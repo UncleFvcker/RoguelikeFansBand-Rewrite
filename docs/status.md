@@ -1,21 +1,21 @@
 # 状态快照
 
-核对日期：2026-09-10。本次集成包含种族主线 `decec518a` 与法术道具 `934a83392`；本页记录已合入的代码/配置事实和注明范围的验收证据。当前数值以链接的源文件为准。
+核对日期：2026-09-10。本次集成包含种族主线 `decec518a` 、法术道具 `934a83392` 与地牢城镇 `78a9cc982`；本页记录已合入的代码/配置事实和注明范围的验收证据。当前数值以链接的源文件为准。
 
 ## 版本与源内容
 
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.239 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | 116 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload / 容器 | 11 / 11 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.400.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
-| 契约政策 | contract-v317，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
+| 协议 | 1.240 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | 117 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload / 容器 | 12 / 12 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
+| 内容包 | 1.401.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 契约政策 | contract-v318，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 6 个 Class、13 个 Build、57 个 Race、32 本能力书、1,840 个 ability 文件、369 个 item、1,402 个 actor、168 个 affix、152 个 mutation。世界定义含 25 个 dungeon 条目；城镇源目录有 3 个 town、30 个 shop、24 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 6 个 Class、13 个 Build、57 个 Race、32 本能力书、1,840 个 ability 文件、370 个 item、1,402 个 actor、168 个 affix、152 个 mutation。世界定义含 25 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、62 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
-权威内容统计工具是 `rfb-contentc inspect-source`。冬贝利开放批次已运行内容编译和锁验证；静态统计不替代行为验收。
+权威内容统计工具是 `rfb-contentc inspect-source`。本次集成已运行内容编译；静态统计不替代行为验收。
 
 ## 玩家入口
 
@@ -36,7 +36,7 @@ Death、Arcane、Sorcery、Armageddon、Nature、Life、Daemon、Crusade 各有�
 
 冬贝利（`rfb-legacy.race.tonberry`）已进入正式新游戏白名单。六职业正式出生、军刀熟练度与“独立”美德、成长被动和攻次／混乱抗性边界已有核心测试；完整核心链为装备军刀、升至 10 级、命中、换回原武器、保存恢复并继续行动。普通武器配置在较高等级可能降至零攻次，界面明确提示该下限。尚缺的决斗者／重槌兵／灵能者关联、死神镰刀武器反噬、神器 247 专属掉落、种族首领和变形怪选择关联，见 `602a33a75` 的原版审计，不计入本批完成范围。
 
-世界中存在 Outpost、Anambar、Thalos 的城镇记录及多种地牢条目。条目存在不证明所有原版设施、守卫、任务链和完整通关已经验证；实际地点进入条件、替代关系和获取路径以运行时与本批测试为准。
+世界中存在 Outpost、Anambar、Thalos、Morivant、Telmora、Angwil 六个城镇记录及多种地牢条目。条目存在不证明所有原版设施、守卫、任务链和完整通关已经验证；实际地点进入条件、替代关系和获取路径以运行时与本批测试为准。
 
 Ent、Spectre 的新游戏入口已开放。种族主线还接入原始经验值与种族等级阈值、永久种族变更、生命力耗尽后的转种族/死亡和相关界面投影；实现与专项测试见 `084f341f0`、`4359de538`、`decec518a`。已有桌面验收只证明各提交记录的范围，本次集成不重复宣称桌面或人工试玩通过。
 
@@ -48,7 +48,17 @@ Ent、Spectre 的新游戏入口已开放。种族主线还接入原始经验值
 
 集成保留物品感知与实例神器鉴定边界、托姆特实例头饰重量、冬贝利逐武器伤害/攻次和准确来源显示。种族永久状态与新增物品字段共同进入当前保存和状态哈希，版本统一收口；内容 hash 本身不参与状态哈希。
 
+## 城镇与共享存储
+
+地牢城镇分支已合入 Morivant、Telmora、Angwil 的正常旅行入口、商店和设施，城镇大地图布局与荒野衔接、按名望调整服务价格、分档强化、赌场和博物馆跨角色共享存储。博物馆转移通过 Tauri 的存储事务与角色检查点一同提交；固定神器禁止捐赠和导入，随机神器实例允许共享并保留完整属性。家与博物馆复用背包详情投影，保留物品身份、知识与实例重量。
+
+Dr. Jones 的鞭子使用原版神器 162、隔空取物与 300 tick 冷却；新内容与规则来源为 RFB master `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。城镇强化复用共享 COST_REAL 估价，并按原版清除估价副本的诅咒影响。单次装备激活按自身经过时间恢复，普通装置保留再生 Ego 加成。
+
+任务审计中的其他依赖与未实现链条仍是后续工作，不因城镇入口开放而计为完成。详见 [Morivant 适配](morivant-town-adaptation.md)、[共享博物馆](shared-museum.md)与本批提交；本次自动验证不替代桌面或 Android 人工试玩。
+
 ## 已有验收证据
+
+本次三线集成的冲突回归已修复；末轮城镇/估价/木精灵专项 74 项、估价与 Camelot 保存专项 8 项、Tauri 原生层 23 项、前端相关 71 项及 26 条 active 契约通过。内容、导入器、本地化、协议、保存与回放测试通过，相关 Clippy、类型检查、生成文件和内容锁检查通过。固定神器估价对照同时补齐 `init1.c` 自动添加的四种元素免毁标记；未重建 standalone 或运行桌面 E2E/Android。
 
 | 记录 | 能证明的范围 | 不扩展到 |
 | --- | --- | --- |

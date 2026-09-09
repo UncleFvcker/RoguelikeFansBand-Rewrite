@@ -9,7 +9,7 @@
   "ownerNameKey": "town-facility-demo-anambar-library-owner-name",
   "identifyItemCost": 50,
   "researchItemCost": 1300,
-  "identifyAllItemsCost": 350,
+  "identifyAllItemsCost": { "ownerCost": 350, "otherCost": 350 },
   "overviewMessageKey": "town-facility-demo-anambar-library-overview",
   "entrancePosition": { "x": 16, "y": 1 },
   "entranceTerrainId": "demo.terrain.library-entrance"

@@ -16,5 +16,7 @@ mod state;
 pub mod stats;
 
 pub use error::CoreError;
-pub use game::{DEFAULT_WORLD_ID, Game, STATE_HASH_SCHEMA_VERSION, load_built_in_content};
+pub use game::{
+    DEFAULT_WORLD_ID, Game, STATE_HASH_SCHEMA_VERSION, SharedMuseum, load_built_in_content,
+};
 pub use rng::{RNG_ALGORITHM, RfbRng};

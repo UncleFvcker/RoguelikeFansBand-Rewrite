@@ -1231,8 +1231,18 @@ pub(super) fn validate_abilities(
                     && !ability.target.requires_line_of_effect
             }
             AbilityEffectDefinition::TeleportTown => town_target_rule,
-            AbilityEffectDefinition::FetchItem { .. }
-            | AbilityEffectDefinition::ConsumeTerrain { .. }
+            AbilityEffectDefinition::FetchItem { .. } => {
+                (1..=18).contains(&ability.target.range)
+                    && ability.target.modes.iter().all(|mode| {
+                        matches!(
+                            mode,
+                            AbilityTargetModeDefinition::Direction
+                                | AbilityTargetModeDefinition::Position
+                                | AbilityTargetModeDefinition::Entity
+                        )
+                    })
+            }
+            AbilityEffectDefinition::ConsumeTerrain { .. }
             | AbilityEffectDefinition::MeleeThenTeleport { .. }
             | AbilityEffectDefinition::DraconianStrike { .. }
             | AbilityEffectDefinition::SwapPosition => projectile_target_rule,

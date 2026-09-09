@@ -15,6 +15,7 @@ export type NativeSaveErrorCategory =
   | "internal";
 
 export interface NativeSaveSummary {
+  museumCheckpoint: boolean;
   slotId: string;
   slotName: string;
   status: NativeSaveStatus;
@@ -29,6 +30,7 @@ export interface NativeSaveSummary {
 }
 
 export interface NativeLoadResult {
+  museumRecovered: boolean;
   snapshot: GameSnapshot;
   recoveryBackup: number | null;
 }

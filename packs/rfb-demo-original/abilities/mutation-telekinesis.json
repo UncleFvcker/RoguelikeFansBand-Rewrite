@@ -6,9 +6,9 @@
   "descriptionKey": "ability-rfb-mutation-telekinesis-description",
   "target": {
     "modes": [
-      "direction"
+      "direction", "position", "entity"
     ],
-    "range": 64,
+    "range": 18,
     "requiresLineOfEffect": true
   },
   "abilityProgramId": "rfb.ability-program.mutation.telekinesis",

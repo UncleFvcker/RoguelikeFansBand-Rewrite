@@ -9,8 +9,8 @@
     "world": "demo.world.middle-earth",
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
-      "x": 26,
-      "y": 13
+      "x": 77,
+      "y": 30
     }
   },
   "commands": [
@@ -25,7 +25,7 @@
   "assertions": {
     "finalState": {
       "lastCommandSeq": 1,
-      "stateHash": "042dc91e0ecf370084bfe4c9954438a40698fe68791648acce5287e39fc6c3f3",
+      "stateHash": "f75aef50003a24c19468f05e467ee370e9ebb22e693f7445c2f80e662b9d2f45",
       "tasks": {
         "demo.task.thieves-hideout": {
           "required": 1,

@@ -428,15 +428,18 @@ fn plan_task_event_reduction(
     let increment = match objective.kind {
         TaskObjectiveKind::ClearFloor => clear_floor_completed as u32,
         TaskObjectiveKind::CollectItem => events.iter().any(|event| {
-            matches!(event, DomainEvent::ItemPickedUp { .. })
-                && objective.item_instance_id.as_ref().is_some_and(|id| {
-                    items.iter().any(|item| {
-                        &item.id == id
-                            && matches!(
-                                item.location,
-                                ItemLocation::Inventory | ItemLocation::Equipped { .. }
-                            )
-                    })
+            matches!(event, DomainEvent::ItemPickedUp { target_kind_id, .. }
+                if objective.item_kind_id.as_ref() == Some(target_kind_id))
+                && items.iter().any(|item| {
+                    objective.item_kind_id.as_ref() == Some(&item.kind_id)
+                        && objective
+                            .item_instance_id
+                            .as_ref()
+                            .is_none_or(|id| &item.id == id)
+                        && matches!(
+                            item.location,
+                            ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                        )
                 })
         }) as u32,
         TaskObjectiveKind::EnterFloor => events.iter().any(|event| {
@@ -701,6 +704,9 @@ pub(super) fn reward_item(
 }
 
 impl Game {
+    pub(super) fn fame_on_failure(&mut self) {
+        self.fame -= (self.fame / 2).min(30);
+    }
     pub(super) fn accept_task(
         &mut self,
         facility_id: &str,
@@ -761,31 +767,59 @@ impl Game {
                 ))
             })
             .collect::<Vec<_>>();
-        let mut changed = Vec::new();
+        let town = self
+            .current_town()
+            .expect("accessible facility must belong to current town");
+        let stored_town = if self.is_wilderness_floor() {
+            Some(
+                self.stored_floors
+                    .get(&town.floor_id)
+                    .ok_or("task-entry-unavailable")?,
+            )
+        } else {
+            None
+        };
+        let (terrain, width) = stored_town
+            .map(|floor| (&floor.terrain, floor.width))
+            .unwrap_or((&self.terrain, self.width));
+        let town_floor_id = town.floor_id.clone();
+        let mut changes = Vec::new();
         for (available_terrain_id, _) in &entry_changes {
-            let mut positions = self
-                .terrain
+            let positions = terrain
                 .iter()
                 .enumerate()
                 .filter_map(|(index, terrain_id)| {
-                    (terrain_id == available_terrain_id).then_some(rfb_protocol::Position {
-                        x: i32::try_from(index % usize::from(self.width)).ok()?,
-                        y: i32::try_from(index / usize::from(self.width)).ok()?,
-                    })
+                    let local = rfb_protocol::Position {
+                        x: i32::try_from(index % usize::from(width)).ok()?,
+                        y: i32::try_from(index / usize::from(width)).ok()?,
+                    };
+                    let visible = self
+                        .town_local_to_active_position(&town.id, local)
+                        .and_then(|position| self.index(position).map(|index| (position, index)));
+                    // Visible cells are authoritative; the stored floor retains offscreen cells.
+                    let effective = visible.map_or(terrain_id, |(_, index)| &self.terrain[index]);
+                    (effective == available_terrain_id).then_some((index, visible))
                 })
                 .collect::<Vec<_>>();
             if positions.len() != 1 {
                 return Err("task-entry-unavailable");
             }
-            changed.append(&mut positions);
+            changes.push(positions[0]);
         }
         state.status = TaskStatusKindDto::Taken;
         self.task_states.insert(task_id.to_owned(), state);
-        for ((_, entry_terrain_id), position) in entry_changes.iter().zip(&changed) {
-            let index = usize::try_from(position.y).expect("task entry y must be non-negative")
-                * usize::from(self.width)
-                + usize::try_from(position.x).expect("task entry x must be non-negative");
-            self.terrain[index] = entry_terrain_id.clone();
+        let mut changed = Vec::new();
+        for ((_, entry_terrain_id), (local_index, visible)) in entry_changes.iter().zip(changes) {
+            if self.is_wilderness_floor() {
+                self.stored_floors
+                    .get_mut(&town_floor_id)
+                    .expect("task town was validated before mutation")
+                    .terrain[local_index] = entry_terrain_id.clone();
+            }
+            if let Some((position, index)) = visible {
+                self.terrain[index] = entry_terrain_id.clone();
+                changed.push(position);
+            }
         }
         Ok(changed)
     }
@@ -942,6 +976,7 @@ impl Game {
                         {
                             failed_floor_ids.push(from_floor_id.to_owned());
                         }
+                        self.fame -= (self.fame / 2).min(30);
                         TaskStatusKindDto::Failed
                     };
                     state.active_floor_id = None;
@@ -981,6 +1016,7 @@ impl Game {
                         {
                             failed_floor_ids.push(from_floor_id.to_owned());
                         }
+                        self.fame -= (self.fame / 2).min(30);
                         TaskStatusKindDto::Failed
                     };
                     state.active_floor_id = None;
@@ -1100,6 +1136,12 @@ impl Game {
             (plan, completion_exit)
         };
         if let Some(plan) = plan {
+            if plan.state.current >= plan.state.required
+                && self.task_states[&plan.task_id].current
+                    < self.task_states[&plan.task_id].required
+            {
+                self.fame = self.fame.saturating_add(self.rng.bounded(2) as u16 + 1);
+            }
             self.task_states.insert(plan.task_id, plan.state);
         }
         if let Some((terrain_id, floor_terrain_id, origin)) = completion_exit {
@@ -1196,5 +1238,59 @@ impl Game {
         )?;
         self.campaign_state = plan.state;
         Some(plan.score)
+    }
+}
+
+#[cfg(test)]
+mod collect_item_tests {
+    use super::*;
+
+    #[test]
+    fn collect_item_keeps_bound_instances_and_requires_the_matching_pickup_kind() {
+        let mut game = Game::new_with_build(51, "demo.build.warrior").unwrap();
+        let mut world = game.content.world(&game.world_id).unwrap().clone();
+        let task_id = "demo.task.morivant-snakes";
+        let floor_id = "demo.floor.morivant-snakes";
+        let initial = task_initial_state(
+            &world,
+            task_definition(&world, task_id).unwrap(),
+            &game.task_states,
+        );
+        game.task_states.insert(task_id.to_owned(), initial);
+        let state = game.task_states.get_mut(task_id).unwrap();
+        state.status = TaskStatusKindDto::Active;
+        state.active_floor_id = Some(floor_id.to_owned());
+        let mut item = game.items[0].clone();
+        item.id = "test.other-whip".to_owned();
+        item.kind_id = "demo.item.dr-jones-whip".to_owned();
+        item.location = ItemLocation::Inventory;
+        for (bound_id, pickup_kind, completes) in [
+            (Some("test.expected-whip"), "demo.item.dr-jones-whip", false),
+            (Some("test.other-whip"), "demo.item.dr-jones-whip", true),
+            (None, "demo.item.dr-jones-whip", true),
+            (None, "demo.item.whip", false),
+        ] {
+            world
+                .tasks
+                .iter_mut()
+                .find(|task| task.id == task_id)
+                .unwrap()
+                .objectives[0]
+                .item_instance_id = bound_id.map(str::to_owned);
+            let plan = plan_task_event_reduction(
+                &world,
+                &game.task_states,
+                floor_id,
+                std::slice::from_ref(&item),
+                false,
+                &[],
+                &[DomainEvent::ItemPickedUp {
+                    target_kind_id: pickup_kind.to_owned(),
+                    quantity: 1,
+                }],
+            )
+            .unwrap();
+            assert_eq!(plan.is_some_and(|plan| plan.state.current == 1), completes);
+        }
     }
 }

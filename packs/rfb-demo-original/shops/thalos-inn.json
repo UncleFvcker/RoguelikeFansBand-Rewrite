@@ -8,6 +8,7 @@
   "category": "general-store",
   "entrancePosition": { "x": 20, "y": 1 },
   "entranceTerrainId": "demo.terrain.inn-entrance",
+  "innReputationCost": 1,
   "innStayCost": 20,
   "owner": {
     "id": "demo.shop-owner.thalos-balthazar",

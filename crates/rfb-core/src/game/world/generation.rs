@@ -694,6 +694,32 @@ fn generated_wall_positions(
 }
 
 impl Game {
+    pub(in crate::game) fn inline_floor_artifacts_available(
+        &self,
+        definition: &ProceduralFloorDefinition,
+    ) -> bool {
+        let Some(map) = &definition.inline_map else {
+            return true;
+        };
+        let mut seen = BTreeSet::new();
+        map.item_spawns
+            .iter()
+            .chain(map.scrambled_item_pair.iter().flatten())
+            .chain(
+                map.scrambled_item_loot_pair
+                    .iter()
+                    .flat_map(|pair| &pair.item_spawns),
+            )
+            .filter(|spawn| {
+                self.content
+                    .item(&spawn.kind_id)
+                    .is_some_and(|item| item.artifact_generation.is_some())
+            })
+            .all(|spawn| {
+                !self.generated_artifact_ids.contains(&spawn.kind_id) && seen.insert(&spawn.kind_id)
+            })
+    }
+
     fn inline_item_instance(
         &mut self,
         definition: &ProceduralFloorDefinition,
@@ -742,6 +768,7 @@ impl Game {
             }),
         };
         materialization.apply_to(&mut item);
+        self.register_generated_artifact(&item.kind_id);
         item
     }
 
@@ -751,10 +778,16 @@ impl Game {
         inline_map: &InlineFloorMapDefinition,
         dungeon_instance_id: Option<String>,
     ) -> Result<FloorState, CoreError> {
+        // RFB rooms.c replaces an already generated ART with a random artifact.
+        // Until replacements exist, reject instead of duplicating a fixed artifact.
+        if !self.inline_floor_artifacts_available(definition) {
+            return Err(CoreError::InvalidSave(
+                "inline floor fixed artifact is already generated",
+            ));
+        }
         let width = definition.width;
         let height = definition.height;
-        let mut terrain =
-            vec![definition.wall_terrain_id.clone(); usize::from(width) * usize::from(height)];
+        let mut terrain = self.inline_floor_base_terrain(definition);
         for terrain_override in &inline_map.terrain_overrides {
             for position in &terrain_override.positions {
                 let terrain_id = if terrain_override.chance_percent == 100
@@ -936,6 +969,7 @@ impl Game {
             terrain,
             glow: vec![false; usize::from(width) * usize::from(height)],
             daylight_suppressed: vec![false; usize::from(width) * usize::from(height)],
+            vault_cells: vec![false; usize::from(width) * usize::from(height)],
             player_position: Position {
                 x: i32::from(inline_map.player_position.x),
                 y: i32::from(inline_map.player_position.y),
@@ -2727,6 +2761,19 @@ impl Game {
         generated_regions.sort_by(|left, right| left.state.region_id.cmp(&right.state.region_id));
         self.resolve_floor_connection_targets(definition, &mut floor_connections)?;
         let mut glow = vec![false; usize::from(width) * usize::from(height)];
+        let mut vault_cells = vec![false; terrain.len()];
+        for placement in &vault_placements {
+            let (vault_width, vault_height) =
+                transformed_vault_dimensions(&placement.vault, placement.transform);
+            for y in 0..vault_height {
+                for x in 0..vault_width {
+                    let index = (placement.origin.y as usize + usize::from(y)) * usize::from(width)
+                        + placement.origin.x as usize
+                        + usize::from(x);
+                    vault_cells[index] = true;
+                }
+            }
+        }
         for position in rooms.iter().flat_map(generated_room_cells) {
             let index = usize::try_from(position.y).expect("generated room y must fit usize")
                 * usize::from(width)
@@ -2742,6 +2789,7 @@ impl Game {
             terrain,
             glow,
             daylight_suppressed: vec![false; usize::from(width) * usize::from(height)],
+            vault_cells,
             player_position: first_center,
             entities,
             items,
@@ -4857,6 +4905,66 @@ fn place_generated_floor_connections(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn generated_vault_cells_survive_floor_serialization() {
+        let pack_root =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+        let mut artifact = rfb_content::compile_pack_dir(&pack_root).unwrap();
+        artifact.content.vaults.push(VaultDefinition {
+            schema: rfb_content::VAULT_SCHEMA.to_owned(),
+            format_version: 1,
+            id: "test.vault.fetch".to_owned(),
+            name_key: "test-vault-fetch-name".to_owned(),
+            theme_id: "test.theme.fetch".to_owned(),
+            width: 3,
+            height: 2,
+            base_terrain_id: "demo.terrain.floor".to_owned(),
+            entrance_position: None,
+            entrance_positions: vec![ContentPosition { x: 1, y: 0 }],
+            transforms: Vec::new(),
+            terrain_overrides: Vec::new(),
+            encounter_groups: vec![rfb_content::VaultEncounterGroupDefinition {
+                id: "test.guard.fetch".to_owned(),
+                member_positions: vec![ContentPosition { x: 0, y: 1 }],
+                entries: vec![rfb_content::VaultEncounterEntryDefinition {
+                    actor_kind_id: "demo.actor.small-kobold".to_owned(),
+                    weight: 1,
+                    min_depth: 1,
+                    max_depth: 100,
+                }],
+            }],
+            loot_spawns: vec![rfb_content::VaultLootSpawnDefinition {
+                id: "test.loot.fetch".to_owned(),
+                position: ContentPosition { x: 2, y: 1 },
+                loot_table_id: "demo.loot-table.base-items".to_owned(),
+            }],
+        });
+        let content = Arc::new(ContentCatalog::from_artifact(
+            rfb_content::encode_content(artifact.content).unwrap(),
+        ));
+        let mut game =
+            Game::from_content_with_build(17, content, DEFAULT_WORLD_ID, "demo.build.warrior")
+                .unwrap();
+        let mut definition = game
+            .content
+            .world(&game.world_id)
+            .unwrap()
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.inline_map.is_none())
+            .unwrap()
+            .clone();
+        definition.layout = None;
+        definition.generation_budget = None;
+        definition.vault_id = Some("test.vault.fetch".to_owned());
+        let floor = game.generate_procedural_floor(&definition, None).unwrap();
+        assert_eq!(floor.vault_cells.iter().filter(|cell| **cell).count(), 6);
+        let restored =
+            crate::save::floor_from_save(crate::save::floor_to_save(&floor), &game.content)
+                .unwrap();
+        assert_eq!(restored.vault_cells, floor.vault_cells);
+    }
 
     #[test]
     fn streamer_treasure_rolls_known_then_hidden_after_a_miss() {

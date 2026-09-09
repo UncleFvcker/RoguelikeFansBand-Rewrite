@@ -132,8 +132,10 @@ fn mattock_natural_disruption_activation_round_trips() {
             .current,
         0
     );
-    game.world_tick = 50;
-    game.process_inventory_device_recovery(&mut events);
+    for _ in 0..50 {
+        game.world_tick += 1;
+        game.process_inventory_device_recovery(&mut events);
+    }
     assert_eq!(
         game.items
             .iter()
@@ -167,7 +169,7 @@ fn riding_charge_game(seed: u64) -> Game {
     affix.device_generation = Some(rfb_content::ItemDeviceGenerationDefinition {
         activation_optional: false,
         activations: vec![rfb_content::ItemDeviceActivationDefinition {
-            rfb_value: None,
+            rfb_value: Some(0),
             id: ACTIVATION_ID.to_owned(),
             name_key: "test-device-activation-riding-charge-name".to_owned(),
             weight: 1,
@@ -264,6 +266,10 @@ fn place_charge_target(game: &mut Game) -> Position {
 }
 
 fn ability_effect_game(seed: u64) -> Game {
+    activation_effect_game(seed, "rfb-legacy.affix.craft", "resist-fire", 12)
+}
+
+fn activation_effect_game(seed: u64, affix_id: &str, effect: &str, weight: u16) -> Game {
     let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .and_then(std::path::Path::parent)
@@ -274,7 +280,7 @@ fn ability_effect_game(seed: u64) -> Game {
         .content
         .affixes
         .iter()
-        .find(|affix| affix.id == "rfb-legacy.affix.craft")
+        .find(|affix| affix.id == affix_id)
         .expect("Craft should expose biased activation candidates")
         .clone();
     let mut activation = affix
@@ -283,7 +289,7 @@ fn ability_effect_game(seed: u64) -> Game {
         .expect("Craft activation candidates")
         .activations
         .iter()
-        .find(|activation| activation.id.ends_with("resist-fire"))
+        .find(|activation| activation.id.ends_with(effect))
         .expect("Craft should include Resist Fire")
         .clone();
     assert!(matches!(
@@ -304,6 +310,13 @@ fn ability_effect_game(seed: u64) -> Game {
         recovery: None,
     });
     artifact.content.affixes.push(affix);
+    artifact
+        .content
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.iron-shot")
+        .expect("iron shot must exist")
+        .weight_tenths_pound = weight;
     let content = Arc::new(ContentCatalog::from_artifact(
         rfb_content::encode_content(artifact.content)
             .expect("ability-effect test content should remain valid"),
@@ -318,6 +331,7 @@ fn ability_effect_game(seed: u64) -> Game {
         .find(|item| item.id == ABILITY_EFFECT_ITEM_ID)
         .expect("test weapon should exist");
     item.affix_ids = vec![ABILITY_EFFECT_AFFIX_ID.to_owned()];
+    item.quality = ItemQualityDto::Fine;
     item.activation = Some(ItemActivationDto {
         profile_id: activation.id,
         name_key: activation.name_key,
@@ -419,8 +433,10 @@ fn riding_charge_moves_mount_attacks_and_uses_profile_recovery() {
         Some(0)
     );
 
-    game.world_tick = 999;
-    game.process_inventory_device_recovery(&mut events);
+    for tick in 1..1_000 {
+        game.world_tick = tick;
+        game.process_inventory_device_recovery(&mut events);
+    }
     assert_eq!(
         game.items
             .iter()
@@ -474,4 +490,393 @@ fn biased_ego_activation_reuses_the_ability_effect_resolver() {
             .map(|charges| charges.current),
         Some(0)
     );
+}
+
+fn fetch_game(weight: u16) -> (Game, Position) {
+    let mut game = activation_effect_game(17, "rfb-legacy.affix.arcane", "telekinesis", weight);
+    clear_monsters(&mut game);
+    super::support::choose_human_talent_if_pending(&mut game);
+    game.items
+        .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
+    game.gold_piles.clear();
+    let origin = game.player.position;
+    let target = Position {
+        x: origin.x + 3,
+        y: origin.y,
+    };
+    for dx in 0..=4 {
+        replace_terrain(
+            &mut game,
+            Position {
+                x: origin.x + dx,
+                y: origin.y,
+            },
+            "demo.terrain.floor",
+        );
+    }
+    give_inventory_item(&mut game, "test.fetch-stack", "demo.item.iron-shot");
+    let item = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.fetch-stack")
+        .unwrap();
+    item.location = ItemLocation::Ground(target);
+    item.quantity = 9;
+    game.reveal_current_visibility();
+    game.rng = fetch_check_rng(true);
+    (game, target)
+}
+
+fn fetch_check_rng(success: bool) -> RfbRng {
+    RfbRng::seeded(
+        (0..1000)
+            .find(|seed| {
+                let roll = RfbRng::seeded(*seed).bounded(100);
+                if success {
+                    roll < 5
+                } else {
+                    (5..10).contains(&roll)
+                }
+            })
+            .unwrap(),
+    )
+}
+
+fn use_fetch(game: &mut Game, target: Option<TargetSelection>) -> GameUpdate {
+    super::support::dispatch_next(
+        game,
+        GameCommand::UseItem {
+            item_id: ABILITY_EFFECT_ITEM_ID.to_owned(),
+            target,
+        },
+    )
+}
+
+#[test]
+fn fetch_activation_checks_unit_weight_moves_the_whole_instance_and_consumes_empty_casts() {
+    for weight in [174, 175, 176] {
+        let (mut game, target) = fetch_game(weight);
+        let before = game
+            .items
+            .iter()
+            .find(|item| item.id == "test.fetch-stack")
+            .unwrap()
+            .clone();
+        let tick = game.world_tick;
+        let update = use_fetch(
+            &mut game,
+            Some(TargetSelection::Position { position: target }),
+        );
+        let mut expected = before;
+        if weight <= 175 {
+            expected.location = ItemLocation::Ground(game.player.position);
+        }
+        assert_eq!(
+            *game
+                .items
+                .iter()
+                .find(|item| item.id == expected.id)
+                .unwrap(),
+            expected
+        );
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|item| item.id == ABILITY_EFFECT_ITEM_ID)
+                .unwrap()
+                .charges
+                .unwrap()
+                .current,
+            0
+        );
+        assert_eq!(game.world_tick, tick + 10);
+        assert!(update.events.iter().any(|event| matches!(&event.outcome,
+            Some(GameEventOutcomeDto::AbilityEffects { resolution, .. })
+            if matches!(resolution.effects.as_slice(), [AbilityEffectResolutionDto::FetchItem { moved, .. }] if *moved == (weight <= 175)))));
+    }
+}
+
+#[test]
+fn fetch_activation_target_branches_keep_original_blocking_rules() {
+    let (base, target) = fetch_game(175);
+    for (case, directional, should_move) in [
+        ("clear", true, true),
+        ("wall", true, false),
+        ("wall", false, true),
+        ("vault", false, false),
+        ("vault", true, true),
+        ("occupied", false, false),
+        ("glyph", false, false),
+        ("deep-water", false, false),
+        ("water-path", true, true),
+        ("empty-target", false, false),
+        ("intermediate-pile", false, true),
+        ("stairs", false, false),
+        ("open-door", false, false),
+        ("curtain-path", true, true),
+    ] {
+        let mut game = base.clone();
+        let intermediate = Position {
+            x: target.x - 1,
+            y: target.y,
+        };
+        match case {
+            "wall" => replace_terrain(&mut game, intermediate, "demo.terrain.wall"),
+            "water-path" => {
+                replace_terrain(&mut game, intermediate, "demo.terrain.surface-water-deep")
+            }
+            "curtain-path" => {
+                replace_terrain(&mut game, intermediate, "demo.terrain.curtain-closed")
+            }
+            "stairs" | "open-door" => {
+                let origin = game.player.position;
+                replace_terrain(
+                    &mut game,
+                    origin,
+                    if case == "stairs" {
+                        "demo.terrain.stairs-up"
+                    } else {
+                        "demo.terrain.door-open"
+                    },
+                );
+            }
+            "vault" => {
+                let index = game.index(target).unwrap();
+                game.vault_cells[index] = true;
+            }
+            "occupied" => {
+                give_inventory_item(&mut game, "test.obstruction", "demo.item.dagger");
+                game.items
+                    .iter_mut()
+                    .find(|item| item.id == "test.obstruction")
+                    .unwrap()
+                    .location = ItemLocation::Ground(game.player.position);
+            }
+            "intermediate-pile" => {
+                give_inventory_item(&mut game, "test.intermediate", "demo.item.dagger");
+                game.items
+                    .iter_mut()
+                    .find(|item| item.id == "test.intermediate")
+                    .unwrap()
+                    .location = ItemLocation::Ground(intermediate);
+            }
+            "glyph" | "deep-water" => {
+                let origin = game.player.position;
+                replace_terrain(
+                    &mut game,
+                    origin,
+                    if case == "glyph" {
+                        "demo.terrain.warding-glyph"
+                    } else {
+                        "demo.terrain.surface-water-deep"
+                    },
+                );
+            }
+            _ => {}
+        }
+        let selection = if directional {
+            TargetSelection::Direction {
+                direction: Direction::East,
+            }
+        } else {
+            TargetSelection::Position {
+                position: if case == "empty-target" {
+                    intermediate
+                } else {
+                    target
+                },
+            }
+        };
+        use_fetch(&mut game, Some(selection));
+        if case == "intermediate-pile" {
+            assert_eq!(
+                game.items
+                    .iter()
+                    .find(|item| item.id == "test.intermediate")
+                    .unwrap()
+                    .location,
+                ItemLocation::Ground(intermediate)
+            );
+        }
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|item| item.id == "test.fetch-stack")
+                .unwrap()
+                .location,
+            ItemLocation::Ground(if should_move {
+                game.player.position
+            } else {
+                target
+            }),
+            "{case}/{directional}"
+        );
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|item| item.id == ABILITY_EFFECT_ITEM_ID)
+                .unwrap()
+                .charges
+                .unwrap()
+                .current,
+            0,
+            "{case}"
+        );
+    }
+}
+
+#[test]
+fn fetch_activation_cancel_failure_and_success_have_distinct_costs() {
+    let (base, target) = fetch_game(175);
+    for (selection, success, ticks, charges, draws) in [
+        (Some(TargetSelection::SelfTarget), true, 0, 1, 0),
+        (None, true, 10, 1, 1),
+        (None, false, 10, 1, 1),
+        (
+            Some(TargetSelection::Position { position: target }),
+            false,
+            10,
+            1,
+            1,
+        ),
+        (
+            Some(TargetSelection::Position { position: target }),
+            true,
+            10,
+            0,
+            1,
+        ),
+    ] {
+        let mut game = base.clone();
+        game.rng = fetch_check_rng(success);
+        let mut expected_rng = game.rng.clone();
+        for _ in 0..draws {
+            expected_rng.bounded(100);
+        }
+        let tick = game.world_tick;
+        use_fetch(&mut game, selection);
+        assert_eq!(game.world_tick, tick + ticks);
+        assert_eq!(game.rng, expected_rng);
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|item| item.id == ABILITY_EFFECT_ITEM_ID)
+                .unwrap()
+                .charges
+                .unwrap()
+                .current,
+            charges
+        );
+    }
+}
+
+#[test]
+fn fetch_vault_protection_is_hashed_and_survives_save_restore() {
+    let (mut game, target) = fetch_game(175);
+    let unprotected = game.state_hash();
+    let index = game.index(target).unwrap();
+    game.vault_cells[index] = true;
+    assert_ne!(game.state_hash(), unprotected);
+    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("vault cells round trip");
+    assert_eq!(restored.state_hash(), game.state_hash());
+    use_fetch(
+        &mut restored,
+        Some(TargetSelection::Position { position: target }),
+    );
+    assert_eq!(
+        restored
+            .items
+            .iter()
+            .find(|item| item.id == "test.fetch-stack")
+            .unwrap()
+            .location,
+        ItemLocation::Ground(target)
+    );
+    let mut invalid = game.to_save();
+    invalid.terrain.vault_cells.pop();
+    assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+}
+
+#[test]
+fn fetch_activation_device_bonus_uses_original_percentage_rounding() {
+    for (bonus, weight, moved) in [
+        (5, 218, true),
+        (5, 219, false),
+        (-1, 166, true),
+        (-1, 167, false),
+        (-20, 1, false),
+    ] {
+        let (mut game, target) = fetch_game(weight);
+        let mut status = monster_combat::melee_status(STATUS_BERSERK, 20, "test").status;
+        status.granted_modifiers.device_power_bonus = bonus;
+        game.player.statuses.push(status);
+        use_fetch(
+            &mut game,
+            Some(TargetSelection::Position { position: target }),
+        );
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|item| item.id == "test.fetch-stack")
+                .unwrap()
+                .location,
+            ItemLocation::Ground(if moved { game.player.position } else { target }),
+            "bonus {bonus}, weight {weight}"
+        );
+    }
+}
+
+#[test]
+fn fetch_position_range_and_los_failures_are_resolved_without_extra_rng() {
+    let (base, target) = fetch_game(175);
+    let source = base
+        .content
+        .ability("rfb.ability.mutation.telekinesis")
+        .unwrap()
+        .clone();
+    for (range, requires_los, should_move) in
+        [(18, true, false), (18, false, true), (2, false, false)]
+    {
+        let mut game = base.clone();
+        replace_terrain(
+            &mut game,
+            Position {
+                x: target.x - 1,
+                y: target.y,
+            },
+            "demo.terrain.wall",
+        );
+        let mut ability = source.clone();
+        ability.target.range = range;
+        ability.target.requires_line_of_effect = requires_los;
+        ability.effect = AbilityEffectDefinition::FetchItem {
+            maximum_weight_tenths_pound: 175,
+        };
+        let plan = game
+            .ability_target_plan(&ability, &TargetSelection::Position { position: target })
+            .unwrap();
+        let rng = game.rng.clone();
+        game.resolve_player_ability_effect(
+            ability,
+            plan,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        assert_eq!(game.rng, rng);
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|item| item.id == "test.fetch-stack")
+                .unwrap()
+                .location,
+            ItemLocation::Ground(if should_move {
+                game.player.position
+            } else {
+                target
+            })
+        );
+    }
 }

@@ -10,8 +10,8 @@
     "debugClearEntities": true,
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
-      "x": 42,
-      "y": 13
+      "x": 93,
+      "y": 30
     }
   },
   "commands": [
@@ -31,6 +31,35 @@
           "playerAtEntrance": true,
           "storedItems": [
             {
+              "details": {
+                "canReceiveRecharge": false,
+                "canSupplyRecharge": false,
+                "captureBall": false,
+                "displayNameKey": "item-demo-ration-of-food-name",
+                "equipmentSlot": null,
+                "id": "generated.item.203",
+                "identification": "unexamined",
+                "kindId": "demo.item.ration-of-food",
+                "knowledge": "aware",
+                "modifiers": {
+                  "attack": 0,
+                  "charisma": 0,
+                  "constitution": 0,
+                  "defense": 0,
+                  "devicePowerBonus": 0,
+                  "dexterity": 0,
+                  "intelligence": 0,
+                  "maxHp": 0,
+                  "speed": 0,
+                  "spellPowerBonus": 0,
+                  "strength": 0,
+                  "wisdom": 0
+                },
+                "mountUsable": false,
+                "quantity": 1,
+                "usable": true,
+                "weightTenthsPound": 10
+              },
               "displayNameKey": "item-demo-ration-of-food-name",
               "id": "generated.item.203",
               "kindId": "demo.item.ration-of-food",
@@ -50,7 +79,7 @@
       },
       "lastCommandSeq": 1,
       "revision": 1,
-      "stateHash": "f5b40b75f7d9a6232ec08e1ac77364a4c654ebbc58ca1ef18ae514a2576e197a",
+      "stateHash": "ff3718814330af6e1e967b372fc1a22433bea0dfc4a0a0ab3a07dbf1b592d179",
       "turn": 1
     },
     "events": [

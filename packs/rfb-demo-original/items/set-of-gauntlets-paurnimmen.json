@@ -45,8 +45,11 @@
     "acid",
     "fire"
   ],
+  "equipmentBonuses": {
+    "meleeDamage": 2,
+    "meleeSkill": 2
+  },
   "equipmentSlot": "gloves",
-  "equipmentBonuses": { "meleeSkill": 2, "meleeDamage": 2 },
   "formatVersion": 1,
   "generationLevel": 30,
   "glyph": "]",
@@ -64,6 +67,10 @@
   "rfbValue": {
     "flags": [
       "BRAND_COLD",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
       "RES_COLD"
     ],
     "pval": 0,

@@ -6,8 +6,8 @@ use super::*;
 const SPECTRE: &str = "rfb-legacy.race.spectre";
 const HUMAN: &str = "demo.race.rfb-human";
 const SCARE: &str = "rfb.ability.race.scare-monster";
-const START: Position = Position { x: 48, y: 16 };
-const EAST: Position = Position { x: 49, y: 16 };
+const START: Position = Position { x: 99, y: 33 };
+const EAST: Position = Position { x: 100, y: 33 };
 
 fn form(game: &mut Game, race: &str) {
     let mut status =
@@ -21,8 +21,8 @@ fn ready() -> Game {
     let mut game = birth(83, "demo.build.high-mage-death");
     clear_monsters(&mut game);
     game.player.position = START;
-    for y in 14..=18 {
-        for x in 46..=52 {
+    for y in 31..=35 {
+        for x in 97..=103 {
             replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
         }
     }
@@ -65,8 +65,8 @@ fn spectre_six_classes_complete_absorb_level_scare_wall_and_save_sequence() {
                 let mut game = birth(seed, build);
                 clear_monsters(&mut game);
                 game.player.position = START;
-                for y in 14..=18 {
-                    for x in 46..=52 {
+                for y in 31..=35 {
+                    for x in 97..=103 {
                         replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
                     }
                 }
@@ -318,7 +318,7 @@ fn spectre_scare_respects_immunity_walls_and_current_form() {
             } else {
                 "demo.actor.sheep"
             },
-            Position { x: 50, y: 16 },
+            Position { x: 101, y: 33 },
         );
         if !immune {
             replace_terrain(&mut game, EAST, "demo.terrain.wall");
@@ -394,8 +394,8 @@ fn spectre_birth_virtue_is_unlife_and_kin_scroll_summons_current_glyph_without_r
         game.gold_piles.clear();
         game.progress.level = 50;
         game.player.position = START;
-        for y in 14..=18 {
-            for x in 46..=50 {
+        for y in 31..=35 {
+            for x in 97..=101 {
                 replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
             }
         }

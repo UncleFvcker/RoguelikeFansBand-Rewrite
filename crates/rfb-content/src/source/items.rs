@@ -203,7 +203,7 @@ impl SourceItemDeviceActivationDefinition {
     ) -> Result<ItemDeviceActivationDefinition, ContentError> {
         let (effect, program_input) =
             resolve_source_item_effect(&self.id, self.effect_program_id, programs)?;
-        if !effect_program_input_matches_device_target(program_input, &self.target) {
+        if !effect_program_input_matches_device_target(program_input, &self.target, &effect) {
             return Err(ContentError::InvalidItemUseAction(self.id.clone()));
         }
         Ok(ItemDeviceActivationDefinition {

@@ -110,6 +110,7 @@ impl Game {
             hp: self.player.hp,
             max_hp: stats.max_hp.value,
             gold: self.gold,
+            fame: self.fame,
             nutrition: self.nutrition,
             fasting: self.fasting,
             nutrition_state: self.nutrition_state(),
@@ -928,105 +929,103 @@ impl Game {
         let mut inventory = self
             .items
             .iter()
-            .filter_map(|item| {
-                if item.location != ItemLocation::Inventory {
-                    return None;
-                }
-                Some(InventoryItemDto {
-                    bag_capacity: self.visible_item_bag_capacity(item),
-                    id: item.id.clone(),
-                    kind_id: item.kind_id.clone(),
-                    display_name_key: self.item_display_name_key(&item.kind_id),
-                    artifact_name: self.visible_artifact_name(item),
-                    knowledge: self.item_knowledge_dto(&item.kind_id),
-                    usable: self.content.item(&item.kind_id).is_some_and(|definition| {
-                        definition.use_action.as_ref().is_some_and(|action| {
-                            action.charges.is_none_or(|charges| {
-                                item.charges
-                                    .is_some_and(|state| state.current >= charges.cost)
-                            })
-                        }) || item.activation.as_ref().is_some_and(|activation| {
-                            item.charges
-                                .is_some_and(|state| state.current >= activation.cost)
-                        })
-                    }),
-                    absorbable: self.item_can_be_absorbed(item),
-                    mount_usable: self.mount_item_is_usable(&item.kind_id),
-                    capture_ball: self
-                        .content
-                        .item(&item.kind_id)
-                        .is_some_and(|definition| definition.capture_ball),
-                    captured_actor: self.captured_actor_dto(item),
-                    charges: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
-                        .then_some(item.charges)
-                        .flatten(),
-                    fuel: item.fuel,
-                    activation: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
-                        .then(|| item.activation.clone())
-                        .flatten(),
-                    use_target_spec: item
-                        .activation
-                        .as_ref()
-                        .map(|activation| activation.target_spec.clone())
-                        .or_else(|| {
-                            self.content
-                                .item(&item.kind_id)
-                                .and_then(|definition| definition.use_action.as_ref())
-                                .and_then(|action| match &action.effect {
-                                    ItemUseEffectDefinition::IdentifyItem { .. }
-                                    | ItemUseEffectDefinition::EnchantItem { .. } => {
-                                        Some(item_target_spec())
-                                    }
-                                    _ => None,
-                                })
-                        }),
-                    requires_crafting_target: self.inventory_item_use_effect(&item.id).is_some_and(
-                        |(effect, _)| matches!(effect, ItemUseEffectDefinition::CraftItem { .. }),
-                    ),
-                    requires_target_glyph: self.inventory_item_use_effect(&item.id).is_some_and(
-                        |(effect, _)| matches!(effect, ItemUseEffectDefinition::Genocide { .. }),
-                    ),
-                    requires_recharge_targets: self
-                        .inventory_item_use_effect(&item.id)
-                        .is_some_and(|(effect, _)| {
-                            matches!(effect, ItemUseEffectDefinition::RechargeFromDevice { .. })
-                        }),
-                    can_receive_recharge: self.item_can_receive_recharge(item),
-                    can_supply_recharge: self.item_can_supply_recharge(item),
-                    quantity: item.quantity,
-                    inscription: item.inscription.clone(),
-                    enchantments: self.visible_item_enchantments(item),
-                    curse: self.visible_item_curse(item),
-                    permanent_destruction_immunities: item
-                        .permanent_destruction_immunities
-                        .iter()
-                        .copied()
-                        .map(item_destruction_element_to_dto)
-                        .collect(),
-                    weight_tenths_pound: self.item_instance_weight(item),
-                    equipment_slot: self
-                        .content
-                        .item(&item.kind_id)
-                        .and_then(|definition| definition.equipment_slot.clone()),
-                    modifiers: self.visible_item_modifiers(item),
-                    equipment_bonuses: self.visible_item_equipment_bonuses(item),
-                    resistances: self.visible_item_resistances(item),
-                    status_immunities: self.visible_item_status_immunities(item),
-                    slays: self.visible_item_slays(item),
-                    brands: self.visible_item_brands(item),
-                    passives: self.visible_item_passives(item),
-                    identification: self.item_identification(item),
-                    feeling: self.item_feeling(item),
-                    quality: self.visible_item_quality(item),
-                    known_properties: self.known_item_properties(item),
-                    melee_profile: self.visible_item_melee_profile(item),
-                    projectile_profile: self.visible_item_projectile_profile(item),
-                    throw_profile: self.visible_item_throw_profile(item),
-                })
-            })
+            .filter(|item| item.location == ItemLocation::Inventory)
+            .map(|item| self.inventory_item_dto(item))
             .collect::<Vec<_>>();
         inventory.sort_by(|left, right| left.id.cmp(&right.id));
         inventory
+    }
+
+    pub(super) fn inventory_item_dto(&self, item: &ItemInstance) -> InventoryItemDto {
+        InventoryItemDto {
+            bag_capacity: self.visible_item_bag_capacity(item),
+            id: item.id.clone(),
+            kind_id: item.kind_id.clone(),
+            display_name_key: self.item_display_name_key(&item.kind_id),
+            artifact_name: self.visible_artifact_name(item),
+            knowledge: self.item_knowledge_dto(&item.kind_id),
+            usable: self.content.item(&item.kind_id).is_some_and(|definition| {
+                definition.use_action.as_ref().is_some_and(|action| {
+                    action.charges.is_none_or(|charges| {
+                        item.charges
+                            .is_some_and(|state| state.current >= charges.cost)
+                    })
+                }) || item.activation.as_ref().is_some_and(|activation| {
+                    item.charges
+                        .is_some_and(|state| state.current >= activation.cost)
+                })
+            }),
+            absorbable: self.item_can_be_absorbed(item),
+            mount_usable: self.mount_item_is_usable(&item.kind_id),
+            capture_ball: self
+                .content
+                .item(&item.kind_id)
+                .is_some_and(|definition| definition.capture_ball),
+            captured_actor: self.captured_actor_dto(item),
+            charges: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
+                .then_some(item.charges)
+                .flatten(),
+            fuel: item.fuel,
+            activation: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
+                .then(|| item.activation.clone())
+                .flatten(),
+            use_target_spec: item
+                .activation
+                .as_ref()
+                .map(|activation| activation.target_spec.clone())
+                .or_else(|| {
+                    self.content
+                        .item(&item.kind_id)
+                        .and_then(|definition| definition.use_action.as_ref())
+                        .and_then(|action| match &action.effect {
+                            ItemUseEffectDefinition::IdentifyItem { .. }
+                            | ItemUseEffectDefinition::EnchantItem { .. } => {
+                                Some(item_target_spec())
+                            }
+                            _ => None,
+                        })
+                }),
+            requires_crafting_target: self.inventory_item_use_effect(&item.id).is_some_and(
+                |(effect, _)| matches!(effect, ItemUseEffectDefinition::CraftItem { .. }),
+            ),
+            requires_target_glyph: self.inventory_item_use_effect(&item.id).is_some_and(
+                |(effect, _)| matches!(effect, ItemUseEffectDefinition::Genocide { .. }),
+            ),
+            requires_recharge_targets: self.inventory_item_use_effect(&item.id).is_some_and(
+                |(effect, _)| matches!(effect, ItemUseEffectDefinition::RechargeFromDevice { .. }),
+            ),
+            can_receive_recharge: self.item_can_receive_recharge(item),
+            can_supply_recharge: self.item_can_supply_recharge(item),
+            quantity: item.quantity,
+            inscription: item.inscription.clone(),
+            enchantments: self.visible_item_enchantments(item),
+            curse: self.visible_item_curse(item),
+            permanent_destruction_immunities: item
+                .permanent_destruction_immunities
+                .iter()
+                .copied()
+                .map(item_destruction_element_to_dto)
+                .collect(),
+            weight_tenths_pound: self.item_instance_weight(item),
+            equipment_slot: self
+                .content
+                .item(&item.kind_id)
+                .and_then(|definition| definition.equipment_slot.clone()),
+            modifiers: self.visible_item_modifiers(item),
+            equipment_bonuses: self.visible_item_equipment_bonuses(item),
+            resistances: self.visible_item_resistances(item),
+            status_immunities: self.visible_item_status_immunities(item),
+            slays: self.visible_item_slays(item),
+            brands: self.visible_item_brands(item),
+            passives: self.visible_item_passives(item),
+            identification: self.item_identification(item),
+            feeling: self.item_feeling(item),
+            quality: self.visible_item_quality(item),
+            known_properties: self.known_item_properties(item),
+            melee_profile: self.visible_item_melee_profile(item),
+            projectile_profile: self.visible_item_projectile_profile(item),
+            throw_profile: self.visible_item_throw_profile(item),
+        }
     }
 
     pub(super) fn equipment_dto(&self) -> Vec<EquipmentItemDto> {
@@ -1561,10 +1560,7 @@ impl Game {
             })
             .map(|facility| {
                 let entrance_position = self
-                    .town_local_to_active_position(
-                        &town.id,
-                        position_from_content(facility.entrance_position),
-                    )
+                    .town_facility_entrance_position(facility)
                     .expect("current town task service must retain an active position");
                 let player_at_entrance = self.player.position == entrance_position;
                 let tasks = if player_at_entrance {
@@ -1599,6 +1595,7 @@ impl Game {
                     Vec::new()
                 };
                 TaskServiceDto {
+                    casino: facility.casino.then(|| self.casino_dto(&facility.id)),
                     id: facility.id.clone(),
                     name_key: facility.name_key.clone(),
                     description_key: facility.description_key.clone(),
@@ -1609,11 +1606,42 @@ impl Game {
                     entrance_position,
                     entrance_terrain_id: facility.entrance_terrain_id.clone(),
                     player_at_entrance,
-                    identify_item_cost: facility.identify_item_cost,
-                    research_item_cost: facility.research_item_cost,
-                    identify_all_items_cost: facility.identify_all_items_cost,
+                    identify_item_cost: facility
+                        .identify_item_cost
+                        .map(|cost| self.town_service_price(cost)),
+                    research_item_cost: facility
+                        .research_item_cost
+                        .map(|cost| self.town_service_price(cost)),
+                    research_monster_cost: facility
+                        .research_monster_cost
+                        .map(|price| self.town_facility_price(facility, price)),
+                    teleport_level_cost: facility
+                        .teleport_level_cost
+                        .map(|price| self.town_facility_price(facility, price)),
+                    teleport_dungeons: if player_at_entrance
+                        && facility.teleport_level_cost.is_some()
+                    {
+                        self.teleport_dungeon_dtos()
+                    } else {
+                        Vec::new()
+                    },
+                    research_monsters: if player_at_entrance
+                        && facility.research_monster_cost.is_some()
+                    {
+                        self.research_monster_dtos()
+                    } else {
+                        Vec::new()
+                    },
+                    identify_all_items_cost: facility
+                        .identify_all_items_cost
+                        .map(|price| self.town_facility_price(facility, price)),
+                    inn_stay_cost: facility
+                        .inn_stay_cost
+                        .map(|price| self.town_facility_price(facility, price)),
                     overview_message_key: facility.overview_message_key.clone(),
-                    legal_name_change_cost: facility.legal_name_change_cost,
+                    legal_name_change_cost: facility
+                        .legal_name_change_cost
+                        .map(|cost| self.town_service_price(cost)),
                     membership: self.town_facility_membership(facility),
                     service_actions: self.town_facility_service_dtos(facility),
                     bounty_office: player_at_entrance

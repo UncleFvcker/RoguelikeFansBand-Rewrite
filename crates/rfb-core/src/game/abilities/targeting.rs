@@ -36,7 +36,7 @@ pub(in crate::game) enum AbilityTargetPlan {
         town_id: String,
     },
     FetchItem {
-        path: Vec<Position>,
+        target: TargetSelection,
     },
     ConsumeTerrain {
         position: Position,
@@ -229,9 +229,29 @@ impl Game {
                         town_id: town_id.clone(),
                     })
             }
-            AbilityEffectDefinition::FetchItem { .. } => self
-                .ability_path(ability, target)
-                .map(|path| AbilityTargetPlan::FetchItem { path }),
+            AbilityEffectDefinition::FetchItem { .. } => {
+                let mode = match target {
+                    TargetSelection::Direction { .. } => AbilityTargetModeDefinition::Direction,
+                    TargetSelection::Position { position } if self.index(*position).is_some() => {
+                        AbilityTargetModeDefinition::Position
+                    }
+                    TargetSelection::Entity { entity_id }
+                        if self.entities.iter().any(|entity| {
+                            entity.id == *entity_id && self.entity_is_visible_to_player(entity)
+                        }) =>
+                    {
+                        AbilityTargetModeDefinition::Entity
+                    }
+                    _ => return None,
+                };
+                ability
+                    .target
+                    .modes
+                    .contains(&mode)
+                    .then(|| AbilityTargetPlan::FetchItem {
+                        target: target.clone(),
+                    })
+            }
             AbilityEffectDefinition::ConsumeTerrain { .. } => {
                 let TargetSelection::Direction { direction } = target else {
                     return None;

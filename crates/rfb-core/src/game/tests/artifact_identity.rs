@@ -176,8 +176,8 @@ fn artifact_identity_activation_and_recovery_need_no_ego_identity() {
             .any(|event| matches!(event, DomainEvent::AbilityAreaDamage { .. }))
     );
     let mut game = round_trip(&game);
-    for _ in 0..10 {
-        game.world_tick += 10;
+    for _ in 0..100 {
+        game.world_tick += 1;
         game.process_inventory_device_recovery(&mut Vec::new());
     }
     assert_eq!(game.items[0].charges.unwrap().current, 1);
@@ -252,7 +252,8 @@ fn artifact_identity_uses_artifact_enchantment_and_curse_rules() {
     assert!(game.equip_inventory_item(ID, None).is_some());
     let before = game.items[0].enchantments.to_hit;
     let mut expected = game.clone();
-    let expected_result = expected.resolve_item_enchantment_component(before, 10, 1, false, true);
+    let expected_result =
+        expected.resolve_item_enchantment_component(before, 10, 1, false, true, false);
     let result = game.enchant_item_instance(ID, ItemEnchantmentRequest::new(10, 0, 0));
     assert_eq!(result.to_hit, expected_result);
     assert_eq!(game.rng, expected.rng);

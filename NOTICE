@@ -8,6 +8,17 @@ Legacy RoguelikeFansBand, FrogComposband and Angband content is not included in 
 
 Third-party notices will be appended here as dependencies and assets are introduced.
 
+The Angwil town layout in packs/rfb-demo-original/worlds/middle-earth.json is
+adapted from lib/edit/t_angwil.txt at FrogComposband/RoguelikeFansBand commit
+a0d92b6378d148c5262cc236b8fa6ed2ca06a54c. This imported layout is an exception
+to the statement above that legacy content is not included; the repository's
+default licenses do not replace its upstream terms. Its source attribution is:
+"by Brett Flannigan (at least the original, as of 10-8-98; feel free to tweak
+it as you please)"; "Tweaked 03-9-2017". The original file also identifies it
+as a mainly elven town. Source mapping and this adaptation's scope are recorded
+in design/angwil-town-plan-20260909.md and
+packs/rfb-demo-original/legacy-wilderness-selection.json.
+
 The generated Android Gradle/Kotlin scaffold under web/src-tauri/gen/android is derived
 from Tauri CLI templates. Tauri is available under the Apache License 2.0 or MIT License:
 https://github.com/tauri-apps/tauri

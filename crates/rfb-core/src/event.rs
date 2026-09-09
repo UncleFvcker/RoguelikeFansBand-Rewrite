@@ -110,6 +110,20 @@ pub(crate) enum DomainEvent {
         previous_race_id: String,
         race_id: String,
     },
+    CasinoRoundCompleted {
+        facility_id: String,
+        wager: u32,
+        payout: u32,
+        gold_balance: u32,
+    },
+    CasinoSessionEnded {
+        facility_id: String,
+        gold_balance: u32,
+    },
+    CasinoUnavailable {
+        facility_id: String,
+        reason: String,
+    },
     #[allow(dead_code)]
     MutationGained {
         mutation_id: String,
@@ -718,6 +732,37 @@ pub(crate) enum DomainEvent {
     },
     FacilityPlayerRenamed {
         outcome: FacilityRenameOutcome,
+    },
+    InnFoodCompleted {
+        facility_id: String,
+        cost: u32,
+        gold_balance: u32,
+        food_key: &'static str,
+    },
+    InnFoodUnavailable {
+        facility_id: String,
+        reason: String,
+    },
+    InnReputationReported {
+        facility_id: String,
+        fame: u16,
+        cost: u32,
+        gold_balance: u32,
+        message_key: &'static str,
+    },
+    InnReputationUnavailable {
+        facility_id: String,
+        reason: String,
+    },
+    MonsterResearchCompleted {
+        facility_id: String,
+        actor_kind_id: String,
+        cost: u32,
+        gold_balance: u32,
+    },
+    MonsterResearchUnavailable {
+        facility_id: String,
+        reason: String,
     },
     InnStayUnavailable {
         facility_id: String,
@@ -3317,6 +3362,122 @@ impl DomainEvent {
                     ("name", outcome.name.clone()),
                     ("cost", outcome.cost.to_string()),
                     ("balance", outcome.gold_balance.to_string()),
+                ],
+            ),
+            Self::InnFoodCompleted {
+                facility_id,
+                cost,
+                gold_balance,
+                food_key,
+            } => dto(
+                "inn.food",
+                "inn-food-completed",
+                [
+                    ("facility", facility_id.clone()),
+                    ("cost", cost.to_string()),
+                    ("balance", gold_balance.to_string()),
+                    ("foodKey", (*food_key).to_owned()),
+                ],
+            ),
+            Self::InnFoodUnavailable {
+                facility_id,
+                reason,
+            } => dto(
+                "inn.food-unavailable",
+                "inn-food-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("reason", reason.clone()),
+                ],
+            ),
+            Self::InnReputationReported {
+                facility_id,
+                fame,
+                cost,
+                gold_balance,
+                message_key,
+            } => dto(
+                "inn.reputation",
+                message_key,
+                [
+                    ("facility", facility_id.clone()),
+                    ("fame", fame.to_string()),
+                    ("cost", cost.to_string()),
+                    ("balance", gold_balance.to_string()),
+                ],
+            ),
+            Self::CasinoRoundCompleted {
+                facility_id,
+                wager,
+                payout,
+                gold_balance,
+            } => dto(
+                "facility.casino-round",
+                "casino-round-completed",
+                [
+                    ("facility", facility_id.clone()),
+                    ("wager", wager.to_string()),
+                    ("payout", payout.to_string()),
+                    ("balance", gold_balance.to_string()),
+                ],
+            ),
+            Self::CasinoSessionEnded {
+                facility_id,
+                gold_balance,
+            } => dto(
+                "facility.casino-ended",
+                "casino-session-ended",
+                [
+                    ("facility", facility_id.clone()),
+                    ("balance", gold_balance.to_string()),
+                ],
+            ),
+            Self::CasinoUnavailable {
+                facility_id,
+                reason,
+            } => dto(
+                "facility.casino-unavailable",
+                "casino-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("reason", reason.clone()),
+                ],
+            ),
+            Self::InnReputationUnavailable {
+                facility_id,
+                reason,
+            } => dto(
+                "inn.reputation-unavailable",
+                "inn-reputation-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("reason", reason.clone()),
+                ],
+            ),
+            Self::MonsterResearchCompleted {
+                facility_id,
+                actor_kind_id,
+                cost,
+                gold_balance,
+            } => dto(
+                "facility.monster-researched",
+                "facility-monster-researched",
+                [
+                    ("facility", facility_id.clone()),
+                    ("actorKind", actor_kind_id.clone()),
+                    ("cost", cost.to_string()),
+                    ("balance", gold_balance.to_string()),
+                ],
+            ),
+            Self::MonsterResearchUnavailable {
+                facility_id,
+                reason,
+            } => dto(
+                "facility.monster-research-unavailable",
+                "facility-monster-research-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("reason", reason.clone()),
                 ],
             ),
             Self::InnStayUnavailable {

@@ -10,8 +10,8 @@
     "debugClearEntities": true,
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
-      "x": 32,
-      "y": 13
+      "x": 83,
+      "y": 30
     },
     "playerGold": 1000000
   },
@@ -34,10 +34,10 @@
       },
       "inventoryStackCount": 8,
       "lastCommandSeq": 1,
-      "playerGold": 999997,
+      "playerGold": 999996,
       "playerPosition": {
-        "x": 32,
-        "y": 13
+        "x": 83,
+        "y": 30
       },
       "revision": 1,
       "shops": {
@@ -46,7 +46,7 @@
           "visited": true
         }
       },
-      "stateHash": "1bb36b67f7db06a850e405df2178d5961c3eed54bf61fd68158885320d0081c4",
+      "stateHash": "44510519a03e3b7c1285592d5b303d73f2b06aa095e230e3219f96c45c5086d1",
       "turn": 1
     },
     "events": [
@@ -54,13 +54,13 @@
         "kind": "shop.purchase",
         "messageKey": "shop-purchase-success",
         "args": {
-          "balance": "999997",
+          "balance": "999996",
           "item": "generated.item.1",
           "quantity": "1",
           "shop": "demo.shop.outpost-general-store",
           "target": "demo.item.ration-of-food",
-          "totalPrice": "3",
-          "unitPrice": "3"
+          "totalPrice": "4",
+          "unitPrice": "4"
         }
       }
     ]

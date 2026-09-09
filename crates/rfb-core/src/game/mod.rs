@@ -107,6 +107,7 @@ mod abilities;
 mod ability_projection;
 mod ability_scaling;
 mod bounty;
+mod casino;
 pub(crate) use bounty::BountyOfficeOutcome;
 mod capabilities;
 mod capture_ball;
@@ -126,8 +127,6 @@ mod item_combat;
 mod item_curses;
 mod item_knowledge;
 mod item_use;
-// E8.1 supplies COST_REAL; value-gated generation is enabled by E8.2/E8.5/E8.6.
-#[allow(dead_code)]
 mod item_value;
 mod lighting;
 mod loot;
@@ -138,6 +137,7 @@ mod monster_ai;
 mod monster_combat;
 mod monster_ecology;
 mod movement;
+mod museum;
 // M2 deliberately establishes this core transaction boundary before any item
 // effect is allowed to call it; Polymorph remains blocked until its own batch.
 #[allow(dead_code)]
@@ -156,6 +156,7 @@ mod status_effects;
 mod tasks;
 mod terrain;
 pub(crate) mod town;
+pub use museum::SharedMuseum;
 mod trait_details;
 mod travel;
 mod turn;
@@ -230,7 +231,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 116;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 117;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -484,6 +485,7 @@ fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHost
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct DungeonState {
     suppressed: bool,
+    recall_floor_id: Option<String>,
     guardian_defeated: bool,
     entrance_guardian_defeated: bool,
     next_instance_ordinal: u32,
@@ -500,6 +502,7 @@ fn base_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<String,
                 dungeon.id.clone(),
                 DungeonState {
                     suppressed: false,
+                    recall_floor_id: None,
                     guardian_defeated: false,
                     entrance_guardian_defeated: false,
                     next_instance_ordinal: 0,
@@ -827,6 +830,7 @@ pub struct Game {
     terrain: Vec<String>,
     glow: Vec<bool>,
     daylight_suppressed: Vec<bool>,
+    vault_cells: Vec<bool>,
     player_name: String,
     player: Actor,
     riding_actor_id: Option<String>,
@@ -844,6 +848,8 @@ pub struct Game {
     entities: Vec<Actor>,
     items: Vec<ItemInstance>,
     gold: u32,
+    fame: u16,
+    casino: Option<rfb_protocol::CasinoStateSaveDto>,
     nutrition: u16,
     fasting: bool,
     gold_piles: Vec<GoldPile>,
@@ -944,6 +950,14 @@ impl Game {
             )
         {
             return Err(CoreError::AbilityDirectionUnavailable);
+        }
+        if self.casino.is_some()
+            && !matches!(
+                action,
+                GameAction::Casino { .. } | GameAction::SetInterfaceLocale { .. }
+            )
+        {
+            return Err(CoreError::CasinoInProgress);
         }
         if race_mutation_choice_pending && !matches!(action, GameAction::ChooseRaceMutation { .. })
         {
@@ -1129,7 +1143,12 @@ impl Game {
                     | GameAction::EnterWorldMap { .. }
                     | GameAction::IdentifyAtFacility { .. }
                     | GameAction::ResearchItemAtFacility { .. }
+                    | GameAction::ResearchMonsterAtFacility { .. }
+                    | GameAction::TeleportToDungeonLevelAtFacility { .. }
+                    | GameAction::EatAtInn { .. }
+                    | GameAction::AskReputationAtInn { .. }
                     | GameAction::IdentifyAllAtFacility { .. }
+                    | GameAction::Casino { .. }
                     | GameAction::UseFacilityService { .. }
                     | GameAction::UseBountyOffice { .. }
                     | GameAction::IncreaseAttribute { .. }
@@ -1359,14 +1378,27 @@ impl Game {
                     }),
                 }
             }
+            GameAction::Casino {
+                facility_id,
+                action,
+            } => {
+                if let Err(reason) = self.casino_action(&facility_id, action, &mut events) {
+                    events.push(DomainEvent::CasinoUnavailable {
+                        facility_id,
+                        reason: reason.to_owned(),
+                    });
+                }
+            }
             GameAction::UseFacilityService {
                 facility_id,
                 service,
                 item_id,
+                enchantment_steps,
             } => match self.use_town_facility_service(
                 &facility_id,
                 service,
                 item_id.as_deref(),
+                enchantment_steps,
                 &mut events,
             ) {
                 Ok(outcome) => events.push(DomainEvent::FacilityServiceCompleted { outcome }),
@@ -1393,6 +1425,49 @@ impl Game {
                     Ok(outcome) => events.push(DomainEvent::FacilityPlayerRenamed { outcome }),
                     Err(reason) => events.push(DomainEvent::FacilityRenameUnavailable {
                         facility_id,
+                        reason: reason.to_owned(),
+                    }),
+                }
+            }
+            GameAction::EatAtInn { facility_id } => {
+                if let Err(reason) = self.eat_at_inn(&facility_id, &mut events) {
+                    events.push(DomainEvent::InnFoodUnavailable {
+                        facility_id,
+                        reason: reason.to_owned(),
+                    });
+                }
+            }
+            GameAction::AskReputationAtInn { facility_id } => {
+                if let Err(reason) = self.ask_reputation_at_inn(&facility_id, &mut events) {
+                    events.push(DomainEvent::InnReputationUnavailable {
+                        facility_id,
+                        reason: reason.to_owned(),
+                    });
+                }
+            }
+            GameAction::ResearchMonsterAtFacility {
+                facility_id,
+                actor_kind_id,
+            } => {
+                if let Err(reason) =
+                    self.research_monster_at_facility(&facility_id, &actor_kind_id, &mut events)
+                {
+                    events.push(DomainEvent::MonsterResearchUnavailable {
+                        facility_id,
+                        reason: reason.to_owned(),
+                    });
+                }
+            }
+            GameAction::TeleportToDungeonLevelAtFacility {
+                facility_id,
+                dungeon_id,
+                depth,
+            } => {
+                match self.teleport_to_dungeon_level_at_facility(&facility_id, &dungeon_id, depth) {
+                    Ok(outcome) => events.push(DomainEvent::FacilityServiceCompleted { outcome }),
+                    Err(reason) => events.push(DomainEvent::FacilityServiceUnavailable {
+                        facility_id,
+                        service: rfb_protocol::FacilityServiceKindDto::Recall,
                         reason: reason.to_owned(),
                     }),
                 }
@@ -4196,6 +4271,7 @@ impl Game {
             .get_mut(task_id)
             .expect("paused task state must remain available");
         *state = abandoned_task_state(state, initial_required);
+        self.fame_on_failure();
         Some(changed.into_iter().collect())
     }
 

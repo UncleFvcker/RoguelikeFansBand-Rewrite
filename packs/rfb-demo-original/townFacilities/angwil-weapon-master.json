@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.angwil-weapon-master",
+  "nameKey": "town-facility-demo-angwil-weapon-master-name",
+  "descriptionKey": "town-facility-demo-angwil-weapon-master-description",
+  "townId": "demo.town.angwil",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-angwil-weapon-master-owner-name",
+  "entrancePosition": {
+    "x": 43,
+    "y": 33
+  },
+  "entranceTerrainId": "demo.terrain.weapon-master-entrance",
+  "serviceActions": [
+    {
+      "kind": "assess-armor",
+      "ownerCost": 400,
+      "otherCost": 400
+    }
+  ]
+}

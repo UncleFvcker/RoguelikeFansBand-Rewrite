@@ -61,6 +61,10 @@
   "rfbValue": {
     "flags": [
       "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
       "RES_DARK",
       "RES_LITE",
       "SEE_INVIS"

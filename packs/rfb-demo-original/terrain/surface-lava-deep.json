@@ -8,5 +8,5 @@
   "walkable": false,
   "blocksSight": false,
   "movementModes": ["fly"],
-  "tags": ["outdoor", "surface", "lava", "deep", "volcano"]
+  "tags": ["projectable", "no-item-drop", "outdoor", "surface", "lava", "deep", "volcano"]
 }

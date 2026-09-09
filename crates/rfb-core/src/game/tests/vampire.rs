@@ -5,8 +5,8 @@ use super::*;
 const VAMPIRE: &str = "rfb-legacy.race.vampire";
 const HUMAN: &str = "demo.race.rfb-human";
 const BITE: &str = "rfb.ability.race.vampirism";
-const START: Position = Position { x: 48, y: 16 };
-const EAST: Position = Position { x: 49, y: 16 };
+const START: Position = Position { x: 99, y: 33 };
+const EAST: Position = Position { x: 100, y: 33 };
 
 fn native(race: &str) -> Game {
     let mut game = Game::new_with_build(83, "demo.build.high-mage-death").unwrap();
@@ -14,8 +14,8 @@ fn native(race: &str) -> Game {
     // Explicit post-conversion precondition; this neither opens birth nor implements change_race.
     game.build.as_mut().unwrap().race_id = race.to_owned();
     game.player.position = START;
-    for y in 14..=18 {
-        for x in 46..=52 {
+    for y in 31..=35 {
+        for x in 97..=103 {
             replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
         }
     }

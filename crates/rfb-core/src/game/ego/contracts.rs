@@ -80,6 +80,7 @@ fn export_ego_desktop_acceptance_save() {
         content_id: snapshot.content_id,
         content_hash: snapshot.content_hash,
         payload_encoding: "messagepack".into(),
+        museum_binding: None,
     };
     let bytes = rfb_save::encode(&header, &game.to_save()).unwrap();
     let (_, payload) = rfb_save::decode(&bytes).unwrap();

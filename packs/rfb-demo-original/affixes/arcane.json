@@ -375,7 +375,7 @@
         "deviceCheckDifficulty": 25,
         "effect": {
           "effect": {
-            "maximumWeightTenthsPound": 3750,
+            "maximumWeightTenthsPound": 175,
             "type": "fetch-item"
           },
           "type": "ability-effect"
@@ -399,7 +399,7 @@
             "entity"
           ],
           "range": 18,
-          "requiresLineOfEffect": true
+          "requiresLineOfEffect": false
         },
         "weight": 127
       },

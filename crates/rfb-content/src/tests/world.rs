@@ -3,6 +3,291 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn angwil_inherits_forest_and_preserves_unopened_entrances() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let floor = artifact.content.worlds[0]
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.angwil")
+        .unwrap();
+    assert_eq!((floor.width, floor.height), (112, 54));
+    let map = floor.inline_map.as_ref().unwrap();
+    assert!(map.inherit_wilderness_terrain);
+    let tiles = map
+        .terrain_overrides
+        .iter()
+        .flat_map(|entry| {
+            entry
+                .positions
+                .iter()
+                .map(|p| ((p.x, p.y), entry.terrain_id.as_str()))
+        })
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(tiles.len(), 1854);
+    assert!(!tiles.contains_key(&(0, 0)));
+    for (position, terrain) in [
+        ((1, 8), "demo.terrain.surface-tree"),
+        ((67, 49), "demo.terrain.surface-tree"),
+        ((40, 52), "demo.terrain.surface-tree"),
+        ((5, 4), "demo.terrain.surface-grass"),
+        ((53, 2), "demo.terrain.permanent-wall"),
+        ((28, 44), "demo.terrain.dirt"),
+        ((35, 22), "demo.terrain.permanent-wall"),
+        ((24, 9), "demo.terrain.casino-entrance"),
+        ((24, 5), "demo.terrain.inn-entrance"),
+    ] {
+        assert_eq!(tiles[&position], terrain);
+    }
+    let mut content = artifact.content.clone();
+    let non_town = content.worlds[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|floor| floor.lifecycle != FloorLifecycle::Town && floor.inline_map.is_some())
+        .unwrap();
+    non_town
+        .inline_map
+        .as_mut()
+        .unwrap()
+        .inherit_wilderness_terrain = true;
+    let invalid_id = non_town.id.clone();
+    assert!(
+        matches!(validate_and_normalize(&mut content), Err(ContentError::InvalidProceduralFloor(id)) if id == invalid_id)
+    );
+    let mut content = artifact.content;
+    let location = content.worlds[0].wilderness.as_mut().unwrap().locations.iter_mut()
+        .find(|location| matches!(location, WildernessLocationDefinition::Town {town_id, ..} if town_id == "demo.town.angwil")).unwrap();
+    if let WildernessLocationDefinition::Town { map_origin, .. } = location {
+        map_origin.x = 100;
+    }
+    assert!(
+        matches!(validate_and_normalize(&mut content), Err(ContentError::InvalidTown(id)) if id == "demo.town.angwil")
+    );
+}
+
+#[test]
+fn telmora_keeps_the_full_map_and_unopened_quest_terrain() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let floor = artifact.content.worlds[0]
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.telmora")
+        .unwrap();
+    assert_eq!((floor.width, floor.height), (198, 66));
+    let map = floor.inline_map.as_ref().unwrap();
+    let tiles = map
+        .terrain_overrides
+        .iter()
+        .flat_map(|entry| {
+            entry
+                .positions
+                .iter()
+                .map(|position| ((position.x, position.y), entry.terrain_id.as_str()))
+        })
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(tiles.len(), 198 * 66);
+    // t_telmo.txt quest defaults remain closed while the T2 casino is open.
+    for (position, terrain) in [
+        ((47, 25), "demo.terrain.floor"),
+        ((197, 0), "demo.terrain.floor"),
+        ((3, 14), "demo.terrain.permanent-wall"),
+        ((133, 14), "demo.terrain.permanent-wall"),
+        ((194, 30), "demo.terrain.surface-grass"),
+        ((175, 18), "demo.terrain.surface-lava-deep"),
+        ((99, 8), "demo.terrain.permanent-wall"),
+        ((157, 58), "demo.terrain.permanent-wall"),
+        ((192, 14), "demo.terrain.surface-mountain"),
+        ((187, 35), "demo.terrain.surface-mountain"),
+        ((58, 46), "demo.terrain.casino-entrance"),
+    ] {
+        assert_eq!(tiles[&position], terrain);
+    }
+    for x in 41..=44 {
+        assert_eq!(tiles[&(x, 21)], "demo.terrain.permanent-wall");
+    }
+    // Unassigned spaces leave the source TERRAIN_TOWN background (FLOOR).
+    assert_eq!(tiles[&(130, 0)], "demo.terrain.floor");
+    let museum = artifact
+        .content
+        .town_facilities
+        .iter()
+        .find(|facility| facility.id == "demo.town-facility.telmora-museum")
+        .unwrap();
+    assert!(museum.reject_artifact_deposits);
+    assert_eq!(
+        museum.storage_id.as_deref(),
+        Some("demo.town-facility.thalos-museum")
+    );
+}
+
+#[test]
+fn morivant_full_map_preserves_both_castle_doors_and_validates_additional_entrances() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let world = &artifact.content.worlds[0];
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.morivant")
+        .unwrap();
+    assert_eq!((floor.width, floor.height), (198, 66));
+    let map = floor.inline_map.as_ref().unwrap();
+    assert_eq!(
+        map.terrain_overrides
+            .iter()
+            .map(|entry| entry.positions.len())
+            .sum::<usize>(),
+        198 * 66
+    );
+    let castle_id = "demo.town-facility.morivant-castle";
+    let castle = artifact
+        .content
+        .town_facilities
+        .iter()
+        .find(|facility| facility.id == castle_id)
+        .unwrap();
+    assert_eq!(
+        castle.entrance_positions().collect::<Vec<_>>(),
+        [
+            ContentPosition { x: 153, y: 18 },
+            ContentPosition { x: 153, y: 19 }
+        ]
+    );
+    for invalid in [
+        ContentPosition { x: 153, y: 18 },
+        ContentPosition { x: 99, y: 38 },
+    ] {
+        let mut content = artifact.content.clone();
+        content
+            .town_facilities
+            .iter_mut()
+            .find(|facility| facility.id == castle_id)
+            .unwrap()
+            .additional_entrance_positions = vec![invalid];
+        assert!(
+            matches!(validate_and_normalize(&mut content), Err(ContentError::InvalidTownFacility(id)) if id == castle_id)
+        );
+    }
+}
+
+#[test]
+fn morivant_snakes_map_and_find_artifact_match_rfb_master() {
+    // master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: q_info N:51, q_snakes.txt.
+    // ':' retains the default FLOOR; '+' is the historical secret-door glyph (rooms.c).
+    let rows = [
+        "################################",
+        "####-,,,,------,,,,-----------##",
+        "##-,,,,c----####;;;##;;;;##-;-##",
+        "#---;;------#acadacdcadaca#--b-#",
+        "#------;;;--;babcbdkdbcbab;--;-#",
+        "#-,,--------#acabacdcabaca#--;-#",
+        "#---;;;;----;##;;;#+#;;##;#-;;-#",
+        "#--b,,------,,,,,--c--,,,---a--#",
+        "#-------:::::-:::---;-----;;---#",
+        "#----------,,,--------;;d-----##",
+        "#<-----;;;;-------------;;;;-###",
+        "################################",
+    ];
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .unwrap();
+    let task = world
+        .tasks
+        .iter()
+        .find(|task| task.id == "demo.task.morivant-snakes")
+        .unwrap();
+    assert_eq!(
+        task.source_facility_id.as_deref(),
+        Some("demo.town-facility.morivant-castle")
+    );
+    assert!(task.reward.is_none());
+    let [objective] = task.objectives.as_slice() else {
+        panic!("one FIND_ART goal")
+    };
+    assert_eq!(objective.kind, TaskObjectiveKind::CollectItem);
+    assert_eq!(
+        objective.item_kind_id.as_deref(),
+        Some("demo.item.dr-jones-whip")
+    );
+    assert!(objective.item_instance_id.is_none());
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.morivant-snakes")
+        .unwrap();
+    assert_eq!((floor.width, floor.height, floor.depth), (32, 12, 15));
+    assert_eq!(floor.return_floor_id, "demo.floor.morivant");
+    assert_eq!(floor.lifecycle, FloorLifecycle::OneShot);
+    assert!(!floor.retakeable);
+    let map = floor.inline_map.as_ref().unwrap();
+    assert_eq!(map.player_position, ContentPosition { x: 1, y: 10 });
+    assert_eq!(map.actor_spawns.len(), 44);
+    let [whip] = map.item_spawns.as_slice() else {
+        panic!("one fixed artifact")
+    };
+    assert_eq!(whip.kind_id, "demo.item.dr-jones-whip");
+    assert_eq!(whip.position, ContentPosition { x: 19, y: 4 });
+    for (y, row) in rows.iter().enumerate() {
+        assert_eq!(row.len(), 32);
+        for (x, glyph) in row.chars().enumerate() {
+            let position = ContentPosition {
+                x: x as u16,
+                y: y as u16,
+            };
+            let expected = match glyph {
+                '#' => "permanent-wall",
+                '-' => "surface-grass",
+                ',' => "dirt",
+                ';' => "rubble",
+                '+' => "door-secret",
+                '<' => "stairs-up",
+                _ => "floor",
+            };
+            let terrain = map
+                .terrain_overrides
+                .iter()
+                .find(|entry| entry.positions.contains(&position))
+                .map_or(floor.wall_terrain_id.as_str(), |entry| {
+                    entry.terrain_id.as_str()
+                });
+            assert_eq!(terrain, format!("demo.terrain.{expected}"), "at {x},{y}");
+            let actor_kind = match glyph {
+                'a' => Some("copperhead-snake"),
+                'b' => Some("rattlesnake"),
+                'c' => Some("king-cobra"),
+                'd' => Some("black-mamba"),
+                _ => None,
+            };
+            if let Some(kind) = actor_kind {
+                assert!(
+                    map.actor_spawns
+                        .iter()
+                        .any(|actor| actor.position == position
+                            && actor.kind_id == format!("demo.actor.{kind}"))
+                );
+            }
+        }
+    }
+    let entry_id = floor.entry_terrain_id.as_ref().unwrap();
+    assert!(
+        world
+            .terrain_overrides
+            .iter()
+            .all(|entry| &entry.terrain_id != entry_id)
+    );
+    assert!(
+        world
+            .procedural_floors
+            .iter()
+            .filter_map(|floor| floor.inline_map.as_ref())
+            .flat_map(|map| &map.terrain_overrides)
+            .all(|entry| &entry.terrain_id != entry_id)
+    );
+}
+
+#[test]
 fn loot_table_allocations_and_quality_sources_are_validated() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
 
@@ -165,6 +450,32 @@ fn loot_table_allocations_and_quality_sources_are_validated() {
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidLootTable(_))
+        ));
+    }
+}
+
+#[test]
+fn town_quest_returns_require_a_surface_and_unique_entry() {
+    let content = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for invalid_return in [false, true] {
+        let mut invalid = content.clone();
+        let floor = invalid
+            .worlds
+            .iter_mut()
+            .find(|world| world.id == "demo.world.middle-earth")
+            .unwrap()
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.morivant-snakes")
+            .unwrap();
+        if invalid_return {
+            floor.return_floor_id = "demo.floor.warrens-depth-1".to_owned();
+        } else {
+            floor.entry_terrain_id = Some("demo.terrain.thieves-hideout-entry".to_owned());
+        }
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidWorldDimensions(_) | ContentError::InvalidProceduralFloor(_))
         ));
     }
 }
@@ -6135,7 +6446,7 @@ fn special_layout_dungeon_bindings_match_source() {
                 matches!(
                     location,
                     WildernessLocationDefinition::Dungeon {
-                        position: ContentPosition { x: 40, y: 37 },
+                        position: ContentPosition { x: 37, y: 40 },
                         dungeon_id,
                     } if dungeon_id == "demo.dungeon.crystal-castle"
                 )
@@ -10024,18 +10335,33 @@ fn town_entrances_and_shared_facilities_match_source() {
             [
                 WildernessLocationDefinition::Town {
                     position: ContentPosition { x: 17, y: 29 },
-                    map_origin: ContentPosition { x: 37, y: 6 },
+                    map_origin: ContentPosition { x: 88, y: 23 },
                     town_id: "demo.town.thalos".to_owned(),
                 },
                 WildernessLocationDefinition::Town {
                     position: ContentPosition { x: 26, y: 39 },
-                    map_origin: ContentPosition { x: 27, y: 6 },
+                    map_origin: ContentPosition { x: 78, y: 23 },
                     town_id: "demo.town.anambar".to_owned(),
                 },
                 WildernessLocationDefinition::Town {
                     position: ContentPosition { x: 28, y: 52 },
-                    map_origin: ContentPosition { x: 0, y: 0 },
+                    map_origin: ContentPosition { x: 51, y: 17 },
                     town_id: "demo.town.outpost".to_owned(),
+                },
+                WildernessLocationDefinition::Town {
+                    position: ContentPosition { x: 47, y: 50 },
+                    map_origin: ContentPosition { x: 0, y: 0 },
+                    town_id: "demo.town.morivant".to_owned(),
+                },
+                WildernessLocationDefinition::Town {
+                    position: ContentPosition { x: 74, y: 23 },
+                    map_origin: ContentPosition { x: 0, y: 0 },
+                    town_id: "demo.town.angwil".to_owned(),
+                },
+                WildernessLocationDefinition::Town {
+                    position: ContentPosition { x: 87, y: 49 },
+                    map_origin: ContentPosition { x: 0, y: 0 },
+                    town_id: "demo.town.telmora".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 5, y: 48 },
@@ -10082,7 +10408,7 @@ fn town_entrances_and_shared_facilities_match_source() {
                     dungeon_id: "demo.dungeon.troll-cave".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
-                    position: ContentPosition { x: 40, y: 37 },
+                    position: ContentPosition { x: 37, y: 40 },
                     dungeon_id: "demo.dungeon.crystal-castle".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
@@ -10392,7 +10718,7 @@ fn town_entrances_and_shared_facilities_match_source() {
                 location,
                 WildernessLocationDefinition::Town {
                     position: ContentPosition { x: 17, y: 29 },
-                    map_origin: ContentPosition { x: 37, y: 6 },
+                    map_origin: ContentPosition { x: 88, y: 23 },
                     town_id,
                 } if town_id == "demo.town.thalos"
             )
@@ -12949,6 +13275,7 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
     floor.abandoned_entry_terrain_id = None;
     floor.task_id = None;
     floor.inline_map = Some(InlineFloorMapDefinition {
+        inherit_wilderness_terrain: false,
         player_position: ContentPosition { x: 1, y: 1 },
         terrain_overrides: vec![
             InlineTerrainOverrideDefinition {
@@ -12992,7 +13319,7 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
                 x: wilderness.start_position.x + 1,
                 y: wilderness.start_position.y,
             },
-            map_origin: ContentPosition { x: 45, y: 15 },
+            map_origin: ContentPosition { x: 96, y: 32 },
             town_id: town_id.to_owned(),
         });
 
@@ -13024,7 +13351,7 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
     };
 
     let mut invalid_origin = content.clone();
-    set_second_town_origin(&mut invalid_origin, ContentPosition { x: 93, y: 31 });
+    set_second_town_origin(&mut invalid_origin, ContentPosition { x: 195, y: 64 });
     assert!(matches!(
         validate_and_normalize(&mut invalid_origin),
         Err(ContentError::InvalidTown(id)) if id == town_id
@@ -13102,7 +13429,13 @@ fn anambar_service_roles_and_rewards_match_source() {
         );
         assert_eq!(library.identify_item_cost, Some(50));
         assert_eq!(library.research_item_cost, Some(1_300));
-        assert_eq!(library.identify_all_items_cost, Some(350));
+        assert_eq!(
+            library.identify_all_items_cost,
+            Some(TownFacilityPrice {
+                owner_cost: 350,
+                other_cost: 350,
+            })
+        );
         assert_eq!(
             library.overview_message_key.as_deref(),
             Some("town-facility-demo-anambar-library-overview")

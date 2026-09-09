@@ -46,6 +46,26 @@
       ],
       "type": "string"
     },
+    "TownFacilityPrice": {
+      "additionalProperties": false,
+      "properties": {
+        "otherCost": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "ownerCost": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ownerCost",
+        "otherCost"
+      ],
+      "type": "object"
+    },
     "TownFacilityServiceDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -92,6 +112,13 @@
     "$schema": {
       "type": "string"
     },
+    "additionalEntrancePositions": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ContentPosition"
+      },
+      "type": "array"
+    },
     "bountyOffice": {
       "anyOf": [
         {
@@ -102,6 +129,10 @@
         }
       ],
       "default": null
+    },
+    "casino": {
+      "default": false,
+      "type": "boolean"
     },
     "category": {
       "$ref": "#/$defs/TownFacilityCategory"
@@ -125,13 +156,15 @@
       "type": "string"
     },
     "identifyAllItemsCost": {
-      "default": null,
-      "format": "uint32",
-      "minimum": 0,
-      "type": [
-        "integer",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TownFacilityPrice"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "identifyItemCost": {
       "default": null,
@@ -141,6 +174,17 @@
         "integer",
         "null"
       ]
+    },
+    "innStayCost": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TownFacilityPrice"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "legalNameChangeCost": {
       "default": null,
@@ -223,6 +267,17 @@
         "null"
       ]
     },
+    "researchMonsterCost": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TownFacilityPrice"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "serviceActions": {
       "default": [],
       "items": {
@@ -243,6 +298,17 @@
         "type": "string"
       },
       "type": "array"
+    },
+    "teleportLevelCost": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TownFacilityPrice"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "townId": {
       "type": "string"

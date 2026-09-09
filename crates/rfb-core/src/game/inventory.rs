@@ -71,6 +71,7 @@ pub(super) struct ItemEnchantmentRequest {
     to_hit_attempts: u16,
     to_damage_attempts: u16,
     to_armor_attempts: u16,
+    forced: bool,
 }
 
 impl ItemEnchantmentRequest {
@@ -83,7 +84,13 @@ impl ItemEnchantmentRequest {
             to_hit_attempts,
             to_damage_attempts,
             to_armor_attempts,
+            forced: false,
         }
+    }
+
+    pub(super) fn forced(mut self) -> Self {
+        self.forced = true;
+        self
     }
 }
 
@@ -1414,6 +1421,8 @@ impl Game {
         let ammunition = definition.tags.iter().any(|tag| tag == "ammunition");
         let resists_enchantment = self.item_resists_enchantment(item);
         let before = item.enchantments;
+        let total_before = request.forced.then(|| self.item_total_enchantments(item));
+        let mut curse = item.curse;
 
         if resists_enchantment {
             let unchanged = |attempts, before| ItemEnchantmentComponentOutcome {
@@ -1437,6 +1446,7 @@ impl Game {
             quantity,
             ammunition,
             artifact,
+            request.forced,
         );
         let to_damage = self.resolve_item_enchantment_component(
             before.to_damage,
@@ -1444,6 +1454,7 @@ impl Game {
             quantity,
             ammunition,
             artifact,
+            request.forced,
         );
         let to_armor = self.resolve_item_enchantment_component(
             before.to_armor,
@@ -1451,12 +1462,31 @@ impl Game {
             quantity,
             ammunition,
             artifact,
+            request.forced,
         );
-        self.items
+        if let Some(total) = total_before {
+            for (before, successes) in [
+                (total.to_hit, to_hit.successes),
+                (total.to_damage, to_damage.successes),
+                (total.to_armor, to_armor.successes),
+            ] {
+                for step in 1..=successes {
+                    if i32::from(before) + i32::from(step) >= 0
+                        && curse == Some(ItemCurseSeverityDto::Normal)
+                        && self.rng.bounded(100) < 25
+                    {
+                        curse = None;
+                    }
+                }
+            }
+        }
+        let item = self
+            .items
             .iter_mut()
             .find(|item| item.id == item_id)
-            .expect("planned enchantment target must remain available")
-            .enchantments = ItemEnchantmentsDto {
+            .expect("planned enchantment target must remain available");
+        item.curse = curse;
+        item.enchantments = ItemEnchantmentsDto {
             to_hit: to_hit.after,
             to_damage: to_damage.after,
             to_armor: to_armor.after,
@@ -1477,11 +1507,21 @@ impl Game {
         quantity: u32,
         ammunition: bool,
         artifact: bool,
+        forced: bool,
     ) -> ItemEnchantmentComponentOutcome {
         const FAILURE_PER_THOUSAND: [u16; 16] = [
             5, 10, 50, 100, 200, 300, 400, 500, 650, 800, 950, 987, 993, 995, 998, 1000,
         ];
         let mut after = before;
+        if forced {
+            after = (i32::from(before) + i32::from(attempts)).min(i32::from(i16::MAX)) as i16;
+            return ItemEnchantmentComponentOutcome {
+                attempts,
+                successes: (i32::from(after) - i32::from(before)) as u16,
+                before,
+                after,
+            };
+        }
         let pile_probability = if ammunition {
             u64::from(quantity).saturating_mul(100) / 20
         } else {

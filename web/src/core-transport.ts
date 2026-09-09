@@ -13,7 +13,7 @@ export interface CoreTransport {
   initialize(request: NewSessionRequest): Promise<GameSnapshot>;
   dispatch(command: GameCommand): Promise<GameUpdate>;
   save(): Promise<Uint8Array>;
-  load(data: Uint8Array): Promise<GameSnapshot>;
+  load(data: Uint8Array): Promise<{ snapshot: GameSnapshot; museumRecovered: boolean }>;
   exportReplay(): Promise<Uint8Array>;
   dispose(): void;
 }

@@ -12,6 +12,7 @@ const SNOTLING_RACE_ID: &str = "rfb-legacy.race.snotling";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum ItemUsePlan {
+    CancelledActivation,
     AbilityEffect {
         ability: Box<AbilityDefinition>,
         target_plan: AbilityTargetPlan,
@@ -2732,6 +2733,11 @@ impl Game {
             } else {
                 0
             };
+        // RFB checks an equipment activation before asking for its direction.
+        // Cancelling that attempt keeps the spent turn/check, but not the cooldown.
+        if matches!(plan, ItemUsePlan::CancelledActivation) {
+            return Ok(());
+        }
         if let Some(cost) = cost {
             self.items[index]
                 .charges
@@ -2804,6 +2810,14 @@ impl Game {
                 damage: Some(damage),
             } => {
                 *damage = device_power_value(u64::from(*damage), bonus) as u16;
+            }
+            AbilityEffectDefinition::FetchItem {
+                maximum_weight_tenths_pound,
+            } => {
+                *maximum_weight_tenths_pound = u32::try_from(
+                    u64::from(*maximum_weight_tenths_pound) * device_power_value(100, bonus) / 100,
+                )
+                .expect("device fetch weight must fit u32");
             }
             AbilityEffectDefinition::Heal { amount } => {
                 *amount = device_power_value(u64::from(*amount), bonus) as u32;
@@ -3430,6 +3444,11 @@ impl Game {
                 affects_ground_items,
             } => {
                 let target_definition = target_definition?.clone();
+                if target.is_none()
+                    && matches!(effect.as_ref(), AbilityEffectDefinition::FetchItem { .. })
+                {
+                    return Some(ItemUsePlan::CancelledActivation);
+                }
                 let selection = target.cloned().unwrap_or(TargetSelection::SelfTarget);
                 let ability = AbilityDefinition {
                     schema: rfb_content::ABILITY_SCHEMA.to_owned(),

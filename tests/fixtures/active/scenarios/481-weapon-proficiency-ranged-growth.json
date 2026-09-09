@@ -9,8 +9,8 @@
     "world": "demo.world.middle-earth",
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
-      "x": 44,
-      "y": 16
+      "x": 95,
+      "y": 33
     },
     "entities": [
       {
@@ -18,8 +18,8 @@
         "kindId": "demo.actor.adobe-golem",
         "experience": 0,
         "position": {
-          "x": 46,
-          "y": 16
+          "x": 97,
+          "y": 33
         },
         "hp": 84,
         "maxHp": 84,
@@ -56,12 +56,12 @@
         }
       },
       "playerPosition": {
-        "x": 44,
-        "y": 16
+        "x": 95,
+        "y": 33
       },
       "revision": 1,
       "rngDrawCounter": 194,
-      "stateHash": "c96d09604240056e2510c54ac4c2d004a9c23fd8e5ab8eaf169291b44fbc5a25",
+      "stateHash": "1075287192d43e0877c72422415ba7fd71400f657a2c405690e66405119f084f",
       "turn": 1
     },
     "events": [
@@ -73,25 +73,25 @@
         },
         "trace": {
           "origin": {
-            "x": 44,
-            "y": 16
+            "x": 95,
+            "y": 33
           },
           "impact": {
-            "x": 46,
-            "y": 16
+            "x": 97,
+            "y": 33
           },
           "landing": {
-            "x": 46,
-            "y": 16
+            "x": 97,
+            "y": 33
           },
           "traversed": [
             {
-              "x": 45,
-              "y": 16
+              "x": 96,
+              "y": 33
             },
             {
-              "x": 46,
-              "y": 16
+              "x": 97,
+              "y": 33
             }
           ]
         }

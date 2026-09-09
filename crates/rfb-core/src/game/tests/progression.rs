@@ -844,8 +844,8 @@ fn ent_and_wood_elf_tree_travel_preserves_normal_cost_on_foot_and_mounted() {
         for mounted in [false, true] {
             let mut game = ent_passive_game(false);
             game.player.statuses[0].granted_race_id = Some(race.to_owned());
-            let start = Position { x: 48, y: 16 };
-            let target = Position { x: 49, y: 16 };
+            let start = Position { x: 99, y: 33 };
+            let target = Position { x: 100, y: 33 };
             game.player.position = start;
             replace_terrain(&mut game, start, "demo.terrain.floor");
             replace_terrain(&mut game, target, "demo.terrain.surface-tree");
@@ -904,8 +904,8 @@ fn ent_and_wood_elf_tree_travel_preserves_normal_cost_on_foot_and_mounted() {
 #[test]
 fn ent_forest_adaptation_does_not_allow_an_aquatic_mount_onto_land() {
     let mut game = ent_passive_game(false);
-    let start = Position { x: 48, y: 16 };
-    let target = Position { x: 49, y: 16 };
+    let start = Position { x: 99, y: 33 };
+    let target = Position { x: 100, y: 33 };
     game.player.position = start;
     replace_terrain(&mut game, start, "demo.terrain.surface-water-deep");
     replace_terrain(&mut game, target, "demo.terrain.surface-tree");
@@ -1174,8 +1174,8 @@ fn undead_race_intrinsics_share_cold_unlock_and_temporary_form_lifecycle() {
 
 #[test]
 fn formal_wood_elf_and_temporary_form_cross_trees_without_delay() {
-    let start = Position { x: 48, y: 16 };
-    let target = Position { x: 49, y: 16 };
+    let start = Position { x: 99, y: 33 };
+    let target = Position { x: 100, y: 33 };
 
     let mut wood_elf = wood_elf_game(386);
     clear_monsters(&mut wood_elf);

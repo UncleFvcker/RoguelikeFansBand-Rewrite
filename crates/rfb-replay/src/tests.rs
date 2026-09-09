@@ -114,7 +114,7 @@ fn item_replay_survives_shop_save_reload() {
         .to_save();
     payload.entities.clear();
     payload.carried_items.clear();
-    payload.player.position = Position { x: 32, y: 13 };
+    payload.player.position = Position { x: 83, y: 30 };
     payload
         .shop_states
         .iter_mut()

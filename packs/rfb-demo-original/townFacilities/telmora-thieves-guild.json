@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.telmora-thieves-guild",
+  "nameKey": "town-facility-demo-telmora-thieves-guild-name",
+  "descriptionKey": "town-facility-demo-telmora-thieves-guild-description",
+  "townId": "demo.town.telmora",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-telmora-thieves-guild-owner-name",
+  "entrancePosition": {
+    "x": 58,
+    "y": 50
+  },
+  "entranceTerrainId": "demo.terrain.thieves-guild-entrance",
+  "identifyAllItemsCost": {
+    "ownerCost": 100,
+    "otherCost": 2000
+  },
+  "innStayCost": {
+    "ownerCost": 0,
+    "otherCost": 100
+  }
+}

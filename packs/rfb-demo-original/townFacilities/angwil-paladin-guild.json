@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.angwil-paladin-guild",
+  "nameKey": "town-facility-demo-angwil-paladin-guild-name",
+  "descriptionKey": "town-facility-demo-angwil-paladin-guild-description",
+  "townId": "demo.town.angwil",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-angwil-paladin-guild-owner-name",
+  "entrancePosition": {
+    "x": 78,
+    "y": 23
+  },
+  "entranceTerrainId": "demo.terrain.paladin-guild-entrance",
+  "serviceActions": [
+    {
+      "kind": "enchant-armor",
+      "ownerCost": 240,
+      "otherCost": 440
+    },
+    {
+      "kind": "heal",
+      "ownerCost": 0,
+      "otherCost": 100
+    }
+  ],
+  "ownerClassIds": [
+    "demo.class.paladin"
+  ]
+}

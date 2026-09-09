@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.telmora-warrior-guild",
+  "nameKey": "town-facility-demo-telmora-warrior-guild-name",
+  "descriptionKey": "town-facility-demo-telmora-warrior-guild-description",
+  "townId": "demo.town.telmora",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-telmora-warrior-guild-owner-name",
+  "entrancePosition": {
+    "x": 42,
+    "y": 47
+  },
+  "entranceTerrainId": "demo.terrain.warrior-guild-entrance",
+  "serviceActions": [
+    {
+      "kind": "enchant-weapon",
+      "ownerCost": 0,
+      "otherCost": 0
+    },
+    {
+      "kind": "enchant-armor",
+      "ownerCost": 0,
+      "otherCost": 0
+    }
+  ],
+  "ownerClassIds": [
+    "demo.class.warrior",
+    "demo.class.cavalry"
+  ]
+}

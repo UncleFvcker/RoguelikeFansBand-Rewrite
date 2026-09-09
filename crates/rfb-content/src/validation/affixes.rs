@@ -129,6 +129,9 @@ fn valid_affix_device_generation(generation: &ItemDeviceGenerationDefinition) ->
     let mut ids = BTreeSet::new();
     generation.recovery.is_none_or(valid_recovery)
         && generation.activations.iter().all(|activation| {
+            if activation.rfb_value.is_none() {
+                return false;
+            }
             let mut modes = BTreeSet::new();
             let modes_are_unique = activation
                 .target

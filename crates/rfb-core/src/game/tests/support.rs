@@ -278,7 +278,7 @@ pub(super) fn command(seq: u32, revision: u32, command: GameCommand) -> GameComm
     }
 }
 
-pub(super) fn dispatch_next(game: &mut Game, command_value: GameCommand) -> GameUpdate {
+pub(in crate::game) fn dispatch_next(game: &mut Game, command_value: GameCommand) -> GameUpdate {
     let snapshot = game.snapshot();
     game.dispatch(command(
         snapshot.last_command_seq + 1,

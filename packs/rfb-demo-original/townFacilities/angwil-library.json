@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.angwil-library",
+  "nameKey": "town-facility-demo-angwil-library-name",
+  "descriptionKey": "town-facility-demo-angwil-library-description",
+  "townId": "demo.town.angwil",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-angwil-library-owner-name",
+  "entrancePosition": {
+    "x": 5,
+    "y": 28
+  },
+  "entranceTerrainId": "demo.terrain.library-entrance",
+  "researchItemCost": 1500,
+  "identifyItemCost": 50,
+  "overviewMessageKey": "town-facility-demo-angwil-library-overview"
+}

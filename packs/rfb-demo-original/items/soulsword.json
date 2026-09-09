@@ -52,6 +52,10 @@
     "flags": [
       "BLESSED",
       "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
       "INT",
       "LIFE",
       "RES_CHAOS",

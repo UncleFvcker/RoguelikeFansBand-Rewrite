@@ -669,6 +669,7 @@ impl Game {
         self.bounty_state
             .completed_wanted_actor_kind_ids
             .insert(actor_kind_id.clone());
+        self.fame = self.fame.saturating_add(1);
         Ok(BountyOfficeOutcome::WantedTurnIn {
             actor_kind_id,
             item_kind_id: reward_kind_id,
@@ -767,6 +768,7 @@ impl Game {
                 let reward = self.make_bounty_reward(&reward_kind_id)?;
                 self.grant_bounty_reward(reward);
                 self.bounty_state.mission = None;
+                self.fame = self.fame.saturating_add(1);
                 Ok(BountyOfficeOutcome::MissionRewarded {
                     item_kind_id: reward_kind_id,
                 })

@@ -4,6 +4,8 @@ import type { AppState } from "./app-state";
 import type { Localization } from "./localization";
 import type {
   GameCommand,
+  CasinoActionDto,
+  CasinoGameDto,
   GameEventDto,
   GameSnapshot,
   GameUpdate,
@@ -12,12 +14,21 @@ import type {
   FacilityMembershipDto,
   FacilityServiceKindDto,
   ItemIdentificationDto,
+  ResearchMonsterDto,
   TaskServiceDto,
   TaskStatusDto,
   TaskStatusKindDto,
 } from "./protocol";
 
 export type TaskServiceAction = "accept" | "claim";
+
+export function filterResearchMonsters(monsters: readonly ResearchMonsterDto[], name: string, glyph: string,
+  group: string, displayName: (monster: ResearchMonsterDto) => string): ResearchMonsterDto[] {
+  const query = name.trim().toLocaleLowerCase();
+  return monsters.filter((monster) => (!query || displayName(monster).toLocaleLowerCase().includes(query))
+    && (!glyph || monster.glyph === glyph)
+    && (group === "all" || (group === "unique" ? monster.unique : !monster.unique)));
+}
 
 interface TaskServiceDom {
   readonly dialog: HTMLDialogElement;
@@ -35,6 +46,8 @@ export class TaskServicePanel {
   readonly #dispatch: (command: GameCommand) => Promise<void>;
   readonly #formatEvent: (event: GameEventDto) => string;
   readonly #visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string;
+  readonly #contentName: (id: string) => string;
+  readonly #statusName: (id: string) => string;
   readonly #beforeOpen: () => void;
   readonly #dom: TaskServiceDom;
   #service: TaskServiceDto | undefined;
@@ -42,6 +55,12 @@ export class TaskServicePanel {
   #feedback: GameEventDto | undefined;
   #overviewVisible = false;
   #installed = false;
+  #monsterKindId = "";
+  #monsterName = "";
+  #monsterGlyph = "";
+  #monsterGroup = "all";
+  #teleportDungeonId = "";
+  #teleportDepth = "";
 
   constructor(options: {
     document: Document;
@@ -50,6 +69,8 @@ export class TaskServicePanel {
     dispatch: (command: GameCommand) => Promise<void>;
     formatEvent: (event: GameEventDto) => string;
     visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string;
+    contentName: (id: string) => string;
+    statusName: (id: string) => string;
     beforeOpen: () => void;
   }) {
     this.#state = options.state;
@@ -57,6 +78,8 @@ export class TaskServicePanel {
     this.#dispatch = options.dispatch;
     this.#formatEvent = options.formatEvent;
     this.#visibleItemName = options.visibleItemName;
+    this.#contentName = options.contentName;
+    this.#statusName = options.statusName;
     this.#beforeOpen = options.beforeOpen;
     this.#dom = createTaskServiceDom(options.document);
   }
@@ -66,6 +89,7 @@ export class TaskServicePanel {
     this.#installed = true;
     this.#dom.close.addEventListener("click", this.#close);
     this.#dom.dialog.addEventListener("close", this.#closed);
+    this.#dom.dialog.addEventListener("cancel", this.#cancel);
     this.#dom.list.addEventListener("click", this.#performAction);
   }
 
@@ -74,6 +98,7 @@ export class TaskServicePanel {
     this.#installed = false;
     this.#dom.close.removeEventListener("click", this.#close);
     this.#dom.dialog.removeEventListener("close", this.#closed);
+    this.#dom.dialog.removeEventListener("cancel", this.#cancel);
     this.#dom.list.removeEventListener("click", this.#performAction);
   }
 
@@ -91,6 +116,8 @@ export class TaskServicePanel {
     const changed = this.#service?.id !== service.id;
     this.#service = service;
     if (changed) {
+      this.#teleportDungeonId = "";
+      this.#teleportDepth = "";
       this.#feedback = undefined;
       this.#overviewVisible = false;
     }
@@ -118,11 +145,21 @@ export class TaskServicePanel {
     if (this.#dom.dialog.open) this.#dom.dialog.close();
   }
 
+  readonly #cancel = (event: Event): void => {
+    const session = this.#service?.casino?.session;
+    if (session && (session.round.type !== "finished" || this.#state.busy)) event.preventDefault();
+  };
+
   readonly #close = (): void => {
+    const session = this.#service?.casino?.session;
+    if (session && (session.round.type !== "finished" || this.#state.busy)) return;
     if (this.#dom.dialog.open) this.#dom.dialog.close();
   };
 
   readonly #closed = (): void => {
+    if (this.#service?.casino?.session?.round.type === "finished") {
+      void this.#dispatch({ type: "casino", facilityId: this.#service.id, action: { type: "leave" } });
+    }
     if (this.#service?.playerAtEntrance) this.#dismissedServiceId = this.#service.id;
   };
 
@@ -146,11 +183,22 @@ export class TaskServicePanel {
             itemId: select.value,
           });
         }
+      } else if (action === "research-monster") {
+        if (this.#monsterKindId) void this.#dispatch({
+          type: "research-monster-at-facility", facilityId: service.id, actorKindId: this.#monsterKindId,
+        });
+      } else if (action === "teleport-level") {
+        if (this.#teleportDungeonId && this.#teleportDepth) void this.#dispatch({
+          type: "teleport-to-dungeon-level-at-facility", facilityId: service.id,
+          dungeonId: this.#teleportDungeonId, depth: Number(this.#teleportDepth),
+        });
       } else if (action === "identify-all") {
         void this.#dispatch({
           type: "identify-all-at-facility",
           facilityId: service.id,
         });
+      } else if (action === "stay") {
+        void this.#dispatch({ type: "stay-at-inn", facilityId: service.id });
       } else if (action === "overview") {
         this.#overviewVisible = true;
         this.#renderPanel();
@@ -162,11 +210,13 @@ export class TaskServicePanel {
           const select = this.#dom.list.querySelector<HTMLSelectElement>(
             `select[data-facility-service="${facilityService}"]`,
           );
+          const option = select?.selectedOptions[0];
           void this.#dispatch({
             type: "use-facility-service",
             facilityId: service.id,
             service: facilityService,
-            itemId: select?.value || undefined,
+            itemId: option?.dataset.itemId,
+            enchantmentSteps: option ? Number(option.dataset.steps) : undefined,
           });
         }
       } else if (action === "rename") {
@@ -232,6 +282,7 @@ export class TaskServicePanel {
     const tasks = this.#service?.tasks ?? [];
     this.#dom.list.replaceChildren();
     this.#renderFacilityActions();
+    this.#renderCasino();
     if (tasks.length === 0 && this.#dom.list.childElementCount === 0) {
       const empty = this.#dom.list.ownerDocument.createElement("li");
       empty.className = "task-service-empty";
@@ -242,11 +293,242 @@ export class TaskServicePanel {
     for (const task of tasks) this.#dom.list.append(this.#taskRow(task));
   }
 
+  #renderCasino(): void {
+    const service = this.#service;
+    const casino = service?.casino;
+    const session = casino?.session;
+    this.#dom.close.disabled = this.#state.busy || !!(session && session.round.type !== "finished");
+    if (!casino || !service) return;
+    const document = this.#dom.list.ownerDocument;
+    const row = document.createElement("li");
+    row.className = "task-service-row";
+    const send = (action: CasinoActionDto): void => {
+      if (!this.#state.busy) void this.#dispatch({ type: "casino", facilityId: service.id, action });
+    };
+    const text = (value: string): void => {
+      const p = document.createElement("p"); p.textContent = value; row.append(p);
+    };
+    const button = (key: string, act: () => void): HTMLButtonElement => {
+      const b = document.createElement("button"); b.type = "button";
+      b.textContent = this.#localization.format(key); b.disabled = this.#state.busy;
+      b.addEventListener("click", act); row.append(b); return b;
+    };
+    const label = (key: string, control: HTMLElement): void => {
+      const l = document.createElement("label"); l.textContent = this.#localization.format(key);
+      l.append(control); row.append(l);
+    };
+    const wheel = document.createElement("select");
+    for (let n = 0; n < 10; n++) {
+      const option = document.createElement("option"); option.value = String(n); option.textContent = String(n); wheel.append(option);
+    }
+    wheel.disabled = this.#state.busy;
+    const cards = (values: readonly number[], replace: boolean): (() => number) => {
+      const checks: HTMLInputElement[] = [];
+      values.forEach((card) => {
+        const l = document.createElement("label");
+        l.textContent = card === 52 ? "JOKER" : `${["♣", "♦", "♥", "♠"][Math.floor(card / 13)]}${["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"][card % 13]}`;
+        if (replace) {
+          const check = document.createElement("input"); check.type = "checkbox"; check.disabled = this.#state.busy;
+          l.append(check, this.#localization.format("casino-replace")); checks.push(check);
+        }
+        row.append(l);
+      });
+      return () => checks.reduce((mask, check, i) => mask | (check.checked ? 1 << i : 0), 0);
+    };
+    if (!session) {
+      const game = document.createElement("select");
+      for (const kind of ["in-between", "craps", "roulette", "dice-slots", "poker"] satisfies CasinoGameDto[]) {
+        const option = document.createElement("option"); option.value = kind; option.textContent = this.#localization.format(`casino-${kind}`); game.append(option);
+      }
+      game.disabled = this.#state.busy; label("casino-game", game);
+      const wager = document.createElement("input"); wager.type = "number"; wager.min = "1";
+      wager.max = String(casino.maximumWager); wager.step = "1"; wager.value = "1"; wager.disabled = this.#state.busy;
+      const wagerLabel = document.createElement("label"); wagerLabel.textContent = this.#localization.format("casino-wager", { maximum: casino.maximumWager });
+      wagerLabel.append(wager); row.append(wagerLabel);
+      label("casino-choice", wheel);
+      const updateWheel = (): void => { wheel.parentElement!.hidden = game.value !== "roulette"; };
+      game.addEventListener("change", updateWheel); updateWheel();
+      const start = button("casino-start", () => {
+        if (wager.checkValidity()) send({ type: "start", game: game.value as CasinoGameDto, wager: Number(wager.value),
+          rouletteChoice: game.value === "roulette" ? Number(wheel.value) : undefined });
+      });
+      start.disabled ||= casino.maximumWager < 1;
+    } else {
+      text(this.#localization.format(`casino-${session.game}`));
+      text(this.#localization.format("casino-session", { wager: session.wager, gold: session.startingGold }));
+      const round = session.round;
+      if (round.type === "poker") {
+        const mask = cards(round.cards, true); button("casino-draw", () => send({ type: "draw", replaceMask: mask() }));
+      } else if (round.type === "craps") {
+        text(this.#localization.format("casino-point", { point: round.point })); text(round.dice.join(" · "));
+        button("casino-roll", () => send({ type: "roll" }));
+      } else {
+        if (session.game === "poker") cards(round.values, false);
+        else if (session.game === "dice-slots") text(round.values.map((v) => ["🍋", "🍊", "⚔", "🛡", "🟣", "🍒"][v - 1]).join(" · "));
+        else text(round.values.join(" · "));
+        text(this.#localization.format(round.resultKey));
+        text(this.#localization.format("casino-return", { payout: round.payout, odds: round.odds }));
+        if (session.game === "roulette") label("casino-choice", wheel);
+        const again = button("casino-again", () => send({ type: "again", rouletteChoice: session.game === "roulette" ? Number(wheel.value) : undefined }));
+        again.disabled ||= casino.maximumWager < session.wager;
+        button("casino-leave", () => send({ type: "leave" }));
+      }
+    }
+    const rules = document.createElement("details"); const title = document.createElement("summary");
+    title.textContent = this.#localization.format("casino-rules"); const body = document.createElement("p");
+    body.textContent = this.#localization.format("casino-rules-text"); rules.append(title, body); row.append(rules);
+    this.#dom.list.append(row);
+  }
+
+  #renderMonsterResearch(): void {
+    const service = this.#service;
+    if (service?.researchMonsterCost == null) return;
+    const monsters = service.researchMonsters ?? [];
+    const document = this.#dom.list.ownerDocument;
+    const row = document.createElement("li");
+    row.className = "task-service-row monster-research-row";
+    const name = document.createElement("input");
+    name.type = "search";
+    name.value = this.#monsterName;
+    name.placeholder = this.#localization.format("monster-research-name");
+    name.setAttribute("aria-label", name.placeholder);
+    const glyph = document.createElement("input");
+    glyph.value = this.#monsterGlyph;
+    glyph.maxLength = 1;
+    glyph.placeholder = this.#localization.format("monster-research-glyph");
+    glyph.setAttribute("aria-label", glyph.placeholder);
+    const group = document.createElement("select");
+    group.setAttribute("aria-label", this.#localization.format("monster-research-group"));
+    for (const value of ["all", "unique", "nonunique"]) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = this.#localization.format(`monster-research-${value}`);
+      group.append(option);
+    }
+    group.value = this.#monsterGroup;
+    const select = document.createElement("select");
+    select.setAttribute("aria-label", this.#localization.format("monster-research-target"));
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "primary-button task-service-action";
+    button.dataset.facilityAction = "research-monster";
+    button.textContent = this.#localization.format("action-monster-research", { cost: service.researchMonsterCost });
+    const detail = document.createElement("div");
+    const renderDetail = (): void => {
+      this.#monsterKindId = select.value;
+      const monster = monsters.find((entry) => entry.kindId === select.value);
+      const knowledge = monster?.knowledge;
+      detail.replaceChildren();
+      button.disabled = this.#state.busy || !monster;
+      const line = (key: string, value: string | number): void => {
+        const p = document.createElement("p");
+        p.textContent = `${this.#localization.format(key)}: ${value}`;
+        detail.append(p);
+      };
+      if (!knowledge) {
+        detail.textContent = this.#localization.format(monster ? "monster-research-unseen" : "monster-research-empty");
+        return;
+      }
+      const description = document.createElement("p");
+      description.textContent = this.#localization.format(knowledge.descriptionKey);
+      detail.append(description);
+      line("monster-research-base-hp", knowledge.maxHp);
+      line("monster-probe-speed", knowledge.speed);
+      line("monster-probe-armor-class", knowledge.armorClass);
+      line("monster-probe-resistances", knowledge.resistances.filter((r) => r.level !== "normal")
+        .map((r) => `${this.#localization.format(`damage-type-${r.damageType}-name`)}: ${this.#localization.format(`resistance-level-${r.level}`)}`).join(", ") || "—");
+      line("monster-probe-status-immunities", knowledge.statusImmunities.map(this.#statusName).join(", ") || "—");
+      line("monster-probe-melee", knowledge.meleeRoutine.blows
+        .map((b) => `${this.#contentName(b.methodId)} ${b.damage.dice}d${b.damage.sides} (${b.toHit >= 0 ? "+" : ""}${b.toHit})`).join(", ") || "—");
+      line("monster-probe-abilities", knowledge.abilityIds.map(this.#contentName).join(", ") || "—");
+    };
+    const filter = (): void => {
+      this.#monsterName = name.value;
+      this.#monsterGlyph = glyph.value;
+      this.#monsterGroup = group.value;
+      const matches = filterResearchMonsters(monsters, name.value, glyph.value, group.value,
+        (entry) => this.#localization.format(entry.nameKey));
+      select.replaceChildren();
+      for (const monster of matches) {
+        const option = document.createElement("option");
+        option.value = monster.kindId;
+        option.textContent = `${monster.glyph} ${this.#localization.format(monster.nameKey)} (${monster.level})`;
+        select.append(option);
+      }
+      if (matches.some((entry) => entry.kindId === this.#monsterKindId)) select.value = this.#monsterKindId;
+      renderDetail();
+    };
+    name.addEventListener("input", filter);
+    glyph.addEventListener("input", filter);
+    group.addEventListener("change", filter);
+    select.addEventListener("change", renderDetail);
+    filter();
+    row.append(name, glyph, group, select, button, detail);
+    this.#dom.list.append(row);
+  }
+
+  #renderTeleportLevel(): void {
+    const service = this.#service;
+    if (service?.teleportLevelCost == null) return;
+    const dungeons = service.teleportDungeons ?? [];
+    const document = this.#dom.list.ownerDocument;
+    const row = document.createElement("li");
+    row.className = "task-service-row";
+    const dungeon = document.createElement("select");
+    dungeon.setAttribute("aria-label", this.#localization.format("teleport-level-dungeon"));
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = this.#localization.format(dungeons.length ? "teleport-level-dungeon" : "teleport-level-empty");
+    dungeon.append(placeholder);
+    for (const entry of dungeons) {
+      const option = document.createElement("option");
+      option.value = entry.dungeonId;
+      option.textContent = this.#localization.format("teleport-level-dungeon-option", {
+        name: this.#localization.format(entry.nameKey), depth: entry.recallDepth,
+      });
+      dungeon.append(option);
+    }
+    dungeon.value = this.#teleportDungeonId;
+    dungeon.disabled = this.#state.busy || !dungeons.length;
+    const depth = document.createElement("select");
+    depth.setAttribute("aria-label", this.#localization.format("teleport-level-depth"));
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "primary-button task-service-action";
+    button.dataset.facilityAction = "teleport-level";
+    button.textContent = this.#localization.format("action-teleport-level", { cost: service.teleportLevelCost });
+    const update = (): void => {
+      this.#teleportDepth = depth.value;
+      button.disabled = this.#state.busy || !depth.value;
+    };
+    const selectDungeon = (): void => {
+      this.#teleportDungeonId = dungeon.value;
+      depth.replaceChildren();
+      const entry = dungeons.find((entry) => entry.dungeonId === dungeon.value);
+      for (const value of entry?.depths ?? []) {
+        const option = document.createElement("option");
+        option.value = String(value);
+        option.textContent = this.#localization.format("teleport-level-depth-option", { depth: value });
+        depth.append(option);
+      }
+      if (entry?.depths.includes(Number(this.#teleportDepth))) depth.value = this.#teleportDepth;
+      depth.disabled = this.#state.busy || !entry;
+      update();
+    };
+    dungeon.addEventListener("change", selectDungeon);
+    depth.addEventListener("change", update);
+    selectDungeon();
+    row.append(dungeon, depth, button);
+    this.#dom.list.append(row);
+  }
+
   #renderFacilityActions(): void {
     const service = this.#service;
     if (!service) return;
     const document = this.#dom.list.ownerDocument;
     this.#renderBountyOffice();
+    this.#renderMonsterResearch();
+    this.#renderTeleportLevel();
     const renderItemAction = (
       action: "identify" | "research",
       cost: number | null | undefined,
@@ -296,6 +578,20 @@ export class TaskServicePanel {
       row.append(button);
       this.#dom.list.append(row);
     }
+    if (service.innStayCost !== undefined && service.innStayCost !== null) {
+      const row = document.createElement("li");
+      row.className = "task-service-row";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "primary-button task-service-action";
+      button.dataset.facilityAction = "stay";
+      button.disabled = this.#state.busy;
+      button.textContent = this.#localization.format("action-inn-stay", {
+        cost: service.innStayCost,
+      });
+      row.append(button);
+      this.#dom.list.append(row);
+    }
     if (service.overviewMessageKey) {
       const row = document.createElement("li");
       row.className = "task-service-row";
@@ -320,14 +616,23 @@ export class TaskServicePanel {
         for (const target of facilityService.targets ?? []) {
           const item = carriedItems.get(target.itemId);
           if (!item) continue;
-          const option = document.createElement("option");
-          option.value = target.itemId;
-          option.textContent = this.#localization.format("facility-service-target-price", {
-            target: this.#visibleItemName(item.displayNameKey, item.kindId, item.artifactName),
-            cost: target.cost,
-          });
-          select.append(option);
+          for (const choice of target.choices) {
+            const option = document.createElement("option");
+            option.value = `${target.itemId}:${choice.steps}`;
+            option.dataset.itemId = target.itemId;
+            option.dataset.steps = String(choice.steps);
+            option.textContent = this.#localization.format("facility-enchantment-choice", {
+              target: this.#visibleItemName(item.displayNameKey, item.kindId, item.artifactName),
+              steps: choice.steps,
+              hit: choice.result.toHit,
+              damage: choice.result.toDamage,
+              armor: choice.result.toArmor,
+              cost: choice.cost,
+            });
+            select.append(option);
+          }
         }
+        select.disabled = this.#state.busy;
         row.append(select);
       }
       const button = document.createElement("button");
@@ -536,6 +841,8 @@ function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | 
       event?.kind === "task.reward-claim-unavailable" ||
       event?.kind === "facility.identify-unavailable" ||
       event?.kind === "facility.identified" ||
+      event?.kind === "facility.monster-researched" ||
+      event?.kind === "facility.monster-research-unavailable" ||
       event?.kind === "facility.identify-all-unavailable" ||
       event?.kind === "facility.identified-all" ||
       event?.kind === "facility.service-unavailable" ||
@@ -547,6 +854,9 @@ function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | 
       event?.kind === "facility.recall-started" ||
       event?.kind === "facility.rename-unavailable" ||
       event?.kind === "facility.renamed" ||
+      event?.kind === "inn.stay" ||
+      event?.kind === "inn.stay-unavailable" ||
+      event?.kind.startsWith("facility.casino-") ||
       event?.kind.startsWith("bounty.")
     ) {
       return event;

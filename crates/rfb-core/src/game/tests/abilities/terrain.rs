@@ -343,13 +343,13 @@ fn ent_tree_creation_respects_occupied_special_and_boundary_squares() {
 fn ent_created_trees_block_sight_allow_tree_movement_and_persist_through_save() {
     let mut game = ent_tree_game(45, "demo.build.warrior");
     game.debug_set_ability_casts_succeed(true);
-    game.player.position = Position { x: 48, y: 16 };
-    for y in 14..=18 {
-        for x in 46..=50 {
+    game.player.position = Position { x: 99, y: 33 };
+    for y in 31..=35 {
+        for x in 97..=101 {
             replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
         }
     }
-    let beyond = Position { x: 50, y: 16 };
+    let beyond = Position { x: 101, y: 33 };
     assert!(crate::game::visibility::has_line_of_sight(
         &game,
         game.player.position,
@@ -367,7 +367,10 @@ fn ent_created_trees_block_sight_allow_tree_movement_and_persist_through_save() 
         game.player.position,
         beyond
     ));
-    assert_eq!(game.terrain_at(Position { x: 49, y: 16 }), ENT_TREE_TERRAIN);
+    assert_eq!(
+        game.terrain_at(Position { x: 100, y: 33 }),
+        ENT_TREE_TERRAIN
+    );
     let before_tick = game.world_tick;
     dispatch_next(
         &mut game,
@@ -375,7 +378,7 @@ fn ent_created_trees_block_sight_allow_tree_movement_and_persist_through_save() 
             direction: Direction::East,
         },
     );
-    assert_eq!(game.player.position, Position { x: 49, y: 16 });
+    assert_eq!(game.player.position, Position { x: 100, y: 33 });
     assert!(game.world_tick > before_tick);
     let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
     assert_eq!(restored.snapshot(), game.snapshot());
@@ -406,9 +409,9 @@ fn formal_ent_six_class_journey_drinks_levels_equips_plants_walks_and_restores()
         game.items
             .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
         game.gold_piles.clear();
-        game.player.position = Position { x: 48, y: 16 };
-        for y in 14..=18 {
-            for x in 46..=51 {
+        game.player.position = Position { x: 99, y: 33 };
+        for y in 31..=35 {
+            for x in 97..=102 {
                 replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
             }
         }
@@ -520,7 +523,7 @@ fn formal_ent_six_class_journey_drinks_levels_equips_plants_walks_and_restores()
                 direction: Direction::East,
             },
         );
-        assert_eq!(game.player.position, Position { x: 49, y: 16 });
+        assert_eq!(game.player.position, Position { x: 100, y: 33 });
         let mut restored = Game::from_save(game.to_save()).unwrap();
         assert_eq!(restored.snapshot(), game.snapshot());
         assert_eq!(restored.state_hash(), game.state_hash());
@@ -532,7 +535,7 @@ fn formal_ent_six_class_journey_drinks_levels_equips_plants_walks_and_restores()
                 },
             );
         }
-        assert_eq!(restored.player.position, Position { x: 50, y: 16 });
+        assert_eq!(restored.player.position, Position { x: 101, y: 33 });
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.snapshot(), game.snapshot());
     }

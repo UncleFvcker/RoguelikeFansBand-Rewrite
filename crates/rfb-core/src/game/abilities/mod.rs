@@ -96,9 +96,10 @@ impl Game {
                 changed,
                 removed_entities,
             )?,
-            (AbilityEffectDefinition::FetchItem { .. }, AbilityTargetPlan::FetchItem { path }) => {
-                self.resolve_player_fetch_item_effect(&ability, path, events, changed)
-            }
+            (
+                AbilityEffectDefinition::FetchItem { .. },
+                AbilityTargetPlan::FetchItem { target },
+            ) => self.resolve_player_fetch_item_effect(&ability, target, events, changed),
             (
                 AbilityEffectDefinition::ConsumeTerrain { .. },
                 AbilityTargetPlan::ConsumeTerrain {

@@ -207,7 +207,7 @@ fn ent_can_buy_water_from_projected_store_stock_and_drink_it() {
     clear_monsters(&mut game);
     game.items
         .retain(|item| item.kind_id != crate::game::hunger::WATER_ITEM_KIND_ID);
-    game.player.position = Position { x: 32, y: 13 };
+    game.player.position = Position { x: 83, y: 30 };
     game.gold = 1000;
     game.mark_shop_visited_at_player().unwrap();
     let snapshot = game.snapshot();

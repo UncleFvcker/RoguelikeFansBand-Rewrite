@@ -6,8 +6,9 @@ use serde::{Deserialize, Serialize};
 
 use super::{ActorDamageType, ActorMovementMode, ItemQuality};
 
-pub const WILDERNESS_WORLD_CELL_WIDTH: u16 = 96;
-pub const WILDERNESS_WORLD_CELL_HEIGHT: u16 = 33;
+// RFB defines.h: MAX_WID / MAX_HGT. Full town maps occupy one world cell.
+pub const WILDERNESS_WORLD_CELL_WIDTH: u16 = 198;
+pub const WILDERNESS_WORLD_CELL_HEIGHT: u16 = 66;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
@@ -439,6 +440,8 @@ pub struct ProceduralFloorDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InlineFloorMapDefinition {
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub inherit_wilderness_terrain: bool,
     pub player_position: ContentPosition,
     pub terrain_overrides: Vec<InlineTerrainOverrideDefinition>,
     #[serde(default)]

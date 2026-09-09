@@ -2200,3 +2200,66 @@ fn bag_identity_uses_pval_and_rejects_invalid_capacity_metadata() {
         Err(ContentError::InvalidEquipmentSlot(_))
     ));
 }
+
+#[test]
+fn dr_jones_whip_matches_rfb_master_artifact_162() {
+    // RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, lib/edit/a_info.txt N:162.
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let item = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.dr-jones-whip")
+        .unwrap();
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value
+        ),
+        (8, 30, 18_000)
+    );
+    assert_eq!((item.modifiers.intelligence, item.modifiers.wisdom), (1, 1));
+    assert_eq!(
+        item.weapon_proficiency_base_item_id.as_deref(),
+        Some("demo.item.whip")
+    );
+    let source = item.artifact_generation.as_ref().unwrap();
+    assert_eq!(
+        (source.source_index, source.rarity_one_in, source.instant),
+        (162, 5, false)
+    );
+    assert_eq!(source.base_item_kind_id, "demo.item.whip");
+    assert!(source.affix_ids.is_empty());
+    let melee = item.melee_profile.as_ref().unwrap();
+    assert_eq!(
+        (
+            melee.damage_dice,
+            melee.damage_sides,
+            melee.to_hit,
+            melee.to_damage
+        ),
+        (1, 7, 16, 13)
+    );
+    assert_eq!(
+        item.passives,
+        BTreeSet::from([EquipmentPassive::Levitation, EquipmentPassive::SeeInvisible])
+    );
+    assert!(item.resists_monster_destruction && item.resists_projection_destruction);
+    let generation = item.device_generation.as_ref().unwrap();
+    let recovery = generation.recovery.unwrap();
+    assert_eq!(
+        (recovery.interval_ticks, recovery.energy_per_mille),
+        (300, 1_000)
+    );
+    let [activation] = generation.activations.as_slice() else {
+        panic!("one activation")
+    };
+    assert_eq!(activation.device_check_difficulty, 25);
+    assert_eq!(activation.target.range, 18);
+    assert!(!activation.target.requires_line_of_effect);
+    assert!(
+        matches!(&activation.effect, ItemUseEffectDefinition::AbilityEffect { effect, .. }
+        if matches!(effect.as_ref(), AbilityEffectDefinition::FetchItem { maximum_weight_tenths_pound: 175 }))
+    );
+}

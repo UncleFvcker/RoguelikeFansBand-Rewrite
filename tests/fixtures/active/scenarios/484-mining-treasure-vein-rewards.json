@@ -10,8 +10,8 @@
     "debugClearEntities": true,
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
-      "x": 44,
-      "y": 16
+      "x": 95,
+      "y": 33
     },
     "playerMiningProficiency": 3999,
     "inventoryItems": [
@@ -23,8 +23,8 @@
     "terrainOverrides": [
       {
         "position": {
-          "x": 44,
-          "y": 15
+          "x": 95,
+          "y": 32
         },
         "terrainId": "demo.terrain.magma-hidden-treasure"
       }
@@ -53,8 +53,8 @@
           "amount": 66,
           "discovered": true,
           "position": {
-            "x": 44,
-            "y": 15
+            "x": 95,
+            "y": 32
           }
         }
       },
@@ -71,11 +71,11 @@
         }
       },
       "playerPosition": {
-        "x": 44,
-        "y": 16
+        "x": 95,
+        "y": 33
       },
       "revision": 2,
-      "stateHash": "d4ac21d26eaee1211ec6364c66ac06884cb4290a4bd3f03e8617aff5fdfdb268",
+      "stateHash": "b67c5da320d385419870d8dd5491bd4722d0119c710e18003781b5fcb7163b6f",
       "turn": 2
     },
     "events": [
@@ -96,8 +96,8 @@
         "kind": "terrain.dug",
         "messageKey": "terrain-dug",
         "args": {
-          "x": "44",
-          "y": "15"
+          "x": "95",
+          "y": "32"
         }
       },
       {
@@ -106,6 +106,6 @@
         "args": {}
       }
     ],
-    "saveRoundTripStateHash": "d4ac21d26eaee1211ec6364c66ac06884cb4290a4bd3f03e8617aff5fdfdb268"
+    "saveRoundTripStateHash": "b67c5da320d385419870d8dd5491bd4722d0119c710e18003781b5fcb7163b6f"
   }
 }

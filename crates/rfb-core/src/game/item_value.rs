@@ -826,3 +826,29 @@ pub(super) fn object_value(mut object: ValueObject) -> Option<i32> {
         _ => return None,
     })
 }
+
+impl super::Game {
+    pub(super) fn item_total_enchantments(
+        &self,
+        item: &crate::state::ItemInstance,
+    ) -> rfb_protocol::ItemEnchantmentsDto {
+        let object = instance::value_object(&self.content, item)
+            .expect("enchantable equipment must retain authoritative value inputs");
+        rfb_protocol::ItemEnchantmentsDto {
+            to_hit: i16::try_from(object.to_h).expect("validated enchantments fit i16"),
+            to_damage: i16::try_from(object.to_d).expect("validated enchantments fit i16"),
+            to_armor: i16::try_from(object.to_a).expect("validated enchantments fit i16"),
+        }
+    }
+
+    pub(super) fn item_enchantment_value(&self, item: &crate::state::ItemInstance) -> i64 {
+        let mut object = instance::value_object(&self.content, item)
+            .expect("enchantable equipment must retain authoritative value inputs");
+        // bldg.c::enchant_item values a copy with curse flags cleared.
+        object.permanent_curse = false;
+        for flag in ["AGGRAVATE", "NO_TELE", "NO_MAGIC", "DRAIN_EXP", "TY_CURSE"] {
+            object.flags.remove(flag);
+        }
+        i64::from(object_value(object).expect("enchantable equipment has a COST_REAL score"))
+    }
+}

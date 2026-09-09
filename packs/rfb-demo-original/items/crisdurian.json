@@ -37,6 +37,10 @@
   "rfbValue": {
     "flags": [
       "BRAND_POIS",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
       "SEE_INVIS",
       "SHOW_MODS",
       "SLAY_DRAGON",

@@ -89,6 +89,7 @@ fn restore_dungeon_states(
                     saved.dungeon_id.clone(),
                     DungeonState {
                         suppressed: saved.suppressed,
+                        recall_floor_id: saved.recall_floor_id.clone(),
                         guardian_defeated: saved.guardian_defeated,
                         entrance_guardian_defeated: if allow_missing_states {
                             saved
@@ -637,6 +638,7 @@ fn item_property_knowledge_from_save(
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct StateHashPayloadV98<'a> {
+    casino: &'a Option<rfb_protocol::CasinoStateSaveDto>,
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -706,6 +708,7 @@ struct TerrainSaveRef<'a> {
     terrain_ids: &'a [String],
     glow: &'a [bool],
     daylight_suppressed: &'a [bool],
+    vault_cells: &'a [bool],
 }
 
 /// Borrowed twin of [`rfb_protocol::FloorSaveDto`] for hashing: the `explored`
@@ -746,6 +749,7 @@ fn floor_save_for_hash(floor: &FloorState) -> FloorSaveForHash<'_> {
             terrain_ids: &floor.terrain,
             glow: &floor.glow,
             daylight_suppressed: &floor.daylight_suppressed,
+            vault_cells: &floor.vault_cells,
         },
         entities: actors_to_save(&floor.entities),
         items: items_to_save(&floor.items),
@@ -929,6 +933,7 @@ impl Game {
             || payload.terrain.terrain_ids.len() != expected_len
             || payload.terrain.glow.len() != expected_len
             || payload.terrain.daylight_suppressed.len() != expected_len
+            || payload.terrain.vault_cells.len() != expected_len
         {
             return Err(CoreError::InvalidSave("terrain dimensions are invalid"));
         }
@@ -1102,6 +1107,7 @@ impl Game {
             slots
         };
         let gold = payload.player.gold;
+        let fame = payload.player.fame;
         let nutrition = payload.player.nutrition;
         let fasting = payload.player.fasting;
         let player_name =
@@ -1425,11 +1431,14 @@ impl Game {
             terrain,
             glow: payload.terrain.glow,
             daylight_suppressed: payload.terrain.daylight_suppressed,
+            vault_cells: payload.terrain.vault_cells,
             player_name,
             player,
             riding_actor_id,
             riding_bond,
             gold,
+            fame,
+            casino: payload.casino,
             nutrition,
             fasting,
             build,
@@ -1502,12 +1511,16 @@ impl Game {
         game.reveal_current_visibility();
         game.clear_stale_mogaminator_query();
         game.validate_loaded_state()?;
+        if !game.casino_state_is_valid() {
+            return Err(CoreError::InvalidSave("casino state is invalid"));
+        }
         Ok(game)
     }
 
     #[must_use]
     pub fn to_save(&self) -> SavePayloadV1 {
         SavePayloadV1 {
+            casino: self.casino.clone(),
             schema_version: SAVE_PAYLOAD_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
@@ -1526,6 +1539,7 @@ impl Game {
                 terrain_ids: self.terrain.clone(),
                 glow: self.glow.clone(),
                 daylight_suppressed: self.daylight_suppressed.clone(),
+                vault_cells: self.vault_cells.clone(),
             },
             player: self.player_save_dto(),
             entities: actors_to_save(&self.entities),
@@ -1588,6 +1602,7 @@ impl Game {
     #[must_use]
     pub fn state_hash(&self) -> String {
         let payload = StateHashPayloadV98 {
+            casino: &self.casino,
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
@@ -1606,6 +1621,7 @@ impl Game {
                 terrain_ids: &self.terrain,
                 glow: &self.glow,
                 daylight_suppressed: &self.daylight_suppressed,
+                vault_cells: &self.vault_cells,
             },
             player: self.player_save_dto(),
             entities: actors_to_save(&self.entities),
@@ -1684,6 +1700,7 @@ impl Game {
             &self.virtues,
         );
         player.gold = self.gold;
+        player.fame = self.fame;
         player.nutrition = self.nutrition;
         player.fasting = self.fasting;
         player.resources = self
@@ -1835,6 +1852,7 @@ impl Game {
             .map(|(dungeon_id, state)| DungeonStateSaveDto {
                 dungeon_id: dungeon_id.clone(),
                 suppressed: state.suppressed,
+                recall_floor_id: state.recall_floor_id.clone(),
                 guardian_defeated: state.guardian_defeated,
                 entrance_guardian_defeated: Some(state.entrance_guardian_defeated),
                 next_instance_ordinal: state.next_instance_ordinal,

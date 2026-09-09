@@ -35,6 +35,27 @@ use rfb_protocol::{
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
 
+pub(crate) fn item_enchantments_are_valid(
+    definition: &rfb_content::ItemDefinition,
+    enchantments: &ItemEnchantmentsDto,
+) -> bool {
+    let limit = if definition
+        .rfb_base_kind
+        .is_some_and(|base| matches!(base.tval, 16..=23 | 30..=38 | 40 | 45))
+    {
+        255
+    } else {
+        15
+    };
+    [
+        enchantments.to_hit,
+        enchantments.to_damage,
+        enchantments.to_armor,
+    ]
+    .into_iter()
+    .all(|value| (-limit..=limit).contains(&value))
+}
+
 pub(crate) fn actor_max_hp_is_valid(
     definition: &rfb_content::ActorDefinition,
     max_hp: i32,
@@ -779,24 +800,18 @@ fn validate_item_runtime_state(
         }),
         charges,
     ) {
-        (Some(_), Some(charges)) => {
-            device_recovery_progress < 1_000
+        (Some(recovery), Some(charges)) => {
+            let limit = if charges.maximum == 1 && recovery.energy_per_mille == 1_000 {
+                recovery.interval_ticks
+            } else {
+                1_000
+            };
+            device_recovery_progress < limit
                 && (charges.current < charges.maximum || device_recovery_progress == 0)
         }
         _ => device_recovery_progress == 0,
     };
-    let limit = if definition
-        .rfb_base_kind
-        .is_some_and(|base| matches!(base.tval, 16..=23 | 30..=38 | 40 | 45))
-    {
-        255
-    } else {
-        15
-    };
-    if !(-limit..=limit).contains(&enchantments.to_hit)
-        || !(-limit..=limit).contains(&enchantments.to_damage)
-        || !(-limit..=limit).contains(&enchantments.to_armor)
-    {
+    if !item_enchantments_are_valid(definition, &enchantments) {
         return Err(CoreError::InvalidSave("item enchantment state is invalid"));
     }
     let valid_fuel = match (item_fuel_from_definition(definition), fuel) {
@@ -859,6 +874,7 @@ pub(crate) fn player_to_save(
         position: player.position,
         hp: player.hp,
         gold: 0,
+        fame: 0,
         nutrition: rfb_protocol::PLAYER_NUTRITION_BIRTH,
         fasting: false,
         base_max_hp: player.max_hp,
@@ -2121,6 +2137,7 @@ pub(crate) fn floor_to_save(floor: &FloorState) -> FloorSaveDto {
             terrain_ids: floor.terrain.clone(),
             glow: floor.glow.clone(),
             daylight_suppressed: floor.daylight_suppressed.clone(),
+            vault_cells: floor.vault_cells.clone(),
         },
         entities: actors_to_save(&floor.entities),
         items: items_to_save(&floor.items),
@@ -2142,6 +2159,7 @@ pub(crate) fn floor_from_save(
         || floor.terrain.terrain_ids.len() != expected_len
         || floor.terrain.glow.len() != expected_len
         || floor.terrain.daylight_suppressed.len() != expected_len
+        || floor.terrain.vault_cells.len() != expected_len
     {
         return Err(CoreError::InvalidSave("terrain dimensions are invalid"));
     }
@@ -2186,6 +2204,7 @@ pub(crate) fn floor_from_save(
         terrain: floor.terrain.terrain_ids,
         glow: floor.terrain.glow,
         daylight_suppressed: floor.terrain.daylight_suppressed,
+        vault_cells: floor.terrain.vault_cells,
         player_position: floor.player_position,
         entities,
         items,

@@ -48,6 +48,7 @@ pub enum NativeSaveStatus {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NativeSaveSummary {
+    pub museum_checkpoint: bool,
     pub slot_id: String,
     pub slot_name: String,
     pub status: NativeSaveStatus,
@@ -234,6 +235,7 @@ impl NativeSaveStore {
         };
         let (header, snapshot) = decode_snapshot(&loaded.bytes)?;
         Ok(NativeSaveSummary {
+            museum_checkpoint: false,
             slot_id: slot_id.to_owned(),
             slot_name: if header.slot_name.trim().is_empty() {
                 slot_id.to_owned()
@@ -394,6 +396,7 @@ fn decode_snapshot(bytes: &[u8]) -> DesktopResult<(SaveHeaderV1, GameSnapshot)> 
 
 fn corrupt_summary(slot_id: &str) -> NativeSaveSummary {
     NativeSaveSummary {
+        museum_checkpoint: false,
         slot_id: slot_id.to_owned(),
         slot_name: slot_id.to_owned(),
         status: NativeSaveStatus::Corrupt,
@@ -406,6 +409,26 @@ fn corrupt_summary(slot_id: &str) -> NativeSaveSummary {
         content_hash: None,
         state_hash: None,
     }
+}
+
+pub fn museum_checkpoint_summary(id: u64, bytes: &[u8]) -> DesktopResult<NativeSaveSummary> {
+    let (header, payload) = rfb_save::decode(bytes).map_err(|error| {
+        DesktopCommandError::new("museum-checkpoint-invalid", error.to_string())
+    })?;
+    Ok(NativeSaveSummary {
+        museum_checkpoint: true,
+        slot_id: format!("museum-{id}"),
+        slot_name: header.character_summary.display_name,
+        status: NativeSaveStatus::Ready,
+        recovery_backup: None,
+        saved_at: None,
+        created_at: Some(header.created_at),
+        turn: Some(payload.turn),
+        location_key: Some(header.character_summary.location_key),
+        content_id: Some(header.content_id),
+        content_hash: Some(header.content_hash),
+        state_hash: None,
+    })
 }
 
 #[cfg(test)]
@@ -443,6 +466,7 @@ mod tests {
             content_id: snapshot.content_id,
             content_hash: snapshot.content_hash,
             payload_encoding: "messagepack".to_owned(),
+            museum_binding: None,
         };
         rfb_save::encode(&header, &game.to_save()).expect("test save should encode")
     }

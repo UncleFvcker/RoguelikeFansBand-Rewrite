@@ -162,14 +162,6 @@ pub(super) fn item_creation_state_is_valid(
     let armor = definition
         .rfb_base_kind
         .is_some_and(|base| matches!(base.tval, 30..=38));
-    let limit = if definition
-        .rfb_base_kind
-        .is_some_and(|base| matches!(base.tval, 16..=23 | 30..=38 | 40 | 45))
-    {
-        255
-    } else {
-        15
-    };
     let weight_is_valid = item.rolled_affixes.iter().all(|rolled| {
         rolled.weight_tenths_pound.is_none_or(|weight| {
             (weight == 0
@@ -183,14 +175,6 @@ pub(super) fn item_creation_state_is_valid(
                         || (weight == 8 && rolled.affix_id == "rfb-legacy.affix.the-tomte"))
         })
     });
-    let enchantments_are_valid = [-limit..=limit, -limit..=limit, -limit..=limit]
-        .into_iter()
-        .zip([
-            item.enchantments.to_hit,
-            item.enchantments.to_damage,
-            item.enchantments.to_armor,
-        ])
-        .all(|(range, value)| range.contains(&value));
     player_made_state_is_valid
         && item.artifact_name.as_ref().is_none_or(|name| {
             !name.trim().is_empty()
@@ -248,7 +232,7 @@ pub(super) fn item_creation_state_is_valid(
                 })
             })
         && damage_override_is_valid
-        && enchantments_are_valid
+        && crate::save::item_enchantments_are_valid(definition, &item.enchantments)
         && weight_is_valid
 }
 
@@ -720,6 +704,7 @@ impl Game {
                 .is_none_or(|turns| (1..=2_000).contains(&turns));
             let current_location_allows_pending = recall.remaining_turns.is_none()
                 || self.current_floor_id == world.initial_floor_id
+                || self.is_wilderness_floor()
                 || self.current_town().is_some()
                 || current_dungeon_id.is_some();
             if !destination_is_valid || !pending_is_valid || !current_location_allows_pending {
@@ -767,6 +752,7 @@ impl Game {
         if self.explored.len() != self.terrain.len()
             || self.glow.len() != self.terrain.len()
             || self.daylight_suppressed.len() != self.terrain.len()
+            || self.vault_cells.len() != self.terrain.len()
         {
             return Err(CoreError::InvalidSave(
                 "terrain state dimensions are invalid",
@@ -940,7 +926,14 @@ impl Game {
             match &item.location {
                 ItemLocation::Ground(position) => {
                     if !common_valid
-                        || !self.is_walkable(*position)
+                        || !self.index(*position).is_some_and(|index| {
+                            self.content
+                                .terrain(&self.terrain[index])
+                                .is_some_and(|terrain| {
+                                    terrain.walkable
+                                        || terrain.tags.iter().any(|tag| tag == "item-drop")
+                                })
+                        })
                         || item.quantity > definition.max_stack
                     {
                         return Err(CoreError::InvalidSave("item state is invalid"));
@@ -1084,6 +1077,7 @@ impl Game {
                 || floor.explored.len() != expected_len
                 || floor.glow.len() != expected_len
                 || floor.daylight_suppressed.len() != expected_len
+                || floor.vault_cells.len() != expected_len
                 || !revealed_terrain_is_valid(
                     &floor.revealed_terrain,
                     &floor.terrain,
@@ -1186,6 +1180,20 @@ impl Game {
                 let location_is_valid = match &item.location {
                     ItemLocation::Ground(position) => {
                         floor_position_is_walkable(floor, *position, &self.content)
+                            || (position.x >= 0
+                                && position.y >= 0
+                                && position.x < i32::from(floor.width)
+                                && position.y < i32::from(floor.height)
+                                && self
+                                    .content
+                                    .terrain(
+                                        &floor.terrain[position.y as usize
+                                            * usize::from(floor.width)
+                                            + position.x as usize],
+                                    )
+                                    .is_some_and(|terrain| {
+                                        terrain.tags.iter().any(|tag| tag == "item-drop")
+                                    }))
                     }
                     ItemLocation::CarriedBy { actor_id } => floor_monster_ids.contains(actor_id),
                     ItemLocation::Inventory
@@ -1360,6 +1368,7 @@ impl Game {
                     || state.entrance_guardian_defeated
                     || state.next_instance_ordinal != 0
                     || state.retained_instance_id.is_some()
+                    || state.recall_floor_id.is_some()
                     || state.retained_at_turn.is_some())
             {
                 return Err(CoreError::InvalidSave(
@@ -1371,6 +1380,15 @@ impl Game {
                 .iter()
                 .find(|dungeon| dungeon.id == *dungeon_id)
                 .expect("validated dungeon state must retain its definition");
+            if state.recall_floor_id.as_ref().is_some_and(|id| {
+                !world.procedural_floors.iter().any(|floor| {
+                    floor.id == *id
+                        && floor.lifecycle == FloorLifecycle::Dungeon
+                        && floor.dungeon_id.as_ref() == Some(dungeon_id)
+                })
+            }) {
+                return Err(CoreError::InvalidSave("dungeon recall floor is invalid"));
+            }
             if dungeon.entrance_guardian.is_none() && state.entrance_guardian_defeated {
                 return Err(CoreError::InvalidSave(
                     "dungeon entrance guardian state is invalid",

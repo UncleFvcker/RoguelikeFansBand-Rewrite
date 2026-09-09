@@ -7,8 +7,8 @@ const SPECTRE: &str = "rfb-legacy.race.spectre";
 const HUMAN: &str = "demo.race.rfb-human";
 const WALL: &str = "demo.terrain.wall";
 const FLOOR: &str = "demo.terrain.floor";
-const START: Position = Position { x: 48, y: 16 };
-const EAST: Position = Position { x: 49, y: 16 };
+const START: Position = Position { x: 99, y: 33 };
+const EAST: Position = Position { x: 100, y: 33 };
 
 fn form(race: &str, ticks: u32) -> StatusInstance {
     let mut status =
@@ -23,8 +23,8 @@ fn prepare(game: &mut Game, native: bool) {
     game.gold_piles.clear();
     game.player.statuses.clear();
     game.player.position = START;
-    for y in 14..=18 {
-        for x in 46..=52 {
+    for y in 31..=35 {
+        for x in 97..=103 {
             replace_terrain(game, Position { x, y }, FLOOR);
         }
     }
@@ -164,7 +164,7 @@ fn spectre_movement_checks_wall_metadata_flight_occupancy_and_original_energy() 
     assert!(!projectile_geometry::has_line_of_effect(
         &game,
         START,
-        Position { x: 50, y: 16 }
+        Position { x: 101, y: 33 }
     ));
     game.push_generated_actor("test.wall-blocker".to_owned(), "demo.actor.horse", EAST);
     game.entities[0].controller_id = Some(game.player.id.clone());
@@ -449,7 +449,7 @@ fn wall_positions_round_trip_after_form_expiry_and_in_departed_floor_cache() {
     );
     assert_eq!(restored.state_hash(), game.state_hash());
 
-    game.player.position = Position { x: 93, y: 29 };
+    game.player.position = Position { x: 144, y: 46 };
     game.traverse_stairs(false).unwrap().unwrap();
     clear_monsters(&mut game);
     game.items.clear();

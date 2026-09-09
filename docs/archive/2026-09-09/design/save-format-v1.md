@@ -31,12 +31,12 @@ payload_msgpack    payload_length bytes
 
 ## 3. Header
 
-Header 只含无需解码完整世界即可展示的信息：
+Header 包含显示元数据和桌面馆藏事务绑定。当前 header / payload 为 v6 / v8，容器保持 v1；以下是字段节选。当前开发存档不做旧 schema 迁移。
 
 ```ts
 interface SaveHeaderV1 {
   format: "rfb-save";
-  saveSchemaVersion: 1;
+  saveSchemaVersion: 6;
   gameVersion: string;
   protocolVersion: string;
   slotName: string;
@@ -51,18 +51,23 @@ interface SaveHeaderV1 {
   contentId: string;
   contentHash: string;
   payloadEncoding: "messagepack";
+  museumBinding?: { profileId: string; characterId: number; epoch: number; collectionRevision: number };
 }
 ```
 
-Header 不可信，显示前需要长度限制和转义；载入是否成功以 payload 验证和迁移结果为准。
+Header 不可信，显示前需要长度限制和转义；载入是否成功以 payload 及本地资料绑定验证结果为准。
+
+Tauri 新角色必须绑定本地馆藏资料；原生槽、备份及手动文件载入均核对该绑定。早于已提交转移的角色存档恢复至资料中的最新转移检查点，不能采用其旧背包；未绑定或来自其他资料的存档拒绝载入。核心与契约工具仍可使用没有桌面绑定的 DTO。馆藏自身不是第二份角色存档格式，事务语义见[跨角色馆藏](../docs/shared-museum.md)。
 
 `slotName` 是桌面原生槽使用的可选显示元数据。Rust 反序列化对缺失字段使用空字符串默认值，因此本字段的加入不破坏已经生成的 v1 存档；手动导出的存档当前写入空名称。桌面目录事务和恢复行为见 [桌面原生存档与诊断 v1](desktop-native-storage-v1.md)。
+
+当前 payload schema 为 v8：`PlayerSaveDto.fame` 为必填的非负声望值，新角色为 0；它参与 State Hash Schema v111。每座地牢状态继续保存可选 `recallFloorId`，用于已访问地牢列表及各自可重设的召回层。读取时校验楼层属于该地牢，受抑制地牢不得保留召回记录；不迁移旧开发存档。Header 仍为 v6。建筑强制强化沿用物品的强化偏移字段，读取与运行时共用上限校验，允许等级上限对应的 +25，以及抵消基础武器负加成所需的偏移；仍拒绝越界数值。
 
 ## 4. Payload
 
 ```ts
 interface SavePayloadV1 {
-  schemaVersion: 1;
+  schemaVersion: 7;
   revision: number;
   turn: number;
   worldTick: number;

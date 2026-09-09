@@ -13,6 +13,170 @@ fn artifact_loot_context(depth: u16) -> LootContext {
     }
 }
 
+fn dr_jones_game() -> (Game, String) {
+    let mut game = Game::new_with_build(162, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    game.items
+        .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
+    game.gold_piles.clear();
+    let context = artifact_loot_context(8);
+    let seed = (0..1_000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(5) == 0)
+        .unwrap();
+    game.rng = RfbRng::seeded(seed);
+    assert_eq!(
+        game.roll_fixed_artifact_kind_id(&context, Some("demo.item.whip"), false)
+            .as_deref(),
+        Some("demo.item.dr-jones-whip")
+    );
+    let draft = game.fixed_item_draft(&context, "demo.item.dr-jones-whip".to_owned());
+    let item = game
+        .commit_generated_item_draft(draft, ItemLocation::Inventory)
+        .unwrap();
+    assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+    assert_eq!(item.activation.as_ref().unwrap().power, 25);
+    assert_eq!(item.charges.unwrap().current, 1);
+    let id = item.id.clone();
+    game.item_property_knowledge.insert(
+        id.clone(),
+        ItemPropertyKnowledgeState {
+            discovered: true,
+            appraised: true,
+            identified: true,
+            known_affix_ids: BTreeSet::new(),
+            feeling: None,
+        },
+    );
+    game.items.push(item);
+    (game, id)
+}
+
+#[test]
+fn dr_jones_equipment_passives_and_unique_generation_survive_save() {
+    let (mut game, id) = dr_jones_game();
+    for item in &mut game.items {
+        if matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "right-hand") {
+            item.location = ItemLocation::Inventory;
+        }
+    }
+    let before = game.equipment_modifiers();
+    let see_invisible = game.player_see_invisible_sources();
+    assert!(!game.player_levitates());
+    game.items
+        .iter_mut()
+        .find(|item| item.id == id)
+        .unwrap()
+        .location = ItemLocation::Equipped {
+        slot_id: "right-hand".to_owned(),
+    };
+    assert_eq!(
+        game.equipment_modifiers().intelligence,
+        before.intelligence + 1
+    );
+    assert_eq!(game.equipment_modifiers().wisdom, before.wisdom + 1);
+    assert!(game.player_levitates());
+    assert_eq!(game.player_see_invisible_sources(), see_invisible + 1);
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert!(
+        restored
+            .generated_artifact_ids
+            .contains("demo.item.dr-jones-whip")
+    );
+    let context = artifact_loot_context(8);
+    assert!(
+        restored
+            .roll_fixed_artifact_kind_id(&context, Some("demo.item.whip"), false)
+            .is_none()
+    );
+    restored
+        .items
+        .iter_mut()
+        .find(|item| item.id == id)
+        .unwrap()
+        .location = ItemLocation::Inventory;
+    assert_eq!(
+        restored.equipment_modifiers().intelligence,
+        before.intelligence
+    );
+    assert_eq!(restored.equipment_modifiers().wisdom, before.wisdom);
+    assert!(!restored.player_levitates());
+    assert_eq!(restored.player_see_invisible_sources(), see_invisible);
+}
+
+#[test]
+fn dr_jones_fetch_and_full_300_tick_cooldown_survive_save() {
+    let (mut game, id) = dr_jones_game();
+    let origin = game.player.position;
+    let target = Position {
+        x: origin.x + 3,
+        y: origin.y,
+    };
+    replace_terrain(&mut game, origin, "demo.terrain.floor");
+    replace_terrain(&mut game, target, "demo.terrain.floor");
+    give_inventory_item(&mut game, "test.jones-stack", "demo.item.iron-shot");
+    let stack = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.jones-stack")
+        .unwrap();
+    stack.location = ItemLocation::Ground(target);
+    stack.quantity = 9;
+    game.reveal_current_visibility();
+    // Cross a global recovery boundary during activation; it must remain empty.
+    game.world_tick = 297;
+    game.rng = RfbRng::seeded(
+        (0..1_000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+            .unwrap(),
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: id.clone(),
+            target: Some(TargetSelection::Position { position: target }),
+        },
+    );
+    assert_eq!(game.world_tick, 307);
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.jones-stack")
+            .unwrap()
+            .location,
+        ItemLocation::Ground(origin)
+    );
+    let mut events = Vec::new();
+    for tick in 308..=447 {
+        game.world_tick = tick;
+        game.process_inventory_device_recovery(&mut events);
+    }
+    let item = game.items.iter().find(|item| item.id == id).unwrap();
+    assert_eq!(
+        (item.charges.unwrap().current, item.device_recovery_progress),
+        (0, 150)
+    );
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    for tick in 448..=596 {
+        restored.world_tick = tick;
+        restored.process_inventory_device_recovery(&mut events);
+    }
+    let item = restored.items.iter().find(|item| item.id == id).unwrap();
+    assert_eq!(
+        (item.charges.unwrap().current, item.device_recovery_progress),
+        (0, 299)
+    );
+    restored.world_tick = 597;
+    restored.process_inventory_device_recovery(&mut events);
+    let item = restored.items.iter().find(|item| item.id == id).unwrap();
+    assert_eq!(
+        (item.charges.unwrap().current, item.device_recovery_progress),
+        (1, 0)
+    );
+}
+
 #[test]
 fn p90b_olog_hai_affix_materializes_and_runs_existing_berserk_activation() {
     let mut game =
@@ -769,10 +933,10 @@ fn enchantment_artifact_and_ammunition_pile_gates_follow_original_order() {
     let artifact_seed = (0..1_000).find(|seed| {
         let mut ordinary = skill_check_game(*seed, "demo.build.warrior");
         ordinary.rng = RfbRng::seeded(*seed);
-        let ordinary = ordinary.resolve_item_enchantment_component(0, 1, 1, false, false);
+        let ordinary = ordinary.resolve_item_enchantment_component(0, 1, 1, false, false, false);
         let mut artifact = skill_check_game(*seed, "demo.build.warrior");
         artifact.rng = RfbRng::seeded(*seed);
-        let artifact = artifact.resolve_item_enchantment_component(0, 1, 1, false, true);
+        let artifact = artifact.resolve_item_enchantment_component(0, 1, 1, false, true, false);
         ordinary.successes == 1 && artifact.successes == 0
     });
     assert_eq!(artifact_seed, Some(0));
@@ -780,10 +944,11 @@ fn enchantment_artifact_and_ammunition_pile_gates_follow_original_order() {
     let ammunition_seed = (0..1_000).find(|seed| {
         let mut ordinary = skill_check_game(*seed, "demo.build.warrior");
         ordinary.rng = RfbRng::seeded(*seed);
-        let ordinary = ordinary.resolve_item_enchantment_component(0, 1, 20, false, false);
+        let ordinary = ordinary.resolve_item_enchantment_component(0, 1, 20, false, false, false);
         let mut ammunition = skill_check_game(*seed, "demo.build.warrior");
         ammunition.rng = RfbRng::seeded(*seed);
-        let ammunition = ammunition.resolve_item_enchantment_component(0, 1, 20, true, false);
+        let ammunition =
+            ammunition.resolve_item_enchantment_component(0, 1, 20, true, false, false);
         ordinary.successes == 0 && ammunition.successes == 1
     });
     assert_eq!(ammunition_seed, Some(0));

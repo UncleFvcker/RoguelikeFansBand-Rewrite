@@ -340,7 +340,7 @@ fn spectre_device_absorption_follows_current_form_and_rejects_remote_items() {
 fn spectre_can_buy_projected_magic_shop_device_and_absorb_its_energy() {
     let mut game = birth(83, "demo.build.warrior");
     clear_monsters(&mut game);
-    game.player.position = Position { x: 57, y: 13 };
+    game.player.position = Position { x: 108, y: 30 };
     game.gold = 100_000;
     game.mark_shop_visited_at_player().unwrap();
     let snapshot = game.snapshot();

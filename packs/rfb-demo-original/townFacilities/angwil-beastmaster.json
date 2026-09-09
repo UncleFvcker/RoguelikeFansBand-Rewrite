@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.angwil-beastmaster",
+  "nameKey": "town-facility-demo-angwil-beastmaster-name",
+  "descriptionKey": "town-facility-demo-angwil-beastmaster-description",
+  "townId": "demo.town.angwil",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-angwil-beastmaster-owner-name",
+  "entrancePosition": {
+    "x": 46,
+    "y": 33
+  },
+  "entranceTerrainId": "demo.terrain.beastmaster-entrance",
+  "researchMonsterCost": {
+    "ownerCost": 1500,
+    "otherCost": 1500
+  }
+}

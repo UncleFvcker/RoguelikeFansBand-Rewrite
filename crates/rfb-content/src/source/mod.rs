@@ -158,7 +158,7 @@ fn resolve_affix_effect_programs(
                 continue;
             };
             let (effect, input) = resolve_source_item_effect(&activation.id, program_id, programs)?;
-            if !effect_program_input_matches_device_target(input, &activation.target) {
+            if !effect_program_input_matches_device_target(input, &activation.target, &effect) {
                 return Err(ContentError::InvalidItemUseAction(activation.id.clone()));
             }
             activation.effect = effect;

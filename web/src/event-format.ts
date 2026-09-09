@@ -917,6 +917,18 @@ export function createPresentationFormatter(
         return localization.format("facility-rename-unavailable", {
           reason: facilityServiceReason(event.args.reason),
         });
+      case "inn-food-completed":
+        return localization.format("inn-food-completed", {
+          food: localization.format(event.args.foodKey ?? ""), cost: event.args.cost ?? "?", balance: event.args.balance ?? "?",
+        });
+      case "inn-food-unavailable":
+        return localization.format("inn-food-unavailable", { reason: innStayReason(event.args.reason) });
+      case "facility-monster-researched":
+        return localization.format("facility-monster-researched", {
+          monster: contentName(event.args.actorKind), cost: event.args.cost ?? "?", balance: event.args.balance ?? "?",
+        });
+      case "facility-monster-research-unavailable":
+        return localization.format("facility-monster-research-unavailable", { reason: facilityServiceReason(event.args.reason) });
       case "inn-stay-completed":
         return localization.format("inn-stay-completed", {
           cost: event.args.cost ?? "?",

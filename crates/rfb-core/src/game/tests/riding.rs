@@ -95,10 +95,10 @@ fn mount_moves_with_player_round_trips_and_dismounts() {
         actor.level = 1;
     });
     clear_monsters(&mut game);
-    let start = Position { x: 48, y: 16 };
-    let mount_position = Position { x: 49, y: 16 };
-    let moved_position = Position { x: 50, y: 16 };
-    let dismount_position = Position { x: 50, y: 15 };
+    let start = Position { x: 99, y: 33 };
+    let mount_position = Position { x: 100, y: 33 };
+    let moved_position = Position { x: 101, y: 33 };
+    let dismount_position = Position { x: 101, y: 32 };
     for position in [start, mount_position, moved_position, dismount_position] {
         replace_terrain(&mut game, position, "demo.terrain.floor");
     }

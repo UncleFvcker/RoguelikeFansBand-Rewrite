@@ -1,0 +1,92 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.whip",
+    "instant": false,
+    "rarityOneIn": 5,
+    "sourceIndex": 162
+  },
+  "baseValue": 18000,
+  "descriptionKey": "item-demo-dr-jones-whip-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effectProgramId": "demo.effect.dr-jones-telekinesis",
+        "id": "demo.item-activation.dr-jones-telekinesis",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "item-activation-demo-dr-jones-telekinesis-name",
+        "rfbValue": 1400,
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 300
+    }
+  },
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 8,
+  "glyph": "\\",
+  "id": "demo.item.dr-jones-whip",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 7,
+    "toDamage": 13,
+    "toHit": 16
+  },
+  "modifiers": {
+    "intelligence": 1,
+    "wisdom": 1
+  },
+  "nameKey": "item-demo-dr-jones-whip-name",
+  "passives": [
+    "levitation",
+    "see-invisible"
+  ],
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "LEVITATION",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "WIS"
+    ],
+    "pval": 1,
+    "toArmor": 0
+  },
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "weaponProficiencyBaseItemId": "demo.item.whip",
+  "weightTenthsPound": 30
+}

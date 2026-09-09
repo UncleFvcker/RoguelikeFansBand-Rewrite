@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.morivant-warrior-guild",
+  "nameKey": "town-facility-demo-morivant-warrior-guild-name",
+  "descriptionKey": "town-facility-demo-morivant-warrior-guild-description",
+  "townId": "demo.town.morivant",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-morivant-warrior-guild-owner-name",
+  "entrancePosition": {
+    "x": 111,
+    "y": 19
+  },
+  "entranceTerrainId": "demo.terrain.warrior-guild-entrance",
+  "serviceActions": [
+    {
+      "kind": "enchant-weapon",
+      "ownerCost": 0,
+      "otherCost": 0
+    },
+    {
+      "kind": "enchant-armor",
+      "ownerCost": 0,
+      "otherCost": 0
+    }
+  ],
+  "ownerClassIds": [
+    "demo.class.warrior",
+    "demo.class.cavalry"
+  ]
+}

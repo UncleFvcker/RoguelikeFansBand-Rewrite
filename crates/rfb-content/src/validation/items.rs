@@ -3,10 +3,10 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{
-    AbilityDetectSubjectDefinition, AbilityTargetDefinition, AbilityTargetModeDefinition,
-    ContentError, EquipmentBonuses, ITEM_SCHEMA, ItemDefinition, ItemEnchantmentRollDefinition,
-    ItemFuelKindDefinition, ItemMountUseDefinition, ItemSummonSelectorDefinition,
-    ItemUseEffectDefinition, StatModifiers,
+    AbilityDetectSubjectDefinition, AbilityEffectDefinition, AbilityTargetDefinition,
+    AbilityTargetModeDefinition, ContentError, EquipmentBonuses, ITEM_SCHEMA, ItemDefinition,
+    ItemEnchantmentRollDefinition, ItemFuelKindDefinition, ItemMountUseDefinition,
+    ItemSummonSelectorDefinition, ItemUseEffectDefinition, StatModifiers,
 };
 
 use super::shared::{
@@ -602,7 +602,7 @@ pub(super) fn validate_items(
             let self_target = target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
                 && target.range == 0
                 && !target.requires_line_of_effect;
-            let projectile_target = !target
+            let actor_target = !target
                 .modes
                 .contains(&AbilityTargetModeDefinition::SelfTarget)
                 && target.modes.iter().all(|mode| {
@@ -613,16 +613,23 @@ pub(super) fn validate_items(
                             | AbilityTargetModeDefinition::Entity
                     )
                 })
-                && (1..=64).contains(&target.range)
-                && target.requires_line_of_effect;
+                && (1..=64).contains(&target.range);
+            let projectile_target = actor_target && target.requires_line_of_effect;
             modes_are_unique
                 && match effect {
-                    ItemUseEffectDefinition::AbilityEffect { .. } => {
+                    ItemUseEffectDefinition::AbilityEffect { effect, .. } => {
                         let item_target = target.modes.as_slice()
                             == [AbilityTargetModeDefinition::Item]
                             && target.range == 0
                             && !target.requires_line_of_effect;
-                        self_target || projectile_target || item_target
+                        self_target
+                            || projectile_target
+                            || item_target
+                            || (actor_target
+                                && matches!(
+                                    effect.as_ref(),
+                                    AbilityEffectDefinition::FetchItem { .. }
+                                ))
                     }
                     ItemUseEffectDefinition::IncreaseNutrition { .. }
                     | ItemUseEffectDefinition::SatisfyHunger
@@ -1184,6 +1191,7 @@ pub(super) fn validate_items(
             let valid_activations = (1..=256).contains(&generation.activations.len())
                 && generation.activations.iter().all(|activation| {
                     activation_ids.insert(activation.id.clone())
+                        && (item.equipment_slot.is_none() || activation.rfb_value.is_some())
                         && validate_id(&activation.id).is_ok()
                         && validate_message_key(&activation.name_key).is_ok()
                         && activation.rfb_value.is_none_or(|value| {

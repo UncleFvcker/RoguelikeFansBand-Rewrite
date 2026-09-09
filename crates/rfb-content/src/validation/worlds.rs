@@ -314,6 +314,7 @@ fn validate_town_surface_placement(
     map_origin: ContentPosition,
     town_width: u16,
     town_height: u16,
+    inherit_wilderness_terrain: bool,
     town_fill_terrain_id: &str,
     town_border_terrain_id: &str,
     town_terrain: &BTreeMap<ContentPosition, &str>,
@@ -328,6 +329,12 @@ fn validate_town_surface_placement(
         return Err(ContentError::InvalidTown(town_id.to_owned()));
     }
 
+    // Open forest templates have no enclosing wall or tagged town gates.
+    // Their unpainted cells use seeded wilderness, so the static gate-to-road
+    // check below applies only to self-contained town maps.
+    if inherit_wilderness_terrain {
+        return Ok(());
+    }
     let surface_width = usize::from(WILDERNESS_WORLD_CELL_WIDTH);
     let surface_height = usize::from(WILDERNESS_WORLD_CELL_HEIGHT);
     let mut walkable = vec![false; surface_width * surface_height];
@@ -464,14 +471,14 @@ fn validate_task_objective(
             }
         }
         TaskObjectiveKind::CollectItem => {
-            let (Some(instance_id), Some(kind_id)) =
-                (&objective.item_instance_id, &objective.item_kind_id)
-            else {
+            let Some(kind_id) = &objective.item_kind_id else {
                 return Err(ContentError::InvalidTask(owner_id.to_owned()));
             };
-            validate_id(instance_id)?;
-            if !instance_ids.insert(instance_id.clone()) {
-                return Err(ContentError::DuplicateInstanceId(instance_id.clone()));
+            if let Some(instance_id) = &objective.item_instance_id {
+                validate_id(instance_id)?;
+                if !instance_ids.insert(instance_id.clone()) {
+                    return Err(ContentError::DuplicateInstanceId(instance_id.clone()));
+                }
             }
             if !item_limits.contains_key(kind_id) {
                 return Err(ContentError::DanglingReference {
@@ -580,6 +587,12 @@ pub(super) fn validate_world(
     let floor_ids = world
         .procedural_floors
         .iter()
+        .map(|floor| floor.id.clone())
+        .collect::<BTreeSet<_>>();
+    let town_floor_ids = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.lifecycle == FloorLifecycle::Town)
         .map(|floor| floor.id.clone())
         .collect::<BTreeSet<_>>();
     if world.procedural_floors.is_empty()
@@ -772,7 +785,8 @@ pub(super) fn validate_world(
                 .is_some_and(|id| !floor_ids.contains(id))
             || procedural.next_floor_id.is_some() != procedural.down_stair_terrain_id.is_some()
             || (procedural.lifecycle == FloorLifecycle::OneShot
-                && (procedural.return_floor_id != world.initial_floor_id
+                && ((procedural.return_floor_id != world.initial_floor_id
+                    && !town_floor_ids.contains(&procedural.return_floor_id))
                     || procedural.dungeon_id.is_some()
                     || procedural.final_floor
                     || procedural.guardian.is_some()
@@ -1981,6 +1995,10 @@ pub(super) fn validate_world(
             return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
         }
         if let Some(inline_map) = &mut procedural.inline_map {
+            if inline_map.inherit_wilderness_terrain && procedural.lifecycle != FloorLifecycle::Town
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
             validate_position(
                 inline_map.player_position,
                 procedural.width,
@@ -2961,7 +2979,9 @@ pub(super) fn validate_world(
     }
     let mut entry_terrain_owners = BTreeMap::<Option<&str>, Option<&str>>::new();
     for floor in world.procedural_floors.iter().filter(|floor| {
-        floor.lifecycle != FloorLifecycle::Town && floor.return_floor_id == world.initial_floor_id
+        floor.lifecycle != FloorLifecycle::Town
+            && (floor.return_floor_id == world.initial_floor_id
+                || town_floor_ids.contains(&floor.return_floor_id))
     }) {
         let entry_terrain_id = floor.entry_terrain_id.as_deref();
         let dungeon_id = floor.dungeon_id.as_deref();
@@ -3070,9 +3090,9 @@ pub(super) fn validate_world(
                     .get(&terrain_override.terrain_id)
                     .is_some_and(|tags| tags.contains("path"))
                 && ((position.x == 0 || position.x == world.width - 1)
-                    && position.y.abs_diff(WILDERNESS_WORLD_CELL_HEIGHT / 2) <= 1
+                    && position.y.abs_diff(world.height / 2) <= 1
                     || (position.y == 0 || position.y == world.height - 1)
-                        && position.x.abs_diff(WILDERNESS_WORLD_CELL_WIDTH / 2) <= 1);
+                        && position.x.abs_diff(world.width / 2) <= 1);
             if (on_border && !valid_town_exit)
                 || override_terrain
                     .insert(*position, terrain_override.terrain_id.clone())
@@ -3168,6 +3188,12 @@ pub(super) fn validate_world(
             map_origin,
             town_width,
             town_height,
+            world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == town.floor_id)
+                .and_then(|floor| floor.inline_map.as_ref())
+                .is_some_and(|map| map.inherit_wilderness_terrain),
             town_fill_terrain_id,
             town_border_terrain_id,
             &town_terrain,
@@ -3189,25 +3215,22 @@ pub(super) fn validate_world(
             let facility = town_facilities
                 .get(facility_id)
                 .expect("validated town facility reference must remain available");
-            validate_position(
-                facility.entrance_position,
-                town_width,
-                town_height,
-                &facility.id,
-            )?;
             require_reference(terrain_ids, &facility.entrance_terrain_id, &facility.id)?;
-            let effective_terrain_id = town_terrain
-                .get(&facility.entrance_position)
-                .copied()
-                .unwrap_or(town_fill_terrain_id);
-            if !entrance_positions.insert(facility.entrance_position)
-                || effective_terrain_id != facility.entrance_terrain_id
-                || terrain_walkability.get(effective_terrain_id) != Some(&true)
-                || !terrain_tags
-                    .get(effective_terrain_id)
-                    .is_some_and(|tags| tags.contains("town-facility-entrance"))
-            {
-                return Err(ContentError::InvalidTownFacility(facility.id.clone()));
+            for position in facility.entrance_positions() {
+                validate_position(position, town_width, town_height, &facility.id)?;
+                let effective_terrain_id = town_terrain
+                    .get(&position)
+                    .copied()
+                    .unwrap_or(town_fill_terrain_id);
+                if !entrance_positions.insert(position)
+                    || effective_terrain_id != facility.entrance_terrain_id
+                    || terrain_walkability.get(effective_terrain_id) != Some(&true)
+                    || !terrain_tags
+                        .get(effective_terrain_id)
+                        .is_some_and(|tags| tags.contains("town-facility-entrance"))
+                {
+                    return Err(ContentError::InvalidTownFacility(facility.id.clone()));
+                }
             }
         }
         let mut shop_entrance_positions = BTreeSet::new();
@@ -3225,7 +3248,9 @@ pub(super) fn validate_world(
             let shares_quest_service = town.facility_ids.iter().any(|facility_id| {
                 town_facilities.get(facility_id).is_some_and(|facility| {
                     facility.category == TownFacilityCategory::QuestGiver
-                        && facility.entrance_position == shop.entrance_position
+                        && facility
+                            .entrance_positions()
+                            .any(|position| position == shop.entrance_position)
                         && facility.entrance_terrain_id == shop.entrance_terrain_id
                 })
             });

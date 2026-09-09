@@ -35,6 +35,8 @@ pub struct TownFacilityDefinition {
     pub town_id: String,
     pub category: TownFacilityCategory,
     #[serde(default)]
+    pub casino: bool,
+    #[serde(default)]
     pub storage_id: Option<String>,
     #[serde(default)]
     pub reject_artifact_deposits: bool,
@@ -47,7 +49,13 @@ pub struct TownFacilityDefinition {
     #[serde(default)]
     pub research_item_cost: Option<u32>,
     #[serde(default)]
-    pub identify_all_items_cost: Option<u32>,
+    pub research_monster_cost: Option<TownFacilityPrice>,
+    #[serde(default)]
+    pub teleport_level_cost: Option<TownFacilityPrice>,
+    #[serde(default)]
+    pub identify_all_items_cost: Option<TownFacilityPrice>,
+    #[serde(default)]
+    pub inn_stay_cost: Option<TownFacilityPrice>,
     #[serde(default)]
     pub overview_message_key: Option<String>,
     #[serde(default)]
@@ -69,7 +77,24 @@ pub struct TownFacilityDefinition {
     #[serde(default)]
     pub bounty_office: Option<TownFacilityBountyDefinition>,
     pub entrance_position: ContentPosition,
+    #[serde(default)]
+    pub additional_entrance_positions: Vec<ContentPosition>,
     pub entrance_terrain_id: String,
+}
+
+impl TownFacilityDefinition {
+    pub fn entrance_positions(&self) -> impl Iterator<Item = ContentPosition> + '_ {
+        std::iter::once(self.entrance_position)
+            .chain(self.additional_entrance_positions.iter().copied())
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TownFacilityPrice {
+    pub owner_cost: u32,
+    pub other_cost: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -129,6 +154,10 @@ pub struct ShopDefinition {
     pub entrance_terrain_id: String,
     #[serde(default)]
     pub inn_stay_cost: Option<u32>,
+    #[serde(default)]
+    pub inn_food_cost: Option<u32>,
+    #[serde(default)]
+    pub inn_reputation_cost: Option<u32>,
     pub owner: ShopOwnerDefinition,
     pub stock: Vec<ShopStockDefinition>,
     pub maintenance: ShopMaintenanceDefinition,

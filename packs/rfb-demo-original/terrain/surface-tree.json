@@ -10,5 +10,5 @@
   "allowsWallPassage": true,
   "monsterDestroyToTerrainId": "demo.terrain.surface-grass",
   "movementModes": ["fly"],
-  "tags": ["outdoor", "surface", "tree"]
+  "tags": ["item-drop", "outdoor", "surface", "tree"]
 }

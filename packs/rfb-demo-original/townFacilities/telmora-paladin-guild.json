@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.telmora-paladin-guild",
+  "nameKey": "town-facility-demo-telmora-paladin-guild-name",
+  "descriptionKey": "town-facility-demo-telmora-paladin-guild-description",
+  "townId": "demo.town.telmora",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-telmora-paladin-guild-owner-name",
+  "entrancePosition": {
+    "x": 9,
+    "y": 46
+  },
+  "entranceTerrainId": "demo.terrain.paladin-guild-entrance",
+  "serviceActions": [
+    {
+      "kind": "enchant-armor",
+      "ownerCost": 300,
+      "otherCost": 600
+    },
+    {
+      "kind": "heal",
+      "ownerCost": 0,
+      "otherCost": 150
+    }
+  ],
+  "ownerClassIds": [
+    "demo.class.paladin"
+  ]
+}

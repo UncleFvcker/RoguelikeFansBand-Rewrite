@@ -10,10 +10,10 @@
     "debugClearEntities": true,
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
-      "x": 63,
-      "y": 13
+      "x": 114,
+      "y": 30
     },
-    "playerGold": 20
+    "playerGold": 28
   },
   "commands": [
     {
@@ -31,7 +31,7 @@
       "playerNutrition": 9999,
       "playerStatuses": [],
       "revision": 1,
-      "stateHash": "5929d153661bd5a8953b1ed2d8001320a243bc957067d170fb37c86ad23ed37b",
+      "stateHash": "6b2a47256ccb3eeebe1eb74388ae0cab114a0ecce2953fd54f0f3812b1a6cbb7",
       "turn": 1,
       "worldTick": 50000
     },
@@ -41,7 +41,7 @@
         "messageKey": "inn-stay-completed",
         "args": {
           "balance": "0",
-          "cost": "20",
+          "cost": "28",
           "elapsedTicks": "50000",
           "facility": "demo.shop.outpost-white-horse",
           "worldTick": "50000"

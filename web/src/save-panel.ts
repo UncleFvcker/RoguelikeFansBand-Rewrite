@@ -177,6 +177,10 @@ export class NativeSavePanel {
   }
 
   #announceLoad(summary: NativeSaveSummary, result: NativeLoadResult): void {
+    if (result.museumRecovered) {
+      this.#announce("message-museum-character-recovered", {}, "system");
+      return;
+    }
     if (result.recoveryBackup === null) {
       this.#announce("message-native-save-loaded", { name: summary.slotName }, "system");
     } else {
@@ -213,7 +217,8 @@ export class NativeSavePanel {
       header.className = "native-save-header";
       const name = this.#list.ownerDocument.createElement("span");
       name.className = "native-save-name";
-      name.textContent = summary.slotName;
+      name.textContent = summary.museumCheckpoint
+        ? this.#localization.format("museum-checkpoint-name", { name: summary.slotName }) : summary.slotName;
       name.title = summary.slotName;
       const status = this.#list.ownerDocument.createElement("span");
       status.className = `native-save-status native-save-status-${summary.status}`;
@@ -240,7 +245,8 @@ export class NativeSavePanel {
         void this.#delete(summary),
       );
       remove.disabled = this.#busy;
-      actions.append(load, overwrite, remove);
+      actions.append(load);
+      if (!summary.museumCheckpoint) actions.append(overwrite, remove);
 
       row.append(header, metadata, actions);
       this.#list.append(row);
@@ -258,6 +264,7 @@ export class NativeSavePanel {
   }
 
   #metadata(summary: NativeSaveSummary): string {
+    if (summary.museumCheckpoint) return this.#localization.format("museum-checkpoint-details", { turn: summary.turn ?? "?" });
     if (summary.turn === null || summary.savedAt === null) {
       return this.#localization.format("native-save-meta-unavailable");
     }
@@ -314,6 +321,15 @@ function nativeSaveStatusKey(status: NativeSaveSummary["status"]): MessageKey {
 }
 
 export function nativeSaveErrorKey(code: string): MessageKey {
+  switch (code) {
+    case "museum-collection-stale": return "museum-error-stale";
+    case "museum-character-stale": return "museum-error-character-stale";
+    case "museum-busy": return "museum-error-busy";
+    case "museum-profile-mismatch":
+    case "museum-character-missing": return "museum-error-profile";
+    case "museum-unbound-save": return "museum-error-unbound";
+  }
+  if (code.startsWith("museum-")) return "museum-error-invalid";
   switch (nativeSaveErrorCategory(code)) {
     case "name-invalid":
       return "native-save-error-name-invalid";

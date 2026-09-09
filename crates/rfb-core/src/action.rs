@@ -9,6 +9,10 @@ use crate::{scheduler::STANDARD_ACTION_COST, stats::AttributeKind};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum GameAction {
+    Casino {
+        facility_id: String,
+        action: rfb_protocol::CasinoActionDto,
+    },
     AbsorbDevice {
         item_id: String,
     },
@@ -126,6 +130,21 @@ pub(crate) enum GameAction {
         facility_id: String,
         item_id: String,
     },
+    ResearchMonsterAtFacility {
+        facility_id: String,
+        actor_kind_id: String,
+    },
+    TeleportToDungeonLevelAtFacility {
+        facility_id: String,
+        dungeon_id: String,
+        depth: u16,
+    },
+    EatAtInn {
+        facility_id: String,
+    },
+    AskReputationAtInn {
+        facility_id: String,
+    },
     IdentifyAllAtFacility {
         facility_id: String,
     },
@@ -133,6 +152,7 @@ pub(crate) enum GameAction {
         facility_id: String,
         service: FacilityServiceKindDto,
         item_id: Option<String>,
+        enchantment_steps: Option<u8>,
     },
     UseBountyOffice {
         facility_id: String,
@@ -235,7 +255,12 @@ impl GameAction {
             | Self::SellToShop { .. }
             | Self::IdentifyAtFacility { .. }
             | Self::ResearchItemAtFacility { .. }
+            | Self::ResearchMonsterAtFacility { .. }
+            | Self::TeleportToDungeonLevelAtFacility { .. }
+            | Self::EatAtInn { .. }
+            | Self::AskReputationAtInn { .. }
             | Self::IdentifyAllAtFacility { .. }
+            | Self::Casino { .. }
             | Self::UseFacilityService { .. }
             | Self::UseBountyOffice { .. }
             | Self::RenameAtFacility { .. }
@@ -407,14 +432,23 @@ impl From<GameCommand> for GameAction {
             GameCommand::IdentifyAllAtFacility { facility_id } => {
                 Self::IdentifyAllAtFacility { facility_id }
             }
+            GameCommand::Casino {
+                facility_id,
+                action,
+            } => Self::Casino {
+                facility_id,
+                action,
+            },
             GameCommand::UseFacilityService {
                 facility_id,
                 service,
                 item_id,
+                enchantment_steps,
             } => Self::UseFacilityService {
                 facility_id,
                 service,
                 item_id,
+                enchantment_steps,
             },
             GameCommand::UseBountyOffice {
                 facility_id,
@@ -429,6 +463,26 @@ impl From<GameCommand> for GameAction {
                 Self::RenameAtFacility { facility_id, name }
             }
             GameCommand::StayAtInn { facility_id } => Self::StayAtInn { facility_id },
+            GameCommand::EatAtInn { facility_id } => Self::EatAtInn { facility_id },
+            GameCommand::AskReputationAtInn { facility_id } => {
+                Self::AskReputationAtInn { facility_id }
+            }
+            GameCommand::ResearchMonsterAtFacility {
+                facility_id,
+                actor_kind_id,
+            } => Self::ResearchMonsterAtFacility {
+                facility_id,
+                actor_kind_id,
+            },
+            GameCommand::TeleportToDungeonLevelAtFacility {
+                facility_id,
+                dungeon_id,
+                depth,
+            } => Self::TeleportToDungeonLevelAtFacility {
+                facility_id,
+                dungeon_id,
+                depth,
+            },
             GameCommand::TravelFromInn {
                 facility_id,
                 destination_town_id,

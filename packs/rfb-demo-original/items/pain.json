@@ -30,6 +30,10 @@
   "resistsProjectionDestruction": true,
   "rfbValue": {
     "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
       "RIDING",
       "SHOW_MODS"
     ],

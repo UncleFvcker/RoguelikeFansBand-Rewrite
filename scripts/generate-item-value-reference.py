@@ -26,15 +26,15 @@ def function(source, name):
     return source[match.start():end]
 
 
-def records(source):
+def records(source, *, artifact=False):
     result = {}
     index = 0
     for line in source.splitlines():
         if line.startswith("N:"):
             _, number, name = line.split(":", 2)
             index = index + 1 if number == "*" else int(number)
-            # RFB zero-initializes each record before parsing optional I/P lines.
-            result[index] = {"name": name, "flags": [], "identity": [0,0,0], "parameters": ["0","0d0","0","0","0"]}
+            # RFB zero-initializes optional I/P values; init1.c adds four IGNORE flags to artifacts.
+            result[index] = {"name": name, "flags": ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"] if artifact else [], "identity": [0,0,0], "parameters": ["0","0d0","0","0","0"]}
         elif line.startswith("I:"):
             result[index]["identity"] = list(map(int, line[2:].split(":")))
         elif line.startswith("P:"):
@@ -205,7 +205,7 @@ def oracle_values(exe, objects, scoring_flags=None):
 
 def source_instances(read, exe, root, scoring_flags):
     """Base and fixed-artifact numbers come directly from k_info/a_info, not Rust."""
-    kinds, artifacts = (records(read(f"lib/edit/{name}_info.txt")) for name in ["k", "a"])
+    kinds, artifacts = (records(read(f"lib/edit/{name}_info.txt"), artifact=name == "a") for name in ["k", "a"])
     items = {data["id"]: data for path in sorted((root/"items").glob("*.json"))
              if (data := json.loads(path.read_text(encoding="utf-8")))}
     cases = []
@@ -291,7 +291,7 @@ def reference_cases(flags):
 
 
 def sync_metadata(read, exe, root):
-    kinds, egos, artifacts = (records(read(f"lib/edit/{name}_info.txt")) for name in ["k","e","a"])
+    kinds, egos, artifacts = (records(read(f"lib/edit/{name}_info.txt"), artifact=name == "a") for name in ["k","e","a"])
     items = [(path,json.loads(path.read_text(encoding="utf-8"))) for path in sorted((root/"items").glob("*.json"))]
     affixes = [(path,json.loads(path.read_text(encoding="utf-8"))) for path in sorted((root/"affixes").glob("*.json"))]
     token_pattern = re.compile(r"^rfb\.device-activation\.ego-\d+-(?:biased-)?(.+)$")

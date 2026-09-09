@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.239";
-pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 11;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 11;
+pub const PROTOCOL_VERSION: &str = "1.240";
+pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 12;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 12;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -103,6 +103,10 @@ pub struct PendingAbilityDirectionDto {
     rename_all_fields = "camelCase"
 )]
 pub enum GameCommand {
+    Casino {
+        facility_id: String,
+        action: CasinoActionDto,
+    },
     AcceptTask {
         facility_id: String,
         task_id: String,
@@ -247,6 +251,21 @@ pub enum GameCommand {
         facility_id: String,
         item_id: String,
     },
+    ResearchMonsterAtFacility {
+        facility_id: String,
+        actor_kind_id: String,
+    },
+    TeleportToDungeonLevelAtFacility {
+        facility_id: String,
+        dungeon_id: String,
+        depth: u16,
+    },
+    EatAtInn {
+        facility_id: String,
+    },
+    AskReputationAtInn {
+        facility_id: String,
+    },
     IdentifyAllAtFacility {
         facility_id: String,
     },
@@ -255,6 +274,8 @@ pub enum GameCommand {
         service: FacilityServiceKindDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         item_id: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        enchantment_steps: Option<u8>,
     },
     UseBountyOffice {
         facility_id: String,
@@ -3586,6 +3607,7 @@ pub struct PlayerDto {
     pub max_hp: i32,
     #[serde(default)]
     pub gold: u32,
+    pub fame: u16,
     #[serde(default = "default_player_nutrition")]
     pub nutrition: u16,
     pub fasting: bool,
@@ -4340,6 +4362,10 @@ pub struct ShopDto {
     pub entrance_terrain_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub inn_stay_cost: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inn_food_cost: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inn_reputation_cost: Option<u32>,
     #[serde(default)]
     pub inn_travel_destinations: Vec<InnTravelDestinationDto>,
     pub visited: bool,
@@ -4358,6 +4384,8 @@ pub struct HomeItemDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub details: Option<InventoryItemDto>,
     pub kind_id: String,
     pub display_name_key: String,
     pub quantity: u32,
@@ -4378,6 +4406,8 @@ pub struct HomeItemDto {
 #[serde(rename_all = "camelCase")]
 pub struct HomeDto {
     pub id: String,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub museum: bool,
     pub name_key: String,
     pub description_key: String,
     pub entrance_position: Position,
@@ -4394,6 +4424,8 @@ pub struct HomeDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TaskServiceDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub casino: Option<CasinoDto>,
     pub id: String,
     pub name_key: String,
     pub description_key: String,
@@ -4406,7 +4438,17 @@ pub struct TaskServiceDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub research_item_cost: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub research_monster_cost: Option<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub research_monsters: Vec<ResearchMonsterDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub teleport_level_cost: Option<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub teleport_dungeons: Vec<TeleportDungeonDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub identify_all_items_cost: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inn_stay_cost: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub overview_message_key: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4419,6 +4461,145 @@ pub struct TaskServiceDto {
     pub bounty_office: Option<BountyOfficeDto>,
     #[serde(default)]
     pub tasks: Vec<TaskStatusDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TeleportDungeonDto {
+    pub dungeon_id: String,
+    pub name_key: String,
+    pub recall_depth: u16,
+    pub depths: Vec<u16>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum CasinoGameDto {
+    InBetween,
+    Craps,
+    Roulette,
+    DiceSlots,
+    Poker,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum CasinoActionDto {
+    Start {
+        game: CasinoGameDto,
+        wager: u32,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        roulette_choice: Option<u8>,
+    },
+    Again {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        roulette_choice: Option<u8>,
+    },
+    Roll,
+    Draw {
+        replace_mask: u8,
+    },
+    Leave,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CasinoDto {
+    pub maximum_wager: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub session: Option<CasinoSessionDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CasinoSessionDto {
+    pub game: CasinoGameDto,
+    pub wager: u32,
+    pub starting_gold: u32,
+    pub round: CasinoRoundDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase"
+)]
+pub enum CasinoRoundDto {
+    Poker {
+        cards: Vec<u8>,
+    },
+    Craps {
+        point: u8,
+        dice: [u8; 2],
+    },
+    Finished {
+        values: Vec<u8>,
+        odds: u16,
+        payout: u32,
+        result_key: String,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CasinoStateSaveDto {
+    pub facility_id: String,
+    pub game: CasinoGameDto,
+    pub wager: u32,
+    pub starting_gold: u32,
+    pub round: CasinoRoundSaveDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum CasinoRoundSaveDto {
+    Poker { deck: Vec<u8> },
+    Craps { point: u8, dice: [u8; 2] },
+    Finished { values: Vec<u8>, odds: u16 },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ResearchMonsterDto {
+    pub kind_id: String,
+    pub name_key: String,
+    pub glyph: String,
+    pub level: u32,
+    pub unique: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub knowledge: Option<MonsterKindKnowledgeDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MonsterKindKnowledgeDto {
+    pub description_key: String,
+    pub max_hp: i32,
+    pub speed: u16,
+    pub armor_class: i32,
+    pub resistances: Vec<ResistanceDto>,
+    pub status_immunities: Vec<String>,
+    pub melee_routine: MeleeRoutineDto,
+    pub ability_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -4545,7 +4726,16 @@ pub enum FacilityServiceKindDto {
 #[serde(rename_all = "camelCase")]
 pub struct FacilityServiceTargetDto {
     pub item_id: String,
+    pub choices: Vec<FacilityEnchantmentChoiceDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct FacilityEnchantmentChoiceDto {
+    pub steps: u8,
     pub cost: u32,
+    pub result: ItemEnchantmentsDto,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4883,6 +5073,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(FacilityMembershipDto);
     push_declaration!(FacilityServiceKindDto);
     push_declaration!(FacilityServiceTargetDto);
+    push_declaration!(FacilityEnchantmentChoiceDto);
     push_declaration!(FacilityServiceDto);
     push_declaration!(BountyOfficeActionDto);
     push_declaration!(BountyDailyTargetDto);
@@ -4892,7 +5083,15 @@ pub fn generated_typescript() -> String {
     push_declaration!(BountyMissionStatusDto);
     push_declaration!(BountyMissionDto);
     push_declaration!(BountyOfficeDto);
+    push_declaration!(CasinoGameDto);
+    push_declaration!(CasinoActionDto);
+    push_declaration!(CasinoDto);
+    push_declaration!(CasinoSessionDto);
+    push_declaration!(CasinoRoundDto);
     push_declaration!(TaskServiceDto);
+    push_declaration!(ResearchMonsterDto);
+    push_declaration!(TeleportDungeonDto);
+    push_declaration!(MonsterKindKnowledgeDto);
     push_declaration!(GameSnapshot);
     push_declaration!(GameUpdate);
 
@@ -4915,6 +5114,7 @@ pub struct TerrainSaveDto {
     pub glow: Vec<bool>,
     /// Magical darkness suppresses surface daylight until the next dawn.
     pub daylight_suppressed: Vec<bool>,
+    pub vault_cells: Vec<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4935,6 +5135,7 @@ pub struct PlayerSaveDto {
     pub hp: i32,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
     pub gold: u32,
+    pub fame: u16,
     #[serde(default = "default_player_nutrition")]
     pub nutrition: u16,
     pub fasting: bool,
@@ -5556,6 +5757,8 @@ pub struct BountyMissionSaveDto {
 pub struct DungeonStateSaveDto {
     pub dungeon_id: String,
     pub suppressed: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recall_floor_id: Option<String>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub guardian_defeated: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5631,6 +5834,8 @@ fn is_zero_u8(value: &u8) -> bool {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SavePayloadV1 {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub casino: Option<CasinoStateSaveDto>,
     pub schema_version: u16,
     pub revision: u32,
     pub turn: u32,
@@ -5732,6 +5937,17 @@ pub struct SaveHeaderV1 {
     pub content_id: String,
     pub content_hash: String,
     pub payload_encoding: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub museum_binding: Option<MuseumBindingSaveDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MuseumBindingSaveDto {
+    pub profile_id: String,
+    pub character_id: u64,
+    pub epoch: u64,
+    pub collection_revision: u64,
 }
 
 #[derive(Debug, Error)]
@@ -5896,6 +6112,7 @@ mod tests {
                 facility_id: "demo.town-facility.anambar-mammon-temple".to_owned(),
                 service: FacilityServiceKindDto::Heal,
                 item_id: None,
+                enchantment_steps: None,
             },
             GameCommand::UseBountyOffice {
                 facility_id: "demo.town-facility.outpost-bounty-office".to_owned(),
@@ -6063,6 +6280,7 @@ mod tests {
                 terrain_ids: vec!["demo.terrain.floor".to_owned()],
                 glow: vec![false],
                 daylight_suppressed: vec![false],
+                vault_cells: vec![false],
             },
             player: PlayerDto {
                 trait_details: CharacterTraitDetailsDto::default(),
@@ -6073,6 +6291,7 @@ mod tests {
                 hp: 8,
                 max_hp: 14,
                 gold: 0,
+                fame: 0,
                 nutrition: PLAYER_NUTRITION_BIRTH,
                 fasting: false,
                 nutrition_state: NutritionStateDto::Normal,
@@ -6355,6 +6574,7 @@ mod tests {
             position: Position { x: 0, y: 0 },
             hp: 10,
             gold: 0,
+            fame: 0,
             nutrition: PLAYER_NUTRITION_BIRTH,
             fasting: false,
             base_max_hp: 10,

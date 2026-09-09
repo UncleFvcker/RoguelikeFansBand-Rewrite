@@ -11,6 +11,7 @@ interface HomeDom {
   title: HTMLElement;
   description: HTMLElement;
   close: HTMLButtonElement;
+  refresh: HTMLButtonElement;
   withdrawTab: HTMLButtonElement;
   depositTab: HTMLButtonElement;
   list: HTMLUListElement;
@@ -31,7 +32,9 @@ export class HomePanel {
   readonly #dispatch: (command: GameCommand) => Promise<void>;
   readonly #formatEvent: (event: GameEventDto) => string;
   readonly #visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string;
+  readonly #inspectItem: (itemId: string) => void;
   readonly #beforeOpen: () => void;
+  readonly #refreshMuseum: () => Promise<void>;
   readonly #dom: HomeDom;
   #mode: HomeMode = "withdraw";
   #home: HomeDto | undefined;
@@ -47,14 +50,18 @@ export class HomePanel {
     dispatch: (command: GameCommand) => Promise<void>;
     formatEvent: (event: GameEventDto) => string;
     visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string;
+    inspectItem: (itemId: string) => void;
     beforeOpen: () => void;
+    refreshMuseum: () => Promise<void>;
   }) {
     this.#state = options.state;
     this.#localization = options.localization;
     this.#dispatch = options.dispatch;
     this.#formatEvent = options.formatEvent;
     this.#visibleItemName = options.visibleItemName;
+    this.#inspectItem = options.inspectItem;
     this.#beforeOpen = options.beforeOpen;
+    this.#refreshMuseum = options.refreshMuseum;
     this.#dom = createHomeDom(options.document);
   }
 
@@ -62,6 +69,7 @@ export class HomePanel {
     if (this.#installed) return;
     this.#installed = true;
     this.#dom.close.addEventListener("click", this.#close);
+    this.#dom.refresh.addEventListener("click", this.#refresh);
     this.#dom.dialog.addEventListener("close", this.#closed);
     this.#dom.withdrawTab.addEventListener("click", this.#showWithdraw);
     this.#dom.depositTab.addEventListener("click", this.#showDeposit);
@@ -77,6 +85,7 @@ export class HomePanel {
     if (!this.#installed) return;
     this.#installed = false;
     this.#dom.close.removeEventListener("click", this.#close);
+    this.#dom.refresh.removeEventListener("click", this.#refresh);
     this.#dom.dialog.removeEventListener("close", this.#closed);
     this.#dom.withdrawTab.removeEventListener("click", this.#showWithdraw);
     this.#dom.depositTab.removeEventListener("click", this.#showDeposit);
@@ -116,6 +125,7 @@ export class HomePanel {
   }
 
   updateActions(): void {
+    this.#dom.refresh.disabled = this.#state.busy;
     if (this.#home) this.#renderTransaction();
   }
 
@@ -129,6 +139,9 @@ export class HomePanel {
 
   readonly #close = (): void => {
     if (this.#dom.dialog.open) this.#dom.dialog.close();
+  };
+  readonly #refresh = (): void => {
+    if (!this.#state.busy) void this.#refreshMuseum();
   };
   readonly #closed = (): void => {
     if (this.#home?.playerAtEntrance) this.#dismissedId = this.#home.id;
@@ -189,6 +202,8 @@ export class HomePanel {
     if (!home || !status) return;
     this.#dom.title.textContent = this.#localization.format(home.nameKey);
     this.#dom.description.textContent = this.#localization.format(home.descriptionKey);
+    this.#dom.refresh.hidden = !home.museum;
+    this.#dom.refresh.disabled = this.#state.busy;
     this.#dom.withdrawTab.setAttribute("aria-selected", String(this.#mode === "withdraw"));
     this.#dom.depositTab.setAttribute("aria-selected", String(this.#mode === "deposit"));
     this.#dom.weight.textContent = this.#localization.format("shop-weight-current", {
@@ -235,6 +250,14 @@ export class HomePanel {
         span(this.#dom.list, "shop-item-stock", this.#localization.format(this.#mode === "withdraw" ? "home-stored-count" : "shop-owned-count", { quantity: item.quantity })),
       );
       row.append(button);
+      if (item.details) {
+        const inspect = this.#dom.list.ownerDocument.createElement("button");
+        inspect.type = "button";
+        inspect.textContent = this.#localization.format("action-inventory-details");
+        inspect.setAttribute("aria-label", this.#localization.format("inventory-details-for", { name }));
+        inspect.addEventListener("click", () => this.#inspectItem(item.id));
+        row.append(inspect);
+      }
       this.#dom.list.append(row);
     }
   }
@@ -343,6 +366,7 @@ function createHomeDom(document: Document): HomeDom {
   return {
     dialog: element("home-dialog"), title: element("home-title"), description: element("home-description"),
     close: element("home-close"), withdrawTab: element("home-withdraw-tab"), depositTab: element("home-deposit-tab"),
+    refresh: element("home-refresh"),
     list: element("home-item-list"), weight: element("home-weight-value"), selection: element("home-selection"),
     quantity: element("home-quantity"), decrease: element("home-quantity-decrease"), increase: element("home-quantity-increase"),
     maximum: element("home-quantity-maximum"), weightAfter: element("home-weight-after"), confirm: element("home-confirm"),

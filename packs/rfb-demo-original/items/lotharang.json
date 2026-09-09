@@ -66,6 +66,10 @@
     "flags": [
       "DEX",
       "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
       "SHOW_MODS",
       "SLAY_ORC",
       "SLAY_TROLL",

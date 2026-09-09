@@ -7112,6 +7112,266 @@
         "experience"
       ]
     },
+    "CasinoActionDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "game": {
+              "$ref": "#/$defs/CasinoGameDto"
+            },
+            "rouletteChoice": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "start"
+            },
+            "wager": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "game",
+            "wager"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "rouletteChoice": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "again"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "roll"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "replaceMask": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "draw"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "replaceMask"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "leave"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ]
+        }
+      ]
+    },
+    "CasinoDto": {
+      "type": "object",
+      "properties": {
+        "maximumWager": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "session": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CasinoSessionDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "maximumWager"
+      ]
+    },
+    "CasinoGameDto": {
+      "type": "string",
+      "enum": [
+        "in-between",
+        "craps",
+        "roulette",
+        "dice-slots",
+        "poker"
+      ]
+    },
+    "CasinoRoundDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "cards": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "poker"
+            }
+          },
+          "required": [
+            "type",
+            "cards"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "dice": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0
+              },
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "point": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "craps"
+            }
+          },
+          "required": [
+            "type",
+            "point",
+            "dice"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "odds": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "payout": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "resultKey": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "finished"
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0
+              }
+            }
+          },
+          "required": [
+            "type",
+            "values",
+            "odds",
+            "payout",
+            "resultKey"
+          ]
+        }
+      ]
+    },
+    "CasinoSessionDto": {
+      "type": "object",
+      "properties": {
+        "game": {
+          "$ref": "#/$defs/CasinoGameDto"
+        },
+        "round": {
+          "$ref": "#/$defs/CasinoRoundDto"
+        },
+        "startingGold": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "wager": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "game",
+        "wager",
+        "startingGold",
+        "round"
+      ]
+    },
     "CellDto": {
       "type": "object",
       "properties": {
@@ -8298,6 +8558,30 @@
         "sustain-charisma"
       ]
     },
+    "FacilityEnchantmentChoiceDto": {
+      "type": "object",
+      "properties": {
+        "cost": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "result": {
+          "$ref": "#/$defs/ItemEnchantmentsDto"
+        },
+        "steps": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "steps",
+        "cost",
+        "result"
+      ]
+    },
     "FacilityMembershipDto": {
       "type": "string",
       "enum": [
@@ -8346,10 +8630,11 @@
     "FacilityServiceTargetDto": {
       "type": "object",
       "properties": {
-        "cost": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
+        "choices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FacilityEnchantmentChoiceDto"
+          }
         },
         "itemId": {
           "type": "string"
@@ -8357,11 +8642,31 @@
       },
       "required": [
         "itemId",
-        "cost"
+        "choices"
       ]
     },
     "GameCommand": {
       "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "action": {
+              "$ref": "#/$defs/CasinoActionDto"
+            },
+            "facilityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "casino"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "action"
+          ]
+        },
         {
           "type": "object",
           "properties": {
@@ -9143,6 +9448,85 @@
         {
           "type": "object",
           "properties": {
+            "actorKindId": {
+              "type": "string"
+            },
+            "facilityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "research-monster-at-facility"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "actorKindId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "depth": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "dungeonId": {
+              "type": "string"
+            },
+            "facilityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "teleport-to-dungeon-level-at-facility"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "dungeonId",
+            "depth"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "eat-at-inn"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "ask-reputation-at-inn"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "facilityId": {
               "type": "string"
             },
@@ -9159,6 +9543,15 @@
         {
           "type": "object",
           "properties": {
+            "enchantmentSteps": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
             "facilityId": {
               "type": "string"
             },
@@ -10503,6 +10896,9 @@
         "id": {
           "type": "string"
         },
+        "museum": {
+          "type": "boolean"
+        },
         "nameKey": {
           "type": "string"
         },
@@ -10543,6 +10939,16 @@
           "anyOf": [
             {
               "$ref": "#/$defs/CapturedActorDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "details": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InventoryItemDto"
             },
             {
               "type": "null"
@@ -12020,6 +12426,59 @@
         "to"
       ]
     },
+    "MonsterKindKnowledgeDto": {
+      "type": "object",
+      "properties": {
+        "abilityIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "armorClass": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "descriptionKey": {
+          "type": "string"
+        },
+        "maxHp": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "meleeRoutine": {
+          "$ref": "#/$defs/MeleeRoutineDto"
+        },
+        "resistances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResistanceDto"
+          }
+        },
+        "speed": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "statusImmunities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "descriptionKey",
+        "maxHp",
+        "speed",
+        "armorClass",
+        "resistances",
+        "statusImmunities",
+        "meleeRoutine",
+        "abilityIds"
+      ]
+    },
     "MutationRatingDto": {
       "type": "string",
       "enum": [
@@ -12342,6 +12801,12 @@
             "wisdom": 0
           }
         },
+        "fame": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
         "fasting": {
           "type": "boolean"
         },
@@ -12579,6 +13044,7 @@
         "position",
         "hp",
         "maxHp",
+        "fame",
         "fasting",
         "virtues"
       ]
@@ -12942,6 +13408,45 @@
         "floorId"
       ]
     },
+    "ResearchMonsterDto": {
+      "type": "object",
+      "properties": {
+        "glyph": {
+          "type": "string"
+        },
+        "kindId": {
+          "type": "string"
+        },
+        "knowledge": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MonsterKindKnowledgeDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "level": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "unique": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kindId",
+        "nameKey",
+        "glyph",
+        "level",
+        "unique"
+      ]
+    },
     "ResistanceDto": {
       "type": "object",
       "properties": {
@@ -13136,6 +13641,22 @@
         },
         "id": {
           "type": "string"
+        },
+        "innFoodCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "innReputationCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
         },
         "innStayCost": {
           "type": [
@@ -13895,6 +14416,16 @@
             }
           ]
         },
+        "casino": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CasinoDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "descriptionKey": {
           "type": "string"
         },
@@ -13916,6 +14447,14 @@
           "minimum": 0
         },
         "identifyItemCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "innStayCost": {
           "type": [
             "integer",
             "null"
@@ -13958,6 +14497,20 @@
           "format": "uint32",
           "minimum": 0
         },
+        "researchMonsterCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "researchMonsters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResearchMonsterDto"
+          }
+        },
         "serviceActions": {
           "type": "array",
           "items": {
@@ -13970,6 +14523,20 @@
           "items": {
             "$ref": "#/$defs/TaskStatusDto"
           }
+        },
+        "teleportDungeons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TeleportDungeonDto"
+          }
+        },
+        "teleportLevelCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
         }
       },
       "required": [
@@ -14073,6 +14640,38 @@
         "paused",
         "reward-available",
         "taken"
+      ]
+    },
+    "TeleportDungeonDto": {
+      "type": "object",
+      "properties": {
+        "depths": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0
+          }
+        },
+        "dungeonId": {
+          "type": "string"
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "recallDepth": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "dungeonId",
+        "nameKey",
+        "recallDepth",
+        "depths"
       ]
     },
     "TerrainInteractionDto": {

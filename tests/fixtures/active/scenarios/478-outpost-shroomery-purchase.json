@@ -10,8 +10,8 @@
     "debugClearEntities": true,
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
-      "x": 61,
-      "y": 19
+      "x": 112,
+      "y": 36
     },
     "playerGold": 1000000
   },
@@ -34,10 +34,10 @@
       },
       "inventoryStackCount": 9,
       "lastCommandSeq": 1,
-      "playerGold": 999880,
+      "playerGold": 999838,
       "playerPosition": {
-        "x": 61,
-        "y": 19
+        "x": 112,
+        "y": 36
       },
       "revision": 1,
       "shops": {
@@ -46,7 +46,7 @@
           "visited": true
         }
       },
-      "stateHash": "ac30566f09a7c80dd651d7d08ad57a07fd50419010c50cf7d3cc86f49ba9c027",
+      "stateHash": "8e8f52165a6f0c8711a0551f50c740364f3e372f04545659cc7490177a2a17f3",
       "turn": 1
     },
     "events": [
@@ -54,13 +54,13 @@
         "kind": "shop.purchase",
         "messageKey": "shop-purchase-success",
         "args": {
-          "balance": "999880",
+          "balance": "999838",
           "item": "generated.item.203",
           "quantity": "1",
           "shop": "demo.shop.outpost-shroomery",
           "target": "demo.item.cure-poison-mushroom",
-          "totalPrice": "120",
-          "unitPrice": "120"
+          "totalPrice": "162",
+          "unitPrice": "162"
         }
       }
     ]

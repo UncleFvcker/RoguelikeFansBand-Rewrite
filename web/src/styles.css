@@ -4124,6 +4124,16 @@ kbd {
   gap: 0.75rem;
 }
 
+.monster-research-row {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.monster-research-row input,
+.monster-research-row select {
+  width: 100%;
+  min-width: 0;
+}
+
 .task-service-heading h3 {
   margin: 0;
   color: #eee6d7;

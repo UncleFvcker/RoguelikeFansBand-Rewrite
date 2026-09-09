@@ -166,8 +166,10 @@ mod tests {
             content_id: "rfb.test.content-v1".to_owned(),
             content_hash: "0".repeat(64),
             payload_encoding: "messagepack".to_owned(),
+            museum_binding: None,
         };
         let payload = SavePayloadV1 {
+            casino: None,
             schema_version: rfb_protocol::SAVE_PAYLOAD_SCHEMA_VERSION,
             revision: 0,
             turn: 0,
@@ -195,8 +197,10 @@ mod tests {
                 terrain_ids: vec!["demo.terrain.floor".to_owned()],
                 glow: vec![false],
                 daylight_suppressed: vec![false],
+                vault_cells: vec![false],
             },
             player: PlayerSaveDto {
+                fame: 0,
                 id: "demo.player".to_owned(),
                 name: "Hero".to_owned(),
                 kind_id: "demo.actor.explorer".to_owned(),
