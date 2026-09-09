@@ -301,6 +301,7 @@ Craft 领域当前尚未导入；本批只完成「工艺」所需的共享行�
 本次结果见[集成审计](ego-integration-audit.md)和[160 条机器可读矩阵](ego-contract-audit.json)。
 通用池及 12 个主题池已统一，旧配方与重复 Combat 已删除；160 条身份/实例检查和代表性桌面流程已落实。
 六项共享契约尚未闭合，当前不能标记 Ego 方向全部完成。
+具体按 [E8.1–E8.8 共享生成实施计划](ego-shared-generation-plan.md)推进，先补真实估值，再闭合依赖它的诅咒、随机神器与首饰重试。
 
 - 收口各批已经开放的自然生成 policy，删除残留的旧近似随机池，不等到最后才一次性开放全部类型；
 - 按 `obj_create_weapon/armor`、首饰、光源、箭袋和装置各自的源码调度核对 quality、神器和 luck/RNG 顺序；

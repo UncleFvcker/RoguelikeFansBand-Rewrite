@@ -51,6 +51,8 @@ node scripts/audit-egos.mjs D:/codex/Frogcomposband/master
 
 ## 尚未闭合的共享契约
 
+六项的依赖、实施批次与验收条件见[共享生成契约实施计划](ego-shared-generation-plan.md)。
+
 | 范围 | 原版要求 | 尚缺工作 |
 | --- | --- | --- |
 | 自然装备的负向质量 | `object2.c:2125`；`curse_object` / `one_biff` | 负向 power 的条件掷骰、属性处理及依赖价值的诅咒强度；当前不是完整负向生成流程 |
