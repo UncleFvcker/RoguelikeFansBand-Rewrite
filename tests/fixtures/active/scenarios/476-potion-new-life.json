@@ -35,7 +35,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "79338f5e7d20adac97e4db76301fd311aa11dc8680695d01e7a5c2a7fa033104",
+      "stateHash": "8ffd0c08fd89bacd808d5e8bf1ef48a80b89c5c0a1a963030723a291ff1c6f57",
       "playerHp": 33,
       "playerMaxHp": 56,
       "inventoryStackCount": 9,
@@ -116,6 +116,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "79338f5e7d20adac97e4db76301fd311aa11dc8680695d01e7a5c2a7fa033104"
+    "saveRoundTripStateHash": "8ffd0c08fd89bacd808d5e8bf1ef48a80b89c5c0a1a963030723a291ff1c6f57"
   }
 }

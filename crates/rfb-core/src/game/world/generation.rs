@@ -928,6 +928,7 @@ impl Game {
             height,
             terrain,
             glow: vec![false; usize::from(width) * usize::from(height)],
+            daylight_suppressed: vec![false; usize::from(width) * usize::from(height)],
             player_position: Position {
                 x: i32::from(inline_map.player_position.x),
                 y: i32::from(inline_map.player_position.y),
@@ -2721,6 +2722,7 @@ impl Game {
             height,
             terrain,
             glow,
+            daylight_suppressed: vec![false; usize::from(width) * usize::from(height)],
             player_position: first_center,
             entities,
             items,

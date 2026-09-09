@@ -6600,7 +6600,7 @@ pub fn parse_character_block(name: &str, body: &str) -> LegacyCharacterEntry {
         entry.hold_life_minimum_level = Some(1);
         entry.healing_received_percent = 50;
     }
-    if entry.id == "spectre" {
+    if matches!(entry.id.as_str(), "spectre" | "vampire") {
         entry.hold_life_minimum_level = Some(1);
     }
     entry
@@ -6680,6 +6680,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
             "stone_skin_spell" => "rfb.ability.race.golem-stone-skin",
             "stone_to_mud_spell" => "rfb.ability.race.stone-to-mud",
             "throw_boulder_spell" => "rfb.ability.race.throw-boulder",
+            "vampirism_spell" => "rfb.ability.race.vampirism",
             _ => {
                 gaps.push(format!("get_powers:{spell}"));
                 continue;
@@ -7466,6 +7467,8 @@ fn character_gap_accounting(entry: &LegacyCharacterEntry, report: &mut ContentIm
                     flag.as_str(),
                     "RACE_IS_NONLIVING" | "RACE_IS_UNDEAD" | "RACE_DEMI_TALENT"
                 ))
+            || (entry.id == "vampire"
+                && matches!(flag.as_str(), "RACE_IS_NONLIVING" | "RACE_IS_UNDEAD"))
         {
             continue;
         }
@@ -7517,6 +7520,16 @@ fn legacy_race_kin_glyph(id: &str) -> char {
 }
 
 fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
+    if entry.id == "vampire" {
+        // The life-force conversion target is runnable; birth and creation stay unopened.
+        return vec![
+            "legacy-import",
+            "nonliving",
+            "polymorph-candidate",
+            "undead",
+            "vampire",
+        ];
+    }
     if entry.id == "spectre" {
         return vec![
             "device-eater",
@@ -7749,6 +7762,9 @@ fn race_json(
     if matches!(entry.id.as_str(), "ent" | "spectre") {
         value["foodNutritionDivisor"] = serde_json::json!(20);
     }
+    if entry.id == "vampire" {
+        value["foodNutritionDivisor"] = serde_json::json!(10);
+    }
     if entry.id == "spectre" {
         // races_k.c: _spectre_birth; common initialization supplies py_birth_light.
         value["startingItems"] = serde_json::json!([{
@@ -7853,6 +7869,11 @@ fn race_json(
                     if power.ability_id == "rfb.ability.race.summon-tree" {
                         value["costScaling"] = serde_json::json!({
                             "startLevel": 45, "levelInterval": 50, "amount": 30,
+                        });
+                    }
+                    if power.ability_id == "rfb.ability.race.vampirism" {
+                        value["costScaling"] = serde_json::json!({
+                            "startLevel": 3, "levelInterval": 3, "amount": 1,
                         });
                     }
                     value
@@ -9043,6 +9064,17 @@ fn vampire_lord_race_json() -> serde_json::Value {
         "id": LEGACY_VAMPIRE_LORD_RACE_ID,
         "nameKey": "race-legacy-vampire-lord-form-name",
         "descriptionKey": "race-legacy-vampire-lord-form-description",
+        "abilities": [{
+            "abilityId": "rfb.ability.race.vampirism", "minimumLevel": 2,
+            "governingAttribute": "constitution", "cost": 1,
+            "costScaling": { "startLevel": 3, "levelInterval": 3, "amount": 1 },
+            "baseFailurePercent": 60,
+        }],
+        "armorClass": 10,
+        "foodNutritionDivisor": 10,
+        "holdLifeMinimumLevel": 1,
+        "infravision": 5,
+        "seeInvisible": true,
         "modifiers": {
             "strength": 4,
             "intelligence": 4,
@@ -9050,7 +9082,6 @@ fn vampire_lord_race_json() -> serde_json::Value {
             "dexterity": 1,
             "constitution": 2,
             "charisma": 3,
-            "defense": 1,
             "speed": 30,
         },
         "lifePercent": 103,
@@ -24999,6 +25030,56 @@ static power_info _wood_elf_get_powers[] =
         character_gap_accounting(&wood_elf, &mut report);
         assert!(report.unmapped_race_flags.is_empty());
         assert!(report.race_hook_gaps.is_empty());
+    }
+
+    #[test]
+    fn vampire_runtime_import_leaves_birth_dependencies_closed() {
+        let mut vampire = parse_character_block(
+            "vampire",
+            r#"
+me.name = "吸血鬼";
+me.infra = 5;
+me.flags = RACE_IS_NONLIVING | RACE_IS_UNDEAD | RACE_NIGHT_START;
+me.birth = _vampire_birth;
+me.get_powers = _vampire_get_powers;
+"#,
+        );
+        parse_race_powers(
+            r#"
+static power_info _vampire_get_powers[] =
+{
+    { A_CON, {2, 1, 60, vampirism_spell}},
+    { -1, {-1, -1, -1, NULL} }
+};
+"#,
+            &mut vampire,
+        );
+        let mut report = ContentImportReport::default();
+        let race = race_json(&vampire, &[], &mut report);
+        assert_eq!(race["infravision"], 5);
+        assert_eq!(race["holdLifeMinimumLevel"], 1);
+        assert_eq!(race["foodNutritionDivisor"], 10);
+        assert_eq!(
+            race["abilities"][0]["abilityId"],
+            "rfb.ability.race.vampirism"
+        );
+        assert_eq!(race["abilities"][0]["governingAttribute"], "constitution");
+        assert_eq!(race["abilities"][0]["minimumLevel"], 2);
+        assert_eq!(race["abilities"][0]["cost"], 1);
+        assert_eq!(race["abilities"][0]["baseFailurePercent"], 60);
+        let tags = legacy_race_tags(&vampire);
+        for tag in ["nonliving", "undead", "vampire"] {
+            assert!(tags.contains(&tag));
+        }
+        for tag in ["night-start", "rfb-compatibility"] {
+            assert!(!tags.contains(&tag));
+        }
+        assert!(race.get("startingItems").is_none());
+        character_gap_accounting(&vampire, &mut report);
+        assert!(!report.unmapped_race_flags.contains_key("RACE_IS_NONLIVING"));
+        assert!(!report.unmapped_race_flags.contains_key("RACE_IS_UNDEAD"));
+        assert!(report.unmapped_race_flags.contains_key("RACE_NIGHT_START"));
+        assert!(report.race_hook_gaps.contains_key("birth"));
     }
 
     #[test]

@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.235";
+pub const PROTOCOL_VERSION: &str = "1.236";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 5;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 6;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 7;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -4790,6 +4790,8 @@ pub struct TerrainSaveDto {
     pub height: u16,
     pub terrain_ids: Vec<String>,
     pub glow: Vec<bool>,
+    /// Magical darkness suppresses surface daylight until the next dawn.
+    pub daylight_suppressed: Vec<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -5891,6 +5893,7 @@ mod tests {
                 height: 1,
                 terrain_ids: vec!["demo.terrain.floor".to_owned()],
                 glow: vec![false],
+                daylight_suppressed: vec![false],
             },
             player: PlayerDto {
                 trait_details: CharacterTraitDetailsDto::default(),

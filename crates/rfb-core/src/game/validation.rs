@@ -664,7 +664,10 @@ impl Game {
                 "active floor region state is invalid",
             ));
         }
-        if self.explored.len() != self.terrain.len() || self.glow.len() != self.terrain.len() {
+        if self.explored.len() != self.terrain.len()
+            || self.glow.len() != self.terrain.len()
+            || self.daylight_suppressed.len() != self.terrain.len()
+        {
             return Err(CoreError::InvalidSave(
                 "terrain state dimensions are invalid",
             ));
@@ -971,6 +974,7 @@ impl Game {
             if floor.terrain.len() != expected_len
                 || floor.explored.len() != expected_len
                 || floor.glow.len() != expected_len
+                || floor.daylight_suppressed.len() != expected_len
                 || !revealed_terrain_is_valid(
                     &floor.revealed_terrain,
                     &floor.terrain,

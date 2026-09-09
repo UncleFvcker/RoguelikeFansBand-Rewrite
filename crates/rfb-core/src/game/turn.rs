@@ -137,6 +137,11 @@ impl Game {
         loop {
             let visible_monster_auras_before_tick = self.visible_monster_aura_entity_ids();
             self.world_tick = self.world_tick.saturating_add(1);
+            self.clear_daylight_suppression_at_dawn();
+            let light_blocks_regeneration = self.process_vampire_light_damage(events);
+            if self.player_is_dead() {
+                break;
+            }
             // RFB processes wall damage before the final tick of Wraith/Invulnerability expires.
             let wall_blocks_regeneration =
                 local_floor_active && self.process_player_wall_damage(events);
@@ -151,7 +156,7 @@ impl Game {
             if self.player_is_dead() {
                 break;
             }
-            if !wall_blocks_regeneration {
+            if !wall_blocks_regeneration && !light_blocks_regeneration {
                 self.process_natural_hp_regeneration(resting);
                 self.process_equipment_regeneration(events);
             }
@@ -277,6 +282,57 @@ impl Game {
                 removed_entities,
             )
         }
+    }
+
+    pub(super) fn process_vampire_light_damage(&mut self, events: &mut Vec<DomainEvent>) -> bool {
+        if !self
+            .world_tick
+            .is_multiple_of(NATURAL_HP_REGENERATION_INTERVAL_TICKS)
+            || !self.player_is_vampire()
+            || self.player_resistance_percent(DamageType::Light) >= 0
+        {
+            return false;
+        }
+        let invulnerable = self.player_has_status_kind(STATUS_INVULNERABILITY);
+        let sunlight = !invulnerable
+            && self.floor_has_environment_light()
+            && self.wilderness_is_daytime()
+            && self.ambient_light(self.player.position, &self.collect_light_sources()) > 0;
+        // RFB tests the equipped light's darkness flag, even when its fuel is exhausted.
+        let burning_light = self
+            .items
+            .iter()
+            .find(|item| {
+                matches!(&item.location, ItemLocation::Equipped { .. })
+                    && self.content.item(&item.kind_id).is_some_and(|definition| {
+                        definition.equipment_slot.as_deref() == Some("light")
+                    })
+                    && !self.item_has_darkness(item)
+            })
+            .map(|item| item.kind_id.clone());
+        let blocks_regeneration = sunlight || burning_light.is_some();
+        let sources = sunlight
+            .then_some(None)
+            .into_iter()
+            .chain(burning_light.filter(|_| !invulnerable).map(Some));
+        for source_kind_id in sources {
+            let damage = resolve_damage(
+                DamagePacket::new(1, DamageType::Light),
+                ResistanceLevel::Normal,
+            );
+            let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+            events.push(DomainEvent::PlayerLightDamaged {
+                source_kind_id,
+                damage: application.damage,
+            });
+            if application.fatal {
+                events.push(DomainEvent::PlayerDiedFromLight {
+                    damage: application.damage,
+                });
+                break;
+            }
+        }
+        blocks_regeneration
     }
 
     pub(super) fn process_player_wall_damage(&mut self, events: &mut Vec<DomainEvent>) -> bool {
@@ -556,6 +612,18 @@ impl Game {
         removed_entities: &mut Vec<String>,
         process_entities: bool,
     ) -> Result<(), CoreError> {
+        if self.player_is_nonliving() {
+            self.player.statuses.retain(|status| {
+                if matches!(status.kind_id.as_str(), STATUS_BLEEDING | STATUS_UNWELL) {
+                    events.push(DomainEvent::PlayerStatusExpired {
+                        status_kind_id: status.kind_id.clone(),
+                    });
+                    false
+                } else {
+                    true
+                }
+            });
+        }
         let tsuyoshi_expiration = self
             .player
             .statuses
@@ -580,12 +648,14 @@ impl Game {
                 status.kind_id == STATUS_INVULNERABILITY && status.remaining_ticks <= 1
             });
         let player_damage_percent = self.player_incoming_damage_percent();
+        let ignores_suffocation = self.player_is_nonliving();
         let transcendence = self.player_has_status_kind(STATUS_TRANSCENDENCE);
         let mut mana = self.resources.get_mut("demo.resource.mana");
         let player_tick = process_actor_status_tick_with(
             &mut self.player,
             false,
             player_damage_percent,
+            ignores_suffocation,
             |player, damage, fatality_policy| {
                 commit_final_player_damage(
                     player,

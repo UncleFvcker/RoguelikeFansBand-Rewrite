@@ -576,6 +576,9 @@ impl Game {
                 ResistanceLevel::Normal,
             );
             self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+            if self.player_is_nonliving() {
+                return;
+            }
             apply_status(
                 &mut self.player.statuses,
                 StatusApplication {
@@ -772,6 +775,9 @@ impl Game {
         stacking: StatusStacking,
         incoming_damage_percent: u8,
     ) {
+        if matches!(status_kind_id, STATUS_BLEEDING | STATUS_UNWELL) && self.player_is_nonliving() {
+            return;
+        }
         let was_invulnerable = status_kind_id == STATUS_INVULNERABILITY
             && self.player_has_status_kind(STATUS_INVULNERABILITY);
         apply_status(
@@ -1554,6 +1560,16 @@ impl Game {
         if base == 0 {
             return 0;
         }
+        // mut.c::_mut_prob_gain returns the native Vampire bias before luck adjustments.
+        if matches!(operation, RandomMutationOperation::Gain)
+            && definition.id == "rfb.mutation.hypn-gaze"
+            && self
+                .build
+                .as_ref()
+                .is_some_and(|build| build.race_id == "rfb-legacy.race.vampire")
+        {
+            return 50;
+        }
         let luck = self.player_luck_bias();
         let positive = matches!(
             definition.rating,
@@ -1699,6 +1715,13 @@ impl Game {
                     .saturating_mul(penalty),
             )
             .max(10)
+    }
+
+    pub(super) fn apply_player_vampiric_healing(&mut self, amount: i32) -> HealingOutcome {
+        let life = self.restore_player_life_force(LifeForceRestorationRequest::add(
+            amount.clamp(0, 1_000) as u16,
+        ));
+        self.apply_player_healing(amount.saturating_sub(i32::from(life.after - life.before)))
     }
 
     pub(super) fn apply_player_healing(&mut self, amount: i32) -> HealingOutcome {
@@ -1951,5 +1974,43 @@ impl Game {
             mutation.resource_drain_immunity
                 && self.progress.active_mutation_ids.contains(&mutation.id)
         })
+    }
+}
+
+#[cfg(test)]
+mod vampire_tests {
+    use super::*;
+
+    #[test]
+    fn vampire_gaze_gain_bias_uses_native_identity_and_does_not_affect_loss() {
+        let mut game = Game::new_with_build(83, "demo.build.warrior").unwrap();
+        let gaze = game
+            .content
+            .mutation("rfb.mutation.hypn-gaze")
+            .unwrap()
+            .clone();
+        let ordinary = game.mutation_random_weight(&gaze, RandomMutationOperation::Gain);
+        let mut form = super::super::monster_combat::melee_status(
+            crate::effect::STATUS_PLAYER_POLYMORPH,
+            100,
+            "test.vampire",
+        )
+        .status;
+        form.granted_race_id = Some("rfb-legacy.race.vampire".to_owned());
+        game.player.statuses.push(form);
+        assert_eq!(
+            game.mutation_random_weight(&gaze, RandomMutationOperation::Gain),
+            ordinary
+        );
+        game.player.statuses[0].granted_race_id = Some("demo.race.rfb-human".to_owned());
+        game.build.as_mut().unwrap().race_id = "rfb-legacy.race.vampire".to_owned();
+        assert_eq!(
+            game.mutation_random_weight(&gaze, RandomMutationOperation::Gain),
+            50
+        );
+        assert_eq!(
+            game.mutation_random_weight(&gaze, RandomMutationOperation::Lose),
+            ordinary
+        );
     }
 }

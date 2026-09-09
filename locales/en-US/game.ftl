@@ -637,3 +637,6 @@ bounty-mission-requested = Bounty accepted: kill { $total } { $actor } on { $flo
 bounty-mission-abandoned = You abandon the current bounty mission.
 bounty-mission-rewarded = You receive { $item } for completing the bounty mission.
 bounty-mission-completed = Every bounty target, { $actor }, is dead. Return to a bounty office for your reward.
+player-sunlight-burn = Sunlight scorches your undead flesh!
+player-light-source-burn = { $source } scorches your undead flesh!
+player-light-death = You die from the burning light.

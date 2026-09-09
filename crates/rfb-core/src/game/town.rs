@@ -1687,6 +1687,7 @@ impl Game {
         let half_day = wilderness::WILDERNESS_DAY_TICKS / 2;
         let remaining = half_day - before % half_day;
         self.world_tick = before.saturating_add(remaining);
+        self.clear_daylight_suppression_at_dawn();
 
         self.player.statuses.clear();
         self.minor_slow = 0;

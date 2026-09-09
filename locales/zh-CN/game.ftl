@@ -622,3 +622,6 @@ bounty-mission-requested = 已接受悬赏任务：前往{ $floor }消灭 { $tot
 bounty-mission-abandoned = 已放弃当前悬赏任务。
 bounty-mission-rewarded = 已领取悬赏任务奖励{ $item }。
 bounty-mission-completed = 已消灭全部悬赏目标{ $actor }；返回赏金设施领取奖励。
+player-sunlight-burn = 阳光灼伤了你亡灵的肉体！
+player-light-source-burn = { $source }灼伤了你亡灵的肉体！
+player-light-death = 你被光灼烧而死。

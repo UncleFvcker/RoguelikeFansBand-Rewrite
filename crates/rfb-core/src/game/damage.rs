@@ -124,6 +124,7 @@ pub(super) fn process_actor_status_tick(
         actor,
         lethal_at_zero,
         incoming_damage_percent,
+        false,
         |actor, damage, fatality_policy| {
             let application = plan_damage_application(actor, damage, fatality_policy);
             commit_damage_application(actor, &application);
@@ -136,6 +137,7 @@ pub(super) fn process_actor_status_tick_with<F>(
     actor: &mut Actor,
     lethal_at_zero: bool,
     incoming_damage_percent: u8,
+    ignores_suffocation: bool,
     mut finalize_damage: F,
 ) -> ActorStatusTick
 where
@@ -148,7 +150,7 @@ where
             let (amount, damage_type, unresisted) = match status.kind_id.as_str() {
                 STATUS_BLEEDING => (i32::from(status.intensity), DamageType::Physical, false),
                 STATUS_POISON => (i32::from(status.intensity), DamageType::Poison, false),
-                STATUS_NO_AIR => (
+                STATUS_NO_AIR if !ignores_suffocation => (
                     i32::try_from(40_u32.saturating_sub(status.remaining_ticks) / 2)
                         .unwrap_or(i32::MAX),
                     DamageType::Physical,

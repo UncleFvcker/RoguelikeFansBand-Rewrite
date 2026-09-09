@@ -3,6 +3,19 @@
   "formatVersion": 1,
   "id": "demo.race.vampire-lord",
   "legacyIndex": 1002,
+  "abilities": [{
+    "abilityId": "rfb.ability.race.vampirism",
+    "minimumLevel": 2,
+    "governingAttribute": "constitution",
+    "cost": 1,
+    "costScaling": { "startLevel": 3, "levelInterval": 3, "amount": 1 },
+    "baseFailurePercent": 60
+  }],
+  "foodNutritionDivisor": 10,
+  "holdLifeMinimumLevel": 1,
+  "infravision": 5,
+  "seeInvisible": true,
+  "armorClass": 10,
   "nameKey": "race-demo-vampire-lord-name",
   "descriptionKey": "race-demo-vampire-lord-description",
   "modifiers": {
@@ -12,7 +25,6 @@
     "dexterity": 1,
     "constitution": 2,
     "charisma": 3,
-    "defense": 1,
     "speed": 30
   },
   "lifePercent": 103,

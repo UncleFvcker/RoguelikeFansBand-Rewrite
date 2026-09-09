@@ -1814,7 +1814,16 @@ impl Game {
             } else {
                 0
             };
-            let outcome = self.apply_player_healing(requested);
+            let outcome = if matches!(
+                ability.id.as_str(),
+                "rfb.ability.race.vampirism"
+                    | "rfb.ability.mutation.vampirism"
+                    | DEATH_VAMPIRISM_TRUE_ABILITY_ID
+            ) {
+                self.apply_player_vampiric_healing(requested)
+            } else {
+                self.apply_player_healing(requested)
+            };
             let requested = outcome.requested;
             let applied = outcome.applied;
             if *feeds && damage.applied > 0 {

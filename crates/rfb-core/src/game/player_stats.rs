@@ -704,8 +704,14 @@ impl Game {
                 (percent + 1) / 2
             }
             Some("rfb-legacy.race.ent") if damage_type == DamageType::Fire => percent * 7 / 10,
+            _ if self.player_is_vampire() && damage_type == DamageType::Light => (percent + 1) / 2,
             _ => percent,
         }
+    }
+
+    pub(super) fn player_is_vampire(&self) -> bool {
+        self.character_definitions()
+            .is_some_and(|(_, race, _, _)| race.tags.iter().any(|tag| tag == "vampire"))
     }
 
     pub(super) fn player_resistance_percent(&self, damage_type: DamageType) -> i32 {
@@ -732,6 +738,10 @@ impl Game {
     /// innate immunities and every equipped item's (plus affixes').
     pub(super) fn player_status_immunities(&self) -> BTreeSet<String> {
         let mut immunities = BTreeSet::new();
+        // effects.c::set_cut/set_unwell reject these conditions for the current nonliving body.
+        if self.player_is_nonliving() {
+            immunities.extend([STATUS_BLEEDING.to_owned(), STATUS_UNWELL.to_owned()]);
+        }
         for status in &self.player.statuses {
             immunities.extend(status.granted_status_immunities.iter().cloned());
         }

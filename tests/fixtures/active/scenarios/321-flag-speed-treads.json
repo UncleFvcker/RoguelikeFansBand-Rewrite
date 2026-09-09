@@ -34,7 +34,7 @@
       "revision": 2,
       "turn": 2,
       "lastCommandSeq": 2,
-      "stateHash": "76f1de0ed38edf86f191526f65c2082131f20c00fbd5d29b6c7faf8fda8958b7",
+      "stateHash": "24a8eed79fe9bd7184f9e88a9202491100f86a52267b566d7537c19514bb4452",
       "playerSpeed": 120,
       "playerEnergyNeed": 0,
       "equipment": {
@@ -59,6 +59,6 @@
         "args": {}
       }
     ],
-    "saveRoundTripStateHash": "76f1de0ed38edf86f191526f65c2082131f20c00fbd5d29b6c7faf8fda8958b7"
+    "saveRoundTripStateHash": "24a8eed79fe9bd7184f9e88a9202491100f86a52267b566d7537c19514bb4452"
   }
 }

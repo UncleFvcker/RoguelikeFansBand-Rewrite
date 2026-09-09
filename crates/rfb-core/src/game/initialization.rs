@@ -300,6 +300,14 @@ impl Game {
             build_id.or(world.player_build_id.as_deref()),
             race_id,
         )?;
+        let birth_race = build
+            .as_ref()
+            .and_then(|identity| content.race(&identity.race_id));
+        if let Some(race) = birth_race
+            && !race.tags.iter().any(|tag| tag == "rfb-compatibility")
+        {
+            return Err(CoreError::CharacterRaceUnavailable(race.id.clone()));
+        }
         let starts_at_night = build
             .as_ref()
             .and_then(|identity| content.race(&identity.race_id))
@@ -542,6 +550,7 @@ impl Game {
             height,
             terrain,
             glow: vec![false; usize::from(width) * usize::from(height)],
+            daylight_suppressed: vec![false; usize::from(width) * usize::from(height)],
             player_name,
             player,
             riding_actor_id: None,

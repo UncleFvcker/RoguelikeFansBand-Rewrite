@@ -53,6 +53,7 @@ pub(crate) mod support;
 mod tasks;
 mod town;
 mod trait_details;
+mod vampire;
 mod virtue_state;
 mod wall_passage;
 mod weapon_ego_activations;

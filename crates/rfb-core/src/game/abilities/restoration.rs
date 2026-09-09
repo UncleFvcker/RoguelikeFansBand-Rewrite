@@ -208,6 +208,8 @@ impl Game {
         if self.nutrition > nutrition_before {
             self.fasting = false;
         }
+        let resistances = self.effective_player_resistances();
+        let immunities = self.player_status_immunities();
         let bleeding = apply_ability_status_effect(
             &mut self.player,
             &ability.id,
@@ -229,7 +231,7 @@ impl Game {
             false,
             100,
             None,
-            None,
+            Some((&resistances, &immunities, None)),
             &mut self.rng,
         );
         let damage = self.effective_player_max_hp() / i32::from(maximum_hp_divisor);

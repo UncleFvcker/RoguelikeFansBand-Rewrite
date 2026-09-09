@@ -328,6 +328,8 @@ impl Game {
         let pval = i32::from(definition.potion_nutrition);
         let amount = if native_ent {
             pval + (pval * 10).max(0) + 2000
+        } else if self.player_is_vampire() {
+            pval / 10
         } else if transformed {
             pval
         } else if self.player_is_skeleton() {
@@ -1254,16 +1256,9 @@ impl Game {
         }
         let affected_positions = positions
             .into_iter()
-            .filter(|position| {
-                self.index(*position)
-                    .is_some_and(|index| self.glow[index] != glow)
-            })
+            .filter(|position| self.set_floor_glow_at(*position, glow))
             .collect::<Vec<_>>();
         for position in &affected_positions {
-            let index = self
-                .index(*position)
-                .expect("planned floor lighting position must remain in bounds");
-            self.glow[index] = glow;
             changed.insert(*position);
         }
         if !affected_positions.is_empty() {

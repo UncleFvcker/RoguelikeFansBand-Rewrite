@@ -154,6 +154,7 @@ pub(crate) struct FloorState {
     pub(crate) height: u16,
     pub(crate) terrain: Vec<String>,
     pub(crate) glow: Vec<bool>,
+    pub(crate) daylight_suppressed: Vec<bool>,
     pub(crate) player_position: Position,
     pub(crate) entities: Vec<Actor>,
     pub(crate) items: Vec<ItemInstance>,

@@ -4399,6 +4399,7 @@ fn wilderness_scroll_translates_overlap_and_crops_entities_items_gold_and_packs(
         .expect("remembered cell should exist");
     game.terrain[remembered_index] = "demo.terrain.created-trap".to_owned();
     game.glow[remembered_index] = true;
+    game.daylight_suppressed[remembered_index] = true;
     game.explored[remembered_index] = true;
     game.revealed_terrain.insert(remembered);
     game.summon_command = SummonCommandDto {
@@ -4428,6 +4429,7 @@ fn wilderness_scroll_translates_overlap_and_crops_entities_items_gold_and_packs(
         .expect("translated cell should exist");
     assert_eq!(game.terrain[translated_index], "demo.terrain.created-trap");
     assert!(game.glow[translated_index]);
+    assert!(game.daylight_suppressed[translated_index]);
     assert!(game.explored[translated_index]);
     assert!(game.revealed_terrain.contains(&translated));
     assert_eq!(game.summon_command.guard_position, Some(translated));

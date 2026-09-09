@@ -194,6 +194,7 @@ mod tests {
                 height: 1,
                 terrain_ids: vec!["demo.terrain.floor".to_owned()],
                 glow: vec![false],
+                daylight_suppressed: vec![false],
             },
             player: PlayerSaveDto {
                 id: "demo.player".to_owned(),

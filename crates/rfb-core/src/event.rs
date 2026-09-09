@@ -770,6 +770,13 @@ pub(crate) enum DomainEvent {
         crushing: bool,
         damage: DamageOutcome,
     },
+    PlayerLightDamaged {
+        source_kind_id: Option<String>,
+        damage: DamageOutcome,
+    },
+    PlayerDiedFromLight {
+        damage: DamageOutcome,
+    },
     RidingMounted {
         target_kind_id: String,
     },
@@ -3418,6 +3425,35 @@ impl DomainEvent {
                 "wilderness-terrain-damaged",
                 [("terrain", terrain_id)],
                 GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::PlayerLightDamaged {
+                source_kind_id,
+                damage,
+            } => {
+                let mut event = dto_with_outcome(
+                    "player.light-damaged",
+                    if source_kind_id.is_some() {
+                        "player-light-source-burn"
+                    } else {
+                        "player-sunlight-burn"
+                    },
+                    [],
+                    GameEventOutcomeDto::Damage {
+                        resolution: damage.into(),
+                    },
+                );
+                if let Some(id) = source_kind_id {
+                    event.args.insert("source".to_owned(), id);
+                }
+                event
+            }
+            Self::PlayerDiedFromLight { damage } => dto_with_outcome(
+                "player.light-death",
+                "player-light-death",
+                [],
+                GameEventOutcomeDto::Death {
                     resolution: damage.into(),
                 },
             ),

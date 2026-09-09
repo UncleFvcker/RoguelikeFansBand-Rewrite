@@ -1810,6 +1810,7 @@ pub(crate) fn floor_to_save(floor: &FloorState) -> FloorSaveDto {
             height: floor.height,
             terrain_ids: floor.terrain.clone(),
             glow: floor.glow.clone(),
+            daylight_suppressed: floor.daylight_suppressed.clone(),
         },
         entities: actors_to_save(&floor.entities),
         items: items_to_save(&floor.items),
@@ -1830,6 +1831,7 @@ pub(crate) fn floor_from_save(
     if expected_len == 0
         || floor.terrain.terrain_ids.len() != expected_len
         || floor.terrain.glow.len() != expected_len
+        || floor.terrain.daylight_suppressed.len() != expected_len
     {
         return Err(CoreError::InvalidSave("terrain dimensions are invalid"));
     }
@@ -1873,6 +1875,7 @@ pub(crate) fn floor_from_save(
         height: floor.terrain.height,
         terrain: floor.terrain.terrain_ids,
         glow: floor.terrain.glow,
+        daylight_suppressed: floor.terrain.daylight_suppressed,
         player_position: floor.player_position,
         entities,
         items,

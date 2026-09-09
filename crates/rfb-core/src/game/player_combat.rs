@@ -2057,7 +2057,7 @@ impl Game {
                         i32::try_from(self.mutation_regeneration_percent())
                             .expect("mutation regeneration percent must fit i32"),
                     ) / 100;
-                    let outcome = self.apply_player_healing(requested);
+                    let outcome = self.apply_player_vampiric_healing(requested);
                     events.push(DomainEvent::PlayerVampiricHealed {
                         resolution: HealingResolutionDto {
                             requested: outcome.requested,

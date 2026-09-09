@@ -1,5 +1,13 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [{
+    "abilityId": "rfb.ability.race.vampirism",
+    "minimumLevel": 2,
+    "governingAttribute": "constitution",
+    "cost": 1,
+    "costScaling": { "startLevel": 3, "levelInterval": 3, "amount": 1 },
+    "baseFailurePercent": 60
+  }],
   "baseHp": 22,
   "bodySlots": [
     {
@@ -65,10 +73,13 @@
   ],
   "descriptionKey": "race-legacy-vampire-description",
   "experiencePercent": 200,
+  "foodNutritionDivisor": 10,
   "formatVersion": 1,
   "id": "rfb-legacy.race.vampire",
   "kinCategory": "kin-glyph-86",
   "legacyIndex": 26,
+  "infravision": 5,
+  "holdLifeMinimumLevel": 1,
   "lifePercent": 102,
   "modifiers": {
     "charisma": 2,
@@ -90,6 +101,9 @@
   "skillSetId": "rfb-legacy.skill-set.race-vampire",
   "tags": [
     "legacy-import",
-    "polymorph-candidate"
+    "nonliving",
+    "polymorph-candidate",
+    "undead",
+    "vampire"
   ]
 }

@@ -980,9 +980,11 @@ impl Game {
 
         let old_terrain = std::mem::take(&mut self.terrain);
         let old_glow = std::mem::take(&mut self.glow);
+        let old_daylight_suppressed = std::mem::take(&mut self.daylight_suppressed);
         let old_explored = std::mem::take(&mut self.explored);
         let mut terrain = self.cached_wilderness_view_terrain(next_world);
         let mut glow = vec![false; terrain.len()];
+        let mut daylight_suppressed = vec![false; terrain.len()];
         let mut explored = vec![false; terrain.len()];
         let width = usize::from(WILDERNESS_VIEW_WIDTH);
         for y in 0..i32::from(WILDERNESS_VIEW_HEIGHT) {
@@ -1000,11 +1002,13 @@ impl Game {
                         .expect("translated wilderness x must fit usize");
                 terrain[destination_index] = old_terrain[source_index].clone();
                 glow[destination_index] = old_glow[source_index];
+                daylight_suppressed[destination_index] = old_daylight_suppressed[source_index];
                 explored[destination_index] = old_explored[source_index];
             }
         }
         self.terrain = terrain;
         self.glow = glow;
+        self.daylight_suppressed = daylight_suppressed;
         self.explored = explored;
         self.revealed_terrain = std::mem::take(&mut self.revealed_terrain)
             .into_iter()
@@ -1175,6 +1179,7 @@ impl Game {
                 height: self.height,
                 terrain: std::mem::take(&mut self.terrain),
                 glow: std::mem::take(&mut self.glow),
+                daylight_suppressed: std::mem::take(&mut self.daylight_suppressed),
                 player_position: self.player.position,
                 entities: std::mem::take(&mut self.entities),
                 items: floor_items,
@@ -1410,6 +1415,7 @@ impl Game {
                         + usize::try_from(view.x).expect("view x must fit usize");
                     floor.terrain[local_index] = self.terrain[view_index].clone();
                     floor.glow[local_index] = self.glow[view_index];
+                    floor.daylight_suppressed[local_index] = self.daylight_suppressed[view_index];
                     floor.explored[local_index] = self.explored[view_index];
                 }
             }
@@ -1589,6 +1595,7 @@ impl Game {
                         + usize::try_from(view.x).expect("view x must fit usize");
                     self.terrain[view_index] = floor.terrain[local_index].clone();
                     self.glow[view_index] = floor.glow[local_index];
+                    self.daylight_suppressed[view_index] = floor.daylight_suppressed[local_index];
                     self.explored[view_index] = floor.explored[local_index];
                 }
             }
@@ -2055,6 +2062,7 @@ impl Game {
             height,
             terrain,
             glow: vec![false; usize::from(width) * usize::from(height)],
+            daylight_suppressed: vec![false; usize::from(width) * usize::from(height)],
             player_position,
             entities: Vec::new(),
             items: Vec::new(),
@@ -2545,6 +2553,7 @@ mod tests {
         let remembered_index = game.index(remembered).expect("town cell should exist");
         game.terrain[remembered_index] = "demo.terrain.created-trap".to_owned();
         game.glow[remembered_index] = true;
+        game.daylight_suppressed[remembered_index] = true;
         game.explored[remembered_index] = true;
         game.revealed_terrain.insert(remembered);
 
@@ -2561,6 +2570,7 @@ mod tests {
         let backing_index = 10 * usize::from(backing.width) + 10;
         assert_eq!(backing.terrain[backing_index], "demo.terrain.created-trap");
         assert!(backing.glow[backing_index]);
+        assert!(backing.daylight_suppressed[backing_index]);
         assert!(backing.explored[backing_index]);
         assert!(backing.revealed_terrain.contains(&remembered));
         assert!(backing.entities.iter().any(|actor| {
@@ -2605,6 +2615,7 @@ mod tests {
         );
         assert_eq!(game.terrain[remembered_index], "demo.terrain.created-trap");
         assert!(game.glow[remembered_index]);
+        assert!(game.daylight_suppressed[remembered_index]);
         assert!(game.explored[remembered_index]);
         assert!(game.revealed_terrain.contains(&remembered));
         let backing = &game.stored_floors["demo.floor.surface"];

@@ -106,16 +106,51 @@ impl Game {
     }
 
     pub(super) fn ambient_light(&self, position: Position, sources: &[LightSource]) -> u8 {
-        if self.floor_has_environment_light() && self.wilderness_is_daytime() {
-            SURFACE_AMBIENT_LIGHT
-        } else if self.index(position).is_some_and(|index| self.glow[index])
-            && !sources
-                .iter()
-                .any(|source| source.darkness && source.contains(position))
+        if sources
+            .iter()
+            .any(|source| source.darkness && source.contains(position))
         {
+            return DUNGEON_AMBIENT_LIGHT;
+        }
+        let Some(index) = self.index(position) else {
+            return DUNGEON_AMBIENT_LIGHT;
+        };
+        if self.floor_has_environment_light()
+            && self.wilderness_is_daytime()
+            && (!self.daylight_suppressed[index] || self.glow[index])
+        {
+            SURFACE_AMBIENT_LIGHT
+        } else if self.glow[index] {
             ROOM_GLOW_LIGHT
         } else {
             DUNGEON_AMBIENT_LIGHT
+        }
+    }
+
+    pub(super) fn set_floor_glow_at(&mut self, position: Position, glow: bool) -> bool {
+        let Some(index) = self.index(position) else {
+            return false;
+        };
+        let suppress_daylight = !glow
+            && self.floor_has_environment_light()
+            && (self.wilderness_is_daytime() || self.daylight_suppressed[index]);
+        let changed =
+            self.glow[index] != glow || self.daylight_suppressed[index] != suppress_daylight;
+        self.glow[index] = glow;
+        self.daylight_suppressed[index] = suppress_daylight;
+        changed
+    }
+
+    pub(super) fn clear_daylight_suppression_at_dawn(&mut self) {
+        if !self
+            .world_tick
+            .is_multiple_of(super::wilderness::WILDERNESS_DAY_TICKS)
+        {
+            return;
+        }
+        self.daylight_suppressed.fill(false);
+        for floor in self.stored_floors.values_mut() {
+            floor.daylight_suppressed.fill(false);
         }
     }
 
@@ -164,10 +199,7 @@ impl Game {
     pub(super) fn darken_room(&mut self, origin: Position) -> Vec<Position> {
         let darkened = self.connected_glow_positions(origin);
         for position in &darkened {
-            let index = self
-                .index(*position)
-                .expect("connected glow position must remain in bounds");
-            self.glow[index] = false;
+            self.set_floor_glow_at(*position, false);
         }
         darkened
     }
@@ -232,19 +264,15 @@ impl Game {
     }
 
     pub(super) fn extinguish_area(&mut self, origin: Position, radius: u8) -> Vec<Position> {
-        let darkened = self
+        let positions = self
             .area_damage_cells(origin, radius)
             .into_iter()
             .map(|(_, position)| position)
-            .filter(|position| self.index(*position).is_some_and(|index| self.glow[index]))
             .collect::<Vec<_>>();
-        for position in &darkened {
-            let index = self
-                .index(*position)
-                .expect("area light position must remain in bounds");
-            self.glow[index] = false;
-        }
-        darkened
+        positions
+            .into_iter()
+            .filter(|position| self.set_floor_glow_at(*position, false))
+            .collect()
     }
 
     pub(super) fn refuel_light_unavailable_reason(
@@ -400,6 +428,13 @@ impl Game {
                 ItemLocation::Equipped { slot_id } => {
                     let bonus = self.item_equipment_bonuses(item).light_radius;
                     if slot_id == "light" {
+                        if self.item_has_darkness(item) {
+                            return Some(match item.fuel.map(|fuel| fuel.kind) {
+                                Some(ItemFuelKindDto::Torch) => -1,
+                                Some(ItemFuelKindDto::Lantern) => -2,
+                                None | Some(ItemFuelKindDto::Oil) => -3,
+                            });
+                        }
                         let fuel = item
                             .fuel
                             .filter(|fuel| fuel.current > 0)
@@ -422,6 +457,27 @@ impl Game {
         let radius = equipment
             .max(self.player_mutation_light_radius())
             .max(status);
+        let radius = if radius <= 0 && self.player_is_vampire() {
+            equipment.saturating_add(1)
+        } else {
+            radius
+        };
         (radius > 0).then_some(radius)
+    }
+
+    pub(super) fn item_has_darkness(&self, item: &crate::state::ItemInstance) -> bool {
+        self.content
+            .item(&item.kind_id)
+            .is_some_and(|definition| definition.equipment_bonuses.light_radius < 0)
+            || item
+                .affix_ids
+                .iter()
+                .filter_map(|id| self.content.affix(id))
+                .any(|affix| affix.equipment_bonuses.light_radius < 0)
+            || item.intrinsic_properties.equipment_bonuses.light_radius < 0
+            || item
+                .rolled_affixes
+                .iter()
+                .any(|rolled| rolled.properties.equipment_bonuses.light_radius < 0)
     }
 }

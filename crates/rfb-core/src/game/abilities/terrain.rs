@@ -191,17 +191,10 @@ impl Game {
     }
 
     fn player_fails_sunlight_save(&mut self) -> bool {
-        let vampire = self
-            .character_definitions()
-            .is_some_and(|(_, race, _, _)| race.tags.iter().any(|tag| tag == "vampire"));
-        if !vampire {
+        if !self.player_is_vampire() {
             return false;
         }
-        let light_resistance = self
-            .effective_player_resistances()
-            .level(DamageType::Light)
-            .reduction_percent()
-            .max(0);
+        let light_resistance = self.player_resistance_percent(DamageType::Light).max(0);
         self.rng.bounded(33) >= u64::try_from(light_resistance).unwrap_or(0)
     }
 

@@ -238,7 +238,10 @@ pub(super) fn resolve_character_build(
     let race = content
         .race(race_id)
         .ok_or_else(|| CoreError::UnknownCharacterRace(race_id.to_owned()))?;
-    if !race.tags.iter().any(|tag| tag == "rfb-compatibility") {
+    // Vampire supports saved post-conversion bodies; initialization checks birth separately.
+    if !race.tags.iter().any(|tag| tag == "rfb-compatibility")
+        && race.id != "rfb-legacy.race.vampire"
+    {
         return Err(CoreError::CharacterRaceUnavailable(race_id.to_owned()));
     }
     Ok(Some(CharacterBuildIdentity {

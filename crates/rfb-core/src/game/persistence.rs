@@ -704,6 +704,7 @@ struct TerrainSaveRef<'a> {
     height: u16,
     terrain_ids: &'a [String],
     glow: &'a [bool],
+    daylight_suppressed: &'a [bool],
 }
 
 /// Borrowed twin of [`rfb_protocol::FloorSaveDto`] for hashing: the `explored`
@@ -743,6 +744,7 @@ fn floor_save_for_hash(floor: &FloorState) -> FloorSaveForHash<'_> {
             height: floor.height,
             terrain_ids: &floor.terrain,
             glow: &floor.glow,
+            daylight_suppressed: &floor.daylight_suppressed,
         },
         entities: actors_to_save(&floor.entities),
         items: items_to_save(&floor.items),
@@ -925,6 +927,7 @@ impl Game {
         if expected_len == 0
             || payload.terrain.terrain_ids.len() != expected_len
             || payload.terrain.glow.len() != expected_len
+            || payload.terrain.daylight_suppressed.len() != expected_len
         {
             return Err(CoreError::InvalidSave("terrain dimensions are invalid"));
         }
@@ -1419,6 +1422,7 @@ impl Game {
             height: payload.terrain.height,
             terrain,
             glow: payload.terrain.glow,
+            daylight_suppressed: payload.terrain.daylight_suppressed,
             player_name,
             player,
             riding_actor_id,
@@ -1517,6 +1521,7 @@ impl Game {
                 height: self.height,
                 terrain_ids: self.terrain.clone(),
                 glow: self.glow.clone(),
+                daylight_suppressed: self.daylight_suppressed.clone(),
             },
             player: self.player_save_dto(),
             entities: actors_to_save(&self.entities),
@@ -1596,6 +1601,7 @@ impl Game {
                 height: self.height,
                 terrain_ids: &self.terrain,
                 glow: &self.glow,
+                daylight_suppressed: &self.daylight_suppressed,
             },
             player: self.player_save_dto(),
             entities: actors_to_save(&self.entities),
