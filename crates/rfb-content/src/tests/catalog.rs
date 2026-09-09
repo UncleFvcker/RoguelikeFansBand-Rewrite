@@ -3,6 +3,43 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn hidden_tomte_intrinsics_match_master_without_opening_character_creation() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog");
+    let race = catalog.race("rfb-legacy.race.tomte").expect("Tomte");
+    assert_eq!(race.infravision, 4);
+    assert_eq!(race.level_stat_scalings.len(), 1);
+    assert_eq!(race.level_stat_scalings[0].divisor, 15);
+    assert_eq!(race.level_stat_scalings[0].multiplier, 1);
+    assert_eq!(
+        race.resistances.get(&ActorDamageType::Cold),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(!race.tags.iter().any(|tag| tag == "rfb-compatibility"));
+    assert!(race.tags.iter().any(|tag| tag == "polymorph-candidate"));
+    assert!(race.level_mutation_rewards.is_empty());
+    assert_eq!(
+        race.abilities,
+        [InnatePowerDefinition {
+            minimum_level: 1,
+            governing_attribute: TechniqueAttribute::Intelligence,
+            cost: 0,
+            cost_scaling: None,
+            base_failure_percent: 20,
+            minimum_failure_percent: None,
+            ability_id: "rfb.ability.race.probe-monsters".to_owned(),
+        }]
+    );
+    assert!(matches!(
+        catalog
+            .ability(&race.abilities[0].ability_id)
+            .expect("probe")
+            .effect,
+        AbilityEffectDefinition::ProbeMonsters
+    ));
+}
+
+#[test]
 fn compiled_catalog_indexes_current_rfb_content() {
     let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");

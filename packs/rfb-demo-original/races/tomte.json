@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.probe-monsters",
+      "minimumLevel": 1,
+      "governingAttribute": "intelligence",
+      "cost": 0,
+      "baseFailurePercent": 20
+    }
+  ],
   "baseHp": 13,
   "bodySlots": [
     {
@@ -67,8 +76,16 @@
   "experiencePercent": 150,
   "formatVersion": 1,
   "id": "rfb-legacy.race.tomte",
+  "infravision": 4,
   "kinCategory": "kin-glyph-104",
   "legacyIndex": 70,
+  "levelStatScalings": [
+    {
+      "stat": "speed",
+      "multiplier": 1,
+      "divisor": 15
+    }
+  ],
   "lifePercent": 94,
   "modifiers": {
     "constitution": -3,

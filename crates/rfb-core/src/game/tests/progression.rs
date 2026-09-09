@@ -228,6 +228,147 @@ fn species_contribution(stat: &DerivedStat, race_id: &str) -> i32 {
 }
 
 #[test]
+fn hidden_tomte_form_grants_intrinsics_and_free_probing_without_unlocking_birth() {
+    const RACE: &str = "rfb-legacy.race.tomte";
+    const PROBE: &str = "rfb.ability.race.probe-monsters";
+    assert!(
+        Game::new_with_build_race_and_name(
+            424,
+            "demo.build.warrior",
+            RACE,
+            Game::DEFAULT_PLAYER_NAME,
+        )
+        .is_err()
+    );
+    let mut game = Game::new_with_build_race_and_name(
+        424,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human warrior");
+    clear_monsters(&mut game);
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.tomte-form").status;
+    form.granted_race_id = Some(RACE.to_owned());
+    game.player.statuses.push(form);
+    game.player.hp = game.effective_player_max_hp();
+    assert_eq!(game.player_infravision_range(), 4);
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Cold),
+        ResistanceLevel::Resistant
+    );
+    for (level, speed) in [
+        (1, 0),
+        (14, 0),
+        (15, 1),
+        (29, 1),
+        (30, 2),
+        (44, 2),
+        (45, 3),
+        (50, 3),
+    ] {
+        game.progress.level = level;
+        assert_eq!(
+            species_contribution(&game.player_derived_stats().speed, RACE),
+            speed
+        );
+    }
+    game.progress.level = 1;
+    let ability = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == PROBE)
+        .expect("Tomte probe at level one");
+    assert_eq!(ability.source, AbilitySourceDto::Race);
+    assert_eq!(
+        ability.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Intelligence)
+    );
+    assert_eq!(
+        (
+            ability.minimum_level,
+            ability.base_resource_cost,
+            ability.resource_cost
+        ),
+        (1, 0, 0)
+    );
+    assert!(ability.can_cast);
+    let target = game.position_in_direction(Direction::East);
+    replace_terrain(&mut game, target, "demo.terrain.floor");
+    let index = game.index(target).expect("target tile");
+    game.glow[index] = true;
+    game.push_generated_actor("test.tomte-probe".to_owned(), "demo.actor.sheep", target);
+    let hp = game.player.hp;
+    let resources = game.resources.clone();
+    let failure_seed = (0..1_000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(100) < u64::from(ability.failure_percent))
+        .expect("probe can fail");
+    game.rng = RfbRng::seeded(failure_seed);
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        PROBE,
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("failed probe");
+    assert!(matches!(
+        events.first(),
+        Some(DomainEvent::AbilityCastFailed { .. })
+    ));
+    assert!(game.probed_actor_kind_ids.is_empty());
+    assert_eq!(game.player.hp, hp);
+    assert_eq!(game.resources, resources);
+    game.debug_set_ability_casts_succeed(true);
+    game.resolve_player_ability(
+        PROBE,
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("successful probe");
+    assert!(game.probed_actor_kind_ids.contains("demo.actor.sheep"));
+    assert_eq!(game.player.hp, hp);
+    assert_eq!(game.resources, resources);
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("temporary Tomte save");
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.player_infravision_range(), 4);
+    game.player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert_eq!(game.player_infravision_range(), 0);
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Cold),
+        ResistanceLevel::Normal
+    );
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != PROBE)
+    );
+    for level in [15, 30, 45] {
+        game.progress.level = level;
+        assert_eq!(
+            species_contribution(&game.player_derived_stats().speed, RACE),
+            0
+        );
+    }
+    game.progress.level = 1;
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("knowledge persists after losing Tomte form");
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert!(restored.probed_actor_kind_ids.contains("demo.actor.sheep"));
+}
+
+#[test]
 fn race_level_stat_scaling_preserves_klackon_and_enables_formal_golem_intrinsics() {
     for level in [1, 3, 5, 9, 10, 15, 16, 31, 32, 34, 35, 47, 48, 50] {
         let mut golem = golem_game(358);

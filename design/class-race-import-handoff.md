@@ -381,6 +381,32 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
   通过；最终两项新增核心测试已用完整名称单独通过。`verify-source`、Rust format 与 diff 检查通过；
   未运行全量测试，也未刷新 `contract-v305` fixture。
 
+### 托姆特第一批：隐藏种族基础效果
+
+- 日期 2026-09-09；在主工作树 `D:/codex/RoguelikeFansBand-Rewrite`、`main` 上接手，起点
+  `62f959f3bb6b308205cd1fb53ae9c8a99f59b391`。本轮归属与交接流程以
+  [三工作树交接](parallel-development-handoff-20260909.md) 为准，不沿用后文旧分支安排。
+- 权威来源为 RFB `master@a0d92b6378d148c5262cc236b8fa6ed2ca06a54c` Git 对象：
+  `src/races_k.c:986–1075` 的能力、被动和种族定义；`src/spells_m.c:886` 的“探测怪物”。
+  中文名“托姆特”及能力名沿用已有原版同名本地化，没有新增名称。
+- 内容定义：补齐 `rfb-legacy.race.tomte` 的 4 格红外、`floor(level / 15)` 速度和 1 级智力能力，
+  消耗 0、基础失败率 20%。保留原有静态矩阵、寒冷抗性和隐藏标签；定义数量不变。
+- 规则实现：复用当前有效种族、等级属性缩放和探测执行器。种族失去后撤销被动与能力，已探测知识继续保存。
+  importer 为托姆特输出十五级速度步长，继续记录 `calc_bonuses` 与 `birth` 缺口。
+- 稳定 ID：改变 `rfb-legacy.race.tomte`；复用 `rfb-legacy.skill-set.race-tomte`、
+  `rfb.ability.race.probe-monsters`、`demo.ability-program.sniper-probe-monsters`；无新增 ID、跨方向依赖提交。
+- 玩家入口：仍未带 `rfb-compatibility`，不加入 New Game；可选数量保持 42。当前批次是隐藏种族补全，
+  不是托姆特完整导入或玩家流程验收。
+- 剩余范围：核对并实现重头盔的智力/装置惩罚、无重头盔时自动感知与 40 级自动鉴定，接入已有
+  `demo.item.knit-cap` 出生物、初始“知识”美德及所需装备说明，再验收正式出生与菜单。当前没有跨方向物品缺口。
+- 版本：pack `1.385.0`，lock `3551df1b8aeee00a1ef0a0afa092199d5e9c03bc539d4d270a2087634a9711e7`。
+  Protocol `1.230`、State Hash v108、save v5、`contract-v306` 不变；无公共初始化、RNG 算法或顺序修改。
+  active scenarios 未引用托姆特或变形操作，本批不刷新 fixture；临时托姆特效果由新增核心测试覆盖。
+- 验证：`cargo test -p rfb-content -p rfb-core -p rfb-legacy-import tomte --lib` 三项通过，覆盖内容参数、
+  importer 输出与保留缺口、隐藏出生拒绝、等级速度边界、临时形态获得/失去、零费用成功/失败及两种形态下
+  save/state-hash 往返。`rfb-contentc verify-source`、`cargo fmt --all -- --check`、`git diff --check` 通过。
+  未运行全量 fixture、桌面 E2E、Web 检查及独立 replay 测试；本批未修改前端、协议或存档结构。
+
 ## 2. 权威来源与不可变规则
 
 1. 新规则和内容以 `D:/codex/Frogcomposband` 的 Git ref `master` 为权威；只能通过 Git 对象读取，

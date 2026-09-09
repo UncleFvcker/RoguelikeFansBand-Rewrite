@@ -7765,6 +7765,14 @@ fn race_json(
             "divisor": 10,
         }]);
     }
+    // races_k.c: Tomte gains one speed per fifteen levels, independently of headgear.
+    if entry.id == "tomte" {
+        value["levelStatScalings"] = serde_json::json!([{
+            "stat": "speed",
+            "multiplier": 1,
+            "divisor": 15,
+        }]);
+    }
     if entry.spell_capacity_bonus != 0 {
         value["spellCapacityBonus"] = serde_json::json!(entry.spell_capacity_bonus);
     }
@@ -25016,6 +25024,51 @@ static void _sprite_calc_bonuses(void)
         assert_eq!(race["levelStatScalings"][0]["stat"], "speed");
         assert_eq!(race["levelStatScalings"][0]["divisor"], 10);
         assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
+    }
+
+    #[test]
+    fn tomte_intrinsics_are_mapped_while_equipment_and_birth_stay_gaps() {
+        // RFB master a0d92b6378: src/races_k.c, _tomte_get_powers / tomte_get_race.
+        const SOURCE: &str = r#"
+static power_info _tomte_get_powers[] =
+{
+    { A_INT, {1, 0, 20, probing_spell}},
+    { -1, {-1, -1, -1, NULL} }
+};
+"#;
+        let mut tomte = LegacyCharacterEntry {
+            id: "tomte".to_owned(),
+            infra: 4,
+            get_powers_fn: Some("_tomte_get_powers".to_owned()),
+            hooks: vec![
+                "calc_bonuses".to_owned(),
+                "get_powers".to_owned(),
+                "birth".to_owned(),
+            ],
+            ..LegacyCharacterEntry::default()
+        };
+        parse_race_powers(SOURCE, &mut tomte);
+        let mut report = ContentImportReport::default();
+        let race = race_json(&tomte, &[], &mut report);
+        assert_eq!(race["infravision"], 4);
+        assert_eq!(
+            race["levelStatScalings"],
+            serde_json::json!([{
+                "stat": "speed", "multiplier": 1, "divisor": 15,
+            }])
+        );
+        assert_eq!(
+            race["abilities"],
+            serde_json::json!([{
+                "abilityId": "rfb.ability.race.probe-monsters",
+                "minimumLevel": 1, "governingAttribute": "intelligence",
+                "cost": 0, "baseFailurePercent": 20,
+            }])
+        );
+        assert!(!legacy_race_tags(&tomte).contains(&"rfb-compatibility"));
+        assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
+        assert_eq!(report.race_hook_gaps["birth"], 1);
+        assert!(!report.race_hook_gaps.contains_key("get_powers"));
     }
 
     #[test]

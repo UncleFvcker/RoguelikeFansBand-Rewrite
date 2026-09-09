@@ -20,7 +20,7 @@
 | 协议 | 1.230 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | v108 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload | v5 / v5；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
-| 内容包 | 1.384.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.385.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
 | 行为基线 | contract-v306，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
 | 内容定义数量 | 地形 201、角色 1402、物品 356、能力 1838、词缀 65、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
 | 角色配置数量 | Class 6、Build 13、Race 57、SkillSet 65 | 同上；这些是定义数量，不是菜单选项数量 |
@@ -30,6 +30,10 @@
 ## 职业与玩家入口
 
 当前新游戏提供 **6 个职业构筑、42 个种族**。种族定义总数 57 不代表全部开放；具体可选 ID 见上述入口列表与[职业种族交接](class-race-import-handoff.md)。
+
+2026-09-09 种族方向第一批补齐隐藏托姆特的 4 格红外、每 15 级速度 +1 与 1 级零费用“探测怪物”。
+这些效果通过既有临时变形路径生效；仍未开放托姆特出生，重头盔惩罚、自动感知/鉴定与出生接入留待后续批次。
+本批自动检查及来源记录见[托姆特分批记录](class-race-import-handoff.md#托姆特第一批隐藏种族基础效果)，不计作玩家流程验收。
 
 | 职业范围 | 内容已定义 | 规则已实现的范围与证据 | 玩家入口已开放 | 2026-09-09 实际验收 |
 | --- | --- | --- | --- | --- |
