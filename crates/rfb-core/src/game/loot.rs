@@ -34,6 +34,7 @@ pub(super) enum ItemGenerationMode {
     Ordinary,
     Good,
     Great,
+    TailoredGreat,
     Artifact,
 }
 
@@ -42,7 +43,9 @@ impl ItemGenerationMode {
         match self {
             Self::Ordinary => rfb_content::ItemQuality::Ordinary,
             Self::Good => rfb_content::ItemQuality::Fine,
-            Self::Great | Self::Artifact => rfb_content::ItemQuality::Exceptional,
+            Self::Great | Self::TailoredGreat | Self::Artifact => {
+                rfb_content::ItemQuality::Exceptional
+            }
         }
     }
 }
@@ -484,12 +487,24 @@ impl Game {
             .expect("validated actor loot table must remain available")
             .clone();
         let minimum_quality = mode.minimum_quality();
+        // RFB master a0d92b6378: object2.c::kind_is_tailored uses the birth race.
+        // This is a reward preference, not an equipment restriction.
+        let tomte_headgear = mode == ItemGenerationMode::TailoredGreat
+            && self
+                .build
+                .as_ref()
+                .is_some_and(|build| build.race_id == "rfb-legacy.race.tomte");
         let eligible_entries = table
             .entries
             .iter()
             .filter(|entry| {
                 entry.min_depth <= context.depth
                     && context.depth <= entry.max_depth
+                    && (!tomte_headgear
+                        || self.content.item(&entry.item_kind_id).is_some_and(|item| {
+                            item.equipment_slot.as_deref() != Some("head")
+                                || item.id == "demo.item.knit-cap"
+                        }))
                     && (minimum_quality == rfb_content::ItemQuality::Ordinary
                         || self.content.item(&entry.item_kind_id).is_some_and(|item| {
                             item.max_stack == 1

@@ -2371,6 +2371,129 @@ fn p3_3_treasure_detection_reports_stable_gold_pile_ids() {
 }
 
 #[test]
+fn tomte_tailored_acquirement_filters_headgear_by_birth_race_only() {
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+    let mut content = rfb_content::compile_pack_dir(&path).unwrap().content;
+    // Crowns share the head slot; the formal pack has no crown yet.
+    let mut crown = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.iron-helm")
+        .unwrap()
+        .clone();
+    crown.id = "test.item.crown".to_owned();
+    content.items.push(crown);
+    let table = content
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .unwrap();
+    let kinds = [
+        "demo.item.knit-cap",
+        "demo.item.iron-helm",
+        "test.item.crown",
+        "demo.item.dagger",
+    ];
+    table
+        .entries
+        .retain(|entry| kinds.contains(&entry.item_kind_id.as_str()));
+    let mut crown_entry = table
+        .entries
+        .iter()
+        .find(|entry| entry.item_kind_id == "demo.item.iron-helm")
+        .unwrap()
+        .clone();
+    crown_entry.item_kind_id = "test.item.crown".to_owned();
+    table.entries.push(crown_entry);
+    assert_eq!(table.entries.len(), kinds.len());
+    for entry in &mut table.entries {
+        entry.weight = 1;
+        entry.min_depth = 0;
+    }
+    let content = Arc::new(ContentCatalog::from_artifact(
+        rfb_content::encode_content(content).unwrap(),
+    ));
+    let mut template = Game::new_with_build(83, "demo.build.warrior").unwrap();
+    clear_monsters(&mut template);
+    template.content = content;
+    for birth_tomte in [false, true] {
+        let mut base = template.clone();
+        base.build.as_mut().unwrap().race_id = if birth_tomte {
+            "rfb-legacy.race.tomte"
+        } else {
+            "demo.race.rfb-human"
+        }
+        .to_owned();
+        let mut form =
+            monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10_000, "test.tailored").status;
+        form.granted_race_id = Some(
+            if birth_tomte {
+                "demo.race.rfb-human"
+            } else {
+                "rfb-legacy.race.tomte"
+            }
+            .to_owned(),
+        );
+        base.player.statuses.push(form);
+        for scroll in [
+            "demo.item.acquirement-scroll",
+            "demo.item.star-acquirement-scroll",
+        ] {
+            let mut seen = BTreeSet::new();
+            for seed in 0..32 {
+                let mut game = base.clone();
+                game.items.clear();
+                give_inventory_item(&mut game, "test.acquirement", scroll);
+                game.rng = RfbRng::seeded(seed);
+                dispatch_next(
+                    &mut game,
+                    GameCommand::UseItem {
+                        item_id: "test.acquirement".to_owned(),
+                        target: None,
+                    },
+                );
+                assert!(!game.items.is_empty());
+                for item in &game.items {
+                    assert_eq!(item.location, ItemLocation::Ground(game.player.position));
+                    assert_eq!(item.quality, ItemQualityDto::Exceptional);
+                    seen.insert(item.kind_id.clone());
+                }
+            }
+            let expected = kinds
+                .iter()
+                .filter(|kind| {
+                    !birth_tomte || matches!(**kind, "demo.item.knit-cap" | "demo.item.dagger")
+                })
+                .map(|kind| (*kind).to_owned())
+                .collect::<BTreeSet<_>>();
+            assert_eq!(seen, expected, "{scroll}: birth Tomte {birth_tomte}");
+        }
+        let context = LootContext {
+            table_id: "demo.loot-table.base-items".to_owned(),
+            floor_id: base.current_floor_id.clone(),
+            depth: 20,
+            source: LootSource::MonsterDeath {
+                actor_id: "test.drop".to_owned(),
+            },
+        };
+        let mut ordinary = BTreeSet::new();
+        for seed in 0..32 {
+            base.rng = RfbRng::seeded(seed);
+            ordinary.insert(
+                base.generate_one_loot_draft(&context, ItemGenerationMode::Great)
+                    .unwrap()
+                    .kind_id,
+            );
+        }
+        assert_eq!(
+            ordinary,
+            kinds.iter().map(|kind| (*kind).to_owned()).collect()
+        );
+    }
+}
+
+#[test]
 fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     let mut single = Game::new(503);
     clear_monsters(&mut single);

@@ -114,7 +114,7 @@ pub(super) fn initial_virtues(
                 kinds.push(VirtueKindDto::Enchantment);
             }
             "rfb-legacy.race.nibelung" => kinds.push(VirtueKindDto::Patience),
-            "rfb-legacy.race.gnome" | "rfb-legacy.race.cyclops" => {
+            "rfb-legacy.race.gnome" | "rfb-legacy.race.cyclops" | "rfb-legacy.race.tomte" => {
                 kinds.push(VirtueKindDto::Knowledge);
             }
             "rfb-legacy.race.half-giant" => kinds.push(VirtueKindDto::Justice),

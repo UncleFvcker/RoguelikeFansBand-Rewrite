@@ -101,6 +101,9 @@
   },
   "shopAdjustPercent": 100,
   "skillSetId": "rfb-legacy.skill-set.race-tomte",
+  "startingItems": [
+    { "itemKindId": "demo.item.knit-cap", "quantity": 1, "equipped": true }
+  ],
   "tags": [
     "legacy-import",
     "polymorph-candidate",

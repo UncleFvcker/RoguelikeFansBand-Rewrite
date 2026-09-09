@@ -7467,6 +7467,7 @@ fn character_gap_accounting(entry: &LegacyCharacterEntry, report: &mut ContentIm
     for hook in &entry.hooks {
         if (entry.id == "einheri" && matches!(hook.as_str(), "gain_level" | "get_flags"))
             || (entry.id == "beastman" && matches!(hook.as_str(), "birth" | "gain_level"))
+            || (entry.id == "tomte" && hook == "birth")
         {
             continue;
         }
@@ -7771,6 +7772,10 @@ fn race_json(
     // races_k.c: Tomte gains one speed per fifteen levels, independently of headgear.
     if entry.id == "tomte" {
         value["meleeDamagePercent"] = serde_json::json!(82);
+        // Standard food/light are supplied once by core initialization.
+        value["startingItems"] = serde_json::json!([{
+            "itemKindId": "demo.item.knit-cap", "quantity": 1, "equipped": true,
+        }]);
         value["levelStatScalings"] = serde_json::json!([{
             "stat": "speed",
             "multiplier": 1,
@@ -25031,7 +25036,7 @@ static void _sprite_calc_bonuses(void)
     }
 
     #[test]
-    fn tomte_intrinsics_are_mapped_while_equipment_and_birth_stay_gaps() {
+    fn tomte_intrinsics_and_birth_kit_are_mapped_without_unlocking_selection() {
         // RFB master a0d92b6378: src/races_k.c, _tomte_get_powers / tomte_get_race.
         const SOURCE: &str = r#"
 static power_info _tomte_get_powers[] =
@@ -25073,7 +25078,13 @@ static power_info _tomte_get_powers[] =
         );
         assert!(!legacy_race_tags(&tomte).contains(&"rfb-compatibility"));
         assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
-        assert_eq!(report.race_hook_gaps["birth"], 1);
+        assert_eq!(
+            race["startingItems"],
+            serde_json::json!([{
+                "itemKindId": "demo.item.knit-cap", "quantity": 1, "equipped": true,
+            }])
+        );
+        assert!(!report.race_hook_gaps.contains_key("birth"));
         assert!(!report.race_hook_gaps.contains_key("get_powers"));
     }
 

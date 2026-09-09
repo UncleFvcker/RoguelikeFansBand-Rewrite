@@ -2472,6 +2472,123 @@ fn build_skill_growth_experience_multiplier_and_save_identity_are_deterministic(
 }
 
 #[test]
+fn tomte_birth_merges_one_cap_with_each_class_kit_and_unique_knowledge_virtue() {
+    const RACE: &str = "rfb-legacy.race.tomte";
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+    let mut content = rfb_content::compile_pack_dir(&path).unwrap().content;
+    let race = content
+        .races
+        .iter_mut()
+        .find(|race| race.id == RACE)
+        .unwrap();
+    assert!(!race.tags.iter().any(|tag| tag == "rfb-compatibility"));
+    // Open only this test catalog; the formal birth entry is a later step.
+    race.tags.push("rfb-compatibility".to_owned());
+    let content = Arc::new(ContentCatalog::from_artifact(
+        rfb_content::encode_content(content).unwrap(),
+    ));
+    for build_id in [
+        "demo.build.warrior",
+        "demo.build.archer",
+        "demo.build.high-mage-death",
+        "demo.build.paladin-death",
+        "demo.build.cavalry",
+        "demo.build.sniper",
+    ] {
+        let mut game = Game::from_content_internal(
+            83,
+            Arc::clone(&content),
+            DEFAULT_WORLD_ID,
+            Some(build_id),
+            Some(RACE),
+            Game::DEFAULT_PLAYER_NAME,
+        )
+        .expect(build_id);
+        let inventory = game
+            .items
+            .iter()
+            .filter(|item| !matches!(item.location, ItemLocation::Ground(_)))
+            .collect::<Vec<_>>();
+        let caps = inventory
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.knit-cap")
+            .collect::<Vec<_>>();
+        assert_eq!(caps.len(), 1, "{build_id}");
+        assert_eq!(caps[0].quantity, 1);
+        assert_eq!(
+            caps[0].location,
+            ItemLocation::Equipped {
+                slot_id: "head".to_owned()
+            }
+        );
+        assert_eq!(game.player_tomte_headgear_excess_weight(), 0);
+        assert!(game.player_has_tomte_item_sensing());
+        let rations = inventory
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.ration-of-food")
+            .collect::<Vec<_>>();
+        assert_eq!(rations.len(), 1);
+        assert!((5..=9).contains(&rations[0].quantity));
+        assert_eq!(rations[0].location, ItemLocation::Inventory);
+        let torches = inventory
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.wooden-torch")
+            .collect::<Vec<_>>();
+        assert!((3..=7).contains(&torches.len()));
+        assert!(torches.iter().all(|item| item.quantity == 1
+            && item.location == ItemLocation::Inventory
+            && item.fuel == torches[0].fuel));
+        assert!((1500..=3500).contains(&torches[0].fuel.unwrap().current));
+        let (build, _, class, personality) =
+            build_definitions(&content, game.build.as_ref().unwrap()).unwrap();
+        let kit = class
+            .starting_items
+            .iter()
+            .chain(&personality.starting_items)
+            .chain(&build.starting_items);
+        assert_eq!(inventory.len(), 1 + 1 + torches.len() + kit.clone().count());
+        for expected in kit {
+            let items = inventory
+                .iter()
+                .filter(|item| item.kind_id == expected.item_kind_id)
+                .collect::<Vec<_>>();
+            assert_eq!(items.len(), 1, "{build_id}: {}", expected.item_kind_id);
+            assert!(
+                (expected.quantity..=expected.maximum_quantity.unwrap_or(expected.quantity))
+                    .contains(&items[0].quantity)
+            );
+            assert_eq!(
+                matches!(items[0].location, ItemLocation::Equipped { .. }),
+                expected.equipped
+            );
+        }
+        assert_eq!(
+            game.virtues
+                .iter()
+                .filter(|virtue| virtue.kind == VirtueKindDto::Knowledge)
+                .count(),
+            1
+        );
+        assert_eq!(
+            game.virtues
+                .iter()
+                .map(|virtue| virtue.kind)
+                .collect::<BTreeSet<_>>()
+                .len(),
+            8
+        );
+        assert!(game.virtues.iter().all(|virtue| virtue.value == 0));
+        give_inventory_item(&mut game, "test.other-helmet", "demo.item.iron-helm");
+        assert!(
+            game.equip_inventory_item("test.other-helmet", Some("head"))
+                .is_some()
+        );
+        assert!(game.player_tomte_headgear_excess_weight() > 0);
+    }
+}
+
+#[test]
 fn class_birth_applies_attributes_skills_and_equipped_kit_from_the_selected_build() {
     // STR, INT, WIS, DEX, CON, CHR; None means the former class test did not check it.
     for (class, build_id, seed, life, experience, attributes, skills, equipped, ammunition) in [
