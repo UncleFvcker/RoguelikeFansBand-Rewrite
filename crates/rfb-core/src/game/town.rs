@@ -491,6 +491,7 @@ fn plain_shop_item(
 ) -> Result<ItemInstance, CoreError> {
     let (activation, charges) = initial_item_runtime_state(content, rng, item_kind_id, &[], 15);
     Ok(ItemInstance {
+        previously_worn: false,
         id: allocate_shop_item_id(next_serial)?,
         kind_id: item_kind_id.to_owned(),
         quantity,

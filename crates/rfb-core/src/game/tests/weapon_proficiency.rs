@@ -94,7 +94,18 @@ fn tonberry_sabre_cap_trains_and_round_trips_by_birth_race() {
             .maximum,
         4_000
     );
-    assert!(Game::from_save_with_content(game.to_save(), game.content.clone()).is_err());
+    assert_eq!(game.progress.weapon_proficiencies["demo.item.sabre"], 8_000);
+    assert_eq!(
+        game.player_weapon_proficiencies()
+            .iter()
+            .find(|entry| entry.item_kind_id == "demo.item.sabre")
+            .unwrap()
+            .current,
+        4_000
+    );
+    game.refresh_character_skills();
+    game.refresh_player_ability_state();
+    assert!(Game::from_save_with_content(game.to_save(), game.content.clone()).is_ok());
 }
 
 #[test]
@@ -590,4 +601,34 @@ fn sparse_weapon_progress_round_trips_and_rejects_noncanonical_or_out_of_range_e
             .weapon_proficiencies
             .is_empty()
     );
+}
+
+#[test]
+fn permanent_race_change_caps_effective_weapon_skill_without_erasing_practice() {
+    let mut game = Game::new_with_build_race_and_name(
+        42,
+        "demo.build.high-mage-death",
+        "rfb-legacy.race.tonberry",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .unwrap();
+    game.progress
+        .weapon_proficiencies
+        .insert("demo.item.sabre".to_owned(), 8_000);
+    assert!(game.change_player_race("rfb-legacy.race.vampire", &mut Vec::new()));
+    assert_eq!(game.progress.weapon_proficiencies["demo.item.sabre"], 8_000);
+    let sabre = game
+        .player_weapon_proficiencies()
+        .into_iter()
+        .find(|entry| entry.item_kind_id == "demo.item.sabre")
+        .unwrap();
+    assert_eq!((sabre.current, sabre.maximum), (4_000, 4_000));
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert!(restored.change_player_race("rfb-legacy.race.tonberry", &mut Vec::new()));
+    let sabre = restored
+        .player_weapon_proficiencies()
+        .into_iter()
+        .find(|entry| entry.item_kind_id == "demo.item.sabre")
+        .unwrap();
+    assert_eq!((sabre.current, sabre.maximum), (8_000, 8_000));
 }

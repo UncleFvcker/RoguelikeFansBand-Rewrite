@@ -179,6 +179,7 @@ fn equipment_precondition_relocates_and_identifies_an_existing_item() {
             "equipmentItems": [{
                 "id": "demo.item.warding-band.1",
                 "kindId": "demo.item.warding-band",
+                "previouslyWorn": false,
                 "quantity": 1,
                 "slotId": "right-ring",
                 "quality": "fine",

@@ -771,6 +771,7 @@ impl Game {
             1,
         );
         self.items.push(ItemInstance {
+            previously_worn: false,
             id,
             kind_id: kind_id.to_owned(),
             quantity: 1,

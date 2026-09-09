@@ -592,8 +592,8 @@ fn actual_wraith_spell_exempts_density_and_preserves_transparent_walls_with_demo
     game.progress.level = 50;
     game.progress.max_level = 50;
     choose_human_talent_if_pending(&mut game);
-    game.learned_abilities
-        .insert("demo.ability.death-wraithform".to_owned());
+    game.ability_learning_order
+        .push("demo.ability.death-wraithform".to_owned());
     game.bonus_spell_learning_capacity = 32;
     give_inventory_item(&mut game, "test.necronomicon", "demo.item.necronomicon");
     game.debug_ability_casts_succeed = true;

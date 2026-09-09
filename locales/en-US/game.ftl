@@ -640,3 +640,5 @@ bounty-mission-completed = Every bounty target, { $actor }, is dead. Return to a
 player-sunlight-burn = Sunlight scorches your undead flesh!
 player-light-source-burn = { $source } scorches your undead flesh!
 player-light-death = You die from the burning light.
+
+player-race-changed = Your race has changed.

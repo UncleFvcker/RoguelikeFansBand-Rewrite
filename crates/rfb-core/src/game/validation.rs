@@ -1425,7 +1425,8 @@ impl Game {
                 }
                 None => self.learned_abilities.is_empty(),
             };
-            if !pools_valid
+            if !self.player_spell_memory_is_valid()
+                || !pools_valid
                 || !learned_valid
                 || self
                     .ability_progress
@@ -1446,6 +1447,7 @@ impl Game {
             }
         } else if !self.resources.is_empty()
             || !self.learned_abilities.is_empty()
+            || !self.ability_learning_order.is_empty()
             || !self.ability_progress.is_empty()
         {
             return Err(CoreError::InvalidSave(

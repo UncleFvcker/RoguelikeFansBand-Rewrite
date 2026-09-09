@@ -29,9 +29,10 @@ fn arcane_high_mage_game(seed: u64, level: u16, ability_ids: &[&str]) -> Game {
         .expect("Arcane High-Mage build should create");
     game.progress.level = level;
     game.progress.max_level = level;
+    game.bonus_spell_learning_capacity = 32;
     game.progress.experience = game.experience_required_for_level(level);
     game.progress.maximum_experience = game.progress.experience;
-    game.learned_abilities
+    game.ability_learning_order
         .extend(ability_ids.iter().map(|id| (*id).to_owned()));
     give_inventory_item(&mut game, "test.minor-arcana", "demo.item.minor-arcana");
     give_inventory_item(&mut game, "test.major-arcana", "demo.item.major-arcana");
@@ -54,9 +55,10 @@ fn sorcery_high_mage_game(seed: u64, level: u16, ability_ids: &[&str]) -> Game {
         .expect("Sorcery High-Mage build should create");
     game.progress.level = level;
     game.progress.max_level = level;
+    game.bonus_spell_learning_capacity = 32;
     game.progress.experience = game.experience_required_for_level(level);
     game.progress.maximum_experience = game.progress.experience;
-    game.learned_abilities
+    game.ability_learning_order
         .extend(ability_ids.iter().map(|id| (*id).to_owned()));
     give_inventory_item(
         &mut game,
@@ -87,9 +89,10 @@ fn armageddon_high_mage_game(seed: u64, level: u16) -> Game {
         .expect("Armageddon High-Mage build should create");
     game.progress.level = level;
     game.progress.max_level = level;
+    game.bonus_spell_learning_capacity = 32;
     game.progress.experience = game.experience_required_for_level(level);
     game.progress.maximum_experience = game.progress.experience;
-    game.learned_abilities.extend(
+    game.ability_learning_order.extend(
         [
             "demo.ability.armageddon-shard-bolt",
             "demo.ability.armageddon-gravity-bolt",
@@ -148,9 +151,10 @@ fn nature_high_mage_game(seed: u64, level: u16) -> Game {
         .expect("Nature High-Mage build should create");
     game.progress.level = level;
     game.progress.max_level = level;
+    game.bonus_spell_learning_capacity = 32;
     game.progress.experience = game.experience_required_for_level(level);
     game.progress.maximum_experience = game.progress.experience;
-    game.learned_abilities.extend(
+    game.ability_learning_order.extend(
         [
             "demo.ability.nature-detect-creatures",
             "demo.ability.nature-lightning",
@@ -205,9 +209,10 @@ fn life_high_mage_game(seed: u64, level: u16) -> Game {
         .expect("Life High-Mage build should create");
     game.progress.level = level;
     game.progress.max_level = level;
+    game.bonus_spell_learning_capacity = 32;
     game.progress.experience = game.experience_required_for_level(level);
     game.progress.maximum_experience = game.progress.experience;
-    game.learned_abilities.extend(
+    game.ability_learning_order.extend(
         [
             "demo.ability.life-cure-light-wounds",
             "demo.ability.life-bless",
@@ -271,9 +276,10 @@ pub(super) fn daemon_high_mage_game(seed: u64, level: u16) -> Game {
         .expect("Daemon High-Mage build should create");
     game.progress.level = level;
     game.progress.max_level = level;
+    game.bonus_spell_learning_capacity = 32;
     game.progress.experience = game.experience_required_for_level(level);
     game.progress.maximum_experience = game.progress.experience;
-    game.learned_abilities.extend(
+    game.ability_learning_order.extend(
         [
             "demo.ability.daemon-magic-missile",
             "demo.ability.daemon-detect-unlife",
@@ -334,9 +340,10 @@ fn crusade_high_mage_game(seed: u64, level: u16) -> Game {
         .expect("Crusade High-Mage build should create");
     game.progress.level = level;
     game.progress.max_level = level;
+    game.bonus_spell_learning_capacity = 32;
     game.progress.experience = game.experience_required_for_level(level);
     game.progress.maximum_experience = game.progress.experience;
-    game.learned_abilities.extend(
+    game.ability_learning_order.extend(
         [
             "demo.ability.crusade-punishment",
             "demo.ability.crusade-detect-evil",
@@ -4041,9 +4048,13 @@ fn commit33_natures_wrath_direction_prompt_is_atomic_cancelable_and_persistent()
     let mut cancelled = nature_high_mage_game(0x4e41_5455_5245_3343, 50);
     choose_human_talent_if_pending(&mut cancelled);
     cancelled.learned_abilities.clear();
+    cancelled.ability_learning_order.clear();
     cancelled
         .learned_abilities
         .insert("demo.ability.nature-natures-wrath".to_owned());
+    cancelled
+        .ability_learning_order
+        .push("demo.ability.nature-natures-wrath".to_owned());
     let mana = cancelled
         .resources
         .get_mut("demo.resource.mana")
@@ -4105,9 +4116,13 @@ fn commit33_natures_wrath_direction_prompt_is_atomic_cancelable_and_persistent()
     let mut resolved = nature_high_mage_game(0x4e41_5455_5245_3352, 50);
     choose_human_talent_if_pending(&mut resolved);
     resolved.learned_abilities.clear();
+    resolved.ability_learning_order.clear();
     resolved
         .learned_abilities
         .insert("demo.ability.nature-natures-wrath".to_owned());
+    resolved
+        .ability_learning_order
+        .push("demo.ability.nature-natures-wrath".to_owned());
     let mana = resolved
         .resources
         .get_mut("demo.resource.mana")

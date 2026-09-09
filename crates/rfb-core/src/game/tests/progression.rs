@@ -4180,3 +4180,483 @@ fn formal_beastman_birth_level_mutations_and_regeneration_match_rfb() {
     tolerant.progress.locked_mutation_ids = mutation_ids[..2].iter().cloned().collect();
     assert_eq!(tolerant.mutation_regeneration_percent(), 100);
 }
+
+fn permanent_race_game(race_id: &str) -> Game {
+    Game::new_with_build_race_and_name(
+        71,
+        "demo.build.high-mage-death",
+        race_id,
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .unwrap()
+}
+
+#[test]
+fn permanent_race_change_rejections_are_atomic_and_consume_no_rng() {
+    for (native, form, target) in [
+        ("demo.race.rfb-human", None, "demo.race.rfb-human"),
+        ("demo.race.rfb-human", None, "unknown.race"),
+        ("demo.race.rfb-human", None, "rfb-legacy.race.doppelganger"),
+        (
+            "rfb-legacy.race.android",
+            Some("demo.race.rfb-human"),
+            "rfb-legacy.race.vampire",
+        ),
+        (
+            "demo.race.rfb-human",
+            Some("rfb-legacy.race.android"),
+            "rfb-legacy.race.vampire",
+        ),
+    ] {
+        let mut game = permanent_race_game("demo.race.rfb-human");
+        game.build.as_mut().unwrap().race_id = native.to_owned();
+        if let Some(form) = form {
+            let mut status = monster_combat::melee_status("test.form", 50, "test.setup").status;
+            status.granted_race_id = Some(form.to_owned());
+            game.player.statuses.push(status);
+        }
+        let before = game.to_save();
+        let rng = game.rng.clone();
+        let mut events = Vec::new();
+        assert!(!game.change_player_race(target, &mut events));
+        assert_eq!(game.to_save(), before);
+        assert_eq!(game.rng, rng);
+        assert!(events.is_empty());
+    }
+}
+
+#[test]
+fn permanent_race_change_rerates_only_hp_and_preserves_identity_progress_and_items() {
+    let mut game = permanent_race_game("demo.race.rfb-human");
+    game.progress.life_force = 725;
+    game.player.hp = game.effective_player_max_hp() / 2;
+    let pool = game.resources.get_mut("demo.resource.mana").unwrap();
+    pool.current = pool.maximum / 2;
+    let build = game.build.clone().unwrap();
+    let attributes = game.progress.attributes;
+    let potentials = game.progress.attribute_potentials;
+    let items = game.items.clone();
+    let virtues = game.virtues;
+    let clock = (game.turn, game.world_tick);
+    let mut expected_rng = game.rng.clone();
+    let expected_hp =
+        CharacterProgress::roll_hp_progression(game.progress.hp_progression[0], &mut expected_rng);
+    let mut events = Vec::new();
+    assert!(game.change_player_race("rfb-legacy.race.vampire", &mut events));
+    assert_eq!(game.progress.hp_progression, expected_hp);
+    assert_eq!(game.rng, expected_rng);
+    assert_eq!(game.progress.life_force, 725);
+    assert_eq!(game.progress.attributes, attributes);
+    assert_eq!(game.progress.attribute_potentials, potentials);
+    assert_eq!(game.items, items);
+    assert_eq!((game.turn, game.world_tick), clock);
+    let after = game.build.as_ref().unwrap();
+    assert_eq!(
+        (&after.build_id, &after.class_id, &after.personality_id),
+        (&build.build_id, &build.class_id, &build.personality_id)
+    );
+    assert!(game.player.hp < game.effective_player_max_hp());
+    let pool = &game.resources["demo.resource.mana"];
+    assert!(pool.current < pool.maximum);
+    assert_eq!(
+        game.virtues.iter().map(|v| v.kind).collect::<Vec<_>>(),
+        virtues.iter().map(|v| v.kind).collect::<Vec<_>>()
+    );
+    for (old, new) in virtues.iter().zip(&game.virtues) {
+        assert_eq!(
+            new.value,
+            old.value
+                + if old.kind == rfb_protocol::VirtueKindDto::Chance {
+                    2
+                } else {
+                    0
+                }
+        );
+    }
+    assert!(events.iter().any(|event| matches!(event, DomainEvent::PlayerRaceChanged { race_id, .. } if race_id == "rfb-legacy.race.vampire")));
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.build.unwrap().race_id, "rfb-legacy.race.vampire");
+}
+
+#[test]
+fn permanent_race_change_preserves_temporary_body_until_expiry() {
+    let mut game = permanent_race_game("demo.race.rfb-human");
+    let mut status = monster_combat::melee_status("test.form", 50, "test.setup").status;
+    status.kind_id = STATUS_PLAYER_POLYMORPH.to_owned();
+    status.granted_race_id = Some("rfb-legacy.race.centaur".to_owned());
+    game.player.statuses.push(status);
+    game.reconcile_player_body_slots_for_current_form();
+    game.refresh_player_ability_state();
+    let slots = game.body_slots.clone();
+    let statuses = game.player.statuses.clone();
+    assert!(game.change_player_race("rfb-legacy.race.vampire", &mut Vec::new()));
+    assert_eq!(game.body_slots, slots);
+    assert_eq!(game.player.statuses, statuses);
+    game.player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    game.reconcile_player_body_slots_for_current_form();
+    game.refresh_player_ability_state();
+    assert_eq!(
+        game.character_definitions().unwrap().1.id,
+        "rfb-legacy.race.vampire"
+    );
+    assert_ne!(game.body_slots, slots);
+    assert!(Game::from_save(game.to_save()).is_ok());
+}
+
+#[test]
+fn permanent_race_change_revokes_draconian_talent_and_restores_worn_gear() {
+    let mut game = draconian_reward_game();
+    game.apply_player_experience(game.experience_required_for_level(35), &mut Vec::new());
+    let items = game
+        .items
+        .iter()
+        .map(|item| (item.id.clone(), (item.kind_id.clone(), item.quantity)))
+        .collect::<BTreeMap<_, _>>();
+    let dagger = game
+        .items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.dagger")
+        .unwrap()
+        .id
+        .clone();
+    assert!(game.choose_race_mutation(
+        "draconian-power",
+        DRACONIAN_METAMORPHOSIS_MUTATION_ID,
+        &mut Vec::new()
+    ));
+    assert!(
+        game.items
+            .iter()
+            .find(|item| item.id == dagger)
+            .unwrap()
+            .previously_worn
+    );
+    assert!(game.gain_mutation("rfb.mutation.teleport", &mut Vec::new()));
+    let mut events = Vec::new();
+    assert!(game.change_player_race("rfb-legacy.race.vampire", &mut events));
+    assert!(
+        !game
+            .progress
+            .active_mutation_ids
+            .contains(DRACONIAN_METAMORPHOSIS_MUTATION_ID)
+    );
+    assert!(
+        !game
+            .progress
+            .locked_mutation_ids
+            .contains(DRACONIAN_METAMORPHOSIS_MUTATION_ID)
+    );
+    assert!(
+        game.progress
+            .active_mutation_ids
+            .contains("rfb.mutation.teleport")
+    );
+    let dagger = game.items.iter().find(|item| item.id == dagger).unwrap();
+    assert!(matches!(dagger.location, ItemLocation::Equipped { .. }));
+    assert!(!dagger.previously_worn);
+    assert_eq!(
+        game.items
+            .iter()
+            .map(|item| (item.id.clone(), (item.kind_id.clone(), item.quantity)))
+            .collect::<BTreeMap<_, _>>(),
+        items
+    );
+    assert_eq!(events.iter().filter(|event| matches!(event, DomainEvent::MutationLost { mutation_id, .. } if mutation_id == DRACONIAN_METAMORPHOSIS_MUTATION_ID)).count(), 1);
+    assert!(Game::from_save(game.to_save()).is_ok());
+}
+
+#[test]
+fn permanent_race_change_rechecks_experience_below_the_historical_maximum() {
+    let mut game = permanent_race_game("rfb-legacy.race.yeek");
+    game.apply_player_experience(game.experience_required_for_level(30), &mut Vec::new());
+    let maximum_level = game.progress.max_level;
+    let experience = game.progress.experience;
+    let maximum_experience = game.progress.maximum_experience;
+    let mut events = Vec::new();
+    assert!(game.change_player_race("rfb-legacy.race.vampire", &mut events));
+    assert!(game.progress.level < maximum_level);
+    assert_eq!(game.progress.max_level, maximum_level);
+    assert_eq!(
+        (game.progress.experience, game.progress.maximum_experience),
+        (experience, maximum_experience)
+    );
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::PlayerLevelLost { .. }))
+    );
+    assert!(game.change_player_race("rfb-legacy.race.yeek", &mut Vec::new()));
+    assert_eq!(game.progress.level, maximum_level);
+    assert!(Game::from_save(game.to_save()).is_ok());
+}
+
+#[test]
+fn spell_memory_forgets_by_level_and_remembers_after_save_and_recovery() {
+    let mut game = permanent_race_game("demo.race.rfb-human");
+    game.apply_player_experience(game.experience_required_for_level(40), &mut Vec::new());
+    game.ability_learning_order = vec![
+        "demo.ability.death-berserk".to_owned(),
+        "demo.ability.death-detect-unlife".to_owned(),
+    ];
+    game.refresh_player_ability_state();
+    assert_eq!(game.learned_abilities.len(), 2);
+    let progress = game.ability_progress.clone();
+    game.progress.level = 1;
+    game.progress.experience = 0;
+    game.player.hp = game.effective_player_max_hp();
+    game.refresh_character_skills();
+    game.refresh_player_ability_state();
+    assert!(
+        !game
+            .learned_abilities
+            .contains("demo.ability.death-berserk")
+    );
+    assert!(
+        game.learned_abilities
+            .contains("demo.ability.death-detect-unlife")
+    );
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.ability_learning_order, game.ability_learning_order);
+    restored.apply_player_experience(restored.experience_required_for_level(40), &mut Vec::new());
+    assert_eq!(restored.learned_abilities.len(), 2);
+    assert_eq!(restored.ability_progress, progress);
+}
+
+#[test]
+fn spell_memory_capacity_keeps_the_earliest_eligible_studies_and_preserves_proficiency() {
+    let mut game = permanent_race_game("demo.race.rfb-human");
+    game.apply_player_experience(game.experience_required_for_level(40), &mut Vec::new());
+    let profile = game.casting_profile().unwrap().clone();
+    let (_, all_ids) = game.player_ability_baseline();
+    game.ability_learning_order = all_ids
+        .into_iter()
+        .rev()
+        .filter(|id| {
+            let ability =
+                game.effective_casting_ability(&profile, game.content.ability(id).unwrap());
+            Game::player_ability_parameters(&ability).minimum_level <= game.progress.level
+        })
+        .collect();
+    game.bonus_spell_learning_capacity = 32;
+    game.refresh_player_ability_state();
+    let history = game.ability_learning_order.clone();
+    let proficiency = game.ability_progress.clone();
+    assert_eq!(game.learned_abilities.len(), history.len());
+    game.bonus_spell_learning_capacity = 0;
+    game.progress.attributes.intelligence = 8;
+    game.refresh_player_ability_state();
+    let capacity = usize::from(game.ability_learning_capacity(&profile));
+    assert!(capacity > 0 && capacity < history.len());
+    assert_eq!(
+        game.learned_abilities,
+        history[..capacity].iter().cloned().collect()
+    );
+    assert_eq!(game.ability_learning_order, history);
+    assert_eq!(game.ability_progress, proficiency);
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    restored.bonus_spell_learning_capacity = 32;
+    restored.refresh_player_ability_state();
+    assert_eq!(restored.learned_abilities.len(), history.len());
+    assert_eq!(restored.ability_progress, proficiency);
+}
+
+#[test]
+fn permanent_race_change_reconciles_feet_and_honors_automatic_rewear_inscriptions() {
+    for inscription in [None, Some("@mimic")] {
+        let slots = load_built_in_content()
+            .unwrap()
+            .race("rfb-legacy.race.centaur")
+            .unwrap()
+            .body_slots
+            .clone();
+        let mut game = Game::from_content_with_build(
+            71,
+            race_change_body_catalog(slots),
+            DEFAULT_WORLD_ID,
+            "demo.build.high-mage-death",
+        )
+        .unwrap();
+        give_inventory_item(&mut game, "test.boots", "demo.item.soft-leather-boots");
+        game.items
+            .iter_mut()
+            .find(|item| item.id == "test.boots")
+            .unwrap()
+            .inscription = inscription.map(str::to_owned);
+        assert!(game.equip_inventory_item("test.boots", None).is_some());
+        assert!(game.change_player_race("rfb-legacy.race.vampire", &mut Vec::new()));
+        let boots = game
+            .items
+            .iter()
+            .find(|item| item.id == "test.boots")
+            .unwrap();
+        assert_eq!(boots.location, ItemLocation::Inventory);
+        assert_eq!(boots.previously_worn, inscription.is_none());
+        let mut restored =
+            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        assert!(game.change_player_race("demo.race.rfb-human", &mut Vec::new()));
+        assert!(restored.change_player_race("demo.race.rfb-human", &mut Vec::new()));
+        assert_eq!(game.state_hash(), restored.state_hash());
+        let boots = game
+            .items
+            .iter()
+            .find(|item| item.id == "test.boots")
+            .unwrap();
+        assert_eq!(
+            matches!(boots.location, ItemLocation::Equipped { .. }),
+            inscription.is_none()
+        );
+        assert!(!boots.previously_worn);
+    }
+}
+
+#[test]
+fn permanent_race_change_releases_quiver_and_container_capacity_without_losing_items() {
+    let content = race_change_body_catalog(vec![rfb_content::BodySlotDefinition {
+        id: "weapon".to_owned(),
+        slot_type: "weapon".to_owned(),
+    }]);
+    let mut game =
+        Game::from_content_with_build(71, content, DEFAULT_WORLD_ID, "demo.build.warrior").unwrap();
+    game.items.clear();
+    game.item_property_knowledge.clear();
+    for (id, kind, slot) in [
+        ("test.quiver", "demo.item.quiver", "quiver"),
+        ("test.bag", "demo.item.fabric-bag", "container"),
+    ] {
+        give_inventory_item(&mut game, id, kind);
+        assert!(game.equip_inventory_item(id, Some(slot)).is_some());
+    }
+    give_inventory_item(&mut game, "test.arrows", "demo.item.arrow");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.arrows")
+        .unwrap()
+        .quantity = 60;
+    for index in 0..game.inventory_slot_capacity() {
+        give_inventory_item(
+            &mut game,
+            &format!("test.filler-{index:02}"),
+            "demo.item.dagger",
+        );
+    }
+    assert_eq!(game.inventory_used_slots(), game.inventory_slot_capacity());
+    let before = game
+        .items
+        .iter()
+        .map(|item| (item.id.clone(), (item.kind_id.clone(), item.quantity)))
+        .collect::<BTreeMap<_, _>>();
+    assert!(game.change_player_race("rfb-legacy.race.vampire", &mut Vec::new()));
+    assert_eq!(
+        game.items
+            .iter()
+            .map(|item| (item.id.clone(), (item.kind_id.clone(), item.quantity)))
+            .collect::<BTreeMap<_, _>>(),
+        before
+    );
+    assert!(game.inventory_used_slots() <= game.inventory_slot_capacity());
+    for id in ["test.quiver", "test.bag"] {
+        let item = game.items.iter().find(|item| item.id == id).unwrap();
+        assert_eq!(item.location, ItemLocation::Ground(game.player.position));
+        assert!(item.previously_worn);
+    }
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn body_reconciliation_uses_old_slot_priority_and_first_compatible_destination() {
+    let mut game = permanent_race_game("demo.race.rfb-human");
+    game.body_slots = vec![
+        BodySlot {
+            id: "right-hand".to_owned(),
+            slot_type: "weapon".to_owned(),
+        },
+        BodySlot {
+            id: "left-hand".to_owned(),
+            slot_type: "weapon".to_owned(),
+        },
+    ];
+    game.items.clear();
+    game.item_property_knowledge.clear();
+    for id in ["z-first-hand", "a-second-hand"] {
+        give_inventory_item(&mut game, id, "demo.item.dagger");
+    }
+    for (id, slot) in [
+        ("z-first-hand", "right-hand"),
+        ("a-second-hand", "left-hand"),
+    ] {
+        assert!(game.equip_inventory_item(id, Some(slot)).is_some());
+    }
+    game.reconcile_player_body_slots(vec![
+        BodySlot {
+            id: "left-hand".to_owned(),
+            slot_type: "weapon".to_owned(),
+        },
+        BodySlot {
+            id: "right-hand".to_owned(),
+            slot_type: "weapon".to_owned(),
+        },
+    ]);
+    for (id, expected) in [
+        ("z-first-hand", "left-hand"),
+        ("a-second-hand", "right-hand"),
+    ] {
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .location,
+            ItemLocation::Equipped {
+                slot_id: expected.to_owned()
+            }
+        );
+    }
+}
+
+fn race_change_body_catalog(
+    slots: Vec<rfb_content::BodySlotDefinition>,
+) -> Arc<rfb_content::ContentCatalog> {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).unwrap();
+    artifact
+        .content
+        .races
+        .iter_mut()
+        .find(|race| race.id == "rfb-legacy.race.vampire")
+        .unwrap()
+        .body_slots = slots;
+    Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content).unwrap(),
+    ))
+}
+
+#[test]
+fn permanent_race_change_revokes_old_human_rewards_and_reopens_choices_below_max_level() {
+    let mut game = permanent_race_game("demo.race.rfb-human");
+    game.apply_player_experience(game.experience_required_for_level(40), &mut Vec::new());
+    let (reward, candidates) = game.pending_race_mutation_choice().unwrap();
+    assert!(game.choose_race_mutation(&reward, &candidates[0], &mut Vec::new()));
+    let old_talents = game.progress.locked_mutation_ids.clone();
+    let historical_level = game.progress.max_level;
+    assert!(!old_talents.is_empty());
+    assert!(game.change_player_race("rfb-legacy.race.vampire", &mut Vec::new()));
+    assert!(
+        old_talents
+            .iter()
+            .all(|id| !game.progress.active_mutation_ids.contains(id)
+                && !game.progress.locked_mutation_ids.contains(id))
+    );
+    assert!(game.change_player_race("demo.race.rfb-human", &mut Vec::new()));
+    assert_eq!(game.progress.max_level, historical_level);
+    assert!(game.pending_race_mutation_choice().is_some());
+    assert!(Game::from_save(game.to_save()).is_ok());
+}

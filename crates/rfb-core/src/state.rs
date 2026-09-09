@@ -88,6 +88,7 @@ pub(crate) struct ItemInstance {
     pub(crate) kind_id: String,
     pub(crate) quantity: u32,
     pub(crate) inscription: Option<String>,
+    pub(crate) previously_worn: bool,
     pub(crate) origin_actor_kind_id: Option<String>,
     pub(crate) origin_kind: Option<ItemOriginKindDto>,
     pub(crate) damage_dice_override: Option<u16>,

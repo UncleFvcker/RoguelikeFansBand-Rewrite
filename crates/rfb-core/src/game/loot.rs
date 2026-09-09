@@ -79,6 +79,7 @@ pub(super) struct GeneratedItemDraft {
 impl GeneratedItemDraft {
     pub(super) fn into_item_instance(self, id: String, location: ItemLocation) -> ItemInstance {
         ItemInstance {
+            previously_worn: false,
             id,
             kind_id: self.kind_id,
             quantity: self.quantity,

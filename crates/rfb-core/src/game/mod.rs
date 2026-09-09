@@ -226,7 +226,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 111;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 112;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -795,6 +795,7 @@ pub struct Game {
     last_visual_cells: Option<Vec<CellVisualDto>>,
     bonus_spell_learning_capacity: u16,
     learned_abilities: BTreeSet<String>,
+    ability_learning_order: Vec<String>,
     ability_progress: BTreeMap<String, AbilityProgress>,
     entities: Vec<Actor>,
     items: Vec<ItemInstance>,
@@ -2438,6 +2439,7 @@ impl Game {
         let (activation, charges) =
             initial_item_runtime_state(&self.content, &mut self.rng, kind_id, &[], depth);
         self.items.push(ItemInstance {
+            previously_worn: false,
             id: id.to_owned(),
             kind_id: kind_id.to_owned(),
             quantity: 1,

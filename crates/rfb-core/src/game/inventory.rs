@@ -818,6 +818,7 @@ fn plan_pick_up(
 
 pub(super) fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemInstance) -> bool {
     left.kind_id == right.kind_id
+        && left.previously_worn == right.previously_worn
         && left.inscription == right.inscription
         && left.origin_actor_kind_id == right.origin_actor_kind_id
         && left.origin_kind == right.origin_kind
@@ -1772,6 +1773,7 @@ impl Game {
         let kind_id = self.items[plan.inventory_index].kind_id.clone();
         let item_instance_id = self.items[plan.inventory_index].id.clone();
         let affix_ids = self.items[plan.inventory_index].affix_ids.clone();
+        self.items[plan.inventory_index].previously_worn = false;
         self.items[plan.inventory_index].location = ItemLocation::Equipped {
             slot_id: plan.slot_id.clone(),
         };

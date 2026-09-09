@@ -709,6 +709,7 @@ impl Game {
             definition.depth,
         );
         let mut item = ItemInstance {
+            previously_worn: false,
             id: spawn.instance_id.clone(),
             kind_id: spawn.kind_id.clone(),
             quantity: spawn.quantity,
@@ -2513,6 +2514,7 @@ impl Game {
                 definition.depth,
             );
             items.push(ItemInstance {
+                previously_worn: false,
                 id: self.allocate_item_instance_id()?,
                 kind_id: entry.item_kind_id.clone(),
                 quantity: 1,
@@ -2554,6 +2556,7 @@ impl Game {
                     );
                     let fuel = initial_item_fuel(&self.content, &kind_id);
                     items.push(ItemInstance {
+                        previously_worn: false,
                         id: objective
                             .item_instance_id
                             .clone()

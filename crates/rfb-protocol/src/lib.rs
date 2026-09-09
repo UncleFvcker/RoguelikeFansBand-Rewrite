@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.236";
+pub const PROTOCOL_VERSION: &str = "1.237";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 5;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 7;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 8;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -4849,6 +4849,7 @@ pub struct PlayerSaveDto {
     pub bonus_spell_learning_capacity: u16,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub learned_ability_ids: Vec<String>,
+    pub ability_learning_order: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ability_progress: Vec<AbilityProgressSaveDto>,
     #[serde(default, skip_serializing_if = "is_default_summon_command")]
@@ -5095,6 +5096,7 @@ pub struct CapturedActorSaveDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemSaveDto {
+    pub previously_worn: bool,
     pub id: String,
     pub kind_id: String,
     pub position: Position,
@@ -5139,6 +5141,7 @@ pub struct ItemSaveDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InventoryItemSaveDto {
+    pub previously_worn: bool,
     pub id: String,
     pub kind_id: String,
     pub quantity: u32,
@@ -5182,6 +5185,7 @@ pub struct InventoryItemSaveDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EquipmentItemSaveDto {
+    pub previously_worn: bool,
     pub id: String,
     pub kind_id: String,
     pub quantity: u32,
@@ -5226,6 +5230,7 @@ pub struct EquipmentItemSaveDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CarriedItemSaveDto {
+    pub previously_worn: bool,
     pub id: String,
     pub kind_id: String,
     pub quantity: u32,
@@ -6112,6 +6117,10 @@ mod tests {
         current["items"][0]["permanentDestructionImmunities"] = serde_json::json!([]);
         current["inventory"][0]["permanentDestructionImmunities"] = serde_json::json!([]);
         current["equipment"][0]["permanentDestructionImmunities"] = serde_json::json!([]);
+        for collection in ["items", "inventory", "equipment"] {
+            current[collection][0]["previouslyWorn"] = serde_json::json!(false);
+        }
+        current["player"]["abilityLearningOrder"] = serde_json::json!([]);
         current["player"]["activeMutationIds"] = serde_json::json!([]);
         current["player"]["lockedMutationIds"] = serde_json::json!([]);
         current["player"]["minorSlowEnergy"] = serde_json::json!(0);
@@ -6200,6 +6209,7 @@ mod tests {
             resources: Vec::new(),
             bonus_spell_learning_capacity: 0,
             learned_ability_ids: Vec::new(),
+            ability_learning_order: Vec::new(),
             ability_progress: Vec::new(),
             summon_command: SummonCommandDto::default(),
             body_slots: Vec::new(),

@@ -227,6 +227,7 @@ mod tests {
                 resources: Vec::new(),
                 bonus_spell_learning_capacity: 0,
                 learned_ability_ids: Vec::new(),
+                ability_learning_order: Vec::new(),
                 ability_progress: Vec::new(),
                 summon_command: Default::default(),
                 body_slots: Vec::new(),

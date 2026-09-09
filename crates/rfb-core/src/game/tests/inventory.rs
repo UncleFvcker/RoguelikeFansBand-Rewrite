@@ -662,6 +662,7 @@ fn elemental_brand_is_suppressed_only_by_matching_immunity() {
     let mut game = Game::new(0);
     clear_monsters(&mut game);
     game.items.push(ItemInstance {
+        previously_worn: false,
         id: "test.item.ember-edge".to_owned(),
         kind_id: "demo.item.ember-edge".to_owned(),
         quantity: 1,
@@ -723,6 +724,7 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
     let mut game = Game::new(0);
     let item_id = "test.item.known-offense".to_owned();
     game.items.push(ItemInstance {
+        previously_worn: false,
         id: item_id.clone(),
         kind_id: "demo.item.ember-edge".to_owned(),
         quantity: 1,

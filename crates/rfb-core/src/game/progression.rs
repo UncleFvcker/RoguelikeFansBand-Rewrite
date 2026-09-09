@@ -511,6 +511,80 @@ fn rescale_u32(current: u32, previous_maximum: u32, next_maximum: u32) -> u32 {
 }
 
 impl Game {
+    /// Permanent native-race change. The effect endpoint is wired in the next stage.
+    #[cfg_attr(not(test), allow(dead_code))]
+    pub(super) fn change_player_race(
+        &mut self,
+        race_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let Some(identity) = self.build.as_ref() else {
+            return false;
+        };
+        if identity.race_id == race_id
+            || matches!(
+                identity.race_id.as_str(),
+                "rfb-legacy.race.android"
+                    | "rfb-legacy.race.doppelganger"
+                    | "rfb-legacy.race.werewolf"
+            )
+            || self.character_definitions().is_some_and(|(_, race, _, _)| {
+                race.tags.iter().any(|tag| tag == "polymorph-immune")
+            })
+            || resolve_character_build(&self.content, Some(&identity.build_id), Some(race_id))
+                .is_err()
+        {
+            return false;
+        }
+        let previous_race_id = identity.race_id.clone();
+        let rewards = self
+            .selected_race_definition()
+            .expect("native race must exist")
+            .level_mutation_rewards
+            .clone();
+        for reward in rewards {
+            let ids = match reward.selection {
+                RaceMutationSelectionDefinition::Choice { mutation_ids } => mutation_ids,
+                RaceMutationSelectionDefinition::CastingAttribute {
+                    default_mutation_id,
+                    mutation_ids_by_attribute,
+                } => std::iter::once(default_mutation_id)
+                    .chain(mutation_ids_by_attribute.into_values())
+                    .collect(),
+            };
+            for id in ids {
+                if self.progress.locked_mutation_ids.remove(&id) {
+                    self.lose_mutation(&id, events);
+                }
+            }
+        }
+        events.push(DomainEvent::PlayerRaceChanged {
+            previous_race_id,
+            race_id: race_id.to_owned(),
+        });
+        self.add_virtue(rfb_protocol::VirtueKindDto::Chance, 2);
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resources = self.player_resource_maxima();
+        self.build
+            .as_mut()
+            .expect("native identity must exist")
+            .race_id = race_id.to_owned();
+        let base_max_hp = self.progress.hp_progression[0];
+        self.progress.hp_progression =
+            CharacterProgress::roll_hp_progression(base_max_hp, &mut self.rng);
+        self.refresh_after_attribute_change(previous_max_hp, &previous_resources);
+        let previous_resources = self.player_resource_maxima();
+        self.apply_player_experience(0, events);
+        let previous_max_hp = self.effective_player_max_hp();
+        self.reconcile_player_body_slots_for_current_form();
+        self.refresh_character_skills();
+        self.refresh_after_attribute_change(previous_max_hp, &previous_resources);
+        // Light, speed, resistance, abilities and riding checks read the current
+        // body and equipment directly; only explored visibility needs refreshing.
+        self.reveal_current_visibility();
+        true
+    }
+
     pub(super) fn restore_player_attribute(
         &mut self,
         attribute: AttributeKind,

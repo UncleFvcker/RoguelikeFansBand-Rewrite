@@ -1242,6 +1242,7 @@ mod tests {
         discovered: bool,
     ) {
         game.items.push(ItemInstance {
+            previously_worn: false,
             id: id.to_owned(),
             kind_id: kind_id.to_owned(),
             quantity: 1,

@@ -678,6 +678,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         .filter(|item| item.generation_depth.is_none())
     {
         payload.inventory.push(InventoryItemSaveDto {
+            previously_worn: false,
             id: item.id.clone(),
             kind_id: item.kind_id.clone(),
             quantity: item.quantity,

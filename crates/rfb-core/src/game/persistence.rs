@@ -992,6 +992,7 @@ impl Game {
             .expect("validated virtue count must fill every slot");
         let bonus_spell_learning_capacity = payload.player.bonus_spell_learning_capacity;
         let saved_learned_ability_ids = payload.player.learned_ability_ids.clone();
+        let saved_ability_learning_order = payload.player.ability_learning_order.clone();
         let saved_ability_progress = payload.player.ability_progress.clone();
         let summon_command = payload.player.summon_command.clone();
         let recall = payload.player.recall.clone();
@@ -1438,6 +1439,7 @@ impl Game {
             last_visual_cells: None,
             bonus_spell_learning_capacity,
             learned_abilities: BTreeSet::new(),
+            ability_learning_order: Vec::new(),
             ability_progress: BTreeMap::new(),
             entities,
             items,
@@ -1489,6 +1491,7 @@ impl Game {
         game.restore_player_ability_state(
             saved_resources,
             saved_learned_ability_ids,
+            saved_ability_learning_order,
             saved_ability_progress,
         )?;
         if campaign_state_missing && game.campaign_victory_reached() {
@@ -1693,6 +1696,7 @@ impl Game {
             .collect();
         player.bonus_spell_learning_capacity = self.bonus_spell_learning_capacity;
         player.learned_ability_ids = self.learned_abilities.iter().cloned().collect();
+        player.ability_learning_order = self.ability_learning_order.clone();
         player.ability_progress = self
             .ability_progress
             .iter()

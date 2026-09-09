@@ -38,7 +38,8 @@ fn berserk_and_battle_frenzy_roll_independent_durations_and_round_trip() {
     assert_eq!(berserk.granted_equipment_bonuses.melee_damage, 11);
     left.progress.level = 1;
     left.progress.max_level = 1;
-    left.learned_abilities.remove("demo.ability.death-berserk");
+    left.forget_player_ability("demo.ability.death-berserk")
+        .unwrap();
     let level_one_mana = test_caster_game(0).resources["demo.resource.mana"].maximum;
     left.resources
         .get_mut("demo.resource.mana")

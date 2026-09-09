@@ -354,61 +354,55 @@ impl Game {
     }
 
     pub(super) fn reconcile_player_body_slots(&mut self, next_slots: Vec<BodySlot>) {
-        let old_slot_types = self
+        if self.body_slots == next_slots {
+            return;
+        }
+        // Original equip_on_change_race walks the old body, then takes the first
+        // compatible free slot in the new body. Item IDs never determine priority.
+        let equipped_indices = self
             .body_slots
             .iter()
-            .map(|slot| (slot.id.as_str(), slot.slot_type.as_str()))
-            .collect::<BTreeMap<_, _>>();
-        let mut equipped_indices = self
-            .items
-            .iter()
-            .enumerate()
-            .filter(|(_, item)| matches!(item.location, ItemLocation::Equipped { .. }))
-            .map(|(index, item)| (item.id.clone(), index))
+            .filter_map(|slot| {
+                self.items.iter().position(|item| {
+                    item.location
+                        == (ItemLocation::Equipped {
+                            slot_id: slot.id.clone(),
+                        })
+                })
+            })
             .collect::<Vec<_>>();
-        equipped_indices.sort_by(|left, right| left.0.cmp(&right.0));
         let mut occupied = BTreeSet::new();
-        let mut plan = Vec::with_capacity(equipped_indices.len());
-        for (_, item_index) in equipped_indices {
-            let ItemLocation::Equipped { slot_id } = &self.items[item_index].location else {
-                unreachable!("equipped item plan must retain its location")
-            };
-            let old_slot_type = old_slot_types.get(slot_id.as_str()).copied();
-            let declared_slot_type = self
+        let mut unequipped = Vec::new();
+        for item_index in equipped_indices {
+            let declared = self
                 .content
                 .item(&self.items[item_index].kind_id)
                 .and_then(|definition| definition.equipment_slot.as_deref());
-            let compatible = |slot: &BodySlot| {
-                declared_slot_type
-                    .is_some_and(|declared| item_can_occupy_slot_type(declared, &slot.slot_type))
-                    && !occupied.contains(&slot.id)
-            };
-            let next_slot = next_slots
-                .iter()
-                .find(|slot| slot.id == *slot_id && compatible(slot))
-                .or_else(|| {
-                    next_slots.iter().find(|slot| {
-                        old_slot_type == Some(slot.slot_type.as_str()) && compatible(slot)
+            let next_slot = next_slots.iter().find(|slot| {
+                !occupied.contains(&slot.id)
+                    && declared.is_some_and(|declared| {
+                        item_can_occupy_slot_type(declared, &slot.slot_type)
                     })
-                })
-                .or_else(|| next_slots.iter().find(|slot| compatible(slot)))
-                .map(|slot| slot.id.clone());
-            if let Some(slot_id) = &next_slot {
-                occupied.insert(slot_id.clone());
-            }
-            plan.push((item_index, next_slot));
-        }
-        let mut unequipped = Vec::new();
-        for (item_index, slot_id) in plan {
-            self.items[item_index].location = slot_id.map_or(ItemLocation::Inventory, |slot_id| {
-                ItemLocation::Equipped { slot_id }
             });
-            if matches!(self.items[item_index].location, ItemLocation::Inventory) {
+            if let Some(slot) = next_slot {
+                occupied.insert(slot.id.clone());
+                self.items[item_index].location = ItemLocation::Equipped {
+                    slot_id: slot.id.clone(),
+                };
+            } else {
+                let item = &mut self.items[item_index];
+                item.location = ItemLocation::Inventory;
+                item.previously_worn = !item.inscription.as_deref().is_some_and(|inscription| {
+                    ["@mimic", "@vampire", "@bat", "@mist", "@wolf"]
+                        .iter()
+                        .any(|tag| inscription.contains(tag))
+                });
                 unequipped.push(item_index);
             }
         }
         self.body_slots = next_slots;
-        unequipped.sort_by(|left, right| self.items[*left].id.cmp(&self.items[*right].id));
+        // Quiver ammunition and container capacity are derived from equipped items;
+        // removing either releases their contents into ordinary inventory accounting.
         while self.inventory_used_slots() > self.inventory_slot_capacity() {
             let item_index = unequipped.pop().or_else(|| {
                 self.items
@@ -422,6 +416,38 @@ impl Game {
                 break;
             };
             self.items[item_index].location = ItemLocation::Ground(self.player.position);
+        }
+        // Overflow precedes automatic re-equipping in the original.
+        let mut inventory_indices = self
+            .items
+            .iter()
+            .enumerate()
+            .filter(|(_, item)| item.location == ItemLocation::Inventory && item.previously_worn)
+            .map(|(index, _)| index)
+            .collect::<Vec<_>>();
+        // Inventory projection and persistence use item ID order.
+        inventory_indices.sort_by(|left, right| self.items[*left].id.cmp(&self.items[*right].id));
+        for item_index in inventory_indices {
+            let item = &mut self.items[item_index];
+            if item.quantity != 1 {
+                continue;
+            }
+            let declared = self
+                .content
+                .item(&item.kind_id)
+                .and_then(|definition| definition.equipment_slot.as_deref());
+            if let Some(slot) = self.body_slots.iter().find(|slot| {
+                !occupied.contains(&slot.id)
+                    && declared.is_some_and(|declared| {
+                        item_can_occupy_slot_type(declared, &slot.slot_type)
+                    })
+            }) {
+                occupied.insert(slot.id.clone());
+                item.location = ItemLocation::Equipped {
+                    slot_id: slot.id.clone(),
+                };
+                item.previously_worn = false;
+            }
         }
     }
 
@@ -447,9 +473,7 @@ impl Game {
         let next_slots = self
             .resolved_player_body_slots()
             .expect("validated player body must remain resolvable");
-        if self.body_slots != next_slots {
-            self.reconcile_player_body_slots(next_slots);
-        }
+        self.reconcile_player_body_slots(next_slots);
     }
 
     pub(super) fn resolve_player_polymorph(

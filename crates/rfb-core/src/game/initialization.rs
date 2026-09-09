@@ -174,6 +174,7 @@ fn append_starting_item(
                     .expect("validated birth item quantity must fit u32")
         });
     items.push(ItemInstance {
+        previously_worn: false,
         id,
         kind_id: starting_item.item_kind_id.clone(),
         quantity,
@@ -422,6 +423,7 @@ impl Game {
                     1,
                 );
                 let mut item = ItemInstance {
+                    previously_worn: false,
                     id: spawn.instance_id.clone(),
                     kind_id: spawn.kind_id.clone(),
                     quantity: spawn.quantity,
@@ -563,6 +565,7 @@ impl Game {
             last_visual_cells: None,
             bonus_spell_learning_capacity: 0,
             learned_abilities: BTreeSet::new(),
+            ability_learning_order: Vec::new(),
             ability_progress: BTreeMap::new(),
             entities,
             items,

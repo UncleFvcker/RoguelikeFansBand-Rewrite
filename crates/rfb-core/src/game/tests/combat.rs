@@ -253,7 +253,7 @@ fn p62_polymorph_melee_changes_the_player_without_polymorphing_the_attacker() {
 }
 
 #[test]
-fn p62_polymorph_reconciles_body_slots_and_expiry_does_not_reequip_items() {
+fn p62_polymorph_reconciles_body_slots_and_expiry_reequips_previously_worn_items() {
     let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .and_then(std::path::Path::parent)
@@ -342,7 +342,7 @@ fn p62_polymorph_reconciles_body_slots_and_expiry_does_not_reequip_items() {
         resolve_body_slots(&game.content, game.build.as_ref())
             .expect("permanent body slots should resolve")
     );
-    assert!(!matches!(
+    assert!(matches!(
         game.items
             .iter()
             .find(|item| item.id == unequipped_id)

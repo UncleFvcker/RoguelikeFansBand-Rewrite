@@ -550,6 +550,7 @@ impl Game {
         let (activation, charges) =
             initial_item_runtime_state(&self.content, &mut self.rng, kind_id, &[], 1);
         Ok(ItemInstance {
+            previously_worn: false,
             id,
             kind_id: kind_id.to_owned(),
             quantity: 1,

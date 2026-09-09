@@ -667,6 +667,7 @@ pub(super) fn reward_item(
         ItemQualityDto::Fine
     };
     let mut item = ItemInstance {
+        previously_worn: false,
         id: reward.item_instance_id.clone(),
         kind_id: entry.item_kind_id.clone(),
         quantity: entry.quantity,

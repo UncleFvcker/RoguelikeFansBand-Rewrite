@@ -2251,6 +2251,7 @@ mod tests {
 
     fn launcher_instance(kind_id: &str) -> ItemInstance {
         ItemInstance {
+            previously_worn: false,
             id: "test.item.launcher".to_owned(),
             kind_id: kind_id.to_owned(),
             quantity: 1,
@@ -3039,6 +3040,7 @@ mod tests {
     #[test]
     fn ego_materialization_commits_complete_instance_state_only_after_success() {
         let mut item = ItemInstance {
+            previously_worn: false,
             id: "test.item.weapon".to_owned(),
             kind_id: "demo.item.long-sword".to_owned(),
             quantity: 1,
@@ -3125,6 +3127,7 @@ mod tests {
     fn rolled_weapon_ego_state_round_trips_without_rng_draws() {
         let game = Game::new(57);
         let mut item = ItemInstance {
+            previously_worn: false,
             id: "test.item.weapon".to_owned(),
             kind_id: "demo.item.long-sword".to_owned(),
             quantity: 1,
@@ -3180,7 +3183,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(STATE_HASH_SCHEMA_VERSION, 111);
+        assert_eq!(STATE_HASH_SCHEMA_VERSION, 112);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,
@@ -3194,6 +3197,7 @@ mod tests {
             ..AffixPropertyBundleDefinition::default()
         };
         let mut item = ItemInstance {
+            previously_worn: false,
             id: "test.item.harp".to_owned(),
             kind_id: "demo.item.harp".to_owned(),
             quantity: 1,

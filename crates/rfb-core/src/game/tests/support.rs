@@ -371,6 +371,7 @@ pub(super) fn prepare_death_caster(seed: u64, level: u16, ability_id: &str) -> G
     game.progress.level = level;
     game.progress.max_level = level;
     game.learned_abilities.insert(ability_id.to_owned());
+    game.ability_learning_order.push(ability_id.to_owned());
     game.ability_progress
         .get_mut(ability_id)
         .expect("Death ability progress should exist")
@@ -394,6 +395,7 @@ pub(super) fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
     let (activation, charges) =
         initial_item_runtime_state(&game.content, &mut game.rng, kind_id, &[], 1);
     game.items.push(ItemInstance {
+        previously_worn: false,
         id: id.to_owned(),
         kind_id: kind_id.to_owned(),
         quantity: 1,

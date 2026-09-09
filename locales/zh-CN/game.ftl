@@ -625,3 +625,5 @@ bounty-mission-completed = 已消灭全部悬赏目标{ $actor }；返回赏金�
 player-sunlight-burn = 阳光灼伤了你亡灵的肉体！
 player-light-source-burn = { $source }灼伤了你亡灵的肉体！
 player-light-death = 你被光灼烧而死。
+
+player-race-changed = 你的种族改变了。

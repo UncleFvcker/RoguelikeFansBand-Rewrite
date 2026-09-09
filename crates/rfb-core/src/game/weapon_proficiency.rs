@@ -103,7 +103,8 @@ fn resolve_weapon_proficiency(
             .weapon_proficiencies
             .get(base_item_id)
             .copied()
-            .unwrap_or(bounds.initial),
+            .unwrap_or(bounds.initial)
+            .min(bounds.maximum),
         crossbow,
     })
 }
@@ -147,7 +148,6 @@ pub(super) fn weapon_proficiency_progress_is_valid(
             resolve_weapon_proficiency(content, build, progress, item_id).is_some_and(|resolved| {
                 resolved.base_item_id == *item_id
                     && *current > resolved.initial
-                    && *current <= resolved.maximum
                     && *current <= WEAPON_EXP_MASTER
             })
         })

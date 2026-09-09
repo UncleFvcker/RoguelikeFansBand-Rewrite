@@ -512,6 +512,7 @@ impl Game {
             let (activation, charges) =
                 initial_item_runtime_state(&self.content, &mut self.rng, &kind_id, &[], 1);
             Some(ItemInstance {
+                previously_worn: false,
                 id: self.allocate_item_instance_id()?,
                 activation,
                 charges,

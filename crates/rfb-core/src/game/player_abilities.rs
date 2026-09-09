@@ -780,7 +780,11 @@ impl Game {
             return Err("unknown-ability");
         };
         let ability = self.effective_casting_ability(&profile, ability);
-        if self.learned_abilities.contains(ability_id) {
+        if self
+            .ability_learning_order
+            .iter()
+            .any(|id| id == ability_id)
+        {
             return Err("already-learned");
         }
         if self.progress.level < Self::player_ability_parameters(&ability).minimum_level {
@@ -804,6 +808,7 @@ impl Game {
             return Err("book-mismatch");
         }
         self.learned_abilities.insert(ability_id.to_owned());
+        self.ability_learning_order.push(ability_id.to_owned());
         Ok(())
     }
 
@@ -838,7 +843,7 @@ impl Game {
             .filter_map(|ability_id| {
                 let ability = self.content.ability(ability_id)?;
                 let ability = self.effective_casting_ability(&profile, ability);
-                (!self.learned_abilities.contains(ability_id)
+                (!self.ability_learning_order.contains(ability_id)
                     && self.progress.level
                         >= Self::player_ability_parameters(&ability).minimum_level)
                     .then(|| ability_id.clone())
@@ -852,6 +857,7 @@ impl Game {
         }
         let ability_id = gift.ok_or("no-learnable-abilities")?;
         self.learned_abilities.insert(ability_id.clone());
+        self.ability_learning_order.push(ability_id.clone());
         Ok(ability_id)
     }
 
@@ -892,7 +898,46 @@ impl Game {
         if !self.learned_abilities.remove(ability_id) {
             return Err("not-learned");
         }
+        self.ability_learning_order.retain(|id| id != ability_id);
+        self.refresh_player_spell_memory();
         Ok(())
+    }
+
+    fn remembered_player_abilities(&self) -> BTreeSet<String> {
+        let Some(profile) = self.casting_profile() else {
+            return BTreeSet::new();
+        };
+        self.ability_learning_order
+            .iter()
+            .filter(|id| {
+                self.content.ability(id).is_some_and(|ability| {
+                    let ability = self.effective_casting_ability(profile, ability);
+                    Self::player_ability_parameters(&ability).minimum_level <= self.progress.level
+                })
+            })
+            .take(usize::from(self.ability_learning_capacity(profile)))
+            .cloned()
+            .collect()
+    }
+
+    fn refresh_player_spell_memory(&mut self) {
+        self.learned_abilities = self.remembered_player_abilities();
+    }
+
+    pub(super) fn player_spell_memory_is_valid(&self) -> bool {
+        let unique = self.ability_learning_order.iter().collect::<BTreeSet<_>>();
+        unique.len() == self.ability_learning_order.len()
+            && self.ability_learning_order.iter().all(|id| {
+                self.casting_profile().is_some_and(|profile| {
+                    self.profile_supports_ability(profile, id)
+                        && self.content.ability(id).is_some_and(|ability| {
+                            let ability = self.effective_casting_ability(profile, ability);
+                            Self::player_ability_parameters(&ability).minimum_level
+                                <= self.progress.max_level
+                        })
+                })
+            })
+            && self.learned_abilities == self.remembered_player_abilities()
     }
 
     pub(super) fn ability_learning_capacity(&self, profile: &CastingProfileDefinition) -> u16 {
@@ -959,6 +1004,7 @@ impl Game {
     pub(super) fn initialize_player_ability_state(&mut self) {
         self.resources.clear();
         self.learned_abilities.clear();
+        self.ability_learning_order.clear();
         self.ability_progress.clear();
         self.refresh_player_ability_state();
     }
@@ -985,6 +1031,7 @@ impl Game {
         &mut self,
         saved_resources: Vec<ResourcePoolSaveDto>,
         saved_learned_ability_ids: Vec<String>,
+        saved_ability_learning_order: Vec<String>,
         saved_ability_progress: Vec<AbilityProgressSaveDto>,
     ) -> Result<(), CoreError> {
         self.initialize_player_ability_state();
@@ -1031,6 +1078,10 @@ impl Game {
                 }
             }
         }
+        self.ability_learning_order = saved_ability_learning_order;
+        if !self.player_spell_memory_is_valid() {
+            return Err(CoreError::InvalidSave("player spell memory is invalid"));
+        }
         let mut seen_progress = BTreeSet::new();
         for saved in saved_ability_progress {
             if !seen_progress.insert(saved.id.clone()) {
@@ -1065,6 +1116,7 @@ impl Game {
             pool.current = pool.current.min(*maximum);
         }
         self.resources.retain(|id, _| pool_maxima.contains_key(id));
+        self.refresh_player_spell_memory();
     }
 
     pub(super) fn profile_supports_ability(

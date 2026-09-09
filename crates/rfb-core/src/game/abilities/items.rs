@@ -719,6 +719,7 @@ impl Game {
 
         let item_id = self.allocate_item_instance_id()?;
         let mut item = ItemInstance {
+            previously_worn: false,
             id: item_id.clone(),
             kind_id: item_kind_id.clone(),
             quantity,

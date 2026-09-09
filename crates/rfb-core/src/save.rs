@@ -352,6 +352,7 @@ pub(crate) fn item_from_dto(
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
+        previously_worn: item.previously_worn,
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
@@ -407,6 +408,7 @@ pub(crate) fn inventory_item_from_dto(
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
+        previously_worn: item.previously_worn,
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
@@ -467,6 +469,7 @@ pub(crate) fn equipment_item_from_dto(
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
+        previously_worn: item.previously_worn,
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
@@ -524,6 +527,7 @@ pub(crate) fn carried_item_from_dto(
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
+        previously_worn: item.previously_worn,
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
@@ -827,6 +831,7 @@ pub(crate) fn player_to_save(
         resources: Vec::new(),
         bonus_spell_learning_capacity: 0,
         learned_ability_ids: Vec::new(),
+        ability_learning_order: Vec::new(),
         ability_progress: Vec::new(),
         summon_command: Default::default(),
         recall: None,
@@ -1636,6 +1641,7 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
                 return None;
             };
             Some(ItemSaveDto {
+                previously_worn: item.previously_worn,
                 id: item.id.clone(),
                 kind_id: item.kind_id.clone(),
                 position: *position,
@@ -1677,6 +1683,7 @@ pub(crate) fn inventory_to_save(items: &[ItemInstance]) -> Vec<InventoryItemSave
                 return None;
             }
             Some(InventoryItemSaveDto {
+                previously_worn: item.previously_worn,
                 id: item.id.clone(),
                 kind_id: item.kind_id.clone(),
                 quantity: item.quantity,
@@ -1717,6 +1724,7 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
                 return None;
             };
             Some(EquipmentItemSaveDto {
+                previously_worn: item.previously_worn,
                 id: item.id.clone(),
                 kind_id: item.kind_id.clone(),
                 quantity: item.quantity,
@@ -1762,6 +1770,7 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
                 return None;
             };
             Some(CarriedItemSaveDto {
+                previously_worn: item.previously_worn,
                 id: item.id.clone(),
                 kind_id: item.kind_id.clone(),
                 quantity: item.quantity,
