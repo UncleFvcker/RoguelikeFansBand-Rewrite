@@ -1,32 +1,20 @@
 # 法术领域导入交接
 
-更新时间：2026-08-14
+状态核对：2026-09-09，代码基线 `3d127279c`。后文逐册实现过程保留 2026-08-14 导入批次的历史说明。
 
-工作分支：`codex/items-next`
-
-本文是后续玩家法术领域导入的当前入口。历史文档
+本文是后续玩家法术领域导入的操作入口；版本、玩家入口和验收范围统一见[当前状态](current-status.md)。历史文档
 [`legacy-player-spell-import-v1.md`](legacy-player-spell-import-v1.md) 只用于理解早期架构演进；其中把
 Death 绑定到 `tval=100` 的内容已经过期，不能作为新导入的身份或行为依据。
 
 ## 1. 当前协调点
 
-| 项目 | 当前值 |
-| --- | --- |
-| main 基线 | `1defe3183` |
-| 本分支法术实现基线 | `83541be2b`（完整 Life 第四册） |
-| 当前批次 | Crusade 四册完成 |
-| demo pack | `1.355.0` |
-| content hash | `a8f810c399fe5d9197500070cba8a6d7587bb64996d01ba88a4ca8bdb0390380` |
-| Protocol | `1.218` |
-| State Hash Schema | v104 |
-| save header / payload | v2 / v2 |
-| active contract baseline | `contract-v303` |
+当前主线已有 Death、Arcane、Sorcery、Armageddon、Nature、Life、Daemon、Crusade 八个领域，
+每领域四册、32 法术，共 32 本能力书、256 个法术定义；Build 与领域规则路径及核心测试均已接入。
+Life 第四册、Daemon 和 Crusade 已在当前基线内，不再列为等待分支合并。
 
-`main@1defe3183` 已包含 Death、Arcane、Sorcery、Armageddon、Nature，以及 Life 前三册。
-`codex/items-next@83541be2b` 又完成了 Life 第四册；当前工作树继续完成了 Daemon 与 Crusade 四册，
-因此该分支目前有八个完整 High Mage 领域、32 本能力书和 256 个可学习法术。后续工作不得重做
-Life 第四册、Daemon 或 Crusade 领域；应先确认对应提交
-是否已进入新的 main。
+**玩家新游戏只开放 Death。** 其余七领域尚未开放入口；“四册已接入”不等于玩家流程验收完成。
+2026-09-09 的桌面自动验收仅对 Death 执行新游戏、学习“探测非生命体”、成功施放及存档恢复。
+完整版本与各层证据见[当前状态](current-status.md)。以下协议递增描述均是对应导入批次的历史事实。
 
 Daemon 第四册新增四个窄复合效果：`insanity-circle` 依次结算混沌、混乱与魅惑球；`explode-pets`
 按宠物实例顺序引爆并让独特宠物逃离；`summon-greater-demon` 只在召唤成功后消耗所选人形尸体；
@@ -58,7 +46,7 @@ Crusade 第四册复用英雄、诅咒清除、区域毁灭与 Vengeance，只�
 
 ## 2. 唯一权威来源
 
-所有新规则、英文名和中文名都以 `D:/codex/Frogcomposband` 的 Git `master` 对象为准，不能读取其
+所有新规则、英文名和中文名都以 `D:/codex/Frogcomposband/master` 仓库的 Git `master` 对象为准，不能读取其
 当前工作树，也不能继续沿用旧固定提交。常用入口如下：
 
 | Git 对象 | 用途 |
@@ -72,11 +60,11 @@ Crusade 第四册复用英雄、诅咒清除、区域毁灭与 Vengeance，只�
 只通过 Git 对象读取，例如：
 
 ```powershell
-git -C D:/codex/Frogcomposband show master:lib/edit/k_info.txt
-git -C D:/codex/Frogcomposband show master:lib/edit/m_info.txt
-git -C D:/codex/Frogcomposband show master:src/do-spell.c
-git -C D:/codex/Frogcomposband show master:src/kind_name_zh.inc
-git -C D:/codex/Frogcomposband grep -n "目标文本" master -- src localization lib/edit
+git -C D:/codex/Frogcomposband/master show master:lib/edit/k_info.txt
+git -C D:/codex/Frogcomposband/master show master:lib/edit/m_info.txt
+git -C D:/codex/Frogcomposband/master show master:src/do-spell.c
+git -C D:/codex/Frogcomposband/master show master:src/kind_name_zh.inc
+git -C D:/codex/Frogcomposband/master grep -n "目标文本" master -- src localization lib/edit
 ```
 
 说明文本和执行代码不一致时，以实际执行代码为行为依据，并在测试或提交说明中记录差异。中文显示名
@@ -86,9 +74,11 @@ git -C D:/codex/Frogcomposband grep -n "目标文本" master -- src localization
 
 `k_info` 的 source index 由第一个显式 `N:500` 起按后续 `N:*` 顺序递增。当前映射为：
 
+下表“完整”仅指该领域四册内容及规则接入，不表示新游戏入口或全法术桌面验收；入口区分见[当前状态](current-status.md#高阶法师八领域)。
+
 | Realm | realm index | tval | source index | High Mage 状态 |
 | --- | ---: | ---: | ---: | --- |
-| Life | 0 | 90 | 500–503 | 本分支完整；第四册尚需确认是否已合入 main |
+| Life | 0 | 90 | 500–503 | 四册已接入当前主线 |
 | Sorcery | 1 | 91 | 504–507 | 完整 |
 | Nature | 2 | 92 | 508–511 | 完整 |
 | Chaos | 3 | 93 | 512–515 | 未导入 |

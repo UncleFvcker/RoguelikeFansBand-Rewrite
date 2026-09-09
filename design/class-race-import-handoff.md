@@ -1,7 +1,6 @@
 # 职业与种族导入交接
 
-更新时间：2026-08-15
-当前实现基线：`e61bea680`（食人魔正式 New Game 开放；本次文档提交只做交接封板）
+状态核对：2026-09-09，代码基线 `3d127279c`。四类状态、当前版本与本次验收范围统一见[当前状态](current-status.md)。后文逐批实现说明保留其历史时点。
 
 本文是继续增加正式 RFB 职业与种族的当前操作入口。历史实现与逐批版本记录见
 [`class-next-handoff.md`](class-next-handoff.md)，跨 worktree 的 ID 和版本协调见
@@ -10,17 +9,7 @@
 
 ## 1. 当前基线
 
-- demo pack：`1.380.0`
-- content hash：`8e99f65ad8a24a310d787b150c120bedb61ced772d4ce00735497d7a92fb08e2`
-- Protocol：`1.227`
-- State Hash Schema：`v107`
-- save header/payload schema：`v4`（二进制容器格式仍为 v1）
-- active fixture baseline：`contract-v305`，26 个 exact fixture；本批没有改变 state-hash 输入、协议投影、
-  通用初始化或 RNG，按用户要求只运行新增聚焦测试，未运行全量测试或刷新 fixture
-- 正式内容：6 个 Class、13 个 Build、65 个 SkillSet、57 个 Race；其中 New Game 当前开放
-  6 个职业构筑和 42 个种族。
-
-开始新批次前必须重新读取以上版本；本文中的数值是交接快照，不是永久常量。
+版本、内容数量和验收结果集中维护在[当前状态基线](current-status.md#当前基线与内容定义)。New Game 当前开放 6 个职业构筑和 42 个种族，以 `web/src/session-shell.ts` 的两份 `PLAYTEST_*_IDS` 列表和 `web/index.html` 为准。下表中的规则说明不等于所有玩家操作已验收。
 
 ### 正式职业
 
@@ -34,8 +23,9 @@
 | 狙击手 | `demo.class.sniper` | `demo.build.sniper` | 专注、特殊射击和探测怪物已闭合 |
 
 内容包另有 `demo.build.high-mage-arcane`、`demo.build.high-mage-sorcery`、
-`demo.build.high-mage-armageddon`、`demo.build.high-mage-nature` 和
-`demo.build.high-mage-life`。它们保留领域扩展接口，但不在当前 New Game 构筑列表中；开放前必须
+`demo.build.high-mage-armageddon`、`demo.build.high-mage-nature`、
+`demo.build.high-mage-life`、`demo.build.high-mage-daemon` 和 `demo.build.high-mage-crusade`。
+这七个领域已有四册内容和规则测试，并非只有扩展接口，但不在当前 New Game 构筑列表中；开放前必须
 重新验收对应领域的书本、学习、施放、出生内容和 UI。
 
 ### 正式可选种族

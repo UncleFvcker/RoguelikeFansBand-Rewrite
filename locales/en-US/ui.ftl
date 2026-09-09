@@ -3,7 +3,7 @@
 app-title = RoguelikeFansBand Rewrite — Player Journey
 session-eyebrow = PHASE 17 / COMPLETE PLAYER JOURNEY
 session-heading = Enter the Warrens
-session-subtitle = Start a Warrens run or resume a native save. Warrior is the first RFB career compatibility slice available for new characters.
+session-subtitle = Choose an available build and race for a new game, or resume a native save.
 action-session-new-game = New Game
 action-session-continue = Continue
 action-session-load-game = Load Game

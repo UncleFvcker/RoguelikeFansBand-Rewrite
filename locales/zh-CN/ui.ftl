@@ -3,7 +3,7 @@
 app-title = RoguelikeFansBand 重构版 — 玩家旅程
 session-eyebrow = PHASE 17 / 完整玩家旅程
 session-heading = 进入兽穴
-session-subtitle = 开始一局兽穴流程，或直接恢复原生存档。新角色目前先开放 RFB 职业兼容切片“战士”。
+session-subtitle = 开始新游戏时选择已开放的职业构筑与种族，或直接恢复原生存档。
 action-session-new-game = 新游戏
 action-session-continue = 继续游戏
 action-session-load-game = 读取存档
