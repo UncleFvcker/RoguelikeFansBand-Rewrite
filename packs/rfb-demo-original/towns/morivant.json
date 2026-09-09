@@ -7,7 +7,14 @@
   "floorId": "demo.floor.morivant",
   "facilityIds": [
     "demo.town-facility.morivant-home",
-    "demo.town-facility.morivant-castle"
+    "demo.town-facility.morivant-castle",
+    "demo.town-facility.morivant-library",
+    "demo.town-facility.morivant-weapon-master",
+    "demo.town-facility.morivant-warrior-guild",
+    "demo.town-facility.morivant-inner-sanctum",
+    "demo.town-facility.morivant-archer-guild",
+    "demo.town-facility.morivant-paladin-guild",
+    "demo.town-facility.morivant-trump-tower"
   ],
   "shopIds": [
     "demo.shop.morivant-shroomery",

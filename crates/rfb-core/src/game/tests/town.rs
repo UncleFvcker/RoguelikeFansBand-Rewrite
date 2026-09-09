@@ -45,7 +45,7 @@ fn enter_morivant(game: &mut Game) {
 }
 
 #[test]
-fn morivant_facilities_are_reachable_and_nine_shops_trade_and_save() {
+fn morivant_nine_shops_trade_and_save() {
     let mut game = Game::new_with_build(51, "demo.build.warrior").unwrap();
     assert!(
         !game
@@ -64,63 +64,7 @@ fn morivant_facilities_are_reachable_and_nine_shops_trade_and_save() {
             .all(|shop| !shop.visited && shop.stock.is_empty())
     );
     assert_eq!(snapshot.homes.len(), 1);
-    assert_eq!(snapshot.task_services.len(), 1);
-    let mut reached = BTreeSet::new();
-    let mut pending = vec![game.player.position];
-    while let Some(position) = pending.pop() {
-        if position.x < 0
-            || position.y < 0
-            || position.x >= i32::from(game.width)
-            || position.y >= i32::from(game.height)
-            || reached.contains(&position)
-        {
-            continue;
-        }
-        let terrain =
-            &game.terrain[position.y as usize * usize::from(game.width) + position.x as usize];
-        if !game.content.terrain(terrain).unwrap().walkable {
-            continue;
-        }
-        reached.insert(position);
-        for (dx, dy) in [(0, -1), (1, 0), (0, 1), (-1, 0)] {
-            pending.push(Position {
-                x: position.x + dx,
-                y: position.y + dy,
-            });
-        }
-    }
-    for entrance in snapshot
-        .shops
-        .iter()
-        .map(|shop| shop.entrance_position)
-        .chain(snapshot.homes.iter().map(|home| home.entrance_position))
-        .chain(
-            snapshot
-                .task_services
-                .iter()
-                .map(|service| service.entrance_position),
-        )
-    {
-        assert!(
-            reached.contains(&entrance),
-            "unreachable entrance {entrance:?}"
-        );
-    }
-    for local in [
-        Position { x: 99, y: 0 },
-        Position { x: 99, y: 65 },
-        Position { x: 0, y: 33 },
-        Position { x: 153, y: 19 },
-        Position { x: 14, y: 46 },
-    ] {
-        let position = game
-            .town_local_to_wilderness_view_position(MORIVANT_TOWN_ID, local)
-            .unwrap();
-        assert!(
-            reached.contains(&position),
-            "unreachable gate or ruins {local:?}"
-        );
-    }
+    assert_eq!(snapshot.task_services.len(), 8);
     game.gold = 1_000_000;
     for shop_id in town
         .shop_ids

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.morivant-inner-sanctum",
+  "nameKey": "town-facility-demo-morivant-inner-sanctum-name",
+  "descriptionKey": "town-facility-demo-morivant-inner-sanctum-description",
+  "townId": "demo.town.morivant",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-morivant-inner-sanctum-owner-name",
+  "entrancePosition": {
+    "x": 83,
+    "y": 26
+  },
+  "entranceTerrainId": "demo.terrain.morivant-inner-sanctum-entrance",
+  "serviceActions": [
+    {
+      "kind": "heal",
+      "ownerCost": 0,
+      "otherCost": 100
+    },
+    {
+      "kind": "restore-vitality",
+      "ownerCost": 300,
+      "otherCost": 1000
+    }
+  ],
+  "ownerRealmIds": [
+    "life"
+  ]
+}

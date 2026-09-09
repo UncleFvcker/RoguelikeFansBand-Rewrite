@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.morivant-trump-tower",
+  "nameKey": "town-facility-demo-morivant-trump-tower-name",
+  "descriptionKey": "town-facility-demo-morivant-trump-tower-description",
+  "townId": "demo.town.morivant",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-morivant-trump-tower-owner-name",
+  "entrancePosition": {
+    "x": 55,
+    "y": 15
+  },
+  "entranceTerrainId": "demo.terrain.trump-tower-entrance",
+  "serviceActions": [
+    {
+      "kind": "recall",
+      "ownerCost": 20,
+      "otherCost": 50
+    }
+  ],
+  "ownerRealmIds": [
+    "trump"
+  ]
+}
