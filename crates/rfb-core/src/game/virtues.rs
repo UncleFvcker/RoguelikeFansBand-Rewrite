@@ -71,7 +71,7 @@ pub(super) fn initial_virtues(
         }
 
         match identity.race_id.as_str() {
-            "demo.race.rfb-human" | "rfb-legacy.race.dunadan" => {
+            "demo.race.rfb-human" | "rfb-legacy.race.dunadan" | "rfb-legacy.race.tonberry" => {
                 kinds.push(VirtueKindDto::Individualism);
             }
             "demo.race.vampire-lord" => kinds.push(VirtueKindDto::Unlife),

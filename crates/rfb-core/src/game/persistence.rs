@@ -400,9 +400,10 @@ fn restore_character_progress(
     saved_locked_mutation_ids: &[String],
     base_max_hp: i32,
     expected_skills: BTreeMap<String, SkillProgress>,
-    class_id: Option<&str>,
+    build: Option<&crate::stats::CharacterBuildIdentity>,
     content: &ContentCatalog,
 ) -> Result<CharacterProgress, CoreError> {
+    let class_id = build.map(|build| build.class_id.as_str());
     let active_mutation_ids = saved_active_mutation_ids
         .iter()
         .cloned()
@@ -531,9 +532,7 @@ fn restore_character_progress(
         active_mutation_ids,
         locked_mutation_ids,
     };
-    if !super::weapon_proficiency::weapon_proficiency_progress_is_valid(
-        content, class_id, &progress,
-    ) {
+    if !super::weapon_proficiency::weapon_proficiency_progress_is_valid(content, build, &progress) {
         return Err(CoreError::InvalidSave(
             "player weapon proficiency state is invalid",
         ));
@@ -975,7 +974,7 @@ impl Game {
             &payload.player.locked_mutation_ids,
             player_definition.max_hp,
             expected_skills,
-            build.as_ref().map(|build| build.class_id.as_str()),
+            build.as_ref(),
             &content,
         )?;
         let saved_resources = payload.player.resources.clone();

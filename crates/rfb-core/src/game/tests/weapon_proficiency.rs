@@ -2,6 +2,214 @@
 
 use super::*;
 
+fn tonberry_test_content() -> Arc<ContentCatalog> {
+    let root =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
+    // Exercise birth and save validation while the public race entry is still closed.
+    artifact
+        .content
+        .races
+        .iter_mut()
+        .find(|race| race.id == "rfb-legacy.race.tonberry")
+        .unwrap()
+        .tags
+        .push("rfb-compatibility".to_owned());
+    Arc::new(ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content).unwrap(),
+    ))
+}
+
+#[test]
+fn tonberry_sabre_cap_trains_and_round_trips_by_birth_race() {
+    let mut game = Game::from_content_internal(
+        42,
+        tonberry_test_content(),
+        DEFAULT_WORLD_ID,
+        Some("demo.build.high-mage-death"),
+        Some("rfb-legacy.race.tonberry"),
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .unwrap();
+    let projected = game.player_weapon_proficiencies();
+    let sabre = projected
+        .iter()
+        .find(|entry| entry.item_kind_id == "demo.item.sabre")
+        .unwrap();
+    assert_eq!(sabre.maximum, 8_000);
+    assert_eq!(sabre.current, 2_000);
+    assert_eq!(
+        projected
+            .iter()
+            .find(|entry| entry.item_kind_id == "demo.item.short-sword")
+            .unwrap()
+            .maximum,
+        4_000
+    );
+    super::support::give_inventory_item(&mut game, "test.sabre", "demo.item.sabre");
+    game.progress
+        .weapon_proficiencies
+        .insert("demo.item.sabre".to_owned(), 7_999);
+    let seed = (0..100)
+        .find(|seed| RfbRng::seeded(*seed).bounded(10) == 0)
+        .unwrap();
+    game.rng = RfbRng::seeded(seed);
+    assert_eq!(
+        game.train_weapon_proficiency("test.sabre", 80),
+        Some("demo.item.sabre".to_owned())
+    );
+    assert_eq!(game.progress.weapon_proficiencies["demo.item.sabre"], 8_000);
+    let before = game.rng.clone();
+    assert_eq!(game.train_weapon_proficiency("test.sabre", 80), None);
+    assert_eq!(game.rng, before);
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(
+        restored.player_weapon_proficiencies(),
+        game.player_weapon_proficiencies()
+    );
+    let mut invalid = game.to_save();
+    invalid
+        .player
+        .progress
+        .as_mut()
+        .unwrap()
+        .weapon_proficiencies[0]
+        .current = 8_001;
+    assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+
+    let form = StatusInstance {
+        kind_id: STATUS_PLAYER_POLYMORPH.to_owned(),
+        intensity: 1,
+        remaining_ticks: 50,
+        source_id: None,
+        granted_modifiers: Default::default(),
+        granted_equipment_bonuses: Default::default(),
+        granted_resistances: Default::default(),
+        granted_status_immunities: Default::default(),
+        granted_brands: Default::default(),
+        granted_race_id: Some("demo.race.rfb-human".to_owned()),
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    };
+    game.player.statuses.push(form);
+    game.player.hp = game.player.hp.min(game.effective_player_max_hp());
+    assert_eq!(
+        game.player_weapon_proficiencies()
+            .iter()
+            .find(|entry| entry.item_kind_id == "demo.item.sabre")
+            .unwrap()
+            .maximum,
+        8_000
+    );
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    game.build.as_mut().unwrap().race_id = "demo.race.rfb-human".to_owned();
+    game.player.statuses[0].granted_race_id = Some("rfb-legacy.race.tonberry".to_owned());
+    assert_eq!(
+        game.player_weapon_proficiencies()
+            .iter()
+            .find(|entry| entry.item_kind_id == "demo.item.sabre")
+            .unwrap()
+            .maximum,
+        4_000
+    );
+    assert!(Game::from_save_with_content(game.to_save(), game.content.clone()).is_err());
+}
+
+#[test]
+fn tonberry_birth_keeps_standard_supplies_and_individualism_for_each_current_class() {
+    let content = tonberry_test_content();
+    assert!(
+        content
+            .race("rfb-legacy.race.tonberry")
+            .unwrap()
+            .starting_items
+            .is_empty()
+    );
+    for build_id in [
+        "demo.build.warrior",
+        "demo.build.archer",
+        "demo.build.high-mage-death",
+        "demo.build.paladin-death",
+        "demo.build.cavalry",
+        "demo.build.sniper",
+    ] {
+        let game = Game::from_content_internal(
+            83,
+            content.clone(),
+            DEFAULT_WORLD_ID,
+            Some(build_id),
+            Some("rfb-legacy.race.tonberry"),
+            Game::DEFAULT_PLAYER_NAME,
+        )
+        .unwrap();
+        let inventory: Vec<_> = game
+            .items
+            .iter()
+            .filter(|item| !matches!(item.location, ItemLocation::Ground(_)))
+            .collect();
+        let food: Vec<_> = inventory
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.ration-of-food")
+            .collect();
+        assert_eq!(food.len(), 1);
+        assert!((5..=9).contains(&food[0].quantity));
+        assert_eq!(food[0].location, ItemLocation::Inventory);
+        let torches: Vec<_> = inventory
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.wooden-torch")
+            .collect();
+        assert!((3..=7).contains(&torches.len()));
+        assert!(torches.iter().all(|item| item.quantity == 1
+            && item.location == ItemLocation::Inventory
+            && item.fuel == torches[0].fuel));
+        assert!((1500..=3500).contains(&torches[0].fuel.unwrap().current));
+        let (build, _, class, personality) =
+            build_definitions(&content, game.build.as_ref().unwrap()).unwrap();
+        let kit = class
+            .starting_items
+            .iter()
+            .chain(&personality.starting_items)
+            .chain(&build.starting_items);
+        assert_eq!(inventory.len(), 1 + torches.len() + kit.clone().count());
+        for expected in kit {
+            let items: Vec<_> = inventory
+                .iter()
+                .filter(|item| item.kind_id == expected.item_kind_id)
+                .collect();
+            assert_eq!(items.len(), 1, "{build_id}: {}", expected.item_kind_id);
+            assert!(
+                (expected.quantity..=expected.maximum_quantity.unwrap_or(expected.quantity))
+                    .contains(&items[0].quantity)
+            );
+            assert_eq!(
+                matches!(items[0].location, ItemLocation::Equipped { .. }),
+                expected.equipped
+            );
+        }
+        assert_eq!(
+            game.virtues
+                .iter()
+                .filter(|virtue| virtue.kind == VirtueKindDto::Individualism)
+                .count(),
+            1
+        );
+        assert_eq!(
+            game.virtues
+                .iter()
+                .map(|virtue| virtue.kind)
+                .collect::<BTreeSet<_>>()
+                .len(),
+            8
+        );
+        assert!(game.virtues.iter().all(|virtue| virtue.value == 0));
+        if build_id == "demo.build.warrior" {
+            assert_eq!(game.virtues[2].kind, VirtueKindDto::Individualism);
+        }
+    }
+}
+
 fn equipped_item_id(game: &Game, slot_type: &str) -> String {
     game.items
         .iter()

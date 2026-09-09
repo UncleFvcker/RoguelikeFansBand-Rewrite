@@ -53,11 +53,15 @@ fn interpolate(value: i32, table: &[(i32, i32)]) -> i32 {
 
 fn resolve_weapon_proficiency(
     content: &ContentCatalog,
-    class_id: Option<&str>,
+    build: Option<&CharacterBuildIdentity>,
     progress: &CharacterProgress,
     item_kind_id: &str,
 ) -> Option<ResolvedWeaponProficiency> {
-    let profile = content.class(class_id?)?.weapon_proficiency.as_ref()?;
+    let build = build?;
+    let profile = content
+        .class(&build.class_id)?
+        .weapon_proficiency
+        .as_ref()?;
     let item = content.item(item_kind_id)?;
     let base_item_id = item
         .weapon_proficiency_base_item_id
@@ -73,6 +77,10 @@ fn resolve_weapon_proficiency(
             maximum: profile.default_maximum,
         },
     );
+    // RFB master a0d92b6378: skills.c::skills_weapon_max uses the birth race.
+    if build.race_id == "rfb-legacy.race.tonberry" && base_item_id == "demo.item.sabre" {
+        bounds.maximum = WEAPON_EXP_MASTER;
+    }
     if let Some(maximum) = content
         .mutations()
         .filter(|mutation| progress.active_mutation_ids.contains(&mutation.id))
@@ -122,11 +130,11 @@ pub(super) fn proficiency_rank(current: u16) -> rfb_protocol::ProficiencyRankDto
 
 pub(super) fn weapon_proficiency_progress_is_valid(
     content: &ContentCatalog,
-    class_id: Option<&str>,
+    build: Option<&CharacterBuildIdentity>,
     progress: &CharacterProgress,
 ) -> bool {
-    if class_id
-        .and_then(|id| content.class(id))
+    if build
+        .and_then(|build| content.class(&build.class_id))
         .and_then(|class| class.weapon_proficiency.as_ref())
         .is_none()
     {
@@ -136,14 +144,12 @@ pub(super) fn weapon_proficiency_progress_is_valid(
         .weapon_proficiencies
         .iter()
         .all(|(item_id, current)| {
-            resolve_weapon_proficiency(content, class_id, progress, item_id).is_some_and(
-                |resolved| {
-                    resolved.base_item_id == *item_id
-                        && *current > resolved.initial
-                        && *current <= resolved.maximum
-                        && *current <= WEAPON_EXP_MASTER
-                },
-            )
+            resolve_weapon_proficiency(content, build, progress, item_id).is_some_and(|resolved| {
+                resolved.base_item_id == *item_id
+                    && *current > resolved.initial
+                    && *current <= resolved.maximum
+                    && *current <= WEAPON_EXP_MASTER
+            })
         })
 }
 
@@ -151,7 +157,7 @@ impl Game {
     fn weapon_proficiency(&self, item_kind_id: &str) -> Option<ResolvedWeaponProficiency> {
         resolve_weapon_proficiency(
             &self.content,
-            self.build.as_ref().map(|build| build.class_id.as_str()),
+            self.build.as_ref(),
             &self.progress,
             item_kind_id,
         )

@@ -713,7 +713,7 @@ impl Game {
             || self.progress.skills != expected_skills
             || !super::weapon_proficiency::weapon_proficiency_progress_is_valid(
                 &self.content,
-                self.build.as_ref().map(|build| build.class_id.as_str()),
+                self.build.as_ref(),
                 &self.progress,
             )
             || !super::riding_proficiency::riding_proficiency_progress_is_valid(
