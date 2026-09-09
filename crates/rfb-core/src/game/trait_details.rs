@@ -536,6 +536,48 @@ impl Game {
         let active_weapon_id = (!self.player_has_draconian_metamorphosis())
             .then(|| melee.source_item_id.clone())
             .flatten();
+        let mut melee_profiles =
+            self.player_mutation_innate_attack_profiles(stats, melee.source_item_id.as_deref());
+        if !self.player_has_draconian_metamorphosis() {
+            melee_profiles.insert(0, melee.clone());
+        }
+        let melee_damage = melee_profiles
+            .into_iter()
+            .map(|profile| {
+                let order = profile.source_item_id.as_deref().is_some_and(|id| {
+                    self.items
+                        .iter()
+                        .find(|item| item.id == id)
+                        .is_some_and(|item| {
+                            Self::item_has_weapon_trait(item, WeaponTraitDto::Order)
+                        })
+                });
+                let maximum = i32::from(profile.damage_dice) * i32::from(profile.damage_sides);
+                let minimum = if order {
+                    maximum
+                } else {
+                    i32::from(profile.damage_dice)
+                };
+                rfb_protocol::MeleeDamagePreviewDto {
+                    source_id: profile
+                        .source_item_id
+                        .or(profile.source_mutation_id)
+                        .unwrap_or_else(|| self.player.kind_id.clone()),
+                    attack_name: profile.attack_name,
+                    damage_percent: self.player_melee_damage_percent(),
+                    base_damage: complete.then(|| {
+                        [
+                            self.scale_player_melee_damage(
+                                minimum.saturating_add(profile.to_damage),
+                            ),
+                            self.scale_player_melee_damage(
+                                maximum.saturating_add(profile.to_damage),
+                            ),
+                        ]
+                    }),
+                }
+            })
+            .collect();
         if !self.player_has_draconian_metamorphosis() {
             numeric.push(CharacterStatDto {
                 id: "melee-attacks".to_owned(),
@@ -642,6 +684,7 @@ impl Game {
             passives,
             stats: numeric,
             attacks,
+            melee_damage,
             active_weapon_id,
             active_launcher_id: projectile.map(|profile| profile.source_item_id),
             auras,

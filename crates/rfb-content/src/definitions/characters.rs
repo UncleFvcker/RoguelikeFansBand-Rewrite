@@ -157,6 +157,9 @@ pub struct RaceDefinition {
     /// Percentage of shared player-healing effects retained by this effective race.
     #[serde(default = "default_percent")]
     pub healing_received_percent: u16,
+    /// Percentage applied after melee damage rolls and bonuses for the effective race.
+    #[serde(default = "default_percent")]
+    pub melee_damage_percent: u16,
     /// Divisor applied to nutrition gained from ordinary food effects.
     #[serde(default = "default_food_nutrition_divisor")]
     pub food_nutrition_divisor: u16,

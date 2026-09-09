@@ -1475,6 +1475,18 @@ impl Game {
         })
     }
 
+    pub(super) fn player_melee_damage_percent(&self) -> u16 {
+        self.character_definitions()
+            .map_or(100, |(_, race, _, _)| race.melee_damage_percent)
+    }
+
+    pub(super) fn scale_player_melee_damage(&self, damage: i32) -> i32 {
+        // RFB cmd1.c: race multiplier follows dice, criticals and damage bonuses.
+        let scaled =
+            (i64::from(damage.max(0)) * i64::from(self.player_melee_damage_percent()) + 50) / 100;
+        i32::try_from(scaled).unwrap_or(i32::MAX)
+    }
+
     pub(super) fn player_melee_profile(&self, stats: &ActorDerivedStats) -> ResolvedAttackProfile {
         let definition = self
             .content

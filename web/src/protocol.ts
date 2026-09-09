@@ -77,11 +77,18 @@ export type TraitAttackScopeDto = "armed-melee" | "current-ammunition" | "own-we
 
 export type CharacterAttackTraitDto = { sourceId: string, scope: TraitAttackScopeDto, slays: Array<SlayDto>, brands: Array<WeaponBrandDto>, vampiric: boolean, };
 
+export type MeleeDamagePreviewDto = { sourceId: string, attackName: string | null, damagePercent: number,
+/**
+ * Minimum and maximum damage per hit before criticals, slays and resistance.
+ * None when unidentified equipment prevents a complete preview.
+ */
+baseDamage: [number, number] | null, };
+
 export type CharacterTraitDetailsDto = { equipmentComplete: boolean, sources: Array<CharacterTraitSourceDto>, resistances: Array<CharacterResistanceDto>, passives: Array<CharacterPassiveDto>,
 /**
  * None means unknown; an empty list means no immunity, not unimplemented.
  */
-statusImmunities: Array<string> | null, reflectsBolts: boolean | null, passesWalls: boolean, stats: Array<CharacterStatDto>, attacks: Array<CharacterAttackTraitDto>, activeWeaponId: string | null, activeLauncherId: string | null, auras: Array<CharacterAuraDto>, negatives: Array<CharacterNegativeDto>, };
+statusImmunities: Array<string> | null, reflectsBolts: boolean | null, passesWalls: boolean, stats: Array<CharacterStatDto>, attacks: Array<CharacterAttackTraitDto>, meleeDamage: Array<MeleeDamagePreviewDto>, activeWeaponId: string | null, activeLauncherId: string | null, auras: Array<CharacterAuraDto>, negatives: Array<CharacterNegativeDto>, };
 
 export type CharacterAuraDto = { damageType: DamageTypeDto, sourceIds: Array<string>, evilOnly: boolean, };
 

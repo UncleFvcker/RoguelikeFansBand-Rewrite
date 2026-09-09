@@ -67,6 +67,208 @@ fn hit_damage(events: &[DomainEvent]) -> Vec<i32> {
         .collect()
 }
 
+fn tomte_form(game: &mut Game) {
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.tomte-combat").status;
+    form.granted_race_id = Some("rfb-legacy.race.tomte".to_owned());
+    game.player.statuses.push(form);
+    game.player.hp = game.effective_player_max_hp();
+}
+
+fn tomte_without_melee_penalty() -> Arc<ContentCatalog> {
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+    let mut content = rfb_content::compile_pack_dir(&path).unwrap().content;
+    content
+        .races
+        .iter_mut()
+        .find(|race| race.id == "rfb-legacy.race.tomte")
+        .unwrap()
+        .melee_damage_percent = 100;
+    Arc::new(ContentCatalog::from_artifact(
+        rfb_content::encode_content(content).unwrap(),
+    ))
+}
+
+#[test]
+fn tomte_scales_weapon_and_innate_damage_after_criticals_without_changing_rng() {
+    let mut base = melee_game(0, "demo.build.warrior");
+    tomte_form(&mut base);
+    assert!(base.gain_mutation("rfb.mutation.horns", &mut Vec::new()));
+    let neutral_content = tomte_without_melee_penalty();
+    for (damage, expected) in [
+        (-1, 0),
+        (0, 0),
+        (1, 1),
+        (2, 2),
+        (3, 2),
+        (8, 7),
+        (25, 21),
+        (100, 82),
+    ] {
+        assert_eq!(base.scale_player_melee_damage(damage), expected);
+    }
+    let melee_damage = |events: Vec<DomainEvent>| {
+        events
+            .into_iter()
+            .filter_map(|event| match event {
+                DomainEvent::PlayerMeleeHit { damage, .. } => Some((false, damage.raw)),
+                DomainEvent::MutationMeleeHit { damage, .. } => Some((true, damage.raw)),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+    };
+    let stats = base.player_derived_stats();
+    let weapon = base.player_melee_profile(&stats);
+    let innate =
+        base.player_mutation_innate_attack_profiles(&stats, weapon.source_item_id.as_deref());
+    let maximum = |profile: &super::super::player_stats::ResolvedAttackProfile| {
+        i32::from(profile.damage_dice) * i32::from(profile.damage_sides) + profile.to_damage
+    };
+    let mut hits = [0, 0];
+    let mut criticals = [false, false];
+    for seed in 0..128 {
+        let mut tomte = base.clone();
+        tomte.rng = RfbRng::seeded(seed);
+        let mut control = tomte.clone();
+        control.content = neutral_content.clone();
+        let actual = melee_damage(resolve_melee(&mut tomte));
+        let unscaled = melee_damage(resolve_melee(&mut control));
+        assert_eq!(actual.len(), unscaled.len());
+        for ((is_innate, damage), (control_innate, original)) in actual.into_iter().zip(unscaled) {
+            assert_eq!(is_innate, control_innate);
+            assert_eq!(damage, (original * 82 + 50) / 100, "seed {seed}");
+            let index = usize::from(is_innate);
+            hits[index] += 1;
+            criticals[index] |= original > maximum(if is_innate { &innate[0] } else { &weapon });
+        }
+        assert_eq!(tomte.rng, control.rng, "seed {seed}");
+    }
+    assert!(hits.into_iter().all(|count| count > 0));
+    assert_eq!(criticals, [true, true]);
+    base.player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert_eq!(base.player_melee_damage_percent(), 100);
+    assert_eq!(base.scale_player_melee_damage(25), 25);
+}
+
+#[test]
+fn tomte_melee_preview_uses_the_damage_rule_and_hides_unidentified_equipment() {
+    let mut game = melee_game(0, "demo.build.warrior");
+    tomte_form(&mut game);
+    assert!(game.gain_mutation("rfb.mutation.horns", &mut Vec::new()));
+    add_weapon_trait(&mut game, WeaponTraitDto::Order, 2, 6);
+    let equipped = game
+        .items
+        .iter()
+        .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+        .map(|item| item.id.clone())
+        .collect::<Vec<_>>();
+    for id in &equipped {
+        game.identify_item_instance(id, ItemIdentificationRequest::new(true));
+    }
+    let rng = game.rng.clone();
+    let data = game.snapshot().player.trait_details;
+    assert_eq!(game.rng, rng);
+    assert_eq!(data.melee_damage.len(), 2);
+    let weapon = game.player_melee_profile(&game.player_derived_stats());
+    let expected = ((12 + weapon.to_damage).max(0) * 82 + 50) / 100;
+    assert_eq!(data.melee_damage[0].base_damage, Some([expected, expected]));
+    assert_eq!(data.melee_damage[0].damage_percent, 82);
+    assert_eq!(data.melee_damage[1].attack_name.as_deref(), Some("长角"));
+    let innate = game.player_mutation_innate_attack_profiles(
+        &game.player_derived_stats(),
+        weapon.source_item_id.as_deref(),
+    );
+    assert_eq!(
+        data.melee_damage[1].base_damage,
+        Some([
+            ((2 + innate[0].to_damage).max(0) * 82 + 50) / 100,
+            ((12 + innate[0].to_damage).max(0) * 82 + 50) / 100,
+        ])
+    );
+    game.item_property_knowledge.remove(&equipped[0]);
+    assert!(
+        game.snapshot()
+            .player
+            .trait_details
+            .melee_damage
+            .iter()
+            .all(|preview| preview.base_damage.is_none() && preview.damage_percent == 82)
+    );
+    game.player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert!(
+        game.snapshot()
+            .player
+            .trait_details
+            .melee_damage
+            .iter()
+            .all(|preview| preview.damage_percent == 100)
+    );
+}
+
+#[test]
+fn tomte_melee_penalty_does_not_scale_projectiles_or_spell_damage() {
+    let mut base = melee_game(0, "demo.build.archer");
+    tomte_form(&mut base);
+    for position in [base.player.position, base.entities[0].position] {
+        super::support::replace_terrain(&mut base, position, "demo.terrain.floor");
+    }
+    let neutral_content = tomte_without_melee_penalty();
+    let mut hits = 0;
+    for seed in 0..16 {
+        let mut tomte = base.clone();
+        tomte.rng = RfbRng::seeded(seed);
+        let mut control = tomte.clone();
+        control.content = neutral_content.clone();
+        let shoot = |game: &mut Game| {
+            let mut events = Vec::new();
+            game.resolve_player_projectile(
+                TargetSelection::Direction {
+                    direction: Direction::East,
+                },
+                super::super::player_combat::ProjectileMode::Normal,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
+            events
+        };
+        let events = shoot(&mut tomte);
+        assert_eq!(events, shoot(&mut control));
+        hits += events
+            .iter()
+            .filter(|event| matches!(event, DomainEvent::ProjectileHit { .. }))
+            .count();
+        assert_eq!(tomte.rng, control.rng);
+    }
+    assert!(hits > 0);
+    let trace = ProjectileTrace {
+        origin: base.player.position,
+        impact: base.entities[0].position,
+        landing: base.entities[0].position,
+        traversed: vec![base.entities[0].position],
+    };
+    let damage = base
+        .resolve_ability_damage_to_entity(
+            0,
+            "test.tomte-spell",
+            DamageType::Mana,
+            100,
+            trace,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+    assert_eq!(damage.raw, 100);
+    assert_eq!(damage.applied, 100);
+}
+
 fn force_melee_misses(game: &mut Game) {
     game.player.statuses.push(StatusInstance {
         kind_id: "test.weapon-trait.no-melee-skill".to_owned(),

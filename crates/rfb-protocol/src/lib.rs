@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.230";
+pub const PROTOCOL_VERSION: &str = "1.231";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 5;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 5;
 
@@ -1831,10 +1831,23 @@ pub struct CharacterTraitDetailsDto {
     pub passes_walls: bool,
     pub stats: Vec<CharacterStatDto>,
     pub attacks: Vec<CharacterAttackTraitDto>,
+    pub melee_damage: Vec<MeleeDamagePreviewDto>,
     pub active_weapon_id: Option<String>,
     pub active_launcher_id: Option<String>,
     pub auras: Vec<CharacterAuraDto>,
     pub negatives: Vec<CharacterNegativeDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MeleeDamagePreviewDto {
+    pub source_id: String,
+    pub attack_name: Option<String>,
+    pub damage_percent: u16,
+    /// Minimum and maximum damage per hit before criticals, slays and resistance.
+    /// None when unidentified equipment prevents a complete preview.
+    pub base_damage: Option<[i32; 2]>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4561,6 +4574,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(CharacterStatDto);
     push_declaration!(TraitAttackScopeDto);
     push_declaration!(CharacterAttackTraitDto);
+    push_declaration!(MeleeDamagePreviewDto);
     push_declaration!(CharacterTraitDetailsDto);
     push_declaration!(CharacterAuraDto);
     push_declaration!(CharacterNegativeDto);

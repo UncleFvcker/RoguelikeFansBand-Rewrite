@@ -8,6 +8,15 @@ fn hidden_tomte_intrinsics_match_master_without_opening_character_creation() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog");
     let race = catalog.race("rfb-legacy.race.tomte").expect("Tomte");
     assert_eq!(race.infravision, 4);
+    assert_eq!(race.melee_damage_percent, 82);
+    assert!(race.tags.iter().any(|tag| tag == "snow-adapted"));
+    assert_eq!(
+        catalog
+            .race("demo.race.rfb-human")
+            .unwrap()
+            .melee_damage_percent,
+        100
+    );
     assert_eq!(race.level_stat_scalings.len(), 1);
     assert_eq!(race.level_stat_scalings[0].divisor, 15);
     assert_eq!(race.level_stat_scalings[0].multiplier, 1);
@@ -37,6 +46,23 @@ fn hidden_tomte_intrinsics_match_master_without_opening_character_creation() {
             .effect,
         AbilityEffectDefinition::ProbeMonsters
     ));
+}
+
+#[test]
+fn racial_melee_damage_percent_rejects_zero_and_out_of_range() {
+    let mut content = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for percent in [0, 1_001] {
+        content
+            .races
+            .iter_mut()
+            .find(|race| race.id == "rfb-legacy.race.tomte")
+            .unwrap()
+            .melee_damage_percent = percent;
+        assert!(matches!(
+            validate_and_normalize(&mut content),
+            Err(ContentError::InvalidCharacterSource(id)) if id == "rfb-legacy.race.tomte"
+        ));
+    }
 }
 
 #[test]

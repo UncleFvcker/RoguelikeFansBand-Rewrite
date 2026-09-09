@@ -2,7 +2,14 @@
 // @ts-nocheck -- Node's built-in test runner.
 import assert from "node:assert/strict";
 import test from "node:test";
-import { traitActionProtection, traitStatSourceValue, traitStatValue } from "./character-traits-panel.ts";
+import { meleeDamagePreviewValue, traitActionProtection, traitStatSourceValue, traitStatValue } from "./character-traits-panel.ts";
+
+test("Tomte melee preview displays Core's rounded range without scaling again or revealing unknown gear", () => {
+  const localization = { format: (key, args) => args ? `${args.minimum}–${args.maximum}` : key };
+  assert.equal(meleeDamagePreviewValue({ damagePercent: 82, baseDamage: [2, 8] }, localization), "2–8");
+  assert.equal(meleeDamagePreviewValue({ damagePercent: 82, baseDamage: [0, 0] }, localization), "0–0");
+  assert.equal(meleeDamagePreviewValue({ damagePercent: 82, baseDamage: null }, localization), "trait-value-unknown");
+});
 
 test("free action uses published paralysis immunity without inventing counts or revealing unknown gear", () => {
   const data = (statusImmunities, known = []) => ({ statusImmunities, sources: [{ statusImmunities: known }] });

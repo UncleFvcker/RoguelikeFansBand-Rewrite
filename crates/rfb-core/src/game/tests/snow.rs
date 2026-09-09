@@ -134,6 +134,51 @@ fn flight_high_elf_and_snow_adapted_mounts_ignore_snow() {
 }
 
 #[test]
+fn tomte_form_ignores_snow_on_foot_and_mounted_until_the_form_ends() {
+    for mounted in [false, true] {
+        let mut game = if mounted {
+            mounted_snow_game(57, false)
+        } else {
+            let (mut game, _, target) = local_snow_game(57);
+            game.player.position = target;
+            game
+        };
+        let ordinary_cost = game.player_snow_movement_action_cost(100);
+        assert!(ordinary_cost > 100);
+        let mut form =
+            monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.tomte-snow").status;
+        form.granted_race_id = Some("rfb-legacy.race.tomte".to_owned());
+        game.player.statuses.push(form);
+        assert_eq!(game.player_snow_movement_action_cost(100), 100);
+        // Ordinary movement keeps its cost; adaptation only removes the snow surcharge.
+        let position = game.player.position;
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+        assert_eq!(game.player_snow_movement_action_cost(100), 100);
+        replace_terrain(&mut game, position, SNOW_ID);
+        game.player
+            .statuses
+            .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+        assert_eq!(game.player_snow_movement_action_cost(100), ordinary_cost);
+    }
+    let (mut game, _, target) = local_snow_game(58);
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.tomte-snow-move").status;
+    form.granted_race_id = Some("rfb-legacy.race.tomte".to_owned());
+    game.player.statuses.push(form);
+    game.player.hp = game.effective_player_max_hp();
+    let ticks = expected_ticks(&game, STANDARD_ACTION_COST);
+    let before = game.world_tick;
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(game.player.position, target);
+    assert_eq!(game.world_tick - before, ticks);
+}
+
+#[test]
 fn successful_world_map_move_into_snow_uses_the_capped_surcharge() {
     let mut game =
         Game::new_with_build(56, "demo.build.warrior").expect("world snow game should create");

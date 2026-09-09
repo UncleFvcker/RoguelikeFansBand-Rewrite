@@ -7424,6 +7424,12 @@
         "equipmentComplete": {
           "type": "boolean"
         },
+        "meleeDamage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MeleeDamagePreviewDto"
+          }
+        },
         "negatives": {
           "type": "array",
           "items": {
@@ -7482,6 +7488,7 @@
         "passesWalls",
         "stats",
         "attacks",
+        "meleeDamage",
         "auras",
         "negatives"
       ]
@@ -11288,6 +11295,43 @@
         "methodId",
         "toHit",
         "damage"
+      ]
+    },
+    "MeleeDamagePreviewDto": {
+      "type": "object",
+      "properties": {
+        "attackName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "baseDamage": {
+          "description": "Minimum and maximum damage per hit before criticals, slays and resistance.\nNone when unidentified equipment prevents a complete preview.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxItems": 2,
+          "minItems": 2
+        },
+        "damagePercent": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "sourceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sourceId",
+        "damagePercent"
       ]
     },
     "MeleeRoutineDto": {

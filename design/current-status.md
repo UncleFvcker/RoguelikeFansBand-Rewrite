@@ -17,10 +17,10 @@
 
 | 项目 | 值 | 来源 |
 | --- | --- | --- |
-| 协议 | 1.230 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| 协议 | 1.231 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | v108 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload | v5 / v5；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
-| 内容包 | 1.385.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.386.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
 | 行为基线 | contract-v306，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
 | 内容定义数量 | 地形 201、角色 1402、物品 356、能力 1838、词缀 65、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
 | 角色配置数量 | Class 6、Build 13、Race 57、SkillSet 65 | 同上；这些是定义数量，不是菜单选项数量 |
@@ -34,6 +34,10 @@
 2026-09-09 种族方向第一批补齐隐藏托姆特的 4 格红外、每 15 级速度 +1 与 1 级零费用“探测怪物”。
 这些效果通过既有临时变形路径生效；仍未开放托姆特出生，重头盔惩罚、自动感知/鉴定与出生接入留待后续批次。
 本批自动检查及来源记录见[托姆特分批记录](class-race-import-handoff.md#托姆特第一批隐藏种族基础效果)，不计作玩家流程验收。
+
+后续完善第一步补齐雪地适应和 82% 种族近战伤害倍率，武器及天生攻击均在伤害加值、暴击之后取整；
+射击和法术不受该倍率影响。角色面板新增 Core 计算的基础单击伤害范围，不含暴击、克制、触发效果和目标抗性；
+未完全鉴定装备时隐藏范围。托姆特仍未开放出生，可选种族保持 42；save v5、State Hash v108 和 contract-v306 不变。
 
 | 职业范围 | 内容已定义 | 规则已实现的范围与证据 | 玩家入口已开放 | 2026-09-09 实际验收 |
 | --- | --- | --- | --- | --- |

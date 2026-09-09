@@ -7509,6 +7509,9 @@ fn legacy_race_kin_glyph(id: &str) -> char {
 }
 
 fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
+    if entry.id == "tomte" {
+        return vec!["legacy-import", "polymorph-candidate", "snow-adapted"];
+    }
     if entry.id == "snotling" {
         return vec![
             "humanoid",
@@ -7767,6 +7770,7 @@ fn race_json(
     }
     // races_k.c: Tomte gains one speed per fifteen levels, independently of headgear.
     if entry.id == "tomte" {
+        value["meleeDamagePercent"] = serde_json::json!(82);
         value["levelStatScalings"] = serde_json::json!([{
             "stat": "speed",
             "multiplier": 1,
@@ -25051,6 +25055,8 @@ static power_info _tomte_get_powers[] =
         let mut report = ContentImportReport::default();
         let race = race_json(&tomte, &[], &mut report);
         assert_eq!(race["infravision"], 4);
+        assert_eq!(race["meleeDamagePercent"], 82);
+        assert!(legacy_race_tags(&tomte).contains(&"snow-adapted"));
         assert_eq!(
             race["levelStatScalings"],
             serde_json::json!([{

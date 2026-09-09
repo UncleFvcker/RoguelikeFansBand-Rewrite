@@ -407,6 +407,27 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
   save/state-hash 往返。`rfb-contentc verify-source`、`cargo fmt --all -- --check`、`git diff --check` 通过。
   未运行全量 fixture、桌面 E2E、Web 检查及独立 replay 测试；本批未修改前端、协议或存档结构。
 
+### 托姆特完善第一步：雪地与近战
+
+- 起点 `main@b84da4ef1859bfc8d5c6b57be572f822c1ccdf69`，仍由种族职业方向在主工作树实现。
+- 来源仍为 `master@a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`：`src/cmd1.c:4441` 雪地例外、
+  `src/combat.c:114–145` 的 `race_melee_mult`，以及 `src/cmd1.c:1577/2800` 的伤害倍率位置与取整。
+- `rfb-legacy.race.tomte` 增加既有 `snow-adapted` 标签与新通用内容字段 `meleeDamagePercent: 82`。
+  未指定倍率的种族保持 100%。Core 在所有玩家近战的最终原始伤害上使用 `(damage × percent + 50) / 100`，
+  不修改骰子、属性加值、命中或 RNG；临时形态获得并在解除后失去两项效果。没有新增稳定内容 ID。
+- 本方向同时交付所需共享底座：`RaceDefinition` 字段、校验和 Schema；`player_stats.rs` 的统一倍率计算；
+  `player_combat.rs` 的近战接入；`MeleeDamagePreviewDto`、`trait_details.rs` 与角色面板的基础单击预览。
+  预览覆盖武器、空手及天生攻击，共用倍率函数且不消耗 RNG；范围排除暴击、克制、触发效果和抗性，
+  未鉴定装备不会暴露范围。协议绑定已重新生成。通用物品定义与领域能力未改变，无跨方向依赖提交。
+- pack `1.386.0`，lock `3163578a5ae60d316ed08176a24e9b8e6c3299e0ee1c606ff9ec5e71ab4df9bd`，
+  Protocol `1.231`；save v5、State Hash v108、contract-v306、公共初始化及 RNG 顺序不变。
+  因共享投影变化执行了 `verify-all`，26 条 exact fixture 全部通过，未刷新 fixture。
+- 验证：托姆特过滤器 7 项通过；武器特性 12、雪地 5、角色特性投影 8 项通过；前端 181 项、typecheck
+  与 UI build 通过。专项对照覆盖 128 个固定种子的武器和长角伤害、暴击后取整、相同 RNG、射击与法术隔离、
+  雪地步行/骑乘/真实移动、临时形态、未知装备和预览投影。原有托姆特 save/state-hash 聚焦测试仍通过。
+- 倍率字段边界校验、相关四个 crate 的 all-target Clippy、source-lock、协议绑定、内容 Schema、format/diff 检查均通过。
+- 本步仍不开放 New Game，也没有实现重头盔、自动感知/鉴定与出生。未运行桌面 E2E 或人工试玩。
+
 ## 2. 权威来源与不可变规则
 
 1. 新规则和内容以 `D:/codex/Frogcomposband` 的 Git ref `master` 为权威；只能通过 Git 对象读取，

@@ -87,6 +87,7 @@
     }
   ],
   "lifePercent": 94,
+  "meleeDamagePercent": 82,
   "modifiers": {
     "constitution": -3,
     "dexterity": 3,
@@ -102,6 +103,7 @@
   "skillSetId": "rfb-legacy.skill-set.race-tomte",
   "tags": [
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "snow-adapted"
   ]
 }

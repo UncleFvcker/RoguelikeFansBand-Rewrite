@@ -1969,6 +1969,7 @@ impl Game {
                     },
                     events,
                 );
+                let rolled_damage = self.scale_player_melee_damage(rolled_damage);
                 let damage_type = profile.damage_type;
                 let resistance = self.entities[index].resistances.level(damage_type);
                 let damage =

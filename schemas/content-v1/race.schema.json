@@ -867,6 +867,14 @@
       "minimum": 0,
       "type": "integer"
     },
+    "meleeDamagePercent": {
+      "default": 100,
+      "description": "Percentage applied after melee damage rolls and bonuses for the effective race.",
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
     "modifiers": {
       "$ref": "#/$defs/StatModifiers",
       "default": {

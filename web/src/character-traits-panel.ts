@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 import type { Localization } from "./localization";
-import type { BodySlotDto, CharacterStatDto, CharacterTraitDetailsDto, CharacterTraitSourceDto, EquipmentItemDto, InventoryItemDto, PlayerDto } from "./protocol";
+import type { BodySlotDto, CharacterStatDto, CharacterTraitDetailsDto, CharacterTraitSourceDto, EquipmentItemDto, InventoryItemDto, MeleeDamagePreviewDto, PlayerDto } from "./protocol";
 
 const ATTACK_STATS = ["melee-attacks", "ranged-base-shot", "ranged-energy"];
+
+export function meleeDamagePreviewValue(preview: MeleeDamagePreviewDto, localization: Localization): string {
+  return preview.baseDamage === null ? localization.format("trait-value-unknown")
+    : localization.format("trait-melee-damage-range", { minimum: preview.baseDamage[0], maximum: preview.baseDamage[1] });
+}
 
 export function traitActionProtection(data: CharacterTraitDetailsDto): boolean | null {
   // The current core represents free action as paralysis immunity, not a counted passive.
@@ -176,7 +181,13 @@ export function renderCharacterTraitsDetails(
       lines, f("trait-curse-severity-rule")));
   }
   if (!data.negatives.length) negatives.append(text("p", f("trait-no-negatives"), "attribute-source-guide"));
-  attacks.replaceChildren(text("p", f("trait-attack-guide"), "attribute-source-guide"), weapons, rates, offense, auras, negatives);
+  const meleeDamage = section("trait-melee-damage");
+  data.meleeDamage.forEach((preview, index) => {
+    meleeDamage.append(row(`melee-damage-${index}`, preview.attackName ?? sourceName(preview.sourceId),
+      meleeDamagePreviewValue(preview, localization),
+      [f("trait-melee-damage-percent", { value: preview.damagePercent })], f("trait-melee-damage-rule")));
+  });
+  attacks.replaceChildren(text("p", f("trait-attack-guide"), "attribute-source-guide"), weapons, rates, meleeDamage, offense, auras, negatives);
   for (const host of [defenses, attacks]) {
     const sections = [...host.querySelectorAll<HTMLElement>("[data-trait-section]")];
     const controls = text("div", "", "trait-narrow-navigation");
