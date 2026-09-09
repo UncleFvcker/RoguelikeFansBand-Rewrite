@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.231";
+pub const PROTOCOL_VERSION: &str = "1.232";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 5;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 5;
 
@@ -3678,6 +3678,8 @@ pub struct ItemDto {
     pub display_name_key: String,
     #[serde(default)]
     pub knowledge: ItemKnowledgeDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub feeling: Option<ItemFeelingDto>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub absorbable: bool,
     pub position: Position,
@@ -3797,6 +3799,21 @@ pub enum ItemIdentificationDto {
     Unexamined,
     Appraised,
     Identified,
+}
+
+/// Strong pseudo-identification reports a feeling without revealing item properties.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemFeelingDto {
+    Broken,
+    Terrible,
+    Awful,
+    Bad,
+    Average,
+    Good,
+    Excellent,
+    Special,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -3971,6 +3988,8 @@ pub struct InventoryItemDto {
     #[serde(default)]
     pub identification: ItemIdentificationDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub feeling: Option<ItemFeelingDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub quality: Option<ItemQualityDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub known_properties: Vec<ItemPropertyDto>,
@@ -4045,6 +4064,8 @@ pub struct EquipmentItemDto {
     pub passives: Vec<EquipmentPassiveDto>,
     #[serde(default)]
     pub identification: ItemIdentificationDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub feeling: Option<ItemFeelingDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub quality: Option<ItemQualityDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -4707,6 +4728,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(ItemActivationDto);
     push_declaration!(ItemQualityDto);
     push_declaration!(ItemIdentificationDto);
+    push_declaration!(ItemFeelingDto);
     push_declaration!(ItemIdentifyResolutionDto);
     push_declaration!(ItemEnchantmentsDto);
     push_declaration!(ItemEnchantmentComponentResolutionDto);
@@ -5305,6 +5327,8 @@ pub struct ItemPropertyKnowledgeSaveDto {
     pub appraised: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub identified: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub feeling: Option<ItemFeelingDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub known_affix_ids: Vec<String>,
 }
@@ -5962,6 +5986,7 @@ mod tests {
                 knowledge: ItemKnowledgeDto::Aware,
                 absorbable: false,
                 position: Position { x: 0, y: 0 },
+                feeling: None,
                 quantity: 2,
                 inscription: None,
                 fuel: None,
@@ -6008,6 +6033,7 @@ mod tests {
                 brands: Vec::new(),
                 passives: Vec::new(),
                 identification: ItemIdentificationDto::Unexamined,
+                feeling: None,
                 quality: None,
                 known_properties: Vec::new(),
                 melee_profile: None,
@@ -6046,6 +6072,7 @@ mod tests {
                 brands: Vec::new(),
                 passives: Vec::new(),
                 identification: ItemIdentificationDto::Unexamined,
+                feeling: None,
                 quality: None,
                 known_properties: Vec::new(),
                 melee_profile: None,

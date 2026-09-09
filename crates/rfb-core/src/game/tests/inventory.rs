@@ -1,6 +1,385 @@
 // SPDX-License-Identifier: MPL-2.0
 use super::support::*;
 use super::*;
+use rfb_protocol::ItemFeelingDto;
+
+fn tomte_sensing_game(level: u16) -> Game {
+    let mut game = Game::new_with_build_race_and_name(
+        424,
+        "demo.build.warrior",
+        "rfb-legacy.race.high-elf",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .unwrap();
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.item_property_knowledge.clear();
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10_000, "test.tomte-sensing").status;
+    form.granted_race_id = Some("rfb-legacy.race.tomte".to_owned());
+    game.player.statuses.push(form);
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(level),
+        &mut Vec::new(),
+    );
+    game.refresh_player_ability_state();
+    game.player.hp = game.effective_player_max_hp();
+    game
+}
+
+#[test]
+fn tomte_sensing_classifies_floor_items_without_identifying_their_properties() {
+    let mut game = tomte_sensing_game(39);
+    let artifact = game
+        .content
+        .item_definitions()
+        .find(|item| {
+            item.artifact_generation.is_some() && item.equipment_slot.as_deref() == Some("weapon")
+        })
+        .unwrap()
+        .id
+        .clone();
+    let cases = [
+        (
+            "ordinary",
+            "demo.item.dagger",
+            false,
+            false,
+            0,
+            Some(ItemFeelingDto::Average),
+        ),
+        (
+            "good",
+            "demo.item.dagger",
+            false,
+            false,
+            2,
+            Some(ItemFeelingDto::Good),
+        ),
+        (
+            "ego",
+            "demo.item.dagger",
+            true,
+            false,
+            3,
+            Some(ItemFeelingDto::Excellent),
+        ),
+        (
+            "bad-ego",
+            "demo.item.dagger",
+            true,
+            true,
+            0,
+            Some(ItemFeelingDto::Awful),
+        ),
+        (
+            "artifact",
+            artifact.as_str(),
+            false,
+            false,
+            0,
+            Some(ItemFeelingDto::Special),
+        ),
+        (
+            "bad-artifact",
+            artifact.as_str(),
+            false,
+            true,
+            0,
+            Some(ItemFeelingDto::Terrible),
+        ),
+        (
+            "cursed",
+            "demo.item.dagger",
+            false,
+            true,
+            0,
+            Some(ItemFeelingDto::Bad),
+        ),
+        (
+            "device",
+            "demo.item.magic-missile-wand",
+            false,
+            false,
+            0,
+            Some(ItemFeelingDto::Average),
+        ),
+        ("potion", "demo.item.healing-potion", false, false, 0, None),
+        ("food", "demo.item.ration-of-food", false, false, 0, None),
+        ("capture", "demo.item.capture-ball", false, false, 0, None),
+    ];
+    for (id, kind, ego, cursed, bonus, _) in cases {
+        give_inventory_item(&mut game, id, kind);
+        let item = game.items.last_mut().unwrap();
+        item.location = ItemLocation::Ground(game.player.position);
+        item.enchantments.to_hit = bonus;
+        item.intrinsic_properties.modifiers.intelligence = 4;
+        if ego {
+            item.quality = ItemQualityDto::Fine;
+            item.affix_ids.push("demo.affix.frost-hunter".to_owned());
+        }
+        if cursed {
+            item.curse = Some(ItemCurseSeverityDto::Heavy);
+        }
+    }
+    give_inventory_item(&mut game, "distant", "demo.item.dagger");
+    game.items.last_mut().unwrap().location =
+        ItemLocation::Ground(game.position_in_direction(Direction::East));
+    let draws = game.rng_draw_counter();
+    let mut world_map = game.clone();
+    world_map.map_scale = MapScaleDto::World;
+    world_map.apply_player_floor_item_knowledge();
+    assert!(!world_map.item_property_knowledge.contains_key("ego"));
+    game.apply_player_floor_item_knowledge();
+    assert_eq!(game.rng_draw_counter(), draws);
+    for (id, _, _, _, _, feeling) in cases {
+        let item = game.items.iter().find(|item| item.id == id).unwrap();
+        assert_eq!(game.item_feeling(item), feeling, "{id}");
+        assert_eq!(
+            game.item_identification(item),
+            ItemIdentificationDto::Unexamined,
+            "{id}"
+        );
+        assert!(game.known_item_properties(item).is_empty(), "{id}");
+        assert_eq!(game.visible_item_modifiers(item).intelligence, 0, "{id}");
+        assert_eq!(
+            game.visible_item_enchantments(item),
+            ItemEnchantmentsDto::default(),
+            "{id}"
+        );
+        assert_eq!(game.visible_item_curse(item), None, "{id}");
+        assert_eq!(game.visible_item_quality(item), None, "{id}");
+    }
+    assert_eq!(game.item_feeling(game.items.last().unwrap()), None);
+    assert_eq!(
+        game.item_knowledge_dto("demo.item.magic-missile-wand"),
+        ItemKnowledgeDto::Unknown
+    );
+    let hash = game.state_hash();
+    game.apply_player_floor_item_knowledge();
+    assert_eq!(game.state_hash(), hash, "sensing is idempotent");
+    let mut unsensed = game.clone();
+    unsensed
+        .item_property_knowledge
+        .get_mut("ego")
+        .unwrap()
+        .feeling = None;
+    assert_ne!(
+        unsensed.state_hash(),
+        hash,
+        "feelings participate in the state hash"
+    );
+
+    let mut kind = game.content.item("demo.item.dagger").unwrap().clone();
+    for (tval, senses) in [
+        (8, true),
+        (50, true),
+        (55, true),
+        (66, true),
+        (7, false),
+        (10, false),
+        (70, false),
+        (75, false),
+        (90, false),
+    ] {
+        kind.rfb_base_kind.as_mut().unwrap().tval = tval;
+        assert_eq!(
+            item_knowledge::item_can_be_sensed(&kind),
+            senses,
+            "tval {tval}"
+        );
+    }
+}
+
+#[test]
+fn tomte_level_forty_and_headgear_gate_only_racial_identification() {
+    let mut game = tomte_sensing_game(39);
+    give_inventory_item(&mut game, "helmet", "demo.item.iron-helm");
+    assert!(game.equip_inventory_item("helmet", Some("head")).is_some());
+    give_inventory_item(&mut game, "blade", "demo.item.dagger");
+    game.items.last_mut().unwrap().location = ItemLocation::Ground(game.player.position);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert!(game.item_property_knowledge["blade"].feeling.is_none());
+    dispatch_next(
+        &mut game,
+        GameCommand::Unequip {
+            slot_id: "head".to_owned(),
+        },
+    );
+    assert_eq!(
+        game.item_property_knowledge["blade"].feeling,
+        Some(ItemFeelingDto::Average)
+    );
+
+    give_inventory_item(&mut game, "potion", "demo.item.healing-potion");
+    game.items.last_mut().unwrap().location = ItemLocation::Ground(game.player.position);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(
+        game.item_knowledge_dto("demo.item.healing-potion"),
+        ItemKnowledgeDto::Unknown
+    );
+    let gain = crate::stats::experience_required_for_level(40) - game.progress.experience;
+    game.apply_unscaled_player_experience(gain, &mut Vec::new());
+    assert_eq!(game.progress.level, 40);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert!(game.item_property_knowledge["potion"].appraised);
+    assert_eq!(
+        game.item_knowledge_dto("demo.item.healing-potion"),
+        ItemKnowledgeDto::Aware
+    );
+    assert!(
+        !game.item_property_knowledge["potion"].identified,
+        "automatic ID uses normal identification"
+    );
+
+    dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: "helmet".to_owned(),
+            slot_id: Some("head".to_owned()),
+        },
+    );
+    give_inventory_item(&mut game, "new-blade", "demo.item.dagger");
+    game.items.last_mut().unwrap().location = ItemLocation::Ground(game.player.position);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert!(!game.item_property_knowledge["new-blade"].appraised);
+    game.progress
+        .active_mutation_ids
+        .insert("rfb.mutation.draconian-lore".to_owned());
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert!(game.item_property_knowledge["new-blade"].appraised);
+    game.progress
+        .active_mutation_ids
+        .remove("rfb.mutation.draconian-lore");
+    game.player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert!(!game.player_has_tomte_item_sensing());
+    assert!(!game.player_auto_identifies_items());
+    assert_eq!(
+        game.item_property_knowledge["blade"].feeling,
+        Some(ItemFeelingDto::Average)
+    );
+}
+
+#[test]
+fn tomte_sensing_precedes_mogaminator_pickup_and_preserves_stack_knowledge() {
+    let mut game = tomte_sensing_game(39);
+    game.mogaminator.enabled = true;
+    game.mogaminator.en_us_source = "ego items#keep".to_owned();
+    game.mogaminator.zh_cn_source = "ego items#keep".to_owned();
+    give_inventory_item(&mut game, "ego-arrows", "demo.item.arrow");
+    let target = game.position_in_direction(Direction::East);
+    replace_terrain(&mut game, target, "demo.terrain.floor");
+    let arrows = game.items.last_mut().unwrap();
+    arrows.quantity = 4;
+    arrows.quality = ItemQualityDto::Fine;
+    arrows.affix_ids.push("demo.affix.frost-hunter".to_owned());
+    arrows.location = ItemLocation::Ground(target);
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    let arrows = game
+        .items
+        .iter()
+        .find(|item| item.id == "ego-arrows")
+        .unwrap();
+    assert_eq!(arrows.location, ItemLocation::Inventory);
+    assert_eq!(arrows.inscription.as_deref(), Some("keep"));
+    assert_eq!(game.item_feeling(arrows), Some(ItemFeelingDto::Excellent));
+    assert!(game.known_item_properties(arrows).is_empty());
+    game.mogaminator.enabled = false;
+    game.drop_inventory_quantity("ego-arrows", 2)
+        .unwrap()
+        .unwrap();
+    let split = game
+        .items
+        .iter()
+        .find(|item| matches!(item.location, ItemLocation::Ground(_)))
+        .unwrap()
+        .id
+        .clone();
+    assert_eq!(
+        game.item_property_knowledge[&split],
+        game.item_property_knowledge["ego-arrows"]
+    );
+    let save = game.to_save();
+    let mut restored = Game::from_save(save.clone()).expect("sensed split stacks should restore");
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.snapshot(), game.snapshot());
+    game.pick_up_item_at_player(Some(&split)).unwrap();
+    restored.pick_up_item_at_player(Some(&split)).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "ego-arrows")
+            .unwrap()
+            .quantity,
+        4
+    );
+
+    let mut different = inventory::ItemPropertyKnowledgeState::default();
+    assert!(!crate::game::inventory::item_properties_match(
+        Some(&different),
+        game.item_property_knowledge.get("ego-arrows")
+    ));
+    different.feeling = Some(ItemFeelingDto::Excellent);
+    assert!(crate::game::inventory::item_properties_match(
+        Some(&different),
+        game.item_property_knowledge.get("ego-arrows")
+    ));
+    let mut invalid = save;
+    let knowledge = invalid
+        .item_property_knowledge
+        .iter_mut()
+        .find(|entry| entry.item_id == "ego-arrows")
+        .unwrap();
+    knowledge.identified = true;
+    knowledge.known_affix_ids = vec!["demo.affix.frost-hunter".to_owned()];
+    assert!(Game::from_save(invalid).is_err());
+}
+
+#[test]
+fn tomte_sensing_identifies_nameless_jewelry_but_ignores_glove_attack_bonuses() {
+    let mut game = tomte_sensing_game(39);
+    let mut kinds = ["ring", "amulet", "quiver"]
+        .into_iter()
+        .map(|slot| {
+            game.content
+                .item_definitions()
+                .find(|item| {
+                    item.equipment_slot.as_deref() == Some(slot)
+                        && !item.tags.iter().any(|tag| tag == "artifact")
+                })
+                .unwrap()
+                .id
+                .clone()
+        })
+        .collect::<Vec<_>>();
+    kinds.push("demo.item.feanorian-lamp".to_owned());
+    for kind in kinds {
+        give_inventory_item(&mut game, &kind, &kind);
+        game.items.last_mut().unwrap().location = ItemLocation::Ground(game.player.position);
+        game.apply_player_floor_item_knowledge();
+        assert!(game.item_property_knowledge[&kind].appraised, "{kind}");
+        assert_eq!(game.item_property_knowledge[&kind].feeling, None, "{kind}");
+        assert_eq!(game.item_knowledge_dto(&kind), ItemKnowledgeDto::Aware);
+    }
+    give_inventory_item(&mut game, "gloves", "demo.item.set-of-gauntlets");
+    let gloves = game.items.last_mut().unwrap();
+    gloves.location = ItemLocation::Ground(game.player.position);
+    gloves.enchantments.to_hit = 5;
+    gloves.enchantments.to_damage = 5;
+    game.apply_player_floor_item_knowledge();
+    assert_eq!(
+        game.item_property_knowledge["gloves"].feeling,
+        Some(ItemFeelingDto::Average)
+    );
+}
 
 #[test]
 fn fabric_bag_adds_four_shared_inventory_slots() {
@@ -384,6 +763,7 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
             discovered: true,
             appraised: true,
             identified: true,
+            feeling: None,
             known_affix_ids: BTreeSet::from(["demo.affix.frost-hunter".to_owned()]),
         },
     );

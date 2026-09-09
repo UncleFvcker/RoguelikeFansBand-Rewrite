@@ -8,6 +8,87 @@ use rfb_protocol::{
 use super::*;
 
 #[test]
+fn tomte_item_feelings_survive_recording_save_reload_and_stack_splits() {
+    let mut payload = Game::new_with_build(424, "demo.build.warrior")
+        .unwrap()
+        .to_save();
+    payload.entities.clear();
+    payload.carried_items.clear();
+    payload.player.hp = 1;
+    payload.player.statuses.push(
+        serde_json::from_value(serde_json::json!({
+            "kindId": "rfb.status.player-polymorph",
+            "intensity": 1,
+            "remainingTicks": 10000,
+            "grantedRaceId": "rfb-legacy.race.tomte"
+        }))
+        .unwrap(),
+    );
+    payload.items.push(
+        serde_json::from_value(serde_json::json!({
+            "id": "test.sensed-arrows",
+            "kindId": "demo.item.arrow",
+            "position": payload.player.position,
+            "quantity": 4,
+            "quality": "fine",
+            "affixIds": ["demo.affix.frost-hunter"],
+            "permanentDestructionImmunities": [],
+            "capturedActor": null
+        }))
+        .unwrap(),
+    );
+    let initial = Game::from_save(payload).unwrap();
+    let mut recorder = ReplayRecorder::new(initial.clone());
+    recorder.dispatch(GameCommand::Wait).unwrap();
+    assert_eq!(
+        recorder
+            .game()
+            .snapshot()
+            .items
+            .iter()
+            .find(|item| item.id == "test.sensed-arrows")
+            .unwrap()
+            .feeling,
+        Some(rfb_protocol::ItemFeelingDto::Excellent)
+    );
+    recorder.dispatch(GameCommand::PickUp).unwrap();
+    recorder
+        .dispatch(GameCommand::DropQuantity {
+            item_id: "test.sensed-arrows".to_owned(),
+            quantity: 2,
+        })
+        .unwrap();
+    let (midpoint, replay) = recorder.finish();
+    let replay = decode(&encode(&replay).unwrap()).unwrap();
+    assert_eq!(
+        verify(&replay, initial).unwrap().final_state_hash,
+        midpoint.state_hash()
+    );
+
+    let restored = Game::from_save(midpoint.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), midpoint.state_hash());
+    let mut recorder = ReplayRecorder::new(restored.clone());
+    recorder.dispatch(GameCommand::PickUp).unwrap();
+    let (final_game, replay) = recorder.finish();
+    assert_eq!(
+        verify(&replay, restored).unwrap().final_state_hash,
+        final_game.state_hash()
+    );
+    let arrows = final_game
+        .snapshot()
+        .inventory
+        .into_iter()
+        .find(|item| item.id == "test.sensed-arrows")
+        .unwrap();
+    assert_eq!(arrows.quantity, 4);
+    assert_eq!(
+        arrows.feeling,
+        Some(rfb_protocol::ItemFeelingDto::Excellent)
+    );
+    assert!(arrows.known_properties.is_empty());
+}
+
+#[test]
 fn combat_replay_records_authoritative_rng_draws() {
     let initial = Game::new(42);
     let mut recorder = ReplayRecorder::new(initial.clone());

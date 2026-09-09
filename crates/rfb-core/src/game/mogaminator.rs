@@ -10,10 +10,10 @@ use crate::mogaminator::{
 use rfb_content::AmmunitionTypeDefinition;
 use rfb_localization::{Locale, Localizer, MogaminatorNames};
 use rfb_protocol::{
-    AutoGetModeDto, AutoGetTargetDto, LocaleDto, MogaminatorActionDto, MogaminatorDiagnosticDto,
-    MogaminatorDispositionDto, MogaminatorDto, MogaminatorItemMatchDto, MogaminatorLineDto,
-    MogaminatorLineKindDto, MogaminatorPendingQueryDto, MogaminatorPendingQuerySaveDto,
-    MogaminatorSaveDto,
+    AutoGetModeDto, AutoGetTargetDto, ItemFeelingDto, LocaleDto, MogaminatorActionDto,
+    MogaminatorDiagnosticDto, MogaminatorDispositionDto, MogaminatorDto, MogaminatorItemMatchDto,
+    MogaminatorLineDto, MogaminatorLineKindDto, MogaminatorPendingQueryDto,
+    MogaminatorPendingQuerySaveDto, MogaminatorSaveDto,
 };
 
 const DEFAULT_ZH_CN_SOURCE: &str = include_str!("mogaminator-default-zh-CN.prf");
@@ -372,9 +372,6 @@ impl Game {
     pub(super) fn apply_mogaminator_at_player(
         &mut self,
     ) -> Result<Vec<MogaminatorItemResolution>, CoreError> {
-        if !self.mogaminator.enabled {
-            return Ok(Vec::new());
-        }
         let mut item_ids = self
             .items
             .iter()
@@ -398,6 +395,7 @@ impl Game {
         item_ids: Vec<String>,
         allow_pickup: bool,
     ) -> Result<Vec<MogaminatorItemResolution>, CoreError> {
+        self.apply_player_floor_item_knowledge();
         if !self.mogaminator.enabled || item_ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -896,6 +894,7 @@ impl Game {
             .item(&item.kind_id)
             .expect("runtime items must retain their definitions");
         let identification = self.item_identification(item);
+        let feeling = self.item_feeling(item);
         let aware = self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware;
         let known_affixes = self
             .item_property_knowledge
@@ -922,30 +921,68 @@ impl Game {
         match predicate {
             MogaminatorPredicate::All | MogaminatorPredicate::Items => true,
             MogaminatorPredicate::Unaware => !aware,
-            MogaminatorPredicate::Unsensed | MogaminatorPredicate::Unidentified => {
+            MogaminatorPredicate::Unsensed => {
+                identification == ItemIdentificationDto::Unexamined && feeling.is_none()
+            }
+            MogaminatorPredicate::Unidentified => {
                 identification == ItemIdentificationDto::Unexamined
             }
             MogaminatorPredicate::Identified => identification != ItemIdentificationDto::Unexamined,
             MogaminatorPredicate::FullyIdentified => {
                 identification == ItemIdentificationDto::Identified
             }
-            MogaminatorPredicate::Average => {
-                self.visible_item_quality(item) == Some(ItemQualityDto::Ordinary)
-            }
-            MogaminatorPredicate::Good => matches!(
-                self.visible_item_quality(item),
-                Some(ItemQualityDto::Fine | ItemQualityDto::Exceptional)
+            MogaminatorPredicate::Average => feeling.map_or_else(
+                || self.visible_item_quality(item) == Some(ItemQualityDto::Ordinary),
+                |feeling| feeling == ItemFeelingDto::Average,
             ),
-            MogaminatorPredicate::Cursed => self.visible_item_curse(item).is_some(),
-            MogaminatorPredicate::Ego => known_affixes.is_some_and(|affixes| !affixes.is_empty()),
+            MogaminatorPredicate::Good => feeling.map_or_else(
+                || {
+                    matches!(
+                        self.visible_item_quality(item),
+                        Some(ItemQualityDto::Fine | ItemQualityDto::Exceptional)
+                    )
+                },
+                |feeling| feeling == ItemFeelingDto::Good,
+            ),
+            MogaminatorPredicate::Cursed => {
+                self.visible_item_curse(item).is_some()
+                    || matches!(
+                        feeling,
+                        Some(
+                            ItemFeelingDto::Broken
+                                | ItemFeelingDto::Bad
+                                | ItemFeelingDto::Awful
+                                | ItemFeelingDto::Terrible
+                        )
+                    )
+            }
+            MogaminatorPredicate::Ego => {
+                known_affixes.is_some_and(|affixes| !affixes.is_empty())
+                    || matches!(
+                        feeling,
+                        Some(ItemFeelingDto::Awful | ItemFeelingDto::Excellent)
+                    )
+            }
             MogaminatorPredicate::Artifact => {
-                identification != ItemIdentificationDto::Unexamined && tagged("artifact")
+                (identification != ItemIdentificationDto::Unexamined && tagged("artifact"))
+                    || matches!(
+                        feeling,
+                        Some(ItemFeelingDto::Special | ItemFeelingDto::Terrible)
+                    )
             }
-            MogaminatorPredicate::Nameless => {
-                identification != ItemIdentificationDto::Unexamined
-                    && !tagged("artifact")
-                    && known_affixes.is_none_or(BTreeSet::is_empty)
-            }
+            MogaminatorPredicate::Nameless => feeling.map_or_else(
+                || {
+                    identification != ItemIdentificationDto::Unexamined
+                        && !tagged("artifact")
+                        && known_affixes.is_none_or(BTreeSet::is_empty)
+                },
+                |feeling| {
+                    matches!(
+                        feeling,
+                        ItemFeelingDto::Average | ItemFeelingDto::Good | ItemFeelingDto::Bad
+                    )
+                },
+            ),
             MogaminatorPredicate::Rare => definition.mogaminator_rare,
             MogaminatorPredicate::Common => !definition.mogaminator_rare,
             MogaminatorPredicate::Worthless => aware && definition.base_value == 0,
@@ -1545,6 +1582,7 @@ mod tests {
                                 discovered: true,
                                 appraised,
                                 identified,
+                                feeling: None,
                                 known_affix_ids: BTreeSet::new(),
                             },
                         )

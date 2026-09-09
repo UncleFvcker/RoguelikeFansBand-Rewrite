@@ -907,10 +907,11 @@ impl Game {
                     knowledge: self.item_knowledge_dto(&item.kind_id),
                     absorbable: self.item_can_be_absorbed(item),
                     position: *position,
+                    feeling: self.item_feeling(item),
                     quantity: item.quantity,
                     inscription: item.inscription.clone(),
                     fuel: item.fuel,
-                    enchantments: item.enchantments,
+                    enchantments: self.visible_item_enchantments(item),
                     curse: self.visible_item_curse(item),
                     permanent_destruction_immunities: item
                         .permanent_destruction_immunities
@@ -991,7 +992,7 @@ impl Game {
                     can_supply_recharge: self.item_can_supply_recharge(item),
                     quantity: item.quantity,
                     inscription: item.inscription.clone(),
-                    enchantments: item.enchantments,
+                    enchantments: self.visible_item_enchantments(item),
                     curse: self.visible_item_curse(item),
                     permanent_destruction_immunities: item
                         .permanent_destruction_immunities
@@ -1012,6 +1013,7 @@ impl Game {
                     brands: self.visible_item_brands(item),
                     passives: self.visible_item_passives(item),
                     identification: self.item_identification(item),
+                    feeling: self.item_feeling(item),
                     quality: self.visible_item_quality(item),
                     known_properties: self.known_item_properties(item),
                     melee_profile: self.visible_item_melee_profile(item),
@@ -1060,7 +1062,7 @@ impl Game {
                     quantity: item.quantity,
                     inscription: item.inscription.clone(),
                     fuel: item.fuel,
-                    enchantments: item.enchantments,
+                    enchantments: self.visible_item_enchantments(item),
                     curse: self.visible_item_curse(item),
                     permanent_destruction_immunities: item
                         .permanent_destruction_immunities
@@ -1078,6 +1080,7 @@ impl Game {
                     brands: self.visible_item_brands(item),
                     passives: self.visible_item_passives(item),
                     identification: self.item_identification(item),
+                    feeling: self.item_feeling(item),
                     quality: self.visible_item_quality(item),
                     known_properties: self.known_item_properties(item),
                     melee_profile: self.visible_item_melee_profile(item),

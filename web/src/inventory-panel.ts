@@ -530,6 +530,7 @@ export class InventoryPanel {
   }
 
   #briefStatus(item: InventoryItemDto): string {
+    if (item.feeling) return this.#localization.format(`item-feeling-${item.feeling}`);
     if (item.charges) return this.#localization.format("inventory-charges", item.charges);
     if (item.fuel) return this.#localization.format("inventory-fuel", {
       current: item.fuel.current, maximum: item.fuel.maximum,
@@ -733,6 +734,11 @@ export class InventoryPanel {
           })
         : this.#localization.format("capture-ball-empty");
       container.append(captured);
+    }
+    if (item.feeling) {
+      this.#appendDetail(container, "item-feeling", this.#localization.format("item-feeling-label", {
+        feeling: this.#localization.format(`item-feeling-${item.feeling}`),
+      }));
     }
     if ("slotId" in item || item.equipmentSlot !== null) {
       const identification = container.ownerDocument.createElement("span");

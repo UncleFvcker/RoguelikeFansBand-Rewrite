@@ -603,6 +603,11 @@ fn item_property_knowledge_from_save(
         let identified = entry.identified || (!known_affix_ids.is_empty() && all_affixes_known);
         let appraised = entry.appraised || identified;
         if !entry.discovered
+            || (entry.feeling.is_some()
+                && (identified
+                    || !content
+                        .item(&item.kind_id)
+                        .is_some_and(super::item_knowledge::item_can_be_sensed)))
             || known_affix_ids.len() != known_affix_count
             || known_affix_ids.iter().any(|affix_id| {
                 !item.affix_ids.contains(affix_id) || content.affix(affix_id).is_none()
@@ -615,6 +620,7 @@ fn item_property_knowledge_from_save(
                         discovered: entry.discovered,
                         appraised,
                         identified,
+                        feeling: entry.feeling,
                         known_affix_ids,
                     },
                 )
@@ -1789,6 +1795,7 @@ impl Game {
                     discovered: held || knowledge.is_some_and(|knowledge| knowledge.discovered),
                     appraised: knowledge.is_some_and(|knowledge| knowledge.appraised),
                     identified: knowledge.is_some_and(|knowledge| knowledge.identified),
+                    feeling: knowledge.and_then(|knowledge| knowledge.feeling),
                     known_affix_ids: knowledge
                         .map(|knowledge| knowledge.known_affix_ids.iter().cloned().collect())
                         .unwrap_or_default(),

@@ -375,13 +375,14 @@ export function buildObjectListEntries(options: ObjectListProjection): ObjectLis
   const items = options.items.flatMap<ObjectListEntry>((item) => {
     const action = mogaminatorMatches.get(item.id);
     if (action && !action.display) return [];
+    const annotations = [item.feeling && options.localize(`item-feeling-${item.feeling}`), item.inscription]
+      .filter(Boolean);
+    const name = options.visibleItemName(item.displayNameKey, item.kindId);
     return [{
       id: `item:${item.id}`,
       category: action?.disposition === "pick-up" ? "needed" : "items",
       position: item.position,
-      name: item.inscription
-        ? `${options.visibleItemName(item.displayNameKey, item.kindId)} {${item.inscription}}`
-        : options.visibleItemName(item.displayNameKey, item.kindId),
+      name: annotations.length ? `${name} {${annotations.join(", ")}}` : name,
       glyph: options.glyphFor(item.kindId) ?? "?",
       distance: gridDistance(options.playerPosition, item.position),
       offsetX: item.position.x - options.playerPosition.x,

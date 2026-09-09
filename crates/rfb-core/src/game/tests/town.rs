@@ -1223,6 +1223,7 @@ fn home_deposit_withdraw_grouping_and_save_are_authoritative() {
             discovered: true,
             appraised: true,
             identified: true,
+            feeling: None,
             known_affix_ids: BTreeSet::new(),
         },
     );

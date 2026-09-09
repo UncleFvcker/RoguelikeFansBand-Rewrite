@@ -226,7 +226,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 108;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 109;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -1776,6 +1776,7 @@ impl Game {
             }
             GameAction::Wait => events.push(DomainEvent::Waited),
             GameAction::AutoGet { object_id } => {
+                self.apply_player_floor_item_knowledge();
                 let valid_target =
                     auto_get_target.is_some_and(|target| target == self.player.position);
                 if !valid_target {
@@ -2105,6 +2106,7 @@ impl Game {
             &mut changed,
         );
 
+        self.apply_player_floor_item_knowledge();
         if automatic_pickup_after_move
             && map_scale_before_command == MapScaleDto::Local
             && self.map_scale == MapScaleDto::Local

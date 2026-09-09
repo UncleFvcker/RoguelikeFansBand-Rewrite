@@ -1923,9 +1923,11 @@ impl Game {
     }
 
     pub(super) fn player_auto_identifies_items(&self) -> bool {
-        self.content.mutations().any(|mutation| {
-            mutation.auto_identify_items && self.progress.active_mutation_ids.contains(&mutation.id)
-        })
+        (self.progress.level >= 40 && self.player_has_tomte_item_sensing())
+            || self.content.mutations().any(|mutation| {
+                mutation.auto_identify_items
+                    && self.progress.active_mutation_ids.contains(&mutation.id)
+            })
     }
 
     pub(super) fn player_has_black_market_standard_prices(&self) -> bool {

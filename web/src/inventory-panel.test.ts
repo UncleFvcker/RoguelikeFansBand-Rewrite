@@ -210,6 +210,20 @@ test("equipped details reuse refuel and unequip commands and retain activation a
   assert.equal(buttons().length, 0);
 });
 
+test("sensed items display the feeling while retaining the appraisal action", (t) => {
+  const { panel, dom, state } = createInventoryFixture(t);
+  const sensed = item("sensed-blade", { equipmentSlot: "weapon", feeling: "excellent", identification: "unexamined" });
+  panel.render([sensed], []);
+  const row = dom.inventoryList.children[0];
+  assert.ok(row.children[0].children.some((child) => child.textContent?.includes("item-feeling-excellent")));
+  row.children[1].dispatchEvent(new Event("click"));
+  assert.ok(dom.inventoryDetailBody.children.some((child) => child.className === "item-feeling"
+    && child.textContent.includes("item-feeling-excellent")));
+  state.selectedInventoryIds.add(sensed.id);
+  panel.updateActions();
+  assert.equal(dom.inventoryAppraise.disabled, false);
+});
+
 test("footer actions reflect selection capabilities while temporary unavailability disables them", (t) => {
   const { panel, dom, state } = createInventoryFixture(t);
   const potion = item("potion", { usable: true, mountUsable: true });

@@ -89,6 +89,14 @@ test("known-object entries reuse discovered facilities, entrances, and items", (
   assert.equal(entries[2].quantity, 2);
 });
 
+test("ground object labels include sensed feelings without replacing inscriptions", () => {
+  const input = projection();
+  input.items[0].feeling = "excellent";
+  input.items[0].inscription = "keep";
+  const entry = buildObjectListEntries(input).find((entry) => entry.id === "item:ration.1");
+  assert.equal(entry.name, "item:item-ration {l10n:item-feeling-excellent, keep}");
+});
+
 test("equal-position object sorting uses stable instance ids", () => {
   const options = projection();
   options.items = [

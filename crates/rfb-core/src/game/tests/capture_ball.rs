@@ -19,6 +19,7 @@ fn equipped_capture_ball(game: &mut Game) -> usize {
             discovered: true,
             appraised: true,
             identified: true,
+            feeling: None,
             known_affix_ids: BTreeSet::new(),
         },
     );

@@ -3,8 +3,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use rfb_content::{ContentCatalog, ItemDestructionElement, TaskObjectiveKind};
 use rfb_protocol::{
-    ItemCurseSeverityDto, ItemEnchantmentsDto, ItemKnowledgeDto, ItemQualityDto, Position,
-    WeaponTraitDto,
+    ItemCurseSeverityDto, ItemEnchantmentsDto, ItemFeelingDto, ItemKnowledgeDto, ItemQualityDto,
+    Position, WeaponTraitDto,
 };
 
 use crate::{
@@ -30,6 +30,7 @@ pub(super) struct ItemPropertyKnowledgeState {
     pub(super) discovered: bool,
     pub(super) appraised: bool,
     pub(super) identified: bool,
+    pub(super) feeling: Option<ItemFeelingDto>,
     pub(super) known_affix_ids: BTreeSet<String>,
 }
 
@@ -42,6 +43,7 @@ pub(super) fn item_properties_match(
     let right = right.unwrap_or(&empty);
     left.appraised == right.appraised
         && left.identified == right.identified
+        && left.feeling == right.feeling
         && left.known_affix_ids == right.known_affix_ids
 }
 
@@ -1188,6 +1190,7 @@ impl Game {
         knowledge.appraised = true;
         if request.full {
             knowledge.identified = true;
+            knowledge.feeling = None;
             knowledge.known_affix_ids.extend(affix_ids);
         }
         let changed = awareness_before != self.item_knowledge_dto(&item_kind_id)
@@ -1780,6 +1783,7 @@ impl Game {
         knowledge.discovered = true;
         knowledge.appraised = true;
         knowledge.identified = true;
+        knowledge.feeling = None;
         let discovered_affix_ids = affix_ids
             .into_iter()
             .filter(|affix_id| knowledge.known_affix_ids.insert(affix_id.clone()))

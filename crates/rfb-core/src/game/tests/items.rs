@@ -345,6 +345,7 @@ fn p100e_soulsword_rolls_and_persists_one_extra_power_and_increases_life() {
             discovered: true,
             appraised: true,
             identified: true,
+            feeling: None,
             known_affix_ids: BTreeSet::from([
                 "rfb-legacy.affix.artifact-extra-res-or-power".to_owned()
             ]),

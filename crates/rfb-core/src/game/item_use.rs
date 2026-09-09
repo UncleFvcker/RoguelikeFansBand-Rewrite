@@ -1952,6 +1952,7 @@ impl Game {
                 discovered: true,
                 appraised: true,
                 identified: true,
+                feeling: None,
                 known_affix_ids: BTreeSet::new(),
             },
         );
@@ -2010,6 +2011,7 @@ impl Game {
                 discovered: true,
                 appraised: true,
                 identified: true,
+                feeling: None,
                 known_affix_ids: BTreeSet::from([affix_id.clone()]),
             },
         );

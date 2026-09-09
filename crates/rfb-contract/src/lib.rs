@@ -25,7 +25,7 @@ pub mod policy;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 5;
-pub const ACTIVE_BASELINE: &str = "contract-v306";
+pub const ACTIVE_BASELINE: &str = "contract-v307";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
@@ -711,6 +711,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
                 discovered: true,
                 appraised: true,
                 identified: true,
+                feeling: None,
                 known_affix_ids: item.affix_ids.clone(),
             });
         payload.equipment.push(item.clone());

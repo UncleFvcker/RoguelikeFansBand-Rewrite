@@ -642,6 +642,7 @@ impl Game {
                         discovered: true,
                         appraised: true,
                         identified: true,
+                        feeling: None,
                         known_affix_ids: item.affix_ids.iter().cloned().collect(),
                     },
                 );
