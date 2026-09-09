@@ -15,9 +15,19 @@ enum Pval {
     LessWisdom,
     LessDexterity,
     LessConstitution,
+    LessCharisma,
     Stealth,
     LessStealth,
     Speed,
+    LessSpeed,
+    Life,
+    LessLife,
+    Infra,
+    Digging,
+    SpellPower,
+    DevicePower,
+    MagicResistance,
+    Might,
     Search,
     Mastery,
     Capacity,
@@ -25,8 +35,17 @@ enum Pval {
 }
 
 pub(super) fn can_apply(index: u32, tval: u16, sval: u16) -> bool {
+    if tval == 32 && sval == 10 && !matches!(index, 56 | 110 | 121 | 122 | 126) {
+        return false;
+    }
     match index {
-        50..=53 => matches!(tval, 34 | 36 | 37),
+        50 => matches!(tval, 30..=32 | 34..=37),
+        51 => matches!(tval, 34..=37),
+        52 => matches!(tval, 33 | 34 | 36 | 37),
+        53 => matches!(tval, 34 | 36 | 37),
+        54 => matches!(tval, 30 | 35),
+        55 => matches!(tval, 30 | 31),
+        56 => matches!(tval, 32 | 33),
         60 => tval == 34 && !matches!(sval, 2 | 4 | 9 | 10),
         61 => tval == 34 && !matches!(sval, 9 | 10),
         62 => tval == 34 && sval != 10,
@@ -40,6 +59,16 @@ pub(super) fn can_apply(index: u32, tval: u16, sval: u16) -> bool {
         85..=90 => tval == 38,
         91 => tval == 38 && matches!(sval, 12 | 16),
         92 => tval == 38 && sval == 18,
+        95..=104 => tval == 35,
+        118 => tval == 32 && !matches!(sval, 2 | 9 | 10),
+        121 => tval == 32 && matches!(sval, 1 | 10),
+        122 => tval == 32 && sval == 10,
+        110..=120 => tval == 32,
+        126 => tval == 33 || (tval == 32 && sval == 10),
+        125..=130 => tval == 33,
+        135..=142 => tval == 31,
+        147 => tval == 30 && matches!(sval, 5 | 6),
+        145..=152 => tval == 30,
         _ => false,
     }
 }
@@ -60,6 +89,9 @@ pub(super) fn materialize(
     if index == 77 && rng.bounded(2) != 0 {
         return None;
     }
+    if index == 147 && base.sval == 6 && one_in(rng, 2) {
+        return None;
+    }
     let body = matches!(base.tval, 36 | 37);
     let mut state = RolledAffixState {
         affix_id: affix.id.clone(),
@@ -67,12 +99,21 @@ pub(super) fn materialize(
     };
     let mut flags = BTreeSet::new();
     let mut pval = 0;
+    if base.tval == 35 && base.sval == 2 {
+        pval = randint1(rng, 4);
+        flags.extend([Stealth, Search]);
+        state.properties.equipment_bonuses.stealth_skill -= item.equipment_bonuses.stealth_skill;
+        state.properties.equipment_bonuses.search_skill -= item.equipment_bonuses.search_skill;
+        state.properties.equipment_bonuses.perception_skill -=
+            item.equipment_bonuses.perception_skill;
+    }
     let mut activation = None;
+    let mut curse = None;
     let properties = &mut state.properties;
     let to_a = &mut state.enchantment_delta.to_armor;
     match index {
         50 => {
-            if one_in(rng, 3) {
+            if !matches!(base.tval, 30 | 31) && one_in(rng, 3) {
                 *to_a += rfb_m_bonus(rng, 10, level) as i16;
             }
         }
@@ -98,6 +139,20 @@ pub(super) fn materialize(
             }
             if body && level > 60 && one_in(rng, 7) {
                 flags.insert(Speed);
+            }
+        }
+        54 => {
+            flags.insert(Stealth);
+        }
+        55 => {}
+        56 => {
+            flags.insert(Search);
+            if one_in(rng, if base.tval == 33 { 3 } else { 7 }) {
+                if one_in(rng, 2) {
+                    add_esp_strong(rng, properties);
+                } else {
+                    add_esp_weak(rng, properties, false);
+                }
             }
         }
         60 => {
@@ -413,9 +468,415 @@ pub(super) fn materialize(
                 activation = random_activation(rng, affix, level, true);
             }
         }
+        95 => {
+            flags.extend([Speed, LessCharisma]);
+            activation = fixed_activation_profile_index(affix);
+        }
+        96..=98 => {
+            if one_in(rng, 5) {
+                activation = random_activation(rng, affix, level, false);
+            }
+        }
+        99 => {
+            for (passive, odds) in [
+                (Passive::FireAura, 2),
+                (Passive::ColdAura, 2),
+                (Passive::ElectricityAura, 2),
+                (Passive::ShardsAura, 7),
+            ] {
+                if one_in(rng, odds) {
+                    properties.passives.insert(passive);
+                }
+            }
+        }
+        100 => {
+            flags.insert(Stealth);
+            if one_in(rng, 3) {
+                add_vulnerability(properties, ActorDamageType::Light);
+            }
+        }
+        101 => {
+            flags.extend([Stealth, Speed]);
+        }
+        102 => {
+            flags.extend([Speed, Infra, Stealth]);
+            state.enchantment_delta.to_hit -= 6;
+            state.enchantment_delta.to_damage -= 6;
+            if one_in(rng, 6) {
+                properties.equipment_bonuses.light_radius -= 1;
+            }
+            if one_in(rng, 3) {
+                add_vulnerability(properties, ActorDamageType::Light);
+                add_one_high_resistance(rng, properties);
+                if one_in(rng, 3) {
+                    flags.insert(LessStrength);
+                }
+            }
+            if one_in(rng, 12) {
+                properties.passives.insert(Passive::NightVision);
+            }
+        }
+        103 => {
+            flags.extend([Stealth, Speed, LessWisdom, LessLife]);
+            state.enchantment_delta.to_hit += 6;
+            state.enchantment_delta.to_damage += 6;
+            curse = Some(if one_in(rng, 6) {
+                ItemCurseSeverityDto::Permanent
+            } else {
+                ItemCurseSeverityDto::Heavy
+            });
+            if one_in(rng, 66) {
+                properties
+                    .resistances
+                    .insert(ActorDamageType::Cold, ActorResistanceLevel::Immune);
+            }
+            while one_in(rng, 6) {
+                add_one_high_resistance(rng, properties);
+            }
+            if one_in(rng, 5) {
+                activation = random_activation(rng, affix, level, false);
+            }
+        }
+        104 => {
+            flags.insert(Strength);
+            state.enchantment_delta.to_hit += 3;
+            state.enchantment_delta.to_damage += 3;
+            for (passive, odds) in [
+                (Passive::SustainDexterity, 2),
+                (Passive::Regeneration, 3),
+                (Passive::SeeInvisible, 5),
+            ] {
+                if one_in(rng, odds) {
+                    properties.passives.insert(passive);
+                }
+            }
+            for (flag, odds) in [(Dexterity, 5), (Constitution, 5), (Life, 10), (Speed, 10)] {
+                if one_in(rng, odds) {
+                    flags.insert(flag);
+                }
+            }
+            if one_in(rng, 10) {
+                properties.passives.insert(Passive::Levitation);
+            }
+            if one_in(rng, 20) {
+                flags.insert(Charisma);
+            } else if one_in(rng, 5) {
+                flags.insert(LessStealth);
+            }
+            if one_in(rng, 12) {
+                add_one_high_resistance(rng, properties);
+            }
+            if one_in(rng, 3) && one_in(rng, 5) {
+                activation = random_activation(rng, affix, level, false);
+            }
+        }
+        110 | 111 => {
+            flags.insert(if index == 110 { Intelligence } else { Wisdom });
+            if one_in(rng, 7) {
+                flags.insert(if index == 110 { Mastery } else { Capacity });
+            }
+            if one_in(rng, 5) {
+                activation = random_activation(rng, affix, level, true);
+            }
+        }
+        112 => {
+            flags.insert(Charisma);
+        }
+        113 => {
+            flags.insert(Constitution);
+        }
+        114 => {
+            flags.extend([Strength, LessCharisma]);
+        }
+        115 => {
+            flags.extend([Strength, LessIntelligence]);
+        }
+        116 => {
+            flags.extend([Strength, Charisma, Stealth, LessWisdom]);
+            for element in [ActorDamageType::Cold, ActorDamageType::Nether] {
+                if one_in(rng, 2) {
+                    add_resistance(properties, element);
+                }
+            }
+            if one_in(rng, 3) {
+                add_vulnerability(properties, ActorDamageType::Light);
+            }
+            if one_in(rng, 6) {
+                properties.passives.insert(Passive::Vampiric);
+            }
+        }
+        117 => {
+            if one_in(rng, 3) {
+                add_vulnerability(properties, ActorDamageType::Dark);
+            }
+            if one_in(rng, 5) {
+                activation = random_activation(rng, affix, level, true);
+            }
+        }
+        118 => {
+            flags.insert(Infra);
+            state.weight_tenths_pound = Some(item.weight_tenths_pound * 2 / 3);
+            properties.modifiers.defense = 3;
+            if one_in(rng, 4) {
+                flags.insert(Digging);
+            }
+        }
+        119 => {
+            flags.extend([Speed, Strength, Charisma]);
+            activation = fixed_activation_profile_index(affix);
+        }
+        120 => {
+            flags.extend([Strength, LessIntelligence, LessWisdom]);
+            if one_in(rng, 6) {
+                flags.insert(LessStealth);
+            }
+            if one_in(rng, 3) {
+                add_vulnerability(properties, ActorDamageType::Confusion);
+            }
+            state.enchantment_delta.to_damage += 3 + rfb_m_bonus(rng, 7, level) as i16;
+            activation = fixed_activation_profile_index(affix);
+        }
+        121 => {
+            flags.insert(Stealth);
+            state.weight_tenths_pound = Some(8);
+            if one_in(rng, 2) && rng.bounded(75) < u64::from(level) {
+                flags.insert(Speed);
+            }
+            if one_in(rng, 2) && rng.bounded(42) < u64::from(level) {
+                add_resistance(properties, ActorDamageType::Cold);
+            }
+            if one_in(rng, 4) && rng.bounded(75) < u64::from(level) {
+                flags.insert(Dexterity);
+                if one_in(rng, 2) {
+                    properties.passives.insert(Passive::SustainDexterity);
+                }
+            }
+        }
+        122 => {
+            flags.insert(Intelligence);
+            if witch(rng, properties, &mut flags, level, affix, &mut activation) {
+                use rfb_content::ItemDestructionElement::*;
+                state
+                    .elemental_destruction_immunities
+                    .extend([Acid, Electricity, Fire, Cold]);
+            }
+        }
+        125 => {
+            add_esp_strong(rng, properties);
+            let extra = properties.passives.contains(&Passive::EspNonliving);
+            add_esp_weak(rng, properties, extra);
+        }
+        126 => {
+            flags.insert(Intelligence);
+            if one_in(rng, 3) {
+                add_one_high_resistance(rng, properties);
+            } else {
+                for _ in 0..4 {
+                    add_one_elemental_resistance(rng, properties);
+                }
+            }
+            if one_in(rng, 7) {
+                properties.passives.insert(Passive::EasySpell);
+            }
+            if one_in(rng, 3) {
+                flags.insert(LessStrength);
+            }
+            if one_in(rng, 30) {
+                flags.extend([SpellPower, LessConstitution]);
+            } else if one_in(rng, 3) {
+                state.enchantment_delta.to_damage += 4 + randint1(rng, 11) as i16;
+                while one_in(rng, 2) {
+                    state.enchantment_delta.to_damage += 1;
+                }
+            } else if base.tval == 33 && level > 70 && one_in(rng, 30) {
+                properties.passives.insert(Passive::ManaRegeneration);
+            }
+            if level > 70 && one_in(rng, 10) {
+                flags.insert(Speed);
+            }
+            if one_in(rng, 5) {
+                activation = random_activation(rng, affix, level, false);
+            }
+        }
+        127 => {
+            flags.extend([Strength, Dexterity, Constitution, LessIntelligence]);
+            if one_in(rng, 5) {
+                state.enchantment_delta.to_hit += randint1(rng, 7) as i16;
+                state.enchantment_delta.to_damage += randint1(rng, 7) as i16;
+            }
+            if one_in(rng, 3) {
+                add_status_immunity(properties, "rfb.status.fear");
+            } else {
+                add_one_high_resistance(rng, properties);
+            }
+            if level > 70 && one_in(rng, 10) {
+                flags.insert(Speed);
+            }
+            if one_in(rng, 5) {
+                activation = random_activation(rng, affix, level, false);
+            }
+        }
+        128 => {
+            flags.extend([Wisdom, Charisma]);
+            if one_in(rng, 5) {
+                flags.insert(Capacity);
+            }
+            for _ in 0..2 {
+                if one_in(rng, 5) {
+                    add_one_high_resistance(rng, properties);
+                }
+            }
+            if level > 70 && one_in(rng, 5) {
+                flags.insert(Speed);
+            }
+            if one_in(rng, 5) {
+                activation = random_activation(rng, affix, level, false);
+            }
+        }
+        129 => {
+            flags.extend([Stealth, LessConstitution]);
+            state.curse_effects.insert(ItemCurseEffectDto::TyCurse);
+        }
+        130 => {
+            flags.extend([
+                Strength,
+                Constitution,
+                LessIntelligence,
+                LessWisdom,
+                MagicResistance,
+            ]);
+        }
+        135 => {
+            if one_in(rng, 4) {
+                gloves_slaying(rng, properties, level);
+            }
+        }
+        136 => {
+            flags.extend([Dexterity, Stealth]);
+            if one_in(rng, 20) {
+                flags.insert(Speed);
+            }
+        }
+        137 => {
+            flags.extend([Strength, Constitution, LessIntelligence]);
+            if one_in(rng, 4) {
+                let element = [
+                    ActorDamageType::Sound,
+                    ActorDamageType::Shards,
+                    ActorDamageType::Chaos,
+                ][rng.bounded(3) as usize];
+                add_resistance(properties, element);
+            }
+            if one_in(rng, 3) {
+                add_vulnerability(properties, ActorDamageType::Confusion);
+            }
+            if one_in(rng, 2) {
+                flags.insert(LessStealth);
+            }
+            if one_in(rng, 2) {
+                flags.insert(LessDexterity);
+            }
+        }
+        138 => {
+            flags.extend([Intelligence, Mastery]);
+            if one_in(rng, 4) {
+                match rng.bounded(3) {
+                    0 => add_resistance(properties, ActorDamageType::Confusion),
+                    1 => add_status_immunity(properties, "rfb.status.blindness"),
+                    _ => add_resistance(properties, ActorDamageType::Light),
+                }
+            }
+            if one_in(rng, 2) {
+                flags.insert(LessStrength);
+            }
+            if one_in(rng, 3) {
+                flags.insert(LessConstitution);
+            }
+            if one_in(rng, 30) {
+                flags.insert(DevicePower);
+            }
+        }
+        139 => {
+            flags.extend([
+                LessStrength,
+                LessDexterity,
+                LessConstitution,
+                LessCharisma,
+                Stealth,
+            ]);
+            if one_in(rng, 10) {
+                properties
+                    .resistances
+                    .insert(ActorDamageType::Acid, ActorResistanceLevel::Immune);
+            }
+        }
+        140 => {
+            flags.insert(Dexterity);
+        }
+        141 => {
+            flags.extend([Might, Stealth]);
+            state.enchantment_delta.to_hit = 5 + randint1(rng, 10) as i16;
+        }
+        142 => {
+            flags.extend([Blows, LessStealth, LessIntelligence]);
+            state.enchantment_delta.to_hit = -10;
+            state.enchantment_delta.to_damage = 10;
+            *to_a = -10;
+            activation = fixed_activation_profile_index(affix);
+        }
+        145 | 151 => {
+            if index == 151 {
+                flags.insert(Speed);
+            }
+            if one_in(rng, 2) {
+                add_one_high_resistance(rng, properties);
+            }
+        }
+        146 => {
+            activation = fixed_activation_profile_index(affix);
+        }
+        147 => {
+            flags.extend([Constitution, LessStealth]);
+            state.weight_tenths_pound = Some(item.weight_tenths_pound * 2 / 3);
+            properties.modifiers.defense = 4;
+            if one_in(rng, 4) {
+                properties.passives.insert(Passive::SustainConstitution);
+            }
+        }
+        148 => {
+            flags.insert(Speed);
+            let amount = 3 + level.min(90).saturating_sub(30) / 10;
+            pval = 1 + rfb_m_bonus(rng, amount, level);
+        }
+        149 => {
+            flags.extend([Stealth, Speed]);
+            if one_in(rng, 2) {
+                add_one_high_resistance(rng, properties);
+            }
+            if one_in(rng, 2) {
+                properties.passives.insert(Passive::Levitation);
+            }
+        }
+        150 => {
+            flags.insert(Speed);
+            pval = 6 + rfb_m_bonus(rng, 9, level);
+            activation = fixed_activation_profile_index(affix);
+        }
+        152 => {
+            flags.extend([LessSpeed, Strength, Constitution, LessDexterity, Life]);
+        }
         _ => return None,
     }
-    if matches!(index, 53 | 71..=75 | 80) {
+    if index == 126 {
+        add_one_ability(rng, properties);
+    }
+    if index == 103 {
+        state.curse_effects.extend([
+            ItemCurseEffectDto::DrainExperience,
+            roll_rfb_heavy_curse_effect(rng),
+        ]);
+    }
+    if matches!(index, 53 | 71..=75 | 80 | 101 | 103 | 126 | 128 | 130 | 152) {
         add_one_high_resistance(rng, properties);
         if randint1(rng, level) > 60 {
             add_one_high_resistance(rng, properties);
@@ -428,8 +889,49 @@ pub(super) fn materialize(
     state.enchantment_delta.to_hit += roll_signed(rng, hit);
     state.enchantment_delta.to_damage += roll_signed(rng, damage);
     *to_a += roll_signed(rng, armor);
-    if maximum_pval > 0 {
+    if index == 142 {
+        pval = randint1(rng, 2);
+        if one_in(rng, 15) {
+            pval += 1;
+        }
+    } else if index == 121 && flags.contains(&Speed) {
+        pval = rng.bounded(3) as u16;
+        loop {
+            pval += 1;
+            if !one_in(rng, (100_u16.saturating_sub(level) / 6).max(7)) {
+                break;
+            }
+        }
+    } else if matches!(index, 95 | 101 | 102) {
+        pval = randint1(rng, maximum_pval);
+        if base.sval == 2 {
+            pval += rng.bounded(2) as u16;
+        }
+    } else if maximum_pval > 0 {
         pval += randint1(rng, maximum_pval);
+    }
+    if index == 104 {
+        pval = pval.min(3);
+    }
+    if index == 101 && level > 80 {
+        while one_in(rng, 4) {
+            pval += 1;
+        }
+    }
+    if matches!(index, 126..=128) && level > 80 && one_in(rng, 5) {
+        pval += 1;
+    }
+    if flags.contains(&DevicePower) && pval >= 3 {
+        pval = 2;
+        if one_in(rng, 30) {
+            pval += 1;
+        }
+    }
+    if index == 149 && level > 70 {
+        *to_a += randint1(rng, 5) as i16;
+        while one_in(rng, 3) {
+            pval += 1;
+        }
     }
     for flag in flags {
         apply_pval(properties, flag, i32::from(pval));
@@ -452,7 +954,7 @@ pub(super) fn materialize(
         vec![affix.id.clone()],
         rolled,
         None,
-        None,
+        curse,
         activation,
         charges,
     );
@@ -460,7 +962,150 @@ pub(super) fn materialize(
         result.kind_id_override = Some("demo.item.yoiyami-robe".to_owned());
         result.clear_armor_enchantment = true;
     }
+    if index == 141 {
+        result.clear_hit_enchantment = true;
+    }
+    if index == 142 {
+        result.clear_hit_enchantment = true;
+        result.clear_damage_enchantment = true;
+        result.clear_armor_enchantment = true;
+    }
     Some(result)
+}
+
+fn gloves_slaying(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinition, level: u16) {
+    let candidates: Vec<_> = SLAYS
+        .iter()
+        .filter(|(_, _, _, maximum)| *maximum == 0 || level <= *maximum)
+        .collect();
+    let total: u64 = candidates
+        .iter()
+        .map(|(_, _, rarity, _)| u64::from(255 / rarity))
+        .sum();
+    let mut rolls = 1 + rfb_m_bonus(rng, 4, level);
+    if one_in(rng, 8) {
+        rolls *= 2;
+    }
+    for _ in 0..rolls {
+        let mut choice = rng.bounded(total);
+        for (target, _, rarity, _) in &candidates {
+            let weight = u64::from(255 / rarity);
+            if choice < weight {
+                add_slay(properties, *target, SlayLevel::Slay);
+                break;
+            }
+            choice -= weight;
+        }
+    }
+}
+
+fn add_vulnerability(properties: &mut AffixPropertyBundleDefinition, element: ActorDamageType) {
+    properties
+        .resistances
+        .insert(element, ActorResistanceLevel::Vulnerable);
+}
+
+fn witch(
+    rng: &mut RfbRng,
+    properties: &mut AffixPropertyBundleDefinition,
+    flags: &mut BTreeSet<Pval>,
+    level: u16,
+    affix: &AffixDefinition,
+    activation: &mut Option<usize>,
+) -> bool {
+    use EquipmentPassive as P;
+    use Pval::*;
+    let mut strength = i32::from(level.min(100));
+    let mut ignores_elements = false;
+    for i in 0..1 + rfb_m_bonus(rng, 5, level) {
+        if one_in(rng, 10) && !properties.resistances.contains_key(&ActorDamageType::Dark) {
+            add_resistance(properties, ActorDamageType::Dark);
+            strength -= 2;
+        } else if one_in(rng, 12)
+            && !properties
+                .resistances
+                .contains_key(&ActorDamageType::Nether)
+        {
+            add_resistance(properties, ActorDamageType::Nether);
+            strength -= 2;
+        } else if strength > 25
+            && rng.bounded((192 - strength) as u64) < 7
+            && !properties.resistances.contains_key(&ActorDamageType::Chaos)
+        {
+            add_resistance(properties, ActorDamageType::Chaos);
+            strength -= 2;
+        }
+        if strength > 25
+            && !flags.contains(&Mastery)
+            && rng.bounded((172 - strength) as u64) < u64::from(i)
+        {
+            flags.insert(Mastery);
+            strength -= 4;
+        } else if strength > 25
+            && !properties.passives.contains(&P::EasySpell)
+            && rng.bounded((256 - strength) as u64) < u64::from(i)
+        {
+            properties.passives.insert(P::EasySpell);
+            if one_in(rng, 3) {
+                properties.passives.insert(P::ReducedManaCost);
+            }
+            strength -= 4;
+        } else if strength > 25
+            && !flags.contains(&Capacity)
+            && rng.bounded((384 - strength) as u64) < u64::from(i)
+        {
+            flags.insert(Capacity);
+            strength -= 4;
+        } else if strength > 50
+            && !properties.passives.contains(&P::ManaRegeneration)
+            && rng.bounded((512 - strength) as u64) < u64::from(i)
+        {
+            properties.passives.insert(P::ManaRegeneration);
+            strength -= 4;
+        }
+        if one_in(rng, 22) {
+            add_one_resistance(rng, properties);
+            strength -= 2;
+        }
+        if !properties.passives.contains(&P::SustainIntelligence) && one_in(rng, 10) {
+            properties.passives.insert(P::SustainIntelligence);
+            strength -= 2;
+        }
+        if !flags.contains(&Charisma) && one_in(rng, 20) {
+            flags.insert(Charisma);
+            strength -= 2;
+        }
+        for (passive, odds) in [
+            (P::Levitation, 20),
+            (P::AutoIdentify, 100),
+            (P::SeeInvisible, 16),
+        ] {
+            if !properties.passives.contains(&passive) && one_in(rng, odds) {
+                properties.passives.insert(passive);
+                strength -= 2;
+            }
+        }
+        if one_in(rng, 12) {
+            add_one_low_esp(rng, properties);
+            strength -= 2;
+        }
+        if !ignores_elements && one_in(rng, 4) {
+            ignores_elements = true;
+            strength -= 2;
+        }
+        if i == 0 {
+            if one_in(rng, 8) {
+                flags.insert(LessWisdom);
+            }
+            if one_in(rng, 8) {
+                add_vulnerability(properties, ActorDamageType::Light);
+            }
+            if one_in(rng, 5) {
+                *activation = random_activation(rng, affix, level, false);
+            }
+        }
+    }
+    ignores_elements
 }
 
 fn random_activation(
@@ -508,7 +1153,21 @@ fn apply_pval(properties: &mut AffixPropertyBundleDefinition, flag: Pval, value:
         LessWisdom => properties.modifiers.wisdom -= value,
         LessDexterity => properties.modifiers.dexterity -= value,
         LessConstitution => properties.modifiers.constitution -= value,
+        LessCharisma => properties.modifiers.charisma -= value,
         Speed => properties.modifiers.speed += value,
+        LessSpeed => properties.modifiers.speed -= value,
+        Life => properties.equipment_bonuses.life_percent += 3 * value,
+        LessLife => properties.equipment_bonuses.life_percent -= 3 * value,
+        Infra => properties.equipment_bonuses.infravision += value,
+        Digging => properties.equipment_bonuses.digging_skill += 20 * value,
+        SpellPower => properties.modifiers.spell_power_bonus += value,
+        DevicePower => properties.modifiers.device_power_bonus += value,
+        MagicResistance => properties.equipment_bonuses.magic_resistance_percent += 5 * value,
+        Might => {
+            properties
+                .equipment_bonuses
+                .launcher_multiplier_delta_percent += 20 * value
+        }
         Stealth => properties.equipment_bonuses.stealth_skill += value,
         LessStealth => properties.equipment_bonuses.stealth_skill -= value,
         Search => {
@@ -526,6 +1185,11 @@ fn maxima(index: u32) -> (i16, i16, i16, u16) {
         50 | 52 | 80 => (0, 0, 10, 0),
         51 => (0, 0, 8, 0),
         53 => (0, 0, 10, 3),
+        54 => (0, 0, 0, 3),
+        55 | 145 | 146 | 148 | 150 => (0, 0, 0, 0),
+        147 => (0, 0, 10, 3),
+        149 | 151 => (0, 0, 0, 3),
+        152 => (8, 8, 15, 3),
         60 => (5, 5, 12, 0),
         61 => (3, 6, 10, 3),
         62 | 63 => (0, 0, 5, 0),
@@ -543,7 +1207,45 @@ fn maxima(index: u32) -> (i16, i16, i16, u16) {
         89 => (0, 0, 5, 3),
         91 => (5, 5, 0, 1),
         85 | 86 | 88 | 90 | 92 => (0, 0, 0, 3),
-        _ => unreachable!("validated front armor ego"),
+        56 => (0, 0, 0, 6),
+        95 => (-10, -10, -10, 3),
+        96 => (0, 0, 0, 0),
+        97 => (0, 0, 0, 0),
+        98 => (0, 0, 0, 0),
+        99 => (0, 0, -20, 0),
+        100 => (0, 0, 0, 7),
+        101 => (0, 0, 10, 3),
+        102 => (-7, -7, -5, 5),
+        103 => (6, 6, 6, 3),
+        104 => (4, 4, 2, 2),
+        110 => (0, 0, 0, 3),
+        111 => (0, 0, 0, 3),
+        112 => (0, 0, 0, 3),
+        113 => (0, 0, 0, 5),
+        114 => (0, 5, 0, 2),
+        115 => (0, 8, 5, 2),
+        116 => (0, 0, 0, 3),
+        117 => (0, 0, 0, 0),
+        118 => (0, 0, 12, 3),
+        119 => (5, 5, 0, 2),
+        120 => (-10, 10, -10, 3),
+        121 => (8, -8, 3, 5),
+        122 => (0, 0, 0, 3),
+        125 => (0, 0, 0, 0),
+        126 => (0, 0, 0, 3),
+        127 => (0, 0, 0, 3),
+        128 => (0, 0, 0, 3),
+        129 => (10, 10, 0, 3),
+        130 => (0, 0, 0, 3),
+        135 => (8, 8, 0, 0),
+        136 => (5, -5, 0, 4),
+        137 => (-5, 10, 0, 4),
+        138 => (-10, -10, -20, 3),
+        139 => (-10, -10, 0, 7),
+        140 => (8, 0, 0, 3),
+        141 => (0, 5, 0, 3),
+        142 => (-15, 8, -15, 3),
+        _ => unreachable!("validated armor ego"),
     }
 }
 
@@ -657,6 +1359,12 @@ mod tests {
 
     fn base_id(index: u32) -> &'static str {
         match index {
+            54 | 55 | 145..=152 => "demo.item.pair-of-metal-shod-boots",
+            56 | 110..=120 => "demo.item.iron-helm",
+            95..=104 => "demo.item.cloak",
+            121 | 122 => "demo.item.pointy-hat",
+            125..=130 => "demo.item.iron-crown",
+            135..=142 => "demo.item.leather-gloves",
             50..=64 => "demo.item.small-metal-shield",
             70..=74 | 76 => "demo.item.chain-mail",
             75 => "demo.item.soft-leather-armour",
@@ -666,6 +1374,77 @@ mod tests {
             92 => "demo.item.chaos-dragon-scale-mail",
             _ => "demo.item.multi-hued-dragon-scale-mail",
         }
+    }
+
+    #[test]
+    fn boots_pool_generates_all_eleven_egos_and_preserves_instance_state() {
+        let game = Game::new_with_build(7, "demo.build.warrior").unwrap();
+        let definition = game
+            .content
+            .item("demo.item.pair-of-metal-shod-boots")
+            .unwrap();
+        let mut seen = BTreeSet::new();
+        for seed in 1..=12_000 {
+            let result = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                &mut RfbRng::seeded(seed),
+                definition,
+                game.content.affix_definitions(),
+                100,
+                None,
+            )
+            .unwrap();
+            let index = game
+                .content
+                .affix(&result.affix_ids[0])
+                .unwrap()
+                .rfb_ego
+                .as_ref()
+                .unwrap()
+                .source_index;
+            if !seen.insert(index) {
+                continue;
+            }
+            let mut item = item_for(&game, &definition.id);
+            result.apply_to(&mut item);
+            assert!(crate::game::validation::rolled_affixes_are_valid(&item));
+            let dto = crate::save::inventory_to_save(std::slice::from_ref(&item)).remove(0);
+            assert_eq!(
+                crate::save::inventory_item_from_dto(dto, &game.content).unwrap(),
+                item
+            );
+            match index {
+                146 | 150 => {
+                    assert!(item.activation.is_some());
+                    assert_eq!(item.charges.as_ref().unwrap().current, 1);
+                    if index == 150 {
+                        assert!(
+                            (6..=15).contains(&item.rolled_affixes[0].properties.modifiers.speed)
+                        );
+                    }
+                }
+                147 => assert_eq!(
+                    game.item_instance_weight(&item),
+                    definition.weight_tenths_pound * 2 / 3
+                ),
+                148 => {
+                    assert!((1..=10).contains(&item.rolled_affixes[0].properties.modifiers.speed))
+                }
+                152 => {
+                    let properties = &item.rolled_affixes[0].properties;
+                    assert!(properties.modifiers.speed < 0);
+                    assert!(properties.modifiers.dexterity < 0);
+                    assert_eq!(
+                        properties.equipment_bonuses.life_percent,
+                        3 * properties.modifiers.strength
+                    );
+                }
+                _ => {}
+            }
+        }
+        assert_eq!(seen, [50, 54, 55].into_iter().chain(145..=152).collect());
+        assert!(!can_apply(147, 30, 2));
+        assert!(can_apply(147, 30, 5));
+        assert!(can_apply(147, 30, 6));
     }
 
     fn item_for(game: &Game, kind_id: &str) -> ItemInstance {
@@ -706,9 +1485,16 @@ mod tests {
             .expect("requested generated armor property");
         let mut item = item_for(game, &definition.id);
         item.id = format!("test.armor.{source_index}");
-        item.location = ItemLocation::Equipped {
-            slot_id: definition.equipment_slot.clone().unwrap(),
-        };
+        item.quality = rfb_protocol::ItemQualityDto::Exceptional;
+        let slot_id = game
+            .body_slots
+            .iter()
+            .find(|slot| Some(&slot.slot_type) == definition.equipment_slot.as_ref())
+            .unwrap()
+            .id
+            .clone();
+        game.items.retain(|item| !matches!(&item.location, ItemLocation::Equipped { slot_id: occupied } if occupied == &slot_id));
+        item.location = ItemLocation::Equipped { slot_id };
         result.apply_to(&mut item);
         game.items.push(item);
         game.items.len() - 1
@@ -920,11 +1706,19 @@ mod tests {
     }
 
     #[test]
-    fn all_front_armor_egos_generate_and_round_trip() {
+    fn all_armor_egos_generate_and_round_trip() {
         let game = Game::new_with_build(7, "demo.build.warrior").unwrap();
-        let affixes: Vec<_> = game.content.affix_definitions().filter(|affix| affix.rfb_ego.as_ref()
-            .is_some_and(|ego| matches!(ego.source_index, 50..=53 | 60..=64 | 70..=77 | 80..=82 | 85..=92))).collect();
-        assert_eq!(affixes.len(), 28);
+        let affixes: Vec<_> = game
+            .content
+            .affix_definitions()
+            .filter(|affix| {
+                affix
+                    .rfb_ego
+                    .as_ref()
+                    .is_some_and(|ego| matches!(ego.source_index, 50..=152))
+            })
+            .collect();
+        assert_eq!(affixes.len(), 76);
         for affix in affixes {
             let index = affix.rfb_ego.as_ref().unwrap().source_index;
             let definition = game.content.item(base_id(index)).unwrap();
@@ -952,6 +1746,395 @@ mod tests {
                     .unwrap_or_else(|error| panic!("ego {index}, seed {seed}: {error:?}"));
                 assert_eq!(restored, item, "ego {index}, seed {seed}");
             }
+        }
+    }
+
+    #[test]
+    fn all_back_armor_pools_are_naturally_reachable_except_the_nazgul() {
+        let game = Game::new_with_build(7, "demo.build.warrior").unwrap();
+        let mut seen = BTreeSet::new();
+        for id in [
+            "iron-helm",
+            "pointy-hat",
+            "iron-crown",
+            "cloak",
+            "leather-gloves",
+            "pair-of-metal-shod-boots",
+        ] {
+            let item = game.content.item(&format!("demo.item.{id}")).unwrap();
+            for seed in 1..=6000 {
+                let result = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                    &mut RfbRng::seeded(seed),
+                    item,
+                    game.content.affix_definitions(),
+                    100,
+                    None,
+                )
+                .unwrap();
+                seen.insert(
+                    game.content
+                        .affix(&result.affix_ids[0])
+                        .unwrap()
+                        .rfb_ego
+                        .as_ref()
+                        .unwrap()
+                        .source_index,
+                );
+            }
+        }
+        let expected = (50..=52)
+            .chain(54..=56)
+            .chain(95..=104)
+            .chain(110..=122)
+            .chain(125..=130)
+            .chain(135..=142)
+            .chain(145..=152)
+            .filter(|index| *index != 103)
+            .collect();
+        assert_eq!(seen, expected);
+    }
+
+    #[test]
+    fn elven_cloak_uses_one_pval_for_its_intrinsic_and_ego_flags() {
+        let game = Game::new_with_build(7, "demo.build.warrior").unwrap();
+        let definition = game.content.item("demo.item.elven-cloak").unwrap();
+        for index in [50, 95, 101, 102, 104] {
+            let affix = game
+                .content
+                .affix_definitions()
+                .find(|affix| {
+                    affix
+                        .rfb_ego
+                        .as_ref()
+                        .is_some_and(|ego| ego.source_index == index)
+                })
+                .unwrap();
+            for seed in 1..=32 {
+                let mut item = item_for(&game, &definition.id);
+                materialize(&mut RfbRng::seeded(seed), definition, affix, 90)
+                    .unwrap()
+                    .apply_to(&mut item);
+                let bonuses = game.item_equipment_bonuses(&item);
+                let pval = bonuses.search_skill / 5;
+                assert!(pval > 0);
+                assert!(
+                    bonuses.stealth_skill == pval || (index == 104 && bonuses.stealth_skill == 0)
+                );
+                assert_eq!(bonuses.perception_skill, bonuses.search_skill);
+                if index == 50 {
+                    assert!((1..=4).contains(&bonuses.stealth_skill));
+                }
+                if index == 104 {
+                    assert!(pval <= 3);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn armor_mana_regeneration_doubles_normal_recovery_without_stacking_with_high_mage() {
+        for build in ["demo.build.paladin-death", "demo.build.high-mage-arcane"] {
+            let mut game = Game::new_with_build(7, build).unwrap();
+            let id = game.casting_profile().unwrap().resource_id.clone();
+            let before = game.player_resource_recovery_change(&id, true);
+            let class_rate = game.casting_profile().unwrap().resource_recovery_percent;
+            equip_ego(&mut game, 126, |result| {
+                result.rolled_affixes.iter().any(|rolled| {
+                    rolled
+                        .properties
+                        .passives
+                        .contains(&EquipmentPassive::ManaRegeneration)
+                })
+            });
+            let after = game.player_resource_recovery_change(&id, true);
+            assert_eq!(
+                after,
+                if class_rate >= 200 {
+                    before
+                } else {
+                    before * 2
+                }
+            );
+        }
+    }
+
+    #[test]
+    fn berserker_gloves_reject_enchantment_and_elemental_auras_use_equipment_sources() {
+        let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
+        let index = equip_ego(&mut game, 142, |_| true);
+        let item = game.items[index].clone();
+        let draws = game.rng_draw_counter();
+        let outcome = game.enchant_item_instance(
+            &item.id,
+            crate::game::inventory::ItemEnchantmentRequest::new(20, 20, 20),
+        );
+        assert_eq!(
+            outcome.to_hit.successes + outcome.to_damage.successes + outcome.to_armor.successes,
+            0
+        );
+        assert_eq!(game.items[index].enchantments, item.enchantments);
+        assert_eq!(game.rng_draw_counter(), draws);
+        for (ego, damage_type) in [(97, DamageType::Electricity), (98, DamageType::Cold)] {
+            let index = equip_ego(&mut game, ego, |_| true);
+            assert!(
+                game.player_elemental_contact_aura_sources(damage_type)
+                    .contains(&vec![game.items[index].id.clone()])
+            );
+            game.items[index].location = ItemLocation::Inventory;
+            assert!(
+                game.player_elemental_contact_aura_sources(damage_type)
+                    .is_empty()
+            );
+        }
+    }
+
+    #[test]
+    fn genji_improves_both_real_weapon_attacks_and_dual_training_survives_save() {
+        let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
+        let mut offhand = item_for(&game, "demo.item.dagger");
+        offhand.id = "test.offhand".to_owned();
+        offhand.location = ItemLocation::Equipped {
+            slot_id: game
+                .body_slots
+                .iter()
+                .find(|slot| slot.slot_type == "shield")
+                .unwrap()
+                .id
+                .clone(),
+        };
+        offhand.enchantments.to_damage = 17;
+        game.items.push(offhand);
+        game.progress.dual_wielding_proficiency = 4000;
+        let before = game.player_melee_profiles(&game.player_derived_stats());
+        assert_eq!(before.len(), 2);
+        equip_ego(&mut game, 140, |_| true);
+        let after = game.player_melee_profiles(&game.player_derived_stats());
+        for (before, after) in before.iter().zip(&after) {
+            assert!(after.melee_skill.value > before.melee_skill.value);
+        }
+        assert_eq!(after[1].source_item_id.as_deref(), Some("test.offhand"));
+        assert!(after[1].to_damage >= 17);
+        assert!(after[0].to_damage < after[1].to_damage);
+        game.train_dual_wielding(90);
+        assert_eq!(game.progress.dual_wielding_proficiency, 4004);
+        game.refresh_player_resource_maxima();
+        game.identify_carried_items();
+        let saved = game.to_save();
+        let restored = Game::from_save(saved).unwrap();
+        assert_eq!(restored.progress.dual_wielding_proficiency, 4004);
+        assert_eq!(restored.equipped_melee_weapons().len(), 2);
+    }
+
+    #[test]
+    fn bat_night_vision_sees_dark_cells_without_lighting_them_and_respects_blindness() {
+        let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
+        game.current_floor_id = "test.dark-floor".to_owned();
+        game.items.clear();
+        game.entities.clear();
+        game.glow.fill(false);
+        // Keep a base instance for the shared materialization helper.
+        game.items.push(item_for(
+            &Game::new_with_build(7, "demo.build.warrior").unwrap(),
+            "demo.item.cloak",
+        ));
+        let target = (0..i32::from(game.height))
+            .flat_map(|y| (0..i32::from(game.width)).map(move |x| rfb_protocol::Position { x, y }))
+            .find(|position| {
+                *position != game.player.position
+                    && crate::game::squared_distance(game.player.position, *position) <= 16
+                    && crate::game::visibility::has_line_of_sight(
+                        &game,
+                        game.player.position,
+                        *position,
+                    )
+            })
+            .unwrap();
+        assert!(!game.is_visible(target));
+        equip_ego(&mut game, 102, |result| {
+            result.rolled_affixes.iter().any(|rolled| {
+                rolled
+                    .properties
+                    .passives
+                    .contains(&EquipmentPassive::NightVision)
+            })
+        });
+        assert!(game.is_visible(target));
+        assert!(!game.position_is_lit(target));
+        game.player.statuses.push(
+            crate::game::monster_combat::melee_status("rfb.status.blindness", 10, "test.blindness")
+                .status,
+        );
+        assert!(!game.is_visible(target));
+    }
+
+    #[test]
+    fn crown_magic_resistance_reduces_spells_but_not_innate_breaths() {
+        let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
+        game.items.clear();
+        game.items.push(item_for(
+            &Game::new_with_build(7, "demo.build.warrior").unwrap(),
+            "demo.item.iron-crown",
+        ));
+        equip_ego(&mut game, 130, |_| true);
+        assert!(game.player_equipment_bonuses().magic_resistance_percent >= 15);
+        for (ability, expected) in [
+            ("demo.ability.armageddon-fire-bolt", 85),
+            ("rfb-legacy.ability.breath-acid-20-900-r2", 100),
+        ] {
+            assert!(game.content.ability(ability).is_some());
+            game.player.hp = 1000;
+            let result = game.resolve_monster_damage_to_player(
+                "test.caster",
+                "test.caster",
+                ability,
+                0,
+                100,
+                100,
+                DamageType::Mana,
+                &mut Vec::new(),
+            );
+            let rfb_protocol::AbilityEffectResolutionDto::Damage { resolution, .. } = result else {
+                panic!("damage expected");
+            };
+            assert_eq!(resolution.final_damage, expected, "{ability}");
+        }
+    }
+
+    #[test]
+    fn sniper_gloves_scale_extra_might_by_the_equipped_launcher_energy() {
+        let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
+        let before = game
+            .player_projectile_profile()
+            .unwrap()
+            .damage_multiplier_percent;
+        let index = equip_ego(&mut game, 141, |_| true);
+        let might = game
+            .item_equipment_bonuses(&game.items[index])
+            .launcher_multiplier_delta_percent;
+        let profile = game.player_projectile_profile().unwrap();
+        let energy = game
+            .content
+            .item(
+                &game
+                    .items
+                    .iter()
+                    .find(|item| item.id == profile.source_item_id)
+                    .unwrap()
+                    .kind_id,
+            )
+            .unwrap()
+            .projectile_profile
+            .as_ref()
+            .unwrap()
+            .shot_energy;
+        assert_eq!(
+            i32::from(profile.damage_multiplier_percent - before),
+            might * i32::from(energy) / 10_000
+        );
+    }
+
+    #[test]
+    fn armor_hit_and_damage_enchantments_follow_melee_shooting_and_spell_scopes() {
+        for index in [135, 141, 126] {
+            let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
+            let melee = game.player_melee_profile(&game.player_derived_stats());
+            let shot = game.player_projectile_profile().unwrap();
+            let i = equip_ego(&mut game, index, |result| {
+                result.enchantment_delta.to_damage > 0 || index == 141
+            });
+            let enchantments = game.items[i].enchantments;
+            let after_melee = game.player_melee_profile(&game.player_derived_stats());
+            let after_shot = game.player_projectile_profile().unwrap();
+            if index == 135 {
+                assert_eq!(
+                    after_melee.to_hit - melee.to_hit,
+                    i32::from(enchantments.to_hit)
+                );
+                assert_eq!(
+                    after_melee.to_damage - melee.to_damage,
+                    i32::from(enchantments.to_damage)
+                );
+                assert_eq!(after_shot.to_hit, shot.to_hit);
+                assert_eq!(after_shot.launcher_to_damage, shot.launcher_to_damage);
+            } else if index == 141 {
+                assert_eq!(after_melee.to_hit, melee.to_hit);
+                assert_eq!(after_melee.to_damage, melee.to_damage);
+                assert_eq!(
+                    after_shot.to_hit - shot.to_hit,
+                    i32::from(enchantments.to_hit)
+                );
+            } else {
+                assert_eq!(after_melee.to_damage, melee.to_damage);
+                assert_eq!(after_shot.launcher_to_damage, shot.launcher_to_damage);
+                assert_eq!(
+                    game.casting_spell_damage_bonus(),
+                    enchantments.to_damage as u16
+                );
+                let mut spell = game
+                    .content
+                    .ability("demo.ability.armageddon-fire-bolt")
+                    .unwrap()
+                    .clone();
+                let class = game
+                    .content
+                    .class("demo.class.high-mage")
+                    .unwrap()
+                    .casting_profile
+                    .as_ref()
+                    .unwrap();
+                let mut without = spell.clone();
+                game.items[i].location = ItemLocation::Inventory;
+                game.apply_casting_profile_damage_bonus(class, &mut without, 1);
+                game.items[i].location = ItemLocation::Equipped {
+                    slot_id: game
+                        .body_slots
+                        .iter()
+                        .find(|slot| slot.slot_type == "head")
+                        .unwrap()
+                        .id
+                        .clone(),
+                };
+                game.apply_casting_profile_damage_bonus(class, &mut spell, 1);
+                let bonus = |spell: &rfb_content::AbilityDefinition| match &spell.effect {
+                    rfb_content::AbilityEffectDefinition::BoltOrBeamDamage {
+                        damage_bonus, ..
+                    } => *damage_bonus,
+                    other => panic!("unexpected bolt effect: {other:?}"),
+                };
+                assert_eq!(
+                    bonus(&spell) - bonus(&without),
+                    enchantments.to_damage as u16
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn revenge_attack_is_one_blow_and_does_not_trigger_monster_revenge_again() {
+        let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
+        game.entities.clear();
+        game.push_generated_actor(
+            "test.revenge-target".to_owned(),
+            "demo.actor.ebony-monk",
+            rfb_protocol::Position { x: 4, y: 3 },
+        );
+        game.entities[0].hp = 100_000;
+        game.entities[0].max_hp = 100_000;
+        game.player.position = rfb_protocol::Position { x: 3, y: 3 };
+        equip_ego(&mut game, 99, |_| true);
+        for _ in 0..20 {
+            let hp = game.player.hp;
+            let result = game
+                .resolve_player_revenge_blow(
+                    0,
+                    &mut Vec::new(),
+                    &mut BTreeSet::new(),
+                    &mut Vec::new(),
+                )
+                .unwrap();
+            assert_eq!(result.attacks_used, 1);
+            assert_eq!(result.attacks_available, 1);
+            assert_eq!(game.player.hp, hp);
         }
     }
 

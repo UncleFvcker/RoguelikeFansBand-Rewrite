@@ -655,6 +655,8 @@ pub struct EquipmentBonuses {
     pub melee_attacks_delta_percent: i32,
     #[serde(default, skip_serializing_if = "is_zero_i32")]
     pub spell_capacity_bonus: i32,
+    #[serde(default, skip_serializing_if = "is_zero_i32")]
+    pub magic_resistance_percent: i32,
     #[serde(default)]
     pub melee_attacks: i32,
     #[serde(default)]

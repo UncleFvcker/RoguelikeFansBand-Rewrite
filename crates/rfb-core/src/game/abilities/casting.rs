@@ -6,9 +6,8 @@ use crate::game::{
     AbilityCastResolutionDto, AbilityDefinition, AbilityEffectDefinition,
     AbilityEffectResolutionDto, AbilityEffectsResolutionDto, AbilityProgress,
     AbilityRandomTargetDefinition, AbilitySourceDto, AbilitySpellPowerField,
-    AbilityTargetModeDefinition, CoreError, Direction, DomainEvent, Game, Position,
-    STATUS_ANTI_MAGIC, STATUS_BERSERK, STATUS_BLINDNESS, STATUS_CONFUSION, STATUS_FEAR,
-    TargetSelection, VirtueKindDto,
+    AbilityTargetModeDefinition, CoreError, Direction, DomainEvent, Game, Position, STATUS_BERSERK,
+    STATUS_BLINDNESS, STATUS_CONFUSION, STATUS_FEAR, TargetSelection, VirtueKindDto,
 };
 use std::collections::BTreeSet;
 
@@ -132,7 +131,7 @@ impl Game {
             });
             return Ok(());
         }
-        if source == AbilitySourceDto::Learned && self.player_has_status_kind(STATUS_ANTI_MAGIC) {
+        if source == AbilitySourceDto::Learned && self.player_has_anti_magic() {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "anti-magic".to_owned(),
@@ -164,7 +163,7 @@ impl Game {
         if (!innate_power || uses_casting_profile_offense)
             && let Some(profile) = casting_profile.as_ref()
         {
-            Self::apply_casting_profile_damage_bonus(profile, &mut ability, self.progress.level);
+            self.apply_casting_profile_damage_bonus(profile, &mut ability, self.progress.level);
         }
         Self::apply_player_spell_power(&mut ability, self.effective_player_spell_power_bonus());
         self.apply_player_status_power_attribute(&mut ability);
@@ -568,7 +567,7 @@ impl Game {
         ability = self.effective_casting_ability(&profile, &ability);
         Self::apply_player_level_scaling(&mut ability, self.progress.level);
         Self::apply_casting_profile_effect_scaling(&profile, &mut ability, self.progress.level);
-        Self::apply_casting_profile_damage_bonus(&profile, &mut ability, self.progress.level);
+        self.apply_casting_profile_damage_bonus(&profile, &mut ability, self.progress.level);
         Self::apply_player_spell_power(&mut ability, self.effective_player_spell_power_bonus());
 
         let resolution = pending.cast_resolution;

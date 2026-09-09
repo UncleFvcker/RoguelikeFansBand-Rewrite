@@ -1252,7 +1252,7 @@ impl Game {
         let Some(definition) = self.content.item(&item.kind_id) else {
             return false;
         };
-        if definition.resists_enchantment || definition.tags.iter().any(|tag| tag == "no-enchant") {
+        if self.item_resists_enchantment(item) {
             return false;
         }
         match service {

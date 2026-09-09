@@ -10,7 +10,7 @@ mod armor_ego_audit;
 mod mutation_audit;
 
 pub use armor_ego_audit::sync_demo_armor_ego_identities;
-pub use armor_ego_audit::sync_demo_front_armor_egos;
+pub use armor_ego_audit::sync_demo_armor_egos;
 pub use mutation_audit::{DemoMutationCoverageReport, audit_demo_mutations};
 
 use std::{
@@ -4685,10 +4685,24 @@ fn equipment_fold(flags: &[String], pval: i32) -> EquipmentFold {
             .insert("stealthSkill".to_owned(), serde_json::json!(-pval));
         fold.consumed.insert("DEC_STEALTH".to_owned());
     }
+    if flags.iter().any(|value| value == "DARKNESS") {
+        fold.bonuses
+            .insert("lightRadius".to_owned(), serde_json::json!(-1));
+        fold.consumed.insert("DARKNESS".to_owned());
+    }
     for (flag, passive) in [
         ("REGEN", "regeneration"),
+        ("LEVITATION", "levitation"),
         ("REFLECT", "reflects-bolts"),
         ("AURA_FIRE", "fire-aura"),
+        ("AURA_COLD", "cold-aura"),
+        ("AURA_ELEC", "electricity-aura"),
+        ("AURA_REVENGE", "revenge-aura"),
+        ("REGEN_MANA", "mana-regeneration"),
+        ("NO_MAGIC", "anti-magic"),
+        ("NIGHT_VISION", "night-vision"),
+        ("DUAL_WIELDING", "dual-wielding"),
+        ("NO_ENCHANT", "no-enchant"),
         ("AURA_SHARDS", "shards-aura"),
         ("DEC_MANA", "reduced-mana-cost"),
         ("EASY_SPELL", "easy-spell"),
@@ -4952,7 +4966,7 @@ fn weapon_ego_device_generation(
 }
 
 fn uses_shared_ego_materialization(entry: &LegacyEgoEntry) -> bool {
-    matches!(entry.index, 50..=53 | 60..=64 | 70..=77 | 80..=82 | 85..=92)
+    matches!(entry.index, 50..=56 | 60..=64 | 70..=77 | 80..=82 | 85..=92 | 95..=104 | 110..=122 | 125..=130 | 135..=142 | 145..=152)
         || (matches!(entry.index, 1..=27 | 40..=42)
             && entry
                 .slots

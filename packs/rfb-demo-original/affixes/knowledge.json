@@ -1,0 +1,419 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-knowledge-description",
+  "deviceGeneration": {
+    "activationOptional": true,
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "effect": {
+            "category": "all",
+            "persistent": true,
+            "radius": 18,
+            "subject": "terrain",
+            "throughWalls": true,
+            "type": "detect"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-110-enlightenment",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-enlightenment-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "effect": {
+            "grantsVirtues": false,
+            "telepathyDurationDice": 1,
+            "telepathyDurationSides": 30,
+            "telepathyDurationTicks": 25,
+            "type": "clairvoyance"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-110-clairvoyance",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-clairvoyance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 31
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 3,
+        "effect": {
+          "effect": {
+            "category": "trap",
+            "persistent": true,
+            "radius": 30,
+            "subject": "terrain",
+            "throughWalls": true,
+            "type": "detect"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-110-detect-traps",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-detect-traps-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 100
+        },
+        "rfbBiases": [],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 5,
+        "effect": {
+          "effect": {
+            "category": "normal-monster",
+            "persistent": false,
+            "radius": 30,
+            "subject": "actor",
+            "throughWalls": true,
+            "type": "detect"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-110-detect-monsters",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-detect-monsters-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 200
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 8,
+        "effect": {
+          "effect": {
+            "category": "item",
+            "persistent": false,
+            "radius": 30,
+            "subject": "item",
+            "throughWalls": true,
+            "type": "detect"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-110-detect-objects",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-detect-objects-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 250
+        },
+        "rfbBiases": [],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "category": "trap",
+                "persistent": true,
+                "radius": 30,
+                "subject": "terrain",
+                "throughWalls": true,
+                "type": "detect"
+              },
+              {
+                "category": "passage",
+                "persistent": true,
+                "radius": 30,
+                "subject": "terrain",
+                "throughWalls": true,
+                "type": "detect"
+              },
+              {
+                "category": "gold",
+                "persistent": false,
+                "radius": 30,
+                "subject": "gold",
+                "throughWalls": true,
+                "type": "detect"
+              },
+              {
+                "category": "item",
+                "persistent": false,
+                "radius": 30,
+                "subject": "item",
+                "throughWalls": true,
+                "type": "detect"
+              },
+              {
+                "category": "any-monster",
+                "persistent": false,
+                "radius": 30,
+                "subject": "actor",
+                "throughWalls": true,
+                "type": "detect"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-110-detect-all",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-detect-all-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 85
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "full": false,
+          "type": "identify-item"
+        },
+        "id": "rfb.device-activation.ego-110-identify",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-identify-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "item"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "fullIdentifyPower": 1,
+            "fullIdentifyRollSides": 1,
+            "type": "identify-item"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-110-identify-full",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-identify-full-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "item"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 85
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "type": "probe"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-110-probing",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-probing-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "effect": {
+            "type": "self-knowledge"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-110-self-knowledge",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-self-knowledge-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 85
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "generationMaxLevel": 40,
+  "id": "rfb-legacy.affix.knowledge",
+  "nameKey": "affix-legacy-knowledge-name",
+  "passives": [
+    "auto-identify",
+    "sustain-intelligence"
+  ],
+  "rfbEgo": {
+    "rarity": 1,
+    "sourceIndex": 110,
+    "types": [
+      "helmet"
+    ]
+  },
+  "tags": [
+    "helmet",
+    "legacy-import"
+  ]
+}

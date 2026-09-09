@@ -7409,6 +7409,12 @@
             "null"
           ]
         },
+        "activeWeaponIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "attacks": {
           "type": "array",
           "items": {
@@ -7912,6 +7918,10 @@
           "format": "int32",
           "default": 0
         },
+        "magicResistancePercent": {
+          "type": "integer",
+          "format": "int32"
+        },
         "meleeAttacks": {
           "type": "integer",
           "format": "int32",
@@ -8209,6 +8219,14 @@
         "slow-digestion",
         "reflects-bolts",
         "fire-aura",
+        "cold-aura",
+        "electricity-aura",
+        "revenge-aura",
+        "mana-regeneration",
+        "anti-magic",
+        "night-vision",
+        "dual-wielding",
+        "no-enchant",
         "shards-aura",
         "reduced-mana-cost",
         "easy-spell",

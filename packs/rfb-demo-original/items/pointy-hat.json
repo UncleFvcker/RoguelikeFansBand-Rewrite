@@ -16,6 +16,7 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-pointy-hat-name",
+  "resistsEnchantment": false,
   "rfbBaseKind": {
     "sourceIndex": 225,
     "sval": 10,

@@ -1,0 +1,358 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-sunlight-description",
+  "deviceGeneration": {
+    "activationOptional": true,
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 1,
+        "effect": {
+          "effect": {
+            "damageDice": 2,
+            "damageSides": 15,
+            "radius": 3,
+            "type": "light-area"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-117-lite-area",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-lite-area-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 100
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "category": "all",
+                "persistent": true,
+                "radius": 30,
+                "subject": "terrain",
+                "throughWalls": true,
+                "type": "detect"
+              },
+              {
+                "damageDice": 3,
+                "damageSides": 15,
+                "radius": 3,
+                "type": "light-area"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-117-lite-map-area",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-lite-map-area-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 85
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "effect": {
+            "damageBonus": 0,
+            "damageDice": 7,
+            "damageSides": 8,
+            "damageType": "light",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-117-bolt-lite",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-bolt-lite-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 250
+        },
+        "rfbBiases": [],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 10,
+        "effect": {
+          "effect": {
+            "damageDice": 6,
+            "damageSides": 8,
+            "type": "light-line"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-117-beam-lite-weak",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-beam-lite-weak-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 200
+        },
+        "rfbBiases": [],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 40,
+        "effect": {
+          "effect": {
+            "damageBonus": 65,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "light",
+            "type": "beam-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-117-beam-lite",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-beam-lite-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 65,
+        "effect": {
+          "effect": {
+            "damageBonus": 200,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "light",
+            "radius": 4,
+            "type": "area-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-117-ball-lite",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-ball-lite-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "damageBonus": 150,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "light",
+            "radius": 2,
+            "type": "cone-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-117-breathe-lite",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-breathe-lite-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1250
+        },
+        "rfbBiases": [],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 85
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 60,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "durationTicks": 3,
+                "intensity": 1,
+                "power": 60,
+                "stacking": "replace",
+                "statusKindId": "rfb.status.confused",
+                "type": "visible-apply-status"
+              },
+              {
+                "durationTicks": 3,
+                "intensity": 1,
+                "power": 60,
+                "stacking": "replace",
+                "statusKindId": "rfb.status.blind",
+                "type": "visible-apply-status"
+              },
+              {
+                "durationTicks": 3,
+                "intensity": 1,
+                "power": 60,
+                "stacking": "replace",
+                "statusKindId": "rfb.status.stun",
+                "type": "visible-apply-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-117-confusing-lite",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-confusing-lite-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "chaos"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 42
+      }
+    ]
+  },
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "generationMaxLevel": 50,
+  "id": "rfb-legacy.affix.sunlight",
+  "nameKey": "affix-legacy-sunlight-name",
+  "resistances": {
+    "light": "resistant"
+  },
+  "rfbEgo": {
+    "rarity": 4,
+    "sourceIndex": 117,
+    "types": [
+      "helmet"
+    ]
+  },
+  "tags": [
+    "helmet",
+    "legacy-import"
+  ]
+}

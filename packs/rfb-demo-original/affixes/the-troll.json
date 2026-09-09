@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-the-troll-description",
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "generationMaxLevel": 60,
+  "id": "rfb-legacy.affix.the-troll",
+  "nameKey": "affix-legacy-the-troll-name",
+  "passives": [
+    "regeneration"
+  ],
+  "resistances": {
+    "light": "vulnerable"
+  },
+  "rfbEgo": {
+    "rarity": 6,
+    "sourceIndex": 115,
+    "types": [
+      "helmet"
+    ]
+  },
+  "tags": [
+    "helmet",
+    "legacy-import"
+  ]
+}

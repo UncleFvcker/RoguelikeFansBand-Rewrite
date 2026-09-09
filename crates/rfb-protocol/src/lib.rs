@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.231";
+pub const PROTOCOL_VERSION: &str = "1.232";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 5;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 5;
 
@@ -575,6 +575,8 @@ pub struct EquipmentBonusesDto {
     pub melee_attacks_delta_percent: i32,
     #[serde(default, skip_serializing_if = "is_zero_i32")]
     pub spell_capacity_bonus: i32,
+    #[serde(default, skip_serializing_if = "is_zero_i32")]
+    pub magic_resistance_percent: i32,
     #[serde(default)]
     pub melee_attacks: i32,
     #[serde(default)]
@@ -626,6 +628,14 @@ pub enum EquipmentPassiveDto {
     SlowDigestion,
     ReflectsBolts,
     FireAura,
+    ColdAura,
+    ElectricityAura,
+    RevengeAura,
+    ManaRegeneration,
+    AntiMagic,
+    NightVision,
+    DualWielding,
+    NoEnchant,
     ShardsAura,
     ReducedManaCost,
     EasySpell,
@@ -1843,6 +1853,8 @@ pub struct CharacterTraitDetailsDto {
     pub stats: Vec<CharacterStatDto>,
     pub attacks: Vec<CharacterAttackTraitDto>,
     pub active_weapon_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub active_weapon_ids: Vec<String>,
     pub active_launcher_id: Option<String>,
     pub auras: Vec<CharacterAuraDto>,
     pub negatives: Vec<CharacterNegativeDto>,
@@ -2435,6 +2447,8 @@ pub struct RolledAffixSaveDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub weight_tenths_pound: Option<u16>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub elemental_destruction_immunities: Vec<ItemDestructionElementDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub weapon_traits: Vec<WeaponTraitDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub curse_effects: Vec<ItemCurseEffectDto>,
@@ -2470,6 +2484,8 @@ impl<'de> Deserialize<'de> for RolledAffixSaveDto {
             #[serde(default)]
             weight_tenths_pound: Option<u16>,
             #[serde(default)]
+            elemental_destruction_immunities: Vec<ItemDestructionElementDto>,
+            #[serde(default)]
             weapon_traits: Vec<WeaponTraitDto>,
             #[serde(default)]
             curse_effects: Vec<ItemCurseEffectDto>,
@@ -2488,6 +2504,7 @@ impl<'de> Deserialize<'de> for RolledAffixSaveDto {
             enchantment_delta: wire.enchantment_delta,
             melee_damage_dice: wire.melee_damage_dice,
             weight_tenths_pound: wire.weight_tenths_pound,
+            elemental_destruction_immunities: wire.elemental_destruction_immunities,
             weapon_traits: wire.weapon_traits,
             curse_effects: wire.curse_effects,
         })
@@ -4910,6 +4927,7 @@ pub struct PlayerProgressSaveDto {
     pub skills: Vec<SkillProgressSaveDto>,
     pub weapon_proficiencies: Vec<WeaponProficiencySaveDto>,
     pub riding_proficiency: u16,
+    pub dual_wielding_proficiency: u16,
     pub mining_proficiency: u16,
     pub materials: Vec<MaterialSaveDto>,
 }

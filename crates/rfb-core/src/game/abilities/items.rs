@@ -214,7 +214,7 @@ impl Game {
             && item.rolled_affixes.is_empty()
             && self.content.item(&item.kind_id).is_some_and(|definition| {
                 definition.melee_profile.is_some()
-                    && !definition.resists_enchantment
+                    && !self.item_resists_enchantment(item)
                     && !definition
                         .tags
                         .iter()

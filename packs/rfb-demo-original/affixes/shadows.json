@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-shadows-description",
+  "equipmentBonuses": {
+    "lightRadius": -1
+  },
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "id": "rfb-legacy.affix.shadows",
+  "nameKey": "affix-legacy-shadows-name",
+  "resistances": {
+    "dark": "resistant"
+  },
+  "rfbEgo": {
+    "rarity": 8,
+    "sourceIndex": 100,
+    "types": [
+      "cloak"
+    ]
+  },
+  "tags": [
+    "cloak",
+    "legacy-import"
+  ]
+}

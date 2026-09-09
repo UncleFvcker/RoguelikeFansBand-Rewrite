@@ -617,7 +617,7 @@ impl Game {
                     .content
                     .item(&entry.item_kind_id)
                     .and_then(|item| item.rfb_base_kind)
-                    .is_some_and(|base| matches!(base.tval, 34 | 36..=38));
+                    .is_some_and(|base| matches!(base.tval, 30..=38));
             let armor_enchantment = if rfb_armor {
                 super::ego::roll_rfb_armor_enchantment(&mut self.rng, generation_depth, quality)
             } else {
@@ -700,6 +700,20 @@ impl Game {
                 ..
             } = materialization;
             let mut intrinsic_properties = harp_intrinsic_properties.unwrap_or_default();
+            if rolled_affixes.is_empty()
+                && let Some(item) = self.content.item(&entry.item_kind_id).filter(|item| {
+                    item.rfb_base_kind
+                        .is_some_and(|base| base.tval == 35 && base.sval == 2)
+                })
+            {
+                let pval = 1 + self.rng.bounded(4) as i32;
+                intrinsic_properties.equipment_bonuses.stealth_skill +=
+                    pval - item.equipment_bonuses.stealth_skill;
+                intrinsic_properties.equipment_bonuses.search_skill +=
+                    5 * pval - item.equipment_bonuses.search_skill;
+                intrinsic_properties.equipment_bonuses.perception_skill +=
+                    5 * pval - item.equipment_bonuses.perception_skill;
+            }
             if let Some(properties) = ego_intrinsic_properties {
                 merge_affix_properties(&mut intrinsic_properties, &properties);
             }

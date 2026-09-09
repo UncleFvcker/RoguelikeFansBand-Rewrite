@@ -1,0 +1,61 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-the-berserker-description",
+  "deviceGeneration": {
+    "activationOptional": false,
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "type": "melee-adjacent"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-142-whirlwind-attack",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-whirlwind-attack-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2500
+        },
+        "rfbBiases": [],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 70,
+  "id": "rfb-legacy.affix.the-berserker",
+  "nameKey": "affix-legacy-the-berserker-name",
+  "passives": [
+    "no-enchant"
+  ],
+  "rfbEgo": {
+    "rarity": 32,
+    "sourceIndex": 142,
+    "types": [
+      "gloves"
+    ]
+  },
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "gloves",
+    "legacy-import"
+  ]
+}

@@ -14,6 +14,27 @@ const ABILITY_EFFECT_ITEM_ID: &str = "test.item.ability-effect";
 #[test]
 fn mattock_natural_disruption_activation_round_trips() {
     let mut game = Game::new_with_build(67, RFB_WARRIOR_BUILD_ID).unwrap();
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).unwrap();
+    let table = artifact
+        .content
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .unwrap();
+    table
+        .entries
+        .retain(|entry| entry.item_kind_id == "demo.item.mattock");
+    table.entries[0].min_depth = 0;
+    table.affix_weights.retain(|entry| entry.affix_id.is_none());
+    game.content = std::sync::Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content).unwrap(),
+    ));
     clear_monsters(&mut game);
     let context = LootContext {
         table_id: "demo.loot-table.base-items".to_owned(),
@@ -143,6 +164,7 @@ fn riding_charge_game(seed: u64) -> Game {
     affix.description_key = "test-affix-riding-charge-description".to_owned();
     affix.rfb_ego = None;
     affix.device_generation = Some(rfb_content::ItemDeviceGenerationDefinition {
+        activation_optional: false,
         activations: vec![rfb_content::ItemDeviceActivationDefinition {
             id: ACTIVATION_ID.to_owned(),
             name_key: "test-device-activation-riding-charge-name".to_owned(),
@@ -275,6 +297,7 @@ fn ability_effect_game(seed: u64) -> Game {
     affix.description_key = "test-affix-ability-effect-description".to_owned();
     affix.rfb_ego = None;
     affix.device_generation = Some(rfb_content::ItemDeviceGenerationDefinition {
+        activation_optional: false,
         activations: vec![activation.clone()],
         recovery: None,
     });

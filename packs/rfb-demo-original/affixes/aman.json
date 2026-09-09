@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-aman-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "id": "rfb-legacy.affix.aman",
+  "nameKey": "affix-legacy-aman-name",
+  "rfbEgo": {
+    "rarity": 16,
+    "sourceIndex": 101,
+    "types": [
+      "cloak"
+    ]
+  },
+  "tags": [
+    "cloak",
+    "legacy-import"
+  ]
+}

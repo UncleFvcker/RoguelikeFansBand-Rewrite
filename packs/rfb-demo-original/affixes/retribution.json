@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-retribution-description",
+  "elementalDestructionImmunities": [
+    "acid"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "id": "rfb-legacy.affix.retribution",
+  "nameKey": "affix-legacy-retribution-name",
+  "passives": [
+    "revenge-aura"
+  ],
+  "rfbEgo": {
+    "rarity": 32,
+    "sourceIndex": 99,
+    "types": [
+      "cloak"
+    ]
+  },
+  "tags": [
+    "cloak",
+    "legacy-import"
+  ]
+}

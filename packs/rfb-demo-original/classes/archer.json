@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
   "formatVersion": 1,
+  "dualWieldingMaximum": 4000,
   "id": "demo.class.archer",
   "nameKey": "class-demo-archer-name",
   "descriptionKey": "class-demo-archer-description",

@@ -125,6 +125,13 @@ pub(super) fn weapon_proficiency_progress_is_valid(
     class_id: Option<&str>,
     progress: &CharacterProgress,
 ) -> bool {
+    if progress.dual_wielding_proficiency
+        > class_id
+            .and_then(|id| content.class(id))
+            .map_or(0, |class| class.dual_wielding_maximum)
+    {
+        return false;
+    }
     if class_id
         .and_then(|id| content.class(id))
         .and_then(|class| class.weapon_proficiency.as_ref())
@@ -148,6 +155,77 @@ pub(super) fn weapon_proficiency_progress_is_valid(
 }
 
 impl Game {
+    pub(super) fn train_dual_wielding(&mut self, monster_level: u32) {
+        let maximum = self
+            .character_definitions()
+            .map_or(0, |(_, _, class, _)| class.dual_wielding_maximum);
+        let current = self.progress.dual_wielding_proficiency;
+        if current >= maximum || (i32::from(current) - 1000) / 200 >= monster_level as i32 {
+            return;
+        }
+        let gain = match current {
+            0..4000 => 80,
+            4000..6000 => 4,
+            6000..7000 => 1,
+            _ => u16::from(self.rng.bounded(3) == 0),
+        };
+        self.progress.dual_wielding_proficiency = (current + gain).min(maximum);
+    }
+
+    pub(super) fn dual_wielding_accuracy_per_mille(&self, item_id: &str) -> i32 {
+        let weapons = self.equipped_melee_weapons();
+        let Some(hand) = weapons.iter().position(|item| item.id == item_id) else {
+            return 1000;
+        };
+        let pair_start = hand / 2 * 2;
+        if weapons.len() <= pair_start + 1 {
+            return 1000;
+        }
+        let item = weapons[hand];
+        let genji = self
+            .player_equipment_passives()
+            .contains(&EquipmentPassive::DualWielding);
+        let mut weight = i32::from(self.item_instance_weight(item));
+        let mut percent = 650 * i32::from(self.progress.dual_wielding_proficiency) / 8000;
+        if genji {
+            percent += 150;
+            if weight >= 130 {
+                weight -= (weight - 130) / 2;
+            }
+        }
+        let divisor =
+            self.character_definitions()
+                .map_or(8, |(_, _, class, _)| match class.id.as_str() {
+                    "demo.class.warrior" => 18,
+                    "demo.class.paladin" => 12,
+                    _ => 8,
+                });
+        if self
+            .content
+            .item(&weapons[pair_start + 1].kind_id)
+            .and_then(|item| item.rfb_base_kind)
+            .is_some_and(|base| base.tval == 23 && matches!(base.sval, 5 | 13))
+        {
+            percent += 50;
+        }
+        percent += 10 * (130 - weight) / divisor;
+        if self
+            .content
+            .item(&item.kind_id)
+            .and_then(|item| item.rfb_base_kind)
+            .is_some_and(|base| base.tval == 22)
+            && self.item_instance_weight(item) > 100
+        {
+            percent -= 50;
+        }
+        let percent = percent.clamp(100, 1000);
+        if hand >= 2 {
+            (percent * 90 / 100).max(100)
+        } else {
+            percent
+        }
+    }
+
     fn weapon_proficiency(&self, item_kind_id: &str) -> Option<ResolvedWeaponProficiency> {
         resolve_weapon_proficiency(
             &self.content,

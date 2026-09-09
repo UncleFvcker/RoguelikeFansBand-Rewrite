@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 500,
+  "descriptionKey": "item-demo-iron-crown-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentSlot": "head",
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "glyph": "]",
+  "id": "demo.item.iron-crown",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-iron-crown-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 220,
+    "sval": 10,
+    "tval": 33
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 20
+}

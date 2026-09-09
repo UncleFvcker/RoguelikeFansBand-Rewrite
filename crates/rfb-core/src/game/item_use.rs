@@ -1786,9 +1786,7 @@ impl Game {
             let Some(definition) = self.content.item(&item.kind_id) else {
                 return false;
             };
-            if definition.resists_enchantment
-                || definition.tags.iter().any(|tag| tag == "no-enchant")
-            {
+            if self.item_resists_enchantment(item) {
                 return false;
             }
             if to_armor.is_some() {
@@ -1859,7 +1857,7 @@ impl Game {
                     .tags
                     .iter()
                     .any(|tag| matches!(tag.as_str(), "artifact" | "no-enchant"))
-                && !definition.resists_enchantment
+                && !self.item_resists_enchantment(item)
         })
     }
 

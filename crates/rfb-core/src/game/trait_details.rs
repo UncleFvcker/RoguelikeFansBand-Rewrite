@@ -232,7 +232,11 @@ impl Game {
             if !slays.is_empty() || !brands.is_empty() {
                 attacks.push(CharacterAttackTraitDto {
                     source_id: item.id.clone(),
-                    scope: TraitAttackScopeDto::ArmedMelee,
+                    scope: if self.item_melee_profile(item).is_some() {
+                        TraitAttackScopeDto::OwnWeapon
+                    } else {
+                        TraitAttackScopeDto::ArmedMelee
+                    },
                     slays,
                     brands,
                     vampiric: false,
@@ -336,6 +340,12 @@ impl Game {
         let mut passive_values: Vec<_> = [
             EquipmentPassive::Regeneration,
             EquipmentPassive::Warning,
+            EquipmentPassive::RevengeAura,
+            EquipmentPassive::ManaRegeneration,
+            EquipmentPassive::AntiMagic,
+            EquipmentPassive::NightVision,
+            EquipmentPassive::DualWielding,
+            EquipmentPassive::NoEnchant,
             EquipmentPassive::ReducedManaCost,
             EquipmentPassive::EasySpell,
             EquipmentPassive::AutoIdentify,
@@ -543,7 +553,12 @@ impl Game {
         if !self.player_has_draconian_metamorphosis() {
             numeric.push(CharacterStatDto {
                 id: "melee-attacks".to_owned(),
-                value: complete.then_some(i32::from(melee.attacks)),
+                value: complete.then(|| {
+                    self.player_melee_profiles(stats)
+                        .iter()
+                        .map(|profile| i32::from(profile.attacks))
+                        .sum()
+                }),
                 sources: if complete {
                     stats
                         .melee_attacks
@@ -656,6 +671,14 @@ impl Game {
             stats: numeric,
             attacks,
             active_weapon_id,
+            active_weapon_ids: if self.player_has_draconian_metamorphosis() {
+                Vec::new()
+            } else {
+                self.equipped_melee_weapons()
+                    .iter()
+                    .map(|item| item.id.clone())
+                    .collect()
+            },
             active_launcher_id: projectile.map(|profile| profile.source_item_id),
             auras,
             negatives,

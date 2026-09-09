@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-the-sniper-description",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "id": "rfb-legacy.affix.the-sniper",
+  "nameKey": "affix-legacy-the-sniper-name",
+  "rfbEgo": {
+    "rarity": 16,
+    "sourceIndex": 141,
+    "types": [
+      "gloves"
+    ]
+  },
+  "tags": [
+    "gloves",
+    "legacy-import"
+  ]
+}

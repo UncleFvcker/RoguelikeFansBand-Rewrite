@@ -16,6 +16,7 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-knit-cap-name",
+  "resistsEnchantment": false,
   "rfbBaseKind": {
     "sourceIndex": 224,
     "sval": 1,

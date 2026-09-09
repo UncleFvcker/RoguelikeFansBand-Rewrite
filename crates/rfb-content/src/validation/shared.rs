@@ -174,6 +174,7 @@ pub(super) fn equipment_bonuses_out_of_range(bonuses: &EquipmentBonuses) -> bool
         || !(-1_000..=1_000).contains(&bonuses.base_shot_delta_percent)
         || !(-800..=800).contains(&bonuses.melee_attacks_delta_percent)
         || !(-100..=100).contains(&bonuses.spell_capacity_bonus)
+        || !(0..=100).contains(&bonuses.magic_resistance_percent)
         || !(-8..=8).contains(&bonuses.melee_attacks)
         || [
             bonuses.melee_skill,

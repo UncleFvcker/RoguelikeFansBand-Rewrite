@@ -19,7 +19,7 @@ use crate::{
         rating_to_combat_value, resolve_armored_damage,
     },
     effect::{
-        DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_ANTI_MAGIC,
+        DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget,
         STATUS_BASIC_RESISTANCE, STATUS_BERSERK, STATUS_BLEEDING, STATUS_BLINDNESS,
         STATUS_CONFUSION, STATUS_DEMON_LORD_TRANSFORMATION, STATUS_FEAR, STATUS_FIRE_AURA,
         STATUS_GIANT_STRENGTH, STATUS_HALLUCINATION, STATUS_HASTE, STATUS_HOLD_LIFE,
@@ -226,7 +226,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 109;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 110;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -626,6 +626,7 @@ fn body_slot_instance_for_type<'a>(
 
 fn item_can_occupy_slot_type(declared_slot_type: &str, target_slot_type: &str) -> bool {
     declared_slot_type == target_slot_type
+        || (declared_slot_type == "weapon" && target_slot_type == "shield")
         || (declared_slot_type == "tool" && target_slot_type == "weapon")
 }
 
@@ -4372,6 +4373,7 @@ fn equipment_bonuses_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
         base_shot_delta_percent: bonuses.base_shot_delta_percent,
         melee_attacks_delta_percent: bonuses.melee_attacks_delta_percent,
         spell_capacity_bonus: bonuses.spell_capacity_bonus,
+        magic_resistance_percent: bonuses.magic_resistance_percent,
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
         melee_damage: bonuses.melee_damage,
@@ -4401,6 +4403,14 @@ const fn equipment_passive_dto(passive: EquipmentPassive) -> EquipmentPassiveDto
         EquipmentPassive::SlowDigestion => EquipmentPassiveDto::SlowDigestion,
         EquipmentPassive::ReflectsBolts => EquipmentPassiveDto::ReflectsBolts,
         EquipmentPassive::FireAura => EquipmentPassiveDto::FireAura,
+        EquipmentPassive::ColdAura => EquipmentPassiveDto::ColdAura,
+        EquipmentPassive::ElectricityAura => EquipmentPassiveDto::ElectricityAura,
+        EquipmentPassive::RevengeAura => EquipmentPassiveDto::RevengeAura,
+        EquipmentPassive::ManaRegeneration => EquipmentPassiveDto::ManaRegeneration,
+        EquipmentPassive::AntiMagic => EquipmentPassiveDto::AntiMagic,
+        EquipmentPassive::NightVision => EquipmentPassiveDto::NightVision,
+        EquipmentPassive::DualWielding => EquipmentPassiveDto::DualWielding,
+        EquipmentPassive::NoEnchant => EquipmentPassiveDto::NoEnchant,
         EquipmentPassive::ShardsAura => EquipmentPassiveDto::ShardsAura,
         EquipmentPassive::ReducedManaCost => EquipmentPassiveDto::ReducedManaCost,
         EquipmentPassive::EasySpell => EquipmentPassiveDto::EasySpell,
@@ -4455,6 +4465,7 @@ fn roll_weighted_index_with_rng(rng: &mut RfbRng, weights: &[u32]) -> usize {
 fn merge_equipment_bonuses(total: &mut EquipmentBonuses, addition: &EquipmentBonuses) {
     total.melee_attacks_delta_percent += addition.melee_attacks_delta_percent;
     total.spell_capacity_bonus += addition.spell_capacity_bonus;
+    total.magic_resistance_percent += addition.magic_resistance_percent;
     total.life_percent = total.life_percent.saturating_add(addition.life_percent);
     total.launcher_multiplier_delta_percent = total
         .launcher_multiplier_delta_percent

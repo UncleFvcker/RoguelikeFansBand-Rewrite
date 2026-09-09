@@ -2,6 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
   "descriptionKey": "affix-legacy-the-demon-lord-description",
   "deviceGeneration": {
+    "activationOptional": true,
     "activations": [
       {
         "charges": {

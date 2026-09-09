@@ -2181,7 +2181,9 @@
     },
     {"itemKindId":"demo.item.law-dragon-scale-mail","minDepth":60,"quantity":1,"weight":12},
     {"itemKindId":"demo.item.gold-dragon-scale-mail","minDepth":50,"quantity":1,"weight":20},
-    {"itemKindId":"demo.item.chaos-dragon-scale-mail","minDepth":65,"quantity":1,"weight":10}
+    {"itemKindId":"demo.item.chaos-dragon-scale-mail","minDepth":65,"quantity":1,"weight":10},
+    {"itemKindId":"demo.item.mithril-shod-boots","minDepth":50,"quantity":1,"weight":50},
+    {"itemKindId":"demo.item.iron-crown","minDepth":30,"quantity":1,"weight":100}
   ],
   "qualityPolicy": {
     "kind": "rfb-depth",

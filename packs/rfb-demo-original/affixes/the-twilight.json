@@ -13,6 +13,7 @@
   "nameKey": "affix-legacy-the-twilight-name",
   "passives": [
     "hold-life",
+    "levitation",
     "reflects-bolts",
     "see-invisible",
     "sustain-charisma",

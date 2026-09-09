@@ -979,7 +979,7 @@ fn draconian_metamorphosis_replaces_body_and_derives_combat_save_and_hash_state(
     assert!(stats.armor_class.contributions.iter().any(|contribution| {
         contribution.source_id == DRACONIAN_METAMORPHOSIS_MUTATION_ID && contribution.amount == 67
     }));
-    let attacks = game.player_mutation_innate_attack_profiles(&stats, None);
+    let attacks = game.player_mutation_innate_attack_profiles(&stats);
     let metamorphosis_attacks = attacks
         .iter()
         .filter(|attack| {

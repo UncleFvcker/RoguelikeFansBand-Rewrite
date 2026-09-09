@@ -569,6 +569,14 @@ impl Game {
     ) -> AbilityEffectResolutionDto {
         let raw_damage = self.scale_monster_damage(source_entity_id, raw_damage);
         let prepared_damage = self.scale_monster_damage(source_entity_id, prepared_damage);
+        let magic_resistance = if self.monster_ability_is_innate(ability_id) {
+            0
+        } else {
+            self.player_equipment_bonuses()
+                .magic_resistance_percent
+                .clamp(0, 15)
+        };
+        let prepared_damage = prepared_damage - prepared_damage * magic_resistance / 100;
         let resistance = self.effective_player_resistances().level(damage_type);
         self.record_monster_player_resistance(source_entity_id, damage_type, resistance);
         let damage = self.reduce_player_damage(resolve_damage(
@@ -592,34 +600,38 @@ impl Game {
         }
     }
 
+    fn monster_ability_is_innate(&self, ability_id: &str) -> bool {
+        self.content.ability(ability_id).is_some_and(|ability| {
+            ability
+                .effect
+                .ordered_effects()
+                .iter()
+                .any(|effect| match effect {
+                    AbilityEffectDefinition::BreathDamage { .. } => true,
+                    AbilityEffectDefinition::AreaDamage {
+                        damage_dice,
+                        damage_sides,
+                        damage_type: ActorDamageType::Shards,
+                        ..
+                    }
+                    | AbilityEffectDefinition::Damage {
+                        damage_dice,
+                        damage_sides,
+                        damage_type: ActorDamageType::Physical,
+                        ..
+                    } => *damage_dice == 1 && *damage_sides == 1,
+                    _ => false,
+                })
+        })
+    }
+
     pub(super) fn apply_evasion_to_monster_ability_damage(
         &mut self,
         ability_id: &str,
         damage: DamageOutcome,
     ) -> DamageOutcome {
         if !self.player_evades_innate_monster_attacks()
-            || !self.content.ability(ability_id).is_some_and(|ability| {
-                ability
-                    .effect
-                    .ordered_effects()
-                    .iter()
-                    .any(|effect| match effect {
-                        AbilityEffectDefinition::BreathDamage { .. } => true,
-                        AbilityEffectDefinition::AreaDamage {
-                            damage_dice,
-                            damage_sides,
-                            damage_type: ActorDamageType::Shards,
-                            ..
-                        }
-                        | AbilityEffectDefinition::Damage {
-                            damage_dice,
-                            damage_sides,
-                            damage_type: ActorDamageType::Physical,
-                            ..
-                        } => *damage_dice == 1 && *damage_sides == 1,
-                        _ => false,
-                    })
-            })
+            || !self.monster_ability_is_innate(ability_id)
         {
             return damage;
         }
@@ -1989,6 +2001,34 @@ impl Game {
                     return Ok(false);
                 }
             }
+            if only_blow_index.is_none()
+                && melee_method_triggers_contact_aura(blow.method_id.as_deref())
+                && self
+                    .player_equipment_passives()
+                    .contains(&EquipmentPassive::RevengeAura)
+                && !self.player_is_dead()
+                && self.entity_is_visible_to_player(&self.entities[index])
+                && ![STATUS_CONFUSION, STATUS_BLINDNESS, STATUS_PARALYSIS]
+                    .iter()
+                    .any(|status| self.player_has_status_kind(status))
+            {
+                let stun = self
+                    .player
+                    .statuses
+                    .iter()
+                    .find(|status| status.kind_id == STATUS_STUN)
+                    .map_or(0, |status| status.intensity);
+                if (stun == 0 || self.rng.bounded(35) >= u64::from(stun))
+                    && self
+                        .resolve_player_revenge_blow(index, events, changed, removed_entities)?
+                        .killed
+                {
+                    return Ok(false);
+                }
+            }
+            if self.player_is_dead() {
+                return Ok(false);
+            }
             if melee_method_triggers_contact_aura(blow.method_id.as_deref())
                 && self.resolve_mutation_contact_auras(index, events, changed, removed_entities)?
             {
@@ -2038,6 +2078,8 @@ impl Game {
         }
         let passive = match damage_type {
             DamageType::Fire => Some(EquipmentPassive::FireAura),
+            DamageType::Cold => Some(EquipmentPassive::ColdAura),
+            DamageType::Electricity => Some(EquipmentPassive::ElectricityAura),
             DamageType::Shards => Some(EquipmentPassive::ShardsAura),
             _ => None,
         };

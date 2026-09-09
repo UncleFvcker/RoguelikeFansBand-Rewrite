@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-dwarven-118-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "id": "rfb-legacy.affix.dwarven-118",
+  "nameKey": "affix-legacy-dwarven-118-name",
+  "rfbEgo": {
+    "rarity": 18,
+    "sourceIndex": 118,
+    "types": [
+      "helmet"
+    ]
+  },
+  "statusImmunities": [
+    "rfb.status.blindness"
+  ],
+  "tags": [
+    "helmet",
+    "legacy-import"
+  ]
+}

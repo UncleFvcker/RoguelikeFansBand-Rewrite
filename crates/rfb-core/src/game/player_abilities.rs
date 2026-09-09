@@ -52,13 +52,15 @@ impl AbilityProgress {
 impl Game {
     pub(super) fn casting_spell_damage_bonus(&self) -> u16 {
         let level = self.progress.level;
-        self.casting_profile().map_or(0, |profile| {
-            profile.spell_damage_bonus_base.saturating_add(
-                profile
-                    .spell_damage_bonus_per_level
-                    .saturating_mul(level / u16::from(profile.spell_damage_bonus_level_divisor)),
-            )
-        })
+        self.casting_profile()
+            .map_or(0, |profile| {
+                profile.spell_damage_bonus_base.saturating_add(
+                    profile.spell_damage_bonus_per_level.saturating_mul(
+                        level / u16::from(profile.spell_damage_bonus_level_divisor),
+                    ),
+                )
+            })
+            .saturating_add(self.armor_spell_damage_bonus())
     }
 
     pub(super) fn player_ability_parameters(
@@ -367,6 +369,7 @@ impl Game {
     }
 
     pub(super) fn apply_casting_profile_damage_bonus(
+        &self,
         profile: &CastingProfileDefinition,
         ability: &mut AbilityDefinition,
         level: u16,
@@ -376,17 +379,19 @@ impl Game {
                 .spell_damage_bonus_per_level
                 .saturating_mul(level / u16::from(profile.spell_damage_bonus_level_divisor)),
         );
-        let bonus = bonus.saturating_mul(
-            if ability
-                .tags
-                .iter()
-                .any(|tag| tag == "double-spell-damage-bonus")
-            {
-                2
-            } else {
-                1
-            },
-        );
+        let bonus = bonus
+            .saturating_add(self.armor_spell_damage_bonus())
+            .saturating_mul(
+                if ability
+                    .tags
+                    .iter()
+                    .any(|tag| tag == "double-spell-damage-bonus")
+                {
+                    2
+                } else {
+                    1
+                },
+            );
         if bonus == 0 {
             return;
         }

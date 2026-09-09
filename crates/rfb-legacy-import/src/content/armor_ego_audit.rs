@@ -2,11 +2,42 @@
 
 use super::*;
 
-pub fn sync_demo_front_armor_egos(
-    source: &Path,
-    pack_root: &Path,
-) -> Result<usize, LegacyImportError> {
+pub fn sync_demo_armor_egos(source: &Path, pack_root: &Path) -> Result<usize, LegacyImportError> {
     let commit = resolve_legacy_content_commit(source)?;
+    let profiles = parse_s_info(&read_legacy_object_at(source, &commit, S_INFO_SOURCE)?)?;
+    let classes = parse_class_registrations(
+        &read_legacy_object_at(source, &commit, "src/defines.h")?,
+        &read_legacy_object_at(source, &commit, "src/classes.c")?,
+    );
+    for class in classes {
+        let path = pack_root.join(format!("classes/{}.json", class.id));
+        if !path.exists() {
+            continue;
+        }
+        let profile = profiles
+            .iter()
+            .find(|profile| profile.class_index == class.index)
+            .unwrap();
+        let dual = profile
+            .skill_entries
+            .iter()
+            .find(|skill| skill.skill_index == 1)
+            .unwrap();
+        assert_eq!(dual.initial, 0);
+        let text = fs::read_to_string(&path)?;
+        let key = "  \"dualWieldingMaximum\": ";
+        let text = if let Some(start) = text.find(key) {
+            let end = start + text[start..].find(',').unwrap();
+            format!("{}{}{}{}", &text[..start], key, dual.maximum, &text[end..])
+        } else {
+            text.replacen(
+                "  \"formatVersion\": 1,",
+                &format!("  \"formatVersion\": 1,\n{key}{},", dual.maximum),
+                1,
+            )
+        };
+        fs::write(path, text)?;
+    }
     let egos = parse_e_info(&read_legacy_object_at(source, &commit, E_INFO_SOURCE)?)?;
     let names = parse_chinese_name_table(
         &read_legacy_object_at(source, &commit, E_NAME_ZH_SOURCE)?,
@@ -20,7 +51,7 @@ pub fn sync_demo_front_armor_egos(
     for line in devices.lines().map(str::trim) {
         if let Some(token) = line
             .strip_prefix("case EFFECT_")
-            .and_then(|s| s.strip_suffix(':'))
+            .and_then(|s| s.split_once(':').map(|(token, _)| token))
         {
             tokens.push(token.to_owned());
         }
@@ -41,8 +72,8 @@ pub fn sync_demo_front_armor_egos(
         let path = root.join(format!("locales/{language}/content.ftl"));
         let mut text = fs::read_to_string(&path)?;
         for label in ["bases", "egos", "activations"] {
-            let start_marker = format!("# E5 front armor {label} (generated)");
-            let end_marker = format!("# /E5 front armor {label}");
+            let start_marker = format!("# E5 armor {label} (generated)");
+            let end_marker = format!("# /E5 armor {label}");
             if let Some(start) = text.find(&start_marker) {
                 let end = start + text[start..].find(&end_marker).unwrap() + end_marker.len();
                 let start = text[..start].trim_end().len();
@@ -51,7 +82,7 @@ pub fn sync_demo_front_armor_egos(
         }
         fs::write(path, text.trim_end().to_owned() + "\n")?;
     }
-    let breath_profiles = sync_front_armor_bases(source, &commit, pack_root)?;
+    let breath_profiles = sync_armor_bases(source, &commit, pack_root)?;
     let contract: Vec<ArmorEgoContract> =
         serde_json::from_str(include_str!("armor-ego-contract.json"))?;
     let mut locale = Vec::new();
@@ -62,9 +93,7 @@ pub fn sync_demo_front_armor_egos(
         "BREATHE_SOUND".to_owned(),
         "BREATHE_ONE_CHAOS".to_owned(),
     ]);
-    for expected in contract.iter().filter(
-        |entry| matches!(entry.source_index, 50..=53 | 60..=64 | 70..=77 | 80..=82 | 85..=92),
-    ) {
+    for expected in &contract {
         let entry = egos
             .iter()
             .find(|entry| entry.index == expected.source_index)
@@ -88,7 +117,7 @@ pub fn sync_demo_front_armor_egos(
                         .replace('-', "_"),
                 );
             }
-            value["deviceGeneration"] = serde_json::json!({"activations": activations});
+            value["deviceGeneration"] = serde_json::json!({"activationOptional": entry.activation.is_none(), "activations": activations});
         }
         if entry.index == 86 {
             value["deviceGeneration"] = serde_json::json!({"activations": breath_profiles});
@@ -112,14 +141,14 @@ pub fn sync_demo_front_armor_egos(
             &root.join(format!("locales/{language}/content.ftl")),
             &locale,
             chinese,
-            "# E5 front armor egos (generated)",
-            "# /E5 front armor egos",
+            "# E5 armor egos (generated)",
+            "# /E5 armor egos",
             "An RFB armor ego.",
             "RFB 护甲 Ego。",
         )?;
         let path = root.join(format!("locales/{language}/content.ftl"));
         let mut text = fs::read_to_string(&path)?;
-        text.push_str("\n# E5 front armor activations (generated)\n");
+        text.push_str("\n# E5 armor activations (generated)\n");
         for token in &used_activations {
             let name = activation_names.get(token).ok_or_else(|| {
                 LegacyImportError::InvalidEgoAudit(format!(
@@ -133,13 +162,13 @@ pub fn sync_demo_front_armor_egos(
                 if chinese { name } else { &english }
             ));
         }
-        text.push_str("# /E5 front armor activations\n");
+        text.push_str("# /E5 armor activations\n");
         fs::write(path, text)?;
     }
     Ok(locale.len())
 }
 
-fn sync_front_armor_bases(
+fn sync_armor_bases(
     source: &Path,
     commit: &str,
     pack_root: &Path,
@@ -156,6 +185,10 @@ fn sync_front_armor_bases(
     let mut locale = Vec::new();
     let mut breaths = Vec::new();
     for (index, id, tval, sval, power, recovery, damage, elements) in [
+        (209, "mithril-shod-boots", 30, 6, 0, 0, 0, &[][..]),
+        (220, "iron-crown", 33, 10, 0, 0, 0, &[][..]),
+        (224, "knit-cap", 32, 1, 0, 0, 0, &[][..]),
+        (225, "pointy-hat", 32, 10, 0, 0, 0, &[][..]),
         (261, "yoiyami-robe", 36, 60, 0, 0, 0, &[][..]),
         (
             297,
@@ -295,6 +328,10 @@ fn sync_front_armor_bases(
     let loot: serde_json::Value = serde_json::from_slice(&fs::read(&loot_path)?)?;
     let mut new_loot = Vec::new();
     for (id, weight, depth) in [
+        ("mithril-shod-boots", 50, 50),
+        ("iron-crown", 100, 30),
+        ("knit-cap", 33, 3),
+        ("pointy-hat", 20, 10),
         ("law-dragon-scale-mail", 12, 60),
         ("gold-dragon-scale-mail", 20, 50),
         ("chaos-dragon-scale-mail", 10, 65),
@@ -319,10 +356,10 @@ fn sync_front_armor_bases(
     for (language, chinese) in [("en-US", false), ("zh-CN", true)] {
         let path = root.join(format!("locales/{language}/content.ftl"));
         let mut source = fs::read_to_string(&path)?;
-        if let Some(start) = source.find("# E5 front armor bases (generated)") {
-            let end = source[start..].find("# /E5 front armor bases").unwrap()
+        if let Some(start) = source.find("# E5 armor bases (generated)") {
+            let end = source[start..].find("# /E5 armor bases").unwrap()
                 + start
-                + "# /E5 front armor bases".len();
+                + "# /E5 armor bases".len();
             source.replace_range(start..end, "");
         }
         let mut source = source
@@ -337,14 +374,14 @@ fn sync_front_armor_bases(
             .join("\n")
             .trim_end()
             .to_owned();
-        source.push_str("\n\n# E5 front armor bases (generated)");
+        source.push_str("\n\n# E5 armor bases (generated)");
         for (id, en, zh) in &locale {
             let name = if chinese { zh } else { en };
             source.push_str(&format!(
                 "\nitem-demo-{id}-name = {name}\nitem-demo-{id}-description = {name}\n"
             ));
         }
-        source.push_str("# /E5 front armor bases\n");
+        source.push_str("# /E5 armor bases\n");
         fs::write(path, source)?;
     }
     Ok(breaths)
@@ -380,6 +417,9 @@ fn armor_activations(
         if candidate.rarity == 0 {
             return false;
         }
+        if let Some(activation) = &entry.activation {
+            return candidate.token == activation.token;
+        }
         match entry.index {
             51 => candidate.biases.iter().any(|bias| {
                 matches!(
@@ -392,6 +432,8 @@ fn armor_activations(
                     && candidate.biases.iter().any(|bias| bias == "BIAS_WARRIOR")
             }
             72 => candidate.token == "BERSERK",
+            146 => candidate.token == "PHASE_DOOR",
+            150 => candidate.token == "SPEED",
             73..=75 => {
                 candidate.level >= entry.level / 3
                     && candidate.biases.iter().any(|bias| bias == "BIAS_DEMON")
@@ -408,6 +450,57 @@ fn armor_activations(
                 candidate.token.as_str(),
                 "GENOCIDE" | "MASS_GENOCIDE" | "WRAITHFORM" | "DARKNESS_STORM"
             ),
+            96..=98 | 103 | 104 | 122 | 126..=128 => {
+                let bias = match entry.index {
+                    96 => "BIAS_FIRE",
+                    97 => "BIAS_ELEC",
+                    98 => "BIAS_COLD",
+                    103 => "BIAS_NECROMANTIC",
+                    104 | 127 => "BIAS_WARRIOR",
+                    122 => "BIAS_DEMON",
+                    126 => "BIAS_MAGE",
+                    _ => "BIAS_PRIESTLY",
+                };
+                candidate.level >= entry.level / 3
+                    && candidate.biases.iter().any(|value| value == bias)
+            }
+            110 => matches!(
+                candidate.token.as_str(),
+                "IDENTIFY"
+                    | "IDENTIFY_FULL"
+                    | "PROBING"
+                    | "DETECT_TRAPS"
+                    | "DETECT_MONSTERS"
+                    | "DETECT_OBJECTS"
+                    | "DETECT_ALL"
+                    | "ENLIGHTENMENT"
+                    | "CLAIRVOYANCE"
+                    | "SELF_KNOWLEDGE"
+            ),
+            111 => matches!(
+                candidate.token.as_str(),
+                "HEAL"
+                    | "CURING"
+                    | "RESTORE_STATS"
+                    | "RESTORE_EXP"
+                    | "HEAL_CURING"
+                    | "CURE_POIS"
+                    | "CURE_FEAR"
+                    | "REMOVE_CURSE"
+                    | "REMOVE_ALL_CURSE"
+                    | "CLARITY"
+            ),
+            117 => matches!(
+                candidate.token.as_str(),
+                "LITE_AREA"
+                    | "LITE_MAP_AREA"
+                    | "BOLT_LITE"
+                    | "BEAM_LITE_WEAK"
+                    | "BEAM_LITE"
+                    | "BALL_LITE"
+                    | "BREATHE_LITE"
+                    | "CONFUSING_LITE"
+            ),
             _ => false,
         }
     };
@@ -421,6 +514,28 @@ fn armor_activations(
                 {"type":"detect","subject":"actor","category":"any-monster","radius":30,"persistent":false,"throughWalls":true}
             ]})), device_self_target(), false),
             "WHIRLWIND_ATTACK" => (device_ability_effect(serde_json::json!({"type":"melee-adjacent"})), device_self_target(), false),
+            "PHASE_DOOR" => (device_ability_effect(serde_json::json!({"type":"teleport-self", "minimumDistance":10})), device_self_target(), false),
+            "TELEPORT" => (device_ability_effect(serde_json::json!({"type":"teleport-self", "minimumDistance":100})), device_self_target(), false),
+            "IDENTIFY" => (serde_json::json!({"type":"identify-item","full":false}), device_item_target(), false),
+            "DETECT_MONSTERS" | "DETECT_OBJECTS" | "DETECT_TRAPS" => {
+                let (subject, category, persistent) = match candidate.token.as_str() {
+                    "DETECT_MONSTERS" => ("actor", "normal-monster", false),
+                    "DETECT_OBJECTS" => ("item", "item", false),
+                    _ => ("terrain", "trap", true),
+                };
+                (device_ability_effect(serde_json::json!({"type":"detect", "subject":subject,"category":category,"radius":30,"persistent":persistent,"throughWalls":true})), device_self_target(), false)
+            }
+            "LITE_AREA" | "LITE_MAP_AREA" => {
+                let light = serde_json::json!({"type":"light-area","damageDice":2+candidate.level/20,"damageSides":15,"radius":3});
+                let effect = if candidate.token == "LITE_MAP_AREA" { serde_json::json!({"type":"sequence","effects":[{"type":"detect","subject":"terrain","category":"all","radius":30,"persistent":true,"throughWalls":true}, light]}) } else { light };
+                (device_ability_effect(effect), device_self_target(), false)
+            }
+            "BOLT_MISSILE" => (device_damage_effect("damage", "missile", 2 + candidate.level / 10, 6, 0, 0), device_projectile_target(), false),
+            "BOLT_LITE" => (device_damage_effect("damage", "light", 5 + candidate.level / 8, 8, 0, 0), device_projectile_target(), false),
+            "BEAM_LITE_WEAK" => (device_ability_effect(serde_json::json!({"type":"light-line","damageDice":6,"damageSides":8})), device_projectile_target(), false),
+            "BEAM_LITE" => (device_damage_effect("beam-damage", "light", 0, 0, 10 + device_power_curve(275, candidate.level, 0), 0), device_projectile_target(), false),
+            "BALL_LITE" => (device_damage_effect("area-damage", "light", 0, 0, 200 + device_power_curve(350, candidate.level, 80), 4), device_projectile_target(), false),
+            "BREATHE_LITE" => (device_damage_effect("cone-damage", "light", 0, 0, 50 + candidate.level * 2, 2), device_projectile_target(), false),
             "STONE_SKIN" => (serde_json::json!({"type":"apply-stone-skin","durationDice":1,"durationSides":20,"durationBonus":20}), device_self_target(), false),
             "BERSERK" => (serde_json::json!({"type":"apply-berserk-strength","durationDice":1,"durationSides":25,"durationBonus":25}), device_self_target(), false),
             "SPEED_HERO" => (serde_json::json!({"type":"apply-heroic-speed","durationDice":1,"durationSides":candidate.level / 2,"durationBonus":candidate.level / 2}), device_self_target(), false),
@@ -428,8 +543,8 @@ fn armor_activations(
         };
         let mut effect = effect;
         if ground { effect["affectsGroundItems"] = serde_json::json!(true); }
-        let fixed = entry.index == 72;
-        let biases: Vec<_> = if fixed { Vec::new() } else { candidate.biases.iter().filter_map(|bias| match bias.as_str() {
+        let fixed = entry.activation.as_ref();
+        let biases: Vec<_> = if fixed.is_some() { Vec::new() } else { candidate.biases.iter().filter_map(|bias| match bias.as_str() {
             "BIAS_WARRIOR" => Some("warrior"), "BIAS_MAGE" => Some("mage"), "BIAS_CHAOS" => Some("chaos"),
             "BIAS_ACID" => Some("acid"), "BIAS_ELEC" => Some("electricity"), "BIAS_FIRE" => Some("fire"),
             "BIAS_COLD" => Some("cold"), "BIAS_POIS" => Some("poison"), "BIAS_PRIESTLY" => Some("priestly"),
@@ -438,13 +553,13 @@ fn armor_activations(
         serde_json::json!({
             "id": format!("rfb.device-activation.ego-{}-{}",entry.index,candidate.token.to_ascii_lowercase().replace('_',"-")),
             "nameKey": format!("device-activation-e5-{}-name", candidate.token.to_ascii_lowercase().replace('_', "-")),
-            "weight": if fixed {1} else {(255 / u32::from(candidate.rarity)).max(1)},
+            "weight": if fixed.is_some() {1} else {(255 / u32::from(candidate.rarity)).max(1)},
             "minDepth": 1,
-            "maxDepth": if fixed || matches!(entry.index,85|92) {100} else {candidate.level.saturating_mul(3).saturating_add(2).min(100)},
-            "deviceCheckDifficulty": if fixed {10} else {candidate.level},
+            "maxDepth": if fixed.is_some() || matches!(entry.index,85|92|110|111|117) {100} else {candidate.level.saturating_mul(3).saturating_add(2).min(100)},
+            "deviceCheckDifficulty": fixed.map_or(candidate.level, |activation| activation.power),
             "rfbBiases": biases,
             "charges": {"minimum":1,"maximum":1,"cost":1},
-            "recovery": {"intervalTicks": if fixed {500} else {candidate.recovery_turns.saturating_mul(10)},"energyPerMille":1000},
+            "recovery": {"intervalTicks": fixed.map_or(candidate.recovery_turns, |activation| activation.recovery_turns).saturating_mul(10),"energyPerMille":1000},
             "target":target,"effect":effect
         })
     }).collect();
@@ -740,24 +855,14 @@ mod tests {
             .collect::<Vec<_>>();
         let contract: Vec<ArmorEgoContract> =
             serde_json::from_str(include_str!("armor-ego-contract.json")).unwrap();
-        let mut existing = Vec::new();
+        assert_eq!(contract.len(), 76);
         for expected in contract {
-            if let Some(affix) = affixes
+            let matches = affixes
                 .iter()
-                .find(|affix| affix["id"] == expected.affix_id)
-            {
-                if let Some(ego) = affix.get("rfbEgo") {
-                    assert_eq!(ego["sourceIndex"], expected.source_index);
-                }
-                existing.push(expected.source_index);
-            }
+                .filter(|affix| affix["id"] == expected.affix_id)
+                .collect::<Vec<_>>();
+            assert_eq!(matches.len(), 1, "{}", expected.affix_id);
+            assert_eq!(matches[0]["rfbEgo"]["sourceIndex"], expected.source_index);
         }
-        assert_eq!(
-            existing,
-            [
-                50, 51, 52, 53, 56, 60, 61, 62, 63, 64, 70, 71, 72, 73, 74, 75, 76, 77, 80, 81, 82,
-                85, 86, 87, 88, 89, 90, 91, 92, 126, 138
-            ]
-        );
     }
 }

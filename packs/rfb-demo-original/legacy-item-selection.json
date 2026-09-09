@@ -127,6 +127,8 @@
     {"id":"yoiyami-robe","sourceId":"robe","sourceIndex":261},
     {"id":"law-dragon-scale-mail","sourceId":"law-dragon-scale-mail","sourceIndex":299},
     {"id":"gold-dragon-scale-mail","sourceId":"gold-dragon-scale-mail","sourceIndex":302},
-    {"id":"chaos-dragon-scale-mail","sourceId":"chaos-dragon-scale-mail","sourceIndex":303}
+    {"id":"chaos-dragon-scale-mail","sourceId":"chaos-dragon-scale-mail","sourceIndex":303},
+    {"id":"mithril-shod-boots","sourceId":"pair-of-mithril-shod-boots","sourceIndex":209},
+    {"id":"iron-crown","sourceId":"iron-crown","sourceIndex":220}
   ]
 }

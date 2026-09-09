@@ -671,10 +671,13 @@ fn validate_item_runtime_state(
                             .contains(&charges.maximum)
                         && charges.current <= charges.maximum
                 }),
-            (None, None) => generation
-                .activations
-                .iter()
-                .all(|profile| !profile.rfb_biases.is_empty()),
+            (None, None) => {
+                generation.activation_optional
+                    || generation
+                        .activations
+                        .iter()
+                        .all(|profile| !profile.rfb_biases.is_empty())
+            }
             _ => false,
         }
     } else {
@@ -708,7 +711,7 @@ fn validate_item_runtime_state(
     };
     let limit = if definition
         .rfb_base_kind
-        .is_some_and(|base| matches!(base.tval, 16..=23 | 34 | 36..=38))
+        .is_some_and(|base| matches!(base.tval, 16..=23 | 30..=38))
     {
         255
     } else {
@@ -851,6 +854,7 @@ pub(crate) fn player_to_save(
                 })
                 .collect(),
             riding_proficiency: progress.riding_proficiency,
+            dual_wielding_proficiency: progress.dual_wielding_proficiency,
             mining_proficiency: progress.mining_proficiency,
             materials: progress
                 .materials
@@ -1092,6 +1096,12 @@ fn rolled_affixes_to_save(rolled_affixes: &[RolledAffixState]) -> Vec<RolledAffi
                 enchantment_delta: rolled.enchantment_delta,
                 melee_damage_dice: rolled.melee_damage_dice,
                 weight_tenths_pound: rolled.weight_tenths_pound,
+                elemental_destruction_immunities: rolled
+                    .elemental_destruction_immunities
+                    .iter()
+                    .copied()
+                    .map(item_destruction_element_to_dto)
+                    .collect(),
                 weapon_traits: rolled.weapon_traits.iter().copied().collect(),
                 curse_effects: rolled.curse_effects.iter().copied().collect(),
             }
@@ -1236,6 +1246,10 @@ fn rolled_affixes_from_save(
                 || rolled.brands.windows(2).any(|pair| pair[0] >= pair[1])
                 || rolled.passives.windows(2).any(|pair| pair[0] >= pair[1])
                 || rolled
+                    .elemental_destruction_immunities
+                    .windows(2)
+                    .any(|pair| pair[0] >= pair[1])
+                || rolled
                     .weapon_traits
                     .windows(2)
                     .any(|pair| pair[0] >= pair[1])
@@ -1290,6 +1304,11 @@ fn rolled_affixes_from_save(
                 enchantment_delta: rolled.enchantment_delta,
                 melee_damage_dice: rolled.melee_damage_dice,
                 weight_tenths_pound: rolled.weight_tenths_pound,
+                elemental_destruction_immunities: rolled
+                    .elemental_destruction_immunities
+                    .into_iter()
+                    .map(item_destruction_element_from_dto)
+                    .collect(),
                 weapon_traits: rolled.weapon_traits.into_iter().collect(),
                 curse_effects: rolled.curse_effects.into_iter().collect(),
             };
@@ -1345,6 +1364,7 @@ fn equipment_bonuses_to_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
         base_shot_delta_percent: bonuses.base_shot_delta_percent,
         melee_attacks_delta_percent: bonuses.melee_attacks_delta_percent,
         spell_capacity_bonus: bonuses.spell_capacity_bonus,
+        magic_resistance_percent: bonuses.magic_resistance_percent,
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
         melee_damage: bonuses.melee_damage,
@@ -1370,6 +1390,7 @@ fn equipment_bonuses_from_dto(bonuses: EquipmentBonusesDto) -> EquipmentBonuses 
         base_shot_delta_percent: bonuses.base_shot_delta_percent,
         melee_attacks_delta_percent: bonuses.melee_attacks_delta_percent,
         spell_capacity_bonus: bonuses.spell_capacity_bonus,
+        magic_resistance_percent: bonuses.magic_resistance_percent,
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
         melee_damage: bonuses.melee_damage,
@@ -1414,6 +1435,7 @@ fn affix_property_bundle_out_of_range(properties: &AffixPropertyBundleDefinition
         || !(-1_000..=1_000).contains(&bonuses.base_shot_delta_percent)
         || !(-800..=800).contains(&bonuses.melee_attacks_delta_percent)
         || !(-100..=100).contains(&bonuses.spell_capacity_bonus)
+        || !(0..=100).contains(&bonuses.magic_resistance_percent)
         || [
             modifiers.strength,
             modifiers.intelligence,
@@ -1612,6 +1634,14 @@ const fn equipment_passive_dto(value: EquipmentPassive) -> EquipmentPassiveDto {
         EquipmentPassive::SlowDigestion => EquipmentPassiveDto::SlowDigestion,
         EquipmentPassive::ReflectsBolts => EquipmentPassiveDto::ReflectsBolts,
         EquipmentPassive::FireAura => EquipmentPassiveDto::FireAura,
+        EquipmentPassive::ColdAura => EquipmentPassiveDto::ColdAura,
+        EquipmentPassive::ElectricityAura => EquipmentPassiveDto::ElectricityAura,
+        EquipmentPassive::RevengeAura => EquipmentPassiveDto::RevengeAura,
+        EquipmentPassive::ManaRegeneration => EquipmentPassiveDto::ManaRegeneration,
+        EquipmentPassive::AntiMagic => EquipmentPassiveDto::AntiMagic,
+        EquipmentPassive::NightVision => EquipmentPassiveDto::NightVision,
+        EquipmentPassive::DualWielding => EquipmentPassiveDto::DualWielding,
+        EquipmentPassive::NoEnchant => EquipmentPassiveDto::NoEnchant,
         EquipmentPassive::ShardsAura => EquipmentPassiveDto::ShardsAura,
         EquipmentPassive::ReducedManaCost => EquipmentPassiveDto::ReducedManaCost,
         EquipmentPassive::EasySpell => EquipmentPassiveDto::EasySpell,
@@ -1650,6 +1680,14 @@ const fn equipment_passive(value: EquipmentPassiveDto) -> EquipmentPassive {
         EquipmentPassiveDto::SlowDigestion => EquipmentPassive::SlowDigestion,
         EquipmentPassiveDto::ReflectsBolts => EquipmentPassive::ReflectsBolts,
         EquipmentPassiveDto::FireAura => EquipmentPassive::FireAura,
+        EquipmentPassiveDto::ColdAura => EquipmentPassive::ColdAura,
+        EquipmentPassiveDto::ElectricityAura => EquipmentPassive::ElectricityAura,
+        EquipmentPassiveDto::RevengeAura => EquipmentPassive::RevengeAura,
+        EquipmentPassiveDto::ManaRegeneration => EquipmentPassive::ManaRegeneration,
+        EquipmentPassiveDto::AntiMagic => EquipmentPassive::AntiMagic,
+        EquipmentPassiveDto::NightVision => EquipmentPassive::NightVision,
+        EquipmentPassiveDto::DualWielding => EquipmentPassive::DualWielding,
+        EquipmentPassiveDto::NoEnchant => EquipmentPassive::NoEnchant,
         EquipmentPassiveDto::ShardsAura => EquipmentPassive::ShardsAura,
         EquipmentPassiveDto::ReducedManaCost => EquipmentPassive::ReducedManaCost,
         EquipmentPassiveDto::EasySpell => EquipmentPassive::EasySpell,

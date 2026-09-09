@@ -43,9 +43,9 @@ launcherMultiplierDeltaPercent?: number,
 /**
  * Additive RFB `base_shot` value in hundredths of a shot. `15` means +0.15 shots.
  */
-baseShotDeltaPercent?: number, meleeAttacksDeltaPercent?: number, spellCapacityBonus?: number, meleeAttacks: number, meleeSkill: number, meleeDamage: number, rangedSkill: number, throwingSkill: number, deviceSkill: number, savingThrowSkill: number, savingThrowSkillOverride?: number | null, stealthSkill: number, searchSkill: number, perceptionSkill: number, disarmingSkill: number, diggingSkill: number, infravision: number, lightRadius: number, };
+baseShotDeltaPercent?: number, meleeAttacksDeltaPercent?: number, spellCapacityBonus?: number, magicResistancePercent?: number, meleeAttacks: number, meleeSkill: number, meleeDamage: number, rangedSkill: number, throwingSkill: number, deviceSkill: number, savingThrowSkill: number, savingThrowSkillOverride?: number | null, stealthSkill: number, searchSkill: number, perceptionSkill: number, disarmingSkill: number, diggingSkill: number, infravision: number, lightRadius: number, };
 
-export type EquipmentPassiveDto = "regeneration" | "see-invisible" | "vampiric" | "hold-life" | "levitation" | "warning" | "slow-digestion" | "reflects-bolts" | "fire-aura" | "shards-aura" | "reduced-mana-cost" | "easy-spell" | "auto-identify" | "blessed" | "esp-animal" | "esp-undead" | "esp-demon" | "esp-orc" | "esp-troll" | "esp-giant" | "esp-dragon" | "esp-human" | "esp-good" | "esp-evil" | "esp-living" | "esp-nonliving" | "telepathy" | "sustain-strength" | "sustain-intelligence" | "sustain-wisdom" | "sustain-dexterity" | "sustain-constitution" | "sustain-charisma";
+export type EquipmentPassiveDto = "regeneration" | "see-invisible" | "vampiric" | "hold-life" | "levitation" | "warning" | "slow-digestion" | "reflects-bolts" | "fire-aura" | "cold-aura" | "electricity-aura" | "revenge-aura" | "mana-regeneration" | "anti-magic" | "night-vision" | "dual-wielding" | "no-enchant" | "shards-aura" | "reduced-mana-cost" | "easy-spell" | "auto-identify" | "blessed" | "esp-animal" | "esp-undead" | "esp-demon" | "esp-orc" | "esp-troll" | "esp-giant" | "esp-dragon" | "esp-human" | "esp-good" | "esp-evil" | "esp-living" | "esp-nonliving" | "telepathy" | "sustain-strength" | "sustain-intelligence" | "sustain-wisdom" | "sustain-dexterity" | "sustain-constitution" | "sustain-charisma";
 
 export type AttributeKindDto = "strength" | "intelligence" | "wisdom" | "dexterity" | "constitution" | "charisma";
 
@@ -81,7 +81,7 @@ export type CharacterTraitDetailsDto = { equipmentComplete: boolean, sources: Ar
 /**
  * None means unknown; an empty list means no immunity, not unimplemented.
  */
-statusImmunities: Array<string> | null, reflectsBolts: boolean | null, passesWalls: boolean, stats: Array<CharacterStatDto>, attacks: Array<CharacterAttackTraitDto>, activeWeaponId: string | null, activeLauncherId: string | null, auras: Array<CharacterAuraDto>, negatives: Array<CharacterNegativeDto>, };
+statusImmunities: Array<string> | null, reflectsBolts: boolean | null, passesWalls: boolean, stats: Array<CharacterStatDto>, attacks: Array<CharacterAttackTraitDto>, activeWeaponId: string | null, activeWeaponIds?: Array<string>, activeLauncherId: string | null, auras: Array<CharacterAuraDto>, negatives: Array<CharacterNegativeDto>, };
 
 export type CharacterAuraDto = { damageType: DamageTypeDto, sourceIds: Array<string>, evilOnly: boolean, };
 

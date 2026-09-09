@@ -123,6 +123,7 @@ pub(crate) struct RolledAffixState {
     pub(crate) enchantment_delta: ItemEnchantmentsDto,
     pub(crate) melee_damage_dice: Option<MeleeDamageDiceDto>,
     pub(crate) weight_tenths_pound: Option<u16>,
+    pub(crate) elemental_destruction_immunities: BTreeSet<ItemDestructionElement>,
     pub(crate) weapon_traits: BTreeSet<WeaponTraitDto>,
     pub(crate) curse_effects: BTreeSet<ItemCurseEffectDto>,
 }
@@ -133,6 +134,7 @@ impl RolledAffixState {
             || !self.enchantment_delta.is_empty()
             || self.melee_damage_dice.is_some()
             || self.weight_tenths_pound.is_some()
+            || !self.elemental_destruction_immunities.is_empty()
             || !self.weapon_traits.is_empty()
             || !self.curse_effects.is_empty()
     }

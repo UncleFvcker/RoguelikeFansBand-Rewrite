@@ -4071,6 +4071,10 @@
           "format": "int32",
           "type": "integer"
         },
+        "magicResistancePercent": {
+          "format": "int32",
+          "type": "integer"
+        },
         "meleeAttacks": {
           "default": 0,
           "format": "int32",
@@ -4146,6 +4150,14 @@
         "slow-digestion",
         "reflects-bolts",
         "fire-aura",
+        "cold-aura",
+        "electricity-aura",
+        "revenge-aura",
+        "mana-regeneration",
+        "anti-magic",
+        "night-vision",
+        "dual-wielding",
+        "no-enchant",
         "shards-aura",
         "reduced-mana-cost",
         "easy-spell",
@@ -4308,6 +4320,10 @@
     "ItemDeviceGenerationDefinition": {
       "additionalProperties": false,
       "properties": {
+        "activationOptional": {
+          "default": false,
+          "type": "boolean"
+        },
         "activations": {
           "items": {
             "$ref": "#/$defs/ItemDeviceActivationDefinition"

@@ -3,7 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{
-    effect::{STATUS_ANTI_MAGIC, STATUS_BERSERK, STATUS_CONFUSION, STATUS_FEAR},
+    effect::{STATUS_BERSERK, STATUS_CONFUSION, STATUS_FEAR},
     resistance::DamageType,
     save::{item_destruction_element_to_dto, position_from_content},
     state::{ItemInstance, ItemLocation},
@@ -378,7 +378,7 @@ impl Game {
                     if !matches!(source, AbilitySourceDto::Mutation | AbilitySourceDto::Race)
                         || uses_casting_profile_offense
                     {
-                        Self::apply_casting_profile_damage_bonus(
+                        self.apply_casting_profile_damage_bonus(
                             profile,
                             &mut effective_ability,
                             self.progress.level,
@@ -664,7 +664,7 @@ impl Game {
                         AbilitySourceDto::Learned => {
                             learned
                                 && !self.player_has_status_kind(STATUS_CONFUSION)
-                                && !self.player_has_status_kind(STATUS_ANTI_MAGIC)
+                                && !self.player_has_anti_magic()
                                 && !self.player_has_status_kind(STATUS_BERSERK)
                                 && level_available
                                 && resource_available

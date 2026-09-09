@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-cowardice-description",
+  "deviceGeneration": {
+    "activationOptional": false,
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "effect": {
+            "minimumDistance": 100,
+            "type": "teleport-self"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-95-teleport",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-teleport-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "generationMaxLevel": 70,
+  "id": "rfb-legacy.affix.cowardice",
+  "nameKey": "affix-legacy-cowardice-name",
+  "resistances": {
+    "fear": "vulnerable"
+  },
+  "rfbEgo": {
+    "rarity": 4,
+    "sourceIndex": 95,
+    "types": [
+      "cloak"
+    ]
+  },
+  "tags": [
+    "cloak",
+    "legacy-import"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-the-sprite-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "id": "rfb-legacy.affix.the-sprite",
+  "nameKey": "affix-legacy-the-sprite-name",
+  "passives": [
+    "levitation"
+  ],
+  "resistances": {
+    "light": "resistant"
+  },
+  "rfbEgo": {
+    "rarity": 6,
+    "sourceIndex": 151,
+    "types": [
+      "boots"
+    ]
+  },
+  "tags": [
+    "boots",
+    "legacy-import"
+  ]
+}

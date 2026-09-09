@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-the-unbeliever-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 70,
+  "id": "rfb-legacy.affix.the-unbeliever",
+  "nameKey": "affix-legacy-the-unbeliever-name",
+  "passives": [
+    "anti-magic",
+    "see-invisible"
+  ],
+  "resistances": {
+    "confusion": "resistant"
+  },
+  "rfbEgo": {
+    "rarity": 32,
+    "sourceIndex": 130,
+    "types": [
+      "crown"
+    ]
+  },
+  "tags": [
+    "crown",
+    "legacy-import"
+  ]
+}

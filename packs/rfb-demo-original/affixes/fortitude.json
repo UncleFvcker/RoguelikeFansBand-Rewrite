@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-fortitude-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "generationMaxLevel": 50,
+  "id": "rfb-legacy.affix.fortitude",
+  "nameKey": "affix-legacy-fortitude-name",
+  "passives": [
+    "sustain-constitution"
+  ],
+  "rfbEgo": {
+    "rarity": 4,
+    "sourceIndex": 113,
+    "types": [
+      "helmet"
+    ]
+  },
+  "tags": [
+    "helmet",
+    "legacy-import"
+  ]
+}

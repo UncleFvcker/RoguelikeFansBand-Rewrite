@@ -1,6 +1,6 @@
 # 当前状态
 
-核对日期：2026-09-09。代码与测试基线：`3d127279c`。本文是当前能力、玩家入口和验收范围的统一记录；历史 contract、阶段方案和分支交接中的“当前”只指各自记录时点。
+核对日期：2026-09-09。代码与测试基线以当前提交及下表版本为准。本文是当前能力、玩家入口和验收范围的统一记录；历史 contract、阶段方案和分支交接中的“当前”只指各自记录时点。
 
 ## 状态口径
 
@@ -17,12 +17,12 @@
 
 | 项目 | 值 | 来源 |
 | --- | --- | --- |
-| 协议 | 1.231 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | v109 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| 协议 | 1.232 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | v110 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload | v5 / v5；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
-| 内容包 | 1.387.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
-| 行为基线 | contract-v307，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
-| 内容定义数量 | 地形 201、角色 1402、物品 361、能力 1838、词缀 91、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
+| 内容包 | 1.388.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
+| 行为基线 | contract-v308，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
+| 内容定义数量 | 地形 201、角色 1402、物品 363、能力 1838、词缀 136、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
 | 角色配置数量 | Class 6、Build 13、Race 57、SkillSet 65 | 同上；这些是定义数量，不是菜单选项数量 |
 
 版本与哈希以源文件为准。玩家入口以 [PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS](../web/src/session-shell.ts) 和 [新游戏表单](../web/index.html) 为准。
@@ -60,20 +60,18 @@
 
 ## 版本验收与限制
 
-2026-09-09，`codex/realms-items` 完成 E5 前半：开放盾牌 9 条、身体护甲 12 条、长袍 3 条、
-龙鳞甲 8 条的完整类型池，共享 4 条去重后共 28 条。生成按 RFB `master`
-`a0d92b6378d148c5262cc236b8fa6ed2ca06a54c` 的分支、底材限制、pval、随机属性和激活处理；
-新增 sval 60 的长袍底材及 3 件龙鳞甲，中文名及新增激活名直接读取源版表和运行时字符串。
-装备消费者接入实例减重、反射、火焰/碎片光环、法力容量/节省/易施法、自动鉴定、半次追加攻击、
-护甲吸血与周期太古诅咒。固定护甲奖励复用同一物化入口。聚焦测试覆盖全部 28 条自然可达、
-生成存档往返、底材限制、装备效果及诅咒；公共存档/属性投影变更统一刷新并复验 26 条 active fixture。
-本批未做桌面或人工试玩。下一批为头冠、头盔、斗篷、手套和靴子，共 48 条。
+2026-09-09，`codex/realms-items` 完成 E5 后半 48 条，头冠、头盔、披风、手套和靴子接入后，
+[护甲 Ego 审计](armor-ego-import-audit.md)中的 76 条均有生成分支、底材限制、随机属性和激活处理。
+75 条可自然生成；“戒灵的”保留原版稀有度 0，仅显式物化。权威来源为 RFB `master`
+`a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`，中文名及激活名直接读取源版表和运行时字符串。
+本批新增铁王冠、秘银铁头靴底材，并接入冰电/复仇光环、夜视、法力恢复、反魔法、魔法减伤、禁止附魔，
+以及护甲命中/伤害的近战、射击、法术分流。源氏手套作用于实际双持：副手槽可装备武器，两手独立
+结算，使用原版重量与熟练度公式；六职业的双持上限来自 `master:s_info.txt`，训练状态进入存档。
+精灵斗篷的基础与词缀属性共用 pval，女巫帽的随机元素保护及全部动态词缀属性均保存为实例状态。
 
-2026-09-09，`codex/realms-items` 完成 [E5.0 护甲 Ego 审计](armor-ego-import-audit.md)：
-核对 76 条权威 Ego、稳定 ID、subtype 限制、动态分支、激活与消费者缺口，为现有 38 件普通护甲
-补齐 `rfbBaseKind`。内容为 1.386.0，仍为 357 件物品、65 个 affix。护甲 Ego 入口未开放；
-新增身份的零 RNG/拒绝提前生成测试、原有自然掉落测试及 equipment/inventory/tasks/town 的
-11 个 fixture 通过，没有刷新行为基线。下一步为 E5.1 共享机制缺口，不记作护甲玩家流程验收。
+19 个护甲专项测试覆盖全部自然生成池、76 条各 48 个种子的存档往返、底材限制及主要装备消费者。
+新增存档字段、公共属性投影和生成 RNG 行为变更使用 State Hash Schema v110，刷新并复验 26 条
+active fixture。前端支持副手武器选择及新增属性展示。本批未做桌面或人工试玩，不记作玩家流程验收。
 
 2026-09-09，`codex/realms-items` 从 `main@62f959f3b` 增补鹤嘴锄（`demo.item.mattock`，
 RFB master `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c` 的 k_info 156）：正式物品数增加至 357，

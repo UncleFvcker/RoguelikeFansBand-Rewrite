@@ -28,6 +28,8 @@ use super::{initial_item_runtime_state, merge_equipment_bonuses, roll_weighted_i
 pub(super) struct EgoMaterialization {
     pub(super) kind_id_override: Option<String>,
     pub(super) clear_armor_enchantment: bool,
+    pub(super) clear_hit_enchantment: bool,
+    pub(super) clear_damage_enchantment: bool,
     pub(super) affix_ids: Vec<String>,
     pub(super) rolled_affixes: Vec<RolledAffixState>,
     pub(super) intrinsic_properties: Option<AffixPropertyBundleDefinition>,
@@ -85,6 +87,8 @@ impl EgoMaterialization {
         Self {
             kind_id_override: None,
             clear_armor_enchantment: false,
+            clear_hit_enchantment: false,
+            clear_damage_enchantment: false,
             affix_ids,
             rolled_affixes,
             intrinsic_properties,
@@ -106,6 +110,12 @@ impl EgoMaterialization {
         }
         if self.clear_armor_enchantment {
             item.enchantments.to_armor = 0;
+        }
+        if self.clear_hit_enchantment {
+            item.enchantments.to_hit = 0;
+        }
+        if self.clear_damage_enchantment {
+            item.enchantments.to_damage = 0;
         }
         let enchantments = ItemEnchantmentsDto {
             to_hit: item
@@ -1198,6 +1208,16 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
         RfbEgoTypeDefinition::Harp
     } else if base_kind.tval == TV_BOW {
         RfbEgoTypeDefinition::Bow
+    } else if base_kind.tval == 30 {
+        RfbEgoTypeDefinition::Boots
+    } else if base_kind.tval == 31 {
+        RfbEgoTypeDefinition::Gloves
+    } else if base_kind.tval == 32 {
+        RfbEgoTypeDefinition::Helmet
+    } else if base_kind.tval == 33 {
+        RfbEgoTypeDefinition::Crown
+    } else if base_kind.tval == 35 {
+        RfbEgoTypeDefinition::Cloak
     } else if base_kind.tval == 34 {
         RfbEgoTypeDefinition::Shield
     } else if base_kind.tval == 38 {
@@ -1237,7 +1257,12 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
             .find(|affix| affix.id == affix_id)
             .expect("selected ego affix remains available");
         let materialized = match allowed_type {
-            RfbEgoTypeDefinition::Shield
+            RfbEgoTypeDefinition::Boots
+            | RfbEgoTypeDefinition::Gloves
+            | RfbEgoTypeDefinition::Helmet
+            | RfbEgoTypeDefinition::Crown
+            | RfbEgoTypeDefinition::Cloak
+            | RfbEgoTypeDefinition::Shield
             | RfbEgoTypeDefinition::BodyArmor
             | RfbEgoTypeDefinition::Robe
             | RfbEgoTypeDefinition::DragonArmor => {
@@ -1271,7 +1296,7 @@ fn rfb_ego_can_apply_to_base(
         .map(|profile| profile.damage_dice.saturating_mul(profile.damage_sides))
         .unwrap_or_default();
     match source_index {
-        50..=92 => armor::can_apply(source_index, tval, sval),
+        50..=152 => armor::can_apply(source_index, tval, sval),
         2 => matches!(tval, TV_POLEARM | TV_SWORD),
         6 => tval == TV_HAFTED && sval == SV_WIZSTAFF,
         23 => tval == TV_SWORD && sval != SV_BLADE_OF_CHAOS && dice_product >= 10,
@@ -1545,25 +1570,26 @@ fn roll_extra_attacks_pval(
     pval
 }
 
+const SLAYS: [(SlayTarget, EquipmentPassive, u16, u16); 11] = [
+    (SlayTarget::Orc, EquipmentPassive::EspOrc, 2, 20),
+    (SlayTarget::Troll, EquipmentPassive::EspTroll, 2, 30),
+    (SlayTarget::Giant, EquipmentPassive::EspGiant, 2, 40),
+    (SlayTarget::Dragon, EquipmentPassive::EspDragon, 3, 80),
+    (SlayTarget::Demon, EquipmentPassive::EspDemon, 3, 90),
+    (SlayTarget::Undead, EquipmentPassive::EspUndead, 3, 95),
+    (SlayTarget::Animal, EquipmentPassive::EspAnimal, 2, 60),
+    (SlayTarget::Human, EquipmentPassive::EspHuman, 3, 50),
+    (SlayTarget::Evil, EquipmentPassive::EspEvil, 5, 0),
+    (SlayTarget::Good, EquipmentPassive::EspGood, 5, 0),
+    (SlayTarget::Living, EquipmentPassive::EspLiving, 20, 0),
+];
+
 pub(super) fn roll_rfb_slaying(
     rng: &mut RfbRng,
     properties: &mut AffixPropertyBundleDefinition,
     generation_level: u16,
     is_ammunition: bool,
 ) {
-    const SLAYS: [(SlayTarget, EquipmentPassive, u16, u16); 11] = [
-        (SlayTarget::Orc, EquipmentPassive::EspOrc, 2, 20),
-        (SlayTarget::Troll, EquipmentPassive::EspTroll, 2, 30),
-        (SlayTarget::Giant, EquipmentPassive::EspGiant, 2, 40),
-        (SlayTarget::Dragon, EquipmentPassive::EspDragon, 3, 80),
-        (SlayTarget::Demon, EquipmentPassive::EspDemon, 3, 90),
-        (SlayTarget::Undead, EquipmentPassive::EspUndead, 3, 95),
-        (SlayTarget::Animal, EquipmentPassive::EspAnimal, 2, 60),
-        (SlayTarget::Human, EquipmentPassive::EspHuman, 3, 50),
-        (SlayTarget::Evil, EquipmentPassive::EspEvil, 5, 0),
-        (SlayTarget::Good, EquipmentPassive::EspGood, 5, 0),
-        (SlayTarget::Living, EquipmentPassive::EspLiving, 20, 0),
-    ];
     let eligible = SLAYS
         .iter()
         .copied()
@@ -2282,35 +2308,6 @@ mod tests {
         }
     }
 
-    #[test]
-    fn unfinished_armor_types_do_not_open_ego_generation_or_consume_rng() {
-        let game = Game::new(1);
-        let mut checked = 0;
-        for item in game.content.item_definitions().filter(|item| {
-            item.rfb_base_kind
-                .is_some_and(|kind| matches!(kind.tval, 30..=33 | 35))
-        }) {
-            for level in [1, 30, 80, 100] {
-                let mut rng = RfbRng::seeded(0xE5_0000);
-                assert!(
-                    roll_and_materialize_rfb_ego_from_affixes_with_rng(
-                        &mut rng,
-                        item,
-                        game.content.affix_definitions(),
-                        level,
-                        None,
-                    )
-                    .is_none(),
-                    "{} must remain outside armor ego generation",
-                    item.id
-                );
-                assert_eq!(rng.draw_counter, 0);
-            }
-            checked += 1;
-        }
-        assert_eq!(checked, 16);
-    }
-
     fn rfb_weapon_item(tval: u16, sval: u16) -> ItemDefinition {
         let game = Game::new(1);
         let mut item = game
@@ -2456,6 +2453,7 @@ mod tests {
                 }],
             );
             affix.device_generation = Some(ItemDeviceGenerationDefinition {
+                activation_optional: false,
                 activations: vec![ego_activation_profile(
                     profile_id,
                     1,
@@ -2493,6 +2491,7 @@ mod tests {
         );
         excluded.max_depth = 49;
         let generation = ItemDeviceGenerationDefinition {
+            activation_optional: false,
             activations: vec![
                 ego_activation_profile("test.activation.fixed", 1, BTreeSet::new(), 1),
                 excluded,
@@ -2536,6 +2535,7 @@ mod tests {
             vec![RfbEgoTypeDefinition::Weapon],
         );
         affix.device_generation = Some(ItemDeviceGenerationDefinition {
+            activation_optional: false,
             activations: vec![
                 ego_activation_profile("test.activation.destruction", 1, BTreeSet::new(), 50),
                 ego_activation_profile(
@@ -2588,6 +2588,7 @@ mod tests {
             vec![RfbEgoTypeDefinition::Weapon],
         );
         mana_affix.device_generation = Some(ItemDeviceGenerationDefinition {
+            activation_optional: false,
             activations: vec![activation.clone()],
             recovery: None,
         });
@@ -2611,6 +2612,7 @@ mod tests {
             vec![RfbEgoTypeDefinition::Weapon],
         );
         arcane_affix.device_generation = Some(ItemDeviceGenerationDefinition {
+            activation_optional: false,
             activations: vec![activation],
             recovery: None,
         });
@@ -3263,7 +3265,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(STATE_HASH_SCHEMA_VERSION, 109);
+        assert_eq!(STATE_HASH_SCHEMA_VERSION, 110);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-the-tomte-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "id": "rfb-legacy.affix.the-tomte",
+  "nameKey": "affix-legacy-the-tomte-name",
+  "rfbEgo": {
+    "rarity": 2,
+    "sourceIndex": 121,
+    "types": [
+      "helmet"
+    ]
+  },
+  "tags": [
+    "helmet",
+    "legacy-import"
+  ]
+}

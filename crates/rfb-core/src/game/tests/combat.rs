@@ -490,7 +490,7 @@ fn ultimate_resistance_reuses_fire_electricity_and_cold_contact_auras() {
 }
 
 #[test]
-fn equipped_fire_and_shards_auras_damage_contact_attackers() {
+fn all_four_equipped_elemental_auras_damage_contact_attackers() {
     let harmless = MeleeBlowEffectDefinition::Damage {
         chance_percent: None,
         damage_dice: 0,
@@ -507,6 +507,8 @@ fn equipped_fire_and_shards_auras_damage_contact_attackers() {
         .unwrap();
     item.intrinsic_properties.passives.extend([
         rfb_content::EquipmentPassive::FireAura,
+        rfb_content::EquipmentPassive::ColdAura,
+        rfb_content::EquipmentPassive::ElectricityAura,
         rfb_content::EquipmentPassive::ShardsAura,
     ]);
     game.entities[0].hp = 100;
@@ -521,7 +523,7 @@ fn equipped_fire_and_shards_auras_damage_contact_attackers() {
             _ => None,
         })
         .collect();
-    assert_eq!(damage.len(), 2);
+    assert_eq!(damage.len(), 4);
     assert_eq!(game.entities[0].hp, 100 - damage.iter().sum::<i32>());
 }
 

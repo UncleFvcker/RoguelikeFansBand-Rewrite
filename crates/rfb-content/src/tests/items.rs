@@ -91,10 +91,13 @@ fn fixed_artifact_combat_and_activation_data_match_source() {
             .find(|affix| affix.id == "rfb-legacy.affix.olog-hai")
             .expect("Olog-hai affix should exist");
         assert!(affix_is_compatible_with_item(affix, item, 36));
-        assert_eq!(affix.modifiers.strength, 4);
-        assert_eq!(affix.modifiers.intelligence, -4);
-        assert_eq!(affix.modifiers.defense, 10);
-        assert_eq!(affix.equipment_bonuses.melee_damage, 7);
+        assert_eq!(affix.rfb_ego.as_ref().unwrap().source_index, 72);
+        // The armor materializer rolls pval, enchantments and high resistance
+        // into the instance; the definition contains only fixed source flags.
+        assert_eq!(affix.modifiers.strength, 0);
+        assert_eq!(affix.modifiers.intelligence, 0);
+        assert_eq!(affix.modifiers.defense, 0);
+        assert_eq!(affix.equipment_bonuses.melee_damage, 0);
         assert_eq!(
             affix.resistances.get(&ActorDamageType::Acid),
             Some(&ActorResistanceLevel::Resistant)
@@ -110,55 +113,22 @@ fn fixed_artifact_combat_and_activation_data_match_source() {
                 .contains(&ItemDestructionElement::Acid)
         );
 
-        let roll_group = affix.roll_groups.as_slice();
-        let [roll_group] = roll_group else {
-            panic!("Olog-hai should roll one high resistance group");
-        };
-        assert_eq!(roll_group.rolls, 1);
-        assert_eq!(roll_group.candidates.len(), 12);
-        assert!(
-            roll_group
-                .candidates
-                .iter()
-                .all(|candidate| candidate.weight == 1)
-        );
-        let rolled_resistances = roll_group
-            .candidates
-            .iter()
-            .flat_map(|candidate| candidate.properties.resistances.keys().copied())
-            .collect::<BTreeSet<_>>();
-        assert_eq!(
-            rolled_resistances,
-            BTreeSet::from([
-                ActorDamageType::Poison,
-                ActorDamageType::Light,
-                ActorDamageType::Dark,
-                ActorDamageType::Shards,
-                ActorDamageType::Blindness,
-                ActorDamageType::Confusion,
-                ActorDamageType::Sound,
-                ActorDamageType::Nether,
-                ActorDamageType::Nexus,
-                ActorDamageType::Chaos,
-                ActorDamageType::Disenchant,
-                ActorDamageType::Fear,
-            ])
-        );
+        assert!(affix.roll_groups.is_empty());
 
         let generation = affix
             .device_generation
             .as_ref()
             .expect("Olog-hai should provide a device activation");
-        assert_eq!(
-            generation.recovery,
-            Some(ItemDeviceRecoveryDefinition {
-                interval_ticks: 50,
-                energy_per_mille: 1_000,
-            })
-        );
         let [activation] = generation.activations.as_slice() else {
             panic!("Olog-hai should provide exactly one activation");
         };
+        assert_eq!(
+            activation.recovery,
+            Some(ItemDeviceRecoveryDefinition {
+                interval_ticks: 500,
+                energy_per_mille: 1_000,
+            })
+        );
         assert_eq!(activation.device_check_difficulty, 10);
         assert_eq!(
             activation.charges,

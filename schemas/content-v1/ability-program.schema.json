@@ -3718,6 +3718,10 @@
           "format": "int32",
           "type": "integer"
         },
+        "magicResistancePercent": {
+          "format": "int32",
+          "type": "integer"
+        },
         "meleeAttacks": {
           "default": 0,
           "format": "int32",

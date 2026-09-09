@@ -357,9 +357,10 @@ impl Game {
                     .is_some_and(|affix| affix.elemental_destruction_immunities.contains(&element))
             })
             || item.rolled_affixes.iter().any(|rolled| {
-                self.content
-                    .affix(&rolled.affix_id)
-                    .is_some_and(|affix| affix.elemental_destruction_immunities.contains(&element))
+                rolled.elemental_destruction_immunities.contains(&element)
+                    || self.content.affix(&rolled.affix_id).is_some_and(|affix| {
+                        affix.elemental_destruction_immunities.contains(&element)
+                    })
             })
     }
 

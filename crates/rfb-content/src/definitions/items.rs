@@ -66,6 +66,14 @@ pub enum EquipmentPassive {
     SlowDigestion,
     ReflectsBolts,
     FireAura,
+    ColdAura,
+    ElectricityAura,
+    RevengeAura,
+    ManaRegeneration,
+    AntiMagic,
+    NightVision,
+    DualWielding,
+    NoEnchant,
     ShardsAura,
     ReducedManaCost,
     EasySpell,
@@ -919,6 +927,8 @@ pub struct ItemDeviceActivationDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ItemDeviceGenerationDefinition {
+    #[serde(default)]
+    pub activation_optional: bool,
     pub activations: Vec<ItemDeviceActivationDefinition>,
     #[serde(default)]
     pub recovery: Option<ItemDeviceRecoveryDefinition>,

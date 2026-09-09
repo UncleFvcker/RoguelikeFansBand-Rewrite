@@ -1111,6 +1111,7 @@ export class InventoryPanel {
     this.#appendSignedEntries(container, [
       ["item-bonus-melee-attacks", bonuses.meleeAttacks + (bonuses.meleeAttacksDeltaPercent ?? 0) / 100],
       ["item-bonus-spell-capacity", (bonuses.spellCapacityBonus ?? 0) * 5],
+      ["item-bonus-magic-resistance", bonuses.magicResistancePercent ?? 0],
       ["item-bonus-melee-skill", bonuses.meleeSkill],
       ["item-bonus-ranged-skill", bonuses.rangedSkill],
       ["item-bonus-throwing-skill", bonuses.throwingSkill],
@@ -1270,7 +1271,7 @@ export class InventoryPanel {
 export type InventoryFilter = "all" | "equippable" | "usable" | "devices" | "light";
 
 export function itemFitsBodySlot(item: InventoryItemDto, slot: BodySlotDto): boolean {
-  return item.equipmentSlot === slot.slotType || (item.equipmentSlot === "tool" && slot.slotType === "weapon");
+  return item.equipmentSlot === slot.slotType || (item.equipmentSlot === "tool" && slot.slotType === "weapon") || (item.equipmentSlot === "weapon" && slot.slotType === "shield");
 }
 
 export function filterInventoryItems(

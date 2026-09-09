@@ -286,6 +286,16 @@ fn inventory_item_missing_its_kind_is_an_invariant_error() {
 fn elemental_brand_is_suppressed_only_by_matching_immunity() {
     let mut game = Game::new(0);
     clear_monsters(&mut game);
+    let weapon_slot = game
+        .body_slots
+        .iter()
+        .find(|slot| slot.slot_type == "weapon")
+        .unwrap()
+        .id
+        .clone();
+    game.items.retain(
+        |item| !matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == &weapon_slot),
+    );
     game.items.push(ItemInstance {
         id: "test.item.ember-edge".to_owned(),
         kind_id: "demo.item.ember-edge".to_owned(),
@@ -308,7 +318,7 @@ fn elemental_brand_is_suppressed_only_by_matching_immunity() {
         device_recovery_progress: 0,
         captured_actor: None,
         location: ItemLocation::Equipped {
-            slot_id: "weapon".to_owned(),
+            slot_id: weapon_slot,
         },
     });
     let profile = game.player_melee_profile(&game.player_derived_stats());

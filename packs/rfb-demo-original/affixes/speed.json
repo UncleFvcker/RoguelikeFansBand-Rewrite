@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-speed-description",
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "id": "rfb-legacy.affix.speed",
+  "nameKey": "affix-legacy-speed-name",
+  "rfbEgo": {
+    "rarity": 5,
+    "sourceIndex": 148,
+    "types": [
+      "boots"
+    ]
+  },
+  "tags": [
+    "boots",
+    "legacy-import"
+  ]
+}

@@ -152,10 +152,10 @@ fn item_creation_state_is_valid(
     });
     let armor = definition
         .rfb_base_kind
-        .is_some_and(|base| matches!(base.tval, 34 | 36..=38));
+        .is_some_and(|base| matches!(base.tval, 30..=38));
     let limit = if definition
         .rfb_base_kind
-        .is_some_and(|base| matches!(base.tval, 16..=23 | 34 | 36..=38))
+        .is_some_and(|base| matches!(base.tval, 16..=23 | 30..=38))
     {
         255
     } else {
@@ -165,7 +165,8 @@ fn item_creation_state_is_valid(
         rolled.weight_tenths_pound.is_none_or(|weight| {
             armor
                 && (weight == definition.weight_tenths_pound * 2 / 3
-                    || weight == definition.weight_tenths_pound / 2)
+                    || weight == definition.weight_tenths_pound / 2
+                    || (weight == 8 && rolled.affix_id == "rfb-legacy.affix.the-tomte"))
         })
     });
     let enchantments_are_valid = [-limit..=limit, -limit..=limit, -limit..=limit]

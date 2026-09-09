@@ -14,9 +14,9 @@
     "finalState": {
       "lastCommandSeq": 0,
       "revision": 0,
-      "stateHash": "cd0af78e5047297d8ad119fb57e6556f7bf73843032efc6217d40044e1912e3c",
+      "stateHash": "5186b289a6f564b6bea4bacfeea941cf45107d981a45884e420e9273c1b199f0",
       "turn": 0
     },
-    "saveRoundTripStateHash": "cd0af78e5047297d8ad119fb57e6556f7bf73843032efc6217d40044e1912e3c"
+    "saveRoundTripStateHash": "5186b289a6f564b6bea4bacfeea941cf45107d981a45884e420e9273c1b199f0"
   }
 }

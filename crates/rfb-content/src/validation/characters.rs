@@ -465,6 +465,7 @@ pub(super) fn validate_characters(
             }
         }
         if class.riding_proficiency.initial > class.riding_proficiency.maximum
+            || class.dual_wielding_maximum > 8_000
             || class.riding_proficiency.maximum > 8_000
             || class
                 .mounted_non_arrow_base_shot_cap

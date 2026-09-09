@@ -1241,8 +1241,7 @@ impl Game {
             .expect("planned enchantment kind must remain available");
         let artifact = definition.tags.iter().any(|tag| tag == "artifact");
         let ammunition = definition.tags.iter().any(|tag| tag == "ammunition");
-        let resists_enchantment =
-            definition.resists_enchantment || definition.tags.iter().any(|tag| tag == "no-enchant");
+        let resists_enchantment = self.item_resists_enchantment(item);
         let before = item.enchantments;
 
         if resists_enchantment {

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-the-vampire-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentBonuses": {
+    "lightRadius": -1
+  },
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "id": "rfb-legacy.affix.the-vampire",
+  "nameKey": "affix-legacy-the-vampire-name",
+  "passives": [
+    "hold-life"
+  ],
+  "resistances": {
+    "dark": "resistant",
+    "poison": "resistant"
+  },
+  "rfbEgo": {
+    "rarity": 16,
+    "sourceIndex": 116,
+    "types": [
+      "helmet"
+    ]
+  },
+  "tags": [
+    "helmet",
+    "legacy-import"
+  ]
+}

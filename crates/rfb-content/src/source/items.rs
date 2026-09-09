@@ -170,6 +170,8 @@ struct SourceItemDeviceActivationDefinition {
 )]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct SourceItemDeviceGenerationDefinition {
+    #[serde(default)]
+    activation_optional: bool,
     activations: Vec<SourceItemDeviceActivationDefinition>,
     #[serde(default)]
     recovery: Option<ItemDeviceRecoveryDefinition>,
@@ -223,6 +225,7 @@ impl SourceItemDeviceGenerationDefinition {
         programs: &BTreeMap<String, ResolvedEffectProgram>,
     ) -> Result<ItemDeviceGenerationDefinition, ContentError> {
         Ok(ItemDeviceGenerationDefinition {
+            activation_optional: self.activation_optional,
             activations: self
                 .activations
                 .into_iter()

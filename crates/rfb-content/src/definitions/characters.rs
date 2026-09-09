@@ -299,6 +299,8 @@ pub struct ClassDefinition {
     pub weapon_proficiency: Option<WeaponProficiencyDefinition>,
     /// RFB riding proficiency at birth and the class training ceiling.
     pub riding_proficiency: RidingProficiencyDefinition,
+    #[serde(default)]
+    pub dual_wielding_maximum: u16,
     /// Uses the Beastmaster/Cavalry mounted attack penalties instead of the
     /// ordinary rider formula.
     #[serde(default)]
