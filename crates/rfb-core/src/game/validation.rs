@@ -620,6 +620,7 @@ impl Game {
                 .is_none_or(|turns| (1..=2_000).contains(&turns));
             let current_location_allows_pending = recall.remaining_turns.is_none()
                 || self.current_floor_id == world.initial_floor_id
+                || self.is_wilderness_floor()
                 || self.current_town().is_some()
                 || current_dungeon_id.is_some();
             if !destination_is_valid || !pending_is_valid || !current_location_allows_pending {

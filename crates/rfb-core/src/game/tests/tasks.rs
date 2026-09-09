@@ -2808,6 +2808,13 @@ fn p87d_tidal_cave_entrance_recall_conquest_and_reward_round_trip() {
             .any(|event| event.kind == "item.recall-triggered")
     );
 
+    assert!(game.recall_use_plan().is_some());
+    let mut pending = Game::from_save(game.to_save()).unwrap();
+    pending.start_recall(0);
+    let mut pending = Game::from_save(pending.to_save()).unwrap();
+    dispatch_next(&mut pending, GameCommand::Wait);
+    assert_eq!(pending.current_floor_id, "demo.floor.tidal-cave-depth-20");
+
     place_player_on_terrain(&mut game, "demo.terrain.tidal-cave-entrance");
     for depth in 15..=27 {
         let update = dispatch_next(&mut game, GameCommand::TraverseStairs);

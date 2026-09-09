@@ -518,7 +518,10 @@ impl Game {
             .content
             .world(&self.world_id)
             .expect("active world must remain available");
-        if self.current_floor_id == world.initial_floor_id || self.current_town().is_some() {
+        if self.current_floor_id == world.initial_floor_id
+            || self.is_wilderness_floor()
+            || self.current_town().is_some()
+        {
             let dungeon = world
                 .dungeons
                 .iter()
@@ -595,7 +598,8 @@ impl Game {
             .procedural_floors
             .iter()
             .find(|floor| floor.id == logical_from_floor_id);
-        let source_is_surface = logical_from_floor_id == *initial_floor_id
+        let source_is_surface = self.is_wilderness_floor()
+            || logical_from_floor_id == *initial_floor_id
             || source_definition.is_some_and(|floor| floor.lifecycle == FloorLifecycle::Town);
         let target_is_surface = target.floor_id == *initial_floor_id
             || target_definition.is_some_and(|floor| floor.lifecycle == FloorLifecycle::Town);
@@ -1466,7 +1470,10 @@ impl Game {
             .expect("active world must remain available");
         Some(RecallAdvancePlan::Trigger {
             from_floor_id: self.current_floor_id.clone(),
-            target_floor_id: if self.current_floor_id == world.initial_floor_id {
+            target_floor_id: if self.current_floor_id == world.initial_floor_id
+                || self.is_wilderness_floor()
+                || self.current_town().is_some()
+            {
                 self.recall
                     .as_ref()
                     .expect("pending recall must retain its destination")

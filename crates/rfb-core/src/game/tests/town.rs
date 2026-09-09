@@ -206,6 +206,44 @@ fn morivant_shares_home_rests_and_revisits_through_inns() {
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
+#[test]
+fn morivant_recall_resumes_after_save_and_returns_to_the_departure_position() {
+    let mut game = Game::new_with_build(51, "demo.build.warrior").unwrap();
+    enter_morivant(&mut game);
+    game.player.position = game
+        .town_local_to_wilderness_view_position(MORIVANT_TOWN_ID, Position { x: 55, y: 15 })
+        .unwrap();
+    let departure = game.player.position;
+    game.recall = Some(RecallStateDto {
+        dungeon_id: "demo.dungeon.tidal-cave".to_owned(),
+        floor_id: "demo.floor.tidal-cave-depth-15".to_owned(),
+        remaining_turns: None,
+    });
+    game.gold = 50;
+    dispatch_next(
+        &mut game,
+        GameCommand::UseFacilityService {
+            facility_id: "demo.town-facility.morivant-trump-tower".to_owned(),
+            service: FacilityServiceKindDto::Recall,
+            item_id: None,
+        },
+    );
+    assert_eq!(game.gold, 0);
+    let mut game = Game::from_save(game.to_save()).unwrap();
+    dispatch_next(&mut game, GameCommand::Wait);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.current_floor_id, "demo.floor.tidal-cave-depth-15");
+    let mut game = Game::from_save(game.to_save()).unwrap();
+    game.entities.clear();
+    game.start_recall(0);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.current_town().unwrap().id, MORIVANT_TOWN_ID);
+    assert_eq!(game.wilderness_position, Some(Position { x: 47, y: 50 }));
+    assert_eq!(game.player.position, departure);
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
 fn projected_shop<'a>(shops: &'a [ShopDto], shop_id: &str) -> &'a ShopDto {
     shops
         .iter()
