@@ -176,6 +176,11 @@ export function createPresentationFormatter(
         });
       case "ability-effects":
         if (event.outcome?.type === "ability-effects") {
+          if (event.outcome.resolution.effects.some(
+            (effect) => effect.type === "no-op" && effect.reason === "no-trees-answer",
+          )) {
+            return localization.format("message-ability-no-trees-answer");
+          }
           const ammunition = event.outcome.resolution.effects.find(
             (effect) => effect.type === "create-ammunition",
           );

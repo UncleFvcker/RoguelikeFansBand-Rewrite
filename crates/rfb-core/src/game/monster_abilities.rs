@@ -4034,7 +4034,7 @@ impl Game {
             {
                 continue;
             }
-            if self.entity_is_player_side(index) == source_is_player_side {
+            if !self.monsters_are_enemies(source_index, index) {
                 friendlies = friendlies.saturating_add(1);
             } else {
                 enemies = enemies.saturating_add(1);
@@ -4098,8 +4098,7 @@ impl Game {
                                 && entity.position == *position
                         })
                 {
-                    let enemy = self.entity_is_player_side(candidate_index)
-                        != self.entity_is_player_side(index);
+                    let enemy = self.monsters_are_enemies(index, candidate_index);
                     return Err(MonsterAbilityPlanRejection {
                         reason: if enemy {
                             MonsterAbilityRejectionReasonDto::Blocked

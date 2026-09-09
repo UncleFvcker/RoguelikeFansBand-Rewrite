@@ -6655,6 +6655,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
         let ability_id = match spell {
             "berserk_spell" => "rfb.ability.race.berserk",
             "create_food_spell" => "rfb.ability.race.create-food",
+            "summon_tree_spell" => "rfb.ability.race.summon-tree",
             "_boit_vomit_spell" => "rfb.ability.race.vomit",
             "_devour_flesh_spell" => "rfb.ability.race.devour-flesh",
             "detect_doors_stairs_traps_spell" => "rfb.ability.race.detect-doors-stairs-traps",
@@ -7815,13 +7816,21 @@ fn race_json(
             entry
                 .abilities
                 .iter()
-                .map(|power| serde_json::json!({
+                .map(|power| {
+                    let mut value = serde_json::json!({
                     "minimumLevel": power.minimum_level,
                     "governingAttribute": power.governing_attribute,
                     "cost": power.cost,
                     "baseFailurePercent": power.base_failure_percent,
                     "abilityId": power.ability_id,
-                }))
+                    });
+                    if power.ability_id == "rfb.ability.race.summon-tree" {
+                        value["costScaling"] = serde_json::json!({
+                            "startLevel": 45, "levelInterval": 50, "amount": 30,
+                        });
+                    }
+                    value
+                })
                 .collect::<Vec<_>>()
         );
     }
@@ -25093,6 +25102,35 @@ static void _sprite_calc_bonuses(void)
         assert_eq!(
             race_json(&entry, &[], &mut ContentImportReport::default())["foodNutritionDivisor"],
             20
+        );
+    }
+
+    #[test]
+    fn ent_tree_power_imports_original_activation_and_level_45_extra_cost() {
+        let mut entry = LegacyCharacterEntry {
+            id: "ent".to_owned(),
+            get_powers_fn: Some("_ent_get_powers".to_owned()),
+            hooks: vec!["get_powers".to_owned()],
+            ..Default::default()
+        };
+        parse_race_powers(
+            r#"
+static power_info _ent_get_powers[] = {
+    { A_WIS, {10, 20, 70, summon_tree_spell}},
+    { -1, {-1, -1, -1, NULL} }
+};
+"#,
+            &mut entry,
+        );
+        assert!(entry.hooks.is_empty());
+        let race = race_json(&entry, &[], &mut ContentImportReport::default());
+        assert_eq!(
+            race["abilities"],
+            serde_json::json!([{
+                "minimumLevel": 10, "governingAttribute": "wisdom", "cost": 20,
+                "baseFailurePercent": 70, "abilityId": "rfb.ability.race.summon-tree",
+                "costScaling": {"startLevel": 45, "levelInterval": 50, "amount": 30}
+            }])
         );
     }
 

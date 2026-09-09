@@ -349,7 +349,7 @@ impl Game {
         source_definition.moves_weaker_bodies
             && !source_definition.movement.never_moves
             && target.hp > 0
-            && self.entity_is_player_side(source_index) == self.entity_is_player_side(target_index)
+            && !self.monsters_are_enemies(source_index, target_index)
             && self.riding_actor_id.as_deref() != Some(target.id.as_str())
             && self.actor_can_enter_position(source_index, target.position)
             && self.actor_kind_can_enter_position(&target.kind_id, source.position)
@@ -389,12 +389,13 @@ impl Game {
         let mut targets = self
             .entities
             .iter()
-            .filter(|entity| {
+            .enumerate()
+            .filter(|(target_index, entity)| {
                 entity.hp > 0
-                    && entity.id != self.entities[index].id
-                    && !self.actor_is_player_side(entity)
+                    && *target_index != index
+                    && self.monsters_are_enemies(index, *target_index)
             })
-            .map(|entity| {
+            .map(|(_, entity)| {
                 (
                     chebyshev_distance(origin, entity.position),
                     entity.id.clone(),
@@ -516,6 +517,24 @@ impl Game {
         self.actor_is_player_side(&self.entities[index])
     }
 
+    pub(super) fn monsters_are_enemies(&self, source_index: usize, target_index: usize) -> bool {
+        let source = self.entities[source_index].kind_id.as_str();
+        let target = self.entities[target_index].kind_id.as_str();
+        // Demeter is neutral and her Ents are good: RFB's earlier opposed-
+        // alignment branch does not apply to this pair's current definitions.
+        if matches!(
+            (source, target),
+            ("demo.actor.demeter-the-goddess-of-nature", "demo.actor.ent")
+                | ("demo.actor.ent", "demo.actor.demeter-the-goddess-of-nature")
+        ) && self
+            .character_definitions()
+            .is_none_or(|(_, race, _, _)| race.id != "rfb-legacy.race.ent")
+        {
+            return false;
+        }
+        self.entity_is_player_side(source_index) != self.entity_is_player_side(target_index)
+    }
+
     pub(super) fn monster_hostile_targets(&self, source_index: usize) -> Vec<MonsterHostileTarget> {
         let origin = self.entities[source_index].position;
         let source_is_player_side = self.entity_is_player_side(source_index);
@@ -534,7 +553,7 @@ impl Game {
                 .filter(|(index, entity)| {
                     *index != source_index
                         && entity.hp > 0
-                        && self.entity_is_player_side(*index) != source_is_player_side
+                        && self.monsters_are_enemies(source_index, *index)
                 })
                 .map(|(_, entity)| MonsterHostileTarget::Summon {
                     entity_id: entity.id.clone(),

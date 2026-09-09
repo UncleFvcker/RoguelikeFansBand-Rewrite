@@ -30,6 +30,24 @@ test("Fast Recovery uses the localized regeneration status name", () => {
   localization.setLocale("en-US");
 });
 
+test("unanswered Ent tree creation preserves the original Chinese message", () => {
+  const event = {
+    kind: "ability.effects",
+    messageKey: "ability-effects",
+    args: { target: "rfb.ability.race.summon-tree", count: "1" },
+    outcome: {
+      type: "ability-effects",
+      resolution: {
+        effects: [{ type: "no-op", effectIndex: 0, reason: "no-trees-answer" }],
+      },
+    },
+  };
+  assert.equal(formatter.formatEvent(event), "No trees answer your call.");
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "没有树人响应召唤。");
+  localization.setLocale("en-US");
+});
+
 test("equipment events resolve body slot IDs through the projected slot type", () => {
   state.bodySlots = [{ id: "right-hand", slotType: "weapon" }];
   assert.equal(formatter.equipmentSlotName("right-hand"), formatter.equipmentSlotName("weapon"));

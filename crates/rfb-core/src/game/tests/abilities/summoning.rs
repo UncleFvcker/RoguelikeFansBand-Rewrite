@@ -1,6 +1,80 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::*;
+
+#[test]
+fn ent_player_kin_scroll_uses_current_hash_glyph_category_and_existing_summon_pipeline() {
+    for temporary in [false, true] {
+        let mut game = crate::game::tests::hunger::ent_birth(442, "demo.build.warrior");
+        clear_monsters(&mut game);
+        game.items.clear();
+        game.gold_piles.clear();
+        game.progress.level = 50;
+        game.progress.max_level = 50;
+        game.player.position = Position { x: 48, y: 16 };
+        for y in 14..=18 {
+            for x in 46..=50 {
+                replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+            }
+        }
+        if temporary {
+            game.build.as_mut().unwrap().race_id = "demo.race.rfb-human".to_owned();
+            let mut form =
+                monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 1000, "test.ent").status;
+            form.granted_race_id = Some("rfb-legacy.race.ent".to_owned());
+            game.player.statuses.push(form);
+        }
+        let item = game.content.item("demo.item.kin-summoning-scroll").unwrap();
+        let effect = &item.use_action.as_ref().unwrap().effect;
+        let plan = game.item_category_summon_plan(effect);
+        assert!(
+            matches!(plan, crate::game::item_use::ItemUsePlan::SummonCategory { ref category, ref candidate_kind_ids, .. }
+            if category == "kin-glyph-35" && candidate_kind_ids.iter().any(|kind| kind == "demo.actor.ent"))
+        );
+        give_inventory_item(
+            &mut game,
+            "test.ent.kin-scroll",
+            "demo.item.kin-summoning-scroll",
+        );
+        game.use_inventory_item(
+            "test.ent.kin-scroll",
+            None,
+            None,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        assert!(!game.entities.is_empty());
+        assert!(game.entities.iter().all(|actor| {
+            game.content
+                .actor(&actor.kind_id)
+                .unwrap()
+                .tags
+                .iter()
+                .any(|tag| tag == "kin-glyph-35")
+                && game.actor_is_player_side(actor)
+        }));
+        assert!(
+            game.items
+                .iter()
+                .all(|item| item.id != "test.ent.kin-scroll")
+        );
+        game.player.statuses.clear();
+        game.build.as_mut().unwrap().race_id = "demo.race.rfb-human".to_owned();
+        let effect = &game
+            .content
+            .item("demo.item.kin-summoning-scroll")
+            .unwrap()
+            .use_action
+            .as_ref()
+            .unwrap()
+            .effect;
+        assert!(
+            matches!(game.item_category_summon_plan(effect), crate::game::item_use::ItemUsePlan::SummonCategory { category, .. } if category != "kin-glyph-35")
+        );
+    }
+}
 use crate::game::ability_projection::ability_effect_spec_dto;
 use crate::game::monster_ecology as ecology;
 

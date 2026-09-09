@@ -101,7 +101,7 @@ pub(super) fn initial_virtues(
             "rfb-legacy.race.einheri" | "rfb-legacy.race.skeleton" | "rfb-legacy.race.zombie" => {
                 kinds.push(VirtueKindDto::Unlife)
             }
-            "rfb-legacy.race.wood-elf" => kinds.push(VirtueKindDto::Nature),
+            "rfb-legacy.race.wood-elf" | "rfb-legacy.race.ent" => kinds.push(VirtueKindDto::Nature),
             "rfb-legacy.race.draconian-red"
             | "rfb-legacy.race.draconian-white"
             | "rfb-legacy.race.draconian-blue"

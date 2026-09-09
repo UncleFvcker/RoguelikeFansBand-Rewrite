@@ -510,6 +510,7 @@ message-skill-check-perception-success = You notice an unusual detail nearby.
 message-item-warning-trap = Your equipment pulses, warning you of a trap ahead.
 message-skill-check-perception-failure = Nothing unusual catches your attention.
 message-item-use-food = You gain { $amount } food from { $target } ({ $nutrition } / 15000).
+message-ability-no-trees-answer = No trees answer your call.
 message-hunger-state-changed = You are now { $state }.
 message-hunger-fainted = Hunger makes you faint for { $duration } ticks.
 message-hunger-starvation-damage = Starvation deals { $damage } damage.

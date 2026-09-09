@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability-program.race.summon-tree",
+  "input": "self",
+  "steps": [{
+    "type": "create-adjacent-terrain",
+    "sourceTerrainIds": [
+      "demo.terrain.floor",
+      "demo.terrain.dirt",
+      "demo.terrain.surface-grass",
+      "demo.terrain.surface-water-shallow",
+      "demo.terrain.surface-flower",
+      "demo.terrain.surface-brake",
+      "demo.terrain.surface-swamp",
+      "demo.terrain.glass-floor",
+      "demo.terrain.surface-waste",
+      "demo.terrain.slush",
+      "demo.terrain.surface-snow",
+      "demo.terrain.ice-floor"
+    ],
+    "targetTerrainId": "demo.terrain.surface-tree"
+  }]
+}

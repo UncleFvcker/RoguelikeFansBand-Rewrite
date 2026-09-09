@@ -31,7 +31,7 @@ fn ent_birth_catalog() -> Arc<ContentCatalog> {
         .clone()
 }
 
-fn ent_birth(seed: u64, build: &str) -> Game {
+pub(super) fn ent_birth(seed: u64, build: &str) -> Game {
     Game::from_content_internal(
         seed,
         ent_birth_catalog(),

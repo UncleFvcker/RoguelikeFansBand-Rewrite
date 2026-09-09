@@ -1,6 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
   "baseHp": 25,
+  "abilities": [{
+    "minimumLevel": 10,
+    "governingAttribute": "wisdom",
+    "cost": 20,
+    "costScaling": { "startLevel": 45, "levelInterval": 50, "amount": 30 },
+    "baseFailurePercent": 70,
+    "abilityId": "rfb.ability.race.summon-tree"
+  }],
   "foodNutritionDivisor": 20,
   "bodySlots": [
     {

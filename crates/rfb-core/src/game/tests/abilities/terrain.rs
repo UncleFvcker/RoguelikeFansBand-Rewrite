@@ -13,6 +13,384 @@ const RACE_OGRE_EXPLOSIVE_RUNE_ABILITY_ID: &str = "rfb.ability.race.explosive-ru
 
 const EXPLOSIVE_RUNE_TERRAIN_ID: &str = "demo.terrain.explosive-rune";
 
+const ENT_TREE_POWER: &str = "rfb.ability.race.summon-tree";
+const ENT_TREE_TERRAIN: &str = "demo.terrain.surface-tree";
+
+fn ent_tree_game(level: u16, build: &str) -> Game {
+    let mut game = crate::game::tests::hunger::ent_birth(440, build);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.gold_piles.clear();
+    game.player.position = Position { x: 10, y: 10 };
+    for y in 8..=12 {
+        for x in 8..=12 {
+            replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+        }
+    }
+    game.progress.level = level;
+    game.progress.max_level = level;
+    game.refresh_character_skills();
+    game.refresh_player_resource_maxima();
+    game.player.hp = game.effective_player_max_hp();
+    game
+}
+
+fn cast_ent_trees(game: &mut Game) -> (Vec<DomainEvent>, BTreeSet<Position>) {
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+    game.resolve_player_ability(
+        ENT_TREE_POWER,
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut changed,
+        &mut Vec::new(),
+    )
+    .unwrap();
+    (events, changed)
+}
+
+fn no_trees_answer(events: &[DomainEvent]) -> bool {
+    events.iter().any(|event| matches!(event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if resolution.effects.iter().any(|effect| matches!(effect,
+                rfb_protocol::AbilityEffectResolutionDto::NoOp { reason, .. } if reason == "no-trees-answer"))
+    ))
+}
+
+#[test]
+fn ent_tree_power_unlock_cost_wisdom_failure_and_current_form_use_innate_pipeline() {
+    for (level, cost) in [(9, 20), (10, 20), (44, 20), (45, 50), (50, 50)] {
+        let mut game = ent_tree_game(level, "demo.build.warrior");
+        assert_eq!(game.virtues[2].kind, VirtueKindDto::Nature);
+        let power = game
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .find(|power| power.id == ENT_TREE_POWER)
+            .unwrap();
+        assert_eq!(power.minimum_level, 10);
+        assert_eq!(power.source, AbilitySourceDto::Race);
+        assert_eq!(
+            power.governing_attribute,
+            Some(rfb_protocol::AttributeKindDto::Wisdom)
+        );
+        assert_eq!((power.base_resource_cost, power.resource_cost), (20, cost));
+        assert_eq!(power.can_cast, level >= 10);
+        game.debug_set_ability_casts_succeed(true);
+        let hp = game.player.hp;
+        let (events, changed) = cast_ent_trees(&mut game);
+        assert_eq!(
+            game.player.hp,
+            hp - if level >= 10 { cost as i32 } else { 0 }
+        );
+        if level == 9 {
+            assert!(changed.is_empty());
+            assert!(events.iter().any(|event| matches!(event, DomainEvent::AbilityCastUnavailable { reason, .. } if reason == "level-too-low")));
+        }
+    }
+    let mut game = ent_tree_game(10, "demo.build.high-mage-death");
+    let activation = game.content.race("rfb-legacy.race.ent").unwrap().abilities[0].clone();
+    assert_eq!(activation.base_failure_percent, 70);
+    game.progress.attributes.wisdom = 3;
+    let poor = game.innate_power_failure_percent(&activation);
+    game.progress.attributes.wisdom = 18;
+    assert!(game.innate_power_failure_percent(&activation) < poor);
+    let failure = game.innate_power_failure_percent(&activation);
+    let seed = (0..1000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(100) < u64::from(failure))
+        .unwrap();
+    game.rng = RfbRng::seeded(seed);
+    game.resources
+        .get_mut("demo.resource.mana")
+        .unwrap()
+        .current = 7;
+    let hp = game.player.hp;
+    let (events, changed) = cast_ent_trees(&mut game);
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::AbilityCastFailed { .. }))
+    );
+    assert!(changed.is_empty());
+    assert_eq!(game.rng.draw_counter, 1);
+    assert_eq!(game.resources["demo.resource.mana"].current, 0);
+    assert_eq!(game.player.hp, hp - 13);
+
+    let virtues = game.virtues;
+    assert_eq!(virtues[3].kind, VirtueKindDto::Nature);
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 1000, "test.ent-form").status;
+    form.granted_race_id = Some("demo.race.rfb-human".to_owned());
+    game.player.statuses.push(form);
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != ENT_TREE_POWER)
+    );
+    game.build.as_mut().unwrap().race_id = "demo.race.rfb-human".to_owned();
+    game.player.statuses.last_mut().unwrap().granted_race_id =
+        Some("rfb-legacy.race.ent".to_owned());
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .any(|ability| ability.id == ENT_TREE_POWER)
+    );
+    assert_eq!(
+        game.virtues, virtues,
+        "temporary form must not redraw birth virtues"
+    );
+    game.debug_set_ability_casts_succeed(true);
+    let (events, _) = cast_ent_trees(&mut game);
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::AbilityCastSucceeded { .. }))
+    );
+    game.player.statuses.clear();
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != ENT_TREE_POWER)
+    );
+}
+
+#[test]
+fn ent_tree_attempts_match_original_keypad_rng_including_zero_five_and_missing_nine() {
+    let mut base = ent_tree_game(44, "demo.build.warrior");
+    base.debug_set_ability_casts_succeed(true);
+    let center = base.player.position;
+    let mut saw_five = false;
+    let mut saw_zero = false;
+    for only_north_east in [false, true] {
+        for seed in 0..64 {
+            let mut game = base.clone();
+            let allowed: BTreeSet<_> = TERRAIN_INTERACTION_DIRECTIONS
+                .iter()
+                .map(|direction| game.position_in_direction(*direction))
+                .filter(|position| !only_north_east || *position == Position { x: 11, y: 9 })
+                .collect();
+            for direction in TERRAIN_INTERACTION_DIRECTIONS {
+                let position = game.position_in_direction(direction);
+                if !allowed.contains(&position) {
+                    replace_terrain(&mut game, position, "demo.terrain.wall");
+                }
+            }
+            let mut oracle = RfbRng::seeded(seed);
+            oracle.bounded(100); // innate cast failure roll
+            let mut attempts = 0;
+            let mut expected = None;
+            while attempts < 5 {
+                let dir = oracle.bounded(9) as usize;
+                saw_five |= dir == 5;
+                if dir == 5 {
+                    continue;
+                }
+                attempts += 1;
+                saw_zero |= dir == 0;
+                let x = center.x + [0, -1, 0, 1, -1, 0, 1, -1, 0, 1][dir];
+                let y = center.y + [0, 1, 1, 1, 0, 0, 0, -1, -1, -1][dir];
+                let position = Position { x, y };
+                if position != center && allowed.contains(&position) {
+                    expected = Some(position);
+                    break;
+                }
+            }
+            game.rng = RfbRng::seeded(seed);
+            let hp = game.player.hp;
+            let (events, changed) = cast_ent_trees(&mut game);
+            assert_eq!(
+                changed,
+                expected.into_iter().collect(),
+                "seed {seed}, NE only {only_north_east}"
+            );
+            assert_eq!(game.rng, oracle);
+            assert_eq!(game.player.hp, hp - 20);
+            assert_eq!(no_trees_answer(&events), expected.is_none());
+            assert!(
+                game.entities.is_empty(),
+                "the power creates terrain, not actors"
+            );
+            assert_eq!(game.terrain_at(center), "demo.terrain.floor");
+        }
+    }
+    assert!(saw_five && saw_zero);
+}
+
+#[test]
+fn ent_level_45_creates_all_adjacent_trees_on_original_floor_types_without_target_rng() {
+    let base = ent_tree_game(45, "demo.build.warrior");
+    let AbilityEffectDefinition::CreateAdjacentTerrain {
+        source_terrain_ids, ..
+    } = &base.content.ability(ENT_TREE_POWER).unwrap().effect
+    else {
+        panic!("tree creation effect")
+    };
+    assert_eq!(source_terrain_ids.len(), 12);
+    for terrain in source_terrain_ids {
+        let mut game = base.clone();
+        game.debug_set_ability_casts_succeed(true);
+        let positions: BTreeSet<_> = TERRAIN_INTERACTION_DIRECTIONS
+            .iter()
+            .map(|direction| game.position_in_direction(*direction))
+            .collect();
+        for position in &positions {
+            replace_terrain(&mut game, *position, terrain);
+        }
+        game.rng = RfbRng::seeded(17);
+        let (events, changed) = cast_ent_trees(&mut game);
+        assert_eq!(changed, positions, "{terrain}");
+        assert_eq!(game.rng.draw_counter, 1);
+        assert!(!no_trees_answer(&events));
+        assert!(
+            positions
+                .iter()
+                .all(|position| game.terrain_at(*position) == ENT_TREE_TERRAIN)
+        );
+    }
+}
+
+#[test]
+fn ent_tree_creation_respects_occupied_special_and_boundary_squares() {
+    let base = ent_tree_game(45, "demo.build.warrior");
+    for blocked in [
+        "item",
+        "gold",
+        "monster",
+        "stairs",
+        "connection",
+        "rune",
+        "tree",
+        "wall",
+        "deep-water",
+        "border",
+    ] {
+        for level in [44, 45] {
+            let mut game = base.clone();
+            game.progress.level = level;
+            game.debug_set_ability_casts_succeed(true);
+            if blocked == "border" {
+                game.player.position = Position {
+                    x: i32::from(game.width) - 2,
+                    y: 10,
+                };
+            }
+            for direction in TERRAIN_INTERACTION_DIRECTIONS {
+                let position = game.position_in_direction(direction);
+                replace_terrain(&mut game, position, "demo.terrain.wall");
+            }
+            let target = game.position_in_direction(Direction::East);
+            replace_terrain(&mut game, target, "demo.terrain.floor");
+            match blocked {
+                "item" => {
+                    give_inventory_item(&mut game, "test.ent.blocker", "demo.item.ration-of-food");
+                    game.items.last_mut().unwrap().location = ItemLocation::Ground(target);
+                }
+                "gold" => game.gold_piles.push(GoldPile {
+                    id: "test.ent.gold".to_owned(),
+                    position: target,
+                    amount: 1,
+                    appearance: GoldAppearanceDto::Gold,
+                    discovered: false,
+                }),
+                "monster" => game.push_generated_actor(
+                    "test.ent.blocker".to_owned(),
+                    "demo.actor.newt",
+                    target,
+                ),
+                "connection" => {
+                    game.floor_connections
+                        .push(crate::state::FloorConnectionState {
+                            id: "test.ent.connection".to_owned(),
+                            position: target,
+                            target_floor_id: None,
+                            target_connection_id: None,
+                        });
+                }
+                "stairs" => replace_terrain(&mut game, target, "demo.terrain.stairs-down"),
+                "rune" => replace_terrain(&mut game, target, "demo.terrain.warding-glyph"),
+                "tree" => replace_terrain(&mut game, target, ENT_TREE_TERRAIN),
+                "wall" => replace_terrain(&mut game, target, "demo.terrain.wall"),
+                "deep-water" => {
+                    replace_terrain(&mut game, target, "demo.terrain.surface-water-deep")
+                }
+                "border" => (),
+                _ => unreachable!(),
+            }
+            let before = game.terrain.clone();
+            let hp = game.player.hp;
+            let (events, changed) = cast_ent_trees(&mut game);
+            if blocked == "border" && level == 45 {
+                assert_eq!(changed, BTreeSet::from([target]));
+                assert_eq!(game.terrain_at(target), ENT_TREE_TERRAIN);
+            } else {
+                assert!(changed.is_empty(), "{blocked} at {level}");
+                assert_eq!(game.terrain, before);
+            }
+            assert_eq!(game.player.hp, hp - if level == 44 { 20 } else { 50 });
+            assert_eq!(no_trees_answer(&events), level == 44);
+        }
+    }
+}
+
+#[test]
+fn ent_created_trees_block_sight_allow_tree_movement_and_persist_through_save() {
+    let mut game = ent_tree_game(45, "demo.build.warrior");
+    game.debug_set_ability_casts_succeed(true);
+    game.player.position = Position { x: 48, y: 16 };
+    for y in 14..=18 {
+        for x in 46..=50 {
+            replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+        }
+    }
+    let beyond = Position { x: 50, y: 16 };
+    assert!(crate::game::visibility::has_line_of_sight(
+        &game,
+        game.player.position,
+        beyond
+    ));
+    dispatch_next(
+        &mut game,
+        GameCommand::CastAbility {
+            ability_id: ENT_TREE_POWER.to_owned(),
+            target: TargetSelection::SelfTarget,
+        },
+    );
+    assert!(!crate::game::visibility::has_line_of_sight(
+        &game,
+        game.player.position,
+        beyond
+    ));
+    assert_eq!(game.terrain_at(Position { x: 49, y: 16 }), ENT_TREE_TERRAIN);
+    let before_tick = game.world_tick;
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(game.player.position, Position { x: 49, y: 16 });
+    assert!(game.world_tick > before_tick);
+    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(restored.snapshot(), game.snapshot());
+    assert_eq!(restored.state_hash(), game.state_hash());
+    for state in [&mut game, &mut restored] {
+        dispatch_next(
+            state,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+        );
+    }
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
 #[test]
 fn formal_ogre_sustains_intelligence_and_places_capped_explosive_runes() {
     let mut game = ogre_game(423);

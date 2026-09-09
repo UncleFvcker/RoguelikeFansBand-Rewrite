@@ -506,6 +506,7 @@ message-skill-check-perception-success = 你注意到了附近的一处异常细
 message-item-warning-trap = 你的装备开始脉动，警告你前方有陷阱。
 message-skill-check-perception-failure = 你没有察觉到任何异样。
 message-item-use-food = 你从{ $target }补充了 { $amount } 点饱食度（{ $nutrition } / 15000）。
+message-ability-no-trees-answer = 没有树人响应召唤。
 message-hunger-state-changed = 你现在处于{ $state }状态。
 message-hunger-fainted = 你因饥饿昏厥了 { $duration } 个脉冲。
 message-hunger-starvation-damage = 挨饿使你受到 { $damage } 点伤害。

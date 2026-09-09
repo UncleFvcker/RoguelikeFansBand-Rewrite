@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.summon-tree",
+  "nameKey": "ability-rfb-race-summon-tree-name",
+  "descriptionKey": "ability-rfb-race-summon-tree-description",
+  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "abilityProgramId": "rfb.ability-program.race.summon-tree",
+  "tags": ["race", "terrain", "nature"]
+}

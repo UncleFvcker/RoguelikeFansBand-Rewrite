@@ -1538,7 +1538,7 @@ impl Game {
     pub(super) fn resolve_player_adjacent_terrain_creation_effect(
         &mut self,
         ability: &AbilityDefinition,
-        replacements: Vec<(Position, String)>,
+        mut replacements: Vec<(Position, String)>,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
@@ -1549,6 +1549,65 @@ impl Game {
         else {
             unreachable!("adjacent terrain executor requires an adjacent terrain effect");
         };
+        if ability.id == "rfb.ability.race.summon-tree" && self.progress.level < 45 {
+            // Low-level placement uses in_bounds (excluding the outer wall);
+            // level 45's projection uses in_bounds2, as the shared planner does.
+            replacements.retain(|(position, _)| {
+                position.x > 0
+                    && position.y > 0
+                    && position.x < i32::from(self.width) - 1
+                    && position.y < i32::from(self.height) - 1
+            });
+            let mut selected = None;
+            for _ in 0..5 {
+                // summon_tree_spell draws randint0(9): 5 retries without
+                // spending an attempt, 0 wastes one, and 9 is never drawn.
+                let direction = loop {
+                    let roll = self.rng.bounded(9);
+                    if roll != 5 {
+                        break roll;
+                    }
+                };
+                let (dx, dy) = [
+                    (0, 0),
+                    (-1, 1),
+                    (0, 1),
+                    (1, 1),
+                    (-1, 0),
+                    (0, 0),
+                    (1, 0),
+                    (-1, -1),
+                    (0, -1),
+                ][direction as usize];
+                let position = Position {
+                    x: self.player.position.x + dx,
+                    y: self.player.position.y + dy,
+                };
+                selected = replacements
+                    .iter()
+                    .find(|(candidate, _)| *candidate == position)
+                    .cloned();
+                if selected.is_some() {
+                    break;
+                }
+            }
+            replacements = selected.into_iter().collect();
+            if replacements.is_empty() {
+                events.push(DomainEvent::AbilityEffectsResolved {
+                    ability_id: ability.id.clone(),
+                    resolution: AbilityEffectsResolutionDto {
+                        target_entity_id: None,
+                        target_kind_id: None,
+                        effects: vec![AbilityEffectResolutionDto::NoOp {
+                            effect_index: 0,
+                            reason: "no-trees-answer".to_owned(),
+                        }],
+                    },
+                    trace: None,
+                });
+                return;
+            }
+        }
         let transformed_positions = self.apply_adjacent_terrain_creation(replacements, changed);
         events.push(DomainEvent::AbilityTerrainTransformed {
             ability_id: ability.id.clone(),

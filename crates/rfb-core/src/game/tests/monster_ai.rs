@@ -3,6 +3,171 @@ use super::support::*;
 use super::*;
 
 #[test]
+fn ent_demeter_relations_follow_current_player_race_for_monsters_pets_and_spells() {
+    const ENT: &str = "demo.actor.ent";
+    const DEMETER: &str = "demo.actor.demeter-the-goddess-of-nature";
+    for form in ["human", "ent", "temporary-ent", "ent-as-human"] {
+        for pet in [false, true] {
+            let mut game = Game::new_with_build(441, "demo.build.warrior").unwrap();
+            clear_monsters(&mut game);
+            game.items.clear();
+            game.player.position = Position { x: 10, y: 10 };
+            if form == "ent" || form == "ent-as-human" {
+                game.build.as_mut().unwrap().race_id = "rfb-legacy.race.ent".to_owned();
+            }
+            if form == "temporary-ent" || form == "ent-as-human" {
+                let mut status =
+                    monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 1000, "test.ent").status;
+                status.granted_race_id = Some(
+                    if form == "temporary-ent" {
+                        "rfb-legacy.race.ent"
+                    } else {
+                        "demo.race.rfb-human"
+                    }
+                    .to_owned(),
+                );
+                game.player.statuses.push(status);
+            }
+            for y in 4..=10 {
+                for x in 4..=10 {
+                    replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+                }
+            }
+            game.push_generated_actor("test.ent".to_owned(), ENT, Position { x: 5, y: 5 });
+            game.push_generated_actor("test.demeter".to_owned(), DEMETER, Position { x: 6, y: 5 });
+            for actor in &mut game.entities {
+                actor.alerted = true;
+                actor.statuses.clear();
+            }
+            if pet {
+                game.entities[0].controller_id = Some(game.player.id.clone());
+            }
+            // These source definitions reach are_enemies' Demeter exception:
+            // Ent is good and Demeter has no opposed alignment.
+            assert!(
+                game.content
+                    .actor(ENT)
+                    .unwrap()
+                    .tags
+                    .iter()
+                    .any(|tag| tag == "good")
+            );
+            assert!(
+                game.content
+                    .actor(DEMETER)
+                    .unwrap()
+                    .tags
+                    .iter()
+                    .all(|tag| tag != "evil" && tag != "good")
+            );
+            let enemies = form == "ent" || form == "temporary-ent";
+            for (source, target) in [(0, 1), (1, 0)] {
+                assert_eq!(
+                    game.monsters_are_enemies(source, target),
+                    enemies,
+                    "{form}, pet {pet}"
+                );
+                assert_eq!(
+                    game.monster_hostile_targets(source)
+                        .iter()
+                        .any(|candidate| candidate.entity_id() == game.entities[target].id),
+                    enemies
+                );
+            }
+            assert_eq!(
+                game.player_summon_hostile_targets(0)
+                    .contains(&"test.demeter".to_owned()),
+                enemies
+            );
+            assert!(
+                game.monster_hostile_targets(0)
+                    .iter()
+                    .all(|target| !target.is_player())
+            );
+            assert!(
+                game.monster_hostile_targets(1)
+                    .iter()
+                    .any(MonsterHostileTarget::is_player),
+                "being an Ent must not make Demeter friendly to the player"
+            );
+            let bolt = game
+                .content
+                .ability("rfb-legacy.ability.bolt-physical-1d1-137")
+                .unwrap()
+                .clone();
+            assert_eq!(
+                game.monster_ability_plan(0, bolt.clone(), 1).is_ok(),
+                enemies
+            );
+            assert_eq!(game.actor_can_move_body_blocker(1, 0), !enemies);
+            let mut collateral = game.clone();
+            collateral.entities[1].position = Position { x: 4, y: 5 };
+            collateral.player.position = Position { x: 6, y: 5 };
+            let ball = game
+                .content
+                .ability("rfb-legacy.ability.ball-acid-1d114-15")
+                .unwrap()
+                .clone();
+            for ability in [bolt, ball] {
+                let plan = collateral.monster_ability_plan(1, ability, 1);
+                if enemies {
+                    assert!(plan.is_ok());
+                } else {
+                    assert_eq!(
+                        plan.unwrap_err().reason,
+                        rfb_protocol::MonsterAbilityRejectionReasonDto::FriendlyRisk
+                    );
+                }
+            }
+            let mut events = Vec::new();
+            game.resolve_monster_action(
+                0,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+                &mut BTreeSet::new(),
+            )
+            .unwrap();
+            let attacked = events.iter().any(|event| {
+                matches!(
+                    event,
+                    DomainEvent::SummonMeleeMissed { .. }
+                        | DomainEvent::SummonMeleeHit { .. }
+                        | DomainEvent::MonsterMeleeEntityMissed { .. }
+                        | DomainEvent::MonsterMeleeEntityHit { .. }
+                        | DomainEvent::MonsterAbilityCast { .. }
+                )
+            });
+            assert_eq!(attacked, enemies, "{form}, pet {pet}");
+            if enemies {
+                let target = game
+                    .monster_hostile_targets(1)
+                    .into_iter()
+                    .find(|target| target.entity_id() == "test.ent")
+                    .unwrap();
+                let mut reverse_events = Vec::new();
+                game.resolve_monster_melee_target(
+                    1,
+                    &target,
+                    &mut reverse_events,
+                    &mut BTreeSet::new(),
+                    &mut Vec::new(),
+                )
+                .unwrap();
+                assert!(reverse_events.iter().any(|event| matches!(
+                    event,
+                    DomainEvent::MonsterMeleeEntityMissed { .. }
+                        | DomainEvent::MonsterMeleeEntityHit { .. }
+                )));
+            }
+            // Controlling both creatures keeps them allied even for an Ent.
+            game.entities[1].controller_id = Some(game.player.id.clone());
+            assert!(!game.monsters_are_enemies(0, 1));
+        }
+    }
+}
+
+#[test]
 fn monster_level_teleport_uses_resistance_save_and_floor_transition() {
     let mut base = Game::new(17);
     clear_monsters(&mut base);
