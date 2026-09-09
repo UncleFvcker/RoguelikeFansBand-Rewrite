@@ -17,6 +17,7 @@ use super::mutations::LuckBias;
 use super::{Game, initial_item_curse, item_quality_dto};
 use crate::{
     CoreError,
+    rng::RfbRng,
     save::initial_item_fuel,
     state::{Actor, GoldPile, ItemInstance, ItemLocation, RolledAffixState},
 };
@@ -570,11 +571,15 @@ impl Game {
                 .and_then(|definition| definition.equipment_slot.as_deref())
                 .is_some_and(|slot| matches!(slot, "ring" | "amulet"));
             let generation_depth = self.luck_adjusted_item_generation_depth(context.depth, staff);
+            let device = self
+                .content
+                .item(&entry.item_kind_id)
+                .is_some_and(|item| item.tags.iter().any(|tag| tag == "device"));
             let rolled_power = match table.quality_policy {
                 Some(policy) => {
-                    self.roll_rfb_depth_loot_power(policy, generation_depth, jewelry, mode)
+                    self.roll_rfb_depth_loot_power(policy, generation_depth, jewelry, device, mode)
                 }
-                None => match self.roll_loot_quality(
+                None => (match self.roll_loot_quality(
                     &table.quality_weights,
                     &quality_weights,
                     minimum_quality,
@@ -582,9 +587,9 @@ impl Game {
                     ItemQualityDto::Ordinary => 0,
                     ItemQualityDto::Fine => 1,
                     ItemQualityDto::Exceptional => 2,
-                },
-            }
-            .max(mode.minimum_power());
+                })
+                .max(mode.minimum_power()),
+            };
             let artifact_rolls = if mode == ItemGenerationMode::Artifact
                 || (rfb_generation
                     && matches!(
@@ -751,7 +756,7 @@ impl Game {
                         &mut self.rng,
                         item,
                         generation_depth,
-                        power >= 2,
+                        power.abs() >= 2,
                         None,
                     )
                 })
@@ -759,6 +764,8 @@ impl Game {
                 (table.rfb_ego_policy
                     == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
                     && (!rfb_weapon || allow_weapon_ego)
+                    && !(power < 0
+                        && base_kind.is_some_and(|base| matches!(base.tval, 16..=18 | 46)))
                     && power_allows_natural_affix(table.quality_policy, power))
                 .then(|| {
                     self.content.item(&entry.item_kind_id).and_then(|item| {
@@ -817,6 +824,7 @@ impl Game {
                 fuel.current = 0;
             }
             let EgoMaterialization {
+                curse_on_finalize,
                 kind_id_override,
                 affix_ids,
                 rolled_affixes,
@@ -863,7 +871,7 @@ impl Game {
                     )
                 },
             );
-            generated.push(GeneratedItemDraft {
+            let mut draft = GeneratedItemDraft {
                 kind_id: kind_id_override.unwrap_or_else(|| entry.item_kind_id.clone()),
                 quantity: entry.quantity,
                 origin_kind: match &context.source {
@@ -880,7 +888,24 @@ impl Game {
                 activation,
                 charges,
                 fuel,
-            });
+            };
+            if rfb_generation {
+                let final_curse = curse_on_finalize
+                    || (power == -2
+                        && !rfb_jewelry
+                        && !rfb_device
+                        && !rfb_quiver
+                        && !draft.affix_ids.is_empty());
+                if final_curse || (power == -1 && (rfb_weapon || rfb_armor)) {
+                    super::ego::curses::finalize_draft(
+                        &self.content,
+                        &mut self.rng,
+                        &mut draft,
+                        final_curse,
+                    );
+                }
+            }
+            generated.push(draft);
         }
         generated
     }
@@ -1104,24 +1129,35 @@ impl Game {
         policy: rfb_content::LootQualityPolicyDefinition,
         depth: u16,
         jewelry: bool,
+        device: bool,
         mode: ItemGenerationMode,
     ) -> i16 {
         let (good_percent, great_percent) =
             rfb_depth_quality_percentages(policy, depth, jewelry, self.player_luck_bias());
         let chance = i32::from(self.virtue_current(rfb_protocol::VirtueKindDto::Chance));
-        let good = (good_percent as i32 + chance / 50).clamp(0, 100) as u64;
-        let great = (great_percent as i32 + chance / 100).clamp(0, 100) as u64;
-        if mode.minimum_power() >= 1 || self.rng.bounded(100) < good {
-            if mode.minimum_power() >= 2
+        let good = good_percent + chance / 50;
+        let great = great_percent + chance / 100;
+        let no_egos = self.content.world(&self.world_id).unwrap().no_egos && !jewelry;
+        if mode.minimum_power() >= 1 || rfb_magik(&mut self.rng, good) {
+            if no_egos {
+                1
+            } else if mode.minimum_power() >= 2
                 || mode == ItemGenerationMode::GreatOnly
-                || self.rng.bounded(100) < great
+                || rfb_magik(&mut self.rng, great)
             {
                 mode.minimum_power().max(2)
             } else {
                 1
             }
+        } else if rfb_magik(&mut self.rng, (good + 2) / 3) {
+            if !no_egos && rfb_magik(&mut self.rng, great) {
+                -2
+            } else if !jewelry && !device && super::ego::randint1(&mut self.rng, depth) > 10 {
+                0
+            } else {
+                -1
+            }
         } else {
-            // E8.2 adds the conditional negative-quality rolls here.
             0
         }
     }
@@ -1145,27 +1181,32 @@ pub(super) fn rfb_depth_quality_percentages(
     depth: u16,
     jewelry: bool,
     luck: LuckBias,
-) -> (u64, u64) {
+) -> (i32, i32) {
     let rfb_content::LootQualityPolicyDefinition::RfbDepth {
         good_cap_percent,
         great_cap_percent,
     } = policy;
-    let mut good_cap = u64::from(good_cap_percent);
-    let mut great_cap = u64::from(great_cap_percent);
+    let mut good_cap = i32::from(good_cap_percent);
+    let mut great_cap = i32::from(great_cap_percent);
     if luck == LuckBias::Bad {
-        good_cap = good_cap.saturating_sub(5);
-        great_cap = great_cap.saturating_sub(great_cap / 4);
+        good_cap -= 5;
+        great_cap -= great_cap / 4;
     }
-    let mut good = (u64::from(depth) + 10).min(good_cap);
+    let mut good = (i32::from(depth) + 10).min(good_cap);
     let mut great = (good * 2 / 3).min(great_cap);
     if jewelry {
-        good = good.saturating_add(30).min(good_cap);
+        good = (good + 30).min(good_cap);
     }
     if luck == LuckBias::Good {
-        good = good.saturating_add(5).min(100);
-        great = great.saturating_add(2).min(100);
+        good += 5;
+        great += 2;
     }
     (good, great)
+}
+
+fn rfb_magik(rng: &mut RfbRng, percent: i32) -> bool {
+    // Preserve master z-rand.h literally, including its P <= 0 short circuit.
+    percent <= 0 || rng.bounded(100) < percent as u64
 }
 
 pub(super) fn power_allows_natural_affix(

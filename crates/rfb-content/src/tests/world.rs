@@ -12039,7 +12039,16 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 353);
+    assert_eq!(base_items.entries.len(), 354);
+    let amulet = base_items
+        .entries
+        .iter()
+        .find(|entry| entry.item_kind_id == "demo.item.amulet")
+        .unwrap();
+    assert_eq!(
+        (amulet.min_depth, amulet.weight, amulet.quantity),
+        (10, 100, 1)
+    );
 
     let selection: serde_json::Value = serde_json::from_slice(
         &std::fs::read(pack_path.join("legacy-item-selection.json"))
@@ -12099,6 +12108,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
             "demo.item.diamond-edge",
             "demo.item.quiver",
             "demo.item.feanorian-lamp",
+            "demo.item.amulet",
         ])
         .collect::<BTreeSet<_>>();
     let actual_item_ids = base_items
@@ -12106,7 +12116,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 319);
+    assert_eq!(expected_item_ids.len(), 320);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.

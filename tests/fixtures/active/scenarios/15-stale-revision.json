@@ -20,14 +20,14 @@
     "finalState": {
       "lastCommandSeq": 0,
       "revision": 0,
-      "stateHash": "a63e537ea612d122551a88332db4681d3496815696386fb5ef3af9873c70ecfa",
+      "stateHash": "de0544a7ddca43df6b8695f6fc1eb400459e6ff55b725295b62cd8e83a2d8dbc",
       "turn": 0
     },
     "errors": [
       {
         "step": 1,
         "kind": "revision-mismatch",
-        "stateHash": "a63e537ea612d122551a88332db4681d3496815696386fb5ef3af9873c70ecfa"
+        "stateHash": "de0544a7ddca43df6b8695f6fc1eb400459e6ff55b725295b62cd8e83a2d8dbc"
       }
     ]
   }

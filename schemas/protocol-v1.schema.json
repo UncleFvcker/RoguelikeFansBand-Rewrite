@@ -10900,7 +10900,23 @@
         "teleport",
         "by-curse",
         "danger",
-        "crappy-mutation"
+        "crappy-mutation",
+        "slow-regeneration",
+        "add-light-curse",
+        "call-animal",
+        "cowardice",
+        "low-melee",
+        "low-armor",
+        "low-magic",
+        "fast-digest",
+        "drain-hp",
+        "drain-mana",
+        "catlike",
+        "drain-pack",
+        "allergy",
+        "open-wounds",
+        "normality",
+        "low-device"
       ]
     },
     "ItemCurseRemovalResolutionDto": {

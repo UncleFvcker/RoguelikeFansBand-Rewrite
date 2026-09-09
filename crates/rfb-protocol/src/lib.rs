@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.235";
-pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 7;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 7;
+pub const PROTOCOL_VERSION: &str = "1.236";
+pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 8;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 8;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -2402,6 +2402,22 @@ pub enum ItemCurseEffectDto {
     ByCurse,
     Danger,
     CrappyMutation,
+    SlowRegeneration,
+    AddLightCurse,
+    CallAnimal,
+    Cowardice,
+    LowMelee,
+    LowArmor,
+    LowMagic,
+    FastDigest,
+    DrainHp,
+    DrainMana,
+    Catlike,
+    DrainPack,
+    Allergy,
+    OpenWounds,
+    Normality,
+    LowDevice,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -2416,6 +2432,8 @@ pub struct RfbPvalSaveDto {
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ItemIntrinsicPropertiesSaveDto {
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub rfb_heavy_curse: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rfb_flags: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2448,6 +2466,8 @@ impl ItemIntrinsicPropertiesSaveDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RolledAffixSaveDto {
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub rfb_heavy_curse: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rfb_flags: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2497,6 +2517,8 @@ impl<'de> Deserialize<'de> for RolledAffixSaveDto {
             #[serde(default)]
             rfb_flags: Vec<String>,
             #[serde(default)]
+            rfb_heavy_curse: bool,
+            #[serde(default)]
             rfb_pval: Option<RfbPvalSaveDto>,
             #[serde(default)]
             device_pval: Option<u16>,
@@ -2534,6 +2556,7 @@ impl<'de> Deserialize<'de> for RolledAffixSaveDto {
         Ok(Self {
             affix_id: wire.affix_id,
             rfb_flags: wire.rfb_flags,
+            rfb_heavy_curse: wire.rfb_heavy_curse,
             rfb_pval: wire.rfb_pval,
             device_pval: wire.device_pval,
             ammunition_capacity: wire.ammunition_capacity,

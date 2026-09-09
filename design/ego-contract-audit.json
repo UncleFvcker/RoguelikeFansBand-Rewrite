@@ -5,6 +5,7 @@
   "craftSelectableCount": 121,
   "runtimeRoundTripTest": "game::ego::contracts::all_160_source_egos_have_an_effect_and_save_stable_instances",
   "runtimeParityComplete": false,
+  "negativeEquipmentContract": "contract-v313-negative-equipment: ordinary/Ego generation, 1216 independent C cases and 26 curse consumers; negative random artifacts remain pending",
   "naturalTablesUsingSharedPolicy": [
     "demo.loot-table.archer",
     "demo.loot-table.base-items",
@@ -21,11 +22,6 @@
     "demo.loot-table.warrior"
   ],
   "unresolvedSharedGenerationContracts": [
-    {
-      "scope": "all natural equipment",
-      "contract": "negative power, curse_object / one_biff and value-dependent severity",
-      "source": "src/object2.c:2125; src/artifact.c:1960"
-    },
     {
       "scope": "non-ammunition random artifacts",
       "contract": "_check_rand_art / _art_create_random",
@@ -63,6 +59,13 @@
     "rfb-legacy.affix.lite-am-quest"
   ],
   "equipmentBases": [
+    {
+      "itemId": "demo.item.amulet",
+      "status": "source-type-verified",
+      "sourceIndex": 311,
+      "sval": 0,
+      "tval": 40
+    },
     {
       "itemId": "demo.item.mattock",
       "status": "source-type-verified",

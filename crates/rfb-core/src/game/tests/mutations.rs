@@ -960,7 +960,7 @@ fn rfb_depth_quality_short_circuits_good_and_great_rolls() {
             ItemQualityDto::Fine,
         ),
         (
-            vec![25],
+            vec![25, 9],
             rfb_content::ItemQuality::Ordinary,
             ItemQualityDto::Ordinary,
         ),
@@ -987,6 +987,7 @@ fn rfb_depth_quality_short_circuits_good_and_great_rolls() {
                 policy,
                 15,
                 false,
+                false,
                 minimum.into()
             )),
             expected
@@ -999,6 +1000,7 @@ fn rfb_depth_quality_short_circuits_good_and_great_rolls() {
             policy,
             15,
             false,
+            false,
             crate::game::loot::ItemGenerationMode::Artifact
         ),
         3
@@ -1007,12 +1009,15 @@ fn rfb_depth_quality_short_circuits_good_and_great_rolls() {
         game.rng, before,
         "GOOD | GREAT | SPECIAL short-circuits both quality rolls"
     );
-    for (roll, expected) in [(24, 2), (25, 0)] {
-        game.rng = RfbRng::seeded(seed_matching(|rng| rng.bounded(100) == roll));
+    for (roll, expected, draws) in [(24, 2, 1), (25, 0, 2)] {
+        game.rng = RfbRng::seeded(seed_matching(|rng| {
+            rng.bounded(100) == roll && (roll == 24 || rng.bounded(100) >= 9)
+        }));
         assert_eq!(
             game.roll_rfb_depth_loot_power(
                 policy,
                 15,
+                false,
                 false,
                 crate::game::loot::ItemGenerationMode::GreatOnly
             ),
@@ -1020,8 +1025,8 @@ fn rfb_depth_quality_short_circuits_good_and_great_rolls() {
         );
         assert_eq!(
             game.rng_draw_counter(),
-            1,
-            "AM_GREAT alone retains the outer good roll"
+            draws,
+            "AM_GREAT alone retains the outer good roll and the conditional curse check"
         );
     }
 }

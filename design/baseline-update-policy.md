@@ -6,11 +6,17 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v312`，机器可读政策固定在：
+当前逻辑基线是 `contract-v313`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
 ```
+
+`contract-v313` 接入自然负向装备、价值驱动诅咒及其消费者，新增独立 HEAVY 诅咒状态。
+State Hash Schema v113、Protocol 1.236、save header/payload v8；内容包 1.393.0。
+公共 RNG 短路与未知物品的共享投影同时改变，因此本批刷新并验证全部 26 条 active exact
+fixture，保留原场景命令及前置条件、零 waiver。具体来源与行为见
+[E8.2 契约](contract-v313-negative-equipment.md)。这不是 contentHash 变化导致的无差别刷新。
 
 `contract-v263` 为 Outpost 伯爵府增加收费鉴定、合法改名和下水道—鬼屋—皇家地下室
 任务链。角色名成为必需的玩家存档与状态哈希字段，协议升至 1.174，State Hash Schema

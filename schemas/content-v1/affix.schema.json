@@ -3897,6 +3897,10 @@
           "type": "array",
           "uniqueItems": true
         },
+        "rfbHeavyCurse": {
+          "description": "Original OFC_HEAVY_CURSE bit, independent of a concurrent permanent curse.",
+          "type": "boolean"
+        },
         "rfbPval": {
           "anyOf": [
             {
@@ -7096,12 +7100,15 @@
         "infra",
         "digging",
         "spell-power",
+        "less-spell-power",
         "device-power",
         "magic-resistance",
         "might",
         "search",
         "mastery",
+        "less-mastery",
         "capacity",
+        "less-capacity",
         "blows",
         "shots",
         "weapon-mastery"

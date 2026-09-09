@@ -758,7 +758,13 @@ impl Game {
         }
         modifiers.defense = modifiers
             .defense
-            .saturating_add(i32::from(item.enchantments.to_armor));
+            .saturating_add(i32::from(item.enchantments.to_armor))
+            .saturating_sub(self.equipped_curse_penalty(
+                item,
+                ItemCurseEffectDto::LowArmor,
+                10,
+                30,
+            ));
         modifiers
     }
 
@@ -1103,6 +1109,11 @@ impl Game {
                 .max(0),
         )
         .expect("non-negative regeneration rate must fit u64")
+            / if self.player_has_equipped_curse_effect(ItemCurseEffectDto::SlowRegeneration) {
+                5
+            } else {
+                1
+            }
     }
 
     pub(super) fn player_slow_digestion(&self) -> bool {
@@ -1551,6 +1562,7 @@ impl Game {
                         to_hit: profile
                             .to_hit
                             .saturating_add(i32::from(item.enchantments.to_hit))
+                            .saturating_sub(self.equipped_curse_penalty(item, ItemCurseEffectDto::LowMelee, 5, 15))
                             .saturating_add(heavy_to_hit)
                             .saturating_add(mounted_to_hit)
                             .saturating_add(sniping_to_hit)
@@ -1708,7 +1720,13 @@ impl Game {
                             profile,
                             item_definition.riding_weapon_kind,
                             item_definition.weight_tenths_pound,
-                            item.enchantments.to_hit,
+                            i32::from(item.enchantments.to_hit)
+                                - self.equipped_curse_penalty(
+                                    item,
+                                    ItemCurseEffectDto::LowMelee,
+                                    5,
+                                    15,
+                                ),
                             item.rolled_affixes
                                 .iter()
                                 .find_map(|rolled| rolled.melee_damage_dice),
@@ -1778,7 +1796,7 @@ impl Game {
                     profile.damage_type,
                     profile
                         .to_hit
-                        .saturating_add(i32::from(enchantment_to_hit))
+                        .saturating_add(enchantment_to_hit)
                         .saturating_add(mounted_to_hit),
                     mounted_to_hit,
                     Some(weight),
@@ -2969,6 +2987,18 @@ impl Game {
         } else {
             stealth_skill
         };
+        let stealth_skill = if include_equipment
+            && self.player_has_equipped_curse_effect(ItemCurseEffectDto::Catlike)
+        {
+            stealth_skill.with_modifier(
+                StatLayer::Equipment,
+                "equipment.curse.catlike",
+                -4,
+                StatBounds::NON_NEGATIVE,
+            )
+        } else {
+            stealth_skill
+        };
         ActorDerivedStats {
             max_hp: if include_equipment {
                 apply_player_life_force(max_hp, self.progress.life_force)
@@ -3002,7 +3032,26 @@ impl Game {
             door_skill: pipeline.resolve(StatKind::DoorSkill, StatBounds::NON_NEGATIVE),
             bash_power: pipeline.resolve(StatKind::BashPower, StatBounds::NON_NEGATIVE),
             search_skill: pipeline.resolve(StatKind::SearchSkill, StatBounds::NON_NEGATIVE),
-            device_skill: pipeline.resolve(StatKind::DeviceSkill, StatBounds::NON_NEGATIVE),
+            device_skill: {
+                let skill = pipeline.resolve(StatKind::DeviceSkill, StatBounds::NON_NEGATIVE);
+                let penalty = if include_equipment {
+                    self.items
+                        .iter()
+                        .map(|item| {
+                            self.equipped_curse_penalty(item, ItemCurseEffectDto::LowDevice, 5, 10)
+                        })
+                        .max()
+                        .unwrap_or(0)
+                } else {
+                    0
+                };
+                skill.with_modifier(
+                    StatLayer::Equipment,
+                    "equipment.curse.low-device",
+                    -penalty,
+                    StatBounds::NON_NEGATIVE,
+                )
+            },
             saving_throw_skill,
             stealth_skill,
             perception_skill: pipeline.resolve(StatKind::PerceptionSkill, StatBounds::NON_NEGATIVE),

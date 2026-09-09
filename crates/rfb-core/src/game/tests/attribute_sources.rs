@@ -101,7 +101,7 @@ fn attribute_sources_hide_unknown_equipment_and_reveal_only_after_identification
     let kind_id = game.items[0].kind_id.clone();
     game.mark_item_aware(&kind_id);
     let known = game.visible_item_modifiers(&game.items[0]).strength;
-    assert_eq!(game.equipment_modifiers().strength, known + 4);
+    assert_eq!(game.equipment_modifiers().strength, known + 5);
     game.player.statuses.push(unwell_status());
     let hidden = game.snapshot().player.progress.attribute_sources;
     for row in &hidden {
@@ -145,7 +145,7 @@ fn attribute_sources_hide_unknown_equipment_and_reveal_only_after_identification
             Some(row.effective)
         );
         if row.attribute == AttributeKindDto::Strength {
-            assert_eq!(equipment.modifier, known + 4);
+            assert_eq!(equipment.modifier, known + 5);
         }
     }
     // Tool slots are excluded by the real attribute path, even with hidden bonuses.

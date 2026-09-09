@@ -195,7 +195,7 @@ impl Game {
         )
     }
 
-    fn ty_curse_summon(
+    pub(super) fn ty_curse_summon(
         &mut self,
         source: &str,
         category: &str,
@@ -204,6 +204,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) -> usize {
+        let level = self.curse_danger_level(level, false);
         let base_category = match category {
             "high-undead" => "undead",
             "high-dragon" => "dragon",
@@ -512,6 +513,9 @@ mod tests {
             slot_id: "body".to_owned(),
         };
         item.curse = None;
+        item.intrinsic_properties
+            .rfb_flags
+            .insert("TY_CURSE".to_owned());
         item.rolled_affixes = vec![RolledAffixState {
             affix_id: "rfb-legacy.affix.the-demon-lord".to_owned(),
             curse_effects: BTreeSet::from([ItemCurseEffectDto::TyCurse]),

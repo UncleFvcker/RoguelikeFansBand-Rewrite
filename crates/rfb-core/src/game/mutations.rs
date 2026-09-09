@@ -1333,6 +1333,26 @@ impl Game {
         gained.then_some(mutation_id)
     }
 
+    pub(super) fn gain_random_bad_mutation(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+    ) -> Option<String> {
+        let candidates = self
+            .random_mutation_candidates(RandomMutationOperation::Gain)
+            .into_iter()
+            .filter(|(_, id, _)| {
+                self.content.mutation(id).is_some_and(|mutation| {
+                    matches!(
+                        mutation.rating,
+                        MutationRatingDefinition::Bad | MutationRatingDefinition::Awful
+                    )
+                })
+            })
+            .collect();
+        let id = self.select_mutation_from_candidates(candidates)?;
+        self.gain_mutation(&id, events).then_some(id)
+    }
+
     pub(super) fn gain_random_mutation_without_refresh(
         &mut self,
         events: &mut Vec<DomainEvent>,
@@ -1799,9 +1819,15 @@ impl Game {
         self.content
             .mutations()
             .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
-            .fold(0_i32, |total, mutation| {
-                total.saturating_add(mutation.spell_failure_modifier_percent)
-            })
+            .fold(
+                self.items
+                    .iter()
+                    .map(|item| {
+                        self.equipped_curse_penalty(item, ItemCurseEffectDto::LowMagic, 3, 10)
+                    })
+                    .sum::<i32>(),
+                |total, mutation| total.saturating_add(mutation.spell_failure_modifier_percent),
+            )
     }
 
     pub(super) fn player_has_mutation(&self, mutation_id: &str) -> bool {

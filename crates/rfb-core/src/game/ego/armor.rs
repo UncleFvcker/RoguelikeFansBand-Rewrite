@@ -1153,6 +1153,7 @@ pub(super) fn apply_pval(properties: &mut AffixPropertyBundleDefinition, flag: P
         Infra => properties.equipment_bonuses.infravision += value,
         Digging => properties.equipment_bonuses.digging_skill += 20 * value,
         SpellPower => properties.modifiers.spell_power_bonus += value,
+        LessSpellPower => properties.modifiers.spell_power_bonus -= value,
         DevicePower => properties.modifiers.device_power_bonus += value,
         MagicResistance => properties.equipment_bonuses.magic_resistance_percent += 5 * value,
         Might => {
@@ -1167,7 +1168,9 @@ pub(super) fn apply_pval(properties: &mut AffixPropertyBundleDefinition, flag: P
             properties.equipment_bonuses.perception_skill += 5 * value;
         }
         Mastery => properties.equipment_bonuses.device_skill += 8 * value,
+        LessMastery => properties.equipment_bonuses.device_skill -= 8 * value,
         Capacity => properties.equipment_bonuses.spell_capacity_bonus += value,
+        LessCapacity => properties.equipment_bonuses.spell_capacity_bonus -= value,
         Blows => properties.equipment_bonuses.melee_attacks_delta_percent += 50 * value,
         Shots => properties.equipment_bonuses.base_shot_delta_percent += 15 * value,
         WeaponMastery => properties.equipment_bonuses.weapon_dice_bonus += value,

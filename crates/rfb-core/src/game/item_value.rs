@@ -3,7 +3,7 @@
 //! Scoring consumes complete object properties; it never identifies or rolls an item.
 
 use std::collections::BTreeSet;
-mod instance;
+pub(super) mod instance;
 
 pub(super) fn obj_value_real(
     content: &rfb_content::ContentCatalog,

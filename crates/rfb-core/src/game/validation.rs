@@ -875,9 +875,9 @@ impl Game {
                     .any(|tag| matches!(tag.as_str(), "ammunition" | "device"));
             let affixes_preserve_ordinary_quality = !item.affix_ids.is_empty()
                 && item.affix_ids.iter().all(|affix_id| {
-                    self.content
-                        .affix(affix_id)
-                        .is_some_and(|affix| affix.preserves_ordinary_quality)
+                    self.content.affix(affix_id).is_some_and(|affix| {
+                        affix.preserves_ordinary_quality || affix.rfb_ego.is_some()
+                    })
                 });
             let affixes_are_valid = item.affix_ids.windows(2).all(|pair| pair[0] < pair[1])
                 && item
@@ -1124,9 +1124,9 @@ impl Game {
                         .any(|tag| matches!(tag.as_str(), "ammunition" | "device"));
                 let affixes_preserve_ordinary_quality = !item.affix_ids.is_empty()
                     && item.affix_ids.iter().all(|affix_id| {
-                        self.content
-                            .affix(affix_id)
-                            .is_some_and(|affix| affix.preserves_ordinary_quality)
+                        self.content.affix(affix_id).is_some_and(|affix| {
+                            affix.preserves_ordinary_quality || affix.rfb_ego.is_some()
+                        })
                     });
                 let affixes_are_valid = item.affix_ids.windows(2).all(|pair| pair[0] < pair[1])
                     && item

@@ -98,9 +98,9 @@ const report = {
   identityContractsVerified: entries.length, craftSelectableCount: 121,
   runtimeRoundTripTest: "game::ego::contracts::all_160_source_egos_have_an_effect_and_save_stable_instances",
   runtimeParityComplete: false,
+  negativeEquipmentContract: "contract-v313-negative-equipment: ordinary/Ego generation, 1216 independent C cases and 26 curse consumers; negative random artifacts remain pending",
   naturalTablesUsingSharedPolicy: naturalTables.map(table => table.id).sort(),
   unresolvedSharedGenerationContracts: [
-    { scope: "all natural equipment", contract: "negative power, curse_object / one_biff and value-dependent severity", source: "src/object2.c:2125; src/artifact.c:1960" },
     { scope: "non-ammunition random artifacts", contract: "_check_rand_art / _art_create_random", source: "src/ego.c:303" },
     { scope: "rings and amulets", contract: "value limits and up to 1000 candidate retries (real scoring implemented in E8.1)", source: "src/ego.c:411" },
     { scope: "dragon base kinds", contract: "dragon_resist and its pre-ego suppression roll", source: "src/object2.c:2312" },

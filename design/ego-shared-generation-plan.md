@@ -1,6 +1,6 @@
 # E8 六项共享生成契约实施计划
 
-日期：2026-09-09。状态：E8.1 已实现，验证记录见 [contract-v312](contract-v312-real-equipment-value.md)；E8.2 起待实施。
+日期：2026-09-09。状态：E8.1、E8.2 已实现，验证记录见 [contract-v312](contract-v312-real-equipment-value.md)、[contract-v313](contract-v313-negative-equipment.md)；E8.3 起待实施。负向随机神器仍随 E8.5 验收。
 
 工作树：`D:/codex/RoguelikeFansBand-Rewrite-realms-items`，分支：`codex/realms-items`。
 代码基线：`1c9e62a2e`。缺口来自 [E8 集成审计](ego-integration-audit.md)。

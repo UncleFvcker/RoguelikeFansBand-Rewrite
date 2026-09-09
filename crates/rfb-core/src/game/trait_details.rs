@@ -627,16 +627,15 @@ impl Game {
             let curse = self.visible_item_curse(item);
             let knowledge = self.item_property_knowledge.get(&item.id);
             let mut effects = Vec::new();
-            for effect in [
-                ItemCurseEffectDto::Aggravate,
-                ItemCurseEffectDto::Teleport,
-                ItemCurseEffectDto::TyCurse,
-            ] {
-                let known = item.rolled_affixes.iter().any(|rolled| {
-                    rolled.curse_effects.contains(&effect)
-                        && knowledge
-                            .is_some_and(|known| known.known_affix_ids.contains(&rolled.affix_id))
-                });
+            for effect in ego::curses::CURSE_EFFECTS.into_iter().flatten() {
+                let known = (self.item_identification(item) == ItemIdentificationDto::Identified
+                    && self.item_has_intrinsic_curse_effect(item, effect))
+                    || item.rolled_affixes.iter().any(|rolled| {
+                        rolled.curse_effects.contains(&effect)
+                            && knowledge.is_some_and(|known| {
+                                known.known_affix_ids.contains(&rolled.affix_id)
+                            })
+                    });
                 if known {
                     let active = (self.item_identification(item)
                         != ItemIdentificationDto::Unexamined)

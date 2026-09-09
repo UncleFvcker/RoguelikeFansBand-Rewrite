@@ -1112,6 +1112,7 @@ fn rolled_affixes_to_save(rolled_affixes: &[RolledAffixState]) -> Vec<RolledAffi
             RolledAffixSaveDto {
                 rfb_pval: rfb_pval_to_save(properties.rfb_pval.as_ref()),
                 rfb_flags: properties.rfb_flags.iter().cloned().collect(),
+                rfb_heavy_curse: properties.rfb_heavy_curse,
                 device_pval: rolled.device_pval,
                 ammunition_capacity: rolled.properties.ammunition_capacity,
                 affix_id: rolled.affix_id.clone(),
@@ -1170,6 +1171,7 @@ fn intrinsic_properties_to_save(
     ItemIntrinsicPropertiesSaveDto {
         rfb_pval: rfb_pval_to_save(properties.rfb_pval.as_ref()),
         rfb_flags: properties.rfb_flags.iter().cloned().collect(),
+        rfb_heavy_curse: properties.rfb_heavy_curse,
         ammunition_capacity: properties.ammunition_capacity,
         modifiers: stat_modifiers_to_dto(&properties.modifiers),
         equipment_bonuses: equipment_bonuses_to_dto(&properties.equipment_bonuses),
@@ -1302,6 +1304,7 @@ fn intrinsic_properties_from_save(
     let properties = AffixPropertyBundleDefinition {
         rfb_pval: rfb_pval_from_save(saved.rfb_pval)?,
         rfb_flags: rfb_flags_from_save(saved.rfb_flags)?,
+        rfb_heavy_curse: saved.rfb_heavy_curse,
         ammunition_capacity: saved.ammunition_capacity,
         modifiers: stat_modifiers_from_dto(saved.modifiers),
         equipment_bonuses: equipment_bonuses_from_dto(saved.equipment_bonuses),
@@ -1407,6 +1410,7 @@ fn rolled_affixes_from_save(
             let properties = AffixPropertyBundleDefinition {
                 rfb_pval: rfb_pval_from_save(rolled.rfb_pval)?,
                 rfb_flags: rfb_flags_from_save(rolled.rfb_flags)?,
+                rfb_heavy_curse: rolled.rfb_heavy_curse,
                 ammunition_capacity: rolled.ammunition_capacity,
                 modifiers: stat_modifiers_from_dto(rolled.modifiers),
                 equipment_bonuses: equipment_bonuses_from_dto(rolled.equipment_bonuses),

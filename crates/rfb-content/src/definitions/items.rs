@@ -199,19 +199,22 @@ pub enum RfbPvalFlagDefinition {
     Infra,
     Digging,
     SpellPower,
+    LessSpellPower,
     DevicePower,
     MagicResistance,
     Might,
     Search,
     Mastery,
+    LessMastery,
     Capacity,
+    LessCapacity,
     Blows,
     Shots,
     WeaponMastery,
 }
 
 impl RfbPvalFlagDefinition {
-    pub const ALL: [Self; 30] = [
+    pub const ALL: [Self; 33] = [
         Self::Strength,
         Self::Intelligence,
         Self::Wisdom,
@@ -233,12 +236,15 @@ impl RfbPvalFlagDefinition {
         Self::Infra,
         Self::Digging,
         Self::SpellPower,
+        Self::LessSpellPower,
         Self::DevicePower,
         Self::MagicResistance,
         Self::Might,
         Self::Search,
         Self::Mastery,
+        Self::LessMastery,
         Self::Capacity,
+        Self::LessCapacity,
         Self::Blows,
         Self::Shots,
         Self::WeaponMastery,
@@ -267,12 +273,15 @@ impl RfbPvalFlagDefinition {
             Self::Infra => "INFRA",
             Self::Digging => "TUNNEL",
             Self::SpellPower => "SPELL_POWER",
+            Self::LessSpellPower => "DEC_SPELL_POWER",
             Self::DevicePower => "DEVICE_POWER",
             Self::MagicResistance => "MAGIC_RESISTANCE",
             Self::Might => "XTRA_MIGHT",
             Self::Search => "SEARCH",
             Self::Mastery => "MAGIC_MASTERY",
+            Self::LessMastery => "DEC_MAGIC_MASTERY",
             Self::Capacity => "SPELL_CAP",
+            Self::LessCapacity => "DEC_SPELL_CAP",
             Self::Blows => "BLOWS",
             Self::Shots => "XTRA_SHOTS",
             Self::WeaponMastery => "WEAPONMASTERY",
@@ -315,6 +324,9 @@ fn is_automatic_affix_name_placement(value: &AffixNamePlacementDefinition) -> bo
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AffixPropertyBundleDefinition {
+    /// Original OFC_HEAVY_CURSE bit, independent of a concurrent permanent curse.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub rfb_heavy_curse: bool,
     /// Original object flags whose distinction is lost by gameplay projection
     /// (notably OF curses versus the separate OFC random curse effects).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
@@ -345,7 +357,7 @@ pub struct AffixPropertyBundleDefinition {
 pub fn valid_rfb_runtime_flag(flag: &str) -> bool {
     if matches!(
         flag,
-        "AGGRAVATE" | "DRAIN_EXP" | "TY_CURSE" | "LITE" | "DARKNESS"
+        "AGGRAVATE" | "DRAIN_EXP" | "TY_CURSE" | "LITE" | "DARKNESS" | "NO_TELE"
     ) {
         return true;
     }

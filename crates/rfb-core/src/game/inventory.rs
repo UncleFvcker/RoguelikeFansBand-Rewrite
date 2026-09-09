@@ -1607,6 +1607,7 @@ impl Game {
             if !matches!(item.location, ItemLocation::Equipped { .. }) {
                 continue;
             }
+            let was_cursed = item.curse.is_some();
             match item.curse {
                 Some(ItemCurseSeverityDto::Normal) => {
                     item.curse = None;
@@ -1620,6 +1621,14 @@ impl Game {
                     retained_permanent_item_ids.push(item.id.clone());
                 }
                 Some(ItemCurseSeverityDto::Heavy) | None => {}
+            }
+            if was_cursed && item.curse.is_none() {
+                item.intrinsic_properties.rfb_heavy_curse = false;
+                for roll in &mut item.rolled_affixes {
+                    roll.curse_effects.clear();
+                    roll.properties.rfb_heavy_curse = false;
+                }
+                item.rolled_affixes.retain(|roll| roll.has_instance_state());
             }
         }
         removed_item_ids.sort();

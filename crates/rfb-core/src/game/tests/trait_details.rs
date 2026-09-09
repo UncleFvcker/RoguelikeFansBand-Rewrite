@@ -112,8 +112,8 @@ fn trait_details_curses_do_not_infer_effects_from_severity_or_reveal_unknown_aff
     assert_eq!(data.negatives[0].curse, Some(ItemCurseSeverityDto::Heavy));
     assert_eq!(
         data.negatives[0].effects.len(),
-        2,
-        "inert effects must not be projected as active rules"
+        3,
+        "every identified curse with a runtime consumer is projected"
     );
     assert!(
         data.negatives[0]

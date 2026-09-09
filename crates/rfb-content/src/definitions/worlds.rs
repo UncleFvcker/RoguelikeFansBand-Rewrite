@@ -145,6 +145,9 @@ pub struct ItemSpawn {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct WorldDefinition {
+    /// RFB birth rule: suppress non-jewelry ego quality rolls in this world.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub no_egos: bool,
     #[serde(rename = "$schema")]
     pub schema: String,
     pub format_version: u16,

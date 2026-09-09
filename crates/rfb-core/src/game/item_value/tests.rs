@@ -147,7 +147,7 @@ fn object_flags_and_random_curse_effects_keep_distinct_real_values() {
 }
 
 #[test]
-fn signed_enchantment_power_preserves_rolls_and_changes_the_sign() {
+fn negative_one_subtracts_but_negative_two_keeps_positive_enchantment_rolls() {
     use crate::game::ego::{roll_rfb_armor_enchantment, roll_rfb_weapon_enchantment};
     let game = crate::game::Game::new(81);
     let item = game.content.item("demo.item.long-sword").unwrap();
@@ -156,11 +156,15 @@ fn signed_enchantment_power_preserves_rolls_and_changes_the_sign() {
         let mut negative = positive.clone();
         let good = roll_rfb_weapon_enchantment(&mut positive, item, 80, power).unwrap();
         let bad = roll_rfb_weapon_enchantment(&mut negative, item, 80, -power).unwrap();
-        assert_eq!((bad.to_hit, bad.to_damage), (-good.to_hit, -good.to_damage));
+        let sign = if power == 1 { -1 } else { 1 };
+        assert_eq!(
+            (bad.to_hit, bad.to_damage),
+            (sign * good.to_hit, sign * good.to_damage)
+        );
         assert_eq!(positive, negative);
         let good = roll_rfb_armor_enchantment(&mut positive, 80, power);
         let bad = roll_rfb_armor_enchantment(&mut negative, 80, -power);
-        assert_eq!(bad, -good);
+        assert_eq!(bad, sign * good);
         assert_eq!(positive, negative);
     }
 }

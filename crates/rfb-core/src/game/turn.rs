@@ -351,9 +351,15 @@ impl Game {
 
     fn process_equipment_regeneration(&mut self, events: &mut Vec<DomainEvent>) {
         if self.wilderness_blocks_regeneration()
-            || !self
-                .world_tick
-                .is_multiple_of(EQUIPMENT_REGENERATION_INTERVAL_TICKS)
+            || !self.world_tick.is_multiple_of(
+                EQUIPMENT_REGENERATION_INTERVAL_TICKS
+                    * if self.player_has_equipped_curse_effect(ItemCurseEffectDto::SlowRegeneration)
+                    {
+                        5
+                    } else {
+                        1
+                    },
+            )
             || !self
                 .player_equipment_passives()
                 .contains(&EquipmentPassive::Regeneration)
@@ -531,6 +537,17 @@ impl Game {
                 status.kind_id == STATUS_INVULNERABILITY && status.remaining_ticks <= 1
             });
         let player_damage_percent = self.player_incoming_damage_percent();
+        // The current status model recovers one wound tick per turn. Apply
+        // dungeon.c's (recovery + game_turn % 3) / 3 without slowing its damage.
+        if self.player_has_equipped_curse_effect(ItemCurseEffectDto::OpenWounds)
+            && self.world_tick % 3 != 2
+        {
+            for status in &mut self.player.statuses {
+                if status.kind_id == STATUS_BLEEDING {
+                    status.remaining_ticks = status.remaining_ticks.saturating_add(1);
+                }
+            }
+        }
         let transcendence = self.player_has_status_kind(STATUS_TRANSCENDENCE);
         let mut mana = self.resources.get_mut("demo.resource.mana");
         let player_tick = process_actor_status_tick_with(

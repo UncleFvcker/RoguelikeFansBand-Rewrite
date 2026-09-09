@@ -93,7 +93,7 @@ export type CharacterCurseEffectDto = { effect: ItemCurseEffectDto,
  */
 active: boolean | null, asStealthPenalty: boolean, };
 
-export type ItemCurseEffectDto = "ty-curse" | "aggravate" | "drain-experience" | "add-heavy-curse" | "call-demon" | "call-dragon" | "teleport" | "by-curse" | "danger" | "crappy-mutation";
+export type ItemCurseEffectDto = "ty-curse" | "aggravate" | "drain-experience" | "add-heavy-curse" | "call-demon" | "call-dragon" | "teleport" | "by-curse" | "danger" | "crappy-mutation" | "slow-regeneration" | "add-light-curse" | "call-animal" | "cowardice" | "low-melee" | "low-armor" | "low-magic" | "fast-digest" | "drain-hp" | "drain-mana" | "catlike" | "drain-pack" | "allergy" | "open-wounds" | "normality" | "low-device";
 
 export type AttributeSourceDto = { kind: AttributeSourceKindDto, sourceId: string | null, nameKey: string | null,
 /**

@@ -114,7 +114,13 @@ impl Game {
     ) {
         if self.actor_is_player_side(&self.entities[source_index])
             || !self.player_has_cult_of_personality()
-            || self.rng.bounded(2) != 0
+            || self.rng.bounded(
+                if self.player_has_equipped_curse_effect(ItemCurseEffectDto::Danger) {
+                    4
+                } else {
+                    2
+                },
+            ) != 0
         {
             return;
         }
@@ -3362,6 +3368,11 @@ impl Game {
                 // Candidate kinds are filtered without RNG. Ordinary
                 // categories enumerate in stable id order; batch candidates
                 // preserve their declared weighted order for execution.
+                let maximum_level = if self.actor_is_player_side(&self.entities[index]) {
+                    *maximum_level
+                } else {
+                    self.curse_danger_level(*maximum_level, true)
+                };
                 let current_task_id = self.current_floor_task_id();
                 let eligible = |definition: &rfb_content::ActorDefinition| {
                     let unique = definition
@@ -3371,7 +3382,7 @@ impl Game {
                     definition.role == ActorRole::Monster
                         && (category != "unique"
                             || definition.level >= u32::from(maximum_level.saturating_sub(40)))
-                        && definition.level <= u32::from(*maximum_level)
+                        && definition.level <= u32::from(maximum_level)
                         && definition.tags.iter().any(|tag| tag == category)
                         && (category == "guardian"
                             || !definition.tags.iter().any(|tag| tag == "guardian"))

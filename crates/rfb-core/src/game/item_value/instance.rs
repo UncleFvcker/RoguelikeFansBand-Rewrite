@@ -7,7 +7,10 @@ use rfb_protocol::{ItemCurseSeverityDto, WeaponTraitDto};
 
 /// Full instance input, independent of player knowledge, pricing, and RNG.
 /// Missing authoritative metadata is unsupported, never an approximate price.
-pub(super) fn value_object(content: &ContentCatalog, item: &ItemInstance) -> Option<ValueObject> {
+pub(in crate::game) fn value_object(
+    content: &ContentCatalog,
+    item: &ItemInstance,
+) -> Option<ValueObject> {
     let definition = content.item(&item.kind_id)?;
     let base = match &definition.artifact_generation {
         Some(artifact) => content.item(&artifact.base_item_kind_id)?,
@@ -18,7 +21,12 @@ pub(super) fn value_object(content: &ContentCatalog, item: &ItemInstance) -> Opt
     let mut object = ValueObject {
         tval: kind.tval,
         sval: kind.sval,
-        pval: i32::from(raw.pval),
+        // obj_create_lite moves the kind's fuel pval to xtra4, then clears pval.
+        pval: if kind.tval == 39 && kind.sval <= 1 {
+            0
+        } else {
+            i32::from(raw.pval)
+        },
         flags: base
             .rfb_value
             .as_ref()?

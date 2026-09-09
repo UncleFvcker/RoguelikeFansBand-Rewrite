@@ -3,6 +3,7 @@
 use std::collections::BTreeSet;
 
 mod armor;
+pub(super) mod curses;
 mod jewelry;
 pub(super) use jewelry::roll as roll_jewelry;
 #[cfg(test)]
@@ -35,6 +36,8 @@ use super::{initial_item_runtime_state, merge_equipment_bonuses, roll_weighted_i
 /// Complete generated affix state shared by content-driven consumers.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct EgoMaterialization {
+    /// Jewelry may change its local power before the final curse step.
+    pub(super) curse_on_finalize: bool,
     pub(super) extinguish_fuel: bool,
     pub(super) kind_id_override: Option<String>,
     pub(super) clear_armor_enchantment: bool,
@@ -95,6 +98,7 @@ impl EgoMaterialization {
             .flat_map(|rolled| rolled.curse_effects.iter().copied())
             .collect();
         Self {
+            curse_on_finalize: false,
             extinguish_fuel: false,
             kind_id_override: None,
             clear_armor_enchantment: false,
@@ -178,8 +182,11 @@ pub(super) fn materialize_ego_with_rng(
     if let [affix_id] = affix_ids.as_slice()
         && let Some(item) = content.item(kind_id)
         && let Some(affix) = content.affix(affix_id)
-        && let Some(result) = jewelry::materialize(rng, item, affix, roll_depth(affix), power)
+        && let Some(mut result) = jewelry::materialize(rng, item, affix, roll_depth(affix), power)
     {
+        if result.curse_on_finalize {
+            curses::finalize_materialization(content, rng, kind_id, &mut result);
+        }
         return result;
     }
     if let [affix_id] = affix_ids.as_slice()
@@ -316,6 +323,7 @@ pub(super) fn merge_affix_properties(
     addition: &AffixPropertyBundleDefinition,
 ) {
     total.rfb_flags.extend(addition.rfb_flags.iter().cloned());
+    total.rfb_heavy_curse |= addition.rfb_heavy_curse;
     if let Some(pval) = &addition.rfb_pval {
         remember_rfb_pval(total, pval.flags.iter().copied(), i32::from(pval.value));
     }
@@ -1318,8 +1326,18 @@ pub(super) fn roll_rfb_weapon_enchantment(
         ItemEnchantmentsDto::default()
     } else {
         ItemEnchantmentsDto {
-            to_hit: to_hit as i16 * power.signum(),
-            to_damage: to_damage as i16 * power.signum(),
+            to_hit: to_hit as i16
+                * if power == -1 {
+                    -1
+                } else {
+                    power.signum().abs()
+                },
+            to_damage: to_damage as i16
+                * if power == -1 {
+                    -1
+                } else {
+                    power.signum().abs()
+                },
             to_armor: 0,
         }
     })
@@ -1333,7 +1351,12 @@ pub(super) fn roll_rfb_armor_enchantment(rng: &mut RfbRng, level: u16, power: i1
     } else {
         first
     };
-    amount as i16 * power.signum()
+    amount as i16
+        * if power == -1 {
+            -1
+        } else {
+            power.signum().abs()
+        }
 }
 
 pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
@@ -2019,22 +2042,7 @@ fn roll_rfb_death(rng: &mut RfbRng, roll: &mut RfbWeaponRoll, dice: &mut MeleeDa
 }
 
 fn roll_rfb_heavy_curse_effect(rng: &mut RfbRng) -> ItemCurseEffectDto {
-    loop {
-        let effect = match rng.bounded(28) {
-            0 => ItemCurseEffectDto::TyCurse,
-            1 => ItemCurseEffectDto::Aggravate,
-            2 => ItemCurseEffectDto::DrainExperience,
-            5 => ItemCurseEffectDto::AddHeavyCurse,
-            7 => ItemCurseEffectDto::CallDemon,
-            8 => ItemCurseEffectDto::CallDragon,
-            10 => ItemCurseEffectDto::Teleport,
-            19 => ItemCurseEffectDto::ByCurse,
-            20 => ItemCurseEffectDto::Danger,
-            23 => ItemCurseEffectDto::CrappyMutation,
-            _ => continue,
-        };
-        return effect;
-    }
+    curses::get_curse(rng, 2, 0)
 }
 
 fn roll_rfb_troika(
@@ -2426,14 +2434,17 @@ fn add_light(properties: &mut AffixPropertyBundleDefinition) {
     properties.equipment_bonuses.light_radius = properties.equipment_bonuses.light_radius.max(1);
 }
 
-fn one_in(rng: &mut RfbRng, odds: u16) -> bool {
+pub(super) fn one_in(rng: &mut RfbRng, odds: u16) -> bool {
     debug_assert!(odds > 0);
-    rng.bounded(u64::from(odds)) == 0
+    odds == 1 || rng.bounded(u64::from(odds)) == 0
 }
 
-fn randint1(rng: &mut RfbRng, maximum: u16) -> u16 {
-    debug_assert!(maximum > 0);
-    u16::try_from(rng.bounded(u64::from(maximum))).expect("bounded roll fits u16") + 1
+pub(super) fn randint1(rng: &mut RfbRng, maximum: u16) -> u16 {
+    if maximum <= 1 {
+        1
+    } else {
+        u16::try_from(rng.bounded(u64::from(maximum))).expect("bounded roll fits u16") + 1
+    }
 }
 
 const fn actor_resistance_rank(level: ActorResistanceLevel) -> u8 {
@@ -3525,7 +3536,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(STATE_HASH_SCHEMA_VERSION, 112);
+        assert_eq!(STATE_HASH_SCHEMA_VERSION, 113);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,

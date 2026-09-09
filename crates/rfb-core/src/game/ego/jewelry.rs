@@ -525,7 +525,7 @@ pub(super) fn materialize(
     properties.status_immunities.sort();
     let profile = activation.and_then(|i| affix.device_generation.as_ref()?.activations.get(i));
     let (activation, charges) = profile.map(materialize_rfb_activation).unzip();
-    Some(EgoMaterialization::new(
+    let mut result = EgoMaterialization::new(
         vec![affix.id.clone()],
         state
             .has_instance_state()
@@ -536,7 +536,11 @@ pub(super) fn materialize(
         curse,
         activation,
         charges,
-    ))
+    );
+    // _create_ring_aux/_create_amulet_aux promote -1 before ego_finalize.
+    // Preserve the protection ring's local power changes, even below -2.
+    result.curse_on_finalize = matches!(power, -2 | -1);
+    Some(result)
 }
 
 fn activation_token(affix: &AffixDefinition, token: &str) -> Option<usize> {

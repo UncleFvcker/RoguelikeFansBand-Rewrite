@@ -70,13 +70,13 @@ fn natural_ammunition_damage_dice_survive_generation_and_save() {
             themed: false,
         },
     };
-    game.rng = RfbRng::seeded(2295);
+    game.rng = RfbRng::seeded(11640);
     let drops = game
         .generate_loot_instances(&context, ItemLocation::Inventory)
         .unwrap();
     let expected = drops[0].clone();
     assert_eq!(expected.kind_id, "demo.item.sheaf-arrow");
-    assert_eq!(expected.damage_dice_override, Some(6));
+    assert_eq!(expected.damage_dice_override, Some(5));
     game.items.extend(drops);
     let restored = Game::from_save(game.to_save()).unwrap();
     assert_eq!(
@@ -183,7 +183,7 @@ fn base_item_natural_egos_cover_all_equipment_types() {
     };
     let mut seen = BTreeSet::new();
     // Fixed representatives exercise the real shared pool without a large seed sweep.
-    for seed in [1, 3, 46, 71, 75, 112, 177, 200, 1819, 3725] {
+    for seed in [3, 7, 63, 94, 297, 427, 618, 704, 1219, 1596] {
         let mut game = base.clone();
         game.rng = RfbRng::seeded(seed);
         let drops = game
@@ -2825,6 +2825,10 @@ fn p88d_icky_cave_entrance_recall_conquest_and_reward_round_trip() {
         .iter()
         .position(|entity| entity.id == "demo.guardian.icky-cave.1")
         .expect("Icky Cave depth 20 should spawn The Icky Queen");
+    let guardian = game.entities[guardian_index].clone();
+    // Reward acceptance does not include other monsters picking the drop up.
+    game.entities = vec![guardian];
+    let guardian_index = 0;
     assert_eq!(
         game.entities[guardian_index].kind_id,
         "demo.actor.the-icky-queen"

@@ -478,3 +478,9 @@ E8.1（contract-v312）将 Protocol 升至 1.235、save header/payload schema �
 `rfbFlags` 保存投影不能反推的 OF 标记。标记按字典序唯一保存，恢复拒绝未知、重复或乱序值；
 空 pval 标记集允许炸毁后的原始 pval 保留。字段进入状态哈希，恢复不抽 RNG、不重新生成。
 不提供旧开发存档迁移。详见 [E8.1](contract-v312-real-equipment-value.md)。
+
+E8.2（contract-v313）将 Protocol 升至 1.236、save header/payload schema 升至 v8、State Hash
+Schema 升至 v113，容器仍为 v1。属性包的 `rfbHeavyCurse` 独立保存 PERMA 上的 HEAVY 位，
+不能从 severity 推断；`curseEffects` 覆盖 get_curse 可生成的 26 种 CF。解除诅咒清除 CF、
+独立 HEAVY 位及空 rolled 记录，保留 OF 标记与负 pval。保存/恢复不重新抽样，正式 RFB Ego
+可保持 Ordinary 显示品质；不提供旧开发存档迁移。详见 [E8.2](contract-v313-negative-equipment.md)。
