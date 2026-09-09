@@ -8,6 +8,8 @@
   "walkable": false,
   "blocksSight": true,
   "allowsWallPassage": true,
+  "movementModes": ["fly"],
+  "monsterDestroyToTerrainId": "demo.terrain.floor",
   "openToTerrainId": "demo.terrain.curtain-open",
   "tags": ["curtain", "passage"]
 }

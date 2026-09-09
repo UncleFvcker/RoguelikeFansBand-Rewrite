@@ -278,7 +278,11 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) -> bool {
-        if change_source == TerrainChangeSource::Projectile {
+        // FF_HURT_DISI has FAF_NO_DROP, including the kill_wall movement path.
+        if matches!(
+            change_source,
+            TerrainChangeSource::Projectile | TerrainChangeSource::Disintegration
+        ) {
             return false;
         }
         let source_yield = source

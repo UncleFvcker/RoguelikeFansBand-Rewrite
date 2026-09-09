@@ -8,6 +8,7 @@
   "walkable": false,
   "blocksSight": true,
   "allowsWallPassage": true,
+  "monsterDestroyToTerrainId": "demo.terrain.surface-grass",
   "movementModes": ["fly"],
   "tags": ["outdoor", "surface", "tree"]
 }

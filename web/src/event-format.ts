@@ -505,6 +505,11 @@ export function createPresentationFormatter(
           terrain: contentName(event.args.terrain),
           damage: damageResolution(event)?.finalDamage ?? "?",
         });
+      case "player-wall-density":
+      case "player-wall-crushed":
+        return localization.format(`message-${event.messageKey}`, {
+          damage: damageResolution(event)?.finalDamage ?? "?",
+        });
       case "terrain-trap-disarmed":
         return localization.format("message-terrain-trap-disarmed");
       case "terrain-trap-disarm-failed":

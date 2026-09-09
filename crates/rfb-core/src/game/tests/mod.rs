@@ -51,6 +51,7 @@ mod tasks;
 mod town;
 mod trait_details;
 mod virtue_state;
+mod wall_passage;
 mod weapon_ego_activations;
 mod weapon_proficiency;
 mod weapon_traits;

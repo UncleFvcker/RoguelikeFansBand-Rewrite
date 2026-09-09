@@ -1405,13 +1405,14 @@ impl Game {
                 if self.player_is_dead() {
                     break RestStopReasonDto::PlayerDied;
                 }
+                // RFB regenerates mana before wall damage's cave_no_regen HP gate.
+                self.recover_player_resources(true, events);
                 if self.player.hp < hp_before {
                     break RestStopReasonDto::Damaged;
                 }
                 if self.visible_hostile_exists() {
                     break RestStopReasonDto::EnemyVisible;
                 }
-                self.recover_player_resources(true, events);
                 if self.pet_upkeep_dto().dismissal_required {
                     break RestStopReasonDto::PetDismissalRequired;
                 }

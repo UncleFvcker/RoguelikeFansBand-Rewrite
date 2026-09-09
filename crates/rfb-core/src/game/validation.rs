@@ -978,7 +978,9 @@ impl Game {
                 )
                 || (floor.id == self.current_floor_id
                     && floor.dungeon_instance_id == self.current_dungeon_instance_id)
-                || !floor_position_is_walkable(floor, floor.player_position, &self.content)
+                // A player can leave a floor from inside a wall, including after a form expires.
+                || !(0..i32::from(floor.width)).contains(&floor.player_position.x)
+                || !(0..i32::from(floor.height)).contains(&floor.player_position.y)
             {
                 return Err(CoreError::InvalidSave("stored floor state is invalid"));
             }

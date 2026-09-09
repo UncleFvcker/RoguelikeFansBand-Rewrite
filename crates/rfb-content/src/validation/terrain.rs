@@ -236,7 +236,8 @@ pub(super) fn validate_terrain(
                 || if monster_rune {
                     !terrain.walkable || terrain.blocks_sight
                 } else {
-                    terrain.walkable || !terrain.blocks_sight
+                    // Original glass walls/doors have FF_LOS and FF_HURT_DISI together.
+                    terrain.walkable || terrain.tags.iter().any(|tag| tag == "permanent")
                 }
                 || !target.walkable
                 || target.blocks_sight

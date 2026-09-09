@@ -95,6 +95,7 @@ impl Game {
                     innate.passives.push(passive);
                 }
             }
+            innate.passes_walls = race.id == "rfb-legacy.race.spectre";
             innate.reflects_bolts = race
                 .reflects_bolts_minimum_level
                 .is_some_and(|level| self.progress.level >= level);

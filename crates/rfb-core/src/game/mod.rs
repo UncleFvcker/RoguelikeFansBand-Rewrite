@@ -1861,30 +1861,7 @@ impl Game {
                         x: self.player.position.x + dx,
                         y: self.player.position.y + dy,
                     };
-                    let movement_blocked = if let Some(mount_id) = self.riding_actor_id.as_deref() {
-                        self.entities
-                            .iter()
-                            .position(|entity| entity.id == mount_id)
-                            .is_none_or(|mount_index| {
-                                !self.actor_can_enter_position(mount_index, target)
-                            })
-                    } else {
-                        self.player_can_enter_local_wilderness(target).map_or_else(
-                            || {
-                                self.index(target).is_none()
-                                    || (!self.is_walkable(target)
-                                        && !self.player_can_pass_walls()
-                                        && !self.index(target).is_some_and(|index| {
-                                            self.content.terrain(&self.terrain[index]).is_some_and(
-                                                |terrain| {
-                                                    self.player_can_cross_tree_terrain(terrain)
-                                                },
-                                            )
-                                        }))
-                            },
-                            |can_enter| !can_enter,
-                        )
-                    };
+                    let movement_blocked = !self.player_can_enter_position(target);
                     if movement_blocked {
                         events.push(DomainEvent::MoveBlocked);
                     } else if let Some(index) = self
@@ -1930,6 +1907,11 @@ impl Game {
                                 translation,
                             } => {
                                 map_translation = translation;
+                                self.destroy_wall_for_player_entry(
+                                    target,
+                                    &mut events,
+                                    &mut changed,
+                                );
                                 if crossed_world_cell
                                     && self.wilderness_is_daytime()
                                     && self.wilderness_has_interesting_site()
@@ -2091,6 +2073,7 @@ impl Game {
 
         if player_moved {
             action_cost = self.player_snow_movement_action_cost(action_cost);
+            action_cost = self.player_wall_movement_action_cost(action_cost);
         }
 
         self.process_chaos_patron_level_rewards(
@@ -3992,8 +3975,7 @@ impl Game {
                 events.push(DomainEvent::RidingUnavailable);
                 return;
             };
-            if self.index(target).is_none()
-                || (!self.is_walkable(target) && !self.player_can_pass_walls())
+            if !self.player_can_enter_unmounted_position(target)
                 || self
                     .entities
                     .iter()

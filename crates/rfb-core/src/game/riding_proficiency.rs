@@ -408,8 +408,7 @@ impl Game {
                 x: origin.x + dx,
                 y: origin.y + dy,
             };
-            let safe = self.index(candidate).is_some()
-                && (self.is_walkable(candidate) || self.player_can_pass_walls())
+            let safe = self.player_can_enter_unmounted_position(candidate)
                 && !self
                     .entities
                     .iter()

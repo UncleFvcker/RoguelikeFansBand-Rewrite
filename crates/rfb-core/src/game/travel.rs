@@ -81,19 +81,11 @@ impl Game {
         if terrain.trap.is_some() {
             return false;
         }
-        if let Some(can_enter) = self.player_can_enter_local_wilderness(position) {
-            return can_enter;
-        }
-        if let Some(mount_id) = self.riding_actor_id.as_deref() {
-            return self
-                .entities
-                .iter()
-                .position(|entity| entity.id == mount_id)
-                .is_some_and(|mount_index| self.actor_can_enter_position(mount_index, position));
-        }
-        terrain.walkable
-            || self.player_can_pass_walls()
-            || self.player_can_cross_tree_terrain(terrain)
+        (if self.is_wilderness_floor() {
+            self.player_can_cross_surface_terrain(terrain)
+        } else {
+            self.player_can_cross_terrain(terrain)
+        }) || self.player_wall_destruction_target(position).is_some()
     }
 }
 

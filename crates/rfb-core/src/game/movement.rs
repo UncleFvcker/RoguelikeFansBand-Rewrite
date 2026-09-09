@@ -8,12 +8,23 @@ pub(super) fn actor_can_cross_terrain(
     actor: &rfb_content::ActorDefinition,
     terrain: &rfb_content::TerrainDefinition,
 ) -> bool {
+    actor_can_cross_terrain_with_wall_passage(actor, terrain, true)
+}
+
+pub(super) fn actor_can_cross_terrain_with_wall_passage(
+    actor: &rfb_content::ActorDefinition,
+    terrain: &rfb_content::TerrainDefinition,
+    wall_passage_allowed: bool,
+) -> bool {
     use rfb_content::ActorMovementMode;
 
     if terrain.tags.iter().any(|tag| tag == "warding-glyph") {
         return false;
     }
-    if actor.movement.modes.contains(&ActorMovementMode::PassWall) && terrain.allows_wall_passage {
+    if wall_passage_allowed
+        && actor.movement.modes.contains(&ActorMovementMode::PassWall)
+        && terrain.allows_wall_passage
+    {
         return true;
     }
     let flies = actor.movement.modes.contains(&ActorMovementMode::Fly);
@@ -23,11 +34,137 @@ pub(super) fn actor_can_cross_terrain(
                 && (terrain.walkable || terrain.movement_modes.contains(&ActorMovementMode::Fly)));
     }
     terrain.walkable
-        || actor
-            .movement
-            .modes
-            .iter()
-            .any(|mode| terrain.movement_modes.contains(mode))
+        || actor.movement.modes.iter().any(|mode| {
+            *mode != ActorMovementMode::PassWall && terrain.movement_modes.contains(mode)
+        })
+}
+
+impl Game {
+    pub(super) fn player_can_cross_terrain_unmounted(
+        &self,
+        terrain: &rfb_content::TerrainDefinition,
+    ) -> bool {
+        terrain.walkable
+            || (self.player_has_wall_passage() && terrain.allows_wall_passage)
+            || (self.player_levitates()
+                && terrain
+                    .movement_modes
+                    .contains(&rfb_content::ActorMovementMode::Fly))
+            || (terrain.tags.iter().any(|tag| tag == "tree")
+                && self.character_definitions().is_some_and(|(_, race, _, _)| {
+                    race.tags.iter().any(|tag| tag == "forest-adapted")
+                }))
+    }
+
+    pub(super) fn player_can_cross_terrain(
+        &self,
+        terrain: &rfb_content::TerrainDefinition,
+    ) -> bool {
+        if self.riding_actor_id.is_none() {
+            return self.player_can_cross_terrain_unmounted(terrain);
+        }
+        self.player_can_cross_tree_terrain(terrain)
+            || actor_can_cross_terrain_with_wall_passage(
+                self.active_traveler_definition(),
+                terrain,
+                self.player_has_wall_passage(),
+            )
+    }
+
+    pub(super) fn player_can_enter_unmounted_position(&self, position: Position) -> bool {
+        self.index(position)
+            .and_then(|index| self.content.terrain(&self.terrain[index]))
+            .is_some_and(|terrain| {
+                self.player_can_cross_terrain_unmounted(terrain)
+                    || (self.is_wilderness_floor()
+                        && terrain.id == wilderness::SURFACE_WATER_DEEP_ID)
+            })
+    }
+
+    pub(super) fn player_can_enter_position(&self, position: Position) -> bool {
+        self.index(position)
+            .and_then(|index| self.content.terrain(&self.terrain[index]))
+            .is_some_and(|terrain| {
+                if self.is_wilderness_floor() {
+                    self.player_can_cross_surface_terrain(terrain)
+                } else {
+                    self.player_can_cross_terrain(terrain)
+                }
+            })
+            || self.player_wall_destruction_target(position).is_some()
+    }
+
+    pub(super) fn player_wall_destruction_target(&self, position: Position) -> Option<&str> {
+        // RFB cmd1.c: kill_wall uses FF_HURT_DISI, before entry; it is not pass_wall.
+        let destroys_walls = self
+            .character_definitions()
+            .is_some_and(|(_, race, _, _)| race.id == "demo.race.demon-lord")
+            || (self.riding_actor_id.is_some()
+                && self
+                    .active_traveler_definition()
+                    .terrain_interaction
+                    .destroys_walls);
+        if !destroys_walls
+            || position.x <= 0
+            || position.y <= 0
+            || position.x >= i32::from(self.width) - 1
+            || position.y >= i32::from(self.height) - 1
+            || self
+                .floor_connections
+                .iter()
+                .any(|entry| entry.position == position)
+        {
+            return None;
+        }
+        let terrain = self.content.terrain(&self.terrain[self.index(position)?])?;
+        if terrain.tags.iter().any(|tag| tag == "permanent")
+            || (self.player_can_cross_terrain(terrain) && !terrain.blocks_sight)
+        {
+            return None;
+        }
+        terrain.monster_destroy_to_terrain_id.as_deref()
+    }
+
+    pub(super) fn player_wall_movement_action_cost(&self, action_cost: i32) -> i32 {
+        let Some(terrain) = self
+            .index(self.player.position)
+            .and_then(|index| self.content.terrain(&self.terrain[index]))
+        else {
+            return action_cost;
+        };
+        // Trees and closed curtains adapt FF_MOVE to non-walkable, flyable tiles in this pack.
+        if self.map_scale == MapScaleDto::Local
+            && terrain.allows_wall_passage
+            && !terrain
+                .movement_modes
+                .contains(&rfb_content::ActorMovementMode::Fly)
+        {
+            action_cost.saturating_mul(3) / 2
+        } else {
+            action_cost
+        }
+    }
+
+    pub(super) fn destroy_wall_for_player_entry(
+        &mut self,
+        position: Position,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        if let Some(replacement) = self
+            .player_wall_destruction_target(position)
+            .map(str::to_owned)
+        {
+            self.replace_terrain_from_source(
+                position,
+                &replacement,
+                terrain::TerrainChangeSource::Disintegration,
+                events,
+                changed,
+            );
+            events.push(DomainEvent::TerrainDug { position });
+        }
+    }
 }
 
 pub(super) fn actor_avoids_terrain_trap(
@@ -301,10 +438,15 @@ impl Game {
                 self.content
                     .terrain(&self.terrain[terrain_index])
                     .map(|terrain| {
-                        actor_can_cross_terrain(actor, terrain)
-                            || (self.riding_actor_id.as_deref()
-                                == Some(self.entities[index].id.as_str())
-                                && self.player_can_cross_tree_terrain(terrain))
+                        actor_can_cross_terrain_with_wall_passage(
+                            actor,
+                            terrain,
+                            self.riding_actor_id.as_deref()
+                                != Some(self.entities[index].id.as_str())
+                                || self.player_has_wall_passage(),
+                        ) || (self.riding_actor_id.as_deref()
+                            == Some(self.entities[index].id.as_str())
+                            && self.player_can_cross_tree_terrain(terrain))
                     })
             })
             .unwrap_or(false)

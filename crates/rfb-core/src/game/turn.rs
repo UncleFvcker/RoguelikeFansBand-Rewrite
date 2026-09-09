@@ -137,6 +137,12 @@ impl Game {
         loop {
             let visible_monster_auras_before_tick = self.visible_monster_aura_entity_ids();
             self.world_tick = self.world_tick.saturating_add(1);
+            // RFB processes wall damage before the final tick of Wraith/Invulnerability expires.
+            let wall_blocks_regeneration =
+                local_floor_active && self.process_player_wall_damage(events);
+            if self.player_is_dead() {
+                break;
+            }
             self.process_status_tick(events, changed, removed_entities, local_floor_active)?;
             if self.player_is_dead() {
                 break;
@@ -145,7 +151,10 @@ impl Game {
             if self.player_is_dead() {
                 break;
             }
-            self.process_natural_hp_regeneration(resting);
+            if !wall_blocks_regeneration {
+                self.process_natural_hp_regeneration(resting);
+                self.process_equipment_regeneration(events);
+            }
             self.process_fasting(events);
             self.process_minor_slow_recovery();
             if local_floor_active {
@@ -192,7 +201,6 @@ impl Game {
         if self.player_is_dead() {
             return Ok(true);
         }
-        self.process_equipment_regeneration(events);
         self.process_inventory_device_recovery(events);
         self.process_captured_actor_regeneration();
         let reality_changed =
@@ -269,6 +277,66 @@ impl Game {
                 removed_entities,
             )
         }
+    }
+
+    pub(super) fn process_player_wall_damage(&mut self, events: &mut Vec<DomainEvent>) -> bool {
+        if !self
+            .world_tick
+            .is_multiple_of(NATURAL_HP_REGENERATION_INTERVAL_TICKS)
+            || self.map_scale != MapScaleDto::Local
+            || self.player_has_status_kind(STATUS_INVULNERABILITY)
+            || self.player_has_status_kind(STATUS_WRAITHFORM)
+        {
+            return false;
+        }
+        let terrain = self
+            .content
+            .terrain(
+                &self.terrain[self
+                    .index(self.player.position)
+                    .expect("player position must remain in bounds")],
+            )
+            .expect("player terrain must exist");
+        // FF_CAN_FLY exempts the terrain, independently of whether the player can fly.
+        if terrain.walkable
+            || terrain
+                .movement_modes
+                .contains(&rfb_content::ActorMovementMode::Fly)
+        {
+            return false;
+        }
+        let terrain_id = terrain.id.clone();
+        let crushing = !self.player_can_pass_walls();
+        let mut raw_damage = 1 + i32::from(self.progress.level / 5);
+        if !crushing
+            && self
+                .build
+                .as_ref()
+                .is_some_and(|build| build.race_id == "rfb-legacy.race.spectre")
+        {
+            raw_damage = raw_damage.min(self.player.hp);
+        }
+        if raw_damage <= 0 {
+            return false;
+        }
+        // The native-race cap precedes take_hit; preserve its shared Transcendence SP payment.
+        let damage = resolve_damage(
+            DamagePacket::new(raw_damage, DamageType::Physical),
+            ResistanceLevel::Normal,
+        );
+        let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+        events.push(DomainEvent::PlayerWallDamaged {
+            crushing,
+            damage: application.damage,
+        });
+        if application.fatal {
+            events.push(DomainEvent::PlayerDied {
+                source_kind_id: terrain_id,
+                method_id: None,
+                damage: application.damage,
+            });
+        }
+        true
     }
 
     pub(super) fn process_natural_hp_regeneration(&mut self, resting: bool) {

@@ -647,10 +647,19 @@ impl Game {
     }
 
     pub(super) fn player_can_pass_walls(&self) -> bool {
-        self.player
-            .statuses
-            .iter()
-            .any(|status| status.grants_wall_passage)
+        self.player_has_wall_passage()
+            && (self.riding_actor_id.is_none()
+                || self.active_traveler_has_mode(rfb_content::ActorMovementMode::PassWall))
+    }
+
+    pub(super) fn player_has_wall_passage(&self) -> bool {
+        self.character_definitions()
+            .is_some_and(|(_, race, _, _)| race.id == "rfb-legacy.race.spectre")
+            || self
+                .player
+                .statuses
+                .iter()
+                .any(|status| status.grants_wall_passage)
     }
 
     pub(super) fn player_reflects_bolts(&self) -> bool {

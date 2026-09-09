@@ -30,6 +30,23 @@ test("Fast Recovery uses the localized regeneration status name", () => {
   localization.setLocale("en-US");
 });
 
+test("wall damage distinguishes density from crushing in both locales", () => {
+  const event = {
+    kind: "player.wall-damaged", messageKey: "player-wall-density", args: {},
+    outcome: { type: "damage", resolution: {
+      rawDamage: 2, armorReduction: 0, resistanceAdjustment: 0, finalDamage: 1,
+      damageType: "physical", resistance: "normal",
+    } },
+  };
+  assert.equal(formatter.formatEvent(event), "Your molecules feel disrupted! Density deals 1 damage to you.");
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "你感觉你的分子被瓦解了！密度使你受到了 1 点伤害。");
+  event.messageKey = "player-wall-crushed";
+  assert.equal(formatter.formatEvent(event), "你快被压碎了！坚硬的岩石使你受到了 1 点伤害。");
+  localization.setLocale("en-US");
+  assert.equal(formatter.formatEvent(event), "You are being crushed! Solid rock deals 1 damage to you.");
+});
+
 test("unanswered Ent tree creation preserves the original Chinese message", () => {
   const event = {
     kind: "ability.effects",

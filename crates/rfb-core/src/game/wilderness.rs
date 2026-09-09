@@ -33,7 +33,7 @@ const SURFACE_GRASS_ID: &str = "demo.terrain.surface-grass";
 const SURFACE_WOODLAND_ID: &str = "demo.terrain.surface-woodland";
 const SURFACE_TREE_ID: &str = "demo.terrain.surface-tree";
 const SURFACE_WATER_SHALLOW_ID: &str = "demo.terrain.surface-water-shallow";
-const SURFACE_WATER_DEEP_ID: &str = "demo.terrain.surface-water-deep";
+pub(super) const SURFACE_WATER_DEEP_ID: &str = "demo.terrain.surface-water-deep";
 const SURFACE_SWAMP_ID: &str = "demo.terrain.surface-swamp";
 const SURFACE_WASTE_ID: &str = "demo.terrain.surface-waste";
 const SURFACE_LAVA_SHALLOW_ID: &str = "demo.terrain.surface-lava-shallow";
@@ -728,7 +728,7 @@ impl Game {
         )
     }
 
-    fn active_traveler_definition(&self) -> &rfb_content::ActorDefinition {
+    pub(super) fn active_traveler_definition(&self) -> &rfb_content::ActorDefinition {
         self.riding_actor_id
             .as_deref()
             .and_then(|mount_id| self.entities.iter().find(|actor| actor.id == mount_id))
@@ -793,19 +793,8 @@ impl Game {
         &self,
         terrain: &rfb_content::TerrainDefinition,
     ) -> bool {
-        if self.player_can_cross_tree_terrain(terrain) {
-            return true;
-        }
-        if self.riding_actor_id.is_none()
-            && self.player_levitates()
-            && terrain.movement_modes.contains(&ActorMovementMode::Fly)
-        {
-            return true;
-        }
-        if self.riding_actor_id.is_none() && terrain.id == SURFACE_WATER_DEEP_ID {
-            return true;
-        }
-        movement::actor_can_cross_terrain(self.active_traveler_definition(), terrain)
+        self.player_can_cross_terrain(terrain)
+            || (self.riding_actor_id.is_none() && terrain.id == SURFACE_WATER_DEEP_ID)
     }
 
     pub(super) fn player_can_cross_tree_terrain(
@@ -828,14 +817,6 @@ impl Game {
             return false;
         };
         self.player_can_cross_surface_terrain(terrain)
-    }
-
-    pub(super) fn player_can_enter_local_wilderness(&self, position: Position) -> Option<bool> {
-        self.is_wilderness_floor().then(|| {
-            self.index(position)
-                .and_then(|index| self.content.terrain(&self.terrain[index]))
-                .is_some_and(|terrain| self.player_can_cross_surface_terrain(terrain))
-        })
     }
 
     pub(super) fn next_world_travel_direction(&self, destination: Position) -> Option<Direction> {

@@ -6600,6 +6600,9 @@ pub fn parse_character_block(name: &str, body: &str) -> LegacyCharacterEntry {
         entry.hold_life_minimum_level = Some(1);
         entry.healing_received_percent = 50;
     }
+    if entry.id == "spectre" {
+        entry.hold_life_minimum_level = Some(1);
+    }
     entry
 }
 
@@ -7448,6 +7451,8 @@ fn character_skill_set_json(entry: &LegacyCharacterEntry, id: &str) -> serde_jso
 fn character_gap_accounting(entry: &LegacyCharacterEntry, report: &mut ContentImportReport) {
     for flag in &entry.flags {
         if (flag == "RACE_IS_DEMON" && legacy_race_tags(entry).contains(&"demon"))
+            || (entry.id == "spectre"
+                && matches!(flag.as_str(), "RACE_IS_NONLIVING" | "RACE_IS_UNDEAD"))
             || (entry.id == "golem"
                 && matches!(flag.as_str(), "RACE_IS_NONLIVING" | "RACE_EATS_DEVICES"))
             || (matches!(entry.id.as_str(), "skeleton" | "zombie")
@@ -7514,6 +7519,15 @@ fn legacy_race_kin_glyph(id: &str) -> char {
 }
 
 fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
+    if entry.id == "spectre" {
+        return vec![
+            "legacy-import",
+            "nonliving",
+            "polymorph-candidate",
+            "slow-digestion",
+            "undead",
+        ];
+    }
     if entry.id == "ent" {
         return vec![
             "forest-adapted",
@@ -24978,6 +24992,60 @@ static power_info _wood_elf_get_powers[] =
         character_gap_accounting(&wood_elf, &mut report);
         assert!(report.unmapped_race_flags.is_empty());
         assert!(report.race_hook_gaps.is_empty());
+    }
+
+    #[test]
+    fn spectre_passives_are_mapped_without_opening_birth_or_claiming_pending_supplies() {
+        const SOURCE: &str = r#"
+static void _spectre_calc_bonuses(void)
+{
+    p_ptr->levitation = TRUE;
+    res_add(RES_NETHER);
+    p_ptr->hold_life++;
+    p_ptr->see_inv++;
+    res_add(RES_POIS);
+    p_ptr->slow_digest = TRUE;
+    res_add(RES_COLD);
+    p_ptr->pass_wall = TRUE;
+}
+"#;
+        let mut spectre = parse_character_block(
+            "spectre",
+            r#"
+me.name = "幽灵";
+me.infra = 5;
+me.flags = RACE_IS_NONLIVING | RACE_IS_UNDEAD | RACE_NIGHT_START | RACE_EATS_DEVICES;
+"#,
+        );
+        let defenses = parse_calc_bonuses_defenses(SOURCE, "_spectre_calc_bonuses");
+        spectre.resistances = defenses.0;
+        spectre.see_invisible = defenses.3;
+        spectre.levitation = parse_calc_bonuses_levitation(SOURCE, "_spectre_calc_bonuses");
+        let mut report = ContentImportReport::default();
+        let race = race_json(&spectre, &[], &mut report);
+        assert_eq!(race["infravision"], 5);
+        assert_eq!(race["levitation"], true);
+        assert_eq!(race["seeInvisible"], true);
+        assert_eq!(race["holdLifeMinimumLevel"], 1);
+        assert_eq!(
+            race["resistances"],
+            serde_json::json!({"cold": "resistant", "poison": "resistant", "nether": "resistant"})
+        );
+        assert_eq!(
+            legacy_race_tags(&spectre),
+            [
+                "legacy-import",
+                "nonliving",
+                "polymorph-candidate",
+                "slow-digestion",
+                "undead"
+            ]
+        );
+        character_gap_accounting(&spectre, &mut report);
+        assert!(!report.unmapped_race_flags.contains_key("RACE_IS_NONLIVING"));
+        assert!(!report.unmapped_race_flags.contains_key("RACE_IS_UNDEAD"));
+        assert!(report.unmapped_race_flags.contains_key("RACE_NIGHT_START"));
+        assert!(report.unmapped_race_flags.contains_key("RACE_EATS_DEVICES"));
     }
 
     #[test]

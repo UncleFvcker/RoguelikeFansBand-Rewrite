@@ -8,6 +8,7 @@
   "walkable": false,
   "blocksSight": false,
   "allowsWallPassage": true,
+  "monsterDestroyToTerrainId": "demo.terrain.floor",
   "openToTerrainId": "demo.terrain.glass-door-open",
   "tags": ["door", "door-closed", "glass", "passage"]
 }

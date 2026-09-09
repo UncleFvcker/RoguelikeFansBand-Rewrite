@@ -766,6 +766,10 @@ pub(crate) enum DomainEvent {
         terrain_id: String,
         damage: DamageOutcome,
     },
+    PlayerWallDamaged {
+        crushing: bool,
+        damage: DamageOutcome,
+    },
     RidingMounted {
         target_kind_id: String,
     },
@@ -3413,6 +3417,18 @@ impl DomainEvent {
                 "wilderness.terrain-damaged",
                 "wilderness-terrain-damaged",
                 [("terrain", terrain_id)],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::PlayerWallDamaged { crushing, damage } => dto_with_outcome(
+                "player.wall-damaged",
+                if crushing {
+                    "player-wall-crushed"
+                } else {
+                    "player-wall-density"
+                },
+                [],
                 GameEventOutcomeDto::Damage {
                     resolution: damage.into(),
                 },

@@ -8,5 +8,6 @@
   "walkable": false,
   "blocksSight": false,
   "allowsWallPassage": true,
+  "monsterDestroyToTerrainId": "demo.terrain.floor",
   "tags": ["glass", "interior", "wall"]
 }

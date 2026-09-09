@@ -69,6 +69,10 @@
   "id": "rfb-legacy.race.spectre",
   "kinCategory": "kin-glyph-71",
   "legacyIndex": 27,
+  "infravision": 5,
+  "levitation": true,
+  "seeInvisible": true,
+  "holdLifeMinimumLevel": 1,
   "lifePercent": 90,
   "modifiers": {
     "charisma": -3,
@@ -88,6 +92,9 @@
   "skillSetId": "rfb-legacy.skill-set.race-spectre",
   "tags": [
     "legacy-import",
-    "polymorph-candidate"
+    "nonliving",
+    "polymorph-candidate",
+    "slow-digestion",
+    "undead"
   ]
 }

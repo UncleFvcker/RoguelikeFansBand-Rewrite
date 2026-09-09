@@ -3,6 +3,37 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn transparent_wall_destruction_preserves_permanent_and_destination_validation() {
+    let content = compile_pack_dir(&original_pack_path()).unwrap().content;
+    let glass = content
+        .terrain
+        .iter()
+        .find(|terrain| terrain.id == "demo.terrain.glass-wall")
+        .unwrap();
+    assert!(!glass.walkable && !glass.blocks_sight);
+    assert_eq!(
+        glass.monster_destroy_to_terrain_id.as_deref(),
+        Some("demo.terrain.floor")
+    );
+    for permanent in [false, true] {
+        let mut invalid = content.clone();
+        let glass = invalid
+            .terrain
+            .iter_mut()
+            .find(|terrain| terrain.id == "demo.terrain.glass-wall")
+            .unwrap();
+        if permanent {
+            glass.tags.push("permanent".to_owned());
+        } else {
+            glass.monster_destroy_to_terrain_id = Some("demo.terrain.wall".to_owned());
+        }
+        assert!(
+            matches!(encode_content(invalid), Err(ContentError::InvalidTerrainTransition(id)) if id == "demo.terrain.glass-wall")
+        );
+    }
+}
+
+#[test]
 fn formal_tomte_intrinsics_match_master() {
     let artifact = verify_pack_lock(&original_pack_path()).expect("original pack");
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog");

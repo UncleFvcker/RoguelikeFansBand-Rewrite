@@ -256,7 +256,7 @@ fn life_high_mage_game(seed: u64, level: u16) -> Game {
     game
 }
 
-fn daemon_high_mage_game(seed: u64, level: u16) -> Game {
+pub(super) fn daemon_high_mage_game(seed: u64, level: u16) -> Game {
     let mut game = Game::new_with_build(seed, DAEMON_HIGH_MAGE_BUILD_ID)
         .expect("Daemon High-Mage build should create");
     game.progress.level = level;
@@ -2226,7 +2226,17 @@ fn daemon_send_to_hell_and_demonlord_form_keep_their_terminal_semantics() {
             .id,
         "demo.race.demon-lord"
     );
-    assert!(game.player_can_pass_walls());
+    assert!(!game.player_can_pass_walls());
+    let wall = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    let index = game.index(wall).unwrap();
+    game.terrain[index] = "demo.terrain.wall".to_owned();
+    assert_eq!(
+        game.player_wall_destruction_target(wall),
+        Some("demo.terrain.floor")
+    );
     assert!(game.player_has_telepathy());
     assert!(game.player_levitates());
     assert!(game.player_hold_life_sources() > 0);
