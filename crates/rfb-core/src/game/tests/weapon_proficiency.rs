@@ -2,32 +2,12 @@
 
 use super::*;
 
-fn tonberry_test_content() -> Arc<ContentCatalog> {
-    let root =
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
-    let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
-    // Exercise birth and save validation while the public race entry is still closed.
-    artifact
-        .content
-        .races
-        .iter_mut()
-        .find(|race| race.id == "rfb-legacy.race.tonberry")
-        .unwrap()
-        .tags
-        .push("rfb-compatibility".to_owned());
-    Arc::new(ContentCatalog::from_artifact(
-        rfb_content::encode_content(artifact.content).unwrap(),
-    ))
-}
-
 #[test]
 fn tonberry_sabre_cap_trains_and_round_trips_by_birth_race() {
-    let mut game = Game::from_content_internal(
+    let mut game = Game::new_with_build_race_and_name(
         42,
-        tonberry_test_content(),
-        DEFAULT_WORLD_ID,
-        Some("demo.build.high-mage-death"),
-        Some("rfb-legacy.race.tonberry"),
+        "demo.build.high-mage-death",
+        "rfb-legacy.race.tonberry",
         Game::DEFAULT_PLAYER_NAME,
     )
     .unwrap();
@@ -119,7 +99,7 @@ fn tonberry_sabre_cap_trains_and_round_trips_by_birth_race() {
 
 #[test]
 fn tonberry_birth_keeps_standard_supplies_and_individualism_for_each_current_class() {
-    let content = tonberry_test_content();
+    let content = load_built_in_content().unwrap();
     assert!(
         content
             .race("rfb-legacy.race.tonberry")
@@ -135,12 +115,10 @@ fn tonberry_birth_keeps_standard_supplies_and_individualism_for_each_current_cla
         "demo.build.cavalry",
         "demo.build.sniper",
     ] {
-        let game = Game::from_content_internal(
+        let game = Game::new_with_build_race_and_name(
             83,
-            content.clone(),
-            DEFAULT_WORLD_ID,
-            Some(build_id),
-            Some("rfb-legacy.race.tonberry"),
+            build_id,
+            "rfb-legacy.race.tonberry",
             Game::DEFAULT_PLAYER_NAME,
         )
         .unwrap();

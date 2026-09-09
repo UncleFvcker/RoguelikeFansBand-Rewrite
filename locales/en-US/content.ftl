@@ -5052,7 +5052,7 @@ actor-demo-lord-of-change-description = Lord of Change as recorded in the origin
 
 # P62 polymorph forms (generated)
 race-legacy-tonberry-name = Tonberry
-race-legacy-tonberry-description = Temporary RFB polymorph form.
+race-legacy-tonberry-description = Tonberries are powerful, lizard-like creatures who favor knives and sabres. They move and react slowly, and young Tonberries are often preyed upon by other races. They have human-like intelligence but rarely become mages. Their melee attacks hit hard but occur less often, and they are susceptible to confusion.
 race-legacy-hobbit-name = Hobbit
 race-legacy-hobbit-description = Hobbits, or Halflings, possess excellent stealth and are very good with bows and thrown weapons; in fact, they are usually well suited to an adventuring life. Their small stature can sometimes be a hindrance, however: they are not very good at melee combat and cannot withstand as many serious blows as larger races. Hobbits are famous for their love of good food, and have an almost miraculous ability to find food in the dark depths of a dungeon.
 ability-rfb-race-create-food-name = Create Food

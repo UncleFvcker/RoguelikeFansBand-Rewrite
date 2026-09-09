@@ -69,7 +69,7 @@ export function renderCharacterTraitsDetails(
   const origin = (source: CharacterTraitSourceDto) => `${f(`trait-origin-${source.kind}`)} · ${sourceName(source.sourceId)}`;
   const unknown = f("trait-value-unknown");
   const active = (value: boolean | null) => value == null ? unknown : f(value ? "trait-active" : "trait-inactive");
-  const row = (id: string, label: string, value: string, lines: string[], note?: string) => {
+  const row = (id: string, label: string, value: string, lines: string[], note?: string, bulleted = false) => {
     const details = document.createElement("details");
     details.className = "trait-row";
     details.dataset.trait = id;
@@ -79,7 +79,13 @@ export function renderCharacterTraitsDetails(
     summary.append(text("span", label, "trait-name"), text("span", value, "trait-value"));
     const body = text("div", "", "trait-row-body");
     if (note) body.append(text("p", note));
-    for (const line of lines) body.append(text("p", line));
+    if (bulleted) {
+      const list = text("ul", "", "race-effects-list");
+      for (const line of lines) list.append(text("li", line));
+      body.append(list);
+    } else {
+      for (const line of lines) body.append(text("p", line));
+    }
     if (!lines.length) body.append(text("p", f(data.equipmentComplete && value !== unknown ? "trait-no-sources" : "trait-no-known-sources")));
     details.append(summary, body);
     return details;
@@ -168,6 +174,10 @@ export function renderCharacterTraitsDetails(
   }
   if (!weapons.querySelector("details")) weapons.append(text("p", f("trait-no-weapons"), "attribute-source-guide"));
   const rates = section("trait-attack-rates");
+  if (data.sources.some((source) => source.kind === "race" && source.sourceId === "rfb-legacy.race.tonberry")) {
+    rates.append(row("tonberry-rules", f("race-legacy-tonberry-name"), f("trait-race-effects"),
+      ["basics", "speed", "damage", "attacks", "confusion", "birth"].map((rule) => f(`trait-tonberry-rule-${rule}`)), undefined, true));
+  }
   for (const stat of data.stats.filter((stat) => ATTACK_STATS.includes(stat.id))) {
     const id = stat.id === "melee-attacks-hundredths" ? data.activeWeaponId : data.activeLauncherId;
     rates.append(row(`stat-${stat.id}`, `${f(`trait-stat-${stat.id}`)} · ${id ? sourceName(id) : f("trait-unarmed")}`, traitStatValue(stat, localization),

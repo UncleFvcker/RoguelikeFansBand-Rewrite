@@ -7510,6 +7510,15 @@ fn legacy_race_kin_glyph(id: &str) -> char {
 }
 
 fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
+    if entry.id == "tonberry" {
+        return vec![
+            "humanoid",
+            "legacy-import",
+            "polymorph-candidate",
+            "rfb-compatibility",
+            "standard-body",
+        ];
+    }
     if entry.id == "tomte" {
         return vec![
             "humanoid",
@@ -25040,6 +25049,25 @@ static void _sprite_calc_bonuses(void)
         assert_eq!(race["levelStatScalings"][0]["stat"], "speed");
         assert_eq!(race["levelStatScalings"][0]["divisor"], 10);
         assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
+    }
+
+    #[test]
+    fn tonberry_formal_tags_preserve_the_existing_kin_mapping() {
+        let entry = LegacyCharacterEntry {
+            id: "tonberry".to_owned(),
+            ..Default::default()
+        };
+        assert_eq!(
+            legacy_race_tags(&entry),
+            [
+                "humanoid",
+                "legacy-import",
+                "polymorph-candidate",
+                "rfb-compatibility",
+                "standard-body"
+            ]
+        );
+        assert_eq!(legacy_race_kin_glyph("tonberry"), 'h');
     }
 
     #[test]

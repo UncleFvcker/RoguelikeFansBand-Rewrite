@@ -2856,6 +2856,8 @@ kbd {
 .trait-value { margin-left: auto; text-align: right; color: var(--ui-accent-strong); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .trait-row-body { padding: 0.2em 0.7em 0.5em 1.6em; color: var(--ui-muted); overflow-wrap: anywhere; }
 .trait-row-body p { margin: 0.3rem 0; }
+.race-effects-list { margin: 0.3rem 0; padding-inline-start: 1.2rem; }
+.race-effects-list li + li { margin-top: 0.4rem; }
 @media (max-width: 760px) {
   .trait-row > summary { padding-inline: 0.4rem; }
 }

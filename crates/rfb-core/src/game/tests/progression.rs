@@ -614,7 +614,7 @@ fn tonberry_passives_and_level_slowing_follow_the_effective_race() {
             monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.tonberry-form").status;
         form.granted_race_id = Some(RACE.to_owned());
         if native {
-            // Native-race precondition only: the unfinished race remains unavailable at birth.
+            // Direct native-race precondition isolates the intrinsic comparison from birth rolls.
             game.build.as_mut().unwrap().race_id = RACE.to_owned();
         } else {
             game.player.statuses.push(form.clone());
@@ -2576,6 +2576,131 @@ fn build_skill_growth_experience_multiplier_and_save_identity_are_deterministic(
         Game::new_with_build(17, "demo.build.missing"),
         Err(CoreError::UnknownCharacterBuild(_))
     ));
+}
+
+#[test]
+fn formal_tonberry_action_chain_equips_levels_attacks_swaps_and_restores() {
+    let mut game = Game::new_with_build_race_and_name(
+        83,
+        "demo.build.warrior",
+        "rfb-legacy.race.tonberry",
+        "冬贝利验收",
+    )
+    .unwrap();
+    clear_monsters(&mut game);
+    game.items
+        .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
+    let starting_weapon = game
+        .snapshot()
+        .player
+        .trait_details
+        .active_weapon_id
+        .unwrap();
+    give_inventory_item(&mut game, "test.tonberry-chain.sabre", "demo.item.sabre");
+    dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: "test.tonberry-chain.sabre".to_owned(),
+            slot_id: Some("right-hand".to_owned()),
+        },
+    );
+    assert_eq!(
+        game.snapshot()
+            .player
+            .trait_details
+            .active_weapon_id
+            .as_deref(),
+        Some("test.tonberry-chain.sabre")
+    );
+    assert_eq!(game.progress.level, 1);
+    game.apply_unscaled_player_experience(experience_required_for_level(10), &mut Vec::new());
+    assert_eq!(game.progress.level, 10);
+    let snapshot = game.snapshot();
+    let speed = snapshot
+        .player
+        .trait_details
+        .stats
+        .iter()
+        .find(|stat| stat.id == "speed")
+        .unwrap();
+    assert_eq!(
+        speed
+            .sources
+            .iter()
+            .find(|source| source.source_id == "rfb-legacy.race.tonberry")
+            .unwrap()
+            .amount,
+        -1
+    );
+    let attacks = snapshot
+        .player
+        .trait_details
+        .stats
+        .iter()
+        .find(|stat| stat.id == "melee-attacks-hundredths")
+        .unwrap();
+    assert!(
+        attacks
+            .sources
+            .iter()
+            .any(|source| source.source_id == "rfb-legacy.race.tonberry" && source.amount < 0)
+    );
+    assert!(
+        snapshot.player.trait_details.melee_damage[0]
+            .base_damage
+            .unwrap()[0]
+            >= 20
+    );
+    let east = game.position_in_direction(Direction::East);
+    replace_terrain(&mut game, east, "demo.terrain.floor");
+    let index = game.index(east).unwrap();
+    game.glow[index] = true;
+    game.push_generated_actor(
+        "test.tonberry-chain.sheep".to_owned(),
+        "demo.actor.sheep",
+        east,
+    );
+    let turn = game.turn;
+    // Select a deterministic hit for the action chain; fractional/miss RNG has separate coverage.
+    game = (0..32)
+        .find_map(|seed| {
+            let mut attempt = game.clone();
+            attempt.rng = RfbRng::seeded(seed);
+            let attack = dispatch_next(
+                &mut attempt,
+                GameCommand::Move {
+                    direction: Direction::East,
+                },
+            );
+            attack
+                .events
+                .iter()
+                .any(|event| event.kind == "combat.hit")
+                .then_some(attempt)
+        })
+        .expect("a level-ten Tonberry can land a weapon hit");
+    assert!(game.turn > turn);
+    clear_monsters(&mut game);
+    dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: starting_weapon.clone(),
+            slot_id: Some("right-hand".to_owned()),
+        },
+    );
+    assert_eq!(
+        game.snapshot().player.trait_details.active_weapon_id,
+        Some(starting_weapon)
+    );
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.snapshot(), game.snapshot());
+    assert_eq!(restored.state_hash(), game.state_hash());
+    let turn = game.turn;
+    dispatch_next(&mut game, GameCommand::Wait);
+    dispatch_next(&mut restored, GameCommand::Wait);
+    assert!(restored.turn > turn);
+    assert_eq!(restored.snapshot(), game.snapshot());
+    assert_eq!(restored.state_hash(), game.state_hash());
 }
 
 #[test]
