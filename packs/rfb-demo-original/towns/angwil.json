@@ -6,8 +6,19 @@
   "descriptionKey": "town-demo-angwil-description",
   "floorId": "demo.floor.angwil",
   "facilityIds": [
+    "demo.town-facility.angwil-archer-guild",
+    "demo.town-facility.angwil-beastmaster",
+    "demo.town-facility.angwil-casino",
     "demo.town-facility.angwil-home",
-    "demo.town-facility.angwil-museum"
+    "demo.town-facility.angwil-inner-temple",
+    "demo.town-facility.angwil-library",
+    "demo.town-facility.angwil-mage-tower",
+    "demo.town-facility.angwil-museum",
+    "demo.town-facility.angwil-paladin-guild",
+    "demo.town-facility.angwil-thieves-guild",
+    "demo.town-facility.angwil-trump-tower",
+    "demo.town-facility.angwil-warrior-guild",
+    "demo.town-facility.angwil-weapon-master"
   ],
   "shopIds": [
     "demo.shop.angwil-alchemist",

@@ -20,7 +20,7 @@
 | 协议 | 1.237 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | v111 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload | v6 / v8；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
-| 内容包 | 1.384.16 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.384.17 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
 | 行为基线 | contract-v306，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
 | 内容定义数量 | 地形 210、角色 1402、物品 357、能力 1838、词缀 65、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
 | 角色配置数量 | Class 6、Build 13、Race 57、SkillSet 65 | 同上；这些是定义数量，不是菜单选项数量 |
@@ -69,7 +69,7 @@
 
 城镇、荒野、地下城、任务、物品、怪物和变异已有内容与规则接入记录；本次五项流程验收不覆盖这些系统的所有内容。各专题中的历史“完成”保留其原有范围，不作为当前全量验收结论。
 
-安格维尔已开放完整森林模板、九类商店、旅店四项服务、共享 Home 与博物馆。透明地形沿用荒野生成及城镇保存流程；核心测试覆盖滚屏、离城返回、读档、交易和服务收费。11 处 A2 建筑及庄园任务尚未开放，本批未做桌面或人工试玩验收；范围见[安格维尔计划](angwil-town-plan-20260909.md)。
+安格维尔已开放完整森林模板、九类商店、旅店四项服务、共享 Home 与博物馆，以及 11 处非任务建筑。法师塔按职业、内殿按职业、王牌之塔按领域/种族判定身份；城镇测试覆盖收费、研究、鉴定、恢复、强化、召回和赌场保存归属。Trump 免费条件已接入且经测试构筑验证，正式 Trump 构筑尚未交付；庄园任务仍关闭。森林保存、滚屏及基础交易保留 A1 证据，本批未做桌面或人工试玩验收；范围见[安格维尔计划](angwil-town-plan-20260909.md)。
 
 莫里凡特已接入完整地图、九类商店、共享 Home、旅店和已支持建筑服务；巫术之塔的批量鉴定、盗贼公会的住宿/批量鉴定、旅店 2 金餐饮、驯兽师 1500 金怪物研究与王牌之塔指定地牢层传送已开放。报价、饱食和研究知识由 Rust 处理，研究资料和各地牢召回层可保存恢复；传闻因原文再分发许可未明确而保持隐藏。Rogue 职业身份和完整原版服务计价仍未接入。入口、来源、适配差异及核心检查范围见[城镇适配](../docs/morivant-town-adaptation.md)，后续安排见[非任务建筑服务计划](morivant-building-services-plan-20260909.md)；这些增量未计入上述桌面验收。
 

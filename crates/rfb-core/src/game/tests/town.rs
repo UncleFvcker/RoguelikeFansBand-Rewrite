@@ -52,6 +52,11 @@ fn enter_town(game: &mut Game, town_id: &str, position: Position) {
 
 fn town_facility_game(seed: u64, build_id: &str, facility_id: &str) -> Game {
     let mut game = Game::new_with_build(seed, build_id).unwrap();
+    enter_town_facility(&mut game, facility_id);
+    game
+}
+
+fn enter_town_facility(game: &mut Game, facility_id: &str) {
     let facility = game.content.town_facility(facility_id).unwrap();
     let town_id = facility.town_id.clone();
     let entrance = facility.entrance_position;
@@ -68,7 +73,7 @@ fn town_facility_game(seed: u64, build_id: &str, facility_id: &str) -> Game {
             _ => None,
         })
         .unwrap();
-    enter_town(&mut game, &town_id, position);
+    enter_town(game, &town_id, position);
     game.player.position = game
         .town_local_to_wilderness_view_position(
             &town_id,
@@ -78,7 +83,6 @@ fn town_facility_game(seed: u64, build_id: &str, facility_id: &str) -> Game {
             },
         )
         .unwrap();
-    game
 }
 
 #[test]
@@ -89,6 +93,11 @@ fn casino_poker_pays_once_resumes_the_deck_and_settles_chance_on_exit() {
 #[test]
 fn telmora_casino_poker_resumes_at_its_own_facility() {
     casino_poker_round_trip("demo.town-facility.telmora-casino");
+}
+
+#[test]
+fn angwil_casino_poker_resumes_at_its_own_facility() {
+    casino_poker_round_trip("demo.town-facility.angwil-casino");
 }
 
 fn casino_poker_round_trip(id: &str) {
@@ -876,6 +885,24 @@ fn morivant_identification_uses_the_projected_membership_price() {
             FacilityMembershipDto::Visitor,
             2000,
         ),
+        (
+            "demo.town-facility.angwil-mage-tower",
+            "demo.build.high-mage-death",
+            FacilityMembershipDto::Owner,
+            200,
+        ),
+        (
+            "demo.town-facility.angwil-mage-tower",
+            "demo.build.warrior",
+            FacilityMembershipDto::Visitor,
+            1000,
+        ),
+        (
+            "demo.town-facility.angwil-thieves-guild",
+            "demo.build.warrior",
+            FacilityMembershipDto::Visitor,
+            800,
+        ),
     ] {
         let mut game = town_facility_game(51, build_id, facility_id);
         let cost = game.town_service_price(cost);
@@ -962,7 +989,7 @@ fn angwil_nine_shops_trade_and_save() {
         "demo.town.angwil",
         "demo.shop.angwil-inn",
         Position { x: 74, y: 23 },
-        0,
+        11,
     );
 }
 
@@ -1349,13 +1376,16 @@ fn telmora_and_angwil_home_and_museum_use_existing_storage() {
 }
 
 #[test]
-fn telmora_research_and_assessment_charge_the_undiscounted_quotes() {
-    for (suffix, base_cost) in [
-        ("library", 2000),
-        ("beastmaster", 10000),
-        ("weapon-master", 1000),
+fn telmora_and_angwil_research_and_assessment_charge_the_source_quotes() {
+    for (town, suffix, base_cost) in [
+        ("telmora", "library", 2000),
+        ("telmora", "beastmaster", 10000),
+        ("telmora", "weapon-master", 1000),
+        ("angwil", "library", 1500),
+        ("angwil", "beastmaster", 1500),
+        ("angwil", "weapon-master", 400),
     ] {
-        let id = format!("demo.town-facility.telmora-{suffix}");
+        let id = format!("demo.town-facility.{town}-{suffix}");
         let mut game = town_facility_game(51, "demo.build.warrior", &id);
         let item_id = game
             .items
@@ -1441,15 +1471,32 @@ fn telmora_research_and_assessment_charge_the_undiscounted_quotes() {
 }
 
 #[test]
-fn telmora_paladin_guild_enchants_equipped_armor_at_the_selected_membership_tier() {
-    let id = "demo.town-facility.telmora-paladin-guild";
-    for (build, membership, base_cost) in [
+fn telmora_and_angwil_paladin_guild_enchants_equipped_armor_at_the_selected_membership_tier() {
+    for (id, build, membership, base_cost) in [
         (
+            "demo.town-facility.telmora-paladin-guild",
             "demo.build.paladin-death",
             FacilityMembershipDto::Owner,
             300,
         ),
-        ("demo.build.warrior", FacilityMembershipDto::Visitor, 600),
+        (
+            "demo.town-facility.telmora-paladin-guild",
+            "demo.build.warrior",
+            FacilityMembershipDto::Visitor,
+            600,
+        ),
+        (
+            "demo.town-facility.angwil-paladin-guild",
+            "demo.build.paladin-death",
+            FacilityMembershipDto::Owner,
+            240,
+        ),
+        (
+            "demo.town-facility.angwil-paladin-guild",
+            "demo.build.warrior",
+            FacilityMembershipDto::Visitor,
+            440,
+        ),
     ] {
         let mut game = town_facility_game(51, build, id);
         support::give_inventory_item(&mut game, "test.telmora.food", "demo.item.ration-of-food");
@@ -1577,6 +1624,255 @@ fn telmora_life_temple_heals_owner_and_visitor_for_the_projected_cost() {
         );
         assert_eq!(game.gold, 0);
         assert_eq!(game.player.hp, game.effective_player_max_hp());
+    }
+}
+
+#[test]
+fn angwil_inner_temple_uses_class_membership_for_healing_and_restoration() {
+    let id = "demo.town-facility.angwil-inner-temple";
+    for (build, membership) in [
+        ("demo.build.paladin-death", FacilityMembershipDto::Member),
+        ("demo.build.high-mage-life", FacilityMembershipDto::Visitor),
+    ] {
+        for (kind, base_cost) in [
+            (FacilityServiceKindDto::Heal, 150),
+            (FacilityServiceKindDto::RestoreVitality, 1000),
+        ] {
+            let mut game = town_facility_game(51, build, id);
+            game.player.hp = 1;
+            game.progress.attributes.strength =
+                game.progress.maximum_attributes.strength.saturating_sub(1);
+            game.progress.life_force = 900;
+            let projection = game
+                .snapshot()
+                .task_services
+                .into_iter()
+                .find(|s| s.id == id)
+                .unwrap();
+            assert_eq!(projection.membership, membership);
+            let cost = projection
+                .service_actions
+                .iter()
+                .find(|action| action.kind == kind)
+                .unwrap()
+                .cost;
+            assert_eq!(cost, game.town_service_price(base_cost));
+            game.gold = cost - 1;
+            let before = game.state_hash();
+            assert_eq!(
+                game.use_town_facility_service(id, kind, None, None, &mut Vec::new())
+                    .unwrap_err(),
+                "insufficient-gold"
+            );
+            assert_eq!(game.state_hash(), before);
+            game.gold = cost;
+            let tick = game.world_tick;
+            let rng = game.rng.clone();
+            dispatch_next(
+                &mut game,
+                GameCommand::UseFacilityService {
+                    facility_id: id.to_owned(),
+                    service: kind,
+                    item_id: None,
+                    enchantment_steps: None,
+                },
+            );
+            assert_eq!(game.gold, 0);
+            assert_eq!(game.world_tick, tick);
+            assert_eq!(game.rng, rng);
+            if kind == FacilityServiceKindDto::Heal {
+                assert_eq!(game.player.hp, game.effective_player_max_hp());
+            } else {
+                assert_eq!(game.progress.attributes, game.progress.maximum_attributes);
+                assert_eq!(game.progress.life_force, 1000);
+            }
+            let restored = Game::from_save(game.to_save()).unwrap();
+            assert_eq!(restored.state_hash(), game.state_hash());
+            assert_eq!(
+                restored
+                    .snapshot()
+                    .task_services
+                    .iter()
+                    .find(|s| s.id == id)
+                    .unwrap()
+                    .membership,
+                membership
+            );
+        }
+    }
+}
+
+#[test]
+fn angwil_trump_tower_prices_and_recall_survive_save_and_return() {
+    let id = "demo.town-facility.angwil-trump-tower";
+    // Trump is not a formal player build yet. This validated fixture supplies
+    // only a realm identity to exercise the real membership and recall paths.
+    let root =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
+    let mut book = artifact
+        .content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.black-prayers")
+        .unwrap()
+        .clone();
+    book.id = "test.ability-book.trump".to_owned();
+    book.realm_id = Some("trump".to_owned());
+    book.rank = Some(3);
+    book.ability_ids.truncate(1);
+    artifact.content.ability_books.push(book);
+    // The world requires one third-book item for every build's first realm.
+    let mut item = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.black-prayers")
+        .unwrap()
+        .clone();
+    item.id = "test.item.trump-book".to_owned();
+    item.ability_book_id = Some("test.ability-book.trump".to_owned());
+    artifact.content.items.push(item);
+    let profile = artifact
+        .content
+        .classes
+        .iter_mut()
+        .find(|class| class.id == "demo.class.high-mage")
+        .unwrap()
+        .casting_profile
+        .as_mut()
+        .unwrap();
+    profile
+        .realm_profiles
+        .push(rfb_content::CastingRealmProfileDefinition {
+            realm_id: "trump".to_owned(),
+            ability_book_ids: vec!["test.ability-book.trump".to_owned()],
+            learning_capacity_bonus: 0,
+            ability_overrides: Vec::new(),
+        });
+    let mut build = artifact
+        .content
+        .builds
+        .iter()
+        .find(|build| build.id == "demo.build.high-mage-death")
+        .unwrap()
+        .clone();
+    build.id = "test.build.trump".to_owned();
+    build.first_realm_id = Some("trump".to_owned());
+    build.starting_items.clear();
+    artifact.content.builds.push(build);
+    let content = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content).unwrap(),
+    ));
+    for (build, amberite, membership, base_cost) in [
+        ("test.build.trump", false, FacilityMembershipDto::Owner, 0),
+        (
+            "demo.build.warrior",
+            false,
+            FacilityMembershipDto::Visitor,
+            150,
+        ),
+        (
+            "demo.build.warrior",
+            true,
+            FacilityMembershipDto::Member,
+            150,
+        ),
+    ] {
+        let mut game = if build == "test.build.trump" {
+            let mut game =
+                Game::from_content_with_build(51, content.clone(), DEFAULT_WORLD_ID, build)
+                    .unwrap();
+            enter_town_facility(&mut game, id);
+            game
+        } else {
+            town_facility_game(51, build, id)
+        };
+        if amberite {
+            let mut form =
+                monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 20, "test.angwil").status;
+            form.granted_race_id = Some("rfb-legacy.race.amberite".to_owned());
+            game.player.statuses.push(form);
+        }
+        let tower = game
+            .snapshot()
+            .task_services
+            .into_iter()
+            .find(|s| s.id == id)
+            .unwrap();
+        assert_eq!(tower.membership, membership);
+        assert_eq!(tower.service_actions.len(), 1);
+        assert_eq!(
+            tower.service_actions[0].kind,
+            FacilityServiceKindDto::Recall
+        );
+        let cost = tower.service_actions[0].cost;
+        assert_eq!(cost, game.town_service_price(base_cost));
+        let departure = game.player.position;
+        game.recall = Some(RecallStateDto {
+            dungeon_id: "demo.dungeon.tidal-cave".to_owned(),
+            floor_id: "demo.floor.tidal-cave-depth-15".to_owned(),
+            remaining_turns: None,
+        });
+        if cost > 0 {
+            game.gold = cost - 1;
+            let before = game.state_hash();
+            assert_eq!(
+                game.use_town_facility_service(
+                    id,
+                    FacilityServiceKindDto::Recall,
+                    None,
+                    None,
+                    &mut Vec::new()
+                )
+                .unwrap_err(),
+                "insufficient-gold"
+            );
+            assert_eq!(game.state_hash(), before);
+        }
+        game.gold = cost;
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::UseFacilityService {
+                facility_id: id.to_owned(),
+                service: FacilityServiceKindDto::Recall,
+                item_id: None,
+                enchantment_steps: None,
+            },
+        );
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.kind == "facility.recall-started")
+        );
+        assert_eq!(game.gold, 0);
+        assert_eq!(game.recall.as_ref().unwrap().remaining_turns, Some(2));
+        let mut game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        assert_eq!(
+            game.snapshot()
+                .task_services
+                .iter()
+                .find(|s| s.id == id)
+                .unwrap()
+                .membership,
+            membership
+        );
+        dispatch_next(&mut game, GameCommand::Wait);
+        dispatch_next(&mut game, GameCommand::Wait);
+        assert_eq!(game.current_floor_id, "demo.floor.tidal-cave-depth-15");
+        let mut game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        game.entities.clear();
+        game.start_recall(0);
+        dispatch_next(&mut game, GameCommand::Wait);
+        assert_eq!(game.current_town().unwrap().id, "demo.town.angwil");
+        assert_eq!(game.player.position, departure);
+        assert_eq!(
+            Game::from_save_with_content(game.to_save(), game.content.clone())
+                .unwrap()
+                .state_hash(),
+            game.state_hash()
+        );
     }
 }
 
@@ -2405,12 +2701,15 @@ fn inn_stays_use_content_prices_and_restore_the_player_at_half_day() {
         (WHITE_HORSE_INN_ID, 20, 20),
         (MORIVANT_THIEVES_GUILD_ID, 50, 50),
         ("demo.town-facility.telmora-thieves-guild", 100, 100),
+        ("demo.town-facility.angwil-thieves-guild", 50, 50),
     ] {
         let mut game = if facility_id == ANAMBAR_INN_ID {
             anambar_inn_game(42)
         } else if matches!(
             facility_id,
-            MORIVANT_THIEVES_GUILD_ID | "demo.town-facility.telmora-thieves-guild"
+            MORIVANT_THIEVES_GUILD_ID
+                | "demo.town-facility.telmora-thieves-guild"
+                | "demo.town-facility.angwil-thieves-guild"
         ) {
             town_facility_game(42, "demo.build.warrior", facility_id)
         } else {

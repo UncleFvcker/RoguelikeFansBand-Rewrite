@@ -33,7 +33,7 @@ fn angwil_inherits_forest_and_preserves_unopened_entrances() {
         ((53, 2), "demo.terrain.permanent-wall"),
         ((28, 44), "demo.terrain.dirt"),
         ((35, 22), "demo.terrain.permanent-wall"),
-        ((24, 9), "demo.terrain.permanent-wall"),
+        ((24, 9), "demo.terrain.casino-entrance"),
         ((24, 5), "demo.terrain.inn-entrance"),
     ] {
         assert_eq!(tiles[&position], terrain);

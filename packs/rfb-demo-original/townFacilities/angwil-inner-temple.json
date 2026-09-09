@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.angwil-inner-temple",
+  "nameKey": "town-facility-demo-angwil-inner-temple-name",
+  "descriptionKey": "town-facility-demo-angwil-inner-temple-description",
+  "townId": "demo.town.angwil",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-angwil-inner-temple-owner-name",
+  "serviceActions": [
+    {
+      "kind": "heal",
+      "ownerCost": 0,
+      "otherCost": 150
+    },
+    {
+      "kind": "restore-vitality",
+      "ownerCost": 300,
+      "otherCost": 1000
+    }
+  ],
+  "entrancePosition": {
+    "x": 10,
+    "y": 24
+  },
+  "entranceTerrainId": "demo.terrain.life-temple-entrance",
+  "memberClassIds": [
+    "demo.class.paladin"
+  ]
+}
