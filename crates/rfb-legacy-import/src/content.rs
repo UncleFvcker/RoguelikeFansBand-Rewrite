@@ -14855,7 +14855,7 @@ fn validate_demo_wilderness_plans(
                 dungeon.id
             )));
         }
-        if dungeon.final_object.is_some() == dungeon.final_artifact_source_index.is_some()
+        if (dungeon.final_object.is_some() && dungeon.final_artifact_source_index.is_some())
             || dungeon_flag_number(record, "FINAL_GUARDIAN_") != Some(dungeon.guardian.source_index)
             || dungeon_final_object(record) != dungeon.final_object
             || dungeon_flag_number(record, "FINAL_ARTIFACT_") != dungeon.final_artifact_source_index
@@ -29110,6 +29110,71 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
     }
 
     #[test]
+    fn arena_plan_locks_source_facts_without_activating_the_dungeon() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let arena = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 25)
+            .expect("Arena should have an implementation plan");
+        assert_eq!(arena.source_name, "Arena");
+        assert_eq!(arena.id, "demo.dungeon.arena");
+        assert_eq!(arena.position, DemoWildernessPosition { x: 67, y: 7 });
+        assert_eq!((arena.minimum_depth, arena.maximum_depth), (50, 80));
+        assert_eq!(arena.monster_divisor, 0);
+        assert_eq!(arena.generation_flags, ["NO_VAULT", "BIG"]);
+        assert!(arena.monster_preferences.is_empty());
+        assert_eq!(
+            arena.floor_terrain_distribution,
+            [100, 0, 0].map(|percent| DemoDungeonFloorTerrainPlan {
+                source_tag: "FLOOR".to_owned(),
+                percent,
+            })
+        );
+        assert_eq!(arena.tunnel_percent, Some(8));
+        let entrance = arena.initial_guardian.as_ref().unwrap();
+        assert_eq!((entrance.source_index, entrance.level), (691, 48));
+        assert_eq!(entrance.source_name, "Drolem");
+        assert_eq!(entrance.chinese_name, "龙魔像");
+        assert_eq!(
+            (arena.guardian.source_index, arena.guardian.level),
+            (1110, 80)
+        );
+        assert_eq!(arena.guardian.source_name, "Metal Babble");
+        assert_eq!(arena.guardian.chinese_name, "散失金属史莱姆");
+        assert_eq!(
+            arena.final_object,
+            Some(DemoDungeonObjectPlan { tval: 70, sval: 52 })
+        );
+        assert_eq!(arena.final_ego_source_index, None);
+        assert_eq!(arena.final_artifact_source_index, None);
+        assert_eq!(arena.substitute_source_index, None);
+        assert!(
+            !selection
+                .dungeons
+                .iter()
+                .any(|entry| { entry.source_index == arena.source_index || entry.id == arena.id })
+        );
+        let world: serde_json::Value = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/worlds/middle-earth.json"
+        ))
+        .expect("Middle-earth should parse");
+        assert!(world["dungeons"].as_array().unwrap().iter().all(|dungeon| {
+            dungeon["id"] != arena.id && dungeon["legacyIndex"] != arena.source_index
+        }));
+        assert!(
+            world["wilderness"]["locations"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|location| location["dungeonId"] != arena.id)
+        );
+    }
+
+    #[test]
     fn p107b_crystal_castle_plan_locks_glass_ecology_and_guardians() {
         let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
@@ -29128,7 +29193,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
 
         assert_eq!(castle.source_name, "Crystal castle");
         assert_eq!(castle.id, "demo.dungeon.crystal-castle");
-        assert_eq!(castle.position, DemoWildernessPosition { x: 40, y: 37 });
+        assert_eq!(castle.position, DemoWildernessPosition { x: 37, y: 40 });
         assert_eq!((castle.minimum_depth, castle.maximum_depth), (40, 60));
         assert_eq!(castle.monster_divisor, 0);
         assert_eq!(

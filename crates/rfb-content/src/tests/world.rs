@@ -6140,7 +6140,7 @@ fn special_layout_dungeon_bindings_match_source() {
                 matches!(
                     location,
                     WildernessLocationDefinition::Dungeon {
-                        position: ContentPosition { x: 40, y: 37 },
+                        position: ContentPosition { x: 37, y: 40 },
                         dungeon_id,
                     } if dungeon_id == "demo.dungeon.crystal-castle"
                 )
@@ -10087,7 +10087,7 @@ fn town_entrances_and_shared_facilities_match_source() {
                     dungeon_id: "demo.dungeon.troll-cave".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
-                    position: ContentPosition { x: 40, y: 37 },
+                    position: ContentPosition { x: 37, y: 40 },
                     dungeon_id: "demo.dungeon.crystal-castle".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {

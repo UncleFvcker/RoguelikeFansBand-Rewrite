@@ -20,7 +20,7 @@
 | 协议 | 1.230 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | v108 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload | v5 / v5；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
-| 内容包 | 1.384.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.384.1 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
 | 行为基线 | contract-v306，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
 | 内容定义数量 | 地形 201、角色 1402、物品 356、能力 1838、词缀 65、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
 | 角色配置数量 | Class 6、Build 13、Race 57、SkillSet 65 | 同上；这些是定义数量，不是菜单选项数量 |
@@ -68,6 +68,8 @@
 | 人工试玩、全职业 / 全种族 / 全法术、完整通关、Android | 未在本次验收 | 需要后续明确范围及独立结果；独立补给循环和渲染性能实验也未在本次运行 |
 
 城镇、荒野、地下城、任务、物品、怪物和变异已有内容与规则接入记录；本次五项流程验收不覆盖这些系统的所有内容。各专题中的历史“完成”保留其原有范围，不作为当前全量验收结论。
+
+2026-09-09 地牢城镇方向增量：按权威 RFB master 修正水晶城堡入口世界坐标为 `(37,40)`，将入口守卫从玩家落点移至相邻位置，补充进入、返回地表与保存恢复的核心测试；修复无固定奖励地牢的来源校验。竞技场地牢仅新增来源计划，正式入口尚未开放，生成规则与最终奖励仍有依赖。具体范围与验证见[本批交付记录](dungeons-towns-source-audit-20260909.md)，不计为桌面或人工试玩验收。
 
 ## 更新方式
 

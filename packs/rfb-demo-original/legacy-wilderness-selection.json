@@ -1580,7 +1580,7 @@
       "sourceIndex": 20,
       "sourceName": "Crystal castle",
       "id": "demo.dungeon.crystal-castle",
-      "position": { "x": 40, "y": 37 },
+      "position": { "x": 37, "y": 40 },
       "minimumDepth": 40,
       "maximumDepth": 60,
       "monsterDivisor": 0,
@@ -1616,6 +1616,36 @@
         "level": 60
       },
       "finalObject": { "tval": 23, "sval": 31 }
+    },
+    {
+      "sourceIndex": 25,
+      "sourceName": "Arena",
+      "id": "demo.dungeon.arena",
+      "position": { "x": 67, "y": 7 },
+      "minimumDepth": 50,
+      "maximumDepth": 80,
+      "monsterDivisor": 0,
+      "generationFlags": ["NO_VAULT", "BIG"],
+      "monsterPreferences": [],
+      "floorTerrainDistribution": [
+        { "sourceTag": "FLOOR", "percent": 100 },
+        { "sourceTag": "FLOOR", "percent": 0 },
+        { "sourceTag": "FLOOR", "percent": 0 }
+      ],
+      "tunnelPercent": 8,
+      "initialGuardian": {
+        "sourceIndex": 691,
+        "sourceName": "Drolem",
+        "chineseName": "龙魔像",
+        "level": 48
+      },
+      "guardian": {
+        "sourceIndex": 1110,
+        "sourceName": "Metal Babble",
+        "chineseName": "散失金属史莱姆",
+        "level": 80
+      },
+      "finalObject": { "tval": 70, "sval": 52 }
     }
   ]
 }

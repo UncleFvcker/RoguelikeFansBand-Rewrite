@@ -1928,6 +1928,43 @@ fn p98c_castle_guardians_and_conquest_are_one_shot() {
 }
 
 #[test]
+fn crystal_castle_entrance_uses_source_coordinates_and_restores_the_surface() {
+    let mut game =
+        Game::new_with_build(207, "demo.build.warrior").expect("Middle-earth should create");
+    dispatch_next(&mut game, enter_world_map_command());
+    let position = Position { x: 37, y: 40 };
+    game.wilderness_position = Some(position);
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert!(game.entities.iter().any(|actor| {
+        actor.id == "demo.guardian.crystal-castle-entrance.1"
+            && actor.kind_id == "demo.actor.ethereal-dragon"
+            && actor.position != game.player.position
+    }));
+    p89_defeat_guardian(&mut game, "demo.guardian.crystal-castle-entrance.1");
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    place_player_on_terrain(&mut game, "demo.terrain.crystal-castle-entrance");
+    let entrance_position = game.player.position;
+    let entered = dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(entered.floor_id, "demo.floor.crystal-castle-depth-40");
+    let hash = game.state_hash();
+    let mut restored = Game::from_save(game.to_save()).expect("Crystal castle should restore");
+    assert_eq!(restored.state_hash(), hash);
+    clear_monsters(&mut restored);
+    place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
+    dispatch_next(&mut restored, GameCommand::TraverseStairs);
+    assert_eq!(restored.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(restored.wilderness_position, Some(position));
+    assert_eq!(restored.player.position, entrance_position);
+    assert_eq!(
+        restored.terrain_at(entrance_position),
+        "demo.terrain.crystal-castle-entrance"
+    );
+    assert!(restored.dungeon_states["demo.dungeon.crystal-castle"].entrance_guardian_defeated);
+}
+
+#[test]
 fn p100f_graveyard_guardians_and_rolled_soulsword_reward_are_one_shot() {
     let mut game =
         Game::new_with_build(200, "demo.build.warrior").expect("Middle-earth should create");
