@@ -39,7 +39,12 @@ test("trait values distinguish unknown, points, percentages and range without in
   assert.equal(value("natural-regeneration", 200), "trait-unit-percent:200");
   assert.equal(value("mutation-regeneration", 10), "trait-unit-percent:10");
   assert.equal(value("infravision", 3), "trait-unit-tiles:3");
-  assert.equal(value("melee-attacks", 2), "trait-unit-attacks:2");
+  assert.equal(value("melee-attacks-hundredths", 200), "trait-unit-attacks:2.00");
+  assert.equal(value("melee-attacks-hundredths", 196), "trait-unit-attacks:1.96");
+  assert.equal(value("melee-attacks-hundredths", 4), "trait-unit-attacks:0.04");
+  assert.equal(value("melee-attacks-hundredths", 0), "trait-unit-attacks:0.00");
+  assert.equal(value("melee-attacks-hundredths", null), "trait-value-unknown");
+  assert.equal(traitStatSourceValue({ id: "melee-attacks-hundredths" }, -4, localization), "trait-unit-attacks:-0.04");
   assert.equal(value("ranged-energy", 50), "trait-unit-energy:50");
   assert.equal(value("ranged-base-shot", 150), "trait-unit-percent:150");
 });

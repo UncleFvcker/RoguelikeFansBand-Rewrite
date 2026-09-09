@@ -289,6 +289,270 @@ fn force_melee_misses(game: &mut Game) {
     });
 }
 
+fn tonberry_game(build: &str) -> Game {
+    let mut game = melee_game(0, build);
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.tonberry-combat").status;
+    form.granted_race_id = Some("rfb-legacy.race.tonberry".to_owned());
+    game.player.statuses.push(form);
+    game
+}
+
+#[test]
+fn tonberry_weapon_profiles_preserve_fractional_blows_and_known_damage() {
+    let mut game = tonberry_game("demo.build.warrior");
+    let weapon = weapon_index(&game);
+    let base_attacks = game.player_derived_stats().melee_attacks.value;
+    game.items[weapon]
+        .intrinsic_properties
+        .equipment_bonuses
+        .melee_attacks += 2 - base_attacks;
+    assert!(game.gain_mutation("rfb.mutation.horns", &mut Vec::new()));
+    let equipped: Vec<_> = game
+        .items
+        .iter()
+        .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+        .map(|item| item.id.clone())
+        .collect();
+    for id in &equipped {
+        game.identify_item_instance(id, ItemIdentificationRequest::new(true));
+    }
+    for (level, blows) in [(1, 196), (24, 104), (25, 100), (26, 96), (49, 4), (50, 0)] {
+        game.progress.level = level;
+        let stats = game.player_derived_stats();
+        let profile = game.player_melee_profile(&stats);
+        assert_eq!(
+            i32::from(profile.attacks) * 100 + i32::from(profile.extra_attack_chance_percent),
+            blows
+        );
+        assert_eq!(
+            profile.to_damage,
+            stats.melee_damage_bonus.value + 2 * i32::from(level)
+        );
+        let innate =
+            game.player_mutation_innate_attack_profiles(&stats, profile.source_item_id.as_deref());
+        let mut human = game.clone();
+        human.player.statuses.clear();
+        // Pass identical derived stats to isolate the weapon-only rule from racial attributes.
+        let control_innate =
+            human.player_mutation_innate_attack_profiles(&stats, profile.source_item_id.as_deref());
+        assert_eq!(innate[0].to_damage, control_innate[0].to_damage);
+        assert_eq!(innate[0].attacks, control_innate[0].attacks);
+        let rng = game.rng.clone();
+        let data = game.snapshot().player.trait_details;
+        assert_eq!(game.rng, rng);
+        let rate = data
+            .stats
+            .iter()
+            .find(|stat| stat.id == "melee-attacks-hundredths")
+            .unwrap();
+        assert_eq!(rate.value, Some(blows));
+        assert_eq!(
+            rate.sources.iter().map(|source| source.amount).sum::<i32>(),
+            blows
+        );
+        assert_eq!(
+            data.melee_damage[0].base_damage,
+            Some([
+                (i32::from(profile.damage_dice) + profile.to_damage).max(0),
+                (i32::from(profile.damage_dice) * i32::from(profile.damage_sides)
+                    + profile.to_damage)
+                    .max(0),
+            ])
+        );
+    }
+    game.items[weapon]
+        .intrinsic_properties
+        .equipment_bonuses
+        .melee_attacks -= 1;
+    let below_zero = game.player_melee_profile(&game.player_derived_stats());
+    assert_eq!(
+        (below_zero.attacks, below_zero.extra_attack_chance_percent),
+        (0, 0)
+    );
+    game.item_property_knowledge.remove(&equipped[0]);
+    let data = game.snapshot().player.trait_details;
+    let rate = data
+        .stats
+        .iter()
+        .find(|stat| stat.id == "melee-attacks-hundredths")
+        .unwrap();
+    assert_eq!(rate.value, None);
+    assert!(rate.sources.is_empty());
+    assert!(
+        data.melee_damage
+            .iter()
+            .all(|preview| preview.base_damage.is_none())
+    );
+
+    game.items[weapon].location = ItemLocation::Inventory;
+    let stats = game.player_derived_stats();
+    let unarmed = game.player_melee_profile(&stats);
+    assert!(unarmed.source_item_id.is_none());
+    assert_eq!(i32::from(unarmed.attacks), stats.melee_attacks.value);
+    assert_eq!(unarmed.extra_attack_chance_percent, 0);
+    assert_eq!(unarmed.to_damage, stats.melee_damage_bonus.value);
+}
+
+#[test]
+fn tonberry_fractional_weapon_attacks_roll_once_and_allow_zero_attacks() {
+    let mut base = tonberry_game("demo.build.warrior");
+    force_melee_misses(&mut base);
+    let weapon = weapon_index(&base);
+    let base_attacks = base.player_derived_stats().melee_attacks.value;
+    base.items[weapon]
+        .intrinsic_properties
+        .equipment_bonuses
+        .melee_attacks += 2 - base_attacks;
+    for (level, guaranteed, chance) in [(1, 1, 96), (25, 1, 0), (26, 0, 96), (49, 0, 4), (50, 0, 0)]
+    {
+        base.progress.level = level;
+        for seed in 0..32 {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(seed);
+            let mut expected_rng = game.rng.clone();
+            let expected_attacks =
+                guaranteed + usize::from(chance > 0 && expected_rng.bounded(100) < chance);
+            let events = resolve_melee(&mut game);
+            assert_eq!(
+                events
+                    .iter()
+                    .filter(|event| matches!(event, DomainEvent::PlayerMeleeMissed { .. }))
+                    .count(),
+                expected_attacks
+            );
+            assert!(hit_damage(&events).is_empty());
+            assert_eq!(game.rng, expected_rng, "level {level}, seed {seed}");
+        }
+    }
+    let mut action = base.clone();
+    // Native Tonberry precondition avoids the Human's unrelated unchosen level reward.
+    action.build.as_mut().unwrap().race_id = "rfb-legacy.race.tonberry".to_owned();
+    action
+        .player
+        .statuses
+        .retain(|status| status.kind_id == STATUS_PLAYER_POLYMORPH);
+    let position = action.player.position;
+    let tick = action.world_tick;
+    let hp = action.entities[0].hp;
+    let update = super::support::dispatch_next(
+        &mut action,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert!(
+        update.world_tick > tick,
+        "zero blows still consume the melee action"
+    );
+    assert_eq!(action.player.position, position);
+    assert_eq!(action.entities[0].hp, hp);
+    assert!(base.gain_mutation("rfb.mutation.horns", &mut Vec::new()));
+    let events = resolve_melee(&mut base);
+    assert!(!events.iter().any(|event| matches!(
+        event,
+        DomainEvent::PlayerMeleeHit { .. } | DomainEvent::PlayerMeleeMissed { .. }
+    )));
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MutationMeleeMissed { .. }))
+    );
+}
+
+fn neutral_tonberry_content() -> Arc<ContentCatalog> {
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+    let mut content = rfb_content::compile_pack_dir(&path).unwrap().content;
+    let race = content
+        .races
+        .iter_mut()
+        .find(|race| race.id == "rfb-legacy.race.tonberry")
+        .unwrap();
+    race.id = "test.race.tonberry-control".to_owned();
+    Arc::new(ContentCatalog::from_artifact(
+        rfb_content::encode_content(content).unwrap(),
+    ))
+}
+
+#[test]
+fn tonberry_damage_is_added_after_weapon_criticals_and_does_not_change_shooting() {
+    let content = neutral_tonberry_content();
+    let mut base = tonberry_game("demo.build.warrior");
+    base.progress.level = 25;
+    let weapon = weapon_index(&base);
+    let attacks = base.player_derived_stats().melee_attacks.value;
+    base.items[weapon]
+        .intrinsic_properties
+        .equipment_bonuses
+        .melee_attacks += 3 - attacks;
+    let mut control = base.clone();
+    control.content = content.clone();
+    control.player.statuses[0].granted_race_id = Some("test.race.tonberry-control".to_owned());
+    control.items[weapon]
+        .intrinsic_properties
+        .equipment_bonuses
+        .melee_attacks -= 1;
+    let profile = control.player_melee_profile(&control.player_derived_stats());
+    let normal_maximum =
+        i32::from(profile.damage_dice) * i32::from(profile.damage_sides) + profile.to_damage;
+    let mut critical_seen = false;
+    for seed in 0..128 {
+        let mut actual = base.clone();
+        let mut expected = control.clone();
+        actual.rng = RfbRng::seeded(seed);
+        expected.rng = actual.rng.clone();
+        let raw_hits = |events: Vec<DomainEvent>| {
+            events
+                .into_iter()
+                .filter_map(|event| match event {
+                    DomainEvent::PlayerMeleeHit { damage, .. } => Some(damage.raw),
+                    _ => None,
+                })
+                .collect::<Vec<_>>()
+        };
+        let actual_hits = raw_hits(resolve_melee(&mut actual));
+        let expected_hits = raw_hits(resolve_melee(&mut expected));
+        assert_eq!(actual_hits.len(), expected_hits.len());
+        for (actual, expected) in actual_hits.into_iter().zip(expected_hits) {
+            assert_eq!(actual, expected + 50);
+            critical_seen |= expected > normal_maximum;
+        }
+        assert_eq!(actual.rng, expected.rng);
+    }
+    assert!(critical_seen);
+
+    let mut archer = tonberry_game("demo.build.archer");
+    for position in [archer.player.position, archer.entities[0].position] {
+        super::support::replace_terrain(&mut archer, position, "demo.terrain.floor");
+    }
+    let mut control = archer.clone();
+    control.content = content;
+    control.player.statuses[0].granted_race_id = Some("test.race.tonberry-control".to_owned());
+    let shoot = |game: &mut Game| {
+        let mut events = Vec::new();
+        game.resolve_player_projectile(
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            super::super::player_combat::ProjectileMode::Normal,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        events
+    };
+    let events = shoot(&mut archer);
+    assert_eq!(events, shoot(&mut control));
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::ProjectileHit { .. }))
+    );
+    assert_eq!(archer.rng, control.rng);
+}
+
 #[test]
 fn mana_weapon_uses_current_dice_and_only_pays_for_successful_affordable_hits() {
     let base = melee_game(0, "demo.build.high-mage-arcane");

@@ -579,19 +579,29 @@ impl Game {
             })
             .collect();
         if !self.player_has_draconian_metamorphosis() {
+            let blows =
+                i32::from(melee.attacks) * 100 + i32::from(melee.extra_attack_chance_percent);
             numeric.push(CharacterStatDto {
-                id: "melee-attacks".to_owned(),
-                value: complete.then_some(i32::from(melee.attacks)),
+                id: "melee-attacks-hundredths".to_owned(),
+                value: complete.then_some(blows),
                 sources: if complete {
-                    stats
+                    let mut sources: Vec<_> = stats
                         .melee_attacks
                         .contributions
                         .iter()
                         .map(|entry| CharacterStatSourceDto {
                             source_id: entry.source_id.clone(),
-                            amount: entry.amount,
+                            amount: entry.amount.saturating_mul(100),
                         })
-                        .collect()
+                        .collect();
+                    let penalty = blows - stats.melee_attacks.value.saturating_mul(100);
+                    if penalty != 0 {
+                        sources.push(CharacterStatSourceDto {
+                            source_id: "rfb-legacy.race.tonberry".to_owned(),
+                            amount: penalty,
+                        });
+                    }
+                    sources
                 } else {
                     Vec::new()
                 },

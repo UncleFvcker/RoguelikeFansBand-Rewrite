@@ -215,10 +215,10 @@ fn trait_details_attack_counts_follow_the_selected_weapon_and_launcher() {
     assert_eq!(
         data.stats
             .iter()
-            .find(|row| row.id == "melee-attacks")
+            .find(|row| row.id == "melee-attacks-hundredths")
             .unwrap()
             .value,
-        Some(i32::from(game.player_melee_profile(&stats).attacks))
+        Some(i32::from(game.player_melee_profile(&stats).attacks) * 100)
     );
     let projectile = game.player_projectile_profile().unwrap();
     assert_eq!(
@@ -242,8 +242,12 @@ fn trait_details_attack_counts_follow_the_selected_weapon_and_launcher() {
         details(&game)
             .stats
             .iter()
-            .filter(|row| ["melee-attacks", "ranged-base-shot", "ranged-energy"]
-                .contains(&row.id.as_str()))
+            .filter(|row| [
+                "melee-attacks-hundredths",
+                "ranged-base-shot",
+                "ranged-energy"
+            ]
+            .contains(&row.id.as_str()))
             .all(|row| row.value.is_none())
     );
 }

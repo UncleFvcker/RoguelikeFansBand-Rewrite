@@ -2,7 +2,7 @@
 import type { Localization } from "./localization";
 import type { BodySlotDto, CharacterStatDto, CharacterTraitDetailsDto, CharacterTraitSourceDto, EquipmentItemDto, InventoryItemDto, MeleeDamagePreviewDto, PlayerDto } from "./protocol";
 
-const ATTACK_STATS = ["melee-attacks", "ranged-base-shot", "ranged-energy"];
+const ATTACK_STATS = ["melee-attacks-hundredths", "ranged-base-shot", "ranged-energy"];
 
 export function meleeDamagePreviewValue(preview: MeleeDamagePreviewDto, localization: Localization): string {
   return preview.baseDamage === null ? localization.format("trait-value-unknown")
@@ -18,8 +18,9 @@ export function traitActionProtection(data: CharacterTraitDetailsDto): boolean |
 export function traitStatValue(stat: CharacterStatDto, localization: Localization): string {
   if (stat.value == null) return localization.format("trait-value-unknown");
   const unit = ["equipment-life", "natural-regeneration", "mutation-regeneration", "ranged-base-shot"].includes(stat.id)
-    ? "percent" : stat.id === "infravision" ? "tiles" : stat.id === "melee-attacks" ? "attacks" : stat.id === "ranged-energy" ? "energy" : "points";
-  return localization.format(`trait-unit-${unit}`, { value: stat.value });
+    ? "percent" : stat.id === "infravision" ? "tiles" : stat.id === "melee-attacks-hundredths" ? "attacks" : stat.id === "ranged-energy" ? "energy" : "points";
+  const value = stat.id === "melee-attacks-hundredths" ? (stat.value / 100).toFixed(2) : stat.value;
+  return localization.format(`trait-unit-${unit}`, { value });
 }
 
 export function traitStatSourceValue(stat: CharacterStatDto, amount: number, localization: Localization): string {
@@ -168,10 +169,10 @@ export function renderCharacterTraitsDetails(
   if (!weapons.querySelector("details")) weapons.append(text("p", f("trait-no-weapons"), "attribute-source-guide"));
   const rates = section("trait-attack-rates");
   for (const stat of data.stats.filter((stat) => ATTACK_STATS.includes(stat.id))) {
-    const id = stat.id === "melee-attacks" ? data.activeWeaponId : data.activeLauncherId;
+    const id = stat.id === "melee-attacks-hundredths" ? data.activeWeaponId : data.activeLauncherId;
     rates.append(row(`stat-${stat.id}`, `${f(`trait-stat-${stat.id}`)} · ${id ? sourceName(id) : f("trait-unarmed")}`, traitStatValue(stat, localization),
       stat.sources.map((source) => `${sourceName(source.sourceId)}：${traitStatSourceValue(stat, source.amount, localization)}`),
-      f(stat.id === "melee-attacks" ? "trait-melee-rate-rule" : "trait-shot-rate-rule")));
+      f(stat.id === "melee-attacks-hundredths" ? "trait-melee-rate-rule" : "trait-shot-rate-rule")));
   }
   const auras = section("trait-auras");
   for (const aura of data.auras) {

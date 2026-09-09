@@ -1656,10 +1656,23 @@ impl Game {
             to_hit = to_hit.saturating_sub(2);
             to_damage = to_damage.saturating_sub(2);
         }
+        let mut blows = stats.melee_attacks.value.saturating_mul(100);
+        if source_item_id.is_some()
+            && self
+                .character_definitions()
+                .is_some_and(|(_, race, _, _)| race.id == "rfb-legacy.race.tonberry")
+        {
+            // RFB master a0d92b6378: _tonberry_calc_bonuses, NUM_BLOWS.
+            // This pipeline wields one active weapon, so weapon_ct is one.
+            to_damage = to_damage.saturating_add(2 * i32::from(self.progress.level));
+            blows = blows
+                .saturating_sub(4 * i32::from(self.progress.level))
+                .max(0);
+        }
         ResolvedAttackProfile {
-            attacks: u16::try_from(stats.melee_attacks.value)
-                .expect("derived melee attack count must fit u16"),
-            extra_attack_chance_percent: 0,
+            attacks: u16::try_from(blows / 100).expect("derived melee attack count must fit u16"),
+            extra_attack_chance_percent: u8::try_from(blows % 100)
+                .expect("fractional melee blows must fit u8"),
             melee_skill,
             to_hit,
             to_damage,
