@@ -29,6 +29,8 @@ fn arcane_high_mage_game(seed: u64, level: u16, ability_ids: &[&str]) -> Game {
         .expect("Arcane High-Mage build should create");
     game.progress.level = level;
     game.progress.max_level = level;
+    game.progress.experience = game.experience_required_for_level(level);
+    game.progress.maximum_experience = game.progress.experience;
     game.learned_abilities
         .extend(ability_ids.iter().map(|id| (*id).to_owned()));
     give_inventory_item(&mut game, "test.minor-arcana", "demo.item.minor-arcana");
@@ -52,6 +54,8 @@ fn sorcery_high_mage_game(seed: u64, level: u16, ability_ids: &[&str]) -> Game {
         .expect("Sorcery High-Mage build should create");
     game.progress.level = level;
     game.progress.max_level = level;
+    game.progress.experience = game.experience_required_for_level(level);
+    game.progress.maximum_experience = game.progress.experience;
     game.learned_abilities
         .extend(ability_ids.iter().map(|id| (*id).to_owned()));
     give_inventory_item(
@@ -83,6 +87,8 @@ fn armageddon_high_mage_game(seed: u64, level: u16) -> Game {
         .expect("Armageddon High-Mage build should create");
     game.progress.level = level;
     game.progress.max_level = level;
+    game.progress.experience = game.experience_required_for_level(level);
+    game.progress.maximum_experience = game.progress.experience;
     game.learned_abilities.extend(
         [
             "demo.ability.armageddon-shard-bolt",
@@ -142,6 +148,8 @@ fn nature_high_mage_game(seed: u64, level: u16) -> Game {
         .expect("Nature High-Mage build should create");
     game.progress.level = level;
     game.progress.max_level = level;
+    game.progress.experience = game.experience_required_for_level(level);
+    game.progress.maximum_experience = game.progress.experience;
     game.learned_abilities.extend(
         [
             "demo.ability.nature-detect-creatures",
@@ -197,6 +205,8 @@ fn life_high_mage_game(seed: u64, level: u16) -> Game {
         .expect("Life High-Mage build should create");
     game.progress.level = level;
     game.progress.max_level = level;
+    game.progress.experience = game.experience_required_for_level(level);
+    game.progress.maximum_experience = game.progress.experience;
     game.learned_abilities.extend(
         [
             "demo.ability.life-cure-light-wounds",
@@ -261,6 +271,8 @@ pub(super) fn daemon_high_mage_game(seed: u64, level: u16) -> Game {
         .expect("Daemon High-Mage build should create");
     game.progress.level = level;
     game.progress.max_level = level;
+    game.progress.experience = game.experience_required_for_level(level);
+    game.progress.maximum_experience = game.progress.experience;
     game.learned_abilities.extend(
         [
             "demo.ability.daemon-magic-missile",
@@ -322,6 +334,8 @@ fn crusade_high_mage_game(seed: u64, level: u16) -> Game {
         .expect("Crusade High-Mage build should create");
     game.progress.level = level;
     game.progress.max_level = level;
+    game.progress.experience = game.experience_required_for_level(level);
+    game.progress.maximum_experience = game.progress.experience;
     game.learned_abilities.extend(
         [
             "demo.ability.crusade-punishment",
@@ -3342,8 +3356,9 @@ fn life_fourth_book_restoration_and_true_healing_restore_the_original_state_sets
         constitution: 18,
         charisma: 18,
     };
-    game.progress.experience = 100;
-    game.progress.maximum_experience = 1_000;
+    game.progress.experience = game.experience_required_for_level(50);
+    game.progress.maximum_experience = game.progress.experience + 1_000;
+    let restored_experience = game.progress.maximum_experience;
     game.progress.life_force = 100;
     game.ability_progress
         .get_mut("demo.ability.life-restoration")
@@ -3358,7 +3373,7 @@ fn life_fourth_book_restoration_and_true_healing_restore_the_original_state_sets
     )
     .expect("Restoration should resolve");
     assert_eq!(game.progress.attributes, game.progress.maximum_attributes);
-    assert_eq!(game.progress.experience, 1_000);
+    assert_eq!(game.progress.experience, restored_experience);
     assert_eq!(game.progress.life_force, 1_000);
 
     for status_kind_id in [STATUS_STUN, STATUS_BLEEDING] {
@@ -4921,6 +4936,7 @@ fn sorcery_self_knowledge_reuses_the_read_only_character_report() {
         15,
         &["demo.ability.sorcery-self-knowledge"],
     );
+    let report_max_hp = game.effective_player_max_hp();
     let mut events = Vec::new();
     game.resolve_player_ability(
         "demo.ability.sorcery-self-knowledge",
@@ -4935,7 +4951,7 @@ fn sorcery_self_knowledge_reuses_the_read_only_character_report() {
         DomainEvent::AbilitySelfKnowledge { ability_id, report, .. }
             if ability_id == "demo.ability.sorcery-self-knowledge"
                 && report.level == 15
-                && report.max_hp == game.effective_player_max_hp()
+                && report.max_hp == report_max_hp
     )));
 }
 
@@ -5811,8 +5827,8 @@ fn arcane_first_book_jams_and_destroys_doors_and_cures_light_wounds() {
     assert_eq!(game.player.statuses[0].remaining_ticks, 10);
     assert_eq!(
         game.progress.experience - experience_before,
-        33,
-        "the original 25-point spell reward uses the High-Mage 130% experience factor"
+        25,
+        "the original spell reward stays raw; the High-Mage factor scales level requirements"
     );
 
     game.resources

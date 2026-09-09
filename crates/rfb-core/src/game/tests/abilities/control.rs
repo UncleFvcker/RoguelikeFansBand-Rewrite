@@ -522,8 +522,8 @@ fn yeek_scare_monster_and_level_acid_immunity_follow_the_effective_race() {
         ResistanceLevel::Resistant
     );
 
-    let level_fourteen_experience = crate::stats::experience_required_for_level(14);
-    game.apply_unscaled_player_experience(level_fourteen_experience, &mut Vec::new());
+    let level_fourteen_experience = game.experience_required_for_level(14);
+    game.apply_player_experience(level_fourteen_experience, &mut Vec::new());
     let locked = game
         .snapshot()
         .player
@@ -540,8 +540,8 @@ fn yeek_scare_monster_and_level_acid_immunity_follow_the_effective_race() {
     assert_eq!((locked.base_resource_cost, locked.resource_cost), (15, 15));
     assert!(!locked.can_cast);
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(15) - level_fourteen_experience,
+    game.apply_player_experience(
+        game.experience_required_for_level(15) - level_fourteen_experience,
         &mut Vec::new(),
     );
     let mana = game

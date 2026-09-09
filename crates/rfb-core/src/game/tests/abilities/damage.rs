@@ -1121,8 +1121,8 @@ fn formal_kobold_poison_dart_is_a_fixed_level_poison_bolt_without_ammunition() {
             .level(DamageType::Poison),
         ResistanceLevel::Resistant
     );
-    let level_eleven_experience = crate::stats::experience_required_for_level(11);
-    game.apply_unscaled_player_experience(level_eleven_experience, &mut Vec::new());
+    let level_eleven_experience = game.experience_required_for_level(11);
+    game.apply_player_experience(level_eleven_experience, &mut Vec::new());
     let locked = game
         .snapshot()
         .player
@@ -1139,8 +1139,8 @@ fn formal_kobold_poison_dart_is_a_fixed_level_poison_bolt_without_ammunition() {
     assert_eq!(locked.base_resource_cost, 8);
     assert!(!locked.can_cast);
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(12) - level_eleven_experience,
+    game.apply_player_experience(
+        game.experience_required_for_level(12) - level_eleven_experience,
         &mut Vec::new(),
     );
     game.debug_set_ability_casts_succeed(true);
@@ -1236,8 +1236,8 @@ fn cyclops_throw_boulder_scales_stuns_and_round_trips_deterministically() {
         ResistanceLevel::Resistant
     );
 
-    let level_nineteen_experience = crate::stats::experience_required_for_level(19);
-    game.apply_unscaled_player_experience(level_nineteen_experience, &mut Vec::new());
+    let level_nineteen_experience = game.experience_required_for_level(19);
+    game.apply_player_experience(level_nineteen_experience, &mut Vec::new());
     let locked = game
         .snapshot()
         .player
@@ -1254,8 +1254,8 @@ fn cyclops_throw_boulder_scales_stuns_and_round_trips_deterministically() {
     assert_eq!((locked.base_resource_cost, locked.resource_cost), (0, 8));
     assert!(!locked.can_cast);
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(20) - level_nineteen_experience,
+    game.apply_player_experience(
+        game.experience_required_for_level(20) - level_nineteen_experience,
         &mut Vec::new(),
     );
     game.player.position = Position { x: 3, y: 3 };
@@ -1467,8 +1467,8 @@ fn klackon_acid_spit_and_speed_growth_follow_the_effective_race() {
         ResistanceLevel::Resistant
     );
 
-    let level_eight_experience = crate::stats::experience_required_for_level(8);
-    game.apply_unscaled_player_experience(level_eight_experience, &mut Vec::new());
+    let level_eight_experience = game.experience_required_for_level(8);
+    game.apply_player_experience(level_eight_experience, &mut Vec::new());
     assert_eq!(game.player_derived_stats().speed.value, base_speed);
     let locked = game
         .snapshot()
@@ -1486,8 +1486,8 @@ fn klackon_acid_spit_and_speed_growth_follow_the_effective_race() {
     assert_eq!((locked.base_resource_cost, locked.resource_cost), (9, 10));
     assert!(!locked.can_cast);
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(9) - level_eight_experience,
+    game.apply_player_experience(
+        game.experience_required_for_level(9) - level_eight_experience,
         &mut Vec::new(),
     );
     let mana = game
@@ -1568,9 +1568,8 @@ fn klackon_acid_spit_and_speed_growth_follow_the_effective_race() {
             if damage.raw == 18 && damage.applied == 18
     )));
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(25)
-            - crate::stats::experience_required_for_level(9),
+    game.apply_player_experience(
+        game.experience_required_for_level(25) - game.experience_required_for_level(9),
         &mut Vec::new(),
     );
     let mana = game
@@ -1951,10 +1950,7 @@ fn mindflayer_mind_blast_sustains_and_senses_follow_the_effective_race() {
     assert_eq!(locked.minimum_level, 5);
     assert!(!locked.can_cast);
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(5),
-        &mut Vec::new(),
-    );
+    game.apply_player_experience(game.experience_required_for_level(5), &mut Vec::new());
     let projected = game
         .snapshot()
         .player
@@ -2158,8 +2154,8 @@ fn imp_fire_upgrade_and_demon_traits_follow_the_effective_race() {
             .any(|tag| tag == "demon")
     );
 
-    let level_eight_experience = crate::stats::experience_required_for_level(8);
-    game.apply_unscaled_player_experience(level_eight_experience, &mut Vec::new());
+    let level_eight_experience = game.experience_required_for_level(8);
+    game.apply_player_experience(level_eight_experience, &mut Vec::new());
     let locked = game
         .snapshot()
         .player
@@ -2176,8 +2172,8 @@ fn imp_fire_upgrade_and_demon_traits_follow_the_effective_race() {
     assert_eq!((locked.base_resource_cost, locked.resource_cost), (8, 8));
     assert!(!locked.can_cast);
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(9) - level_eight_experience,
+    game.apply_player_experience(
+        game.experience_required_for_level(9) - level_eight_experience,
         &mut Vec::new(),
     );
     let mana = game
@@ -2251,15 +2247,13 @@ fn imp_fire_upgrade_and_demon_traits_follow_the_effective_race() {
             .all(|event| !matches!(event, DomainEvent::AbilityAreaDamage { .. }))
     );
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(10)
-            - crate::stats::experience_required_for_level(9),
+    game.apply_player_experience(
+        game.experience_required_for_level(10) - game.experience_required_for_level(9),
         &mut Vec::new(),
     );
     assert_eq!(game.player_see_invisible_sources(), 1);
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(29)
-            - crate::stats::experience_required_for_level(10),
+    game.apply_player_experience(
+        game.experience_required_for_level(29) - game.experience_required_for_level(10),
         &mut Vec::new(),
     );
     let level_twenty_nine = game
@@ -2279,9 +2273,8 @@ fn imp_fire_upgrade_and_demon_traits_follow_the_effective_race() {
         }]
     ));
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(30)
-            - crate::stats::experience_required_for_level(29),
+    game.apply_player_experience(
+        game.experience_required_for_level(30) - game.experience_required_for_level(29),
         &mut Vec::new(),
     );
     let mana = game

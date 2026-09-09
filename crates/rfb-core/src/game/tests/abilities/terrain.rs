@@ -437,10 +437,7 @@ fn formal_ent_six_class_journey_drinks_levels_equips_plants_walks_and_restores()
         );
 
         let mut events = Vec::new();
-        game.apply_unscaled_player_experience(
-            crate::stats::experience_required_for_level(46),
-            &mut events,
-        );
+        game.apply_player_experience(game.experience_required_for_level(46), &mut events);
         assert_eq!(game.progress.level, 46);
         for level in [10, 26, 41, 45, 46] {
             assert!(events.iter().any(|event| matches!(event, DomainEvent::PlayerLevelGained { level: gained, .. } if *gained == level)));
@@ -910,8 +907,8 @@ fn formal_dwarf_detection_powers_reveal_original_terrain_categories_only() {
         ResistanceLevel::Resistant
     );
 
-    let level_four_experience = crate::stats::experience_required_for_level(4);
-    game.apply_unscaled_player_experience(level_four_experience, &mut Vec::new());
+    let level_four_experience = game.experience_required_for_level(4);
+    game.apply_player_experience(level_four_experience, &mut Vec::new());
     let snapshot = game.snapshot();
     let doors = snapshot
         .player
@@ -942,8 +939,8 @@ fn formal_dwarf_detection_powers_reveal_original_terrain_categories_only() {
     assert_eq!(treasure.base_resource_cost, 5);
     assert!(!treasure.can_cast);
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(5) - level_four_experience,
+    game.apply_player_experience(
+        game.experience_required_for_level(5) - level_four_experience,
         &mut Vec::new(),
     );
     let mana = game
@@ -971,9 +968,8 @@ fn formal_dwarf_detection_powers_reveal_original_terrain_categories_only() {
             .can_cast
     );
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(9)
-            - crate::stats::experience_required_for_level(5),
+    game.apply_player_experience(
+        game.experience_required_for_level(9) - game.experience_required_for_level(5),
         &mut Vec::new(),
     );
     let mana = game
@@ -992,9 +988,8 @@ fn formal_dwarf_detection_powers_reveal_original_terrain_categories_only() {
             .can_cast
     );
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(10)
-            - crate::stats::experience_required_for_level(9),
+    game.apply_player_experience(
+        game.experience_required_for_level(10) - game.experience_required_for_level(9),
         &mut Vec::new(),
     );
     let mana = game
@@ -1126,8 +1121,8 @@ fn formal_nibelung_intrinsics_and_detection_powers_unlock_at_level_ten() {
         ResistanceLevel::Resistant
     );
 
-    let level_nine_experience = crate::stats::experience_required_for_level(9);
-    game.apply_unscaled_player_experience(level_nine_experience, &mut Vec::new());
+    let level_nine_experience = game.experience_required_for_level(9);
+    game.apply_player_experience(level_nine_experience, &mut Vec::new());
     let snapshot = game.snapshot();
     for (ability_id, attribute) in [
         (
@@ -1152,8 +1147,8 @@ fn formal_nibelung_intrinsics_and_detection_powers_unlock_at_level_ten() {
         assert!(!ability.can_cast);
     }
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(10) - level_nine_experience,
+    game.apply_player_experience(
+        game.experience_required_for_level(10) - level_nine_experience,
         &mut Vec::new(),
     );
     let mana = game
@@ -1198,8 +1193,8 @@ fn formal_half_giant_stone_to_mud_does_not_grant_mining_rewards() {
         ResistanceLevel::Resistant
     );
 
-    let level_nineteen_experience = crate::stats::experience_required_for_level(19);
-    game.apply_unscaled_player_experience(level_nineteen_experience, &mut Vec::new());
+    let level_nineteen_experience = game.experience_required_for_level(19);
+    game.apply_player_experience(level_nineteen_experience, &mut Vec::new());
     let racial = game
         .snapshot()
         .player
@@ -1216,8 +1211,8 @@ fn formal_half_giant_stone_to_mud_does_not_grant_mining_rewards() {
     assert_eq!(racial.base_resource_cost, 10);
     assert!(!racial.can_cast);
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(20) - level_nineteen_experience,
+    game.apply_player_experience(
+        game.experience_required_for_level(20) - level_nineteen_experience,
         &mut Vec::new(),
     );
     game.debug_set_ability_casts_succeed(true);
@@ -1275,8 +1270,8 @@ fn half_titan_probe_knowledge_survives_losing_the_race_power_and_reloading() {
         ResistanceLevel::Resistant
     );
 
-    let level_fourteen_experience = crate::stats::experience_required_for_level(14);
-    game.apply_unscaled_player_experience(level_fourteen_experience, &mut Vec::new());
+    let level_fourteen_experience = game.experience_required_for_level(14);
+    game.apply_player_experience(level_fourteen_experience, &mut Vec::new());
     let racial = game
         .snapshot()
         .player
@@ -1293,8 +1288,8 @@ fn half_titan_probe_knowledge_survives_losing_the_race_power_and_reloading() {
     assert_eq!(racial.base_resource_cost, 10);
     assert!(!racial.can_cast);
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(15) - level_fourteen_experience,
+    game.apply_player_experience(
+        game.experience_required_for_level(15) - level_fourteen_experience,
         &mut Vec::new(),
     );
     game.debug_set_ability_casts_succeed(true);

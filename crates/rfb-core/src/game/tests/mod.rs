@@ -21,6 +21,7 @@ mod attribute_sources;
 mod capture_ball;
 mod cavalry;
 mod combat;
+mod experience;
 mod generation;
 mod gold;
 mod high_mage;

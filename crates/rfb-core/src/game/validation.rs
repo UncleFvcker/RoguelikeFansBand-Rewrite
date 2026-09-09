@@ -709,7 +709,9 @@ impl Game {
         }
         let expected_skills =
             character_skill_progress(&self.content, self.build.as_ref(), self.progress.level)?;
-        if !self.progress.validate(victory_cap_unlocked)
+        if !self
+            .progress
+            .validate(self.character_experience_percent(), victory_cap_unlocked)
             || self.progress.skills != expected_skills
             || !super::weapon_proficiency::weapon_proficiency_progress_is_valid(
                 &self.content,

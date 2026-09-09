@@ -170,7 +170,7 @@ impl Game {
             }
             ChaosPatronRewardKind::GainExperience => {
                 let amount = self.progress.experience / 2 + 10;
-                self.apply_unscaled_player_experience(amount.min(100_000), events);
+                self.apply_player_experience(amount.min(100_000), events);
             }
             ChaosPatronRewardKind::LoseExperience => {
                 self.apply_player_experience_drain(

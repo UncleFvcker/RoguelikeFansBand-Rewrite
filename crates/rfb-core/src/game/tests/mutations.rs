@@ -787,10 +787,7 @@ fn chaos_gift_rewards_only_a_new_highest_level() {
     clear_monsters(&mut game);
     game.rng = RfbRng::seeded(seed_matching(|rng| rng.bounded(6) == 0));
     let mut events = Vec::new();
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(2),
-        &mut events,
-    );
+    game.apply_player_experience(game.experience_required_for_level(2), &mut events);
     let mut event_cursor = 0;
     game.process_chaos_patron_level_rewards(
         &mut events,
@@ -809,15 +806,15 @@ fn chaos_gift_rewards_only_a_new_highest_level() {
 
     let mut regained = Game::new(43);
     regained.progress.active_mutation_ids.clear();
-    let level_two = crate::stats::experience_required_for_level(2);
-    regained.apply_unscaled_player_experience(level_two, &mut Vec::new());
+    let level_two = regained.experience_required_for_level(2);
+    regained.apply_player_experience(level_two, &mut Vec::new());
     regained.apply_player_experience_drain(level_two, "test", &mut Vec::new());
     regained
         .progress
         .active_mutation_ids
         .insert(chaos_patron::CHAOS_GIFT_MUTATION_ID.to_owned());
     let mut events = Vec::new();
-    regained.apply_unscaled_player_experience(level_two, &mut events);
+    regained.apply_player_experience(level_two, &mut events);
     let mut event_cursor = 0;
     regained
         .process_chaos_patron_level_rewards(

@@ -2069,7 +2069,8 @@ fn p3_2_refreshments_are_deliberate_no_numeric_effects() {
 fn p3_2_lose_memories_preserves_historical_experience() {
     let mut game = Game::new(202);
     clear_monsters(&mut game);
-    game.progress.gain_experience(1_000, false);
+    game.progress
+        .gain_experience(1_000, game.character_experience_percent(), false);
     let maximum = game.progress.maximum_experience;
     give_inventory_item(
         &mut game,
@@ -2159,7 +2160,7 @@ fn p3_7_experience_potion_uses_unscaled_relative_gain_and_level_cap() {
     let mut game =
         Game::new_with_build(701, "demo.build.warrior").expect("Warrior build should create");
     clear_monsters(&mut game);
-    game.apply_unscaled_player_experience(100, &mut Vec::new());
+    game.apply_player_experience(100, &mut Vec::new());
     assert_eq!(game.progress.experience, 100);
     give_inventory_item(
         &mut game,
@@ -2183,7 +2184,7 @@ fn p3_7_experience_potion_uses_unscaled_relative_gain_and_level_cap() {
 
     let mut capped = Game::new(704);
     clear_monsters(&mut capped);
-    capped.apply_unscaled_player_experience(4_500_000, &mut Vec::new());
+    capped.apply_player_experience(4_500_000, &mut Vec::new());
     assert_eq!(capped.progress.level, 50);
     choose_human_talent_if_pending(&mut capped);
     give_inventory_item(

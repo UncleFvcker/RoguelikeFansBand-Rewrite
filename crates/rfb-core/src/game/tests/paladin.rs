@@ -177,8 +177,8 @@ fn death_paladin_unlocks_hell_lance_and_fear_resistance_at_original_levels() {
     );
 
     let mut restorable = paladin_game(0x5041_4c41_4449_4e40);
-    restorable.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(40),
+    restorable.apply_player_experience(
+        restorable.experience_required_for_level(40),
         &mut Vec::new(),
     );
     assert_eq!(restorable.progress.level, 40);

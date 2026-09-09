@@ -4113,7 +4113,7 @@ impl Game {
             )
             .min(self.player_relative_experience_reward(maximum_gain));
         let before = self.progress.experience;
-        self.apply_unscaled_player_experience(amount, events);
+        self.apply_player_experience(amount, events);
         let noticed = self.progress.experience != before;
         if noticed {
             self.mark_item_aware(source_kind_id);

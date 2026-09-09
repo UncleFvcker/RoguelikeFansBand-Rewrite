@@ -160,10 +160,7 @@ fn racial_cast_failures_pay_without_revealing_or_creating_items() {
         )
         .expect("racial High-Mage should create");
         clear_monsters(&mut game);
-        game.apply_unscaled_player_experience(
-            crate::stats::experience_required_for_level(level),
-            &mut Vec::new(),
-        );
+        game.apply_player_experience(game.experience_required_for_level(level), &mut Vec::new());
         game.resources
             .get_mut("demo.resource.mana")
             .expect("High-Mage should have mana")

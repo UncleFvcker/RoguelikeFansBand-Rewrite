@@ -16,9 +16,9 @@
       "revision": 0,
       "turn": 0,
       "lastCommandSeq": 0,
-      "stateHash": "7c62dc560769aea96ee32a2214240b156c6e3aaa7cfb622cb2a12245bf62ff11",
+      "stateHash": "3bc5abcb018ff734a9002b4cac138a31508582f14d001af6657435d30bd0b2a8",
       "playerGold": 405
     },
-    "saveRoundTripStateHash": "7c62dc560769aea96ee32a2214240b156c6e3aaa7cfb622cb2a12245bf62ff11"
+    "saveRoundTripStateHash": "3bc5abcb018ff734a9002b4cac138a31508582f14d001af6657435d30bd0b2a8"
   }
 }

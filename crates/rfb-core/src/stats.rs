@@ -236,6 +236,12 @@ pub fn experience_required_for_level(level: u16) -> u64 {
         .unwrap_or(0)
 }
 
+/// Raw XP threshold: RFB applies the experience factor to the requirement, not rewards.
+#[must_use]
+pub fn experience_required_for_level_with_factor(level: u16, experience_percent: u16) -> u64 {
+    experience_required_for_level(level) * u64::from(experience_percent) / 100
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CharacterProgress {
     pub attributes: AttributeSet,
@@ -488,13 +494,50 @@ impl CharacterProgress {
         base.saturating_mul(percent).saturating_add(50) / 100
     }
 
-    pub fn gain_experience(&mut self, amount: u64, victorious: bool) -> Vec<u16> {
+    pub fn gain_experience(
+        &mut self,
+        amount: u64,
+        experience_percent: u16,
+        victorious: bool,
+    ) -> Vec<u16> {
         self.experience = self.experience.saturating_add(amount).min(MAX_EXPERIENCE);
+        // RFB gain_exp_64 also grows the restorable maximum while XP remains drained.
+        if self.experience < self.maximum_experience {
+            self.maximum_experience = self
+                .maximum_experience
+                .saturating_add(amount / 5)
+                .min(MAX_EXPERIENCE);
+        }
         self.maximum_experience = self.maximum_experience.max(self.experience);
+        self.recalculate_level(experience_percent, victorious)
+    }
+
+    pub fn lose_experience(
+        &mut self,
+        amount: u64,
+        experience_percent: u16,
+        victorious: bool,
+    ) -> Vec<u16> {
+        self.experience = self.experience.saturating_sub(amount);
+        self.recalculate_level(experience_percent, victorious)
+    }
+
+    fn recalculate_level(&mut self, experience_percent: u16, victorious: bool) -> Vec<u16> {
         let cap = Self::level_cap(victorious);
-        let mut gained = Vec::new();
+        let mut levels = Vec::new();
+        while self.level > 1
+            && self.experience
+                < experience_required_for_level_with_factor(self.level, experience_percent)
+        {
+            self.level -= 1;
+            levels.push(self.level);
+        }
         while self.level < cap
-            && self.experience >= experience_required_for_level(self.level.saturating_add(1))
+            && self.experience
+                >= experience_required_for_level_with_factor(
+                    self.level.saturating_add(1),
+                    experience_percent,
+                )
         {
             self.level += 1;
             let reached_new_maximum = self.level > self.max_level;
@@ -503,19 +546,9 @@ impl CharacterProgress {
                 self.pending_attribute_increases =
                     self.pending_attribute_increases.saturating_add(1);
             }
-            gained.push(self.level);
+            levels.push(self.level);
         }
-        gained
-    }
-
-    pub fn lose_experience(&mut self, amount: u64) -> Vec<u16> {
-        self.experience = self.experience.saturating_sub(amount);
-        let mut lost = Vec::new();
-        while self.level > 1 && self.experience < experience_required_for_level(self.level) {
-            self.level -= 1;
-            lost.push(self.level);
-        }
-        lost
+        levels
     }
 
     pub fn replace_skills(&mut self, skills: BTreeMap<String, SkillProgress>) {
@@ -716,7 +749,7 @@ impl CharacterProgress {
         true
     }
 
-    pub fn validate(&self, victorious: bool) -> bool {
+    pub fn validate(&self, experience_percent: u16, victorious: bool) -> bool {
         self.level >= 1
             && self.level <= Self::level_cap(victorious)
             && self.max_level >= self.level
@@ -788,7 +821,8 @@ impl CharacterProgress {
                 .iter()
                 .all(|(id, current)| !id.is_empty() && *current <= 8_000)
             && (self.level == Self::level_cap(victorious)
-                || self.experience < experience_required_for_level(self.level + 1))
+                || self.experience
+                    < experience_required_for_level_with_factor(self.level + 1, experience_percent))
     }
 }
 
@@ -1145,26 +1179,26 @@ mod tests {
     #[test]
     fn victory_unlocks_banked_experience_through_level_100() {
         let mut progress = CharacterProgress::new(7, 10);
-        let capped = progress.gain_experience(29_500_000, false);
+        let capped = progress.gain_experience(29_500_000, 100, false);
         assert_eq!(capped.last(), Some(&50));
         assert_eq!(progress.level, 50);
         assert_eq!(progress.pending_attribute_increases, 10);
 
-        let unlocked = progress.gain_experience(0, true);
+        let unlocked = progress.gain_experience(0, 100, true);
         assert_eq!(unlocked.first(), Some(&51));
         assert_eq!(unlocked.last(), Some(&100));
         assert_eq!(progress.level, 100);
         assert_eq!(progress.pending_attribute_increases, 20);
-        assert!(progress.validate(true));
+        assert!(progress.validate(100, true));
     }
 
     #[test]
     fn regaining_drained_levels_does_not_repeat_attribute_rewards() {
         let mut progress = CharacterProgress::new(7, 10);
-        progress.gain_experience(experience_required_for_level(5), false);
+        progress.gain_experience(experience_required_for_level(5), 100, false);
         let pending = progress.pending_attribute_increases;
 
-        progress.lose_experience(progress.experience);
+        progress.lose_experience(progress.experience, 100, false);
         assert_eq!(progress.level, 1);
         assert_eq!(progress.max_level, 5);
         assert_eq!(
@@ -1172,7 +1206,7 @@ mod tests {
             experience_required_for_level(5)
         );
 
-        progress.gain_experience(progress.maximum_experience, false);
+        progress.gain_experience(progress.maximum_experience, 100, false);
         assert_eq!(progress.level, 5);
         assert_eq!(progress.pending_attribute_increases, pending);
     }

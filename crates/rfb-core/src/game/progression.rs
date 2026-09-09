@@ -38,12 +38,6 @@ struct AttributeIncreasePlan {
     pending_attribute_increases: u16,
 }
 
-struct ExperienceGainPlan {
-    amount: u64,
-    progress: CharacterProgress,
-    levels: Vec<u16>,
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct AttributeMutationOutcome {
     pub(super) attribute: AttributeKind,
@@ -408,11 +402,8 @@ fn effective_attributes<'a>(
 
 fn character_experience_percent(definitions: Option<CharacterDefinitions<'_>>) -> u16 {
     definitions.map_or(100, |(_, race, class, personality)| {
-        combine_percentages([
-            race.experience_percent,
-            class.experience_percent,
-            personality.experience_percent,
-        ])
+        let factor = u64::from(race.experience_percent) * u64::from(class.experience_percent) / 100;
+        u16::try_from(factor * u64::from(personality.experience_percent) / 100).unwrap_or(u16::MAX)
     })
 }
 
@@ -489,27 +480,6 @@ fn plan_attribute_increase(
         maximum_attributes: planned.maximum_attributes,
         pending_attribute_increases: planned.pending_attribute_increases,
     })
-}
-
-fn plan_experience_gain(
-    progress: &CharacterProgress,
-    amount: u64,
-    victorious: bool,
-) -> ExperienceGainPlan {
-    let mut progress = progress.clone();
-    let levels = progress.gain_experience(amount, victorious);
-    ExperienceGainPlan {
-        amount,
-        progress,
-        levels,
-    }
-}
-
-fn scale_experience_reward(amount: u64, experience_percent: u16) -> u64 {
-    amount
-        .saturating_mul(u64::from(experience_percent))
-        .saturating_add(50)
-        .saturating_div(100)
 }
 
 fn rescale_i32(current: i32, previous_maximum: i32, next_maximum: i32) -> i32 {
@@ -820,8 +790,20 @@ impl Game {
         .expect("validated character skills must remain available")
     }
 
-    fn character_experience_percent(&self) -> u16 {
-        character_experience_percent(self.character_definitions())
+    pub(super) fn character_experience_percent(&self) -> u16 {
+        // Ordinary temporary forms do not change calc_exp_factor's true-race input.
+        let definitions = self.build.as_ref().map(|identity| {
+            build_definitions(&self.content, identity)
+                .expect("validated build must remain available")
+        });
+        character_experience_percent(definitions)
+    }
+
+    pub(super) fn experience_required_for_level(&self, level: u16) -> u64 {
+        crate::stats::experience_required_for_level_with_factor(
+            level,
+            self.character_experience_percent(),
+        )
     }
 
     fn character_modifier_total(&self, value: impl Fn(&StatModifiers) -> i32) -> i32 {
@@ -867,28 +849,21 @@ impl Game {
     }
 
     pub(super) fn apply_player_experience(&mut self, amount: u64, events: &mut Vec<DomainEvent>) {
-        let amount = scale_experience_reward(amount, self.character_experience_percent());
-        self.apply_unscaled_player_experience(amount, events);
-    }
-
-    pub(super) fn apply_unscaled_player_experience(
-        &mut self,
-        amount: u64,
-        events: &mut Vec<DomainEvent>,
-    ) {
+        if self.player.hp < 0 {
+            return;
+        }
         let previous_level = self.progress.level;
         let previous_max_level = self.progress.max_level;
         let mut previous_max_hp = self.player_max_hp_at_level(previous_level);
-        let ExperienceGainPlan {
+        let levels = self.progress.gain_experience(
             amount,
-            progress,
-            levels,
-        } = plan_experience_gain(&self.progress, amount, self.victory_level_cap_unlocked());
+            self.character_experience_percent(),
+            self.victory_level_cap_unlocked(),
+        );
         let newly_reached_levels = levels
             .iter()
             .filter(|level| **level > previous_max_level)
             .count();
-        self.progress = progress;
         if !levels.is_empty() {
             self.refresh_character_skills();
             self.refresh_player_resource_maxima();
@@ -905,12 +880,16 @@ impl Game {
                 self.player.hp = rescale_i32(self.player.hp, previous_max_hp, max_hp);
             }
             previous_max_hp = max_hp;
-            events.push(DomainEvent::PlayerLevelGained {
-                level,
-                max_hp,
-                pending_attribute_increases: self.progress.pending_attribute_increases,
-                reached_new_maximum: level > previous_max_level,
-            });
+            if level < previous_level {
+                events.push(DomainEvent::PlayerLevelLost { level, max_hp });
+            } else {
+                events.push(DomainEvent::PlayerLevelGained {
+                    level,
+                    max_hp,
+                    pending_attribute_increases: self.progress.pending_attribute_increases,
+                    reached_new_maximum: level > previous_max_level,
+                });
+            }
         }
         self.apply_birth_race_level_mutation_rolls(newly_reached_levels, events);
         self.apply_race_level_mutation_rewards(events);
@@ -1043,7 +1022,11 @@ impl Game {
         let before = self.progress.experience;
         let previous_max_hp = self.effective_player_max_hp();
         let previous_resource_maxima = self.player_resource_maxima();
-        let lost_levels = self.progress.lose_experience(amount);
+        let lost_levels = self.progress.lose_experience(
+            amount,
+            self.character_experience_percent(),
+            self.victory_level_cap_unlocked(),
+        );
         let drained = before.saturating_sub(self.progress.experience);
         if !lost_levels.is_empty() {
             self.refresh_character_skills();
@@ -1114,6 +1097,23 @@ impl Game {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn experience_factor_uses_original_sequential_truncation() {
+        let game = Game::new(83);
+        let (build, race, class, personality) = game.character_definitions().unwrap();
+        let mut race = race.clone();
+        let mut class = class.clone();
+        let mut personality = personality.clone();
+        race.experience_percent = 111;
+        class.experience_percent = 111;
+        personality.experience_percent = 111;
+        // floor(floor(111 * 111 / 100) * 111 / 100), not a rounded product.
+        assert_eq!(
+            character_experience_percent(Some((build, &race, &class, &personality))),
+            136
+        );
+    }
 
     #[test]
     fn normal_appearance_masks_only_mutation_charisma_and_applies_its_level_floor() {

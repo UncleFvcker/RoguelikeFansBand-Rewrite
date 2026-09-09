@@ -137,8 +137,8 @@ fn formal_amberite_passives_and_powers_match_the_authoritative_behavior() {
         charisma: 18,
     };
     pattern.refresh_character_skills();
-    let drained_experience = crate::stats::experience_required_for_level(40);
-    let maximum_experience = crate::stats::experience_required_for_level(41).saturating_sub(1);
+    let drained_experience = pattern.experience_required_for_level(40);
+    let maximum_experience = pattern.experience_required_for_level(41).saturating_sub(1);
     pattern.progress.experience = drained_experience;
     pattern.progress.maximum_experience = maximum_experience;
     pattern.progress.life_force = 125;
@@ -233,8 +233,8 @@ fn formal_gnome_phase_door_is_distinct_from_the_sorcery_spell() {
     assert_eq!(game.player_infravision_range(), 4);
     assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
 
-    let level_four_experience = crate::stats::experience_required_for_level(4);
-    game.apply_unscaled_player_experience(level_four_experience, &mut Vec::new());
+    let level_four_experience = game.experience_required_for_level(4);
+    game.apply_player_experience(level_four_experience, &mut Vec::new());
     let snapshot = game.snapshot();
     let racial = snapshot
         .player
@@ -261,8 +261,8 @@ fn formal_gnome_phase_door_is_distinct_from_the_sorcery_spell() {
         AbilitySourceDto::Learned
     );
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(5) - level_four_experience,
+    game.apply_player_experience(
+        game.experience_required_for_level(5) - level_four_experience,
         &mut Vec::new(),
     );
     game.debug_set_ability_casts_succeed(true);

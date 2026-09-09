@@ -26,10 +26,7 @@ fn ready() -> Game {
             replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
         }
     }
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(4),
-        &mut Vec::new(),
-    );
+    game.apply_player_experience(game.experience_required_for_level(4), &mut Vec::new());
     game.refresh_player_resource_maxima();
     game.player.hp = game.effective_player_max_hp();
     let mana = game.resources.get_mut("demo.resource.mana").unwrap();
@@ -99,8 +96,8 @@ fn spectre_six_classes_complete_absorb_level_scare_wall_and_save_sequence() {
                     20
                 );
                 // XP and a nearby sheep are explicit core-test preconditions, not desktop play.
-                game.apply_unscaled_player_experience(
-                    crate::stats::experience_required_for_level(4),
+                game.apply_player_experience(
+                    game.experience_required_for_level(4),
                     &mut Vec::new(),
                 );
                 assert_eq!(game.progress.level, 4);

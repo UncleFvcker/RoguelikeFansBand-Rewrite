@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use rfb_core::stats::experience_required_for_level;
+use rfb_core::stats::experience_required_for_level_with_factor;
 use rfb_protocol::{
     ActorSaveDto, Direction, GameCommand, MapScaleDto, MonsterPackBehaviorDto, Position,
 };
@@ -369,14 +369,15 @@ fn quiet_game(seed: u64) -> Game {
 }
 
 fn level_thirty_race(seed: u64, race_id: &str) -> Game {
-    let mut payload = Game::new_with_build_race_and_name(
+    let game = Game::new_with_build_race_and_name(
         seed,
         "demo.build.warrior",
         race_id,
         Game::DEFAULT_PLAYER_NAME,
     )
-    .expect("formal level 30 race should create")
-    .to_save();
+    .expect("formal level 30 race should create");
+    let factor = game.snapshot().player.build.unwrap().experience_percent;
+    let mut payload = game.to_save();
     let progress = payload
         .player
         .progress
@@ -384,7 +385,7 @@ fn level_thirty_race(seed: u64, race_id: &str) -> Game {
         .expect("formal build should save character progress");
     progress.level = 30;
     progress.max_level = 30;
-    progress.experience = experience_required_for_level(30);
+    progress.experience = experience_required_for_level_with_factor(30, factor);
     progress.maximum_experience = progress.experience;
     progress.pending_attribute_increases = 6;
     for skill in &mut progress.skills {
@@ -397,14 +398,15 @@ fn level_thirty_race(seed: u64, race_id: &str) -> Game {
 }
 
 fn level_thirty_five_draconian(seed: u64) -> Game {
-    let mut payload = Game::new_with_build_race_and_name(
+    let game = Game::new_with_build_race_and_name(
         seed,
         "demo.build.warrior",
         "rfb-legacy.race.draconian-red",
         Game::DEFAULT_PLAYER_NAME,
     )
-    .expect("formal red Draconian should create")
-    .to_save();
+    .expect("formal red Draconian should create");
+    let factor = game.snapshot().player.build.unwrap().experience_percent;
+    let mut payload = game.to_save();
     let progress = payload
         .player
         .progress
@@ -412,7 +414,7 @@ fn level_thirty_five_draconian(seed: u64) -> Game {
         .expect("formal build should save character progress");
     progress.level = 35;
     progress.max_level = 35;
-    progress.experience = experience_required_for_level(35);
+    progress.experience = experience_required_for_level_with_factor(35, factor);
     progress.maximum_experience = progress.experience;
     progress.pending_attribute_increases = 7;
     for skill in &mut progress.skills {

@@ -30,7 +30,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "5edeaf4b0a81fcad64453e9121e9fe662cb13916c040a3315f2dedac4f411a76",
+      "stateHash": "03369411f750f136491a1f3fd1caf135ea3505c8fbb40f1dbc26a7da48295b7d",
       "campaign": {
         "status": "retired",
         "score": 60000,
@@ -52,9 +52,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "5edeaf4b0a81fcad64453e9121e9fe662cb13916c040a3315f2dedac4f411a76"
+        "stateHash": "03369411f750f136491a1f3fd1caf135ea3505c8fbb40f1dbc26a7da48295b7d"
       }
     ],
-    "saveRoundTripStateHash": "5edeaf4b0a81fcad64453e9121e9fe662cb13916c040a3315f2dedac4f411a76"
+    "saveRoundTripStateHash": "03369411f750f136491a1f3fd1caf135ea3505c8fbb40f1dbc26a7da48295b7d"
   }
 }

@@ -187,10 +187,7 @@ fn formal_hobbit_high_mage(seed: u64, level: u16) -> Game {
     )
     .expect("Hobbit High-Mage should create");
     clear_monsters(&mut game);
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(level),
-        &mut Vec::new(),
-    );
+    game.apply_player_experience(game.experience_required_for_level(level), &mut Vec::new());
     game
 }
 

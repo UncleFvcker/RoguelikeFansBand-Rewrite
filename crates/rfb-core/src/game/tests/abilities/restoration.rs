@@ -1006,8 +1006,8 @@ fn formal_half_troll_regeneration_and_berserk_follow_the_effective_race() {
     assert!(game.player_sustains_attribute(AttributeKind::Strength));
     assert_eq!(game.player_regeneration_rate_percent(), 200);
 
-    let level_nine_experience = crate::stats::experience_required_for_level(9);
-    game.apply_unscaled_player_experience(level_nine_experience, &mut Vec::new());
+    let level_nine_experience = game.experience_required_for_level(9);
+    game.apply_player_experience(level_nine_experience, &mut Vec::new());
     let racial = game
         .snapshot()
         .player
@@ -1024,8 +1024,8 @@ fn formal_half_troll_regeneration_and_berserk_follow_the_effective_race() {
     assert_eq!(racial.base_resource_cost, 12);
     assert!(!racial.can_cast);
 
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(10) - level_nine_experience,
+    game.apply_player_experience(
+        game.experience_required_for_level(10) - level_nine_experience,
         &mut Vec::new(),
     );
     game.debug_set_ability_casts_succeed(true);
@@ -1280,6 +1280,8 @@ fn formal_barbarian_berserk_spills_sp_into_hp_pays_on_failure_and_rejects_zero_b
 #[test]
 fn vampiric_transformation_overlays_race_but_preserves_body_slots() {
     let mut game = prepare_death_caster(17, 35, "demo.ability.death-vampiric-transformation");
+    game.progress.experience = game.experience_required_for_level(35);
+    game.progress.maximum_experience = game.progress.experience;
     game.apply_player_experience(0, &mut Vec::new());
     game.refresh_character_skills();
     game.refresh_player_resource_maxima();

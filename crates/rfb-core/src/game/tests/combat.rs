@@ -1393,7 +1393,8 @@ fn melee_amnesia_uses_the_existing_save_and_floor_memory_wipe() {
 
 #[test]
 fn dice_less_time_uses_exp_or_fractional_attribute_ravaging_without_damage() {
-    let template = Game::new(0);
+    let mut template = Game::new(0);
+    template.apply_player_experience(1_000, &mut Vec::new());
     let exp_seed = (0..100)
         .find(|seed| {
             let mut trial = template.clone();

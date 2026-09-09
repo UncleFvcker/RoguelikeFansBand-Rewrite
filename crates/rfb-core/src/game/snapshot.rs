@@ -7,7 +7,7 @@ use crate::{
     resistance::DamageType,
     save::{item_destruction_element_to_dto, position_from_content},
     state::{ItemInstance, ItemLocation},
-    stats::{AttributeKind, CharacterProgress, experience_required_for_level},
+    stats::{AttributeKind, CharacterProgress},
 };
 use rfb_content::{
     AbilityEffectDefinition, CastingStudyMode, ItemUseEffectDefinition, MutationRatingDefinition,
@@ -702,7 +702,7 @@ impl Game {
             attribute_cap: CharacterProgress::attribute_cap(victory_unlocked),
             attribute_index_cap: CharacterProgress::attribute_index_cap(victory_unlocked),
             experience_for_next_level: (self.progress.level < level_cap)
-                .then(|| experience_required_for_level(self.progress.level.saturating_add(1))),
+                .then(|| self.experience_required_for_level(self.progress.level.saturating_add(1))),
             pending_attribute_increases: self.progress.pending_attribute_increases,
             victory_level_cap_unlocked: victory_unlocked,
             attributes: AttributeSetDto {
@@ -751,11 +751,7 @@ impl Game {
                 class.life_percent,
                 personality.life_percent,
             ]),
-            experience_percent: combine_percentages([
-                race.experience_percent,
-                class.experience_percent,
-                personality.experience_percent,
-            ]),
+            experience_percent: self.character_experience_percent(),
         })
     }
 

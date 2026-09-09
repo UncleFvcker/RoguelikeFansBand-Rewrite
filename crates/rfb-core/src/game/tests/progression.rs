@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 use super::support::*;
 use super::*;
-use crate::stats::{AttributeSet, experience_required_for_level, modify_attribute_value};
+use crate::stats::{AttributeSet, modify_attribute_value};
 use rfb_protocol::{AbilityEffectSpecDto, AbilitySourceDto, AttributeKindDto, MutationRatingDto};
 
 const TEST_RACE_REWARD_BUILD_ID: &str = "test.build.race-rewards";
@@ -146,8 +146,8 @@ fn birth_race_passives_mutation_overrides_and_class_exclusions_are_resolved() {
     assert!(game.player_levitates());
     assert!(!game.player_reflects_bolts());
 
-    game.apply_unscaled_player_experience(experience_required_for_level(2), &mut Vec::new());
-    control.apply_unscaled_player_experience(experience_required_for_level(2), &mut Vec::new());
+    game.apply_player_experience(game.experience_required_for_level(2), &mut Vec::new());
+    control.apply_player_experience(control.experience_required_for_level(2), &mut Vec::new());
     assert!(game.player_reflects_bolts());
     let race_armor = game.player_derived_stats().armor_class.value;
     assert_eq!(
@@ -185,7 +185,7 @@ fn birth_race_passives_mutation_overrides_and_class_exclusions_are_resolved() {
     let mut archer =
         Game::from_content_with_build(47, catalog, DEFAULT_WORLD_ID, "demo.build.archer")
             .expect("Archer race override game should create");
-    archer.apply_unscaled_player_experience(experience_required_for_level(2), &mut Vec::new());
+    archer.apply_player_experience(archer.experience_required_for_level(2), &mut Vec::new());
     let pending = archer
         .snapshot()
         .player
@@ -637,8 +637,8 @@ fn tonberry_passives_and_level_slowing_follow_the_effective_race() {
             (49, -4),
             (50, -5),
         ] {
-            game.apply_unscaled_player_experience(
-                experience_required_for_level(level) - game.progress.experience,
+            game.apply_player_experience(
+                game.experience_required_for_level(level) - game.progress.experience,
                 &mut Vec::new(),
             );
             assert_eq!(game.progress.level, level);
@@ -744,8 +744,8 @@ fn ent_growth_tracks_level_thresholds_drain_and_current_form() {
             (46, 3),
             (50, 3),
         ] {
-            game.apply_unscaled_player_experience(
-                experience_required_for_level(level) - game.progress.experience,
+            game.apply_player_experience(
+                game.experience_required_for_level(level) - game.progress.experience,
                 &mut Vec::new(),
             );
             assert_eq!(game.progress.level, level);
@@ -753,7 +753,7 @@ fn ent_growth_tracks_level_thresholds_drain_and_current_form() {
         }
         for (level, growth) in [(45, 2), (40, 1), (25, 0)] {
             game.apply_player_experience_drain(
-                game.progress.experience - experience_required_for_level(level),
+                game.progress.experience - game.experience_required_for_level(level),
                 "test.ent-drain",
                 &mut Vec::new(),
             );
@@ -787,7 +787,7 @@ fn ent_growth_tracks_level_thresholds_drain_and_current_form() {
 fn ent_level_events_use_each_levels_constitution_and_form_round_trips() {
     let mut game = ent_passive_game(false);
     let mut events = Vec::new();
-    game.apply_unscaled_player_experience(experience_required_for_level(46), &mut events);
+    game.apply_player_experience(game.experience_required_for_level(46), &mut events);
     for level in [25, 26, 40, 41, 45, 46] {
         let mut at_level = game.clone();
         at_level.progress.level = level;
@@ -960,8 +960,8 @@ fn race_level_stat_scaling_preserves_klackon_and_enables_formal_golem_intrinsics
     for level in [1, 3, 5, 9, 10, 15, 16, 31, 32, 34, 35, 47, 48, 50] {
         let mut golem = golem_game(358);
         if level > 1 {
-            golem.apply_unscaled_player_experience(
-                experience_required_for_level(level),
+            golem.apply_player_experience(
+                golem.experience_required_for_level(level),
                 &mut Vec::new(),
             );
         }
@@ -1000,8 +1000,8 @@ fn race_level_stat_scaling_preserves_klackon_and_enables_formal_golem_intrinsics
             Game::DEFAULT_PLAYER_NAME,
         )
         .expect("formal Klackon should create");
-        klackon.apply_unscaled_player_experience(
-            experience_required_for_level(level),
+        klackon.apply_player_experience(
+            klackon.experience_required_for_level(level),
             &mut Vec::new(),
         );
         assert_eq!(
@@ -1435,7 +1435,7 @@ fn draconian_subraces_are_available_to_formal_character_creation() {
 fn draconian_level_35_reward_revalidates_all_nine_completed_powers() {
     let mut game = draconian_reward_game();
     clear_monsters(&mut game);
-    game.apply_unscaled_player_experience(experience_required_for_level(35), &mut Vec::new());
+    game.apply_player_experience(game.experience_required_for_level(35), &mut Vec::new());
     let pending = game
         .snapshot()
         .player
@@ -1651,7 +1651,7 @@ fn draconian_level_35_reward_revalidates_all_nine_completed_powers() {
 fn draconian_metamorphosis_replaces_body_and_derives_combat_save_and_hash_state() {
     let mut game = draconian_reward_game();
     clear_monsters(&mut game);
-    game.apply_unscaled_player_experience(experience_required_for_level(35), &mut Vec::new());
+    game.apply_player_experience(game.experience_required_for_level(35), &mut Vec::new());
     let hash_before = game.state_hash();
     assert!(game.items.iter().any(|item| {
         item.kind_id == "demo.item.dagger" && matches!(item.location, ItemLocation::Equipped { .. })
@@ -1768,7 +1768,7 @@ fn draconian_metamorphosis_uses_class_multipliers_and_original_exclusions() {
     ] {
         let mut game = draconian_reward_game_for_build(build_id);
         clear_monsters(&mut game);
-        game.apply_unscaled_player_experience(experience_required_for_level(35), &mut Vec::new());
+        game.apply_player_experience(game.experience_required_for_level(35), &mut Vec::new());
         assert!(game.choose_race_mutation(
             "draconian-power",
             DRACONIAN_METAMORPHOSIS_MUTATION_ID,
@@ -1788,7 +1788,7 @@ fn draconian_metamorphosis_uses_class_multipliers_and_original_exclusions() {
     ] {
         let mut game = draconian_reward_game_for_build(build_id);
         clear_monsters(&mut game);
-        game.apply_unscaled_player_experience(experience_required_for_level(35), &mut Vec::new());
+        game.apply_player_experience(game.experience_required_for_level(35), &mut Vec::new());
         let pending = game
             .snapshot()
             .player
@@ -1810,7 +1810,7 @@ fn race_level_mutation_rewards_are_derived_locked_and_zero_time() {
     clear_monsters(&mut game);
     let rng_before = game.rng.clone();
     let mut level_events = Vec::new();
-    game.apply_unscaled_player_experience(experience_required_for_level(3), &mut level_events);
+    game.apply_player_experience(game.experience_required_for_level(3), &mut level_events);
 
     assert_eq!(game.rng, rng_before);
     assert!(
@@ -1908,7 +1908,7 @@ fn race_level_mutation_rewards_are_derived_locked_and_zero_time() {
             .contains(TEST_RACE_CHOICE_MUTATION_ID)
     );
     let mut regained_events = Vec::new();
-    game.apply_unscaled_player_experience(experience_required_for_level(3), &mut regained_events);
+    game.apply_player_experience(game.experience_required_for_level(3), &mut regained_events);
     assert!(
         game.snapshot()
             .player
@@ -1928,7 +1928,7 @@ fn race_level_mutation_rewards_are_derived_locked_and_zero_time() {
 #[test]
 fn casting_attribute_race_reward_uses_the_class_profile() {
     let mut game = race_reward_game(TEST_RACE_REWARD_CASTER_BUILD_ID);
-    game.apply_unscaled_player_experience(experience_required_for_level(3), &mut Vec::new());
+    game.apply_player_experience(game.experience_required_for_level(3), &mut Vec::new());
 
     assert!(
         game.progress
@@ -1955,7 +1955,7 @@ fn formal_human_weakness_uses_each_current_build_casting_attribute_once() {
         ("demo.build.paladin-death", HUMAN_WIS_MUTATION_ID),
     ] {
         let mut game = Game::new_with_build(0, build_id).expect("formal build should create");
-        game.apply_unscaled_player_experience(experience_required_for_level(35), &mut Vec::new());
+        game.apply_player_experience(game.experience_required_for_level(35), &mut Vec::new());
 
         assert!(
             game.progress
@@ -1972,11 +1972,13 @@ fn formal_human_weakness_uses_each_current_build_casting_attribute_once() {
     }
 
     let mut warrior = Game::new_with_build(0, "demo.build.warrior").unwrap();
-    warrior.apply_unscaled_player_experience(experience_required_for_level(35), &mut Vec::new());
+    warrior.apply_player_experience(warrior.experience_required_for_level(35), &mut Vec::new());
     warrior.apply_player_experience_drain(u64::MAX, "test", &mut Vec::new());
     let mut regained_events = Vec::new();
-    warrior
-        .apply_unscaled_player_experience(experience_required_for_level(35), &mut regained_events);
+    warrior.apply_player_experience(
+        warrior.experience_required_for_level(35),
+        &mut regained_events,
+    );
     assert!(!regained_events.iter().any(|event| matches!(
         event,
         DomainEvent::MutationGained { mutation_id, .. }
@@ -2206,7 +2208,7 @@ fn passive_mutations_feed_existing_attribute_speed_armor_and_hp_pipelines() {
     for mutation_id in mutation_ids {
         let mut game = Game::new(0);
         clear_monsters(&mut game);
-        game.apply_unscaled_player_experience(experience_required_for_level(25), &mut Vec::new());
+        game.apply_player_experience(game.experience_required_for_level(25), &mut Vec::new());
         let baseline_attributes = game.effective_player_attributes();
         let baseline_stats = game.player_derived_stats();
         let baseline_max_hp = baseline_stats.max_hp.value;
@@ -2297,7 +2299,7 @@ fn passive_mutations_feed_existing_attribute_speed_armor_and_hp_pipelines() {
 fn m4b_passives_feed_resistance_sense_skill_and_flight_pipelines() {
     let mut game = Game::new(0);
     clear_monsters(&mut game);
-    game.apply_unscaled_player_experience(experience_required_for_level(25), &mut Vec::new());
+    game.apply_player_experience(game.experience_required_for_level(25), &mut Vec::new());
 
     let saving_throw = game.player_derived_stats().saving_throw_skill.value;
     assert!(game.gain_mutation("rfb.mutation.magic-res", &mut Vec::new()));
@@ -2646,7 +2648,7 @@ fn new_life_is_one_seeded_transaction_with_locked_mutation_protection() {
 
     let mut game = test_caster_game(705);
     clear_monsters(&mut game);
-    game.apply_unscaled_player_experience(experience_required_for_level(25), &mut Vec::new());
+    game.apply_player_experience(game.experience_required_for_level(25), &mut Vec::new());
     choose_human_talent_if_pending(&mut game);
 
     let previous_attribute_max_hp = game.effective_player_max_hp();
@@ -2910,7 +2912,7 @@ fn formal_tonberry_action_chain_equips_levels_attacks_swaps_and_restores() {
         Some("test.tonberry-chain.sabre")
     );
     assert_eq!(game.progress.level, 1);
-    game.apply_unscaled_player_experience(experience_required_for_level(10), &mut Vec::new());
+    game.apply_player_experience(game.experience_required_for_level(10), &mut Vec::new());
     assert_eq!(game.progress.level, 10);
     let snapshot = game.snapshot();
     let speed = snapshot
@@ -3064,7 +3066,7 @@ fn formal_tomte_action_chain_probes_changes_headgear_levels_senses_and_restores(
         game.snapshot().player.trait_details.tomte_heavy_headgear,
         Some(false)
     );
-    game.apply_unscaled_player_experience(experience_required_for_level(39), &mut Vec::new());
+    game.apply_player_experience(game.experience_required_for_level(39), &mut Vec::new());
     assert_eq!(game.progress.level, 39);
     assert!(!game.player_auto_identifies_items());
     give_inventory_item(&mut game, "test.tomte-chain.arrows", "demo.item.arrow");
@@ -3091,8 +3093,8 @@ fn formal_tomte_action_chain_probes_changes_headgear_levels_senses_and_restores(
     let mut restored = Game::from_save(game.to_save()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.snapshot(), game.snapshot());
-    let experience = experience_required_for_level(40) - restored.progress.experience;
-    restored.apply_unscaled_player_experience(experience, &mut Vec::new());
+    let experience = restored.experience_required_for_level(40) - restored.progress.experience;
+    restored.apply_player_experience(experience, &mut Vec::new());
     assert_eq!(restored.progress.level, 40);
     assert!(restored.player_auto_identifies_items());
     dispatch_next(
@@ -3493,7 +3495,8 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
             );
         }
         game.apply_player_experience(100, &mut Vec::new());
-        assert_eq!(game.progress.experience, experience, "{race}");
+        assert_eq!(game.progress.experience, 100, "{race}");
+        assert_eq!(game.character_experience_percent(), experience, "{race}");
     }
 
     let default = Game::new_with_build(83, "demo.build.warrior")
@@ -3551,8 +3554,8 @@ fn dunadan_sustain_talent_and_identity_are_authoritative() {
     assert!(game.player_sustains_attribute(AttributeKind::Constitution));
     assert!(!game.player_sustains_attribute(AttributeKind::Strength));
 
-    let level_29_experience = experience_required_for_level(29);
-    game.apply_unscaled_player_experience(level_29_experience, &mut Vec::new());
+    let level_29_experience = game.experience_required_for_level(29);
+    game.apply_player_experience(level_29_experience, &mut Vec::new());
     assert_eq!(game.progress.level, 29);
     assert!(
         game.snapshot()
@@ -3561,8 +3564,8 @@ fn dunadan_sustain_talent_and_identity_are_authoritative() {
             .is_none()
     );
 
-    game.apply_unscaled_player_experience(
-        experience_required_for_level(30) - level_29_experience,
+    game.apply_player_experience(
+        game.experience_required_for_level(30) - level_29_experience,
         &mut Vec::new(),
     );
     let pending = game
@@ -3602,7 +3605,7 @@ fn dunadan_sustain_talent_and_identity_are_authoritative() {
         "Finrod",
     )
     .expect("formal High-Elf should create");
-    temporary.apply_unscaled_player_experience(experience_required_for_level(30), &mut Vec::new());
+    temporary.apply_player_experience(temporary.experience_required_for_level(30), &mut Vec::new());
     let mut form = monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.setup").status;
     form.granted_race_id = Some("rfb-legacy.race.dunadan".to_owned());
     temporary.player.statuses.push(form);
@@ -3636,8 +3639,8 @@ fn half_orc_infravision_and_level_thirty_talent_are_authoritative() {
         ResistanceLevel::Resistant
     );
 
-    let level_29_experience = experience_required_for_level(29);
-    game.apply_unscaled_player_experience(level_29_experience, &mut Vec::new());
+    let level_29_experience = game.experience_required_for_level(29);
+    game.apply_player_experience(level_29_experience, &mut Vec::new());
     assert_eq!(game.progress.level, 29);
     assert!(
         game.snapshot()
@@ -3646,8 +3649,8 @@ fn half_orc_infravision_and_level_thirty_talent_are_authoritative() {
             .is_none()
     );
 
-    game.apply_unscaled_player_experience(
-        experience_required_for_level(30) - level_29_experience,
+    game.apply_player_experience(
+        game.experience_required_for_level(30) - level_29_experience,
         &mut Vec::new(),
     );
     let pending = game
@@ -3740,8 +3743,8 @@ fn barbarian_fear_power_and_level_thirty_talent_are_authoritative() {
         "Conan",
     )
     .expect("formal Barbarian reward game should create");
-    let level_29_experience = experience_required_for_level(29);
-    reward_game.apply_unscaled_player_experience(level_29_experience, &mut Vec::new());
+    let level_29_experience = reward_game.experience_required_for_level(29);
+    reward_game.apply_player_experience(level_29_experience, &mut Vec::new());
     assert!(
         reward_game
             .snapshot()
@@ -3749,8 +3752,8 @@ fn barbarian_fear_power_and_level_thirty_talent_are_authoritative() {
             .pending_race_mutation_choice
             .is_none()
     );
-    reward_game.apply_unscaled_player_experience(
-        experience_required_for_level(30) - level_29_experience,
+    reward_game.apply_player_experience(
+        reward_game.experience_required_for_level(30) - level_29_experience,
         &mut Vec::new(),
     );
     let pending = reward_game
@@ -3820,8 +3823,8 @@ fn barbarian_fear_power_and_level_thirty_talent_are_authoritative() {
 #[test]
 fn formal_einheri_chooses_the_shared_demigod_talent_at_level_thirty() {
     let mut game = einheri_game(408);
-    let level_29_experience = experience_required_for_level(29);
-    game.apply_unscaled_player_experience(level_29_experience, &mut Vec::new());
+    let level_29_experience = game.experience_required_for_level(29);
+    game.apply_player_experience(level_29_experience, &mut Vec::new());
     assert!(
         game.snapshot()
             .player
@@ -3829,8 +3832,8 @@ fn formal_einheri_chooses_the_shared_demigod_talent_at_level_thirty() {
             .is_none()
     );
 
-    game.apply_unscaled_player_experience(
-        experience_required_for_level(30) - level_29_experience,
+    game.apply_player_experience(
+        game.experience_required_for_level(30) - level_29_experience,
         &mut Vec::new(),
     );
     let pending = game
@@ -4120,7 +4123,7 @@ fn formal_beastman_birth_level_mutations_and_regeneration_match_rfb() {
     for candidate in [&mut leveled, &mut replay] {
         candidate.rng = RfbRng::seeded(success_seed);
         let mut events = Vec::new();
-        candidate.apply_unscaled_player_experience(experience_required_for_level(2), &mut events);
+        candidate.apply_player_experience(candidate.experience_required_for_level(2), &mut events);
         assert_eq!(candidate.progress.level, 2);
         assert!(
             events
@@ -4136,7 +4139,7 @@ fn formal_beastman_birth_level_mutations_and_regeneration_match_rfb() {
     let mut missed = game.clone();
     missed.rng = RfbRng::seeded(failure_seed);
     let mut events = Vec::new();
-    missed.apply_unscaled_player_experience(experience_required_for_level(2), &mut events);
+    missed.apply_player_experience(missed.experience_required_for_level(2), &mut events);
     assert!(
         !events
             .iter()
@@ -4147,7 +4150,7 @@ fn formal_beastman_birth_level_mutations_and_regeneration_match_rfb() {
     leveled.progress.experience = 0;
     leveled.rng = RfbRng::seeded(success_seed);
     let mut events = Vec::new();
-    leveled.apply_unscaled_player_experience(experience_required_for_level(2), &mut events);
+    leveled.apply_player_experience(leveled.experience_required_for_level(2), &mut events);
     assert!(
         !events
             .iter()

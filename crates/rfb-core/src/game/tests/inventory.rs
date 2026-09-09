@@ -18,10 +18,7 @@ fn tomte_sensing_game(level: u16) -> Game {
         monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10_000, "test.tomte-sensing").status;
     form.granted_race_id = Some("rfb-legacy.race.tomte".to_owned());
     game.player.statuses.push(form);
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(level),
-        &mut Vec::new(),
-    );
+    game.apply_player_experience(game.experience_required_for_level(level), &mut Vec::new());
     game.refresh_player_ability_state();
     game.player.hp = game.effective_player_max_hp();
     game
@@ -218,8 +215,8 @@ fn tomte_level_forty_and_headgear_gate_only_racial_identification() {
         game.item_knowledge_dto("demo.item.healing-potion"),
         ItemKnowledgeDto::Unknown
     );
-    let gain = crate::stats::experience_required_for_level(40) - game.progress.experience;
-    game.apply_unscaled_player_experience(gain, &mut Vec::new());
+    let gain = game.experience_required_for_level(40) - game.progress.experience;
+    game.apply_player_experience(gain, &mut Vec::new());
     assert_eq!(game.progress.level, 40);
     dispatch_next(&mut game, GameCommand::Wait);
     assert!(game.item_property_knowledge["potion"].appraised);

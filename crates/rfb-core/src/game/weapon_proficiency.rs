@@ -77,7 +77,7 @@ fn resolve_weapon_proficiency(
             maximum: profile.default_maximum,
         },
     );
-    // RFB master a0d92b6378: skills.c::skills_weapon_max uses the birth race.
+    // RFB master a0d92b6378: skills.c::skills_weapon_max uses the native race (prace).
     if build.race_id == "rfb-legacy.race.tonberry" && base_item_id == "demo.item.sabre" {
         bounds.maximum = WEAPON_EXP_MASTER;
     }
