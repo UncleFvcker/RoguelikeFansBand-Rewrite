@@ -582,6 +582,12 @@ pub(super) fn validate_world(
         .iter()
         .map(|floor| floor.id.clone())
         .collect::<BTreeSet<_>>();
+    let town_floor_ids = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.lifecycle == FloorLifecycle::Town)
+        .map(|floor| floor.id.clone())
+        .collect::<BTreeSet<_>>();
     if world.procedural_floors.is_empty()
         || floor_ids.len() != world.procedural_floors.len()
         || !world.procedural_floors.iter().any(|floor| {
@@ -772,7 +778,8 @@ pub(super) fn validate_world(
                 .is_some_and(|id| !floor_ids.contains(id))
             || procedural.next_floor_id.is_some() != procedural.down_stair_terrain_id.is_some()
             || (procedural.lifecycle == FloorLifecycle::OneShot
-                && (procedural.return_floor_id != world.initial_floor_id
+                && ((procedural.return_floor_id != world.initial_floor_id
+                    && !town_floor_ids.contains(&procedural.return_floor_id))
                     || procedural.dungeon_id.is_some()
                     || procedural.final_floor
                     || procedural.guardian.is_some()
@@ -2961,7 +2968,9 @@ pub(super) fn validate_world(
     }
     let mut entry_terrain_owners = BTreeMap::<Option<&str>, Option<&str>>::new();
     for floor in world.procedural_floors.iter().filter(|floor| {
-        floor.lifecycle != FloorLifecycle::Town && floor.return_floor_id == world.initial_floor_id
+        floor.lifecycle != FloorLifecycle::Town
+            && (floor.return_floor_id == world.initial_floor_id
+                || town_floor_ids.contains(&floor.return_floor_id))
     }) {
         let entry_terrain_id = floor.entry_terrain_id.as_deref();
         let dungeon_id = floor.dungeon_id.as_deref();

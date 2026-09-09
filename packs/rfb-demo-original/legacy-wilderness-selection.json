@@ -2,6 +2,7 @@
   "schemaVersion": 11,
   "worldId": "demo.world.middle-earth",
   "towns": [
+    {"sourceIndex":3,"sourceName":"莫里凡特","id":"demo.town.morivant"},
     {
       "sourceIndex": 1,
       "sourceName": "前哨站",
@@ -96,6 +97,7 @@
     }
   ],
   "townPlans": [
+    {"sourceIndex":3,"sourceName":"莫里凡特","id":"demo.town.morivant","position":{"x":47,"y":50},"sourceFile":"lib/edit/t_mori.txt","standardFacilities":[{"symbol":"0","sourceTag":"SHROOMERY"},{"symbol":"1","sourceTag":"GENERAL_STORE"},{"symbol":"2","sourceTag":"ARMOURY"},{"symbol":"3","sourceTag":"WEAPON_SMITHS"},{"symbol":"4","sourceTag":"TEMPLE"},{"symbol":"5","sourceTag":"ALCHEMY_SHOP"},{"symbol":"6","sourceTag":"MAGIC_SHOP"},{"symbol":"7","sourceTag":"BLACK_MARKET"},{"symbol":"8","sourceTag":"HOME"},{"symbol":"9","sourceTag":"BOOKSTORE"}],"specialFacilities":[],"buildings":[{"name":"城堡","ownerName":"布林","ownerRace":"矮人","buildingIndex":1,"services":[{"actionIndex":0,"name":"请求任务","minimumCost":0,"maximumCost":0,"command":"q","actionId":6,"restriction":0}]},{"name":"旅店","ownerName":"凯勒波","ownerRace":"半精灵","buildingIndex":4,"services":[{"actionIndex":0,"name":"住宿一晚","minimumCost":20,"maximumCost":20,"command":"r","actionId":17,"restriction":0},{"actionIndex":1,"name":"购买食物和饮料","minimumCost":2,"maximumCost":2,"command":"f","actionId":18,"restriction":1},{"actionIndex":2,"name":"打听传闻","minimumCost":10,"maximumCost":10,"command":"u","actionId":19,"restriction":0},{"actionIndex":3,"name":"传送到其他城镇","minimumCost":500,"maximumCost":500,"command":"m","actionId":42,"restriction":0},{"actionIndex":4,"name":"询问你的声望","minimumCost":1,"maximumCost":1,"command":"a","actionId":55,"restriction":0}],"access":"Member"}]},
     {
       "sourceIndex": 5,
       "sourceName": "阿南巴",

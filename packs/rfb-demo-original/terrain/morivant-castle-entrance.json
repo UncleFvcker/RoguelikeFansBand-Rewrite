@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.morivant-castle-entrance",
+  "nameKey": "town-facility-demo-morivant-castle-name",
+  "descriptionKey": "town-facility-demo-morivant-castle-description",
+  "glyph": "0",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["surface", "town-facility-entrance"]
+}

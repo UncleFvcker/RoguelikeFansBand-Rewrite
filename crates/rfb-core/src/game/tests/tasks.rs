@@ -8,23 +8,71 @@ use crate::game::tasks::{
 const SNAKES_TASK: &str = "demo.task.morivant-snakes";
 const SNAKES_FLOOR: &str = "demo.floor.morivant-snakes";
 const JONES_WHIP: &str = "demo.item.dr-jones-whip";
+const MORIVANT_CASTLE: &str = "demo.town-facility.morivant-castle";
 
 fn morivant_snakes_game() -> Game {
     let mut game = test_caster_game(51);
     clear_monsters(&mut game);
     choose_human_talent_if_pending(&mut game);
-    // Test-only entry precondition; the town entrance is deferred to the town batch.
-    let entry = game.player.position;
-    replace_terrain(&mut game, entry, "demo.terrain.morivant-snakes-entry");
+    dispatch_next(
+        &mut game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    game.wilderness_position = Some(Position { x: 47, y: 50 });
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    clear_monsters(&mut game);
+    let entry = game
+        .town_local_to_wilderness_view_position("demo.town.morivant", Position { x: 7, y: 23 })
+        .unwrap();
+    game.player.position = entry;
+    assert!(!game.task_states.contains_key(SNAKES_TASK));
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    game.player.position = game
+        .town_local_to_wilderness_view_position("demo.town.morivant", Position { x: 53, y: 8 })
+        .unwrap();
+    let service = game
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == MORIVANT_CASTLE)
+        .unwrap();
+    assert_eq!(service.tasks.len(), 1);
+    assert_eq!(service.tasks[0].task_id, SNAKES_TASK);
+    assert_eq!(service.tasks[0].status, TaskStatusKindDto::Available);
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: MORIVANT_CASTLE.to_owned(),
+            task_id: SNAKES_TASK.to_owned(),
+        },
+    );
+    assert_eq!(
+        game.task_states[SNAKES_TASK].status,
+        TaskStatusKindDto::Taken
+    );
+    game.player.position = game
+        .town_local_to_wilderness_view_position("demo.town.morivant", Position { x: 7, y: 23 })
+        .unwrap();
+    assert_eq!(
+        game.terrain_at(game.player.position),
+        "demo.terrain.morivant-snakes-entry"
+    );
     game
 }
 
 #[test]
 fn morivant_snakes_fetch_pickup_save_and_exit_keep_one_artifact() {
-    let mut game = morivant_snakes_game();
+    let accepted = morivant_snakes_game();
+    let mut game =
+        Game::from_save_with_content(accepted.to_save(), accepted.content.clone()).unwrap();
+    assert_eq!(game.state_hash(), accepted.state_hash());
     let entry = game.player.position;
-    dispatch_next(&mut game, GameCommand::TraverseStairs);
-    assert_eq!(game.current_floor_id, SNAKES_FLOOR);
+    let entered = dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, SNAKES_FLOOR, "{:?}", entered.events);
     assert_eq!(game.entities.len(), 44);
     assert!(game.generated_artifact_ids.contains(JONES_WHIP));
     let whip_id = game
@@ -138,6 +186,29 @@ fn morivant_snakes_fetch_pickup_save_and_exit_keep_one_artifact() {
     );
     game.player.position = Position { x: 1, y: 10 };
     let exited = dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.wilderness_position, Some(Position { x: 47, y: 50 }));
+    assert_eq!(game.player.position, entry);
+    assert_eq!(
+        game.task_states[SNAKES_TASK].status,
+        TaskStatusKindDto::RewardAvailable
+    );
+    let mut game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    game.player.position = game
+        .town_local_to_wilderness_view_position("demo.town.morivant", Position { x: 53, y: 8 })
+        .unwrap();
+    let gold = game.gold;
+    let draws = game.rng_draw_counter();
+    for _ in 0..2 {
+        dispatch_next(
+            &mut game,
+            GameCommand::ClaimTaskReward {
+                facility_id: MORIVANT_CASTLE.to_owned(),
+                task_id: SNAKES_TASK.to_owned(),
+            },
+        );
+    }
+    assert_eq!(game.gold, gold);
+    assert_eq!(game.rng_draw_counter(), draws);
     assert_eq!(
         game.task_states[SNAKES_TASK].status,
         TaskStatusKindDto::Completed
@@ -205,11 +276,24 @@ fn morivant_snakes_failed_and_abandoned_floors_stay_closed_after_save() {
             TaskStatusKindDto::Failed
         };
         assert_eq!(game.task_states[SNAKES_TASK].status, expected);
+        assert_eq!(game.wilderness_position, Some(Position { x: 47, y: 50 }));
+        assert_eq!(game.player.position, entry);
         assert!(game.generated_artifact_ids.contains(JONES_WHIP));
         assert!(game.items.iter().all(|item| item.kind_id != JONES_WHIP));
         let mut restored =
             Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
         assert_eq!(restored.task_states[SNAKES_TASK].status, expected);
+        restored.player.position = restored
+            .town_local_to_wilderness_view_position("demo.town.morivant", Position { x: 53, y: 8 })
+            .unwrap();
+        let service = restored
+            .snapshot()
+            .task_services
+            .into_iter()
+            .find(|service| service.id == MORIVANT_CASTLE)
+            .unwrap();
+        assert_eq!(service.tasks.len(), 1);
+        assert_eq!(service.tasks[0].status, expected);
         restored.player.position = entry;
         let before = restored.current_floor_id.clone();
         dispatch_next(&mut restored, GameCommand::TraverseStairs);

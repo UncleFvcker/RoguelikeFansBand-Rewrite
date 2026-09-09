@@ -221,17 +221,29 @@ fn stair_transition_target(
     }
     if abandon_task {
         return Ok(Some(FloorTransitionTarget {
-            floor_id: world.initial_floor_id.clone(),
+            floor_id: world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == current_floor_id)
+                .expect("abandoned task floor must remain available")
+                .return_floor_id
+                .clone(),
             arrival_connection_id: None,
             departure_connection_id: None,
         }));
     }
-    if current_floor_id == world.initial_floor_id {
-        return Ok(world
+    let birth_floor = current_floor_id == world.initial_floor_id;
+    if birth_floor
+        || world
+            .procedural_floors
+            .iter()
+            .any(|floor| floor.id == current_floor_id && floor.lifecycle == FloorLifecycle::Town)
+    {
+        let target = world
             .procedural_floors
             .iter()
             .find(|floor| {
-                floor.return_floor_id == world.initial_floor_id
+                floor.return_floor_id == current_floor_id
                     && floor.entry_terrain_id.as_deref() == Some(terrain_id)
                     && floor.dungeon_id.as_ref().is_none_or(|dungeon_id| {
                         dungeon_states
@@ -243,7 +255,10 @@ fn stair_transition_target(
                 floor_id: target.id.clone(),
                 arrival_connection_id: target.entry_connection_id.clone(),
                 departure_connection_id: None,
-            }));
+            });
+        if birth_floor || target.is_some() {
+            return Ok(target);
+        }
     }
     let Some(current) = world
         .procedural_floors
@@ -676,9 +691,8 @@ impl Game {
             None
         };
 
-        let one_shot_source = source_definition.filter(|floor| {
-            target.floor_id == *initial_floor_id && floor.lifecycle == FloorLifecycle::OneShot
-        });
+        let one_shot_source = source_definition
+            .filter(|floor| target_is_surface && floor.lifecycle == FloorLifecycle::OneShot);
         let one_shot_departure = if let Some(source) = one_shot_source {
             let task_id = floor_task_id(source).to_owned();
             let members = world

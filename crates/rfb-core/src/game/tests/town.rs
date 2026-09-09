@@ -27,6 +27,240 @@ const ANAMBAR_ARCHER_GUILD_ID: &str = "demo.town-facility.anambar-archer-guild";
 const ANAMBAR_TRUMP_TOWER_ID: &str = "demo.town-facility.anambar-trump-tower";
 const OUTPOST_COUNT_ID: &str = "demo.town-facility.outpost-count";
 const OUTPOST_BOUNTY_OFFICE_ID: &str = "demo.town-facility.outpost-bounty-office";
+const MORIVANT_TOWN_ID: &str = "demo.town.morivant";
+const MORIVANT_INN_ID: &str = "demo.shop.morivant-inn";
+const MORIVANT_HOME_ID: &str = "demo.town-facility.morivant-home";
+
+fn enter_morivant(game: &mut Game) {
+    dispatch_next(
+        game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    game.wilderness_position = Some(Position { x: 47, y: 50 });
+    dispatch_next(game, GameCommand::LeaveWorldMap);
+    assert_eq!(game.current_town().unwrap().id, MORIVANT_TOWN_ID);
+}
+
+#[test]
+fn morivant_facilities_are_reachable_and_nine_shops_trade_and_save() {
+    let mut game = Game::new_with_build(51, "demo.build.warrior").unwrap();
+    assert!(
+        !game
+            .shop_states
+            .keys()
+            .any(|id| id.starts_with("demo.shop.morivant-"))
+    );
+    enter_morivant(&mut game);
+    let town = game.content.town(MORIVANT_TOWN_ID).unwrap().clone();
+    let snapshot = game.snapshot();
+    assert_eq!(snapshot.shops.len(), 10);
+    assert!(
+        snapshot
+            .shops
+            .iter()
+            .all(|shop| !shop.visited && shop.stock.is_empty())
+    );
+    assert_eq!(snapshot.homes.len(), 1);
+    assert_eq!(snapshot.task_services.len(), 1);
+    let mut reached = BTreeSet::new();
+    let mut pending = vec![game.player.position];
+    while let Some(position) = pending.pop() {
+        if position.x < 0
+            || position.y < 0
+            || position.x >= i32::from(game.width)
+            || position.y >= i32::from(game.height)
+            || reached.contains(&position)
+        {
+            continue;
+        }
+        let terrain =
+            &game.terrain[position.y as usize * usize::from(game.width) + position.x as usize];
+        if !game.content.terrain(terrain).unwrap().walkable {
+            continue;
+        }
+        reached.insert(position);
+        for (dx, dy) in [(0, -1), (1, 0), (0, 1), (-1, 0)] {
+            pending.push(Position {
+                x: position.x + dx,
+                y: position.y + dy,
+            });
+        }
+    }
+    for entrance in snapshot
+        .shops
+        .iter()
+        .map(|shop| shop.entrance_position)
+        .chain(snapshot.homes.iter().map(|home| home.entrance_position))
+        .chain(
+            snapshot
+                .task_services
+                .iter()
+                .map(|service| service.entrance_position),
+        )
+    {
+        assert!(
+            reached.contains(&entrance),
+            "unreachable entrance {entrance:?}"
+        );
+    }
+    for local in [
+        Position { x: 32, y: 0 },
+        Position { x: 32, y: 30 },
+        Position { x: 0, y: 15 },
+        Position { x: 64, y: 15 },
+        Position { x: 7, y: 23 },
+    ] {
+        let position = game
+            .town_local_to_wilderness_view_position(MORIVANT_TOWN_ID, local)
+            .unwrap();
+        assert!(
+            reached.contains(&position),
+            "unreachable gate or ruins {local:?}"
+        );
+    }
+    game.gold = 1_000_000;
+    for shop_id in town
+        .shop_ids
+        .iter()
+        .filter(|id| id.as_str() != MORIVANT_INN_ID)
+    {
+        let definition = game.content.shop(shop_id).unwrap();
+        let local = Position {
+            x: i32::from(definition.entrance_position.x),
+            y: i32::from(definition.entrance_position.y),
+        };
+        game.player.position = game
+            .town_local_to_wilderness_view_position(MORIVANT_TOWN_ID, local)
+            .unwrap();
+        game.mark_shop_visited_at_player().unwrap();
+        let shop = projected_shop(&game.snapshot().shops, shop_id).clone();
+        assert!(shop.visited && shop.player_at_entrance);
+        let stock = shop.stock.first().unwrap();
+        let purchase = dispatch_next(
+            &mut game,
+            GameCommand::BuyFromShop {
+                shop_id: shop_id.clone(),
+                item_id: stock.id.clone(),
+                quantity: 1,
+            },
+        );
+        assert!(
+            purchase
+                .events
+                .iter()
+                .any(|event| event.kind == "shop.purchase"),
+            "{shop_id}: {:?}",
+            purchase.events
+        );
+        let item_id = game
+            .items
+            .iter()
+            .find(|item| item.kind_id == stock.kind_id && item.location == ItemLocation::Inventory)
+            .unwrap()
+            .id
+            .clone();
+        let sale = dispatch_next(
+            &mut game,
+            GameCommand::SellToShop {
+                shop_id: shop_id.clone(),
+                item_id,
+                quantity: 1,
+            },
+        );
+        assert!(
+            sale.events.iter().any(|event| event.kind == "shop.sale"),
+            "{shop_id}: {:?}",
+            sale.events
+        );
+    }
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn morivant_shares_home_rests_and_revisits_through_inns() {
+    let mut game = Game::new_with_build(51, "demo.build.warrior").unwrap();
+    game.player.position = Position { x: 42, y: 13 };
+    let item = game.snapshot().homes[0].deposit_items[0].clone();
+    dispatch_next(
+        &mut game,
+        GameCommand::DepositAtHome {
+            facility_id: HOME_ID.to_owned(),
+            item_id: item.id,
+            quantity: 1,
+        },
+    );
+    assert_eq!(game.home_states[HOME_ID].inventory.len(), 1);
+    enter_morivant(&mut game);
+    game.player.position = game
+        .town_local_to_wilderness_view_position(MORIVANT_TOWN_ID, Position { x: 44, y: 22 })
+        .unwrap();
+    let home = game
+        .snapshot()
+        .homes
+        .into_iter()
+        .find(|home| home.id == MORIVANT_HOME_ID)
+        .unwrap();
+    let stored = home.stored_items[0].clone();
+    dispatch_next(
+        &mut game,
+        GameCommand::WithdrawFromHome {
+            facility_id: MORIVANT_HOME_ID.to_owned(),
+            item_id: stored.id,
+            quantity: 1,
+        },
+    );
+    assert!(game.home_states[HOME_ID].inventory.is_empty());
+    assert_eq!(game.home_states.len(), 1);
+    game.player.position = game
+        .town_local_to_wilderness_view_position(MORIVANT_TOWN_ID, Position { x: 30, y: 22 })
+        .unwrap();
+    game.mark_shop_visited_at_player().unwrap();
+    game.gold = 1_020;
+    game.player.hp = 1;
+    game.world_tick = 12_345;
+    let stay = dispatch_next(
+        &mut game,
+        GameCommand::StayAtInn {
+            facility_id: MORIVANT_INN_ID.to_owned(),
+        },
+    );
+    assert!(
+        stay.events
+            .iter()
+            .any(|event| event.kind == "inn.stay" && event.args["cost"] == "20")
+    );
+    assert_eq!(game.world_tick, 50_000);
+    assert_eq!(game.player.hp, game.effective_player_max_hp());
+    assert_eq!(game.gold, 1_000);
+    let stock = game.shop_states[MORIVANT_INN_ID].inventory.clone();
+    let mut game = Game::from_save(game.to_save()).unwrap();
+    dispatch_next(
+        &mut game,
+        GameCommand::TravelFromInn {
+            facility_id: MORIVANT_INN_ID.to_owned(),
+            destination_town_id: "demo.town.outpost".to_owned(),
+        },
+    );
+    assert_eq!(game.current_town().unwrap().id, "demo.town.outpost");
+    assert_eq!(game.gold, 500);
+    dispatch_next(
+        &mut game,
+        GameCommand::TravelFromInn {
+            facility_id: WHITE_HORSE_INN_ID.to_owned(),
+            destination_town_id: MORIVANT_TOWN_ID.to_owned(),
+        },
+    );
+    assert_eq!(game.current_town().unwrap().id, MORIVANT_TOWN_ID);
+    assert_eq!(game.gold, 0);
+    assert!(projected_shop(&game.snapshot().shops, MORIVANT_INN_ID).player_at_entrance);
+    assert_eq!(game.shop_states[MORIVANT_INN_ID].inventory, stock);
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
 
 fn projected_shop<'a>(shops: &'a [ShopDto], shop_id: &str) -> &'a ShopDto {
     shops

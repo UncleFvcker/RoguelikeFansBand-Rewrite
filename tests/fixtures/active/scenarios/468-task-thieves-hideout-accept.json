@@ -27,7 +27,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "7377895424804d37e51c514c6922b3baeebeaf5168f17240577b075f2d589392",
+      "stateHash": "41cba57ca48ac4c51af79d60543ff76030ec11586a715b630c9984b8c95095c5",
       "tasks": {
         "demo.task.thieves-hideout": {
           "taskId": "demo.task.thieves-hideout",

@@ -32,7 +32,11 @@ fn morivant_snakes_map_and_find_artifact_match_rfb_master() {
         .iter()
         .find(|task| task.id == "demo.task.morivant-snakes")
         .unwrap();
-    assert!(task.source_facility_id.is_none() && task.reward.is_none());
+    assert_eq!(
+        task.source_facility_id.as_deref(),
+        Some("demo.town-facility.morivant-castle")
+    );
+    assert!(task.reward.is_none());
     let [objective] = task.objectives.as_slice() else {
         panic!("one FIND_ART goal")
     };
@@ -48,6 +52,7 @@ fn morivant_snakes_map_and_find_artifact_match_rfb_master() {
         .find(|floor| floor.id == "demo.floor.morivant-snakes")
         .unwrap();
     assert_eq!((floor.width, floor.height, floor.depth), (32, 12, 15));
+    assert_eq!(floor.return_floor_id, "demo.floor.morivant");
     assert_eq!(floor.lifecycle, FloorLifecycle::OneShot);
     assert!(!floor.retakeable);
     let map = floor.inline_map.as_ref().unwrap();
@@ -279,6 +284,32 @@ fn loot_table_allocations_and_quality_sources_are_validated() {
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidLootTable(_))
+        ));
+    }
+}
+
+#[test]
+fn town_quest_returns_require_a_surface_and_unique_entry() {
+    let content = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for invalid_return in [false, true] {
+        let mut invalid = content.clone();
+        let floor = invalid
+            .worlds
+            .iter_mut()
+            .find(|world| world.id == "demo.world.middle-earth")
+            .unwrap()
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.morivant-snakes")
+            .unwrap();
+        if invalid_return {
+            floor.return_floor_id = "demo.floor.warrens-depth-1".to_owned();
+        } else {
+            floor.entry_terrain_id = Some("demo.terrain.thieves-hideout-entry".to_owned());
+        }
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidWorldDimensions(_) | ContentError::InvalidProceduralFloor(_))
         ));
     }
 }
@@ -10155,6 +10186,11 @@ fn town_entrances_and_shared_facilities_match_source() {
                     position: ContentPosition { x: 28, y: 52 },
                     map_origin: ContentPosition { x: 0, y: 0 },
                     town_id: "demo.town.outpost".to_owned(),
+                },
+                WildernessLocationDefinition::Town {
+                    position: ContentPosition { x: 47, y: 50 },
+                    map_origin: ContentPosition { x: 16, y: 1 },
+                    town_id: "demo.town.morivant".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 5, y: 48 },

@@ -52,7 +52,7 @@
       "revision": 2,
       "turn": 2,
       "lastCommandSeq": 2,
-      "stateHash": "822731c2aff45eb269ce5d60383554935fd8457c484082d8855d1a5564b40148",
+      "stateHash": "57c8ca879d960a61e49e27d5106cde78e3f5daf568a9abfc9988c6e8edcf2898",
       "equipment": {
         "test.item.torch.target.459": {
           "kindId": "demo.item.wooden-torch",
@@ -89,6 +89,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "822731c2aff45eb269ce5d60383554935fd8457c484082d8855d1a5564b40148"
+    "saveRoundTripStateHash": "57c8ca879d960a61e49e27d5106cde78e3f5daf568a9abfc9988c6e8edcf2898"
   }
 }
