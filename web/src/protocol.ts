@@ -88,7 +88,11 @@ export type CharacterTraitDetailsDto = { equipmentComplete: boolean, sources: Ar
 /**
  * None means unknown; an empty list means no immunity, not unimplemented.
  */
-statusImmunities: Array<string> | null, reflectsBolts: boolean | null, passesWalls: boolean, stats: Array<CharacterStatDto>, attacks: Array<CharacterAttackTraitDto>, meleeDamage: Array<MeleeDamagePreviewDto>, activeWeaponId: string | null, activeLauncherId: string | null, auras: Array<CharacterAuraDto>, negatives: Array<CharacterNegativeDto>, };
+statusImmunities: Array<string> | null, reflectsBolts: boolean | null, passesWalls: boolean, stats: Array<CharacterStatDto>, attacks: Array<CharacterAttackTraitDto>, meleeDamage: Array<MeleeDamagePreviewDto>,
+/**
+ * Present only in the effective Tomte form; derived by Core from current headgear.
+ */
+tomteHeavyHeadgear?: boolean, activeWeaponId: string | null, activeLauncherId: string | null, auras: Array<CharacterAuraDto>, negatives: Array<CharacterNegativeDto>, };
 
 export type CharacterAuraDto = { damageType: DamageTypeDto, sourceIds: Array<string>, evilOnly: boolean, };
 

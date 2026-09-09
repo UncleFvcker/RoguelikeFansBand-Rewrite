@@ -101,6 +101,11 @@ export function renderCharacterTraitsDetails(
   const abilities = section("trait-abilities");
   const sustains = section("trait-sustains");
   const senses = section("trait-senses");
+  if (data.tomteHeavyHeadgear !== undefined) {
+    senses.append(row("tomte-headgear", f("trait-tomte-headgear"),
+      f(data.tomteHeavyHeadgear ? "trait-tomte-headgear-heavy" : "trait-tomte-headgear-light"),
+      [f("trait-tomte-headgear-rule")]));
+  }
   abilities.append(row("free-action", f("trait-free-action"), active(traitActionProtection(data)),
     data.sources.filter((source) => source.statusImmunities.includes("rfb.status.paralysis")).map(origin), f("trait-free-action-rule")));
   for (const passive of data.passives) {

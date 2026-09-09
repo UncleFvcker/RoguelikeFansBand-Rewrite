@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
-fn hidden_tomte_intrinsics_match_master_without_opening_character_creation() {
+fn formal_tomte_intrinsics_match_master() {
     let artifact = verify_pack_lock(&original_pack_path()).expect("original pack");
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog");
     let race = catalog.race("rfb-legacy.race.tomte").expect("Tomte");
@@ -24,7 +24,7 @@ fn hidden_tomte_intrinsics_match_master_without_opening_character_creation() {
         race.resistances.get(&ActorDamageType::Cold),
         Some(&ActorResistanceLevel::Resistant)
     );
-    assert!(!race.tags.iter().any(|tag| tag == "rfb-compatibility"));
+    assert!(race.tags.iter().any(|tag| tag == "rfb-compatibility"));
     assert!(race.tags.iter().any(|tag| tag == "polymorph-candidate"));
     assert!(race.level_mutation_rewards.is_empty());
     assert_eq!(

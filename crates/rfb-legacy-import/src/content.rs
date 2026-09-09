@@ -7511,7 +7511,14 @@ fn legacy_race_kin_glyph(id: &str) -> char {
 
 fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
     if entry.id == "tomte" {
-        return vec!["legacy-import", "polymorph-candidate", "snow-adapted"];
+        return vec![
+            "humanoid",
+            "legacy-import",
+            "polymorph-candidate",
+            "rfb-compatibility",
+            "snow-adapted",
+            "standard-body",
+        ];
     }
     if entry.id == "snotling" {
         return vec![
@@ -25036,7 +25043,7 @@ static void _sprite_calc_bonuses(void)
     }
 
     #[test]
-    fn tomte_intrinsics_and_birth_kit_are_mapped_without_unlocking_selection() {
+    fn tomte_intrinsics_birth_kit_and_formal_tags_are_mapped() {
         // RFB master a0d92b6378: src/races_k.c, _tomte_get_powers / tomte_get_race.
         const SOURCE: &str = r#"
 static power_info _tomte_get_powers[] =
@@ -25076,7 +25083,7 @@ static power_info _tomte_get_powers[] =
                 "cost": 0, "baseFailurePercent": 20,
             }])
         );
-        assert!(!legacy_race_tags(&tomte).contains(&"rfb-compatibility"));
+        assert!(legacy_race_tags(&tomte).contains(&"rfb-compatibility"));
         assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
         assert_eq!(
             race["startingItems"],

@@ -685,6 +685,10 @@ impl Game {
             stats: numeric,
             attacks,
             melee_damage,
+            tomte_heavy_headgear: self
+                .character_definitions()
+                .filter(|(_, race, _, _)| race.id == "rfb-legacy.race.tomte")
+                .map(|_| self.player_tomte_headgear_excess_weight() > 0),
             active_weapon_id,
             active_launcher_id: projectile.map(|profile| profile.source_item_id),
             auras,

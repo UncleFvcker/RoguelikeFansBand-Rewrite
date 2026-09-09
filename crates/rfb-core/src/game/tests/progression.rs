@@ -306,6 +306,10 @@ fn tomte_headgear_penalties_follow_weight_boundaries_and_effective_race() {
             .unwrap();
         assert_eq!(race.modifier, 2 - i32::from(int_penalty), "{kind}");
         assert_eq!(
+            game.snapshot().player.trait_details.tomte_heavy_headgear,
+            Some(int_penalty > 0)
+        );
+        assert_eq!(
             species_contribution(
                 &game.player_derived_stats().device_skill,
                 "rfb-legacy.race.tomte"
@@ -316,6 +320,10 @@ fn tomte_headgear_penalties_follow_weight_boundaries_and_effective_race() {
 
         let equipped = game.clone();
         assert!(game.unequip_slot("head").is_some());
+        assert_eq!(
+            game.snapshot().player.trait_details.tomte_heavy_headgear,
+            Some(false)
+        );
         assert_eq!(game.effective_player_attributes().intelligence, 15);
         assert_eq!(
             species_contribution(
@@ -326,6 +334,10 @@ fn tomte_headgear_penalties_follow_weight_boundaries_and_effective_race() {
         );
         game = equipped;
         game.player.statuses.clear();
+        assert_eq!(
+            game.snapshot().player.trait_details.tomte_heavy_headgear,
+            None
+        );
         assert_eq!(
             game.player_tomte_headgear_excess_weight(),
             0,
@@ -411,18 +423,9 @@ fn tomte_heavy_helmet_updates_casting_and_preserves_other_auto_identification() 
 }
 
 #[test]
-fn hidden_tomte_form_grants_intrinsics_and_free_probing_without_unlocking_birth() {
+fn tomte_form_grants_intrinsics_and_free_probing() {
     const RACE: &str = "rfb-legacy.race.tomte";
     const PROBE: &str = "rfb.ability.race.probe-monsters";
-    assert!(
-        Game::new_with_build_race_and_name(
-            424,
-            "demo.build.warrior",
-            RACE,
-            Game::DEFAULT_PLAYER_NAME,
-        )
-        .is_err()
-    );
     let mut game = Game::new_with_build_race_and_name(
         424,
         "demo.build.warrior",
@@ -2472,22 +2475,136 @@ fn build_skill_growth_experience_multiplier_and_save_identity_are_deterministic(
 }
 
 #[test]
+fn formal_tomte_action_chain_probes_changes_headgear_levels_senses_and_restores() {
+    let mut game = Game::new_with_build_race_and_name(
+        83,
+        "demo.build.warrior",
+        "rfb-legacy.race.tomte",
+        "托姆特验收",
+    )
+    .unwrap();
+    clear_monsters(&mut game);
+    game.items
+        .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
+    game.mogaminator.enabled = false;
+    let cap_id = game
+        .items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.knit-cap")
+        .unwrap()
+        .id
+        .clone();
+    let east = game.position_in_direction(Direction::East);
+    replace_terrain(&mut game, east, "demo.terrain.floor");
+    let index = game.index(east).unwrap();
+    game.glow[index] = true;
+    game.push_generated_actor(
+        "test.tomte-chain.sheep".to_owned(),
+        "demo.actor.sheep",
+        east,
+    );
+    game.debug_set_ability_casts_succeed(true);
+    dispatch_next(
+        &mut game,
+        GameCommand::CastAbility {
+            ability_id: "rfb.ability.race.probe-monsters".to_owned(),
+            target: TargetSelection::SelfTarget,
+        },
+    );
+    assert!(game.probed_actor_kind_ids.contains("demo.actor.sheep"));
+    game.debug_set_ability_casts_succeed(false);
+    clear_monsters(&mut game);
+    give_inventory_item(&mut game, "test.tomte-chain.helmet", "demo.item.iron-helm");
+    dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: "test.tomte-chain.helmet".to_owned(),
+            slot_id: Some("head".to_owned()),
+        },
+    );
+    assert_eq!(
+        game.snapshot().player.trait_details.tomte_heavy_headgear,
+        Some(true)
+    );
+    assert!(!game.player_has_tomte_item_sensing());
+    dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: cap_id,
+            slot_id: Some("head".to_owned()),
+        },
+    );
+    assert_eq!(
+        game.snapshot().player.trait_details.tomte_heavy_headgear,
+        Some(false)
+    );
+    game.apply_unscaled_player_experience(experience_required_for_level(39), &mut Vec::new());
+    assert_eq!(game.progress.level, 39);
+    assert!(!game.player_auto_identifies_items());
+    give_inventory_item(&mut game, "test.tomte-chain.arrows", "demo.item.arrow");
+    let arrows = game.items.last_mut().unwrap();
+    arrows.quantity = 3;
+    arrows.quality = ItemQualityDto::Fine;
+    arrows.affix_ids.push("demo.affix.frost-hunter".to_owned());
+    arrows.location = ItemLocation::Ground(east);
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(game.player.position, east);
+    assert_eq!(
+        game.item_property_knowledge["test.tomte-chain.arrows"].feeling,
+        Some(rfb_protocol::ItemFeelingDto::Excellent)
+    );
+    dispatch_next(&mut game, GameCommand::PickUp);
+    assert!(game.items.iter().any(
+        |item| item.id == "test.tomte-chain.arrows" && item.location == ItemLocation::Inventory
+    ));
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.snapshot(), game.snapshot());
+    let experience = experience_required_for_level(40) - restored.progress.experience;
+    restored.apply_unscaled_player_experience(experience, &mut Vec::new());
+    assert_eq!(restored.progress.level, 40);
+    assert!(restored.player_auto_identifies_items());
+    dispatch_next(
+        &mut restored,
+        GameCommand::Drop {
+            item_ids: vec!["test.tomte-chain.arrows".to_owned()],
+        },
+    );
+    dispatch_next(&mut restored, GameCommand::Wait);
+    let arrows = restored
+        .items
+        .iter()
+        .find(|item| item.id == "test.tomte-chain.arrows")
+        .unwrap();
+    assert_eq!(
+        restored.item_identification(arrows),
+        ItemIdentificationDto::Appraised
+    );
+    assert!(restored.item_property_knowledge[&arrows.id].appraised);
+    assert!(!restored.item_property_knowledge[&arrows.id].identified);
+    assert_eq!(
+        restored.item_property_knowledge[&arrows.id].feeling,
+        Some(rfb_protocol::ItemFeelingDto::Excellent)
+    );
+    dispatch_next(&mut restored, GameCommand::PickUp);
+    let mut continued = Game::from_save(restored.to_save()).unwrap();
+    assert_eq!(continued.snapshot(), restored.snapshot());
+    let turn = continued.turn;
+    dispatch_next(&mut continued, GameCommand::Wait);
+    dispatch_next(&mut restored, GameCommand::Wait);
+    assert!(continued.turn > turn);
+    assert_eq!(continued.state_hash(), restored.state_hash());
+}
+
+#[test]
 fn tomte_birth_merges_one_cap_with_each_class_kit_and_unique_knowledge_virtue() {
     const RACE: &str = "rfb-legacy.race.tomte";
-    let path =
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
-    let mut content = rfb_content::compile_pack_dir(&path).unwrap().content;
-    let race = content
-        .races
-        .iter_mut()
-        .find(|race| race.id == RACE)
-        .unwrap();
-    assert!(!race.tags.iter().any(|tag| tag == "rfb-compatibility"));
-    // Open only this test catalog; the formal birth entry is a later step.
-    race.tags.push("rfb-compatibility".to_owned());
-    let content = Arc::new(ContentCatalog::from_artifact(
-        rfb_content::encode_content(content).unwrap(),
-    ));
+    let content = load_built_in_content().unwrap();
     for build_id in [
         "demo.build.warrior",
         "demo.build.archer",
@@ -2496,15 +2613,9 @@ fn tomte_birth_merges_one_cap_with_each_class_kit_and_unique_knowledge_virtue() 
         "demo.build.cavalry",
         "demo.build.sniper",
     ] {
-        let mut game = Game::from_content_internal(
-            83,
-            Arc::clone(&content),
-            DEFAULT_WORLD_ID,
-            Some(build_id),
-            Some(RACE),
-            Game::DEFAULT_PLAYER_NAME,
-        )
-        .expect(build_id);
+        let mut game =
+            Game::new_with_build_race_and_name(83, build_id, RACE, Game::DEFAULT_PLAYER_NAME)
+                .expect(build_id);
         let inventory = game
             .items
             .iter()

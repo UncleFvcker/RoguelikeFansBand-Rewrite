@@ -66,6 +66,7 @@ export const PLAYTEST_RACE_IDS = [
   "rfb-legacy.race.beastman",
   "rfb-legacy.race.shadow-fairy",
   "rfb-legacy.race.ogre",
+  "rfb-legacy.race.tomte",
 ] as const;
 export type PlaytestRaceId = (typeof PLAYTEST_RACE_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";
@@ -104,6 +105,7 @@ interface SessionShellDom {
   readonly cavalryBuild: HTMLInputElement;
   readonly sniperBuild: HTMLInputElement;
   readonly raceSelect: HTMLSelectElement;
+  readonly tomteDescription: HTMLElement;
   readonly characterNameInput: HTMLInputElement;
   readonly seedInput: HTMLInputElement;
   readonly randomizeSeedButton: HTMLButtonElement;
@@ -181,6 +183,7 @@ export class SessionShell {
     this.#dom.settingsButton.addEventListener("click", this.#openSettings);
     this.#dom.exitButton.addEventListener("click", this.#exit);
     this.#dom.newGameView.addEventListener("submit", this.#startNewGame);
+    this.#dom.raceSelect.addEventListener("change", this.#changeRace);
     this.#dom.randomizeSeedButton.addEventListener("click", this.#randomizeSeed);
     this.#dom.newGameBackButton.addEventListener("click", this.#backToTitle);
     this.#dom.loadRefreshButton.addEventListener("click", this.#refreshSaves);
@@ -199,6 +202,7 @@ export class SessionShell {
     this.#dom.settingsButton.removeEventListener("click", this.#openSettings);
     this.#dom.exitButton.removeEventListener("click", this.#exit);
     this.#dom.newGameView.removeEventListener("submit", this.#startNewGame);
+    this.#dom.raceSelect.removeEventListener("change", this.#changeRace);
     this.#dom.randomizeSeedButton.removeEventListener("click", this.#randomizeSeed);
     this.#dom.newGameBackButton.removeEventListener("click", this.#backToTitle);
     this.#dom.loadRefreshButton.removeEventListener("click", this.#refreshSaves);
@@ -225,7 +229,12 @@ export class SessionShell {
     this.#renderSaves();
     this.#renderReadyStatus();
     this.#renderRunMetadata();
+    this.#changeRace();
   }
+
+  readonly #changeRace = (): void => {
+    this.#dom.tomteDescription.hidden = this.#dom.raceSelect.value !== "rfb-legacy.race.tomte";
+  };
 
   showGame(snapshot: GameSnapshot, request?: NewSessionRequest): void {
     this.#activeSnapshot = snapshot;
@@ -621,6 +630,7 @@ export function createSessionShellDom(document: DocumentLookup): SessionShellDom
     cavalryBuild: element<HTMLInputElement>(document, "session-build-cavalry"),
     sniperBuild: element<HTMLInputElement>(document, "session-build-sniper"),
     raceSelect: element<HTMLSelectElement>(document, "session-race"),
+    tomteDescription: element<HTMLElement>(document, "session-tomte-description"),
     characterNameInput: element<HTMLInputElement>(document, "session-character-name"),
     seedInput: element<HTMLInputElement>(document, "session-seed"),
     randomizeSeedButton: element<HTMLButtonElement>(document, "session-randomize-seed"),

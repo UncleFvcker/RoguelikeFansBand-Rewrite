@@ -7478,6 +7478,13 @@
           "items": {
             "type": "string"
           }
+        },
+        "tomteHeavyHeadgear": {
+          "description": "Present only in the effective Tomte form; derived by Core from current headgear.",
+          "type": [
+            "boolean",
+            "null"
+          ]
         }
       },
       "required": [

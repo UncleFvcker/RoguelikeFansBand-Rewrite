@@ -47,6 +47,7 @@ const artifactDirectory = path.join(repositoryDirectory, "test-results");
 const diagnosticDirectory = path.join(artifactDirectory, "e2e-crash-diagnostics");
 const desktopLogPath = path.join(artifactDirectory, "e2e-rfb-desktop.log");
 const renderProfileOnly = process.argv.includes("--render-profile");
+const tomteOnly = process.argv.includes("--tomte");
 const logs = [];
 let child;
 let client;
@@ -87,6 +88,8 @@ async function main() {
     client = await WebDriverClient.create(port, child);
     if (renderProfileOnly) {
       await runRendererProfile(client, artifactDirectory);
+    } else if (tomteOnly) {
+      await runTomteScenario(client);
     } else {
       await runScenario(client);
     }
@@ -99,7 +102,7 @@ async function main() {
       );
     }
     process.stdout.write(
-      renderProfileOnly ? "Renderer profile passed.\n" : "Tauri desktop E2E passed.\n",
+      renderProfileOnly ? "Renderer profile passed.\n" : tomteOnly ? "Tomte desktop acceptance passed.\n" : "Tauri desktop E2E passed.\n",
     );
   } catch (error) {
     await mkdir(artifactDirectory, { recursive: true });
@@ -309,6 +312,105 @@ async function runScenario(driver) {
   report.checks.push({ check: "frontend-crash-diagnostic" });
   await mkdir(artifactDirectory, { recursive: true });
   await writeFile(path.join(artifactDirectory, "playable-acceptance.json"), JSON.stringify(report, null, 2) + "\n");
+}
+
+async function runTomteScenario(driver) {
+  const expected = await loadExpectedIdentity();
+  const report = { identity: expected, checks: [] };
+  const state = () => driver.execute(`return {
+    hash: document.querySelector("#hash-value")?.title,
+    turn: parseInt(document.querySelector("#turn-value")?.textContent, 10),
+    equipment: document.querySelector("#equipment-list")?.textContent,
+    race: document.querySelector("#character-race-value")?.textContent,
+    errors: window.__tomteErrors ?? [],
+  };`);
+  const afterTurn = turn => driver.waitFor(`return parseInt(document.querySelector("#turn-value")?.textContent, 10) > arguments[0]`, "Tomte action committed", 10_000, [turn]);
+  await driver.waitFor(`return document.documentElement.dataset.appMode === "title"`, "Tomte title", 60_000);
+  await driver.execute(`localStorage.setItem("rfb.locale", "zh-CN"); setTimeout(() => location.reload(), 100); return true;`);
+  await driver.waitFor(`return performance.getEntriesByType("navigation")[0]?.type === "reload" && document.documentElement.dataset.appMode === "title"`, "Chinese title", 60_000);
+  await mkdir(artifactDirectory, { recursive: true });
+  for (const build of ["warrior", "high-mage-death", "archer"]) {
+    await click(driver, "#session-new-game");
+    const description = await driver.execute(`
+      window.__tomteErrors = [];
+      window.addEventListener("error", event => window.__tomteErrors.push(event.message));
+      const race = document.querySelector("#session-race"); race.value = "rfb-legacy.race.tomte";
+      race.dispatchEvent(new Event("change", { bubbles: true }));
+      const build = document.querySelector("#session-build-" + arguments[0]); build.checked = true;
+      build.dispatchEvent(new Event("change", { bubbles: true }));
+      document.querySelector("#session-seed").value = "83";
+      document.querySelector("#session-character-name").value = "托姆特验收";
+      const note = document.querySelector("#session-tomte-description");
+      return { visible: !note.hidden, text: note.textContent, name: race.selectedOptions[0].textContent };
+    `, [build]);
+    assert.equal(description.name, "托姆特");
+    assert.equal(description.visible, true);
+    assert.ok(description.text.includes("1.0 磅") && description.text.includes("40"));
+    await click(driver, "#session-start-game");
+    await driver.waitFor(`return document.documentElement.dataset.appMode === "playing" && document.querySelector("#connection-status")?.classList.contains("ready")`, "Tomte creation", 60_000);
+    assert.equal((await state()).race, "托姆特");
+    assert.equal(await driver.execute(`return document.querySelector("#map-host").dataset.contentHash;`), expected.contentHash);
+    assert.equal(await driver.execute(`return document.querySelector("#map-host").dataset.protocolVersion;`), expected.protocolVersion);
+    await click(driver, "#player-ui-character-open");
+    await click(driver, "#character-tab-details");
+    await click(driver, "#character-detail-tab-defenses");
+    await driver.waitFor(`return document.querySelector('[data-trait="tomte-headgear"]')?.textContent.includes("头饰未超重")`, "Tomte headgear projection");
+    await driver.execute(`const row = document.querySelector('[data-trait="tomte-headgear"]'); row.open = true; row.scrollIntoView({ block: "center" }); return true;`);
+    await writeFile(path.join(artifactDirectory, `tomte-${build}.png`), await driver.screenshot(), "base64");
+    await click(driver, "#player-page-close");
+    await click(driver, "#player-ui-ability-open");
+    const beforeProbe = await state();
+    await driver.execute(`
+      const row = [...document.querySelectorAll(".ability-row")].find(row => row.querySelector(".ability-name")?.textContent === "探测怪物");
+      const button = row?.querySelector(".ability-cast-action");
+      if (!button || button.disabled) throw new Error("Tomte probe unavailable");
+      button.click(); return true;
+    `);
+    await afterTurn(beforeProbe.turn);
+    await driver.execute(`if (document.querySelector("#monster-probe-dialog").open) document.querySelector("#monster-probe-close").click(); return true;`);
+    await driver.execute(`if (document.querySelector("#player-page-dialog").open) document.querySelector("#player-page-close").click(); return true;`);
+    await click(driver, "#player-ui-inventory-open");
+    const cap = await driver.execute(`const row = document.querySelector('#equipment-list [data-slot-id="head"]'); const name = row.querySelector(".equipment-slot-name").textContent; row.querySelector("button").click(); return name;`);
+    assert.ok(cap.includes("针织帽"));
+    await driver.waitFor(`return document.querySelector("#inventory-detail-dialog")?.open`, "cap detail");
+    await click(driver, "#inventory-detail-actions .equipment-actions button:last-child");
+    await driver.waitFor(`return document.querySelector('#equipment-list [data-slot-id="head"]')?.classList.contains("equipment-slot-vacant")`, "cap removed");
+    await driver.execute(`
+      if (document.querySelector("#inventory-detail-dialog").open) document.querySelector("#inventory-detail-close").click();
+      const row = [...document.querySelectorAll("#inventory-list .inventory-item")].find(row => row.querySelector(".inventory-item-name").textContent === arguments[0]);
+      row.querySelector('input[type="checkbox"]').click(); return true;
+    `, [cap]);
+    await click(driver, "#inventory-equip");
+    await driver.waitFor(`return document.querySelector('#equipment-list [data-slot-id="head"] .equipment-slot-name')?.textContent === arguments[0]`, "cap equipped", 10_000, [cap]);
+    await click(driver, "#player-page-close");
+    await driver.execute(`
+      window.__rfbE2eDownloads = [];
+      URL.createObjectURL = blob => { window.__rfbE2eDownloads.push({ blob, size: blob.size }); return "blob:tomte-acceptance"; };
+      URL.revokeObjectURL = () => {};
+      HTMLAnchorElement.prototype.click = function () { window.__rfbE2eDownloads.at(-1).fileName = this.download; };
+      document.querySelector(".hud-menu").open = true; return true;
+    `);
+    const saved = await state();
+    await click(driver, "#save-button");
+    await driver.waitFor(`return window.__rfbE2eDownloads.some(item => item.fileName?.endsWith(".rfbsave"))`, "Tomte save export");
+    assert.ok((await lastDownload(driver)).size > 100);
+    await driver.execute(`document.querySelector(".hud-menu").open = false; return true;`);
+    await dispatchKey(driver, "Numpad5", "5"); await afterTurn(saved.turn);
+    await driver.execute(`
+      const saved = window.__rfbE2eDownloads.find(item => item.fileName?.endsWith(".rfbsave"));
+      const transfer = new DataTransfer(); transfer.items.add(new File([saved.blob], saved.fileName));
+      const input = document.querySelector("#load-input"); input.files = transfer.files;
+      input.dispatchEvent(new Event("change", { bubbles: true })); return true;
+    `);
+    await driver.waitFor(`return document.querySelector("#hash-value")?.title === arguments[0]`, "Tomte exact restore", 10_000, [saved.hash]);
+    assert.deepEqual(await state(), saved);
+    await dispatchKey(driver, "Numpad5", "5"); await afterTurn(saved.turn);
+    assert.deepEqual((await state()).errors, []);
+    report.checks.push({ build, race: saved.race, saveHash: saved.hash, checks: ["create", "Chinese description", "headgear hint", "probe", "unequip/equip", "save/restore", "continue"] });
+    await driver.execute(`setTimeout(() => location.reload(), 100); return true;`);
+    await driver.waitFor(`return document.documentElement.dataset.appMode === "title"`, "next Tomte class", 60_000);
+  }
+  await writeFile(path.join(artifactDirectory, "tomte-acceptance.json"), JSON.stringify(report, null, 2) + "\n");
 }
 
 async function dispatchKey(driver, code, key) {

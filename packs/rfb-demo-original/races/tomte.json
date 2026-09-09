@@ -105,8 +105,11 @@
     { "itemKindId": "demo.item.knit-cap", "quantity": 1, "equipped": true }
   ],
   "tags": [
+    "humanoid",
     "legacy-import",
     "polymorph-candidate",
-    "snow-adapted"
+    "rfb-compatibility",
+    "snow-adapted",
+    "standard-body"
   ]
 }

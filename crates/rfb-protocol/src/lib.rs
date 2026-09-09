@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.232";
+pub const PROTOCOL_VERSION: &str = "1.233";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 5;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 5;
 
@@ -1832,6 +1832,10 @@ pub struct CharacterTraitDetailsDto {
     pub stats: Vec<CharacterStatDto>,
     pub attacks: Vec<CharacterAttackTraitDto>,
     pub melee_damage: Vec<MeleeDamagePreviewDto>,
+    /// Present only in the effective Tomte form; derived by Core from current headgear.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "bindings", ts(optional))]
+    pub tomte_heavy_headgear: Option<bool>,
     pub active_weapon_id: Option<String>,
     pub active_launcher_id: Option<String>,
     pub auras: Vec<CharacterAuraDto>,
