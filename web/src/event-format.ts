@@ -14,6 +14,7 @@ import type {
 export interface PresentationState {
   currentInventory: readonly InventoryItemDto[];
   currentEquipment: readonly EquipmentItemDto[];
+  bodySlots?: GameSnapshot["bodySlots"];
   currentStatus: GameSnapshot | GameUpdate | undefined;
   currentWorldId?: string;
 }
@@ -1834,6 +1835,7 @@ export function createPresentationFormatter(
   };
 
   function equipmentSlotName(slotType: string | undefined): string {
+    slotType = getState().bodySlots?.find((slot) => slot.id === slotType)?.slotType ?? slotType;
     const key = slotType ? EQUIPMENT_SLOT_TYPE_KEYS[slotType] : undefined;
     if (key) return localization.format(key);
     return localization.format("equipment-slot-unknown", { slot: slotType ?? "?" });

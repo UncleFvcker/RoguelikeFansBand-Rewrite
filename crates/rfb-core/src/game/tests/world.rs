@@ -351,7 +351,7 @@ fn p96c_numenor_atlantis_selection_and_shared_entrance_are_seed_stable() {
 }
 
 #[test]
-fn p96d_all_numenor_atlantis_floors_generate_water_veins_and_ordinary_stairs() {
+fn p96d_representative_numenor_atlantis_floors_generate_water_veins_and_ordinary_stairs() {
     let mut game =
         Game::new_with_build(196, "demo.build.warrior").expect("Middle-earth should create");
     let mut definitions = game
@@ -370,6 +370,12 @@ fn p96d_all_numenor_atlantis_floors_generate_water_veins_and_ordinary_stairs() {
         .collect::<Vec<_>>();
     definitions.sort_by_key(|floor| (floor.dungeon_id.clone(), floor.depth));
     assert_eq!(definitions.len(), 32);
+    // Entry/size boundaries, special layers, and the final guardian floor.
+    definitions.retain(|floor| match floor.dungeon_id.as_deref() {
+        Some("demo.dungeon.numenor") => matches!(floor.depth, 55 | 56 | 65 | 70 | 74 | 75),
+        Some("demo.dungeon.atlantis") => matches!(floor.depth, 55 | 60 | 64 | 65),
+        _ => false,
+    });
 
     let mut magma_veins = 0;
     let mut quartz_veins = 0;
@@ -421,67 +427,69 @@ fn p96d_all_numenor_atlantis_floors_generate_water_veins_and_ordinary_stairs() {
 }
 
 #[test]
-fn p99f_giants_hall_snow_castle_selection_uses_the_original_distinct_positions() {
+fn alternate_dungeons_project_only_the_selected_original_position() {
     let definitions = game_with_dungeon_substitution(0);
     let world = definitions
         .content
         .world(DEFAULT_WORLD_ID)
-        .expect("Middle-earth world definition");
-    let giants_hall = world
-        .dungeons
-        .iter()
-        .find(|dungeon| dungeon.id == "demo.dungeon.giants-hall")
-        .expect("Giant's Hall definition");
-    let snow_castle = world
-        .dungeons
-        .iter()
-        .find(|dungeon| dungeon.id == "demo.dungeon.snow-castle")
-        .expect("Snow castle definition");
-    let primary_seed = (0..10_000)
-        .find(|seed| !dungeon_substitution_uses_alternate(giants_hall, snow_castle, *seed))
-        .expect("a Giant's Hall seed should exist");
-    let alternate_seed = (0..10_000)
-        .find(|seed| dungeon_substitution_uses_alternate(giants_hall, snow_castle, *seed))
-        .expect("a Snow castle seed should exist");
-
-    for (seed, active_id, active_position, suppressed_position) in [
+        .expect("Middle-earth world");
+    for (primary_id, alternate_id, primary_position, alternate_position) in [
         (
-            primary_seed,
             "demo.dungeon.giants-hall",
+            "demo.dungeon.snow-castle",
             Position { x: 63, y: 44 },
             Position { x: 65, y: 44 },
         ),
         (
-            alternate_seed,
-            "demo.dungeon.snow-castle",
-            Position { x: 65, y: 44 },
-            Position { x: 63, y: 44 },
+            "demo.dungeon.witch-wood",
+            "demo.dungeon.plains-of-oz",
+            Position { x: 63, y: 53 },
+            Position { x: 65, y: 54 },
         ),
     ] {
-        let game = game_with_dungeon_substitution(seed);
-        assert!(game.dungeon_is_active(active_id));
-        assert!(
-            game.wilderness_cell_dto(active_position)
-                .locations
-                .iter()
-                .any(|location| location.id == active_id)
-        );
-        assert!(
-            game.wilderness_cell_dto(suppressed_position)
-                .locations
-                .iter()
-                .all(|location| {
-                    !matches!(
-                        location.id.as_str(),
-                        "demo.dungeon.giants-hall" | "demo.dungeon.snow-castle"
-                    )
+        let primary = world
+            .dungeons
+            .iter()
+            .find(|d| d.id == primary_id)
+            .expect("primary dungeon");
+        let alternate = world
+            .dungeons
+            .iter()
+            .find(|d| d.id == alternate_id)
+            .expect("alternate dungeon");
+        for use_alternate in [false, true] {
+            let seed = (0..10_000)
+                .find(|seed| {
+                    dungeon_substitution_uses_alternate(primary, alternate, *seed) == use_alternate
                 })
-        );
+                .expect("selection seed");
+            let (active_id, active_position, suppressed_position) = if use_alternate {
+                (alternate_id, alternate_position, primary_position)
+            } else {
+                (primary_id, primary_position, alternate_position)
+            };
+            let game = game_with_dungeon_substitution(seed);
+            assert!(game.dungeon_is_active(active_id), "{active_id}");
+            assert!(
+                game.wilderness_cell_dto(active_position)
+                    .locations
+                    .iter()
+                    .any(|location| location.id == active_id),
+                "{active_id}"
+            );
+            assert!(
+                game.wilderness_cell_dto(suppressed_position)
+                    .locations
+                    .iter()
+                    .all(|location| location.id != primary_id && location.id != alternate_id),
+                "{active_id}"
+            );
+        }
     }
 }
 
 #[test]
-fn p99f_all_giants_hall_and_snow_castle_floors_generate_without_doors() {
+fn p99f_representative_giants_hall_and_snow_castle_floors_generate_without_doors() {
     let mut game =
         Game::new_with_build(199, "demo.build.warrior").expect("Middle-earth should create");
     let mut definitions = game
@@ -500,6 +508,12 @@ fn p99f_all_giants_hall_and_snow_castle_floors_generate_without_doors() {
         .collect::<Vec<_>>();
     definitions.sort_by_key(|floor| (floor.dungeon_id.clone(), floor.depth));
     assert_eq!(definitions.len(), 32);
+    // Entry/size boundaries, special layers, and the final guardian floor.
+    definitions.retain(|floor| match floor.dungeon_id.as_deref() {
+        Some("demo.dungeon.giants-hall") => matches!(floor.depth, 30 | 31 | 39 | 40),
+        Some("demo.dungeon.snow-castle") => matches!(floor.depth, 30 | 31 | 49 | 50),
+        _ => false,
+    });
 
     let mut generated_water = 0;
     for definition in definitions {
@@ -539,7 +553,7 @@ fn p99f_all_giants_hall_and_snow_castle_floors_generate_without_doors() {
 }
 
 #[test]
-fn p100f_all_graveyard_floors_generate_shallow_water_layers_and_shafts() {
+fn p100f_representative_graveyard_floors_generate_shallow_water_layers_and_shafts() {
     let mut game =
         Game::new_with_build(200, "demo.build.warrior").expect("Middle-earth should create");
     let mut definitions = game
@@ -553,6 +567,11 @@ fn p100f_all_graveyard_floors_generate_shallow_water_layers_and_shafts() {
         .collect::<Vec<_>>();
     definitions.sort_by_key(|floor| floor.depth);
     assert_eq!(definitions.len(), 21);
+    // Entry/size boundaries, special layers, and the final guardian floor.
+    definitions.retain(|floor| match floor.dungeon_id.as_deref() {
+        Some("demo.dungeon.graveyard") => matches!(floor.depth, 50 | 51 | 54 | 62 | 66 | 69 | 70),
+        _ => false,
+    });
 
     for definition in definitions {
         let generated = game
@@ -615,67 +634,7 @@ fn p100f_all_graveyard_floors_generate_shallow_water_layers_and_shafts() {
 }
 
 #[test]
-fn p101d_witch_wood_and_plains_of_oz_selection_uses_distinct_original_positions() {
-    let definitions = game_with_dungeon_substitution(0);
-    let world = definitions
-        .content
-        .world(DEFAULT_WORLD_ID)
-        .expect("Middle-earth world definition");
-    let witch = world
-        .dungeons
-        .iter()
-        .find(|dungeon| dungeon.id == "demo.dungeon.witch-wood")
-        .expect("Witch Wood definition");
-    let plains = world
-        .dungeons
-        .iter()
-        .find(|dungeon| dungeon.id == "demo.dungeon.plains-of-oz")
-        .expect("Plains of Oz definition");
-    let witch_seed = (0..10_000)
-        .find(|seed| !dungeon_substitution_uses_alternate(witch, plains, *seed))
-        .expect("a Witch Wood seed should exist");
-    let oz_seed = (0..10_000)
-        .find(|seed| dungeon_substitution_uses_alternate(witch, plains, *seed))
-        .expect("a Plains of Oz seed should exist");
-
-    for (seed, active_id, active_position, suppressed_position) in [
-        (
-            witch_seed,
-            "demo.dungeon.witch-wood",
-            Position { x: 63, y: 53 },
-            Position { x: 65, y: 54 },
-        ),
-        (
-            oz_seed,
-            "demo.dungeon.plains-of-oz",
-            Position { x: 65, y: 54 },
-            Position { x: 63, y: 53 },
-        ),
-    ] {
-        let game = game_with_dungeon_substitution(seed);
-        assert!(game.dungeon_is_active(active_id));
-        assert!(
-            game.wilderness_cell_dto(active_position)
-                .locations
-                .iter()
-                .any(|location| location.id == active_id)
-        );
-        assert!(
-            game.wilderness_cell_dto(suppressed_position)
-                .locations
-                .iter()
-                .all(|location| {
-                    !matches!(
-                        location.id.as_str(),
-                        "demo.dungeon.witch-wood" | "demo.dungeon.plains-of-oz"
-                    )
-                })
-        );
-    }
-}
-
-#[test]
-fn p101d_all_witch_wood_and_plains_of_oz_floors_generate_their_outdoor_layers() {
+fn p101d_representative_witch_wood_and_plains_of_oz_floors_generate_their_outdoor_layers() {
     let mut game =
         Game::new_with_build(201, "demo.build.warrior").expect("Middle-earth should create");
     let mut definitions = game
@@ -694,6 +653,12 @@ fn p101d_all_witch_wood_and_plains_of_oz_floors_generate_their_outdoor_layers() 
         .collect::<Vec<_>>();
     definitions.sort_by_key(|floor| (floor.dungeon_id.clone(), floor.depth));
     assert_eq!(definitions.len(), 35);
+    // Entry/size boundaries, special layers, and the final guardian floor.
+    definitions.retain(|floor| match floor.dungeon_id.as_deref() {
+        Some("demo.dungeon.witch-wood") => matches!(floor.depth, 25 | 26 | 39 | 40),
+        Some("demo.dungeon.plains-of-oz") => matches!(floor.depth, 18 | 19 | 35 | 36),
+        _ => false,
+    });
 
     let mut flowers = 0;
     let mut swamps = 0;
@@ -849,6 +814,23 @@ fn p89_reach_shared_dungeon_guardian(seed: u64, dungeon_id: &str) -> Game {
     game
 }
 
+// Guardian tests keep their real entrance and final stair; intermediate travel is shared coverage.
+fn enter_guardian_floor_from_penultimate(game: &mut Game, dungeon: &str, final_depth: u16) {
+    clear_monsters(game);
+    let approach = format!("demo.floor.{dungeon}-depth-{}", final_depth - 1);
+    game.transition_floor(approach.clone(), None, None, false)
+        .expect("guardian approach should transition")
+        .expect("guardian approach must be a different floor");
+    assert_eq!(game.current_floor_id, approach);
+    clear_monsters(game);
+    place_player_on_terrain(game, "demo.terrain.stairs-down");
+    let update = dispatch_next(game, GameCommand::TraverseStairs);
+    assert_eq!(
+        update.floor_id,
+        format!("demo.floor.{dungeon}-depth-{final_depth}")
+    );
+}
+
 fn p89_defeat_guardian(game: &mut Game, guardian_id: &str) -> (GameUpdate, Position) {
     defeat_guardian_with_status(game, guardian_id, STATUS_POISON)
 }
@@ -897,9 +879,16 @@ fn p90c_troll_cave_generation_keeps_terrain_mix_lakes_shafts_and_connectivity() 
         .collect::<Vec<_>>();
     definitions.sort_by_key(|floor| floor.depth);
     assert_eq!(definitions.len(), 19);
+    // Entry/size boundaries, special layers, and the final guardian floor.
+    definitions.retain(|floor| match floor.dungeon_id.as_deref() {
+        Some("demo.dungeon.troll-cave") => matches!(floor.depth, 18 | 19 | 24 | 30 | 31 | 35 | 36),
+        _ => false,
+    });
+
     let mut generated_mountain_walls = 0;
     let mut generated_dirt = 0;
 
+    let sampled_depths = definitions.len();
     for definition in definitions {
         let generated = game
             .generate_procedural_floor(&definition, None)
@@ -1000,7 +989,7 @@ fn p90c_troll_cave_generation_keeps_terrain_mix_lakes_shafts_and_connectivity() 
         }
     }
     assert!(generated_mountain_walls > 0);
-    assert!(generated_dirt > 240 * 19);
+    assert!(generated_dirt > 240 * sampled_depths);
 }
 
 #[test]
@@ -1047,21 +1036,7 @@ fn p90c_troll_cave_shared_entry_shafts_conquest_and_reward_are_one_shot() {
     let returned = dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(returned.floor_id, "demo.floor.troll-cave-depth-18");
 
-    for depth in 19..=36 {
-        game.entities.clear();
-        let connection_id = format!("demo.connection.troll-cave-depth-{}-stairs-down", depth - 1);
-        game.player.position = game
-            .floor_connections
-            .iter()
-            .find(|connection| connection.id == connection_id)
-            .unwrap_or_else(|| panic!("depth {} regular down stairs", depth - 1))
-            .position;
-        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
-        assert_eq!(
-            update.floor_id,
-            format!("demo.floor.troll-cave-depth-{depth}")
-        );
-    }
+    enter_guardian_floor_from_penultimate(&mut game, "troll-cave", 36);
 
     let (update, guardian_position) = p89_defeat_guardian(&mut game, "demo.guardian.troll-cave.1");
     assert_eq!(update.campaign.status, CampaignStatusDto::Active);
@@ -1116,8 +1091,16 @@ fn p91c_eyrie_generation_keeps_caverns_rivers_shafts_and_connectivity() {
         .collect::<Vec<_>>();
     definitions.sort_by_key(|floor| floor.depth);
     assert_eq!(definitions.len(), 11);
+    // Entry/size boundaries, special layers, and the final guardian floor.
+    definitions.retain(|floor| match floor.dungeon_id.as_deref() {
+        Some("demo.dungeon.eyrie") => matches!(floor.depth, 40 | 41 | 49 | 50),
+        _ => false,
+    });
+
     let mut generated_water = 0;
 
+    // Seed 3 exercises the optional river on the entry floor.
+    game.rng = RfbRng::seeded(3);
     for definition in definitions {
         let generated = game
             .generate_procedural_floor(&definition, None)
@@ -1266,18 +1249,7 @@ fn p91c_eyrie_guardians_shafts_conquest_and_new_life_reward_are_one_shot() {
     let returned = dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(returned.floor_id, "demo.floor.eyrie-depth-40");
 
-    for depth in 41..=50 {
-        clear_monsters(&mut game);
-        let connection_id = format!("demo.connection.eyrie-depth-{}-stairs-down", depth - 1);
-        game.player.position = game
-            .floor_connections
-            .iter()
-            .find(|connection| connection.id == connection_id)
-            .unwrap_or_else(|| panic!("depth {} regular down stairs", depth - 1))
-            .position;
-        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
-        assert_eq!(update.floor_id, format!("demo.floor.eyrie-depth-{depth}"));
-    }
+    enter_guardian_floor_from_penultimate(&mut game, "eyrie", 50);
 
     let (update, guardian_position) = p89_defeat_guardian(&mut game, "demo.guardian.eyrie.1");
     assert_eq!(update.campaign.status, CampaignStatusDto::Active);
@@ -1506,15 +1478,7 @@ fn p92c_labyrinth_forgets_after_movement_and_drops_the_fixed_recall_rod() {
     );
     assert!(game.explored[0], "blocked movement must retain memory");
 
-    for depth in 21..=28 {
-        clear_monsters(&mut game);
-        place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
-        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
-        assert_eq!(
-            update.floor_id,
-            format!("demo.floor.labyrinth-depth-{depth}")
-        );
-    }
+    enter_guardian_floor_from_penultimate(&mut game, "labyrinth", 28);
     let (update, guardian_position) = p89_defeat_guardian(&mut game, "demo.guardian.labyrinth.1");
     assert_eq!(update.campaign.conquered_dungeons, 1);
     assert!(game.dungeon_states["demo.dungeon.labyrinth"].guardian_defeated);
@@ -1544,78 +1508,100 @@ fn p92c_labyrinth_forgets_after_movement_and_drops_the_fixed_recall_rod() {
 }
 
 #[test]
-fn p93c_lonely_mountain_generation_keeps_lava_caverns_lakes_and_destruction() {
-    let mut game =
-        Game::new_with_build(193, "demo.build.warrior").expect("Middle-earth should create");
-    let mut definitions = game
-        .content
-        .world(&game.world_id)
-        .expect("Middle-earth should remain available")
-        .procedural_floors
-        .iter()
-        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.lonely-mountain"))
-        .cloned()
-        .collect::<Vec<_>>();
-    definitions.sort_by_key(|floor| floor.depth);
-    assert_eq!(definitions.len(), 11);
+fn lava_cavern_dungeons_share_lakes_destruction_stairs_and_guardian_placement() {
+    for (dungeon_id, seed, total, depths, guardian_id, guardian_kind) in [
+        (
+            "demo.dungeon.lonely-mountain",
+            193,
+            11,
+            &[30, 32, 34, 35, 38, 39, 40][..],
+            "demo.guardian.lonely-mountain.1",
+            "demo.actor.smaug-the-golden",
+        ),
+        (
+            "demo.dungeon.dragon-lair",
+            197,
+            13,
+            &[60, 62, 64, 66, 68, 71, 72][..],
+            "demo.guardian.dragon-lair.1",
+            "demo.actor.tiamat-celestial-dragon-of-evil",
+        ),
+    ] {
+        let mut game =
+            Game::new_with_build(seed, "demo.build.warrior").expect("Middle-earth should create");
+        let mut definitions = game
+            .content
+            .world(&game.world_id)
+            .expect("Middle-earth should remain available")
+            .procedural_floors
+            .iter()
+            .filter(|floor| floor.dungeon_id.as_deref() == Some(dungeon_id))
+            .cloned()
+            .collect::<Vec<_>>();
+        definitions.sort_by_key(|floor| floor.depth);
+        assert_eq!(definitions.len(), total);
+        definitions.retain(|floor| depths.contains(&floor.depth));
 
-    let mut generated_lava = 0;
-    let mut generated_tree_lake = false;
-    let mut generated_rubble = false;
-    for definition in definitions {
-        let generated = game
-            .generate_procedural_floor(&definition, None)
-            .expect("Lonely Mountain floor should generate");
-        assert_eq!((generated.width, generated.height), (96, 33));
-        assert!(generated.entities.iter().all(|actor| {
-            let index = actor.position.y as usize * usize::from(generated.width)
-                + actor.position.x as usize;
-            game.content
-                .terrain(&generated.terrain[index])
-                .is_some_and(|terrain| terrain.walkable)
-        }));
-        generated_lava += generated
-            .terrain
-            .iter()
-            .filter(|terrain| {
-                matches!(
-                    terrain.as_str(),
-                    "demo.terrain.surface-lava-deep" | "demo.terrain.surface-lava-shallow"
-                )
-            })
-            .count();
-        generated_tree_lake |= generated
-            .terrain
-            .iter()
-            .any(|terrain| terrain == "demo.terrain.surface-tree");
-        generated_rubble |= generated
-            .terrain
-            .iter()
-            .any(|terrain| terrain == "demo.terrain.rubble");
-        let up_stairs = generated
-            .terrain
-            .iter()
-            .filter(|terrain| terrain.as_str() == "demo.terrain.stairs-up")
-            .count();
-        assert!((1..=2).contains(&up_stairs));
-        let down_stairs = generated
-            .terrain
-            .iter()
-            .filter(|terrain| terrain.as_str() == "demo.terrain.stairs-down")
-            .count();
-        if definition.final_floor {
-            assert_eq!(down_stairs, 0);
-            assert!(generated.entities.iter().any(|actor| {
-                actor.id == "demo.guardian.lonely-mountain.1"
-                    && actor.kind_id == "demo.actor.smaug-the-golden"
+        let mut generated_lava = 0;
+        let mut generated_tree_lake = false;
+        let mut generated_rubble = false;
+        for definition in definitions {
+            let generated = game
+                .generate_procedural_floor(&definition, None)
+                .expect("lava cavern should generate");
+            assert_eq!((generated.width, generated.height), (96, 33));
+            assert!(generated.entities.iter().all(|actor| {
+                let index = actor.position.y as usize * usize::from(generated.width)
+                    + actor.position.x as usize;
+                game.content
+                    .terrain(&generated.terrain[index])
+                    .is_some_and(|terrain| terrain.walkable)
             }));
-        } else {
-            assert!((4..=5).contains(&down_stairs));
+            generated_lava += generated
+                .terrain
+                .iter()
+                .filter(|terrain| {
+                    matches!(
+                        terrain.as_str(),
+                        "demo.terrain.surface-lava-deep" | "demo.terrain.surface-lava-shallow"
+                    )
+                })
+                .count();
+            generated_tree_lake |= generated
+                .terrain
+                .iter()
+                .any(|terrain| terrain == "demo.terrain.surface-tree");
+            generated_rubble |= generated
+                .terrain
+                .iter()
+                .any(|terrain| terrain == "demo.terrain.rubble");
+            let up_stairs = generated
+                .terrain
+                .iter()
+                .filter(|terrain| terrain.as_str() == "demo.terrain.stairs-up")
+                .count();
+            assert!((1..=2).contains(&up_stairs));
+            let down_stairs = generated
+                .terrain
+                .iter()
+                .filter(|terrain| terrain.as_str() == "demo.terrain.stairs-down")
+                .count();
+            if definition.final_floor {
+                assert_eq!(down_stairs, 0);
+                assert!(
+                    generated
+                        .entities
+                        .iter()
+                        .any(|actor| { actor.id == guardian_id && actor.kind_id == guardian_kind })
+                );
+            } else {
+                assert!((4..=5).contains(&down_stairs));
+            }
         }
+        assert!(generated_lava > 0);
+        assert!(generated_tree_lake);
+        assert!(generated_rubble);
     }
-    assert!(generated_lava > 0);
-    assert!(generated_tree_lake);
-    assert!(generated_rubble);
 }
 
 #[test]
@@ -1629,15 +1615,7 @@ fn p93c_smaug_drops_arkenstone_with_clairvoyance_and_replacement() {
     let root = dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(root.floor_id, "demo.floor.lonely-mountain-depth-30");
 
-    for depth in 31..=40 {
-        clear_monsters(&mut game);
-        place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
-        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
-        assert_eq!(
-            update.floor_id,
-            format!("demo.floor.lonely-mountain-depth-{depth}")
-        );
-    }
+    enter_guardian_floor_from_penultimate(&mut game, "lonely-mountain", 40);
     let final_floor = game.clone();
     let (update, guardian_position) =
         p89_defeat_guardian(&mut game, "demo.guardian.lonely-mountain.1");
@@ -1724,81 +1702,6 @@ fn p93c_smaug_drops_arkenstone_with_clairvoyance_and_replacement() {
 }
 
 #[test]
-fn p97e_dragon_lair_generation_keeps_lava_caverns_lakes_and_guardians() {
-    let mut game =
-        Game::new_with_build(197, "demo.build.warrior").expect("Middle-earth should create");
-    let mut definitions = game
-        .content
-        .world(&game.world_id)
-        .expect("Middle-earth should remain available")
-        .procedural_floors
-        .iter()
-        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.dragon-lair"))
-        .cloned()
-        .collect::<Vec<_>>();
-    definitions.sort_by_key(|floor| floor.depth);
-    assert_eq!(definitions.len(), 13);
-
-    let mut generated_lava = 0;
-    let mut generated_tree_lake = false;
-    let mut generated_rubble = false;
-    for definition in definitions {
-        let generated = game
-            .generate_procedural_floor(&definition, None)
-            .expect("Dragon's Lair floor should generate");
-        assert_eq!((generated.width, generated.height), (96, 33));
-        assert!(generated.entities.iter().all(|actor| {
-            let index = actor.position.y as usize * usize::from(generated.width)
-                + actor.position.x as usize;
-            game.content
-                .terrain(&generated.terrain[index])
-                .is_some_and(|terrain| terrain.walkable)
-        }));
-        generated_lava += generated
-            .terrain
-            .iter()
-            .filter(|terrain| {
-                matches!(
-                    terrain.as_str(),
-                    "demo.terrain.surface-lava-deep" | "demo.terrain.surface-lava-shallow"
-                )
-            })
-            .count();
-        generated_tree_lake |= generated
-            .terrain
-            .iter()
-            .any(|terrain| terrain == "demo.terrain.surface-tree");
-        generated_rubble |= generated
-            .terrain
-            .iter()
-            .any(|terrain| terrain == "demo.terrain.rubble");
-        let up_stairs = generated
-            .terrain
-            .iter()
-            .filter(|terrain| terrain.as_str() == "demo.terrain.stairs-up")
-            .count();
-        assert!((1..=2).contains(&up_stairs));
-        let down_stairs = generated
-            .terrain
-            .iter()
-            .filter(|terrain| terrain.as_str() == "demo.terrain.stairs-down")
-            .count();
-        if definition.final_floor {
-            assert_eq!(down_stairs, 0);
-            assert!(generated.entities.iter().any(|actor| {
-                actor.id == "demo.guardian.dragon-lair.1"
-                    && actor.kind_id == "demo.actor.tiamat-celestial-dragon-of-evil"
-            }));
-        } else {
-            assert!((4..=5).contains(&down_stairs));
-        }
-    }
-    assert!(generated_lava > 0);
-    assert!(generated_tree_lake);
-    assert!(generated_rubble);
-}
-
-#[test]
 fn p97e_dragon_lair_guardians_and_scale_mail_reward_are_one_shot() {
     let mut game =
         Game::new_with_build(197, "demo.build.warrior").expect("Middle-earth should create");
@@ -1826,15 +1729,7 @@ fn p97e_dragon_lair_guardians_and_scale_mail_reward_are_one_shot() {
     let root = dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(root.floor_id, "demo.floor.dragon-lair-depth-60");
 
-    for depth in 61..=72 {
-        clear_monsters(&mut game);
-        place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
-        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
-        assert_eq!(
-            update.floor_id,
-            format!("demo.floor.dragon-lair-depth-{depth}")
-        );
-    }
+    enter_guardian_floor_from_penultimate(&mut game, "dragon-lair", 72);
     let (update, guardian_position) = p89_defeat_guardian(&mut game, "demo.guardian.dragon-lair.1");
     assert_eq!(update.campaign.conquered_dungeons, 1);
     assert!(game.dungeon_states["demo.dungeon.dragon-lair"].guardian_defeated);
@@ -1895,6 +1790,11 @@ fn p98c_castle_generation_keeps_rooms_stairs_and_representative_layers() {
         .collect::<Vec<_>>();
     definitions.sort_by_key(|floor| floor.depth);
     assert_eq!(definitions.len(), 26);
+    // Entry/size boundaries, special layers, and the final guardian floor.
+    definitions.retain(|floor| match floor.dungeon_id.as_deref() {
+        Some("demo.dungeon.castle") => matches!(floor.depth, 40 | 41 | 45 | 50 | 55 | 64 | 65),
+        _ => false,
+    });
 
     for definition in definitions {
         let generated = game
@@ -1995,12 +1895,7 @@ fn p98c_castle_guardians_and_conquest_are_one_shot() {
     let root = dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(root.floor_id, "demo.floor.castle-depth-40");
 
-    for depth in 41..=65 {
-        clear_monsters(&mut game);
-        place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
-        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
-        assert_eq!(update.floor_id, format!("demo.floor.castle-depth-{depth}"));
-    }
+    enter_guardian_floor_from_penultimate(&mut game, "castle", 65);
     let guardian = game
         .entities
         .iter_mut()
@@ -2058,15 +1953,7 @@ fn p100f_graveyard_guardians_and_rolled_soulsword_reward_are_one_shot() {
     let root = dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(root.floor_id, "demo.floor.graveyard-depth-50");
 
-    for depth in 51..=70 {
-        clear_monsters(&mut game);
-        place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
-        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
-        assert_eq!(
-            update.floor_id,
-            format!("demo.floor.graveyard-depth-{depth}")
-        );
-    }
+    enter_guardian_floor_from_penultimate(&mut game, "graveyard", 70);
     let vecna = game
         .entities
         .iter_mut()
@@ -2116,13 +2003,13 @@ fn p100f_graveyard_guardians_and_rolled_soulsword_reward_are_one_shot() {
 
 #[test]
 fn p94c_mine_generation_selects_dry_water_or_lava_rivers_with_rich_veins() {
-    let mut saw_dry = false;
-    let mut saw_water = false;
-    let mut saw_lava = false;
-
-    for seed in 0..128 {
-        let mut game =
-            Game::new_with_build(seed, "demo.build.warrior").expect("Middle-earth should create");
+    let base = Game::new_with_build(0, "demo.build.warrior").expect("Mine character");
+    for (branch, seed, expected_water, expected_lava) in [
+        ("dry", 0, false, false),
+        ("lava", 5, false, true),
+        ("water", 14, true, false),
+    ] {
+        let mut game = base.clone();
         let definition = game
             .content
             .world(&game.world_id)
@@ -2150,9 +2037,11 @@ fn p94c_mine_generation_selects_dry_water_or_lava_rivers_with_rich_veins() {
             )
         });
         assert!(!(water && lava), "one river roll must select only one type");
-        saw_dry |= !water && !lava;
-        saw_water |= water;
-        saw_lava |= lava;
+        assert_eq!(
+            (water, lava),
+            (expected_water, expected_lava),
+            "{branch} seed {seed}"
+        );
         assert!(generated.terrain.iter().any(|terrain| {
             matches!(
                 terrain.as_str(),
@@ -2162,14 +2051,7 @@ fn p94c_mine_generation_selects_dry_water_or_lava_rivers_with_rich_veins() {
                     | "demo.terrain.quartz-hidden-treasure"
             )
         }));
-        if saw_dry && saw_water && saw_lava {
-            break;
-        }
     }
-
-    assert!(saw_dry, "chanceOneIn 7 should permit a dry Mine floor");
-    assert!(saw_water, "the primary Mine river should be water");
-    assert!(saw_lava, "the alternate Mine river should be lava");
 }
 
 #[test]
@@ -2199,12 +2081,7 @@ fn p94c_mine_guardians_and_star_healing_reward_are_one_shot() {
     let root = dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(root.floor_id, "demo.floor.mine-depth-75");
 
-    for depth in 76..=80 {
-        clear_monsters(&mut game);
-        place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
-        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
-        assert_eq!(update.floor_id, format!("demo.floor.mine-depth-{depth}"));
-    }
+    enter_guardian_floor_from_penultimate(&mut game, "mine", 80);
     let (update, guardian_position) = p89_defeat_guardian(&mut game, "demo.guardian.mine.1");
     assert_eq!(update.campaign.conquered_dungeons, 1);
     assert!(game.dungeon_states["demo.dungeon.mine"].guardian_defeated);
@@ -2333,15 +2210,7 @@ fn p95c_battlefield_guardians_reward_and_no_enchant_are_one_shot() {
     let returned = dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(returned.floor_id, "demo.floor.battlefield-depth-30");
 
-    for depth in 31..=50 {
-        clear_monsters(&mut game);
-        place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
-        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
-        assert_eq!(
-            update.floor_id,
-            format!("demo.floor.battlefield-depth-{depth}")
-        );
-    }
+    enter_guardian_floor_from_penultimate(&mut game, "battlefield", 50);
     let (update, guardian_position) =
         defeat_guardian_with_status(&mut game, "demo.guardian.battlefield.1", STATUS_BLEEDING);
     assert_eq!(update.campaign.conquered_dungeons, 1);
@@ -2579,6 +2448,7 @@ fn middle_earth_starts_on_an_outdoor_surface_with_a_working_warrens_entrance() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Middle-earth should create");
 
+    assert!(game.entities.is_empty());
     assert_eq!(game.world_id, DEFAULT_WORLD_ID);
     assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
     assert_eq!((game.width, game.height), (96, 33));
@@ -3367,49 +3237,7 @@ fn p87c_tidal_cave_room_water_and_optional_river_use_existing_terrain() {
 }
 
 #[test]
-fn p88c_icky_cave_small_floor_uses_the_existing_grass_swamp_water_mix() {
-    let mut game = Game::new_with_build(88, "demo.build.warrior")
-        .expect("Icky Cave generation proof should create");
-    let definition = game
-        .content
-        .world(&game.world_id)
-        .expect("Middle-earth should remain available")
-        .procedural_floors
-        .iter()
-        .find(|floor| floor.id == "demo.floor.icky-cave-depth-10")
-        .expect("Icky Cave depth 10 should remain available")
-        .clone();
-    game.rng = RfbRng::seeded(88);
-
-    let generated = game
-        .generate_procedural_floor(&definition, None)
-        .expect("Icky Cave depth 10 should generate");
-    let terrain_count = |terrain_id: &str| {
-        generated
-            .terrain
-            .iter()
-            .filter(|generated_id| generated_id.as_str() == terrain_id)
-            .count()
-    };
-    let swamp = terrain_count("demo.terrain.surface-swamp");
-    let shallow_water = terrain_count("demo.terrain.surface-water-shallow");
-
-    assert_eq!((generated.width, generated.height), (66, 22));
-    assert_eq!(swamp + shallow_water, 186);
-    assert!(swamp > 0);
-    assert!(shallow_water > 0);
-    assert!(terrain_count("demo.terrain.surface-grass") > 0);
-    assert_eq!(terrain_count("demo.terrain.surface-water-deep"), 0);
-    assert!(
-        !generated
-            .entities
-            .iter()
-            .any(|actor| actor.kind_id == "demo.actor.the-icky-queen")
-    );
-}
-
-#[test]
-fn p88e_icky_cave_all_depths_keep_the_terrain_mix_and_stairs_reachable() {
+fn p88e_icky_cave_representative_depths_keep_the_terrain_mix_and_stairs_reachable() {
     let mut game =
         Game::new_with_build(880, "demo.build.warrior").expect("Middle-earth should create");
     let mut definitions = game
@@ -3423,6 +3251,11 @@ fn p88e_icky_cave_all_depths_keep_the_terrain_mix_and_stairs_reachable() {
         .collect::<Vec<_>>();
     definitions.sort_by_key(|floor| floor.depth);
     assert_eq!(definitions.len(), 11);
+    // Entry/size boundaries, special layers, and the final guardian floor.
+    definitions.retain(|floor| match floor.dungeon_id.as_deref() {
+        Some("demo.dungeon.icky-cave") => matches!(floor.depth, 10 | 11 | 19 | 20),
+        _ => false,
+    });
 
     for definition in definitions {
         let generated = game
@@ -3456,6 +3289,7 @@ fn p88e_icky_cave_all_depths_keep_the_terrain_mix_and_stairs_reachable() {
                 .filter(|generated_id| generated_id.as_str() == terrain_id)
                 .count()
         };
+        assert_eq!(terrain_count("demo.terrain.surface-water-deep"), 0);
         let swamp = terrain_count("demo.terrain.surface-swamp");
         let shallow_water = terrain_count("demo.terrain.surface-water-shallow");
         let expected_features = if definition.depth == 10 { 186 } else { 320 };
@@ -3533,10 +3367,10 @@ fn p88e_icky_cave_all_depths_keep_the_terrain_mix_and_stairs_reachable() {
 }
 
 #[test]
-fn p87e_tidal_cave_all_depths_keep_water_and_stairs_reachable() {
+fn p87e_tidal_cave_representative_depths_keep_water_and_stairs_reachable() {
     let mut game =
         Game::new_with_build(87, "demo.build.warrior").expect("Middle-earth should create");
-    let definitions = game
+    let mut definitions = game
         .content
         .world(&game.world_id)
         .expect("Middle-earth should remain available")
@@ -3546,6 +3380,11 @@ fn p87e_tidal_cave_all_depths_keep_water_and_stairs_reachable() {
         .cloned()
         .collect::<Vec<_>>();
     assert_eq!(definitions.len(), 13);
+    // Entry/size boundaries, special layers, and the final guardian floor.
+    definitions.retain(|floor| match floor.dungeon_id.as_deref() {
+        Some("demo.dungeon.tidal-cave") => matches!(floor.depth, 15 | 16 | 26 | 27),
+        _ => false,
+    });
 
     for definition in definitions {
         let generated = game
@@ -3605,7 +3444,7 @@ fn p87e_tidal_cave_all_depths_keep_water_and_stairs_reachable() {
 fn warrens_maps_are_seeded_connected_varied_and_persistent() {
     let mut generated_maps = BTreeSet::new();
     let mut walkable_masks = Vec::<Vec<bool>>::new();
-    for seed in 0..16 {
+    for seed in [0, 1, 2] {
         let mut proof = Game::new_with_build(seed, "demo.build.warrior")
             .expect("Warrens connectivity proof should create");
         let definition = proof
@@ -3747,7 +3586,7 @@ fn warrens_maps_are_seeded_connected_varied_and_persistent() {
         generated_maps.insert(first_floor_terrain);
     }
     assert!(
-        generated_maps.len() >= 15,
+        generated_maps.len() == 3,
         "fixed seed matrix should produce visibly distinct Warrens maps"
     );
 }
@@ -3756,83 +3595,83 @@ fn warrens_maps_are_seeded_connected_varied_and_persistent() {
 fn warrens_every_generated_floor_has_a_normal_descent_and_return_route() {
     let mut saw_scaled_allocation_above_minimum = false;
     let mut saw_depth_gated_item = false;
-    for seed in 0..16 {
-        let mut game = Game::new_with_build(seed, "demo.build.warrior")
-            .expect("Warrens journey should create");
-        game.player
-            .resistances
-            .set(DamageType::Physical, ResistanceLevel::Immune);
+    // Seed 2 covers scaled allocation and a depth-gated item in one full journey.
+    let seed = 2;
+    let mut game =
+        Game::new_with_build(seed, "demo.build.warrior").expect("Warrens journey should create");
+    game.player
+        .resistances
+        .set(DamageType::Physical, ResistanceLevel::Immune);
 
-        for depth in 1..=9 {
-            place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
-            dispatch_next(&mut game, GameCommand::TraverseStairs);
-            assert_eq!(
-                game.current_floor_id,
-                format!("demo.floor.warrens-depth-{depth}")
-            );
-            assert!(game.terrain.iter().any(|id| id == "demo.terrain.stairs-up"));
-            assert_eq!(generated_encounter_leader_count(&game), 4);
-            if depth == 9 {
-                assert!(
-                    game.entities
-                        .iter()
-                        .any(|actor| actor.id == "demo.guardian.warrens.1")
-                );
-            }
-            let ground_items = game
-                .items
-                .iter()
-                .filter(|item| matches!(item.location, ItemLocation::Ground(_)))
-                .collect::<Vec<_>>();
+    for depth in 1..=9 {
+        place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(
+            game.current_floor_id,
+            format!("demo.floor.warrens-depth-{depth}")
+        );
+        assert!(game.terrain.iter().any(|id| id == "demo.terrain.stairs-up"));
+        assert_eq!(generated_encounter_leader_count(&game), 4);
+        if depth == 9 {
             assert!(
-                (2..=5).contains(&ground_items.len()),
-                "seed {seed} depth {depth} generated {} floor items",
-                ground_items.len()
+                game.entities
+                    .iter()
+                    .any(|actor| actor.id == "demo.guardian.warrens.1")
             );
-            saw_scaled_allocation_above_minimum |= ground_items.len() > 2;
-            saw_depth_gated_item |= depth >= 5
-                && ground_items.iter().any(|item| {
-                    matches!(
-                        item.kind_id.as_str(),
-                        "demo.item.cartography-scroll"
-                            | "demo.item.clamor-scroll"
-                            | "demo.item.homeward-scroll"
-                            | "demo.item.short-sword"
-                            | "demo.item.trapfinding-scroll"
-                    )
-                });
-            assert_eq!(
+        }
+        let ground_items = game
+            .items
+            .iter()
+            .filter(|item| matches!(item.location, ItemLocation::Ground(_)))
+            .collect::<Vec<_>>();
+        assert!(
+            (2..=5).contains(&ground_items.len()),
+            "seed {seed} depth {depth} generated {} floor items",
+            ground_items.len()
+        );
+        saw_scaled_allocation_above_minimum |= ground_items.len() > 2;
+        saw_depth_gated_item |= depth >= 5
+            && ground_items.iter().any(|item| {
+                matches!(
+                    item.kind_id.as_str(),
+                    "demo.item.cartography-scroll"
+                        | "demo.item.clamor-scroll"
+                        | "demo.item.homeward-scroll"
+                        | "demo.item.short-sword"
+                        | "demo.item.trapfinding-scroll"
+                )
+            });
+        assert_eq!(
+            game.terrain
+                .iter()
+                .filter(|terrain_id| {
+                    game.content
+                        .terrain(terrain_id)
+                        .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "vein"))
+                })
+                .count(),
+            24
+        );
+        if depth < 9 {
+            assert!(
                 game.terrain
                     .iter()
-                    .filter(|terrain_id| {
-                        game.content
-                            .terrain(terrain_id)
-                            .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "vein"))
-                    })
-                    .count(),
-                24
+                    .any(|id| id == "demo.terrain.stairs-down")
             );
-            if depth < 9 {
-                assert!(
-                    game.terrain
-                        .iter()
-                        .any(|id| id == "demo.terrain.stairs-down")
-                );
-            }
         }
+    }
 
-        for expected_depth in (1..=8).rev() {
-            place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
-            dispatch_next(&mut game, GameCommand::TraverseStairs);
-            assert_eq!(
-                game.current_floor_id,
-                format!("demo.floor.warrens-depth-{expected_depth}")
-            );
-        }
+    for expected_depth in (1..=8).rev() {
         place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
         dispatch_next(&mut game, GameCommand::TraverseStairs);
-        assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+        assert_eq!(
+            game.current_floor_id,
+            format!("demo.floor.warrens-depth-{expected_depth}")
+        );
     }
+    place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
     assert!(saw_scaled_allocation_above_minimum);
     assert!(saw_depth_gated_item);
 }

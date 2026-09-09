@@ -365,185 +365,109 @@ fn formal_golem_creation_and_temporary_form_apply_and_remove_intrinsics_and_ston
 }
 
 #[test]
-fn formal_zombie_creation_and_temporary_form_apply_and_remove_intrinsics() {
-    let mut zombie = zombie_game(375);
-    zombie.progress.level = 4;
-    assert_eq!(
-        zombie
-            .build
-            .as_ref()
-            .expect("formal build identity")
-            .race_id,
-        "rfb-legacy.race.zombie"
-    );
-    assert_eq!(
-        zombie
-            .effective_player_resistances()
-            .level(DamageType::Nether),
-        ResistanceLevel::Resistant
-    );
-    assert_eq!(
-        zombie
-            .effective_player_resistances()
-            .level(DamageType::Poison),
-        ResistanceLevel::Resistant
-    );
-    assert_eq!(
-        zombie
-            .effective_player_resistances()
-            .level(DamageType::Cold),
-        ResistanceLevel::Normal
-    );
-    assert_eq!(zombie.player_hold_life_sources(), 1);
-    assert!(zombie.player_see_invisible_sources() >= 1);
-    assert!(zombie.player_is_nonliving());
-    zombie.progress.level = 5;
-    assert_eq!(
-        zombie
-            .effective_player_resistances()
-            .level(DamageType::Cold),
-        ResistanceLevel::Resistant
-    );
-
-    let mut human = Game::new_with_build_race_and_name(
-        375,
-        "demo.build.warrior",
-        "demo.race.rfb-human",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Human warrior should create");
-    human.progress.level = 30;
-    let mut form =
-        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.zombie-form").status;
-    form.granted_race_id = Some("rfb-legacy.race.zombie".to_owned());
-    human.player.statuses.push(form);
-
-    for damage_type in [DamageType::Nether, DamageType::Poison, DamageType::Cold] {
+fn undead_race_intrinsics_share_cold_unlock_and_temporary_form_lifecycle() {
+    for (race_id, seed, cold_level, resistance) in [
+        ("rfb-legacy.race.zombie", 375, 5, DamageType::Nether),
+        ("rfb-legacy.race.skeleton", 381, 10, DamageType::Shards),
+    ] {
+        let mut undead = Game::new_with_build_race_and_name(
+            seed,
+            "demo.build.warrior",
+            race_id,
+            Game::DEFAULT_PLAYER_NAME,
+        )
+        .expect("formal undead warrior");
         assert_eq!(
-            human.effective_player_resistances().level(damage_type),
-            ResistanceLevel::Resistant
+            undead.build.as_ref().expect("formal identity").race_id,
+            race_id
         );
-    }
-    assert_eq!(human.player_hold_life_sources(), 1);
-    assert!(human.player_see_invisible_sources() >= 1);
-    assert!(human.player_is_nonliving());
-    assert!(
-        human
-            .snapshot()
-            .player
-            .abilities
-            .iter()
-            .any(|ability| { ability.id == "rfb.ability.race.restore-life" && ability.can_cast })
-    );
-
-    human
-        .player
-        .statuses
-        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
-    for damage_type in [DamageType::Nether, DamageType::Poison, DamageType::Cold] {
+        undead.progress.level = cold_level - 1;
+        for damage in [resistance, DamageType::Poison] {
+            assert_eq!(
+                undead.effective_player_resistances().level(damage),
+                ResistanceLevel::Resistant,
+                "{race_id} {damage:?}"
+            );
+        }
         assert_eq!(
-            human.effective_player_resistances().level(damage_type),
-            ResistanceLevel::Normal
+            undead
+                .effective_player_resistances()
+                .level(DamageType::Cold),
+            ResistanceLevel::Normal,
+            "{race_id}"
         );
-    }
-    assert_eq!(human.player_hold_life_sources(), 0);
-    assert_eq!(human.player_see_invisible_sources(), 0);
-    assert!(!human.player_is_nonliving());
-    assert!(
-        human
-            .snapshot()
-            .player
-            .abilities
-            .iter()
-            .all(|ability| ability.id != "rfb.ability.race.restore-life")
-    );
-}
-
-#[test]
-fn formal_skeleton_creation_and_temporary_form_apply_and_remove_intrinsics() {
-    let mut skeleton = skeleton_game(381);
-    skeleton.progress.level = 9;
-    assert_eq!(
-        skeleton
-            .effective_player_resistances()
-            .level(DamageType::Shards),
-        ResistanceLevel::Resistant
-    );
-    assert_eq!(
-        skeleton
-            .effective_player_resistances()
-            .level(DamageType::Poison),
-        ResistanceLevel::Resistant
-    );
-    assert_eq!(
-        skeleton
-            .effective_player_resistances()
-            .level(DamageType::Cold),
-        ResistanceLevel::Normal
-    );
-    assert_eq!(skeleton.player_hold_life_sources(), 1);
-    assert!(skeleton.player_see_invisible_sources() >= 1);
-    assert!(skeleton.player_is_nonliving());
-    skeleton.progress.level = 10;
-    assert_eq!(
-        skeleton
-            .effective_player_resistances()
-            .level(DamageType::Cold),
-        ResistanceLevel::Resistant
-    );
-
-    let mut human = Game::new_with_build_race_and_name(
-        381,
-        "demo.build.warrior",
-        "demo.race.rfb-human",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Human warrior should create");
-    human.progress.level = 30;
-    let mut form =
-        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.skeleton-form").status;
-    form.granted_race_id = Some("rfb-legacy.race.skeleton".to_owned());
-    human.player.statuses.push(form);
-
-    for damage_type in [DamageType::Shards, DamageType::Poison, DamageType::Cold] {
+        assert_eq!(undead.player_hold_life_sources(), 1, "{race_id}");
+        assert!(undead.player_see_invisible_sources() >= 1, "{race_id}");
+        assert!(undead.player_is_nonliving(), "{race_id}");
+        undead.progress.level = cold_level;
         assert_eq!(
-            human.effective_player_resistances().level(damage_type),
-            ResistanceLevel::Resistant
+            undead
+                .effective_player_resistances()
+                .level(DamageType::Cold),
+            ResistanceLevel::Resistant,
+            "{race_id}"
         );
-    }
-    assert_eq!(human.player_hold_life_sources(), 1);
-    assert!(human.player_see_invisible_sources() >= 1);
-    assert!(human.player_is_nonliving());
-    assert!(
-        human
-            .snapshot()
-            .player
-            .abilities
-            .iter()
-            .any(|ability| { ability.id == "rfb.ability.race.restore-life" && ability.can_cast })
-    );
 
-    human
-        .player
-        .statuses
-        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
-    for damage_type in [DamageType::Shards, DamageType::Poison, DamageType::Cold] {
-        assert_eq!(
-            human.effective_player_resistances().level(damage_type),
-            ResistanceLevel::Normal
-        );
+        let mut human = Game::new_with_build_race_and_name(
+            seed,
+            "demo.build.warrior",
+            "demo.race.rfb-human",
+            Game::DEFAULT_PLAYER_NAME,
+        )
+        .expect("Human warrior");
+        human.progress.level = 30;
+        let mut form =
+            monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.undead-form").status;
+        form.granted_race_id = Some(race_id.to_owned());
+        human.player.statuses.push(form);
+        for active in [true, false] {
+            if !active {
+                human
+                    .player
+                    .statuses
+                    .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+            }
+            for damage in [resistance, DamageType::Poison, DamageType::Cold] {
+                assert_eq!(
+                    human.effective_player_resistances().level(damage),
+                    if active {
+                        ResistanceLevel::Resistant
+                    } else {
+                        ResistanceLevel::Normal
+                    },
+                    "{race_id} active={active} {damage:?}"
+                );
+            }
+            assert_eq!(
+                human.player_hold_life_sources(),
+                usize::from(active),
+                "{race_id} active={active}"
+            );
+            if active {
+                assert!(human.player_see_invisible_sources() >= 1, "{race_id}");
+            } else {
+                assert_eq!(human.player_see_invisible_sources(), 0, "{race_id}");
+            }
+            assert_eq!(human.player_is_nonliving(), active, "{race_id}");
+            let abilities = human.snapshot().player.abilities;
+            if active {
+                assert!(
+                    abilities
+                        .iter()
+                        .any(|ability| ability.id == "rfb.ability.race.restore-life"
+                            && ability.can_cast),
+                    "{race_id}"
+                );
+            } else {
+                assert!(
+                    abilities
+                        .iter()
+                        .all(|ability| ability.id != "rfb.ability.race.restore-life"),
+                    "{race_id}"
+                );
+            }
+        }
     }
-    assert_eq!(human.player_hold_life_sources(), 0);
-    assert_eq!(human.player_see_invisible_sources(), 0);
-    assert!(!human.player_is_nonliving());
-    assert!(
-        human
-            .snapshot()
-            .player
-            .abilities
-            .iter()
-            .all(|ability| ability.id != "rfb.ability.race.restore-life")
-    );
 }
 
 #[test]
@@ -631,194 +555,129 @@ fn formal_wood_elf_and_temporary_form_cross_trees_without_delay() {
 }
 
 #[test]
-fn formal_archon_and_temporary_form_apply_and_remove_static_passives() {
-    let archon = archon_game(388);
-    assert!(archon.player_levitates());
-    assert!(archon.active_traveler_has_mode(rfb_content::ActorMovementMode::Fly));
-    assert_eq!(archon.player_see_invisible_sources(), 1);
-    assert_eq!(archon.player_infravision_range(), 3);
-    let restored = Game::from_save_with_content(archon.to_save(), archon.content.clone())
-        .expect("Archon should round-trip");
-    assert_eq!(restored.state_hash(), archon.state_hash());
-
-    let mut human = Game::new_with_build_race_and_name(
-        388,
-        "demo.build.warrior",
-        "demo.race.rfb-human",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Human warrior should create");
-    assert!(!human.player_levitates());
-    assert_eq!(human.player_see_invisible_sources(), 0);
-
-    let mut form =
-        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.archon-form").status;
-    form.granted_race_id = Some("rfb-legacy.race.archon".to_owned());
-    human.player.statuses.push(form);
-    assert!(human.player_levitates());
-    assert!(human.active_traveler_has_mode(rfb_content::ActorMovementMode::Fly));
-    assert_eq!(human.player_see_invisible_sources(), 1);
-    assert_eq!(human.player_infravision_range(), 3);
-
-    human
-        .player
-        .statuses
-        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
-    assert!(!human.player_levitates());
-    assert!(!human.active_traveler_has_mode(rfb_content::ActorMovementMode::Fly));
-    assert_eq!(human.player_see_invisible_sources(), 0);
-    assert_eq!(human.player_infravision_range(), 0);
-}
-
-#[test]
-fn formal_sprite_and_temporary_form_apply_level_speed_and_static_passives() {
-    for (level, expected_speed) in [(9, 0), (10, 1), (19, 1), (20, 2)] {
-        let mut sprite = sprite_game(390);
-        sprite.progress.level = level;
-        assert_eq!(
-            species_contribution(
-                &sprite.player_derived_stats().speed,
-                "rfb-legacy.race.sprite",
-            ),
-            expected_speed,
-            "Sprite speed at level {level}",
+fn flying_races_share_passive_application_removal_and_preserve_unique_traits() {
+    for (race_id, seed, level, infravision, see_invisible, light) in [
+        ("rfb-legacy.race.archon", 388, 1, 3, 1, None),
+        (
+            "rfb-legacy.race.sprite",
+            390,
+            20,
+            4,
+            0,
+            Some(ResistanceLevel::Resistant),
+        ),
+        (
+            "rfb-legacy.race.shadow-fairy",
+            421,
+            1,
+            4,
+            0,
+            Some(ResistanceLevel::Vulnerable),
+        ),
+    ] {
+        let mut formal = Game::new_with_build_race_and_name(
+            seed,
+            "demo.build.warrior",
+            race_id,
+            Game::DEFAULT_PLAYER_NAME,
+        )
+        .expect("formal flying race");
+        if race_id == "rfb-legacy.race.sprite" {
+            for (level, speed) in [(9, 0), (10, 1), (19, 1), (20, 2)] {
+                formal.progress.level = level;
+                assert_eq!(
+                    species_contribution(&formal.player_derived_stats().speed, race_id),
+                    speed,
+                    "Sprite level {level}"
+                );
+            }
+        }
+        formal.progress.level = level;
+        formal.progress.max_level = level;
+        formal.refresh_character_skills();
+        let check = |game: &Game, active| {
+            assert_eq!(game.player_levitates(), active, "{race_id} active={active}");
+            assert_eq!(
+                game.active_traveler_has_mode(rfb_content::ActorMovementMode::Fly),
+                active,
+                "{race_id}"
+            );
+            assert_eq!(
+                game.player_infravision_range(),
+                if active { infravision } else { 0 },
+                "{race_id}"
+            );
+            assert_eq!(
+                game.player_see_invisible_sources(),
+                if active { see_invisible } else { 0 },
+                "{race_id}"
+            );
+            if let Some(light) = light {
+                assert_eq!(
+                    game.effective_player_resistances().level(DamageType::Light),
+                    if active {
+                        light
+                    } else {
+                        ResistanceLevel::Normal
+                    },
+                    "{race_id}"
+                );
+            }
+            if race_id == "rfb-legacy.race.shadow-fairy" {
+                assert_eq!(
+                    game.player_fairy_stealth_race_id(),
+                    active.then_some(race_id)
+                );
+            }
+        };
+        check(&formal, true);
+        let restored = Game::from_save_with_content(formal.to_save(), formal.content.clone())
+            .expect("flying race save");
+        assert_eq!(restored.state_hash(), formal.state_hash(), "{race_id}");
+        let mut human = Game::new_with_build_race_and_name(
+            seed,
+            "demo.build.warrior",
+            "demo.race.rfb-human",
+            Game::DEFAULT_PLAYER_NAME,
+        )
+        .expect("Human warrior");
+        human.progress.level = level;
+        human.progress.max_level = level;
+        human.refresh_character_skills();
+        check(&human, false);
+        let mut form =
+            monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.flying-form").status;
+        form.granted_race_id = Some(race_id.to_owned());
+        human.player.statuses.push(form);
+        check(&human, true);
+        if race_id == "rfb-legacy.race.sprite" {
+            assert_eq!(
+                species_contribution(&human.player_derived_stats().speed, race_id),
+                2
+            );
+            assert!(
+                human
+                    .snapshot()
+                    .player
+                    .abilities
+                    .iter()
+                    .any(|ability| ability.id == "rfb.ability.race.sleeping-dust")
+            );
+        }
+        human
+            .player
+            .statuses
+            .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+        check(&human, false);
+        assert!(
+            human
+                .snapshot()
+                .player
+                .abilities
+                .iter()
+                .all(|ability| ability.id != "rfb.ability.race.sleeping-dust")
         );
     }
-
-    let mut sprite = sprite_game(390);
-    sprite.progress.level = 20;
-    sprite.progress.max_level = 20;
-    sprite.refresh_character_skills();
-    assert!(sprite.player_levitates());
-    assert!(sprite.active_traveler_has_mode(rfb_content::ActorMovementMode::Fly));
-    assert_eq!(sprite.player_infravision_range(), 4);
-    assert_eq!(
-        sprite
-            .effective_player_resistances()
-            .level(DamageType::Light),
-        ResistanceLevel::Resistant,
-    );
-    let restored = Game::from_save_with_content(sprite.to_save(), sprite.content.clone())
-        .expect("Sprite should round-trip");
-    assert_eq!(restored.state_hash(), sprite.state_hash());
-
-    let mut human = Game::new_with_build_race_and_name(
-        390,
-        "demo.build.warrior",
-        "demo.race.rfb-human",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Human warrior should create");
-    human.progress.level = 20;
-    human.progress.max_level = 20;
-    human.refresh_character_skills();
-    let mut form =
-        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.sprite-form").status;
-    form.granted_race_id = Some("rfb-legacy.race.sprite".to_owned());
-    human.player.statuses.push(form);
-    assert!(human.player_levitates());
-    assert_eq!(human.player_infravision_range(), 4);
-    assert_eq!(
-        human
-            .effective_player_resistances()
-            .level(DamageType::Light),
-        ResistanceLevel::Resistant,
-    );
-    assert_eq!(
-        species_contribution(
-            &human.player_derived_stats().speed,
-            "rfb-legacy.race.sprite",
-        ),
-        2,
-    );
-    assert!(
-        human
-            .snapshot()
-            .player
-            .abilities
-            .iter()
-            .any(|ability| ability.id == "rfb.ability.race.sleeping-dust")
-    );
-
-    human
-        .player
-        .statuses
-        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
-    assert!(!human.player_levitates());
-    assert_eq!(human.player_infravision_range(), 0);
-    assert_eq!(
-        human
-            .effective_player_resistances()
-            .level(DamageType::Light),
-        ResistanceLevel::Normal,
-    );
-    assert!(
-        human
-            .snapshot()
-            .player
-            .abilities
-            .iter()
-            .all(|ability| ability.id != "rfb.ability.race.sleeping-dust")
-    );
-}
-
-#[test]
-fn formal_shadow_fairy_and_temporary_form_apply_and_remove_intrinsics() {
-    let shadow_fairy = shadow_fairy_game(421);
-    assert!(shadow_fairy.player_levitates());
-    assert_eq!(shadow_fairy.player_infravision_range(), 4);
-    assert_eq!(
-        shadow_fairy
-            .effective_player_resistances()
-            .level(DamageType::Light),
-        ResistanceLevel::Vulnerable,
-    );
-    assert_eq!(
-        shadow_fairy.player_fairy_stealth_race_id(),
-        Some("rfb-legacy.race.shadow-fairy"),
-    );
-    let restored =
-        Game::from_save_with_content(shadow_fairy.to_save(), shadow_fairy.content.clone())
-            .expect("Shadow-Fairy should round-trip");
-    assert_eq!(restored.state_hash(), shadow_fairy.state_hash());
-
-    let mut human = Game::new_with_build_race_and_name(
-        421,
-        "demo.build.warrior",
-        "demo.race.rfb-human",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Human warrior should create");
-    let mut form =
-        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.shadow-fairy-form").status;
-    form.granted_race_id = Some("rfb-legacy.race.shadow-fairy".to_owned());
-    human.player.statuses.push(form);
-    assert!(human.player_levitates());
-    assert_eq!(human.player_infravision_range(), 4);
-    assert_eq!(
-        human
-            .effective_player_resistances()
-            .level(DamageType::Light),
-        ResistanceLevel::Vulnerable,
-    );
-    assert_eq!(
-        human.player_fairy_stealth_race_id(),
-        Some("rfb-legacy.race.shadow-fairy"),
-    );
-
-    human
-        .player
-        .statuses
-        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
-    assert!(!human.player_levitates());
-    assert_eq!(human.player_infravision_range(), 0);
-    assert_eq!(
-        human
-            .effective_player_resistances()
-            .level(DamageType::Light),
-        ResistanceLevel::Normal,
-    );
-    assert_eq!(human.player_fairy_stealth_race_id(), None);
 }
 
 #[test]
@@ -2281,13 +2140,154 @@ fn build_skill_growth_experience_multiplier_and_save_identity_are_deterministic(
     );
 
     let restored = Game::from_save(warrior.to_save()).expect("build save should reload");
-    assert_eq!(restored.build, warrior.build);
-    assert_eq!(restored.progress.skills, warrior.progress.skills);
     assert_eq!(restored.snapshot(), warrior.snapshot());
     assert!(matches!(
         Game::new_with_build(17, "demo.build.missing"),
         Err(CoreError::UnknownCharacterBuild(_))
     ));
+}
+
+#[test]
+fn class_birth_applies_attributes_skills_and_equipped_kit_from_the_selected_build() {
+    // STR, INT, WIS, DEX, CON, CHR; None means the former class test did not check it.
+    for (class, build_id, seed, life, experience, attributes, skills, equipped, ammunition) in [
+        (
+            "archer",
+            "demo.build.archer",
+            0x4152_4348_4552,
+            110,
+            110,
+            [Some(15), Some(12), Some(12), Some(15), Some(14), None],
+            &[("ranged", 82, 36), ("melee", 56, 18), ("disarming", 38, 12)][..],
+            &["short-sword", "leather-scale-mail", "short-bow", "quiver"][..],
+            Some(("arrow", 30..=50)),
+        ),
+        (
+            "paladin",
+            "demo.build.paladin-death",
+            0x5041_4c41_4449_4e00,
+            110,
+            135,
+            [Some(15), Some(10), Some(14), None, Some(15), Some(15)],
+            &[
+                ("disarming", 20, 7),
+                ("device", 24, 10),
+                ("saving-throw", 34, 11),
+                ("stealth", 1, 0),
+                ("search", 12, 0),
+                ("perception", 12, 0),
+                ("melee", 68, 21),
+                ("ranged", 40, 18),
+            ][..],
+            &["broad-sword", "ring-mail"][..],
+            None,
+        ),
+        (
+            "cavalry",
+            "demo.build.cavalry",
+            0x0043_4156_414c_5259,
+            111,
+            120,
+            [Some(15), Some(11), Some(11), Some(15), Some(15), Some(14)],
+            &[
+                ("disarming", 20, 10),
+                ("device", 18, 7),
+                ("saving-throw", 32, 10),
+                ("stealth", 1, 0),
+                ("search", 16, 0),
+                ("perception", 20, 0),
+                ("melee", 60, 22),
+                ("ranged", 66, 26),
+            ][..],
+            &["broad-spear", "leather-scale-mail", "short-bow"][..],
+            Some(("arrow", 15..=25)),
+        ),
+        (
+            "sniper",
+            "demo.build.sniper",
+            0x0053_4e49_5045_5200,
+            100,
+            110,
+            [Some(15), Some(12), Some(12), Some(15), Some(14), Some(13)],
+            &[
+                ("disarming", 25, 12),
+                ("device", 24, 10),
+                ("saving-throw", 28, 10),
+                ("stealth", 5, 0),
+                ("search", 32, 0),
+                ("perception", 28, 0),
+                ("melee", 35, 12),
+                ("ranged", 72, 28),
+            ][..],
+            &["dagger", "soft-leather-armour", "light-crossbow"][..],
+            Some(("bolt", 20..=30)),
+        ),
+    ] {
+        let game = Game::new_with_build(seed, build_id).expect(class);
+        let player = game.snapshot().player;
+        let build = player.build.expect(class);
+        assert_eq!(build.build_id, build_id, "{class}");
+        assert_eq!(build.class_id, format!("demo.class.{class}"));
+        assert_eq!(
+            (build.life_percent, build.experience_percent),
+            (life, experience),
+            "{class}"
+        );
+        assert_eq!(player.kind_id, format!("demo.actor.{class}-player"));
+        let actual = player.progress.attributes;
+        for (attribute, expected) in [
+            actual.strength,
+            actual.intelligence,
+            actual.wisdom,
+            actual.dexterity,
+            actual.constitution,
+            actual.charisma,
+        ]
+        .into_iter()
+        .zip(attributes)
+        {
+            if let Some(expected) = expected {
+                assert_eq!(attribute.effective, expected, "{class} {attribute:?}");
+            }
+        }
+        for (id, base, growth) in skills {
+            let skill = player
+                .progress
+                .skills
+                .iter()
+                .find(|skill| skill.id == format!("demo.skill.{id}"))
+                .expect(id);
+            assert_eq!(
+                (skill.base, skill.growth_per_ten_levels),
+                (*base, *growth),
+                "{class} {id}"
+            );
+        }
+        for kind in equipped {
+            assert!(
+                game.items
+                    .iter()
+                    .any(|item| item.kind_id == format!("demo.item.{kind}")
+                        && matches!(item.location, ItemLocation::Equipped { .. })),
+                "{class} {kind}"
+            );
+        }
+        if let Some((kind, quantity)) = ammunition {
+            let item = game
+                .items
+                .iter()
+                .find(|item| item.kind_id == format!("demo.item.{kind}"))
+                .expect(class);
+            assert!(quantity.contains(&item.quantity), "{class} {kind}");
+        }
+        if class == "paladin" {
+            assert!(
+                game.items
+                    .iter()
+                    .any(|item| item.kind_id == "demo.item.black-prayers")
+            );
+        }
+    }
 }
 
 #[test]
@@ -2299,154 +2299,8 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
         Game::DEFAULT_PLAYER_NAME,
     )
     .expect("formal Human should create");
-    let half_orc = Game::new_with_build_race_and_name(
-        83,
-        "demo.build.warrior",
-        "rfb-legacy.race.half-orc",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("formal Half-Orc should create");
-    let high_elf = Game::new_with_build_race_and_name(
-        83,
-        "demo.build.warrior",
-        "rfb-legacy.race.high-elf",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("formal High-Elf should create");
-    let dunadan = Game::new_with_build_race_and_name(
-        83,
-        "demo.build.warrior",
-        "rfb-legacy.race.dunadan",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("formal Dunadan should create");
-    let barbarian = Game::new_with_build_race_and_name(
-        83,
-        "demo.build.warrior",
-        "rfb-legacy.race.barbarian",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("formal Barbarian should create");
-    let hobbit = Game::new_with_build_race_and_name(
-        83,
-        "demo.build.warrior",
-        "rfb-legacy.race.hobbit",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("formal Hobbit should create");
-    assert_eq!(barbarian.player.kind_id, human.player.kind_id);
-    assert_eq!(hobbit.player.kind_id, human.player.kind_id);
-
     let human_attributes = human.effective_player_attributes();
-    let half_orc_attributes = half_orc.effective_player_attributes();
-    assert_eq!(
-        half_orc_attributes.index(AttributeKind::Strength),
-        human_attributes.index(AttributeKind::Strength) + 2
-    );
-    assert_eq!(
-        half_orc_attributes.index(AttributeKind::Intelligence) + 1,
-        human_attributes.index(AttributeKind::Intelligence)
-    );
-    assert_eq!(
-        half_orc_attributes.index(AttributeKind::Constitution),
-        human_attributes.index(AttributeKind::Constitution) + 1
-    );
-    assert_eq!(
-        half_orc_attributes.index(AttributeKind::Charisma) + 1,
-        human_attributes.index(AttributeKind::Charisma)
-    );
-    assert!(half_orc.effective_player_max_hp() > human.effective_player_max_hp());
-
-    let dunadan_attributes = dunadan.effective_player_attributes();
-    for (attribute, bonus) in [
-        (AttributeKind::Strength, 1),
-        (AttributeKind::Intelligence, 2),
-        (AttributeKind::Wisdom, 2),
-        (AttributeKind::Dexterity, 2),
-        (AttributeKind::Constitution, 3),
-        (AttributeKind::Charisma, 0),
-    ] {
-        assert_eq!(
-            dunadan_attributes.index(attribute),
-            human_attributes.index(attribute) + bonus
-        );
-    }
-    assert!(dunadan.effective_player_max_hp() > human.effective_player_max_hp());
-
-    let barbarian_attributes = barbarian.effective_player_attributes();
-    for (attribute, bonus) in [
-        (AttributeKind::Strength, 3),
-        (AttributeKind::Intelligence, -2),
-        (AttributeKind::Wisdom, -1),
-        (AttributeKind::Dexterity, 1),
-        (AttributeKind::Constitution, 2),
-        (AttributeKind::Charisma, 2),
-    ] {
-        assert_eq!(
-            i16::from(barbarian_attributes.index(attribute)),
-            i16::from(human_attributes.index(attribute)) + bonus
-        );
-    }
-    assert!(barbarian.effective_player_max_hp() > human.effective_player_max_hp());
-
-    let hobbit_attributes = hobbit.effective_player_attributes();
-    for (attribute, bonus) in [
-        (AttributeKind::Strength, -2),
-        (AttributeKind::Intelligence, 1),
-        (AttributeKind::Wisdom, 1),
-        (AttributeKind::Dexterity, 3),
-        (AttributeKind::Constitution, 2),
-        (AttributeKind::Charisma, 1),
-    ] {
-        assert_eq!(
-            i16::from(hobbit_attributes.index(attribute)),
-            i16::from(human_attributes.index(attribute)) + bonus
-        );
-    }
-    assert!(hobbit.effective_player_max_hp() < human.effective_player_max_hp());
-
     let human_skills = human.effective_player_skill_progress();
-    let half_orc_skills = half_orc.effective_player_skill_progress();
-    assert_eq!(
-        half_orc_skills["demo.skill.melee"].current,
-        human_skills["demo.skill.melee"].current + 20
-    );
-    assert_eq!(
-        half_orc_skills["demo.skill.perception"].current + 5,
-        human_skills["demo.skill.perception"].current
-    );
-    let dunadan_skills = dunadan.effective_player_skill_progress();
-    assert_eq!(
-        dunadan_skills["demo.skill.melee"].current,
-        human_skills["demo.skill.melee"].current + 15
-    );
-    assert_eq!(
-        dunadan_skills["demo.skill.perception"].current,
-        human_skills["demo.skill.perception"].current + 3
-    );
-    let barbarian_skills = barbarian.effective_player_skill_progress();
-    assert_eq!(
-        barbarian_skills["demo.skill.melee"].current,
-        human_skills["demo.skill.melee"].current + 12
-    );
-    assert_eq!(
-        barbarian_skills["demo.skill.device"].current + 7,
-        human_skills["demo.skill.device"].current
-    );
-    let hobbit_skills = hobbit.effective_player_skill_progress();
-    assert_eq!(
-        hobbit_skills["demo.skill.melee"].current + 10,
-        human_skills["demo.skill.melee"].current
-    );
-    assert_eq!(
-        hobbit_skills["demo.skill.ranged"].current,
-        human_skills["demo.skill.ranged"].current + 10
-    );
-    assert_eq!(
-        hobbit_skills["demo.skill.perception"].current,
-        human_skills["demo.skill.perception"].current + 5
-    );
-
     let shop_factor = |game: &Game| {
         game.snapshot()
             .shops
@@ -2456,39 +2310,113 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
             .owner
             .price_factor_percent
     };
-    assert!(shop_factor(&half_orc) > shop_factor(&human));
-    assert!(shop_factor(&barbarian) > shop_factor(&human));
-    assert_eq!(
-        hobbit
-            .content
-            .race("rfb-legacy.race.hobbit")
-            .expect("formal Hobbit race")
-            .shop_adjust_percent,
-        100
-    );
-
     let mut human_experience = human.clone();
-    let mut half_orc_experience = half_orc.clone();
     human_experience.apply_player_experience(100, &mut Vec::new());
-    half_orc_experience.apply_player_experience(100, &mut Vec::new());
     assert_eq!(human_experience.progress.experience, 100);
-    assert_eq!(half_orc_experience.progress.experience, 110);
 
-    let mut high_elf_experience = high_elf.clone();
-    high_elf_experience.apply_player_experience(100, &mut Vec::new());
-    assert_eq!(high_elf_experience.progress.experience, 190);
-
-    let mut dunadan_experience = dunadan.clone();
-    dunadan_experience.apply_player_experience(100, &mut Vec::new());
-    assert_eq!(dunadan_experience.progress.experience, 160);
-
-    let mut barbarian_experience = barbarian.clone();
-    barbarian_experience.apply_player_experience(100, &mut Vec::new());
-    assert_eq!(barbarian_experience.progress.experience, 135);
-
-    let mut hobbit_experience = hobbit.clone();
-    hobbit_experience.apply_player_experience(100, &mut Vec::new());
-    assert_eq!(hobbit_experience.progress.experience, 120);
+    // Attribute deltas and skill deltas share one calculation path across these races.
+    for (race, attributes, skills, hp_order, higher_shop_price, experience) in [
+        (
+            "half-orc",
+            [Some(2), Some(-1), None, None, Some(1), Some(-1)],
+            &[("melee", 20), ("perception", -5)][..],
+            Some(std::cmp::Ordering::Greater),
+            true,
+            110,
+        ),
+        (
+            "dunadan",
+            [Some(1), Some(2), Some(2), Some(2), Some(3), Some(0)],
+            &[("melee", 15), ("perception", 3)][..],
+            Some(std::cmp::Ordering::Greater),
+            false,
+            160,
+        ),
+        (
+            "barbarian",
+            [Some(3), Some(-2), Some(-1), Some(1), Some(2), Some(2)],
+            &[("melee", 12), ("device", -7)][..],
+            Some(std::cmp::Ordering::Greater),
+            true,
+            135,
+        ),
+        (
+            "hobbit",
+            [Some(-2), Some(1), Some(1), Some(3), Some(2), Some(1)],
+            &[("melee", -10), ("ranged", 10), ("perception", 5)][..],
+            Some(std::cmp::Ordering::Less),
+            false,
+            120,
+        ),
+        (
+            "high-elf",
+            [Some(1), Some(3), Some(-1), Some(3), Some(1), Some(1)],
+            &[][..],
+            None,
+            false,
+            190,
+        ),
+    ] {
+        let mut game = Game::new_with_build_race_and_name(
+            83,
+            "demo.build.warrior",
+            &format!("rfb-legacy.race.{race}"),
+            Game::DEFAULT_PLAYER_NAME,
+        )
+        .expect(race);
+        assert_eq!(game.player.kind_id, human.player.kind_id, "{race}");
+        let actual = game.effective_player_attributes();
+        for (attribute, delta) in [
+            AttributeKind::Strength,
+            AttributeKind::Intelligence,
+            AttributeKind::Wisdom,
+            AttributeKind::Dexterity,
+            AttributeKind::Constitution,
+            AttributeKind::Charisma,
+        ]
+        .into_iter()
+        .zip(attributes)
+        {
+            if let Some(delta) = delta {
+                assert_eq!(
+                    i16::from(actual.index(attribute)),
+                    i16::from(human_attributes.index(attribute)) + delta,
+                    "{race} {attribute:?}"
+                );
+            }
+        }
+        let actual = game.effective_player_skill_progress();
+        for (id, delta) in skills {
+            let id = format!("demo.skill.{id}");
+            assert_eq!(
+                actual[&id].current,
+                human_skills[&id].current + delta,
+                "{race} {id}"
+            );
+        }
+        if let Some(order) = hp_order {
+            assert_eq!(
+                game.effective_player_max_hp()
+                    .cmp(&human.effective_player_max_hp()),
+                order,
+                "{race}"
+            );
+        }
+        if higher_shop_price {
+            assert!(shop_factor(&game) > shop_factor(&human), "{race}");
+        }
+        if race == "hobbit" {
+            assert_eq!(
+                game.content
+                    .race("rfb-legacy.race.hobbit")
+                    .expect("Hobbit race")
+                    .shop_adjust_percent,
+                100
+            );
+        }
+        game.apply_player_experience(100, &mut Vec::new());
+        assert_eq!(game.progress.experience, experience, "{race}");
+    }
 
     let default = Game::new_with_build(83, "demo.build.warrior")
         .expect("Warrior build should retain its Human default");
@@ -2509,13 +2437,6 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
 
 #[test]
 fn high_elf_intrinsics_and_identity_round_trip() {
-    let human = Game::new_with_build_race_and_name(
-        84,
-        "demo.build.warrior",
-        "demo.race.rfb-human",
-        "Finrod",
-    )
-    .expect("formal Human should create");
     let game = Game::new_with_build_race_and_name(
         84,
         "demo.build.warrior",
@@ -2523,32 +2444,6 @@ fn high_elf_intrinsics_and_identity_round_trip() {
         "Finrod",
     )
     .expect("formal High-Elf should create");
-    let human_attributes = human.effective_player_attributes();
-    let attributes = game.effective_player_attributes();
-    assert_eq!(
-        attributes.index(AttributeKind::Strength),
-        human_attributes.index(AttributeKind::Strength) + 1
-    );
-    assert_eq!(
-        attributes.index(AttributeKind::Intelligence),
-        human_attributes.index(AttributeKind::Intelligence) + 3
-    );
-    assert_eq!(
-        attributes.index(AttributeKind::Wisdom) + 1,
-        human_attributes.index(AttributeKind::Wisdom)
-    );
-    assert_eq!(
-        attributes.index(AttributeKind::Dexterity),
-        human_attributes.index(AttributeKind::Dexterity) + 3
-    );
-    assert_eq!(
-        attributes.index(AttributeKind::Constitution),
-        human_attributes.index(AttributeKind::Constitution) + 1
-    );
-    assert_eq!(
-        attributes.index(AttributeKind::Charisma),
-        human_attributes.index(AttributeKind::Charisma) + 1
-    );
     assert_eq!(game.player_infravision_range(), 4);
     assert_eq!(game.player_see_invisible_sources(), 1);
     assert_eq!(
@@ -2563,9 +2458,7 @@ fn high_elf_intrinsics_and_identity_round_trip() {
     );
 
     let restored = Game::from_save(game.to_save()).expect("High-Elf save should restore");
-    assert_eq!(restored.build, game.build);
     assert_eq!(restored.snapshot(), game.snapshot());
-    assert_eq!(restored.state_hash(), game.state_hash());
 }
 
 #[test]
@@ -2911,7 +2804,6 @@ fn selected_formal_race_overrides_the_build_default_and_round_trips() {
 
     let restored = Game::from_save_with_content(game.to_save(), content)
         .expect("selected race should reload independently of the build default");
-    assert_eq!(restored.build, game.build);
     assert_eq!(restored.snapshot(), game.snapshot());
 }
 
@@ -3004,7 +2896,7 @@ fn unavailable_attribute_increase_rejects_without_mutation_or_rng() {
 }
 
 #[test]
-fn restore_life_uses_historical_experience_and_migrates_old_saves() {
+fn restore_life_uses_historical_experience() {
     let mut game = prepare_death_caster(0, 42, "demo.ability.death-restore-life");
     game.progress.experience = 500;
     game.progress.maximum_experience = 900;
@@ -3036,35 +2928,21 @@ fn restore_life_uses_historical_experience_and_migrates_old_saves() {
                 }]
             )
     )));
-
-    let mut legacy = Game::new(0);
-    legacy.apply_player_experience(10, &mut Vec::new());
-    let expected = legacy.progress.experience;
-    let mut payload = legacy.to_save();
-    payload
-        .player
-        .progress
-        .as_mut()
-        .expect("player progress should be saved")
-        .maximum_experience = 0;
-    let migrated = Game::from_save(payload).expect("old progress should migrate");
-    assert_eq!(migrated.progress.maximum_experience, expected);
 }
 
 #[test]
-fn attribute_history_migrates_old_saves_and_rejects_inverted_values() {
-    let mut legacy = Game::new(0).to_save();
-    let progress = legacy
-        .player
-        .progress
-        .as_mut()
-        .expect("player progress should be saved");
-    let strength = progress.attributes.strength;
-    progress.maximum_attributes = None;
-    let migrated = Game::from_save(legacy).expect("old progress should migrate");
-    assert_eq!(migrated.progress.maximum_attributes.strength, strength);
+fn attribute_and_experience_history_round_trip_and_reject_invalid_values() {
+    let mut game = Game::new(0);
+    game.apply_player_experience(10, &mut Vec::new());
+    game.progress.maximum_experience += 10;
+    game.progress.attributes.strength -= 1;
+    let payload = game.to_save();
+    let encoded = serde_json::to_value(&payload).expect("save should serialize");
+    let restored = Game::from_save(serde_json::from_value(encoded).unwrap())
+        .expect("current attribute and experience history should round-trip");
+    assert_eq!(restored.state_hash(), game.state_hash());
 
-    let mut invalid = migrated.to_save();
+    let mut invalid = payload.clone();
     let progress = invalid
         .player
         .progress
@@ -3072,10 +2950,17 @@ fn attribute_history_migrates_old_saves_and_rejects_inverted_values() {
         .expect("player progress should be saved");
     let mut maximum = progress.attributes;
     maximum.strength = progress.attributes.strength.saturating_sub(1);
-    progress.maximum_attributes = Some(maximum);
+    progress.maximum_attributes = maximum;
     assert!(matches!(
         Game::from_save(invalid),
         Err(CoreError::InvalidSave("player attribute state is invalid"))
+    ));
+
+    let mut invalid = payload;
+    invalid.player.progress.as_mut().unwrap().maximum_experience = 0;
+    assert!(matches!(
+        Game::from_save(invalid),
+        Err(CoreError::InvalidSave("character progress is invalid"))
     ));
 }
 

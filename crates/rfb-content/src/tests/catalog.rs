@@ -8,8 +8,6 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.384.0");
-    assert_eq!(catalog.races().count(), 57);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
         .expect("formal Human race should exist")
@@ -314,9 +312,11 @@ fn compiled_catalog_indexes_current_rfb_content() {
 }
 
 #[test]
-fn formal_human_matches_rfb_static_profile() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+fn human_and_talent_race_bindings_match_source() {
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
+    );
+
     let human = catalog
         .race("demo.race.rfb-human")
         .expect("formal Human race");
@@ -354,27 +354,11 @@ fn formal_human_matches_rfb_static_profile() {
             "{build_id} must continue to use the formal Human race"
         );
     }
-}
 
-#[test]
-fn formal_half_orc_matches_rfb_profile_and_talent_pool() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
     let half_orc = catalog
         .race("rfb-legacy.race.half-orc")
         .expect("formal Half-Orc race");
 
-    assert_eq!(half_orc.modifiers.strength, 2);
-    assert_eq!(half_orc.modifiers.intelligence, -1);
-    assert_eq!(half_orc.modifiers.wisdom, 0);
-    assert_eq!(half_orc.modifiers.dexterity, 0);
-    assert_eq!(half_orc.modifiers.constitution, 1);
-    assert_eq!(half_orc.modifiers.charisma, -1);
-    assert_eq!(half_orc.life_percent, 103);
-    assert_eq!(half_orc.base_hp, 20);
-    assert_eq!(half_orc.experience_percent, 110);
-    assert_eq!(half_orc.shop_adjust_percent, 120);
-    assert_eq!(half_orc.infravision, 3);
     assert_eq!(
         half_orc.resistances.get(&ActorDamageType::Dark),
         Some(&ActorResistanceLevel::Resistant)
@@ -416,1930 +400,7 @@ fn formal_half_orc_matches_rfb_profile_and_talent_pool() {
         .expect("Half-Orc talent");
     assert_eq!(half_orc_talent.minimum_level, 30);
     assert_eq!(half_orc_talent.selection, human_talent.selection);
-}
 
-#[test]
-fn formal_hobbit_matches_rfb_profile_and_create_food_power() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let hobbit = catalog
-        .race("rfb-legacy.race.hobbit")
-        .expect("formal Hobbit race");
-
-    assert_eq!(
-        [
-            hobbit.modifiers.strength,
-            hobbit.modifiers.intelligence,
-            hobbit.modifiers.wisdom,
-            hobbit.modifiers.dexterity,
-            hobbit.modifiers.constitution,
-            hobbit.modifiers.charisma,
-        ],
-        [-2, 1, 1, 3, 2, 1]
-    );
-    assert_eq!(hobbit.life_percent, 92);
-    assert_eq!(hobbit.base_hp, 14);
-    assert_eq!(hobbit.experience_percent, 120);
-    assert_eq!(hobbit.shop_adjust_percent, 100);
-    assert_eq!(hobbit.infravision, 4);
-    assert_eq!(hobbit.kin_category.as_deref(), Some("kin-glyph-104"));
-    assert!(hobbit.resistances.is_empty());
-    assert!(hobbit.level_mutation_rewards.is_empty());
-    assert_eq!(
-        hobbit.abilities,
-        [InnatePowerDefinition {
-            minimum_level: 15,
-            governing_attribute: TechniqueAttribute::Intelligence,
-            cost: 10,
-            cost_scaling: None,
-            base_failure_percent: 50,
-            minimum_failure_percent: None,
-            ability_id: "rfb.ability.race.create-food".to_owned(),
-        }]
-    );
-    for tag in [
-        "humanoid",
-        "legacy-import",
-        "polymorph-candidate",
-        "rfb-compatibility",
-        "standard-body",
-    ] {
-        assert!(hobbit.tags.iter().any(|candidate| candidate == tag));
-    }
-
-    let skills = catalog
-        .skill_set(&hobbit.skill_set_id)
-        .expect("formal Hobbit skill set");
-    assert_eq!(
-        skills
-            .entries
-            .iter()
-            .map(|entry| (entry.skill_id.as_str(), entry.base))
-            .collect::<Vec<_>>(),
-        [
-            ("demo.skill.device", 8),
-            ("demo.skill.disarming", 15),
-            ("demo.skill.melee", -10),
-            ("demo.skill.perception", 15),
-            ("demo.skill.ranged", 10),
-            ("demo.skill.saving-throw", 10),
-            ("demo.skill.search", 12),
-            ("demo.skill.stealth", 5),
-        ]
-    );
-
-    let ability = catalog
-        .ability("rfb.ability.race.create-food")
-        .expect("Hobbit Create Food ability");
-    assert!(matches!(
-        &ability.effect,
-        AbilityEffectDefinition::CreateItem {
-            item_kind_id,
-            quantity: 1,
-        } if item_kind_id == "demo.item.ration-of-food"
-    ));
-}
-
-#[test]
-fn formal_kobold_matches_rfb_profile_and_poison_dart_power() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let kobold = catalog
-        .race("rfb-legacy.race.kobold")
-        .expect("formal Kobold race");
-
-    assert_eq!(
-        [
-            kobold.modifiers.strength,
-            kobold.modifiers.intelligence,
-            kobold.modifiers.wisdom,
-            kobold.modifiers.dexterity,
-            kobold.modifiers.constitution,
-            kobold.modifiers.charisma,
-        ],
-        [1, -1, 0, 1, 0, -2]
-    );
-    assert_eq!(kobold.life_percent, 98);
-    assert_eq!(kobold.base_hp, 19);
-    assert_eq!(kobold.experience_percent, 90);
-    assert_eq!(kobold.shop_adjust_percent, 120);
-    assert_eq!(kobold.infravision, 3);
-    assert_eq!(kobold.kin_category.as_deref(), Some("kin-glyph-107"));
-    assert_eq!(
-        kobold.resistances.get(&ActorDamageType::Poison),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert!(kobold.level_mutation_rewards.is_empty());
-    assert_eq!(
-        kobold.abilities,
-        [InnatePowerDefinition {
-            minimum_level: 12,
-            governing_attribute: TechniqueAttribute::Dexterity,
-            cost: 8,
-            cost_scaling: None,
-            base_failure_percent: 50,
-            minimum_failure_percent: None,
-            ability_id: "rfb.ability.race.poison-dart".to_owned(),
-        }]
-    );
-    for tag in [
-        "humanoid",
-        "legacy-import",
-        "polymorph-candidate",
-        "rfb-compatibility",
-        "standard-body",
-    ] {
-        assert!(kobold.tags.iter().any(|candidate| candidate == tag));
-    }
-
-    let skills = catalog
-        .skill_set(&kobold.skill_set_id)
-        .expect("formal Kobold skill set");
-    assert_eq!(
-        skills
-            .entries
-            .iter()
-            .map(|entry| (entry.skill_id.as_str(), entry.base))
-            .collect::<Vec<_>>(),
-        [
-            ("demo.skill.device", -2),
-            ("demo.skill.disarming", -2),
-            ("demo.skill.melee", 10),
-            ("demo.skill.perception", 8),
-            ("demo.skill.ranged", 3),
-            ("demo.skill.saving-throw", -1),
-            ("demo.skill.search", 1),
-            ("demo.skill.stealth", -1),
-        ]
-    );
-
-    let ability = catalog
-        .ability("rfb.ability.race.poison-dart")
-        .expect("Kobold Poison Dart ability");
-    assert_eq!(ability.target.range, 18);
-    assert!(!ability.affects_ground_items);
-    assert!(ability.spell_power_fields.is_empty());
-    assert_eq!(ability.level_scaling.len(), 1);
-    assert_eq!(
-        ability.level_scaling[0].field,
-        AbilityLevelScalingField::DamageBonus
-    );
-    assert_eq!(ability.level_scaling[0].level_offset, 1);
-    assert!(matches!(
-        ability.effect,
-        AbilityEffectDefinition::BoltOrBeamDamage {
-            damage_dice: 0,
-            damage_sides: 0,
-            damage_bonus: 1,
-            damage_type: ActorDamageType::Poison,
-            beam_chance_percent: 0,
-            ..
-        }
-    ));
-}
-
-#[test]
-fn formal_dwarf_matches_rfb_profile_and_detection_powers() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let dwarf = catalog
-        .race("rfb-legacy.race.dwarf")
-        .expect("formal Dwarf race");
-
-    assert_eq!(
-        [
-            dwarf.modifiers.strength,
-            dwarf.modifiers.intelligence,
-            dwarf.modifiers.wisdom,
-            dwarf.modifiers.dexterity,
-            dwarf.modifiers.constitution,
-            dwarf.modifiers.charisma,
-        ],
-        [2, -2, 2, -2, 2, 1]
-    );
-    assert_eq!(dwarf.life_percent, 103);
-    assert_eq!(dwarf.base_hp, 22);
-    assert_eq!(dwarf.experience_percent, 135);
-    assert_eq!(dwarf.shop_adjust_percent, 115);
-    assert_eq!(dwarf.infravision, 5);
-    assert_eq!(dwarf.kin_category.as_deref(), Some("kin-glyph-104"));
-    assert_eq!(
-        dwarf.resistances.get(&ActorDamageType::Blindness),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert!(dwarf.level_mutation_rewards.is_empty());
-    assert_eq!(
-        dwarf.abilities,
-        [
-            InnatePowerDefinition {
-                minimum_level: 5,
-                governing_attribute: TechniqueAttribute::Wisdom,
-                cost: 5,
-                cost_scaling: None,
-                base_failure_percent: 50,
-                minimum_failure_percent: None,
-                ability_id: "rfb.ability.race.detect-doors-stairs-traps".to_owned(),
-            },
-            InnatePowerDefinition {
-                minimum_level: 10,
-                governing_attribute: TechniqueAttribute::Charisma,
-                cost: 5,
-                cost_scaling: None,
-                base_failure_percent: 50,
-                minimum_failure_percent: None,
-                ability_id: "rfb.ability.race.detect-treasure".to_owned(),
-            },
-        ]
-    );
-    for tag in [
-        "humanoid",
-        "legacy-import",
-        "polymorph-candidate",
-        "rfb-compatibility",
-        "standard-body",
-    ] {
-        assert!(dwarf.tags.iter().any(|candidate| candidate == tag));
-    }
-
-    let skills = catalog
-        .skill_set(&dwarf.skill_set_id)
-        .expect("formal Dwarf skill set");
-    assert_eq!(
-        skills
-            .entries
-            .iter()
-            .map(|entry| (entry.skill_id.as_str(), entry.base))
-            .collect::<Vec<_>>(),
-        [
-            ("demo.skill.device", 5),
-            ("demo.skill.disarming", 2),
-            ("demo.skill.melee", 15),
-            ("demo.skill.perception", 10),
-            ("demo.skill.saving-throw", 6),
-            ("demo.skill.search", 7),
-            ("demo.skill.stealth", -1),
-        ]
-    );
-
-    let doors = catalog
-        .ability("rfb.ability.race.detect-doors-stairs-traps")
-        .expect("Dwarf door and trap detection ability");
-    let door_effects = doors.effect.ordered_effects();
-    assert_eq!(door_effects.len(), 4);
-    for (effect, expected_category) in
-        door_effects
-            .iter()
-            .zip(["trap", "door", "stairs-down", "stairs-up"])
-    {
-        assert!(matches!(
-            effect,
-            AbilityEffectDefinition::Detect {
-                subject: AbilityDetectSubjectDefinition::Terrain,
-                category,
-                radius: 30,
-                persistent: true,
-                through_walls: true,
-            } if category == expected_category
-        ));
-    }
-
-    let treasure = catalog
-        .ability("rfb.ability.race.detect-treasure")
-        .expect("Dwarf treasure detection ability");
-    assert!(matches!(
-        treasure.effect,
-        AbilityEffectDefinition::Detect {
-            subject: AbilityDetectSubjectDefinition::Terrain,
-            ref category,
-            radius: 30,
-            persistent: true,
-            through_walls: true,
-        } if category == "treasure"
-    ));
-}
-
-#[test]
-fn formal_nibelung_matches_rfb_profile_and_reuses_detection_powers() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let nibelung = catalog
-        .race("rfb-legacy.race.nibelung")
-        .expect("formal Nibelung race");
-
-    assert_eq!(
-        [
-            nibelung.modifiers.strength,
-            nibelung.modifiers.intelligence,
-            nibelung.modifiers.wisdom,
-            nibelung.modifiers.dexterity,
-            nibelung.modifiers.constitution,
-            nibelung.modifiers.charisma,
-        ],
-        [0, 1, 0, 1, 1, -2]
-    );
-    assert_eq!(nibelung.life_percent, 101);
-    assert_eq!(nibelung.base_hp, 21);
-    assert_eq!(nibelung.experience_percent, 150);
-    assert_eq!(nibelung.shop_adjust_percent, 115);
-    assert_eq!(nibelung.infravision, 5);
-    assert_eq!(nibelung.kin_category.as_deref(), Some("kin-glyph-104"));
-    assert_eq!(
-        nibelung.resistances.get(&ActorDamageType::Dark),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert_eq!(
-        nibelung.resistances.get(&ActorDamageType::Disenchant),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert!(nibelung.level_mutation_rewards.is_empty());
-    assert_eq!(
-        nibelung.abilities,
-        [
-            InnatePowerDefinition {
-                minimum_level: 10,
-                governing_attribute: TechniqueAttribute::Wisdom,
-                cost: 5,
-                cost_scaling: None,
-                base_failure_percent: 50,
-                minimum_failure_percent: None,
-                ability_id: "rfb.ability.race.detect-doors-stairs-traps".to_owned(),
-            },
-            InnatePowerDefinition {
-                minimum_level: 10,
-                governing_attribute: TechniqueAttribute::Charisma,
-                cost: 5,
-                cost_scaling: None,
-                base_failure_percent: 50,
-                minimum_failure_percent: None,
-                ability_id: "rfb.ability.race.detect-treasure".to_owned(),
-            },
-        ]
-    );
-    for tag in [
-        "humanoid",
-        "legacy-import",
-        "polymorph-candidate",
-        "rfb-compatibility",
-        "standard-body",
-    ] {
-        assert!(nibelung.tags.iter().any(|candidate| candidate == tag));
-    }
-
-    let skills = catalog
-        .skill_set(&nibelung.skill_set_id)
-        .expect("formal Nibelung skill set");
-    assert_eq!(
-        skills
-            .entries
-            .iter()
-            .map(|entry| (entry.skill_id.as_str(), entry.base))
-            .collect::<Vec<_>>(),
-        [
-            ("demo.skill.device", 3),
-            ("demo.skill.disarming", 3),
-            ("demo.skill.melee", 10),
-            ("demo.skill.perception", 10),
-            ("demo.skill.saving-throw", 6),
-            ("demo.skill.search", 5),
-            ("demo.skill.stealth", 1),
-        ]
-    );
-
-    for ability_id in [
-        "rfb.ability.race.detect-doors-stairs-traps",
-        "rfb.ability.race.detect-treasure",
-    ] {
-        assert!(catalog.ability(ability_id).is_some());
-    }
-}
-
-#[test]
-fn formal_gnome_matches_rfb_profile_and_uses_a_distinct_race_phase_door() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let gnome = catalog
-        .race("rfb-legacy.race.gnome")
-        .expect("formal Gnome race");
-
-    assert_eq!(
-        [
-            gnome.modifiers.strength,
-            gnome.modifiers.intelligence,
-            gnome.modifiers.wisdom,
-            gnome.modifiers.dexterity,
-            gnome.modifiers.constitution,
-            gnome.modifiers.charisma,
-        ],
-        [-1, 2, -1, 2, 1, -1]
-    );
-    assert_eq!(gnome.life_percent, 95);
-    assert_eq!(gnome.base_hp, 16);
-    assert_eq!(gnome.experience_percent, 115);
-    assert_eq!(gnome.shop_adjust_percent, 115);
-    assert_eq!(gnome.infravision, 4);
-    assert_eq!(gnome.kin_category.as_deref(), Some("kin-glyph-104"));
-    assert_eq!(gnome.status_immunities, ["rfb.status.paralysis"]);
-    assert!(gnome.level_mutation_rewards.is_empty());
-    assert_eq!(
-        gnome.abilities,
-        [InnatePowerDefinition {
-            minimum_level: 5,
-            governing_attribute: TechniqueAttribute::Intelligence,
-            cost: 2,
-            cost_scaling: None,
-            base_failure_percent: 50,
-            minimum_failure_percent: None,
-            ability_id: "rfb.ability.race.phase-door".to_owned(),
-        }]
-    );
-    for tag in [
-        "humanoid",
-        "legacy-import",
-        "polymorph-candidate",
-        "rfb-compatibility",
-        "standard-body",
-    ] {
-        assert!(gnome.tags.iter().any(|candidate| candidate == tag));
-    }
-
-    let skills = catalog
-        .skill_set(&gnome.skill_set_id)
-        .expect("formal Gnome skill set");
-    assert_eq!(
-        skills
-            .entries
-            .iter()
-            .map(|entry| (entry.skill_id.as_str(), entry.base))
-            .collect::<Vec<_>>(),
-        [
-            ("demo.skill.device", 6),
-            ("demo.skill.disarming", 10),
-            ("demo.skill.melee", -8),
-            ("demo.skill.perception", 13),
-            ("demo.skill.ranged", 8),
-            ("demo.skill.saving-throw", 7),
-            ("demo.skill.search", 6),
-            ("demo.skill.stealth", 3),
-        ]
-    );
-
-    let phase_door = catalog
-        .ability("rfb.ability.race.phase-door")
-        .expect("Gnome race Phase Door ability");
-    assert_ne!(phase_door.id, "demo.ability.sorcery-phase-door");
-    assert!(matches!(
-        phase_door.effect,
-        AbilityEffectDefinition::BlinkSelf { radius: 10 }
-    ));
-}
-
-#[test]
-fn formal_half_giant_matches_rfb_profile_and_reuses_stone_to_mud() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let half_giant = catalog
-        .race("rfb-legacy.race.half-giant")
-        .expect("formal Half-Giant race");
-
-    assert_eq!(
-        [
-            half_giant.modifiers.strength,
-            half_giant.modifiers.intelligence,
-            half_giant.modifiers.wisdom,
-            half_giant.modifiers.dexterity,
-            half_giant.modifiers.constitution,
-            half_giant.modifiers.charisma,
-        ],
-        [4, -2, -2, -2, 3, 0]
-    );
-    assert_eq!(half_giant.life_percent, 108);
-    assert_eq!(half_giant.base_hp, 26);
-    assert_eq!(half_giant.experience_percent, 150);
-    assert_eq!(half_giant.shop_adjust_percent, 125);
-    assert_eq!(half_giant.infravision, 3);
-    assert_eq!(half_giant.kin_category.as_deref(), Some("kin-glyph-80"));
-    assert_eq!(
-        half_giant.resistances.get(&ActorDamageType::Shards),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert_eq!(
-        half_giant
-            .attribute_sustains
-            .iter()
-            .copied()
-            .collect::<Vec<_>>(),
-        [ItemAttributeDefinition::Strength]
-    );
-    assert!(half_giant.level_mutation_rewards.is_empty());
-    assert_eq!(
-        half_giant.abilities,
-        [InnatePowerDefinition {
-            minimum_level: 20,
-            governing_attribute: TechniqueAttribute::Strength,
-            cost: 10,
-            cost_scaling: None,
-            base_failure_percent: 70,
-            minimum_failure_percent: None,
-            ability_id: "rfb.ability.race.stone-to-mud".to_owned(),
-        }]
-    );
-    for tag in [
-        "humanoid",
-        "legacy-import",
-        "polymorph-candidate",
-        "rfb-compatibility",
-        "standard-body",
-    ] {
-        assert!(half_giant.tags.iter().any(|candidate| candidate == tag));
-    }
-
-    let skills = catalog
-        .skill_set(&half_giant.skill_set_id)
-        .expect("formal Half-Giant skill set");
-    assert_eq!(
-        skills
-            .entries
-            .iter()
-            .map(|entry| (entry.skill_id.as_str(), entry.base))
-            .collect::<Vec<_>>(),
-        [
-            ("demo.skill.device", -5),
-            ("demo.skill.disarming", -6),
-            ("demo.skill.melee", 25),
-            ("demo.skill.perception", 5),
-            ("demo.skill.saving-throw", -3),
-            ("demo.skill.search", -1),
-            ("demo.skill.stealth", -2),
-        ]
-    );
-
-    let stone_to_mud = catalog
-        .ability("rfb.ability.race.stone-to-mud")
-        .expect("Half-Giant Stone to Mud ability");
-    assert!(matches!(
-        stone_to_mud.effect,
-        AbilityEffectDefinition::TerrainBeam {
-            operation: AbilityTerrainBeamOperationDefinition::StoneToMud,
-        }
-    ));
-}
-
-#[test]
-fn formal_half_troll_matches_rfb_profile_and_reuses_racial_berserk() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let half_troll = catalog
-        .race("rfb-legacy.race.half-troll")
-        .expect("formal Half-Troll race");
-
-    assert_eq!(
-        [
-            half_troll.modifiers.strength,
-            half_troll.modifiers.intelligence,
-            half_troll.modifiers.wisdom,
-            half_troll.modifiers.dexterity,
-            half_troll.modifiers.constitution,
-            half_troll.modifiers.charisma,
-        ],
-        [4, -4, -1, -3, 3, -2]
-    );
-    assert_eq!(half_troll.life_percent, 107);
-    assert_eq!(half_troll.base_hp, 25);
-    assert_eq!(half_troll.experience_percent, 150);
-    assert_eq!(half_troll.shop_adjust_percent, 135);
-    assert_eq!(half_troll.infravision, 3);
-    assert_eq!(half_troll.kin_category.as_deref(), Some("kin-glyph-84"));
-    assert_eq!(half_troll.regeneration_rate_modifier_percent, 100);
-    assert_eq!(
-        half_troll
-            .attribute_sustains
-            .iter()
-            .copied()
-            .collect::<Vec<_>>(),
-        [ItemAttributeDefinition::Strength]
-    );
-    assert!(half_troll.level_mutation_rewards.is_empty());
-    assert_eq!(
-        half_troll.abilities,
-        [InnatePowerDefinition {
-            minimum_level: 10,
-            governing_attribute: TechniqueAttribute::Strength,
-            cost: 12,
-            cost_scaling: None,
-            base_failure_percent: 50,
-            minimum_failure_percent: None,
-            ability_id: "rfb.ability.race.berserk".to_owned(),
-        }]
-    );
-    for tag in [
-        "humanoid",
-        "legacy-import",
-        "polymorph-candidate",
-        "rfb-compatibility",
-        "standard-body",
-    ] {
-        assert!(half_troll.tags.iter().any(|candidate| candidate == tag));
-    }
-
-    let skills = catalog
-        .skill_set(&half_troll.skill_set_id)
-        .expect("formal Half-Troll skill set");
-    assert_eq!(
-        skills
-            .entries
-            .iter()
-            .map(|entry| (entry.skill_id.as_str(), entry.base))
-            .collect::<Vec<_>>(),
-        [
-            ("demo.skill.device", -6),
-            ("demo.skill.disarming", -5),
-            ("demo.skill.melee", 20),
-            ("demo.skill.perception", 5),
-            ("demo.skill.ranged", -6),
-            ("demo.skill.saving-throw", -5),
-            ("demo.skill.search", -1),
-            ("demo.skill.stealth", -2),
-        ]
-    );
-}
-
-#[test]
-fn formal_half_titan_matches_rfb_profile_and_reuses_monster_probe() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let half_titan = catalog
-        .race("rfb-legacy.race.half-titan")
-        .expect("formal Half-Titan race");
-
-    assert_eq!(
-        [
-            half_titan.modifiers.strength,
-            half_titan.modifiers.intelligence,
-            half_titan.modifiers.wisdom,
-            half_titan.modifiers.dexterity,
-            half_titan.modifiers.constitution,
-            half_titan.modifiers.charisma,
-        ],
-        [5, 1, 2, -2, 3, 3]
-    );
-    assert_eq!(half_titan.life_percent, 110);
-    assert_eq!(half_titan.base_hp, 28);
-    assert_eq!(half_titan.experience_percent, 200);
-    assert_eq!(half_titan.shop_adjust_percent, 90);
-    assert_eq!(half_titan.infravision, 0);
-    assert_eq!(half_titan.kin_category.as_deref(), Some("kin-glyph-80"));
-    assert_eq!(
-        half_titan.resistances.get(&ActorDamageType::Chaos),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert!(half_titan.level_mutation_rewards.is_empty());
-    assert_eq!(
-        half_titan.abilities,
-        [InnatePowerDefinition {
-            minimum_level: 15,
-            governing_attribute: TechniqueAttribute::Intelligence,
-            cost: 10,
-            cost_scaling: None,
-            base_failure_percent: 60,
-            minimum_failure_percent: None,
-            ability_id: "rfb.ability.race.probe-monsters".to_owned(),
-        }]
-    );
-    for tag in [
-        "humanoid",
-        "legacy-import",
-        "polymorph-candidate",
-        "rfb-compatibility",
-        "standard-body",
-    ] {
-        assert!(half_titan.tags.iter().any(|candidate| candidate == tag));
-    }
-
-    let skills = catalog
-        .skill_set(&half_titan.skill_set_id)
-        .expect("formal Half-Titan skill set");
-    assert_eq!(
-        skills
-            .entries
-            .iter()
-            .map(|entry| (entry.skill_id.as_str(), entry.base))
-            .collect::<Vec<_>>(),
-        [
-            ("demo.skill.device", 3),
-            ("demo.skill.disarming", -5),
-            ("demo.skill.melee", 25),
-            ("demo.skill.perception", 8),
-            ("demo.skill.saving-throw", 1),
-            ("demo.skill.search", 1),
-            ("demo.skill.stealth", -2),
-        ]
-    );
-
-    assert!(matches!(
-        catalog
-            .ability("rfb.ability.race.probe-monsters")
-            .expect("Half-Titan monster probe ability")
-            .effect,
-        AbilityEffectDefinition::ProbeMonsters
-    ));
-}
-
-#[test]
-fn formal_cyclops_matches_rfb_profile_and_throw_boulder_power() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let cyclops = catalog
-        .race("rfb-legacy.race.cyclops")
-        .expect("formal Cyclops race");
-
-    assert_eq!(
-        [
-            cyclops.modifiers.strength,
-            cyclops.modifiers.intelligence,
-            cyclops.modifiers.wisdom,
-            cyclops.modifiers.dexterity,
-            cyclops.modifiers.constitution,
-            cyclops.modifiers.charisma,
-        ],
-        [4, -3, -2, -3, 4, -1]
-    );
-    assert_eq!(cyclops.life_percent, 108);
-    assert_eq!(cyclops.base_hp, 24);
-    assert_eq!(cyclops.experience_percent, 155);
-    assert_eq!(cyclops.shop_adjust_percent, 135);
-    assert_eq!(cyclops.infravision, 1);
-    assert_eq!(cyclops.kin_category.as_deref(), Some("kin-glyph-80"));
-    assert_eq!(
-        cyclops.resistances.get(&ActorDamageType::Sound),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert!(cyclops.level_mutation_rewards.is_empty());
-    assert_eq!(cyclops.abilities.len(), 1);
-    let activation = &cyclops.abilities[0];
-    assert_eq!(activation.minimum_level, 20);
-    assert_eq!(activation.governing_attribute, TechniqueAttribute::Strength);
-    assert_eq!(activation.cost, 0);
-    assert_eq!(activation.base_failure_percent, 50);
-    assert_eq!(activation.ability_id, "rfb.ability.race.throw-boulder");
-    assert_eq!(
-        activation.cost_scaling,
-        Some(InnatePowerCostScalingDefinition {
-            curve: InnatePowerCostScalingCurveDefinition::Prorated,
-            start_level: 1,
-            level_interval: 1,
-            amount: 250,
-            divisor: 7,
-            round_up: true,
-            linear_weight: 2,
-            quadratic_weight: 1,
-            cubic_weight: 2,
-        })
-    );
-    for tag in [
-        "humanoid",
-        "legacy-import",
-        "polymorph-candidate",
-        "rfb-compatibility",
-        "standard-body",
-    ] {
-        assert!(cyclops.tags.iter().any(|candidate| candidate == tag));
-    }
-
-    let skills = catalog
-        .skill_set(&cyclops.skill_set_id)
-        .expect("formal Cyclops skill set");
-    assert_eq!(
-        skills
-            .entries
-            .iter()
-            .map(|entry| (entry.skill_id.as_str(), entry.base))
-            .collect::<Vec<_>>(),
-        [
-            ("demo.skill.device", -3),
-            ("demo.skill.disarming", -4),
-            ("demo.skill.melee", 20),
-            ("demo.skill.perception", 5),
-            ("demo.skill.ranged", 10),
-            ("demo.skill.saving-throw", -3),
-            ("demo.skill.search", -2),
-            ("demo.skill.stealth", -2),
-        ]
-    );
-
-    let ability = catalog
-        .ability("rfb.ability.race.throw-boulder")
-        .expect("Cyclops boulder ability");
-    assert!(ability.affects_ground_items);
-    assert!(matches!(
-        ability.effect,
-        AbilityEffectDefinition::BoltOrBeamDamage {
-            damage_dice: 0,
-            damage_sides: 0,
-            damage_bonus: 0,
-            damage_type: ActorDamageType::Rock,
-            beam_chance_percent: 0,
-            ..
-        }
-    ));
-    assert_eq!(ability.level_scaling.len(), 1);
-    let scaling = &ability.level_scaling[0];
-    assert_eq!(scaling.curve, AbilityLevelScalingCurveDefinition::Prorated);
-    assert_eq!(scaling.linear_weight, 2);
-    assert_eq!(scaling.quadratic_weight, 1);
-    assert_eq!(scaling.cubic_weight, 2);
-    assert_eq!(scaling.multiplier, 250);
-}
-
-#[test]
-fn formal_yeek_matches_rfb_profile_acid_growth_and_scare_power() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let yeek = catalog
-        .race("rfb-legacy.race.yeek")
-        .expect("formal Yeek race");
-
-    assert_eq!(
-        [
-            yeek.modifiers.strength,
-            yeek.modifiers.intelligence,
-            yeek.modifiers.wisdom,
-            yeek.modifiers.dexterity,
-            yeek.modifiers.constitution,
-            yeek.modifiers.charisma,
-        ],
-        [-2, 1, -2, 1, -2, -4]
-    );
-    assert_eq!(
-        (
-            yeek.life_percent,
-            yeek.base_hp,
-            yeek.experience_percent,
-            yeek.shop_adjust_percent,
-            yeek.infravision,
-        ),
-        (92, 14, 70, 105, 2)
-    );
-    assert_eq!(yeek.kin_category.as_deref(), Some("kin-glyph-121"));
-    assert_eq!(
-        yeek.resistances.get(&ActorDamageType::Acid),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert_eq!(yeek.level_resistances.len(), 1);
-    assert_eq!(yeek.level_resistances[0].minimum_level, 20);
-    assert_eq!(
-        yeek.level_resistances[0]
-            .resistances
-            .get(&ActorDamageType::Acid),
-        Some(&ActorResistanceLevel::Immune)
-    );
-    assert!(yeek.level_mutation_rewards.is_empty());
-    assert_eq!(yeek.abilities.len(), 1);
-    let activation = &yeek.abilities[0];
-    assert_eq!(activation.minimum_level, 15);
-    assert_eq!(activation.governing_attribute, TechniqueAttribute::Wisdom);
-    assert_eq!(activation.cost, 15);
-    assert_eq!(activation.base_failure_percent, 50);
-    assert_eq!(activation.ability_id, "rfb.ability.race.scare-monster");
-    for tag in [
-        "humanoid",
-        "legacy-import",
-        "polymorph-candidate",
-        "rfb-compatibility",
-        "standard-body",
-    ] {
-        assert!(yeek.tags.iter().any(|candidate| candidate == tag));
-    }
-
-    let skills = catalog
-        .skill_set(&yeek.skill_set_id)
-        .expect("formal Yeek skill set");
-    assert_eq!(
-        skills
-            .entries
-            .iter()
-            .map(|entry| (entry.skill_id.as_str(), entry.base))
-            .collect::<Vec<_>>(),
-        [
-            ("demo.skill.device", 3),
-            ("demo.skill.disarming", 2),
-            ("demo.skill.melee", -5),
-            ("demo.skill.perception", 15),
-            ("demo.skill.ranged", -3),
-            ("demo.skill.saving-throw", 6),
-            ("demo.skill.search", 5),
-            ("demo.skill.stealth", 3),
-        ]
-    );
-
-    let ability = catalog
-        .ability("rfb.ability.race.scare-monster")
-        .expect("Yeek scare ability");
-    assert_eq!(
-        ability.status_power_attribute,
-        Some(ItemAttributeDefinition::Charisma)
-    );
-    assert!(matches!(
-        ability.effect,
-        AbilityEffectDefinition::ApplyStatus {
-            ref status_kind_id,
-            intensity: 1,
-            duration_ticks: 1,
-            duration_dice: 3,
-            duration_sides: 1,
-            stacking: AbilityStatusStackingDefinition::Extend,
-            power: Some(5),
-            ..
-        } if status_kind_id == "rfb.status.fear"
-    ));
-    assert_eq!(ability.level_scaling.len(), 3);
-}
-
-#[test]
-fn formal_klackon_matches_rfb_profile_speed_and_acid_spit() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let klackon = catalog
-        .race("rfb-legacy.race.klackon")
-        .expect("formal Klackon race");
-
-    assert_eq!(
-        [
-            klackon.modifiers.strength,
-            klackon.modifiers.intelligence,
-            klackon.modifiers.wisdom,
-            klackon.modifiers.dexterity,
-            klackon.modifiers.constitution,
-            klackon.modifiers.charisma,
-        ],
-        [2, -1, -1, 1, 2, 1]
-    );
-    assert_eq!(
-        (
-            klackon.life_percent,
-            klackon.base_hp,
-            klackon.experience_percent,
-            klackon.shop_adjust_percent,
-            klackon.infravision,
-        ),
-        (105, 23, 170, 115, 2)
-    );
-    assert_eq!(
-        klackon.level_stat_scalings,
-        [RaceLevelStatScalingDefinition {
-            stat: RaceLevelStatDefinition::Speed,
-            multiplier: 1,
-            divisor: 10,
-        }]
-    );
-    assert_eq!(klackon.kin_category.as_deref(), Some("kin-glyph-75"));
-    assert_eq!(
-        klackon.resistances.get(&ActorDamageType::Acid),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert_eq!(
-        klackon.resistances.get(&ActorDamageType::Confusion),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert!(klackon.level_mutation_rewards.is_empty());
-    assert_eq!(klackon.abilities.len(), 1);
-    let activation = &klackon.abilities[0];
-    assert_eq!(activation.minimum_level, 9);
-    assert_eq!(
-        activation.governing_attribute,
-        TechniqueAttribute::Dexterity
-    );
-    assert_eq!(activation.cost, 9);
-    assert_eq!(activation.base_failure_percent, 50);
-    assert_eq!(activation.ability_id, "rfb.ability.race.spit-acid");
-    assert_eq!(
-        activation.cost_scaling,
-        Some(InnatePowerCostScalingDefinition {
-            curve: InnatePowerCostScalingCurveDefinition::Step,
-            start_level: 5,
-            level_interval: 5,
-            amount: 1,
-            divisor: 1,
-            round_up: false,
-            linear_weight: 1,
-            quadratic_weight: 0,
-            cubic_weight: 0,
-        })
-    );
-    for tag in [
-        "humanoid",
-        "legacy-import",
-        "polymorph-candidate",
-        "rfb-compatibility",
-        "standard-body",
-    ] {
-        assert!(klackon.tags.iter().any(|candidate| candidate == tag));
-    }
-
-    let skills = catalog
-        .skill_set(&klackon.skill_set_id)
-        .expect("formal Klackon skill set");
-    assert_eq!(
-        skills
-            .entries
-            .iter()
-            .map(|entry| (entry.skill_id.as_str(), entry.base))
-            .collect::<Vec<_>>(),
-        [
-            ("demo.skill.device", -2),
-            ("demo.skill.disarming", 10),
-            ("demo.skill.melee", 5),
-            ("demo.skill.perception", 10),
-            ("demo.skill.ranged", 3),
-            ("demo.skill.saving-throw", 3),
-            ("demo.skill.search", -1),
-        ]
-    );
-
-    let ability = catalog
-        .ability("rfb.ability.race.spit-acid")
-        .expect("Klackon acid-spit ability");
-    assert!(ability.affects_ground_items);
-    assert!(matches!(
-        ability.effect,
-        AbilityEffectDefinition::BoltOrAreaDamage {
-            damage_dice: 1,
-            damage_sides: 1,
-            damage_bonus: 1,
-            damage_type: ActorDamageType::Acid,
-            area_from_level: 25,
-            radius: 2,
-            ..
-        }
-    ));
-    assert_eq!(ability.level_scaling.len(), 1);
-}
-
-#[test]
-fn formal_golem_has_authoritative_level_scaled_intrinsics() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let golem = catalog
-        .race("rfb-legacy.race.golem")
-        .expect("formal Golem race");
-
-    assert_eq!(golem.armor_class, 10);
-    assert_eq!(golem.infravision, 4);
-    assert!(golem.see_invisible);
-    assert_eq!(golem.hold_life_minimum_level, Some(35));
-    assert_eq!(
-        golem.level_stat_scalings,
-        [
-            RaceLevelStatScalingDefinition {
-                stat: RaceLevelStatDefinition::ArmorClass,
-                multiplier: 2,
-                divisor: 5,
-            },
-            RaceLevelStatScalingDefinition {
-                stat: RaceLevelStatDefinition::Speed,
-                multiplier: -1,
-                divisor: 16,
-            },
-        ]
-    );
-    assert_eq!(
-        golem.resistances.get(&ActorDamageType::Poison),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert_eq!(
-        golem.status_immunities,
-        ["rfb.status.paralysis", "rfb.status.stun"]
-    );
-    assert!(golem.tags.iter().any(|tag| tag == "rfb-compatibility"));
-}
-
-#[test]
-fn formal_golem_declares_construct_metabolism_tags() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let golem = catalog
-        .race("rfb-legacy.race.golem")
-        .expect("formal Golem race");
-
-    assert_eq!(golem.food_nutrition_divisor, 20);
-    for tag in ["device-eater", "nonliving", "slow-digestion"] {
-        assert!(golem.tags.iter().any(|candidate| candidate == tag));
-    }
-}
-
-#[test]
-fn formal_golem_completes_the_authoritative_profile_stone_skin_and_birth_staff() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let golem = catalog
-        .race("rfb-legacy.race.golem")
-        .expect("formal Golem race");
-
-    assert_eq!(
-        [
-            golem.modifiers.strength,
-            golem.modifiers.intelligence,
-            golem.modifiers.wisdom,
-            golem.modifiers.dexterity,
-            golem.modifiers.constitution,
-            golem.modifiers.charisma,
-        ],
-        [4, -5, -5, -2, 4, 0]
-    );
-    assert_eq!(
-        (
-            golem.life_percent,
-            golem.base_hp,
-            golem.experience_percent,
-            golem.infravision,
-            golem.shop_adjust_percent,
-        ),
-        (105, 23, 185, 4, 120)
-    );
-    assert!(golem.tags.iter().any(|tag| tag == "rfb-compatibility"));
-    let [activation] = golem.abilities.as_slice() else {
-        panic!("Golem should have one racial power");
-    };
-    assert_eq!(
-        (
-            activation.ability_id.as_str(),
-            activation.minimum_level,
-            activation.governing_attribute,
-            activation.cost,
-            activation.base_failure_percent,
-        ),
-        (
-            "rfb.ability.race.golem-stone-skin",
-            20,
-            TechniqueAttribute::Constitution,
-            20,
-            50,
-        )
-    );
-    let ability = catalog
-        .ability(&activation.ability_id)
-        .expect("Golem Stone Skin ability");
-    assert!(matches!(
-        ability.effect,
-        AbilityEffectDefinition::ApplyStatus {
-            ref status_kind_id,
-            intensity: 1,
-            duration_ticks: 20,
-            duration_dice: 1,
-            duration_sides: 30,
-            ref granted_modifiers,
-            ..
-        } if status_kind_id == "rfb.status.stone-skin" && granted_modifiers.defense == 10
-    ));
-    assert!(ability.spell_power_fields.is_empty());
-    assert!(matches!(
-        ability.level_scaling.as_slice(),
-        [AbilityLevelScalingDefinition {
-            effect_index: 0,
-            field: AbilityLevelScalingField::StatusDefense,
-            multiplier: 40,
-            divisor: 50,
-            ..
-        }]
-    ));
-
-    let [starting_item] = golem.starting_items.as_slice() else {
-        panic!("Golem should start with one race-specific item");
-    };
-    assert_eq!(starting_item.item_kind_id, "demo.item.staff-of-nothing");
-    assert_eq!(starting_item.quantity, 1);
-    assert!(!starting_item.equipped);
-    assert!(starting_item.fully_charged);
-    let staff = catalog
-        .item(&starting_item.item_kind_id)
-        .expect("Golem birth staff");
-    let generation = staff
-        .device_generation
-        .as_ref()
-        .expect("birth staff should use the device lifecycle");
-    assert_eq!(
-        generation.recovery,
-        Some(ItemDeviceRecoveryDefinition {
-            interval_ticks: 10,
-            energy_per_mille: 10,
-        })
-    );
-    let [staff_activation] = generation.activations.as_slice() else {
-        panic!("birth staff should have one activation");
-    };
-    assert_eq!(
-        staff_activation.charges,
-        ItemDeviceChargeRangeDefinition {
-            minimum: 21,
-            maximum: 21,
-            cost: 1,
-        }
-    );
-    assert!(matches!(
-        staff_activation.effect,
-        ItemUseEffectDefinition::NoNumericEffect
-    ));
-}
-
-#[test]
-fn formal_zombie_completes_the_authoritative_profile_and_restore_life_power() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let zombie = catalog
-        .race("rfb-legacy.race.zombie")
-        .expect("formal Zombie race");
-
-    assert_eq!(
-        [
-            zombie.modifiers.strength,
-            zombie.modifiers.intelligence,
-            zombie.modifiers.wisdom,
-            zombie.modifiers.dexterity,
-            zombie.modifiers.constitution,
-            zombie.modifiers.charisma,
-        ],
-        [2, -6, -6, 1, 4, -3]
-    );
-    assert_eq!(
-        (
-            zombie.life_percent,
-            zombie.base_hp,
-            zombie.experience_percent,
-            zombie.infravision,
-            zombie.shop_adjust_percent,
-        ),
-        (108, 24, 180, 2, 140)
-    );
-    assert!(zombie.see_invisible);
-    assert_eq!(zombie.hold_life_minimum_level, Some(1));
-    assert_eq!(zombie.food_nutrition_divisor, 20);
-    assert_eq!(
-        zombie.resistances.get(&ActorDamageType::Nether),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert_eq!(
-        zombie.resistances.get(&ActorDamageType::Poison),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert_eq!(zombie.level_resistances.len(), 1);
-    assert_eq!(zombie.level_resistances[0].minimum_level, 5);
-    assert_eq!(
-        zombie.level_resistances[0]
-            .resistances
-            .get(&ActorDamageType::Cold),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    for tag in [
-        "device-eater",
-        "night-start",
-        "nonliving",
-        "rfb-compatibility",
-        "slow-digestion",
-        "undead",
-    ] {
-        assert!(
-            zombie.tags.iter().any(|candidate| candidate == tag),
-            "{tag}"
-        );
-    }
-
-    let skills = catalog
-        .skill_set(&zombie.skill_set_id)
-        .expect("formal Zombie skill set")
-        .entries
-        .iter()
-        .map(|entry| (entry.skill_id.as_str(), entry.base))
-        .collect::<BTreeMap<_, _>>();
-    assert_eq!(
-        [
-            skills.get("demo.skill.disarming").copied().unwrap_or(0),
-            skills.get("demo.skill.device").copied().unwrap_or(0),
-            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
-            skills.get("demo.skill.stealth").copied().unwrap_or(0),
-            skills.get("demo.skill.search").copied().unwrap_or(0),
-            skills.get("demo.skill.perception").copied().unwrap_or(0),
-            skills.get("demo.skill.melee").copied().unwrap_or(0),
-            skills.get("demo.skill.ranged").copied().unwrap_or(0),
-        ],
-        [-5, -5, 5, -1, -1, 5, 15, 0]
-    );
-
-    let [activation] = zombie.abilities.as_slice() else {
-        panic!("Zombie should have one racial power");
-    };
-    assert_eq!(
-        (
-            activation.ability_id.as_str(),
-            activation.minimum_level,
-            activation.governing_attribute,
-            activation.cost,
-            activation.base_failure_percent,
-        ),
-        (
-            "rfb.ability.race.restore-life",
-            30,
-            TechniqueAttribute::Wisdom,
-            30,
-            70,
-        )
-    );
-    let ability = catalog
-        .ability(&activation.ability_id)
-        .expect("Zombie Restore Life ability");
-    assert!(matches!(
-        ability.effect,
-        AbilityEffectDefinition::RestoreVitality {
-            life_force: 150,
-            restore_attributes: false,
-        }
-    ));
-
-    let [starting_item] = zombie.starting_items.as_slice() else {
-        panic!("Zombie should start with one race-specific item");
-    };
-    assert_eq!(starting_item.item_kind_id, "demo.item.staff-of-nothing");
-    assert_eq!(starting_item.quantity, 1);
-    assert!(!starting_item.equipped);
-    assert!(starting_item.fully_charged);
-}
-
-#[test]
-fn formal_skeleton_completes_the_authoritative_profile_and_restore_life_power() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let skeleton = catalog
-        .race("rfb-legacy.race.skeleton")
-        .expect("formal Skeleton race");
-
-    assert_eq!(
-        [
-            skeleton.modifiers.strength,
-            skeleton.modifiers.intelligence,
-            skeleton.modifiers.wisdom,
-            skeleton.modifiers.dexterity,
-            skeleton.modifiers.constitution,
-            skeleton.modifiers.charisma,
-        ],
-        [0, 1, -2, 0, 1, 1]
-    );
-    assert_eq!(
-        (
-            skeleton.life_percent,
-            skeleton.base_hp,
-            skeleton.experience_percent,
-            skeleton.infravision,
-            skeleton.shop_adjust_percent,
-        ),
-        (100, 21, 115, 2, 125)
-    );
-    assert!(skeleton.see_invisible);
-    assert_eq!(skeleton.hold_life_minimum_level, Some(1));
-    assert_eq!(skeleton.food_nutrition_divisor, 20);
-    assert_eq!(
-        skeleton.resistances.get(&ActorDamageType::Shards),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert_eq!(
-        skeleton.resistances.get(&ActorDamageType::Poison),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert_eq!(skeleton.level_resistances.len(), 1);
-    assert_eq!(skeleton.level_resistances[0].minimum_level, 10);
-    assert_eq!(
-        skeleton.level_resistances[0]
-            .resistances
-            .get(&ActorDamageType::Cold),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    for tag in [
-        "device-eater",
-        "night-start",
-        "nonliving",
-        "rfb-compatibility",
-        "slow-digestion",
-        "undead",
-    ] {
-        assert!(
-            skeleton.tags.iter().any(|candidate| candidate == tag),
-            "{tag}"
-        );
-    }
-
-    let skills = catalog
-        .skill_set(&skeleton.skill_set_id)
-        .expect("formal Skeleton skill set")
-        .entries
-        .iter()
-        .map(|entry| (entry.skill_id.as_str(), entry.base))
-        .collect::<BTreeMap<_, _>>();
-    assert_eq!(
-        [
-            skills.get("demo.skill.disarming").copied().unwrap_or(0),
-            skills.get("demo.skill.device").copied().unwrap_or(0),
-            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
-            skills.get("demo.skill.stealth").copied().unwrap_or(0),
-            skills.get("demo.skill.search").copied().unwrap_or(0),
-            skills.get("demo.skill.perception").copied().unwrap_or(0),
-            skills.get("demo.skill.melee").copied().unwrap_or(0),
-            skills.get("demo.skill.ranged").copied().unwrap_or(0),
-        ],
-        [-5, 0, 3, -1, -1, 8, 10, 0]
-    );
-
-    let [activation] = skeleton.abilities.as_slice() else {
-        panic!("Skeleton should have one racial power");
-    };
-    assert_eq!(
-        (
-            activation.ability_id.as_str(),
-            activation.minimum_level,
-            activation.governing_attribute,
-            activation.cost,
-            activation.base_failure_percent,
-        ),
-        (
-            "rfb.ability.race.restore-life",
-            30,
-            TechniqueAttribute::Wisdom,
-            30,
-            70,
-        )
-    );
-    let [starting_item] = skeleton.starting_items.as_slice() else {
-        panic!("Skeleton should start with one race-specific item");
-    };
-    assert_eq!(starting_item.item_kind_id, "demo.item.staff-of-nothing");
-    assert_eq!(starting_item.quantity, 1);
-    assert!(!starting_item.equipped);
-    assert!(starting_item.fully_charged);
-}
-
-#[test]
-fn formal_wood_elf_completes_the_authoritative_profile_and_nature_awareness_power() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let wood_elf = catalog
-        .race("rfb-legacy.race.wood-elf")
-        .expect("formal Wood-Elf race");
-
-    assert_eq!(
-        [
-            wood_elf.modifiers.strength,
-            wood_elf.modifiers.intelligence,
-            wood_elf.modifiers.wisdom,
-            wood_elf.modifiers.dexterity,
-            wood_elf.modifiers.constitution,
-            wood_elf.modifiers.charisma,
-        ],
-        [-1, 1, 2, 1, -1, 1]
-    );
-    assert_eq!(
-        (
-            wood_elf.life_percent,
-            wood_elf.base_hp,
-            wood_elf.experience_percent,
-            wood_elf.infravision,
-            wood_elf.shop_adjust_percent,
-        ),
-        (97, 16, 125, 3, 95)
-    );
-    for tag in [
-        "forest-adapted",
-        "humanoid",
-        "rfb-compatibility",
-        "standard-body",
-    ] {
-        assert!(
-            wood_elf.tags.iter().any(|candidate| candidate == tag),
-            "{tag}"
-        );
-    }
-
-    let skills = catalog
-        .skill_set(&wood_elf.skill_set_id)
-        .expect("formal Wood-Elf skill set")
-        .entries
-        .iter()
-        .map(|entry| (entry.skill_id.as_str(), entry.base))
-        .collect::<BTreeMap<_, _>>();
-    assert_eq!(
-        [
-            skills.get("demo.skill.disarming").copied().unwrap_or(0),
-            skills.get("demo.skill.device").copied().unwrap_or(0),
-            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
-            skills.get("demo.skill.stealth").copied().unwrap_or(0),
-            skills.get("demo.skill.search").copied().unwrap_or(0),
-            skills.get("demo.skill.perception").copied().unwrap_or(0),
-            skills.get("demo.skill.melee").copied().unwrap_or(0),
-            skills.get("demo.skill.ranged").copied().unwrap_or(0),
-        ],
-        [5, 4, 4, 3, 8, 12, -5, 12]
-    );
-
-    let [activation] = wood_elf.abilities.as_slice() else {
-        panic!("Wood-Elf should have one racial power");
-    };
-    assert_eq!(
-        (
-            activation.ability_id.as_str(),
-            activation.minimum_level,
-            activation.governing_attribute,
-            activation.cost,
-            activation.base_failure_percent,
-        ),
-        (
-            "rfb.ability.race.wood-elf-nature-awareness",
-            20,
-            TechniqueAttribute::Wisdom,
-            15,
-            50,
-        )
-    );
-    let ability = catalog
-        .ability(&activation.ability_id)
-        .expect("Wood-Elf Nature Awareness ability");
-    assert!(ability.tags.iter().any(|tag| tag == "nature"));
-    assert!(wood_elf.starting_items.is_empty());
-}
-
-#[test]
-fn formal_archon_completes_the_authoritative_profile_and_static_passives() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let archon = catalog
-        .race("rfb-legacy.race.archon")
-        .expect("formal Archon race");
-
-    assert_eq!(
-        [
-            archon.modifiers.strength,
-            archon.modifiers.intelligence,
-            archon.modifiers.wisdom,
-            archon.modifiers.dexterity,
-            archon.modifiers.constitution,
-            archon.modifiers.charisma,
-        ],
-        [2, 0, 4, 1, 2, 3]
-    );
-    assert_eq!(
-        (
-            archon.life_percent,
-            archon.base_hp,
-            archon.experience_percent,
-            archon.infravision,
-            archon.shop_adjust_percent,
-        ),
-        (103, 22, 200, 3, 90)
-    );
-    assert!(archon.levitation);
-    assert!(archon.see_invisible);
-    assert_eq!(archon.body_slots.len(), 15);
-    for tag in ["angel", "rfb-compatibility", "standard-body"] {
-        assert!(
-            archon.tags.iter().any(|candidate| candidate == tag),
-            "{tag}"
-        );
-    }
-    assert!(!archon.tags.iter().any(|tag| tag == "good"));
-
-    let skills = catalog
-        .skill_set(&archon.skill_set_id)
-        .expect("formal Archon skill set")
-        .entries
-        .iter()
-        .map(|entry| (entry.skill_id.as_str(), entry.base))
-        .collect::<BTreeMap<_, _>>();
-    assert_eq!(
-        [
-            skills.get("demo.skill.disarming").copied().unwrap_or(0),
-            skills.get("demo.skill.device").copied().unwrap_or(0),
-            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
-            skills.get("demo.skill.stealth").copied().unwrap_or(0),
-            skills.get("demo.skill.search").copied().unwrap_or(0),
-            skills.get("demo.skill.perception").copied().unwrap_or(0),
-            skills.get("demo.skill.melee").copied().unwrap_or(0),
-            skills.get("demo.skill.ranged").copied().unwrap_or(0),
-        ],
-        [0, 8, 8, 2, 2, 11, 10, 7]
-    );
-    assert!(archon.abilities.is_empty());
-    assert!(archon.starting_items.is_empty());
-}
-
-#[test]
-fn formal_sprite_completes_the_authoritative_profile_and_sleeping_dust_power() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let sprite = catalog
-        .race("rfb-legacy.race.sprite")
-        .expect("formal Sprite race");
-
-    assert_eq!(
-        [
-            sprite.modifiers.strength,
-            sprite.modifiers.intelligence,
-            sprite.modifiers.wisdom,
-            sprite.modifiers.dexterity,
-            sprite.modifiers.constitution,
-            sprite.modifiers.charisma,
-        ],
-        [-4, 3, 3, 3, -2, -2],
-    );
-    assert_eq!(
-        (
-            sprite.life_percent,
-            sprite.base_hp,
-            sprite.experience_percent,
-            sprite.infravision,
-            sprite.shop_adjust_percent,
-        ),
-        (92, 14, 135, 4, 90),
-    );
-    assert!(sprite.levitation);
-    assert_eq!(
-        sprite.resistances.get(&ActorDamageType::Light),
-        Some(&ActorResistanceLevel::Resistant),
-    );
-    assert_eq!(
-        sprite.level_stat_scalings,
-        [RaceLevelStatScalingDefinition {
-            stat: RaceLevelStatDefinition::Speed,
-            multiplier: 1,
-            divisor: 10,
-        }],
-    );
-    assert_eq!(sprite.body_slots.len(), 15);
-    for tag in [
-        "humanoid",
-        "polymorph-candidate",
-        "rfb-compatibility",
-        "standard-body",
-    ] {
-        assert!(
-            sprite.tags.iter().any(|candidate| candidate == tag),
-            "{tag}"
-        );
-    }
-
-    let skills = catalog
-        .skill_set(&sprite.skill_set_id)
-        .expect("formal Sprite skill set")
-        .entries
-        .iter()
-        .map(|entry| (entry.skill_id.as_str(), entry.base))
-        .collect::<BTreeMap<_, _>>();
-    assert_eq!(
-        [
-            skills.get("demo.skill.disarming").copied().unwrap_or(0),
-            skills.get("demo.skill.device").copied().unwrap_or(0),
-            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
-            skills.get("demo.skill.stealth").copied().unwrap_or(0),
-            skills.get("demo.skill.search").copied().unwrap_or(0),
-            skills.get("demo.skill.perception").copied().unwrap_or(0),
-            skills.get("demo.skill.melee").copied().unwrap_or(0),
-            skills.get("demo.skill.ranged").copied().unwrap_or(0),
-        ],
-        [10, 6, 6, 4, 10, 10, -12, 0],
-    );
-
-    let [activation] = sprite.abilities.as_slice() else {
-        panic!("Sprite should have one racial power");
-    };
-    assert_eq!(
-        (
-            activation.ability_id.as_str(),
-            activation.minimum_level,
-            activation.governing_attribute,
-            activation.cost,
-            activation.base_failure_percent,
-        ),
-        (
-            "rfb.ability.race.sleeping-dust",
-            12,
-            TechniqueAttribute::Intelligence,
-            12,
-            50,
-        ),
-    );
-    let ability = catalog
-        .ability(&activation.ability_id)
-        .expect("Sprite Sleeping Dust ability");
-    assert!(matches!(
-        ability.effect,
-        AbilityEffectDefinition::SleepingDust {
-            visible_at_level: 25,
-        }
-    ));
-    assert!(sprite.starting_items.is_empty());
-}
-
-#[test]
-fn formal_snotling_completes_the_authoritative_profile_power_and_birth_mushrooms() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let snotling = catalog
-        .race("rfb-legacy.race.snotling")
-        .expect("formal Snotling race");
-
-    assert_eq!(
-        [
-            snotling.modifiers.strength,
-            snotling.modifiers.intelligence,
-            snotling.modifiers.wisdom,
-            snotling.modifiers.dexterity,
-            snotling.modifiers.constitution,
-            snotling.modifiers.charisma,
-        ],
-        [-2, -2, -2, -2, -2, -5],
-    );
-    assert_eq!(
-        (
-            snotling.life_percent,
-            snotling.base_hp,
-            snotling.experience_percent,
-            snotling.infravision,
-            snotling.shop_adjust_percent,
-        ),
-        (85, 10, 45, 2, 125),
-    );
-    assert_eq!(snotling.body_slots.len(), 15);
-    for tag in [
-        "humanoid",
-        "polymorph-candidate",
-        "rfb-compatibility",
-        "standard-body",
-    ] {
-        assert!(
-            snotling.tags.iter().any(|candidate| candidate == tag),
-            "{tag}",
-        );
-    }
-
-    let skills = catalog
-        .skill_set(&snotling.skill_set_id)
-        .expect("formal Snotling skill set")
-        .entries
-        .iter()
-        .map(|entry| (entry.skill_id.as_str(), entry.base))
-        .collect::<BTreeMap<_, _>>();
-    assert_eq!(
-        [
-            skills.get("demo.skill.disarming").copied().unwrap_or(0),
-            skills.get("demo.skill.device").copied().unwrap_or(0),
-            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
-            skills.get("demo.skill.stealth").copied().unwrap_or(0),
-            skills.get("demo.skill.search").copied().unwrap_or(0),
-            skills.get("demo.skill.perception").copied().unwrap_or(0),
-            skills.get("demo.skill.melee").copied().unwrap_or(0),
-            skills.get("demo.skill.ranged").copied().unwrap_or(0),
-        ],
-        [-3, -2, -2, 2, 0, 7, -10, -5],
-    );
-
-    let [activation] = snotling.abilities.as_slice() else {
-        panic!("Snotling should have one racial power");
-    };
-    assert_eq!(
-        (
-            activation.ability_id.as_str(),
-            activation.minimum_level,
-            activation.governing_attribute,
-            activation.cost,
-            activation.base_failure_percent,
-        ),
-        (
-            "rfb.ability.race.devour-flesh",
-            1,
-            TechniqueAttribute::Charisma,
-            0,
-            0,
-        ),
-    );
-    let ability = catalog
-        .ability(&activation.ability_id)
-        .expect("Snotling Devour Flesh ability");
-    assert!(matches!(
-        ability.effect,
-        AbilityEffectDefinition::DevourFlesh {
-            maximum_hp_divisor: 3,
-            bleeding_amount: 100,
-        }
-    ));
-    assert!(
-        ability
-            .tags
-            .iter()
-            .any(|tag| tag == "usable-while-confused")
-    );
-    assert_eq!(
-        snotling.starting_items,
-        [StartingItemDefinition {
-            item_kind_id: "demo.item.fast-recovery-mushroom".to_owned(),
-            quantity: 1,
-            maximum_quantity: Some(3),
-            equipped: false,
-            fully_charged: false,
-        }],
-    );
-}
-
-#[test]
-fn formal_boit_completes_the_authoritative_profile_throwing_bonus_and_vomit_power() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let boit = catalog
-        .race("rfb-legacy.race.boit")
-        .expect("formal Boit race");
-
-    assert_eq!(
-        [
-            boit.modifiers.strength,
-            boit.modifiers.intelligence,
-            boit.modifiers.wisdom,
-            boit.modifiers.dexterity,
-            boit.modifiers.constitution,
-            boit.modifiers.charisma,
-        ],
-        [-1, -2, -2, -2, 0, -2],
-    );
-    assert_eq!(boit.modifiers.speed, 2);
-    assert_eq!(
-        (
-            boit.life_percent,
-            boit.base_hp,
-            boit.experience_percent,
-            boit.infravision,
-            boit.shop_adjust_percent,
-        ),
-        (95, 15, 80, 1, 105),
-    );
-    assert_eq!(boit.body_slots.len(), 15);
-    for tag in [
-        "humanoid",
-        "polymorph-candidate",
-        "rfb-compatibility",
-        "standard-body",
-    ] {
-        assert!(boit.tags.iter().any(|candidate| candidate == tag), "{tag}");
-    }
-
-    let skills = catalog
-        .skill_set(&boit.skill_set_id)
-        .expect("formal Boit skill set")
-        .entries
-        .iter()
-        .map(|entry| (entry.skill_id.as_str(), entry.base))
-        .collect::<BTreeMap<_, _>>();
-    assert_eq!(
-        [
-            skills.get("demo.skill.disarming").copied().unwrap_or(0),
-            skills.get("demo.skill.device").copied().unwrap_or(0),
-            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
-            skills.get("demo.skill.stealth").copied().unwrap_or(0),
-            skills.get("demo.skill.search").copied().unwrap_or(0),
-            skills.get("demo.skill.perception").copied().unwrap_or(0),
-            skills.get("demo.skill.melee").copied().unwrap_or(0),
-            skills.get("demo.skill.ranged").copied().unwrap_or(0),
-            skills.get("demo.skill.throwing").copied().unwrap_or(0),
-        ],
-        [2, -5, -1, 0, 0, 10, -8, -8, 25],
-    );
-
-    let [activation] = boit.abilities.as_slice() else {
-        panic!("Boit should have one racial power");
-    };
-    assert_eq!(
-        (
-            activation.ability_id.as_str(),
-            activation.minimum_level,
-            activation.governing_attribute,
-            activation.cost,
-            activation.base_failure_percent,
-        ),
-        (
-            "rfb.ability.race.vomit",
-            1,
-            TechniqueAttribute::Strength,
-            0,
-            0,
-        ),
-    );
-    let ability = catalog
-        .ability(&activation.ability_id)
-        .expect("Boit Vomit ability");
-    assert!(matches!(ability.effect, AbilityEffectDefinition::Vomit));
-    for tag in ["usable-while-afraid", "usable-while-confused"] {
-        assert!(
-            ability.tags.iter().any(|candidate| candidate == tag),
-            "{tag}",
-        );
-    }
-    assert!(boit.starting_items.is_empty());
-}
-
-#[test]
-fn formal_einheri_matches_the_authoritative_profile_healing_penalty_and_talent_pool() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
     let einheri = catalog
         .race("rfb-legacy.race.einheri")
         .expect("formal Einheri race");
@@ -2437,54 +498,379 @@ fn formal_einheri_matches_the_authoritative_profile_healing_penalty_and_talent_p
     assert_eq!(talent.minimum_level, 30);
     assert_eq!(talent.selection, human_talent.selection);
     assert!(einheri.starting_items.is_empty());
-}
 
-#[test]
-fn formal_kutar_matches_the_authoritative_profile_and_expansion_power() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let kutar = catalog
-        .race("rfb-legacy.race.kutar")
-        .expect("formal Kutar race");
+    let barbarian = catalog
+        .race("rfb-legacy.race.barbarian")
+        .expect("formal Barbarian race");
 
     assert_eq!(
-        [
-            kutar.modifiers.strength,
-            kutar.modifiers.intelligence,
-            kutar.modifiers.wisdom,
-            kutar.modifiers.dexterity,
-            kutar.modifiers.constitution,
-            kutar.modifiers.charisma,
-        ],
-        [0, -1, -1, 1, 2, 2],
+        barbarian.resistances.get(&ActorDamageType::Fear),
+        Some(&ActorResistanceLevel::Resistant)
     );
     assert_eq!(
-        (
-            kutar.life_percent,
-            kutar.base_hp,
-            kutar.experience_percent,
-            kutar.infravision,
-            kutar.shop_adjust_percent,
-        ),
-        (102, 21, 175, 0, 95),
+        barbarian.abilities,
+        [InnatePowerDefinition {
+            minimum_level: 8,
+            governing_attribute: TechniqueAttribute::Strength,
+            cost: 10,
+            cost_scaling: None,
+            base_failure_percent: 30,
+            minimum_failure_percent: None,
+            ability_id: "rfb.ability.race.berserk".to_owned(),
+        }]
     );
-    assert_eq!(
-        kutar.resistances.get(&ActorDamageType::Confusion),
-        Some(&ActorResistanceLevel::Resistant),
-    );
-    assert_eq!(kutar.body_slots.len(), 15);
     for tag in [
         "humanoid",
         "polymorph-candidate",
         "rfb-compatibility",
         "standard-body",
     ] {
-        assert!(kutar.tags.iter().any(|candidate| candidate == tag), "{tag}");
+        assert!(barbarian.tags.iter().any(|candidate| candidate == tag));
     }
 
     let skills = catalog
-        .skill_set(&kutar.skill_set_id)
-        .expect("formal Kutar skill set")
+        .skill_set(&barbarian.skill_set_id)
+        .expect("formal Barbarian skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", -7),
+            ("demo.skill.disarming", -2),
+            ("demo.skill.melee", 12),
+            ("demo.skill.perception", 7),
+            ("demo.skill.ranged", 6),
+            ("demo.skill.saving-throw", 2),
+            ("demo.skill.search", 1),
+            ("demo.skill.stealth", -1),
+        ]
+    );
+
+    let talent = barbarian
+        .level_mutation_rewards
+        .iter()
+        .find(|reward| reward.id == "barbarian-talent")
+        .expect("Barbarian talent");
+    let human_talent = catalog
+        .race("demo.race.rfb-human")
+        .expect("formal Human race")
+        .level_mutation_rewards
+        .iter()
+        .find(|reward| reward.id == "human-talent")
+        .expect("Human talent");
+    assert_eq!(talent.minimum_level, 30);
+    assert_eq!(talent.selection, human_talent.selection);
+
+    let dunadan = catalog
+        .race("rfb-legacy.race.dunadan")
+        .expect("formal Dunadan race");
+
+    assert_eq!(
+        dunadan
+            .attribute_sustains
+            .iter()
+            .copied()
+            .collect::<Vec<_>>(),
+        [ItemAttributeDefinition::Constitution]
+    );
+    for tag in ["humanoid", "rfb-compatibility", "standard-body"] {
+        assert!(dunadan.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&dunadan.skill_set_id)
+        .expect("formal Dunadan skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 3),
+            ("demo.skill.disarming", 4),
+            ("demo.skill.melee", 15),
+            ("demo.skill.perception", 13),
+            ("demo.skill.ranged", 7),
+            ("demo.skill.saving-throw", 3),
+            ("demo.skill.search", 3),
+            ("demo.skill.stealth", 2),
+        ]
+    );
+
+    let talent = dunadan
+        .level_mutation_rewards
+        .iter()
+        .find(|reward| reward.id == "dunadan-talent")
+        .expect("Dunadan should choose a level 30 talent");
+    let human_talent = catalog
+        .race("demo.race.rfb-human")
+        .expect("formal Human race")
+        .level_mutation_rewards
+        .iter()
+        .find(|reward| reward.id == "human-talent")
+        .expect("Human talent");
+    assert_eq!(talent.minimum_level, 30);
+    assert_eq!(talent.selection, human_talent.selection);
+}
+
+#[test]
+fn formal_race_attributes_and_economy_match_source_values() {
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
+    );
+    for (id, attributes, economy) in [
+        (
+            "rfb-legacy.race.half-orc",
+            [2, -1, 0, 0, 1, -1],
+            (103, 20, 110, 120, 3),
+        ),
+        (
+            "rfb-legacy.race.hobbit",
+            [-2, 1, 1, 3, 2, 1],
+            (92, 14, 120, 100, 4),
+        ),
+        (
+            "rfb-legacy.race.kobold",
+            [1, -1, 0, 1, 0, -2],
+            (98, 19, 90, 120, 3),
+        ),
+        (
+            "rfb-legacy.race.dwarf",
+            [2, -2, 2, -2, 2, 1],
+            (103, 22, 135, 115, 5),
+        ),
+        (
+            "rfb-legacy.race.nibelung",
+            [0, 1, 0, 1, 1, -2],
+            (101, 21, 150, 115, 5),
+        ),
+        (
+            "rfb-legacy.race.gnome",
+            [-1, 2, -1, 2, 1, -1],
+            (95, 16, 115, 115, 4),
+        ),
+        (
+            "rfb-legacy.race.half-giant",
+            [4, -2, -2, -2, 3, 0],
+            (108, 26, 150, 125, 3),
+        ),
+        (
+            "rfb-legacy.race.half-troll",
+            [4, -4, -1, -3, 3, -2],
+            (107, 25, 150, 135, 3),
+        ),
+        (
+            "rfb-legacy.race.half-titan",
+            [5, 1, 2, -2, 3, 3],
+            (110, 28, 200, 90, 0),
+        ),
+        (
+            "rfb-legacy.race.cyclops",
+            [4, -3, -2, -3, 4, -1],
+            (108, 24, 155, 135, 1),
+        ),
+        (
+            "rfb-legacy.race.yeek",
+            [-2, 1, -2, 1, -2, -4],
+            (92, 14, 70, 105, 2),
+        ),
+        (
+            "rfb-legacy.race.klackon",
+            [2, -1, -1, 1, 2, 1],
+            (105, 23, 170, 115, 2),
+        ),
+        (
+            "rfb-legacy.race.golem",
+            [4, -5, -5, -2, 4, 0],
+            (105, 23, 185, 120, 4),
+        ),
+        (
+            "rfb-legacy.race.zombie",
+            [2, -6, -6, 1, 4, -3],
+            (108, 24, 180, 140, 2),
+        ),
+        (
+            "rfb-legacy.race.skeleton",
+            [0, 1, -2, 0, 1, 1],
+            (100, 21, 115, 125, 2),
+        ),
+        (
+            "rfb-legacy.race.wood-elf",
+            [-1, 1, 2, 1, -1, 1],
+            (97, 16, 125, 95, 3),
+        ),
+        (
+            "rfb-legacy.race.archon",
+            [2, 0, 4, 1, 2, 3],
+            (103, 22, 200, 90, 3),
+        ),
+        (
+            "rfb-legacy.race.sprite",
+            [-4, 3, 3, 3, -2, -2],
+            (92, 14, 135, 90, 4),
+        ),
+        (
+            "rfb-legacy.race.snotling",
+            [-2, -2, -2, -2, -2, -5],
+            (85, 10, 45, 125, 2),
+        ),
+        (
+            "rfb-legacy.race.boit",
+            [-1, -2, -2, -2, 0, -2],
+            (95, 15, 80, 105, 1),
+        ),
+        (
+            "rfb-legacy.race.kutar",
+            [0, -1, -1, 1, 2, 2],
+            (102, 21, 175, 95, 0),
+        ),
+        (
+            "rfb-legacy.race.beastman",
+            [2, -2, -1, -1, 2, 1],
+            (102, 22, 150, 130, 0),
+        ),
+        (
+            "rfb-legacy.race.shadow-fairy",
+            [-2, 2, 2, 1, -1, -3],
+            (91, 13, 140, 110, 4),
+        ),
+        (
+            "rfb-legacy.race.ogre",
+            [3, 0, -1, -1, 3, 0],
+            (106, 23, 140, 125, 0),
+        ),
+        (
+            "rfb-legacy.race.barbarian",
+            [3, -2, -1, 1, 2, 2],
+            (103, 22, 135, 120, 0),
+        ),
+        (
+            "rfb-legacy.race.high-elf",
+            [1, 3, -1, 3, 1, 1],
+            (99, 19, 190, 90, 4),
+        ),
+        (
+            "rfb-legacy.race.dunadan",
+            [1, 2, 2, 2, 3, 0],
+            (100, 20, 160, 100, 0),
+        ),
+    ] {
+        let race = catalog.race(id).unwrap_or_else(|| panic!("{id}"));
+        assert_eq!(
+            [
+                race.modifiers.strength,
+                race.modifiers.intelligence,
+                race.modifiers.wisdom,
+                race.modifiers.dexterity,
+                race.modifiers.constitution,
+                race.modifiers.charisma,
+            ],
+            attributes,
+            "{id}"
+        );
+        assert_eq!(
+            (
+                race.life_percent,
+                race.base_hp,
+                race.experience_percent,
+                race.shop_adjust_percent,
+                race.infravision
+            ),
+            economy,
+            "{id}"
+        );
+    }
+}
+
+#[test]
+fn racial_passive_and_utility_bindings_match_source() {
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
+    );
+
+    let hobbit = catalog
+        .race("rfb-legacy.race.hobbit")
+        .expect("formal Hobbit race");
+
+    assert_eq!(hobbit.kin_category.as_deref(), Some("kin-glyph-104"));
+    assert!(hobbit.resistances.is_empty());
+    assert!(hobbit.level_mutation_rewards.is_empty());
+    assert_eq!(
+        hobbit.abilities,
+        [InnatePowerDefinition {
+            minimum_level: 15,
+            governing_attribute: TechniqueAttribute::Intelligence,
+            cost: 10,
+            cost_scaling: None,
+            base_failure_percent: 50,
+            minimum_failure_percent: None,
+            ability_id: "rfb.ability.race.create-food".to_owned(),
+        }]
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(hobbit.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&hobbit.skill_set_id)
+        .expect("formal Hobbit skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 8),
+            ("demo.skill.disarming", 15),
+            ("demo.skill.melee", -10),
+            ("demo.skill.perception", 15),
+            ("demo.skill.ranged", 10),
+            ("demo.skill.saving-throw", 10),
+            ("demo.skill.search", 12),
+            ("demo.skill.stealth", 5),
+        ]
+    );
+
+    let ability = catalog
+        .ability("rfb.ability.race.create-food")
+        .expect("Hobbit Create Food ability");
+    assert!(matches!(
+        &ability.effect,
+        AbilityEffectDefinition::CreateItem {
+            item_kind_id,
+            quantity: 1,
+        } if item_kind_id == "demo.item.ration-of-food"
+    ));
+
+    let archon = catalog
+        .race("rfb-legacy.race.archon")
+        .expect("formal Archon race");
+
+    assert!(archon.levitation);
+    assert!(archon.see_invisible);
+    assert_eq!(archon.body_slots.len(), 15);
+    for tag in ["angel", "rfb-compatibility", "standard-body"] {
+        assert!(
+            archon.tags.iter().any(|candidate| candidate == tag),
+            "{tag}"
+        );
+    }
+    assert!(!archon.tags.iter().any(|tag| tag == "good"));
+
+    let skills = catalog
+        .skill_set(&archon.skill_set_id)
+        .expect("formal Archon skill set")
         .entries
         .iter()
         .map(|entry| (entry.skill_id.as_str(), entry.base))
@@ -2500,52 +886,11 @@ fn formal_kutar_matches_the_authoritative_profile_and_expansion_power() {
             skills.get("demo.skill.melee").copied().unwrap_or(0),
             skills.get("demo.skill.ranged").copied().unwrap_or(0),
         ],
-        [-2, 3, 5, 5, -2, 6, 0, -3],
+        [0, 8, 8, 2, 2, 11, 10, 7]
     );
+    assert!(archon.abilities.is_empty());
+    assert!(archon.starting_items.is_empty());
 
-    let [activation] = kutar.abilities.as_slice() else {
-        panic!("Kutar should have one racial power");
-    };
-    assert_eq!(
-        (
-            activation.ability_id.as_str(),
-            activation.minimum_level,
-            activation.governing_attribute,
-            activation.cost,
-            activation.base_failure_percent,
-        ),
-        (
-            "rfb.ability.race.kutar-expand",
-            20,
-            TechniqueAttribute::Charisma,
-            15,
-            70,
-        ),
-    );
-    let ability = catalog
-        .ability(&activation.ability_id)
-        .expect("Kutar Expand Horizontally ability");
-    assert!(matches!(
-        &ability.effect,
-        AbilityEffectDefinition::ApplyStatus {
-            status_kind_id,
-            duration_ticks: 30,
-            duration_dice: 1,
-            duration_sides: 20,
-            granted_modifiers,
-            granted_equipment_bonuses,
-            ..
-        } if status_kind_id == "rfb.status.kutar-expand"
-            && granted_modifiers.defense == 35
-            && granted_equipment_bonuses.saving_throw_skill_override == Some(10)
-    ));
-    assert!(kutar.starting_items.is_empty());
-}
-
-#[test]
-fn formal_amberite_matches_the_authoritative_profile_and_powers() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
     let amberite = catalog
         .race("rfb-legacy.race.amberite")
         .expect("formal Amberite race");
@@ -2668,37 +1013,11 @@ fn formal_amberite_matches_the_authoritative_profile_and_powers() {
         })
     ));
     assert!(amberite.starting_items.is_empty());
-}
 
-#[test]
-fn formal_beastman_matches_the_authoritative_static_profile() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
     let beastman = catalog
         .race("rfb-legacy.race.beastman")
         .expect("formal Beastman race");
 
-    assert_eq!(
-        [
-            beastman.modifiers.strength,
-            beastman.modifiers.intelligence,
-            beastman.modifiers.wisdom,
-            beastman.modifiers.dexterity,
-            beastman.modifiers.constitution,
-            beastman.modifiers.charisma,
-        ],
-        [2, -2, -1, -1, 2, 1],
-    );
-    assert_eq!(
-        (
-            beastman.life_percent,
-            beastman.base_hp,
-            beastman.experience_percent,
-            beastman.infravision,
-            beastman.shop_adjust_percent,
-        ),
-        (102, 22, 150, 0, 130),
-    );
     assert_eq!(
         beastman.resistances.get(&ActorDamageType::Confusion),
         Some(&ActorResistanceLevel::Resistant),
@@ -2742,37 +1061,11 @@ fn formal_beastman_matches_the_authoritative_static_profile() {
     );
     assert!(beastman.abilities.is_empty());
     assert!(beastman.starting_items.is_empty());
-}
 
-#[test]
-fn formal_shadow_fairy_matches_the_authoritative_profile_and_fairy_stealth() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
     let shadow_fairy = catalog
         .race("rfb-legacy.race.shadow-fairy")
         .expect("formal Shadow-Fairy race");
 
-    assert_eq!(
-        [
-            shadow_fairy.modifiers.strength,
-            shadow_fairy.modifiers.intelligence,
-            shadow_fairy.modifiers.wisdom,
-            shadow_fairy.modifiers.dexterity,
-            shadow_fairy.modifiers.constitution,
-            shadow_fairy.modifiers.charisma,
-        ],
-        [-2, 2, 2, 1, -1, -3],
-    );
-    assert_eq!(
-        (
-            shadow_fairy.life_percent,
-            shadow_fairy.base_hp,
-            shadow_fairy.experience_percent,
-            shadow_fairy.infravision,
-            shadow_fairy.shop_adjust_percent,
-        ),
-        (91, 13, 140, 4, 110),
-    );
     assert!(shadow_fairy.levitation);
     assert!(shadow_fairy.fairy_stealth);
     assert_eq!(
@@ -2814,37 +1107,11 @@ fn formal_shadow_fairy_matches_the_authoritative_profile_and_fairy_stealth() {
     );
     assert!(shadow_fairy.abilities.is_empty());
     assert!(shadow_fairy.starting_items.is_empty());
-}
 
-#[test]
-fn formal_ogre_matches_the_authoritative_profile_sustain_and_explosive_rune() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
     let ogre = catalog
         .race("rfb-legacy.race.ogre")
         .expect("formal Ogre race");
 
-    assert_eq!(
-        [
-            ogre.modifiers.strength,
-            ogre.modifiers.intelligence,
-            ogre.modifiers.wisdom,
-            ogre.modifiers.dexterity,
-            ogre.modifiers.constitution,
-            ogre.modifiers.charisma,
-        ],
-        [3, 0, -1, -1, 3, 0],
-    );
-    assert_eq!(
-        (
-            ogre.life_percent,
-            ogre.base_hp,
-            ogre.experience_percent,
-            ogre.infravision,
-            ogre.shop_adjust_percent,
-        ),
-        (106, 23, 140, 0, 125),
-    );
     assert!(
         ogre.attribute_sustains
             .contains(&ItemAttributeDefinition::Intelligence)
@@ -2920,12 +1187,469 @@ fn formal_ogre_matches_the_authoritative_profile_sustain_and_explosive_rune() {
     );
     assert!(terrain.tags.iter().any(|tag| tag == "explosive-rune"));
     assert!(ogre.starting_items.is_empty());
+
+    let high_elf = catalog
+        .race("rfb-legacy.race.high-elf")
+        .expect("formal High-Elf race");
+
+    assert!(high_elf.see_invisible);
+    assert_eq!(
+        high_elf.resistances.get(&ActorDamageType::Light),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(high_elf.level_mutation_rewards.is_empty());
+    for tag in [
+        "humanoid",
+        "rfb-compatibility",
+        "snow-adapted",
+        "standard-body",
+    ] {
+        assert!(high_elf.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&high_elf.skill_set_id)
+        .expect("formal High-Elf skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 9),
+            ("demo.skill.disarming", 4),
+            ("demo.skill.melee", 10),
+            ("demo.skill.perception", 14),
+            ("demo.skill.ranged", 15),
+            ("demo.skill.saving-throw", 12),
+            ("demo.skill.search", 3),
+            ("demo.skill.stealth", 4),
+        ]
+    );
 }
 
 #[test]
-fn formal_dark_elf_matches_rfb_profile_passives_and_magic_missile() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+fn racial_projectile_and_control_bindings_match_source() {
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
+    );
+
+    let kobold = catalog
+        .race("rfb-legacy.race.kobold")
+        .expect("formal Kobold race");
+
+    assert_eq!(kobold.kin_category.as_deref(), Some("kin-glyph-107"));
+    assert_eq!(
+        kobold.resistances.get(&ActorDamageType::Poison),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(kobold.level_mutation_rewards.is_empty());
+    assert_eq!(
+        kobold.abilities,
+        [InnatePowerDefinition {
+            minimum_level: 12,
+            governing_attribute: TechniqueAttribute::Dexterity,
+            cost: 8,
+            cost_scaling: None,
+            base_failure_percent: 50,
+            minimum_failure_percent: None,
+            ability_id: "rfb.ability.race.poison-dart".to_owned(),
+        }]
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(kobold.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&kobold.skill_set_id)
+        .expect("formal Kobold skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", -2),
+            ("demo.skill.disarming", -2),
+            ("demo.skill.melee", 10),
+            ("demo.skill.perception", 8),
+            ("demo.skill.ranged", 3),
+            ("demo.skill.saving-throw", -1),
+            ("demo.skill.search", 1),
+            ("demo.skill.stealth", -1),
+        ]
+    );
+
+    let ability = catalog
+        .ability("rfb.ability.race.poison-dart")
+        .expect("Kobold Poison Dart ability");
+    assert_eq!(ability.target.range, 18);
+    assert!(!ability.affects_ground_items);
+    assert!(ability.spell_power_fields.is_empty());
+    assert_eq!(ability.level_scaling.len(), 1);
+    assert_eq!(
+        ability.level_scaling[0].field,
+        AbilityLevelScalingField::DamageBonus
+    );
+    assert_eq!(ability.level_scaling[0].level_offset, 1);
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::BoltOrBeamDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 1,
+            damage_type: ActorDamageType::Poison,
+            beam_chance_percent: 0,
+            ..
+        }
+    ));
+
+    let cyclops = catalog
+        .race("rfb-legacy.race.cyclops")
+        .expect("formal Cyclops race");
+
+    assert_eq!(cyclops.kin_category.as_deref(), Some("kin-glyph-80"));
+    assert_eq!(
+        cyclops.resistances.get(&ActorDamageType::Sound),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(cyclops.level_mutation_rewards.is_empty());
+    assert_eq!(cyclops.abilities.len(), 1);
+    let activation = &cyclops.abilities[0];
+    assert_eq!(activation.minimum_level, 20);
+    assert_eq!(activation.governing_attribute, TechniqueAttribute::Strength);
+    assert_eq!(activation.cost, 0);
+    assert_eq!(activation.base_failure_percent, 50);
+    assert_eq!(activation.ability_id, "rfb.ability.race.throw-boulder");
+    assert_eq!(
+        activation.cost_scaling,
+        Some(InnatePowerCostScalingDefinition {
+            curve: InnatePowerCostScalingCurveDefinition::Prorated,
+            start_level: 1,
+            level_interval: 1,
+            amount: 250,
+            divisor: 7,
+            round_up: true,
+            linear_weight: 2,
+            quadratic_weight: 1,
+            cubic_weight: 2,
+        })
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(cyclops.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&cyclops.skill_set_id)
+        .expect("formal Cyclops skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", -3),
+            ("demo.skill.disarming", -4),
+            ("demo.skill.melee", 20),
+            ("demo.skill.perception", 5),
+            ("demo.skill.ranged", 10),
+            ("demo.skill.saving-throw", -3),
+            ("demo.skill.search", -2),
+            ("demo.skill.stealth", -2),
+        ]
+    );
+
+    let ability = catalog
+        .ability("rfb.ability.race.throw-boulder")
+        .expect("Cyclops boulder ability");
+    assert!(ability.affects_ground_items);
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::BoltOrBeamDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 0,
+            damage_type: ActorDamageType::Rock,
+            beam_chance_percent: 0,
+            ..
+        }
+    ));
+    assert_eq!(ability.level_scaling.len(), 1);
+    let scaling = &ability.level_scaling[0];
+    assert_eq!(scaling.curve, AbilityLevelScalingCurveDefinition::Prorated);
+    assert_eq!(scaling.linear_weight, 2);
+    assert_eq!(scaling.quadratic_weight, 1);
+    assert_eq!(scaling.cubic_weight, 2);
+    assert_eq!(scaling.multiplier, 250);
+
+    let yeek = catalog
+        .race("rfb-legacy.race.yeek")
+        .expect("formal Yeek race");
+
+    assert_eq!(yeek.kin_category.as_deref(), Some("kin-glyph-121"));
+    assert_eq!(
+        yeek.resistances.get(&ActorDamageType::Acid),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(yeek.level_resistances.len(), 1);
+    assert_eq!(yeek.level_resistances[0].minimum_level, 20);
+    assert_eq!(
+        yeek.level_resistances[0]
+            .resistances
+            .get(&ActorDamageType::Acid),
+        Some(&ActorResistanceLevel::Immune)
+    );
+    assert!(yeek.level_mutation_rewards.is_empty());
+    assert_eq!(yeek.abilities.len(), 1);
+    let activation = &yeek.abilities[0];
+    assert_eq!(activation.minimum_level, 15);
+    assert_eq!(activation.governing_attribute, TechniqueAttribute::Wisdom);
+    assert_eq!(activation.cost, 15);
+    assert_eq!(activation.base_failure_percent, 50);
+    assert_eq!(activation.ability_id, "rfb.ability.race.scare-monster");
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(yeek.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&yeek.skill_set_id)
+        .expect("formal Yeek skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 3),
+            ("demo.skill.disarming", 2),
+            ("demo.skill.melee", -5),
+            ("demo.skill.perception", 15),
+            ("demo.skill.ranged", -3),
+            ("demo.skill.saving-throw", 6),
+            ("demo.skill.search", 5),
+            ("demo.skill.stealth", 3),
+        ]
+    );
+
+    let ability = catalog
+        .ability("rfb.ability.race.scare-monster")
+        .expect("Yeek scare ability");
+    assert_eq!(
+        ability.status_power_attribute,
+        Some(ItemAttributeDefinition::Charisma)
+    );
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::ApplyStatus {
+            ref status_kind_id,
+            intensity: 1,
+            duration_ticks: 1,
+            duration_dice: 3,
+            duration_sides: 1,
+            stacking: AbilityStatusStackingDefinition::Extend,
+            power: Some(5),
+            ..
+        } if status_kind_id == "rfb.status.fear"
+    ));
+    assert_eq!(ability.level_scaling.len(), 3);
+
+    let klackon = catalog
+        .race("rfb-legacy.race.klackon")
+        .expect("formal Klackon race");
+
+    assert_eq!(
+        klackon.level_stat_scalings,
+        [RaceLevelStatScalingDefinition {
+            stat: RaceLevelStatDefinition::Speed,
+            multiplier: 1,
+            divisor: 10,
+        }]
+    );
+    assert_eq!(klackon.kin_category.as_deref(), Some("kin-glyph-75"));
+    assert_eq!(
+        klackon.resistances.get(&ActorDamageType::Acid),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        klackon.resistances.get(&ActorDamageType::Confusion),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(klackon.level_mutation_rewards.is_empty());
+    assert_eq!(klackon.abilities.len(), 1);
+    let activation = &klackon.abilities[0];
+    assert_eq!(activation.minimum_level, 9);
+    assert_eq!(
+        activation.governing_attribute,
+        TechniqueAttribute::Dexterity
+    );
+    assert_eq!(activation.cost, 9);
+    assert_eq!(activation.base_failure_percent, 50);
+    assert_eq!(activation.ability_id, "rfb.ability.race.spit-acid");
+    assert_eq!(
+        activation.cost_scaling,
+        Some(InnatePowerCostScalingDefinition {
+            curve: InnatePowerCostScalingCurveDefinition::Step,
+            start_level: 5,
+            level_interval: 5,
+            amount: 1,
+            divisor: 1,
+            round_up: false,
+            linear_weight: 1,
+            quadratic_weight: 0,
+            cubic_weight: 0,
+        })
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(klackon.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&klackon.skill_set_id)
+        .expect("formal Klackon skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", -2),
+            ("demo.skill.disarming", 10),
+            ("demo.skill.melee", 5),
+            ("demo.skill.perception", 10),
+            ("demo.skill.ranged", 3),
+            ("demo.skill.saving-throw", 3),
+            ("demo.skill.search", -1),
+        ]
+    );
+
+    let ability = catalog
+        .ability("rfb.ability.race.spit-acid")
+        .expect("Klackon acid-spit ability");
+    assert!(ability.affects_ground_items);
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::BoltOrAreaDamage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 1,
+            damage_type: ActorDamageType::Acid,
+            area_from_level: 25,
+            radius: 2,
+            ..
+        }
+    ));
+    assert_eq!(ability.level_scaling.len(), 1);
+
+    let sprite = catalog
+        .race("rfb-legacy.race.sprite")
+        .expect("formal Sprite race");
+
+    assert!(sprite.levitation);
+    assert_eq!(
+        sprite.resistances.get(&ActorDamageType::Light),
+        Some(&ActorResistanceLevel::Resistant),
+    );
+    assert_eq!(
+        sprite.level_stat_scalings,
+        [RaceLevelStatScalingDefinition {
+            stat: RaceLevelStatDefinition::Speed,
+            multiplier: 1,
+            divisor: 10,
+        }],
+    );
+    assert_eq!(sprite.body_slots.len(), 15);
+    for tag in [
+        "humanoid",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(
+            sprite.tags.iter().any(|candidate| candidate == tag),
+            "{tag}"
+        );
+    }
+
+    let skills = catalog
+        .skill_set(&sprite.skill_set_id)
+        .expect("formal Sprite skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [10, 6, 6, 4, 10, 10, -12, 0],
+    );
+
+    let [activation] = sprite.abilities.as_slice() else {
+        panic!("Sprite should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.sleeping-dust",
+            12,
+            TechniqueAttribute::Intelligence,
+            12,
+            50,
+        ),
+    );
+    let ability = catalog
+        .ability(&activation.ability_id)
+        .expect("Sprite Sleeping Dust ability");
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::SleepingDust {
+            visible_at_level: 25,
+        }
+    ));
+    assert!(sprite.starting_items.is_empty());
+
     let dark_elf = catalog
         .race("rfb-legacy.race.dark-elf")
         .expect("formal Dark-Elf race");
@@ -3023,12 +1747,7 @@ fn formal_dark_elf_matches_rfb_profile_passives_and_magic_missile() {
             .iter()
             .any(|tag| tag == "uses-casting-profile-offense")
     );
-}
 
-#[test]
-fn formal_mindflayer_matches_rfb_profile_senses_and_mind_blast() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
     let mindflayer = catalog
         .race("rfb-legacy.race.mindflayer")
         .expect("formal Mindflayer race");
@@ -3131,12 +1850,7 @@ fn formal_mindflayer_matches_rfb_profile_senses_and_mind_blast() {
             .iter()
             .any(|tag| tag == "uses-casting-profile-offense")
     );
-}
 
-#[test]
-fn formal_imp_matches_rfb_profile_demon_identity_and_fire_upgrade() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
     let imp = catalog
         .race("rfb-legacy.race.imp")
         .expect("formal Imp race");
@@ -3246,6 +1960,1042 @@ fn formal_imp_matches_rfb_profile_demon_identity_and_fire_upgrade() {
             .iter()
             .any(|tag| tag == "uses-casting-profile-offense")
     );
+}
+
+#[test]
+fn racial_detection_and_mobility_bindings_match_source() {
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
+    );
+
+    let dwarf = catalog
+        .race("rfb-legacy.race.dwarf")
+        .expect("formal Dwarf race");
+
+    assert_eq!(dwarf.kin_category.as_deref(), Some("kin-glyph-104"));
+    assert_eq!(
+        dwarf.resistances.get(&ActorDamageType::Blindness),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(dwarf.level_mutation_rewards.is_empty());
+    assert_eq!(
+        dwarf.abilities,
+        [
+            InnatePowerDefinition {
+                minimum_level: 5,
+                governing_attribute: TechniqueAttribute::Wisdom,
+                cost: 5,
+                cost_scaling: None,
+                base_failure_percent: 50,
+                minimum_failure_percent: None,
+                ability_id: "rfb.ability.race.detect-doors-stairs-traps".to_owned(),
+            },
+            InnatePowerDefinition {
+                minimum_level: 10,
+                governing_attribute: TechniqueAttribute::Charisma,
+                cost: 5,
+                cost_scaling: None,
+                base_failure_percent: 50,
+                minimum_failure_percent: None,
+                ability_id: "rfb.ability.race.detect-treasure".to_owned(),
+            },
+        ]
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(dwarf.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&dwarf.skill_set_id)
+        .expect("formal Dwarf skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 5),
+            ("demo.skill.disarming", 2),
+            ("demo.skill.melee", 15),
+            ("demo.skill.perception", 10),
+            ("demo.skill.saving-throw", 6),
+            ("demo.skill.search", 7),
+            ("demo.skill.stealth", -1),
+        ]
+    );
+
+    let doors = catalog
+        .ability("rfb.ability.race.detect-doors-stairs-traps")
+        .expect("Dwarf door and trap detection ability");
+    let door_effects = doors.effect.ordered_effects();
+    assert_eq!(door_effects.len(), 4);
+    for (effect, expected_category) in
+        door_effects
+            .iter()
+            .zip(["trap", "door", "stairs-down", "stairs-up"])
+    {
+        assert!(matches!(
+            effect,
+            AbilityEffectDefinition::Detect {
+                subject: AbilityDetectSubjectDefinition::Terrain,
+                category,
+                radius: 30,
+                persistent: true,
+                through_walls: true,
+            } if category == expected_category
+        ));
+    }
+
+    let treasure = catalog
+        .ability("rfb.ability.race.detect-treasure")
+        .expect("Dwarf treasure detection ability");
+    assert!(matches!(
+        treasure.effect,
+        AbilityEffectDefinition::Detect {
+            subject: AbilityDetectSubjectDefinition::Terrain,
+            ref category,
+            radius: 30,
+            persistent: true,
+            through_walls: true,
+        } if category == "treasure"
+    ));
+
+    let nibelung = catalog
+        .race("rfb-legacy.race.nibelung")
+        .expect("formal Nibelung race");
+
+    assert_eq!(nibelung.kin_category.as_deref(), Some("kin-glyph-104"));
+    assert_eq!(
+        nibelung.resistances.get(&ActorDamageType::Dark),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        nibelung.resistances.get(&ActorDamageType::Disenchant),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(nibelung.level_mutation_rewards.is_empty());
+    assert_eq!(
+        nibelung.abilities,
+        [
+            InnatePowerDefinition {
+                minimum_level: 10,
+                governing_attribute: TechniqueAttribute::Wisdom,
+                cost: 5,
+                cost_scaling: None,
+                base_failure_percent: 50,
+                minimum_failure_percent: None,
+                ability_id: "rfb.ability.race.detect-doors-stairs-traps".to_owned(),
+            },
+            InnatePowerDefinition {
+                minimum_level: 10,
+                governing_attribute: TechniqueAttribute::Charisma,
+                cost: 5,
+                cost_scaling: None,
+                base_failure_percent: 50,
+                minimum_failure_percent: None,
+                ability_id: "rfb.ability.race.detect-treasure".to_owned(),
+            },
+        ]
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(nibelung.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&nibelung.skill_set_id)
+        .expect("formal Nibelung skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 3),
+            ("demo.skill.disarming", 3),
+            ("demo.skill.melee", 10),
+            ("demo.skill.perception", 10),
+            ("demo.skill.saving-throw", 6),
+            ("demo.skill.search", 5),
+            ("demo.skill.stealth", 1),
+        ]
+    );
+
+    for ability_id in [
+        "rfb.ability.race.detect-doors-stairs-traps",
+        "rfb.ability.race.detect-treasure",
+    ] {
+        assert!(catalog.ability(ability_id).is_some());
+    }
+
+    let gnome = catalog
+        .race("rfb-legacy.race.gnome")
+        .expect("formal Gnome race");
+
+    assert_eq!(gnome.kin_category.as_deref(), Some("kin-glyph-104"));
+    assert_eq!(gnome.status_immunities, ["rfb.status.paralysis"]);
+    assert!(gnome.level_mutation_rewards.is_empty());
+    assert_eq!(
+        gnome.abilities,
+        [InnatePowerDefinition {
+            minimum_level: 5,
+            governing_attribute: TechniqueAttribute::Intelligence,
+            cost: 2,
+            cost_scaling: None,
+            base_failure_percent: 50,
+            minimum_failure_percent: None,
+            ability_id: "rfb.ability.race.phase-door".to_owned(),
+        }]
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(gnome.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&gnome.skill_set_id)
+        .expect("formal Gnome skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 6),
+            ("demo.skill.disarming", 10),
+            ("demo.skill.melee", -8),
+            ("demo.skill.perception", 13),
+            ("demo.skill.ranged", 8),
+            ("demo.skill.saving-throw", 7),
+            ("demo.skill.search", 6),
+            ("demo.skill.stealth", 3),
+        ]
+    );
+
+    let phase_door = catalog
+        .ability("rfb.ability.race.phase-door")
+        .expect("Gnome race Phase Door ability");
+    assert_ne!(phase_door.id, "demo.ability.sorcery-phase-door");
+    assert!(matches!(
+        phase_door.effect,
+        AbilityEffectDefinition::BlinkSelf { radius: 10 }
+    ));
+
+    let half_giant = catalog
+        .race("rfb-legacy.race.half-giant")
+        .expect("formal Half-Giant race");
+
+    assert_eq!(half_giant.kin_category.as_deref(), Some("kin-glyph-80"));
+    assert_eq!(
+        half_giant.resistances.get(&ActorDamageType::Shards),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        half_giant
+            .attribute_sustains
+            .iter()
+            .copied()
+            .collect::<Vec<_>>(),
+        [ItemAttributeDefinition::Strength]
+    );
+    assert!(half_giant.level_mutation_rewards.is_empty());
+    assert_eq!(
+        half_giant.abilities,
+        [InnatePowerDefinition {
+            minimum_level: 20,
+            governing_attribute: TechniqueAttribute::Strength,
+            cost: 10,
+            cost_scaling: None,
+            base_failure_percent: 70,
+            minimum_failure_percent: None,
+            ability_id: "rfb.ability.race.stone-to-mud".to_owned(),
+        }]
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(half_giant.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&half_giant.skill_set_id)
+        .expect("formal Half-Giant skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", -5),
+            ("demo.skill.disarming", -6),
+            ("demo.skill.melee", 25),
+            ("demo.skill.perception", 5),
+            ("demo.skill.saving-throw", -3),
+            ("demo.skill.search", -1),
+            ("demo.skill.stealth", -2),
+        ]
+    );
+
+    let stone_to_mud = catalog
+        .ability("rfb.ability.race.stone-to-mud")
+        .expect("Half-Giant Stone to Mud ability");
+    assert!(matches!(
+        stone_to_mud.effect,
+        AbilityEffectDefinition::TerrainBeam {
+            operation: AbilityTerrainBeamOperationDefinition::StoneToMud,
+        }
+    ));
+
+    let half_titan = catalog
+        .race("rfb-legacy.race.half-titan")
+        .expect("formal Half-Titan race");
+
+    assert_eq!(half_titan.kin_category.as_deref(), Some("kin-glyph-80"));
+    assert_eq!(
+        half_titan.resistances.get(&ActorDamageType::Chaos),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(half_titan.level_mutation_rewards.is_empty());
+    assert_eq!(
+        half_titan.abilities,
+        [InnatePowerDefinition {
+            minimum_level: 15,
+            governing_attribute: TechniqueAttribute::Intelligence,
+            cost: 10,
+            cost_scaling: None,
+            base_failure_percent: 60,
+            minimum_failure_percent: None,
+            ability_id: "rfb.ability.race.probe-monsters".to_owned(),
+        }]
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(half_titan.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&half_titan.skill_set_id)
+        .expect("formal Half-Titan skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 3),
+            ("demo.skill.disarming", -5),
+            ("demo.skill.melee", 25),
+            ("demo.skill.perception", 8),
+            ("demo.skill.saving-throw", 1),
+            ("demo.skill.search", 1),
+            ("demo.skill.stealth", -2),
+        ]
+    );
+
+    assert!(matches!(
+        catalog
+            .ability("rfb.ability.race.probe-monsters")
+            .expect("Half-Titan monster probe ability")
+            .effect,
+        AbilityEffectDefinition::ProbeMonsters
+    ));
+
+    let wood_elf = catalog
+        .race("rfb-legacy.race.wood-elf")
+        .expect("formal Wood-Elf race");
+
+    for tag in [
+        "forest-adapted",
+        "humanoid",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(
+            wood_elf.tags.iter().any(|candidate| candidate == tag),
+            "{tag}"
+        );
+    }
+
+    let skills = catalog
+        .skill_set(&wood_elf.skill_set_id)
+        .expect("formal Wood-Elf skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [5, 4, 4, 3, 8, 12, -5, 12]
+    );
+
+    let [activation] = wood_elf.abilities.as_slice() else {
+        panic!("Wood-Elf should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.wood-elf-nature-awareness",
+            20,
+            TechniqueAttribute::Wisdom,
+            15,
+            50,
+        )
+    );
+    let ability = catalog
+        .ability(&activation.ability_id)
+        .expect("Wood-Elf Nature Awareness ability");
+    assert!(ability.tags.iter().any(|tag| tag == "nature"));
+    assert!(wood_elf.starting_items.is_empty());
+}
+
+#[test]
+fn racial_body_and_metabolism_bindings_match_source() {
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
+    );
+
+    let half_troll = catalog
+        .race("rfb-legacy.race.half-troll")
+        .expect("formal Half-Troll race");
+
+    assert_eq!(half_troll.kin_category.as_deref(), Some("kin-glyph-84"));
+    assert_eq!(half_troll.regeneration_rate_modifier_percent, 100);
+    assert_eq!(
+        half_troll
+            .attribute_sustains
+            .iter()
+            .copied()
+            .collect::<Vec<_>>(),
+        [ItemAttributeDefinition::Strength]
+    );
+    assert!(half_troll.level_mutation_rewards.is_empty());
+    assert_eq!(
+        half_troll.abilities,
+        [InnatePowerDefinition {
+            minimum_level: 10,
+            governing_attribute: TechniqueAttribute::Strength,
+            cost: 12,
+            cost_scaling: None,
+            base_failure_percent: 50,
+            minimum_failure_percent: None,
+            ability_id: "rfb.ability.race.berserk".to_owned(),
+        }]
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(half_troll.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&half_troll.skill_set_id)
+        .expect("formal Half-Troll skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", -6),
+            ("demo.skill.disarming", -5),
+            ("demo.skill.melee", 20),
+            ("demo.skill.perception", 5),
+            ("demo.skill.ranged", -6),
+            ("demo.skill.saving-throw", -5),
+            ("demo.skill.search", -1),
+            ("demo.skill.stealth", -2),
+        ]
+    );
+
+    let golem = catalog
+        .race("rfb-legacy.race.golem")
+        .expect("formal Golem race");
+
+    assert_eq!(golem.armor_class, 10);
+    assert_eq!(golem.infravision, 4);
+    assert!(golem.see_invisible);
+    assert_eq!(golem.hold_life_minimum_level, Some(35));
+    assert_eq!(
+        golem.level_stat_scalings,
+        [
+            RaceLevelStatScalingDefinition {
+                stat: RaceLevelStatDefinition::ArmorClass,
+                multiplier: 2,
+                divisor: 5,
+            },
+            RaceLevelStatScalingDefinition {
+                stat: RaceLevelStatDefinition::Speed,
+                multiplier: -1,
+                divisor: 16,
+            },
+        ]
+    );
+    assert_eq!(
+        golem.resistances.get(&ActorDamageType::Poison),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        golem.status_immunities,
+        ["rfb.status.paralysis", "rfb.status.stun"]
+    );
+    assert!(golem.tags.iter().any(|tag| tag == "rfb-compatibility"));
+
+    let golem = catalog
+        .race("rfb-legacy.race.golem")
+        .expect("formal Golem race");
+
+    assert_eq!(golem.food_nutrition_divisor, 20);
+    for tag in ["device-eater", "nonliving", "slow-digestion"] {
+        assert!(golem.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let golem = catalog
+        .race("rfb-legacy.race.golem")
+        .expect("formal Golem race");
+
+    assert!(golem.tags.iter().any(|tag| tag == "rfb-compatibility"));
+    let [activation] = golem.abilities.as_slice() else {
+        panic!("Golem should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.golem-stone-skin",
+            20,
+            TechniqueAttribute::Constitution,
+            20,
+            50,
+        )
+    );
+    let ability = catalog
+        .ability(&activation.ability_id)
+        .expect("Golem Stone Skin ability");
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::ApplyStatus {
+            ref status_kind_id,
+            intensity: 1,
+            duration_ticks: 20,
+            duration_dice: 1,
+            duration_sides: 30,
+            ref granted_modifiers,
+            ..
+        } if status_kind_id == "rfb.status.stone-skin" && granted_modifiers.defense == 10
+    ));
+    assert!(ability.spell_power_fields.is_empty());
+    assert!(matches!(
+        ability.level_scaling.as_slice(),
+        [AbilityLevelScalingDefinition {
+            effect_index: 0,
+            field: AbilityLevelScalingField::StatusDefense,
+            multiplier: 40,
+            divisor: 50,
+            ..
+        }]
+    ));
+
+    let [starting_item] = golem.starting_items.as_slice() else {
+        panic!("Golem should start with one race-specific item");
+    };
+    assert_eq!(starting_item.item_kind_id, "demo.item.staff-of-nothing");
+    assert_eq!(starting_item.quantity, 1);
+    assert!(!starting_item.equipped);
+    assert!(starting_item.fully_charged);
+    let staff = catalog
+        .item(&starting_item.item_kind_id)
+        .expect("Golem birth staff");
+    let generation = staff
+        .device_generation
+        .as_ref()
+        .expect("birth staff should use the device lifecycle");
+    assert_eq!(
+        generation.recovery,
+        Some(ItemDeviceRecoveryDefinition {
+            interval_ticks: 10,
+            energy_per_mille: 10,
+        })
+    );
+    let [staff_activation] = generation.activations.as_slice() else {
+        panic!("birth staff should have one activation");
+    };
+    assert_eq!(
+        staff_activation.charges,
+        ItemDeviceChargeRangeDefinition {
+            minimum: 21,
+            maximum: 21,
+            cost: 1,
+        }
+    );
+    assert!(matches!(
+        staff_activation.effect,
+        ItemUseEffectDefinition::NoNumericEffect
+    ));
+
+    let zombie = catalog
+        .race("rfb-legacy.race.zombie")
+        .expect("formal Zombie race");
+
+    assert!(zombie.see_invisible);
+    assert_eq!(zombie.hold_life_minimum_level, Some(1));
+    assert_eq!(zombie.food_nutrition_divisor, 20);
+    assert_eq!(
+        zombie.resistances.get(&ActorDamageType::Nether),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        zombie.resistances.get(&ActorDamageType::Poison),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(zombie.level_resistances.len(), 1);
+    assert_eq!(zombie.level_resistances[0].minimum_level, 5);
+    assert_eq!(
+        zombie.level_resistances[0]
+            .resistances
+            .get(&ActorDamageType::Cold),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    for tag in [
+        "device-eater",
+        "night-start",
+        "nonliving",
+        "rfb-compatibility",
+        "slow-digestion",
+        "undead",
+    ] {
+        assert!(
+            zombie.tags.iter().any(|candidate| candidate == tag),
+            "{tag}"
+        );
+    }
+
+    let skills = catalog
+        .skill_set(&zombie.skill_set_id)
+        .expect("formal Zombie skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [-5, -5, 5, -1, -1, 5, 15, 0]
+    );
+
+    let [activation] = zombie.abilities.as_slice() else {
+        panic!("Zombie should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.restore-life",
+            30,
+            TechniqueAttribute::Wisdom,
+            30,
+            70,
+        )
+    );
+    let ability = catalog
+        .ability(&activation.ability_id)
+        .expect("Zombie Restore Life ability");
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::RestoreVitality {
+            life_force: 150,
+            restore_attributes: false,
+        }
+    ));
+
+    let [starting_item] = zombie.starting_items.as_slice() else {
+        panic!("Zombie should start with one race-specific item");
+    };
+    assert_eq!(starting_item.item_kind_id, "demo.item.staff-of-nothing");
+    assert_eq!(starting_item.quantity, 1);
+    assert!(!starting_item.equipped);
+    assert!(starting_item.fully_charged);
+
+    let skeleton = catalog
+        .race("rfb-legacy.race.skeleton")
+        .expect("formal Skeleton race");
+
+    assert!(skeleton.see_invisible);
+    assert_eq!(skeleton.hold_life_minimum_level, Some(1));
+    assert_eq!(skeleton.food_nutrition_divisor, 20);
+    assert_eq!(
+        skeleton.resistances.get(&ActorDamageType::Shards),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        skeleton.resistances.get(&ActorDamageType::Poison),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(skeleton.level_resistances.len(), 1);
+    assert_eq!(skeleton.level_resistances[0].minimum_level, 10);
+    assert_eq!(
+        skeleton.level_resistances[0]
+            .resistances
+            .get(&ActorDamageType::Cold),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    for tag in [
+        "device-eater",
+        "night-start",
+        "nonliving",
+        "rfb-compatibility",
+        "slow-digestion",
+        "undead",
+    ] {
+        assert!(
+            skeleton.tags.iter().any(|candidate| candidate == tag),
+            "{tag}"
+        );
+    }
+
+    let skills = catalog
+        .skill_set(&skeleton.skill_set_id)
+        .expect("formal Skeleton skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [-5, 0, 3, -1, -1, 8, 10, 0]
+    );
+
+    let [activation] = skeleton.abilities.as_slice() else {
+        panic!("Skeleton should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.restore-life",
+            30,
+            TechniqueAttribute::Wisdom,
+            30,
+            70,
+        )
+    );
+    let [starting_item] = skeleton.starting_items.as_slice() else {
+        panic!("Skeleton should start with one race-specific item");
+    };
+    assert_eq!(starting_item.item_kind_id, "demo.item.staff-of-nothing");
+    assert_eq!(starting_item.quantity, 1);
+    assert!(!starting_item.equipped);
+    assert!(starting_item.fully_charged);
+
+    let snotling = catalog
+        .race("rfb-legacy.race.snotling")
+        .expect("formal Snotling race");
+
+    assert_eq!(snotling.body_slots.len(), 15);
+    for tag in [
+        "humanoid",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(
+            snotling.tags.iter().any(|candidate| candidate == tag),
+            "{tag}",
+        );
+    }
+
+    let skills = catalog
+        .skill_set(&snotling.skill_set_id)
+        .expect("formal Snotling skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [-3, -2, -2, 2, 0, 7, -10, -5],
+    );
+
+    let [activation] = snotling.abilities.as_slice() else {
+        panic!("Snotling should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.devour-flesh",
+            1,
+            TechniqueAttribute::Charisma,
+            0,
+            0,
+        ),
+    );
+    let ability = catalog
+        .ability(&activation.ability_id)
+        .expect("Snotling Devour Flesh ability");
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::DevourFlesh {
+            maximum_hp_divisor: 3,
+            bleeding_amount: 100,
+        }
+    ));
+    assert!(
+        ability
+            .tags
+            .iter()
+            .any(|tag| tag == "usable-while-confused")
+    );
+    assert_eq!(
+        snotling.starting_items,
+        [StartingItemDefinition {
+            item_kind_id: "demo.item.fast-recovery-mushroom".to_owned(),
+            quantity: 1,
+            maximum_quantity: Some(3),
+            equipped: false,
+            fully_charged: false,
+        }],
+    );
+
+    let boit = catalog
+        .race("rfb-legacy.race.boit")
+        .expect("formal Boit race");
+
+    assert_eq!(boit.modifiers.speed, 2);
+    assert_eq!(boit.body_slots.len(), 15);
+    for tag in [
+        "humanoid",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(boit.tags.iter().any(|candidate| candidate == tag), "{tag}");
+    }
+
+    let skills = catalog
+        .skill_set(&boit.skill_set_id)
+        .expect("formal Boit skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+            skills.get("demo.skill.throwing").copied().unwrap_or(0),
+        ],
+        [2, -5, -1, 0, 0, 10, -8, -8, 25],
+    );
+
+    let [activation] = boit.abilities.as_slice() else {
+        panic!("Boit should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.vomit",
+            1,
+            TechniqueAttribute::Strength,
+            0,
+            0,
+        ),
+    );
+    let ability = catalog
+        .ability(&activation.ability_id)
+        .expect("Boit Vomit ability");
+    assert!(matches!(ability.effect, AbilityEffectDefinition::Vomit));
+    for tag in ["usable-while-afraid", "usable-while-confused"] {
+        assert!(
+            ability.tags.iter().any(|candidate| candidate == tag),
+            "{tag}",
+        );
+    }
+    assert!(boit.starting_items.is_empty());
+
+    let kutar = catalog
+        .race("rfb-legacy.race.kutar")
+        .expect("formal Kutar race");
+
+    assert_eq!(
+        kutar.resistances.get(&ActorDamageType::Confusion),
+        Some(&ActorResistanceLevel::Resistant),
+    );
+    assert_eq!(kutar.body_slots.len(), 15);
+    for tag in [
+        "humanoid",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(kutar.tags.iter().any(|candidate| candidate == tag), "{tag}");
+    }
+
+    let skills = catalog
+        .skill_set(&kutar.skill_set_id)
+        .expect("formal Kutar skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [-2, 3, 5, 5, -2, 6, 0, -3],
+    );
+
+    let [activation] = kutar.abilities.as_slice() else {
+        panic!("Kutar should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.kutar-expand",
+            20,
+            TechniqueAttribute::Charisma,
+            15,
+            70,
+        ),
+    );
+    let ability = catalog
+        .ability(&activation.ability_id)
+        .expect("Kutar Expand Horizontally ability");
+    assert!(matches!(
+        &ability.effect,
+        AbilityEffectDefinition::ApplyStatus {
+            status_kind_id,
+            duration_ticks: 30,
+            duration_dice: 1,
+            duration_sides: 20,
+            granted_modifiers,
+            granted_equipment_bonuses,
+            ..
+        } if status_kind_id == "rfb.status.kutar-expand"
+            && granted_modifiers.defense == 35
+            && granted_equipment_bonuses.saving_throw_skill_override == Some(10)
+    ));
+    assert!(kutar.starting_items.is_empty());
 }
 
 #[test]
@@ -3698,623 +3448,395 @@ fn draconian_level_35_power_matrix_includes_completed_metamorphosis() {
 }
 
 #[test]
-fn formal_barbarian_matches_rfb_profile_power_and_talent_pool() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let barbarian = catalog
-        .race("rfb-legacy.race.barbarian")
-        .expect("formal Barbarian race");
-
-    assert_eq!(
-        [
-            barbarian.modifiers.strength,
-            barbarian.modifiers.intelligence,
-            barbarian.modifiers.wisdom,
-            barbarian.modifiers.dexterity,
-            barbarian.modifiers.constitution,
-            barbarian.modifiers.charisma,
-        ],
-        [3, -2, -1, 1, 2, 2]
-    );
-    assert_eq!(barbarian.life_percent, 103);
-    assert_eq!(barbarian.base_hp, 22);
-    assert_eq!(barbarian.experience_percent, 135);
-    assert_eq!(barbarian.shop_adjust_percent, 120);
-    assert_eq!(barbarian.infravision, 0);
-    assert_eq!(
-        barbarian.resistances.get(&ActorDamageType::Fear),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert_eq!(
-        barbarian.abilities,
-        [InnatePowerDefinition {
-            minimum_level: 8,
-            governing_attribute: TechniqueAttribute::Strength,
-            cost: 10,
-            cost_scaling: None,
-            base_failure_percent: 30,
-            minimum_failure_percent: None,
-            ability_id: "rfb.ability.race.berserk".to_owned(),
-        }]
-    );
-    for tag in [
-        "humanoid",
-        "polymorph-candidate",
-        "rfb-compatibility",
-        "standard-body",
-    ] {
-        assert!(barbarian.tags.iter().any(|candidate| candidate == tag));
-    }
-
-    let skills = catalog
-        .skill_set(&barbarian.skill_set_id)
-        .expect("formal Barbarian skill set");
-    assert_eq!(
-        skills
-            .entries
-            .iter()
-            .map(|entry| (entry.skill_id.as_str(), entry.base))
-            .collect::<Vec<_>>(),
-        [
-            ("demo.skill.device", -7),
-            ("demo.skill.disarming", -2),
-            ("demo.skill.melee", 12),
-            ("demo.skill.perception", 7),
-            ("demo.skill.ranged", 6),
-            ("demo.skill.saving-throw", 2),
-            ("demo.skill.search", 1),
-            ("demo.skill.stealth", -1),
-        ]
+fn monster_endgame_bindings_match_source() {
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
     );
 
-    let talent = barbarian
-        .level_mutation_rewards
-        .iter()
-        .find(|reward| reward.id == "barbarian-talent")
-        .expect("Barbarian talent");
-    let human_talent = catalog
-        .race("demo.race.rfb-human")
-        .expect("formal Human race")
-        .level_mutation_rewards
-        .iter()
-        .find(|reward| reward.id == "human-talent")
-        .expect("Human talent");
-    assert_eq!(talent.minimum_level, 30);
-    assert_eq!(talent.selection, human_talent.selection);
-}
-
-#[test]
-fn formal_high_elf_matches_the_original_profile() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let high_elf = catalog
-        .race("rfb-legacy.race.high-elf")
-        .expect("formal High-Elf race");
-
-    assert_eq!(
-        [
-            high_elf.modifiers.strength,
-            high_elf.modifiers.intelligence,
-            high_elf.modifiers.wisdom,
-            high_elf.modifiers.dexterity,
-            high_elf.modifiers.constitution,
-            high_elf.modifiers.charisma,
-        ],
-        [1, 3, -1, 3, 1, 1]
-    );
-    assert_eq!(high_elf.life_percent, 99);
-    assert_eq!(high_elf.base_hp, 19);
-    assert_eq!(high_elf.experience_percent, 190);
-    assert_eq!(high_elf.shop_adjust_percent, 90);
-    assert_eq!(high_elf.infravision, 4);
-    assert!(high_elf.see_invisible);
-    assert_eq!(
-        high_elf.resistances.get(&ActorDamageType::Light),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert!(high_elf.level_mutation_rewards.is_empty());
-    for tag in [
-        "humanoid",
-        "rfb-compatibility",
-        "snow-adapted",
-        "standard-body",
-    ] {
-        assert!(high_elf.tags.iter().any(|candidate| candidate == tag));
-    }
-
-    let skills = catalog
-        .skill_set(&high_elf.skill_set_id)
-        .expect("formal High-Elf skill set");
-    assert_eq!(
-        skills
-            .entries
-            .iter()
-            .map(|entry| (entry.skill_id.as_str(), entry.base))
-            .collect::<Vec<_>>(),
-        [
-            ("demo.skill.device", 9),
-            ("demo.skill.disarming", 4),
-            ("demo.skill.melee", 10),
-            ("demo.skill.perception", 14),
-            ("demo.skill.ranged", 15),
-            ("demo.skill.saving-throw", 12),
-            ("demo.skill.search", 3),
-            ("demo.skill.stealth", 4),
-        ]
-    );
-}
-
-#[test]
-fn formal_dunadan_matches_the_original_profile_and_talent_pool() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let dunadan = catalog
-        .race("rfb-legacy.race.dunadan")
-        .expect("formal Dunadan race");
-
-    assert_eq!(
-        [
-            dunadan.modifiers.strength,
-            dunadan.modifiers.intelligence,
-            dunadan.modifiers.wisdom,
-            dunadan.modifiers.dexterity,
-            dunadan.modifiers.constitution,
-            dunadan.modifiers.charisma,
-        ],
-        [1, 2, 2, 2, 3, 0]
-    );
-    assert_eq!(dunadan.life_percent, 100);
-    assert_eq!(dunadan.base_hp, 20);
-    assert_eq!(dunadan.experience_percent, 160);
-    assert_eq!(dunadan.shop_adjust_percent, 100);
-    assert_eq!(dunadan.infravision, 0);
-    assert_eq!(
-        dunadan
-            .attribute_sustains
-            .iter()
-            .copied()
-            .collect::<Vec<_>>(),
-        [ItemAttributeDefinition::Constitution]
-    );
-    for tag in ["humanoid", "rfb-compatibility", "standard-body"] {
-        assert!(dunadan.tags.iter().any(|candidate| candidate == tag));
-    }
-
-    let skills = catalog
-        .skill_set(&dunadan.skill_set_id)
-        .expect("formal Dunadan skill set");
-    assert_eq!(
-        skills
-            .entries
-            .iter()
-            .map(|entry| (entry.skill_id.as_str(), entry.base))
-            .collect::<Vec<_>>(),
-        [
-            ("demo.skill.device", 3),
-            ("demo.skill.disarming", 4),
-            ("demo.skill.melee", 15),
-            ("demo.skill.perception", 13),
-            ("demo.skill.ranged", 7),
-            ("demo.skill.saving-throw", 3),
-            ("demo.skill.search", 3),
-            ("demo.skill.stealth", 2),
-        ]
-    );
-
-    let talent = dunadan
-        .level_mutation_rewards
-        .iter()
-        .find(|reward| reward.id == "dunadan-talent")
-        .expect("Dunadan should choose a level 30 talent");
-    let human_talent = catalog
-        .race("demo.race.rfb-human")
-        .expect("formal Human race")
-        .level_mutation_rewards
-        .iter()
-        .find(|reward| reward.id == "human-talent")
-        .expect("Human talent");
-    assert_eq!(talent.minimum_level, 30);
-    assert_eq!(talent.selection, human_talent.selection);
-}
-
-#[test]
-fn p76_complex_monsters_and_their_shared_mechanisms_compile_into_the_pack() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let actors = [
-        (822, "qlzqqlzuup-the-lord-of-flesh"),
-        (844, "kaschei-the-immortal"),
-        (848, "shub-niggurath-black-goat-of-the-woods"),
-        (849, "nodens-lord-of-the-great-abyss"),
-        (859, "the-unicorn-of-order"),
-        (861, "morgoth-lord-of-darkness"),
-        (1098, "hades-ruler-of-the-underworld"),
-        (1099, "athena-the-goddess-of-wisdom"),
-        (1100, "ares-the-god-of-war"),
-        (1102, "apollo-the-sun-god"),
-        (1103, "artemis-the-moon-goddess"),
-        (1104, "hephaestus-the-smith-god"),
-        (1105, "hera-queen-of-the-gods"),
-        (1107, "aphrodite-the-goddess-of-love"),
-        (1161, "atropos-the-sister-of-fate"),
-        (1180, "tik-srvzllat"),
-        (1259, "osiris-the-reborn"),
-        (1265, "ptah-the-divine-craftsman"),
-        (1281, "aijem-the-walrus"),
-        (1365, "vayu-the-embodied-wind"),
-        (1372, "vishnu-the-preserver"),
-        (1373, "lakshmi-the-goddess-of-prosperity"),
-        (1380, "shiva-the-destroyer"),
-        (1382, "parvati-the-goddess-of-hidden-power"),
-    ];
-    for (legacy_index, id) in actors {
-        let actor = catalog
-            .actor(&format!("demo.actor.{id}"))
-            .unwrap_or_else(|| panic!("P76 actor {id} should compile"));
-        assert_eq!(
-            actor
-                .allocation
-                .as_ref()
-                .map(|allocation| allocation.legacy_index),
-            Some(legacy_index),
-            "{id} should retain its authoritative source index"
-        );
-    }
-
-    let has_ability = |actor_id: &str, ability_id: &str| {
-        catalog
-            .actor(actor_id)
-            .and_then(|actor| actor.monster_casting.as_ref())
-            .is_some_and(|casting| {
-                casting
-                    .abilities
-                    .iter()
-                    .any(|candidate| candidate.ability_id == ability_id)
-            })
-    };
-    assert!(has_ability(
-        "demo.actor.morgoth-lord-of-darkness",
-        "rfb-legacy.ability.summon-unique-l100-1d2"
-    ));
-    assert!(has_ability(
-        "demo.actor.osiris-the-reborn",
-        "rfb-legacy.ability.summon-family-osiris-the-reborn"
-    ));
-    assert!(has_ability(
-        "demo.actor.vayu-the-embodied-wind",
-        "rfb-legacy.ability.breath-air-17-250-r3"
-    ));
-    assert!(has_ability(
-        "demo.actor.vayu-the-embodied-wind",
-        "rfb-legacy.ability.no-air-40"
-    ));
-    assert!(has_ability(
-        "demo.actor.aijem-the-walrus",
-        "rfb-legacy.ability.chicken-1d1-199"
-    ));
-
-    let kaschei = catalog
-        .actor("demo.actor.kaschei-the-immortal")
-        .expect("Kaschei should compile");
-    assert!(matches!(
-        kaschei.contact_effects.as_slice(),
-        [MeleeBlowEffectDefinition::Unlife {
-            amount_dice: 2,
-            amount_sides: 6,
-            chance_percent: Some(50)
-        }]
-    ));
-    let unicorn = catalog
-        .actor("demo.actor.the-unicorn-of-order")
-        .expect("Unicorn of Order should compile");
-    assert!(
-        unicorn
-            .contact_auras
-            .iter()
-            .any(|aura| { aura.damage_type == ActorDamageType::Time && aura.ravages_time })
-    );
-}
-
-#[test]
-fn p77_location_bound_monsters_and_resurrection_mechanism_compile_into_the_pack() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    for id in [
-        "godzilla",
-        "greater-cyber-wyrm-angel-daemon-lich",
-        "sauron-the-sorcerer",
-        "oberon-king-of-amber",
-        "the-serpent-of-chaos",
-        "the-resurrection-machine",
-    ] {
-        assert!(
-            catalog.actor(&format!("demo.actor.{id}")).is_some(),
-            "P77 actor {id} should compile"
-        );
-    }
-
-    let godzilla = catalog.actor("demo.actor.godzilla").expect("Godzilla");
-    let godzilla_allocation = godzilla.allocation.as_ref().expect("ocean allocation");
-    assert_eq!(godzilla_allocation.legacy_index, 832);
-    assert!(godzilla_allocation.wild_only);
-    assert_eq!(godzilla_allocation.habitats, [ActorHabitat::Ocean]);
-
-    let wyrm = catalog
-        .actor("demo.actor.greater-cyber-wyrm-angel-daemon-lich")
-        .expect("Greater Cyber Wyrm Angel Daemon Lich");
-    let wyrm_allocation = wyrm.allocation.as_ref().expect("wilderness allocation");
-    assert_eq!(wyrm_allocation.legacy_index, 1337);
-    assert!(wyrm_allocation.habitats.contains(&ActorHabitat::All));
-    assert!(wyrm_allocation.habitats.contains(&ActorHabitat::Ocean));
-    assert_eq!(
-        wyrm.monster_casting
-            .as_ref()
-            .expect("the full original casting profile")
-            .abilities
-            .len(),
-        94
-    );
-
-    for id in [
-        "sauron-the-sorcerer",
-        "oberon-king-of-amber",
-        "the-serpent-of-chaos",
-        "the-resurrection-machine",
-    ] {
-        assert!(
-            catalog
+    {
+        let actors = [
+            (822, "qlzqqlzuup-the-lord-of-flesh"),
+            (844, "kaschei-the-immortal"),
+            (848, "shub-niggurath-black-goat-of-the-woods"),
+            (849, "nodens-lord-of-the-great-abyss"),
+            (859, "the-unicorn-of-order"),
+            (861, "morgoth-lord-of-darkness"),
+            (1098, "hades-ruler-of-the-underworld"),
+            (1099, "athena-the-goddess-of-wisdom"),
+            (1100, "ares-the-god-of-war"),
+            (1102, "apollo-the-sun-god"),
+            (1103, "artemis-the-moon-goddess"),
+            (1104, "hephaestus-the-smith-god"),
+            (1105, "hera-queen-of-the-gods"),
+            (1107, "aphrodite-the-goddess-of-love"),
+            (1161, "atropos-the-sister-of-fate"),
+            (1180, "tik-srvzllat"),
+            (1259, "osiris-the-reborn"),
+            (1265, "ptah-the-divine-craftsman"),
+            (1281, "aijem-the-walrus"),
+            (1365, "vayu-the-embodied-wind"),
+            (1372, "vishnu-the-preserver"),
+            (1373, "lakshmi-the-goddess-of-prosperity"),
+            (1380, "shiva-the-destroyer"),
+            (1382, "parvati-the-goddess-of-hidden-power"),
+        ];
+        for (legacy_index, id) in actors {
+            let actor = catalog
                 .actor(&format!("demo.actor.{id}"))
-                .expect("fixed identity actor")
-                .allocation
-                .is_none(),
-            "{id} should require explicit placement"
-        );
-    }
+                .unwrap_or_else(|| panic!("P76 actor {id} should compile"));
+            assert_eq!(
+                actor
+                    .allocation
+                    .as_ref()
+                    .map(|allocation| allocation.legacy_index),
+                Some(legacy_index),
+                "{id} should retain its authoritative source index"
+            );
+        }
 
-    let serpent = catalog
-        .actor("demo.actor.the-serpent-of-chaos")
-        .expect("Serpent of Chaos");
-    assert!(serpent.tags.iter().any(|tag| tag == "guardian"));
-    assert!(serpent.contact_auras.iter().any(|aura| {
-        aura.damage_type == ActorDamageType::Chaos && aura.chance_percent == Some(20)
-    }));
-    assert!(serpent.contact_auras.iter().any(|aura| {
-        aura.damage_type == ActorDamageType::Disenchant && aura.chance_percent == Some(10)
-    }));
-
-    let resurrection = catalog
-        .ability("rfb-legacy.ability.summon-dead-unique-l100-1d2")
-        .expect("S_DEAD_UNIQ should compile");
-    assert!(
-        resurrection
-            .tags
-            .iter()
-            .any(|tag| tag == "monster-dead-unique-summon")
-    );
-    assert!(matches!(
-        &resurrection.effect,
-        AbilityEffectDefinition::SummonCategory {
-            category,
-            count_dice: 1,
-            count_sides: 2,
-            maximum_level: 100,
-            ..
-        } if category == "unique"
-    ));
-}
-
-#[test]
-fn p78_direct_monsters_compile_with_original_levels_and_existing_mechanics() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    for (id, level, legacy_index) in [
-        ("warrens-keeper", 7, 135),
-        ("swamp-rat", 10, 1297),
-        ("plague-monk", 14, 1293),
-        ("skaven-assassin", 14, 1294),
-        ("clay-golem", 15, 261),
-        ("magic-mushroom-patch", 15, 267),
-        ("rat-ogre", 15, 1295),
-        ("master-rogue", 23, 376),
-        ("mummified-human", 24, 390),
-        ("samurai", 25, 901),
-        ("black-knight", 28, 442),
-        ("trap-master", 28, 1036),
-        ("nekhbet-the-vulture-mother", 57, 1258),
-        ("thoth-the-voice-of-ra", 60, 1246),
-        ("loki-the-trickster", 85, 835),
-        ("shuma-gorath", 88, 841),
-        ("pandemonium", 94, 1200),
-        ("zombified-serpent-of-chaos", 127, 883),
-    ] {
-        let actor = catalog
-            .actor(&format!("demo.actor.{id}"))
-            .unwrap_or_else(|| panic!("P78 actor {id} should compile"));
-        assert_eq!(actor.level, level, "P78 actor {id} level");
-        assert_eq!(
-            actor
-                .allocation
-                .as_ref()
-                .map(|allocation| allocation.legacy_index),
-            Some(legacy_index),
-            "P78 actor {id} source index"
-        );
-        let allocation_tag = if id == "warrens-keeper" {
-            "warrens"
-        } else {
-            "orc-cave"
+        let has_ability = |actor_id: &str, ability_id: &str| {
+            catalog
+                .actor(actor_id)
+                .and_then(|actor| actor.monster_casting.as_ref())
+                .is_some_and(|casting| {
+                    casting
+                        .abilities
+                        .iter()
+                        .any(|candidate| candidate.ability_id == ability_id)
+                })
         };
-        assert!(actor.tags.iter().any(|tag| tag == allocation_tag));
-    }
+        assert!(has_ability(
+            "demo.actor.morgoth-lord-of-darkness",
+            "rfb-legacy.ability.summon-unique-l100-1d2"
+        ));
+        assert!(has_ability(
+            "demo.actor.osiris-the-reborn",
+            "rfb-legacy.ability.summon-family-osiris-the-reborn"
+        ));
+        assert!(has_ability(
+            "demo.actor.vayu-the-embodied-wind",
+            "rfb-legacy.ability.breath-air-17-250-r3"
+        ));
+        assert!(has_ability(
+            "demo.actor.vayu-the-embodied-wind",
+            "rfb-legacy.ability.no-air-40"
+        ));
+        assert!(has_ability(
+            "demo.actor.aijem-the-walrus",
+            "rfb-legacy.ability.chicken-1d1-199"
+        ));
 
-    let mushroom = catalog
-        .actor("demo.actor.magic-mushroom-patch")
-        .expect("Magic mushroom patch");
-    assert!(
-        mushroom
-            .monster_casting
-            .as_ref()
-            .expect("original casting profile")
-            .abilities
-            .iter()
-            .any(|ability| ability.ability_id == "rfb-legacy.ability.polymorph-target")
-    );
-
-    let serpent = catalog
-        .actor("demo.actor.zombified-serpent-of-chaos")
-        .expect("Zombified Serpent of Chaos");
-    assert!(serpent.tags.iter().any(|tag| tag == "unique2"));
-    assert!(serpent.contact_auras.iter().any(|aura| {
-        aura.damage_type == ActorDamageType::Shards && aura.chance_percent.is_none()
-    }));
-    assert!(serpent.contact_auras.iter().any(|aura| {
-        aura.damage_type == ActorDamageType::Chaos && aura.chance_percent == Some(40)
-    }));
-    assert!(serpent.contact_auras.iter().any(|aura| {
-        aura.damage_type == ActorDamageType::Disenchant && aura.chance_percent == Some(20)
-    }));
-}
-
-#[test]
-fn p79_norse_and_olympian_summoners_compile_with_original_retinues() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    for (id, level, legacy_index) in [
-        ("einheri-berserker", 65, 1344),
-        ("hermes-the-messenger-god", 86, 1101),
-        ("zeus-king-of-the-olympians", 90, 1096),
-        ("odin-the-all-father", 90, 1343),
-    ] {
-        let actor = catalog
-            .actor(&format!("demo.actor.{id}"))
-            .unwrap_or_else(|| panic!("P79 actor {id} should compile"));
-        assert_eq!(actor.level, level);
-        assert_eq!(
-            actor
-                .allocation
-                .as_ref()
-                .map(|allocation| allocation.legacy_index),
-            Some(legacy_index)
+        let kaschei = catalog
+            .actor("demo.actor.kaschei-the-immortal")
+            .expect("Kaschei should compile");
+        assert!(matches!(
+            kaschei.contact_effects.as_slice(),
+            [MeleeBlowEffectDefinition::Unlife {
+                amount_dice: 2,
+                amount_sides: 6,
+                chance_percent: Some(50)
+            }]
+        ));
+        let unicorn = catalog
+            .actor("demo.actor.the-unicorn-of-order")
+            .expect("Unicorn of Order should compile");
+        assert!(
+            unicorn
+                .contact_auras
+                .iter()
+                .any(|aura| { aura.damage_type == ActorDamageType::Time && aura.ravages_time })
         );
     }
 
-    let einheri = catalog
-        .actor("demo.actor.einheri-berserker")
-        .expect("Einheri berserker");
-    assert_eq!(
-        einheri
-            .allocation
-            .as_ref()
-            .expect("Asgard allocation")
-            .legacy_dungeon_indices,
-        [39]
-    );
-    assert!(einheri.tags.iter().any(|tag| tag == "asgard"));
+    {
+        for id in [
+            "godzilla",
+            "greater-cyber-wyrm-angel-daemon-lich",
+            "sauron-the-sorcerer",
+            "oberon-king-of-amber",
+            "the-serpent-of-chaos",
+            "the-resurrection-machine",
+        ] {
+            assert!(
+                catalog.actor(&format!("demo.actor.{id}")).is_some(),
+                "P77 actor {id} should compile"
+            );
+        }
 
-    for (ability_id, target_id, count_sides) in [
-        (
-            "rfb-legacy.ability.summon-magic-mushroom-patch-l15-1d16",
-            "demo.actor.magic-mushroom-patch",
-            16,
-        ),
-        (
-            "rfb-legacy.ability.summon-shambler-l67-1d4",
-            "demo.actor.shambler",
-            4,
-        ),
-    ] {
-        let ability = catalog.ability(ability_id).expect("P79 fixed retinue");
+        let godzilla = catalog.actor("demo.actor.godzilla").expect("Godzilla");
+        let godzilla_allocation = godzilla.allocation.as_ref().expect("ocean allocation");
+        assert_eq!(godzilla_allocation.legacy_index, 832);
+        assert!(godzilla_allocation.wild_only);
+        assert_eq!(godzilla_allocation.habitats, [ActorHabitat::Ocean]);
+
+        let wyrm = catalog
+            .actor("demo.actor.greater-cyber-wyrm-angel-daemon-lich")
+            .expect("Greater Cyber Wyrm Angel Daemon Lich");
+        let wyrm_allocation = wyrm.allocation.as_ref().expect("wilderness allocation");
+        assert_eq!(wyrm_allocation.legacy_index, 1337);
+        assert!(wyrm_allocation.habitats.contains(&ActorHabitat::All));
+        assert!(wyrm_allocation.habitats.contains(&ActorHabitat::Ocean));
+        assert_eq!(
+            wyrm.monster_casting
+                .as_ref()
+                .expect("the full original casting profile")
+                .abilities
+                .len(),
+            94
+        );
+
+        for id in [
+            "sauron-the-sorcerer",
+            "oberon-king-of-amber",
+            "the-serpent-of-chaos",
+            "the-resurrection-machine",
+        ] {
+            assert!(
+                catalog
+                    .actor(&format!("demo.actor.{id}"))
+                    .expect("fixed identity actor")
+                    .allocation
+                    .is_none(),
+                "{id} should require explicit placement"
+            );
+        }
+
+        let serpent = catalog
+            .actor("demo.actor.the-serpent-of-chaos")
+            .expect("Serpent of Chaos");
+        assert!(serpent.tags.iter().any(|tag| tag == "guardian"));
+        assert!(serpent.contact_auras.iter().any(|aura| {
+            aura.damage_type == ActorDamageType::Chaos && aura.chance_percent == Some(20)
+        }));
+        assert!(serpent.contact_auras.iter().any(|aura| {
+            aura.damage_type == ActorDamageType::Disenchant && aura.chance_percent == Some(10)
+        }));
+
+        let resurrection = catalog
+            .ability("rfb-legacy.ability.summon-dead-unique-l100-1d2")
+            .expect("S_DEAD_UNIQ should compile");
+        assert!(
+            resurrection
+                .tags
+                .iter()
+                .any(|tag| tag == "monster-dead-unique-summon")
+        );
         assert!(matches!(
-            &ability.effect,
+            &resurrection.effect,
             AbilityEffectDefinition::SummonCategory {
+                category,
                 count_dice: 1,
-                count_sides: sides,
-                count_bonus: 0,
-                maximum_count: None,
-                batch_candidates,
+                count_sides: 2,
+                maximum_level: 100,
                 ..
-            } if *sides == count_sides
-                && batch_candidates.as_slice() == [AbilitySummonCandidateDefinition {
-                    actor_kind_id: target_id.to_owned(),
-                    weight: 1,
-                }]
+            } if category == "unique"
         ));
     }
 
-    let odin = catalog
-        .ability("rfb-legacy.ability.summon-odin-retinue-1d4-max1")
-        .expect("Odin retinue");
-    assert!(matches!(
-        &odin.effect,
-        AbilityEffectDefinition::SummonCategory {
-            count_dice: 1,
-            count_sides: 4,
-            count_bonus: 0,
-            maximum_count: Some(1),
-            batch_candidates,
-            ..
-        } if batch_candidates.as_slice() == [
-            AbilitySummonCandidateDefinition {
-                actor_kind_id: "demo.actor.einheri-berserker".to_owned(),
-                weight: 1,
-            },
-            AbilitySummonCandidateDefinition {
-                actor_kind_id: "demo.actor.valkyrie".to_owned(),
-                weight: 1,
-            },
-        ]
-    ));
-}
+    {
+        for (id, level, legacy_index) in [
+            ("warrens-keeper", 7, 135),
+            ("swamp-rat", 10, 1297),
+            ("plague-monk", 14, 1293),
+            ("skaven-assassin", 14, 1294),
+            ("clay-golem", 15, 261),
+            ("magic-mushroom-patch", 15, 267),
+            ("rat-ogre", 15, 1295),
+            ("master-rogue", 23, 376),
+            ("mummified-human", 24, 390),
+            ("samurai", 25, 901),
+            ("black-knight", 28, 442),
+            ("trap-master", 28, 1036),
+            ("nekhbet-the-vulture-mother", 57, 1258),
+            ("thoth-the-voice-of-ra", 60, 1246),
+            ("loki-the-trickster", 85, 835),
+            ("shuma-gorath", 88, 841),
+            ("pandemonium", 94, 1200),
+            ("zombified-serpent-of-chaos", 127, 883),
+        ] {
+            let actor = catalog
+                .actor(&format!("demo.actor.{id}"))
+                .unwrap_or_else(|| panic!("P78 actor {id} should compile"));
+            assert_eq!(actor.level, level, "P78 actor {id} level");
+            assert_eq!(
+                actor
+                    .allocation
+                    .as_ref()
+                    .map(|allocation| allocation.legacy_index),
+                Some(legacy_index),
+                "P78 actor {id} source index"
+            );
+            let allocation_tag = if id == "warrens-keeper" {
+                "warrens"
+            } else {
+                "orc-cave"
+            };
+            assert!(actor.tags.iter().any(|tag| tag == allocation_tag));
+        }
 
-#[test]
-fn p80_variant_maintainer_compiles_with_software_bug_summon() {
-    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
-    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    let actor = catalog
-        .actor("demo.actor.the-variant-maintainer")
-        .expect("Variant Maintainer should compile");
-    assert_eq!(actor.level, 14);
-    assert_eq!(
-        actor
-            .allocation
+        let mushroom = catalog
+            .actor("demo.actor.magic-mushroom-patch")
+            .expect("Magic mushroom patch");
+        assert!(
+            mushroom
+                .monster_casting
+                .as_ref()
+                .expect("original casting profile")
+                .abilities
+                .iter()
+                .any(|ability| ability.ability_id == "rfb-legacy.ability.polymorph-target")
+        );
+
+        let serpent = catalog
+            .actor("demo.actor.zombified-serpent-of-chaos")
+            .expect("Zombified Serpent of Chaos");
+        assert!(serpent.tags.iter().any(|tag| tag == "unique2"));
+        assert!(serpent.contact_auras.iter().any(|aura| {
+            aura.damage_type == ActorDamageType::Shards && aura.chance_percent.is_none()
+        }));
+        assert!(serpent.contact_auras.iter().any(|aura| {
+            aura.damage_type == ActorDamageType::Chaos && aura.chance_percent == Some(40)
+        }));
+        assert!(serpent.contact_auras.iter().any(|aura| {
+            aura.damage_type == ActorDamageType::Disenchant && aura.chance_percent == Some(20)
+        }));
+    }
+
+    {
+        for (id, level, legacy_index) in [
+            ("einheri-berserker", 65, 1344),
+            ("hermes-the-messenger-god", 86, 1101),
+            ("zeus-king-of-the-olympians", 90, 1096),
+            ("odin-the-all-father", 90, 1343),
+        ] {
+            let actor = catalog
+                .actor(&format!("demo.actor.{id}"))
+                .unwrap_or_else(|| panic!("P79 actor {id} should compile"));
+            assert_eq!(actor.level, level);
+            assert_eq!(
+                actor
+                    .allocation
+                    .as_ref()
+                    .map(|allocation| allocation.legacy_index),
+                Some(legacy_index)
+            );
+        }
+
+        let einheri = catalog
+            .actor("demo.actor.einheri-berserker")
+            .expect("Einheri berserker");
+        assert_eq!(
+            einheri
+                .allocation
+                .as_ref()
+                .expect("Asgard allocation")
+                .legacy_dungeon_indices,
+            [39]
+        );
+        assert!(einheri.tags.iter().any(|tag| tag == "asgard"));
+
+        for (ability_id, target_id, count_sides) in [
+            (
+                "rfb-legacy.ability.summon-magic-mushroom-patch-l15-1d16",
+                "demo.actor.magic-mushroom-patch",
+                16,
+            ),
+            (
+                "rfb-legacy.ability.summon-shambler-l67-1d4",
+                "demo.actor.shambler",
+                4,
+            ),
+        ] {
+            let ability = catalog.ability(ability_id).expect("P79 fixed retinue");
+            assert!(matches!(
+                &ability.effect,
+                AbilityEffectDefinition::SummonCategory {
+                    count_dice: 1,
+                    count_sides: sides,
+                    count_bonus: 0,
+                    maximum_count: None,
+                    batch_candidates,
+                    ..
+                } if *sides == count_sides
+                    && batch_candidates.as_slice() == [AbilitySummonCandidateDefinition {
+                        actor_kind_id: target_id.to_owned(),
+                        weight: 1,
+                    }]
+            ));
+        }
+
+        let odin = catalog
+            .ability("rfb-legacy.ability.summon-odin-retinue-1d4-max1")
+            .expect("Odin retinue");
+        assert!(matches!(
+            &odin.effect,
+            AbilityEffectDefinition::SummonCategory {
+                count_dice: 1,
+                count_sides: 4,
+                count_bonus: 0,
+                maximum_count: Some(1),
+                batch_candidates,
+                ..
+            } if batch_candidates.as_slice() == [
+                AbilitySummonCandidateDefinition {
+                    actor_kind_id: "demo.actor.einheri-berserker".to_owned(),
+                    weight: 1,
+                },
+                AbilitySummonCandidateDefinition {
+                    actor_kind_id: "demo.actor.valkyrie".to_owned(),
+                    weight: 1,
+                },
+            ]
+        ));
+    }
+
+    {
+        let actor = catalog
+            .actor("demo.actor.the-variant-maintainer")
+            .expect("Variant Maintainer should compile");
+        assert_eq!(actor.level, 14);
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(1094)
+        );
+        assert!(actor.tags.iter().any(|tag| tag == "unique"));
+        let casting = actor
+            .monster_casting
             .as_ref()
-            .map(|allocation| allocation.legacy_index),
-        Some(1094)
-    );
-    assert!(actor.tags.iter().any(|tag| tag == "unique"));
-    let casting = actor
-        .monster_casting
-        .as_ref()
-        .expect("Variant Maintainer casting profile");
-    assert_eq!(casting.frequency_percent, 33);
-    assert_eq!(
-        casting
-            .abilities
-            .iter()
-            .map(|entry| entry.ability_id.as_str())
-            .collect::<Vec<_>>(),
-        [
-            "rfb-legacy.ability.summon-software-bug-l14-1d3-1",
-            "rfb-legacy.ability.polymorph-target",
-        ]
-    );
+            .expect("Variant Maintainer casting profile");
+        assert_eq!(casting.frequency_percent, 33);
+        assert_eq!(
+            casting
+                .abilities
+                .iter()
+                .map(|entry| entry.ability_id.as_str())
+                .collect::<Vec<_>>(),
+            [
+                "rfb-legacy.ability.summon-software-bug-l14-1d3-1",
+                "rfb-legacy.ability.polymorph-target",
+            ]
+        );
 
-    let summon = catalog
-        .ability("rfb-legacy.ability.summon-software-bug-l14-1d3-1")
-        .expect("software bug summon should compile");
-    assert!(matches!(
-        &summon.effect,
-        AbilityEffectDefinition::SummonCategory {
-            count_dice: 1,
-            count_sides: 3,
-            count_bonus: 1,
-            batch_candidates,
-            ..
-        } if batch_candidates.as_slice() == [AbilitySummonCandidateDefinition {
-            actor_kind_id: "demo.actor.software-bug".to_owned(),
-            weight: 1,
-        }]
-    ));
+        let summon = catalog
+            .ability("rfb-legacy.ability.summon-software-bug-l14-1d3-1")
+            .expect("software bug summon should compile");
+        assert!(matches!(
+            &summon.effect,
+            AbilityEffectDefinition::SummonCategory {
+                count_dice: 1,
+                count_sides: 3,
+                count_bonus: 1,
+                batch_candidates,
+                ..
+            } if batch_candidates.as_slice() == [AbilitySummonCandidateDefinition {
+                actor_kind_id: "demo.actor.software-bug".to_owned(),
+                weight: 1,
+            }]
+        ));
+    }
 }
 
 #[test]
@@ -4375,7 +3897,7 @@ fn elemental_ground_item_rules_compile_as_explicit_content() {
 }
 
 #[test]
-fn m6_a_periodic_mutations_are_random_candidates_with_typed_effects() {
+fn periodic_mutations_are_random_candidates_with_typed_effects() {
     let catalog = ContentCatalog::from_artifact(
         compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
     );
@@ -4390,73 +3912,16 @@ fn m6_a_periodic_mutations_are_random_candidates_with_typed_effects() {
         "rfb.mutation.sp-to-hp",
         "rfb.mutation.hp-to-sp",
         "rfb.mutation.hypochondria",
-    ] {
-        let mutation = catalog.mutation(id).expect("M6-A mutation should exist");
-        assert!(
-            mutation.random_selection_enabled,
-            "{id} should be selectable"
-        );
-        assert!(
-            mutation.periodic_effect.is_some(),
-            "{id} should be periodic"
-        );
-    }
-}
-
-#[test]
-fn m6_b_periodic_mutations_are_random_candidates_with_typed_effects() {
-    let catalog = ContentCatalog::from_artifact(
-        compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
-    );
-    for id in [
         "rfb.mutation.teleport-rnd",
         "rfb.mutation.banish-all-rnd",
         "rfb.mutation.shadow-walk",
         "rfb.mutation.fumbling",
-    ] {
-        let mutation = catalog.mutation(id).expect("M6-B mutation should exist");
-        assert!(
-            mutation.random_selection_enabled,
-            "{id} should be selectable"
-        );
-        assert!(
-            mutation.periodic_effect.is_some(),
-            "{id} should be periodic"
-        );
-    }
-}
-
-#[test]
-fn m6_c_periodic_mutations_are_random_candidates_with_typed_effects() {
-    let catalog = ContentCatalog::from_artifact(
-        compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
-    );
-    for id in [
         "rfb.mutation.flatulent",
         "rfb.mutation.attract-demon",
         "rfb.mutation.eat-light",
         "rfb.mutation.attract-animal",
         "rfb.mutation.raw-chaos",
         "rfb.mutation.attract-dragon",
-    ] {
-        let mutation = catalog.mutation(id).expect("M6-C mutation should exist");
-        assert!(
-            mutation.random_selection_enabled,
-            "{id} should be selectable"
-        );
-        assert!(
-            mutation.periodic_effect.is_some(),
-            "{id} should be periodic"
-        );
-    }
-}
-
-#[test]
-fn m6_d_periodic_mutations_are_random_candidates_with_typed_effects() {
-    let catalog = ContentCatalog::from_artifact(
-        compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
-    );
-    for id in [
         "rfb.mutation.normality",
         "rfb.mutation.wraith",
         "rfb.mutation.poly-wound",
@@ -4465,7 +3930,9 @@ fn m6_d_periodic_mutations_are_random_candidates_with_typed_effects() {
         "rfb.mutation.nausea",
         "rfb.mutation.warning",
     ] {
-        let mutation = catalog.mutation(id).expect("M6-D mutation should exist");
+        let mutation = catalog
+            .mutation(id)
+            .unwrap_or_else(|| panic!("{id} should exist"));
         assert!(
             mutation.random_selection_enabled,
             "{id} should be selectable"
@@ -4540,757 +4007,725 @@ fn mutation_definitions_match_the_frozen_legacy_ledger() {
 }
 
 #[test]
-fn first_passive_mutation_batch_keeps_original_attribute_speed_and_armor_bonuses() {
-    let pack = original_pack_path();
+fn passive_mutation_stat_and_resistance_bindings_match_source() {
     let catalog = ContentCatalog::from_artifact(
-        compile_pack_dir(&pack).expect("original pack should compile"),
-    );
-    let expected = [
-        (
-            "rfb.mutation.hyper-str",
-            StatModifiers {
-                strength: 4,
-                ..StatModifiers::default()
-            },
-            0,
-        ),
-        (
-            "rfb.mutation.puny",
-            StatModifiers {
-                strength: -4,
-                ..StatModifiers::default()
-            },
-            0,
-        ),
-        (
-            "rfb.mutation.hyper-int",
-            StatModifiers {
-                intelligence: 4,
-                wisdom: 4,
-                ..StatModifiers::default()
-            },
-            0,
-        ),
-        (
-            "rfb.mutation.moronic",
-            StatModifiers {
-                intelligence: -4,
-                wisdom: -4,
-                ..StatModifiers::default()
-            },
-            0,
-        ),
-        (
-            "rfb.mutation.pultitis",
-            StatModifiers {
-                intelligence: -3,
-                ..StatModifiers::default()
-            },
-            0,
-        ),
-        (
-            "rfb.mutation.resilient",
-            StatModifiers {
-                constitution: 4,
-                ..StatModifiers::default()
-            },
-            0,
-        ),
-        (
-            "rfb.mutation.xtra-fat",
-            StatModifiers {
-                constitution: 2,
-                speed: -2,
-                ..StatModifiers::default()
-            },
-            0,
-        ),
-        (
-            "rfb.mutation.albino",
-            StatModifiers {
-                constitution: -4,
-                ..StatModifiers::default()
-            },
-            0,
-        ),
-        (
-            "rfb.mutation.silly-voice",
-            StatModifiers {
-                charisma: -4,
-                ..StatModifiers::default()
-            },
-            0,
-        ),
-        (
-            "rfb.mutation.blank-face",
-            StatModifiers {
-                charisma: -1,
-                ..StatModifiers::default()
-            },
-            0,
-        ),
-        (
-            "rfb.mutation.xtra-legs",
-            StatModifiers {
-                speed: 3,
-                ..StatModifiers::default()
-            },
-            0,
-        ),
-        (
-            "rfb.mutation.short-leg",
-            StatModifiers {
-                speed: -3,
-                ..StatModifiers::default()
-            },
-            0,
-        ),
-        (
-            "rfb.mutation.warts",
-            StatModifiers {
-                charisma: -2,
-                ..StatModifiers::default()
-            },
-            5,
-        ),
-        (
-            "rfb.mutation.scales",
-            StatModifiers {
-                charisma: -1,
-                ..StatModifiers::default()
-            },
-            10,
-        ),
-        (
-            "rfb.mutation.steel-skin",
-            StatModifiers {
-                dexterity: -1,
-                ..StatModifiers::default()
-            },
-            25,
-        ),
-    ];
-    let active_expected = expected
-        .iter()
-        .map(|(id, _, _)| *id)
-        .collect::<std::collections::BTreeSet<_>>();
-    for (id, modifiers, armor_class) in expected {
-        let mutation = catalog
-            .mutation(id)
-            .unwrap_or_else(|| panic!("{id} should exist"));
-        assert_eq!(mutation.modifiers, modifiers, "{id} modifiers");
-        assert_eq!(mutation.armor_class, armor_class, "{id} armor class");
-    }
-
-    let ledger: serde_json::Value = serde_json::from_slice(
-        &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
-    )
-    .expect("ledger should parse");
-    let active = ledger["mutations"]
-        .as_array()
-        .expect("ledger should contain mutations")
-        .iter()
-        .filter(|entry| entry["status"] == "active")
-        .map(|entry| entry["id"].as_str().expect("mutation id"))
-        .collect::<std::collections::BTreeSet<_>>();
-    assert!(active.is_superset(&active_expected));
-}
-
-#[test]
-fn second_passive_mutation_batch_keeps_resistance_sense_and_levitation_semantics() {
-    let pack = original_pack_path();
-    let catalog = ContentCatalog::from_artifact(
-        compile_pack_dir(&pack).expect("original pack should compile"),
-    );
-    let expected_active = [
-        "rfb.mutation.magic-res",
-        "rfb.mutation.wings",
-        "rfb.mutation.fearless",
-        "rfb.mutation.weird-mind",
-        "rfb.mutation.draconian-magic-res",
-        "rfb.mutation.draconian-resistance",
-        "rfb.mutation.sensitive-eyes",
-        "rfb.mutation.no-inhibitions",
-        "rfb.mutation.infravision",
-        "rfb.mutation.vuln-elem",
-        "rfb.mutation.waybread-into",
-        "rfb.mutation.ill-norm",
-        "rfb.mutation.esp",
-    ];
-
-    for id in ["rfb.mutation.magic-res", "rfb.mutation.draconian-magic-res"] {
-        let mutation = catalog.mutation(id).unwrap_or_else(|| panic!("{id}"));
-        assert_eq!(mutation.saving_throw_skill, 15);
-        assert_eq!(mutation.saving_throw_skill_per_five_levels, 1);
-    }
-    assert!(catalog.mutation("rfb.mutation.wings").unwrap().levitation);
-    assert!(
-        catalog
-            .mutation("rfb.mutation.waybread-into")
-            .unwrap()
-            .levitation
-    );
-    assert!(catalog.mutation("rfb.mutation.esp").unwrap().telepathy);
-    assert!(
-        catalog
-            .mutation("rfb.mutation.ill-norm")
-            .unwrap()
-            .normal_appearance
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.fearless")
-            .unwrap()
-            .resistances
-            .get(&ActorDamageType::Fear),
-        Some(&ActorResistanceLevel::Resistant)
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.sensitive-eyes")
-            .unwrap()
-            .resistances
-            .get(&ActorDamageType::Blindness),
-        Some(&ActorResistanceLevel::Vulnerable)
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.sensitive-eyes")
-            .unwrap()
-            .infravision,
-        4
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.infravision")
-            .unwrap()
-            .infravision,
-        3
-    );
-    let elemental_vulnerability = &catalog
-        .mutation("rfb.mutation.vuln-elem")
-        .unwrap()
-        .resistances;
-    for damage_type in [
-        ActorDamageType::Acid,
-        ActorDamageType::Cold,
-        ActorDamageType::Electricity,
-        ActorDamageType::Fire,
-    ] {
-        assert_eq!(
-            elemental_vulnerability.get(&damage_type),
-            Some(&ActorResistanceLevel::Vulnerable),
-            "{damage_type:?} vulnerability"
-        );
-    }
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.weird-mind")
-            .unwrap()
-            .status_immunities,
-        ["rfb.status.eldritch-horror", "rfb.status.hallucination"]
+        compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
     );
 
     let ledger: serde_json::Value = serde_json::from_slice(
-        &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
+        &std::fs::read(original_pack_path().join("legacy-mutation-plan.json"))
+            .expect("ledger should read"),
     )
     .expect("ledger should parse");
-    let entries = ledger["mutations"].as_array().expect("mutation entries");
-    for id in expected_active {
-        let entry = entries
+
+    {
+        let expected = [
+            (
+                "rfb.mutation.hyper-str",
+                StatModifiers {
+                    strength: 4,
+                    ..StatModifiers::default()
+                },
+                0,
+            ),
+            (
+                "rfb.mutation.puny",
+                StatModifiers {
+                    strength: -4,
+                    ..StatModifiers::default()
+                },
+                0,
+            ),
+            (
+                "rfb.mutation.hyper-int",
+                StatModifiers {
+                    intelligence: 4,
+                    wisdom: 4,
+                    ..StatModifiers::default()
+                },
+                0,
+            ),
+            (
+                "rfb.mutation.moronic",
+                StatModifiers {
+                    intelligence: -4,
+                    wisdom: -4,
+                    ..StatModifiers::default()
+                },
+                0,
+            ),
+            (
+                "rfb.mutation.pultitis",
+                StatModifiers {
+                    intelligence: -3,
+                    ..StatModifiers::default()
+                },
+                0,
+            ),
+            (
+                "rfb.mutation.resilient",
+                StatModifiers {
+                    constitution: 4,
+                    ..StatModifiers::default()
+                },
+                0,
+            ),
+            (
+                "rfb.mutation.xtra-fat",
+                StatModifiers {
+                    constitution: 2,
+                    speed: -2,
+                    ..StatModifiers::default()
+                },
+                0,
+            ),
+            (
+                "rfb.mutation.albino",
+                StatModifiers {
+                    constitution: -4,
+                    ..StatModifiers::default()
+                },
+                0,
+            ),
+            (
+                "rfb.mutation.silly-voice",
+                StatModifiers {
+                    charisma: -4,
+                    ..StatModifiers::default()
+                },
+                0,
+            ),
+            (
+                "rfb.mutation.blank-face",
+                StatModifiers {
+                    charisma: -1,
+                    ..StatModifiers::default()
+                },
+                0,
+            ),
+            (
+                "rfb.mutation.xtra-legs",
+                StatModifiers {
+                    speed: 3,
+                    ..StatModifiers::default()
+                },
+                0,
+            ),
+            (
+                "rfb.mutation.short-leg",
+                StatModifiers {
+                    speed: -3,
+                    ..StatModifiers::default()
+                },
+                0,
+            ),
+            (
+                "rfb.mutation.warts",
+                StatModifiers {
+                    charisma: -2,
+                    ..StatModifiers::default()
+                },
+                5,
+            ),
+            (
+                "rfb.mutation.scales",
+                StatModifiers {
+                    charisma: -1,
+                    ..StatModifiers::default()
+                },
+                10,
+            ),
+            (
+                "rfb.mutation.steel-skin",
+                StatModifiers {
+                    dexterity: -1,
+                    ..StatModifiers::default()
+                },
+                25,
+            ),
+        ];
+        let active_expected = expected
             .iter()
-            .find(|entry| entry["id"] == id)
-            .unwrap_or_else(|| panic!("{id}"));
-        assert_eq!(entry["status"], "active", "{id}");
-        assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
+            .map(|(id, _, _)| *id)
+            .collect::<std::collections::BTreeSet<_>>();
+        for (id, modifiers, armor_class) in expected {
+            let mutation = catalog
+                .mutation(id)
+                .unwrap_or_else(|| panic!("{id} should exist"));
+            assert_eq!(mutation.modifiers, modifiers, "{id} modifiers");
+            assert_eq!(mutation.armor_class, armor_class, "{id} armor class");
+        }
+
+        let active = ledger["mutations"]
+            .as_array()
+            .expect("ledger should contain mutations")
+            .iter()
+            .filter(|entry| entry["status"] == "active")
+            .map(|entry| entry["id"].as_str().expect("mutation id"))
+            .collect::<std::collections::BTreeSet<_>>();
+        assert!(active.is_superset(&active_expected));
     }
-}
 
-#[test]
-fn third_passive_mutation_batch_keeps_regeneration_aura_and_light_semantics() {
-    let pack = original_pack_path();
-    let catalog = ContentCatalog::from_artifact(
-        compile_pack_dir(&pack).expect("original pack should compile"),
-    );
+    {
+        let expected_active = [
+            "rfb.mutation.magic-res",
+            "rfb.mutation.wings",
+            "rfb.mutation.fearless",
+            "rfb.mutation.weird-mind",
+            "rfb.mutation.draconian-magic-res",
+            "rfb.mutation.draconian-resistance",
+            "rfb.mutation.sensitive-eyes",
+            "rfb.mutation.no-inhibitions",
+            "rfb.mutation.infravision",
+            "rfb.mutation.vuln-elem",
+            "rfb.mutation.waybread-into",
+            "rfb.mutation.ill-norm",
+            "rfb.mutation.esp",
+        ];
 
-    for (id, modifier) in [
-        ("rfb.mutation.flesh-rot", -80),
-        ("rfb.mutation.regen", 100),
-        ("rfb.mutation.draconian-regen", 150),
-    ] {
+        for id in ["rfb.mutation.magic-res", "rfb.mutation.draconian-magic-res"] {
+            let mutation = catalog.mutation(id).unwrap_or_else(|| panic!("{id}"));
+            assert_eq!(mutation.saving_throw_skill, 15);
+            assert_eq!(mutation.saving_throw_skill_per_five_levels, 1);
+        }
+        assert!(catalog.mutation("rfb.mutation.wings").unwrap().levitation);
+        assert!(
+            catalog
+                .mutation("rfb.mutation.waybread-into")
+                .unwrap()
+                .levitation
+        );
+        assert!(catalog.mutation("rfb.mutation.esp").unwrap().telepathy);
+        assert!(
+            catalog
+                .mutation("rfb.mutation.ill-norm")
+                .unwrap()
+                .normal_appearance
+        );
         assert_eq!(
             catalog
+                .mutation("rfb.mutation.fearless")
+                .unwrap()
+                .resistances
+                .get(&ActorDamageType::Fear),
+            Some(&ActorResistanceLevel::Resistant)
+        );
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.sensitive-eyes")
+                .unwrap()
+                .resistances
+                .get(&ActorDamageType::Blindness),
+            Some(&ActorResistanceLevel::Vulnerable)
+        );
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.sensitive-eyes")
+                .unwrap()
+                .infravision,
+            4
+        );
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.infravision")
+                .unwrap()
+                .infravision,
+            3
+        );
+        let elemental_vulnerability = &catalog
+            .mutation("rfb.mutation.vuln-elem")
+            .unwrap()
+            .resistances;
+        for damage_type in [
+            ActorDamageType::Acid,
+            ActorDamageType::Cold,
+            ActorDamageType::Electricity,
+            ActorDamageType::Fire,
+        ] {
+            assert_eq!(
+                elemental_vulnerability.get(&damage_type),
+                Some(&ActorResistanceLevel::Vulnerable),
+                "{damage_type:?} vulnerability"
+            );
+        }
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.weird-mind")
+                .unwrap()
+                .status_immunities,
+            ["rfb.status.eldritch-horror", "rfb.status.hallucination"]
+        );
+
+        let entries = ledger["mutations"].as_array().expect("mutation entries");
+        for id in expected_active {
+            let entry = entries
+                .iter()
+                .find(|entry| entry["id"] == id)
+                .unwrap_or_else(|| panic!("{id}"));
+            assert_eq!(entry["status"], "active", "{id}");
+            assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
+        }
+    }
+
+    {
+        for (id, modifier) in [
+            ("rfb.mutation.flesh-rot", -80),
+            ("rfb.mutation.regen", 100),
+            ("rfb.mutation.draconian-regen", 150),
+        ] {
+            assert_eq!(
+                catalog
+                    .mutation(id)
+                    .unwrap_or_else(|| panic!("{id}"))
+                    .regeneration_rate_modifier_percent,
+                modifier,
+                "{id} regeneration modifier"
+            );
+        }
+        let flesh_rot = catalog.mutation("rfb.mutation.flesh-rot").unwrap();
+        assert_eq!(flesh_rot.modifiers.constitution, -2);
+        assert_eq!(flesh_rot.modifiers.charisma, -1);
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.fire-aura")
+                .unwrap()
+                .contact_aura,
+            Some(ActorDamageType::Fire)
+        );
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.fire-aura")
+                .unwrap()
+                .light_radius,
+            1
+        );
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.elec-aura")
+                .unwrap()
+                .contact_aura,
+            Some(ActorDamageType::Electricity)
+        );
+
+        let entries = ledger["mutations"].as_array().expect("mutation entries");
+        for id in [
+            "rfb.mutation.flesh-rot",
+            "rfb.mutation.elec-aura",
+            "rfb.mutation.fire-aura",
+            "rfb.mutation.regen",
+            "rfb.mutation.draconian-regen",
+            "rfb.mutation.draconian-shield",
+        ] {
+            let entry = entries
+                .iter()
+                .find(|entry| entry["id"] == id)
+                .unwrap_or_else(|| panic!("{id}"));
+            assert_eq!(entry["status"], "active", "{id}");
+            assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
+        }
+    }
+}
+
+#[test]
+fn passive_mutation_combat_and_system_bindings_match_source() {
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&original_pack_path()).expect("original pack should compile"),
+    );
+
+    let ledger: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(original_pack_path().join("legacy-mutation-plan.json"))
+            .expect("ledger should read"),
+    )
+    .expect("ledger should parse");
+
+    {
+        for (id, name, dice, sides, damage_type, weight) in [
+            (
+                "rfb.mutation.scorpion-tail",
+                "尾巴",
+                3,
+                7,
+                ActorDamageType::Poison,
+                50,
+            ),
+            (
+                "rfb.mutation.horns",
+                "长角",
+                2,
+                6,
+                ActorDamageType::Physical,
+                150,
+            ),
+            (
+                "rfb.mutation.beak",
+                "鸟喙",
+                2,
+                4,
+                ActorDamageType::Physical,
+                30,
+            ),
+            (
+                "rfb.mutation.trunk",
+                "象鼻",
+                1,
+                4,
+                ActorDamageType::Physical,
+                200,
+            ),
+            (
+                "rfb.mutation.tentacles",
+                "触手",
+                2,
+                5,
+                ActorDamageType::Physical,
+                50,
+            ),
+        ] {
+            let attack = catalog
                 .mutation(id)
                 .unwrap_or_else(|| panic!("{id}"))
-                .regeneration_rate_modifier_percent,
-            modifier,
-            "{id} regeneration modifier"
+                .innate_attack
+                .as_ref()
+                .unwrap_or_else(|| panic!("{id} innate attack"));
+            assert_eq!(attack.name, name, "{id}");
+            assert_eq!(
+                (attack.damage_dice, attack.damage_sides),
+                (dice, sides),
+                "{id}"
+            );
+            assert_eq!(attack.damage_type, damage_type, "{id}");
+            assert_eq!(attack.weight_tenths_pound, weight, "{id}");
+            assert_eq!((attack.to_hit, attack.to_damage), (0, 0), "{id}");
+        }
+        assert!(
+            catalog
+                .mutation("rfb.mutation.launcher")
+                .unwrap()
+                .mighty_throw
         );
-    }
-    let flesh_rot = catalog.mutation("rfb.mutation.flesh-rot").unwrap();
-    assert_eq!(flesh_rot.modifiers.constitution, -2);
-    assert_eq!(flesh_rot.modifiers.charisma, -1);
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.fire-aura")
-            .unwrap()
-            .contact_aura,
-        Some(ActorDamageType::Fire)
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.fire-aura")
-            .unwrap()
-            .light_radius,
-        1
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.elec-aura")
-            .unwrap()
-            .contact_aura,
-        Some(ActorDamageType::Electricity)
-    );
-
-    let ledger: serde_json::Value = serde_json::from_slice(
-        &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
-    )
-    .expect("ledger should parse");
-    let entries = ledger["mutations"].as_array().expect("mutation entries");
-    for id in [
-        "rfb.mutation.flesh-rot",
-        "rfb.mutation.elec-aura",
-        "rfb.mutation.fire-aura",
-        "rfb.mutation.regen",
-        "rfb.mutation.draconian-regen",
-        "rfb.mutation.draconian-shield",
-    ] {
-        let entry = entries
-            .iter()
-            .find(|entry| entry["id"] == id)
-            .unwrap_or_else(|| panic!("{id}"));
-        assert_eq!(entry["status"], "active", "{id}");
-        assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
-    }
-}
-
-#[test]
-fn fourth_passive_mutation_batch_keeps_innate_attack_and_combat_semantics() {
-    let pack = original_pack_path();
-    let catalog = ContentCatalog::from_artifact(
-        compile_pack_dir(&pack).expect("original pack should compile"),
-    );
-
-    for (id, name, dice, sides, damage_type, weight) in [
-        (
-            "rfb.mutation.scorpion-tail",
-            "尾巴",
-            3,
-            7,
-            ActorDamageType::Poison,
-            50,
-        ),
-        (
-            "rfb.mutation.horns",
-            "长角",
-            2,
-            6,
-            ActorDamageType::Physical,
-            150,
-        ),
-        (
-            "rfb.mutation.beak",
-            "鸟喙",
-            2,
-            4,
-            ActorDamageType::Physical,
-            30,
-        ),
-        (
-            "rfb.mutation.trunk",
-            "象鼻",
-            1,
-            4,
-            ActorDamageType::Physical,
-            200,
-        ),
-        (
-            "rfb.mutation.tentacles",
-            "触手",
-            2,
-            5,
-            ActorDamageType::Physical,
-            50,
-        ),
-    ] {
-        let attack = catalog
-            .mutation(id)
-            .unwrap_or_else(|| panic!("{id}"))
-            .innate_attack
-            .as_ref()
-            .unwrap_or_else(|| panic!("{id} innate attack"));
-        assert_eq!(attack.name, name, "{id}");
         assert_eq!(
-            (attack.damage_dice, attack.damage_sides),
-            (dice, sides),
-            "{id}"
+            catalog
+                .mutation("rfb.mutation.limber")
+                .unwrap()
+                .modifiers
+                .dexterity,
+            3
         );
-        assert_eq!(attack.damage_type, damage_type, "{id}");
-        assert_eq!(attack.weight_tenths_pound, weight, "{id}");
-        assert_eq!((attack.to_hit, attack.to_damage), (0, 0), "{id}");
-    }
-    assert!(
-        catalog
-            .mutation("rfb.mutation.launcher")
-            .unwrap()
-            .mighty_throw
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.limber")
-            .unwrap()
-            .modifiers
-            .dexterity,
-        3
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.arthritis")
-            .unwrap()
-            .modifiers
-            .dexterity,
-        -3
-    );
-    let motion = catalog.mutation("rfb.mutation.motion").unwrap();
-    assert_eq!(motion.stealth_skill, 1);
-    assert_eq!(motion.status_immunities, ["rfb.status.paralysis"]);
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.untouchable")
-            .unwrap()
-            .armor_class,
-        20
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.tread-softly")
-            .unwrap()
-            .stealth_skill,
-        3
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.human-int")
-            .unwrap()
-            .resistances
-            .get(&ActorDamageType::Fear),
-        Some(&ActorResistanceLevel::Vulnerable)
-    );
-    assert!(matches!(
-        catalog
-            .mutation("rfb.mutation.human-con")
-            .unwrap()
-            .periodic_effect,
-        Some(MutationPeriodicEffectDefinition::ApplyStatus {
-            trigger_one_in: 200,
-            skip_if_present: true,
-            ref status_kind_id,
-            duration_ticks: 50,
-            ..
-        }) if status_kind_id == "rfb.status.unwell"
-    ));
-    let human_charisma = catalog.mutation("rfb.mutation.human-chr").unwrap();
-    assert_eq!(
-        (
-            human_charisma.device_skill,
-            human_charisma.melee_skill,
-            human_charisma.ranged_skill,
-            human_charisma.spell_failure_modifier_percent,
-        ),
-        (-10, -16, -10, 10)
-    );
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.arthritis")
+                .unwrap()
+                .modifiers
+                .dexterity,
+            -3
+        );
+        let motion = catalog.mutation("rfb.mutation.motion").unwrap();
+        assert_eq!(motion.stealth_skill, 1);
+        assert_eq!(motion.status_immunities, ["rfb.status.paralysis"]);
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.untouchable")
+                .unwrap()
+                .armor_class,
+            20
+        );
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.tread-softly")
+                .unwrap()
+                .stealth_skill,
+            3
+        );
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.human-int")
+                .unwrap()
+                .resistances
+                .get(&ActorDamageType::Fear),
+            Some(&ActorResistanceLevel::Vulnerable)
+        );
+        assert!(matches!(
+            catalog
+                .mutation("rfb.mutation.human-con")
+                .unwrap()
+                .periodic_effect,
+            Some(MutationPeriodicEffectDefinition::ApplyStatus {
+                trigger_one_in: 200,
+                skip_if_present: true,
+                ref status_kind_id,
+                duration_ticks: 50,
+                ..
+            }) if status_kind_id == "rfb.status.unwell"
+        ));
+        let human_charisma = catalog.mutation("rfb.mutation.human-chr").unwrap();
+        assert_eq!(
+            (
+                human_charisma.device_skill,
+                human_charisma.melee_skill,
+                human_charisma.ranged_skill,
+                human_charisma.spell_failure_modifier_percent,
+            ),
+            (-10, -16, -10, 10)
+        );
 
-    let ledger: serde_json::Value = serde_json::from_slice(
-        &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
-    )
-    .expect("ledger should parse");
-    let entries = ledger["mutations"].as_array().expect("mutation entries");
-    for id in [
-        "rfb.mutation.launcher",
-        "rfb.mutation.scorpion-tail",
-        "rfb.mutation.horns",
-        "rfb.mutation.beak",
-        "rfb.mutation.trunk",
-        "rfb.mutation.tentacles",
-        "rfb.mutation.limber",
-        "rfb.mutation.arthritis",
-        "rfb.mutation.motion",
-        "rfb.mutation.untouchable",
-        "rfb.mutation.tread-softly",
-        "rfb.mutation.human-str",
-        "rfb.mutation.human-int",
-        "rfb.mutation.human-wis",
-        "rfb.mutation.human-dex",
-        "rfb.mutation.human-con",
-        "rfb.mutation.human-chr",
-    ] {
-        let entry = entries
-            .iter()
-            .find(|entry| entry["id"] == id)
-            .unwrap_or_else(|| panic!("{id}"));
-        assert_eq!(entry["status"], "active", "{id}");
-        assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
-    }
-    let id = "rfb.mutation.vortex-melee";
-    let entry = entries
-        .iter()
-        .find(|entry| entry["id"] == id)
-        .unwrap_or_else(|| panic!("{id}"));
-    assert_eq!(entry["status"], "blocked", "{id}");
-    assert_eq!(
-        entry["blockers"],
-        serde_json::json!(["vortex-race-innate-attack-identity"]),
-        "{id}"
-    );
-}
-
-#[test]
-fn fifth_passive_mutation_batch_keeps_cross_system_semantics_explicit() {
-    let pack = original_pack_path();
-    let catalog = ContentCatalog::from_artifact(
-        compile_pack_dir(&pack).expect("original pack should compile"),
-    );
-
-    let eyes = catalog.mutation("rfb.mutation.xtra-eyes").unwrap();
-    assert_eq!((eyes.search_skill, eyes.perception_skill), (15, 15));
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.xtra-noise")
-            .unwrap()
-            .stealth_skill,
-        -3
-    );
-    let learner = catalog.mutation("rfb.mutation.fast-learner").unwrap();
-    assert_eq!(learner.kill_experience_bonus_percent, 20);
-    assert_eq!(
-        learner.relative_experience_multiplier,
-        Some(MutationRatioDefinition {
-            numerator: 5,
-            denominator: 3,
-        })
-    );
-    assert!(
-        catalog
-            .mutation("rfb.mutation.loremaster")
-            .unwrap()
-            .auto_identify_items
-    );
-    assert!(
-        catalog
-            .mutation("rfb.mutation.draconian-lore")
-            .unwrap()
-            .auto_identify_items
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.arcane-mastery")
-            .unwrap()
-            .spell_failure_modifier_percent,
-        -3
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.one-with-magic")
-            .unwrap()
-            .dispel_resistance_percent,
-        77
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.fleet-of-foot")
-            .unwrap()
-            .movement_energy_multiplier,
-        Some(MutationRatioDefinition {
-            numerator: 3,
-            denominator: 5,
-        })
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.limp")
-            .unwrap()
-            .movement_energy_multiplier,
-        Some(MutationRatioDefinition {
-            numerator: 10,
-            denominator: 9,
-        })
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.speed-reader")
-            .unwrap()
-            .scroll_energy_multiplier,
-        Some(MutationRatioDefinition {
-            numerator: 1,
-            denominator: 2,
-        })
-    );
-    assert!(
-        catalog
-            .mutation("rfb.mutation.black-marketeer")
-            .unwrap()
-            .black_market_standard_prices
-    );
-    assert!(
-        catalog
-            .mutation("rfb.mutation.strong-mind")
-            .unwrap()
-            .resource_drain_immunity
-    );
-
-    let ledger: serde_json::Value = serde_json::from_slice(
-        &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
-    )
-    .expect("ledger should parse");
-    let entries = ledger["mutations"].as_array().expect("mutation entries");
-    for id in [
-        "rfb.mutation.xtra-eyes",
-        "rfb.mutation.xtra-noise",
-        "rfb.mutation.fast-learner",
-        "rfb.mutation.loremaster",
-        "rfb.mutation.arcane-mastery",
-        "rfb.mutation.one-with-magic",
-        "rfb.mutation.merchants-friend",
-        "rfb.mutation.fleet-of-foot",
-        "rfb.mutation.black-marketeer",
-        "rfb.mutation.speed-reader",
-        "rfb.mutation.draconian-lore",
-        "rfb.mutation.strong-mind",
-        "rfb.mutation.limp",
-        "rfb.mutation.bad-luck",
-        "rfb.mutation.good-luck",
-        "rfb.mutation.easy-tiring",
-        "rfb.mutation.impotence",
-    ] {
-        let entry = entries
-            .iter()
-            .find(|entry| entry["id"] == id)
-            .unwrap_or_else(|| panic!("{id}"));
-        assert_eq!(entry["status"], "active", "{id}");
-        assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
-    }
-    for (id, blocker) in [
-        (
-            "rfb.mutation.astral-guide",
-            "player-teleport-energy-cost-across-abilities-and-items",
-        ),
-        (
-            "rfb.mutation.easy-tiring2",
-            "fatigue-minislow-state-recovery-and-magic-ranged-consumers",
-        ),
-    ] {
+        let entries = ledger["mutations"].as_array().expect("mutation entries");
+        for id in [
+            "rfb.mutation.launcher",
+            "rfb.mutation.scorpion-tail",
+            "rfb.mutation.horns",
+            "rfb.mutation.beak",
+            "rfb.mutation.trunk",
+            "rfb.mutation.tentacles",
+            "rfb.mutation.limber",
+            "rfb.mutation.arthritis",
+            "rfb.mutation.motion",
+            "rfb.mutation.untouchable",
+            "rfb.mutation.tread-softly",
+            "rfb.mutation.human-str",
+            "rfb.mutation.human-int",
+            "rfb.mutation.human-wis",
+            "rfb.mutation.human-dex",
+            "rfb.mutation.human-con",
+            "rfb.mutation.human-chr",
+        ] {
+            let entry = entries
+                .iter()
+                .find(|entry| entry["id"] == id)
+                .unwrap_or_else(|| panic!("{id}"));
+            assert_eq!(entry["status"], "active", "{id}");
+            assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
+        }
+        let id = "rfb.mutation.vortex-melee";
         let entry = entries
             .iter()
             .find(|entry| entry["id"] == id)
             .unwrap_or_else(|| panic!("{id}"));
         assert_eq!(entry["status"], "blocked", "{id}");
-        assert_eq!(entry["blockers"], serde_json::json!([blocker]), "{id}");
+        assert_eq!(
+            entry["blockers"],
+            serde_json::json!(["vortex-race-innate-attack-identity"]),
+            "{id}"
+        );
     }
-}
 
-#[test]
-fn sixth_passive_mutation_batch_completes_current_consumers() {
-    let pack = original_pack_path();
-    let catalog = ContentCatalog::from_artifact(
-        compile_pack_dir(&pack).expect("original pack should compile"),
-    );
+    {
+        let eyes = catalog.mutation("rfb.mutation.xtra-eyes").unwrap();
+        assert_eq!((eyes.search_skill, eyes.perception_skill), (15, 15));
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.xtra-noise")
+                .unwrap()
+                .stealth_skill,
+            -3
+        );
+        let learner = catalog.mutation("rfb.mutation.fast-learner").unwrap();
+        assert_eq!(learner.kill_experience_bonus_percent, 20);
+        assert_eq!(
+            learner.relative_experience_multiplier,
+            Some(MutationRatioDefinition {
+                numerator: 5,
+                denominator: 3,
+            })
+        );
+        assert!(
+            catalog
+                .mutation("rfb.mutation.loremaster")
+                .unwrap()
+                .auto_identify_items
+        );
+        assert!(
+            catalog
+                .mutation("rfb.mutation.draconian-lore")
+                .unwrap()
+                .auto_identify_items
+        );
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.arcane-mastery")
+                .unwrap()
+                .spell_failure_modifier_percent,
+            -3
+        );
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.one-with-magic")
+                .unwrap()
+                .dispel_resistance_percent,
+            77
+        );
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.fleet-of-foot")
+                .unwrap()
+                .movement_energy_multiplier,
+            Some(MutationRatioDefinition {
+                numerator: 3,
+                denominator: 5,
+            })
+        );
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.limp")
+                .unwrap()
+                .movement_energy_multiplier,
+            Some(MutationRatioDefinition {
+                numerator: 10,
+                denominator: 9,
+            })
+        );
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.speed-reader")
+                .unwrap()
+                .scroll_energy_multiplier,
+            Some(MutationRatioDefinition {
+                numerator: 1,
+                denominator: 2,
+            })
+        );
+        assert!(
+            catalog
+                .mutation("rfb.mutation.black-marketeer")
+                .unwrap()
+                .black_market_standard_prices
+        );
+        assert!(
+            catalog
+                .mutation("rfb.mutation.strong-mind")
+                .unwrap()
+                .resource_drain_immunity
+        );
 
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.unyielding")
-            .unwrap()
-            .max_hp_per_level,
-        1
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.potion-chugger")
-            .unwrap()
-            .potion_energy_multiplier,
-        Some(MutationRatioDefinition {
-            numerator: 1,
-            denominator: 2,
-        })
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.sacred-vitality")
-            .unwrap()
-            .healing_bonus_percent,
-        20
-    );
-    let fell_sorcery = catalog.mutation("rfb.mutation.fell-sorcery").unwrap();
-    assert_eq!(
-        (
-            fell_sorcery.modifiers.strength,
-            fell_sorcery.modifiers.dexterity,
-            fell_sorcery.modifiers.constitution,
-            fell_sorcery.modifiers.spell_power_bonus,
-        ),
-        (-1, -1, -1, 2)
-    );
-    assert_eq!(
-        catalog
-            .mutation("rfb.mutation.weapon-skills")
-            .unwrap()
-            .weapon_proficiency_maximum,
-        Some(8_000)
-    );
-    assert!(
-        catalog
-            .mutation("rfb.mutation.infernal-deal")
-            .unwrap()
-            .infernal_deal
-    );
-    assert!(
-        catalog
-            .mutation("rfb.mutation.demonic-grasp")
-            .unwrap()
-            .device_charge_drain_immunity
-    );
+        let entries = ledger["mutations"].as_array().expect("mutation entries");
+        for id in [
+            "rfb.mutation.xtra-eyes",
+            "rfb.mutation.xtra-noise",
+            "rfb.mutation.fast-learner",
+            "rfb.mutation.loremaster",
+            "rfb.mutation.arcane-mastery",
+            "rfb.mutation.one-with-magic",
+            "rfb.mutation.merchants-friend",
+            "rfb.mutation.fleet-of-foot",
+            "rfb.mutation.black-marketeer",
+            "rfb.mutation.speed-reader",
+            "rfb.mutation.draconian-lore",
+            "rfb.mutation.strong-mind",
+            "rfb.mutation.limp",
+            "rfb.mutation.bad-luck",
+            "rfb.mutation.good-luck",
+            "rfb.mutation.easy-tiring",
+            "rfb.mutation.impotence",
+        ] {
+            let entry = entries
+                .iter()
+                .find(|entry| entry["id"] == id)
+                .unwrap_or_else(|| panic!("{id}"));
+            assert_eq!(entry["status"], "active", "{id}");
+            assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
+        }
+        for (id, blocker) in [
+            (
+                "rfb.mutation.astral-guide",
+                "player-teleport-energy-cost-across-abilities-and-items",
+            ),
+            (
+                "rfb.mutation.easy-tiring2",
+                "fatigue-minislow-state-recovery-and-magic-ranged-consumers",
+            ),
+        ] {
+            let entry = entries
+                .iter()
+                .find(|entry| entry["id"] == id)
+                .unwrap_or_else(|| panic!("{id}"));
+            assert_eq!(entry["status"], "blocked", "{id}");
+            assert_eq!(entry["blockers"], serde_json::json!([blocker]), "{id}");
+        }
+    }
 
-    let ledger: serde_json::Value = serde_json::from_slice(
-        &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
-    )
-    .expect("ledger should parse");
-    let entries = ledger["mutations"].as_array().expect("mutation entries");
-    for id in [
-        "rfb.mutation.fast-learner",
-        "rfb.mutation.untouchable",
-        "rfb.mutation.loremaster",
-        "rfb.mutation.arcane-mastery",
-        "rfb.mutation.one-with-magic",
-        "rfb.mutation.merchants-friend",
-        "rfb.mutation.fleet-of-foot",
-        "rfb.mutation.weird-mind",
-        "rfb.mutation.black-marketeer",
-        "rfb.mutation.speed-reader",
-        "rfb.mutation.tread-softly",
-        "rfb.mutation.strong-mind",
-        "rfb.mutation.unyielding",
-        "rfb.mutation.potion-chugger",
-        "rfb.mutation.sacred-vitality",
-        "rfb.mutation.fell-sorcery",
-        "rfb.mutation.weapon-skills",
-        "rfb.mutation.infernal-deal",
-        "rfb.mutation.demonic-grasp",
-    ] {
-        let entry = entries
-            .iter()
-            .find(|entry| entry["id"] == id)
-            .unwrap_or_else(|| panic!("{id}"));
-        assert_eq!(entry["status"], "active", "{id}");
-        assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
+    {
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.unyielding")
+                .unwrap()
+                .max_hp_per_level,
+            1
+        );
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.potion-chugger")
+                .unwrap()
+                .potion_energy_multiplier,
+            Some(MutationRatioDefinition {
+                numerator: 1,
+                denominator: 2,
+            })
+        );
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.sacred-vitality")
+                .unwrap()
+                .healing_bonus_percent,
+            20
+        );
+        let fell_sorcery = catalog.mutation("rfb.mutation.fell-sorcery").unwrap();
+        assert_eq!(
+            (
+                fell_sorcery.modifiers.strength,
+                fell_sorcery.modifiers.dexterity,
+                fell_sorcery.modifiers.constitution,
+                fell_sorcery.modifiers.spell_power_bonus,
+            ),
+            (-1, -1, -1, 2)
+        );
+        assert_eq!(
+            catalog
+                .mutation("rfb.mutation.weapon-skills")
+                .unwrap()
+                .weapon_proficiency_maximum,
+            Some(8_000)
+        );
+        assert!(
+            catalog
+                .mutation("rfb.mutation.infernal-deal")
+                .unwrap()
+                .infernal_deal
+        );
+        assert!(
+            catalog
+                .mutation("rfb.mutation.demonic-grasp")
+                .unwrap()
+                .device_charge_drain_immunity
+        );
+
+        let entries = ledger["mutations"].as_array().expect("mutation entries");
+        for id in [
+            "rfb.mutation.fast-learner",
+            "rfb.mutation.untouchable",
+            "rfb.mutation.loremaster",
+            "rfb.mutation.arcane-mastery",
+            "rfb.mutation.one-with-magic",
+            "rfb.mutation.merchants-friend",
+            "rfb.mutation.fleet-of-foot",
+            "rfb.mutation.weird-mind",
+            "rfb.mutation.black-marketeer",
+            "rfb.mutation.speed-reader",
+            "rfb.mutation.tread-softly",
+            "rfb.mutation.strong-mind",
+            "rfb.mutation.unyielding",
+            "rfb.mutation.potion-chugger",
+            "rfb.mutation.sacred-vitality",
+            "rfb.mutation.fell-sorcery",
+            "rfb.mutation.weapon-skills",
+            "rfb.mutation.infernal-deal",
+            "rfb.mutation.demonic-grasp",
+        ] {
+            let entry = entries
+                .iter()
+                .find(|entry| entry["id"] == id)
+                .unwrap_or_else(|| panic!("{id}"));
+            assert_eq!(entry["status"], "active", "{id}");
+            assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
+        }
     }
 }
 

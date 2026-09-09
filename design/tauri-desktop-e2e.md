@@ -1,6 +1,6 @@
 # Tauri 桌面端到端测试
 
-状态：Windows WebView2 E2E v1 已实现并接入 CI
+状态：Windows WebView2 玩家流程 E2E 已接入按路径触发的 CI；渲染架构实验单独运行。
 
 ## 1. 目标与边界
 
@@ -21,28 +21,20 @@
 
 ## 3. 当前场景
 
-固定种子 `42` 的单一场景依次验证：
+当前主场景从标题页创建战士（种子 `42`）和死亡领域高阶法师（种子 `7`），验证：
 
-1. 初始快照绘制 400 格，地图 Canvas 与 HTML 状态/消息分别存在；
-   同时验证协议 1.31 的玩家状态列表为空且 HTML 状态层显示“无”；
-2. 小键盘 5 等待后回合增加、消息写入 HTML 列表、地图更新 0 格；
-3. 小键盘 6 东移后位置变化，合并规则格与 Rust 权威 FOV/光照增量后更新 99 格；
-4. 导出 `.rfbsave`，校验文件名、非空字节和成功消息；
-5. 保存后继续移动，再从捕获的真实 Blob 载入，恢复回合和位置；
-6. 导出 `.rfbreplay`，校验文件名、非空字节和成功消息；
-7. 在整图与玩家居中镜头间切换，移动到可跟随区域并验证相机偏移、边缘钳制、state hash 和 dirty cell 计数不受镜头切换影响；
-8. 从 100% 切换到 150% 缩放再恢复，验证相机偏移、视口尺寸、Canvas 身份、state hash 和 dirty cell 计数；
-9. 从 ASCII 热切换到原创图片 tileset，重用同一 Canvas 并重绘 400 格。
-10. 创建桌面原生命名存档槽，验证地点、回合和状态摘要；移动后载入并恢复 state hash；
-11. 原生载入后继续派发命令，验证 TypeScript command sequence/revision 与 Rust 会话同步；
-12. 覆盖并删除原生槽，同时保留手动 `.rfbsave` 导入/导出场景。
-13. 验证默认 16×16 terrain chunk 初始重建、普通 dirty update 零重建、tileset 全量失效和累计重建计数；
-14. 验证整图、玩家居中、跟随移动和 150% 缩放下的 4/1/2/1 个可见 chunk。
-15. 从 5 个发光碎片中指定丢弃 2 个，验证背包剩余 3 个和单堆数量事件；随后拾取回声护符；
-16. 单选装备回声护符，验证攻击 2→3、防御 1→2、最大生命 10→14，以及三个装备修正词条；卸下后恢复基础属性，再多选两堆物品执行整堆批量丢弃；
-17. 从操作前的 `.rfbsave` 恢复背包、装备、地面物品、回合和位置，确认 UI 选择状态和数量输入不进入存档；
-18. 合成 WebView `ErrorEvent`，验证前端未处理异常通过 Tauri IPC 自动生成 `.rfbdiagnostic`，并显示脱敏且不自动上传的中文提示。
-19. 显式启用开发诊断钩子，运行 192×64 原创大地图 profile，对比 8/16/32 格 chunk；校验整图理论值 86,016 个动态 display object 在可见 chunk 复用后分别降到 7,168、7,168 和 28,672，并验证 active/pooled chunk 与有限值性能结果。
+1. 新游戏进入可玩状态，Canvas 存在，协议和内容哈希与构建源一致；
+2. 背包、人物、任务、能力、设置菜单可打开关闭，背包快捷键可切换，菜单不推进状态；
+3. 镜头、缩放、ASCII/图片外观可切换，不改变 state hash，并复用 Canvas；
+4. 从当前装备中选择一件，卸下后进入背包，再穿回原槽；
+5. 战士和法师均导出真实 `.rfbsave` Blob，继续行动后导入，精确恢复哈希、回合、位置、装备及资源，再继续行动；
+6. 创建原生命名存档，重载至标题页后载入并恢复哈希，清理测试槽；
+7. 法师学习第一项可学法术并成功施放，资源变化且能力菜单关闭；
+8. 导出非空 `.rfbreplay`，合成 WebView `ErrorEvent` 验证自动生成 `.rfbdiagnostic`。
+
+通过后写入 `test-results/playable-acceptance.json`。场景已跟随当前初始世界和本地化回合文本更新，不再绑定已移除的 20×20 演示场景、初始地面碎片或旧引导面板。旧场景中的固定移动轨迹、部分数量丢弃与原生覆盖交互不属于当前版本主场景覆盖范围。
+
+玩家流程保留镜头、缩放、tileset 热切换和 Canvas 复用检查，不断言渲染后端名称、图层排列、显示对象数量或 chunk 数量。
 
 `MapRenderer` 在 `#map-host` 暴露只读诊断属性：最近渲染类型、最近处理格数、累计处理格数、当前 tileset ID、镜头模式、缩放、相机偏移、视口尺寸、visible/remembered/hidden 格数量，以及 terrain chunk 总数、可见数、剔除数和重建计数。这些信息不影响游戏规则、存档或状态哈希。
 
@@ -58,7 +50,14 @@ npm run e2e
 
 - `test-results/tauri-e2e.png`：当前窗口截图；
 - `test-results/tauri-e2e.log`：应用 stdout、stderr 和退出状态。
-- `test-results/render-profile.json`：成功场景生成的大地图 profile Schema v1。
+大地图 profile 使用独立命令，不包含在 `npm run e2e` 中：
+
+```powershell
+npm run e2e:build
+npm run e2e:render-profile
+```
+
+该命令复用 E2E 驱动与调试程序，在标题页独立运行 `render-profile.e2e.mjs`，不执行玩家流程。它启用诊断钩子，对比 192×64 大地图下 8/16/32 格 chunk 的对象数量、复用行为和性能，保留实验的架构基线断言，成功后写入 `test-results/render-profile.json`。
 
 WebDriver 构建还会把桌面日志和崩溃诊断目录重定向到 `test-results/`，避免强制结束测试进程时在真实应用目录留下异常退出标记。
 
@@ -66,7 +65,15 @@ E2E 启动的 WebView2 固定追加 `--disable-gpu`，使用软件合成避免�
 
 设置 `RFB_E2E_CAPTURE_SCREENSHOT=1` 时，成功场景还会写入 `test-results/tauri-e2e-success.png`，用于人工检查 chunk 接缝、tileset、光照和遮罩。
 
-该目录已被 Git 忽略。CI 失败时上传截图与日志；成功时单独上传 `tauri-render-profile` artifact，便于比较不同提交和 Windows runner 的趋势。
+该目录已被 Git 忽略。CI 失败时上传截图与日志；只有显式选择渲染实验时才上传 `tauri-render-profile` artifact。
+
+### CI 执行范围
+
+- `ci.yml`：每次 PR/main push 运行 Rust 检查、前端单元测试和 UI 构建。
+- `windows.yml`：前端运行代码、资源、桌面壳、协议/存档/回放接口、构建配置或桌面 E2E 改动时，构建一次 E2E 调试包并执行玩家流程与补给循环；纯文档、独立测试文件和内容包改动不触发。
+- `android.yml`：共享前端、原生壳、协议/存档/回放接口或构建配置改动时执行 Android ARM64 构建；桌面 E2E 脚本不触发 Android，Android 原生工程改动不触发 Windows。
+- 核心规则、内容包及其他未命中路径的改动由常规检查覆盖；需要跨层验收时，或到达里程碑时，手动运行相应平台工作流。
+- 手动运行 Windows 工作流还会执行独立发布构建；勾选 `render_profile` 才运行渲染架构实验。Android 工作流也支持手动运行。
 
 ## 5. 后续扩展
 

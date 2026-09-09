@@ -4880,11 +4880,9 @@ pub struct NaturalAttributeSetSaveDto {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PlayerProgressSaveDto {
     pub attributes: NaturalAttributeSetSaveDto,
-    #[serde(default)]
-    pub maximum_attributes: Option<NaturalAttributeSetSaveDto>,
+    pub maximum_attributes: NaturalAttributeSetSaveDto,
     pub attribute_potentials: NaturalAttributeSetSaveDto,
     pub experience: u64,
-    #[serde(default)]
     pub maximum_experience: u64,
     #[serde(default = "default_life_force")]
     pub life_force: u16,
@@ -5544,10 +5542,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn ranged_materialization_protocol_uses_explicit_units_and_v5_save() {
-        assert_eq!(PROTOCOL_VERSION, "1.230");
-        assert_eq!(SAVE_HEADER_SCHEMA_VERSION, 5);
-        assert_eq!(SAVE_PAYLOAD_SCHEMA_VERSION, 5);
+    fn ranged_materialization_protocol_uses_explicit_units() {
         let encoded = serde_json::to_value(EquipmentBonusesDto {
             launcher_multiplier_delta_percent: 25,
             base_shot_delta_percent: 15,

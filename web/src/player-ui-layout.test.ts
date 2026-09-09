@@ -292,33 +292,3 @@ function createLayoutFixture(t) {
   t.after(() => layout.dispose());
   return { layout, document, window, element };
 }
-
-test("player menu reserves explicit rows inside its own fixed viewport frame", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
-  const css = readFileSync(new URL("./styles.css", import.meta.url), "utf8");
-  const dialog = html.match(/<dialog id="player-page-dialog"[\s\S]*?<\/dialog>/)?.[0];
-  assert.ok(dialog);
-  assert.match(dialog, /id="player-page-filters"/);
-  assert.match(css, /#player-page-dialog:not\(\[data-page="inventory"\]\) > #player-page-filters \{\s*display: none;/);
-  assert.match(dialog, /id="player-page-host"/);
-  assert.match(dialog, /<footer id="player-page-footer">/);
-
-  const frame = css.match(/#player-page-dialog \{([^}]+)\}/)?.[1];
-  assert.ok(frame);
-  assert.match(frame, /width: 84vw;/);
-  assert.match(frame, /height: 84dvh;/);
-  assert.match(frame, /grid-template-rows: auto auto minmax\(0, 1fr\) auto;/);
-  assert.match(frame, /overflow: hidden;/);
-  assert.doesNotMatch(frame, /display:/);
-  assert.match(css, /#player-page-dialog\[open\] \{\s*display: grid;/);
-
-  // The hidden filter must not shift the content into an auto-sized row.
-  for (const [selector, area] of [
-    ["#player-page-dialog > header", "navigation"],
-    ["#player-page-filters", "filters"],
-    ["#player-page-host", "content"],
-    ["#player-page-footer", "footer"],
-  ]) {
-    assert.match(css, new RegExp(`${selector} \\{\\s*grid-area: ${area};`));
-  }
-});

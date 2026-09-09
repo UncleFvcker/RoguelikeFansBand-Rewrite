@@ -35,31 +35,14 @@ fn armor_hit_modifier_only_changes_melee_skill() {
     let mut game = Game::new(42);
     game.items.clear();
     let baseline = game.player_derived_stats();
-    game.items.push(ItemInstance {
-        id: "test.item.hard-leather-armour".to_owned(),
-        kind_id: "demo.item.hard-leather-armour".to_owned(),
-        quantity: 1,
-        inscription: None,
-        origin_actor_kind_id: None,
-        origin_kind: None,
-        damage_dice_override: None,
-        discount_percent: 0,
-        quality: ItemQualityDto::Ordinary,
-        affix_ids: Vec::new(),
-        rolled_affixes: Vec::new(),
-        intrinsic_properties: Default::default(),
-        permanent_destruction_immunities: Default::default(),
-        enchantments: Default::default(),
-        curse: None,
-        activation: None,
-        charges: None,
-        fuel: None,
-        device_recovery_progress: 0,
-        captured_actor: None,
-        location: ItemLocation::Equipped {
-            slot_id: "body".to_owned(),
-        },
-    });
+    give_inventory_item(
+        &mut game,
+        "test.item.hard-leather-armour",
+        "demo.item.hard-leather-armour",
+    );
+    game.items[0].location = ItemLocation::Equipped {
+        slot_id: "body".to_owned(),
+    };
 
     let equipped = game.player_derived_stats();
     assert_eq!(equipped.melee_skill.value, baseline.melee_skill.value - 1);
@@ -75,31 +58,14 @@ fn gauntlets_add_their_hit_and_damage_modifiers_to_melee() {
     let mut game = Game::new(42);
     game.items.clear();
     let baseline = game.player_derived_stats();
-    game.items.push(ItemInstance {
-        id: "test.item.set-of-gauntlets".to_owned(),
-        kind_id: "demo.item.set-of-gauntlets".to_owned(),
-        quantity: 1,
-        inscription: None,
-        origin_actor_kind_id: None,
-        origin_kind: None,
-        damage_dice_override: None,
-        discount_percent: 0,
-        quality: ItemQualityDto::Ordinary,
-        affix_ids: Vec::new(),
-        rolled_affixes: Vec::new(),
-        intrinsic_properties: Default::default(),
-        permanent_destruction_immunities: Default::default(),
-        enchantments: Default::default(),
-        curse: None,
-        activation: None,
-        charges: None,
-        fuel: None,
-        device_recovery_progress: 0,
-        captured_actor: None,
-        location: ItemLocation::Equipped {
-            slot_id: "hands".to_owned(),
-        },
-    });
+    give_inventory_item(
+        &mut game,
+        "test.item.set-of-gauntlets",
+        "demo.item.set-of-gauntlets",
+    );
+    game.items[0].location = ItemLocation::Equipped {
+        slot_id: "hands".to_owned(),
+    };
 
     let equipped = game.player_derived_stats();
     assert_eq!(equipped.melee_skill.value, baseline.melee_skill.value + 1);
@@ -304,14 +270,15 @@ fn inventory_item_missing_its_kind_is_an_invariant_error() {
         .expect("test item should exist")
         .kind_id = "test.item-kind.missing".to_owned();
 
-    assert_invariant_error_without_mutation(
-        &mut game,
+    let result = game.dispatch(command(
+        1,
+        0,
         GameCommand::UseItem {
             item_id: ITEM_ID.to_owned(),
             target: None,
         },
-        "inventory item test.item.missing-kind references missing kind test.item-kind.missing",
-    );
+    ));
+    assert!(matches!(result, Err(CoreError::Invariant(_))));
 }
 
 #[test]

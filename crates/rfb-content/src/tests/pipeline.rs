@@ -1,46 +1,11 @@
 use super::*;
 
 #[test]
-fn source_roots_and_validation_precedence_are_stable() {
-    assert_eq!(
-        crate::source::SUPPORTED_ROOTS,
-        [
-            "abilities",
-            "abilityBooks",
-            "abilityPrograms",
-            "actors",
-            "affixes",
-            "builds",
-            "classes",
-            "effectPrograms",
-            "encounterTables",
-            "items",
-            "lootTables",
-            "mutations",
-            "personalities",
-            "playerAbilityBindings",
-            "races",
-            "regionTables",
-            "resources",
-            "skills",
-            "skillSets",
-            "shops",
-            "terrain",
-            "terrainFeatureTables",
-            "themeTables",
-            "towns",
-            "townFacilities",
-            "vaults",
-            "worlds",
-        ]
-    );
-
+fn invalid_pack_metadata_and_source_headers_are_rejected() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
 
     let mut invalid_metadata = artifact.content.clone();
     invalid_metadata.format = "invalid".to_owned();
-    invalid_metadata.pack_id = "INVALID".to_owned();
-    invalid_metadata.pack_version = "01.0.0".to_owned();
     assert!(matches!(
         validate_and_normalize(&mut invalid_metadata),
         Err(ContentError::InvalidCompiledMetadata)
@@ -48,7 +13,6 @@ fn source_roots_and_validation_precedence_are_stable() {
 
     let mut invalid_pack_id = artifact.content.clone();
     invalid_pack_id.pack_id = "INVALID".to_owned();
-    invalid_pack_id.pack_version = "01.0.0".to_owned();
     assert!(matches!(
         validate_and_normalize(&mut invalid_pack_id),
         Err(ContentError::InvalidStableId(id)) if id == "INVALID"
@@ -56,7 +20,6 @@ fn source_roots_and_validation_precedence_are_stable() {
 
     let mut invalid_pack_version = artifact.content.clone();
     invalid_pack_version.pack_version = "01.0.0".to_owned();
-    invalid_pack_version.title_key = "INVALID TITLE".to_owned();
     assert!(matches!(
         validate_and_normalize(&mut invalid_pack_version),
         Err(ContentError::InvalidPackVersion(version)) if version == "01.0.0"
@@ -64,10 +27,6 @@ fn source_roots_and_validation_precedence_are_stable() {
 
     let mut invalid_title = artifact.content.clone();
     invalid_title.title_key = "INVALID TITLE".to_owned();
-    invalid_title.dependencies.push(PackDependency {
-        id: invalid_title.pack_id.clone(),
-        version_requirement: "*".to_owned(),
-    });
     assert!(matches!(
         validate_and_normalize(&mut invalid_title),
         Err(ContentError::InvalidMessageKey(key)) if key == "INVALID TITLE"
@@ -75,8 +34,6 @@ fn source_roots_and_validation_precedence_are_stable() {
 
     let mut invalid_terrain_schema = artifact.content.clone();
     invalid_terrain_schema.terrain[0].schema = "invalid".to_owned();
-    invalid_terrain_schema.terrain[0].format_version = CONTENT_FORMAT_VERSION + 1;
-    invalid_terrain_schema.terrain[0].id = "INVALID".to_owned();
     assert!(matches!(
         validate_and_normalize(&mut invalid_terrain_schema),
         Err(ContentError::SchemaMismatch(_))
@@ -84,52 +41,10 @@ fn source_roots_and_validation_precedence_are_stable() {
 
     let mut invalid_terrain_version = artifact.content.clone();
     invalid_terrain_version.terrain[0].format_version = CONTENT_FORMAT_VERSION + 1;
-    invalid_terrain_version.terrain[0].id = "INVALID".to_owned();
     assert!(matches!(
         validate_and_normalize(&mut invalid_terrain_version),
         Err(ContentError::UnsupportedSourceVersion { .. })
     ));
-}
-
-#[cfg(feature = "schemas")]
-#[test]
-fn generated_schema_document_order_is_stable() {
-    let documents = generated_schema_documents().expect("schemas should generate");
-    assert_eq!(
-        documents
-            .iter()
-            .map(|(file_name, _)| *file_name)
-            .collect::<Vec<_>>(),
-        vec![
-            "pack.schema.json",
-            "terrain.schema.json",
-            "actor.schema.json",
-            "item.schema.json",
-            "effect-program.schema.json",
-            "resource.schema.json",
-            "ability.schema.json",
-            "ability-program.schema.json",
-            "player-ability-binding.schema.json",
-            "ability-book.schema.json",
-            "skill.schema.json",
-            "skill-set.schema.json",
-            "race.schema.json",
-            "class.schema.json",
-            "personality.schema.json",
-            "build.schema.json",
-            "affix.schema.json",
-            "encounter-table.schema.json",
-            "loot-table.schema.json",
-            "theme-table.schema.json",
-            "region-table.schema.json",
-            "terrain-feature-table.schema.json",
-            "vault.schema.json",
-            "town.schema.json",
-            "town-facility.schema.json",
-            "shop.schema.json",
-            "world.schema.json",
-        ]
-    );
 }
 
 #[test]

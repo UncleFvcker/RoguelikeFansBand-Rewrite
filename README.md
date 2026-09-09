@@ -101,6 +101,8 @@ npm run build:ui
 
 协议生成会同步 `web/src/protocol.ts` 与 `schemas/protocol-v1.schema.json`。完整 workspace、桌面 E2E 和 Android 构建仅在相关改动或里程碑验收时运行；细节见 [桌面 E2E](design/tauri-desktop-e2e.md) 与 [Android 目标](design/android-target.md)。
 
+契约 fixture 的 `assertions.finalState` 只填写场景需要检查的字段，必须保留完整 `stateHash`。对象按已填写的字段递归比较；空对象表示集合必须为空，数组精确比较内容和顺序。商店、背包、装备、实体、任务、物品知识、武器熟练度和材料等有稳定 ID 的集合使用 ID 作为对象键。事件、错误和存档往返哈希仍精确比较。`refresh` 会保留已填写的字段范围；新增 fixture 可先用 `observe` 生成完整观察值，再裁剪到场景目标。完整投影由专门的核心测试覆盖。
+
 ## 旧版来源
 
 原项目：[UncleFvcker/RoguelikeFansBand-zh-CN](https://github.com/UncleFvcker/RoguelikeFansBand-zh-CN)。

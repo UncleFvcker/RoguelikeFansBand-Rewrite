@@ -7,6 +7,7 @@ import net from "node:net";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { runRendererProfile } from "./render-profile.e2e.mjs";
 
 const webDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryDirectory = path.resolve(webDirectory, "..");
@@ -45,7 +46,7 @@ const executable = path.join(
 const artifactDirectory = path.join(repositoryDirectory, "test-results");
 const diagnosticDirectory = path.join(artifactDirectory, "e2e-crash-diagnostics");
 const desktopLogPath = path.join(artifactDirectory, "e2e-rfb-desktop.log");
-const renderProfilePath = path.join(artifactDirectory, "render-profile.json");
+const renderProfileOnly = process.argv.includes("--render-profile");
 const logs = [];
 let child;
 let client;
@@ -58,7 +59,6 @@ async function main() {
   try {
     await rm(diagnosticDirectory, { recursive: true, force: true });
     await rm(desktopLogPath, { force: true });
-    await rm(renderProfilePath, { force: true });
     const port = await reservePort();
     child = spawn(executable, [], {
       cwd: repositoryDirectory,
@@ -85,7 +85,11 @@ async function main() {
 
     await waitForServer(port, child);
     client = await WebDriverClient.create(port, child);
-    await runScenario(client);
+    if (renderProfileOnly) {
+      await runRendererProfile(client, artifactDirectory);
+    } else {
+      await runScenario(client);
+    }
     if (process.env.RFB_E2E_CAPTURE_SCREENSHOT === "1") {
       await mkdir(artifactDirectory, { recursive: true });
       await writeFile(
@@ -94,7 +98,9 @@ async function main() {
         "base64",
       );
     }
-    process.stdout.write("Tauri desktop E2E passed.\n");
+    process.stdout.write(
+      renderProfileOnly ? "Renderer profile passed.\n" : "Tauri desktop E2E passed.\n",
+    );
   } catch (error) {
     await mkdir(artifactDirectory, { recursive: true });
     if (client) {
@@ -110,7 +116,7 @@ async function main() {
     process.stderr.write(`Artifacts: ${artifactDirectory}\n`);
     process.exitCode = 1;
   } finally {
-    if (client) await cleanupNativeTestSaves(client).catch(() => undefined);
+    if (client && !renderProfileOnly) await cleanupNativeTestSaves(client).catch(() => undefined);
     if (client) await client.close().catch(() => undefined);
     if (child && child.exitCode === null && child.signalCode === null) child.kill();
   }
@@ -131,851 +137,178 @@ async function cleanupNativeTestSaves(driver) {
 
 async function runScenario(driver) {
   const expected = await loadExpectedIdentity();
-  // Gate 1 must stop at the session shell without constructing a throwaway
-  // game. Cold CI runners still need extra time for the first WebView load.
-  await driver.waitFor(
-    `return document.documentElement.dataset.appMode === "title" && !document.querySelector("#session-shell")?.hidden && document.querySelector("#app")?.hidden`,
-    "title session shell",
-    60_000,
-  );
-  await driver.execute(`
-    localStorage.clear();
-    localStorage.setItem("rfb.locale", "zh-CN");
-    localStorage.setItem("rfb.renderer-profile-enabled", "1");
-    // Give WebDriver enough time to receive the execute response before the
-    // document is replaced. A zero-delay reload can race WebView2 and leave
-    // the synchronous command waiting until its script timeout.
-    setTimeout(() => window.location.reload(), 250);
-    return true;
-  `);
-  await driver.waitFor(
-    `return performance.getEntriesByType("navigation")[0]?.type === "reload" && document.documentElement.dataset.appMode === "title"`,
-    "deterministic title reload",
-    60_000,
-  );
+  const report = { identity: expected, checks: [] };
+  await driver.waitFor(`return document.documentElement.dataset.appMode === "title"`, "title", 60_000);
+  await driver.execute(`localStorage.clear(); localStorage.setItem("rfb.locale", "zh-CN"); setTimeout(() => location.reload(), 250); return true;`);
+  await driver.waitFor(`return performance.getEntriesByType("navigation")[0]?.type === "reload" && document.documentElement.dataset.appMode === "title"`, "clean title", 60_000);
 
-  const titleState = await driver.execute(`
-    return {
-      title: document.querySelector("#session-heading")?.textContent,
-      subtitle: document.querySelector(".session-subtitle")?.textContent,
-      continueDisabled: document.querySelector("#session-continue")?.disabled,
-    };
-  `);
-  assert.match(titleState.title, /兽穴/);
-  assert.match(titleState.subtitle, /RFB 职业兼容切片“战士”/);
-
-  await driver.execute(`
-    document.querySelector("#session-new-game").click();
-    const build = document.querySelector("#session-build-warrior");
-    build.checked = true;
-    build.dispatchEvent(new Event("change", { bubbles: true }));
-    const seed = document.querySelector("#session-seed");
-    seed.value = "42";
-    seed.dispatchEvent(new Event("input", { bubbles: true }));
-    document.querySelector("#session-start-game").click();
-    return true;
-  `);
-  await driver.waitFor(
-    `return document.documentElement.dataset.appMode === "playing" && document.querySelector("#connection-status")?.classList.contains("ready")`,
-    "selected build session initialization",
-    60_000,
-  );
-  const runSetup = await driver.execute(`
-    return {
-      buildId: document.querySelector("#app")?.dataset.sessionBuildId,
-      seed: document.querySelector("#app")?.dataset.sessionSeed,
-      seedLabel: document.querySelector("#run-seed-value")?.textContent,
-      titleHidden: document.querySelector("#session-shell")?.hidden,
-      gameHidden: document.querySelector("#app")?.hidden,
-    };
-  `);
-  assert.equal(runSetup.buildId, "demo.build.warrior");
-  assert.equal(runSetup.seed, "42");
-  assert.equal(runSetup.seedLabel, "42");
-  assert.equal(runSetup.titleHidden, true);
-  assert.equal(runSetup.gameHidden, false);
-  const initialGuidance = await driver.execute(`
-    return {
-      prompt: document.querySelector("#journey-panel")?.dataset.promptId,
-      kind: document.querySelector("#journey-panel")?.dataset.promptKind,
-    };
-  `);
-  assert.equal(initialGuidance.prompt, "movement");
-  assert.equal(initialGuidance.kind, "journey");
-
-  const playerUiStructure = await driver.execute(`
-    const resource = document.querySelector("#resource-panel");
-    const nearby = document.querySelector("#nearby-panel");
-    return {
-      messageDocked: document.querySelector("#message-panel")?.parentElement?.id,
-      supportDocked: document.querySelector("#native-save-panel")?.parentElement?.id,
-      resourceInHud: resource?.parentElement?.id === "hud-vitals-host",
-      nearbyFollowsResources: Boolean(
-        resource?.compareDocumentPosition(nearby) & Node.DOCUMENT_POSITION_FOLLOWING
-      ),
-       advancedPanelInGameLayout: Boolean(
-         document.querySelector(".game-layout #inventory-panel, .game-layout #ability-panel")
-       ),
-    };
-  `);
-  assert.equal(playerUiStructure.messageDocked, "message-panel-host");
-  assert.equal(playerUiStructure.supportDocked, "support-panel-host");
-  assert.equal(playerUiStructure.resourceInHud, true);
-  assert.equal(playerUiStructure.nearbyFollowsResources, true);
-  assert.equal(playerUiStructure.advancedPanelInGameLayout, false);
-
-  await dispatchKey(driver, "KeyI", "i");
-  await driver.waitFor(
-    `return document.querySelector("#player-page-dialog")?.open && document.querySelector("#inventory-panel")?.parentElement?.id === "player-page-host"`,
-    "inventory shortcut page",
-  );
-  await dispatchKey(driver, "KeyI", "i");
-  await driver.waitFor(
-    `return !document.querySelector("#player-page-dialog")?.open && document.querySelector("#inventory-panel")?.parentElement?.id === "player-page-parking"`,
-    "inventory shortcut page closes",
-  );
-  await click(driver, "#player-ui-character-open");
-  await driver.waitFor(
-    `return document.querySelector("#player-page-dialog")?.open && document.querySelector("#character-details-panel")?.parentElement?.id === "player-page-host"`,
-    "character details page",
-  );
-  await click(driver, "#player-page-close");
-
-  await driver.execute(`
-    const input = document.querySelector("#input-preset");
-    input.value = "numpad";
-    input.dispatchEvent(new Event("change", { bubbles: true }));
-    const tileset = document.querySelector("#tileset-preset");
-    if (tileset.value !== "ascii") {
-      tileset.value = "ascii";
-      tileset.dispatchEvent(new Event("change", { bubbles: true }));
-    }
-    const camera = document.querySelector("#camera-mode");
-    camera.value = "full-map";
-    camera.dispatchEvent(new Event("change", { bubbles: true }));
-    const zoom = document.querySelector("#zoom-level");
-    zoom.value = "1";
-    zoom.dispatchEvent(new Event("change", { bubbles: true }));
-    window.__rfbE2eCanvas = document.querySelector("#map-host canvas");
-    return true;
-  `);
-  await driver.waitFor(
-    `return document.querySelector("#map-host")?.dataset.tilesetId === "rfb.tileset.ascii-default"`,
-    "ASCII tileset normalization",
-  );
-
-  let state = await readState(driver);
-  assert.equal(state.turn, "0");
-  assert.equal(state.position, "3, 3");
-  assert.equal(state.renderKind, "snapshot");
-  assert.equal(state.appliedCells, "400");
-  assert.equal(state.tilesetId, "rfb.tileset.ascii-default");
-  assert.equal(state.rendererBackend, "pixi-layered-chunks-v3");
-  assert.equal(state.rendererLayerCount, "5");
-  assert.equal(state.rendererLayers, "terrain,object,actor,visibility,lighting");
-  assert.equal(state.terrainMode, "chunk-render-texture-v1");
-  assert.equal(state.dynamicViewMode, "visible-chunk-reuse-v1");
-  assert.equal(state.terrainChunkSize, "16");
-  assert.equal(state.terrainChunkCount, "4");
-  assert.equal(state.visibleChunkCount, "4");
-  assert.equal(state.culledChunkCount, "0");
-  assert.equal(state.lastRebuiltTerrainChunks, "4");
-  assert.equal(state.totalRebuiltTerrainChunks, "4");
-  assert.equal(state.rendererCellViewCount, "400");
-  assert.equal(state.rendererDynamicDisplayObjectCount, "2800");
-  assert.equal(state.activeDynamicChunkCount, "4");
-  assert.equal(state.pooledDynamicChunkCount, "0");
-  assert.equal(state.visibilityMode, "rust-fov-memory-v1");
-  assert.equal(state.lightingMode, "rust-content-lights-v1");
-  assert.equal(state.protocolVersion, expected.protocolVersion);
-  assert.equal(state.visualCellCount, "400");
-  assert.ok(Number(state.visibleCellCount) > 0);
-  assert.equal(state.rememberedCellCount, "0");
-  assert.ok(Number(state.hiddenCellCount) > 0);
-  assert.equal(state.cameraMode, "full-map");
-  assert.equal(state.cameraX, "0");
-  assert.equal(state.cameraY, "0");
-  assert.ok(Number(state.viewportWidth) >= 560);
-  assert.ok(Number(state.viewportHeight) >= 400);
-  const fullMapViewportWidth = Number(state.viewportWidth);
-  const fullMapViewportHeight = Number(state.viewportHeight);
-  assert.equal(state.zoom, "1");
-  assert.equal(state.canvasUnchanged, true);
-  assert.equal(state.contentId, expected.contentId);
-  assert.equal(state.contentHash, expected.contentHash);
-  assert.equal(state.worldId, "demo.world.original-v1");
-  assert.equal(state.itemCount, "5");
-  assert.equal(state.inventoryStackCount, "0");
-  assert.equal(state.equipmentCount, "0");
-  assert.equal(state.playerStatusCount, "0");
-  assert.equal(state.effects, "无");
-  assert.equal(state.attack, "2");
-  assert.equal(state.defense, "1");
-  assert.match(state.inventory, /背包是空的/);
-  assert.match(state.abilities, /当前构筑没有能力书施法配置/);
-
-  await dispatchKey(driver, "Numpad5", "5");
-  await driver.waitFor(`return document.querySelector("#turn-value")?.textContent === "1"`, "wait command");
-  state = await readState(driver);
-  assert.equal(state.position, "3, 3");
-  assert.equal(state.renderKind, "update");
-  assert.equal(state.appliedCells, "0");
-  assert.equal(state.lastRebuiltTerrainChunks, "0");
-  assert.equal(state.totalRebuiltTerrainChunks, "4");
-  assert.equal(state.canvasUnchanged, true);
-  assert.match(state.messages, /你在寂静中停留了一回合/);
-
-  await dispatchKey(driver, "Numpad6", "6");
-  await driver.waitFor(
-    `return document.querySelector("#position-value")?.textContent === "4, 3"`,
-    "east movement",
-  );
-  state = await readState(driver);
-  assert.equal(state.turn, "2");
-  assert.equal(state.renderKind, "update");
-  assert.equal(state.appliedCells, "18");
-  assert.equal(state.lastRebuiltTerrainChunks, "0");
-  assert.equal(state.canvasUnchanged, true);
-
-  const movedGuidance = await driver.execute(`
-    return {
-      prompt: document.querySelector("#journey-panel")?.dataset.promptId,
-      kind: document.querySelector("#journey-panel")?.dataset.promptKind,
-    };
-  `);
-  assert.deepEqual(movedGuidance, { prompt: "look", kind: "optional" });
-
-  await dispatchKey(driver, "KeyX", "x");
-  await driver.waitFor(
-    `return document.querySelector("#map-host")?.dataset.targetingAction === "look" && document.querySelector("#journey-panel")?.dataset.promptId === "pickup"`,
-    "look mode and observed onboarding completion",
-  );
-  await dispatchKey(driver, "Numpad6", "6");
-  const lookState = await driver.execute(`
-    return {
-      turn: document.querySelector("#turn-value")?.textContent,
-      targetX: document.querySelector("#map-host")?.dataset.targetX,
-      status: document.querySelector("#target-mode-status")?.textContent,
-    };
-  `);
-  assert.equal(lookState.turn, "2");
-  assert.equal(lookState.targetX, "5");
-  assert.match(lookState.status, /物品/);
-  await dispatchKey(driver, "Escape", "Escape");
-  await driver.waitFor(
-    `return document.querySelector("#map-host")?.dataset.targetingAction === "none"`,
-    "look mode exit",
-  );
-
-  await dispatchKey(driver, "KeyG", "g");
-  await driver.waitFor(
-    `return document.querySelector("#turn-value")?.textContent === "3" && document.querySelector("#inventory-count")?.textContent?.startsWith("1 堆")`,
-    "ground item pickup",
-  );
-  state = await readState(driver);
-  assert.equal(state.renderKind, "update");
-  assert.equal(state.appliedCells, "45");
-  assert.equal(state.itemCount, "4");
-  assert.equal(state.inventoryStackCount, "1");
-  assert.match(state.inventory, /陌生的浅色碎片/);
-  assert.match(state.inventory, /×5/);
-  assert.match(state.messages, /你将 5 个陌生的浅色碎片收入了背包/);
-  const pickupGuidance = await driver.execute(`
-    return {
-      prompt: document.querySelector("#journey-panel")?.dataset.promptId,
-    };
-  `);
-  assert.deepEqual(pickupGuidance, { prompt: "inventory" });
-
-  const nativeSaveName = `E2E 原生存档 ${Date.now()}`;
-  const nativeSaveHash = state.stateHash;
-  await driver.execute(`
-    const input = document.querySelector("#native-save-name");
-    input.value = arguments[0];
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    document.querySelector("#native-save-create").click();
-    return true;
-  `, [nativeSaveName]);
-  await driver.waitFor(
-    `return [...document.querySelectorAll(".native-save-item")].some((row) => row.querySelector(".native-save-name")?.textContent === arguments[0])`,
-    "native save creation",
-    10_000,
-    [nativeSaveName],
-  );
-  const nativeSlot = await driver.execute(`
-    const row = [...document.querySelectorAll(".native-save-item")]
-      .find((item) => item.querySelector(".native-save-name")?.textContent === arguments[0]);
-    return {
-      slotId: row.dataset.slotId,
-      status: row.querySelector(".native-save-status")?.textContent,
-      metadata: row.querySelector(".native-save-meta")?.textContent,
-    };
-  `, [nativeSaveName]);
-  assert.match(nativeSlot.slotId, /^save-[0-9]+(?:-[0-9]+)?$/);
-  assert.equal(nativeSlot.status, "可用");
-  assert.match(nativeSlot.metadata, /原创实验场/);
-  assert.match(nativeSlot.metadata, /回合 3/);
-  assert.match((await readState(driver)).messages, /已创建原生存档/);
-
-  await dispatchKey(driver, "Numpad2", "2");
-  await driver.waitFor(
-    `return document.querySelector("#position-value")?.textContent === "4, 4" && document.querySelector("#turn-value")?.textContent === "4"`,
-    "movement after native save",
-  );
-  await driver.execute(`setTimeout(() => window.location.reload(), 250); return true;`);
-  await driver.waitFor(
-    `return document.documentElement.dataset.appMode === "title" && document.querySelector("#app")?.hidden`,
-    "return to title without implicit session",
-    60_000,
-  );
-  await click(driver, "#session-load-game");
-  await driver.waitFor(
-    `return document.querySelector('#session-load-list [data-slot-id="${nativeSlot.slotId}"] [data-session-load-action="load"]') && !document.querySelector('#session-load-list [data-slot-id="${nativeSlot.slotId}"] [data-session-load-action="load"]')?.disabled`,
-    "pre-session native save discovery",
-  );
-  await click(
-    driver,
-    `#session-load-list [data-slot-id="${nativeSlot.slotId}"] [data-session-load-action="load"]`,
-  );
-  await driver.waitFor(
-    `return document.documentElement.dataset.appMode === "playing" && document.querySelector("#position-value")?.textContent === "4, 3" && document.querySelector("#turn-value")?.textContent === "3" && !document.querySelector('[data-slot-id="${nativeSlot.slotId}"] [data-native-save-action="load"]')?.disabled`,
-    "title native save restore",
-    60_000,
-  );
-  await driver.execute(`window.__rfbE2eCanvas = document.querySelector("#map-host canvas"); return true;`);
-  state = await readState(driver);
-  assert.equal(state.stateHash, nativeSaveHash);
-  assert.equal(state.canvasUnchanged, true);
-  assert.equal(
-    await driver.execute(`return document.querySelector("#run-seed-value")?.textContent;`),
-    "来自已载入存档",
-  );
-  assert.match(state.messages, /已载入原生存档/);
-
-  await dispatchKey(driver, "Numpad5", "5");
-  await driver.waitFor(
-    `return document.querySelector("#turn-value")?.textContent === "4"`,
-    "command sequence after native restore",
-  );
-  await click(driver, `[data-slot-id="${nativeSlot.slotId}"] [data-native-save-action="load"]`);
-  await driver.waitFor(
-    `return document.querySelector("#turn-value")?.textContent === "3" && !document.querySelector('[data-slot-id="${nativeSlot.slotId}"] [data-native-save-action="overwrite"]')?.disabled`,
-    "second native save restore",
-  );
-  await click(
-    driver,
-    `[data-slot-id="${nativeSlot.slotId}"] [data-native-save-action="overwrite"]`,
-  );
-  await driver.waitFor(
-    `return document.querySelector("#message-list")?.textContent.includes("已安全覆盖原生存档")`,
-    "native save overwrite",
-  );
-  await driver.execute(`window.confirm = () => true; return true;`);
-  await click(driver, `[data-slot-id="${nativeSlot.slotId}"] [data-native-save-action="delete"]`);
-  await driver.waitFor(
-    `return !document.querySelector('#native-save-list [data-slot-id="${nativeSlot.slotId}"]')`,
-    "native save deletion",
-  );
-  state = await readState(driver);
-  assert.match(state.messages, /已删除原生存档/);
-
-  await driver.execute(`
-    const downloads = [];
-    window.__rfbE2eDownloads = downloads;
-    URL.createObjectURL = (blob) => {
-      downloads.push({ blob, fileName: "", size: blob.size });
-      return "blob:rfb-e2e-" + downloads.length;
-    };
-    URL.revokeObjectURL = () => {};
-    HTMLAnchorElement.prototype.click = function () {
-      const download = downloads.at(-1);
-      if (download) download.fileName = this.download;
-    };
-    return true;
-  `);
-
-  await click(driver, "#save-button");
-  await driver.waitFor(
-    `return window.__rfbE2eDownloads?.some((item) => item.fileName.endsWith(".rfbsave"))`,
-    "save export",
-  );
-  let download = await lastDownload(driver);
-  assert.equal(download.fileName, "rfb-rewrite-demo.rfbsave");
-  assert.ok(download.size > 100, `save is unexpectedly small: ${download.size}`);
-  assert.match((await readState(driver)).messages, /已导出带校验和的 \.rfbsave 存档/);
-
-  await driver.execute(`
-    const row = document.querySelector('[data-item-id="demo.item.luminous-shard.1"]');
-    row.querySelector('input[type="checkbox"]').click();
-    const quantity = document.querySelector("#inventory-drop-quantity");
-    quantity.value = "2";
-    quantity.dispatchEvent(new Event("input", { bubbles: true }));
-    return true;
-  `);
-  await click(driver, "#inventory-drop");
-  await driver.waitFor(
-    `return document.querySelector("#turn-value")?.textContent === "4" && document.querySelector('[data-item-id="demo.item.luminous-shard.1"] .inventory-quantity')?.textContent === "×3"`,
-    "partial stack drop",
-  );
-  state = await readState(driver);
-  assert.equal(state.itemCount, "5");
-  assert.equal(state.inventoryStackCount, "1");
-  assert.match(state.messages, /丢下了 1 堆物品，共 2 件/);
-
-  await dispatchKey(driver, "Numpad6", "6");
-  await driver.waitFor(
-    `return document.querySelector("#position-value")?.textContent === "5, 3" && document.querySelector("#turn-value")?.textContent === "5"`,
-    "movement to equippable item",
-  );
-  await dispatchKey(driver, "KeyG", "g");
-  await driver.waitFor(
-    `return document.querySelector("#turn-value")?.textContent === "6" && document.querySelector("#inventory-count")?.textContent?.startsWith("2 堆")`,
-    "second item pickup",
-  );
-  state = await readState(driver);
-  assert.equal(state.itemCount, "4");
-  assert.equal(state.inventoryStackCount, "2");
-  assert.match(state.inventory, /陌生的/);
-  assert.match(state.inventory, /可装备：护符/);
-  assert.match(state.inventory, /攻击 \+1/);
-  assert.match(state.inventory, /防御 \+1/);
-  assert.match(state.inventory, /最大生命 \+4/);
-
-  await driver.execute(`
-    for (const checkbox of document.querySelectorAll('#inventory-list input[type="checkbox"]')) {
-      if (checkbox.checked) checkbox.click();
-    }
-    const row = document.querySelector('[data-item-id="demo.item.echo-charm.1"]');
-    const checkbox = row.querySelector('input[type="checkbox"]');
-    checkbox.click();
-    return true;
-  `);
-  await click(driver, "#inventory-equip");
-  await driver.waitFor(
-    `return document.querySelector("#turn-value")?.textContent === "7" && document.querySelector("#map-host")?.dataset.equipmentCount === "1"`,
-    "equipment action",
-  );
-  state = await readState(driver);
-  assert.equal(state.inventoryStackCount, "1");
-  assert.equal(state.equipmentCount, "1");
-  assert.match(state.equipment, /回声护符/);
-  assert.match(state.equipment, /攻击 \+2/);
-  assert.match(state.equipment, /防御 \+1/);
-  assert.match(state.equipment, /最大生命 \+4/);
-  assert.match(state.health, /33 \/ 37（装备 \+4）/);
-  assert.equal(state.attack, "4（装备 +2）");
-  assert.equal(state.defense, "2（装备 +1）");
-  assert.match(state.messages, /装备在护符槽位/);
-
-  await click(driver, '[data-slot-id="charm"] button');
-  await driver.waitFor(
-    `return document.querySelector("#turn-value")?.textContent === "8" && document.querySelector("#map-host")?.dataset.equipmentCount === "0"`,
-    "unequipment action",
-  );
-  state = await readState(driver);
-  assert.equal(state.inventoryStackCount, "2");
-  assert.equal(state.health, "33 / 33");
-  assert.equal(state.attack, "2");
-  assert.equal(state.defense, "1");
-  assert.match(state.messages, /卸下了回声护符/);
-
-  await driver.execute(`
-    for (const checkbox of document.querySelectorAll('#inventory-list input[type="checkbox"]')) {
-      if (!checkbox.checked) checkbox.click();
-    }
-    return true;
-  `);
-  await driver.waitFor(
-    `return document.querySelector("#inventory-selection-count")?.textContent === "已选择 2 堆"`,
-    "multi-item selection",
-  );
-  await click(driver, "#inventory-drop");
-  await driver.waitFor(
-    `return document.querySelector("#turn-value")?.textContent === "9" && document.querySelector("#inventory-count")?.textContent?.startsWith("0 堆")`,
-    "batch item drop",
-  );
-  state = await readState(driver);
-  assert.equal(state.itemCount, "6");
-  assert.equal(state.inventoryStackCount, "0");
-  assert.match(state.messages, /丢下了 2 堆物品，共 4 件/);
-
-  await driver.execute(`
-    const saved = window.__rfbE2eDownloads.find((item) => item.fileName.endsWith(".rfbsave"));
-    const input = document.querySelector("#load-input");
-    const transfer = new DataTransfer();
-    transfer.items.add(new File([saved.blob], saved.fileName, { type: "application/octet-stream" }));
-    input.files = transfer.files;
-    input.dispatchEvent(new Event("change", { bubbles: true }));
-    return true;
-  `);
-  await driver.waitFor(
-    `return document.querySelector("#position-value")?.textContent === "4, 3" && document.querySelector("#turn-value")?.textContent === "3" && document.querySelector("#inventory-count")?.textContent?.startsWith("1 堆")`,
-    "inventory action save reset",
-  );
-  state = await readState(driver);
-  assert.equal(state.itemCount, "4");
-  assert.equal(state.equipmentCount, "0");
-  assert.equal(state.canvasUnchanged, true);
-
-  const hashBeforeCameraSwitch = state.stateHash;
-  const appliedCellsBeforeCameraSwitch = state.appliedCells;
-  const totalAppliedCellsBeforeCameraSwitch = state.totalAppliedCells;
-  await driver.execute(`
-    const select = document.querySelector("#camera-mode");
-    select.value = "player-centered";
-    select.dispatchEvent(new Event("change", { bubbles: true }));
-    return true;
-  `);
-  await driver.waitFor(
-    `return document.querySelector("#map-host")?.dataset.cameraMode === "player-centered" && Number(document.querySelector("#map-host")?.dataset.viewportWidth) > 420 && Number(document.querySelector("#map-host")?.dataset.viewportHeight) > 420`,
-    "player-centered camera mode",
-  );
-  state = await readState(driver);
-  assert.equal(state.stateHash, hashBeforeCameraSwitch);
-  assert.equal(state.appliedCells, appliedCellsBeforeCameraSwitch);
-  assert.equal(state.totalAppliedCells, totalAppliedCellsBeforeCameraSwitch);
-  assert.ok(Number(state.cameraX) >= 0);
-  assert.equal(state.cameraY, "0");
-  assert.ok(Number(state.viewportWidth) >= fullMapViewportWidth);
-  assert.ok(Number(state.viewportWidth) - fullMapViewportWidth <= 20);
-  assert.ok(Number(state.viewportHeight) >= fullMapViewportHeight);
-  assert.ok(Number(state.viewportHeight) - fullMapViewportHeight <= 20);
-  assert.ok(Number(state.visibleChunkCount) > 0);
-  assert.equal(state.canvasUnchanged, true);
-
-  for (const x of [5, 6, 7, 8]) {
-    await dispatchKey(driver, "Numpad6", "6");
-    await driver.waitFor(
-      `return document.querySelector("#position-value")?.textContent === "${x}, 3"`,
-      `camera-follow movement to x=${x}`,
-    );
-  }
-  state = await readState(driver);
-  assert.equal(state.cameraMode, "player-centered");
-  assert.equal(state.cameraY, "0");
-  assert.equal(
+  async function start(build, seed) {
     await driver.execute(`
-      const host = document.querySelector("#map-host");
-      const cellSize = 28 * Number(host.dataset.zoom);
-      const x = Number(host.dataset.cameraX) + 8 * cellSize;
-      const y = Number(host.dataset.cameraY) + 3 * cellSize;
-      return x >= 0 && y >= 0 && x + cellSize <= host.clientWidth && y + cellSize <= host.clientHeight;
-    `),
-    true,
-  );
-  assert.ok(Number(state.rememberedCellCount) > 0);
-  assert.equal(state.canvasUnchanged, true);
-
-  const hashBeforeZoom = state.stateHash;
-  const cellsBeforeZoom = state.totalAppliedCells;
-  await driver.execute(`
-    const select = document.querySelector("#zoom-level");
-    select.value = "1.5";
-    select.dispatchEvent(new Event("change", { bubbles: true }));
-    return true;
-  `);
-  await driver.waitFor(
-    `return document.querySelector("#map-host")?.dataset.zoom === "1.5"`,
-    "screen zoom",
-  );
-  state = await readState(driver);
-  assert.equal(state.stateHash, hashBeforeZoom);
-  assert.equal(state.totalAppliedCells, cellsBeforeZoom);
-  assert.equal(state.zoom, "1.5");
-  assert.ok(Number(state.viewportWidth) >= fullMapViewportWidth);
-  assert.ok(Number(state.viewportHeight) >= fullMapViewportHeight);
-  assert.ok(Number(state.visibleChunkCount) > 0);
-  assert.equal(
-    await driver.execute(`
-      const host = document.querySelector("#map-host");
-      const cellSize = 28 * Number(host.dataset.zoom);
-      const x = Number(host.dataset.cameraX) + 8 * cellSize;
-      const y = Number(host.dataset.cameraY) + 3 * cellSize;
-      return x >= 0 && y >= 0 && x + cellSize <= host.clientWidth && y + cellSize <= host.clientHeight;
-    `),
-    true,
-  );
-  assert.equal(state.canvasUnchanged, true);
-  await driver.execute(`
-    const select = document.querySelector("#zoom-level");
-    select.value = "1";
-    select.dispatchEvent(new Event("change", { bubbles: true }));
-    return true;
-  `);
-  await driver.waitFor(
-    `return document.querySelector("#map-host")?.dataset.zoom === "1"`,
-    "zoom restore",
-  );
-
-  const hashAfterCameraMovement = state.stateHash;
-  const cellsAfterCameraMovement = state.totalAppliedCells;
-  await driver.execute(`
-    const select = document.querySelector("#camera-mode");
-    select.value = "full-map";
-    select.dispatchEvent(new Event("change", { bubbles: true }));
-    return true;
-  `);
-  await driver.waitFor(
-    `return document.querySelector("#map-host")?.dataset.cameraMode === "full-map" && document.querySelector("#map-host")?.dataset.cameraX === "0"`,
-    "full-map camera restore",
-  );
-  state = await readState(driver);
-  assert.equal(state.stateHash, hashAfterCameraMovement);
-  assert.equal(state.totalAppliedCells, cellsAfterCameraMovement);
-  assert.equal(state.visibleChunkCount, "4");
-  await driver.execute(`
-    const select = document.querySelector("#camera-mode");
-    select.value = "player-centered";
-    select.dispatchEvent(new Event("change", { bubbles: true }));
-    return true;
-  `);
-  await driver.waitFor(
-    `return document.querySelector("#map-host")?.dataset.cameraMode === "player-centered"`,
-    "player-centered camera restore",
-  );
-
-  await driver.waitFor(
-    `return document.querySelector("#position-value")?.textContent === "8, 3"`,
-    "movement after save",
-  );
-
-  await driver.execute(`
-    const saved = window.__rfbE2eDownloads.find((item) => item.fileName.endsWith(".rfbsave"));
-    const input = document.querySelector("#load-input");
-    const transfer = new DataTransfer();
-    transfer.items.add(new File([saved.blob], saved.fileName, { type: "application/octet-stream" }));
-    input.files = transfer.files;
-    input.dispatchEvent(new Event("change", { bubbles: true }));
-    return true;
-  `);
-  await driver.waitFor(
-    `return document.querySelector("#position-value")?.textContent === "4, 3" && document.querySelector("#turn-value")?.textContent === "3" && document.querySelector("#inventory-count")?.textContent?.startsWith("1 堆")`,
-    "save restore",
-  );
-  state = await readState(driver);
-  assert.equal(state.renderKind, "snapshot");
-  assert.equal(state.appliedCells, "400");
-  assert.equal(state.itemCount, "4");
-  assert.equal(state.inventoryStackCount, "1");
-  assert.equal(state.cameraMode, "player-centered");
-  assert.ok(Number(state.cameraX) >= 0);
-  assert.equal(state.visibleChunkCount, "4");
-  assert.match(state.inventory, /陌生的浅色碎片/);
-  assert.match(state.messages, /存档校验与载入成功/);
-
-  await click(driver, "#replay-button");
-  await driver.waitFor(
-    `return window.__rfbE2eDownloads?.some((item) => item.fileName.endsWith(".rfbreplay"))`,
-    "replay export",
-  );
-  download = await lastDownload(driver);
-  assert.equal(download.fileName, "rfb-rewrite-diagnostic.rfbreplay");
-  assert.ok(download.size > 50, `replay is unexpectedly small: ${download.size}`);
-  assert.match((await readState(driver)).messages, /已导出不包含存档和本地路径的诊断回放/);
-
-  await driver.execute(`
-    window.dispatchEvent(new ErrorEvent("error", { message: "synthetic E2E crash" }));
-    return true;
-  `);
-  await driver.waitFor(
-    `return document.documentElement.dataset.crashDiagnosticReport?.endsWith(".rfbdiagnostic")`,
-    "automatic frontend crash diagnostic",
-  );
-  state = await readState(driver);
-  assert.equal(state.crashDiagnosticReason, "frontend-error");
-  assert.match(state.crashDiagnosticReport, /^crash-\d+(?:-\d+)?\.rfbdiagnostic$/);
-  assert.match(state.messages, /已在本机自动保存脱敏诊断报告/);
-  const visibleChunksBeforeTilesetSwitch = state.visibleChunkCount;
-
-  await driver.execute(`
-    const select = document.querySelector("#tileset-preset");
-    select.value = "image";
-    select.dispatchEvent(new Event("change", { bubbles: true }));
-    return true;
-  `);
-  await driver.waitFor(
-    `return document.querySelector("#map-host")?.dataset.tilesetId === "rfb.tileset.image-demo"`,
-    "image tileset hot switch",
-  );
-  state = await readState(driver);
-  assert.equal(state.renderKind, "tileset");
-  assert.equal(state.appliedCells, "400");
-  assert.equal(state.lastRebuiltTerrainChunks, "4");
-  assert.equal(state.totalRebuiltTerrainChunks, "8");
-  assert.equal(state.visibleChunkCount, visibleChunksBeforeTilesetSwitch);
-  assert.equal(state.canvasUnchanged, true);
-  assert.match(state.messages, /地图外观已载入：rfb\.tileset\.image-demo/);
-
-  const hashBeforeLanguageSwitch = state.stateHash;
-  await driver.execute(`
-    const select = document.querySelector("#language-select");
-    select.value = "en-US";
-    select.dispatchEvent(new Event("change", { bubbles: true }));
-    return true;
-  `);
-  await driver.waitFor(
-    `return document.documentElement.lang === "en-US" && document.querySelector("#connection-status")?.textContent === "Core connected"`,
-    "English locale switch",
-  );
-  state = await readState(driver);
-  assert.equal(state.stateHash, hashBeforeLanguageSwitch);
-  assert.equal(state.canvasUnchanged, true);
-  assert.match(state.inventory, /unfamiliar pale shard/);
-  assert.match(state.messages, /You pick up echo charm ×1/);
-  assert.match(state.controls, /Numpad 1–9 moves in eight directions/);
-
-  await driver.execute(`
-    window.__rfbRunRendererProfile().catch(() => undefined);
-    return true;
-  `);
-  await driver.waitFor(
-    `return document.documentElement.dataset.rendererProfileState === "complete" || document.documentElement.dataset.rendererProfileState === "error"`,
-    "large-map renderer profile",
-    120_000,
-  );
-  const profileState = await driver.execute(`
-    return {
-      state: document.documentElement.dataset.rendererProfileState,
-      error: window.__rfbRendererProfileError,
-      report: window.__rfbRendererProfileResult,
-    };
-  `);
-  assert.equal(profileState.state, "complete", profileState.error);
-  const profile = profileState.report;
-  assert.equal(profile.schemaVersion, 1);
-  assert.equal(profile.scenarioId, "rfb-render-profile-large-original-v1");
-  assert.equal(profile.rendererBackend, "pixi-layered-chunks-v3");
-  assert.equal(profile.dynamicViewMode, "visible-chunk-reuse-v1");
-  assert.equal(profile.width, 192);
-  assert.equal(profile.height, 64);
-  assert.equal(profile.cellCount, 12_288);
-  assert.equal(profile.dynamicUpdateCellCount, 256);
-  assert.equal(profile.terrainUpdateCellCount, 96);
-  assert.equal(profile.estimatedFullMapDynamicDisplayObjectCount, 86_016);
-  assert.equal(profile.recommendation, "retain-visible-chunk-dynamic-views");
-  assert.deepEqual(profile.runs.map((run) => run.chunkSize), [8, 16, 32]);
-  assert.deepEqual(
-    profile.runs.map((run) => run.diagnostics.terrainChunkCount),
-    [192, 48, 12],
-  );
-  assert.deepEqual(
-    profile.runs.map((run) => run.diagnostics.activeDynamicChunkCount),
-    [16, 4, 4],
-  );
-  assert.deepEqual(
-    profile.runs.map((run) => run.diagnostics.cellViewCount),
-    [1024, 1024, 4096],
-  );
-  assert.deepEqual(
-    profile.runs.map((run) => run.diagnostics.dynamicDisplayObjectCount),
-    [7168, 7168, 28_672],
-  );
-  for (const run of profile.runs) {
-    assert.ok(run.diagnostics.visibleChunkCount > 0);
-    assert.ok(run.diagnostics.visibleChunkCount < run.diagnostics.terrainChunkCount);
-    assert.equal(
-      run.diagnostics.activeDynamicChunkCount,
-      run.diagnostics.visibleChunkCount,
-    );
-    assert.equal(run.diagnostics.pooledDynamicChunkCount, 0);
-    assert.ok(
-      run.diagnostics.dynamicDisplayObjectCount <
-        profile.estimatedFullMapDynamicDisplayObjectCount,
-    );
-    assert.equal(
-      run.diagnostics.lastRebuiltTerrainChunks,
-      run.diagnostics.terrainChunkCount,
-    );
-    assert.ok(
-      run.diagnostics.totalRebuiltTerrainChunks >=
-        run.diagnostics.terrainChunkCount * 2,
-    );
-    assert.ok(run.canvasPixelWidth >= 420);
-    assert.ok(run.canvasPixelHeight >= 420);
-    assert.equal(run.frameTiming.sampleCount, 45);
-    for (const timing of [
-      run.initializeMs,
-      run.initialCameraMs,
-      run.initialSnapshotMs,
-      run.cameraSweepMs,
-      run.dynamicUpdateMs,
-      run.terrainUpdateMs,
-      run.tilesetSwitchMs,
-      run.frameTiming.medianMs,
-      run.frameTiming.p95Ms,
-      run.frameTiming.maxMs,
-    ]) {
-      assert.ok(Number.isFinite(timing) && timing >= 0);
-    }
+      window.__acceptanceErrors = [];
+      window.addEventListener("error", event => window.__acceptanceErrors.push(event.message));
+      document.querySelector("#session-new-game").click();
+      const build = document.querySelector(arguments[0]); build.checked = true;
+      build.dispatchEvent(new Event("change", { bubbles: true }));
+      const seed = document.querySelector("#session-seed"); seed.value = arguments[1];
+      seed.dispatchEvent(new Event("input", { bubbles: true }));
+      document.querySelector("#session-start-game").click(); return true;
+    `, [build, seed]);
+    await driver.waitFor(`return document.documentElement.dataset.appMode === "playing" && document.querySelector("#connection-status")?.classList.contains("ready")`, "new game", 60_000);
   }
-  await mkdir(artifactDirectory, { recursive: true });
-  await writeFile(renderProfilePath, `${JSON.stringify(profile, null, 2)}\n`);
-}
-
-async function readState(driver) {
-  return driver.execute(`
-    const host = document.querySelector("#map-host");
-    return {
-      turn: document.querySelector("#turn-value")?.textContent,
+  async function state() {
+    return driver.execute(`return {
+      hash: document.querySelector("#hash-value")?.title,
+      turn: parseInt(document.querySelector("#turn-value")?.textContent, 10),
       position: document.querySelector("#position-value")?.textContent,
-      health: document.querySelector("#hp-value")?.textContent,
-      attack: document.querySelector("#attack-value")?.textContent,
-      defense: document.querySelector("#defense-value")?.textContent,
-      renderKind: host?.dataset.renderKind,
-      appliedCells: host?.dataset.lastAppliedCells,
-      tilesetId: host?.dataset.tilesetId,
-      rendererBackend: host?.dataset.rendererBackend,
-      rendererLayerCount: host?.dataset.rendererLayerCount,
-      rendererLayers: host?.dataset.rendererLayers,
-      terrainMode: host?.dataset.terrainMode,
-      dynamicViewMode: host?.dataset.dynamicViewMode,
-      terrainChunkSize: host?.dataset.terrainChunkSize,
-      terrainChunkCount: host?.dataset.terrainChunkCount,
-      visibleChunkCount: host?.dataset.visibleChunkCount,
-      culledChunkCount: host?.dataset.culledChunkCount,
-      lastRebuiltTerrainChunks: host?.dataset.lastRebuiltTerrainChunks,
-      totalRebuiltTerrainChunks: host?.dataset.totalRebuiltTerrainChunks,
-      activeDynamicChunkCount: host?.dataset.activeDynamicChunkCount,
-      pooledDynamicChunkCount: host?.dataset.pooledDynamicChunkCount,
-      rendererCellViewCount: host?.dataset.rendererCellViewCount,
-      rendererDynamicDisplayObjectCount: host?.dataset.rendererDynamicDisplayObjectCount,
-      visibilityMode: host?.dataset.visibilityMode,
-      lightingMode: host?.dataset.lightingMode,
-      protocolVersion: host?.dataset.protocolVersion,
-      visualCellCount: host?.dataset.visualCellCount,
-      visibleCellCount: host?.dataset.visibleCellCount,
-      rememberedCellCount: host?.dataset.rememberedCellCount,
-      hiddenCellCount: host?.dataset.hiddenCellCount,
-      cameraMode: host?.dataset.cameraMode,
-      cameraX: host?.dataset.cameraX,
-      cameraY: host?.dataset.cameraY,
-      scrollX: host?.dataset.scrollX,
-      scrollY: host?.dataset.scrollY,
-      viewportWidth: host?.dataset.viewportWidth,
-      viewportHeight: host?.dataset.viewportHeight,
-      zoom: host?.dataset.zoom,
-      contentId: host?.dataset.contentId,
-      contentHash: host?.dataset.contentHash,
-      worldId: host?.dataset.worldId,
-      itemCount: host?.dataset.itemCount,
-      inventoryStackCount: host?.dataset.inventoryStackCount,
-      equipmentCount: host?.dataset.equipmentCount,
-      playerStatusCount: host?.dataset.playerStatusCount,
-      totalAppliedCells: host?.dataset.totalAppliedCells,
-      inventory: document.querySelector("#inventory-list")?.textContent,
       equipment: document.querySelector("#equipment-list")?.textContent,
       resources: document.querySelector("#resource-list")?.textContent,
-      abilities: document.querySelector("#ability-list")?.textContent,
-      effects: document.querySelector("#effects-value")?.textContent,
-      controls: document.querySelector("#controls-help")?.textContent,
-      locale: document.documentElement.lang,
-      crashDiagnosticReport: document.documentElement.dataset.crashDiagnosticReport,
-      crashDiagnosticReason: document.documentElement.dataset.crashDiagnosticReason,
-      stateHash: document.querySelector("#hash-value")?.title,
-      canvasUnchanged: window.__rfbE2eCanvas === host?.querySelector("canvas"),
-      messages: document.querySelector("#message-list")?.textContent,
-    };
+      errors: window.__acceptanceErrors ?? [],
+    };`);
+  }
+  async function waitTurnAfter(turn) {
+    await driver.waitFor(`return parseInt(document.querySelector("#turn-value")?.textContent, 10) > arguments[0]`, "committed action", 10_000, [turn]);
+  }
+  async function installDownloads() {
+    await driver.execute(`
+      const downloads = []; window.__rfbE2eDownloads = downloads;
+      URL.createObjectURL = blob => { downloads.push({ blob, size: blob.size, fileName: "" }); return "blob:acceptance-" + downloads.length; };
+      URL.revokeObjectURL = () => {};
+      HTMLAnchorElement.prototype.click = function () { downloads.at(-1).fileName = this.download; };
+      return true;
+    `);
+  }
+  async function saveRestore() {
+    await installDownloads();
+    const saved = await state();
+    await driver.execute(`document.querySelector(".hud-menu").open = true; return true;`);
+    await click(driver, "#save-button");
+    await driver.waitFor(`return window.__rfbE2eDownloads.some(item => item.fileName.endsWith(".rfbsave"))`, "save export");
+    assert.ok((await lastDownload(driver)).size > 100);
+    await driver.execute(`document.querySelector(".hud-menu").open = false; return true;`);
+    await dispatchKey(driver, "Numpad5", "5"); await waitTurnAfter(saved.turn);
+    assert.notEqual((await state()).hash, saved.hash);
+    await driver.execute(`
+      const saved = window.__rfbE2eDownloads.find(item => item.fileName.endsWith(".rfbsave"));
+      const transfer = new DataTransfer(); transfer.items.add(new File([saved.blob], saved.fileName));
+      const input = document.querySelector("#load-input"); input.files = transfer.files;
+      input.dispatchEvent(new Event("change", { bubbles: true })); return true;
+    `);
+    await driver.waitFor(`return document.querySelector("#hash-value")?.title === arguments[0]`, "exact save restoration", 10_000, [saved.hash]);
+    const restored = await state();
+    assert.equal(restored.turn, saved.turn); assert.equal(restored.position, saved.position);
+    assert.equal(restored.equipment, saved.equipment); assert.equal(restored.resources, saved.resources);
+    await dispatchKey(driver, "Numpad5", "5"); await waitTurnAfter(saved.turn);
+    report.checks.push({ check: "save-restore-and-continue", hash: saved.hash });
+  }
+
+  await start("#session-build-warrior", "42");
+  const identity = await driver.execute(`return {
+    build: document.querySelector("#app").dataset.sessionBuildId,
+    seed: document.querySelector("#app").dataset.sessionSeed,
+    protocol: document.querySelector("#map-host").dataset.protocolVersion,
+    content: document.querySelector("#map-host").dataset.contentHash,
+    canvas: Boolean(document.querySelector("#map-host canvas")),
+  };`);
+  assert.equal(identity.build, "demo.build.warrior"); assert.equal(identity.seed, "42");
+  assert.equal(identity.protocol, expected.protocolVersion);
+  assert.equal(identity.content, expected.contentHash); assert.equal(identity.canvas, true);
+  report.checks.push({ check: "warrior-new-game", ...identity });
+
+  const menuHash = (await state()).hash;
+  for (const button of ["#player-ui-inventory-open", "#player-ui-character-open", "#player-ui-tasks-open", "#player-ui-ability-open"]) {
+    await click(driver, button);
+    await driver.waitFor(`return document.querySelector("#player-page-dialog")?.open`, button);
+    assert.equal(await driver.execute(`const d = document.querySelector("#player-page-dialog"); return d.scrollWidth <= d.clientWidth;`), true);
+    await click(driver, "#player-page-close");
+  }
+  await dispatchKey(driver, "KeyI", "i");
+  await driver.waitFor(`return document.querySelector("#player-page-dialog")?.open`, "inventory shortcut");
+  await dispatchKey(driver, "KeyI", "i");
+  await driver.waitFor(`return !document.querySelector("#player-page-dialog")?.open`, "shortcut closes menu");
+  await click(driver, "#player-ui-settings-open");
+  await driver.waitFor(`return document.querySelector("#player-ui-settings-dialog")?.open`, "settings menu");
+  await click(driver, "#player-ui-settings-close");
+  assert.equal((await state()).hash, menuHash);
+  report.checks.push({ check: "menus-shortcuts-no-turn" });
+
+  await driver.execute(`window.__acceptanceCanvas = document.querySelector("#map-host canvas"); return true;`);
+  for (const [selector, value, field, projected] of [
+    ["#camera-mode", "full-map", "cameraMode", "full-map"],
+    ["#camera-mode", "player-centered", "cameraMode", "player-centered"],
+    ["#zoom-level", "1.5", "zoom", "1.5"],
+    ["#zoom-level", "1", "zoom", "1"],
+    ["#tileset-preset", "image", "tilesetId", "rfb.tileset.pixel-28"],
+    ["#tileset-preset", "ascii", "tilesetId", "rfb.tileset.ascii-default"],
+  ]) {
+    await driver.execute(`const input = document.querySelector(arguments[0]); input.value = arguments[1]; input.dispatchEvent(new Event("change", { bubbles: true })); return true;`, [selector, value]);
+    await driver.waitFor(`return document.querySelector("#map-host").dataset[arguments[0]] === arguments[1]`, selector, 10_000, [field, projected]);
+    assert.equal((await state()).hash, menuHash);
+    assert.equal(await driver.execute(`return window.__acceptanceCanvas === document.querySelector("#map-host canvas");`), true);
+  }
+  report.checks.push({ check: "camera-zoom-tileset-canvas-reuse" });
+
+  await click(driver, "#player-ui-inventory-open");
+  const equipment = await driver.execute(`
+    const row = document.querySelector("#equipment-list .equipment-item:not(.equipment-slot-vacant)");
+    const result = { slot: row.dataset.slotId, name: row.querySelector(".equipment-slot-name").textContent };
+    row.querySelector("button").click(); return result;
   `);
+  await driver.waitFor(`return document.querySelector("#inventory-detail-dialog")?.open`, "equipment details");
+  await click(driver, "#inventory-detail-actions .equipment-actions button:last-child");
+  await driver.waitFor(`return document.querySelector('#equipment-list [data-slot-id="' + arguments[0] + '"]')?.classList.contains("equipment-slot-vacant")`, "unequip", 10_000, [equipment.slot]);
+  await driver.execute(`
+    if (document.querySelector("#inventory-detail-dialog").open) document.querySelector("#inventory-detail-close").click();
+    const row = [...document.querySelectorAll("#inventory-list .inventory-item")].find(row => row.querySelector(".inventory-item-name").textContent === arguments[0]);
+    if (!row) throw new Error("Unequipped item missing from inventory");
+    row.querySelector('input[type="checkbox"]').click(); return true;
+  `, [equipment.name]);
+  await click(driver, "#inventory-equip");
+  await driver.waitFor(`const row = document.querySelector('#equipment-list [data-slot-id="' + arguments[0] + '"]'); return row && !row.classList.contains("equipment-slot-vacant");`, "re-equip", 10_000, [equipment.slot]);
+  assert.equal(await driver.execute(`return document.querySelector('#equipment-list [data-slot-id="' + arguments[0] + '"] .equipment-slot-name').textContent;`, [equipment.slot]), equipment.name);
+  await click(driver, "#player-page-close");
+  report.checks.push({ check: "unequip-and-equip", ...equipment });
+  await saveRestore();
+
+  const nativeSaveName = `E2E 原生存档 ${Date.now()}`;
+  const nativeHash = (await state()).hash;
+  await driver.execute(`const input = document.querySelector("#native-save-name"); input.value = arguments[0]; input.dispatchEvent(new Event("input", { bubbles: true })); document.querySelector("#native-save-create").click(); return true;`, [nativeSaveName]);
+  await driver.waitFor(`return [...document.querySelectorAll(".native-save-name")].some(row => row.textContent === arguments[0])`, "native save", 10_000, [nativeSaveName]);
+  const slot = await driver.execute(`return [...document.querySelectorAll(".native-save-item")].find(row => row.querySelector(".native-save-name")?.textContent === arguments[0]).dataset.slotId;`, [nativeSaveName]);
+  await driver.execute(`setTimeout(() => location.reload(), 250); return true;`);
+  await driver.waitFor(`return document.documentElement.dataset.appMode === "title"`, "reload to title", 60_000);
+  await click(driver, "#session-load-game");
+  const loadSelector = `#session-load-list [data-slot-id="${slot}"] [data-session-load-action="load"]`;
+  await driver.waitFor(`return document.querySelector(arguments[0]) && !document.querySelector(arguments[0]).disabled`, "native slot in title", 10_000, [loadSelector]);
+  await click(driver, loadSelector);
+  await driver.waitFor(`return document.documentElement.dataset.appMode === "playing" && document.querySelector("#hash-value")?.title === arguments[0]`, "native title load", 60_000, [nativeHash]);
+  report.checks.push({ check: "native-save-title-load", hash: nativeHash });
+  assert.deepEqual((await state()).errors, []);
+  await cleanupNativeTestSaves(driver);
+
+  await driver.execute(`setTimeout(() => location.reload(), 250); return true;`);
+  await driver.waitFor(`return document.documentElement.dataset.appMode === "title"`, "mage title", 60_000);
+  await start("#session-build-high-mage-death", "7");
+  await click(driver, "#player-ui-ability-open");
+  await driver.waitFor(`return document.querySelector("#player-page-dialog")?.open && document.querySelectorAll(".ability-row").length > 0`, "mage spellbook");
+  const spell = await driver.execute(`const row = [...document.querySelectorAll(".ability-row")].find(row => !row.querySelector(".ability-actions button")?.disabled); if (!row) throw new Error("No learnable spell"); const name = row.querySelector(".ability-name").textContent; row.querySelector(".ability-actions button").click(); return name;`);
+  await driver.waitFor(`return [...document.querySelectorAll(".ability-row")].some(row => row.querySelector(".ability-name").textContent === arguments[0] && !row.querySelector(".ability-cast-action").disabled)`, "spell learned", 10_000, [spell]);
+  const beforeCast = await state();
+  await driver.execute(`const row = [...document.querySelectorAll(".ability-row")].find(row => row.querySelector(".ability-name").textContent === arguments[0]); row.querySelector(".ability-cast-action").click(); return true;`, [spell]);
+  await waitTurnAfter(beforeCast.turn);
+  await driver.waitFor(`return Boolean(document.querySelector(".message-ability-cast-success"))`, "successful cast");
+  assert.notEqual((await state()).resources, beforeCast.resources);
+  assert.equal(await driver.execute(`return document.querySelector("#player-page-dialog").open;`), false);
+  report.checks.push({ check: "mage-learn-and-cast", spell });
+  await saveRestore();
+  assert.deepEqual((await state()).errors, []);
+  await click(driver, "#replay-button");
+  await driver.waitFor(`return window.__rfbE2eDownloads.some(item => item.fileName.endsWith(".rfbreplay") && item.size > 50)`, "diagnostic replay export");
+  report.checks.push({ check: "diagnostic-replay-export" });
+  await driver.execute(`window.dispatchEvent(new ErrorEvent("error", { message: "synthetic E2E crash" })); return true;`);
+  await driver.waitFor(`return document.documentElement.dataset.crashDiagnosticReport?.endsWith(".rfbdiagnostic") && document.documentElement.dataset.crashDiagnosticReason === "frontend-error"`, "automatic frontend crash diagnostic");
+  report.checks.push({ check: "frontend-crash-diagnostic" });
+  await mkdir(artifactDirectory, { recursive: true });
+  await writeFile(path.join(artifactDirectory, "playable-acceptance.json"), JSON.stringify(report, null, 2) + "\n");
 }
 
 async function dispatchKey(driver, code, key) {

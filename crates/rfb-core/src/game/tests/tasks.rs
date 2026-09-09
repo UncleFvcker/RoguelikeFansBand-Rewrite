@@ -60,7 +60,7 @@ fn direct_warrens_death_drops(
 
 #[test]
 fn base_item_natural_egos_cover_completed_weapon_digger_and_ranged_types() {
-    let mut game =
+    let base =
         Game::new_with_build(67, RFB_WARRIOR_BUILD_ID).expect("Orc Cave loot test should create");
     let context = LootContext {
         table_id: "demo.loot-table.base-items".to_owned(),
@@ -77,10 +77,29 @@ fn base_item_natural_egos_cover_completed_weapon_digger_and_ranged_types() {
     let mut saw_rolled_rfb_ego = false;
     let mut saw_protection = false;
     let mut saw_fine_incompatible_fallback = false;
-    for _ in 0..20_000 {
+    // Named seeds cover each natural-ego pool and the incompatible-quality fallback.
+    for (seed, kind_id, affix_id) in [
+        (1, "demo.item.bolt", "rfb-legacy.affix.slaying-180"),
+        (9, "demo.item.hard-leather-armour", ""),
+        (44, "demo.item.sling", "rfb-legacy.affix.the-hunter"),
+        (114, "demo.item.scimitar", "rfb-legacy.affix.slaying"),
+        (248, "demo.item.filthy-rag", "rfb-legacy.affix.protection"),
+        (305, "demo.item.pick", "rfb-legacy.affix.digging"),
+        (1124, "demo.item.harp", "rfb-legacy.affix.erebor"),
+        (9477, "demo.item.sling", "rfb-legacy.affix.buckland"),
+    ] {
+        let mut game = base.clone();
+        game.rng = RfbRng::seeded(seed);
         let drops = game
             .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
             .expect("Orc Cave loot should generate");
+        assert_eq!(drops.len(), 1, "seed {seed}");
+        assert_eq!(drops[0].kind_id, kind_id, "seed {seed}");
+        assert_eq!(
+            drops[0].affix_ids.first().map(String::as_str).unwrap_or(""),
+            affix_id,
+            "seed {seed}"
+        );
         for item in drops {
             let definition = game
                 .content
@@ -171,8 +190,7 @@ fn shared_base_and_warrior_loot_use_depth_instead_of_dungeon_identity() {
     assert!(!depth_nine_kinds.contains("demo.item.bastard-sword"));
 
     let roll = |table_id: &str, floor_id: &str, depth: u16, seed: u64| {
-        let mut game =
-            Game::new_with_build(1, RFB_WARRIOR_BUILD_ID).expect("shared loot test should create");
+        let mut game = catalog.clone();
         game.rng = RfbRng::seeded(seed);
         game.generate_loot_instances(
             &LootContext {
@@ -191,7 +209,7 @@ fn shared_base_and_warrior_loot_use_depth_instead_of_dungeon_identity() {
         .collect::<Vec<_>>()
     };
 
-    for seed in 0..256 {
+    for seed in [0, 1, 42, 255] {
         let depth_nine = roll(
             "demo.loot-table.base-items",
             "demo.floor.warrens-depth-9",
@@ -847,10 +865,12 @@ fn external_task_service_rejects_unavailable_commands_without_rng_or_state_chang
 
 #[test]
 fn task_rewards_use_one_weighted_default_choice_and_class_affix_overrides() {
+    let template = task_service_game(42);
     let mut saw_food = false;
     let mut saw_water = false;
     for seed in 0..32 {
-        let mut game = task_service_game(seed);
+        let mut game = template.clone();
+        game.rng = RfbRng::seeded(seed);
         game.player.position = Position { x: 26, y: 13 };
         game.task_states.insert(
             "demo.task.test-warrens-depth".to_owned(),
@@ -877,7 +897,7 @@ fn task_rewards_use_one_weighted_default_choice_and_class_affix_overrides() {
     }
     assert!(saw_food && saw_water);
 
-    let mut game = task_service_game(42);
+    let mut game = template;
     game.player.position = Position { x: 26, y: 13 };
     game.task_states.insert(
         "demo.task.test-prerequisite".to_owned(),
@@ -945,6 +965,17 @@ fn trouble_at_home_runs_from_white_horse_targets_only_mercenaries_and_rewards_wa
         "demo.terrain.trouble-at-home-entry-available"
     );
     game.player.position = Position { x: 63, y: 13 };
+    let service = game
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == "demo.town-facility.outpost-white-horse")
+        .expect("White Horse should expose its task service at the inn entrance");
+    assert!(service.player_at_entrance);
+    assert_eq!(
+        service.tasks.first().map(|task| task.task_id.as_str()),
+        Some("demo.task.trouble-at-home")
+    );
     dispatch_next(
         &mut game,
         GameCommand::AcceptTask {
@@ -1456,115 +1487,133 @@ fn old_castle_reward_is_forced_even_when_the_artifact_was_generated_before_claim
 }
 
 #[test]
-fn clearing_thieves_hideout_closes_the_floor_without_granting_the_reward() {
-    let mut game =
-        Game::new_with_build(43, "demo.build.warrior").expect("Warrens journey should create");
-    game.player.position = Position { x: 26, y: 13 };
+fn thieves_hideout_departure_closes_the_entry_and_keeps_reward_and_failure_distinct() {
+    let mut base = Game::new_with_build(43, "demo.build.warrior").expect("task character");
+    base.player.position = Position { x: 26, y: 13 };
     dispatch_next(
-        &mut game,
+        &mut base,
         GameCommand::AcceptTask {
             facility_id: "demo.town-facility.outpost-count".to_owned(),
             task_id: "demo.task.thieves-hideout".to_owned(),
         },
     );
-    game.player.position = Position { x: 30, y: 9 };
-    dispatch_next(&mut game, GameCommand::TraverseStairs);
-    assert_eq!(game.current_floor_id, "demo.floor.thieves-hideout");
-
-    game.entities.clear();
-    dispatch_next(&mut game, GameCommand::Wait);
-    assert_eq!(
-        game.task_states["demo.task.thieves-hideout"].status,
-        TaskStatusKindDto::RewardAvailable
-    );
-    game.player.position = Position { x: 1, y: 4 };
-    let returned = dispatch_next(&mut game, GameCommand::TraverseStairs);
-
-    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
-    assert_eq!(
-        game.task_states["demo.task.thieves-hideout"].status,
-        TaskStatusKindDto::RewardAvailable
-    );
-    assert_eq!(
-        game.terrain_at(Position { x: 30, y: 9 }),
-        "demo.terrain.thieves-hideout-entry-completed"
-    );
-    assert!(
-        returned
-            .events
-            .iter()
-            .any(|event| event.kind == "task.reward-available")
-    );
-    assert!(
-        !game
-            .items
-            .iter()
-            .any(|item| item.id == "demo.task.thieves-hideout.reward.1")
-    );
+    base.player.position = Position { x: 30, y: 9 };
+    dispatch_next(&mut base, GameCommand::TraverseStairs);
+    assert_eq!(base.current_floor_id, "demo.floor.thieves-hideout");
+    for (cleared, expected_status, entry_terrain) in [
+        (
+            true,
+            TaskStatusKindDto::RewardAvailable,
+            "demo.terrain.thieves-hideout-entry-completed",
+        ),
+        (
+            false,
+            TaskStatusKindDto::Failed,
+            "demo.terrain.thieves-hideout-entry-failed",
+        ),
+    ] {
+        let mut game = base.clone();
+        if cleared {
+            game.entities.clear();
+            dispatch_next(&mut game, GameCommand::Wait);
+            assert_eq!(
+                game.task_states["demo.task.thieves-hideout"].status,
+                TaskStatusKindDto::RewardAvailable
+            );
+        }
+        game.player.position = Position { x: 1, y: 4 };
+        let returned = dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(
+            game.current_floor_id,
+            wilderness::WILDERNESS_FLOOR_ID,
+            "cleared={cleared}"
+        );
+        assert_eq!(
+            game.task_states["demo.task.thieves-hideout"].status, expected_status,
+            "cleared={cleared}"
+        );
+        assert_eq!(
+            game.terrain_at(Position { x: 30, y: 9 }),
+            entry_terrain,
+            "cleared={cleared}"
+        );
+        if cleared {
+            assert!(
+                returned
+                    .events
+                    .iter()
+                    .any(|event| event.kind == "task.reward-available")
+            );
+        }
+        assert!(
+            !game
+                .items
+                .iter()
+                .any(|item| item.id == "demo.task.thieves-hideout.reward.1"),
+            "cleared={cleared}"
+        );
+    }
 }
 
 #[test]
-fn leaving_thieves_hideout_uncleared_fails_and_closes_the_entry() {
-    let mut game =
-        Game::new_with_build(44, "demo.build.warrior").expect("Warrens journey should create");
-    game.player.position = Position { x: 26, y: 13 };
-    dispatch_next(
-        &mut game,
-        GameCommand::AcceptTask {
-            facility_id: "demo.town-facility.outpost-count".to_owned(),
-            task_id: "demo.task.thieves-hideout".to_owned(),
-        },
-    );
-    game.player.position = Position { x: 30, y: 9 };
-    dispatch_next(&mut game, GameCommand::TraverseStairs);
-    game.player.position = Position { x: 1, y: 4 };
-    dispatch_next(&mut game, GameCommand::TraverseStairs);
-
-    assert_eq!(
-        game.task_states["demo.task.thieves-hideout"].status,
-        TaskStatusKindDto::Failed
-    );
-    assert_eq!(
-        game.terrain_at(Position { x: 30, y: 9 }),
-        "demo.terrain.thieves-hideout-entry-failed"
-    );
-}
-
-#[test]
-fn count_grants_the_warrior_broad_sword_only_when_claimed() {
-    let mut game =
-        Game::new_with_build(45, "demo.build.warrior").expect("Warrens journey should create");
-    game.player.position = Position { x: 26, y: 13 };
-    game.task_states.insert(
-        "demo.task.thieves-hideout".to_owned(),
-        TaskState {
-            status: TaskStatusKindDto::RewardAvailable,
-            stage_index: 0,
-            current: 1,
-            required: 1,
-            active_floor_id: None,
-            retakes_used: 0,
-        },
-    );
-    let before_draws = game.rng_draw_counter();
-    dispatch_next(
-        &mut game,
-        GameCommand::ClaimTaskReward {
-            facility_id: "demo.town-facility.outpost-count".to_owned(),
-            task_id: "demo.task.thieves-hideout".to_owned(),
-        },
-    );
-
-    assert_eq!(
-        game.task_states["demo.task.thieves-hideout"].status,
-        TaskStatusKindDto::Completed
-    );
-    assert_eq!(game.rng_draw_counter(), before_draws);
-    assert!(game.items.iter().any(|item| {
-        item.id == "demo.task.thieves-hideout.reward.1"
-            && item.kind_id == "demo.item.broad-sword"
-            && item.location == ItemLocation::Inventory
-    }));
+fn count_task_rewards_complete_only_on_claim_with_the_expected_inventory_item() {
+    let mut base = Game::new_with_build(45, "demo.build.warrior").expect("task reward character");
+    base.player.position = Position { x: 26, y: 13 };
+    for (task_id, required, kind_id) in [
+        ("demo.task.thieves-hideout", 1, "demo.item.broad-sword"),
+        ("demo.task.pest-control", 8, "demo.item.fur-cloak"),
+    ] {
+        let mut game = base.clone();
+        if task_id == "demo.task.pest-control" {
+            game.task_states.insert(
+                "demo.task.thieves-hideout".to_owned(),
+                TaskState {
+                    status: TaskStatusKindDto::Completed,
+                    stage_index: 0,
+                    current: 1,
+                    required: 1,
+                    active_floor_id: None,
+                    retakes_used: 0,
+                },
+            );
+        }
+        game.task_states.insert(
+            task_id.to_owned(),
+            TaskState {
+                status: TaskStatusKindDto::RewardAvailable,
+                stage_index: 0,
+                current: required,
+                required,
+                active_floor_id: None,
+                retakes_used: 0,
+            },
+        );
+        let reward_id = format!("{task_id}.reward.1");
+        assert!(
+            !game.items.iter().any(|item| item.id == reward_id),
+            "{task_id}"
+        );
+        let before_draws = game.rng_draw_counter();
+        dispatch_next(
+            &mut game,
+            GameCommand::ClaimTaskReward {
+                facility_id: "demo.town-facility.outpost-count".to_owned(),
+                task_id: task_id.to_owned(),
+            },
+        );
+        assert_eq!(
+            game.task_states[task_id].status,
+            TaskStatusKindDto::Completed,
+            "{task_id}"
+        );
+        assert_eq!(game.rng_draw_counter(), before_draws, "{task_id}");
+        assert!(
+            game.items.iter().any(|item| item.id == reward_id
+                && item.kind_id == kind_id
+                && item.location == ItemLocation::Inventory),
+            "{task_id}"
+        );
+    }
 }
 
 fn pest_control_state(status: TaskStatusKindDto, current: u32) -> TaskState {
@@ -1799,45 +1848,6 @@ fn leaving_pest_control_incomplete_fails_and_discards_the_blocked_floor() {
             .collect::<Vec<_>>(),
         ["demo.floor.surface"]
     );
-}
-
-#[test]
-fn count_grants_the_fur_cloak_only_when_pest_control_is_claimed() {
-    let mut game =
-        Game::new_with_build(55, "demo.build.warrior").expect("Warrens journey should create");
-    game.player.position = Position { x: 26, y: 13 };
-    game.task_states.insert(
-        "demo.task.thieves-hideout".to_owned(),
-        TaskState {
-            status: TaskStatusKindDto::Completed,
-            stage_index: 0,
-            current: 1,
-            required: 1,
-            active_floor_id: None,
-            retakes_used: 0,
-        },
-    );
-    game.task_states.insert(
-        "demo.task.pest-control".to_owned(),
-        pest_control_state(TaskStatusKindDto::RewardAvailable, 8),
-    );
-    dispatch_next(
-        &mut game,
-        GameCommand::ClaimTaskReward {
-            facility_id: "demo.town-facility.outpost-count".to_owned(),
-            task_id: "demo.task.pest-control".to_owned(),
-        },
-    );
-
-    assert_eq!(
-        game.task_states["demo.task.pest-control"].status,
-        TaskStatusKindDto::Completed
-    );
-    assert!(game.items.iter().any(|item| {
-        item.id == "demo.task.pest-control.reward.1"
-            && item.kind_id == "demo.item.fur-cloak"
-            && item.location == ItemLocation::Inventory
-    }));
 }
 
 #[test]

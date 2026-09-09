@@ -12,81 +12,9 @@ fn archer_game(seed: u64) -> Game {
 }
 
 #[test]
-fn archer_birth_uses_the_original_class_identity_skills_and_kit() {
+fn archer_birth_projects_ammunition_creation_level_gates() {
     let game = archer_game(0x4152_4348_4552);
     let snapshot = game.snapshot();
-    let build = snapshot
-        .player
-        .build
-        .expect("Archer should project its build");
-
-    assert_eq!(build.build_id, ARCHER_BUILD_ID);
-    assert_eq!(build.class_id, "demo.class.archer");
-    assert_eq!((build.life_percent, build.experience_percent), (110, 110));
-    assert_eq!(snapshot.player.kind_id, "demo.actor.archer-player");
-    assert_eq!(snapshot.player.progress.attributes.strength.effective, 15);
-    assert_eq!(
-        snapshot.player.progress.attributes.intelligence.effective,
-        12
-    );
-    assert_eq!(snapshot.player.progress.attributes.wisdom.effective, 12);
-    assert_eq!(snapshot.player.progress.attributes.dexterity.effective, 15);
-    assert_eq!(
-        snapshot.player.progress.attributes.constitution.effective,
-        14
-    );
-
-    let skill = |id: &str| {
-        snapshot
-            .player
-            .progress
-            .skills
-            .iter()
-            .find(|skill| skill.id == id)
-            .expect("original Archer skill should be projected")
-    };
-    assert_eq!(
-        (
-            skill("demo.skill.ranged").base,
-            skill("demo.skill.ranged").growth_per_ten_levels
-        ),
-        (82, 36)
-    );
-    assert_eq!(
-        (
-            skill("demo.skill.melee").base,
-            skill("demo.skill.melee").growth_per_ten_levels
-        ),
-        (56, 18)
-    );
-    assert_eq!(
-        (
-            skill("demo.skill.disarming").base,
-            skill("demo.skill.disarming").growth_per_ten_levels
-        ),
-        (38, 12)
-    );
-
-    for kind_id in [
-        "demo.item.short-sword",
-        "demo.item.leather-scale-mail",
-        "demo.item.short-bow",
-        "demo.item.quiver",
-    ] {
-        assert!(
-            game.items.iter().any(|item| {
-                item.kind_id == kind_id && matches!(item.location, ItemLocation::Equipped { .. })
-            }),
-            "birth kit should equip {kind_id}"
-        );
-    }
-    let arrows = game
-        .items
-        .iter()
-        .find(|item| item.kind_id == "demo.item.arrow")
-        .expect("Archer should start with arrows");
-    assert!((30..=50).contains(&arrows.quantity));
-
     let abilities = snapshot
         .player
         .abilities

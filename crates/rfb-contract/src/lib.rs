@@ -18,12 +18,13 @@ use rfb_protocol::{
     WeaponProficiencySaveDto,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value};
 use thiserror::Error;
 
 pub mod policy;
 pub mod snapshot;
 
-pub const CONTRACT_SCHEMA_VERSION: u16 = 4;
+pub const CONTRACT_SCHEMA_VERSION: u16 = 5;
 pub const ACTIVE_BASELINE: &str = "contract-v306";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
@@ -43,7 +44,7 @@ pub struct ContractFixture {
     #[serde(default, skip_serializing_if = "is_false")]
     pub save_round_trip: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub assertions: Option<ContractAssertions>,
+    pub assertions: Option<FixtureAssertions>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -328,18 +329,6 @@ const fn is_zero_u32(value: &u32) -> bool {
     *value == 0
 }
 
-const fn is_zero_u64(value: &u64) -> bool {
-    *value == 0
-}
-
-const fn is_zero_usize(value: &usize) -> bool {
-    *value == 0
-}
-
-fn summon_command_is_default(value: &SummonCommandDto) -> bool {
-    value == &SummonCommandDto::default()
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TerrainOverridePrecondition {
@@ -377,8 +366,8 @@ pub enum ContractOnlyCommand {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ContractAssertions {
-    pub final_state: FinalStateAssertion,
+pub struct ContractAssertions<State = FinalStateAssertion> {
+    pub final_state: State,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub events: Vec<GameEventDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -391,104 +380,61 @@ pub struct ContractAssertions {
     pub save_round_trip_state_hash: Option<String>,
 }
 
+pub type FixtureAssertions = ContractAssertions<Map<String, Value>>;
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct FinalStateAssertion {
     pub revision: u32,
     pub turn: u32,
-    #[serde(default, skip_serializing_if = "is_zero_u32")]
     pub world_tick: u32,
     pub last_command_seq: u32,
-    #[serde(default, skip_serializing_if = "is_zero_u64")]
     pub rng_draw_counter: u64,
-    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub floor_id: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dungeon_instance_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub town: Option<TownDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub shops: Vec<ShopDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub homes: Vec<HomeDto>,
     pub player_position: Position,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_hp: Option<i32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_max_hp: Option<i32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_attack: Option<i32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_defense: Option<i32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_speed: Option<u16>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_energy_need: Option<i32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_carried_weight_tenths_pound: Option<u32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_carry_capacity_tenths_pound: Option<u32>,
     pub player_encumbrance_speed_penalty: Option<u16>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_gold: Option<u32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_nutrition: Option<u16>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub player_statuses: Vec<StatusDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub player_resistances: Vec<ResistanceDto>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_level: Option<u16>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_experience: Option<u64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_max_level: Option<u16>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_pending_attribute_increases: Option<u16>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_attributes: Option<rfb_protocol::PlayerProgressDto>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_build_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub player_resources: Vec<ResourcePoolDto>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_ability_learning: Option<AbilityLearningDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub player_abilities: Vec<PlayerAbilityRuntimeAssertion>,
-    #[serde(default, skip_serializing_if = "summon_command_is_default")]
     pub player_summon_command: SummonCommandDto,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub player_recall: Option<RecallStateDto>,
     pub entity_count: usize,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub entities: Vec<ActorStateAssertion>,
-    #[serde(default, skip_serializing_if = "is_zero_usize")]
     pub ground_item_count: usize,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub gold_piles: Vec<GoldPileDto>,
-    #[serde(default, skip_serializing_if = "is_zero_usize")]
     pub inventory_stack_count: usize,
-    #[serde(default, skip_serializing_if = "is_zero_usize")]
     pub equipment_count: usize,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub inventory: Vec<InventoryItemDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub equipment: Vec<EquipmentItemDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub item_knowledge: Vec<ItemKnowledgeSaveDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub next_item_instance_serial: Option<u64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub next_gold_pile_serial: Option<u64>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub terrain_interactions: Vec<TerrainInteractionDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tasks: Vec<TaskRuntimeAssertion>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub campaign: Option<CampaignStateDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub revealed_terrain: Vec<Position>,
     pub state_hash: String,
 }
@@ -643,7 +589,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         }
         if let Some(attributes) = &fixture.preconditions.player_attributes {
             progress.attributes = *attributes;
-            progress.maximum_attributes = Some(*attributes);
+            progress.maximum_attributes = *attributes;
         }
     }
     if fixture.preconditions.legacy_player_progress {
@@ -1121,49 +1067,83 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     })
 }
 
+/// Observe the fields authored in a fixture, retaining its scope when refreshing.
+/// Named collections use stable IDs; arrays retain exact contents and order.
+pub fn observe_assertions(fixture: &ContractFixture) -> Result<FixtureAssertions, ContractError> {
+    let mut actual = serde_json::to_value(observe(fixture)?)?;
+    for (path, key) in [
+        ("/finalState/shops", "id"),
+        ("/finalState/homes", "id"),
+        ("/finalState/inventory", "id"),
+        ("/finalState/equipment", "id"),
+        ("/finalState/entities", "id"),
+        ("/finalState/goldPiles", "id"),
+        ("/finalState/tasks", "taskId"),
+        ("/finalState/itemKnowledge", "kindId"),
+        ("/finalState/itemPropertyKnowledge", "itemId"),
+        (
+            "/finalState/playerAttributes/weaponProficiencies",
+            "itemKindId",
+        ),
+        ("/finalState/playerAttributes/materials", "materialId"),
+    ] {
+        let collection = actual.pointer_mut(path).expect("known observation field");
+        let entries = collection.as_array().expect("known observation collection");
+        *collection = Value::Object(
+            entries
+                .iter()
+                .map(|entry| {
+                    let id = entry[key]
+                        .as_str()
+                        .expect("projected record has a stable ID");
+                    (id.to_owned(), entry.clone())
+                })
+                .collect(),
+        );
+    }
+    if let Some(expected) = &fixture.assertions {
+        actual["finalState"] = select_asserted_fields(
+            &actual["finalState"],
+            &Value::Object(expected.final_state.clone()),
+            "finalState",
+        )?;
+    }
+    Ok(serde_json::from_value(actual)?)
+}
+
+fn select_asserted_fields(
+    actual: &Value,
+    expected: &Value,
+    path: &str,
+) -> Result<Value, ContractError> {
+    if let (Value::Object(actual), Value::Object(expected)) = (actual, expected) {
+        if expected.is_empty() {
+            return Ok(Value::Object(actual.clone()));
+        }
+        return expected
+            .iter()
+            .map(|(key, expected)| {
+                let path = format!("{path}.{key}");
+                let actual = actual
+                    .get(key)
+                    .ok_or_else(|| ContractError::UnknownAssertionField(path.clone()))?;
+                Ok((
+                    key.clone(),
+                    select_asserted_fields(actual, expected, &path)?,
+                ))
+            })
+            .collect::<Result<Map<_, _>, _>>()
+            .map(Value::Object);
+    }
+    Ok(actual.clone())
+}
+
 pub fn verify(fixture: &ContractFixture) -> Result<(), ContractError> {
     let expected = fixture
         .assertions
         .as_ref()
         .ok_or_else(|| ContractError::MissingAssertions(fixture.id.clone()))?;
-    let mut migrated_expected = None;
-    if let Some(player_attributes) = expected.final_state.player_attributes.as_ref() {
-        let maxima = [
-            player_attributes.attributes.strength.maximum_natural,
-            player_attributes.attributes.intelligence.maximum_natural,
-            player_attributes.attributes.wisdom.maximum_natural,
-            player_attributes.attributes.dexterity.maximum_natural,
-            player_attributes.attributes.constitution.maximum_natural,
-            player_attributes.attributes.charisma.maximum_natural,
-        ];
-        let all_legacy = maxima.iter().all(|maximum| *maximum == 0);
-        if maxima.contains(&0) && !all_legacy {
-            return Err(ContractError::IncompleteLegacyAttributeProjection(
-                fixture.id.clone(),
-            ));
-        }
-        if fixture.schema_version == 1 && all_legacy {
-            let mut migrated = expected.clone();
-            let progress = migrated
-                .final_state
-                .player_attributes
-                .as_mut()
-                .expect("checked player progress must remain available");
-            for value in [
-                &mut progress.attributes.strength,
-                &mut progress.attributes.intelligence,
-                &mut progress.attributes.wisdom,
-                &mut progress.attributes.dexterity,
-                &mut progress.attributes.constitution,
-                &mut progress.attributes.charisma,
-            ] {
-                value.maximum_natural = value.natural;
-            }
-            migrated_expected = Some(migrated);
-        }
-    }
-    let expected = migrated_expected.as_ref().unwrap_or(expected);
-    let actual = observe(fixture)?;
+    let actual = observe_assertions(fixture)?;
     if &actual == expected {
         return Ok(());
     }
@@ -1186,7 +1166,7 @@ pub fn validate_fixture_set(fixtures: &[ContractFixture]) -> Result<(), Contract
 }
 
 fn validate_fixture(fixture: &ContractFixture) -> Result<(), ContractError> {
-    if !(1..=CONTRACT_SCHEMA_VERSION).contains(&fixture.schema_version) {
+    if fixture.schema_version != CONTRACT_SCHEMA_VERSION {
         return Err(ContractError::UnsupportedSchema(fixture.schema_version));
     }
     if fixture.legacy_commit != LEGACY_BASELINE_COMMIT {
@@ -1201,6 +1181,15 @@ fn validate_fixture(fixture: &ContractFixture) -> Result<(), ContractError> {
     }
     if fixture.id.trim().is_empty() {
         return Err(ContractError::EmptyId);
+    }
+    if let Some(expected) = &fixture.assertions
+        && expected
+            .final_state
+            .get("stateHash")
+            .and_then(Value::as_str)
+            .is_none_or(str::is_empty)
+    {
+        return Err(ContractError::MissingStateHash(fixture.id.clone()));
     }
     for item in &fixture.preconditions.inventory_items {
         if let Some(depth) = item.generation_depth
@@ -1369,8 +1358,10 @@ pub enum ContractError {
     InvalidSeed(String),
     #[error("fixture {0} does not contain assertions")]
     MissingAssertions(String),
-    #[error("fixture {0} has a partially populated legacy attribute projection")]
-    IncompleteLegacyAttributeProjection(String),
+    #[error("fixture {0} must assert the complete final state hash")]
+    MissingStateHash(String),
+    #[error("unknown assertion field {0}")]
+    UnknownAssertionField(String),
     #[error("fixture {id} did not match\nexpected:\n{expected}\nactual:\n{actual}")]
     AssertionMismatch {
         id: String,
@@ -1387,4 +1378,43 @@ pub enum ContractError {
     Core(#[from] CoreError),
     #[error(transparent)]
     Json(#[from] serde_json::Error),
+}
+
+#[cfg(test)]
+mod assertion_tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn selected_record_fields_refresh_without_expanding_the_scope() {
+        let actual = json!({"inventory": {
+            "food": {"quantity": 8, "weight": 10},
+            "torch": {"quantity": 1}
+        }, "playerGold": 50});
+        let expected = json!({"inventory": {"food": {"quantity": 7}}});
+        assert_eq!(
+            select_asserted_fields(&actual, &expected, "finalState").unwrap(),
+            json!({"inventory": {"food": {"quantity": 8}}})
+        );
+        assert!(matches!(
+            select_asserted_fields(&actual, &json!({"inventory": {"missing": {"quantity": 1}}}), "finalState"),
+            Err(ContractError::UnknownAssertionField(path)) if path == "finalState.inventory.missing"
+        ));
+    }
+
+    #[test]
+    fn empty_collections_and_arrays_remain_exact_assertions() {
+        for (actual, expected) in [
+            (
+                json!({"inventory": {"food": {"quantity": 1}}}),
+                json!({"inventory": {}}),
+            ),
+            (json!({"positions": [2, 1]}), json!({"positions": [1, 2]})),
+            (json!({"statuses": ["paralyzed"]}), json!({"statuses": []})),
+        ] {
+            let selected = select_asserted_fields(&actual, &expected, "finalState").unwrap();
+            assert_eq!(selected, actual);
+            assert_ne!(selected, expected);
+        }
+    }
 }

@@ -40,6 +40,7 @@ fn create_item_effect_accepts_only_bounded_plain_item_references() {
 #[test]
 fn abilities_validate_actor_detection_control_and_level_scaling() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    check_spell_effect_parameter_contracts(&artifact.content);
 
     let mut valid = artifact.content.clone();
     let malediction = valid
@@ -156,9 +157,89 @@ fn zero_ability_bases_require_matching_level_scaling() {
 }
 
 #[test]
-fn arcane_first_book_keeps_the_original_spell_table_and_narrow_effects() {
-    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    let content = artifact.content;
+fn arcane_books_keep_source_values_effects_and_acquisition() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+
+    check_arcane_first_book(&content);
+    check_arcane_second_book(&content);
+    check_arcane_third_book(&content);
+    check_arcane_fourth_book(&content);
+}
+
+#[test]
+fn life_books_keep_source_values_effects_and_acquisition() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+
+    check_life_first_book(&content);
+    check_life_second_book(&content);
+    check_life_third_book(&content);
+    check_life_fourth_book(&content);
+}
+
+#[test]
+fn daemon_books_keep_source_values_effects_and_acquisition() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+
+    check_daemon_first_book(&content);
+    check_daemon_second_book(&content);
+    check_daemon_third_book(&content);
+    check_daemon_fourth_book(&content);
+}
+
+#[test]
+fn crusade_books_keep_source_values_effects_and_acquisition() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+
+    check_crusade_first_book(&content);
+    check_crusade_second_book(&content);
+    check_crusade_third_book(&content);
+    check_crusade_fourth_book(&content);
+}
+
+#[test]
+fn nature_books_keep_source_values_effects_and_acquisition() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+
+    check_nature_first_book(&content);
+    check_nature_second_book(&content);
+    check_nature_third_book(&content);
+    check_nature_fourth_book(&content);
+}
+
+#[test]
+fn armageddon_books_keep_source_values_effects_and_acquisition() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+
+    check_armageddon_first_book(&content);
+    check_armageddon_second_book(&content);
+    check_armageddon_third_book(&content);
+    check_armageddon_fourth_book(&content);
+}
+
+#[test]
+fn sorcery_books_keep_source_values_effects_and_acquisition() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+
+    check_sorcery_first_two_books(&content);
+    check_sorcery_third_book(&content);
+    check_sorcery_fourth_book(&content);
+}
+
+fn check_arcane_first_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -222,11 +303,7 @@ fn arcane_first_book_keeps_the_original_spell_table_and_narrow_effects() {
     ));
 }
 
-#[test]
-fn life_first_book_keeps_the_original_spell_table_allocation_and_final_scaling() {
-    let content = compile_pack_dir(&original_pack_path())
-        .expect("original pack should compile")
-        .content;
+fn check_life_first_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -341,11 +418,7 @@ fn life_first_book_keeps_the_original_spell_table_allocation_and_final_scaling()
     );
 }
 
-#[test]
-fn daemon_first_book_keeps_the_original_identity_spell_table_and_effect_boundaries() {
-    let content = compile_pack_dir(&original_pack_path())
-        .expect("original pack should compile")
-        .content;
+fn check_daemon_first_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -509,11 +582,7 @@ fn daemon_first_book_keeps_the_original_identity_spell_table_and_effect_boundari
     ));
 }
 
-#[test]
-fn crusade_first_book_keeps_original_identity_spell_table_and_effect_boundaries() {
-    let content = compile_pack_dir(&original_pack_path())
-        .expect("original pack should compile")
-        .content;
+fn check_crusade_first_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -661,11 +730,7 @@ fn crusade_first_book_keeps_original_identity_spell_table_and_effect_boundaries(
     );
 }
 
-#[test]
-fn crusade_second_book_keeps_original_identity_allocation_and_spell_table() {
-    let content = compile_pack_dir(&original_pack_path())
-        .expect("original pack should compile")
-        .content;
+fn check_crusade_second_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -801,11 +866,7 @@ fn crusade_second_book_keeps_original_identity_allocation_and_spell_table() {
     ));
 }
 
-#[test]
-fn crusade_third_book_keeps_original_identity_allocation_and_spell_table() {
-    let content = compile_pack_dir(&original_pack_path())
-        .expect("original pack should compile")
-        .content;
+fn check_crusade_third_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -954,11 +1015,7 @@ fn crusade_third_book_keeps_original_identity_allocation_and_spell_table() {
     );
 }
 
-#[test]
-fn crusade_fourth_book_keeps_original_identity_allocation_and_spell_table() {
-    let content = compile_pack_dir(&original_pack_path())
-        .expect("original pack should compile")
-        .content;
+fn check_crusade_fourth_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -1101,11 +1158,7 @@ fn crusade_fourth_book_keeps_original_identity_allocation_and_spell_table() {
     ));
 }
 
-#[test]
-fn daemon_second_book_keeps_the_original_identity_allocation_and_spell_table() {
-    let content = compile_pack_dir(&original_pack_path())
-        .expect("original pack should compile")
-        .content;
+fn check_daemon_second_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -1304,11 +1357,7 @@ fn daemon_second_book_keeps_the_original_identity_allocation_and_spell_table() {
     );
 }
 
-#[test]
-fn daemon_third_book_keeps_the_original_identity_allocation_spell_table_and_demon_form() {
-    let content = compile_pack_dir(&original_pack_path())
-        .expect("original pack should compile")
-        .content;
+fn check_daemon_third_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -1567,11 +1616,7 @@ fn daemon_third_book_keeps_the_original_identity_allocation_spell_table_and_demo
     ));
 }
 
-#[test]
-fn daemon_fourth_book_completes_the_original_realm_and_keeps_composite_effects_explicit() {
-    let content = compile_pack_dir(&original_pack_path())
-        .expect("original pack should compile")
-        .content;
+fn check_daemon_fourth_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -1773,11 +1818,7 @@ fn daemon_fourth_book_completes_the_original_realm_and_keeps_composite_effects_e
     );
 }
 
-#[test]
-fn life_second_book_keeps_the_original_identity_allocation_and_spell_table() {
-    let content = compile_pack_dir(&original_pack_path())
-        .expect("original pack should compile")
-        .content;
+fn check_life_second_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -1894,11 +1935,7 @@ fn life_second_book_keeps_the_original_identity_allocation_and_spell_table() {
     assert_eq!(turn.level_scaling.len(), 1);
 }
 
-#[test]
-fn life_third_book_keeps_the_original_identity_allocation_and_spell_table() {
-    let content = compile_pack_dir(&original_pack_path())
-        .expect("original pack should compile")
-        .content;
+fn check_life_third_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -2078,11 +2115,66 @@ fn life_third_book_keeps_the_original_identity_allocation_and_spell_table() {
     }
 }
 
-#[test]
-fn life_fourth_book_completes_the_original_realm_and_acquisition() {
-    let content = compile_pack_dir(&original_pack_path())
-        .expect("original pack should compile")
-        .content;
+// Fixed spell data is checked here; core tests exercise the shared calculations.
+fn check_spell_effect_parameter_contracts(content: &CompiledContentV1) {
+    let contracts: Vec<serde_json::Value> =
+        serde_json::from_str(include_str!("spell-effect-parameters.json"))
+            .expect("spell parameter contracts must be JSON");
+    let mage = content
+        .classes
+        .iter()
+        .find(|class| class.id == "demo.class.high-mage")
+        .and_then(|class| class.casting_profile.as_ref())
+        .expect("High-Mage casting profile");
+    for contract in contracts {
+        let id = contract["id"].as_str().expect("contract ability ID");
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} must compile"));
+        assert_eq!(
+            ability.effect.ordered_effects().len(),
+            contract["effectCount"].as_u64().unwrap() as usize,
+            "{id} effect count"
+        );
+        let effect = serde_json::to_value(&ability.effect).expect("serializable effect");
+        for (pointer, expected) in contract["effectFields"].as_object().expect("effect fields") {
+            assert_eq!(effect.pointer(pointer), Some(expected), "{id} {pointer}");
+        }
+        let mut scaling: Vec<AbilityLevelScalingDefinition> =
+            serde_json::from_value(contract["levelScaling"].clone())
+                .expect("level scaling contract");
+        scaling.sort_by_key(|value| (value.effect_index, value.field));
+        assert_eq!(ability.level_scaling, scaling, "{id} level scaling");
+        let mut power: Vec<AbilitySpellPowerDefinition> =
+            serde_json::from_value(contract["spellPowerFields"].clone())
+                .expect("spell power contract");
+        power.sort_by_key(|value| (value.effect_index, value.field));
+        assert_eq!(ability.spell_power_fields, power, "{id} spell power fields");
+        if let Some(expected) = contract.get("highMageOverride") {
+            let override_ = mage
+                .realm_profiles
+                .iter()
+                .flat_map(|realm| &realm.ability_overrides)
+                .find(|value| value.ability_id == id)
+                .expect("High-Mage override");
+            let actual = serde_json::to_value(override_).expect("serializable override");
+            for (field, value) in expected.as_object().expect("override fields") {
+                if field == "levelScaling" {
+                    let mut scaling: Vec<AbilityLevelScalingDefinition> =
+                        serde_json::from_value(value.clone()).expect("override scaling");
+                    scaling.sort_by_key(|value| (value.effect_index, value.field));
+                    assert_eq!(override_.level_scaling, scaling, "{id} override scaling");
+                } else {
+                    assert_eq!(&actual[field], value, "{id} override {field}");
+                }
+            }
+        }
+    }
+}
+
+fn check_life_fourth_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -2291,11 +2383,7 @@ fn life_fourth_book_completes_the_original_realm_and_acquisition() {
     }));
 }
 
-#[test]
-fn nature_first_book_keeps_the_original_spell_table_and_allocation() {
-    let content = compile_pack_dir(&original_pack_path())
-        .expect("original pack should compile")
-        .content;
+fn check_nature_first_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -2406,11 +2494,7 @@ fn nature_first_book_keeps_the_original_spell_table_and_allocation() {
     ));
 }
 
-#[test]
-fn nature_second_book_keeps_the_original_spell_table_and_allocation() {
-    let content = compile_pack_dir(&original_pack_path())
-        .expect("original pack should compile")
-        .content;
+fn check_nature_second_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -2518,11 +2602,7 @@ fn nature_second_book_keeps_the_original_spell_table_and_allocation() {
     );
 }
 
-#[test]
-fn commit32_nature_third_book_keeps_the_original_spell_table_and_allocation() {
-    let content = compile_pack_dir(&original_pack_path())
-        .expect("original pack should compile")
-        .content;
+fn check_nature_third_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -2623,11 +2703,7 @@ fn commit32_nature_third_book_keeps_the_original_spell_table_and_allocation() {
     }
 }
 
-#[test]
-fn commit33_nature_fourth_book_keeps_the_original_spell_table_and_allocation() {
-    let content = compile_pack_dir(&original_pack_path())
-        .expect("original pack should compile")
-        .content;
+fn check_nature_fourth_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -2722,10 +2798,7 @@ fn commit33_nature_fourth_book_keeps_the_original_spell_table_and_allocation() {
     }
 }
 
-#[test]
-fn armageddon_first_book_keeps_the_original_spell_table_and_elemental_scaling() {
-    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    let content = artifact.content;
+fn check_armageddon_first_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -2867,10 +2940,7 @@ fn armageddon_first_book_keeps_the_original_spell_table_and_elemental_scaling() 
     }
 }
 
-#[test]
-fn armageddon_second_book_keeps_the_original_spell_table_and_allocation() {
-    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    let content = artifact.content;
+fn check_armageddon_second_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -2966,10 +3036,7 @@ fn armageddon_second_book_keeps_the_original_spell_table_and_allocation() {
     );
 }
 
-#[test]
-fn armageddon_third_book_keeps_the_original_spell_table_and_allocation() {
-    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    let content = artifact.content;
+fn check_armageddon_third_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -3074,10 +3141,7 @@ fn armageddon_third_book_keeps_the_original_spell_table_and_allocation() {
     }
 }
 
-#[test]
-fn armageddon_fourth_book_keeps_the_original_spell_table_and_allocation() {
-    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    let content = artifact.content;
+fn check_armageddon_fourth_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -3183,10 +3247,7 @@ fn armageddon_fourth_book_keeps_the_original_spell_table_and_allocation() {
     }
 }
 
-#[test]
-fn sorcery_first_two_books_keep_the_original_spell_table() {
-    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    let content = artifact.content;
+fn check_sorcery_first_two_books(content: &CompiledContentV1) {
     for (book_id, rank) in [
         ("demo.ability-book.beginners-handbook", 1),
         ("demo.ability-book.master-sorcerers-handbook", 2),
@@ -3238,10 +3299,7 @@ fn sorcery_first_two_books_keep_the_original_spell_table() {
     }
 }
 
-#[test]
-fn sorcery_third_book_keeps_the_original_spell_table_and_acquisition() {
-    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    let content = artifact.content;
+fn check_sorcery_third_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -3326,10 +3384,7 @@ fn sorcery_third_book_keeps_the_original_spell_table_and_acquisition() {
     }));
 }
 
-#[test]
-fn arcane_second_book_keeps_the_original_spell_table_and_narrow_effects() {
-    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    let content = artifact.content;
+fn check_arcane_second_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -3494,10 +3549,7 @@ fn arcane_second_book_keeps_the_original_spell_table_and_narrow_effects() {
     }
 }
 
-#[test]
-fn arcane_third_book_keeps_the_original_spell_table_and_narrow_effects() {
-    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    let content = artifact.content;
+fn check_arcane_third_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -3648,10 +3700,7 @@ fn arcane_third_book_keeps_the_original_spell_table_and_narrow_effects() {
     assert_eq!(hunger.effect, AbilityEffectDefinition::SatisfyHunger);
 }
 
-#[test]
-fn arcane_fourth_book_completes_the_original_realm_and_acquisition() {
-    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    let content = artifact.content;
+fn check_arcane_fourth_book(content: &CompiledContentV1) {
     let book = content
         .ability_books
         .iter()
@@ -3772,10 +3821,7 @@ fn arcane_fourth_book_completes_the_original_realm_and_acquisition() {
     ));
 }
 
-#[test]
-fn sorcery_fourth_book_completes_the_original_realm_and_keeps_rare_books_out_of_bookstores() {
-    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    let content = artifact.content;
+fn check_sorcery_fourth_book(content: &CompiledContentV1) {
     let books = content
         .ability_books
         .iter()

@@ -766,62 +766,75 @@ fn zero_dice_hurt_hits_without_dealing_damage() {
 }
 
 #[test]
-fn resource_drain_melee_heals_six_times_the_amount_actually_drained() {
-    let mut game = monster_effect_game(
-        0,
-        MeleeBlowEffectDefinition::DrainResource {
-            chance_percent: None,
-            amount_dice: 1,
-            amount_sides: 1,
-        },
-    );
-    game.resources.insert(
-        "test.resource.mana".to_owned(),
-        ResourcePool {
-            current: 1,
-            maximum: 1,
-        },
-    );
-    game.entities[0].hp = 1;
-    game.entities[0].max_hp = 20;
-
-    game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
-        .expect("resource-draining melee should resolve");
-
-    assert_eq!(game.resources["test.resource.mana"].current, 0);
-    assert_eq!(game.entities[0].hp, 7);
-}
-
-#[test]
-fn percent_gated_resource_drain_uses_level_power_and_heals_the_caster() {
-    let game = (0..100_u64)
-        .find_map(|seed| {
-            let mut game = monster_effect_game(
-                seed,
-                MeleeBlowEffectDefinition::DrainResource {
-                    chance_percent: Some(25),
-                    amount_dice: 1,
-                    amount_sides: 25,
-                },
-            );
-            game.resources.insert(
-                "test.resource.mana".to_owned(),
-                ResourcePool {
-                    current: 25,
-                    maximum: 25,
-                },
-            );
+fn melee_resource_drain_shares_gate_exhaustion_and_actual_healing_rules() {
+    for (chance_percent, amount_sides, cases) in [
+        (
+            None,
+            1,
+            &[
+                ("one point", 1, Some(1), 20, 1, 3),
+                ("empty pool", 1, Some(0), 20, 0, 3),
+                ("missing pool", 1, None, 20, 0, 3),
+            ][..],
+        ),
+        (
+            Some(25),
+            25,
+            &[
+                ("rolled amount", 1, Some(25), 200, 9, 4),
+                ("exhausted pool", 1, Some(3), 200, 3, 4),
+                ("healing cap", 1, Some(25), 10, 9, 4),
+                ("gate rejected", 0, Some(25), 200, 0, 3),
+            ][..],
+        ),
+    ] {
+        let base = monster_effect_game(
+            0,
+            MeleeBlowEffectDefinition::DrainResource {
+                chance_percent,
+                amount_dice: 1,
+                amount_sides,
+            },
+        );
+        for &(case, seed, resource, max_hp, drained, draws) in cases {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(seed);
+            game.resources.clear();
+            if let Some(current) = resource {
+                game.resources.insert(
+                    "test.resource.mana".to_owned(),
+                    ResourcePool {
+                        current,
+                        maximum: current,
+                    },
+                );
+            }
             game.entities[0].hp = 1;
-            game.entities[0].max_hp = 200;
-            game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
-                .expect("percent-gated resource drain should resolve");
-            (game.resources["test.resource.mana"].current < 25).then_some(game)
-        })
-        .expect("a deterministic seed should pass the 25% gate");
-
-    let drained = 25 - game.resources["test.resource.mana"].current;
-    assert!((1..=25).contains(&drained));
-    assert_eq!(game.entities[0].hp, 1 + i32::try_from(drained * 6).unwrap());
+            game.entities[0].max_hp = max_hp;
+            let mut events = Vec::new();
+            game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+                .expect("resource drain melee");
+            assert!(
+                events
+                    .iter()
+                    .all(|event| !matches!(event, DomainEvent::MonsterMeleeMissed { .. })),
+                "{case}"
+            );
+            assert_eq!(
+                game.resources
+                    .get("test.resource.mana")
+                    .map(|pool| pool.current),
+                resource.map(|amount| amount - drained),
+                "{case}"
+            );
+            assert_eq!(
+                game.entities[0].hp,
+                (1 + i32::try_from(drained * 6).unwrap()).min(max_hp),
+                "{case}"
+            );
+            assert_eq!(game.rng_draw_counter(), draws, "{case}");
+        }
+    }
 }
 
 #[test]
@@ -1787,49 +1800,42 @@ fn bleeding_ticks_as_physical_damage_in_stable_status_order() {
 
 #[test]
 fn content_driven_fire_melee_uses_the_player_resistance_profile() {
-    let fire = MeleeBlowEffectDefinition::Damage {
-        chance_percent: None,
-        damage_dice: 1,
-        damage_sides: 4,
-        damage_type: rfb_content::ActorDamageType::Fire,
-        armor_mitigated: false,
-        vampiric: false,
-    };
-    let (seed, normal_damage) = (0_u64..1_000)
-        .find_map(|seed| {
-            let mut game = monster_effect_game(seed, fire.clone());
-            let mut events = Vec::new();
-            game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
-                .expect("monster melee should resolve");
-            events.into_iter().find_map(|event| match event {
-                DomainEvent::MonsterMeleeHit { damage, .. } if damage.applied >= 2 => {
-                    Some((seed, damage.applied))
-                }
+    let base = monster_effect_game(
+        0,
+        MeleeBlowEffectDefinition::Damage {
+            chance_percent: None,
+            damage_dice: 1,
+            damage_sides: 4,
+            damage_type: rfb_content::ActorDamageType::Fire,
+            armor_mitigated: false,
+            vampiric: false,
+        },
+    );
+    for (resistance, expected) in [
+        (ResistanceLevel::Vulnerable, 3),
+        (ResistanceLevel::Normal, 2),
+        (ResistanceLevel::Resistant, 1),
+        (ResistanceLevel::Strong, 1),
+        (ResistanceLevel::Immune, 0),
+    ] {
+        let mut game = base.clone();
+        game.rng = RfbRng::seeded(2);
+        game.player.resistances.set(DamageType::Fire, resistance);
+        let hp_before = game.player.hp;
+        let mut events = Vec::new();
+        game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+            .expect("fire melee should resolve");
+        let damage = events
+            .iter()
+            .find_map(|event| match event {
+                DomainEvent::MonsterMeleeHit { damage, .. } => Some(damage),
                 _ => None,
             })
-        })
-        .expect("a deterministic seed should produce a fire hit of at least two damage");
-
-    let mut resistant = monster_effect_game(seed, fire);
-    resistant.player.resistances.set(
-        DamageType::Fire,
-        crate::resistance::ResistanceLevel::Resistant,
-    );
-    let hp_before = resistant.player.hp;
-    let mut events = Vec::new();
-    resistant
-        .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
-        .expect("monster melee should resolve");
-    let resisted_damage = events
-        .into_iter()
-        .find_map(|event| match event {
-            DomainEvent::MonsterMeleeHit { damage, .. } => Some(damage.applied),
-            _ => None,
-        })
-        .expect("the same seed should preserve the hit result");
-
-    assert_eq!(resisted_damage, normal_damage - normal_damage / 2);
-    assert_eq!(resistant.player.hp, hp_before - resisted_damage);
+            .expect("fixed seed should hit");
+        assert_eq!(damage.requested, 2, "{resistance:?}");
+        assert_eq!(damage.applied, expected, "{resistance:?}");
+        assert_eq!(game.player.hp, hp_before - expected, "{resistance:?}");
+    }
 }
 
 #[test]

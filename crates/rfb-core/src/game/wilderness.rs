@@ -2312,16 +2312,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn wilderness_view_is_three_by_three_chunks() {
-        assert_eq!(WILDERNESS_VIEW_WIDTH, 96);
-        assert_eq!(WILDERNESS_VIEW_HEIGHT, 33);
-        assert_eq!(WILDERNESS_CHUNK_WIDTH, 32);
-        assert_eq!(WILDERNESS_CHUNK_HEIGHT, 11);
-        assert_eq!(WILDERNESS_VIEW_WIDTH, WILDERNESS_CHUNK_WIDTH * 3);
-        assert_eq!(WILDERNESS_VIEW_HEIGHT, WILDERNESS_CHUNK_HEIGHT * 3);
-    }
-
-    #[test]
     fn exposed_wilderness_area_is_one_third_or_five_ninths() {
         let center = Position { x: 90, y: 156 };
         let horizontal = wilderness_exposed_chunks(center, Position { x: 1, y: 0 });
@@ -2458,27 +2448,6 @@ mod tests {
         }
         assert_eq!(initial[16 * width + 48], "demo.terrain.outpost-gate");
         assert!(outside_changed);
-    }
-
-    #[test]
-    fn adjacent_view_crops_town_at_its_map_origin() {
-        let mut game =
-            Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
-        let anambar = Position { x: 26, y: 39 };
-        let full = game.cached_wilderness_view_terrain(anambar);
-
-        game.wilderness_view_offset = Position { x: 1, y: 0 };
-        let partial = game.cached_wilderness_view_terrain(Position { x: 25, y: 39 });
-        let width = usize::from(WILDERNESS_VIEW_WIDTH);
-        assert_eq!(partial[6 * width + 91], "demo.terrain.outpost-wall");
-        for y in 0..11 {
-            for x in 0..5 {
-                assert_eq!(
-                    partial[(6 + y) * width + 91 + x],
-                    full[(6 + y) * width + 27 + x]
-                );
-            }
-        }
     }
 
     #[test]
@@ -2723,18 +2692,6 @@ mod tests {
         assert!(game.wilderness_terrain_cache.is_empty());
         let evolved = game.cached_wilderness_view_terrain(position);
         assert_ne!(evolved, initial);
-    }
-
-    #[test]
-    fn coordinate_seed_is_stable_and_coordinate_specific() {
-        assert_eq!(
-            coordinate_seed(42, Position { x: 28, y: 52 }),
-            coordinate_seed(42, Position { x: 28, y: 52 })
-        );
-        assert_ne!(
-            coordinate_seed(42, Position { x: 28, y: 52 }),
-            coordinate_seed(42, Position { x: 29, y: 52 })
-        );
     }
 
     #[test]

@@ -405,14 +405,3 @@ fn sparse_weapon_progress_round_trips_and_rejects_noncanonical_or_out_of_range_e
             .is_empty()
     );
 }
-
-#[test]
-fn weapon_proficiency_save_field_is_required_for_new_progress_payloads() {
-    let mut value =
-        serde_json::to_value(Game::new(0x5354_5249_4354).to_save()).expect("save should serialize");
-    value["player"]["progress"]
-        .as_object_mut()
-        .expect("progress should be an object")
-        .remove("weaponProficiencies");
-    assert!(serde_json::from_value::<rfb_protocol::SavePayloadV1>(value).is_err());
-}

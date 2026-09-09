@@ -480,18 +480,14 @@ fn restore_character_progress(
         constitution: saved.attributes.constitution,
         charisma: saved.attributes.charisma,
     };
-    let maximum_attributes = saved
-        .maximum_attributes
-        .as_ref()
-        .map(|maximum| AttributeSet {
-            strength: maximum.strength,
-            intelligence: maximum.intelligence,
-            wisdom: maximum.wisdom,
-            dexterity: maximum.dexterity,
-            constitution: maximum.constitution,
-            charisma: maximum.charisma,
-        })
-        .unwrap_or(attributes);
+    let maximum_attributes = AttributeSet {
+        strength: saved.maximum_attributes.strength,
+        intelligence: saved.maximum_attributes.intelligence,
+        wisdom: saved.maximum_attributes.wisdom,
+        dexterity: saved.maximum_attributes.dexterity,
+        constitution: saved.maximum_attributes.constitution,
+        charisma: saved.maximum_attributes.charisma,
+    };
     let attribute_potentials = AttributeSet {
         strength: saved.attribute_potentials.strength,
         intelligence: saved.attribute_potentials.intelligence,
@@ -521,11 +517,7 @@ fn restore_character_progress(
         maximum_attributes,
         attribute_potentials,
         experience: saved.experience,
-        maximum_experience: if saved.maximum_experience == 0 {
-            saved.experience
-        } else {
-            saved.maximum_experience
-        },
+        maximum_experience: saved.maximum_experience,
         life_force: saved.life_force,
         level: saved.level,
         max_level: saved.max_level,
@@ -1494,10 +1486,6 @@ impl Game {
             game.campaign_state.status = CampaignStatusDto::Victorious;
             game.campaign_state.victory_turn = Some(game.turn);
         }
-        // A victorious/retired v70 save may contain experience banked at the
-        // pre-victory cap. Reconcile the newly unlocked cap during load so
-        // the authoritative level and HP are not dependent on a later input.
-        game.apply_player_experience(0, &mut Vec::new());
         game.reveal_current_visibility();
         game.clear_stale_mogaminator_query();
         game.validate_loaded_state()?;

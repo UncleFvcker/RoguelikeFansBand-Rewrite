@@ -103,43 +103,48 @@ fn formal_snotling_birth_adds_one_to_three_fast_recovery_mushrooms() {
 }
 
 #[test]
-fn formal_zombie_birth_starts_at_night_without_rations_and_round_trips() {
-    let mut game = zombie_game(370);
-    assert_eq!(game.world_tick, wilderness::WILDERNESS_NIGHT_START_TICK);
-    assert!(!game.wilderness_is_daytime());
-    assert!(
-        game.items.iter().all(|item| item.kind_id != RATION_KIND_ID),
-        "Zombie birth should not create ordinary rations"
-    );
-    assert!(game.items.iter().any(|item| {
-        item.kind_id == "demo.item.wooden-torch" && item.location == ItemLocation::Inventory
-    }));
-    let staff = game
-        .items
-        .iter()
-        .find(|item| {
-            item.kind_id == "demo.item.staff-of-nothing" && item.location == ItemLocation::Inventory
-        })
-        .expect("Zombie should carry its Staff of Nothing");
-    assert_eq!(
-        staff.charges,
-        Some(ItemChargesDto {
-            current: 21,
-            maximum: 21,
-        })
-    );
+fn undead_birth_starts_at_night_without_rations_and_round_trips() {
+    for (race, mut game) in [
+        ("Zombie", zombie_game(370)),
+        ("Skeleton", skeleton_game(378)),
+    ] {
+        assert_eq!(game.world_tick, wilderness::WILDERNESS_NIGHT_START_TICK);
+        assert!(!game.wilderness_is_daytime());
+        assert!(
+            game.items.iter().all(|item| item.kind_id != RATION_KIND_ID),
+            "{race} birth should not create ordinary rations"
+        );
+        assert!(game.items.iter().any(|item| {
+            item.kind_id == "demo.item.wooden-torch" && item.location == ItemLocation::Inventory
+        }));
+        let staff = game
+            .items
+            .iter()
+            .find(|item| {
+                item.kind_id == "demo.item.staff-of-nothing"
+                    && item.location == ItemLocation::Inventory
+            })
+            .expect("undead should carry its Staff of Nothing");
+        assert_eq!(
+            staff.charges,
+            Some(ItemChargesDto {
+                current: 21,
+                maximum: 21,
+            })
+        );
 
-    let saved = game.to_save();
-    let restored = Game::from_save(saved.clone()).expect("night-start Zombie should restore");
-    assert_eq!(restored.to_save(), saved);
-    assert_eq!(restored.state_hash(), game.state_hash());
+        let saved = game.to_save();
+        let restored = Game::from_save(saved.clone()).expect("night-start undead should restore");
+        assert_eq!(restored.to_save(), saved);
+        assert_eq!(restored.state_hash(), game.state_hash());
 
-    clear_monsters(&mut game);
-    let mut replay = game.clone();
-    let update = dispatch_next(&mut game, GameCommand::Wait);
-    let replay_update = dispatch_next(&mut replay, GameCommand::Wait);
-    assert_eq!(replay_update.events, update.events);
-    assert_eq!(replay.state_hash(), game.state_hash());
+        clear_monsters(&mut game);
+        let mut replay = game.clone();
+        let update = dispatch_next(&mut game, GameCommand::Wait);
+        let replay_update = dispatch_next(&mut replay, GameCommand::Wait);
+        assert_eq!(replay_update.events, update.events);
+        assert_eq!(replay.state_hash(), game.state_hash());
+    }
 }
 
 #[test]
@@ -216,43 +221,6 @@ fn formal_zombie_uses_undead_food_and_device_metabolism() {
             .current,
         0
     );
-}
-
-#[test]
-fn formal_skeleton_birth_starts_at_night_without_rations_and_round_trips() {
-    let mut game = skeleton_game(378);
-    assert_eq!(game.world_tick, wilderness::WILDERNESS_NIGHT_START_TICK);
-    assert!(!game.wilderness_is_daytime());
-    assert!(game.items.iter().all(|item| item.kind_id != RATION_KIND_ID));
-    assert!(game.items.iter().any(|item| {
-        item.kind_id == "demo.item.wooden-torch" && item.location == ItemLocation::Inventory
-    }));
-    let staff = game
-        .items
-        .iter()
-        .find(|item| {
-            item.kind_id == "demo.item.staff-of-nothing" && item.location == ItemLocation::Inventory
-        })
-        .expect("Skeleton should carry its Staff of Nothing");
-    assert_eq!(
-        staff.charges,
-        Some(ItemChargesDto {
-            current: 21,
-            maximum: 21,
-        })
-    );
-
-    let saved = game.to_save();
-    let restored = Game::from_save(saved.clone()).expect("night-start Skeleton should restore");
-    assert_eq!(restored.to_save(), saved);
-    assert_eq!(restored.state_hash(), game.state_hash());
-
-    clear_monsters(&mut game);
-    let mut replay = game.clone();
-    let update = dispatch_next(&mut game, GameCommand::Wait);
-    let replay_update = dispatch_next(&mut replay, GameCommand::Wait);
-    assert_eq!(replay_update.events, update.events);
-    assert_eq!(replay.state_hash(), game.state_hash());
 }
 
 #[test]
@@ -524,6 +492,21 @@ fn satisfy_hunger_sets_food_to_the_original_maximum_minus_one() {
             .iter()
             .any(|event| event.kind == "item.use-hunger-satisfied")
     );
+    game.nutrition = 1;
+    let ability = game
+        .content
+        .ability("demo.ability.life-satisfy-hunger")
+        .expect("Life Satisfy Hunger")
+        .clone();
+    game.resolve_player_ability_effect(
+        ability,
+        AbilityTargetPlan::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("ability hunger effect");
+    assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
 }
 
 #[test]
@@ -1255,16 +1238,6 @@ fn starvation_damage_precedes_recovery_and_can_kill() {
             .iter()
             .any(|event| matches!(event, DomainEvent::PlayerDiedFromStarvation { .. }))
     );
-}
-
-#[test]
-fn nutrition_round_trips() {
-    let mut game =
-        Game::new_with_build(17, RFB_WARRIOR_BUILD_ID).expect("Warrens Warrior should create");
-    game.nutrition = 321;
-    let restored = Game::from_save(game.to_save()).expect("nutrition should round trip");
-    assert_eq!(restored.nutrition, 321);
-    assert_eq!(restored.state_hash(), game.state_hash());
 }
 
 #[test]

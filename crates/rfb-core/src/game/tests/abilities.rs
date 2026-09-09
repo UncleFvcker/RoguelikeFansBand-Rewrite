@@ -9,77 +9,45 @@ fn set_test_virtue(game: &mut Game, slot: usize, kind: VirtueKindDto, value: i16
 }
 
 #[test]
-fn anti_magic_status_blocks_learned_spells_without_spending_resources() {
-    let mut game = prepare_death_caster(7, 40, "demo.ability.death-berserk");
-    game.player
-        .statuses
-        .push(monster_combat::melee_status(STATUS_ANTI_MAGIC, 5, "test.anti-magic").status);
-    let mana_before = game.resources["demo.resource.mana"].current;
-    let draws_before = game.rng_draw_counter();
-    let mut events = Vec::new();
+fn spell_blocking_statuses_reject_without_spending_resources() {
+    for (status_kind, expected_reason) in [
+        (STATUS_ANTI_MAGIC, "anti-magic"),
+        (STATUS_BERSERK, "berserk"),
+    ] {
+        let mut game = prepare_death_caster(7, 40, "demo.ability.death-berserk");
+        game.player
+            .statuses
+            .push(monster_combat::melee_status(status_kind, 5, "test.spell-blocker").status);
+        let mana_before = game.resources["demo.resource.mana"].current;
+        let draws_before = game.rng_draw_counter();
+        let mut events = Vec::new();
 
-    game.resolve_player_ability(
-        "demo.ability.death-berserk",
-        TargetSelection::SelfTarget,
-        &mut events,
-        &mut BTreeSet::new(),
-        &mut Vec::new(),
-    )
-    .expect("anti-magic rejection should resolve cleanly");
+        game.resolve_player_ability(
+            "demo.ability.death-berserk",
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("spell rejection should resolve cleanly");
 
-    assert_eq!(game.resources["demo.resource.mana"].current, mana_before);
-    assert_eq!(game.rng_draw_counter(), draws_before);
-    assert!(matches!(
-        events.as_slice(),
-        [DomainEvent::AbilityCastUnavailable { reason, .. }] if reason == "anti-magic"
-    ));
-    assert!(
-        !game
-            .snapshot()
-            .player
-            .abilities
-            .iter()
-            .find(|ability| ability.id == "demo.ability.death-berserk")
-            .expect("learned spell should remain projected")
-            .can_cast
-    );
-}
-
-#[test]
-fn berserk_status_blocks_learned_spells_without_spending_resources() {
-    let mut game = prepare_death_caster(7, 40, "demo.ability.death-berserk");
-    game.player
-        .statuses
-        .push(monster_combat::melee_status(STATUS_BERSERK, 5, "test.berserk").status);
-    let mana_before = game.resources["demo.resource.mana"].current;
-    let draws_before = game.rng_draw_counter();
-    let mut events = Vec::new();
-
-    game.resolve_player_ability(
-        "demo.ability.death-berserk",
-        TargetSelection::SelfTarget,
-        &mut events,
-        &mut BTreeSet::new(),
-        &mut Vec::new(),
-    )
-    .expect("berserk rejection should resolve cleanly");
-
-    assert_eq!(game.resources["demo.resource.mana"].current, mana_before);
-    assert_eq!(game.rng_draw_counter(), draws_before);
-    assert!(matches!(
-        events.as_slice(),
-        [DomainEvent::AbilityCastUnavailable { reason, .. }] if reason == "berserk"
-    ));
-    assert!(
-        !game
-            .snapshot()
-            .player
-            .abilities
-            .iter()
-            .find(|ability| ability.id == "demo.ability.death-berserk")
-            .expect("learned spell should remain projected")
-            .can_cast
-    );
+        assert_eq!(game.resources["demo.resource.mana"].current, mana_before);
+        assert_eq!(game.rng_draw_counter(), draws_before);
+        assert!(matches!(
+            events.as_slice(),
+            [DomainEvent::AbilityCastUnavailable { reason, .. }] if reason == expected_reason
+        ));
+        assert!(
+            !game
+                .snapshot()
+                .player
+                .abilities
+                .iter()
+                .find(|ability| ability.id == "demo.ability.death-berserk")
+                .expect("learned spell should remain projected")
+                .can_cast
+        );
+    }
 }
 
 #[test]
@@ -300,72 +268,6 @@ fn spawned_entities_get_content_declared_resistances_stamped() {
         }
     }
     panic!("slag crawler should kin-summon within 60 turns");
-}
-
-#[test]
-fn death_abilities_materialize_player_level_scaling_in_projection() {
-    let mut game = test_caster_game(0);
-    game.progress.level = 11;
-    let abilities = game
-        .snapshot()
-        .player
-        .abilities
-        .into_iter()
-        .map(|ability| (ability.id.clone(), ability))
-        .collect::<BTreeMap<_, _>>();
-
-    assert!(matches!(
-        abilities["demo.ability.death-malediction"]
-            .effects
-            .as_slice(),
-        [AbilityEffectSpecDto::Damage {
-            damage_dice: 5,
-            damage_sides: 4,
-            damage_bonus: 0,
-            ..
-        }]
-    ));
-    assert!(matches!(
-        abilities["demo.ability.death-stinking-cloud"]
-            .effects
-            .as_slice(),
-        [AbilityEffectSpecDto::AreaDamage {
-            damage_dice: 1,
-            damage_sides: 1,
-            damage_bonus: 14,
-            radius: 2,
-            ..
-        }]
-    ));
-    assert!(matches!(
-        abilities["demo.ability.death-black-sleep"]
-            .effects
-            .as_slice(),
-        [AbilityEffectSpecDto::ApplyStatus {
-            power: Some(22),
-            duration_ticks: 500,
-            ..
-        }]
-    ));
-    assert!(matches!(
-        abilities["demo.ability.death-horrify"].effects.as_slice(),
-        [
-            AbilityEffectSpecDto::ApplyStatus {
-                power: Some(22),
-                ..
-            },
-            AbilityEffectSpecDto::ApplyStatus {
-                duration_ticks: 7,
-                ..
-            }
-        ]
-    ));
-    assert!(matches!(
-        abilities["demo.ability.death-enslave-undead"]
-            .effects
-            .as_slice(),
-        [AbilityEffectSpecDto::Control { power: 22, .. }]
-    ));
 }
 
 #[test]
@@ -649,53 +551,6 @@ fn malediction_resolves_all_riders_and_skips_the_d1000_when_not_triggered() {
 }
 
 #[test]
-fn corrected_death_spells_project_authoritative_values_at_levels_one_twenty_and_fifty() {
-    for level in [1, 20, 50] {
-        let mut game = test_caster_game(0);
-        game.progress.level = level;
-        let abilities = game
-            .snapshot()
-            .player
-            .abilities
-            .into_iter()
-            .map(|ability| (ability.id.clone(), ability))
-            .collect::<BTreeMap<_, _>>();
-
-        for ability_id in [
-            "demo.ability.death-detect-unlife",
-            "demo.ability.death-detect-evil",
-        ] {
-            assert!(matches!(
-                abilities[ability_id].effects.as_slice(),
-                [AbilityEffectSpecDto::Detect { radius: 30, .. }]
-            ));
-        }
-        assert!(matches!(
-            abilities["demo.ability.death-necromantic-resistance"]
-                .effects
-                .as_slice(),
-            [AbilityEffectSpecDto::ApplyStatus {
-                duration_ticks: 20,
-                duration_dice: 1,
-                duration_sides: 20,
-                ..
-            }]
-        ));
-        assert!(matches!(
-            abilities["demo.ability.death-vampiric-drain"]
-                .effects
-                .as_slice(),
-            [AbilityEffectSpecDto::DrainLife {
-                damage_sides,
-                damage_bonus,
-                feeds: true,
-                ..
-            }] if *damage_sides == level * 2 && *damage_bonus == level * 2
-        ));
-    }
-}
-
-#[test]
 fn death_vampiric_drain_heals_and_feeds_up_to_the_original_caps() {
     let mut game = prepare_death_caster(0, 50, "demo.ability.death-vampiric-drain");
     set_test_virtue(&mut game, 0, VirtueKindDto::Sacrifice, 0);
@@ -735,96 +590,6 @@ fn death_vampiric_drain_heals_and_feeds_up_to_the_original_caps() {
     assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
     assert_eq!(game.virtue_current(VirtueKindDto::Sacrifice), -1);
     assert_eq!(game.virtue_current(VirtueKindDto::Vitality), -1);
-}
-
-#[test]
-fn death_second_book_materializes_original_mage_scaling_and_beam_profile() {
-    let mut game = test_caster_game(0);
-    game.progress.level = 30;
-    let abilities = game
-        .snapshot()
-        .player
-        .abilities
-        .into_iter()
-        .map(|ability| (ability.id.clone(), ability))
-        .collect::<BTreeMap<_, _>>();
-
-    assert!(matches!(
-        abilities["demo.ability.death-entropy-orb"]
-            .effects
-            .as_slice(),
-        [AbilityEffectSpecDto::AreaDamage {
-            damage_dice: 3,
-            damage_sides: 6,
-            damage_bonus: 45,
-            radius: 3,
-            target_category: Some(category),
-            ..
-        }] if category == "living"
-    ));
-    assert!(matches!(
-        abilities["demo.ability.death-nether-bolt"]
-            .effects
-            .as_slice(),
-        [AbilityEffectSpecDto::BoltOrBeamDamage {
-            damage_dice: 14,
-            damage_sides: 8,
-            beam_chance_percent: 30,
-            ..
-        }]
-    ));
-    assert!(matches!(
-        abilities["demo.ability.death-cloud-kill"]
-            .effects
-            .as_slice(),
-        [AbilityEffectSpecDto::AreaDamage {
-            damage_dice: 1,
-            damage_sides: 1,
-            damage_bonus: 119,
-            radius: 5,
-            ..
-        }]
-    ));
-    assert!(matches!(
-        abilities["demo.ability.death-genocide-one"]
-            .effects
-            .as_slice(),
-        [AbilityEffectSpecDto::Genocide {
-            scope: AbilityGenocideScopeDto::Single,
-            power: 90,
-            radius: 0,
-            ..
-        }]
-    ));
-    assert!(matches!(
-        abilities["demo.ability.death-poison-branding"]
-            .effects
-            .as_slice(),
-        [AbilityEffectSpecDto::BrandWeapon {
-            affix_id,
-            brand: Some(WeaponBrandDto::Poison),
-            resistance: Some(DamageTypeDto::Poison),
-        }] if affix_id == "rfb-legacy.affix.slaying"
-    ));
-
-    game.progress.level = 32;
-    let vampiric_drain = game
-        .snapshot()
-        .player
-        .abilities
-        .into_iter()
-        .find(|ability| ability.id == "demo.ability.death-vampiric-drain")
-        .expect("vampiric drain should be projected");
-    assert!(matches!(
-        vampiric_drain.effects.as_slice(),
-        [AbilityEffectSpecDto::DrainLife {
-            damage_dice: 1,
-            damage_sides: 64,
-            damage_bonus: 64,
-            target_category,
-            ..
-        }] if target_category == "living"
-    ));
 }
 
 #[test]
@@ -1000,121 +765,6 @@ fn death_weapon_branding_rejects_nonplain_or_unavailable_weapons_without_rng() {
         ),
         "{events:#?}"
     );
-}
-
-#[test]
-fn death_third_book_materializes_original_scaling_and_prorated_cap() {
-    let projected = |level| {
-        let mut game = test_caster_game(0);
-        game.progress.level = level;
-        game.snapshot()
-            .player
-            .abilities
-            .into_iter()
-            .map(|ability| (ability.id.clone(), ability))
-            .collect::<BTreeMap<_, _>>()
-    };
-
-    let level_40 = projected(40);
-    assert!(matches!(
-        level_40["demo.ability.death-berserk"].effects.as_slice(),
-        [
-            AbilityEffectSpecDto::ApplyStatus {
-                duration_ticks: 25,
-                duration_dice: 1,
-                duration_sides: 25,
-                granted_modifiers,
-                granted_equipment_bonuses,
-                granted_status_immunities,
-                ..
-            },
-            AbilityEffectSpecDto::Heal { amount: 30 },
-        ] if granted_modifiers.max_hp == 30
-            && granted_modifiers.defense == -10
-            && granted_equipment_bonuses.melee_damage == 11
-            && granted_status_immunities == &["rfb.status.fear".to_owned()]
-    ));
-    assert!(matches!(
-        level_40["demo.ability.death-dark-bolt"].effects.as_slice(),
-        [AbilityEffectSpecDto::BoltOrBeamDamage {
-            damage_dice: 12,
-            damage_sides: 8,
-            beam_chance_percent: 40,
-            ..
-        }]
-    ));
-    assert!(matches!(
-        level_40["demo.ability.death-battle-frenzy"]
-            .effects
-            .as_slice(),
-        [
-            AbilityEffectSpecDto::ApplyStatus {
-                duration_ticks: 25,
-                duration_sides: 25,
-                ..
-            },
-            AbilityEffectSpecDto::ApplyStatus {
-                duration_ticks: 25,
-                duration_sides: 25,
-                ..
-            },
-            AbilityEffectSpecDto::ApplyStatus {
-                duration_ticks: 20,
-                duration_sides: 40,
-                ..
-            },
-        ]
-    ));
-    assert!(matches!(
-        level_40["demo.ability.death-vampirism-true"]
-            .effects
-            .as_slice(),
-        [AbilityEffectSpecDto::DrainLife { repeat: 3, .. }]
-    ));
-    assert!(matches!(
-        level_40["demo.ability.death-nether-wave"]
-            .effects
-            .as_slice(),
-        [AbilityEffectSpecDto::VisibleDamage {
-            damage_dice: 1,
-            damage_sides: 120,
-            target_category: Some(category),
-            ..
-        }] if category == "living"
-    ));
-    assert!(matches!(
-        level_40["demo.ability.death-darkness-storm"]
-            .effects
-            .as_slice(),
-        [AbilityEffectSpecDto::AreaDamage {
-            damage_dice: 1,
-            damage_sides: 1,
-            damage_bonus: 222,
-            radius: 4,
-            ..
-        }]
-    ));
-
-    for level in [50, 100] {
-        let abilities = projected(level);
-        let expected_nether_sides = level * 3;
-        assert!(matches!(
-            abilities["demo.ability.death-nether-wave"]
-                .effects
-                .as_slice(),
-            [AbilityEffectSpecDto::VisibleDamage { damage_sides, .. }]
-                if *damage_sides == expected_nether_sides
-        ));
-        assert!(matches!(
-            abilities["demo.ability.death-darkness-storm"]
-                .effects
-                .as_slice(),
-            [AbilityEffectSpecDto::AreaDamage {
-                damage_bonus: 299,
-                ..
-            }]
-        ));
-    }
 }
 
 #[test]
@@ -4315,155 +3965,125 @@ fn formal_golem_stone_skin_unlocks_at_twenty_without_spell_power_scaling() {
 }
 
 #[test]
-fn formal_zombie_restore_life_unlocks_at_thirty_and_restores_experience_and_life_force() {
-    let mut game = zombie_game(374);
-    clear_monsters(&mut game);
-    game.progress.level = 29;
-    game.player.hp = game.effective_player_max_hp();
-    let locked = game
-        .snapshot()
-        .player
-        .abilities
-        .into_iter()
-        .find(|ability| ability.id == RACE_ZOMBIE_RESTORE_LIFE_ABILITY_ID)
-        .expect("Zombie Restore Life should be projected before it unlocks");
-    assert_eq!(locked.source, AbilitySourceDto::Race);
-    assert_eq!(
-        locked.governing_attribute,
-        Some(rfb_protocol::AttributeKindDto::Wisdom)
-    );
-    assert_eq!(locked.minimum_level, 30);
-    assert_eq!((locked.base_resource_cost, locked.resource_cost), (30, 30));
-    assert!(!locked.can_cast);
+fn undead_restore_life_shares_unlock_payment_and_vitality_rules() {
+    for (race_id, seed) in [
+        ("rfb-legacy.race.zombie", 374),
+        ("rfb-legacy.race.skeleton", 382),
+    ] {
+        let mut game = Game::new_with_build_race_and_name(
+            seed,
+            "demo.build.warrior",
+            race_id,
+            Game::DEFAULT_PLAYER_NAME,
+        )
+        .expect("undead character should create");
+        clear_monsters(&mut game);
+        game.progress.level = 29;
+        game.player.hp = game.effective_player_max_hp();
+        let projected = |game: &Game| {
+            game.snapshot()
+                .player
+                .abilities
+                .into_iter()
+                .find(|ability| ability.id == RACE_ZOMBIE_RESTORE_LIFE_ABILITY_ID)
+                .expect("Restore Life should be projected")
+        };
+        let locked = projected(&game);
+        assert_eq!(
+            (
+                locked.source,
+                locked.governing_attribute,
+                locked.minimum_level,
+                locked.base_resource_cost,
+                locked.resource_cost,
+                locked.can_cast
+            ),
+            (
+                AbilitySourceDto::Race,
+                Some(rfb_protocol::AttributeKindDto::Wisdom),
+                30,
+                30,
+                30,
+                false
+            ),
+            "{race_id}"
+        );
+        game.progress.level = 30;
+        game.player.hp = game.effective_player_max_hp();
+        let available = projected(&game);
+        assert!(
+            available.can_cast && available.failure_percent >= 70,
+            "{race_id}"
+        );
+        assert!(
+            matches!(
+                available.effects.as_slice(),
+                [AbilityEffectSpecDto::RestoreVitality { life_force: 150 }]
+            ),
+            "{race_id}"
+        );
+        game.progress.experience = 500;
+        game.progress.maximum_experience = 900;
+        game.progress.life_force = 125;
 
-    game.progress.level = 30;
-    game.player.hp = game.effective_player_max_hp();
-    let available = game
-        .snapshot()
-        .player
-        .abilities
-        .into_iter()
-        .find(|ability| ability.id == RACE_ZOMBIE_RESTORE_LIFE_ABILITY_ID)
-        .expect("level-thirty Zombie Restore Life");
-    assert!(available.can_cast);
-    assert!(available.failure_percent >= 70);
-    assert!(matches!(
-        available.effects.as_slice(),
-        [AbilityEffectSpecDto::RestoreVitality { life_force: 150 }]
-    ));
+        let mut failed = game.clone();
+        let failure_seed = (0..1_000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(100) < u64::from(available.failure_percent))
+            .expect("Restore Life should have a failing seed");
+        failed.rng = RfbRng::seeded(failure_seed);
+        let failed_hp = failed.player.hp;
+        let mut events = Vec::new();
+        failed
+            .resolve_player_ability(
+                RACE_ZOMBIE_RESTORE_LIFE_ABILITY_ID,
+                TargetSelection::SelfTarget,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .expect("failed Restore Life should resolve");
+        assert!(
+            matches!(events.first(), Some(DomainEvent::AbilityCastFailed { .. })),
+            "{race_id}"
+        );
+        assert_eq!(
+            (
+                failed.player.hp,
+                failed.progress.experience,
+                failed.progress.life_force
+            ),
+            (failed_hp - 30, 500, 125),
+            "{race_id}"
+        );
 
-    let failure_seed = (0..1_000)
-        .find(|seed| {
-            let mut rng = RfbRng::seeded(*seed);
-            rng.bounded(100) < u64::from(available.failure_percent)
-        })
-        .expect("Zombie Restore Life should have a failing percentile seed");
-    let mut failed = game.clone();
-    failed.progress.experience = 500;
-    failed.progress.maximum_experience = 900;
-    failed.progress.life_force = 125;
-    failed.rng = RfbRng::seeded(failure_seed);
-    let failed_hp = failed.player.hp;
-    let mut failed_events = Vec::new();
-    failed
-        .resolve_player_ability(
+        game.debug_set_ability_casts_succeed(true);
+        events.clear();
+        game.resolve_player_ability(
             RACE_ZOMBIE_RESTORE_LIFE_ABILITY_ID,
             TargetSelection::SelfTarget,
-            &mut failed_events,
+            &mut events,
             &mut BTreeSet::new(),
             &mut Vec::new(),
         )
-        .expect("failed Zombie Restore Life should resolve");
-    assert!(matches!(
-        failed_events.first(),
-        Some(DomainEvent::AbilityCastFailed { .. })
-    ));
-    assert_eq!(failed.player.hp, failed_hp - 30);
-    assert_eq!(failed.progress.experience, 500);
-    assert_eq!(failed.progress.life_force, 125);
-
-    game.progress.experience = 500;
-    game.progress.maximum_experience = 900;
-    game.progress.life_force = 125;
-    game.debug_set_ability_casts_succeed(true);
-    let mut events = Vec::new();
-    game.resolve_player_ability(
-        RACE_ZOMBIE_RESTORE_LIFE_ABILITY_ID,
-        TargetSelection::SelfTarget,
-        &mut events,
-        &mut BTreeSet::new(),
-        &mut Vec::new(),
-    )
-    .expect("Zombie Restore Life should resolve");
-    let resolution = mutation_cast_resolution(&events);
-    assert!(resolution.succeeded);
-    assert_eq!(resolution.hp_paid, 30);
-    assert_eq!(game.progress.experience, 900);
-    assert_eq!(game.progress.maximum_experience, 900);
-    assert_eq!(game.progress.life_force, 275);
-    assert!(events.iter().any(|event| matches!(
-        event,
-        DomainEvent::AbilityEffectsResolved { resolution, .. }
-            if matches!(
-                resolution.effects.as_slice(),
-                [AbilityEffectResolutionDto::RestoreVitality {
-                    experience_before: 500,
-                    experience_after: 900,
-                    life_force_before: 125,
-                    life_force_after: 275,
-                    ..
-                }]
-            )
-    )));
-}
-
-#[test]
-fn formal_skeleton_restore_life_unlocks_at_thirty_and_restores_vitality() {
-    let mut game = skeleton_game(382);
-    clear_monsters(&mut game);
-    game.progress.level = 29;
-    game.player.hp = game.effective_player_max_hp();
-    let locked = game
-        .snapshot()
-        .player
-        .abilities
-        .into_iter()
-        .find(|ability| ability.id == RACE_ZOMBIE_RESTORE_LIFE_ABILITY_ID)
-        .expect("Skeleton Restore Life should be projected before it unlocks");
-    assert_eq!(locked.source, AbilitySourceDto::Race);
-    assert!(!locked.can_cast);
-
-    game.progress.level = 30;
-    game.progress.experience = 500;
-    game.progress.maximum_experience = 900;
-    game.progress.life_force = 125;
-    game.player.hp = game.effective_player_max_hp();
-    game.debug_set_ability_casts_succeed(true);
-    let mut events = Vec::new();
-    game.resolve_player_ability(
-        RACE_ZOMBIE_RESTORE_LIFE_ABILITY_ID,
-        TargetSelection::SelfTarget,
-        &mut events,
-        &mut BTreeSet::new(),
-        &mut Vec::new(),
-    )
-    .expect("Skeleton Restore Life should resolve");
-    assert_eq!(game.progress.experience, 900);
-    assert_eq!(game.progress.life_force, 275);
-    assert!(events.iter().any(|event| matches!(
-        event,
-        DomainEvent::AbilityEffectsResolved { resolution, .. }
-            if matches!(
-                resolution.effects.as_slice(),
-                [AbilityEffectResolutionDto::RestoreVitality {
-                    experience_before: 500,
-                    experience_after: 900,
-                    life_force_before: 125,
-                    life_force_after: 275,
-                    ..
-                }]
-            )
-    )));
+        .expect("Restore Life should resolve");
+        let resolution = mutation_cast_resolution(&events);
+        assert_eq!(
+            (
+                resolution.succeeded,
+                resolution.hp_paid,
+                game.progress.experience,
+                game.progress.maximum_experience,
+                game.progress.life_force
+            ),
+            (true, 30, 900, 900, 275),
+            "{race_id}"
+        );
+        assert!(events.iter().any(|event| matches!(event,
+            DomainEvent::AbilityEffectsResolved { resolution, .. } if matches!(resolution.effects.as_slice(),
+                [AbilityEffectResolutionDto::RestoreVitality { experience_before: 500,
+                    experience_after: 900, life_force_before: 125, life_force_after: 275, .. }]))),
+            "{race_id}");
+    }
 }
 
 #[test]
@@ -4645,56 +4265,122 @@ fn formal_kobold_poison_dart_is_a_fixed_level_poison_bolt_without_ammunition() {
 }
 
 #[test]
-fn formal_kobold_poison_dart_failure_spills_sp_into_hp_without_projecting() {
-    let mut game = Game::new_with_build_race_and_name(
-        92,
-        "demo.build.high-mage-death",
-        "rfb-legacy.race.kobold",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Kobold High-Mage should create");
-    clear_monsters(&mut game);
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(12),
-        &mut Vec::new(),
-    );
-    game.resources
-        .get_mut("demo.resource.mana")
-        .expect("High-Mage should have mana")
-        .current = 3;
-    let failure_percent = game
-        .snapshot()
-        .player
-        .abilities
-        .iter()
-        .find(|ability| ability.id == RACE_POISON_DART_ABILITY_ID)
-        .expect("Kobold Poison Dart should be projected")
-        .failure_percent;
-    let seed = (0..4_096)
-        .find(|seed| {
-            let mut rng = RfbRng::seeded(*seed);
-            rng.bounded(100) < u64::from(failure_percent)
-        })
-        .expect("Kobold Poison Dart should have a reachable failure roll");
-    game.rng = RfbRng::seeded(seed);
-    let hp_before = game.player.hp;
-    let tick_before = game.world_tick;
-    let serial_before = game.next_item_instance_serial;
-
-    dispatch_next(
-        &mut game,
-        GameCommand::CastAbility {
-            ability_id: RACE_POISON_DART_ABILITY_ID.to_owned(),
-            target: TargetSelection::Direction {
+fn racial_cast_failures_pay_without_revealing_or_creating_items() {
+    for (race_id, seed, level, ability_id, hp_cost, target) in [
+        (
+            "rfb-legacy.race.kobold",
+            92,
+            12,
+            RACE_POISON_DART_ABILITY_ID,
+            5,
+            TargetSelection::Direction {
                 direction: Direction::East,
             },
-        },
-    );
-
-    assert_eq!(game.world_tick, tick_before + 10);
-    assert_eq!(game.resources["demo.resource.mana"].current, 0);
-    assert_eq!(game.player.hp, hp_before - 5);
-    assert_eq!(game.next_item_instance_serial, serial_before);
+        ),
+        (
+            "rfb-legacy.race.dwarf",
+            95,
+            10,
+            RACE_DETECT_TREASURE_ABILITY_ID,
+            2,
+            TargetSelection::SelfTarget,
+        ),
+        (
+            "rfb-legacy.race.hobbit",
+            88,
+            15,
+            RACE_CREATE_FOOD_ABILITY_ID,
+            7,
+            TargetSelection::SelfTarget,
+        ),
+    ] {
+        let mut game = Game::new_with_build_race_and_name(
+            seed,
+            "demo.build.high-mage-death",
+            race_id,
+            Game::DEFAULT_PLAYER_NAME,
+        )
+        .expect("racial High-Mage should create");
+        clear_monsters(&mut game);
+        game.apply_unscaled_player_experience(
+            crate::stats::experience_required_for_level(level),
+            &mut Vec::new(),
+        );
+        game.resources
+            .get_mut("demo.resource.mana")
+            .expect("High-Mage should have mana")
+            .current = 3;
+        let blocker = Position {
+            x: game.player.position.x + 1,
+            y: game.player.position.y,
+        };
+        let treasure = Position {
+            x: game.player.position.x + 2,
+            y: game.player.position.y,
+        };
+        replace_terrain(&mut game, blocker, "demo.terrain.wall");
+        replace_terrain(&mut game, treasure, "demo.terrain.quartz-hidden-treasure");
+        let treasure_index = game.index(treasure).expect("treasure cell");
+        game.explored[treasure_index] = false;
+        game.revealed_terrain.remove(&treasure);
+        game.gold_piles = vec![GoldPile {
+            id: "generated.gold.1".to_owned(),
+            position: treasure,
+            amount: 25,
+            appearance: GoldAppearanceDto::Gold,
+            discovered: false,
+        }];
+        game.next_gold_pile_serial = 2;
+        let failure_percent = game
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == ability_id)
+            .expect("racial ability")
+            .failure_percent;
+        let failure_seed = (0..4_096)
+            .find(|seed| RfbRng::seeded(*seed).bounded(100) < u64::from(failure_percent))
+            .expect("racial ability should have a failing seed");
+        game.rng = RfbRng::seeded(failure_seed);
+        let acquired = |game: &Game| {
+            game.items
+                .iter()
+                .filter(|item| item.origin_kind == Some(ItemOriginKindDto::Acquire))
+                .count()
+        };
+        let acquired_before = acquired(&game);
+        let serial_before = game.next_item_instance_serial;
+        let hp_before = game.player.hp;
+        let tick_before = game.world_tick;
+        dispatch_next(
+            &mut game,
+            GameCommand::CastAbility {
+                ability_id: ability_id.to_owned(),
+                target,
+            },
+        );
+        assert_eq!(
+            (
+                game.world_tick,
+                game.resources["demo.resource.mana"].current,
+                game.player.hp
+            ),
+            (tick_before + 10, 0, hp_before - hp_cost),
+            "{race_id}"
+        );
+        assert_eq!(
+            (game.next_item_instance_serial, acquired(&game)),
+            (serial_before, acquired_before),
+            "{race_id}"
+        );
+        assert!(
+            !game.explored[treasure_index]
+                && !game.revealed_terrain.contains(&treasure)
+                && !game.gold_piles[0].discovered,
+            "{race_id}"
+        );
+    }
 }
 
 #[test]
@@ -7118,79 +6804,6 @@ fn draconian_strike_applies_elemental_stun_confusion_vorpal_and_vampiric_modes()
 }
 
 #[test]
-fn formal_dwarf_detection_failure_spills_mana_into_hp_without_revealing() {
-    let mut game = Game::new_with_build_race_and_name(
-        95,
-        "demo.build.high-mage-death",
-        "rfb-legacy.race.dwarf",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Dwarf High-Mage should create");
-    clear_monsters(&mut game);
-    game.apply_unscaled_player_experience(
-        crate::stats::experience_required_for_level(10),
-        &mut Vec::new(),
-    );
-    game.resources
-        .get_mut("demo.resource.mana")
-        .expect("High-Mage should have mana")
-        .current = 3;
-    let blocker = Position {
-        x: game.player.position.x + 1,
-        y: game.player.position.y,
-    };
-    let treasure = Position {
-        x: game.player.position.x + 2,
-        y: game.player.position.y,
-    };
-    replace_terrain(&mut game, blocker, "demo.terrain.wall");
-    replace_terrain(&mut game, treasure, "demo.terrain.quartz-hidden-treasure");
-    let treasure_index = game.index(treasure).expect("treasure should exist");
-    game.explored[treasure_index] = false;
-    game.revealed_terrain.remove(&treasure);
-    game.gold_piles = vec![GoldPile {
-        id: "generated.gold.1".to_owned(),
-        position: treasure,
-        amount: 25,
-        appearance: GoldAppearanceDto::Gold,
-        discovered: false,
-    }];
-    game.next_gold_pile_serial = 2;
-    let failure_percent = game
-        .snapshot()
-        .player
-        .abilities
-        .iter()
-        .find(|ability| ability.id == RACE_DETECT_TREASURE_ABILITY_ID)
-        .expect("Dwarf treasure detection should be projected")
-        .failure_percent;
-    let seed = (0..4_096)
-        .find(|seed| {
-            let mut rng = RfbRng::seeded(*seed);
-            rng.bounded(100) < u64::from(failure_percent)
-        })
-        .expect("Dwarf treasure detection should have a reachable failure roll");
-    game.rng = RfbRng::seeded(seed);
-    let hp_before = game.player.hp;
-    let tick_before = game.world_tick;
-
-    dispatch_next(
-        &mut game,
-        GameCommand::CastAbility {
-            ability_id: RACE_DETECT_TREASURE_ABILITY_ID.to_owned(),
-            target: TargetSelection::SelfTarget,
-        },
-    );
-
-    assert_eq!(game.world_tick, tick_before + 10);
-    assert_eq!(game.resources["demo.resource.mana"].current, 0);
-    assert_eq!(game.player.hp, hp_before - 2);
-    assert!(!game.explored[treasure_index]);
-    assert!(!game.revealed_terrain.contains(&treasure));
-    assert!(!game.gold_piles[0].discovered);
-}
-
-#[test]
 fn dwarf_intrinsics_follow_the_effective_race_without_replacing_birth_rewards() {
     let mut game = Game::new_with_build_race_and_name(
         96,
@@ -7561,58 +7174,6 @@ fn formal_hobbit_create_food_projects_and_round_trips_an_acquired_ration() {
         rfb_protocol::ItemQualityDto::Ordinary
     );
     assert_eq!(restored.state_hash(), game.state_hash());
-}
-
-#[test]
-fn formal_hobbit_create_food_failure_pays_and_creates_nothing() {
-    let mut game = formal_hobbit_high_mage(88, 15);
-    game.resources
-        .get_mut("demo.resource.mana")
-        .expect("High-Mage should have mana")
-        .current = 3;
-    let failure_percent = game
-        .snapshot()
-        .player
-        .abilities
-        .iter()
-        .find(|ability| ability.id == RACE_CREATE_FOOD_ABILITY_ID)
-        .expect("Hobbit Create Food should be projected")
-        .failure_percent;
-    let seed = (0..4_096)
-        .find(|seed| {
-            let mut rng = RfbRng::seeded(*seed);
-            rng.bounded(100) < u64::from(failure_percent)
-        })
-        .expect("Hobbit Create Food should have a reachable failure roll");
-    game.rng = RfbRng::seeded(seed);
-    let acquired_before = game
-        .items
-        .iter()
-        .filter(|item| item.origin_kind == Some(ItemOriginKindDto::Acquire))
-        .count();
-    let serial_before = game.next_item_instance_serial;
-    let hp_before = game.player.hp;
-    let tick_before = game.world_tick;
-
-    dispatch_next(
-        &mut game,
-        GameCommand::CastAbility {
-            ability_id: RACE_CREATE_FOOD_ABILITY_ID.to_owned(),
-            target: TargetSelection::SelfTarget,
-        },
-    );
-
-    assert_eq!(game.world_tick, tick_before + 10);
-    assert_eq!(game.resources["demo.resource.mana"].current, 0);
-    assert_eq!(game.player.hp, hp_before - 7);
-    assert_eq!(game.next_item_instance_serial, serial_before);
-    assert_eq!(
-        game.items
-            .iter()
-            .filter(|item| item.origin_kind == Some(ItemOriginKindDto::Acquire))
-            .count(),
-        acquired_before
-    );
 }
 
 #[test]
@@ -10089,105 +9650,6 @@ fn monster_polymorph_reuses_mutation_and_actor_form_transactions() {
 }
 
 #[test]
-fn death_fourth_book_materializes_original_level_curves() {
-    let projected = |level| {
-        let mut game = test_caster_game(0);
-        game.progress.level = level;
-        game.snapshot()
-            .player
-            .abilities
-            .into_iter()
-            .map(|ability| (ability.id.clone(), ability))
-            .collect::<BTreeMap<_, _>>()
-    };
-
-    let level_40 = projected(40);
-    assert!(matches!(
-        level_40["demo.ability.death-death-ray"].effects.as_slice(),
-        [AbilityEffectSpecDto::DeathRay { power: 80 }]
-    ));
-    assert!(matches!(
-        level_40["demo.ability.death-raise-dead"]
-            .effects
-            .as_slice(),
-        [AbilityEffectSpecDto::SummonCategory {
-            maximum_level: 60,
-            upgraded_category: Some(category),
-            upgrade_at_level: Some(48),
-            ..
-        }] if category == "high-undead"
-    ));
-    let [
-        AbilityEffectSpecDto::IdentifyItem {
-            full_identify_power,
-            full_identify_roll_sides,
-        },
-    ] = level_40["demo.ability.death-esoteria"].effects.as_slice()
-    else {
-        panic!("Esoteria should project one identify effect");
-    };
-    assert_eq!((*full_identify_power, *full_identify_roll_sides), (30, 50));
-    assert!(matches!(
-        level_40["demo.ability.death-vampiric-transformation"]
-            .effects
-            .as_slice(),
-        [AbilityEffectSpecDto::ApplyStatus {
-            duration_ticks: 25,
-            duration_sides: 25,
-            granted_race_id: Some(race_id),
-            ..
-        }] if race_id == "demo.race.vampire-lord"
-    ));
-    assert!(matches!(
-        level_40["demo.ability.death-mass-genocide"]
-            .effects
-            .as_slice(),
-        [AbilityEffectSpecDto::Genocide {
-            scope: AbilityGenocideScopeDto::Nearby,
-            power: 92,
-            radius: 20,
-            ..
-        }]
-    ));
-    assert!(matches!(
-        level_40["demo.ability.death-hellfire"].effects.as_slice(),
-        [AbilityEffectSpecDto::AreaDamage {
-            damage_bonus: 373,
-            radius: 5,
-            ..
-        }]
-    ));
-    assert!(matches!(
-        level_40["demo.ability.death-wraithform"].effects.as_slice(),
-        [AbilityEffectSpecDto::ApplyStatus {
-            duration_ticks: 14,
-            duration_sides: 14,
-            grants_wall_passage: true,
-            incoming_damage_percent: 50,
-            ..
-        }]
-    ));
-
-    let level_50 = projected(50);
-    assert!(matches!(
-        level_50["demo.ability.death-hellfire"].effects.as_slice(),
-        [AbilityEffectSpecDto::AreaDamage {
-            damage_bonus: 604,
-            radius: 10,
-            ..
-        }]
-    ));
-    assert!(matches!(
-        level_50["demo.ability.death-wraithform"].effects.as_slice(),
-        [AbilityEffectSpecDto::ApplyStatus {
-            duration_ticks: 25,
-            duration_sides: 25,
-            ..
-        }]
-    ));
-}
-
-#[test]
 fn raise_dead_is_deterministic_and_enforces_faction_group_and_unique_rules() {
     let cast = |seed: u64, level: u16| {
         let mut game = prepare_death_caster(seed, level, "demo.ability.death-raise-dead");
@@ -10946,4 +10408,244 @@ fn shattered_potion_healing_uses_area_falloff() {
     );
 
     assert_eq!(game.player.hp, (1 + 50).min(maximum));
+}
+
+#[test]
+fn ability_level_curves_preserve_offset_rounding_and_cap_boundaries() {
+    let mut scaling = AbilityLevelScalingDefinition {
+        effect_index: 0,
+        field: AbilityLevelScalingField::DamageBonus,
+        multiplier: 2,
+        divisor: 3,
+        level_offset: 5,
+        maximum: None,
+        curve: AbilityLevelScalingCurveDefinition::Linear,
+        linear_weight: 1,
+        quadratic_weight: 0,
+        cubic_weight: 0,
+    };
+    for (level, expected) in [(0, 3), (5, 3), (6, 3), (7, 4), (8, 5), (50, 33)] {
+        assert_eq!(
+            scaled_ability_level_value(3, &scaling, level),
+            expected,
+            "linear level {level}"
+        );
+    }
+    scaling.maximum = Some(10);
+    assert_eq!(scaled_ability_level_value(3, &scaling, 50), 10);
+    assert_eq!(scaled_ability_level_value(15, &scaling, 0), 10);
+    scaling.curve = AbilityLevelScalingCurveDefinition::Prorated;
+    scaling.multiplier = 300;
+    scaling.maximum = None;
+    scaling.quadratic_weight = 1;
+    scaling.cubic_weight = 1;
+    for (level, expected) in [
+        (0, 2),
+        (1, 4),
+        (25, 89),
+        (40, 197),
+        (49, 290),
+        (50, 302),
+        (100, 302),
+    ] {
+        assert_eq!(
+            scaled_ability_level_value(2, &scaling, level),
+            expected,
+            "prorated level {level}"
+        );
+    }
+    for (weights, expected) in [((1, 0, 0), 150), ((0, 1, 0), 75), ((0, 0, 1), 37)] {
+        assert_eq!(
+            prorated_level_value(300, 25, weights.0, weights.1, weights.2),
+            expected,
+            "{weights:?}"
+        );
+    }
+}
+
+#[test]
+fn ability_scaling_changes_only_the_selected_effect_field() {
+    let game = Game::new(0);
+    let mut checked_level = BTreeSet::new();
+    let mut checked_power = BTreeSet::new();
+    for ability in game.content.abilities() {
+        let effects = ability.effect.ordered_effects();
+        for definition in &ability.level_scaling {
+            let source = &effects[usize::from(definition.effect_index)];
+            let mut expected = serde_json::to_value(source).expect("effect JSON");
+            let kind = expected["type"].as_str().expect("effect type").to_owned();
+            if !checked_level.insert((kind.clone(), definition.field)) {
+                continue;
+            }
+            use AbilityLevelScalingField as F;
+            let pointer = match definition.field {
+                F::DamageDice => "/damageDice",
+                F::DamageSides => "/damageSides",
+                F::DamageBonus => "/damageBonus",
+                F::DeathRayPower
+                | F::TeleportAwayPower
+                | F::RechargePower
+                | F::StatusPower
+                | F::GenocidePower => "/power",
+                F::IdentifyPower => "/fullIdentifyPower",
+                F::Radius if kind == "dimension-door" => "/range",
+                F::Radius => "/radius",
+                F::BeamChancePercent => "/beamChancePercent",
+                F::StatusIntensity => "/intensity",
+                F::StatusDurationTicks => "/durationTicks",
+                F::StatusDurationSides => "/durationSides",
+                F::StatusDefense => "/grantedModifiers/defense",
+                F::StatusMeleeDamage => "/grantedEquipmentBonuses/meleeDamage",
+                F::ControlPower if kind == "insanity-circle" => "/controlPower",
+                F::ControlPower => "/power",
+                F::SummonMaximumLevel => "/maximumLevel",
+                F::MaximumWeight => "/maximumWeightTenthsPound",
+                F::BanishDistance => "/maximumDistance",
+                F::DeviceMasteryDurationBase => "/durationBase",
+                F::DevicePowerBonus => "/devicePowerBonus",
+                F::MaximumRange => "/maximumRange",
+            };
+            *expected
+                .pointer_mut(pointer)
+                .unwrap_or_else(|| panic!("{kind} {pointer}")) = serde_json::json!(13);
+            let mut actual: AbilityEffectDefinition =
+                serde_json::from_value(expected.clone()).expect("effect input");
+            let scaling = AbilityLevelScalingDefinition {
+                multiplier: 3,
+                divisor: 2,
+                level_offset: 5,
+                maximum: None,
+                curve: AbilityLevelScalingCurveDefinition::Linear,
+                ..definition.clone()
+            };
+            apply_ability_level_scaling(&mut actual, &scaling, 8);
+            *expected.pointer_mut(pointer).unwrap() = serde_json::json!(17);
+            assert_eq!(
+                serde_json::to_value(actual).unwrap(),
+                expected,
+                "{kind} {:?}",
+                definition.field
+            );
+        }
+        for definition in &ability.spell_power_fields {
+            let source = &effects[usize::from(definition.effect_index)];
+            let mut expected = serde_json::to_value(source).expect("effect JSON");
+            let kind = expected["type"].as_str().expect("effect type").to_owned();
+            // Mass Sleep has a level-dependent form; its boundary test checks the full pipeline.
+            if kind == "mass-sleep-or-stasis"
+                || !checked_power.insert((kind.clone(), definition.field))
+            {
+                continue;
+            }
+            use AbilitySpellPowerField as F;
+            let pointer = match definition.field {
+                F::DamageDice => Some("/damageDice"),
+                F::DamageSides => Some("/damageSides"),
+                F::DamageBonus => Some("/damageBonus"),
+                F::HealingAmount => Some("/amount"),
+                F::HealingSides => Some("/sides"),
+                F::Radius if kind == "dimension-door" => Some("/range"),
+                F::Radius => Some("/radius"),
+                F::StatusDurationTicks => Some("/durationTicks"),
+                F::StatusDurationSides => Some("/durationSides"),
+                F::StatusPower | F::GenocidePower | F::TeleportAwayPower | F::RechargePower => {
+                    Some("/power")
+                }
+                F::ControlPower if kind == "insanity-circle" => Some("/controlPower"),
+                F::ControlPower => Some("/power"),
+                F::SummonMaximumLevel => Some("/maximumLevel"),
+                F::IdentifyPower => Some("/fullIdentifyPower"),
+                F::MaximumWeight => Some("/maximumWeightTenthsPound"),
+                F::BanishDistance => Some("/maximumDistance"),
+                F::DeviceMasteryDurationBase => Some("/durationBase"),
+                F::ClairvoyanceDurationSides => Some("/telepathyDurationSides"),
+                F::MaximumRange => Some("/maximumRange"),
+                F::FinalDamage
+                | F::FinalHealing
+                | F::RandomChoiceRoll
+                | F::MaledictionDeathRayPower
+                | F::MaledictionFearPower
+                | F::InvulnerabilityDuration => None,
+            };
+            if let Some(pointer) = pointer {
+                *expected
+                    .pointer_mut(pointer)
+                    .unwrap_or_else(|| panic!("{kind} {pointer}")) = serde_json::json!(13);
+            }
+            let mut actual = serde_json::from_value(expected.clone()).expect("effect input");
+            apply_ability_spell_power(&mut actual, *definition, 7);
+            if let Some(pointer) = pointer {
+                *expected.pointer_mut(pointer).unwrap() = serde_json::json!(20);
+            }
+            assert_eq!(
+                serde_json::to_value(actual).unwrap(),
+                expected,
+                "{kind} {:?}",
+                definition.field
+            );
+        }
+    }
+    assert!(checked_level.contains(&(
+        "area-damage".to_owned(),
+        AbilityLevelScalingField::DamageBonus
+    )));
+    assert!(
+        checked_power.contains(&("heal-dice".to_owned(), AbilitySpellPowerField::HealingSides))
+    );
+}
+
+#[test]
+fn level_and_spell_power_scaling_keep_effect_and_target_ranges_in_sync() {
+    let game = Game::new(0);
+    for (id, field) in [
+        (
+            "demo.ability.nature-lightning",
+            AbilityLevelScalingField::MaximumRange,
+        ),
+        (
+            "demo.ability.sorcery-dimension-door",
+            AbilityLevelScalingField::Radius,
+        ),
+    ] {
+        let mut ability = game.content.ability(id).expect("ranged ability").clone();
+        let pointer = if field == AbilityLevelScalingField::MaximumRange {
+            "/maximumRange"
+        } else {
+            "/range"
+        };
+        let mut effect = serde_json::to_value(&ability.effect).unwrap();
+        *effect.pointer_mut(pointer).unwrap() = serde_json::json!(13);
+        ability.effect = serde_json::from_value(effect).unwrap();
+        ability.level_scaling = vec![AbilityLevelScalingDefinition {
+            effect_index: 0,
+            field,
+            multiplier: 3,
+            divisor: 2,
+            level_offset: 5,
+            maximum: None,
+            curve: AbilityLevelScalingCurveDefinition::Linear,
+            linear_weight: 1,
+            quadratic_weight: 0,
+            cubic_weight: 0,
+        }];
+        ability.spell_power_fields = vec![AbilitySpellPowerDefinition {
+            effect_index: 0,
+            field: if field == AbilityLevelScalingField::MaximumRange {
+                AbilitySpellPowerField::MaximumRange
+            } else {
+                AbilitySpellPowerField::Radius
+            },
+        }];
+        Game::apply_player_level_scaling(&mut ability, 8);
+        assert_eq!(ability.target.range, 17, "{id} level range");
+        Game::apply_player_spell_power(&mut ability, 13);
+        assert_eq!(ability.target.range, 34, "{id} powered range");
+        assert_eq!(
+            serde_json::to_value(&ability.effect)
+                .unwrap()
+                .pointer(pointer),
+            Some(&serde_json::json!(34)),
+            "{id}"
+        );
+    }
 }

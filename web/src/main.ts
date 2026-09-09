@@ -104,6 +104,7 @@ const {
   () => ({
     currentInventory: appState.inventory,
     currentEquipment: appState.equipment,
+    bodySlots: appState.bodySlots,
     currentStatus: appState.status,
     currentWorldId: appState.worldId,
   }),

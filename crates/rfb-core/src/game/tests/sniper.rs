@@ -202,51 +202,9 @@ fn equip_light_crossbow(game: &mut Game) {
 }
 
 #[test]
-fn sniper_birth_uses_original_identity_skills_proficiencies_kit_and_techniques() {
+fn sniper_birth_projects_proficiencies_and_techniques() {
     let game = formal_sniper_game(0x0053_4e49_5045_5200);
     let snapshot = game.snapshot();
-    let build = snapshot
-        .player
-        .build
-        .expect("Sniper should project its build");
-
-    assert_eq!(build.build_id, FORMAL_SNIPER_BUILD_ID);
-    assert_eq!(build.class_id, "demo.class.sniper");
-    assert_eq!((build.life_percent, build.experience_percent), (100, 110));
-    assert_eq!(snapshot.player.kind_id, "demo.actor.sniper-player");
-    let attributes = snapshot.player.progress.attributes;
-    assert_eq!(attributes.strength.effective, 15);
-    assert_eq!(attributes.intelligence.effective, 12);
-    assert_eq!(attributes.wisdom.effective, 12);
-    assert_eq!(attributes.dexterity.effective, 15);
-    assert_eq!(attributes.constitution.effective, 14);
-    assert_eq!(attributes.charisma.effective, 13);
-
-    let skill = |id: &str| {
-        snapshot
-            .player
-            .progress
-            .skills
-            .iter()
-            .find(|skill| skill.id == id)
-            .expect("original Sniper skill should be projected")
-    };
-    for (id, base, growth) in [
-        ("demo.skill.disarming", 25, 12),
-        ("demo.skill.device", 24, 10),
-        ("demo.skill.saving-throw", 28, 10),
-        ("demo.skill.stealth", 5, 0),
-        ("demo.skill.search", 32, 0),
-        ("demo.skill.perception", 28, 0),
-        ("demo.skill.melee", 35, 12),
-        ("demo.skill.ranged", 72, 28),
-    ] {
-        assert_eq!(
-            (skill(id).base, skill(id).growth_per_ten_levels),
-            (base, growth)
-        );
-    }
-
     assert_eq!(snapshot.player.progress.riding_proficiency.current, 0);
     assert_eq!(snapshot.player.progress.riding_proficiency.maximum, 0);
     let light_crossbow = snapshot
@@ -261,28 +219,11 @@ fn sniper_birth_uses_original_identity_skills_proficiencies_kit_and_techniques()
         (4_000, 8_000)
     );
 
-    for kind_id in [
-        "demo.item.dagger",
-        "demo.item.soft-leather-armour",
-        "demo.item.light-crossbow",
-    ] {
-        assert!(game.items.iter().any(|item| {
-            item.kind_id == kind_id && matches!(item.location, ItemLocation::Equipped { .. })
-        }));
-    }
-    let bolts = game
-        .items
-        .iter()
-        .find(|item| item.kind_id == "demo.item.bolt")
-        .expect("Sniper should start with bolts");
-    assert!((20..=30).contains(&bolts.quantity));
-
     let class = game
         .content
         .class("demo.class.sniper")
         .expect("Sniper class should exist");
     assert_eq!(class.base_hp, 4);
-    assert_eq!(class.pet_upkeep_divisor, 40);
     let profile = class.sniping_profile.expect("Sniper profile");
     assert_eq!(
         profile.preferred_ammunition_type,

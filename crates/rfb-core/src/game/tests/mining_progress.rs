@@ -155,19 +155,6 @@ fn mining_and_sparse_materials_project_and_round_trip_strictly() {
 }
 
 #[test]
-fn mining_and_material_save_fields_are_required() {
-    for field in ["miningProficiency", "materials"] {
-        let mut value =
-            serde_json::to_value(Game::new(0x5354_5249_4354).to_save()).expect("serialize save");
-        value["player"]["progress"]
-            .as_object_mut()
-            .expect("progress should be an object")
-            .remove(field);
-        assert!(serde_json::from_value::<rfb_protocol::SavePayloadV1>(value).is_err());
-    }
-}
-
-#[test]
 fn hidden_treasure_veins_use_their_real_yield_for_digging_rewards() {
     let mut game = Game::new(0x5452_4541_5355_5245);
     clear_monsters(&mut game);

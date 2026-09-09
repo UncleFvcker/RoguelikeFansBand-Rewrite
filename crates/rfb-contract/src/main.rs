@@ -10,7 +10,7 @@ use std::{
 };
 
 use rfb_contract::{
-    ContractFixture, FixtureCategory, observe,
+    ContractFixture, FixtureCategory, observe_assertions,
     policy::{ContractFixtureFile, load_policy_fixture_files, validate_policy_file},
     snapshot::{normalize_json, normalized_hash},
     verify,
@@ -34,7 +34,10 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             require_argument_count(&args, 2)?;
             let path = PathBuf::from(&args[1]);
             let fixture: ContractFixture = serde_json::from_slice(&fs::read(path)?)?;
-            println!("{}", serde_json::to_string_pretty(&observe(&fixture)?)?);
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&observe_assertions(&fixture)?)?
+            );
         }
         "verify" => {
             require_argument_count(&args, 2)?;
@@ -187,10 +190,8 @@ fn refresh_fixture_files(files: &[ContractFixtureFile]) -> Result<(), Box<dyn st
 }
 
 fn refreshed_fixture_output(path: &Path) -> Result<(String, String), Box<dyn std::error::Error>> {
-    let mut source: serde_json::Value = serde_json::from_slice(&fs::read(path)?)?;
-    source["assertions"] = serde_json::Value::Null;
-    let mut fixture: ContractFixture = serde_json::from_value(source)?;
-    fixture.assertions = Some(observe(&fixture)?);
+    let mut fixture: ContractFixture = serde_json::from_slice(&fs::read(path)?)?;
+    fixture.assertions = Some(observe_assertions(&fixture)?);
     let mut output = serde_json::to_string_pretty(&fixture)?;
     output.push('\n');
     Ok((fixture.id, output))

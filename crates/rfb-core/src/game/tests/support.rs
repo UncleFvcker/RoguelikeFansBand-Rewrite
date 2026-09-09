@@ -160,16 +160,6 @@ pub(super) fn wood_elf_game(seed: u64) -> Game {
     .expect("formal Wood-Elf should create")
 }
 
-pub(super) fn archon_game(seed: u64) -> Game {
-    Game::new_with_build_race_and_name(
-        seed,
-        "demo.build.warrior",
-        "rfb-legacy.race.archon",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("formal Archon should create")
-}
-
 pub(super) fn sprite_game(seed: u64) -> Game {
     Game::new_with_build_race_and_name(
         seed,
@@ -238,16 +228,6 @@ pub(super) fn beastman_game(seed: u64) -> Game {
         Game::DEFAULT_PLAYER_NAME,
     )
     .expect("formal Beastman should create")
-}
-
-pub(super) fn shadow_fairy_game(seed: u64) -> Game {
-    Game::new_with_build_race_and_name(
-        seed,
-        "demo.build.warrior",
-        "rfb-legacy.race.shadow-fairy",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("formal Shadow-Fairy should create")
 }
 
 pub(super) fn ogre_game(seed: u64) -> Game {
@@ -383,23 +363,6 @@ pub(super) fn visual_at(snapshot: &GameSnapshot, position: Position) -> CellVisu
         .iter()
         .find(|visual| visual.position == position)
         .expect("snapshot should contain every visual cell")
-}
-
-pub(super) fn assert_invariant_error_without_mutation(
-    game: &mut Game,
-    game_command: GameCommand,
-    expected: &str,
-) {
-    let before = game.clone();
-    let error = game
-        .dispatch(command(1, 0, game_command))
-        .expect_err("broken runtime reference should fail");
-    match error {
-        CoreError::Invariant(message) => assert_eq!(message, expected),
-        other => panic!("expected an invariant error, got {other}"),
-    }
-    assert_eq!(game.to_save(), before.to_save());
-    assert_eq!(game.last_visual_cells, before.last_visual_cells);
 }
 
 pub(super) fn prepare_death_caster(seed: u64, level: u16, ability_id: &str) -> Game {

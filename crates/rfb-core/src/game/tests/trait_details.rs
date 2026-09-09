@@ -45,20 +45,6 @@ fn details(game: &Game) -> CharacterTraitDetailsDto {
 }
 
 #[test]
-fn trait_details_are_stable_across_save_round_trip() {
-    let mut game = Game::new(0);
-    game.player.statuses.push(status(STATUS_REGENERATION));
-    game.player.statuses.push(status(STATUS_HOLD_LIFE));
-    let restored = Game::from_save(game.to_save()).unwrap();
-    let before = details(&game);
-    let after = details(&restored);
-    assert_eq!(before.sources, after.sources);
-    assert_eq!(before.attacks, after.attacks);
-    assert_eq!(before.stats, after.stats);
-    assert_eq!(before, after);
-}
-
-#[test]
 fn trait_details_auras_share_combat_sources_without_rolling_damage() {
     let mut game = game();
     for id in [
@@ -66,9 +52,14 @@ fn trait_details_auras_share_combat_sources_without_rolling_damage() {
         STATUS_DEMON_LORD_TRANSFORMATION,
         STATUS_ULTIMATE_RESISTANCE,
         STATUS_HOLY_AURA,
+        STATUS_REGENERATION,
+        STATUS_HOLD_LIFE,
     ] {
         game.player.statuses.push(status(id));
     }
+    game.player
+        .statuses
+        .sort_by(|left, right| left.kind_id.cmp(&right.kind_id));
     assert_eq!(
         game.player_elemental_contact_aura_sources(DamageType::Fire)
             .len(),
@@ -93,6 +84,8 @@ fn trait_details_auras_share_combat_sources_without_rolling_damage() {
             .evil_only
     );
     assert_eq!(game.to_save(), saved, "projection must not consume RNG");
+    let restored = Game::from_save(saved).expect("timed aura and passive sources should restore");
+    assert_eq!(restored.snapshot(), game.snapshot());
     game.player.statuses.clear();
     assert!(details(&game).auras.is_empty());
 }

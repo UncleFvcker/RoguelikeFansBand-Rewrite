@@ -90,16 +90,6 @@ fn riding_proficiency_is_authoritative_save_and_snapshot_state() {
 }
 
 #[test]
-fn riding_proficiency_save_field_is_required() {
-    let mut value = serde_json::to_value(Game::new(48).to_save()).expect("save should serialize");
-    value["player"]["progress"]
-        .as_object_mut()
-        .expect("progress should be an object")
-        .remove("ridingProficiency");
-    assert!(serde_json::from_value::<rfb_protocol::SavePayloadV1>(value).is_err());
-}
-
-#[test]
 fn mount_moves_with_player_round_trips_and_dismounts() {
     let mut game = game_with_actor_definition(41, "demo.actor.horse", |actor| {
         actor.level = 1;

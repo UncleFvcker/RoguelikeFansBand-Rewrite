@@ -1473,22 +1473,6 @@ mod tests {
     }
 
     #[test]
-    fn bilingual_defaults_compile_and_choose_the_same_rules() {
-        compile_mogaminator(DEFAULT_EN_US_SOURCE).expect("English defaults should compile");
-        compile_mogaminator(DEFAULT_ZH_CN_SOURCE).expect("Chinese defaults should compile");
-
-        let mut game = Game::new(11);
-        game.mogaminator.enabled = true;
-        game.interface_locale = LocaleDto::EnUs;
-        let english = game.mogaminator_dto(Vec::new()).matches;
-        game.interface_locale = LocaleDto::ZhCn;
-        let chinese = game.mogaminator_dto(Vec::new()).matches;
-
-        assert!(!english.is_empty());
-        assert_eq!(chinese, english);
-    }
-
-    #[test]
     fn bilingual_defaults_match_every_current_item_kind_equally() {
         let mut game = Game::new(11);
         let kind_ids = game
@@ -1496,33 +1480,18 @@ mod tests {
             .item_definitions()
             .map(|definition| definition.id.clone())
             .collect::<Vec<_>>();
-        game.items = kind_ids
-            .iter()
-            .enumerate()
-            .map(|(index, kind_id)| ItemInstance {
-                id: format!("m6.item.{index}"),
-                kind_id: kind_id.clone(),
-                quantity: 1,
-                inscription: None,
-                origin_actor_kind_id: None,
-                origin_kind: None,
-                damage_dice_override: None,
-                discount_percent: 0,
-                quality: ItemQualityDto::Ordinary,
-                affix_ids: Vec::new(),
-                rolled_affixes: Vec::new(),
-                intrinsic_properties: Default::default(),
-                permanent_destruction_immunities: Default::default(),
-                enchantments: ItemEnchantmentsDto::default(),
-                curse: None,
-                activation: None,
-                charges: None,
-                fuel: None,
-                device_recovery_progress: 0,
-                captured_actor: None,
-                location: ItemLocation::Ground(game.player.position),
-            })
-            .collect();
+        game.items.clear();
+        for (index, kind_id) in kind_ids.iter().enumerate() {
+            let position = game.player.position;
+            add_auto_get_item(
+                &mut game,
+                &format!("m6.item.{index}"),
+                kind_id,
+                position,
+                None,
+                true,
+            );
+        }
         let english = compile_mogaminator(DEFAULT_EN_US_SOURCE).expect("English defaults");
         let chinese = compile_mogaminator(DEFAULT_ZH_CN_SOURCE).expect("Chinese defaults");
         let english_names = MogaminatorNames::new(Locale::EnUs).expect("English names");
@@ -1544,6 +1513,19 @@ mod tests {
                 english_rule.line_number
             );
         }
+        let item_names = kind_ids
+            .iter()
+            .map(|kind_id| {
+                (
+                    english_names
+                        .item_name(&game.content, kind_id, &[], None)
+                        .expect("English item name"),
+                    chinese_names
+                        .item_name(&game.content, kind_id, &[], None)
+                        .expect("Chinese item name"),
+                )
+            })
+            .collect::<Vec<_>>();
         for aware in [false, true] {
             game.item_knowledge.clear();
             if aware {
@@ -1568,31 +1550,30 @@ mod tests {
                     })
                     .collect();
                 for (chinese_rule, english_rule) in chinese.rules.iter().zip(&english.rules) {
-                    for item in &game.items {
+                    for (item, (english_name, chinese_name)) in game.items.iter().zip(&item_names) {
                         let english_matches =
                             english_rule.rule.predicates.iter().all(|predicate| {
                                 game.mogaminator_predicate_matches(*predicate, item)
                             });
+                        // Reuse evaluation only for identical inputs; translated rules may differ.
                         let chinese_matches =
-                            chinese_rule.rule.predicates.iter().all(|predicate| {
-                                game.mogaminator_predicate_matches(*predicate, item)
-                            });
-                        let english_name = english_names
-                            .item_name(&game.content, &item.kind_id, &[], None)
-                            .expect("English item name");
-                        let chinese_name = chinese_names
-                            .item_name(&game.content, &item.kind_id, &[], None)
-                            .expect("Chinese item name");
+                            if chinese_rule.rule.predicates == english_rule.rule.predicates {
+                                english_matches
+                            } else {
+                                chinese_rule.rule.predicates.iter().all(|predicate| {
+                                    game.mogaminator_predicate_matches(*predicate, item)
+                                })
+                            };
                         assert_eq!(
                             chinese_matches
                                 && mogaminator_search_matches(
                                     &chinese_rule.rule.search,
-                                    &chinese_name,
+                                    chinese_name,
                                 ),
                             english_matches
                                 && mogaminator_search_matches(
                                     &english_rule.rule.search,
-                                    &english_name,
+                                    english_name,
                                 ),
                             "{} at line {} ({aware}/{appraised}/{identified})",
                             item.kind_id,

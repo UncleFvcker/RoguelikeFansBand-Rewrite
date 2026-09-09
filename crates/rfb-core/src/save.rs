@@ -762,14 +762,14 @@ pub(crate) fn player_to_save(
                 constitution: progress.attributes.constitution,
                 charisma: progress.attributes.charisma,
             },
-            maximum_attributes: Some(NaturalAttributeSetSaveDto {
+            maximum_attributes: NaturalAttributeSetSaveDto {
                 strength: progress.maximum_attributes.strength,
                 intelligence: progress.maximum_attributes.intelligence,
                 wisdom: progress.maximum_attributes.wisdom,
                 dexterity: progress.maximum_attributes.dexterity,
                 constitution: progress.maximum_attributes.constitution,
                 charisma: progress.maximum_attributes.charisma,
-            }),
+            },
             attribute_potentials: NaturalAttributeSetSaveDto {
                 strength: progress.attribute_potentials.strength,
                 intelligence: progress.attribute_potentials.intelligence,

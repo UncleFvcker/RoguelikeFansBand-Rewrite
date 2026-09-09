@@ -1,0 +1,83 @@
+name: Android acceptance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/src/**'
+      - '!web/src/**/*.test.ts'
+      - 'web/public/**'
+      - 'web/src-tauri/**'
+      - 'web/package.json'
+      - 'web/package-lock.json'
+      - 'web/index.html'
+      - 'web/*.config.*'
+      - 'web/tsconfig*.json'
+      - 'crates/rfb-protocol/src/**'
+      - 'crates/rfb-save/src/**'
+      - 'crates/rfb-replay/src/**'
+      - '!crates/**/src/tests/**'
+      - 'Cargo.toml'
+      - 'crates/*/Cargo.toml'
+      - 'Cargo.lock'
+      - '.cargo/**'
+      - 'rust-toolchain*'
+      - '.github/workflows/android.yml'
+  pull_request:
+    paths:
+      - 'web/src/**'
+      - '!web/src/**/*.test.ts'
+      - 'web/public/**'
+      - 'web/src-tauri/**'
+      - 'web/package.json'
+      - 'web/package-lock.json'
+      - 'web/index.html'
+      - 'web/*.config.*'
+      - 'web/tsconfig*.json'
+      - 'crates/rfb-protocol/src/**'
+      - 'crates/rfb-save/src/**'
+      - 'crates/rfb-replay/src/**'
+      - '!crates/**/src/tests/**'
+      - 'Cargo.toml'
+      - 'crates/*/Cargo.toml'
+      - 'Cargo.lock'
+      - '.cargo/**'
+      - 'rust-toolchain*'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  tauri-android:
+    name: Tauri Android ARM64 build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+      - uses: Swatinem/rust-cache@v2
+      - uses: android-actions/setup-android@v3
+      - run: yes | sdkmanager --licenses > /dev/null
+      - run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;35.0.0" "ndk;29.0.13846066"
+      - run: echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.13846066" >> "$GITHUB_ENV"
+      - run: npm ci
+      - run: npm run android:build:debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rfb-android-arm64-debug
+          path: web/src-tauri/gen/android/app/build/outputs/apk/**/*.apk

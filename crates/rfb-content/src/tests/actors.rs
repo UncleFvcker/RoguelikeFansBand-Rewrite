@@ -63,6 +63,22 @@ fn rfb_pet_evolution_relations_use_stable_actor_ids() {
     let evolution = horse.evolution.as_ref().expect("Horse should evolve");
     assert_eq!(evolution.required_experience, 70);
     assert_eq!(evolution.next_actor_kind_id, "demo.actor.unruly-horse");
+
+    let sky_drake = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.sky-drake")
+        .expect("Sky Drake should remain imported");
+    let evolution = sky_drake
+        .evolution
+        .as_ref()
+        .expect("Sky Drake should have an evolution target");
+    assert_eq!(evolution.required_experience, 600_000);
+    assert_eq!(
+        evolution.next_actor_kind_id,
+        "demo.actor.great-wyrm-of-power"
+    );
 }
 
 #[test]

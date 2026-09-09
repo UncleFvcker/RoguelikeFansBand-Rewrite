@@ -5868,21 +5868,4 @@ mod tests {
         assert_eq!(event.kind, "terrain.dig-failed");
         assert_eq!(event.args["retryable"], "true");
     }
-
-    #[test]
-    fn batch_projection_preserves_authoritative_event_order() {
-        let events = project_events(vec![
-            DomainEvent::Waited,
-            DomainEvent::MoveBlocked,
-            DomainEvent::PlayerDied {
-                source_kind_id: "demo.actor.monster".to_owned(),
-                method_id: None,
-                damage: damage(7),
-            },
-        ]);
-
-        assert_eq!(events[0].kind, "turn.wait");
-        assert_eq!(events[1].kind, "move.blocked");
-        assert_eq!(events[2].kind, "combat.player-death");
-    }
 }

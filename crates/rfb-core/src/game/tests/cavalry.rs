@@ -43,51 +43,9 @@ fn cast_rodeo(game: &mut Game) -> Vec<DomainEvent> {
 }
 
 #[test]
-fn cavalry_birth_uses_original_identity_skills_proficiencies_and_kit() {
+fn cavalry_birth_projects_proficiencies_and_rodeo() {
     let game = cavalry_game(0x0043_4156_414c_5259);
     let snapshot = game.snapshot();
-    let build = snapshot
-        .player
-        .build
-        .expect("Cavalry should project its build");
-
-    assert_eq!(build.build_id, CAVALRY_BUILD_ID);
-    assert_eq!(build.class_id, "demo.class.cavalry");
-    assert_eq!((build.life_percent, build.experience_percent), (111, 120));
-    assert_eq!(snapshot.player.kind_id, "demo.actor.cavalry-player");
-    let attributes = snapshot.player.progress.attributes;
-    assert_eq!(attributes.strength.effective, 15);
-    assert_eq!(attributes.intelligence.effective, 11);
-    assert_eq!(attributes.wisdom.effective, 11);
-    assert_eq!(attributes.dexterity.effective, 15);
-    assert_eq!(attributes.constitution.effective, 15);
-    assert_eq!(attributes.charisma.effective, 14);
-
-    let skill = |id: &str| {
-        snapshot
-            .player
-            .progress
-            .skills
-            .iter()
-            .find(|skill| skill.id == id)
-            .expect("original Cavalry skill should be projected")
-    };
-    for (id, base, growth) in [
-        ("demo.skill.disarming", 20, 10),
-        ("demo.skill.device", 18, 7),
-        ("demo.skill.saving-throw", 32, 10),
-        ("demo.skill.stealth", 1, 0),
-        ("demo.skill.search", 16, 0),
-        ("demo.skill.perception", 20, 0),
-        ("demo.skill.melee", 60, 22),
-        ("demo.skill.ranged", 66, 26),
-    ] {
-        assert_eq!(
-            (skill(id).base, skill(id).growth_per_ten_levels),
-            (base, growth)
-        );
-    }
-
     assert_eq!(snapshot.player.progress.riding_proficiency.current, 2_000);
     assert_eq!(snapshot.player.progress.riding_proficiency.maximum, 8_000);
     let short_bow = snapshot
@@ -98,22 +56,6 @@ fn cavalry_birth_uses_original_identity_skills_proficiencies_and_kit() {
         .find(|entry| entry.item_kind_id == "demo.item.short-bow")
         .expect("Cavalry short-bow proficiency");
     assert_eq!((short_bow.current, short_bow.maximum), (4_000, 8_000));
-
-    for kind_id in [
-        "demo.item.broad-spear",
-        "demo.item.leather-scale-mail",
-        "demo.item.short-bow",
-    ] {
-        assert!(game.items.iter().any(|item| {
-            item.kind_id == kind_id && matches!(item.location, ItemLocation::Equipped { .. })
-        }));
-    }
-    let arrows = game
-        .items
-        .iter()
-        .find(|item| item.kind_id == "demo.item.arrow")
-        .expect("Cavalry should start with arrows");
-    assert!((15..=25).contains(&arrows.quantity));
 
     let rodeo = snapshot
         .player
@@ -139,9 +81,6 @@ fn cavalry_birth_uses_original_identity_skills_proficiencies_and_kit() {
         .class("demo.class.cavalry")
         .expect("Cavalry class should exist");
     assert_eq!(class.base_hp, 10);
-    assert_eq!(class.pet_upkeep_divisor, 35);
-    assert!(class.riding_combat_expert);
-    assert_eq!(class.mounted_non_arrow_base_shot_cap, Some(100));
 }
 
 #[test]

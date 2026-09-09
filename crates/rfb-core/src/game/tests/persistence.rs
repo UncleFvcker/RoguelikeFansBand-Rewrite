@@ -3,6 +3,44 @@ use super::support::*;
 use super::*;
 
 #[test]
+fn new_save_required_fields_reject_missing_values() {
+    let encoded = serde_json::to_value(Game::new(0x5354_5249_4354).to_save())
+        .expect("new save should serialize");
+    // Verify the shared payload is valid before testing one missing field at a time.
+    serde_json::from_value::<rfb_protocol::SavePayloadV1>(encoded.clone())
+        .expect("unmodified save should decode");
+    for (parent, field) in [
+        ("", "defeatedLimitedActorCounts"),
+        ("/player/progress", "ridingProficiency"),
+        ("/player/progress", "weaponProficiencies"),
+        ("/player/progress", "miningProficiency"),
+        ("/player/progress", "materials"),
+        ("/player/progress", "maximumAttributes"),
+        ("/player/progress", "maximumExperience"),
+    ] {
+        let mut missing = encoded.clone();
+        assert!(
+            missing
+                .pointer_mut(parent)
+                .expect(parent)
+                .as_object_mut()
+                .expect("object")
+                .remove(field)
+                .is_some(),
+            "{parent}/{field} must exist before removal"
+        );
+        let error =
+            serde_json::from_value::<rfb_protocol::SavePayloadV1>(missing).expect_err(field);
+        assert!(
+            error
+                .to_string()
+                .contains(&format!("missing field `{field}`")),
+            "{parent}/{field}: {error}"
+        );
+    }
+}
+
+#[test]
 fn exploration_memory_does_not_change_authoritative_state_hash() {
     let mut game = Game::new(42);
     let before = game.state_hash();

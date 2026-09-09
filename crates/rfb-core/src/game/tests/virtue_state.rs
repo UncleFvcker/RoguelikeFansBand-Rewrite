@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use super::support::{
-    archon_game, boit_game, einheri_game, golem_game, kutar_game, shadow_fairy_game, skeleton_game,
-    sprite_game, wood_elf_game, zombie_game,
-};
 use super::*;
 
 fn virtue_kinds(game: &Game) -> Vec<VirtueKindDto> {
@@ -103,480 +99,201 @@ fn rfb_virtue_initialization_keeps_class_race_and_realm_order_then_fills_unique_
 
 #[test]
 fn formal_races_receive_their_original_race_virtues() {
-    let barbarian = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.barbarian",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Barbarian Archer should create");
-    assert_eq!(
-        &virtue_kinds(&barbarian)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Valour,
-        ]
-    );
+    use VirtueKindDto::*;
 
-    let half_orc = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.half-orc",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Half-Orc Archer should create");
-    assert_eq!(
-        &virtue_kinds(&half_orc)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Valour,
-        ]
-    );
-
-    let high_elf = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.high-elf",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("High-Elf Archer should create");
-    assert_eq!(
-        &virtue_kinds(&high_elf)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Vitality,
-        ]
-    );
-
-    let hobbit = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.warrior",
-        "rfb-legacy.race.hobbit",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Hobbit Warrior should create");
-    assert_eq!(
-        &virtue_kinds(&hobbit)[..3],
-        [
-            VirtueKindDto::Valour,
-            VirtueKindDto::Honour,
-            VirtueKindDto::Temperance,
-        ]
-    );
-
-    let kobold = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.kobold",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Kobold Archer should create");
-    assert_eq!(
-        &virtue_kinds(&kobold)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Honour,
-        ]
-    );
-
-    let dwarf = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.dwarf",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Dwarf Archer should create");
-    assert_eq!(
-        &virtue_kinds(&dwarf)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Diligence,
-        ]
-    );
-
-    let nibelung = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.nibelung",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Nibelung Archer should create");
-    assert_eq!(
-        &virtue_kinds(&nibelung)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Patience,
-        ]
-    );
-
-    let gnome = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.gnome",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Gnome Archer should create");
-    assert_eq!(
-        &virtue_kinds(&gnome)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Knowledge,
-        ]
-    );
-
-    let half_giant = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.half-giant",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Half-Giant Archer should create");
-    assert_eq!(
-        &virtue_kinds(&half_giant)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Justice,
-        ]
-    );
-
-    let half_troll = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.half-troll",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Half-Troll Archer should create");
-    assert_eq!(
-        &virtue_kinds(&half_troll)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Valour,
-        ]
-    );
-
-    let half_titan = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.half-titan",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Half-Titan Archer should create");
-    assert_eq!(
-        &virtue_kinds(&half_titan)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Harmony,
-        ]
-    );
-
-    let cyclops = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.cyclops",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Cyclops Archer should create");
-    assert_eq!(
-        &virtue_kinds(&cyclops)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Knowledge,
-        ]
-    );
-
-    let yeek = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.yeek",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Yeek Archer should create");
-    assert_eq!(
-        &virtue_kinds(&yeek)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Sacrifice,
-        ]
-    );
-
-    let klackon = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.klackon",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Klackon Archer should create");
-    assert_eq!(
-        &virtue_kinds(&klackon)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Diligence,
-        ]
-    );
-
-    let dark_elf = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.dark-elf",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Dark-Elf Archer should create");
-    assert_eq!(
-        &virtue_kinds(&dark_elf)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Enchantment,
-        ]
-    );
-
-    let mindflayer = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.mindflayer",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Mindflayer Archer should create");
-    assert_eq!(
-        &virtue_kinds(&mindflayer)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Enlightenment,
-        ]
-    );
-
-    let imp = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.imp",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Imp Archer should create");
-    assert_eq!(
-        &virtue_kinds(&imp)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Faith,
-        ]
-    );
-
-    let dunadan = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.dunadan",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Dunadan Archer should create");
-    assert_eq!(
-        &virtue_kinds(&dunadan)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Individualism,
-        ]
-    );
-}
-
-#[test]
-fn formal_snotling_receives_the_original_honour_virtue() {
-    let snotling = Game::new_with_build_race_and_name(
-        43,
-        "demo.build.archer",
-        "rfb-legacy.race.snotling",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Snotling Archer should create");
-    assert_eq!(
-        &virtue_kinds(&snotling)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Honour,
-        ],
-    );
-}
-
-#[test]
-fn formal_boit_receives_the_authoritative_sacrifice_virtue() {
-    let boit = boit_game(405);
-    assert_eq!(
-        &virtue_kinds(&boit)[..3],
-        [
-            VirtueKindDto::Valour,
-            VirtueKindDto::Honour,
-            VirtueKindDto::Sacrifice,
-        ]
-    );
-}
-
-#[test]
-fn formal_einheri_receives_the_authoritative_unlife_virtue() {
-    let einheri = einheri_game(409);
-    assert_eq!(
-        &virtue_kinds(&einheri)[..3],
-        [
-            VirtueKindDto::Valour,
-            VirtueKindDto::Honour,
-            VirtueKindDto::Unlife,
-        ]
-    );
-}
-
-#[test]
-fn formal_kutar_receives_the_authoritative_vitality_virtue() {
-    let kutar = kutar_game(411);
-    assert_eq!(
-        &virtue_kinds(&kutar)[..3],
-        [
-            VirtueKindDto::Valour,
-            VirtueKindDto::Honour,
-            VirtueKindDto::Vitality,
-        ]
-    );
-}
-
-#[test]
-fn formal_amberite_receives_the_authoritative_honour_virtue() {
-    let amberite = Game::new_with_build_race_and_name(
-        413,
-        "demo.build.archer",
-        "rfb-legacy.race.amberite",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Amberite Archer should create");
-    assert_eq!(
-        &virtue_kinds(&amberite)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Honour,
-        ]
-    );
-}
-
-#[test]
-fn formal_beastman_receives_the_authoritative_chance_virtue() {
-    let beastman = Game::new_with_build_race_and_name(
-        419,
-        "demo.build.archer",
-        "rfb-legacy.race.beastman",
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .expect("Beastman Archer should create");
-    assert_eq!(
-        &virtue_kinds(&beastman)[..3],
-        [
-            VirtueKindDto::Nature,
-            VirtueKindDto::Temperance,
-            VirtueKindDto::Chance,
-        ]
-    );
-}
-
-#[test]
-fn formal_shadow_fairy_receives_the_authoritative_enchantment_virtue() {
-    let shadow_fairy = shadow_fairy_game(421);
-    assert_eq!(
-        &virtue_kinds(&shadow_fairy)[..3],
-        [
-            VirtueKindDto::Valour,
-            VirtueKindDto::Honour,
-            VirtueKindDto::Enchantment,
-        ]
-    );
-}
-
-#[test]
-fn formal_golem_receives_the_authoritative_justice_virtue() {
-    let golem = golem_game(367);
-    assert_eq!(
-        &virtue_kinds(&golem)[..3],
-        [
-            VirtueKindDto::Valour,
-            VirtueKindDto::Honour,
-            VirtueKindDto::Justice,
-        ]
-    );
-}
-
-#[test]
-fn formal_zombie_receives_the_authoritative_unlife_virtue() {
-    let zombie = zombie_game(376);
-    assert_eq!(
-        &virtue_kinds(&zombie)[..3],
-        [
-            VirtueKindDto::Valour,
-            VirtueKindDto::Honour,
-            VirtueKindDto::Unlife,
-        ]
-    );
-}
-
-#[test]
-fn formal_skeleton_receives_the_authoritative_unlife_virtue() {
-    let skeleton = skeleton_game(383);
-    assert_eq!(
-        &virtue_kinds(&skeleton)[..3],
-        [
-            VirtueKindDto::Valour,
-            VirtueKindDto::Honour,
-            VirtueKindDto::Unlife,
-        ]
-    );
-}
-
-#[test]
-fn formal_wood_elf_receives_the_authoritative_nature_virtue() {
-    let wood_elf = wood_elf_game(384);
-    assert_eq!(
-        &virtue_kinds(&wood_elf)[..3],
-        [
-            VirtueKindDto::Valour,
-            VirtueKindDto::Honour,
-            VirtueKindDto::Nature,
-        ]
-    );
-}
-
-#[test]
-fn formal_archon_receives_the_authoritative_justice_virtue() {
-    let archon = archon_game(387);
-    assert_eq!(
-        &virtue_kinds(&archon)[..3],
-        [
-            VirtueKindDto::Valour,
-            VirtueKindDto::Honour,
-            VirtueKindDto::Justice,
-        ]
-    );
-}
-
-#[test]
-fn formal_sprite_receives_the_authoritative_nature_virtue() {
-    let sprite = sprite_game(389);
-    assert_eq!(
-        &virtue_kinds(&sprite)[..3],
-        [
-            VirtueKindDto::Valour,
-            VirtueKindDto::Honour,
-            VirtueKindDto::Nature,
-        ]
-    );
+    for (seed, build_id, race_id, expected) in [
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.barbarian",
+            [Nature, Temperance, Valour],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.half-orc",
+            [Nature, Temperance, Valour],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.high-elf",
+            [Nature, Temperance, Vitality],
+        ),
+        (
+            43,
+            "demo.build.warrior",
+            "rfb-legacy.race.hobbit",
+            [Valour, Honour, Temperance],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.kobold",
+            [Nature, Temperance, Honour],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.dwarf",
+            [Nature, Temperance, Diligence],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.nibelung",
+            [Nature, Temperance, Patience],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.gnome",
+            [Nature, Temperance, Knowledge],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.half-giant",
+            [Nature, Temperance, Justice],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.half-troll",
+            [Nature, Temperance, Valour],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.half-titan",
+            [Nature, Temperance, Harmony],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.cyclops",
+            [Nature, Temperance, Knowledge],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.yeek",
+            [Nature, Temperance, Sacrifice],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.klackon",
+            [Nature, Temperance, Diligence],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.dark-elf",
+            [Nature, Temperance, Enchantment],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.mindflayer",
+            [Nature, Temperance, Enlightenment],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.imp",
+            [Nature, Temperance, Faith],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.dunadan",
+            [Nature, Temperance, Individualism],
+        ),
+        (
+            43,
+            "demo.build.archer",
+            "rfb-legacy.race.snotling",
+            [Nature, Temperance, Honour],
+        ),
+        (
+            405,
+            "demo.build.warrior",
+            "rfb-legacy.race.boit",
+            [Valour, Honour, Sacrifice],
+        ),
+        (
+            409,
+            "demo.build.warrior",
+            "rfb-legacy.race.einheri",
+            [Valour, Honour, Unlife],
+        ),
+        (
+            411,
+            "demo.build.warrior",
+            "rfb-legacy.race.kutar",
+            [Valour, Honour, Vitality],
+        ),
+        (
+            413,
+            "demo.build.archer",
+            "rfb-legacy.race.amberite",
+            [Nature, Temperance, Honour],
+        ),
+        (
+            419,
+            "demo.build.archer",
+            "rfb-legacy.race.beastman",
+            [Nature, Temperance, Chance],
+        ),
+        (
+            421,
+            "demo.build.warrior",
+            "rfb-legacy.race.shadow-fairy",
+            [Valour, Honour, Enchantment],
+        ),
+        (
+            367,
+            "demo.build.warrior",
+            "rfb-legacy.race.golem",
+            [Valour, Honour, Justice],
+        ),
+        (
+            376,
+            "demo.build.warrior",
+            "rfb-legacy.race.zombie",
+            [Valour, Honour, Unlife],
+        ),
+        (
+            383,
+            "demo.build.warrior",
+            "rfb-legacy.race.skeleton",
+            [Valour, Honour, Unlife],
+        ),
+        (
+            384,
+            "demo.build.warrior",
+            "rfb-legacy.race.wood-elf",
+            [Valour, Honour, Nature],
+        ),
+        (
+            387,
+            "demo.build.warrior",
+            "rfb-legacy.race.archon",
+            [Valour, Honour, Justice],
+        ),
+        (
+            389,
+            "demo.build.warrior",
+            "rfb-legacy.race.sprite",
+            [Valour, Honour, Nature],
+        ),
+    ] {
+        let game =
+            Game::new_with_build_race_and_name(seed, build_id, race_id, Game::DEFAULT_PLAYER_NAME)
+                .unwrap_or_else(|error| panic!("{race_id}: {error}"));
+        assert_eq!(&virtue_kinds(&game)[..3], expected, "{race_id}");
+    }
 }
 
 #[test]

@@ -642,119 +642,91 @@ fn restorative_item_sequence_recovers_resource_then_removes_status() {
 }
 
 #[test]
-fn full_resource_restoration_is_deterministic_and_round_trips() {
+fn resource_restorative_preserves_awareness_order_and_missing_resource_semantics() {
     const ITEM_ID: &str = "test.item.perfect-focus-elixir.1";
-    let mut game = test_caster_game(23);
-    clear_monsters(&mut game);
-    let mana = game
-        .resources
-        .get_mut("demo.resource.mana")
-        .expect("test caster should have mana");
-    mana.current = 1;
-    let maximum = mana.maximum;
-    game.player.statuses.push(StatusInstance {
-        kind_id: "rfb.status.berserk".to_owned(),
-        remaining_ticks: 20,
-        intensity: 1,
-        source_id: Some("test".to_owned()),
-        granted_resistances: BTreeMap::new(),
-        granted_brands: BTreeSet::new(),
-        granted_modifiers: StatModifiersDto::default(),
-        granted_equipment_bonuses: EquipmentBonusesDto::default(),
-        granted_status_immunities: BTreeSet::new(),
-        granted_race_id: None,
-        grants_wall_passage: false,
-        incoming_damage_percent: 100,
-    });
-    give_inventory_item(&mut game, ITEM_ID, "demo.item.perfect-focus-elixir");
-    let draws_before = game.rng_draw_counter();
-
-    let update = dispatch_next(
-        &mut game,
-        GameCommand::UseItem {
-            item_id: ITEM_ID.to_owned(),
-            target: None,
-        },
-    );
-
-    assert_eq!(game.resources["demo.resource.mana"].current, maximum);
-    assert!(!game.player_has_status_kind("rfb.status.berserk"));
-    assert_eq!(game.rng_draw_counter(), draws_before);
-    assert!(update.events.iter().any(|event| {
-        matches!(
-            &event.outcome,
+    for (case, seed, has_mana, has_berserk) in [
+        ("restoration-and-cure", 23, true, true),
+        ("restoration-before-no-effect", 27, true, false),
+        ("missing-resource", 29, false, false),
+    ] {
+        let mut game = if has_mana {
+            test_caster_game(seed)
+        } else {
+            skill_check_game(seed, "demo.build.warrior")
+        };
+        clear_monsters(&mut game);
+        let before = u32::from(has_berserk);
+        let maximum = if has_mana {
+            let mana = game
+                .resources
+                .get_mut("demo.resource.mana")
+                .expect("caster mana");
+            mana.current = before;
+            mana.maximum
+        } else {
+            assert!(!game.resources.contains_key("demo.resource.mana"), "{case}");
+            0
+        };
+        if has_berserk {
+            game.player
+                .statuses
+                .push(monster_combat::melee_status(STATUS_BERSERK, 20, "test").status);
+        }
+        give_inventory_item(&mut game, ITEM_ID, "demo.item.perfect-focus-elixir");
+        let draws_before = game.rng_draw_counter();
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::UseItem {
+                item_id: ITEM_ID.to_owned(),
+                target: None,
+            },
+        );
+        assert!(!game.items.iter().any(|item| item.id == ITEM_ID), "{case}");
+        assert_eq!(game.rng_draw_counter(), draws_before, "{case}");
+        assert!(!game.player_has_status_kind(STATUS_BERSERK), "{case}");
+        assert!(
+            update.events.iter().any(|event| matches!(&event.outcome,
             Some(GameEventOutcomeDto::ResourceRecovery { resolution })
-                if resolution.before == 1
-                    && resolution.after == maximum
-                    && resolution.recovered == maximum - 1
-        )
-    }));
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("restored resource state should reload");
-    assert_eq!(restored.snapshot(), game.snapshot());
-}
-
-#[test]
-fn successful_restoration_reveals_later_no_effect_events() {
-    const ITEM_ID: &str = "test.item.perfect-focus-elixir.1";
-    let mut game = test_caster_game(27);
-    clear_monsters(&mut game);
-    game.resources
-        .get_mut("demo.resource.mana")
-        .expect("test caster should have mana")
-        .current = 0;
-    give_inventory_item(&mut game, ITEM_ID, "demo.item.perfect-focus-elixir");
-
-    let update = dispatch_next(
-        &mut game,
-        GameCommand::UseItem {
-            item_id: ITEM_ID.to_owned(),
-            target: None,
-        },
-    );
-
-    let status_event = update
-        .events
-        .iter()
-        .find(|event| event.kind == "item.use-status-no-effect")
-        .expect("the absent berserk status should produce a no-effect event");
-    assert_eq!(
-        status_event.args["nameKey"],
-        "item-demo-perfect-focus-elixir-name"
-    );
-}
-
-#[test]
-fn missing_player_resource_consumes_restorative_without_claiming_awareness() {
-    const ITEM_ID: &str = "test.item.perfect-focus-elixir.1";
-    let mut game = skill_check_game(29, "demo.build.warrior");
-    assert!(!game.resources.contains_key("demo.resource.mana"));
-    give_inventory_item(&mut game, ITEM_ID, "demo.item.perfect-focus-elixir");
-
-    let update = dispatch_next(
-        &mut game,
-        GameCommand::UseItem {
-            item_id: ITEM_ID.to_owned(),
-            target: None,
-        },
-    );
-
-    assert!(!game.items.iter().any(|item| item.id == ITEM_ID));
-    assert!(update.events.iter().any(|event| {
-        event.kind == "item.use-resource-no-effect"
-            && matches!(
-                &event.outcome,
-                Some(GameEventOutcomeDto::ResourceRecovery { resolution })
-                    if resolution.before == 0
-                        && resolution.after == 0
-                        && resolution.recovered == 0
-            )
-    }));
-    assert!(
-        game.item_knowledge
-            .get("demo.item.perfect-focus-elixir")
-            .is_some_and(|knowledge| knowledge.tried && !knowledge.aware)
-    );
+                if resolution.before == before && resolution.after == maximum
+                    && resolution.recovered == maximum - before)),
+            "{case}"
+        );
+        if has_mana {
+            assert_eq!(
+                game.resources["demo.resource.mana"].current, maximum,
+                "{case}"
+            );
+            if has_berserk {
+                let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+                    .expect("restored resource state should reload");
+                assert_eq!(restored.snapshot(), game.snapshot(), "{case}");
+            } else {
+                let event = update
+                    .events
+                    .iter()
+                    .find(|event| event.kind == "item.use-status-no-effect")
+                    .expect("absent berserk should report no effect");
+                assert_eq!(
+                    event.args["nameKey"], "item-demo-perfect-focus-elixir-name",
+                    "{case}"
+                );
+            }
+        } else {
+            assert!(
+                update
+                    .events
+                    .iter()
+                    .any(|event| event.kind == "item.use-resource-no-effect"),
+                "{case}"
+            );
+            assert!(
+                game.item_knowledge
+                    .get("demo.item.perfect-focus-elixir")
+                    .is_some_and(|knowledge| knowledge.tried && !knowledge.aware),
+                "{case}"
+            );
+        }
+    }
 }
 
 #[test]
@@ -1141,61 +1113,6 @@ fn spell_scroll_increases_only_eligible_learning_capacity_without_rng() {
 }
 
 #[test]
-fn slowness_potion_refreshes_existing_slow_without_becoming_aware() {
-    const ITEM_ID: &str = "test.item.slowness-potion";
-    const KIND_ID: &str = "demo.item.slowness-potion";
-
-    let mut game = Game::new(82);
-    clear_monsters(&mut game);
-    give_inventory_item(&mut game, ITEM_ID, KIND_ID);
-    game.player.statuses.push(StatusInstance {
-        kind_id: STATUS_SLOW.to_owned(),
-        intensity: 1,
-        remaining_ticks: 1,
-        source_id: Some("test.existing-slow".to_owned()),
-        granted_resistances: BTreeMap::new(),
-        granted_brands: BTreeSet::new(),
-        granted_modifiers: StatModifiersDto::default(),
-        granted_equipment_bonuses: EquipmentBonusesDto::default(),
-        granted_status_immunities: BTreeSet::new(),
-        granted_race_id: None,
-        grants_wall_passage: false,
-        incoming_damage_percent: 100,
-    });
-    let duration_seed = (0..512)
-        .find(|seed| RfbRng::seeded(*seed).bounded(25) == 24)
-        .expect("a maximum slowness duration roll should exist");
-    game.rng = RfbRng::seeded(duration_seed);
-    let draws_before = game.rng_draw_counter();
-
-    let update = dispatch_next(
-        &mut game,
-        GameCommand::UseItem {
-            item_id: ITEM_ID.to_owned(),
-            target: None,
-        },
-    );
-
-    assert_eq!(game.rng_draw_counter(), draws_before + 1);
-    let slow = game
-        .player
-        .statuses
-        .iter()
-        .find(|status| status.kind_id == STATUS_SLOW)
-        .expect("the longer slowness roll should refresh the status");
-    assert!(slow.remaining_ticks > 1);
-    assert_eq!(slow.source_id.as_deref(), Some("test.existing-slow"));
-    assert!(!game.items.iter().any(|item| item.id == ITEM_ID));
-    assert_eq!(game.item_knowledge_dto(KIND_ID), ItemKnowledgeDto::Tried);
-    assert!(
-        update
-            .events
-            .iter()
-            .any(|event| event.kind == "item.use-slowness-no-effect")
-    );
-}
-
-#[test]
 fn veil_draught_awareness_and_rng_follow_existing_blindness_and_immunity() {
     const ITEM_ID: &str = "test.item.veil-draught";
     const KIND_ID: &str = "demo.item.veil-draught";
@@ -1421,71 +1338,6 @@ fn renewal_tonic_awareness_depends_on_either_restoration() {
                 .any(|event| event.kind == expected_event_kind)
         );
     }
-}
-
-#[test]
-fn temperate_tonic_extends_existing_resistance_without_becoming_aware() {
-    const ITEM_ID: &str = "test.item.temperate-tonic";
-    const KIND_ID: &str = "demo.item.temperate-tonic";
-
-    let mut game = Game::new(85);
-    clear_monsters(&mut game);
-    give_inventory_item(&mut game, ITEM_ID, KIND_ID);
-    game.player.statuses.push(StatusInstance {
-        kind_id: STATUS_THERMAL_RESISTANCE.to_owned(),
-        intensity: 1,
-        remaining_ticks: 3,
-        source_id: Some("test.existing-thermal-resistance".to_owned()),
-        granted_resistances: BTreeMap::from([
-            (DamageType::Fire, ResistanceLevel::Resistant),
-            (DamageType::Cold, ResistanceLevel::Resistant),
-        ]),
-        granted_brands: BTreeSet::new(),
-        granted_modifiers: StatModifiersDto::default(),
-        granted_equipment_bonuses: EquipmentBonusesDto::default(),
-        granted_status_immunities: BTreeSet::new(),
-        granted_race_id: None,
-        grants_wall_passage: false,
-        incoming_damage_percent: 100,
-    });
-    let draws_before = game.rng_draw_counter();
-
-    let update = dispatch_next(
-        &mut game,
-        GameCommand::UseItem {
-            item_id: ITEM_ID.to_owned(),
-            target: None,
-        },
-    );
-
-    assert_eq!(game.rng_draw_counter(), draws_before + 1);
-    let thermal = game
-        .player
-        .statuses
-        .iter()
-        .find(|status| status.kind_id == STATUS_THERMAL_RESISTANCE)
-        .expect("the tonic should extend the existing resistance");
-    assert!((4..=13).contains(&thermal.remaining_ticks));
-    assert_eq!(
-        thermal.source_id.as_deref(),
-        Some("test.existing-thermal-resistance")
-    );
-    assert_eq!(
-        game.effective_player_resistances().level(DamageType::Fire),
-        ResistanceLevel::Resistant
-    );
-    assert_eq!(
-        game.effective_player_resistances().level(DamageType::Cold),
-        ResistanceLevel::Resistant
-    );
-    assert!(!game.items.iter().any(|item| item.id == ITEM_ID));
-    assert_eq!(game.item_knowledge_dto(KIND_ID), ItemKnowledgeDto::Tried);
-    assert!(
-        update
-            .events
-            .iter()
-            .any(|event| event.kind == "item.use-thermal-resistance-no-effect")
-    );
 }
 
 #[test]
@@ -3272,4 +3124,97 @@ fn crisdurian_seed_for_test() -> u64 {
     (0..10_000)
         .find(|seed| RfbRng::seeded(*seed).bounded(15) == 0)
         .expect("a Crisdurian rarity seed should exist")
+}
+
+#[test]
+fn status_item_refresh_preserves_source_and_does_not_make_the_kind_aware() {
+    let mut base = Game::new(85);
+    clear_monsters(&mut base);
+    let duration_seed = (0..512)
+        .find(|seed| RfbRng::seeded(*seed).bounded(25) == 24)
+        .expect("a maximum slowness duration roll should exist");
+    for (kind_id, status_id, ticks, source, seed, event, resistances) in [
+        (
+            "demo.item.slowness-potion",
+            STATUS_SLOW,
+            1,
+            "test.existing-slow",
+            duration_seed,
+            "item.use-slowness-no-effect",
+            BTreeMap::new(),
+        ),
+        (
+            "demo.item.temperate-tonic",
+            STATUS_THERMAL_RESISTANCE,
+            3,
+            "test.existing-thermal-resistance",
+            85,
+            "item.use-thermal-resistance-no-effect",
+            BTreeMap::from([
+                (DamageType::Fire, ResistanceLevel::Resistant),
+                (DamageType::Cold, ResistanceLevel::Resistant),
+            ]),
+        ),
+    ] {
+        let mut game = base.clone();
+        give_inventory_item(&mut game, "test.refresh-item", kind_id);
+        game.player.statuses.push(StatusInstance {
+            kind_id: status_id.to_owned(),
+            intensity: 1,
+            remaining_ticks: ticks,
+            source_id: Some(source.to_owned()),
+            granted_resistances: resistances.clone(),
+            granted_brands: BTreeSet::new(),
+            granted_modifiers: StatModifiersDto::default(),
+            granted_equipment_bonuses: EquipmentBonusesDto::default(),
+            granted_status_immunities: BTreeSet::new(),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
+        });
+        // Preserve the tonic's post-initialization RNG; force the slowness maximum roll.
+        if status_id == STATUS_SLOW {
+            game.rng = RfbRng::seeded(seed);
+        }
+        let draws_before = game.rng_draw_counter();
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::UseItem {
+                item_id: "test.refresh-item".to_owned(),
+                target: None,
+            },
+        );
+        assert_eq!(game.rng_draw_counter(), draws_before + 1, "{kind_id}");
+        let status = game
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == status_id)
+            .unwrap_or_else(|| panic!("{kind_id} should refresh {status_id}"));
+        assert!(status.remaining_ticks > ticks, "{kind_id}");
+        if status_id == STATUS_THERMAL_RESISTANCE {
+            assert!((4..=13).contains(&status.remaining_ticks), "{kind_id}");
+        }
+        assert_eq!(status.source_id.as_deref(), Some(source), "{kind_id}");
+        for (damage, resistance) in resistances {
+            assert_eq!(
+                game.effective_player_resistances().level(damage),
+                resistance,
+                "{kind_id}"
+            );
+        }
+        assert!(
+            !game.items.iter().any(|item| item.id == "test.refresh-item"),
+            "{kind_id}"
+        );
+        assert_eq!(
+            game.item_knowledge_dto(kind_id),
+            ItemKnowledgeDto::Tried,
+            "{kind_id}"
+        );
+        assert!(
+            update.events.iter().any(|entry| entry.kind == event),
+            "{kind_id}"
+        );
+    }
 }

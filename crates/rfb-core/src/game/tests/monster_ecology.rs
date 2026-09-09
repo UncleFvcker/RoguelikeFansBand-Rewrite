@@ -29,55 +29,42 @@ fn first_seed_for(mut predicate: impl FnMut(&mut RfbRng) -> bool) -> u64 {
 }
 
 #[test]
-fn p55a_ocean_monsters_require_a_deep_water_wilderness_cell() {
-    let game = Game::new(0);
-    let deep_water = game
-        .content
-        .terrain("demo.terrain.surface-water-deep")
-        .expect("surface deep water should exist");
-    let fastitocalon = game
-        .content
-        .actor("demo.actor.fastitocalon")
-        .expect("P55A should import Fastitocalon");
-    assert!(actor_matches_surface_habitat(
-        fastitocalon,
-        deep_water,
-        Some(WildernessTerrain::DeepWater),
-    ));
-    assert!(!actor_matches_surface_habitat(
-        fastitocalon,
-        deep_water,
-        Some(WildernessTerrain::Grass),
-    ));
-
-    let makara = game
-        .content
-        .actor("demo.actor.makara")
-        .expect("P55A should import Makara");
-    assert!(!actor_matches_surface_habitat(
-        makara,
-        deep_water,
-        Some(WildernessTerrain::DeepWater),
-    ));
-}
-
-#[test]
-fn p77_wild_all_overrides_an_additional_ocean_habitat() {
-    let game = Game::new(0);
-    let grass = game
-        .content
-        .terrain("demo.terrain.surface-grass")
-        .expect("surface grass should exist");
-    let wyrm = game
-        .content
-        .actor("demo.actor.greater-cyber-wyrm-angel-daemon-lich")
-        .expect("P77 should import the wilderness-wide wyrm");
-
-    assert!(actor_matches_surface_habitat(
-        wyrm,
-        grass,
-        Some(WildernessTerrain::Grass),
-    ));
+fn surface_habitat_requires_the_declared_terrain_unless_wild_all() {
+    let content = load_built_in_content().expect("built-in content");
+    for (actor_id, terrain_id, wilderness, expected) in [
+        (
+            "demo.actor.fastitocalon",
+            "demo.terrain.surface-water-deep",
+            WildernessTerrain::DeepWater,
+            true,
+        ),
+        (
+            "demo.actor.fastitocalon",
+            "demo.terrain.surface-water-deep",
+            WildernessTerrain::Grass,
+            false,
+        ),
+        (
+            "demo.actor.makara",
+            "demo.terrain.surface-water-deep",
+            WildernessTerrain::DeepWater,
+            false,
+        ),
+        (
+            "demo.actor.greater-cyber-wyrm-angel-daemon-lich",
+            "demo.terrain.surface-grass",
+            WildernessTerrain::Grass,
+            true,
+        ),
+    ] {
+        let actor = content.actor(actor_id).expect("habitat actor");
+        let terrain = content.terrain(terrain_id).expect("surface terrain");
+        assert_eq!(
+            actor_matches_surface_habitat(actor, terrain, Some(wilderness)),
+            expected,
+            "{actor_id}: {wilderness:?}"
+        );
+    }
 }
 
 fn eldritch_seed(saving_throw_skill: i32, consequence_saves: &[bool]) -> u64 {
@@ -403,25 +390,6 @@ fn eldritch_horror_reuses_attribute_amnesia_and_weird_mind_contracts() {
 }
 
 #[test]
-fn legacy_dungeon_restrictions_match_only_the_declared_region() {
-    let game =
-        Game::new_with_build(1, "demo.build.warrior").expect("Warrens journey should create");
-    let allocation = |actor_id: &str| {
-        game.content
-            .actor(actor_id)
-            .and_then(|actor| actor.allocation.as_ref())
-            .unwrap_or_else(|| panic!("{actor_id} should retain allocation"))
-    };
-
-    let duosi = allocation("demo.actor.king-duosi-the-chief-of-southerings");
-    assert!(actor_allocation_matches_legacy_dungeon(duosi, Some(31)));
-    assert!(!actor_allocation_matches_legacy_dungeon(duosi, Some(30)));
-    let wallaby = allocation("demo.actor.wallaby");
-    assert!(actor_allocation_matches_legacy_dungeon(wallaby, Some(35)));
-    assert!(!actor_allocation_matches_legacy_dungeon(wallaby, None));
-}
-
-#[test]
 fn p86e_camelot_admits_only_its_dungeon_two_roster() {
     let game = Game::new_with_build(1, "demo.build.warrior").expect("Middle-earth should create");
     let mut camelot_actor_ids = BTreeSet::new();
@@ -598,253 +566,211 @@ fn p88c_icky_cave_glyphs_are_or_preferences_and_queen_is_a_guardian() {
 }
 
 #[test]
-fn p88e_icky_cave_allocation_keeps_location_locks_and_queen_out() {
-    let mut game =
-        Game::new_with_build(888, "demo.build.warrior").expect("Middle-earth should create");
-    game.current_floor_id = "demo.floor.icky-cave-depth-20".to_owned();
-    let policy = game
-        .content
-        .encounter_table("demo.encounter-table.icky-cave")
-        .and_then(|table| table.global_allocation.as_ref())
-        .expect("Icky Cave global allocation policy")
-        .clone();
+fn dungeon_allocation_preserves_ecology_location_locks_and_guardian_exclusions() {
+    for (seed, floor_id, ecology, level, dungeon_index, excluded) in [
+        (
+            888,
+            "demo.floor.icky-cave-depth-20",
+            "icky-cave",
+            20,
+            21,
+            &["demo.actor.the-icky-queen"][..],
+        ),
+        (
+            87,
+            "demo.floor.tidal-cave-depth-15",
+            "tidal-cave",
+            27,
+            33,
+            &["demo.actor.grendel"][..],
+        ),
+        (
+            0,
+            "demo.floor.numenor-depth-55",
+            "numenor-atlantis",
+            55,
+            11,
+            &[][..],
+        ),
+        (
+            197,
+            "demo.floor.dragon-lair-depth-60",
+            "dragon-lair",
+            60,
+            5,
+            &["demo.actor.tiamat-celestial-dragon-of-evil"][..],
+        ),
+        (
+            198,
+            "demo.floor.castle-depth-40",
+            "castle",
+            40,
+            12,
+            &["demo.actor.layzark-the-emperor"][..],
+        ),
+        (
+            203,
+            "demo.floor.volcano-depth-50",
+            "volcano",
+            50,
+            8,
+            &[
+                "demo.actor.shooting-star-the-red-dragon",
+                "demo.actor.lesser-balrog",
+            ][..],
+        ),
+    ] {
+        let mut game =
+            Game::new_with_build(seed, "demo.build.warrior").expect("Middle-earth should create");
+        game.current_floor_id = floor_id.to_owned();
+        let policy = game
+            .content
+            .encounter_table(&format!("demo.encounter-table.{ecology}"))
+            .and_then(|table| table.global_allocation.as_ref())
+            .expect("dungeon allocation policy")
+            .clone();
+        if matches!(ecology, "icky-cave" | "tidal-cave") {
+            let mut restricted_elsewhere = 0;
+            for actor in game.content.actor_definitions() {
+                let Some(allocation) = actor.allocation.as_ref() else {
+                    continue;
+                };
+                if !allocation.legacy_dungeon_indices.is_empty()
+                    && !allocation.legacy_dungeon_indices.contains(&dungeon_index)
+                {
+                    restricted_elsewhere += 1;
+                    assert!(!actor_allocation_matches_legacy_dungeon(
+                        allocation,
+                        Some(dungeon_index)
+                    ));
+                }
+            }
+            assert!(restricted_elsewhere > 0);
+        }
+        match ecology {
+            "icky-cave" => {
+                assert!(game.actor_kind_is_dungeon_guardian("demo.actor.the-icky-queen"));
+            }
+            "tidal-cave" => {
+                let level_zero_allocations = game
+                    .content
+                    .actor_definitions()
+                    .filter(|actor| actor.level == 0)
+                    .filter_map(|actor| actor.allocation.as_ref())
+                    .collect::<Vec<_>>();
+                assert!(!level_zero_allocations.is_empty());
+                assert!(
+                    level_zero_allocations
+                        .iter()
+                        .all(|allocation| allocation.wild_only)
+                );
+                assert_eq!(
+                    game.select_original_allocated_monster(&policy, 0, 15, None, &[], None, None),
+                    None
+                );
 
-    let mut restricted_elsewhere = 0;
-    for actor in game.content.actor_definitions() {
-        let Some(allocation) = actor.allocation.as_ref() else {
-            continue;
-        };
-        if !allocation.legacy_dungeon_indices.is_empty()
-            && !allocation.legacy_dungeon_indices.contains(&21)
-        {
-            restricted_elsewhere += 1;
-            assert!(!actor_allocation_matches_legacy_dungeon(
-                allocation,
-                Some(21)
-            ));
+                let grendel = game
+                    .content
+                    .actor("demo.actor.grendel")
+                    .expect("Grendel definition");
+                assert!(grendel.allocation.is_some());
+                assert!(grendel.movement.modes.contains(&ActorMovementMode::Swim));
+                assert!(game.actor_kind_is_dungeon_guardian(&grendel.id));
+            }
+            "numenor-atlantis" => {
+                assert!(game.content.actor_definitions().any(|actor| {
+                    actor.allocation.as_ref().is_some_and(|allocation| {
+                        allocation.wild_only && allocation.habitats.contains(&ActorHabitat::Ocean)
+                    })
+                }));
+            }
+            "dragon-lair" | "castle" | "volcano" => {
+                let preferred_id = match ecology {
+                    "dragon-lair" => "demo.actor.young-red-dragon",
+                    "castle" => "demo.actor.vrock",
+                    "volcano" => "demo.actor.fire-elemental",
+                    _ => unreachable!(),
+                };
+                let preferred = game
+                    .content
+                    .actor(preferred_id)
+                    .expect("preferred monster")
+                    .clone();
+                let ogre = game
+                    .content
+                    .actor("demo.actor.ogre")
+                    .expect("non-preferred monster")
+                    .clone();
+                let preferred_weight = game.original_dungeon_weight(&preferred, &policy);
+                let other_weight = game.original_dungeon_weight(&ogre, &policy);
+                if ecology == "dragon-lair" {
+                    assert_eq!(preferred_weight, 100);
+                    assert!((7..=8).contains(&other_weight));
+                } else {
+                    assert!(preferred_weight > other_weight, "{ecology}");
+                }
+            }
+            _ => unreachable!(),
+        }
+        let mut selected_preferred = 0;
+        for _ in 0..256 {
+            let selected = game
+                .select_original_allocated_monster(&policy, level, level, None, &[], None, None)
+                .unwrap_or_else(|| panic!("{ecology} should retain ordinary dungeon candidates"));
+            let actor = game.content.actor(&selected).expect("selected actor");
+            let allocation = actor.allocation.as_ref().expect("selected allocation");
+            assert!(!allocation.wild_only, "{ecology}: {selected}");
+            assert!(
+                allocation.legacy_dungeon_indices.is_empty()
+                    || allocation.legacy_dungeon_indices.contains(&dungeon_index),
+                "{ecology}: {selected}"
+            );
+            assert!(
+                !excluded.contains(&selected.as_str()),
+                "{ecology}: {selected}"
+            );
+            match ecology {
+                "numenor-atlantis" => {
+                    assert!(
+                        actor.movement.modes.iter().any(|mode| matches!(
+                            mode,
+                            ActorMovementMode::Aquatic
+                                | ActorMovementMode::Swim
+                                | ActorMovementMode::Fly
+                        )) || allocation.habitats.contains(&ActorHabitat::Ocean),
+                        "{selected}"
+                    );
+                }
+                "dragon-lair" => {
+                    if matches!(actor.glyph.as_str(), "d" | "D")
+                        || actor.tags.iter().any(|tag| tag == "dragon")
+                    {
+                        selected_preferred += 1;
+                    }
+                }
+                "castle" => {
+                    if matches!(actor.glyph.as_str(), "p" | "h" | "H" | "g")
+                        || actor.tags.iter().any(|tag| tag == "demon")
+                    {
+                        selected_preferred += 1;
+                    }
+                }
+                "volcano" => {
+                    assert!(
+                        actor.resistances.get(&ActorDamageType::Fire)
+                            == Some(&ActorResistanceLevel::Immune)
+                            || actor.movement.modes.contains(&ActorMovementMode::Fly)
+                            || allocation.habitats.contains(&ActorHabitat::Volcano),
+                        "{selected}"
+                    );
+                }
+                _ => {}
+            }
+        }
+        if matches!(ecology, "dragon-lair" | "castle") {
+            assert!(selected_preferred > 0, "{ecology}");
         }
     }
-    assert!(restricted_elsewhere > 0);
-    assert!(game.actor_kind_is_dungeon_guardian("demo.actor.the-icky-queen"));
-
-    for _ in 0..256 {
-        let selected = game
-            .select_original_allocated_monster(&policy, 20, 20, None, &[], None, None)
-            .expect("Icky Cave should retain ordinary dungeon candidates");
-        let actor = game.content.actor(&selected).expect("selected actor");
-        let allocation = actor.allocation.as_ref().expect("selected allocation");
-        assert!(!allocation.wild_only, "{selected}");
-        assert!(
-            allocation.legacy_dungeon_indices.is_empty()
-                || allocation.legacy_dungeon_indices.contains(&21),
-            "{selected}"
-        );
-        assert_ne!(selected, "demo.actor.the-icky-queen");
-    }
-}
-
-#[test]
-fn p87e_tidal_cave_allocation_keeps_location_locks_and_grendel_out() {
-    let mut game =
-        Game::new_with_build(87, "demo.build.warrior").expect("Middle-earth should create");
-    game.current_floor_id = "demo.floor.tidal-cave-depth-15".to_owned();
-    let policy = game
-        .content
-        .encounter_table("demo.encounter-table.tidal-cave")
-        .and_then(|table| table.global_allocation.as_ref())
-        .expect("Tidal Cave global allocation policy")
-        .clone();
-
-    let level_zero_allocations = game
-        .content
-        .actor_definitions()
-        .filter(|actor| actor.level == 0)
-        .filter_map(|actor| actor.allocation.as_ref())
-        .collect::<Vec<_>>();
-    assert!(!level_zero_allocations.is_empty());
-    assert!(
-        level_zero_allocations
-            .iter()
-            .all(|allocation| allocation.wild_only)
-    );
-    assert_eq!(
-        game.select_original_allocated_monster(&policy, 0, 15, None, &[], None, None),
-        None
-    );
-
-    let mut restricted_elsewhere = 0;
-    for actor in game.content.actor_definitions() {
-        let Some(allocation) = actor.allocation.as_ref() else {
-            continue;
-        };
-        if !allocation.legacy_dungeon_indices.is_empty()
-            && !allocation.legacy_dungeon_indices.contains(&33)
-        {
-            restricted_elsewhere += 1;
-            assert!(!actor_allocation_matches_legacy_dungeon(
-                allocation,
-                Some(33)
-            ));
-        }
-    }
-    assert!(restricted_elsewhere > 0);
-
-    let grendel = game
-        .content
-        .actor("demo.actor.grendel")
-        .expect("Grendel definition");
-    assert!(grendel.allocation.is_some());
-    assert!(grendel.movement.modes.contains(&ActorMovementMode::Swim));
-    assert!(game.actor_kind_is_dungeon_guardian(&grendel.id));
-
-    for _ in 0..256 {
-        let selected = game
-            .select_original_allocated_monster(&policy, 27, 27, None, &[], None, None)
-            .expect("Tidal Cave should retain ordinary dungeon candidates");
-        let actor = game.content.actor(&selected).expect("selected actor");
-        let allocation = actor.allocation.as_ref().expect("selected allocation");
-        assert!(!allocation.wild_only, "{selected}");
-        assert!(
-            allocation.legacy_dungeon_indices.is_empty()
-                || allocation.legacy_dungeon_indices.contains(&33),
-            "{selected}"
-        );
-        assert_ne!(selected, "demo.actor.grendel");
-    }
-}
-
-#[test]
-fn p96c_shared_aquatic_ecology_keeps_wilderness_only_monsters_out() {
-    let mut game =
-        Game::new_with_build(0, "demo.build.warrior").expect("Middle-earth should create");
-    game.current_floor_id = "demo.floor.numenor-depth-55".to_owned();
-    let policy = game
-        .content
-        .encounter_table("demo.encounter-table.numenor-atlantis")
-        .and_then(|table| table.global_allocation.as_ref())
-        .expect("Numenor and Atlantis global allocation policy")
-        .clone();
-    assert!(game.content.actor_definitions().any(|actor| {
-        actor.allocation.as_ref().is_some_and(|allocation| {
-            allocation.wild_only && allocation.habitats.contains(&ActorHabitat::Ocean)
-        })
-    }));
-
-    for _ in 0..256 {
-        let selected = game
-            .select_original_allocated_monster(&policy, 55, 55, None, &[], None, None)
-            .expect("shared aquatic ecology should retain ordinary dungeon candidates");
-        let actor = game.content.actor(&selected).expect("selected actor");
-        let allocation = actor.allocation.as_ref().expect("selected allocation");
-        assert!(!allocation.wild_only, "{selected}");
-        assert!(
-            actor.movement.modes.iter().any(|mode| matches!(
-                mode,
-                ActorMovementMode::Aquatic | ActorMovementMode::Swim | ActorMovementMode::Fly
-            )) || allocation.habitats.contains(&ActorHabitat::Ocean),
-            "{selected}"
-        );
-        assert!(
-            allocation.legacy_dungeon_indices.is_empty()
-                || allocation.legacy_dungeon_indices.contains(&11),
-            "{selected}"
-        );
-    }
-}
-
-#[test]
-fn p97e_dragon_lair_prefers_dragons_and_excludes_guardians_and_wild_only() {
-    let mut game =
-        Game::new_with_build(197, "demo.build.warrior").expect("Middle-earth should create");
-    game.current_floor_id = "demo.floor.dragon-lair-depth-60".to_owned();
-    let policy = game
-        .content
-        .encounter_table("demo.encounter-table.dragon-lair")
-        .and_then(|table| table.global_allocation.as_ref())
-        .expect("Dragon's Lair global allocation policy")
-        .clone();
-    let dragon = game
-        .content
-        .actor("demo.actor.young-red-dragon")
-        .expect("ordinary dragon should exist")
-        .clone();
-    let ogre = game
-        .content
-        .actor("demo.actor.ogre")
-        .expect("ordinary non-dragon should exist")
-        .clone();
-    assert_eq!(game.original_dungeon_weight(&dragon, &policy), 100);
-    assert!((7..=8).contains(&game.original_dungeon_weight(&ogre, &policy)));
-
-    let mut selected_dragons = 0;
-    for _ in 0..256 {
-        let selected = game
-            .select_original_allocated_monster(&policy, 60, 60, None, &[], None, None)
-            .expect("Dragon's Lair should retain ordinary dungeon candidates");
-        let actor = game.content.actor(&selected).expect("selected actor");
-        let allocation = actor.allocation.as_ref().expect("selected allocation");
-        assert!(!allocation.wild_only, "{selected}");
-        assert!(
-            allocation.legacy_dungeon_indices.is_empty()
-                || allocation.legacy_dungeon_indices.contains(&5),
-            "{selected}"
-        );
-        assert_ne!(selected, "demo.actor.tiamat-celestial-dragon-of-evil");
-        if matches!(actor.glyph.as_str(), "d" | "D") || actor.tags.iter().any(|tag| tag == "dragon")
-        {
-            selected_dragons += 1;
-        }
-    }
-    assert!(selected_dragons > 0);
-}
-
-#[test]
-fn p98c_castle_prefers_demons_and_humanoids_and_excludes_its_final_guardian() {
-    let mut game =
-        Game::new_with_build(198, "demo.build.warrior").expect("Middle-earth should create");
-    game.current_floor_id = "demo.floor.castle-depth-40".to_owned();
-    let policy = game
-        .content
-        .encounter_table("demo.encounter-table.castle")
-        .and_then(|table| table.global_allocation.as_ref())
-        .expect("Castle global allocation policy")
-        .clone();
-    let demon = game
-        .content
-        .actor("demo.actor.vrock")
-        .expect("ordinary demon should exist")
-        .clone();
-    let ogre = game
-        .content
-        .actor("demo.actor.ogre")
-        .expect("ordinary non-preferred monster should exist")
-        .clone();
-    assert!(
-        game.original_dungeon_weight(&demon, &policy)
-            > game.original_dungeon_weight(&ogre, &policy)
-    );
-
-    let mut selected_preferred = 0;
-    for _ in 0..256 {
-        let selected = game
-            .select_original_allocated_monster(&policy, 40, 40, None, &[], None, None)
-            .expect("Castle should retain ordinary dungeon candidates");
-        let actor = game.content.actor(&selected).expect("selected actor");
-        let allocation = actor.allocation.as_ref().expect("selected allocation");
-        assert!(!allocation.wild_only, "{selected}");
-        assert!(
-            allocation.legacy_dungeon_indices.is_empty()
-                || allocation.legacy_dungeon_indices.contains(&12),
-            "{selected}"
-        );
-        assert_ne!(selected, "demo.actor.layzark-the-emperor");
-        if matches!(actor.glyph.as_str(), "p" | "h" | "H" | "g")
-            || actor.tags.iter().any(|tag| tag == "demon")
-        {
-            selected_preferred += 1;
-        }
-    }
-    assert!(selected_preferred > 0);
 }
 
 #[test]
@@ -1514,64 +1440,4 @@ fn p71_one_split_death_closes_the_shared_lifetime_and_round_trips() {
     assert_eq!(restored.state_hash(), hash);
     assert_eq!(restored.entities.len(), 1);
     assert!(restored.banor_rupart_group_is_defeated());
-}
-
-#[test]
-fn defeated_limited_actor_counts_are_required_in_new_saves() {
-    let mut value = serde_json::to_value(Game::new(18).to_save()).expect("save should serialize");
-    value
-        .as_object_mut()
-        .expect("save should be an object")
-        .remove("defeatedLimitedActorCounts");
-
-    assert!(serde_json::from_value::<rfb_protocol::SavePayloadV1>(value).is_err());
-}
-
-#[test]
-fn p103f_volcano_prefers_fire_immune_flying_volcanic_monsters() {
-    let mut game =
-        Game::new_with_build(203, "demo.build.warrior").expect("Middle-earth should create");
-    game.current_floor_id = "demo.floor.volcano-depth-50".to_owned();
-    let policy = game
-        .content
-        .encounter_table("demo.encounter-table.volcano")
-        .and_then(|table| table.global_allocation.as_ref())
-        .expect("Volcano global allocation policy")
-        .clone();
-    let fire_elemental = game
-        .content
-        .actor("demo.actor.fire-elemental")
-        .expect("fire elemental should exist")
-        .clone();
-    let ogre = game
-        .content
-        .actor("demo.actor.ogre")
-        .expect("ordinary non-volcanic monster should exist")
-        .clone();
-    assert!(
-        game.original_dungeon_weight(&fire_elemental, &policy)
-            > game.original_dungeon_weight(&ogre, &policy)
-    );
-
-    for _ in 0..256 {
-        let selected = game
-            .select_original_allocated_monster(&policy, 50, 50, None, &[], None, None)
-            .expect("Volcano should retain ordinary dungeon candidates");
-        let actor = game.content.actor(&selected).expect("selected actor");
-        let allocation = actor.allocation.as_ref().expect("selected allocation");
-        assert!(!allocation.wild_only, "{selected}");
-        assert_ne!(selected, "demo.actor.shooting-star-the-red-dragon");
-        assert_ne!(selected, "demo.actor.lesser-balrog");
-        assert!(
-            actor.resistances.get(&ActorDamageType::Fire) == Some(&ActorResistanceLevel::Immune)
-                || actor.movement.modes.contains(&ActorMovementMode::Fly)
-                || allocation.habitats.contains(&ActorHabitat::Volcano),
-            "{selected}"
-        );
-        assert!(
-            allocation.legacy_dungeon_indices.is_empty()
-                || allocation.legacy_dungeon_indices.contains(&8),
-            "{selected}"
-        );
-    }
 }

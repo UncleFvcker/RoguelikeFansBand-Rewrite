@@ -8,7 +8,8 @@ use std::{
 };
 
 use rfb_contract::{
-    ACTIVE_FIXTURE_DIRECTORY, ContractError, ContractFixture, observe, validate_fixture_set, verify,
+    ACTIVE_FIXTURE_DIRECTORY, CONTRACT_SCHEMA_VERSION, ContractError, ContractFixture, observe,
+    observe_assertions, validate_fixture_set, verify,
 };
 use rfb_protocol::Position;
 use serde_json::json;
@@ -101,67 +102,11 @@ fn committed_contract_fixture_metadata_is_valid() {
         .collect::<Vec<_>>();
 
     validate_fixture_set(&fixtures).expect("fixture metadata should be valid");
-}
-
-#[test]
-fn legacy_attribute_projection_migration_is_schema_bounded() {
-    let fixture = minimal_default_fixture(
-        json!({
-            "world": "demo.world.middle-earth",
-            "playerBuildId": "demo.build.warrior",
-            "debugClearEntities": true
-        }),
-        json!([]),
-    );
-    let current_assertions = observe(&fixture).expect("minimal fixture should be observable");
-
-    let legacy = |schema_version| {
-        let mut fixture = fixture.clone();
-        fixture.schema_version = schema_version;
-        fixture.assertions = Some(current_assertions.clone());
-        let attributes = &mut fixture
-            .assertions
-            .as_mut()
-            .expect("fixture should have assertions")
-            .final_state
-            .player_attributes
-            .as_mut()
-            .expect("fixture should project player attributes")
-            .attributes;
-        for value in [
-            &mut attributes.strength,
-            &mut attributes.intelligence,
-            &mut attributes.wisdom,
-            &mut attributes.dexterity,
-            &mut attributes.constitution,
-            &mut attributes.charisma,
-        ] {
-            value.maximum_natural = 0;
-        }
-        fixture
-    };
-
-    verify(&legacy(1)).expect("schema 1 should migrate the complete legacy projection");
-
-    let mut partial = legacy(1);
-    partial
-        .assertions
-        .as_mut()
-        .unwrap()
-        .final_state
-        .player_attributes
-        .as_mut()
-        .unwrap()
-        .attributes
-        .strength
-        .maximum_natural = 13;
+    let mut obsolete = fixtures[0].clone();
+    obsolete.schema_version = CONTRACT_SCHEMA_VERSION - 1;
     assert!(matches!(
-        verify(&partial),
-        Err(ContractError::IncompleteLegacyAttributeProjection(_))
-    ));
-    assert!(matches!(
-        verify(&legacy(2)),
-        Err(ContractError::AssertionMismatch { .. })
+        validate_fixture_set(&[obsolete]),
+        Err(ContractError::UnsupportedSchema(_))
     ));
 }
 
@@ -170,7 +115,7 @@ fn minimal_default_fixture(
     commands: serde_json::Value,
 ) -> ContractFixture {
     serde_json::from_value(json!({
-        "schemaVersion": 4,
+        "schemaVersion": CONTRACT_SCHEMA_VERSION,
         "id": "town.minimal-contract-helper",
         "category": "town",
         "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
@@ -292,4 +237,53 @@ fn buy_first_from_shop_resolves_projected_stock_without_movement() {
     assert_eq!(observed.events.len(), 1);
     assert_eq!(observed.events[0].kind, "shop.purchase");
     assert!(observed.changed_cells.is_empty());
+}
+
+#[test]
+fn focused_assertions_still_require_exact_values_events_and_state_hashes() {
+    let mut fixture = minimal_default_fixture(
+        json!({"world": "demo.world.middle-earth", "debugClearEntities": true}),
+        json!([{"command": {"type": "wait"}}]),
+    );
+    let mut expected = observe_assertions(&fixture).expect("fixture should be observable");
+    expected
+        .final_state
+        .retain(|key, _| key == "stateHash" || key == "turn");
+    fixture.assertions = Some(expected.clone());
+    verify(&fixture).expect("unselected projections should not be required");
+    assert_eq!(
+        observe_assertions(&fixture).unwrap(),
+        expected,
+        "refresh should preserve the scope"
+    );
+
+    for field in ["turn", "stateHash"] {
+        let mut incorrect = fixture.clone();
+        incorrect.assertions.as_mut().unwrap().final_state[field] = if field == "turn" {
+            json!(999)
+        } else {
+            json!("wrong-hash")
+        };
+        assert!(matches!(
+            verify(&incorrect),
+            Err(ContractError::AssertionMismatch { .. })
+        ));
+    }
+    let mut missing_event = fixture.clone();
+    missing_event.assertions.as_mut().unwrap().events.clear();
+    assert!(matches!(
+        verify(&missing_event),
+        Err(ContractError::AssertionMismatch { .. })
+    ));
+
+    fixture
+        .assertions
+        .as_mut()
+        .unwrap()
+        .final_state
+        .remove("stateHash");
+    assert!(matches!(
+        validate_fixture_set(&[fixture]),
+        Err(ContractError::MissingStateHash(_))
+    ));
 }

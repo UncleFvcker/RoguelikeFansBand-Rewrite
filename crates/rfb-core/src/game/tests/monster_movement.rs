@@ -5,79 +5,52 @@ use super::support::{game_with_actor_definition, replace_terrain};
 use super::*;
 
 #[test]
-fn climber_crosses_mountain_and_glacier_terrain() {
-    let game = Game::new(2);
-    let brumby = game
-        .content
-        .actor("demo.actor.brumby")
-        .expect("Brumby definition");
-    let walker = game
-        .content
-        .actor("demo.actor.small-kobold")
-        .expect("walker definition");
-
-    for terrain_id in [
-        "demo.terrain.surface-mountain",
-        "demo.terrain.surface-glacier",
+fn movement_domains_allow_only_their_supported_terrain() {
+    let content = load_built_in_content().expect("built-in content should load");
+    for (actor_id, terrain_id, allowed) in [
+        ("demo.actor.brumby", "demo.terrain.surface-mountain", true),
+        ("demo.actor.brumby", "demo.terrain.surface-glacier", true),
+        (
+            "demo.actor.small-kobold",
+            "demo.terrain.surface-mountain",
+            false,
+        ),
+        (
+            "demo.actor.small-kobold",
+            "demo.terrain.surface-glacier",
+            false,
+        ),
+        (
+            "demo.actor.piranha",
+            "demo.terrain.surface-water-shallow",
+            true,
+        ),
+        ("demo.actor.piranha", "demo.terrain.floor", false),
+        ("demo.actor.poltergeist", "demo.terrain.wall", true),
+        (
+            "demo.actor.poltergeist",
+            "demo.terrain.permanent-wall",
+            false,
+        ),
+        ("demo.actor.crow", "demo.terrain.surface-tree", true),
+        (
+            "demo.actor.small-kobold",
+            "demo.terrain.surface-tree",
+            false,
+        ),
     ] {
-        let terrain = game.content.terrain(terrain_id).expect("climb terrain");
-        assert!(actor_can_cross_terrain(brumby, terrain));
-        assert!(!actor_can_cross_terrain(walker, terrain));
+        let actor = content
+            .actor(actor_id)
+            .unwrap_or_else(|| panic!("{actor_id}"));
+        let terrain = content
+            .terrain(terrain_id)
+            .unwrap_or_else(|| panic!("{terrain_id}"));
+        assert_eq!(
+            actor_can_cross_terrain(actor, terrain),
+            allowed,
+            "{actor_id}: {terrain_id}"
+        );
     }
-}
-
-#[test]
-fn aquatic_and_wall_passing_domains_remain_distinct() {
-    let game = Game::new(11);
-    let floor = game
-        .content
-        .terrain("demo.terrain.floor")
-        .expect("floor definition");
-    let wall = game
-        .content
-        .terrain("demo.terrain.wall")
-        .expect("ordinary wall definition");
-    let permanent_wall = game
-        .content
-        .terrain("demo.terrain.permanent-wall")
-        .expect("permanent wall definition");
-    let shallow_water = game
-        .content
-        .terrain("demo.terrain.surface-water-shallow")
-        .expect("surface water definition");
-    let aquatic = game
-        .content
-        .actor("demo.actor.piranha")
-        .expect("aquatic actor definition");
-    let wall_passer = game
-        .content
-        .actor("demo.actor.poltergeist")
-        .expect("wall-passing actor definition");
-
-    assert!(actor_can_cross_terrain(aquatic, shallow_water));
-    assert!(!actor_can_cross_terrain(aquatic, floor));
-    assert!(actor_can_cross_terrain(wall_passer, wall));
-    assert!(!actor_can_cross_terrain(wall_passer, permanent_wall));
-}
-
-#[test]
-fn p107i_flying_monsters_cross_surface_trees() {
-    let game = Game::new(107);
-    let tree = game
-        .content
-        .terrain("demo.terrain.surface-tree")
-        .expect("surface tree definition");
-    let crow = game
-        .content
-        .actor("demo.actor.crow")
-        .expect("flying crow definition");
-    let walker = game
-        .content
-        .actor("demo.actor.small-kobold")
-        .expect("ordinary walker definition");
-
-    assert!(actor_can_cross_terrain(crow, tree));
-    assert!(!actor_can_cross_terrain(walker, tree));
 }
 
 #[test]

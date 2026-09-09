@@ -1,0 +1,91 @@
+name: Windows acceptance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/src/**'
+      - '!web/src/**/*.test.ts'
+      - 'web/public/**'
+      - 'web/src-tauri/**'
+      - 'web/package.json'
+      - 'web/package-lock.json'
+      - 'web/index.html'
+      - 'web/*.config.*'
+      - 'web/tsconfig*.json'
+      - 'crates/rfb-protocol/src/**'
+      - 'crates/rfb-save/src/**'
+      - 'crates/rfb-replay/src/**'
+      - '!crates/**/src/tests/**'
+      - 'Cargo.toml'
+      - 'crates/*/Cargo.toml'
+      - 'Cargo.lock'
+      - '.cargo/**'
+      - 'rust-toolchain*'
+      - 'web/e2e/**'
+      - '!web/src-tauri/gen/android/**'
+      - '.github/workflows/windows.yml'
+  pull_request:
+    paths:
+      - 'web/src/**'
+      - '!web/src/**/*.test.ts'
+      - 'web/public/**'
+      - 'web/src-tauri/**'
+      - 'web/package.json'
+      - 'web/package-lock.json'
+      - 'web/index.html'
+      - 'web/*.config.*'
+      - 'web/tsconfig*.json'
+      - 'crates/rfb-protocol/src/**'
+      - 'crates/rfb-save/src/**'
+      - 'crates/rfb-replay/src/**'
+      - '!crates/**/src/tests/**'
+      - 'Cargo.toml'
+      - 'crates/*/Cargo.toml'
+      - 'Cargo.lock'
+      - '.cargo/**'
+      - 'rust-toolchain*'
+      - 'web/e2e/**'
+      - '!web/src-tauri/gen/android/**'
+      - '.github/workflows/windows.yml'
+  workflow_dispatch:
+    inputs:
+      render_profile:
+        description: 'Also run the renderer architecture experiment'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+
+jobs:
+  tauri-windows:
+    name: Tauri Windows build
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: npm ci
+      - run: npm run build -- --no-bundle
+        if: github.event_name == 'workflow_dispatch'
+      - run: npm run e2e
+      - run: npm run e2e:render-profile
+        if: inputs.render_profile == true
+      - uses: actions/upload-artifact@v4
+        if: inputs.render_profile == true
+        with:
+          name: tauri-render-profile
+          path: test-results/render-profile.json
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: tauri-e2e-failure
+          path: test-results/

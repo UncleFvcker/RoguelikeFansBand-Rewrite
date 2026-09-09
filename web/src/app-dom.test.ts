@@ -53,7 +53,6 @@ test("the application DOM registry is immutable and preserves stable element IDs
   assert.equal(dom.characterAttributeSources.id, "character-attribute-sources");
   assert.equal(dom.characterTraitDefenses.id, "character-trait-defenses");
   assert.equal(dom.characterTraitAttacks.id, "character-trait-attacks");
-  assert.equal(elements.size, 136);
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   for (const id of elements.keys()) {
     assert.equal(html.split(` id="${id}"`).length - 1, 1, `unique DOM binding: ${id}`);

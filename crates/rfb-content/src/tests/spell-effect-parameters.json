@@ -1,0 +1,1026 @@
+[
+  {
+    "id": "demo.ability.arcane-cure-medium-wounds",
+    "effectFields": {"/type": "sequence", "/effects/0/type": "heal-dice", "/effects/0/dice": 4, "/effects/0/sides": 8, "/effects/1/type": "reduce-status", "/effects/1/statusKindId": "rfb.status.bleeding", "/effects/1/amount": 50, "/effects/1/remainingDivisor": 2},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "healing-sides"}],
+    "effectCount": 2,
+    "highMageOverride": {"abilityId": "demo.ability.arcane-cure-medium-wounds", "minimumLevel": 14, "resourceCost": 11, "baseFailurePercent": 22}
+  },
+  {
+    "id": "demo.ability.arcane-cure-poison",
+    "effectFields": {"/type": "reduce-status", "/statusKindId": "rfb.status.poison", "/amount": 100, "/currentDivisor": 5},
+    "levelScaling": [],
+    "spellPowerFields": [],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.arcane-cure-poison", "minimumLevel": 10, "resourceCost": 9, "baseFailurePercent": 40}
+  },
+  {
+    "id": "demo.ability.arcane-resist-cold",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.resist-cold", "/intensity": 1, "/durationTicks": 20, "/durationDice": 1, "/durationSides": 20, "/stacking": "replace", "/grantedResistances/cold": "resistant"},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.arcane-resist-cold", "minimumLevel": 10, "resourceCost": 10, "baseFailurePercent": 40}
+  },
+  {
+    "id": "demo.ability.arcane-resist-fire",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.resist-fire", "/intensity": 1, "/durationTicks": 20, "/durationDice": 1, "/durationSides": 20, "/stacking": "replace", "/grantedResistances/fire": "resistant"},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.arcane-resist-fire", "minimumLevel": 11, "resourceCost": 10, "baseFailurePercent": 40}
+  },
+  {
+    "id": "demo.ability.arcane-resist-poison",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.resist-poison", "/intensity": 1, "/durationTicks": 20, "/durationDice": 1, "/durationSides": 20, "/stacking": "replace", "/grantedResistances/poison": "resistant"},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.arcane-resist-poison", "minimumLevel": 26, "resourceCost": 26, "baseFailurePercent": 60}
+  },
+  {
+    "id": "demo.ability.arcane-see-invisible",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.see-invisible", "/intensity": 1, "/durationTicks": 24, "/durationDice": 1, "/durationSides": 24, "/stacking": "replace"},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.arcane-see-invisible", "minimumLevel": 24, "resourceCost": 22, "baseFailurePercent": 50}
+  },
+  {
+    "id": "demo.ability.armageddon-acid-ball",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 34, "/damageType": "acid", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 3, "divisor": 2}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-acid-ball", "minimumLevel": 12, "resourceCost": 9, "baseFailurePercent": 40},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-acid-bolt",
+    "effectFields": {"/type": "bolt-or-beam-damage", "/damageDice": 5, "/damageSides": 8, "/damageBonus": 0, "/damageType": "acid", "/beamChancePercent": 0, "/beamChanceModifier": 10},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "multiplier": 1, "divisor": 4}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-acid-bolt", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 35},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-breathe-acid",
+    "effectFields": {"/type": "cone-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 4, "/damageType": "acid", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "levelOffset": 1, "multiplier": 5, "divisor": 1}, {"effectIndex": 0, "field": "radius", "levelOffset": 1, "multiplier": 1, "divisor": 40}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-breathe-acid", "minimumLevel": 26, "resourceCost": 23, "baseFailurePercent": 60},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-breathe-disintegration",
+    "effectFields": {"/type": "cone-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 6, "/radius": 2, "/damageType": "disintegrate"},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "levelOffset": 1, "multiplier": 7, "divisor": 1}, {"effectIndex": 0, "field": "radius", "levelOffset": 1, "multiplier": 1, "divisor": 40}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-breathe-disintegration", "minimumLevel": 40, "resourceCost": 40, "baseFailurePercent": 70},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-breathe-fire",
+    "effectFields": {"/type": "cone-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 4, "/damageType": "fire", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "levelOffset": 1, "multiplier": 5, "divisor": 1}, {"effectIndex": 0, "field": "radius", "levelOffset": 1, "multiplier": 1, "divisor": 40}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-breathe-fire", "minimumLevel": 24, "resourceCost": 22, "baseFailurePercent": 60},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-breathe-frost",
+    "effectFields": {"/type": "cone-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 8, "/damageType": "cold", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "levelOffset": 2, "multiplier": 9, "divisor": 2}, {"effectIndex": 0, "field": "radius", "levelOffset": 1, "multiplier": 1, "divisor": 40}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-breathe-frost", "minimumLevel": 22, "resourceCost": 21, "baseFailurePercent": 55},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-breathe-gravity",
+    "effectFields": {"/type": "cone-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 3, "/damageType": "gravity", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "levelOffset": 1, "multiplier": 4, "divisor": 1}, {"effectIndex": 0, "field": "radius", "levelOffset": 1, "multiplier": 1, "divisor": 40}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-breathe-gravity", "minimumLevel": 36, "resourceCost": 30, "baseFailurePercent": 60},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-breathe-inertia",
+    "effectFields": {"/type": "cone-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 4, "/radius": 2, "/damageType": "inertia"},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "levelOffset": 1, "multiplier": 5, "divisor": 1}, {"effectIndex": 0, "field": "radius", "levelOffset": 1, "multiplier": 1, "divisor": 40}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-breathe-inertia", "minimumLevel": 38, "resourceCost": 28, "baseFailurePercent": 65},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-breathe-lightning",
+    "effectFields": {"/type": "cone-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 8, "/damageType": "electricity", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "levelOffset": 2, "multiplier": 9, "divisor": 2}, {"effectIndex": 0, "field": "radius", "levelOffset": 1, "multiplier": 1, "divisor": 40}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-breathe-lightning", "minimumLevel": 21, "resourceCost": 20, "baseFailurePercent": 55},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-breathe-mana",
+    "effectFields": {"/type": "cone-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 8, "/radius": 2, "/damageType": "mana"},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "levelOffset": 1, "multiplier": 9, "divisor": 1}, {"effectIndex": 0, "field": "radius", "levelOffset": 1, "multiplier": 1, "divisor": 40}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-breathe-mana", "minimumLevel": 42, "resourceCost": 43, "baseFailurePercent": 75},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-breathe-plasma",
+    "effectFields": {"/type": "cone-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 10, "/damageType": "plasma", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "levelOffset": 2, "multiplier": 11, "divisor": 2}, {"effectIndex": 0, "field": "radius", "levelOffset": 1, "multiplier": 1, "divisor": 40}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-breathe-plasma", "minimumLevel": 28, "resourceCost": 28, "baseFailurePercent": 60},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-breathe-shards",
+    "effectFields": {"/type": "cone-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 9, "/radius": 2, "/damageType": "shards"},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "levelOffset": 1, "multiplier": 10, "divisor": 1}, {"effectIndex": 0, "field": "radius", "levelOffset": 1, "multiplier": 1, "divisor": 40}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-breathe-shards", "minimumLevel": 44, "resourceCost": 49, "baseFailurePercent": 75},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-breathe-sound",
+    "effectFields": {"/type": "cone-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 5, "/radius": 2, "/damageType": "sound"},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "levelOffset": 1, "multiplier": 6, "divisor": 1}, {"effectIndex": 0, "field": "radius", "levelOffset": 1, "multiplier": 1, "divisor": 40}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-breathe-sound", "minimumLevel": 35, "resourceCost": 26, "baseFailurePercent": 65},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-fire-ball",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 29, "/damageType": "fire", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 3, "divisor": 2}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-fire-ball", "minimumLevel": 11, "resourceCost": 8, "baseFailurePercent": 40},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-fire-bolt",
+    "effectFields": {"/type": "bolt-or-beam-damage", "/damageDice": 5, "/damageSides": 8, "/damageBonus": 0, "/damageType": "fire", "/beamChancePercent": 0, "/beamChanceModifier": 10},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "multiplier": 1, "divisor": 4}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-fire-bolt", "minimumLevel": 3, "resourceCost": 3, "baseFailurePercent": 30},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-frost-ball",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 24, "/damageType": "cold", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 3, "divisor": 2}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-frost-ball", "minimumLevel": 9, "resourceCost": 6, "baseFailurePercent": 40},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-frost-bolt",
+    "effectFields": {"/type": "bolt-or-beam-damage", "/damageDice": 4, "/damageSides": 8, "/damageBonus": 0, "/damageType": "cold", "/beamChancePercent": 0, "/beamChanceModifier": 10},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "multiplier": 1, "divisor": 4}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-frost-bolt", "minimumLevel": 2, "resourceCost": 2, "baseFailurePercent": 25},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-gravity-bolt",
+    "effectFields": {"/type": "bolt-or-beam-damage", "/damageDice": 5, "/damageSides": 8, "/damageBonus": 0, "/damageType": "gravity", "/beamChancePercent": 0, "/beamChanceModifier": 10},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "multiplier": 1, "divisor": 4}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-gravity-bolt", "minimumLevel": 17, "resourceCost": 12, "baseFailurePercent": 50},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-hellstorm",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 11, "/damageType": "fire", "/radius": 8},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 12, "divisor": 1, "levelOffset": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-hellstorm", "minimumLevel": 28, "resourceCost": 25, "baseFailurePercent": 50},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-ice-bolt",
+    "effectFields": {"/type": "damage", "/damageDice": 5, "/damageSides": 15, "/damageBonus": 0, "/damageType": "ice"},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "multiplier": 1, "divisor": 4}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-ice-bolt", "minimumLevel": 16, "resourceCost": 14, "baseFailurePercent": 55},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-lightning-ball",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 19, "/damageType": "electricity", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 3, "divisor": 2}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-lightning-ball", "minimumLevel": 6, "resourceCost": 5, "baseFailurePercent": 35},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-lightning-bolt",
+    "effectFields": {"/type": "bolt-or-beam-damage", "/damageDice": 3, "/damageSides": 8, "/damageBonus": 0, "/damageType": "electricity", "/beamChancePercent": 0, "/beamChanceModifier": 10},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "multiplier": 1, "divisor": 4}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-lightning-bolt", "minimumLevel": 1, "resourceCost": 2, "baseFailurePercent": 25},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-mana-ball",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 99, "/radius": 3, "/damageType": "mana"},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 4, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-mana-ball", "minimumLevel": 30, "resourceCost": 22, "baseFailurePercent": 65},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-mana-bolt",
+    "effectFields": {"/type": "damage", "/damageDice": 1, "/damageSides": 5, "/damageBonus": 50, "/damageType": "mana"},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-sides", "levelOffset": 1, "multiplier": 5, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-mana-bolt", "minimumLevel": 19, "resourceCost": 12, "baseFailurePercent": 45},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-meteor",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 59, "/damageType": "meteor", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 1, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-meteor", "minimumLevel": 21, "resourceCost": 17, "baseFailurePercent": 50},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-plasma-ball",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 89, "/radius": 3, "/damageType": "plasma"},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 2, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-plasma-ball", "minimumLevel": 22, "resourceCost": 17, "baseFailurePercent": 55},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-plasma-bolt",
+    "effectFields": {"/type": "bolt-or-beam-damage", "/damageDice": 11, "/damageSides": 8, "/damageBonus": 0, "/damageType": "plasma", "/beamChancePercent": 0, "/beamChanceModifier": 10},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "multiplier": 1, "divisor": 4}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-plasma-bolt", "minimumLevel": 19, "resourceCost": 15, "baseFailurePercent": 50},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-rocket",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 59, "/damageType": "rocket", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 4, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-rocket", "minimumLevel": 31, "resourceCost": 33, "baseFailurePercent": 50},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-shard-bolt",
+    "effectFields": {"/type": "bolt-or-beam-damage", "/damageDice": 7, "/damageSides": 8, "/damageBonus": 0, "/damageType": "shards", "/beamChancePercent": 0, "/beamChanceModifier": 10},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "multiplier": 1, "divisor": 4}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-shard-bolt", "minimumLevel": 15, "resourceCost": 10, "baseFailurePercent": 40},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-thunderclap",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 79, "/damageType": "sound", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 2, "divisor": 1}, {"effectIndex": 0, "field": "radius", "multiplier": 1, "divisor": 10}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-thunderclap", "minimumLevel": 23, "resourceCost": 19, "baseFailurePercent": 50},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-water-ball",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 29, "/damageType": "water", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 2, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-water-ball", "minimumLevel": 18, "resourceCost": 17, "baseFailurePercent": 50},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.armageddon-windblast",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 39, "/damageType": "telekinesis", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 1, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.armageddon-windblast", "minimumLevel": 26, "resourceCost": 23, "baseFailurePercent": 50},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.crusade-exorcism",
+    "effectFields": {"/type": "sequence", "/effects/0/type": "visible-damage", "/effects/0/damageDice": 1, "/effects/0/damageSides": 1, "/effects/0/damageType": "mana", "/effects/0/targetCategory": "undead", "/effects/1/type": "visible-damage", "/effects/1/damageDice": 1, "/effects/1/damageSides": 1, "/effects/1/damageType": "mana", "/effects/1/targetCategory": "demon", "/effects/2/type": "visible-apply-status", "/effects/2/statusKindId": "rfb.status.fear", "/effects/2/intensity": 1, "/effects/2/durationTicks": 1, "/effects/2/durationDice": 3, "/effects/2/durationSides": 0, "/effects/2/stacking": "extend", "/effects/2/power": 0, "/effects/2/targetCategory": "evil"},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-sides", "levelOffset": 1, "multiplier": 1, "divisor": 1}, {"effectIndex": 1, "field": "damage-sides", "levelOffset": 1, "multiplier": 1, "divisor": 1}, {"effectIndex": 2, "field": "status-duration-sides", "multiplier": 1, "divisor": 2}, {"effectIndex": 2, "field": "status-power", "multiplier": 1, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}, {"effectIndex": 1, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.crusade-exorcism", "minimumLevel": 15, "resourceCost": 15, "baseFailurePercent": 35},
+    "effectCount": 3
+  },
+  {
+    "id": "demo.ability.crusade-holy-orb",
+    "effectFields": {"/type": "area-damage", "/damageDice": 3, "/damageSides": 6, "/damageBonus": 0, "/damageType": "holy-fire", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 3, "divisor": 2}, {"effectIndex": 0, "field": "radius", "levelOffset": 29, "multiplier": 1, "divisor": 1, "maximum": 3}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.crusade-holy-orb", "minimumLevel": 12, "resourceCost": 11, "baseFailurePercent": 40},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.crusade-holy-word",
+    "effectFields": {"/type": "sequence", "/effects/0/type": "visible-damage", "/effects/0/damageDice": 1, "/effects/0/damageSides": 6, "/effects/0/damageType": "mana", "/effects/0/targetCategory": "evil", "/effects/1/type": "heal", "/effects/1/amount": 100, "/effects/2/type": "remove-status", "/effects/2/statusKindId": "rfb.status.stun", "/effects/3/type": "remove-status", "/effects/3/statusKindId": "rfb.status.bleeding", "/effects/4/type": "remove-status", "/effects/4/statusKindId": "rfb.status.poison"},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-sides", "levelOffset": 1, "multiplier": 6, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}, {"effectIndex": 1, "field": "healing-amount"}],
+    "highMageOverride": {"abilityId": "demo.ability.crusade-holy-word", "minimumLevel": 36, "resourceCost": 32, "baseFailurePercent": 75},
+    "effectCount": 5
+  },
+  {
+    "id": "demo.ability.crusade-judgment-thunder",
+    "effectFields": {"/type": "damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 4, "/damageType": "electricity"},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "levelOffset": 1, "multiplier": 5, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.crusade-judgment-thunder", "minimumLevel": 28, "resourceCost": 30, "baseFailurePercent": 65},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.crusade-portal",
+    "effectFields": {"/type": "blink-self", "/radius": 25},
+    "levelScaling": [{"effectIndex": 0, "field": "radius", "multiplier": 1, "divisor": 2}],
+    "spellPowerFields": [],
+    "highMageOverride": {"abilityId": "demo.ability.crusade-portal", "minimumLevel": 7, "resourceCost": 6, "baseFailurePercent": 30},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.crusade-protection-from-evil",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.protection-from-evil", "/intensity": 1, "/durationTicks": 0, "/durationDice": 1, "/durationSides": 0, "/stacking": "replace"},
+    "levelScaling": [{"effectIndex": 0, "field": "status-duration-ticks", "multiplier": 3, "divisor": 1}, {"effectIndex": 0, "field": "status-duration-sides", "multiplier": 3, "divisor": 1}],
+    "spellPowerFields": [],
+    "highMageOverride": {"abilityId": "demo.ability.crusade-protection-from-evil", "minimumLevel": 20, "resourceCost": 18, "baseFailurePercent": 60},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.crusade-punishment",
+    "effectFields": {"/type": "bolt-or-beam-damage", "/damageDice": 3, "/damageSides": 4, "/damageType": "electricity", "/beamChancePercent": 0, "/beamChanceModifier": -10},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "levelOffset": 1, "multiplier": 1, "divisor": 5}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.crusade-punishment", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 15},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.crusade-purification",
+    "effectFields": {"/type": "sequence", "/effects/0/type": "reduce-status", "/effects/0/statusKindId": "rfb.status.poison", "/effects/0/amount": 50, "/effects/0/currentDivisor": 3, "/effects/1/type": "remove-status", "/effects/1/statusKindId": "rfb.status.stun", "/effects/2/type": "remove-status", "/effects/2/statusKindId": "rfb.status.bleeding"},
+    "levelScaling": [],
+    "spellPowerFields": [],
+    "effectCount": 3,
+    "highMageOverride": {"abilityId": "demo.ability.crusade-purification", "minimumLevel": 10, "resourceCost": 8, "baseFailurePercent": 45}
+  },
+  {
+    "id": "demo.ability.crusade-sanctuary",
+    "effectFields": {"/type": "sanctuary", "/power": 1, "/radius": 1},
+    "levelScaling": [{"effectIndex": 0, "field": "status-power", "levelOffset": 1, "multiplier": 1, "divisor": 1}],
+    "spellPowerFields": [],
+    "highMageOverride": {"abilityId": "demo.ability.crusade-sanctuary", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 34},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.crusade-scatter-evil",
+    "effectFields": {"/type": "teleport-away", "/minimumDistance": 1, "/power": 100, "/stopAtActor": true, "/targetCategory": "evil"},
+    "levelScaling": [],
+    "spellPowerFields": [],
+    "highMageOverride": {"abilityId": "demo.ability.crusade-scatter-evil", "minimumLevel": 11, "resourceCost": 11, "baseFailurePercent": 45},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.crusade-star-dust",
+    "effectFields": {"/type": "stardust", "/damageDice": 3, "/damageSides": 2, "/count": 10, "/deviation": 3},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "levelOffset": 1, "multiplier": 1, "divisor": 9}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "damage-dice"}],
+    "highMageOverride": {"abilityId": "demo.ability.crusade-star-dust", "minimumLevel": 8, "resourceCost": 8, "baseFailurePercent": 45},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.daemon-devilish-cloak",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.fire-aura", "/intensity": 1, "/durationTicks": 20, "/durationDice": 1, "/durationSides": 20, "/stacking": "replace", "/grantedResistances/acid": "resistant", "/grantedResistances/fire": "resistant", "/grantedResistances/poison": "resistant"},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-devilish-cloak", "minimumLevel": 12, "resourceCost": 15, "baseFailurePercent": 70}
+  },
+  {
+    "id": "demo.ability.daemon-devilish-eye",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.telepathy", "/intensity": 1, "/durationTicks": 25, "/durationDice": 1, "/durationSides": 30, "/stacking": "extend"},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-devilish-eye", "minimumLevel": 9, "resourceCost": 10, "baseFailurePercent": 35}
+  },
+  {
+    "id": "demo.ability.daemon-doom-hand",
+    "effectFields": {"/type": "doom-hand"},
+    "levelScaling": [],
+    "spellPowerFields": [],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-doom-hand", "minimumLevel": 40, "resourceCost": 70, "baseFailurePercent": 80}
+  },
+  {
+    "id": "demo.ability.daemon-explode-pets",
+    "effectFields": {"/type": "explode-pets"},
+    "levelScaling": [],
+    "spellPowerFields": [],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-explode-pets", "minimumLevel": 36, "resourceCost": 44, "baseFailurePercent": 75}
+  },
+  {
+    "id": "demo.ability.daemon-fire-ball",
+    "effectFields": {"/type": "area-damage", "/damageDice": 0, "/damageSides": 0, "/damageBonus": 55, "/damageType": "fire", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 1, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-fire-ball", "minimumLevel": 22, "resourceCost": 13, "baseFailurePercent": 40}
+  },
+  {
+    "id": "demo.ability.daemon-flow-of-lava",
+    "effectFields": {"/type": "lava-flow", "/damageDice": 0, "/damageSides": 0, "/damageBonus": 110, "/radius": 3, "/targetTerrainId": "demo.terrain.surface-lava-deep"},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 2, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-flow-of-lava", "minimumLevel": 22, "resourceCost": 19, "baseFailurePercent": 70}
+  },
+  {
+    "id": "demo.ability.daemon-hellfire",
+    "effectFields": {"/type": "hellfire", "/damageBonus": 666, "/radius": 3, "/backlashDice": 1, "/backlashSides": 30, "/backlashBonus": 20},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "damage-bonus"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-hellfire", "minimumLevel": 42, "resourceCost": 85, "baseFailurePercent": 85}
+  },
+  {
+    "id": "demo.ability.daemon-hellish-flame",
+    "effectFields": {"/type": "area-damage", "/damageDice": 3, "/damageSides": 6, "/damageType": "hell-fire", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 3, "divisor": 2}, {"effectIndex": 0, "field": "radius", "multiplier": 1, "divisor": 30}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-hellish-flame", "minimumLevel": 11, "resourceCost": 11, "baseFailurePercent": 40}
+  },
+  {
+    "id": "demo.ability.daemon-immortal-body",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.resist-time", "/intensity": 1, "/durationTicks": 20, "/durationDice": 1, "/durationSides": 20, "/stacking": "replace", "/grantedResistances/time": "resistant"},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-immortal-body", "minimumLevel": 23, "resourceCost": 20, "baseFailurePercent": 75}
+  },
+  {
+    "id": "demo.ability.daemon-insanity-circle",
+    "effectFields": {"/type": "insanity-circle", "/damageBonus": 50, "/controlPower": 20, "/radius": 3},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 1, "divisor": 1}, {"effectIndex": 0, "field": "control-power", "multiplier": 1, "divisor": 1}, {"effectIndex": 0, "field": "radius", "multiplier": 1, "divisor": 20}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "damage-bonus"}, {"effectIndex": 0, "field": "control-power"}, {"effectIndex": 0, "field": "radius"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-insanity-circle", "minimumLevel": 33, "resourceCost": 30, "baseFailurePercent": 70}
+  },
+  {
+    "id": "demo.ability.daemon-kiss-of-succubus",
+    "effectFields": {"/type": "area-damage", "/damageDice": 0, "/damageSides": 0, "/damageBonus": 75, "/damageType": "nexus", "/radius": 4},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 3, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-kiss-of-succubus", "minimumLevel": 34, "resourceCost": 35, "baseFailurePercent": 75}
+  },
+  {
+    "id": "demo.ability.daemon-magic-missile",
+    "effectFields": {"/type": "bolt-or-beam-damage", "/damageDice": 3, "/damageSides": 4, "/damageType": "physical", "/beamChancePercent": 0, "/beamChanceModifier": -10},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "levelOffset": 1, "multiplier": 1, "divisor": 5}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-magic-missile", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 15}
+  },
+  {
+    "id": "demo.ability.daemon-nether-ball",
+    "effectFields": {"/type": "area-damage", "/damageDice": 0, "/damageSides": 0, "/damageBonus": 100, "/damageType": "nether", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 3, "divisor": 2}, {"effectIndex": 0, "field": "radius", "multiplier": 1, "divisor": 20}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}, {"effectIndex": 0, "field": "radius"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-nether-ball", "minimumLevel": 28, "resourceCost": 25, "baseFailurePercent": 55}
+  },
+  {
+    "id": "demo.ability.daemon-nether-bolt",
+    "effectFields": {"/type": "bolt-or-beam-damage", "/damageDice": 6, "/damageSides": 8, "/damageType": "nether", "/beamChancePercent": 0},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "levelOffset": 5, "multiplier": 1, "divisor": 4}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-nether-bolt", "minimumLevel": 7, "resourceCost": 5, "baseFailurePercent": 40}
+  },
+  {
+    "id": "demo.ability.daemon-nether-wave",
+    "effectFields": {"/type": "sequence", "/effects/0/type": "visible-damage", "/effects/0/damageDice": 1, "/effects/0/damageSides": 2, "/effects/0/damageType": "mana", "/effects/1/type": "visible-damage", "/effects/1/damageDice": 1, "/effects/1/damageSides": 2, "/effects/1/damageType": "mana", "/effects/1/targetCategory": "good"},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-sides", "levelOffset": 1, "multiplier": 2, "divisor": 1}, {"effectIndex": 1, "field": "damage-sides", "levelOffset": 1, "multiplier": 2, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}, {"effectIndex": 1, "field": "final-damage"}],
+    "effectCount": 2,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-nether-wave", "minimumLevel": 33, "resourceCost": 32, "baseFailurePercent": 75}
+  },
+  {
+    "id": "demo.ability.daemon-plasma-ball",
+    "effectFields": {"/type": "area-damage", "/damageDice": 0, "/damageSides": 0, "/damageBonus": 80, "/damageType": "plasma", "/radius": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 3, "divisor": 2}, {"effectIndex": 0, "field": "radius", "multiplier": 1, "divisor": 40}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}, {"effectIndex": 0, "field": "radius"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-plasma-ball", "minimumLevel": 31, "resourceCost": 26, "baseFailurePercent": 75}
+  },
+  {
+    "id": "demo.ability.daemon-plasma-bolt",
+    "effectFields": {"/type": "bolt-or-beam-damage", "/damageDice": 11, "/damageSides": 8, "/damageType": "plasma", "/beamChancePercent": 0},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "levelOffset": 5, "multiplier": 1, "divisor": 4}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-plasma-bolt", "minimumLevel": 21, "resourceCost": 12, "baseFailurePercent": 40}
+  },
+  {
+    "id": "demo.ability.daemon-polymorph-demon",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.demon-transformation", "/intensity": 1, "/durationTicks": 10, "/durationDice": 1, "/durationSides": 10, "/stacking": "replace", "/grantedRaceId": "demo.race.demon"},
+    "levelScaling": [{"effectIndex": 0, "field": "status-duration-ticks", "multiplier": 1, "divisor": 2}, {"effectIndex": 0, "field": "status-duration-sides", "multiplier": 1, "divisor": 2}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-polymorph-demon", "minimumLevel": 32, "resourceCost": 35, "baseFailurePercent": 75}
+  },
+  {
+    "id": "demo.ability.daemon-polymorph-demonlord",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.demon-lord-transformation", "/intensity": 1, "/durationTicks": 15, "/durationDice": 1, "/durationSides": 15, "/stacking": "replace", "/grantedRaceId": "demo.race.demon-lord", "/grantsWallPassage": true},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-polymorph-demonlord", "minimumLevel": 46, "resourceCost": 70, "baseFailurePercent": 75}
+  },
+  {
+    "id": "demo.ability.daemon-raise-the-morale",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.hero", "/intensity": 1, "/durationTicks": 25, "/durationDice": 1, "/durationSides": 25, "/stacking": "replace", "/grantedModifiers/maxHp": 10, "/grantedEquipmentBonuses/meleeSkill": 12, "/grantedEquipmentBonuses/rangedSkill": 12, "/grantedStatusImmunities": ["rfb.status.fear"]},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-raise-the-morale", "minimumLevel": 8, "resourceCost": 8, "baseFailurePercent": 55}
+  },
+  {
+    "id": "demo.ability.daemon-resist-nether",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.resist-nether", "/intensity": 1, "/durationTicks": 20, "/durationDice": 1, "/durationSides": 20, "/stacking": "replace", "/grantedResistances/nether": "resistant"},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-resist-nether", "minimumLevel": 17, "resourceCost": 15, "baseFailurePercent": 40}
+  },
+  {
+    "id": "demo.ability.daemon-send-to-hell",
+    "effectFields": {"/type": "genocide", "/scope": "single", "/power": 666, "/fatigue": false},
+    "levelScaling": [],
+    "spellPowerFields": [],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-send-to-hell", "minimumLevel": 43, "resourceCost": 75, "baseFailurePercent": 70}
+  },
+  {
+    "id": "demo.ability.daemon-summon-demon",
+    "effectFields": {"/type": "demon-summoning"},
+    "levelScaling": [],
+    "spellPowerFields": [],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-summon-demon", "minimumLevel": 33, "resourceCost": 65, "baseFailurePercent": 75}
+  },
+  {
+    "id": "demo.ability.daemon-summon-greater-demon",
+    "effectFields": {"/type": "summon-greater-demon", "/corpseItemKindId": "demo.item.corpse-remains", "/radius": 2},
+    "levelScaling": [],
+    "spellPowerFields": [],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-summon-greater-demon", "minimumLevel": 38, "resourceCost": 90, "baseFailurePercent": 75}
+  },
+  {
+    "id": "demo.ability.daemon-summon-manes",
+    "effectFields": {"/type": "summon-category", "/category": "manes", "/maximumLevel": 0, "/countDice": 1, "/countSides": 1, "/friendlyGroupChancePercent": 100, "/groupCountDice": 1, "/groupCountSides": 10, "/radius": 2, "/durationTurns": 0},
+    "levelScaling": [{"effectIndex": 0, "field": "summon-maximum-level", "multiplier": 3, "divisor": 2}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "summon-maximum-level"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.daemon-summon-manes", "minimumLevel": 9, "resourceCost": 8, "baseFailurePercent": 25}
+  },
+  {
+    "id": "demo.ability.death-battle-frenzy",
+    "effectFields": {"/type": "sequence", "/effects/0/type": "apply-status", "/effects/0/statusKindId": "rfb.status.hero", "/effects/0/intensity": 1, "/effects/0/durationTicks": 25, "/effects/0/durationDice": 1, "/effects/0/durationSides": 25, "/effects/0/stacking": "replace", "/effects/0/grantedModifiers/maxHp": 10, "/effects/0/grantedEquipmentBonuses/meleeSkill": 12, "/effects/0/grantedEquipmentBonuses/rangedSkill": 12, "/effects/0/grantedStatusImmunities": ["rfb.status.fear"], "/effects/1/type": "apply-status", "/effects/1/statusKindId": "rfb.status.blessed", "/effects/1/intensity": 1, "/effects/1/durationTicks": 25, "/effects/1/durationDice": 1, "/effects/1/durationSides": 25, "/effects/1/stacking": "replace", "/effects/1/grantedModifiers/defense": 5, "/effects/1/grantedEquipmentBonuses/meleeSkill": 10, "/effects/1/grantedEquipmentBonuses/rangedSkill": 10, "/effects/2/type": "apply-status", "/effects/2/statusKindId": "rfb.status.haste", "/effects/2/intensity": 1, "/effects/2/durationTicks": 0, "/effects/2/durationDice": 1, "/effects/2/durationSides": 20, "/effects/2/stacking": "replace"},
+    "levelScaling": [{"effectIndex": 2, "field": "status-duration-ticks", "multiplier": 1, "divisor": 2}, {"effectIndex": 2, "field": "status-duration-sides", "multiplier": 1, "divisor": 2}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}, {"effectIndex": 1, "field": "status-duration-ticks"}, {"effectIndex": 1, "field": "status-duration-sides"}, {"effectIndex": 2, "field": "status-duration-ticks"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-battle-frenzy", "minimumLevel": 25, "resourceCost": 20, "baseFailurePercent": 65},
+    "effectCount": 3
+  },
+  {
+    "id": "demo.ability.death-berserk",
+    "effectFields": {"/type": "sequence", "/effects/0/type": "apply-status", "/effects/0/statusKindId": "rfb.status.berserk", "/effects/0/intensity": 1, "/effects/0/durationTicks": 25, "/effects/0/durationDice": 1, "/effects/0/durationSides": 25, "/effects/0/stacking": "replace", "/effects/0/grantedModifiers/defense": -10, "/effects/0/grantedModifiers/maxHp": 30, "/effects/0/grantedEquipmentBonuses/meleeSkill": 12, "/effects/0/grantedEquipmentBonuses/meleeDamage": 3, "/effects/0/grantedEquipmentBonuses/rangedSkill": -12, "/effects/0/grantedEquipmentBonuses/throwingSkill": -20, "/effects/0/grantedEquipmentBonuses/deviceSkill": -20, "/effects/0/grantedEquipmentBonuses/savingThrowSkill": -30, "/effects/0/grantedEquipmentBonuses/stealthSkill": -7, "/effects/0/grantedEquipmentBonuses/searchSkill": -15, "/effects/0/grantedEquipmentBonuses/perceptionSkill": -15, "/effects/0/grantedEquipmentBonuses/diggingSkill": 30, "/effects/0/grantedStatusImmunities": ["rfb.status.fear"], "/effects/1/type": "heal", "/effects/1/amount": 30},
+    "levelScaling": [{"effectIndex": 0, "field": "status-melee-damage", "multiplier": 1, "divisor": 5}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-berserk", "minimumLevel": 8, "resourceCost": 15, "baseFailurePercent": 70},
+    "effectCount": 2
+  },
+  {
+    "id": "demo.ability.death-black-sleep",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.sleep", "/intensity": 1, "/durationTicks": 500, "/stacking": "keep-strongest", "/power": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "status-power", "levelOffset": 1, "multiplier": 2, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-power"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-black-sleep", "minimumLevel": 3, "resourceCost": 3, "baseFailurePercent": 20},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-cloud-kill",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 59, "/damageType": "poison", "/radius": 2},
+    "levelScaling": [{"divisor": 1, "effectIndex": 0, "field": "damage-bonus", "multiplier": 2}, {"divisor": 10, "effectIndex": 0, "field": "radius", "multiplier": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}, {"effectIndex": 0, "field": "radius"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-cloud-kill", "minimumLevel": 14, "resourceCost": 12, "baseFailurePercent": 40},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-dark-bolt",
+    "effectFields": {"/type": "bolt-or-beam-damage", "/damageDice": 4, "/damageSides": 8, "/damageType": "dark", "/beamChancePercent": 0},
+    "levelScaling": [{"divisor": 4, "effectIndex": 0, "field": "damage-dice", "levelOffset": 5, "multiplier": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-dark-bolt", "minimumLevel": 9, "resourceCost": 9, "baseFailurePercent": 20},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-darkness-storm",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 99, "/damageType": "dark", "/radius": 4},
+    "levelScaling": [{"cubicWeight": 2, "curve": "prorated", "divisor": 1, "effectIndex": 0, "field": "damage-bonus", "multiplier": 200, "quadraticWeight": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}, {"effectIndex": 0, "field": "radius"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-darkness-storm", "minimumLevel": 36, "resourceCost": 35, "baseFailurePercent": 60},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-death-ray",
+    "effectFields": {"/type": "death-ray", "/power": 0},
+    "levelScaling": [{"effectIndex": 0, "field": "death-ray-power", "multiplier": 2, "divisor": 1}],
+    "spellPowerFields": [],
+    "highMageOverride": {"abilityId": "demo.ability.death-death-ray", "minimumLevel": 16, "resourceCost": 16, "baseFailurePercent": 65},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-detect-evil",
+    "effectFields": {"/type": "detect", "/subject": "actor", "/category": "evil", "/radius": 30},
+    "levelScaling": [],
+    "spellPowerFields": [],
+    "highMageOverride": {"abilityId": "demo.ability.death-detect-evil", "minimumLevel": 2, "resourceCost": 1, "baseFailurePercent": 20},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-detect-unlife",
+    "effectFields": {"/type": "detect", "/subject": "actor", "/category": "nonliving", "/radius": 30},
+    "levelScaling": [],
+    "spellPowerFields": [],
+    "highMageOverride": {"abilityId": "demo.ability.death-detect-unlife", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 20},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-enslave-undead",
+    "effectFields": {"/type": "control", "/category": "undead", "/power": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "control-power", "levelOffset": 1, "multiplier": 2, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "control-power"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-enslave-undead", "minimumLevel": 8, "resourceCost": 8, "baseFailurePercent": 20},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-entropy-orb",
+    "effectFields": {"/type": "area-damage", "/damageDice": 3, "/damageSides": 6, "/damageType": "physical", "/radius": 2, "/targetCategory": "living"},
+    "levelScaling": [{"divisor": 2, "effectIndex": 0, "field": "damage-bonus", "multiplier": 3}, {"divisor": 30, "effectIndex": 0, "field": "radius", "maximum": 3, "multiplier": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-entropy-orb", "minimumLevel": 10, "resourceCost": 10, "baseFailurePercent": 30},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-esoteria",
+    "effectFields": {"/type": "identify-item", "/fullIdentifyPower": 0, "/fullIdentifyRollSides": 50},
+    "levelScaling": [{"effectIndex": 0, "field": "identify-power", "multiplier": 50, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "identify-power"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-esoteria", "minimumLevel": 26, "resourceCost": 35, "baseFailurePercent": 85},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-genocide-one",
+    "effectFields": {"/type": "genocide", "/scope": "single", "/power": 3},
+    "levelScaling": [{"effectIndex": 0, "field": "genocide-power", "levelOffset": 1, "multiplier": 3, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "genocide-power"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-genocide-one", "minimumLevel": 22, "resourceCost": 20, "baseFailurePercent": 75},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-hellfire",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 4, "/damageType": "nether", "/radius": 1},
+    "levelScaling": [{"cubicWeight": 2, "curve": "prorated", "divisor": 1, "effectIndex": 0, "field": "damage-bonus", "multiplier": 600, "quadraticWeight": 1}, {"cubicWeight": 2, "curve": "prorated", "divisor": 1, "effectIndex": 0, "field": "radius", "multiplier": 9, "quadraticWeight": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}, {"effectIndex": 0, "field": "radius"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-hellfire", "minimumLevel": 40, "resourceCost": 53, "baseFailurePercent": 70},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-horrify",
+    "effectFields": {"/type": "sequence", "/effects/0/type": "apply-status", "/effects/0/statusKindId": "rfb.status.fear", "/effects/0/intensity": 1, "/effects/0/durationTicks": 200, "/effects/0/stacking": "extend", "/effects/0/power": 2, "/effects/1/type": "apply-status", "/effects/1/statusKindId": "rfb.status.stun", "/effects/1/intensity": 1, "/effects/1/durationTicks": 5, "/effects/1/stacking": "extend"},
+    "levelScaling": [{"effectIndex": 0, "field": "status-power", "levelOffset": 1, "multiplier": 2, "divisor": 1}, {"effectIndex": 1, "field": "status-duration-ticks", "multiplier": 1, "divisor": 5}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-power"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-horrify", "minimumLevel": 7, "resourceCost": 7, "baseFailurePercent": 20},
+    "effectCount": 2
+  },
+  {
+    "id": "demo.ability.death-malediction",
+    "effectFields": {"/type": "malediction", "/damageDice": 3, "/damageSides": 4},
+    "levelScaling": [{"divisor": 5, "effectIndex": 0, "field": "damage-dice", "levelOffset": 1, "multiplier": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}, {"effectIndex": 0, "field": "malediction-death-ray-power"}, {"effectIndex": 0, "field": "malediction-fear-power"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-malediction", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 20},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-mass-genocide",
+    "effectFields": {"/type": "genocide", "/scope": "nearby", "/power": 0, "/radius": 20},
+    "levelScaling": [{"effectIndex": 0, "field": "genocide-power", "multiplier": 150, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "genocide-power"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-mass-genocide", "minimumLevel": 38, "resourceCost": 66, "baseFailurePercent": 70},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-necromantic-resistance",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.necromantic-resistance", "/intensity": 1, "/durationTicks": 20, "/durationDice": 1, "/durationSides": 20, "/stacking": "replace", "/grantedResistances/cold": "resistant", "/grantedResistances/poison": "resistant"},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-necromantic-resistance", "minimumLevel": 5, "resourceCost": 9, "baseFailurePercent": 55},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-nether-bolt",
+    "effectFields": {"/type": "bolt-or-beam-damage", "/damageDice": 8, "/damageSides": 8, "/damageType": "nether", "/beamChancePercent": 0},
+    "levelScaling": [{"divisor": 4, "effectIndex": 0, "field": "damage-dice", "levelOffset": 5, "multiplier": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-nether-bolt", "minimumLevel": 11, "resourceCost": 10, "baseFailurePercent": 20},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-nether-wave",
+    "effectFields": {"/type": "visible-damage", "/damageDice": 1, "/damageSides": 3, "/damageType": "nether", "/targetCategory": "living"},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-sides", "levelOffset": 1, "multiplier": 3, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-nether-wave", "minimumLevel": 34, "resourceCost": 30, "baseFailurePercent": 60},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-poison-branding",
+    "effectFields": {"/type": "brand-weapon", "/affixId": "rfb-legacy.affix.slaying", "/brand": "poison", "/resistance": "poison"},
+    "levelScaling": [],
+    "spellPowerFields": [],
+    "highMageOverride": {"abilityId": "demo.ability.death-poison-branding", "minimumLevel": 26, "resourceCost": 65, "baseFailurePercent": 70},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-raise-dead",
+    "effectFields": {"/type": "summon-category", "/category": "undead", "/upgradedCategory": "high-undead", "/upgradeAtLevel": 48, "/maximumLevel": 0, "/countDice": 1, "/countSides": 1, "/hostileChancePercent": 67, "/friendlyGroupChancePercent": 33, "/hostileGroupChancePercent": 100, "/groupCountDice": 1, "/groupCountSides": 3, "/groupCountBonus": 1, "/allowUniqueHostile": true, "/radius": 2, "/durationTurns": 0},
+    "levelScaling": [{"effectIndex": 0, "field": "summon-maximum-level", "multiplier": 3, "divisor": 2}],
+    "spellPowerFields": [],
+    "highMageOverride": {"abilityId": "demo.ability.death-raise-dead", "minimumLevel": 22, "resourceCost": 60, "baseFailurePercent": 85},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-stinking-cloud",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 9, "/damageType": "poison", "/radius": 2},
+    "levelScaling": [{"divisor": 2, "effectIndex": 0, "field": "damage-bonus", "multiplier": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-stinking-cloud", "minimumLevel": 2, "resourceCost": 2, "baseFailurePercent": 20},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-vampiric-drain",
+    "effectFields": {"/type": "drain-life", "/damageDice": 1, "/damageSides": 2, "/damageBonus": 2, "/damageType": "physical", "/targetCategory": "living", "/feeds": true},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-sides", "levelOffset": 1, "multiplier": 2, "divisor": 1}, {"effectIndex": 0, "field": "damage-bonus", "levelOffset": 1, "multiplier": 2, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "damage-sides"}, {"effectIndex": 0, "field": "damage-bonus"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-vampiric-drain", "minimumLevel": 30, "resourceCost": 25, "baseFailurePercent": 50},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-vampiric-transformation",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.vampiric-transformation", "/intensity": 1, "/durationTicks": 10, "/durationDice": 1, "/durationSides": 10, "/stacking": "replace", "/grantedRaceId": "demo.race.vampire-lord"},
+    "levelScaling": [{"effectIndex": 0, "field": "status-duration-ticks", "multiplier": 25, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2}, {"effectIndex": 0, "field": "status-duration-sides", "multiplier": 25, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-vampiric-transformation", "minimumLevel": 32, "resourceCost": 35, "baseFailurePercent": 75},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-vampirism-true",
+    "effectFields": {"/type": "drain-life", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 99, "/damageType": "nether", "/targetCategory": "living", "/repeat": 3},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-vampirism-true", "minimumLevel": 33, "resourceCost": 30, "baseFailurePercent": 50},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.death-wraithform",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.wraithform", "/intensity": 1, "/durationTicks": 1, "/durationDice": 1, "/durationSides": 1, "/stacking": "replace", "/grantsWallPassage": true, "/incomingDamagePercent": 50},
+    "levelScaling": [{"effectIndex": 0, "field": "status-duration-ticks", "multiplier": 24, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2}, {"effectIndex": 0, "field": "status-duration-sides", "multiplier": 24, "divisor": 1, "curve": "prorated", "quadraticWeight": 1, "cubicWeight": 2}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "highMageOverride": {"abilityId": "demo.ability.death-wraithform", "minimumLevel": 45, "resourceCost": 75, "baseFailurePercent": 80},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.life-annihilate-undead",
+    "effectFields": {"/type": "genocide", "/scope": "nearby", "/power": 50, "/radius": 20, "/targetCategory": "undead", "/fatigue": true, "/unlifeChangeOnSuccess": -2, "/chanceChangeOnSuccess": -1},
+    "levelScaling": [{"effectIndex": 0, "field": "genocide-power", "multiplier": 1, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "genocide-power"}],
+    "highMageOverride": {"abilityId": "demo.ability.life-annihilate-undead", "minimumLevel": 30, "resourceCost": 50, "baseFailurePercent": 60},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.life-bless",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.blessed", "/intensity": 1, "/durationTicks": 12, "/durationDice": 1, "/durationSides": 12, "/stacking": "replace", "/grantedModifiers/defense": 5, "/grantedEquipmentBonuses/meleeSkill": 10, "/grantedEquipmentBonuses/rangedSkill": 10},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "highMageOverride": {"abilityId": "demo.ability.life-bless", "minimumLevel": 2, "resourceCost": 2, "baseFailurePercent": 25},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.life-call-light",
+    "effectFields": {"/type": "light-area", "/damageDice": 2, "/damageSides": 0, "/radius": 1},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-sides", "multiplier": 1, "divisor": 2}, {"effectIndex": 0, "field": "radius", "multiplier": 1, "divisor": 10}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}, {"effectIndex": 0, "field": "radius"}],
+    "highMageOverride": {"abilityId": "demo.ability.life-call-light", "minimumLevel": 4, "resourceCost": 4, "baseFailurePercent": 25},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.life-cure-light-wounds",
+    "effectFields": {"/type": "sequence", "/effects/0/type": "heal-dice", "/effects/0/dice": 2, "/effects/0/sides": 10, "/effects/1/type": "reduce-status", "/effects/1/statusKindId": "rfb.status.bleeding", "/effects/1/amount": 10},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-healing"}],
+    "highMageOverride": {"abilityId": "demo.ability.life-cure-light-wounds", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 20},
+    "effectCount": 2
+  },
+  {
+    "id": "demo.ability.life-cure-medium-wounds",
+    "effectFields": {"/type": "sequence", "/effects/0/type": "heal-dice", "/effects/0/dice": 6, "/effects/0/sides": 10, "/effects/1/type": "reduce-status", "/effects/1/statusKindId": "rfb.status.bleeding", "/effects/1/amount": 20, "/effects/1/remainingDivisor": 2},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-healing"}],
+    "highMageOverride": {"abilityId": "demo.ability.life-cure-medium-wounds", "minimumLevel": 6, "resourceCost": 5, "baseFailurePercent": 30},
+    "effectCount": 2
+  },
+  {
+    "id": "demo.ability.life-cure-poison",
+    "effectFields": {"/type": "reduce-status", "/statusKindId": "rfb.status.poison", "/amount": 125, "/currentDivisor": 3},
+    "levelScaling": [],
+    "spellPowerFields": [],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.life-cure-poison", "minimumLevel": 9, "resourceCost": 9, "baseFailurePercent": 30}
+  },
+  {
+    "id": "demo.ability.life-regeneration",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.regeneration", "/intensity": 1, "/durationTicks": 80, "/durationDice": 1, "/durationSides": 80, "/stacking": "replace"},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "highMageOverride": {"abilityId": "demo.ability.life-regeneration", "minimumLevel": 3, "resourceCost": 3, "baseFailurePercent": 25},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.life-satisfy-hunger",
+    "effectFields": {"/type": "satisfy-hunger"},
+    "levelScaling": [],
+    "spellPowerFields": [],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.life-satisfy-hunger", "minimumLevel": 12, "resourceCost": 10, "baseFailurePercent": 35}
+  },
+  {
+    "id": "demo.ability.life-ultimate-resistance",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.ultimate-resistance", "/intensity": 1, "/durationTicks": 0, "/durationDice": 1, "/durationSides": 0, "/stacking": "keep-strongest", "/grantedResistances/acid": "strong", "/grantedResistances/electricity": "strong", "/grantedResistances/fire": "strong", "/grantedResistances/cold": "strong", "/grantedResistances/poison": "strong", "/grantedResistances/light": "resistant", "/grantedResistances/dark": "resistant", "/grantedResistances/blindness": "resistant", "/grantedResistances/fear": "resistant", "/grantedResistances/confusion": "resistant", "/grantedResistances/nether": "resistant", "/grantedResistances/nexus": "resistant", "/grantedResistances/sound": "resistant", "/grantedResistances/shards": "resistant", "/grantedResistances/chaos": "resistant", "/grantedResistances/disenchant": "resistant", "/grantedResistances/time": "resistant", "/grantedModifiers/defense": 100, "/grantedModifiers/speed": 10, "/grantedEquipmentBonuses/lightRadius": 1, "/grantedStatusImmunities": ["rfb.status.paralysis"]},
+    "levelScaling": [{"effectIndex": 0, "field": "status-duration-ticks", "multiplier": 1, "divisor": 2}, {"effectIndex": 0, "field": "status-duration-sides", "multiplier": 1, "divisor": 2}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "highMageOverride": {"abilityId": "demo.ability.life-ultimate-resistance", "minimumLevel": 49, "resourceCost": 90, "baseFailurePercent": 70},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.nature-cure-wounds-and-poison",
+    "effectFields": {"/type": "sequence", "/effects/0/type": "heal-dice", "/effects/0/dice": 2, "/effects/0/sides": 8, "/effects/1/type": "remove-status", "/effects/1/statusKindId": "rfb.status.bleeding", "/effects/2/type": "reduce-status", "/effects/2/statusKindId": "rfb.status.poison", "/effects/2/amount": 125, "/effects/2/currentDivisor": 3},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "healing-sides"}],
+    "effectCount": 3,
+    "highMageOverride": {"abilityId": "demo.ability.nature-cure-wounds-and-poison", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 25}
+  },
+  {
+    "id": "demo.ability.nature-daylight",
+    "effectFields": {"/type": "light-area", "/damageDice": 2, "/damageSides": 0, "/radius": 1, "/sunlightBurnDamageDice": 2, "/sunlightBurnDamageSides": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-sides", "multiplier": 1, "divisor": 2}, {"effectIndex": 0, "field": "radius", "multiplier": 1, "divisor": 10}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "damage-sides"}, {"effectIndex": 0, "field": "radius"}],
+    "highMageOverride": {"abilityId": "demo.ability.nature-daylight", "minimumLevel": 3, "resourceCost": 3, "baseFailurePercent": 40},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.nature-earthquake",
+    "effectFields": {"/type": "earthquake", "/radius": 10, "/affectChancePercent": 15, "/floorTerrainId": "demo.terrain.floor", "/wallTerrainIds": ["demo.terrain.magma-vein", "demo.terrain.quartz-vein", "demo.terrain.wall"]},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "radius"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.nature-earthquake", "minimumLevel": 15, "resourceCost": 15, "baseFailurePercent": 50}
+  },
+  {
+    "id": "demo.ability.nature-entangle",
+    "effectFields": {"/type": "entangle", "/power": 0, "/durationTicks": 50},
+    "levelScaling": [{"effectIndex": 0, "field": "status-power", "multiplier": 2, "divisor": 1}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-power"}],
+    "highMageOverride": {"abilityId": "demo.ability.nature-entangle", "minimumLevel": 14, "resourceCost": 10, "baseFailurePercent": 35},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.nature-fire-bolt",
+    "effectFields": {"/type": "bolt-or-beam-damage", "/damageDice": 5, "/damageSides": 8, "/damageBonus": 0, "/damageType": "fire", "/beamChancePercent": 0, "/beamChanceModifier": 0},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "multiplier": 1, "divisor": 4, "levelOffset": 5}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.nature-fire-bolt", "minimumLevel": 5, "resourceCost": 5, "baseFailurePercent": 30},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.nature-fire-storm",
+    "effectFields": {"/type": "area-damage", "/damageDice": 1, "/damageSides": 1, "/damageBonus": 59, "/damageType": "fire", "/radius": 1},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-bonus", "multiplier": 2, "divisor": 1}, {"effectIndex": 0, "field": "radius", "multiplier": 1, "divisor": 12}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.nature-fire-storm", "minimumLevel": 20, "resourceCost": 20, "baseFailurePercent": 65}
+  },
+  {
+    "id": "demo.ability.nature-frost-bolt",
+    "effectFields": {"/type": "bolt-or-beam-damage", "/damageDice": 3, "/damageSides": 8, "/damageBonus": 0, "/damageType": "cold", "/beamChancePercent": 0, "/beamChanceModifier": 0},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "multiplier": 1, "divisor": 4, "levelOffset": 5}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "highMageOverride": {"abilityId": "demo.ability.nature-frost-bolt", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 20},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.nature-herbal-healing",
+    "effectFields": {"/type": "sequence", "/effects/0/type": "heal", "/effects/0/amount": 500, "/effects/1/type": "remove-status", "/effects/1/statusKindId": "rfb.status.stun", "/effects/2/type": "remove-status", "/effects/2/statusKindId": "rfb.status.bleeding", "/effects/3/type": "reduce-status", "/effects/3/statusKindId": "rfb.status.poison", "/effects/3/amount": 300, "/effects/3/currentDivisor": 2},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "healing-amount"}],
+    "highMageOverride": {"abilityId": "demo.ability.nature-herbal-healing", "minimumLevel": 35, "resourceCost": 50, "baseFailurePercent": 80},
+    "effectCount": 4
+  },
+  {
+    "id": "demo.ability.nature-ice-bolt",
+    "effectFields": {"/type": "damage", "/damageDice": 5, "/damageSides": 15, "/damageType": "ice"},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "multiplier": 15, "divisor": 50}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.nature-ice-bolt", "minimumLevel": 36, "resourceCost": 32, "baseFailurePercent": 65}
+  },
+  {
+    "id": "demo.ability.nature-lightning",
+    "effectFields": {"/type": "beam-damage", "/damageDice": 3, "/damageSides": 4, "/damageBonus": 0, "/damageType": "electricity", "/maximumRange": 2},
+    "levelScaling": [{"effectIndex": 0, "field": "damage-dice", "multiplier": 1, "divisor": 5, "levelOffset": 1}, {"effectIndex": 0, "field": "maximum-range", "multiplier": 1, "divisor": 6}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "final-damage"}, {"effectIndex": 0, "field": "maximum-range"}],
+    "highMageOverride": {"abilityId": "demo.ability.nature-lightning", "minimumLevel": 2, "resourceCost": 1, "baseFailurePercent": 15},
+    "effectCount": 1
+  },
+  {
+    "id": "demo.ability.nature-natures-wrath",
+    "effectFields": {"/type": "nature-wrath"},
+    "levelScaling": [],
+    "spellPowerFields": [],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.nature-natures-wrath", "minimumLevel": 39, "resourceCost": 65, "baseFailurePercent": 55}
+  },
+  {
+    "id": "demo.ability.nature-produce-food",
+    "effectFields": {"/type": "create-item", "/itemKindId": "demo.item.ration-of-food", "/quantity": 1},
+    "levelScaling": [],
+    "spellPowerFields": [],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.nature-produce-food", "minimumLevel": 3, "resourceCost": 2, "baseFailurePercent": 25}
+  },
+  {
+    "id": "demo.ability.nature-resist-environment",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.resist-environment", "/intensity": 1, "/durationTicks": 20, "/durationDice": 1, "/durationSides": 20, "/stacking": "replace", "/grantedResistances/cold": "resistant", "/grantedResistances/electricity": "resistant", "/grantedResistances/fire": "resistant"},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.nature-resist-environment", "minimumLevel": 4, "resourceCost": 4, "baseFailurePercent": 40}
+  },
+  {
+    "id": "demo.ability.nature-resistance-true",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.resistance-true", "/intensity": 1, "/durationTicks": 20, "/durationDice": 1, "/durationSides": 20, "/stacking": "keep-strongest", "/grantedResistances/acid": "resistant", "/grantedResistances/electricity": "resistant", "/grantedResistances/fire": "resistant", "/grantedResistances/cold": "resistant", "/grantedResistances/poison": "resistant"},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.nature-resistance-true", "minimumLevel": 12, "resourceCost": 15, "baseFailurePercent": 75}
+  },
+  {
+    "id": "demo.ability.nature-stone-skin",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.stone-skin", "/intensity": 1, "/durationTicks": 20, "/durationDice": 1, "/durationSides": 30, "/stacking": "keep-strongest", "/grantedModifiers/defense": 10},
+    "levelScaling": [{"effectIndex": 0, "field": "status-defense", "multiplier": 40, "divisor": 50}],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.nature-stone-skin", "minimumLevel": 8, "resourceCost": 8, "baseFailurePercent": 65}
+  },
+  {
+    "id": "demo.ability.nature-wind-walker",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.levitation", "/intensity": 1, "/durationTicks": 30, "/durationDice": 1, "/durationSides": 30, "/stacking": "replace"},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.nature-wind-walker", "minimumLevel": 4, "resourceCost": 3, "baseFailurePercent": 40}
+  },
+  {
+    "id": "demo.ability.sorcery-esp",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.telepathy", "/intensity": 1, "/durationTicks": 25, "/durationDice": 1, "/durationSides": 30, "/stacking": "extend"},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.sorcery-esp", "minimumLevel": 12, "resourceCost": 9, "baseFailurePercent": 50}
+  },
+  {
+    "id": "demo.ability.sorcery-inventory-protection",
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.inventory-protection", "/intensity": 1, "/durationTicks": 30, "/durationDice": 1, "/durationSides": 30, "/stacking": "extend"},
+    "levelScaling": [],
+    "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
+    "effectCount": 1,
+    "highMageOverride": {"abilityId": "demo.ability.sorcery-inventory-protection", "minimumLevel": 2, "resourceCost": 2, "baseFailurePercent": 20}
+  }
+]

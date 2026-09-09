@@ -30,6 +30,15 @@ test("Fast Recovery uses the localized regeneration status name", () => {
   localization.setLocale("en-US");
 });
 
+test("equipment events resolve body slot IDs through the projected slot type", () => {
+  state.bodySlots = [{ id: "right-hand", slotType: "weapon" }];
+  assert.equal(formatter.equipmentSlotName("right-hand"), formatter.equipmentSlotName("weapon"));
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.equipmentSlotName("right-hand"), formatter.equipmentSlotName("weapon"));
+  localization.setLocale("en-US");
+  delete state.bodySlots;
+});
+
 test("mutation events use their authoritative projected names", () => {
   const gained = {
     kind: "mutation.gained",
