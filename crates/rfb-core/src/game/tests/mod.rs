@@ -46,6 +46,7 @@ mod riding_bond;
 mod snapshots;
 mod sniper;
 mod snow;
+mod spectre_rules;
 mod spectre_supplies;
 pub(crate) mod support;
 mod tasks;

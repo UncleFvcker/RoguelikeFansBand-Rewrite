@@ -98,9 +98,10 @@ pub(super) fn initial_virtues(
             "rfb-legacy.race.golem" => kinds.push(VirtueKindDto::Justice),
             "rfb-legacy.race.archon" => kinds.push(VirtueKindDto::Justice),
             "rfb-legacy.race.sprite" => kinds.push(VirtueKindDto::Nature),
-            "rfb-legacy.race.einheri" | "rfb-legacy.race.skeleton" | "rfb-legacy.race.zombie" => {
-                kinds.push(VirtueKindDto::Unlife)
-            }
+            "rfb-legacy.race.einheri"
+            | "rfb-legacy.race.skeleton"
+            | "rfb-legacy.race.zombie"
+            | "rfb-legacy.race.spectre" => kinds.push(VirtueKindDto::Unlife),
             "rfb-legacy.race.wood-elf" | "rfb-legacy.race.ent" => kinds.push(VirtueKindDto::Nature),
             "rfb-legacy.race.draconian-red"
             | "rfb-legacy.race.draconian-white"

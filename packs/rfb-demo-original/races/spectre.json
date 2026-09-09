@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.scare-monster",
+      "minimumLevel": 4,
+      "governingAttribute": "intelligence",
+      "cost": 6,
+      "baseFailurePercent": 50
+    }
+  ],
   "baseHp": 13,
   "bodySlots": [
     {

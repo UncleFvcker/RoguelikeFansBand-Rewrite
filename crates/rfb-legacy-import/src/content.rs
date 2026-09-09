@@ -25003,6 +25003,11 @@ static power_info _wood_elf_get_powers[] =
     #[test]
     fn spectre_passives_and_supplies_are_mapped_without_opening_creation() {
         const SOURCE: &str = r#"
+static power_info _spectre_get_powers[] =
+{
+    { A_INT, {4, 6, 50, scare_monster_spell}},
+    { -1, {-1, -1, -1, NULL} }
+};
 static void _spectre_calc_bonuses(void)
 {
     p_ptr->levitation = TRUE;
@@ -25022,12 +25027,14 @@ me.name = "幽灵";
 me.infra = 5;
 me.flags = RACE_IS_NONLIVING | RACE_IS_UNDEAD | RACE_NIGHT_START | RACE_EATS_DEVICES;
 me.birth = _spectre_birth;
+me.get_powers = _spectre_get_powers;
 "#,
         );
         let defenses = parse_calc_bonuses_defenses(SOURCE, "_spectre_calc_bonuses");
         spectre.resistances = defenses.0;
         spectre.see_invisible = defenses.3;
         spectre.levitation = parse_calc_bonuses_levitation(SOURCE, "_spectre_calc_bonuses");
+        parse_race_powers(SOURCE, &mut spectre);
         let mut report = ContentImportReport::default();
         let race = race_json(&spectre, &[], &mut report);
         assert_eq!(race["infravision"], 5);
@@ -25035,6 +25042,13 @@ me.birth = _spectre_birth;
         assert_eq!(race["seeInvisible"], true);
         assert_eq!(race["holdLifeMinimumLevel"], 1);
         assert_eq!(race["foodNutritionDivisor"], 20);
+        assert_eq!(
+            race["abilities"],
+            serde_json::json!([{
+                "abilityId": "rfb.ability.race.scare-monster", "minimumLevel": 4,
+                "governingAttribute": "intelligence", "cost": 6, "baseFailurePercent": 50,
+            }])
+        );
         assert_eq!(
             race["startingItems"],
             serde_json::json!([{

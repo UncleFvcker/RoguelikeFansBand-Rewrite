@@ -3,7 +3,7 @@ use super::support::*;
 use super::*;
 use crate::game::initialization::resolve_body_slots;
 
-fn monster_effect_game(seed: u64, effect: MeleeBlowEffectDefinition) -> Game {
+pub(super) fn monster_effect_game(seed: u64, effect: MeleeBlowEffectDefinition) -> Game {
     monster_effect_game_with_method(seed, "rfb.blow.touch", effect)
 }
 

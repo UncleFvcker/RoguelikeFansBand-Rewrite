@@ -8,7 +8,7 @@ const SPECTRE: &str = "rfb-legacy.race.spectre";
 const HUMAN: &str = "demo.race.rfb-human";
 const STAFF: &str = "demo.item.staff-of-nothing";
 
-fn birth(seed: u64, build: &str) -> Game {
+pub(super) fn birth(seed: u64, build: &str) -> Game {
     static CONTENT: OnceLock<Arc<rfb_content::ContentCatalog>> = OnceLock::new();
     let content = CONTENT.get_or_init(|| {
         let root =
