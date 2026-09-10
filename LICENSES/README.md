@@ -25,6 +25,6 @@ The complete license text is in `LICENSES/CC-BY-SA-4.0.txt`.
 
 ## Exclusions
 
-Legacy RoguelikeFansBand, FrogComposband and Angband source code, data, text, binaries and assets are not included in this repository and are not relicensed by this project.
+Materials adapted from RoguelikeFansBand, FrogComposband and Angband are not relicensed by this project's default licenses. See `NOTICE`, the relevant source/adaptation records, and `RFB-UPSTREAM-NOTICE.txt` for the reproduced notice from upstream `src/angband.h`.
 
 Third-party files retain their own licenses and must carry an SPDX identifier, adjacent license notice or an entry in `NOTICE`.

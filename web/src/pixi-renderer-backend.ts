@@ -265,7 +265,7 @@ export class PixiRendererBackend implements RendererBackend {
     this.#activeDynamicViews.clear();
     this.#dynamicViewPools.clear();
     this.#host = undefined;
-    this.#application.destroy(true, { children: true });
+    if (this.#application.renderer) this.#application.destroy(true, { children: true });
   }
 
   #createTerrainChunks(): void {

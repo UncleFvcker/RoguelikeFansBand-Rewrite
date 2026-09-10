@@ -313,6 +313,15 @@ fn level_passives_stack_with_race_and_rest_recovers_without_a_power_roll() {
     assert!(flayer.player_has_permanent_telepathy());
     assert!(flayer.player_sustains_attribute(AttributeKind::Intelligence));
     assert!(flayer.player_sustains_attribute(AttributeKind::Wisdom));
+    let powers = flayer.snapshot().player.abilities;
+    assert!(powers.iter().any(
+        |ability| ability.source == rfb_protocol::AbilitySourceDto::Race
+            && ability.id == "rfb.ability.race.mind-blast"
+    ));
+    assert!(powers.iter().any(
+        |ability| ability.source == rfb_protocol::AbilitySourceDto::Class
+            && ability.id == "demo.ability.mindcrafter-neural-blast"
+    ));
 }
 
 #[test]
@@ -546,6 +555,65 @@ fn auto_identify_uses_devices_then_scrolls_then_twelve_mana() {
                     .any(|item| item.id == "test.identify-scroll")
             );
         }
+    }
+}
+
+#[test]
+fn tomte_sensing_and_free_identification_precede_paid_mindcraft_without_replacing_it() {
+    for (level, heavy_headgear, expected_cost) in [(39, false, 12), (40, false, 0), (40, true, 12)]
+    {
+        let mut game =
+            Game::new_with_build_race_and_name(928, BUILD, "rfb-legacy.race.tomte", "心灵感知")
+                .unwrap();
+        game.debug_prepare_mindcrafter_e2e(level);
+        if heavy_headgear {
+            give_inventory_item(&mut game, "test.helmet", "demo.item.iron-helm");
+            assert!(
+                game.equip_inventory_item("test.helmet", Some("head"))
+                    .is_some()
+            );
+        }
+        assert!(
+            game.configure_mogaminator(
+                true,
+                false,
+                rfb_protocol::AutoGetModeDto::Off,
+                LocaleDto::EnUs,
+                "~?unidentified items".to_owned()
+            )
+            .is_empty()
+        );
+        game.interface_locale = LocaleDto::EnUs;
+        give_inventory_item(&mut game, "test.sensed", "demo.item.dagger");
+        let item = game.items.last_mut().unwrap();
+        item.location = ItemLocation::Ground(game.player.position);
+        item.enchantments.to_hit = 2;
+        game.resources.get_mut(MANA).unwrap().current = 12;
+        game.apply_player_floor_item_knowledge();
+        assert_eq!(
+            game.item_feeling(game.items.last().unwrap()),
+            (!heavy_headgear).then_some(rfb_protocol::ItemFeelingDto::Good)
+        );
+        assert_eq!(
+            game.item_property_knowledge
+                .get("test.sensed")
+                .is_some_and(|knowledge| knowledge.appraised),
+            expected_cost == 0
+        );
+        if level == 39 {
+            game.items.last_mut().unwrap().location = ItemLocation::Inventory;
+            game.lose_mindcraft_information(&mut BTreeSet::new());
+            assert_eq!(
+                game.item_feeling(game.items.last().unwrap()),
+                Some(rfb_protocol::ItemFeelingDto::Good)
+            );
+        }
+        let outcomes = game
+            .apply_mogaminator_to_items(vec!["test.sensed".to_owned()], false)
+            .unwrap();
+        assert_eq!(outcomes.len(), usize::from(expected_cost > 0));
+        assert_eq!(game.resources[MANA].current, 12 - expected_cost);
+        assert!(game.item_property_knowledge["test.sensed"].appraised);
     }
 }
 

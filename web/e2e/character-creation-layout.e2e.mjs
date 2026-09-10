@@ -32,8 +32,15 @@ export async function connectKeyboard(profile) {
     socket.addEventListener("message", receive);
     socket.send(JSON.stringify({ id, method, params }));
   });
-  const keys = { Tab: ["Tab", 9], Enter: ["Enter", 13], Escape: ["Escape", 27], " ": ["Space", 32], Home: ["Home", 36], End: ["End", 35], ArrowLeft: ["ArrowLeft", 37], ArrowUp: ["ArrowUp", 38], ArrowRight: ["ArrowRight", 39], ArrowDown: ["ArrowDown", 40], a: ["KeyA", 65], "5": ["Numpad5", 101] };
+  const keys = { Tab: ["Tab", 9], Enter: ["Enter", 13], Escape: ["Escape", 27], " ": ["Space", 32], Home: ["Home", 36], End: ["End", 35], ArrowLeft: ["ArrowLeft", 37], ArrowUp: ["ArrowUp", 38], ArrowRight: ["ArrowRight", 39], ArrowDown: ["ArrowDown", 40], a: ["KeyA", 65], "2": ["Numpad2", 98], "5": ["Numpad5", 101], "6": ["Numpad6", 102] };
+  const errors = [];
+  socket.addEventListener("message", event => {
+    const message = JSON.parse(event.data);
+    if (message.method === "Runtime.exceptionThrown") errors.push(message.params.exceptionDetails.exception?.description ?? message.params.exceptionDetails.text);
+  });
+  await send("Runtime.enable", {});
   return {
+    errors,
     async key(key, modifiers = 0) {
       const [code, windowsVirtualKeyCode] = keys[key];
       const params = { key, code, windowsVirtualKeyCode, modifiers };
@@ -41,6 +48,18 @@ export async function connectKeyboard(profile) {
       await send("Input.dispatchKeyEvent", { type: "keyUp", ...params });
     },
     async text(text) { await send("Input.insertText", { text }); },
+    async reload() {
+      await send("Page.enable", {});
+      const loaded = new Promise((resolve, reject) => {
+        const timer = setTimeout(() => { socket.removeEventListener("message", receive); reject(new Error("CDP page reload timed out")); }, 30_000);
+        function receive(event) {
+          if (JSON.parse(event.data).method !== "Page.loadEventFired") return;
+          clearTimeout(timer); socket.removeEventListener("message", receive); resolve();
+        }
+        socket.addEventListener("message", receive);
+      });
+      await send("Page.reload", {}); await loaded;
+    },
     close() { socket.close(); },
   };
 }

@@ -3114,6 +3114,7 @@ fn tomte_birth_merges_one_cap_with_each_class_kit_and_unique_knowledge_virtue() 
         "demo.build.paladin-death",
         "demo.build.cavalry",
         "demo.build.sniper",
+        "demo.build.mindcrafter",
     ] {
         let mut game =
             Game::new_with_build_race_and_name(83, build_id, RACE, Game::DEFAULT_PLAYER_NAME)

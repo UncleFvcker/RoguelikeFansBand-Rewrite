@@ -8,10 +8,10 @@ import { connectKeyboard } from "./character-creation-layout.e2e.mjs";
 
 export async function runMindcrafterUiScenario(driver, directory, profile) {
   await mkdir(directory, { recursive: true });
+  const keyboard = await connectKeyboard(profile);
   await driver.waitFor('return document.documentElement.dataset.appMode === "title"', "Mindcrafter title", 60_000);
   await driver.execute('window.__mindReload = true; localStorage.setItem("rfb.locale", "zh-CN"); localStorage.setItem("rfb.input-preset", "numpad"); setTimeout(() => location.reload(), 50); return true;');
   await driver.waitFor('return !window.__mindReload && document.documentElement.dataset.appMode === "title"', "Chinese title", 60_000);
-  const keyboard = await connectKeyboard(profile);
   const sources = Object.fromEntries(await Promise.all(["zh-CN", "en-US"].map(async locale => [locale,
     await Promise.all(["ui", "content", "game"].map(file => readFile(new URL(`../../locales/${locale}/${file}.ftl`, import.meta.url), "utf8"))),
   ])));
@@ -120,6 +120,22 @@ export async function runMindcrafterUiScenario(driver, directory, profile) {
     await tabTo("#session-start-game"); await keyboard.key("Enter");
     await driver.waitFor('return document.documentElement.dataset.appMode === "playing" && document.querySelector("#connection-status").classList.contains("ready")', "new human Mindcrafter", 60_000);
     assert.equal(await driver.execute('return document.querySelector("#app").dataset.sessionBuildId'), "demo.build.mindcrafter");
+    const bornHash = await hash();
+    await abilitiesPage();
+    await tabTo(`${row("neural-blast")} .ability-cast-action`); await keyboard.key("Enter");
+    await driver.waitFor('return !document.querySelector("#target-cursor").hidden', "birth spell target");
+    await keyboard.key("6"); await keyboard.key("Enter");
+    await driver.waitFor('return document.querySelector("#hash-value").title !== arguments[0]', "unmodified birth spell cast", 10_000, [bornHash]);
+    await ready();
+    const birthCast = { hash: await hash(), messages: await driver.execute('return document.querySelector("#message-list").textContent') };
+    assert.match(birthCast.messages, /你成功施放了神经爆破/);
+    const birthPosition = await driver.execute('return document.querySelector("#position-value").textContent');
+    await keyboard.key("2");
+    await driver.waitFor('return document.querySelector("#position-value").textContent !== arguments[0]', "normal movement", 10_000, [birthPosition]);
+    await ready();
+    const movedPosition = await driver.execute('return document.querySelector("#position-value").textContent');
+    await screenshot("birth-cast-move");
+    checks.push({ bornHash, birthCast, birthPosition, movedPosition, precondition: "Normal new character, no debug preparation or forced success" });
     const initial = await prepareLevel(1);
     await checkAbilities(initial);
     assert.equal(initial.abilities.filter(ability => ability.minimumLevel <= 1).length, 1);
@@ -127,6 +143,52 @@ export async function runMindcrafterUiScenario(driver, directory, profile) {
     await driver.waitFor('return !document.querySelector("#target-cursor").hidden', "keyboard targeting");
     await keyboard.key("Escape");
     assert.equal(await hash(), initial.hash, "cancelled targeting keeps authoritative state");
+
+    await prepareLevel(3);
+    const lowLevelCasts = [];
+    for (const slug of ["precognition", "minor-displacement"]) {
+      const name = slug === "precognition" ? "预知" : "微级位移";
+      let succeeded = false;
+      // Keep natural casting rolls: a reported spell failure spends an action,
+      // then the player may cast again; transport/assertion errors still fail immediately.
+      for (let attempt = 0; attempt < 5 && !succeeded; attempt++) {
+        await abilitiesPage();
+        const before = await hash();
+        const position = await driver.execute('return document.querySelector("#position-value").textContent');
+        await tabTo(`${row(slug)} .ability-cast-action`); await keyboard.key("Enter");
+        await driver.waitFor('return document.querySelector("#hash-value").title !== arguments[0]', `level-three ${slug}`, 10_000, [before]);
+        await ready();
+        const messages = await driver.execute('return document.querySelector("#message-list").textContent');
+        succeeded = messages.includes(`你成功施放了${name}`);
+        const afterPosition = await driver.execute('return document.querySelector("#position-value").textContent');
+        if (succeeded && slug === "minor-displacement") assert.notEqual(afterPosition, position);
+        if (!succeeded) {
+          assert.ok(messages.includes(`你施放${name}失败了`));
+          assert.equal(afterPosition, position);
+        }
+        lowLevelCasts.push({ slug, succeeded, before, after: await hash(), position, afterPosition });
+      }
+      assert.ok(succeeded, `${name} must actually take effect`);
+    }
+    await driver.execute(`window.__mindDownload = null;
+      URL.createObjectURL = blob => { window.__mindDownload = { blob }; return "blob:mindcrafter-acceptance"; };
+      URL.revokeObjectURL = () => {};
+      HTMLAnchorElement.prototype.click = function () { window.__mindDownload.name = this.download; };
+      document.querySelector('.hud-menu').open = true; return true;`);
+    const savedHash = await hash(); await click("#save-button");
+    await driver.waitFor('return window.__mindDownload?.name?.endsWith(".rfbsave")', "save menu exports a native save");
+    await driver.execute('document.querySelector(".hud-menu").open = false; return true;');
+    await keyboard.key("5");
+    await driver.waitFor('return document.querySelector("#hash-value").title !== arguments[0]', "continue before restore", 10_000, [savedHash]);
+    await ready(); const continuedHash = await hash();
+    await driver.execute(`const saved = window.__mindDownload;
+      const files = new DataTransfer(); files.items.add(new File([saved.blob], saved.name));
+      const input = document.querySelector('#load-input'); input.files = files.files;
+      input.dispatchEvent(new Event('change', { bubbles: true })); return true;`);
+    await driver.waitFor('return document.querySelector("#hash-value").title === arguments[0]', "restore exact played character", 30_000, [savedHash]);
+    await ready(); await keyboard.key("5");
+    await driver.waitFor('return document.querySelector("#hash-value").title === arguments[0]', "deterministic continuation after restore", 10_000, [continuedHash]);
+    checks.push({ lowLevelCasts, savedHash, continuedHash, precondition: "Real experience grant to level 3; UI detection/teleport, save menu, file restore and identical continued action" });
 
     for (const level of [19, 20, 24, 25, 29, 30, 44, 45]) {
       const prepared = await prepareLevel(level);
@@ -186,6 +248,9 @@ export async function runMindcrafterUiScenario(driver, directory, profile) {
     await viewport(640, 360, 2);
     assert.equal(await driver.execute('const list = document.querySelector("#ability-list"); return list.scrollWidth <= list.clientWidth'), true);
     await screenshot("abilities-45-en-US-200percent");
+    await keyboard.reload();
+    await driver.waitFor('return document.documentElement.dataset.appMode === "title"', "playing renderer disposed on reload", 30_000);
+    assert.deepEqual(keyboard.errors, [], "title and playing reloads must not throw renderer cleanup errors");
     checks.push({ layout, afterLoadCast, englishZoom: 2, insufficientMana: [reason, englishReason], keyboard: "WebView2 CDP native Tab, arrows, Enter and Escape", levelSetup: "WebDriver-only experience grants; all level snapshots loaded through native save validation" });
     await writeFile(path.join(directory, "mindcrafter-ui-acceptance.json"), JSON.stringify(checks, null, 2));
   } finally { keyboard.close(); }
