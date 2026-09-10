@@ -1004,6 +1004,7 @@ impl Game {
                     item,
                     generation_depth,
                     power.abs() >= 2,
+                    mode,
                     None,
                 )
             })

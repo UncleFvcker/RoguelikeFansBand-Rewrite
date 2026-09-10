@@ -567,9 +567,16 @@ fn warrior_shoot_monster_death_keeps_theme_through_pickup_equipment_and_save() {
         .find(|item| !initial_ids.contains(&item.id) && !item.affix_ids.is_empty())
         .unwrap()
         .clone();
-    // Archer's former merged mapping cannot produce this helmet.
-    assert_eq!(item.kind_id, "demo.item.iron-helm");
-    assert_eq!(item.affix_ids, ["rfb-legacy.affix.seeing"]);
+    // Warrior-shoot can produce armor, which the former Archer mapping rejects.
+    assert!(matches!(
+        game.content
+            .item(&item.kind_id)
+            .unwrap()
+            .rfb_base_kind
+            .unwrap()
+            .tval,
+        30..=38
+    ));
     assert!(events.iter().any(|event| matches!(event, DomainEvent::LootDropped { source_kind_id, target_kind_id, .. } if source_kind_id == actor_kind && target_kind_id == &item.kind_id)));
     assert_eq!(item.location, ItemLocation::Ground(game.player.position));
     game.pick_up_item_at_player(Some(&item.id)).unwrap();
@@ -1865,7 +1872,7 @@ fn vapor_quest_unlocks_after_old_man_willow_clears_the_cellar_and_rewards_detect
             .iter()
             .filter(|item| item.id.starts_with("demo.item.vapor-quest."))
             .count(),
-        11
+        12
     );
     game.entities.clear();
     dispatch_next(&mut game, GameCommand::Wait);

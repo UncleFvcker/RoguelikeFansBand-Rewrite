@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1100,
+  "descriptionKey": "item-demo-metal-brigandine-armour-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -3
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 35,
+  "glyph": "[",
+  "id": "demo.item.metal-brigandine-armour",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 19
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-metal-brigandine-armour-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 278,
+    "sval": 9,
+    "tval": 37
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 290
+}

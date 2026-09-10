@@ -412,6 +412,22 @@ test("using items starts map targeting only for map targets and preserves rechar
   assert.deepEqual(commands[1], { type: "use-item-for-recharge", itemId: "wand", sourceItemId: "source", targetItemId: "target" });
 });
 
+test("item-use target cancellation reaches core once, while a confirmed target does not cancel", (t) => {
+  const { panel, dom, state, commands, document } = createInventoryFixture(t);
+  const staff = item("staff", { usable: true, useTargetSpec: { modes: ["item"] } });
+  panel.render([staff, item("target")], []);
+  state.selectedInventoryIds.add("staff");
+  dom.inventoryUse.dispatchEvent(new Event("click"));
+  document.body.children[0].close();
+  assert.deepEqual(commands, [{ type: "use-item", itemId: "staff" }]);
+  dom.inventoryUse.dispatchEvent(new Event("click"));
+  const form = document.body.children[0].children[0];
+  form.children[1].children[1].value = "target";
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.deepEqual(commands[1], { type: "use-item", itemId: "staff", target: { type: "item", itemId: "target" } });
+  assert.equal(commands.length, 2);
+});
+
 test("crafting confirms risky whole stacks and cancelling dispatches nothing", (t) => {
   const { panel, dom, state, commands, document } = createInventoryFixture(t);
   const source = item("craft", { usable: true, requiresCraftingTarget: true });

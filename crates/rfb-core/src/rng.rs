@@ -110,7 +110,12 @@ pub(crate) fn rfb_m_bonus(rng: &mut RfbRng, maximum: u16, generation_level: u16)
     if rng.bounded(4) < u64::from(maximum % 4) {
         deviation += 1;
     }
-    let value = if deviation == 0 {
+    let value = rfb_randnor(rng, mean, deviation);
+    u16::try_from(value.clamp(0, i32::from(maximum))).expect("bounded RFB bonus must fit u16")
+}
+
+pub(crate) fn rfb_randnor(rng: &mut RfbRng, mean: i32, deviation: u16) -> i32 {
+    if deviation == 0 {
         mean
     } else {
         let roll = u16::try_from(rng.bounded(32_768)).expect("d32768 roll must fit u16");
@@ -122,8 +127,7 @@ pub(crate) fn rfb_m_bonus(rng: &mut RfbRng, maximum: u16, generation_level: u16)
         } else {
             mean.saturating_add(offset)
         }
-    };
-    u16::try_from(value.clamp(0, i32::from(maximum))).expect("bounded RFB bonus must fit u16")
+    }
 }
 
 fn splitmix64(state: &mut u64) -> u64 {

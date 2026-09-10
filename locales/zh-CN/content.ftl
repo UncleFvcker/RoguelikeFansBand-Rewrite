@@ -9213,3 +9213,36 @@ item-demo-duelist-description = 原版旧城堡决斗者奖励细剑。
 
 item-demo-quickthorn-name = 『快刺』
 item-demo-quickthorn-description = 原版旧城堡决斗者奖励细剑。
+
+
+item-demo-metal-scale-mail-name = 金属鳞甲
+item-demo-metal-scale-mail-description = 一件沉重的鳞甲衫，由皮革支撑的重叠钢鳞制成，配有相配的裙子和袖子。
+
+item-demo-double-ring-mail-name = 双层环甲
+item-demo-double-ring-mail-description = 普通重型躯干护甲。
+
+item-demo-double-chain-mail-name = 双层链甲
+item-demo-double-chain-mail-description = 普通重型躯干护甲。
+
+item-demo-bar-chain-mail-name = 条板链甲
+item-demo-bar-chain-mail-description = 普通重型躯干护甲。
+
+item-demo-metal-brigandine-armour-name = 金属布面甲
+item-demo-metal-brigandine-armour-description = 普通重型躯干护甲。
+
+item-demo-splint-mail-name = 板环甲
+item-demo-splint-mail-description = 普通重型躯干护甲。
+
+### Source device utility effects
+device-activation-rfb-rod-detect-traps-name = 探测陷阱
+device-activation-rfb-rod-detect-door-stairs-name = 探测门与楼梯
+device-activation-rfb-rod-detect-monsters-name = 探测怪物
+device-activation-rfb-rod-detect-all-name = 探测
+device-activation-rfb-staff-detect-gold-name = 探测宝藏
+device-activation-rfb-staff-detect-objects-name = 探测物品
+device-activation-rfb-staff-detect-invisible-name = 探测隐形
+device-activation-rfb-staff-detect-traps-name = 探测陷阱
+device-activation-rfb-staff-detect-door-stairs-name = 探测门与楼梯
+device-activation-rfb-staff-detect-evil-name = 探测邪恶
+device-activation-rfb-staff-identify-name = 鉴定
+device-activation-rfb-staff-identify-full-name = *鉴定*

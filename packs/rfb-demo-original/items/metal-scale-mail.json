@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 550,
+  "descriptionKey": "item-demo-metal-scale-mail-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -2
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 25,
+  "glyph": "[",
+  "id": "demo.item.metal-scale-mail",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 13
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-metal-scale-mail-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 272,
+    "sval": 3,
+    "tval": 37
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 250
+}

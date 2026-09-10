@@ -1,0 +1,67 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.effect.device-detect-all",
+  "input": "self",
+  "steps": [
+    {
+      "category": "trap",
+      "persistent": true,
+      "radius": 30,
+      "subject": "terrain",
+      "throughWalls": true,
+      "type": "detect"
+    },
+    {
+      "type": "detect",
+      "subject": "terrain",
+      "category": "door",
+      "radius": 30,
+      "persistent": true,
+      "throughWalls": true
+    },
+    {
+      "category": "passage",
+      "persistent": true,
+      "radius": 30,
+      "subject": "terrain",
+      "throughWalls": true,
+      "type": "detect"
+    },
+    {
+      "type": "detect",
+      "subject": "terrain",
+      "category": "treasure",
+      "radius": 30,
+      "persistent": true,
+      "throughWalls": true
+    },
+    {
+      "category": "gold",
+      "persistent": false,
+      "radius": 30,
+      "subject": "gold",
+      "throughWalls": true,
+      "type": "detect"
+    },
+    {
+      "category": "item",
+      "persistent": false,
+      "radius": 30,
+      "subject": "item",
+      "throughWalls": true,
+      "type": "detect"
+    },
+    {
+      "category": "any-monster",
+      "persistent": false,
+      "radius": 30,
+      "subject": "actor",
+      "throughWalls": true,
+      "type": "detect"
+    },
+    {
+      "type": "no-numeric-effect"
+    }
+  ]
+}

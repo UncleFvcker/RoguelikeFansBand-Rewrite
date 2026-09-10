@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.effect.device-detect-gold",
+  "input": "self",
+  "steps": [
+    {
+      "category": "treasure",
+      "persistent": true,
+      "radius": 30,
+      "subject": "terrain",
+      "throughWalls": true,
+      "type": "detect"
+    },
+    {
+      "category": "gold",
+      "persistent": false,
+      "radius": 30,
+      "subject": "gold",
+      "throughWalls": true,
+      "type": "detect"
+    }
+  ]
+}

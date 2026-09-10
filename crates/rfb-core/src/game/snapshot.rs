@@ -994,11 +994,13 @@ impl Game {
                 .item(&item.kind_id)
                 .is_some_and(|definition| definition.capture_ball),
             captured_actor: self.captured_actor_dto(item),
-            charges: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
+            charges: self
+                .item_activation_is_known(item)
                 .then_some(item.charges)
                 .flatten(),
             fuel: item.fuel,
-            activation: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
+            activation: self
+                .item_activation_is_known(item)
                 .then(|| item.activation.clone())
                 .flatten(),
             use_target_spec: item

@@ -460,6 +460,88 @@ fn random_artifact_current_classes_and_themes_select_eligible_biases_and_activat
 }
 
 #[test]
+fn real_build_misc_warning_and_no_tele_follow_source_boundaries() {
+    // master artifact.c random_misc case 31: magik(10) for Berserker,
+    // magik(90) otherwise. Fix the two source draws, not generated flags.
+    for (build, threshold) in [("berserker", 10), ("warrior", 90)] {
+        let game = Game::new_with_build(85, &format!("demo.build.{build}")).unwrap();
+        let class_id = &game.build.as_ref().unwrap().class_id;
+        for roll in [9, 10, 89, 90] {
+            let seed = (0..100_000)
+                .find(|seed| {
+                    let mut rng = RfbRng::seeded(*seed);
+                    rng.bounded(33) == 30 && rng.bounded(100) == roll
+                })
+                .expect("misc branch and probability boundary seed");
+            let mut expected = RfbRng::seeded(seed);
+            assert_eq!(expected.bounded(33), 30);
+            assert_eq!(expected.bounded(100), roll);
+            let mut rng = RfbRng::seeded(seed);
+            let mut gen_ = generator(game.content.random_artifact_generation().unwrap(), &mut rng);
+            gen_.class_id = class_id;
+            gen_.misc();
+            assert_eq!(
+                gen_.object.flags,
+                BTreeSet::from([if roll < threshold {
+                    "WARNING"
+                } else {
+                    "NO_TELE"
+                }
+                .to_owned()]),
+                "{build}: {roll}"
+            );
+            assert_eq!(rng, expected);
+        }
+    }
+}
+
+#[test]
+fn real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary() {
+    let game = Game::new_with_build(85, "demo.build.mindcrafter").unwrap();
+    let class_id = &game.build.as_ref().unwrap().class_id;
+    let data = game.content.random_artifact_generation().unwrap();
+    for (theme, bias) in [("", Bias::None), ("mage", Bias::Mage)] {
+        let mut rng = RfbRng::seeded(85);
+        let before = rng.clone();
+        let mut gen_ = generator(data, &mut rng);
+        gen_.class_id = class_id;
+        gen_.initial_bias(Creation {
+            class_id,
+            theme,
+            ..Default::default()
+        });
+        assert_eq!(gen_.bias, bias);
+        assert_eq!(rng, before, "natural mode must not draw for class bias");
+    }
+    // Scroll mode remains a factory contract: no playable scroll entry exists.
+    for (gate, roll, bias) in [
+        (0, 19, Bias::Warrior),
+        (0, 20, Bias::Priestly),
+        (1, 19, Bias::None),
+    ] {
+        let seed = (0..100_000)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                rng.bounded(4) == gate && rng.bounded(100) == roll
+            })
+            .unwrap();
+        let mut expected = RfbRng::seeded(seed);
+        expected.bounded(4);
+        expected.bounded(100);
+        let mut rng = RfbRng::seeded(seed);
+        let mut gen_ = generator(data, &mut rng);
+        gen_.class_id = class_id;
+        gen_.initial_bias(Creation {
+            class_id,
+            scroll: true,
+            ..Default::default()
+        });
+        assert_eq!(gen_.bias, bias);
+        assert_eq!(rng, expected);
+    }
+}
+
+#[test]
 fn random_artifact_throwing_flag_changes_real_throw_range_damage_and_instance_dice() {
     let mut game = Game::new_with_build(85, "demo.build.warrior").unwrap();
     game.items.clear();

@@ -70,16 +70,16 @@
         "kind": "combat.hit",
         "messageKey": "combat-player-hit",
         "args": {
-          "damage": "7",
+          "damage": "10",
           "target": "demo.actor.adobe-golem"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 7,
+            "rawDamage": 10,
             "armorReduction": 0,
             "resistanceAdjustment": 0,
-            "finalDamage": 7,
+            "finalDamage": 10,
             "damageType": "physical",
             "resistance": "normal"
           }

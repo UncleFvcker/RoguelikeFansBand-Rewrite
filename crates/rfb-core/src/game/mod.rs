@@ -116,7 +116,7 @@ mod damage;
 mod death;
 mod ego;
 mod random_artifact;
-pub(crate) use ego::{device_capacity, device_difficulty};
+pub(crate) use ego::{device_capacity, device_difficulty, source_device_runtime_valid};
 mod environment_combat;
 mod floor;
 mod gold;
@@ -745,6 +745,16 @@ fn initial_item_runtime_state(
     let Some(generation) = item_device_generation(content, kind_id, affix_ids, None, false) else {
         return (None, initial_item_charges(content, kind_id));
     };
+    if generation.rfb_device.is_some() {
+        let rod = content
+            .item(kind_id)
+            .unwrap()
+            .tags
+            .iter()
+            .any(|tag| tag == "rod");
+        let (activation, charges) = ego::initialize_fixed_device(rng, generation, rod);
+        return (Some(activation), Some(charges));
+    }
     let power = depth.clamp(1, 100);
     let eligible = generation
         .activations
@@ -1270,12 +1280,14 @@ impl Game {
         let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
         let mut turn_advance = 1_u32;
         let mut player_moved = false;
+        let deferred_item_turn = matches!(&action, GameAction::UseItem { target: None, .. });
         let defer_ability_cooldowns = matches!(&action, GameAction::CastAbility { ability_id, .. }
             if self.dungeon_blocks_vampirism(ability_id));
-        if advances_world && !defer_ability_cooldowns {
+        if advances_world && !defer_ability_cooldowns && !deferred_item_turn {
             self.decrement_ability_cooldowns(1);
         }
         if (advances_world || matches!(&action, GameAction::Rest { turns } if *turns > 0))
+            && !deferred_item_turn
             && !matches!(
                 &action,
                 GameAction::CastAbility { .. }
@@ -1891,14 +1903,17 @@ impl Game {
                 target,
                 target_glyph,
             } => {
-                self.use_inventory_item(
+                if self.use_inventory_item(
                     &item_id,
                     target.as_ref(),
                     target_glyph.as_deref(),
                     &mut events,
                     &mut changed,
                     &mut removed_entities,
-                )?;
+                )? {
+                    advances_world = false;
+                    action_cost = 0;
+                }
             }
             GameAction::RefuelLight {
                 target_item_id,
@@ -2264,6 +2279,10 @@ impl Game {
             nice_entities_at_command_start = completion.nice_entity_ids.iter().cloned().collect();
             self.command_actor_deaths
                 .extend(completion.actor_deaths.clone());
+        }
+        if deferred_item_turn && advances_world {
+            self.decrement_ability_cooldowns(1);
+            self.sniper_concentration = 0;
         }
         if player_moved {
             action_cost = self.player_snow_movement_action_cost(action_cost);

@@ -13,6 +13,78 @@ fn artifact_loot_context(depth: u16) -> LootContext {
     }
 }
 
+#[test]
+fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
+    let mut game = Game::new_with_build(409, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    game.items.clear();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: game.current_floor_id.clone(),
+        depth: 35,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.ordinary-drop".into(),
+        },
+    };
+    // Controlled depth and repeated drops; the formal pool, weights, quality
+    // rolls and materialization remain intact. This is not a leveling test.
+    let mut remaining = BTreeSet::from([272, 274, 276, 277, 278, 279]);
+    for _ in 0..10_000 {
+        let generated = game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        for item in generated {
+            let definition = game.content.item(&item.kind_id).unwrap();
+            let Some(base) = definition.rfb_base_kind else {
+                continue;
+            };
+            if item.quality != ItemQualityDto::Ordinary || !remaining.remove(&base.source_index) {
+                continue;
+            }
+            let defense = definition.modifiers.defense;
+            let hit = definition.equipment_bonuses.melee_skill;
+            let weight = u32::from(definition.weight_tenths_pound);
+            let baseline = game.player_derived_stats();
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            assert_eq!(game.carried_weight_tenths_pound(), weight);
+            game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+            assert!(game.item_property_knowledge[&id].identified);
+            game.equip_inventory_item(&id, Some("body")).unwrap();
+            let equipped = game.player_derived_stats();
+            assert_eq!(
+                equipped.armor_class.value - baseline.armor_class.value,
+                defense * 10
+            );
+            assert_eq!(equipped.melee_skill.value - baseline.melee_skill.value, hit);
+            game.reveal_current_visibility();
+            let mut restored = Game::from_save(game.to_save()).unwrap();
+            assert_eq!(restored.state_hash(), game.state_hash());
+            assert_eq!(restored.rng, game.rng);
+            assert_eq!(
+                restored.player_derived_stats().armor_class,
+                equipped.armor_class
+            );
+            assert_eq!(restored.carried_weight_tenths_pound(), weight);
+            let next = game
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap();
+            let replay = restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap();
+            assert_eq!(next, replay);
+            assert_eq!(restored.rng, game.rng);
+            game.items.clear();
+        }
+        if remaining.is_empty() {
+            return;
+        }
+    }
+    panic!("ordinary heavy armor was not generated: {remaining:?}");
+}
+
 fn razorback_game() -> (Game, String) {
     let mut game = Game::new_with_build(129, "demo.build.warrior").unwrap();
     clear_monsters(&mut game);
@@ -2963,8 +3035,14 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
     let content = Arc::new(ContentCatalog::from_artifact(
         rfb_content::encode_content(source).unwrap(),
     ));
-    for ego in ["protection", "wizard-gloves", "free-action"] {
-        let mut game = Game::new_with_build(425, "demo.build.high-mage-death").unwrap();
+    for (build, ego) in [
+        ("high-mage-death", "protection"),
+        ("high-mage-death", "wizard-gloves"),
+        ("high-mage-death", "free-action"),
+        ("berserker", "protection"),
+        ("mindcrafter", "protection"),
+    ] {
+        let mut game = Game::new_with_build(425, &format!("demo.build.{build}")).unwrap();
         game.content = content.clone();
         clear_monsters(&mut game);
         choose_human_talent_if_pending(&mut game);
@@ -2973,7 +3051,10 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
         game.refresh_character_skills();
         choose_human_talent_if_pending(&mut game);
         game.refresh_player_resource_maxima();
-        let baseline_mana = game.resources["demo.resource.mana"].maximum;
+        let baseline_mana = game.resources.get("demo.resource.mana").map(|r| r.maximum);
+        assert_eq!(baseline_mana.is_some(), build != "berserker");
+        let baseline_armor = game.player_derived_stats().armor_class.value;
+        let encumbers = build == "high-mage-death" && ego == "protection";
         let context = LootContext {
             table_id: format!("test.loot-table.tailored-{ego}"),
             floor_id: game.current_floor_id.clone(),
@@ -2991,7 +3072,7 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
         let knowledge_before = game.item_knowledge.clone();
         let tailored =
             game.generate_loot_draft_attempt(&context, ItemGenerationMode::TailoredGreat);
-        assert_eq!(tailored.is_some(), ego != "protection");
+        assert_eq!(tailored.is_some(), !encumbers);
         if let Some(tailored) = tailored {
             assert_eq!(tailored, great);
         }
@@ -3010,26 +3091,44 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
             .unwrap();
         let id = item.id.clone();
         assert!(!game.item_is_icky(&item, false));
-        assert_eq!(game.item_is_icky(&item, true), ego == "protection");
+        assert_eq!(game.item_is_icky(&item, true), encumbers);
         game.items.push(item);
         game.pick_up_item_at_player(Some(&id)).unwrap();
         game.equip_inventory_item(&id, Some("hands")).unwrap();
         game.refresh_player_resource_maxima();
-        let mana = game.resources["demo.resource.mana"].maximum;
-        if ego == "protection" {
-            assert_eq!(mana, baseline_mana * 3 / 4);
+        let mana = game.resources.get("demo.resource.mana").map(|r| r.maximum);
+        if encumbers {
+            assert_eq!(mana, baseline_mana.map(|m| m * 3 / 4));
         } else {
             assert!(mana >= baseline_mana);
+        }
+        if ego == "protection" {
+            assert!(game.player_derived_stats().armor_class.value > baseline_armor);
         }
         game.identify_item_instance(&id, ItemIdentificationRequest::new(false));
         assert_eq!(
             game.item_is_icky(game.items.iter().find(|item| item.id == id).unwrap(), false),
-            ego == "protection"
+            encumbers
         );
         game.reveal_current_visibility();
-        let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored =
+            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
-        assert_eq!(restored.resources["demo.resource.mana"].maximum, mana);
+        assert_eq!(
+            restored
+                .resources
+                .get("demo.resource.mana")
+                .map(|r| r.maximum),
+            mana
+        );
+        if build != "high-mage-death" {
+            let actual = game.generate_one_loot_draft(&context, ItemGenerationMode::TailoredGreat);
+            let replay =
+                restored.generate_one_loot_draft(&context, ItemGenerationMode::TailoredGreat);
+            assert!(actual.is_some());
+            assert_eq!(actual, replay);
+            assert_eq!(game.rng, restored.rng);
+        }
     }
 }
 
@@ -3318,7 +3417,7 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     assert_eq!(generated[0].quality, ItemQualityDto::Exceptional);
     assert!(generated[0].id.starts_with("generated.item."));
     // drop_near consumes the disabled-breakage roll and a tied-grid roll.
-    assert_eq!(single.rng_draw_counter(), draws_before + 18);
+    assert_eq!(single.rng_draw_counter(), draws_before + 34);
     assert!(update.events.iter().any(|event| {
         event.kind == "item.use-acquirement"
             && event.args.get("count").map(String::as_str) == Some("1")

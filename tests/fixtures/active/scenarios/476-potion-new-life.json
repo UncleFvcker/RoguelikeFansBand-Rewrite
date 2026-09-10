@@ -41,42 +41,42 @@
             "index": 11,
             "maximumNatural": 13,
             "natural": 13,
-            "potential": 128
+            "potential": 118
           },
           "constitution": {
             "effective": 15,
             "index": 12,
             "maximumNatural": 13,
             "natural": 13,
-            "potential": 98
+            "potential": 138
           },
           "dexterity": {
             "effective": 15,
             "index": 12,
             "maximumNatural": 13,
             "natural": 13,
-            "potential": 118
+            "potential": 98
           },
           "intelligence": {
             "effective": 11,
             "index": 8,
             "maximumNatural": 13,
             "natural": 13,
-            "potential": 98
+            "potential": 108
           },
           "strength": {
             "effective": 17,
             "index": 14,
             "maximumNatural": 13,
             "natural": 13,
-            "potential": 128
+            "potential": 118
           },
           "wisdom": {
             "effective": 11,
             "index": 8,
             "maximumNatural": 13,
             "natural": 13,
-            "potential": 138
+            "potential": 128
           }
         },
         "lifeForce": 1000

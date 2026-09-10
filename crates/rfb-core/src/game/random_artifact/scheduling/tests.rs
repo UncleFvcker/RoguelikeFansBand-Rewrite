@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 use super::*;
 use crate::game::loot::LootSource;
+use crate::game::tests::support::{choose_human_talent_if_pending, dispatch_next};
+use crate::game::{DomainEvent, Position};
 use rfb_content::{CompiledArtifact, ContentCatalog};
+use rfb_protocol::{Direction, GameCommand, TargetSelection};
 use std::sync::Arc;
 
 fn base(tval: u16, sval: u16) -> RfbBaseKindDefinition {
@@ -296,39 +299,316 @@ fn random_artifact_forced_base_pipeline_covers_slots_and_special_robe_and_light(
 
 #[test]
 fn random_artifact_save_preserves_rejected_names_and_continued_generation() {
-    let mut game = Game::new_with_build(85, "demo.build.warrior").unwrap();
-    game.items.clear();
-    game.entities.clear();
-    let context = context(&game);
+    for build in ["warrior", "berserker", "mindcrafter"] {
+        let mut game = Game::new_with_build(85, &format!("demo.build.{build}")).unwrap();
+        game.items.clear();
+        game.entities.clear();
+        let context = context(&game);
+        let mode = ItemGenerationMode::Artifact {
+            no_fixed_artifact: true,
+        };
+        for _ in 0..6 {
+            let items = game
+                .generate_loot_instances_internal(
+                    &context,
+                    ItemLocation::Inventory,
+                    false,
+                    Some(1),
+                    mode,
+                )
+                .unwrap();
+            game.items.extend(items);
+        }
+        assert!(game.items.iter().any(|item| item.artifact_name.is_some()));
+        let produced: BTreeSet<_> = game
+            .items
+            .iter()
+            .filter_map(|item| item.artifact_name.as_ref())
+            .collect();
+        assert!(
+            game.random_artifact_names
+                .iter()
+                .any(|name| !name.is_empty() && !produced.contains(name))
+        );
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(game.state_hash(), restored.state_hash());
+        for _ in 0..6 {
+            let actual = game
+                .generate_loot_instances_internal(
+                    &context,
+                    ItemLocation::Inventory,
+                    false,
+                    Some(1),
+                    mode,
+                )
+                .unwrap();
+            let replay = restored
+                .generate_loot_instances_internal(
+                    &context,
+                    ItemLocation::Inventory,
+                    false,
+                    Some(1),
+                    mode,
+                )
+                .unwrap();
+            assert_eq!(actual, replay);
+            assert_eq!(game.rng, restored.rng);
+            assert_eq!(game.random_artifact_names, restored.random_artifact_names);
+            game.items.extend(actual);
+            restored.items.extend(replay);
+            assert_eq!(game.state_hash(), restored.state_hash());
+        }
+        for names in [
+            vec!["missing empty quark".into()],
+            vec!["".into(), "".into()],
+            vec!["".into(), "bad\nname".into()],
+        ] {
+            let mut invalid = game.to_save();
+            invalid.random_artifact_names = names;
+            assert!(Game::from_save(invalid).is_err());
+        }
+        let mut altered = game.clone();
+        altered
+            .random_artifact_names
+            .insert("another rejected name".into());
+        assert_ne!(altered.state_hash(), game.state_hash());
+    }
+}
+
+#[test]
+fn random_artifact_negative_power_reaches_a_cursed_equippable_instance() {
+    let artifact = source();
+    for build in ["warrior", "berserker", "mindcrafter"] {
+        let mut game = Game::new_with_build(85, &format!("demo.build.{build}")).unwrap();
+        game.items.clear();
+        game.entities.clear();
+        let original_content = game.content.clone();
+        narrow(&mut game, &artifact, "demo.item.dagger");
+        let context = context(&game);
+        let table = game.content.loot_table(&context.table_id).unwrap().clone();
+        let mut found = None;
+        for seed in 0..5000 {
+            game.rng = RfbRng::seeded(seed);
+            let mut prefix = game.clone();
+            if prefix
+                .roll_instant_fixed_artifact_kind_id(&context, 1000)
+                .is_some()
+            {
+                continue;
+            }
+            prefix.roll_weighted_index(&[table.entries[0].weight]);
+            if prefix.roll_rfb_depth_loot_power(
+                table.quality_policy.unwrap(),
+                80,
+                false,
+                false,
+                ItemGenerationMode::Ordinary,
+            ) != -2
+            {
+                continue;
+            }
+            let draft = game
+                .generate_one_loot_draft(&context, ItemGenerationMode::Ordinary)
+                .unwrap();
+            if draft.artifact_name.is_some() {
+                found = Some(draft);
+                break;
+            }
+        }
+        let draft = found.expect("natural -2 artifact branch");
+        assert_eq!(draft.kind_id, "demo.item.dagger");
+        assert!(draft.curse.is_some());
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Inventory)
+            .unwrap();
+        let id = item.id.clone();
+        game.items.push(item);
+        game.content = original_content;
+        assert!(game.equip_inventory_item(&id, None).is_some());
+        let severity = game.items[0].curse.unwrap();
+        let ItemLocation::Equipped { slot_id } = game.items[0].location.clone() else {
+            panic!()
+        };
+        let removable = build == "berserker" && severity != ItemCurseSeverityDto::Permanent;
+        if removable {
+            game.rng = RfbRng::seeded(
+                (0..100)
+                    .find(|seed| {
+                        let mut rng = RfbRng::seeded(*seed);
+                        (severity == ItemCurseSeverityDto::Heavy && rng.bounded(7) == 0)
+                            || rng.bounded(4) == 0
+                    })
+                    .unwrap(),
+            );
+        }
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        for run in [&mut game, &mut restored] {
+            assert_eq!(
+                run.unequip_slot(&slot_id).is_some(),
+                removable,
+                "{build}: generated curse"
+            );
+            assert_eq!(
+                run.items[0].curse,
+                if removable { None } else { Some(severity) }
+            );
+            if removable {
+                assert!(run.items[0].intrinsic_curse_effects.is_empty());
+            }
+        }
+        assert_eq!(restored.state_hash(), game.state_hash());
+        let actual = game.generate_one_loot_draft(&context, ItemGenerationMode::Ordinary);
+        let replay = restored.generate_one_loot_draft(&context, ItemGenerationMode::Ordinary);
+        assert_eq!(actual, replay);
+        assert_eq!(game.rng, restored.rng);
+    }
+}
+
+#[test]
+fn real_berserker_generated_flags_and_activation_rejection_survive_save_and_continue() {
+    let artifact = source();
+    let mut template = Game::new_with_build(85, "demo.build.berserker").unwrap();
+    choose_human_talent_if_pending(&mut template);
+    template.items.clear();
+    template.entities.clear();
+    let original_content = template.content.clone();
+    narrow(&mut template, &artifact, "demo.item.dagger");
+    let mut warrior = Game::new_with_build(85, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut warrior);
+    narrow(&mut warrior, &artifact, "demo.item.dagger");
+    let context = context(&template);
+    // Existing forced-randart scheduling mode, with a fixed base only. The
+    // real class, all random properties, names, values and retries stay live.
     let mode = ItemGenerationMode::Artifact {
         no_fixed_artifact: true,
     };
-    for _ in 0..6 {
-        let items = game
-            .generate_loot_instances_internal(
-                &context,
-                ItemLocation::Inventory,
-                false,
-                Some(1),
-                mode,
-            )
+    for feature in ["WARNING", "NO_TELE", "activation"] {
+        let mut game = template.clone();
+        let draft = (0..512)
+            .find_map(|_| {
+                // A second real build with the same generation input ensures
+                // the scheduler forwards class identity, not just the factory.
+                let control = if feature == "NO_TELE" {
+                    warrior.rng = game.rng.clone();
+                    warrior.random_artifact_names = game.random_artifact_names.clone();
+                    warrior.generate_one_loot_draft(&context, mode)
+                } else {
+                    None
+                };
+                game.generate_one_loot_draft(&context, mode)
+                    .filter(|draft| {
+                        let flags = &draft.intrinsic_properties.rfb_flags;
+                        draft.artifact_name.is_some()
+                            && match feature {
+                                "WARNING" => {
+                                    flags.contains("WARNING") && !flags.contains("NO_TELE")
+                                }
+                                "NO_TELE" => {
+                                    flags.contains("NO_TELE")
+                                        && !flags.contains("WARNING")
+                                        && control.as_ref().is_some_and(|item| {
+                                            item.intrinsic_properties.rfb_flags.contains("WARNING")
+                                                && !item
+                                                    .intrinsic_properties
+                                                    .rfb_flags
+                                                    .contains("NO_TELE")
+                                        })
+                                }
+                                _ => draft.activation.is_some(),
+                            }
+                    })
+            })
+            .unwrap_or_else(|| panic!("generated {feature} artifact must be reachable"));
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
             .unwrap();
-        game.items.extend(items);
-    }
-    assert!(game.items.iter().any(|item| item.artifact_name.is_some()));
-    let produced: BTreeSet<_> = game
-        .items
-        .iter()
-        .filter_map(|item| item.artifact_name.as_ref())
-        .collect();
-    assert!(
-        game.random_artifact_names
-            .iter()
-            .any(|name| !name.is_empty() && !produced.contains(name))
-    );
-    let mut restored = Game::from_save(game.to_save()).unwrap();
-    assert_eq!(game.state_hash(), restored.state_hash());
-    for _ in 0..6 {
+        let id = item.id.clone();
+        game.items.push(item);
+        game.content = original_content.clone();
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        game.equip_inventory_item(&id, None).unwrap();
+        game.terrain.fill("demo.terrain.floor".into());
+        let start = game.player.position;
+        let trap = Position {
+            x: start.x + 1,
+            y: start.y,
+        };
+        let destination = Position {
+            x: start.x,
+            y: start.y + 1,
+        };
+        let index = game.index(trap).unwrap();
+        game.terrain[index] = "demo.terrain.warren-snare".into();
+        game.revealed_terrain.remove(&trap);
+        game.rng = RfbRng::seeded(
+            (0..100)
+                .find(|seed| RfbRng::seeded(*seed).bounded(13) != 0)
+                .unwrap(),
+        );
+        game.reveal_current_visibility();
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(game.state_hash(), restored.state_hash());
+        for run in [&mut game, &mut restored] {
+            if feature == "activation" {
+                let item = run.items.iter().find(|item| item.id == id).unwrap();
+                let charges = item.charges;
+                assert_eq!(run.berserker_item_use_rejection_cost(item), Some(100));
+                assert_eq!(
+                    run.inventory_item_dto(item)
+                        .use_unavailable_reason
+                        .as_deref(),
+                    Some("berserker")
+                );
+                let tick = run.world_tick;
+                dispatch_next(
+                    run,
+                    GameCommand::UseItem {
+                        item_id: id.clone(),
+                        target: None,
+                    },
+                );
+                assert!(run.world_tick > tick);
+                assert_eq!(
+                    run.items.iter().find(|item| item.id == id).unwrap().charges,
+                    charges
+                );
+            } else {
+                let no_tele = feature == "NO_TELE";
+                assert_eq!(run.player_has_anti_teleport(), no_tele);
+                let mut events = Vec::new();
+                let mut changed = BTreeSet::new();
+                assert_eq!(
+                    run.warn_player_of_hidden_trap(trap, &mut events, &mut changed),
+                    !no_tele
+                );
+                assert_eq!(run.revealed_terrain.contains(&trap), !no_tele);
+                // Exercise the common teleport effect, without granting this
+                // class a new ability or bypassing a use restriction in play.
+                let ability = run
+                    .content
+                    .ability("demo.ability.mindcrafter-minor-displacement")
+                    .unwrap()
+                    .clone();
+                run.resolve_player_teleport_effect(
+                    &ability,
+                    destination,
+                    &mut events,
+                    &mut changed,
+                );
+                assert_eq!(
+                    run.player.position,
+                    if no_tele { start } else { destination }
+                );
+                assert_eq!(
+                    events
+                        .iter()
+                        .any(|e| matches!(e, DomainEvent::AbilityTeleported { .. })),
+                    !no_tele
+                );
+            }
+        }
+        assert_eq!(game.state_hash(), restored.state_hash());
         let actual = game
             .generate_loot_instances_internal(
                 &context,
@@ -350,80 +630,74 @@ fn random_artifact_save_preserves_rejected_names_and_continued_generation() {
         assert_eq!(actual, replay);
         assert_eq!(game.rng, restored.rng);
         assert_eq!(game.random_artifact_names, restored.random_artifact_names);
-        game.items.extend(actual);
-        restored.items.extend(replay);
-        assert_eq!(game.state_hash(), restored.state_hash());
     }
-    for names in [
-        vec!["missing empty quark".into()],
-        vec!["".into(), "".into()],
-        vec!["".into(), "bad\nname".into()],
-    ] {
-        let mut invalid = game.to_save();
-        invalid.random_artifact_names = names;
-        assert!(Game::from_save(invalid).is_err());
-    }
-    let mut altered = game.clone();
-    altered
-        .random_artifact_names
-        .insert("another rejected name".into());
-    assert_ne!(altered.state_hash(), game.state_hash());
 }
 
 #[test]
-fn random_artifact_negative_power_reaches_a_cursed_equippable_instance() {
+fn real_build_generated_devices_keep_use_costs_charges_and_continued_rng() {
     let artifact = source();
-    let mut game = Game::new_with_build(85, "demo.build.warrior").unwrap();
-    game.items.clear();
-    game.entities.clear();
-    let original_content = game.content.clone();
-    narrow(&mut game, &artifact, "demo.item.dagger");
-    let context = context(&game);
-    let table = game.content.loot_table(&context.table_id).unwrap().clone();
-    let mut found = None;
-    for seed in 0..5000 {
-        game.rng = RfbRng::seeded(seed);
-        let mut prefix = game.clone();
-        if prefix
-            .roll_instant_fixed_artifact_kind_id(&context, 1000)
-            .is_some()
-        {
-            continue;
-        }
-        prefix.roll_weighted_index(&[table.entries[0].weight]);
-        if prefix.roll_rfb_depth_loot_power(
-            table.quality_policy.unwrap(),
-            80,
-            false,
-            false,
-            ItemGenerationMode::Ordinary,
-        ) != -2
-        {
-            continue;
-        }
+    for build in ["berserker", "mindcrafter"] {
+        let mut game = Game::new_with_build(85, &format!("demo.build.{build}")).unwrap();
+        choose_human_talent_if_pending(&mut game);
+        game.items.clear();
+        game.entities.clear();
+        let original_content = game.content.clone();
+        // Ordinary generation can produce a device for either class, although
+        // neither is a tailored device class and Berserker cannot use it.
+        narrow(&mut game, &artifact, "demo.item.magic-missile-wand");
+        let context = context(&game);
         let draft = game
             .generate_one_loot_draft(&context, ItemGenerationMode::Ordinary)
             .unwrap();
-        if draft.artifact_name.is_some() {
-            found = Some(draft);
-            break;
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        let id = item.id.clone();
+        let before = item.charges.unwrap();
+        game.items.push(item);
+        game.content = original_content;
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        game.rng = RfbRng::seeded(
+            (0..100)
+                .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+                .unwrap(),
+        );
+        game.reveal_current_visibility();
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(game.state_hash(), restored.state_hash());
+        for run in [&mut game, &mut restored] {
+            let tick = run.world_tick;
+            dispatch_next(
+                run,
+                GameCommand::UseItem {
+                    item_id: id.clone(),
+                    target: Some(TargetSelection::Direction {
+                        direction: Direction::East,
+                    }),
+                },
+            );
+            let item = run.items.iter().find(|item| item.id == id).unwrap();
+            if build == "berserker" {
+                assert_eq!(run.world_tick, tick);
+                assert_eq!(item.charges, Some(before));
+                assert_eq!(
+                    run.inventory_item_dto(item)
+                        .use_unavailable_reason
+                        .as_deref(),
+                    Some("berserker")
+                );
+            } else {
+                assert!(run.world_tick > tick);
+                assert!(item.charges.unwrap().current < before.current);
+            }
         }
+        assert_eq!(game.state_hash(), restored.state_hash());
+        let actual = game.generate_one_loot_draft(&context, ItemGenerationMode::TailoredGreat);
+        let replay = restored.generate_one_loot_draft(&context, ItemGenerationMode::TailoredGreat);
+        assert!(actual.is_some());
+        assert_eq!(actual, replay);
+        assert_eq!(game.rng, restored.rng);
     }
-    let draft = found.expect("natural -2 artifact branch");
-    assert_eq!(draft.kind_id, "demo.item.dagger");
-    assert!(draft.curse.is_some());
-    let item = game
-        .commit_generated_item_draft(draft, ItemLocation::Inventory)
-        .unwrap();
-    let id = item.id.clone();
-    game.items.push(item);
-    game.content = original_content;
-    assert!(game.equip_inventory_item(&id, None).is_some());
-    assert!(game.items[0].curse.is_some());
-    assert_eq!(
-        Game::from_save(game.to_save()).unwrap().state_hash(),
-        game.state_hash()
-    );
 }
 
 #[test]

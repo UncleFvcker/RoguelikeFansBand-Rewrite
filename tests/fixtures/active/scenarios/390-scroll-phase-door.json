@@ -37,8 +37,8 @@
       },
       "lastCommandSeq": 1,
       "playerPosition": {
-        "x": 106,
-        "y": 41
+        "x": 91,
+        "y": 35
       },
       "revision": 1,
       "stateHash": "2ba9aa1ef46067decd19b33973d17703a90fa03a1632848259ecb102bff8eaea",
@@ -52,8 +52,8 @@
           "fromX": "99",
           "fromY": "33",
           "source": "demo.item.flicker-scroll",
-          "toX": "106",
-          "toY": "41"
+          "toX": "91",
+          "toY": "35"
         },
         "outcome": {
           "type": "ability-teleport",
@@ -63,8 +63,8 @@
               "y": 33
             },
             "to": {
-              "x": 106,
-              "y": 41
+              "x": 91,
+              "y": 35
             }
           }
         }

@@ -98,8 +98,8 @@
         }
       },
       {
-        "kind": "combat.projectile-ammo-recovered",
-        "messageKey": "projectile-ammo-recovered",
+        "kind": "combat.projectile-ammo-broken",
+        "messageKey": "projectile-ammo-broken",
         "args": {
           "target": "demo.item.arrow"
         }

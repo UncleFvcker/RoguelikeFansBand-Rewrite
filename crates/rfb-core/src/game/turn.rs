@@ -721,10 +721,21 @@ impl Game {
                 if !world_tick.is_multiple_of(u32::from(recovery.interval_ticks)) {
                     continue;
                 }
-                let scaled = u64::from(charges.maximum)
+                let source_device = content
+                    .item(&item.kind_id)
+                    .and_then(|definition| definition.device_generation.as_ref())
+                    .is_some_and(|generation| generation.rfb_device.is_some());
+                let mut scaled = u64::from(charges.maximum)
                     .saturating_mul(u64::from(recovery.energy_per_mille))
-                    .saturating_mul(u64::from(regeneration))
-                    .saturating_add(u64::from(item.device_recovery_progress));
+                    .saturating_mul(u64::from(regeneration));
+                if source_device {
+                    // devices.c stores hundredths of SP and stochastically
+                    // rounds the next hundredth. Reuse our saved thousandths.
+                    scaled *= 100;
+                    scaled =
+                        (scaled / 1000 + u64::from(self.rng.bounded(1000) < scaled % 1000)) * 10;
+                }
+                scaled += u64::from(item.device_recovery_progress);
                 let gain = u32::try_from(scaled / 1_000)
                     .expect("validated device recovery gain must fit u32");
                 item.device_recovery_progress =

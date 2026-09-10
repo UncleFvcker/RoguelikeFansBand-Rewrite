@@ -1951,6 +1951,7 @@ fn daemon_doom_hand_preserves_unique_immunity_save_rng_and_current_hp_percentage
 #[test]
 fn daemon_insanity_circle_applies_both_balls_then_confusion_and_charm() {
     let mut game = daemon_high_mage_game(0x494e_5341_4e49_5459, 50);
+    game.rng = RfbRng::seeded(0);
     clear_monsters(&mut game);
     game.terrain.fill("demo.terrain.floor".to_owned());
     let target_position = Position {

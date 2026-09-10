@@ -40,35 +40,51 @@
     "demo.loot-table.warrior-shoot"
   ],
   "buildApplicability": {
-    "entrySource": "web/src/session-shell.ts PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
+    "entrySource": "web/src/character-creation.ts CREATION_BUILDS / PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
+    "reviewInput": "design/generation-build-applicability.json",
+    "sourceRef": "master",
+    "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
     "playableBuilds": [
       "demo.build.warrior",
-      "demo.build.high-mage-death",
+      "demo.build.berserker",
       "demo.build.archer",
+      "demo.build.sniper",
+      "demo.build.high-mage-death",
       "demo.build.paladin-death",
       "demo.build.cavalry",
-      "demo.build.sniper"
+      "demo.build.mindcrafter"
     ],
     "playableRaces": [
-      "demo.race.rfb-human",
-      "rfb-legacy.race.half-orc",
-      "rfb-legacy.race.high-elf",
-      "rfb-legacy.race.dunadan",
+      "rfb-legacy.race.amberite",
       "rfb-legacy.race.barbarian",
-      "rfb-legacy.race.hobbit",
-      "rfb-legacy.race.kobold",
-      "rfb-legacy.race.dwarf",
-      "rfb-legacy.race.nibelung",
-      "rfb-legacy.race.gnome",
-      "rfb-legacy.race.half-giant",
-      "rfb-legacy.race.half-troll",
-      "rfb-legacy.race.half-titan",
-      "rfb-legacy.race.cyclops",
-      "rfb-legacy.race.yeek",
-      "rfb-legacy.race.klackon",
+      "rfb-legacy.race.dunadan",
+      "demo.race.rfb-human",
       "rfb-legacy.race.dark-elf",
-      "rfb-legacy.race.mindflayer",
+      "rfb-legacy.race.high-elf",
+      "rfb-legacy.race.tomte",
+      "rfb-legacy.race.wood-elf",
+      "rfb-legacy.race.dwarf",
+      "rfb-legacy.race.gnome",
+      "rfb-legacy.race.hobbit",
+      "rfb-legacy.race.nibelung",
+      "rfb-legacy.race.shadow-fairy",
+      "rfb-legacy.race.sprite",
+      "rfb-legacy.race.archon",
       "rfb-legacy.race.imp",
+      "rfb-legacy.race.cyclops",
+      "rfb-legacy.race.half-giant",
+      "rfb-legacy.race.half-orc",
+      "rfb-legacy.race.half-titan",
+      "rfb-legacy.race.half-troll",
+      "rfb-legacy.race.kobold",
+      "rfb-legacy.race.ogre",
+      "rfb-legacy.race.snotling",
+      "rfb-legacy.race.einheri",
+      "rfb-legacy.race.skeleton",
+      "rfb-legacy.race.spectre",
+      "rfb-legacy.race.zombie",
+      "rfb-legacy.race.beastman",
+      "rfb-legacy.race.boit",
       "rfb-legacy.race.draconian-red",
       "rfb-legacy.race.draconian-white",
       "rfb-legacy.race.draconian-blue",
@@ -78,34 +94,562 @@
       "rfb-legacy.race.draconian-crystal",
       "rfb-legacy.race.draconian-gold",
       "rfb-legacy.race.draconian-shadow",
-      "rfb-legacy.race.golem",
-      "rfb-legacy.race.zombie",
-      "rfb-legacy.race.skeleton",
-      "rfb-legacy.race.wood-elf",
-      "rfb-legacy.race.archon",
-      "rfb-legacy.race.sprite",
-      "rfb-legacy.race.snotling",
-      "rfb-legacy.race.boit",
-      "rfb-legacy.race.einheri",
-      "rfb-legacy.race.kutar",
-      "rfb-legacy.race.amberite",
-      "rfb-legacy.race.beastman",
-      "rfb-legacy.race.shadow-fairy",
-      "rfb-legacy.race.ogre",
-      "rfb-legacy.race.tomte",
-      "rfb-legacy.race.tonberry",
       "rfb-legacy.race.ent",
-      "rfb-legacy.race.spectre"
+      "rfb-legacy.race.golem",
+      "rfb-legacy.race.klackon",
+      "rfb-legacy.race.kutar",
+      "rfb-legacy.race.mindflayer",
+      "rfb-legacy.race.tonberry",
+      "rfb-legacy.race.yeek"
     ],
     "playableClasses": [
       "demo.class.archer",
+      "demo.class.berserker",
       "demo.class.cavalry",
       "demo.class.high-mage",
+      "demo.class.mindcrafter",
       "demo.class.paladin",
       "demo.class.sniper",
       "demo.class.warrior"
     ],
-    "acceptanceRule": "new-game identity must be real; forged identity branch tests are not playable acceptance; listed test paths are references, not results of this audit command",
+    "resolvedBuilds": [
+      {
+        "buildId": "demo.build.warrior",
+        "classId": "demo.class.warrior",
+        "firstRealmId": null,
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.berserker",
+        "classId": "demo.class.berserker",
+        "firstRealmId": null,
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.archer",
+        "classId": "demo.class.archer",
+        "firstRealmId": null,
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.sniper",
+        "classId": "demo.class.sniper",
+        "firstRealmId": null,
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.high-mage-death",
+        "classId": "demo.class.high-mage",
+        "firstRealmId": "death",
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.paladin-death",
+        "classId": "demo.class.paladin",
+        "firstRealmId": "death",
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.cavalry",
+        "classId": "demo.class.cavalry",
+        "firstRealmId": null,
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.mindcrafter",
+        "classId": "demo.class.mindcrafter",
+        "firstRealmId": null,
+        "secondRealmId": null
+      }
+    ],
+    "reviews": [
+      {
+        "buildId": "demo.build.warrior",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "no-special-difference",
+            "reason": "No realm/books, device class or category preference; ordinary melee favorites and real slots apply."
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save."
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Deferred scroll-only result: Warrior."
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "no-special-difference",
+            "reason": "No reachable identity-specific construction branch in the imported fixed artifacts; ordinary construction and configured reward paths apply."
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "Shared equipment, melee, curse and persistence consumers; baseline real-build generation evidence reused.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/acquirement.rs"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.berserker",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "no-special-difference",
+            "reason": "No realm/books, device category or glove penalty; ordinary melee favorites and slots apply, including bows. Scroll/device/activation prohibitions do not authorize removing those items from ordinary generation. Acquirement scroll self-use is blocked; available service/reward paths must be distinguished.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/berserker.rs#forbidden_item_attempts_preserve_items_and_follow_source_energy",
+              "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save."
+          },
+          {
+            "review": "random-artifact",
+            "status": "implemented",
+            "reason": "Real class reaches random_misc case 31: WARNING 10%, otherwise NO_TELE; other builds use WARNING 90%. Boundary tests cover 9/10 and 89/90, while equal-input real Warrior/Berserker scheduling verifies class forwarding. Generated passives reach trap warning and common teleport effects; generated activation rejection spends a turn and preserves charges. Scroll-only Warrior bias stays deferred.",
+            "tests": [
+              "crates/rfb-core/src/game/random_artifact/tests.rs#real_build_misc_warning_and_no_tele_follow_source_boundaries",
+              "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#real_berserker_generated_flags_and_activation_rejection_survive_save_and_continue"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "No imported identity-specific construction branch; eight configured class rewards already materialize real items and Egos. Missing Terror Mask remains deferred.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/berserker/rewards.rs#all_eight_class_rewards_are_claimed_as_real_items_with_materialized_egos"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "Generated natural cursed artifacts equip, survive save and enter Berserker forced-unequip rules; generated devices are rejected without spending a turn, generated artifact activations consume a turn without charges. WARNING/NO_TELE reach their actual equipment consumers; restored actions and subsequent generation keep state, items, names and RNG identical.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/berserker.rs#forbidden_item_attempts_preserve_items_and_follow_source_energy",
+              "crates/rfb-core/src/game/tests/berserker.rs#forced_unequip_and_replacement_share_short_circuit_curse_rolls",
+              "crates/rfb-core/src/game/tests/berserker.rs#weapon_bonuses_follow_hands_and_negative_blows_stop_at_zero",
+              "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#real_berserker_generated_flags_and_activation_rejection_survive_save_and_continue",
+              "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#real_build_generated_devices_keep_use_costs_charges_and_continued_rng",
+              "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_negative_power_reaches_a_cursed_equippable_instance"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.archer",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "Tailored bow preference 1/5; all melee excluded. No realm/books or device preference; fallback bow category still includes non-preferred kinds."
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save."
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Deferred scroll-only result: Warrior."
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "no-special-difference",
+            "reason": "No reachable identity-specific construction branch in the imported fixed artifacts; ordinary construction and configured reward paths apply."
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "Generated launcher equips, shoots and restores; ammunition/launcher proficiency remains a consumer rule.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/items.rs#b4_tailored_launchers_equip_shoot_and_restore_for_archer_and_sniper"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.sniper",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "Tailored bow preference 1/5; unlike Archer, default melee favorites remain. No realm/books or device preference."
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save."
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Deferred scroll-only result: Ranger, with 30% Warrior conversion after bias selection."
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "no-special-difference",
+            "reason": "No reachable identity-specific construction branch in the imported fixed artifacts; ordinary construction and configured reward paths apply."
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "Generated launcher equips, shoots and restores; class shooting/focus stays in existing combat consumers.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/items.rs#b4_tailored_launchers_equip_shoot_and_restore_for_archer_and_sniper"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.high-mage-death",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "Death realm selects only its advanced books with persistent discovery limits. Ordered book preference 1/10 precedes device preference 1/7; completed gloves use full flags/pval to reject caster encumbrance. High Mage is the sole current tailored device class."
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save."
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Deferred scroll-only result: Mage, with 20% Warrior conversion after bias selection."
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "no-special-difference",
+            "reason": "No reachable identity-specific construction branch in the imported fixed artifacts; ordinary construction and configured reward paths apply."
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "Death books are found, studied/cast and saved; generated devices are used and charges restored; glove rejection shares casting logic.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/items.rs#b4_tailored_death_books_are_counted_studied_cast_and_restored",
+              "crates/rfb-core/src/game/tests/items.rs#b4_tailored_high_mage_device_is_usable_and_restores_its_charges",
+              "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.paladin-death",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "Death realm advanced books and discovery counts apply with book preference 1/10; no device preference. Melee favorites default normally; no High Mage glove restriction."
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save."
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Deferred scroll-only result: Priestly, with 60% Warrior conversion after bias selection; Death realm does not change the scroll class switch."
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "no-special-difference",
+            "reason": "No reachable identity-specific construction branch in the imported fixed artifacts; ordinary construction and configured reward paths apply."
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "Generated Death books reach Paladin study/prayer casting and restored discovery state.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/items.rs#b4_tailored_death_books_are_counted_studied_cast_and_restored"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.cavalry",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "Tailored lance preference 1/7; melee favorites require source riding-weapon flags. No realm/books/device preference; preference does not narrow the fallback weapon category."
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save."
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Deferred scroll-only result: Warrior."
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "no-special-difference",
+            "reason": "No reachable identity-specific construction branch in the imported fixed artifacts; ordinary construction and configured reward paths apply."
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "Generated lance retains its riding bonus in actual mounted combat; shared equip/save applies.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/items.rs#b4_tailored_lance_keeps_riding_bonus_in_actual_mounted_combat"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mindcrafter",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "no-special-difference",
+            "reason": "Wisdom mana with no realm/book study means needs_book=false; source excludes Mindcrafter from device classes despite usable devices. Default melee favorites, normal body slots and no glove penalty; heavy equipment still reduces mana at use time.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/mindcrafter.rs#birth_has_wisdom_mana_proficiencies_and_no_spell_study",
+              "crates/rfb-core/src/game/tests/mindcrafter.rs#mana_encumbrance_counts_half_weapon_weight_without_glove_penalty",
+              "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save."
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Deferred scroll-only result: Priestly, with 20% Warrior conversion after bias selection; no natural-generation Mindcrafter bias.",
+            "tests": [
+              "crates/rfb-core/src/game/random_artifact/tests.rs#real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "Imported Meditation Stone has exclusive casting bonuses in the equipment consumer; Palantir activation and Old Castle reward pool already have real-build tests. No extra identity-specific fixed construction branch.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/mindcrafter/spells.rs#meditation_stone_has_exclusive_casting_bonuses_and_its_activation_recharges_devices",
+              "crates/rfb-core/src/game/tests/mindcrafter/spells.rs#palantir_lists_hidden_uniques_without_revealing_their_positions_and_old_castle_uses_its_pool"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "Generated protection gloves add armor without a caster glove penalty; natural cursed artifacts obey ordinary removal restrictions. A normally generated wand reaches successful actual use and charge consumption despite exclusion from tailored devices. Save/restored actions and subsequent generation match state and RNG; existing sensing and bookless ability evidence is reused.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/mindcrafter.rs#auto_identify_uses_devices_then_scrolls_then_twelve_mana",
+              "crates/rfb-core/src/game/tests/mindcrafter.rs#bookless_resources_and_sensed_knowledge_round_trip_and_continue",
+              "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
+              "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#real_build_generated_devices_keep_use_costs_charges_and_continued_rng",
+              "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_negative_power_reaches_a_cursed_equippable_instance"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      }
+    ],
+    "sharedReviews": [
+      {
+        "id": "base-allocation-tailored",
+        "conditionIds": [
+          "equipment-category-weight",
+          "tailored-favorite",
+          "tailored-device-class",
+          "tailored-compatible-kinds",
+          "great-book-count",
+          "good-book-count",
+          "needs-book",
+          "base-theme",
+          "tailored-class-hooks",
+          "base-harp-bard"
+        ],
+        "entry": "Natural floor/monster allocation and existing Acquirement service; ordinary modes retain non-tailored kinds.",
+        "reason": "All eight default builds resolve to the human standard body; race selection supplies real body slots and Tomte birth-headgear rules. Source object_is_favorite defaults to all melee weapons for Warrior, Berserker, Sniper, High Mage, Paladin and Mindcrafter; Archer and Cavalry have explicit filters. Source device-class membership is independent of ability to use devices. Completed-item rejection follows caster glove encumbrance, not general usability.",
+        "sourceEvidence": [
+          "src/obj_kind.c:97-162 object_is_favorite",
+          "src/autopick.c:848-868 object_is_icky",
+          "src/object2.c:3747-3752 completed tailored rejection",
+          "src/equip.c:372 slot compatibility",
+          "src/mindcrafter.c:629-644 caster info without glove flag",
+          "src/berserker.c:161-172 HP caster without glove flag"
+        ],
+        "implementation": [
+          "crates/rfb-core/src/game/loot/allocation.rs",
+          "crates/rfb-core/src/game/loot.rs#generate_loot_draft_attempt",
+          "crates/rfb-core/src/game/player_abilities.rs#item_is_icky",
+          "crates/rfb-core/src/game/item_knowledge.rs",
+          "packs/rfb-demo-original/races/rfb-human.json"
+        ],
+        "tests": [
+          "crates/rfb-core/src/game/loot/allocation.rs#tailored_uses_playable_class_equipment_realms_and_birth_race",
+          "crates/rfb-core/src/game/loot/allocation.rs#tailored_preference_draws_follow_class_then_book_then_device",
+          "crates/rfb-core/src/game/tests/book_discovery.rs"
+        ],
+        "limits": "The real-build allocation loop covers all eight builds and the existing Tomte/body-slot intersection. Good/Great advanced-book limits and Tailored found<3 remain distinct; book instances retain B1 quantity-one representation."
+      },
+      {
+        "id": "ego-negative",
+        "conditionIds": [
+          "ego-theme",
+          "mauler-weight",
+          "bad-luck-randart",
+          "bad-luck-tomte-hat",
+          "luck-quality-virtue",
+          "theme-jewelry-power",
+          "theme-reset"
+        ],
+        "entry": "Shared natural/Ego materialization, existing configured rewards and Craft consumers; no new Craft realm.",
+        "reason": "No eight-class-specific Ego materializer appears in reviewed source: weight adjustment belongs to unavailable Mauler. Existing luck mutations, Chance virtue, themes, race/body properties and curse consumers still apply and can differ by real character state; no-special-difference means no additional class branch, not identical output.",
+        "implementation": [
+          "crates/rfb-core/src/game/ego.rs",
+          "crates/rfb-core/src/game/ego/armor.rs",
+          "crates/rfb-core/src/game/ego/jewelry.rs",
+          "crates/rfb-core/src/game/ego/curses.rs",
+          "crates/rfb-core/src/game/item_curses.rs",
+          "crates/rfb-core/src/game/loot.rs"
+        ],
+        "tests": [
+          "crates/rfb-core/src/game/ego/contracts.rs#all_160_source_egos_have_an_effect_and_save_stable_instances",
+          "crates/rfb-core/src/game/ego/applicability.rs",
+          "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_negative_power_reaches_a_cursed_equippable_instance",
+          "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng"
+        ],
+        "limits": "Shared Ego/E8.8 evidence is reused. Both new builds now exercise generated protection gloves and natural negative random artifacts through equipment, curse handling, save and continued generation."
+      },
+      {
+        "id": "random-artifact",
+        "conditionIds": [
+          "artifact-theme-bias",
+          "artifact-scroll-class-bias",
+          "artifact-scroll-virtues",
+          "berserker-warning-no-tele",
+          "bard-slot-value",
+          "bad-luck-randart"
+        ],
+        "entry": "Natural/themed scheduler passes real class and theme with scroll=false; CREATE_ART_SCROLL player entry is unavailable.",
+        "reason": "Theme supplies initial bias. Without a theme there is no class initial bias in natural mode. Only scroll mode with no prior bias and the 1/4 gate applies class bias; later Warrior conversion depends on mode. Non-Bard harp value and shared value/curse retries apply. Berserker alone changes random_misc case 31 among current classes.",
+        "implementation": [
+          "crates/rfb-core/src/game/random_artifact.rs#initial_bias",
+          "crates/rfb-core/src/game/random_artifact/scheduling.rs#materialize_random_artifact_draft",
+          "crates/rfb-core/src/game/random_artifact/powers.rs",
+          "crates/rfb-core/src/game/random_artifact/materialization.rs",
+          "crates/rfb-core/src/game/item_value.rs"
+        ],
+        "tests": [
+          "crates/rfb-core/src/game/random_artifact/tests.rs#random_artifact_current_classes_and_themes_select_eligible_biases_and_activations",
+          "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_save_preserves_rejected_names_and_continued_generation",
+          "crates/rfb-core/src/game/random_artifact/tests.rs#real_build_misc_warning_and_no_tele_follow_source_boundaries",
+          "crates/rfb-core/src/game/random_artifact/tests.rs#real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary",
+          "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#real_berserker_generated_flags_and_activation_rejection_survive_save_and_continue"
+        ],
+        "limits": "Boundary tests use real Build-derived class IDs and deterministic source draws. A second real Warrior build checks scheduler class forwarding against Berserker with equal generation inputs. Flag/activation consumers use the existing forced-randart mode and a fixed dagger base; ordinary negative generation is covered separately. Scroll probability tests remain factory evidence for an unavailable entry, not desktop acceptance."
+      },
+      {
+        "id": "fixed-artifact-reward",
+        "conditionIds": [
+          "fixed-artifact-identity",
+          "fixed-harp-bard",
+          "fixed-harp-pval",
+          "bad-luck-fixed-special",
+          "bad-luck-fixed-normal",
+          "good-luck-fixed-retry"
+        ],
+        "entry": "Imported fixed artifacts and explicitly configured class reward pools.",
+        "reason": "Of ten source identity-sensitive artifacts, only Dr Jones (162) is imported and uses its ordinary non-Archaeologist branch. Terror Mask is absent even though Warrior/Cavalry/Berserker qualify in source. Meditation Stone class bonuses and other imported rewards are actual use/reward behavior; they do not add a class branch to fixed-artifact construction.",
+        "implementation": [
+          "crates/rfb-core/src/game/loot.rs",
+          "crates/rfb-core/src/game/tasks.rs",
+          "crates/rfb-core/src/game/player_stats.rs",
+          "packs/rfb-demo-original/worlds"
+        ],
+        "tests": [
+          "crates/rfb-core/src/game/tests/tasks.rs#old_castle_reward_is_forced_even_when_the_artifact_was_generated_before_claim",
+          "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_is_not_sampled_after_either_fixed_artifact_success"
+        ],
+        "limits": "Absent identity-sensitive artifacts and fixed harps remain deferred; explicit rewards must keep their forced-item contract."
+      },
+      {
+        "id": "use-save",
+        "conditionIds": [
+          "tailored-compatible-kinds",
+          "berserker-warning-no-tele",
+          "theme-reset"
+        ],
+        "entry": "Equip/use/reject generated instances, identify/sense, combat or attributes, native save/load and continued actions.",
+        "reason": "Generation eligibility and item usability remain separate. Real new-build generated equipment/device/activation consumers preserve costs, charges, curses and properties across save/load; subsequent generation compares instances/drafts, RNG and random-artifact names.",
+        "implementation": [
+          "crates/rfb-core/src/game/inventory.rs",
+          "crates/rfb-core/src/game/item_use.rs",
+          "crates/rfb-core/src/game/player_stats.rs",
+          "crates/rfb-core/src/game/player_abilities.rs",
+          "crates/rfb-core/src/game/persistence.rs"
+        ],
+        "tests": [
+          "crates/rfb-core/src/game/tests/items.rs",
+          "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_save_preserves_rejected_names_and_continued_generation",
+          "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#real_berserker_generated_flags_and_activation_rejection_survive_save_and_continue",
+          "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#real_build_generated_devices_keep_use_costs_charges_and_continued_rng",
+          "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_negative_power_reaches_a_cursed_equippable_instance"
+        ],
+        "limits": "B0-B6/E8.8 evidence is reused for the prior six-build scope. New-build integration is core acceptance with documented fixed-base/mode fixtures; no new desktop acceptance or full-source parity is claimed."
+      }
+    ],
+    "deferred": [
+      {
+        "status": "deferred",
+        "conditionIds": [
+          "artifact-scroll-class-bias",
+          "artifact-scroll-virtues",
+          "inspired-smithing"
+        ],
+        "reason": "No artifact scroll or reforge player entry; factory coverage cannot close playable acceptance.",
+        "prerequisite": "Implement the requested actual entry and verify its mode-specific bias/virtue/value consumers before activation."
+      },
+      {
+        "status": "deferred",
+        "conditionIds": [
+          "fixed-artifact-identity",
+          "fixed-harp-bard",
+          "fixed-harp-pval",
+          "mauler-weight",
+          "bard-slot-value",
+          "monster-ring-activation"
+        ],
+        "reason": "Missing identity/content branches remain distinct from currently reachable build gaps; see individual scope prerequisites.",
+        "prerequisite": "Import the applicable content and actual identity/consumer together; review ordinary branches as well."
+      }
+    ],
+    "gaps": [],
     "conditionScopes": [
       {
         "id": "ego-theme",
@@ -141,7 +685,10 @@
         "change": "activation chance 1/2 instead of 1/5",
         "consumer": "jewelry activation generation and actual activation use",
         "tests": null,
-        "prerequisite": "real Monster Ring race, equipment/absorption and activation consumers"
+        "prerequisite": "real Monster Ring race, equipment/absorption and activation consumers",
+        "unavailableRaceIds": [
+          "rfb-legacy.race.mon-ring"
+        ]
       },
       {
         "id": "mauler-weight",
@@ -153,7 +700,10 @@
         "change": "recompute melee weapon weight after dice improvement",
         "consumer": "Ego/random artifact instance weight, burden and melee",
         "tests": null,
-        "prerequisite": "real Mauler class and heavy-weapon combat; same-input Ego/randart equip/save acceptance"
+        "prerequisite": "real Mauler class and heavy-weapon combat; same-input Ego/randart equip/save acceptance",
+        "unavailableClassIds": [
+          "demo.class.mauler"
+        ]
       },
       {
         "id": "bad-luck-tomte-hat",
@@ -168,16 +718,16 @@
         "prerequisite": null
       },
       {
-        "id": "berserker-telepathy",
+        "id": "berserker-warning-no-tele",
         "file": "src/artifact.c",
         "start": 1320,
         "end": 1326,
-        "status": "deferred-unavailable-build",
-        "entry": "no Berserker creation entry",
-        "change": "telepathy resistance ability chance 10% instead of 90%",
-        "consumer": "random artifact abilities and senses",
-        "tests": null,
-        "prerequisite": "real Berserker class and telepathy acceptance"
+        "status": "implemented",
+        "entry": "real Berserker build; natural/themed random artifacts pass the actual class ID",
+        "change": "random_misc case 31 gives WARNING at 10% for Berserker versus 90% for other classes; otherwise NO_TELE. This is not TELEPATHY.",
+        "consumer": "crates/rfb-core/src/game/random_artifact/powers.rs; random_artifact/materialization.rs; player_stats.rs player_has_anti_teleport; abilities/travel.rs; mod.rs warn_player_of_hidden_trap",
+        "tests": "crates/rfb-core/src/game/random_artifact/tests.rs#real_build_misc_warning_and_no_tele_follow_source_boundaries; crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#real_berserker_generated_flags_and_activation_rejection_survive_save_and_continue",
+        "prerequisite": null
       },
       {
         "id": "bard-slot-value",
@@ -189,7 +739,10 @@
         "change": "harp slot value percentage 50 instead of 40",
         "consumer": "random artifact value acceptance and harp abilities",
         "tests": null,
-        "prerequisite": "real Bard class, harp use and same-input value comparison"
+        "prerequisite": "real Bard class, harp use and same-input value comparison",
+        "unavailableClassIds": [
+          "demo.class.bard"
+        ]
       },
       {
         "id": "artifact-theme-bias",
@@ -211,8 +764,8 @@
         "status": "deferred-unavailable-entry",
         "entry": "CREATE_ART_SCROLL has no player creation entry",
         "change": "class/subclass bias on the scroll branch; ordinary natural generation does not run it",
-        "consumer": "random_artifact.rs initial_bias; future artifact scroll",
-        "tests": "factory tests only, not playable class acceptance",
+        "consumer": "crates/rfb-core/src/game/random_artifact.rs initial_bias; future artifact scroll",
+        "tests": "crates/rfb-core/src/game/random_artifact/tests.rs#random_artifact_current_classes_and_themes_select_eligible_biases_and_activations (scroll=true factory only; not real-build acceptance); crates/rfb-core/src/game/random_artifact/tests.rs#real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary (real class configuration; natural no-draw and scroll 1/4, 20% boundaries; scroll entry remains unavailable)",
         "prerequisite": "artifact scroll entry; each listed class needs actual new-game configuration"
       },
       {
@@ -237,7 +790,7 @@
         "change": "Gothmog, Twilight, Stormbringer, Destroyer, Terror Mask, Stone Mask, Muramasa, Dr Jones, Xiaolong, Dragonlance branches",
         "consumer": "fixed artifact construction, curses/dice/pval/slays/abilities",
         "tests": null,
-        "prerequisite": "import each source artifact and implement both normal and applicable identity branches; Warrior/Cavalry alone do not make absent Terror Mask reachable"
+        "prerequisite": "import each source artifact and implement both ordinary and applicable identity branches; Warrior/Cavalry/Berserker entries do not make absent Terror Mask reachable"
       },
       {
         "id": "inspired-smithing",
@@ -273,7 +826,10 @@
         "change": "gold setters notify Politician",
         "consumer": "politician_check_au",
         "tests": null,
-        "prerequisite": "real Politician gold consumer"
+        "prerequisite": "real Politician gold consumer",
+        "unavailableClassIds": [
+          "demo.class.politician"
+        ]
       },
       {
         "id": "bad-luck-fixed-special",
@@ -364,7 +920,7 @@
         "file": "src/object2.c",
         "start": 2374,
         "end": 2384,
-        "status": "deferred-unavailable-build",
+        "status": "deferred-unavailable-personality-or-demigod",
         "entry": "Sexy personality / Aphrodite demigod unavailable",
         "change": "bikini adds +3 to all six attributes",
         "consumer": "base properties and equipped attributes",
@@ -377,7 +933,7 @@
         "start": 2415,
         "end": 2428,
         "status": "implemented-current-builds",
-        "entry": "Acquirement on six open classes",
+        "entry": "Acquirement on eight open builds",
         "change": "Archer rejects melee; Sniper retains it; Cavalry uses source riding weapon flags",
         "consumer": "loot/allocation.rs; mounted combat and projectile consumers",
         "tests": "game::loot::allocation::tests::tailored_uses_playable_class_equipment_realms_and_birth_race; game::tests::items::b4_tailored_launchers_equip_shoot_and_restore_for_archer_and_sniper; game::tests::items::b4_tailored_lance_keeps_riding_bonus_in_actual_mounted_combat",
@@ -401,7 +957,7 @@
         "start": 2455,
         "end": 2570,
         "status": "implemented-current-builds",
-        "entry": "six open classes; real body slots; birth Tomte knit cap",
+        "entry": "eight open builds; real body slots; birth Tomte knit cap",
         "change": "slot/favorite/book filters; full materialized glove flags and pval reject caster encumbrance",
         "consumer": "loot/allocation.rs; mod.rs slot helper; player_abilities.rs; inventory.rs",
         "tests": "game::loot::allocation::tests::; game::tests::items::tomte_tailored_acquirement_filters_headgear_by_birth_race_only; game::tests::items::b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
@@ -453,7 +1009,10 @@
         "change": "halve category weight when equip_has_slot_type is false; ANY excludes bow for this helper",
         "consumer": "loot/allocation.rs; mod.rs item_can_occupy_slot_type",
         "tests": "game::loot::allocation::tests::category_weights_use_great_precedence_and_body_slots_not_equipped_items",
-        "prerequisite": "Vortex real evolving body/innate consumers remain unavailable"
+        "prerequisite": "Vortex real evolving body/innate consumers remain unavailable",
+        "unavailableRaceIds": [
+          "rfb-legacy.race.mon-vortex"
+        ]
       },
       {
         "id": "needs-book",
@@ -501,7 +1060,10 @@
         "change": "replace generated artifact via disciple hook",
         "consumer": "karrot_replace_art",
         "tests": null,
-        "prerequisite": "real Disciple and artifact replacement consumer"
+        "prerequisite": "real Disciple and artifact replacement consumer",
+        "unavailableClassIds": [
+          "demo.class.disciple"
+        ]
       },
       {
         "id": "theme-reset",
@@ -537,9 +1099,14 @@
         "change": "realm-dependent book awareness",
         "consumer": "object awareness/knowledge",
         "tests": null,
-        "prerequisite": "real classes and book knowledge consumer"
+        "prerequisite": "real classes and book knowledge consumer",
+        "unavailableClassIds": [
+          "demo.class.sorcerer",
+          "demo.class.red-mage"
+        ]
       }
     ],
+    "acceptanceRule": "new-game identity must be real; forged identity branch tests are not playable acceptance; listed test paths are references, not results of this audit command",
     "sourceConditions": [
       {
         "source": "src/ego.c:83",
@@ -1124,7 +1691,7 @@
       {
         "source": "src/artifact.c:1323",
         "expression": "bool tele_proof = ((p_ptr->pclass == CLASS_BERSERKER) ? magik(10) : magik(90));",
-        "scope": "berserker-telepathy"
+        "scope": "berserker-warning-no-tele"
       },
       {
         "source": "src/artifact.c:2044",
@@ -1556,13 +2123,18 @@
   },
   "unresolvedSharedGenerationContracts": [
     {
+      "scope": "current build acceptance evidence",
+      "contract": "See buildApplicability.gaps for reachable generation/consumer evidence still needed; source review and test references alone do not close acceptance",
+      "source": "design/generation-build-applicability.json"
+    },
+    {
       "scope": "unavailable identities and entries",
       "contract": "see buildApplicability.conditionScopes; Mauler/Bard/Monster Ring are examples, not exhaustive",
       "source": "src/ego.c; src/object2.c; src/artifact.c"
     },
     {
       "scope": "source kind coverage and object representation",
-      "contract": "B0-B6 close allocation/retry/consumer acceptance for current playable builds and the imported pool. Unimported canonical kinds remain in legacy-base-allocation-audit.json; physical books retain B1 quantity-one instances; source ordinary pile distributions and full obj_can_combine origin/inscription/discount semantics are not claimed",
+      "contract": "B0-B6 close allocation/retry/consumer acceptance for the prior six playable classes and the imported pool. Unimported canonical kinds remain in legacy-base-allocation-audit.json; physical books retain B1 quantity-one instances; source ordinary pile distributions and full obj_can_combine origin/inscription/discount semantics are not claimed",
       "source": "lib/edit/k_info.txt; src/object2.c; src/obj.c"
     },
     {
@@ -2283,10 +2855,24 @@
       "tval": 19
     },
     {
+      "itemId": "demo.item.metal-scale-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 272,
+      "sval": 3,
+      "tval": 37
+    },
+    {
       "itemId": "demo.item.chain-mail",
       "status": "source-type-verified",
       "sourceIndex": 273,
       "sval": 4,
+      "tval": 37
+    },
+    {
+      "itemId": "demo.item.double-ring-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 274,
+      "sval": 5,
       "tval": 37
     },
     {
@@ -2353,6 +2939,13 @@
       "tval": 37
     },
     {
+      "itemId": "demo.item.double-chain-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 276,
+      "sval": 7,
+      "tval": 37
+    },
+    {
       "itemId": "demo.item.no-dachi",
       "status": "source-type-verified",
       "sourceIndex": 70,
@@ -2365,6 +2958,27 @@
       "sourceIndex": 105,
       "sval": 26,
       "tval": 22
+    },
+    {
+      "itemId": "demo.item.bar-chain-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 277,
+      "sval": 8,
+      "tval": 37
+    },
+    {
+      "itemId": "demo.item.metal-brigandine-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 278,
+      "sval": 9,
+      "tval": 37
+    },
+    {
+      "itemId": "demo.item.splint-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 279,
+      "sval": 10,
+      "tval": 37
     },
     {
       "itemId": "demo.item.falchion",

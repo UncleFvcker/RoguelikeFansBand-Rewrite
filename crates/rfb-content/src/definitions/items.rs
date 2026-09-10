@@ -1239,6 +1239,40 @@ pub struct ItemDeviceGenerationDefinition {
     pub activations: Vec<ItemDeviceActivationDefinition>,
     #[serde(default)]
     pub recovery: Option<ItemDeviceRecoveryDefinition>,
+    /// Natural source-device allocation; explicit grants use the named fixed effect.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rfb_device: Option<RfbDeviceGenerationDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RfbDeviceGenerationDefinition {
+    pub fixed_activation_id: String,
+    /// Preserve the source table order independently of the sorted profile catalog.
+    pub effects: Vec<RfbDeviceEffectDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RfbDeviceEffectDefinition {
+    pub activation_id: String,
+    pub rarity: u16,
+    pub difficulty_base: u16,
+    pub difficulty_extra: u16,
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub flags: BTreeSet<RfbDeviceEffectFlagDefinition>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum RfbDeviceEffectFlagDefinition {
+    Common,
+    DropGood,
+    DropGreat,
+    StockTown,
 }
 
 /// Shared source name tables and activation pool, independent of item/Ego identities.

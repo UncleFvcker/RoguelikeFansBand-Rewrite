@@ -179,7 +179,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
         "audit-demo-items" => {
             let adaptations = PathBuf::from(args.next().ok_or(
-                "audit-demo-items requires selection, adaptations, plan, and items paths",
+                "audit-demo-items requires selection, adaptations, plan (or - for inventory only), and items paths",
             )?);
             let plan = PathBuf::from(args.next().ok_or(
                 "audit-demo-items requires selection, adaptations, plan, and items paths",
@@ -199,7 +199,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                     &source,
                     &path,
                     &adaptations,
-                    &plan,
+                    (plan.as_os_str() != "-").then_some(plan.as_path()),
                     &items,
                 )?)?
             );

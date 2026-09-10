@@ -4220,6 +4220,17 @@
             }
           ],
           "default": null
+        },
+        "rfbDevice": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RfbDeviceGenerationDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Natural source-device allocation; explicit grants use the named fixed effect."
         }
       },
       "required": [
@@ -6932,6 +6943,75 @@
         "ranger"
       ],
       "type": "string"
+    },
+    "RfbDeviceEffectDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "activationId": {
+          "type": "string"
+        },
+        "difficultyBase": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "difficultyExtra": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "flags": {
+          "items": {
+            "$ref": "#/$defs/RfbDeviceEffectFlagDefinition"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "rarity": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "activationId",
+        "rarity",
+        "difficultyBase",
+        "difficultyExtra"
+      ],
+      "type": "object"
+    },
+    "RfbDeviceEffectFlagDefinition": {
+      "enum": [
+        "common",
+        "drop-good",
+        "drop-great",
+        "stock-town"
+      ],
+      "type": "string"
+    },
+    "RfbDeviceGenerationDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "effects": {
+          "description": "Preserve the source table order independently of the sorted profile catalog.",
+          "items": {
+            "$ref": "#/$defs/RfbDeviceEffectDefinition"
+          },
+          "type": "array"
+        },
+        "fixedActivationId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "fixedActivationId",
+        "effects"
+      ],
+      "type": "object"
     },
     "SniperShotModeDefinition": {
       "enum": [

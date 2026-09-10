@@ -6,30 +6,251 @@
   "deviceGeneration": {
     "activations": [
       {
+        "id": "rfb.device-activation.staff.detect-gold",
+        "nameKey": "device-activation-rfb-staff-detect-gold-name",
+        "weight": 1,
+        "minDepth": 5,
+        "maxDepth": 30,
+        "deviceCheckDifficulty": 5,
         "charges": {
           "cost": 4,
-          "maximum": 45,
-          "minimum": 45
+          "minimum": 16,
+          "maximum": 1000
         },
-        "deviceCheckDifficulty": 6,
-        "effectProgramId": "demo.effect.detect-items",
-        "id": "demo.device-activation.detect-objects",
-        "maxDepth": 100,
-        "minDepth": 1,
-        "nameKey": "device-activation-demo-detect-objects-name",
+        "effectProgramId": "rfb.effect.device-detect-gold",
         "target": {
           "modes": [
             "self"
           ],
           "range": 0,
           "requiresLineOfEffect": false
+        }
+      },
+      {
+        "id": "demo.device-activation.detect-objects",
+        "nameKey": "device-activation-rfb-staff-detect-objects-name",
+        "weight": 1,
+        "minDepth": 5,
+        "maxDepth": 30,
+        "deviceCheckDifficulty": 5,
+        "charges": {
+          "cost": 4,
+          "minimum": 16,
+          "maximum": 1000
         },
-        "weight": 1
+        "effectProgramId": "rfb.effect.device-detect-objects",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        }
+      },
+      {
+        "id": "rfb.device-activation.staff.detect-invisible",
+        "nameKey": "device-activation-rfb-staff-detect-invisible-name",
+        "weight": 1,
+        "minDepth": 5,
+        "maxDepth": 30,
+        "deviceCheckDifficulty": 5,
+        "charges": {
+          "cost": 4,
+          "minimum": 16,
+          "maximum": 1000
+        },
+        "effectProgramId": "rfb.effect.device-detect-invisible",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        }
+      },
+      {
+        "id": "rfb.device-activation.staff.detect-traps",
+        "nameKey": "device-activation-rfb-staff-detect-traps-name",
+        "weight": 1,
+        "minDepth": 5,
+        "maxDepth": 30,
+        "deviceCheckDifficulty": 5,
+        "charges": {
+          "cost": 5,
+          "minimum": 20,
+          "maximum": 1000
+        },
+        "effectProgramId": "rfb.effect.device-detect-traps",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        }
+      },
+      {
+        "id": "rfb.device-activation.staff.detect-door-stairs",
+        "nameKey": "device-activation-rfb-staff-detect-door-stairs-name",
+        "weight": 1,
+        "minDepth": 5,
+        "maxDepth": 30,
+        "deviceCheckDifficulty": 5,
+        "charges": {
+          "cost": 5,
+          "minimum": 20,
+          "maximum": 1000
+        },
+        "effectProgramId": "rfb.effect.device-detect-door-stairs",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        }
+      },
+      {
+        "id": "rfb.device-activation.staff.detect-evil",
+        "nameKey": "device-activation-rfb-staff-detect-evil-name",
+        "weight": 1,
+        "minDepth": 7,
+        "maxDepth": 30,
+        "deviceCheckDifficulty": 7,
+        "charges": {
+          "cost": 5,
+          "minimum": 20,
+          "maximum": 1000
+        },
+        "effectProgramId": "rfb.effect.device-detect-evil",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        }
+      },
+      {
+        "id": "rfb.device-activation.staff.identify",
+        "nameKey": "device-activation-rfb-staff-identify-name",
+        "weight": 1,
+        "minDepth": 10,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 10,
+        "charges": {
+          "cost": 4,
+          "minimum": 16,
+          "maximum": 1000
+        },
+        "effectProgramId": "rfb.effect.device-identify",
+        "target": {
+          "modes": [
+            "item"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        }
+      },
+      {
+        "id": "rfb.device-activation.staff.identify-full",
+        "nameKey": "device-activation-rfb-staff-identify-full-name",
+        "weight": 1,
+        "minDepth": 40,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 40,
+        "charges": {
+          "cost": 20,
+          "minimum": 80,
+          "maximum": 1000
+        },
+        "effectProgramId": "rfb.effect.device-identify-full",
+        "target": {
+          "modes": [
+            "item"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        }
       }
     ],
     "recovery": {
       "energyPerMille": 10,
       "intervalTicks": 10
+    },
+    "rfbDevice": {
+      "fixedActivationId": "demo.device-activation.detect-objects",
+      "effects": [
+        {
+          "activationId": "rfb.device-activation.staff.detect-gold",
+          "rarity": 1,
+          "difficultyBase": 10,
+          "difficultyExtra": 0,
+          "flags": [
+            "stock-town"
+          ]
+        },
+        {
+          "activationId": "demo.device-activation.detect-objects",
+          "rarity": 1,
+          "difficultyBase": 10,
+          "difficultyExtra": 0,
+          "flags": [
+            "stock-town"
+          ]
+        },
+        {
+          "activationId": "rfb.device-activation.staff.detect-invisible",
+          "rarity": 1,
+          "difficultyBase": 10,
+          "difficultyExtra": 0,
+          "flags": []
+        },
+        {
+          "activationId": "rfb.device-activation.staff.detect-traps",
+          "rarity": 1,
+          "difficultyBase": 10,
+          "difficultyExtra": 0,
+          "flags": [
+            "stock-town"
+          ]
+        },
+        {
+          "activationId": "rfb.device-activation.staff.detect-door-stairs",
+          "rarity": 1,
+          "difficultyBase": 10,
+          "difficultyExtra": 0,
+          "flags": [
+            "stock-town"
+          ]
+        },
+        {
+          "activationId": "rfb.device-activation.staff.detect-evil",
+          "rarity": 1,
+          "difficultyBase": 10,
+          "difficultyExtra": 0,
+          "flags": []
+        },
+        {
+          "activationId": "rfb.device-activation.staff.identify",
+          "rarity": 1,
+          "difficultyBase": 10,
+          "difficultyExtra": 0,
+          "flags": [
+            "stock-town",
+            "common"
+          ]
+        },
+        {
+          "activationId": "rfb.device-activation.staff.identify-full",
+          "rarity": 3,
+          "difficultyBase": 10,
+          "difficultyExtra": 0,
+          "flags": [
+            "common"
+          ]
+        }
+      ]
     }
   },
   "elementalDestructionVulnerabilities": [

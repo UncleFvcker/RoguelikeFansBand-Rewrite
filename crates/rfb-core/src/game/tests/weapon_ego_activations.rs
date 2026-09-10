@@ -172,6 +172,7 @@ fn riding_charge_game(seed: u64) -> Game {
     affix.description_key = "test-affix-riding-charge-description".to_owned();
     affix.rfb_ego = None;
     affix.device_generation = Some(rfb_content::ItemDeviceGenerationDefinition {
+        rfb_device: None,
         activation_optional: false,
         activations: vec![rfb_content::ItemDeviceActivationDefinition {
             rfb_value: Some(0),
@@ -316,6 +317,7 @@ fn activation_effect_game(seed: u64, affix_id: &str, effect: &str, weight: u16) 
     affix.description_key = "test-affix-ability-effect-description".to_owned();
     affix.rfb_ego = None;
     affix.device_generation = Some(rfb_content::ItemDeviceGenerationDefinition {
+        rfb_device: None,
         activation_optional: false,
         activations: vec![activation.clone()],
         recovery: None,

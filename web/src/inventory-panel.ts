@@ -274,13 +274,14 @@ export class InventoryPanel {
   selectItemTarget(
     excludedItemId: string | undefined,
     onSelect: (itemId: string) => Promise<void>,
+    onCancel?: () => Promise<void>,
   ): void {
     const candidates = itemTargetCandidates(
       this.#state,
       excludedItemId,
       (displayNameKey, kindId, artifactName) => this.#formatter.visibleItemName(displayNameKey, kindId, artifactName),
     );
-    this.#selectItemTargetFrom(candidates, onSelect);
+    this.#selectItemTargetFrom(candidates, onSelect, onCancel);
   }
 
   readonly #handleUse = (): void => {
@@ -868,6 +869,7 @@ export class InventoryPanel {
           itemId: item.id,
           target: { type: "item", itemId },
         }),
+        () => this.#dispatch({ type: "use-item", itemId: item.id }),
       );
       return;
     }
@@ -960,9 +962,11 @@ export class InventoryPanel {
   #selectItemTargetFrom(
     candidates: Array<{ id: string; label: string }>,
     onSelect: (itemId: string) => Promise<void>,
+    onCancel?: () => Promise<void>,
   ): void {
     if (candidates.length === 0) {
       this.#announce("message-target-mode-unavailable", undefined, "system");
+      void onCancel?.();
       return;
     }
     const document = this.#dom.inventoryList.ownerDocument;
@@ -994,13 +998,18 @@ export class InventoryPanel {
     confirm.textContent = this.#localization.format("action-item-target-confirm");
     actions.append(cancel, confirm);
     form.append(title, label, actions);
+    let selected = false;
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       const itemId = select.value;
+      selected = true;
       dialog.close();
       void onSelect(itemId);
     });
-    dialog.addEventListener("close", () => dialog.remove(), { once: true });
+    dialog.addEventListener("close", () => {
+      dialog.remove();
+      if (!selected) void onCancel?.();
+    }, { once: true });
     dialog.append(form);
     document.body.append(dialog);
     dialog.showModal();

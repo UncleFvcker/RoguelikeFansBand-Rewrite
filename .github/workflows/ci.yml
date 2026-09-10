@@ -40,5 +40,9 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
+      - name: Check generation applicability and audit tooling
+        run: |
+          node ../scripts/audit-egos.mjs --check-applicability
+          node --test ../scripts/generation-applicability.test.mjs
       - run: npm test
       - run: npm run build:ui

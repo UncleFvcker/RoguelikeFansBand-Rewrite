@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1300,
+  "descriptionKey": "item-demo-splint-mail-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -2
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 35,
+  "glyph": "[",
+  "id": "demo.item.splint-mail",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 19
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-splint-mail-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 279,
+    "sval": 10,
+    "tval": 37
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 250
+}
