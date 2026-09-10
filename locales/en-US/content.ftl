@@ -9214,6 +9214,12 @@ item-demo-duelist-name = of the Duelist
 item-demo-duelist-description = A source rapier from the Duelist Old Castle rewards.
 
 item-demo-quickthorn-name = 'Quickthorn'
+item-demo-sam-name = Hard Leather Cap of Sam
+item-demo-sam-description = The cap of Frodo's brave and faithful companion.
+item-demo-merry-name = Cloak of Merry
+item-demo-merry-description = A cloak that sharpens the wearer's stealth and perception.
+item-demo-pippin-name = Leather Gloves of Pippin
+item-demo-pippin-description = The gloves of the brave Peregrin Took.
 item-demo-quickthorn-description = A source rapier from the Duelist Old Castle rewards.
 
 

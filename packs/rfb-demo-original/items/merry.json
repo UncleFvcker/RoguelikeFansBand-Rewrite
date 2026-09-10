@@ -1,0 +1,65 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.merry",
+  "nameKey": "item-demo-merry-name",
+  "descriptionKey": "item-demo-merry-description",
+  "glyph": "(",
+  "generationLevel": 20,
+  "weightTenthsPound": 10,
+  "maxStack": 1,
+  "baseValue": 15000,
+  "equipmentSlot": "cloak",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 240,
+    "baseItemKindId": "demo.item.cloak",
+    "instant": false,
+    "rarityOneIn": 3
+  },
+  "modifiers": {
+    "strength": -1,
+    "dexterity": 1,
+    "speed": 1,
+    "defense": 8
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 1,
+    "meleeDamage": 1,
+    "stealthSkill": 1,
+    "searchSkill": 5,
+    "perceptionSkill": 5
+  },
+  "resistances": {
+    "confusion": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "DEC_STR",
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_CONF",
+      "SEARCH",
+      "SPEED",
+      "STEALTH"
+    ],
+    "pval": 1,
+    "toArmor": 7
+  }
+}

@@ -85,6 +85,127 @@ fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
     panic!("ordinary heavy armor was not generated: {remaining:?}");
 }
 
+#[test]
+fn hobbit_fixed_artifacts_generate_equip_and_preserve_uniqueness_after_save() {
+    let mut game = Game::new_with_build(413, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    game.items.clear();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-20".into(),
+        depth: 20,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.ordinary-drop".into(),
+        },
+    };
+    let mut remaining = BTreeSet::from(["demo.item.sam", "demo.item.merry", "demo.item.pippin"]);
+    // Repeated drops at controlled depth; keep the formal base pool, quality
+    // rolls, rarity and uniqueness bookkeeping in the production path.
+    for _ in 0..50_000 {
+        let generated = game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        for item in generated {
+            if !remaining.remove(item.kind_id.as_str()) {
+                continue;
+            }
+            assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+            assert!(game.item_property_knowledge[&id].identified);
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "artifacts never generated: {remaining:?}"
+    );
+    assert_eq!(game.carried_weight_tenths_pound(), 30);
+    for (kind, defense) in [("sam", 9), ("merry", 8), ("pippin", 8)] {
+        let id = game
+            .items
+            .iter()
+            .find(|item| item.kind_id == format!("demo.item.{kind}"))
+            .unwrap()
+            .id
+            .clone();
+        let before = game.equipment_modifiers();
+        let bonuses = game.player_equipment_bonuses();
+        let stats = game.player_derived_stats();
+        game.equip_inventory_item(&id, None).unwrap();
+        let after = game.equipment_modifiers();
+        let equipped = game.player_derived_stats();
+        assert_eq!(after.strength, before.strength - 1);
+        assert_eq!(after.dexterity, before.dexterity + 1);
+        assert_eq!(equipped.speed.value, stats.speed.value + 1);
+        assert_eq!(after.defense, before.defense + defense);
+        assert_eq!(
+            game.player_equipment_bonuses().melee_skill,
+            bonuses.melee_skill + 1
+        );
+        assert_eq!(
+            game.player_equipment_bonuses().melee_damage,
+            bonuses.melee_damage + 1
+        );
+        if kind == "merry" {
+            assert_eq!(equipped.stealth_skill.value, stats.stealth_skill.value + 1);
+            assert_eq!(equipped.search_skill.value, stats.search_skill.value + 5);
+            assert_eq!(
+                equipped.perception_skill.value,
+                stats.perception_skill.value + 5
+            );
+            assert_eq!(
+                game.effective_player_resistances()
+                    .level(DamageType::Confusion),
+                ResistanceLevel::Resistant
+            );
+        }
+    }
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.rng, game.rng);
+    assert_eq!(
+        restored.player_derived_stats().armor_class,
+        game.player_derived_stats().armor_class
+    );
+    assert_eq!(
+        restored.player_derived_stats().search_skill,
+        game.player_derived_stats().search_skill
+    );
+    let next = game
+        .generate_loot_instances(&context, ItemLocation::Inventory)
+        .unwrap();
+    assert_eq!(
+        restored
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap(),
+        next
+    );
+    assert_eq!(restored.rng, game.rng);
+    for (kind, base) in [
+        ("sam", "hard-leather-cap"),
+        ("merry", "cloak"),
+        ("pippin", "leather-gloves"),
+    ] {
+        assert!(
+            restored
+                .generated_artifact_ids
+                .contains(&format!("demo.item.{kind}"))
+        );
+        assert!(
+            restored
+                .roll_fixed_artifact_kind_id(&context, Some(&format!("demo.item.{base}")), false)
+                .is_none()
+        );
+    }
+}
+
 fn razorback_game() -> (Game, String) {
     let mut game = Game::new_with_build(129, "demo.build.warrior").unwrap();
     clear_monsters(&mut game);

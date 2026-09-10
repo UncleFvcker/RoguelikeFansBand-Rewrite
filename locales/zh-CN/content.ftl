@@ -9218,6 +9218,12 @@ item-demo-duelist-name = 决斗者的
 item-demo-duelist-description = 原版旧城堡决斗者奖励细剑。
 
 item-demo-quickthorn-name = 『快刺』
+item-demo-sam-name = 山姆的硬皮帽
+item-demo-sam-description = 山姆是佛罗多勇敢而值得信赖的同伴。
+item-demo-merry-name = 梅里的披风
+item-demo-merry-description = 梅里是霍比特人中最敏锐、最聪明的。
+item-demo-pippin-name = 皮平的皮手套
+item-demo-pippin-description = “图克家的傻瓜”……啊，不过佩里格林（皮平）虽然算不上明智，但很勇敢。
 item-demo-quickthorn-description = 原版旧城堡决斗者奖励细剑。
 
 

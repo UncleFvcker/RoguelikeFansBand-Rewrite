@@ -10,10 +10,10 @@
 | 协议 | 1.249 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 122 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 17 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.412.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.413.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v323，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 9 个 Class、16 个 Build、57 个 Race、32 本能力书、1,869 个 ability 文件、385 个 item、1,405 个 actor、168 个 affix、152 个 mutation。世界定义含 31 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 9 个 Class、16 个 Build、57 个 Race、32 本能力书、1,869 个 ability 文件、388 个 item、1,405 个 actor、168 个 affix、152 个 mutation。世界定义含 31 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
 权威内容统计工具是 `rfb-contentc inspect-source`。本次集成已运行内容编译；静态统计不替代行为验收。
 
@@ -81,7 +81,7 @@ B2 已接入 17 类共享类别权重、身体槽位减半、Good 分配层级 +
 
 集成保留物品感知与实例神器鉴定边界、托姆特实例头饰重量、冬贝利逐武器伤害/攻次和准确来源显示。种族永久状态与新增物品字段共同进入当前保存和状态哈希，版本统一收口；内容 hash 本身不参与状态哈希。
 
-物品覆盖 I0 已完成清单校准，[I1 首组](remaining-item-coverage-plan.md#i1补普通装备底材)已接入金属鳞甲、双层环甲、双层链甲、条板链甲、金属布面甲和板环甲。I1 该批盘点为 346 个有效基础身份；本次合入神器卷轴后为 347 个，余 197 个有效 kind 与占位 0。固定神器随决斗者奖励增至 16/392 个定义。六件重甲保留源等级、分配、中文名和装备参数，复用现有生成/装备规则；核心测试通过完整正式池的受控深度生成，实际拾取、鉴定、装备及保存恢复后的下一次生成/RNG 验证。其他 I1 机制族与后续依赖见[逐项清单](../design/remaining-item-coverage-review.json)。
+物品覆盖 I0 已完成清单校准，[I1 首组](remaining-item-coverage-plan.md#i1补普通装备底材)已接入金属鳞甲、双层环甲、双层链甲、条板链甲、金属布面甲和板环甲。I1 该批盘点为 346 个有效基础身份；本次合入神器卷轴后为 347 个，余 197 个有效 kind 与占位 0。固定神器随决斗者奖励及 I3 普通首组增至 19/392 个定义。山姆的硬皮帽、梅里的披风、皮平的皮手套复用既有底材与消费者，核心受控 20 层普通生成、拾取/鉴定/装备及保存后的唯一性与后续 RNG 已验证；未执行本组桌面验收。六件重甲保留源等级、分配、中文名和装备参数，复用现有生成/装备规则；核心测试通过完整正式池的受控深度生成，实际拾取、鉴定、装备及保存恢复后的下一次生成/RNG 验证。其他 I1 机制族与后续依赖见[逐项清单](../design/remaining-item-coverage-review.json)。
 
 [I2 首组](remaining-item-coverage-plan.md#i2装置效果与普通消耗品)已将 rod 四条、staff 八条侦测/鉴定配置接入同一 canonical 底材的自然生成，保留源动态参数、模式/等级筛选、实例知识、费用及恢复。121 条源表行中，22 条有配置对应（含改编别名），13 条绑定 canonical 底材，其中本次 12 条使用源式生成参数；其余行不计作完成。核心与内容库回归、取消目标的界面测试/typecheck、内容 Schema/lock、Clippy 和八构筑适用性检查通过。26 条 active 契约经观察后刷新并通过：固定装置初始化改变了保存状态和 RNG，影响随机落点、伤害、潜力及生成 ID；采矿场景改用成功分支种子，保留金币/矿石/熟练度及存档断言。State Hash Schema 与保存/协议格式不变。没有本批桌面试玩；疯狂卷轴与液态洛格鲁斯仍未开放，具体依赖已记入计划。
 
