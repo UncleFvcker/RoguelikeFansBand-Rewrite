@@ -1,0 +1,138 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.wizardstaff",
+    "instant": false,
+    "rarityOneIn": 50,
+    "sourceIndex": 120
+  },
+  "baseValue": 140000,
+  "brands": [
+    "fire"
+  ],
+  "descriptionKey": "item-demo-gandalf-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 90,
+        "rfbValue": 14000,
+        "effectProgramId": "demo.effect.gandalf-invulnerability",
+        "id": "rfb-legacy.item-activation.invulnerability",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "item-activation-demo-gandalf-name",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 7770
+    }
+  },
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "equipmentBonuses": {
+    "lightRadius": 1,
+    "searchSkill": 20,
+    "spellCapacityBonus": 4
+  },
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 80,
+  "glyph": "\\",
+  "id": "demo.item.gandalf",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 2,
+    "toDamage": 13,
+    "toHit": 10
+  },
+  "modifiers": {
+    "charisma": 4,
+    "intelligence": 4,
+    "wisdom": 4
+  },
+  "nameKey": "item-demo-gandalf-name",
+  "passives": [
+    "hold-life",
+    "mana-regeneration",
+    "reduced-mana-cost",
+    "regeneration",
+    "see-invisible",
+    "slow-digestion"
+  ],
+  "resistances": {
+    "confusion": "resistant",
+    "fire": "resistant",
+    "nether": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "BRAND_FIRE",
+      "BRAND_MANA",
+      "CHR",
+      "DEC_MANA",
+      "HIDE_TYPE",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "LITE",
+      "REGEN",
+      "REGEN_MANA",
+      "RES_BLIND",
+      "RES_CONF",
+      "RES_FIRE",
+      "RES_NETHER",
+      "SEARCH",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_EVIL",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "SLOW_DIGEST",
+      "SPELL_CAP",
+      "WIS",
+      "XTRA_POWER"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "slays": {
+    "evil": "slay",
+    "orc": "slay",
+    "troll": "slay"
+  },
+  "statusImmunities": [
+    "rfb.status.blindness"
+  ],
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable",
+    "mana-efficient"
+  ],
+  "weightTenthsPound": 40,
+  "resistsMonsterDestruction": true,
+  "weaponProficiencyBaseItemId": "demo.item.wizardstaff"
+}

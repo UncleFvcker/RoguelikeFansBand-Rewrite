@@ -895,14 +895,24 @@ impl Game {
         }
         // q_old_castle's RANDOM27 is a birth-time choice. Use the existing durable
         // selection seed, so intervening commands and failed claims cannot reroll it.
-        if self.player_is_duelist()
+        let fixed_castle_reward = self.build.as_ref().is_some_and(|build| {
+            matches!(
+                build.class_id.as_str(),
+                "demo.class.duelist" | "demo.class.mage" | "demo.class.high-mage"
+            )
+        });
+        if fixed_castle_reward
             && task_id == "demo.task.old-castle"
             && let Some(reward) = task.reward.as_mut()
         {
             let mut selection =
                 crate::rng::RfbRng::seeded(task_selection_seed(task_id, self.wilderness_seed));
-            let entry =
-                selected_reward_entry(reward, Some("demo.class.duelist"), &mut selection).clone();
+            let entry = selected_reward_entry(
+                reward,
+                self.build.as_ref().map(|build| build.class_id.as_str()),
+                &mut selection,
+            )
+            .clone();
             reward.entries = vec![entry];
             reward.class_overrides.clear();
         }
@@ -953,7 +963,7 @@ impl Game {
             ItemLocation::Inventory,
             &mut self.rng,
         );
-        if self.player_is_duelist()
+        if fixed_castle_reward
             && task_id == "demo.task.old-castle"
             && self.generated_artifact_ids.contains(&reward.kind_id)
         {
@@ -961,10 +971,10 @@ impl Game {
                 &self.content,
                 &mut self.rng,
                 &reward,
-                "demo.class.duelist",
+                class_id.expect("reward class"),
                 &mut self.random_artifact_names,
             )
-            .expect("validated Duelist reward has an RFB base and random artifact data");
+            .expect("validated class reward has an RFB base and random artifact data");
         }
         let outcome = TaskRewardOutcome {
             item_kind_id: reward.kind_id.clone(),

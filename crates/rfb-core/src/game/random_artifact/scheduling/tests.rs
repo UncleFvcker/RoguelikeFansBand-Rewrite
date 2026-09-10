@@ -299,7 +299,13 @@ fn random_artifact_forced_base_pipeline_covers_slots_and_special_robe_and_light(
 
 #[test]
 fn random_artifact_save_preserves_rejected_names_and_continued_generation() {
-    for build in ["warrior", "berserker", "mindcrafter", "duelist"] {
+    for build in [
+        "warrior",
+        "berserker",
+        "mindcrafter",
+        "duelist",
+        "mage-death-sorcery",
+    ] {
         let mut game = Game::new_with_build(85, &format!("demo.build.{build}")).unwrap();
         game.items.clear();
         game.entities.clear();
@@ -378,7 +384,7 @@ fn random_artifact_save_preserves_rejected_names_and_continued_generation() {
 #[test]
 fn random_artifact_negative_power_reaches_a_cursed_equippable_instance() {
     let artifact = source();
-    for build in ["warrior", "berserker", "mindcrafter"] {
+    for build in ["warrior", "berserker", "mindcrafter", "mage-death-sorcery"] {
         let mut game = Game::new_with_build(85, &format!("demo.build.{build}")).unwrap();
         game.items.clear();
         game.entities.clear();
@@ -636,14 +642,14 @@ fn real_berserker_generated_flags_and_activation_rejection_survive_save_and_cont
 #[test]
 fn real_build_generated_devices_keep_use_costs_charges_and_continued_rng() {
     let artifact = source();
-    for build in ["berserker", "mindcrafter"] {
+    for build in ["berserker", "mindcrafter", "mage-death-sorcery"] {
         let mut game = Game::new_with_build(85, &format!("demo.build.{build}")).unwrap();
         choose_human_talent_if_pending(&mut game);
         game.items.clear();
         game.entities.clear();
         let original_content = game.content.clone();
-        // Ordinary generation can produce a device for either class, although
-        // neither is a tailored device class and Berserker cannot use it.
+        // Ordinary generation includes devices for all classes; Mage also prefers
+        // them in Tailored generation, while Berserker cannot use them.
         narrow(&mut game, &artifact, "demo.item.magic-missile-wand");
         let context = context(&game);
         let draft = game

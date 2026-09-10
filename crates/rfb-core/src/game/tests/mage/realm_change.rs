@@ -450,6 +450,36 @@ fn guild_membership_and_prices_follow_current_realms_without_changing_primary_or
     );
     assert_eq!(game.virtues, virtues);
     assert_eq!(game.active_casting_realm_profiles()[0].realm_id, "death");
+
+    // Exercise the actual services with the changed role, including saved continuation.
+    crate::game::tests::town::enter_town_facility(&mut game, &sorcery.id);
+    game.gold = old_price;
+    let before = game.to_save();
+    assert_eq!(
+        game.identify_all_at_facility(&sorcery.id),
+        Err("insufficient-gold")
+    );
+    assert!(game.to_save() == before);
+    crate::game::tests::town::enter_town_facility(&mut game, &life.id);
+    game.player.hp = 1;
+    game.gold = 0;
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    for run in [&mut game, &mut restored] {
+        dispatch_next(
+            run,
+            GameCommand::UseFacilityService {
+                facility_id: life.id.clone(),
+                service: rfb_protocol::FacilityServiceKindDto::Heal,
+                item_id: None,
+                enchantment_steps: None,
+            },
+        );
+        assert!(run.player.hp > 1);
+        assert_eq!(run.gold, 0);
+    }
+    assert_eq!(game.state_hash(), restored.state_hash());
+    assert_eq!(game.rng, restored.rng);
 }
 
 #[test]

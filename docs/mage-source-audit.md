@@ -1,8 +1,8 @@
 # 法师来源与消费者审计
 
-初审日期：2026-09-10，对应[法师计划](mage-class-plan.md)第一步，代码基线 `a09a334df`。以下源→实现差异表记录初审基线；截至 2026-09-11 已完成前四步，见文末当前进度，**普通创角入口尚未开放**。工作树既存 `release/` 保留。
+初审日期：2026-09-10，对应[法师计划](mage-class-plan.md)第一步，代码基线 `a09a334df`。以下源→实现差异表记录初审基线；截至 2026-09-11 已完成前五步，见文末当前进度与第五步结论，**普通创角入口尚未开放**。工作树既存 `release/` 保留。
 
-RFB 来源为 `D:/codex/Frogcomposband/master` 的 `master` Git 对象，实际提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`，第四步复核未变。以下源路径和行号均指此提交，通过 `git show` / `git grep` 读取；实现路径指本项目。内容保持 1.413.0；当前协议 1.251、State Hash Schema 124、save header/payload 为 14/19。
+RFB 来源为 `D:/codex/Frogcomposband/master` 的 `master` Git 对象，实际提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`，第五步复核未变。以下源路径和行号均指此提交，通过 `git show` / `git grep` 读取；实现路径指本项目。内容 1.414.0；当前协议 1.251、State Hash Schema 124、save header/payload 为 14/19。
 
 ## 范围和审计方法
 
@@ -161,7 +161,7 @@ Build 保留出生身份，主领域不变；当前副领域与必要历史由 R
 
 ## 当前进度与验证
 
-前四步已完成，第四步基线为 `bd2834bff`。正式定义见 [Mage Class](../packs/rfb-demo-original/classes/mage.json)、[技能](../packs/rfb-demo-original/skillSets/mage.json)、[玩家 actor](../packs/rfb-demo-original/actors/mage-player.json)、[职业能力](../packs/rfb-demo-original/abilities/mage-eat-magic.json)及 [Build 目录](../packs/rfb-demo-original/builds/)。56 个有序组合各携带双方第一本书，共用职业定义；未添加创角目录项。
+前五步已完成，第四步基线为 `bd2834bff`，第五步基线为 `151ff7f30`。正式定义见 [Mage Class](../packs/rfb-demo-original/classes/mage.json)、[技能](../packs/rfb-demo-original/skillSets/mage.json)、[玩家 actor](../packs/rfb-demo-original/actors/mage-player.json)、[职业能力](../packs/rfb-demo-original/abilities/mage-eat-magic.json)及 [Build 目录](../packs/rfb-demo-original/builds/)。56 个有序组合各携带双方第一本书，共用职业定义；未添加创角目录项。
 
 - 复用 importer 的 `parse_m_info`，按 book rank/书内次序导入 256 项 Mage 等级、基础费用、失败率和首用经验；逐项对照解析结果通过。`firstSuccessExperience` 已存 `sexp × minimumLevel` 的最终值，运行时不再乘等级；死亡 Wraithform 的 250×47 和 Nature's Wrath 的 150×40 有实际首用奖励覆盖。
 - 源属性/技能、武器熟练度（含双节棍 0/0）、400/100/20 攻击参数、MP/再生/负重、周期感知、美德与龙人变形等级已接入。保持公共出生属性和 HP progression 适配；没有复刻源点购或 HP 掷点曲线。
@@ -179,4 +179,105 @@ Build 保留出生身份，主领域不变；当前副领域与必要历史由 R
 
 第四步实际检查：37 项 Mage、既有 High-Mage/Paladin/随机祈祷、Mogaminator、书本分配、城镇、保存、发现统计、神器身份和 Mindcrafter 相关回归通过；协议 7、保存容器 2 项通过。`rfb-core` / `rfb-protocol` / `rfb-save` all-targets Clippy、生成绑定检查、前端 typecheck 和 41 项状态/会话/背包/创角消费者测试通过。新增持久状态进入哈希，初始保存回环先 observe，再刷新 26 条 active 契约；diff 只有 stateHash/saveRoundTripStateHash，全部 verify 通过。内容未变化，不重编内容 Schema 或升级包/lock。
 
-第五至七步仍待完成：完整职业生成/任务/公会关联、正式界面与桌面交付。本批没有 Tauri 或 Android 验收，也没有发布新的可玩程序；56 个 Mage 仍未进入普通创角或可用生成审计集合。
+第六、七步仍待完成：正式界面、可用生成记录/报告与桌面交付。本批没有 Tauri 或 Android 验收，也没有发布新的可玩程序；56 个 Mage 仍未进入普通创角或可用生成审计集合。
+
+## 第五步：职业关联与生成结论
+
+以下是 2026-09-11 的完成结论，覆盖正式池内当前可达内容。第 6 节保留初审时发现的缺口，实施结果以此节为准。源 ref/commit 与文首相同；没有扩大到尚未接入的四个领域或其他职业入口。
+
+### 五个共享审计范围
+
+| 引用 / 正式 sharedReview | 结论与条件 | 本批实现及行为证据 |
+| --- | --- | --- |
+| G1 / `base-allocation-tailored` | implemented。Mage 加入装置类：tval 55/65/66；先 needs-book 的 1/10，再装置的 1/7。基础/Good/Great/Acquirement 复用现有类别、等级、主题及数量规则；Tailored 使用当前双方和真实身体槽，普通池保留非当前领域书和非偏好物品。Mage 默认近战 favorite，手套以 caster 负重判成品资格。 | [allocation.rs](../crates/rfb-core/src/game/loot/allocation.rs)：`mage_tailored_draws_book_before_device_and_skips_satisfied_book_draw` 核对满足/未满足书需求时的实际 RNG；`tailored_uses_playable_class_equipment_realms_and_birth_race` 加 Mage 与 Tomte；`mage_realm_change_updates_book_need_and_actual_allocation_without_resetting_discovery` 验证改换前后实际候选、生成和发现历史。Good/Great/主题/等级等既有 19 项分配测试全部通过。 |
+| G2 / `ego-negative` | no-special-difference。源 Ego 没有 Mage 独立权重；Mauler 等不可用身份条件保留。种族、幸运、美德、主题与诅咒仍按真实状态消费。手套负重属于已有 caster 条件，不能把所有手套或装置使用者统一处理。 | [items.rs](../crates/rfb-core/src/game/tests/items.rs) 的 `b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng` 加 Mage 的 protection / wizard-gloves / free-action，验证生成、拒绝 RNG、装备后 MP 与保存。[scheduling/tests.rs](../crates/rfb-core/src/game/random_artifact/scheduling/tests.rs) 的 `random_artifact_negative_power_reaches_a_cursed_equippable_instance` 加真实 Mage，验证负向成品、诅咒、装备与恢复；共享 [ego/applicability.rs](../crates/rfb-core/src/game/ego/applicability.rs) 四项回归通过，其他 Ego 契约继续引用现有公共证据。 |
+| G3 / `random-artifact` | implemented。无外部主题的神器创造卷轴：1/4 进入职业 bias 后 Mage bias 保留源 20% Warrior 转换。自然及显式主题路径不增加此职业骰；卷轴美德、名字、固定底材与失败路径继续使用共同引擎。 | [random_artifact.rs](../crates/rfb-core/src/game/random_artifact.rs) 增 Mage；[tests.rs](../crates/rfb-core/src/game/random_artifact/tests.rs) 的 `real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary` 复用原测试名并加 Mage，实测自然/两个主题及 19/20 转换边界。自然生成后的拒名/负向/装置续跑用真实 Mage；[items.rs](../crates/rfb-core/src/game/tests/items.rs) 的 `artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name` 从真实 Mage 命令创造背包/装备目标，核对实例、命名、保存及 Enchantment 增长。 |
+| G4 / `fixed-artifact-reward` | implemented。源 `q_old_castle.txt:343–349` 的 Mage/High-Mage 甘道夫:萨鲁曼:因陀罗为 1:1:8，出生选择不受后续 RNG/读档/失败领取改变；已生成的唯一神器走既有具名随机替代。普通 Mage 盗贼奖励为长剑；SPEED=2 魔杖分支仍无当前模式入口。三件不是 fixed-artifact-identity 中的十项独立身份特例，不据此删除那些限制。 | [tasks.rs](../crates/rfb-core/src/game/tasks.rs)、[世界奖励](../packs/rfb-demo-original/worlds/middle-earth.json)、[generation.rs](../crates/rfb-core/src/game/tests/mage/generation.rs)：`mage_task_rewards_keep_birth_selection_and_replace_previously_generated_artifacts` 覆盖两个职业各三种选择、满包原子拒绝、重复替代、不可二次领取与加载；`fixed_mage_artifacts_generate_extra_power_equip_and_resume_activation_cooldowns` 从自然固定候选池抽中三件，提交实例后唯一性登记阻止再次生成。既有 Duelist 三项奖励及 tasks/artifact_identity 回归通过。 |
+| G5 / `use-save` | implemented。没有 Mage 专用的第二套装置或保存规则。生成成品、附魔、负向实例、唯一性与名字沿原保存；固定法杖的魔力品牌、法术容量、额外能力和激活必须实际生效。职业/领域公会均消费当前权威身份。 | [generation.rs](../crates/rfb-core/src/game/tests/mage/generation.rs) 验证实际装备、激活耗用、冷却末 tick 和存档相同续跑；[weapon_traits.rs](../crates/rfb-core/src/game/tests/weapon_traits.rs) 的 `mage_fixed_staff_mana_brand_uses_real_equipment_and_only_pays_on_hits` 比较有/无 MP 伤害并验证未命中不付费。[town.rs](../crates/rfb-core/src/game/tests/town.rs) 以 Mage 使用 Angwil/Thalos 两塔并付投影价格；[realm_change.rs](../crates/rfb-core/src/game/tests/mage/realm_change.rs) 验证失去 Sorcery 后原低价失败且无变更，获得 Life 后零金治疗、保存继续的状态/RNG 相同。 |
+
+全部 36 个 conditionScopes 已按第 6 节分组复核：新增类分支是装置/Tailored 与卷轴 bias；双领域相关条件改读当前领域；其他条件复用各自实际种族/性格/主题/职业边界。没有为 Mage 放开 Mauler、Bard、Monster Ring、Politician、Sorcerer/Red-Mage book-awareness、Inspired Smithing 等不可用入口，也没有删除既有 unavailable 条件。G2 的 no-special-difference 仅指没有新增职业专用分支，仍受幸运、身体槽和主题等条件影响。
+
+### 三件神器与城镇适配
+
+[甘道夫](../packs/rfb-demo-original/items/gandalf.json)、[萨鲁曼](../packs/rfb-demo-original/items/saruman.json)、[因陀罗](../packs/rfb-demo-original/items/indra.json) 对应源 `a_info.txt` 120/249/33，中文名采用 `artifact_name_zh.inc` 与源底材名。战斗参数、pval、抗性、法术容量、减耗/恢复被动及不可摧毁规则进入正式内容；[importer 测试](../crates/rfb-legacy-import/src/content.rs) 的 `mage_reward_artifacts_preserve_source_parameters_and_activations` 逐字段对照源记录、激活与正式内容。甘道夫 SEARCH 为 5×pval＝20、LITE 为 1；两件法杖沿用巫师法杖熟练度底材。
+
+源 `artifact.c` 的 XTRA_POWER 在共同固定神器物化时调用现有 one-ability 抽取，结果保存在实例的 intrinsic properties；魔力品牌读取保留的 BRAND_MANA 源标记并进入既有命中扣 MP/伤害与投影路径。没有新增协议类型、affix、存档字段或第二套神器生成器。
+
+甘道夫激活为源无敌结界（难度 90，1d8+8），冷却 777 源回合＝7770 项目 tick；萨鲁曼为元素抵抗（难度 25，所有五种基础元素共享 1d20+20 时长），冷却 1110 tick。萨鲁曼沿共同 apply-status 实现，修正 importer 原 RESISTANCE 对 Nature 按等级选择抗性执行器的误用；测试特意以 1 级 Mage 验证五种抗性全有。因陀罗没有激活，实际装备验证电免疫和盲免疫。冷却测试直接推进现有恢复 tick，验证充能恢复前一 tick 与末 tick 及存档续跑；不把它当作完整探索期间的持续状态验收。
+
+Angwil 原法师塔增 Mage owner；新 [Thalos 巫术之塔](../packs/rfb-demo-original/townFacilities/thalos-sorcery-tower.json) 对应源 `t_thalos.txt B:8`，所有物品鉴定 owner 200 / visitor 1000，当前支持 Mage/High-Mage。其余源 owner 职业保持各自未开放状态。源中文“巫术之塔”和“津达尼”逐字沿用；入口放在现有缩编 Thalos 地图 (10,4) 并接道路，这是地图坐标适配。现有 royal-academy 继续承担独立任务入口。
+
+初始商店保留正式配置适配。新增 `mage_can_buy_both_early_volumes_of_each_realm_and_resume_the_purchase` 从真实八领域 Build 的 Outpost 书店投影选择对应 rank 1/2 库存，执行购买并验证读档后相同购买结果；高阶书需求与改换后的分配由 G1 覆盖。没有按出生或改换重新生成商店、补发书本或重置发现记录。
+
+### 拟开放 Build 的逐项记录
+
+每行明确登记五个范围；G1–G5 引用上表共同结论、来源、实现与行为证据。所有 Build 的共同 class 为 Mage；第二领域可能改换，因此 G1/G5 的 realm 输入是当前保存状态，行中 ID 仅是出生身份。主 Life 资格、主副熟练度及八领域法术参数仍沿前四步的各自规则。56 个有序组合的出生/引用已经由已有测试逐项覆盖；本表不声称跑了 56 套重复的完整流程。
+
+| 拟开放 Build ID | 基础/Tailored/Acquirement | Ego/负向 | 随机神器 | 固定神器/奖励 | 使用/保存 |
+| --- | --- | --- | --- | --- | --- |
+| `demo.build.mage-life-sorcery` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-life-nature` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-life-death` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-life-arcane` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-life-daemon` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-life-crusade` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-life-armageddon` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-sorcery-life` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-sorcery-nature` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-sorcery-death` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-sorcery-arcane` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-sorcery-daemon` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-sorcery-crusade` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-sorcery-armageddon` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-nature-life` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-nature-sorcery` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-nature-death` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-nature-arcane` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-nature-daemon` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-nature-crusade` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-nature-armageddon` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-death-life` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-death-sorcery` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-death-nature` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-death-arcane` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-death-daemon` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-death-crusade` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-death-armageddon` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-arcane-life` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-arcane-sorcery` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-arcane-nature` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-arcane-death` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-arcane-daemon` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-arcane-crusade` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-arcane-armageddon` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-daemon-life` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-daemon-sorcery` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-daemon-nature` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-daemon-death` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-daemon-arcane` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-daemon-crusade` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-daemon-armageddon` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-crusade-life` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-crusade-sorcery` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-crusade-nature` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-crusade-death` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-crusade-arcane` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-crusade-daemon` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-crusade-armageddon` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-armageddon-life` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-armageddon-sorcery` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-armageddon-nature` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-armageddon-death` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-armageddon-arcane` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-armageddon-daemon` | G1 | G2 | G3 | G4 | G5 |
+| `demo.build.mage-armageddon-crusade` | G1 | G2 | G3 | G4 | G5 |
+
+上述 56 行是入口前审计。第六步须与 `CREATION_BUILDS` 同批迁入 `design/generation-build-applicability.json` 的正式 records，更新共享 reviews、conditionScopes 与必要 gap 双向引用，再生成报告和运行 CI。当前 `--check-applicability` 仍只验证九个已开放入口，不能用它证明这 56 个入口已经可玩。
+
+### 第五步实际检查与边界
+
+- 核心专项：40 项 Mage、19 项 allocation、17 项 weapon_traits、手套 Ego、5 项神器创造卷轴、22 项 random_artifact、4 项 ego applicability、3 项 Duelist rewards，以及 tasks、town、artifact_identity、book_discovery、84 项 High-Mage 回归全部通过。
+- importer 194 项、本地化 39 项通过；`cargo clippy -p rfb-core -p rfb-legacy-import --all-targets -- -D warnings`、`cargo fmt --all -- --check` 与 `git diff --check` 通过。
+- `inspect-source` / `verify-source` 通过：内容 1.414.0，388 items、64 townFacilities；正式 lock hash 为 `87a444e08e4e6cd59b250ff104bf58b2e02cb1d551e791a28c4482c5a9d961cf`。类型和状态哈希输入未变化，协议/save/hash 版本保持。
+- `rfb-contract observe` 的初始保存回环哈希与现有 fixture 相同；`rfb-contract verify-all tests/fixtures/active/baseline-policy.json` 验证 26 条全部通过，没有刷新 fixture。`node scripts/audit-egos.mjs --check-applicability` 通过，范围是当前九个已开放入口，报告生成留在第六步。
+- 新奖励测试显式设置任务为可领奖、固定神器测试选择深度/种子并直接走自然候选与实例提交、服务测试直接设置设施位置、购买测试准备金币；它们验证真实规则入口和保存确定性，不等于自然完成旧城堡或从 1 级游玩到神器获得。没有运行完整 workspace、前端、Tauri、Android 或桌面通关验收。

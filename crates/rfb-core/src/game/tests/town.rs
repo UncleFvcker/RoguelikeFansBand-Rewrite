@@ -894,6 +894,30 @@ fn morivant_identification_uses_the_projected_membership_price() {
         ),
         (
             "demo.town-facility.angwil-mage-tower",
+            "demo.build.mage-death-sorcery",
+            FacilityMembershipDto::Owner,
+            200,
+        ),
+        (
+            "demo.town-facility.thalos-sorcery-tower",
+            "demo.build.mage-death-sorcery",
+            FacilityMembershipDto::Owner,
+            200,
+        ),
+        (
+            "demo.town-facility.thalos-sorcery-tower",
+            "demo.build.high-mage-death",
+            FacilityMembershipDto::Owner,
+            200,
+        ),
+        (
+            "demo.town-facility.thalos-sorcery-tower",
+            "demo.build.warrior",
+            FacilityMembershipDto::Visitor,
+            1000,
+        ),
+        (
+            "demo.town-facility.angwil-mage-tower",
             "demo.build.warrior",
             FacilityMembershipDto::Visitor,
             1000,

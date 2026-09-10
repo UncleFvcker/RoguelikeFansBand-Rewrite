@@ -627,6 +627,49 @@ fn tonberry_damage_is_added_after_weapon_criticals_and_does_not_change_shooting(
 }
 
 #[test]
+fn mage_fixed_staff_mana_brand_uses_real_equipment_and_only_pays_on_hits() {
+    for kind in ["demo.item.gandalf", "demo.item.saruman"] {
+        let mut base = melee_game(0, "demo.build.mage-death-sorcery");
+        base.apply_player_experience(base.experience_required_for_level(30), &mut Vec::new());
+        super::support::choose_human_talent_if_pending(&mut base);
+        give_inventory_item(&mut base, "test.mage-staff", kind);
+        base.equip_inventory_item("test.mage-staff", None).unwrap();
+        base.refresh_player_resource_maxima();
+        let mana = base.resources.get_mut("demo.resource.mana").unwrap();
+        mana.current = mana.maximum;
+        let initial_mana = mana.current;
+        let seed = (0..1000)
+            .find(|seed| {
+                let mut trial = base.clone();
+                trial.rng = RfbRng::seeded(*seed);
+                !hit_damage(&resolve_melee(&mut trial)).is_empty()
+            })
+            .unwrap();
+        let mut paid = base.clone();
+        paid.rng = RfbRng::seeded(seed);
+        let damage = hit_damage(&resolve_melee(&mut paid));
+        assert!(paid.resources["demo.resource.mana"].current < initial_mana);
+        let mut empty = base.clone();
+        empty.rng = RfbRng::seeded(seed);
+        empty
+            .resources
+            .get_mut("demo.resource.mana")
+            .unwrap()
+            .current = 0;
+        let plain = hit_damage(&resolve_melee(&mut empty));
+        assert!(
+            damage[0] > plain[0],
+            "{kind}: source mana brand increases a paid hit"
+        );
+        assert_eq!(empty.resources["demo.resource.mana"].current, 0);
+        assert_eq!(paid.rng, empty.rng);
+        force_melee_misses(&mut base);
+        assert!(hit_damage(&resolve_melee(&mut base)).is_empty());
+        assert_eq!(base.resources["demo.resource.mana"].current, initial_mana);
+    }
+}
+
+#[test]
 fn mana_weapon_uses_current_dice_and_only_pays_for_successful_affordable_hits() {
     let base = melee_game(0, "demo.build.high-mage-arcane");
     assert_eq!(

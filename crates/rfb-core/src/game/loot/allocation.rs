@@ -249,7 +249,7 @@ fn tailored_candidate(game: &Game, item: &ItemDefinition) -> bool {
                 && (class != Some("demo.class.duelist") || game.duelist_favorite_weapon(item))
                 && (class != Some("demo.class.cavalry") || item.riding_weapon_kind.is_some())
         }
-        55 | 65 | 66 => class == Some("demo.class.high-mage"),
+        55 | 65 | 66 => matches!(class, Some("demo.class.mage" | "demo.class.high-mage")),
         90..=95 | 97..=101 | 104..=109 => {
             base.sval >= 2
                 && item
@@ -279,7 +279,9 @@ fn tailored_category(game: &mut Game) -> Option<Category> {
     }
     if needs_book(game) && game.rng.bounded(10) == 0 {
         Some(Category::Book)
-    } else if class == Some("demo.class.high-mage") && game.rng.bounded(7) == 0 {
+    } else if matches!(class, Some("demo.class.mage" | "demo.class.high-mage"))
+        && game.rng.bounded(7) == 0
+    {
         Some(Category::Device)
     } else {
         None
@@ -498,6 +500,7 @@ mod tests {
             "sniper",
             "cavalry",
             "high-mage-death",
+            "mage-death-nature",
             "paladin-death",
         ] {
             let game = Game::new_with_build(421, &format!("demo.build.{build}")).unwrap();
@@ -531,10 +534,16 @@ mod tests {
             }
             assert_eq!(accepts("dagger"), !matches!(build, "archer" | "cavalry"));
             assert_eq!(accepts("lance"), !matches!(build, "archer" | "duelist"));
-            assert_eq!(accepts("magic-missile-wand"), build == "high-mage-death");
+            assert_eq!(
+                accepts("magic-missile-wand"),
+                matches!(build, "high-mage-death" | "mage-death-nature")
+            );
             assert_eq!(
                 accepts("black-channels"),
-                matches!(build, "high-mage-death" | "paladin-death")
+                matches!(
+                    build,
+                    "high-mage-death" | "mage-death-nature" | "paladin-death"
+                )
             );
             assert!(!accepts("pattern-sorcery"), "wrong realm");
 
@@ -634,12 +643,55 @@ mod tests {
                 .or_default()
                 .found_count = 2;
             assert!(!needs_book(game));
-            let before = game.rng.clone();
-            assert_eq!(tailored_category(game), None);
-            assert_eq!(game.rng, before);
+            let mut expected = game.rng.clone();
+            let device = expected.bounded(7) == 0;
+            assert_eq!(tailored_category(game), device.then_some(Category::Device));
+            assert_eq!(game.rng, expected);
         }
         assert_eq!(game.rng, restored.rng);
         assert_eq!(game.state_hash(), restored.state_hash());
+    }
+
+    #[test]
+    fn mage_tailored_draws_book_before_device_and_skips_satisfied_book_draw() {
+        let mut game = Game::new_with_build(925, "demo.build.mage-death-sorcery").unwrap();
+        let books: Vec<_> = game
+            .content
+            .item_definitions()
+            .filter(|item| {
+                item.ability_book_id
+                    .as_deref()
+                    .is_some_and(|id| game.active_casting_book_ids().contains(&id))
+            })
+            .map(|item| item.id.clone())
+            .collect();
+        for needs in [true, false] {
+            for id in &books {
+                game.item_knowledge
+                    .entry(id.clone())
+                    .or_default()
+                    .found_count = if needs { 0 } else { 3 };
+            }
+            assert_eq!(needs_book(&game), needs);
+            let mut seen = [false; 3];
+            for seed in 0..128 {
+                game.rng = crate::rng::RfbRng::seeded(seed);
+                let mut expected = game.rng.clone();
+                let category = if needs && expected.bounded(10) == 0 {
+                    seen[0] = true;
+                    Some(Category::Book)
+                } else if expected.bounded(7) == 0 {
+                    seen[1] = true;
+                    Some(Category::Device)
+                } else {
+                    seen[2] = true;
+                    None
+                };
+                assert_eq!(tailored_category(&mut game), category);
+                assert_eq!(game.rng, expected);
+            }
+            assert_eq!(seen, [needs, true, true]);
+        }
     }
 
     #[test]

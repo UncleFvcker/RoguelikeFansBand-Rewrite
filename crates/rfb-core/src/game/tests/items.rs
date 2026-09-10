@@ -3039,6 +3039,9 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
         ("high-mage-death", "protection"),
         ("high-mage-death", "wizard-gloves"),
         ("high-mage-death", "free-action"),
+        ("mage-death-sorcery", "protection"),
+        ("mage-death-sorcery", "wizard-gloves"),
+        ("mage-death-sorcery", "free-action"),
         ("berserker", "protection"),
         ("mindcrafter", "protection"),
     ] {
@@ -3054,7 +3057,8 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
         let baseline_mana = game.resources.get("demo.resource.mana").map(|r| r.maximum);
         assert_eq!(baseline_mana.is_some(), build != "berserker");
         let baseline_armor = game.player_derived_stats().armor_class.value;
-        let encumbers = build == "high-mage-death" && ego == "protection";
+        let encumbers =
+            matches!(build, "high-mage-death" | "mage-death-sorcery") && ego == "protection";
         let context = LootContext {
             table_id: format!("test.loot-table.tailored-{ego}"),
             floor_id: game.current_floor_id.clone(),
@@ -3121,7 +3125,7 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
                 .map(|r| r.maximum),
             mana
         );
-        if build != "high-mage-death" {
+        if !matches!(build, "high-mage-death" | "mage-death-sorcery") {
             let actual = game.generate_one_loot_draft(&context, ItemGenerationMode::TailoredGreat);
             let replay =
                 restored.generate_one_loot_draft(&context, ItemGenerationMode::TailoredGreat);
@@ -3654,6 +3658,7 @@ fn artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name()
         "paladin-death",
         "mindcrafter",
         "duelist",
+        "mage-death-sorcery",
     ]
     .into_iter()
     .flat_map(|build| [false, true].map(|equipped| (build, equipped)))
@@ -3694,6 +3699,9 @@ fn artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name()
                 .contains(&"test.artifact-target".to_owned())
         );
         let update = dispatch_next(&mut game, artifact_creation_command(1, Some("圆月")));
+        if build == "mage-death-sorcery" {
+            assert_eq!(game.virtue_current(VirtueKindDto::Enchantment), 6);
+        }
         let target = game
             .items
             .iter()

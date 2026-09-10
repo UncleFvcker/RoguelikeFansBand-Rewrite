@@ -579,9 +579,7 @@ impl Game {
                     self.items
                         .iter()
                         .find(|item| item.id == id)
-                        .is_some_and(|item| {
-                            Self::item_has_weapon_trait(item, WeaponTraitDto::Order)
-                        })
+                        .is_some_and(|item| self.item_has_weapon_trait(item, WeaponTraitDto::Order))
                 });
                 let maximum = i32::from(profile.damage_dice) * i32::from(profile.damage_sides);
                 let minimum = if order {

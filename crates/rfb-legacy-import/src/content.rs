@@ -4735,6 +4735,7 @@ fn equipment_fold(flags: &[String], pval: i32) -> EquipmentFold {
         ("SEARCH", "searchSkill"),
         ("MAGIC_MASTERY", "deviceSkill"),
         ("INFRA", "infravision"),
+        ("SPELL_CAP", "spellCapacityBonus"),
         ("LITE", "lightRadius"),
     ] {
         if flags.iter().any(|value| value == flag) && (pval != 0 || flag == "LITE") {
@@ -4765,6 +4766,7 @@ fn equipment_fold(flags: &[String], pval: i32) -> EquipmentFold {
     }
     for (flag, passive) in [
         ("REGEN", "regeneration"),
+        ("SLOW_DIGEST", "slow-digestion"),
         ("LEVITATION", "levitation"),
         ("REFLECT", "reflects-bolts"),
         ("AURA_FIRE", "fire-aura"),
@@ -5882,13 +5884,7 @@ fn legacy_device_item_effect(
                 false,
             )
         }
-        "RESISTANCE" => (
-            device_ability_effect(
-                serde_json::json!({"type": "resist-elements", "durationDice": 1, "durationSides": 20, "durationBonus": 20}),
-            ),
-            self_target,
-            false,
-        ),
+        "RESISTANCE" => (device_basic_resistance_effect(), self_target, false),
         "RESTORE_EXP" => (
             device_ability_effect(
                 serde_json::json!({"type": "restore-vitality", "lifeForce": 1000, "restoreAttributes": false}),
@@ -6004,6 +6000,18 @@ fn legacy_device_item_effect(
         _ => return None,
     };
     Some(result)
+}
+
+fn device_basic_resistance_effect() -> serde_json::Value {
+    device_ability_effect(serde_json::json!({
+        "type": "apply-status", "statusKindId": "rfb.status.basic-resistance",
+        "intensity": 1, "durationTicks": 20, "durationDice": 1, "durationSides": 20,
+        "stacking": "keep-strongest",
+        "grantedResistances": {
+            "acid": "resistant", "electricity": "resistant", "fire": "resistant",
+            "cold": "resistant", "poison": "resistant"
+        }
+    }))
 }
 
 fn device_restore_mana_effect() -> serde_json::Value {
@@ -6156,6 +6164,8 @@ fn artifact_json(
                 | "LIST_UNIQUES"
                 | "STAR_BALL"
                 | "STRAFING"
+                | "INVULNERABILITY"
+                | "RESISTANCE"
         )
     }) {
         let (activation_id, name_key, target, effect) = if activation.token == "TELEKINESIS" {
@@ -6187,6 +6197,28 @@ fn artifact_json(
                 device_ability_effect(
                     serde_json::json!({"type": "blink-self", "radius": 10, "lineOfSight": true}),
                 ),
+            )
+        } else if matches!(activation.token.as_str(), "INVULNERABILITY" | "RESISTANCE") {
+            let invulnerable = activation.token == "INVULNERABILITY";
+            (
+                if invulnerable {
+                    "rfb-legacy.item-activation.invulnerability"
+                } else {
+                    "rfb-legacy.item-activation.resistance"
+                },
+                if invulnerable {
+                    "item-activation-demo-gandalf-name"
+                } else {
+                    "item-activation-demo-saruman-name"
+                },
+                device_self_target(),
+                if invulnerable {
+                    device_ability_effect(
+                        serde_json::json!({"type": "invulnerability", "durationDice": 1, "durationSides": 8, "durationBonus": 8}),
+                    )
+                } else {
+                    device_basic_resistance_effect()
+                },
             )
         } else if activation.token == "STAR_BALL" {
             (
@@ -6230,6 +6262,14 @@ fn artifact_json(
         }
         if activation.token == "STRAFING" {
             value["deviceGeneration"]["activations"][0]["rfbValue"] = serde_json::json!(1_500);
+        }
+        if matches!(activation.token.as_str(), "INVULNERABILITY" | "RESISTANCE") {
+            value["deviceGeneration"]["activations"][0]["rfbValue"] =
+                serde_json::json!(if activation.token == "INVULNERABILITY" {
+                    14_000
+                } else {
+                    5_500
+                });
         }
     } else if entry.has_activation {
         *report
@@ -29197,6 +29237,87 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                 .contains_key("XTRA_RES_OR_POWER")
         );
         assert!(!report.unmapped_artifact_flags.contains_key("BLESSED"));
+    }
+
+    #[test]
+    fn mage_reward_artifacts_preserve_source_parameters_and_activations() {
+        // master a0d92b6378: a_info.txt 33/120/249. Runtime extra power and mana brand
+        // consume the preserved source flags; formal names use artifact_name_zh.inc.
+        let source = "N:33:of Indra\nI:32:2:5\nW:60:50:15:100000\nP:2:0d0:0:0:18\nF:INT | WIS | CHR | SUST_INT | SUST_WIS | SUST_CHR | RES_BLIND | IM_ELEC\nN:120:of Gandalf\nI:21:21:4\nW:80:50:40:140000\nP:0:4d2:10:13:0\nF:INT | WIS | CHR | HIDE_TYPE | SEARCH | BRAND_FIRE | BRAND_MANA | SLAY_EVIL | SLAY_TROLL | SLAY_ORC | LITE | DEC_MANA | XTRA_POWER | HOLD_LIFE | RES_FIRE | RES_NETHER | SEE_INVIS | SHOW_MODS | REGEN | REGEN_MANA | SLOW_DIGEST | RES_CONF | RES_BLIND | SPELL_CAP\nE:INVULNERABILITY:90:777\nN:249:of Saruman\nI:21:21:3\nW:66:20:40:100000\nP:0:3d2:8:8:0\nF:INT | HIDE_TYPE | DEC_MANA | REGEN | RES_FIRE | RES_COLD | RES_ACID | RES_ELEC | BRAND_VAMP | BRAND_POIS | BRAND_MANA | SPELL_CAP\nE:RESISTANCE:25:111\n";
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+        for (entry, (slug, base)) in parse_a_info(source).unwrap().iter().zip([
+            ("indra", "hard-leather-cap"),
+            ("gandalf", "wizardstaff"),
+            ("saruman", "wizardstaff"),
+        ]) {
+            let mut report = ContentImportReport::default();
+            let mut imported = artifact_json(
+                entry,
+                slug,
+                Some(&format!("demo.item.{base}")),
+                &LauncherAmmoIndex::default(),
+                &mut report,
+            );
+            let mut flags: BTreeSet<_> = entry.flags.iter().map(String::as_str).collect();
+            flags.extend(["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"]);
+            imported["rfbValue"]["flags"] = serde_json::json!(flags);
+            // xtra1.c/equip.c: SEARCH adds 5*pval, LITE adds one independent of pval.
+            if slug == "gandalf" {
+                imported["equipmentBonuses"]["searchSkill"] = serde_json::json!(20);
+                imported["equipmentBonuses"]["lightRadius"] = serde_json::json!(1);
+            }
+            let formal: serde_json::Value =
+                serde_json::from_slice(&fs::read(root.join(format!("items/{slug}.json"))).unwrap())
+                    .unwrap();
+            for field in [
+                "weightTenthsPound",
+                "baseValue",
+                "generationLevel",
+                "meleeProfile",
+                "modifiers",
+                "equipmentBonuses",
+                "passives",
+                "resistances",
+                "slays",
+                "brands",
+                "statusImmunities",
+                "artifactGeneration",
+                "rfbValue",
+            ] {
+                assert_eq!(imported[field], formal[field], "{slug}: {field}");
+            }
+            if entry.has_activation {
+                assert!(
+                    !report
+                        .item_behavior_gaps
+                        .contains_key("artifact-activation")
+                );
+                assert_eq!(
+                    imported["deviceGeneration"]["recovery"],
+                    formal["deviceGeneration"]["recovery"]
+                );
+                for field in ["charges", "deviceCheckDifficulty", "target", "rfbValue"] {
+                    assert_eq!(
+                        imported["deviceGeneration"]["activations"][0][field],
+                        formal["deviceGeneration"]["activations"][0][field],
+                        "{slug}: {field}"
+                    );
+                }
+                let effect = if slug == "gandalf" {
+                    "invulnerability"
+                } else {
+                    "resistance"
+                };
+                let program: serde_json::Value = serde_json::from_slice(
+                    &fs::read(root.join(format!("effectPrograms/{slug}-{effect}.json"))).unwrap(),
+                )
+                .unwrap();
+                assert_eq!(
+                    imported["deviceGeneration"]["activations"][0]["effect"],
+                    program["steps"][0]
+                );
+            }
+        }
     }
 
     #[test]

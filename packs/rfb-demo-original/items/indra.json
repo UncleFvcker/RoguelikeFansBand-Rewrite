@@ -1,0 +1,65 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.hard-leather-cap",
+    "instant": false,
+    "rarityOneIn": 50,
+    "sourceIndex": 33
+  },
+  "baseValue": 100000,
+  "descriptionKey": "item-demo-indra-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "equipmentSlot": "head",
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "glyph": "]",
+  "id": "demo.item.indra",
+  "maxStack": 1,
+  "modifiers": {
+    "charisma": 5,
+    "defense": 20,
+    "intelligence": 5,
+    "wisdom": 5
+  },
+  "nameKey": "item-demo-indra-name",
+  "passives": [
+    "sustain-charisma",
+    "sustain-intelligence",
+    "sustain-wisdom"
+  ],
+  "resistances": {
+    "electricity": "immune"
+  },
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_ELEC",
+      "INT",
+      "RES_BLIND",
+      "SUST_CHR",
+      "SUST_INT",
+      "SUST_WIS",
+      "WIS"
+    ],
+    "pval": 5,
+    "toArmor": 18
+  },
+  "statusImmunities": [
+    "rfb.status.blindness"
+  ],
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "weightTenthsPound": 15,
+  "resistsMonsterDestruction": true
+}

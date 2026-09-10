@@ -439,6 +439,7 @@ fn random_artifact_current_classes_and_themes_select_eligible_biases_and_activat
         ("archer", Bias::Warrior),
         ("cavalry", Bias::Warrior),
         ("high-mage", Bias::Mage),
+        ("mage", Bias::Mage),
         ("sniper", Bias::Ranger),
         ("paladin", Bias::Priestly),
     ] {
@@ -498,47 +499,56 @@ fn real_build_misc_warning_and_no_tele_follow_source_boundaries() {
 
 #[test]
 fn real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary() {
-    let game = Game::new_with_build(85, "demo.build.mindcrafter").unwrap();
-    let class_id = &game.build.as_ref().unwrap().class_id;
-    let data = game.content.random_artifact_generation().unwrap();
-    for (theme, bias) in [("", Bias::None), ("mage", Bias::Mage)] {
-        let mut rng = RfbRng::seeded(85);
-        let before = rng.clone();
-        let mut gen_ = generator(data, &mut rng);
-        gen_.class_id = class_id;
-        gen_.initial_bias(Creation {
-            class_id,
-            theme,
-            ..Default::default()
-        });
-        assert_eq!(gen_.bias, bias);
-        assert_eq!(rng, before, "natural mode must not draw for class bias");
-    }
-    // Factory boundary evidence complements the actual artifact-scroll command tests.
-    for (gate, roll, bias) in [
-        (0, 19, Bias::Warrior),
-        (0, 20, Bias::Priestly),
-        (1, 19, Bias::None),
+    for (build, class_bias) in [
+        ("mindcrafter", Bias::Priestly),
+        ("mage-death-sorcery", Bias::Mage),
     ] {
-        let seed = (0..100_000)
-            .find(|seed| {
-                let mut rng = RfbRng::seeded(*seed);
-                rng.bounded(4) == gate && rng.bounded(100) == roll
-            })
-            .unwrap();
-        let mut expected = RfbRng::seeded(seed);
-        expected.bounded(4);
-        expected.bounded(100);
-        let mut rng = RfbRng::seeded(seed);
-        let mut gen_ = generator(data, &mut rng);
-        gen_.class_id = class_id;
-        gen_.initial_bias(Creation {
-            class_id,
-            scroll: true,
-            ..Default::default()
-        });
-        assert_eq!(gen_.bias, bias);
-        assert_eq!(rng, expected);
+        let game = Game::new_with_build(85, &format!("demo.build.{build}")).unwrap();
+        let class_id = &game.build.as_ref().unwrap().class_id;
+        let data = game.content.random_artifact_generation().unwrap();
+        for (theme, bias) in [
+            ("", Bias::None),
+            ("mage", Bias::Mage),
+            ("priest", Bias::Priestly),
+        ] {
+            let mut rng = RfbRng::seeded(85);
+            let before = rng.clone();
+            let mut gen_ = generator(data, &mut rng);
+            gen_.class_id = class_id;
+            gen_.initial_bias(Creation {
+                class_id,
+                theme,
+                ..Default::default()
+            });
+            assert_eq!(gen_.bias, bias);
+            assert_eq!(rng, before, "natural mode must not draw for class bias");
+        }
+        // Factory boundary evidence complements the actual artifact-scroll command tests.
+        for (gate, roll, bias) in [
+            (0, 19, Bias::Warrior),
+            (0, 20, class_bias),
+            (1, 19, Bias::None),
+        ] {
+            let seed = (0..100_000)
+                .find(|seed| {
+                    let mut rng = RfbRng::seeded(*seed);
+                    rng.bounded(4) == gate && rng.bounded(100) == roll
+                })
+                .unwrap();
+            let mut expected = RfbRng::seeded(seed);
+            expected.bounded(4);
+            expected.bounded(100);
+            let mut rng = RfbRng::seeded(seed);
+            let mut gen_ = generator(data, &mut rng);
+            gen_.class_id = class_id;
+            gen_.initial_bias(Creation {
+                class_id,
+                scroll: true,
+                ..Default::default()
+            });
+            assert_eq!(gen_.bias, bias);
+            assert_eq!(rng, expected);
+        }
     }
 }
 

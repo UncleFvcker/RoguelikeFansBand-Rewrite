@@ -4,6 +4,7 @@ use super::support::{
 };
 use super::*;
 
+mod generation;
 mod learning;
 mod realm_change;
 

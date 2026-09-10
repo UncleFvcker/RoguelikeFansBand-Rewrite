@@ -9365,3 +9365,15 @@ build-demo-mage-armageddon-daemon-name = Mage · Armageddon / Daemon
 build-demo-mage-armageddon-daemon-description = Primary realm: Armageddon. Secondary realm: Daemon.
 build-demo-mage-armageddon-crusade-name = Mage · Armageddon / Crusade
 build-demo-mage-armageddon-crusade-description = Primary realm: Armageddon. Secondary realm: Crusade.
+
+item-demo-gandalf-name = Wizardstaff of Gandalf
+item-demo-gandalf-description = The staff of the great wizard Gandalf.
+item-demo-saruman-name = Wizardstaff of Saruman
+item-demo-saruman-description = This staff glows with many colours.
+item-demo-indra-name = Hard Leather Cap of Indra
+item-demo-indra-description = A cap that sharpens the mind and grants immunity to electricity.
+item-activation-demo-gandalf-name = Invulnerability
+item-activation-demo-saruman-name = Resistance
+town-facility-demo-thalos-sorcery-tower-name = Sorcery Tower
+town-facility-demo-thalos-sorcery-tower-description = 津达尼 identifies carried and equipped items for visitors.
+town-facility-demo-thalos-sorcery-tower-owner-name = 津达尼

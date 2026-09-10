@@ -1,6 +1,6 @@
 # 状态快照
 
-核对日期：2026-09-11。当前基于种族职业主线 `080005368`、法术道具 `ea723f342` 与地牢城镇 `bd94fe086` 的集成，另完成法师出生、双领域学习成长及副领域改换保存。本页记录代码/配置事实和注明范围的验收证据。当前数值以链接的源文件为准。
+核对日期：2026-09-11。当前基于种族职业主线 `080005368`、法术道具 `ea723f342` 与地牢城镇 `bd94fe086` 的集成，另完成法师出生、双领域学习成长、副领域改换保存和职业生成/奖励关联。本页记录代码/配置事实和注明范围的验收证据。当前数值以链接的源文件为准。
 
 ## 版本与源内容
 
@@ -10,14 +10,14 @@
 | 协议 | 1.251 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 124 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 19 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.413.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.414.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v323，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 10 个 Class、72 个 Build、57 个 Race、32 本能力书、1,870 个 ability 文件、385 个 item、1,406 个 actor、168 个 affix、152 个 mutation。世界定义含 31 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 10 个 Class、72 个 Build、57 个 Race、32 本能力书、1,870 个 ability 文件、388 个 item、1,406 个 actor、168 个 affix、152 个 mutation。世界定义含 31 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、64 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
 权威内容统计工具是 `rfb-contentc inspect-source`。本次集成已运行内容编译；静态统计不替代行为验收。
 
-法师已完成[计划](mage-class-plan.md)前四步：现有八领域的 56 个有序 Build、双书出生、256 项职业参数与首用经验、MP/负重/再生、感知、美德、种族交叉及 25 级吞噬魔法；共享学习支出、重复研习、主副熟练度、练习、遗忘恢复和失败规则已接入。真实背包/脚下书本可请求改换副领域，确认清理旧副领域而保留已付支出，取消后续选法术不回滚；当前领域、历史及待确认状态进入保存。学习、Mogaminator、书本分配和公会价格使用当前领域。37 项 Mage、相关既有回归、协议/保存、41 项前端消费者、类型与 lint 检查通过；26 条 active 契约仅刷新哈希并全部通过。普通创角入口仍关闭，完整生成/奖励关联及 UI/桌面验收仍在第五至七步；其余四个源领域另列后续范围。详情与公共适配边界见[来源审计](mage-source-audit.md)。
+法师已完成[计划](mage-class-plan.md)前五步：现有八领域的 56 个有序 Build、双书出生、256 项职业参数与首用经验、MP/负重/再生、感知、美德、种族交叉及 25 级吞噬魔法；共享学习支出、重复研习、主副熟练度、练习、遗忘恢复和失败规则已接入。真实背包/脚下书本可请求改换副领域，确认清理旧副领域而保留已付支出，取消后续选法术不回滚；当前领域、历史及待确认状态进入保存。学习、Mogaminator、书本分配和公会服务使用当前领域。已接装置偏好、卷轴 bias、三件旧城堡神器及重复替代、普通盗贼奖励和两塔资格；56 个拟开放组合的五类生成结论已记录。第五步 40 项 Mage 及受影响回归、内容锁、本地化和 Clippy 通过，26 条 active 契约未刷新即通过。普通创角入口、正式可用生成 records/报告和 UI/桌面验收仍在第六、七步；其余四个源领域另列后续范围。详情与公共适配边界见[来源审计](mage-source-audit.md)。
 
 决斗者已完成[五步计划](duelist-class-plan.md)：正式无 MP 出生、装备天赋、手动/自动挑战、来源实例相关攻防与成长打击，以及全部八项 HP 能力。普通入口已开放“近战 → 决斗者”，禁止冬贝利出生组合。能力面板显示 Rust 投影的 HP 费用、目标和不可用原因；常驻挑战支持重选/解除，Esc 取消瞄准保留挑战。超距冲锋、30 级传送阻止/跟随和 35 级免费重选的界面已接入保存后的原动作继续。量身分配、武器偏好、龙人变形天赋排除、盗贼/旧城堡奖励、两件固定神器及扫射激活、重复神器替代与公会非会员规则已实现。毒针和 Death Scythe 尚未正式导入，公共适配边界见[来源审计](duelist-source-audit.md)。
 

@@ -275,7 +275,28 @@ pub(super) fn materialize_ego_with_rng(
     let rolled_affixes = roll_affix_properties_with_rng(content, rng, &affix_ids, roll_depth);
     let (activation, charges) =
         initial_item_runtime_state(content, rng, kind_id, &affix_ids, activation_depth);
-    EgoMaterialization::new(affix_ids, rolled_affixes, None, None, activation, charges)
+    let extra_power = content
+        .item(kind_id)
+        .filter(|item| {
+            item.artifact_generation.is_some()
+                && item
+                    .rfb_value
+                    .as_ref()
+                    .is_some_and(|value| value.flags.contains("XTRA_POWER"))
+        })
+        .map(|_| {
+            let mut properties = AffixPropertyBundleDefinition::default();
+            add_one_ability(rng, &mut properties);
+            properties
+        });
+    EgoMaterialization::new(
+        affix_ids,
+        rolled_affixes,
+        extra_power,
+        None,
+        activation,
+        charges,
+    )
 }
 
 /// Selects one authoritative RFB ego without changing any item state.

@@ -1895,6 +1895,8 @@
         ],
         "classOverrides": [
           {"classId": "demo.class.duelist", "entries": [{"itemKindId": "demo.item.duelist", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.quickthorn", "quantity": 1, "weight": 4}]},
+          {"classId": "demo.class.mage", "entries": [{"itemKindId": "demo.item.gandalf", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.saruman", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.indra", "quantity": 1, "weight": 8}]},
+          {"classId": "demo.class.high-mage", "entries": [{"itemKindId": "demo.item.gandalf", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.saruman", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.indra", "quantity": 1, "weight": 8}]},
           {
             "classId": "demo.class.warrior",
             "entries": [
@@ -1936,7 +1938,7 @@
       ],
       "reward": {
         "itemInstanceId": "demo.task.thieves-hideout.reward.1",
-        "classOverrides": [{"classId": "demo.class.duelist", "entries": [{"itemKindId": "demo.item.rapier", "quantity": 1, "weight": 1}]}],
+        "classOverrides": [{"classId": "demo.class.duelist", "entries": [{"itemKindId": "demo.item.rapier", "quantity": 1, "weight": 1}]}, {"classId": "demo.class.mage", "entries": [{"itemKindId": "demo.item.long-sword", "quantity": 1, "weight": 1}]}],
         "entries": [
           { "itemKindId": "demo.item.broad-sword", "quantity": 1, "weight": 1 }
         ]
@@ -8828,7 +8830,7 @@
             "positions": [
               { "x": 2, "y": 2 }, { "x": 4, "y": 2 }, { "x": 6, "y": 2 }, { "x": 8, "y": 2 }, { "x": 10, "y": 2 }, { "x": 12, "y": 2 }, { "x": 14, "y": 2 }, { "x": 16, "y": 2 }, { "x": 18, "y": 2 }, { "x": 20, "y": 2 },
               { "x": 1, "y": 3 }, { "x": 2, "y": 3 }, { "x": 3, "y": 3 }, { "x": 4, "y": 3 }, { "x": 5, "y": 3 }, { "x": 6, "y": 3 }, { "x": 7, "y": 3 }, { "x": 8, "y": 3 }, { "x": 9, "y": 3 }, { "x": 10, "y": 3 }, { "x": 12, "y": 3 }, { "x": 13, "y": 3 }, { "x": 14, "y": 3 }, { "x": 15, "y": 3 }, { "x": 16, "y": 3 }, { "x": 17, "y": 3 }, { "x": 18, "y": 3 }, { "x": 19, "y": 3 }, { "x": 20, "y": 3 }, { "x": 21, "y": 3 },
-              { "x": 2, "y": 4 }, { "x": 3, "y": 4 }, { "x": 4, "y": 4 }, { "x": 5, "y": 4 }, { "x": 6, "y": 4 }, { "x": 7, "y": 4 }, { "x": 8, "y": 4 }, { "x": 9, "y": 4 }, { "x": 10, "y": 4 }, { "x": 12, "y": 4 }, { "x": 13, "y": 4 }, { "x": 14, "y": 4 }, { "x": 15, "y": 4 }, { "x": 16, "y": 4 }, { "x": 17, "y": 4 }, { "x": 18, "y": 4 }, { "x": 19, "y": 4 }, { "x": 20, "y": 4 },
+              { "x": 2, "y": 4 }, { "x": 3, "y": 4 }, { "x": 4, "y": 4 }, { "x": 5, "y": 4 }, { "x": 6, "y": 4 }, { "x": 7, "y": 4 }, { "x": 8, "y": 4 }, { "x": 9, "y": 4 },  { "x": 12, "y": 4 }, { "x": 13, "y": 4 }, { "x": 14, "y": 4 }, { "x": 15, "y": 4 }, { "x": 16, "y": 4 }, { "x": 17, "y": 4 }, { "x": 18, "y": 4 }, { "x": 19, "y": 4 }, { "x": 20, "y": 4 },
               { "x": 1, "y": 6 }, { "x": 2, "y": 6 }, { "x": 3, "y": 6 }, { "x": 4, "y": 6 }, { "x": 5, "y": 6 }, { "x": 6, "y": 6 }, { "x": 7, "y": 6 }, { "x": 8, "y": 6 }, { "x": 9, "y": 6 }, { "x": 10, "y": 6 }, { "x": 12, "y": 6 }, { "x": 13, "y": 6 }, { "x": 14, "y": 6 }, { "x": 15, "y": 6 }, { "x": 16, "y": 6 }, { "x": 17, "y": 6 }, { "x": 18, "y": 6 }, { "x": 19, "y": 6 }, { "x": 20, "y": 6 }, { "x": 21, "y": 6 },
               { "x": 1, "y": 7 }, { "x": 2, "y": 7 }, { "x": 3, "y": 7 }, { "x": 4, "y": 7 }, { "x": 5, "y": 7 }, { "x": 6, "y": 7 }, { "x": 7, "y": 7 }, { "x": 8, "y": 7 }, { "x": 9, "y": 7 }, { "x": 10, "y": 7 }, { "x": 12, "y": 7 }, { "x": 13, "y": 7 }, { "x": 14, "y": 7 }, { "x": 15, "y": 7 }, { "x": 16, "y": 7 }, { "x": 17, "y": 7 }, { "x": 18, "y": 7 }, { "x": 19, "y": 7 }, { "x": 20, "y": 7 }, { "x": 21, "y": 7 },
               { "x": 1, "y": 8 }, { "x": 2, "y": 8 }, { "x": 3, "y": 8 }, { "x": 4, "y": 8 }, { "x": 5, "y": 8 }, { "x": 6, "y": 8 }, { "x": 7, "y": 8 }, { "x": 8, "y": 8 }, { "x": 9, "y": 8 }, { "x": 10, "y": 8 }, { "x": 12, "y": 8 }, { "x": 13, "y": 8 }, { "x": 14, "y": 8 }, { "x": 15, "y": 8 }, { "x": 16, "y": 8 }, { "x": 17, "y": 8 }, { "x": 18, "y": 8 }, { "x": 19, "y": 8 }, { "x": 20, "y": 8 }, { "x": 21, "y": 8 }
@@ -8875,7 +8877,8 @@
           { "terrainId": "demo.terrain.thalos-renegade-sorcerer-entry-available", "positions": [{ "x": 21, "y": 4 }] },
           { "terrainId": "demo.terrain.outpost-gate", "positions": [{ "x": 11, "y": 10 }] },
           { "terrainId": "demo.terrain.palace-entrance", "positions": [{ "x": 1, "y": 9 }] },
-          { "terrainId": "demo.terrain.royal-academy-entrance", "positions": [{ "x": 21, "y": 9 }] }
+          { "terrainId": "demo.terrain.royal-academy-entrance", "positions": [{ "x": 21, "y": 9 }] },
+          {"terrainId":"demo.terrain.sorcery-tower-entrance","positions":[{"x":10,"y":4}]}
         ]
       }
     },

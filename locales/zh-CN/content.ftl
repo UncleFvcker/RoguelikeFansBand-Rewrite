@@ -9369,3 +9369,15 @@ build-demo-mage-armageddon-daemon-name = 法师 · 毁灭 / 恶魔
 build-demo-mage-armageddon-daemon-description = 主领域：毁灭。副领域：恶魔。
 build-demo-mage-armageddon-crusade-name = 法师 · 毁灭 / 圣战
 build-demo-mage-armageddon-crusade-description = 主领域：毁灭。副领域：圣战。
+
+item-demo-gandalf-name = 甘道夫的巫师法杖
+item-demo-gandalf-description = 伟大巫师甘道夫的法杖。
+item-demo-saruman-name = 萨鲁曼的巫师法杖
+item-demo-saruman-description = 这根法杖闪烁着五颜六色的光芒。
+item-demo-indra-name = 因陀罗的硬皮帽
+item-demo-indra-description = 提升智慧并免疫电击的硬皮帽。
+item-activation-demo-gandalf-name = 无敌结界
+item-activation-demo-saruman-name = 元素抵抗
+town-facility-demo-thalos-sorcery-tower-name = 巫术之塔
+town-facility-demo-thalos-sorcery-tower-description = 津达尼为访客鉴定携带与装备中的物品。
+town-facility-demo-thalos-sorcery-tower-owner-name = 津达尼

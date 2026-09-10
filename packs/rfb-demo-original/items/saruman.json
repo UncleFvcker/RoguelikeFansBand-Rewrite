@@ -1,0 +1,112 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.wizardstaff",
+    "instant": false,
+    "rarityOneIn": 20,
+    "sourceIndex": 249
+  },
+  "baseValue": 100000,
+  "brands": [
+    "poison"
+  ],
+  "descriptionKey": "item-demo-saruman-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "rfbValue": 5500,
+        "effectProgramId": "demo.effect.saruman-resistance",
+        "id": "rfb-legacy.item-activation.resistance",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "item-activation-demo-saruman-name",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1110
+    }
+  },
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 66,
+  "glyph": "\\",
+  "id": "demo.item.saruman",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 2,
+    "toDamage": 8,
+    "toHit": 8
+  },
+  "modifiers": {
+    "intelligence": 3
+  },
+  "nameKey": "item-demo-saruman-name",
+  "passives": [
+    "reduced-mana-cost",
+    "regeneration",
+    "vampiric"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "BRAND_MANA",
+      "BRAND_POIS",
+      "BRAND_VAMP",
+      "DEC_MANA",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "REGEN",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_ELEC",
+      "RES_FIRE",
+      "SPELL_CAP"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable",
+    "mana-efficient"
+  ],
+  "weightTenthsPound": 40,
+  "resistsMonsterDestruction": true,
+  "weaponProficiencyBaseItemId": "demo.item.wizardstaff",
+  "equipmentBonuses": {
+    "spellCapacityBonus": 3
+  }
+}

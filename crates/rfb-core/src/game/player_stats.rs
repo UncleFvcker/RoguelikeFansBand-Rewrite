@@ -1369,8 +1369,19 @@ impl Game {
             })
     }
 
-    pub(super) fn item_has_weapon_trait(item: &ItemInstance, trait_: WeaponTraitDto) -> bool {
-        item.intrinsic_weapon_traits.contains(&trait_)
+    pub(super) fn item_has_weapon_trait(
+        &self,
+        item: &ItemInstance,
+        trait_: WeaponTraitDto,
+    ) -> bool {
+        (trait_ == WeaponTraitDto::ManaBrand
+            && self.content.item(&item.kind_id).is_some_and(|definition| {
+                definition
+                    .rfb_value
+                    .as_ref()
+                    .is_some_and(|value| value.flags.contains("BRAND_MANA"))
+            }))
+            || item.intrinsic_weapon_traits.contains(&trait_)
             || item
                 .rolled_affixes
                 .iter()
@@ -1997,7 +2008,7 @@ impl Game {
                                 priest_class,
                                 good_realm,
                                 item_definition.rfb_base_kind.map(|kind| kind.tval),
-                                Self::item_has_weapon_trait(item, WeaponTraitDto::Blessed),
+                                self.item_has_weapon_trait(item, WeaponTraitDto::Blessed),
                             ),
                         )
                     })
