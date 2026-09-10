@@ -1,6 +1,6 @@
 # E8 六项共享生成契约实施计划
 
-日期：2026-09-10。状态：E8.1–E8.4、E8.5a 已实现，验证记录见 [contract-v312](contract-v312-real-equipment-value.md)、[contract-v313](contract-v313-negative-equipment.md)、[contract-v314](contract-v314-dragon-base-equipment.md)、[contract-v315](contract-v315-bag-containers.md)、[contract-v316](contract-v316-random-artifact-identity.md)；下一项为 E8.5b。自然随机神器与负向随机神器生成仍未开放。
+日期：2026-09-10。状态：E8.1–E8.6、E8.7 当前开放构筑范围及 E8.8 桌面里程碑已完成。早期验证记录见 [contract-v312](contract-v312-real-equipment-value.md)、[contract-v313](contract-v313-negative-equipment.md)、[contract-v314](contract-v314-dragon-base-equipment.md)、[contract-v315](contract-v315-bag-containers.md)、[contract-v316](contract-v316-random-artifact-identity.md)，最终桌面证据见[集成审计](ego-integration-audit.md#e88-当前桌面验收)。全原版范围仍受未开放身份和源内容覆盖限制。
 
 工作树：`D:/codex/RoguelikeFansBand-Rewrite-realms-items`，分支：`codex/realms-items`。
 代码基线：`1c9e62a2e`。缺口来自 [E8 集成审计](ego-integration-audit.md)。
@@ -9,7 +9,7 @@
 
 目标是补齐生成、实例状态和实际消费者。前五项组成当前可玩构筑的收口里程碑；
 第六项随真实职业、种族开放逐项验收，在全部适用分支完成前保留全原版范围的未完成状态。
-Craft 领域四册/32 法术、怪物主题的完整基础物品分配表仍是独立任务。
+Craft 领域四册/32 法术仍是独立任务；当前导入池的类别/主题分配与 Acquirement 已由 B0–B6 接入。
 
 ## 1. 顺序与依赖
 
@@ -23,11 +23,11 @@ Craft 领域四册/32 法术、怪物主题的完整基础物品分配表仍是�
 | E8.3 | 龙牙及五类龙系底材的基础生成 | E8.1 的 power/模式上下文 | 4 | 小到中 |
 | E8.4 | 三种背包的实例容量及 Ego 消费者 | 当前容器系统；使用 E8.1 上下文 | 5 | 中 |
 | E8.5a（已实现） | 随机神器实例身份、属性表示及消费者 | E8.1、E8.2 | 2 | 中 |
-| E8.5b | 真实 `create_artifact`、命名与估值筛选 | E8.5a；E8.3 的底材处理 | 2 | 大 |
-| E8.5c | 各非弹药类型的随机神器调度 | E8.5b | 2；3 的前置 | 中 |
-| E8.6 | 首饰价值上下限和完整重试 | E8.1、E8.2、E8.5c | 3 | 中 |
+| E8.5b（已实现） | 真实 `create_artifact`、命名与估值筛选 | E8.5a；E8.3 的底材处理 | 2 | 大 |
+| E8.5c（已实现） | 各非弹药类型的随机神器调度 | E8.5b | 2；3 的前置 | 中 |
+| E8.6（已实现） | 首饰价值上下限和完整重试 | E8.1、E8.2、E8.5c | 3 | 中 |
 | E8.7 | 职业/种族专属分支逐项接入 | 对应构筑真实可玩，及其用到的前述批次 | 6 | 按构筑拆分 |
-| E8.8 | 当前构筑集成验收与更新审计 | E8.1–E8.6；当前开放构筑适用的 E8.7 | 前五项＋已开放构筑 | 中 |
+| E8.8（已完成） | 当前构筑集成验收与更新审计 | E8.1–E8.6；当前开放构筑适用的 E8.7 | 前五项＋已开放构筑 | 中 |
 
 主依赖链：**真实估值 → 诅咒 → 随机神器 → 首饰完整重试 → 集成验收**。
 龙系和背包无需等随机神器完成才交付。E8.7 的源端分支清单在 E8.1 开始建立，实施随构筑到位。
@@ -140,7 +140,9 @@ UI 显示真实已知容量和权威 Ego 名，不恢复“完全鉴定”“无
 
 验收：准备一个真实实例，通过上述消费者和保存恢复核对；这一批是内部表示交付，尚不启用自然随机神器分支。
 
-### E8.5b：完整生成器与价值筛选
+### E8.5b：完整生成器与价值筛选（已实现）
+
+来源：RFB `master` 提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。工厂在 `game/random_artifact/`；正式包 `randomArtifacts/source.json` 收录 30 个原版命名文件、195 项非零稀有度激活及 bias。规则测试覆盖槽位、特殊底材、职业/主题、重试与命名顺序，并通过真实激活、投掷和保存消费者验证。调用方拥有连续生成共用的名字表，自然调度及其持久化接线属于 E8.5c。
 
 新增 `game/random_artifact.rs` 承载有实际调用关系的 `artifact.c:2122 create_artifact` 移植，
 继续复用已有抽样、装备属性和激活执行能力，不建设插件式生成框架。
@@ -156,10 +158,12 @@ UI 显示真实已知容量和权威 Ego 名，不恢复“完全鉴定”“无
   除最终物品外，原版确有的状态副作用另行逐项核对，不一概回滚 RNG。
 
 验收：各合法非弹药槽位、特殊底材、正/负 power、已有可玩职业/主题 bias，
-候选拒绝、softmax 短路、1000 次耗尽后的第 1001 次、命名和诅咒的先后及 RNG 终态。
+候选拒绝、softmax 短路、1000 次耗尽后的第 1001 次、命名和诅咒的先后，以及本项目内固定种子连续性。
 重复生成的统计仅辅助排查，不能替代分支及数值验收；弹药继续使用它自己的源码分支。
 
-### E8.5c：接回真实调度
+### E8.5c：接回真实调度（已实现）
+
+来源仍为 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。`loot.rs` 在固定神器、底材和基础强化之后调用 `random_artifact/scheduling.rs`；长袍先判定专用 Ego，龙系保留 power 压制，费艾诺光源保留先掷骰再判断强制 power 的顺序。Craft 继续使用直接 Ego 路径。生成草稿携带完整神器属性，提交时才分配物品 ID。`Game.random_artifact_names` 保存成功及被拒绝候选的名字，进入存档校验和状态哈希，防止恢复后重复命名或生成序列分叉。
 
 逐个接入 `ego.c:303 _check_rand_art` 的调用者，包括武器/挖掘工具、远程/竖琴、护甲、首饰和光源特殊入口。
 保留不同 base 概率、等级修正、Craft 排除、`power > 2`、首饰等级调整和项链额外条件。
@@ -169,7 +173,9 @@ UI 显示真实已知容量和权威 Ego 名，不恢复“完全鉴定”“无
 Craft 不新增随机神器抽样、光源特殊入口、随机神器保存后继续生成的序列一致。
 同步检验 E8.2 负向随机神器与 E8.3 龙系底材的交叉分支。
 
-## 7. E8.6：戒指与项链的价值重试
+## 7. E8.6：戒指与项链的价值重试（已实现）
+
+来源提交仍为 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。`jewelry.rs` 在循环外选择阈值并执行一次 `GREAT_OBJ` 抽样，每轮从原始草稿重新执行随机神器判定或 Ego 生成及诅咒结算，再用真实估值筛选；第 1001 个候选无条件采用。淘汰的候选保留 RNG 和神器名字登记，但不分配物品 ID。自然入口覆盖正/负 power 与强制神器模式；阈值函数按源位标志保留 FORCE_EGO/GREAT/QUEST 优先于 GOOD 的规则。现有显式 kind/affix 配置仍直接物化，不把它们宣称为完整的源端 FORCE_EGO/QUEST 奖励调度，入口差异见 [E8.1 契约](contract-v312-real-equipment-value.md)。
 
 来源：`ego.c:373 _get_jewelry_power_limit`、`:408 ego_create_ring`、`:430 ego_create_amulet`，
 以及内部 `_create_ring_aux/_create_amulet_aux`。修改 [jewelry.rs](../crates/rfb-core/src/game/ego/jewelry.rs)。
@@ -185,6 +191,8 @@ Craft 不新增随机神器抽样、光源特殊入口、随机神器保存后�
 第 1 次/多次/第 1001 次结果、负 power 和内部随机神器；比较最终实例及 RNG 终态。
 保留当前各首饰 Ego 分支测试，并补自然生成集成测试；首饰实测价值分布作为辅助报告。
 
+阈值、完整候选及自然入口验收位于 [generation_tests.rs](../crates/rfb-core/src/game/ego/jewelry/generation_tests.rs)。辅助采样保留正式基础分配的等级约束，按戒指/项链、等级 10/29/59/80 和 Good/Great 各连续生成 128 次；固定神器登记后单独计数，报告只作分布观察。运行 `cargo test -p rfb-core --lib --no-default-features jewelry_value_distribution_report -- --ignored --nocapture`，结果写入 `target/e86-jewelry-value-distribution.json`。
+
 ## 8. E8.7：尚未开放的职业/种族
 
 此项不是在生成器里加几个永远为假的布尔开关。先记录“源码条件 → 真实构筑入口 → 生成变化 → 消费者 → 测试”。
@@ -195,19 +203,40 @@ Craft 不新增随机神器抽样、光源特殊入口、随机神器保存后�
 | Mauler | `ego.c:1641 ego_weapon_adjust_weight`；`artifact.c` bias 等分支；`object2.c` 相关底材选择 | 真实职业入口和重武器消费者；骰数强化后的重量、负重/战斗结果、Ego 与随机神器路径 |
 | Bard | `object2.c:2298` 竖琴基础 pval；`artifact.c:2044` 槽位估值比例、bias 与竖琴相关修正 | 真实职业及竖琴使用；与非 Bard 在同输入下比较 pval、价值限制和实际能力 |
 | Monster Ring | `ego.c:455 ACTIVATION_CHANCE`；`object2.c` 首饰选择/主题分支 | 真实种族与装备/激活入口；首饰基础池、激活概率及可实际使用的结果 |
-| Vortex | 本次在 `ego.c/object2.c/artifact.c` 未发现以该名称/常量直接判断的生成分支；现有审计将其笼统归为生成修正，证据不足 | 沿真实种族装备模板和调用链核对；如属于装备/能力消费者，应更正分类，不为凑齐清单编造生成修正 |
+| Vortex | 三个生成源文件没有直接身份分支；`r_vortex.c:764-810` 使用演化后的 `mon_get_equip_template`，`b_info.txt` 定义 3–8 个 ANY 槽；`equip.c:1622` 对正向 BLOWS 减半 | 分类为装备模板/天生攻击消费者；`equip.c:372` 的 ANY 接受除 BOW 外的类别，因此 `object2.c:3078` 间接将弓/箭袋、弹药类别权重减半。等待真实种族入口，不增加直接生成开关 |
 | 其余条件 | 枚举上述源码中的其他职业、种族、变异、人格和主题条件，不把前三个例子当成穷举 | 区分已开放、待开放、源端无对应生成分支；按真实适用范围分别完成 |
 
 每个构筑使用可从新游戏创建的真实配置验证生成、装备/激活和保存恢复；
 测试中伪造身份只能做函数级分支测试，不能作为该构筑已接入的验收。
 把 Vortex 等证据修正同步到 `scripts/audit-egos.mjs` 和生成的审计矩阵；本计划不提前修改机器审计结果。
 
+本批来源为 `master` 对象 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。
+[机器矩阵](ego-contract-audit.json) 的 `buildApplicability` 从前端实际新游戏入口读取 6 个构筑、46 个种族，
+逐行收录三个源文件的身份、变异、人格、领域、德行和主题条件，并按生成变化、入口、消费者、测试和前置条件分类。
+运行 `node scripts/audit-egos.mjs D:/codex/Frogcomposband/master` 重生成；源提交改变或出现未分类条件时审计失败。
+矩阵中的测试路径是证据索引，审计命令本身不执行这些测试。
+
+已补共享生成的两个实际缺口：主题先筛选首饰/护甲 Ego 候选，只有主题类型池为空才回到通用池；
+Bad Luck 在每次固定神器尝试前单独降低参考层级，并在 Tomte 帽速度 pval 增长时先掷继续骰、再停止增长。
+帽子规则由自然生成、Craft 和显式物化共同使用。验收见 [applicability.rs](../crates/rfb-core/src/game/ego/applicability.rs)：
+真实 Warrior 接收 Mage/Dwarf 主题装备后装备与保存恢复，真实 Tomte 获得 Bad Luck 后比较帽子生成、速度消费者和恢复；
+空主题池及参考层级/RNG 顺序另做函数级验证。没有把伪造 Mauler/Bard/Monster Ring 身份的测试当成入口验收。
+
+E8.7 留下的当前可玩底材分配缺口已由 B0–B6 完成：Acquirement 的 Archer/Sniper 弓、Cavalry 骑乘武器、
+High Mage 装置/领域书偏好，装备兼容/最爱武器筛选、发现书本计数、失败重试及当前导入池的主题底材分配，
+均已通过规则、消费者和保存验收。入口矩阵、standalone Acquirement 及对象表示限制见
+[完整底材分配与 Acquirement 计划](base-allocation-acquirement-plan.md#b6接入验收审计与交付)。
+其余待开放条件包括 Berserker、Sexy/Aphrodite、神器卷轴职业 bias/德行、Inspired Smithing 重铸、
+Draconian Metamorphosis 和固定神器身份分支。正式包已有 Dr Jones 鞭的普通行为，Archaeologist 奖励分支未开放；
+其他九件身份敏感固定神器和固定神器竖琴尚未导入。Monster Ring 的类别加权条件还比较了分配表未使用的
+`kind_is_jewelry` hook，矩阵记作源表下不可达，不据此编造加权规则。全范围 `runtimeParityComplete` 保持 `false`。
+
 ## 9. 验证、版本与完成判定
 
 每批先运行所改模块的核心测试、相关内容/导入器验证和格式检查；协议或前端变化时补 bindings、schema、
-TypeScript 与对应 UI 测试。为阈值/抽样分支保留来自源码的独立参考向量，记录输入、结果、抽样顺序和 RNG 终态。
-若 C/Rust 使用不同底层 RNG，按相同原始随机输入核对映射和消耗，并另验 Rust 固定种子连续性；
-不能仅凭相同整数 seed 宣称跨实现随机序列等价。
+TypeScript 与对应 UI 测试。按 2026-09-10 的用户决定，后续生成验收核对源码规则、阈值、抽样条件与分支顺序，
+并验证 Rust 固定种子连续性；不要求同种子产物或 RNG 终态与 C 实现相同，也不要求跨实现逐次随机输入对齐。
+历史批次已保存的参考向量仍保留；确定性数值（如估值和阈值）继续用独立来源核对。
 
 - 重试测试用最小测试内输入控制覆盖拒绝/接受边界，不为测试添加生产调试开关或通用模拟框架。
 - 复用现有保存恢复路径。新增持久字段时同步 save/protocol/state-hash 输入和生成物；
@@ -228,4 +257,5 @@ TypeScript 与对应 UI 测试。为阈值/抽样分支保留来自源码的独�
 前五项及全部已开放构筑通过后，可标记“当前可玩范围共享生成契约完成”；
 尚未开放构筑对应契约继续列明依赖，不能把全范围 `runtimeParityComplete` 提前改成 `true`。
 
-下一步实施从 **E8.1：生成入口/模式清单、表示缺口和真实装备估值** 开始。
+E8.8 四类 standalone 流程已完成，B6 的 Acquirement 桌面证据继续复用。可以标记“当前可玩范围共享生成契约完成”；
+未开放身份随真实职业/种族入口接入，未导入 source kind 与 B1 书本/普通堆叠表示限制继续单列，`runtimeParityComplete` 保持 `false`。

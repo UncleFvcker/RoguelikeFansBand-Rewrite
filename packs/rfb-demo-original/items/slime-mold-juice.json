@@ -9,9 +9,14 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.slime-mold-juice",
-  "potionNutrition": 400,
   "maxStack": 20,
   "nameKey": "item-demo-slime-mold-juice-name",
+  "potionNutrition": 400,
+  "rfbBaseKind": {
+    "sourceIndex": 402,
+    "sval": 2,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "potion",

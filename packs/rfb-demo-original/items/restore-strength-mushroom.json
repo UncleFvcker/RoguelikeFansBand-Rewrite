@@ -1,1 +1,26 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.restore-strength-mushroom","nameKey":"item-demo-restore-strength-mushroom-name","appearanceNameKey":"item-demo-restore-strength-mushroom-appearance","descriptionKey":"item-demo-restore-strength-mushroom-description","glyph":",","weightTenthsPound":1,"maxStack":100,"baseValue":350,"useAction":{"effectProgramId":"demo.effect.restore-strength-mushroom"},"tags":["consumable","food","mushroom","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-restore-strength-mushroom-appearance",
+  "baseValue": 350,
+  "descriptionKey": "item-demo-restore-strength-mushroom-description",
+  "formatVersion": 1,
+  "glyph": ",",
+  "id": "demo.item.restore-strength-mushroom",
+  "maxStack": 100,
+  "nameKey": "item-demo-restore-strength-mushroom-name",
+  "rfbBaseKind": {
+    "sourceIndex": 19,
+    "sval": 17,
+    "tval": 80
+  },
+  "tags": [
+    "consumable",
+    "food",
+    "mushroom",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.restore-strength-mushroom"
+  },
+  "weightTenthsPound": 1
+}

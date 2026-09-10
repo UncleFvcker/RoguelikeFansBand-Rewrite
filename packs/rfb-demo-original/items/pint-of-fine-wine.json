@@ -1,16 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.pint-of-fine-wine",
-  "nameKey": "item-demo-pint-of-fine-wine-name",
-  "descriptionKey": "item-demo-pint-of-fine-wine-description",
-  "glyph": ",",
-  "generationLevel": 0,
-  "weightTenthsPound": 10,
-  "maxStack": 100,
   "baseValue": 2,
+  "descriptionKey": "item-demo-pint-of-fine-wine-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "glyph": ",",
+  "id": "demo.item.pint-of-fine-wine",
+  "maxStack": 100,
+  "nameKey": "item-demo-pint-of-fine-wine-name",
+  "rfbBaseKind": {
+    "sourceIndex": 37,
+    "sval": 39,
+    "tval": 80
+  },
+  "tags": [
+    "consumable",
+    "food",
+    "rfb-compatibility"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.pint-of-fine-wine"
   },
-  "tags": ["consumable", "food", "rfb-compatibility"]
+  "weightTenthsPound": 10
 }

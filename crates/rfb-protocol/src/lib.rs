@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.245";
-pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 12;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 13;
+pub const PROTOCOL_VERSION: &str = "1.246";
+pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 15;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -5476,6 +5476,8 @@ pub struct CapturedActorSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct ItemSaveDto {
     pub previously_worn: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub book_counted: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5531,6 +5533,8 @@ pub struct ItemSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct InventoryItemSaveDto {
     pub previously_worn: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub book_counted: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5585,6 +5589,8 @@ pub struct InventoryItemSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct EquipmentItemSaveDto {
     pub previously_worn: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub book_counted: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5640,6 +5646,8 @@ pub struct EquipmentItemSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct CarriedItemSaveDto {
     pub previously_worn: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub book_counted: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5742,6 +5750,8 @@ pub struct FloorSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct ItemKnowledgeSaveDto {
     pub kind_id: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    pub found_count: u32,
     #[serde(default)]
     pub tried: bool,
     #[serde(default)]
@@ -5933,6 +5943,7 @@ pub struct SavePayloadV1 {
     pub dungeon_states: Vec<DungeonStateSaveDto>,
     pub defeated_limited_actor_counts: Vec<DefeatedActorCountSaveDto>,
     pub generated_artifact_ids: Vec<String>,
+    pub random_artifact_names: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub town_states: Vec<TownStateSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -6554,6 +6565,7 @@ mod tests {
             "pre-v190 actor saves without nice must be rejected"
         );
         let mut current = serde_json::to_value(&legacy).expect("fixture should serialize");
+        current["randomArtifactNames"] = serde_json::json!([]);
         current["entities"][0]["nice"] = serde_json::json!(false);
         current["entities"][0]["experience"] = serde_json::json!(0);
         current["entities"][0]["anger"] = serde_json::json!(0);

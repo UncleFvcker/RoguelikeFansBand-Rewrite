@@ -258,6 +258,7 @@ mod tests {
             dungeon_states: Vec::new(),
             defeated_limited_actor_counts: Vec::new(),
             generated_artifact_ids: Vec::new(),
+            random_artifact_names: Vec::new(),
             town_states: Vec::new(),
             shop_states: Vec::new(),
             home_states: Vec::new(),

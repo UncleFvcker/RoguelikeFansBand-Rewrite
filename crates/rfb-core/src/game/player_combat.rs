@@ -1489,25 +1489,15 @@ impl Game {
             events.push(DomainEvent::ItemThrowUnavailable);
             return Ok(());
         };
-        let definition = self
-            .content
-            .item(&item.kind_id)
-            .expect("throwable item definition must remain available");
-        let mighty_throw = self.player_has_mighty_throw();
-        let range = throw_range(self.item_instance_weight(item), mighty_throw);
-        let profile = definition
-            .throw_profile
-            .as_ref()
+        let (range, damage_multiplier) = self.item_throw_parameters(item);
+        let profile = self
+            .item_throw_profile(item)
             .map(|profile| ResolvedThrowProfile {
-                to_hit: profile
-                    .to_hit
-                    .saturating_add(i32::from(item.enchantments.to_hit)),
-                to_damage: profile
-                    .to_damage
-                    .saturating_add(i32::from(item.enchantments.to_damage)),
-                damage_dice: profile.damage_dice,
-                damage_sides: profile.damage_sides,
-                damage_type: DamageType::from(profile.damage_type),
+                to_hit: profile.to_hit,
+                to_damage: profile.to_damage,
+                damage_dice: profile.damage.dice,
+                damage_sides: profile.damage.sides,
+                damage_type: DamageType::from(profile.damage.damage_type),
             });
         let Some(mut thrown) = self.take_inventory_item(item_id)? else {
             events.push(DomainEvent::ItemThrowUnavailable);
@@ -1557,7 +1547,8 @@ impl Game {
                 let raw_damage = self
                     .roll_damage(profile.damage_dice, profile.damage_sides)
                     .saturating_add(profile.to_damage)
-                    .saturating_mul(if mighty_throw { 2 } else { 1 })
+                    .saturating_mul(damage_multiplier)
+                    .saturating_div(100)
                     .max(0);
                 let resistance = self.entities[index].resistances.level(profile.damage_type);
                 let damage = resolve_armored_damage(

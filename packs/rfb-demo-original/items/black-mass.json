@@ -13,6 +13,11 @@
   "maxStack": 1,
   "mogaminatorRare": false,
   "nameKey": "item-demo-black-mass-name",
+  "rfbBaseKind": {
+    "sourceIndex": 517,
+    "sval": 1,
+    "tval": 94
+  },
   "tags": [
     "book",
     "death",

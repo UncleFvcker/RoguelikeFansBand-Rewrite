@@ -1,1 +1,33 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.hellfire-tome","nameKey":"item-demo-hellfire-tome-name","descriptionKey":"item-demo-hellfire-tome-description","glyph":"?","weightTenthsPound":30,"baseValue":100000,"generationLevel":80,"maxStack":1,"mogaminatorRare":false,"elementalDestructionVulnerabilities":["fire"],"elementalDestructionImmunities":["acid","electricity","fire","cold"],"abilityBookId":"demo.ability-book.hellfire-tome","tags":["book","daemon","spellbook"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "abilityBookId": "demo.ability-book.hellfire-tome",
+  "baseValue": 100000,
+  "descriptionKey": "item-demo-hellfire-tome-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 80,
+  "glyph": "?",
+  "id": "demo.item.hellfire-tome",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-hellfire-tome-name",
+  "rfbBaseKind": {
+    "sourceIndex": 535,
+    "sval": 3,
+    "tval": 98
+  },
+  "tags": [
+    "book",
+    "daemon",
+    "spellbook"
+  ],
+  "weightTenthsPound": 30
+}

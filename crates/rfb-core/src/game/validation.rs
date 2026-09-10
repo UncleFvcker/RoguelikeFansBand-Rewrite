@@ -57,6 +57,20 @@ impl Game {
             GameAction::UseItem { item_id, .. }
             | GameAction::UseItemForRecharge { item_id, .. } => {
                 self.inventory_item_use_context(item_id)?;
+                if matches!(
+                    action,
+                    GameAction::UseItem {
+                        target: None | Some(TargetSelection::SelfTarget),
+                        target_glyph: None,
+                        ..
+                    }
+                ) && let Some((ItemUseEffectDefinition::Acquirement { maximum_count, .. }, _)) =
+                    self.inventory_item_use_effect(item_id)
+                {
+                    self.next_item_instance_serial
+                        .checked_add(u64::from(*maximum_count))
+                        .ok_or(CoreError::ItemIdExhausted)?;
+                }
             }
             _ => {}
         }
@@ -141,6 +155,9 @@ pub(super) fn item_creation_state_is_valid(
     item: &ItemInstance,
     definition: &rfb_content::ItemDefinition,
 ) -> bool {
+    if item.book_counted && (definition.ability_book_id.is_none() || item.quantity != 1) {
+        return false;
+    }
     let player_made_state_is_valid = match item.origin_kind {
         None => item.discount_percent == 0,
         Some(ItemOriginKindDto::PlayerMade) => {
@@ -177,7 +194,7 @@ pub(super) fn item_creation_state_is_valid(
     });
     player_made_state_is_valid
         && item.artifact_name.as_ref().is_none_or(|name| {
-            !name.trim().is_empty()
+            (name.is_empty() || !name.trim().is_empty())
                 && name.len() < 1024
                 && !name.chars().any(char::is_control)
                 && item.quantity == 1

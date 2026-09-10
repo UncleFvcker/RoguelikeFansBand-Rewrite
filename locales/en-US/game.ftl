@@ -469,6 +469,7 @@ message-item-use-banishment-no-space = { $source } cannot displace { $target }.
 message-item-use-banishment-no-effect = You use { $source }, but there are no creatures in sight.
 message-item-activation-detected = { $source } reveals { $count } concealed locations.
 message-item-use-detected = { $source } reveals { $count } nearby locations.
+message-item-list-entry = { $target }
 message-item-use-teleported = { $source } teleports you from ({ $fromX }, { $fromY }) to ({ $toX }, { $toY }).
 message-item-activation-teleported = { $source } teleports you from ({ $fromX }, { $fromY }) to ({ $toX }, { $toY }).
 message-item-use-teleported-level = { $source } shifts you from { $from } to { $to }.

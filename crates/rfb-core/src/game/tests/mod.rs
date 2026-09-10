@@ -16,10 +16,13 @@ use rfb_protocol::{
 use super::*;
 
 mod abilities;
+mod acquirement;
 mod archer;
 mod artifact_identity;
 mod attribute_sources;
 mod berserker;
+
+mod book_discovery;
 mod capture_ball;
 mod cavalry;
 mod combat;

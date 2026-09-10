@@ -12,6 +12,11 @@
   "id": "demo.item.trap-creation-scroll",
   "maxStack": 20,
   "nameKey": "item-demo-trap-creation-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 322,
+    "sval": 7,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "rfb-compatibility",

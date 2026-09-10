@@ -1130,6 +1130,9 @@ impl Game {
                     .cloned()
             {
                 let reward = reward_item(
+                    self.progress
+                        .active_mutation_ids
+                        .contains("rfb.mutation.bad-luck"),
                     &self.content,
                     self.build
                         .as_ref()

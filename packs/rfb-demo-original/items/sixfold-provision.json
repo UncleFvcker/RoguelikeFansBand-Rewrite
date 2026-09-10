@@ -1,18 +1,28 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.sixfold-provision",
-  "nameKey": "item-demo-sixfold-provision-name",
   "appearanceNameKey": "item-demo-unfamiliar-food-name",
-  "descriptionKey": "item-demo-sixfold-provision-description",
-  "glyph": ",",
-  "generationLevel": 20,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 2,
-  "maxStack": 20,
   "baseValue": 1000,
+  "descriptionKey": "item-demo-sixfold-provision-description",
+  "formatVersion": 1,
+  "generationLevel": 20,
+  "glyph": ",",
+  "id": "demo.item.sixfold-provision",
+  "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-sixfold-provision-name",
+  "rfbBaseKind": {
+    "sourceIndex": 18,
+    "sval": 19,
+    "tval": 80
+  },
+  "tags": [
+    "attribute-restoration",
+    "consumable",
+    "food",
+    "task-reward"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.restore-all-attributes"
   },
-  "tags": ["attribute-restoration", "consumable", "food", "task-reward"]
+  "weightTenthsPound": 2
 }

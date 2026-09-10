@@ -10,10 +10,15 @@
   "generationLevel": 55,
   "glyph": "!",
   "id": "demo.item.mortal-draught",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-mortal-draught-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 418,
+    "sval": 23,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "potion",

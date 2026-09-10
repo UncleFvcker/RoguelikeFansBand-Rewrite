@@ -10,10 +10,15 @@
   "generationLevel": 25,
   "glyph": "!",
   "id": "demo.item.restore-wisdom-potion",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-restore-wisdom-potion-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 437,
+    "sval": 44,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "rfb-compatibility",

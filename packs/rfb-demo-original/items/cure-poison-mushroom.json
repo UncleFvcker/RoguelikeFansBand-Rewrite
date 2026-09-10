@@ -1,1 +1,26 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.cure-poison-mushroom","nameKey":"item-demo-cure-poison-mushroom-name","appearanceNameKey":"item-demo-cure-poison-mushroom-appearance","descriptionKey":"item-demo-cure-poison-mushroom-description","glyph":",","weightTenthsPound":1,"maxStack":100,"baseValue":120,"useAction":{"effectProgramId":"demo.effect.cure-poison-mushroom"},"tags":["consumable","food","mushroom","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-cure-poison-mushroom-appearance",
+  "baseValue": 120,
+  "descriptionKey": "item-demo-cure-poison-mushroom-description",
+  "formatVersion": 1,
+  "glyph": ",",
+  "id": "demo.item.cure-poison-mushroom",
+  "maxStack": 100,
+  "nameKey": "item-demo-cure-poison-mushroom-name",
+  "rfbBaseKind": {
+    "sourceIndex": 13,
+    "sval": 12,
+    "tval": 80
+  },
+  "tags": [
+    "consumable",
+    "food",
+    "mushroom",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.cure-poison-mushroom"
+  },
+  "weightTenthsPound": 1
+}

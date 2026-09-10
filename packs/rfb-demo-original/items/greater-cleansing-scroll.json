@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-greater-cleansing-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 330,
+    "sval": 15,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "curse",

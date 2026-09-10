@@ -1,9 +1,153 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::*;
+use crate::game::loot::{GeneratedItemDraft, ItemGenerationMode, LootContext};
+use crate::game::{Game, item_value, random_artifact};
+use crate::state::ItemLocation;
 use EquipmentPassive as Passive;
 use Pval::*;
 use armor::{Pval, apply_pval};
+
+#[cfg(test)]
+mod generation_tests;
+
+// RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, ego.c:373-450.
+// Only the source flags which affect jewelry's outer value limits are needed.
+const AM_GOOD: u32 = 0x2;
+const AM_GREAT: u32 = 0x4;
+const AM_FORCE_EGO: u32 = 0x100;
+const AM_QUEST: u32 = 0x800;
+
+fn power_limits(rng: &mut RfbRng, level: u16, mode: u32) -> (i32, i32) {
+    let (_, mut minimum, mut maximum) = [
+        (10, 0, 5_000),
+        (20, 0, 7_000),
+        (30, 1_000, 15_000),
+        (40, 2_500, 20_000),
+        (50, 5_000, 30_000),
+        (60, 7_500, 60_000),
+        (70, 10_000, 0),
+        (80, 12_500, 0),
+        (90, 15_000, 0),
+        (999, 15_000, 0),
+    ]
+    .into_iter()
+    .find(|(boundary, _, _)| level < *boundary)
+    .expect("apply_magic level is below MAX_DEPTH");
+    if mode & (AM_FORCE_EGO | AM_GREAT | AM_QUEST) != 0 {
+        minimum = minimum.max(5_000);
+        if maximum != 0 {
+            maximum = maximum.max(10_000);
+        }
+    } else if mode & AM_GOOD != 0 {
+        minimum = minimum.max(2_500);
+        if maximum != 0 {
+            maximum = maximum.max(7_500);
+        }
+    }
+    if one_in(rng, 8) {
+        minimum = minimum.max(5_000);
+        maximum *= 2;
+    }
+    (minimum, maximum)
+}
+
+fn accepts_value(value: i32, (minimum, maximum): (i32, i32)) -> bool {
+    (minimum == 0 || value >= minimum) && (maximum == 0 || value <= maximum)
+}
+
+fn create_with_limits(
+    game: &mut Game,
+    original: &GeneratedItemDraft,
+    context: &LootContext,
+    level: u16,
+    power: i16,
+    mode: ItemGenerationMode,
+    limits: (i32, i32),
+) -> (GeneratedItemDraft, usize) {
+    for attempt in 1..=1001 {
+        let draft = game.create_jewelry_candidate(original, context, level, power, mode);
+        if attempt == 1001 {
+            return (draft, attempt);
+        }
+        let item = draft
+            .clone()
+            .into_item_instance(String::new(), ItemLocation::Inventory);
+        let value = item_value::obj_value_real(&game.content, &item)
+            .expect("validated RFB jewelry supports real valuation");
+        if accepts_value(value, limits) {
+            return (draft, attempt);
+        }
+    }
+    unreachable!("attempt 1001 is unconditional")
+}
+
+impl Game {
+    pub(in crate::game) fn generate_jewelry_draft(
+        &mut self,
+        original: GeneratedItemDraft,
+        context: &LootContext,
+        level: u16,
+        power: i16,
+        mode: ItemGenerationMode,
+    ) -> GeneratedItemDraft {
+        let flags = match mode {
+            ItemGenerationMode::Ordinary => 0,
+            ItemGenerationMode::Good => AM_GOOD,
+            ItemGenerationMode::GreatOnly => AM_GREAT,
+            ItemGenerationMode::Great
+            | ItemGenerationMode::TailoredGreat
+            | ItemGenerationMode::Artifact { .. } => AM_GOOD | AM_GREAT,
+        };
+        let limits = power_limits(&mut self.rng, level, flags);
+        create_with_limits(self, &original, context, level, power, mode, limits).0
+    }
+
+    fn create_jewelry_candidate(
+        &mut self,
+        original: &GeneratedItemDraft,
+        context: &LootContext,
+        level: u16,
+        power: i16,
+        mode: ItemGenerationMode,
+    ) -> GeneratedItemDraft {
+        let definition = self.content.item(&original.kind_id).unwrap();
+        if let Some((value_level, adjusted)) = random_artifact::scheduling::select(
+            &mut self.rng,
+            definition.rfb_base_kind.unwrap(),
+            i32::from(level),
+            power,
+            mode,
+        ) {
+            return self.materialize_random_artifact_draft(
+                original.clone(),
+                context,
+                value_level,
+                power,
+                adjusted,
+            );
+        }
+        let materialization = roll(
+            context.drop_theme(&self.content),
+            &self.content,
+            &mut self.rng,
+            definition,
+            level,
+            power,
+        )
+        .expect("validated jewelry has eligible source egos");
+        let final_curse = materialization.curse_on_finalize;
+        let mut item = original
+            .clone()
+            .into_item_instance(String::new(), ItemLocation::Inventory);
+        materialization.apply_to(&mut item);
+        let mut draft = item.into();
+        if final_curse {
+            curses::finalize_draft(&self.content, &mut self.rng, &mut draft, true);
+        }
+        draft
+    }
+}
 
 fn pval(rng: &mut RfbRng, maximum: u16, level: u16) -> u16 {
     let maximum = 1 + rfb_m_bonus(rng, maximum - 1, level);
@@ -18,7 +162,8 @@ fn level_check(rng: &mut RfbRng, power: u16, level: i32) -> bool {
     level > 0 && rng.bounded((i32::from(power) * 100 / level).max(1) as u64) < 100
 }
 
-pub(in crate::game) fn roll(
+fn roll(
+    theme: &str,
     content: &ContentCatalog,
     rng: &mut RfbRng,
     item: &ItemDefinition,
@@ -30,7 +175,8 @@ pub(in crate::game) fn roll(
         45 => RfbEgoTypeDefinition::Ring,
         _ => return None,
     };
-    let id = roll_rfb_ego_from_affixes(content.affix_definitions(), rng, level, &[category])?;
+    let id =
+        roll_rfb_ego_from_affixes(theme, content.affix_definitions(), rng, level, &[category])?;
     materialize(rng, item, content.affix(id)?, level, power)
 }
 
@@ -1137,6 +1283,7 @@ mod tests {
             let definition = game.content.item(kind).unwrap();
             for seed in 1..=1500 {
                 let result = roll(
+                    "",
                     &game.content,
                     &mut RfbRng::seeded(seed),
                     definition,

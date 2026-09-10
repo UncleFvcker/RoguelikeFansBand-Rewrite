@@ -594,6 +594,23 @@ impl Game {
             {
                 continue;
             }
+            if item.artifact_name.is_some() {
+                let flags = super::item_value::instance::value_object(&self.content, item)
+                    .expect("random artifact kind has source values")
+                    .flags;
+                for (damage_type, token) in super::random_artifact::resistance_elements() {
+                    for (prefix, level) in [
+                        ("RES", ResistanceLevel::Resistant),
+                        ("VULN", ResistanceLevel::Vulnerable),
+                        ("IM", ResistanceLevel::Immune),
+                    ] {
+                        if flags.contains(&format!("{prefix}_{token}")) {
+                            record(DamageType::from(damage_type), level);
+                        }
+                    }
+                }
+                continue;
+            }
             if let Some(definition) = self.content.item(&item.kind_id) {
                 for (damage_type, level) in &definition.resistances {
                     record(
@@ -1477,15 +1494,22 @@ impl Game {
     }
 
     pub(super) fn item_throw_profile(&self, item: &ItemInstance) -> Option<ThrowProfileDto> {
+        if self.item_has_rfb_flag(item, "THROWING") {
+            let profile = self.item_melee_profile(item)?;
+            return Some(ThrowProfileDto {
+                range: self.item_throw_parameters(item).0,
+                to_hit: profile.to_hit,
+                to_damage: profile.to_damage,
+                damage: profile.damage,
+                source_item_id: item.id.clone(),
+            });
+        }
         let definition = self.content.item(&item.kind_id)?;
         definition
             .throw_profile
             .as_ref()
             .map(|profile| ThrowProfileDto {
-                range: throw_range(
-                    self.item_instance_weight(item),
-                    self.player_has_mighty_throw(),
-                ),
+                range: self.item_throw_parameters(item).0,
                 to_hit: profile
                     .to_hit
                     .saturating_add(i32::from(item.enchantments.to_hit)),
@@ -1493,12 +1517,40 @@ impl Game {
                     .to_damage
                     .saturating_add(i32::from(item.enchantments.to_damage)),
                 damage: DamageDiceDto {
-                    dice: profile.damage_dice,
-                    sides: profile.damage_sides,
+                    dice: item
+                        .melee_damage_dice()
+                        .map_or(profile.damage_dice, |dice| dice.dice),
+                    sides: item
+                        .melee_damage_dice()
+                        .map_or(profile.damage_sides, |dice| dice.sides),
                     damage_type: DamageType::from(profile.damage_type).into(),
                 },
                 source_item_id: item.id.clone(),
             })
+    }
+
+    pub(super) fn item_throw_parameters(&self, item: &ItemInstance) -> (u16, i32) {
+        let weight = self.item_instance_weight(item);
+        let mighty = self.player_has_mighty_throw();
+        if !self.item_has_rfb_flag(item, "THROWING") {
+            return (throw_range(weight, mighty), if mighty { 200 } else { 100 });
+        }
+        // RFB py_throw.c: THROWING adds 100 to the multiplier and halves the
+        // effective weight for range; mighty throw adds another 100.
+        const STRENGTH_DAMAGE: [i32; 38] = [
+            -2, -2, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 5, 5, 6, 7, 8,
+            9, 10, 11, 12, 13, 14, 15, 16, 18, 20,
+        ];
+        let index = usize::from(
+            self.effective_player_attributes()
+                .index(AttributeKind::Strength)
+                .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP),
+        );
+        let multiplier = (200 + i32::from(mighty) * 100) * (100 + STRENGTH_DAMAGE[index]) / 100;
+        let limit = 10 + 2 * (multiplier - 100) / 100;
+        let range = (i32::from(DRACONIAN_STRENGTH_BLOW[index]) + 20) * limit
+            / i32::from(weight.max(10) / 2);
+        (range.min(limit).clamp(5, 18) as u16, multiplier)
     }
 
     pub(super) fn body_slot_type(&self, slot_id: &str) -> Option<&str> {
@@ -3013,12 +3065,23 @@ impl Game {
                 if matches!(slot_type, Some("weapon" | "tool"))
                     && let Some(definition) = self.content.item(&item.kind_id)
                 {
+                    let tunneling = if item.artifact_name.is_some() {
+                        0
+                    } else {
+                        definition.tunneling_pval
+                    };
                     let bonus = i32::from(self.item_instance_weight(item) / 10)
-                        .saturating_add(i32::from(definition.tunneling_pval).saturating_mul(20));
+                        .saturating_add(i32::from(tunneling).saturating_mul(20));
                     if bonus > digging_equipment.1 {
                         digging_equipment = (item.id.clone(), bonus);
                     }
                 }
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::DigSkill,
+                    &item.id,
+                    self.item_equipment_bonuses(item).digging_skill,
+                );
                 if slot_type == Some("tool") {
                     continue;
                 }

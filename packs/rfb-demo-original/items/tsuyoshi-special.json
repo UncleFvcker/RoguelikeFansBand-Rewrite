@@ -9,9 +9,14 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.tsuyoshi-special",
-  "potionNutrition": 0,
   "maxStack": 20,
   "nameKey": "item-demo-tsuyoshi-special-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 458,
+    "sval": 65,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "potion",

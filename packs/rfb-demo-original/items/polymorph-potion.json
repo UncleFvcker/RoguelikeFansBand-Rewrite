@@ -9,9 +9,14 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.polymorph-potion",
-  "potionNutrition": 0,
   "maxStack": 20,
   "nameKey": "item-demo-polymorph-potion-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 459,
+    "sval": 66,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "mutation",

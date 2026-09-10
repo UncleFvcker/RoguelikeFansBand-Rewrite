@@ -10,10 +10,15 @@
   "generationLevel": 25,
   "glyph": "!",
   "id": "demo.item.strength-renewal-tonic",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-strength-renewal-tonic-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 435,
+    "sval": 42,
+    "tval": 75
+  },
   "tags": [
     "attribute-restore",
     "consumable",

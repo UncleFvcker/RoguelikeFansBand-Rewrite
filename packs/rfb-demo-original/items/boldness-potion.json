@@ -10,10 +10,15 @@
   "generationLevel": 1,
   "glyph": "!",
   "id": "demo.item.boldness-potion",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-boldness-potion-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 421,
+    "sval": 28,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "rfb-compatibility",

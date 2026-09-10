@@ -36,6 +36,8 @@ export function createPresentationFormatter(
 
   function formatEvent(event: GameEventDto): string {
     switch (event.messageKey) {
+      case "item-list-entry":
+        return localization.format("message-item-list-entry", { target: event.args.name ?? contentName(event.args.target) });
       case "player-life-force-exhausted":
         return localization.format(event.messageKey);
       case "player-race-changed":

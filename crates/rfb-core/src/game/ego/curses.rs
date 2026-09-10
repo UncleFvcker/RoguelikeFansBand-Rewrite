@@ -135,14 +135,19 @@ fn one_biff(rng: &mut RfbRng, flags: &BTreeSet<String>, added: &mut BTreeSet<Str
 }
 
 #[derive(Debug)]
-struct CurseRoll {
-    heavy: bool,
-    flags: BTreeSet<String>,
-    effects: BTreeSet<ItemCurseEffectDto>,
-    severity: ItemCurseSeverityDto,
+pub(in crate::game) struct CurseRoll {
+    pub(in crate::game) heavy: bool,
+    pub(in crate::game) flags: BTreeSet<String>,
+    pub(in crate::game) effects: BTreeSet<ItemCurseEffectDto>,
+    pub(in crate::game) severity: ItemCurseSeverityDto,
 }
 
-fn roll_curse(rng: &mut RfbRng, value: i32, tval: u16, flags: &BTreeSet<String>) -> CurseRoll {
+pub(in crate::game) fn roll_curse(
+    rng: &mut RfbRng,
+    value: i32,
+    tval: u16,
+    flags: &BTreeSet<String>,
+) -> CurseRoll {
     let mut count = i32::from(randint1(rng, 2));
     let value = value / 10_000;
     let mut result = CurseRoll {
@@ -330,6 +335,12 @@ pub(super) fn finalize_materialization(
     result: &mut EgoMaterialization,
 ) {
     let mut item = GeneratedItemDraft {
+        artifact_name: None,
+        intrinsic_melee_damage_dice: None,
+        intrinsic_weight_tenths_pound: None,
+        intrinsic_weapon_traits: Default::default(),
+        intrinsic_curse_effects: Default::default(),
+        permanent_destruction_immunities: Default::default(),
         kind_id: kind.to_owned(),
         quantity: 1,
         origin_kind: None,

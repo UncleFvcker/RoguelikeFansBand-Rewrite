@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-//! E8.5a uses real instances on ordinary kinds; no natural artifact generation.
+//! Random artifact identity and its consumers, including natural generation.
 use super::support::{dispatch_next, give_inventory_item};
 use super::*;
 use crate::game::inventory::{
@@ -550,8 +550,9 @@ fn artifact_identity_inventory_damage_and_ground_save_keep_the_instance() {
 }
 
 #[test]
-fn artifact_identity_does_not_enable_natural_random_artifact_generation() {
+fn artifact_identity_natural_generation_preserves_existing_artifacts() {
     let game = game_with_artifact("demo.item.dagger");
+    let mut random_count = 0;
     for seed in 0..16 {
         for mode in [
             ItemGenerationMode::Ordinary,
@@ -569,7 +570,6 @@ fn artifact_identity_does_not_enable_natural_random_artifact_generation() {
                 depth: 80,
                 source: LootSource::MonsterDeath {
                     actor_id: "test.source".to_owned(),
-                    themed: false,
                 },
             };
             let generated = trial
@@ -581,7 +581,28 @@ fn artifact_identity_does_not_enable_natural_random_artifact_generation() {
                     mode,
                 )
                 .unwrap();
-            assert!(generated.iter().all(|item| item.artifact_name.is_none()));
+            for item in &generated {
+                if let Some(name) = &item.artifact_name {
+                    random_count += 1;
+                    assert!(trial.random_artifact_names.contains(name));
+                    assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+                    assert!(!trial.generated_artifact_ids.contains(&item.kind_id));
+                    if trial
+                        .content
+                        .item(&item.kind_id)
+                        .unwrap()
+                        .device_generation
+                        .is_some()
+                    {
+                        assert!(item.activation.is_some(), "base activation on {seed}");
+                        assert!(item.charges.is_some());
+                    }
+                }
+            }
+            assert_eq!(trial.items[0], game.items[0]);
+            trial.items.extend(generated);
+            round_trip(&trial);
         }
     }
+    assert!(random_count > 0);
 }

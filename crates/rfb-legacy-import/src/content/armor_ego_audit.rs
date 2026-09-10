@@ -538,57 +538,7 @@ pub(super) fn armor_activations(
         }
     };
     let profiles: Vec<_> = candidates.iter().filter(eligible).map(|candidate| {
-        let (effect, target, ground) = match candidate.token.as_str() {
-            "STAR_BALL" => (serde_json::json!({"type":"star-ball"}), device_self_target(), false),
-            "ESCAPE" => (serde_json::json!({"type":"escape"}), device_self_target(), false),
-            "DESTROY_TRAPS" => (device_ability_effect(serde_json::json!({"type":"terrain-beam", "operation":"destroy-traps-and-doors"})), device_projectile_target(), false),
-            "STARBURST" => (serde_json::json!({"type":"starburst", "damage":375 + device_power_curve(200, candidate.level, 80)}), device_self_target(), false),
-            "WRATH_OF_GOD" => (device_ability_effect(serde_json::json!({"type":"wrath-of-god", "damage":25 + candidate.level * 3 / 2})), device_projectile_target(), true),
-            "EARTHQUAKE" => (device_ability_effect(serde_json::json!({"type":"earthquake","radius":10,"affectChancePercent":15,"floorTerrainId":"demo.terrain.floor","wallTerrainIds":["demo.terrain.wall","demo.terrain.quartz-vein","demo.terrain.magma-vein"]})), device_self_target(), false),
-            "LIGHT_SPEED" => (device_status_effect("rfb.status.light-speed", 0, 0, 16), device_self_target(), false),
-            "DETECT_ALL" => (device_ability_effect(serde_json::json!({"type":"sequence", "effects": [
-                {"type":"detect","subject":"terrain","category":"trap","radius":30,"persistent":true,"throughWalls":true},
-                {"type":"detect","subject":"terrain","category":"passage","radius":30,"persistent":true,"throughWalls":true},
-                {"type":"detect","subject":"gold","category":"gold","radius":30,"persistent":false,"throughWalls":true},
-                {"type":"detect","subject":"item","category":"item","radius":30,"persistent":false,"throughWalls":true},
-                {"type":"detect","subject":"actor","category":"any-monster","radius":30,"persistent":false,"throughWalls":true}
-            ]})), device_self_target(), false),
-            "WHIRLWIND_ATTACK" => (device_ability_effect(serde_json::json!({"type":"melee-adjacent"})), device_self_target(), false),
-            "PHASE_DOOR" | "TELEPORT" => (serde_json::json!({"type":"random-teleport", "maximumDistance":if candidate.token == "PHASE_DOOR" {10} else {100}}), device_self_target(), false),
-            "STRAFING" => (device_ability_effect(serde_json::json!({"type":"blink-self", "radius":10, "lineOfSight":true})), device_self_target(), false),
-            "SLEEP_MONSTERS" => (serde_json::json!({"type":"visible-apply-status", "statusKindId":"rfb.status.sleep", "intensity":1, "durationTicks":500, "stacking":"replace", "power":candidate.level * 3}), device_self_target(), false),
-            "IDENTIFY" => (serde_json::json!({"type":"identify-item","full":false}), device_item_target(), false),
-            "DETECT_MONSTERS" | "DETECT_OBJECTS" | "DETECT_TRAPS" => {
-                let (subject, category, persistent) = match candidate.token.as_str() {
-                    "DETECT_MONSTERS" => ("actor", "normal-monster", false),
-                    "DETECT_OBJECTS" => ("item", "item", false),
-                    _ => ("terrain", "trap", true),
-                };
-                (device_ability_effect(serde_json::json!({"type":"detect", "subject":subject,"category":category,"radius":30,"persistent":persistent,"throughWalls":true})), device_self_target(), false)
-            }
-            "LITE_AREA" | "LITE_MAP_AREA" => {
-                let light = serde_json::json!({"type":"light-area","damageDice":2+candidate.level/20,"damageSides":15,"radius":3});
-                let effect = if candidate.token == "LITE_MAP_AREA" { serde_json::json!({"type":"sequence","effects":[{"type":"detect","subject":"terrain","category":"all","radius":30,"persistent":true,"throughWalls":true}, light]}) } else { light };
-                (device_ability_effect(effect), device_self_target(), false)
-            }
-            "BOLT_MISSILE" => (device_damage_effect("damage", "missile", 2 + candidate.level / 10, 6, 0, 0), device_projectile_target(), false),
-            "BOLT_SOUND" => (device_damage_effect("damage", "sound", 7 + candidate.level / 6, 8, 0, 0), device_projectile_target(), false),
-            "BEAM_SOUND" => (device_damage_effect("beam-damage", "sound", 7 + candidate.level / 6, 8, 0, 0), device_projectile_target(), false),
-            "BALL_SOUND" => (device_damage_effect("area-damage", "sound", 0, 0, 70 + device_power_curve(280, candidate.level, 40), 3), device_projectile_target(), false),
-            "BALL_SHARDS" => (device_damage_effect("area-damage", "shards", 0, 0, 175 + device_power_curve(325, candidate.level, 75), 2), device_projectile_target(), false),
-            "BREATHE_SOUND" => (device_damage_effect("cone-damage", "sound", 0, 0, 50 + candidate.level * 2, 2), device_projectile_target(), false),
-            "BREATHE_SHARDS" => (device_damage_effect("cone-damage", "shards", 0, 0, 100 + candidate.level * 2, 2), device_projectile_target(), false),
-            "BOLT_SHARDS" => (device_damage_effect("damage", "shards", 7 + candidate.level / 5, 8, 0, 0), device_projectile_target(), false),
-            "BOLT_LITE" => (device_damage_effect("damage", "light", 5 + candidate.level / 8, 8, 0, 0), device_projectile_target(), false),
-            "BEAM_LITE_WEAK" => (device_ability_effect(serde_json::json!({"type":"light-line","damageDice":6,"damageSides":8})), device_projectile_target(), false),
-            "BEAM_LITE" => (device_damage_effect("beam-damage", "light", 0, 0, 10 + device_power_curve(275, candidate.level, 0), 0), device_projectile_target(), false),
-            "BALL_LITE" => (device_damage_effect("area-damage", "light", 0, 0, 200 + device_power_curve(350, candidate.level, 80), 4), device_projectile_target(), false),
-            "BREATHE_LITE" => (device_damage_effect("cone-damage", "light", 0, 0, 50 + candidate.level * 2, 2), device_projectile_target(), false),
-            "STONE_SKIN" => (serde_json::json!({"type":"apply-stone-skin","durationDice":1,"durationSides":20,"durationBonus":20}), device_self_target(), false),
-            "BERSERK" => (serde_json::json!({"type":"apply-berserk-strength","durationDice":1,"durationSides":25,"durationBonus":25}), device_self_target(), false),
-            "SPEED_HERO" => (serde_json::json!({"type":"apply-heroic-speed","durationDice":1,"durationSides":candidate.level / 2,"durationBonus":candidate.level / 2}), device_self_target(), false),
-            _ => legacy_device_item_effect(candidate).unwrap_or_else(|| panic!("front armor activation {} requires an implemented effect", candidate.token)),
-        };
+        let (effect, target, ground) = activation_effect(candidate).expect("armor activation has an implemented effect");
         let mut effect = effect;
         if ground { effect["affectsGroundItems"] = serde_json::json!(true); }
         let fixed = entry.activation.as_ref();
@@ -612,6 +562,226 @@ pub(super) fn armor_activations(
         })
     }).collect();
     (!profiles.is_empty()).then_some(profiles)
+}
+
+pub(super) fn activation_effect(
+    candidate: &LegacyEgoActivationCandidate,
+) -> Option<(serde_json::Value, serde_json::Value, bool)> {
+    Some(match candidate.token.as_str() {
+        "STAR_BALL" => (
+            serde_json::json!({"type":"star-ball"}),
+            device_self_target(),
+            false,
+        ),
+        "ESCAPE" => (
+            serde_json::json!({"type":"escape"}),
+            device_self_target(),
+            false,
+        ),
+        "DESTROY_TRAPS" => (
+            device_ability_effect(
+                serde_json::json!({"type":"terrain-beam", "operation":"destroy-traps-and-doors"}),
+            ),
+            serde_json::json!({"modes":["direction"],"range":18,"requiresLineOfEffect":true}),
+            false,
+        ),
+        "STARBURST" => (
+            serde_json::json!({"type":"starburst", "damage":375 + device_power_curve(200, candidate.level, 80)}),
+            device_self_target(),
+            false,
+        ),
+        "WRATH_OF_GOD" => (
+            device_ability_effect(
+                serde_json::json!({"type":"wrath-of-god", "damage":25 + candidate.level * 3 / 2}),
+            ),
+            device_projectile_target(),
+            true,
+        ),
+        "EARTHQUAKE" => (
+            device_ability_effect(
+                serde_json::json!({"type":"earthquake","radius":10,"affectChancePercent":15,"floorTerrainId":"demo.terrain.floor","wallTerrainIds":["demo.terrain.wall","demo.terrain.quartz-vein","demo.terrain.magma-vein"]}),
+            ),
+            device_self_target(),
+            false,
+        ),
+        "LIGHT_SPEED" => (
+            device_status_effect("rfb.status.light-speed", 0, 0, 16),
+            device_self_target(),
+            false,
+        ),
+        "DETECT_ALL" => (
+            device_ability_effect(serde_json::json!({"type":"sequence", "effects": [
+                {"type":"detect","subject":"terrain","category":"trap","radius":30,"persistent":true,"throughWalls":true},
+                {"type":"detect","subject":"terrain","category":"passage","radius":30,"persistent":true,"throughWalls":true},
+                {"type":"detect","subject":"gold","category":"gold","radius":30,"persistent":false,"throughWalls":true},
+                {"type":"detect","subject":"item","category":"item","radius":30,"persistent":false,"throughWalls":true},
+                {"type":"detect","subject":"actor","category":"any-monster","radius":30,"persistent":false,"throughWalls":true}
+            ]})),
+            device_self_target(),
+            false,
+        ),
+        "WHIRLWIND_ATTACK" => (
+            device_ability_effect(serde_json::json!({"type":"melee-adjacent"})),
+            device_self_target(),
+            false,
+        ),
+        "PHASE_DOOR" | "TELEPORT" => (
+            serde_json::json!({"type":"random-teleport", "maximumDistance":if candidate.token == "PHASE_DOOR" {10} else {100}}),
+            device_self_target(),
+            false,
+        ),
+        "STRAFING" => (
+            device_ability_effect(
+                serde_json::json!({"type":"blink-self", "radius":10, "lineOfSight":true}),
+            ),
+            device_self_target(),
+            false,
+        ),
+        "SLEEP_MONSTERS" => (
+            serde_json::json!({"type":"visible-apply-status", "statusKindId":"rfb.status.sleep", "intensity":1, "durationTicks":500, "stacking":"replace", "power":candidate.level * 3}),
+            device_self_target(),
+            false,
+        ),
+        "IDENTIFY" => (
+            serde_json::json!({"type":"identify-item","full":false}),
+            device_item_target(),
+            false,
+        ),
+        "DETECT_MONSTERS" | "DETECT_OBJECTS" | "DETECT_TRAPS" => {
+            let (subject, category, persistent) = match candidate.token.as_str() {
+                "DETECT_MONSTERS" => ("actor", "normal-monster", false),
+                "DETECT_OBJECTS" => ("item", "item", false),
+                _ => ("terrain", "trap", true),
+            };
+            (
+                device_ability_effect(
+                    serde_json::json!({"type":"detect", "subject":subject,"category":category,"radius":30,"persistent":persistent,"throughWalls":true}),
+                ),
+                device_self_target(),
+                false,
+            )
+        }
+        "LITE_AREA" | "LITE_MAP_AREA" => {
+            let light = serde_json::json!({"type":"light-area","damageDice":2+candidate.level/20,"damageSides":15,"radius":3});
+            let effect = if candidate.token == "LITE_MAP_AREA" {
+                serde_json::json!({"type":"sequence","effects":[{"type":"detect","subject":"terrain","category":"map","radius":30,"persistent":true,"throughWalls":true}, light]})
+            } else {
+                light
+            };
+            (device_ability_effect(effect), device_self_target(), false)
+        }
+        "BOLT_MISSILE" => (
+            device_damage_effect("damage", "physical", 2 + candidate.level / 10, 6, 0, 0),
+            device_projectile_target(),
+            false,
+        ),
+        "BOLT_SOUND" => (
+            device_damage_effect("damage", "sound", 7 + candidate.level / 6, 8, 0, 0),
+            device_projectile_target(),
+            false,
+        ),
+        "BEAM_SOUND" => (
+            device_damage_effect("beam-damage", "sound", 7 + candidate.level / 6, 8, 0, 0),
+            device_projectile_target(),
+            false,
+        ),
+        "BALL_SOUND" => (
+            device_damage_effect(
+                "area-damage",
+                "sound",
+                0,
+                0,
+                70 + device_power_curve(280, candidate.level, 40),
+                3,
+            ),
+            device_projectile_target(),
+            false,
+        ),
+        "BALL_SHARDS" => (
+            device_damage_effect(
+                "area-damage",
+                "shards",
+                0,
+                0,
+                175 + device_power_curve(325, candidate.level, 75),
+                2,
+            ),
+            device_projectile_target(),
+            false,
+        ),
+        "BREATHE_SOUND" => (
+            device_damage_effect("cone-damage", "sound", 0, 0, 50 + candidate.level * 2, 2),
+            serde_json::json!({"modes":["direction"],"range":18,"requiresLineOfEffect":true}),
+            false,
+        ),
+        "BREATHE_SHARDS" => (
+            device_damage_effect("cone-damage", "shards", 0, 0, 100 + candidate.level * 2, 2),
+            serde_json::json!({"modes":["direction"],"range":18,"requiresLineOfEffect":true}),
+            false,
+        ),
+        "BOLT_SHARDS" => (
+            device_damage_effect("damage", "shards", 7 + candidate.level / 5, 8, 0, 0),
+            device_projectile_target(),
+            false,
+        ),
+        "BOLT_LITE" => (
+            device_damage_effect("damage", "light", 5 + candidate.level / 8, 8, 0, 0),
+            device_projectile_target(),
+            false,
+        ),
+        "BEAM_LITE_WEAK" => (
+            device_ability_effect(
+                serde_json::json!({"type":"light-line","damageDice":6,"damageSides":8}),
+            ),
+            device_projectile_target(),
+            false,
+        ),
+        "BEAM_LITE" => (
+            device_damage_effect(
+                "beam-damage",
+                "light",
+                0,
+                0,
+                10 + device_power_curve(275, candidate.level, 0),
+                0,
+            ),
+            device_projectile_target(),
+            false,
+        ),
+        "BALL_LITE" => (
+            device_damage_effect(
+                "area-damage",
+                "light",
+                0,
+                0,
+                200 + device_power_curve(350, candidate.level, 80),
+                4,
+            ),
+            device_projectile_target(),
+            false,
+        ),
+        "BREATHE_LITE" => (
+            device_damage_effect("cone-damage", "light", 0, 0, 50 + candidate.level * 2, 2),
+            serde_json::json!({"modes":["direction"],"range":18,"requiresLineOfEffect":true}),
+            false,
+        ),
+        "STONE_SKIN" => (
+            serde_json::json!({"type":"apply-stone-skin","durationDice":1,"durationSides":20,"durationBonus":20}),
+            device_self_target(),
+            false,
+        ),
+        "BERSERK" => (
+            serde_json::json!({"type":"apply-berserk-strength","durationDice":1,"durationSides":25,"durationBonus":25}),
+            device_self_target(),
+            false,
+        ),
+        "SPEED_HERO" => (
+            serde_json::json!({"type":"apply-heroic-speed","durationDice":1,"durationSides":candidate.level / 2,"durationBonus":candidate.level / 2}),
+            device_self_target(),
+            false,
+        ),
+        _ => return legacy_device_item_effect(candidate),
+    })
 }
 
 const ARMOR_TYPES: &[&str] = &[

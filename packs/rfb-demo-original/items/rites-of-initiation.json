@@ -1,16 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.rites-of-initiation",
-  "nameKey": "item-demo-rites-of-initiation-name",
-  "descriptionKey": "item-demo-rites-of-initiation-description",
-  "glyph": "?",
-  "weightTenthsPound": 30,
+  "abilityBookId": "demo.ability-book.rites-of-initiation",
   "baseValue": 100,
+  "descriptionKey": "item-demo-rites-of-initiation-description",
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
+  "formatVersion": 1,
   "generationLevel": 10,
+  "glyph": "?",
+  "id": "demo.item.rites-of-initiation",
   "maxStack": 1,
   "mogaminatorRare": false,
-  "elementalDestructionVulnerabilities": ["fire"],
-  "abilityBookId": "demo.ability-book.rites-of-initiation",
-  "tags": ["book", "crusade", "spellbook"]
+  "nameKey": "item-demo-rites-of-initiation-name",
+  "rfbBaseKind": {
+    "sourceIndex": 536,
+    "sval": 0,
+    "tval": 99
+  },
+  "tags": [
+    "book",
+    "crusade",
+    "spellbook"
+  ],
+  "weightTenthsPound": 30
 }

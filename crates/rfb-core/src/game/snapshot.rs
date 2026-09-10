@@ -1004,9 +1004,8 @@ impl Game {
                         .and_then(|definition| definition.use_action.as_ref())
                         .and_then(|action| match &action.effect {
                             ItemUseEffectDefinition::IdentifyItem { .. }
-                            | ItemUseEffectDefinition::EnchantItem { .. } => {
-                                Some(item_target_spec())
-                            }
+                            | ItemUseEffectDefinition::EnchantItem { .. }
+                            | ItemUseEffectDefinition::EnchantEquipment => Some(item_target_spec()),
                             _ => None,
                         })
                 }),

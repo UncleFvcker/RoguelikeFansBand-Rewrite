@@ -646,6 +646,7 @@ fn selected_reward_entry<'a>(
 }
 
 pub(super) fn reward_item(
+    bad_luck: bool,
     content: &ContentCatalog,
     class_id: Option<&str>,
     reward: &TaskRewardDefinition,
@@ -664,6 +665,7 @@ pub(super) fn reward_item(
         })
         .unwrap_or_default();
     let mut materialization = materialize_ego_with_rng(
+        bad_luck,
         content,
         rng,
         &entry.item_kind_id,
@@ -686,6 +688,7 @@ pub(super) fn reward_item(
     };
     let mut item = ItemInstance {
         previously_worn: false,
+        book_counted: false,
         artifact_name: None,
         intrinsic_melee_damage_dice: None,
         intrinsic_weight_tenths_pound: None,
@@ -893,6 +896,9 @@ impl Game {
             .map(|identity| identity.class_id.as_str());
         let mut preview_rng = self.rng.clone();
         let preview = reward_item(
+            self.progress
+                .active_mutation_ids
+                .contains("rfb.mutation.bad-luck"),
             &self.content,
             class_id,
             reward_definition,
@@ -904,6 +910,9 @@ impl Game {
         }
 
         let reward = reward_item(
+            self.progress
+                .active_mutation_ids
+                .contains("rfb.mutation.bad-luck"),
             &self.content,
             class_id,
             reward_definition,
@@ -942,6 +951,11 @@ impl Game {
         if remaining > 0 {
             let mut reward = reward;
             reward.quantity = remaining;
+            super::inventory::record_book_found(
+                &self.content,
+                &mut self.item_knowledge,
+                &mut reward,
+            );
             self.items.push(reward);
         }
         self.register_generated_artifact(&outcome.item_kind_id);

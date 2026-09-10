@@ -9,10 +9,9 @@ use crate::game::ego::{
 use crate::game::gold::MAX_PLAYER_GOLD;
 use crate::game::inventory::{
     ItemEnchantmentRequest, ItemIdentificationRequest, RemoveEquippedCursesRequest,
-    item_instances_stack_compatible,
 };
 use crate::game::loot::GeneratedItemDraft;
-use crate::game::projectile_geometry::{has_line_of_effect, projectile_path_between, rfb_distance};
+use crate::game::projectile_geometry::{projectile_path_between, rfb_distance};
 use crate::game::terrain::TerrainChangeSource;
 use crate::game::visibility::has_line_of_sight;
 use crate::game::{Game, device_recharge_resolved_event, weapon_brand_dto};
@@ -418,7 +417,7 @@ impl Game {
                 .into_iter()
                 .take_while(|position| {
                     rfb_distance(origin, *position) <= u32::from(range)
-                        && self.fetch_projectable(*position)
+                        && self.terrain_is_projectable(*position)
                 })
                 .collect::<Vec<_>>(),
             _ => {
@@ -440,36 +439,16 @@ impl Game {
                     && (!ability.target.requires_line_of_effect
                         || (has_line_of_sight(self, origin, position)
                             && projectile_path_between(origin, position, range).is_some_and(
-                                |path| path.into_iter().all(|at| self.fetch_projectable(at)),
+                                |path| path.into_iter().all(|at| self.terrain_is_projectable(at)),
                             )));
                 if valid { vec![position] } else { Vec::new() }
             }
         };
-        let can_drop = self.index(origin).is_some_and(|index| {
-            let terrain = self
-                .content
-                .terrain(&self.terrain[index])
-                .expect("validated terrain");
-            (terrain.walkable || terrain.tags.iter().any(|tag| tag == "item-drop"))
-                && !terrain.tags.iter().any(|tag| {
-                    matches!(
-                        tag.as_str(),
-                        "no-item-drop"
-                            | "warding-glyph"
-                            | "explosive-rune"
-                            | "door"
-                            | "stairs-up"
-                            | "stairs-down"
-                            | "task-entry"
-                            | "shop-entrance"
-                            | "town-facility-entrance"
-                            | "building"
-                    )
-                })
-        }) && !self
-            .items
-            .iter()
-            .any(|item| item.location == ItemLocation::Ground(origin))
+        let can_drop = self.can_drop_item_at(origin)
+            && !self
+                .items
+                .iter()
+                .any(|item| item.location == ItemLocation::Ground(origin))
             && !self.gold_piles.iter().any(|pile| pile.position == origin);
         let candidate = positions.iter().filter(|_| can_drop).find_map(|position| {
             self.items
@@ -508,17 +487,6 @@ impl Game {
             },
             trace: None,
         });
-    }
-
-    fn fetch_projectable(&self, position: Position) -> bool {
-        self.index(position).is_some_and(|index| {
-            let terrain = self
-                .content
-                .terrain(&self.terrain[index])
-                .expect("validated terrain");
-            (terrain.walkable || terrain.tags.iter().any(|tag| tag == "projectable"))
-                && !terrain.tags.iter().any(|tag| tag == "blocks-projectiles")
-        })
     }
 
     fn roll_rfb_ammunition_magic_power(&mut self) -> i8 {
@@ -601,6 +569,9 @@ impl Game {
             .item(&item.kind_id)
             .expect("created ammunition kind must remain defined");
         let materialization = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+            self.progress
+                .active_mutation_ids
+                .contains("rfb.mutation.bad-luck"),
             rfb_protocol::ItemEnchantmentsDto::default(),
             &mut self.rng,
             definition,
@@ -626,6 +597,12 @@ impl Game {
             unreachable!("item creation executor requires a create-item effect");
         };
         let draft = GeneratedItemDraft {
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
+            permanent_destruction_immunities: Default::default(),
             damage_dice_override: None,
             kind_id: item_kind_id.clone(),
             quantity: *quantity,
@@ -640,46 +617,16 @@ impl Game {
             charges: None,
             fuel: None,
         };
-        let mut item =
-            draft.into_item_instance(String::new(), ItemLocation::Ground(self.player.position));
-        let position = self.created_item_drop_position(&item);
-        item.location = ItemLocation::Ground(position);
-        let maximum_stack = self
-            .content
-            .item(item_kind_id)
-            .expect("validated created item must remain available")
-            .max_stack;
-        let mut stack_indices = self
-            .items
-            .iter()
-            .enumerate()
-            .filter(|(_, existing)| {
-                existing.location == ItemLocation::Ground(position)
-                    && existing.quantity < maximum_stack
-                    && item_instances_stack_compatible(&self.content, existing, &item)
-            })
-            .map(|(index, _)| index)
-            .collect::<Vec<_>>();
-        stack_indices.sort_by(|left, right| self.items[*left].id.cmp(&self.items[*right].id));
-
-        let mut destination_item_ids = Vec::new();
-        for index in stack_indices {
-            let transferred = item
-                .quantity
-                .min(maximum_stack - self.items[index].quantity);
-            self.items[index].quantity += transferred;
-            item.quantity -= transferred;
-            destination_item_ids.push(self.items[index].id.clone());
-            if item.quantity == 0 {
-                break;
-            }
+        let placed = self.drop_generated_item_near(draft, self.player.position)?;
+        let (position, destination_item_ids) = placed.unwrap_or((self.player.position, Vec::new()));
+        let placed_quantity = if destination_item_ids.is_empty() {
+            0
+        } else {
+            *quantity
+        };
+        if placed_quantity > 0 {
+            changed.insert(position);
         }
-        if item.quantity > 0 {
-            item.id = self.allocate_item_instance_id()?;
-            destination_item_ids.push(item.id.clone());
-            self.items.push(item);
-        }
-        changed.insert(position);
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),
             resolution: AbilityEffectsResolutionDto {
@@ -688,7 +635,7 @@ impl Game {
                 effects: vec![AbilityEffectResolutionDto::CreateItem {
                     effect_index: 0,
                     item_kind_id: item_kind_id.clone(),
-                    quantity: *quantity,
+                    quantity: placed_quantity,
                     position,
                     destination_item_ids,
                 }],
@@ -696,69 +643,6 @@ impl Game {
             trace: None,
         });
         Ok(())
-    }
-
-    fn created_item_drop_position(&mut self, item: &ItemInstance) -> Position {
-        let origin = self.player.position;
-        let maximum_stack = self
-            .content
-            .item(&item.kind_id)
-            .expect("validated created item must remain available")
-            .max_stack;
-        let mut best = None;
-        let mut ties = 0_u64;
-        for dy in -3..=3 {
-            for dx in -3..=3 {
-                let distance_squared = dx * dx + dy * dy;
-                if distance_squared > 10 {
-                    continue;
-                }
-                let position = Position {
-                    x: origin.x + dx,
-                    y: origin.y + dy,
-                };
-                if !self.is_walkable(position) || !has_line_of_effect(self, origin, position) {
-                    continue;
-                }
-                let (pile_count, combines) = self
-                    .items
-                    .iter()
-                    .filter(|existing| existing.location == ItemLocation::Ground(position))
-                    .fold((0_usize, false), |(count, combines), existing| {
-                        (
-                            count + 1,
-                            combines
-                                || (existing.quantity < maximum_stack
-                                    && item_instances_stack_compatible(
-                                        &self.content,
-                                        existing,
-                                        item,
-                                    )),
-                        )
-                    });
-                let pile_count = pile_count + usize::from(!combines);
-                let score = 1_000_i64 - i64::from(distance_squared) - pile_count as i64 * 5;
-                match best {
-                    None => {
-                        best = Some((score, position));
-                        ties = 1;
-                    }
-                    Some((best_score, _)) if score > best_score => {
-                        best = Some((score, position));
-                        ties = 1;
-                    }
-                    Some((best_score, _)) if score == best_score => {
-                        ties += 1;
-                        if self.rng.bounded(ties) == 0 {
-                            best = Some((score, position));
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        }
-        best.expect("the player's walkable grid must accept a created item")
-            .1
     }
 
     pub(super) fn resolve_player_create_ammunition_effect(
@@ -797,6 +681,7 @@ impl Game {
         let item_id = self.allocate_item_instance_id()?;
         let mut item = ItemInstance {
             previously_worn: false,
+            book_counted: false,
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,

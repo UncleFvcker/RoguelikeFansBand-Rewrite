@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-detect-invisible-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 344,
+    "sval": 30,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "rfb-compatibility",

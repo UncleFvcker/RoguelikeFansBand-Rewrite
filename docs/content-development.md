@@ -30,7 +30,7 @@ git -C D:/codex/Frogcomposband/master grep -n '目标符号' master -- src lib
 | --- | --- | --- |
 | 种族 / 职业 | `races/`、`classes/`、`skillSets/`、`builds/`、专属能力及 binding | 出生、属性/成长、实际专属行为、临时形态；菜单来源见 `PLAYTEST_*_IDS` |
 | 领域 / 书本 | `abilities/`、`abilityPrograms/`、`playerAbilityBindings/`、`abilityBooks/`、实体书 `items/` | 源槽位、职业施法参数、学习与获取路径；施法使用现有 casting/targeting/effect |
-| 物品 / Ego / 神器 / 装置 | `items/`、`affixes/`、`effectPrograms/` 及激活能力 | 生成、使用、装备、知识与实例生命周期；复用 loot 与已有物品规则 |
+| 物品 / Ego / 神器 / 装置 | `items/`、`affixes/`、`randomArtifacts/`、`effectPrograms/` 及激活能力 | 生成、使用、装备、知识与实例生命周期；复用 loot 与已有物品规则 |
 | 地牢 / 城镇 / 任务 | `worlds/middle-earth.json`、`towns/`、`townFacilities/`、`shops/`、`terrain/`、生态/掉落表 | 正式地点与 planned 地点区分，入口与楼层链、设施服务、奖励及必要保存恢复 |
 | 怪物 / 守卫 | `actors/`、相关能力、生态选择与任务/地牢引用 | 先检查已导入身份；地牢专属内容由地点方向接入，法术召唤复用相同 actor |
 
@@ -39,6 +39,21 @@ git -C D:/codex/Frogcomposband/master grep -n '目标符号' master -- src lib
 已有八个高阶法师领域，先查[状态](status.md)，不要按旧待办重新实现。种族专属能力归种族职业；领域法术、通用物品归法术道具；任务和设施引用的物品定义与物品方向共享。实际冲突按[并行协作](parallel-development.md)处理。
 
 ## 内容锁与生成文件
+
+基础分配的定向同步只更新当前正式物品的 source kind 身份、权威中文显示名、基础分配行和主题引用，保留现有物品效果/装置适配。中文词干来自 `kind_name_zh.inc`；药水、卷轴和蘑菇类别后缀沿用 `flavor.c` 的已知无外观显示格式。基础池按层级、source kind 和原分配行顺序排列，零权重及重复行保留。覆盖报告位于包根目录 `legacy-base-allocation-audit.json`，不属于运行时内容。
+
+```powershell
+$env:RFB_LEGACY_SOURCE = 'D:/codex/Frogcomposband/master'
+cargo run -p rfb-legacy-import -- sync-demo-base-allocation packs/rfb-demo-original
+```
+
+随机神器数据单独同步。第一条命令读取 `master` 的名字文件及激活表；第二条通过原版 C 估值补齐激活价值，需要本机 C 编译器。两步完成后再更新包版本与 lock，不重导其他内容。
+
+```powershell
+$env:RFB_LEGACY_SOURCE = 'D:/codex/Frogcomposband/master'
+cargo run -p rfb-legacy-import -- sync-demo-random-artifacts packs/rfb-demo-original
+python scripts/generate-random-artifact-reference.py D:/codex/Frogcomposband/master
+```
 
 [pack.json](../packs/rfb-demo-original/pack.json)声明版本及 contentRoots；[content.lock.json](../packs/rfb-demo-original/content.lock.json)记录 pack ID、版本和编译 hash。包目录里存在一个子目录，不代表它已经进入 contentRoots。
 

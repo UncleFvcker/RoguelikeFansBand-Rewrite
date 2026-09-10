@@ -17,6 +17,11 @@
   "maxStack": 100,
   "mogaminatorRare": false,
   "nameKey": "item-demo-flask-of-oil-name",
+  "rfbBaseKind": {
+    "sourceIndex": 602,
+    "sval": 0,
+    "tval": 77
+  },
   "tags": [
     "consumable",
     "fuel",

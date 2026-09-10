@@ -27,6 +27,8 @@ pub struct CompiledContentV1 {
     pub actors: Vec<ActorDefinition>,
     pub affixes: Vec<AffixDefinition>,
     pub items: Vec<ItemDefinition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub random_artifact_generation: Vec<super::RandomArtifactGenerationDefinition>,
     #[serde(default)]
     pub resources: Vec<ResourceDefinition>,
     #[serde(default)]
@@ -77,6 +79,7 @@ pub struct ContentCatalog {
     actors: BTreeMap<String, ActorDefinition>,
     affixes: BTreeMap<String, AffixDefinition>,
     items: BTreeMap<String, ItemDefinition>,
+    random_artifact_generation: Vec<super::RandomArtifactGenerationDefinition>,
     resources: BTreeMap<String, ResourceDefinition>,
     abilities: BTreeMap<String, AbilityDefinition>,
     ability_books: BTreeMap<String, AbilityBookDefinition>,
@@ -142,6 +145,11 @@ pub struct ContentLockV1 {
 
 impl ContentCatalog {
     #[must_use]
+    pub fn random_artifact_generation(&self) -> Option<&super::RandomArtifactGenerationDefinition> {
+        self.random_artifact_generation.first()
+    }
+
+    #[must_use]
     pub fn from_artifact(artifact: CompiledArtifact) -> Self {
         let CompiledArtifact {
             content,
@@ -150,6 +158,7 @@ impl ContentCatalog {
         } = artifact;
         Self {
             pack_id: content.pack_id,
+            random_artifact_generation: content.random_artifact_generation,
             pack_version: content.pack_version,
             content_hash,
             terrain: content

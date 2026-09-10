@@ -13,6 +13,11 @@
   "maxStack": 1,
   "mogaminatorRare": false,
   "nameKey": "item-demo-black-prayers-name",
+  "rfbBaseKind": {
+    "sourceIndex": 516,
+    "sval": 0,
+    "tval": 94
+  },
   "tags": [
     "book",
     "death",

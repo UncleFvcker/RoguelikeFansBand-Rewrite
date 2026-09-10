@@ -28,7 +28,7 @@
     "kind": "items",
     "minimumQuality": "fine",
     "themeChancePercent": 50,
-    "themeTableId": "demo.loot-table.archer"
+    "themeTableId": "demo.loot-table.warrior-shoot"
   },
   "defense": 3,
   "descriptionKey": "actor-demo-dailai-dongzhu-captain-of-southerings-description",

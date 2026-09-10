@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-holy-prayer-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 348,
+    "sval": 35,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "rfb-compatibility",

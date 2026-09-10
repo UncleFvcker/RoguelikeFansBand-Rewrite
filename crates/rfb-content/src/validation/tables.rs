@@ -73,6 +73,14 @@ pub(super) fn validate_tables(
     let mut loot_table_ids = BTreeSet::new();
     let mut loot_tables_by_id = BTreeMap::new();
     for table in definitions.loot_tables.iter_mut() {
+        let source_base = matches!(
+            table.kind_selection,
+            Some(crate::LootKindSelectionDefinition::RfbBase)
+        );
+        let source_theme = matches!(
+            table.kind_selection,
+            Some(crate::LootKindSelectionDefinition::RfbTheme { .. })
+        );
         require_schema(&table.schema, LOOT_TABLE_SCHEMA, &table.id)?;
         require_format_version(table.format_version, &table.id)?;
         validate_definition_id(&table.id, "loot-table")?;
@@ -88,7 +96,8 @@ pub(super) fn validate_tables(
             || table
                 .roll_dice
                 .is_some_and(|dice| dice.dice == 0 || dice.sides == 0)
-            || table.entries.is_empty()
+            || (table.entries.is_empty() != source_theme)
+            || (table.kind_selection.is_some() && table.rfb_ego_policy.is_none())
             || table.entries.len() > 512
             || table.quality_weights.len() > 3
             || has_quality_weights == table.quality_policy.is_some()
@@ -111,14 +120,27 @@ pub(super) fn validate_tables(
             return Err(ContentError::InvalidLootTable(table.id.clone()));
         }
 
-        table.entries.sort_by(|left, right| {
-            left.item_kind_id
-                .cmp(&right.item_kind_id)
-                .then(left.quantity.cmp(&right.quantity))
-                .then(left.min_depth.cmp(&right.min_depth))
-                .then(left.max_depth.cmp(&right.max_depth))
-                .then(left.weight.cmp(&right.weight))
-        });
+        if source_base {
+            table.entries.sort_by_key(|entry| {
+                (
+                    entry.min_depth,
+                    items
+                        .iter()
+                        .find(|item| item.id == entry.item_kind_id)
+                        .and_then(|item| item.rfb_base_kind)
+                        .map(|base| base.source_index),
+                )
+            });
+        } else {
+            table.entries.sort_by(|left, right| {
+                left.item_kind_id
+                    .cmp(&right.item_kind_id)
+                    .then(left.quantity.cmp(&right.quantity))
+                    .then(left.min_depth.cmp(&right.min_depth))
+                    .then(left.max_depth.cmp(&right.max_depth))
+                    .then(left.weight.cmp(&right.weight))
+            });
+        }
         table.quality_weights.sort_by_key(|entry| entry.quality);
         table
             .affix_weights
@@ -146,15 +168,22 @@ pub(super) fn validate_tables(
             // RFB's integer 100/chance conversion intentionally leaves its
             // 1/255 allocations at zero; the table total must still be positive.
             if entry.quantity == 0
+                || (source_base
+                    && (entry.quantity != 1
+                        || items
+                            .iter()
+                            .find(|item| item.id == entry.item_kind_id)
+                            .is_none_or(|item| item.rfb_base_kind.is_none())))
                 || entry.quantity > *max_stack
                 || entry.min_depth > entry.max_depth
-                || !entry_keys.insert((
-                    entry.item_kind_id.as_str(),
-                    entry.weight,
-                    entry.quantity,
-                    entry.min_depth,
-                    entry.max_depth,
-                ))
+                || (!source_base
+                    && !entry_keys.insert((
+                        entry.item_kind_id.as_str(),
+                        entry.weight,
+                        entry.quantity,
+                        entry.min_depth,
+                        entry.max_depth,
+                    )))
             {
                 return Err(ContentError::InvalidLootTable(table.id.clone()));
             }
@@ -235,7 +264,7 @@ pub(super) fn validate_tables(
         {
             return Err(ContentError::InvalidLootTable(table.id.clone()));
         }
-        if entry_weight == 0
+        if (entry_weight == 0 && !source_theme)
             || (table.quality_policy.is_none() && quality_weight == 0)
             || (table.rfb_ego_policy.is_none() && affix_weight == 0)
         {
@@ -244,6 +273,20 @@ pub(super) fn validate_tables(
         insert_definition_id(all_ids, &table.id)?;
         loot_table_ids.insert(table.id.clone());
         loot_tables_by_id.insert(table.id.clone(), table.clone());
+    }
+
+    for table in definitions.loot_tables.iter() {
+        if let Some(crate::LootKindSelectionDefinition::RfbTheme { pool_id, .. }) =
+            &table.kind_selection
+        {
+            require_reference(&loot_table_ids, pool_id, &table.id)?;
+            if !matches!(
+                loot_tables_by_id[pool_id].kind_selection,
+                Some(crate::LootKindSelectionDefinition::RfbBase)
+            ) {
+                return Err(ContentError::InvalidLootTable(table.id.clone()));
+            }
+        }
     }
 
     for (actor_id, loot_table_id) in actor_loot_table_ids {

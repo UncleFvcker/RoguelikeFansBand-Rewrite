@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-recall-setting-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 365,
+    "sval": 53,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "recall",

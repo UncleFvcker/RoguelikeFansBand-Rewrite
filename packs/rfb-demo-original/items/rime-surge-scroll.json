@@ -17,6 +17,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-rime-surge-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 371,
+    "sval": 59,
+    "tval": 70
+  },
   "tags": [
     "cold",
     "consumable",

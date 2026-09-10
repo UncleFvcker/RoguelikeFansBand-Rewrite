@@ -1,16 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.dark-incantations",
-  "nameKey": "item-demo-dark-incantations-name",
-  "descriptionKey": "item-demo-dark-incantations-description",
-  "glyph": "?",
-  "weightTenthsPound": 30,
+  "abilityBookId": "demo.ability-book.dark-incantations",
   "baseValue": 100,
+  "descriptionKey": "item-demo-dark-incantations-description",
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
+  "formatVersion": 1,
   "generationLevel": 10,
+  "glyph": "?",
+  "id": "demo.item.dark-incantations",
   "maxStack": 1,
   "mogaminatorRare": false,
-  "elementalDestructionVulnerabilities": ["fire"],
-  "abilityBookId": "demo.ability-book.dark-incantations",
-  "tags": ["book", "daemon", "spellbook"]
+  "nameKey": "item-demo-dark-incantations-name",
+  "rfbBaseKind": {
+    "sourceIndex": 532,
+    "sval": 0,
+    "tval": 98
+  },
+  "tags": [
+    "book",
+    "daemon",
+    "spellbook"
+  ],
+  "weightTenthsPound": 30
 }

@@ -1,16 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.pint-of-fine-ale",
-  "nameKey": "item-demo-pint-of-fine-ale-name",
-  "descriptionKey": "item-demo-pint-of-fine-ale-description",
-  "glyph": ",",
-  "generationLevel": 0,
-  "weightTenthsPound": 5,
-  "maxStack": 100,
   "baseValue": 1,
+  "descriptionKey": "item-demo-pint-of-fine-ale-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "glyph": ",",
+  "id": "demo.item.pint-of-fine-ale",
+  "maxStack": 100,
+  "nameKey": "item-demo-pint-of-fine-ale-name",
+  "rfbBaseKind": {
+    "sourceIndex": 36,
+    "sval": 38,
+    "tval": 80
+  },
+  "tags": [
+    "consumable",
+    "food",
+    "rfb-compatibility"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.pint-of-fine-ale"
   },
-  "tags": ["consumable", "food", "rfb-compatibility"]
+  "weightTenthsPound": 5
 }

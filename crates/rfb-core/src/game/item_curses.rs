@@ -12,7 +12,7 @@ const EQUIPMENT_CURSE_INTERVAL_TICKS: u32 = 10;
 const RANDOM_TELEPORT_ONE_IN: u64 = 200;
 
 impl Game {
-    fn item_has_rfb_flag(&self, item: &ItemInstance, flag: &str) -> bool {
+    pub(super) fn item_has_rfb_flag(&self, item: &ItemInstance, flag: &str) -> bool {
         item.intrinsic_properties.rfb_flags.contains(flag)
             || item
                 .rolled_affixes

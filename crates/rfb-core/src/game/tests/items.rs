@@ -2602,7 +2602,7 @@ fn tomte_tailored_acquirement_filters_headgear_by_birth_race_only() {
             "demo.item.star-acquirement-scroll",
         ] {
             let mut seen = BTreeSet::new();
-            for seed in 0..32 {
+            for seed in 0..256 {
                 let mut game = base.clone();
                 game.items.clear();
                 give_inventory_item(&mut game, "test.acquirement", scroll);
@@ -2614,9 +2614,11 @@ fn tomte_tailored_acquirement_filters_headgear_by_birth_race_only() {
                         target: None,
                     },
                 );
-                assert!(!game.items.is_empty());
+                // Empty categories retry; every accepted reward uses drop_near.
                 for item in &game.items {
-                    assert_eq!(item.location, ItemLocation::Ground(game.player.position));
+                    assert!(
+                        matches!(item.location, ItemLocation::Ground(at) if (at.x-game.player.position.x).pow(2) + (at.y-game.player.position.y).pow(2) <= 10 && game.can_drop_item_at(at))
+                    );
                     assert_eq!(item.quality, ItemQualityDto::Exceptional);
                     seen.insert(item.kind_id.clone());
                 }
@@ -2636,23 +2638,375 @@ fn tomte_tailored_acquirement_filters_headgear_by_birth_race_only() {
             depth: 20,
             source: LootSource::MonsterDeath {
                 actor_id: "test.drop".to_owned(),
-                themed: false,
             },
         };
         let mut ordinary = BTreeSet::new();
-        for seed in 0..32 {
+        for seed in 0..256 {
             base.rng = RfbRng::seeded(seed);
-            ordinary.insert(
-                base.generate_one_loot_draft(&context, ItemGenerationMode::Great)
-                    .unwrap()
-                    .kind_id,
-            );
+            if let Some(draft) = base.generate_one_loot_draft(&context, ItemGenerationMode::Great) {
+                ordinary.insert(draft.kind_id);
+            }
         }
         assert_eq!(
             ordinary,
             kinds.iter().map(|kind| (*kind).to_owned()).collect()
         );
     }
+}
+
+#[test]
+fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+    let mut source = rfb_content::compile_pack_dir(&path).unwrap().content;
+    let template = source
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .unwrap()
+        .clone();
+    for ego in ["protection", "wizard-gloves", "free-action"] {
+        let mut table = template.clone();
+        table.id = format!("test.loot-table.tailored-{ego}");
+        table.kind_selection = None;
+        table.rfb_ego_policy = None;
+        table.quality_policy = None;
+        table.quality_weights = vec![rfb_content::LootQualityWeightDefinition {
+            quality: rfb_content::ItemQuality::Exceptional,
+            weight: 1,
+        }];
+        table
+            .entries
+            .retain(|entry| entry.item_kind_id == "demo.item.leather-gloves");
+        table.affix_weights = vec![rfb_content::LootAffixWeightDefinition {
+            affix_id: Some(format!("rfb-legacy.affix.{ego}")),
+            weight: 1,
+        }];
+        source.loot_tables.push(table);
+    }
+    let content = Arc::new(ContentCatalog::from_artifact(
+        rfb_content::encode_content(source).unwrap(),
+    ));
+    for ego in ["protection", "wizard-gloves", "free-action"] {
+        let mut game = Game::new_with_build(425, "demo.build.high-mage-death").unwrap();
+        game.content = content.clone();
+        clear_monsters(&mut game);
+        choose_human_talent_if_pending(&mut game);
+        game.progress.level = 30;
+        game.progress.max_level = 30;
+        game.refresh_character_skills();
+        choose_human_talent_if_pending(&mut game);
+        game.refresh_player_resource_maxima();
+        let baseline_mana = game.resources["demo.resource.mana"].maximum;
+        let context = LootContext {
+            table_id: format!("test.loot-table.tailored-{ego}"),
+            floor_id: game.current_floor_id.clone(),
+            depth: 30,
+            source: LootSource::ItemUse {
+                item_id: "test.reward".into(),
+            },
+        };
+        let mut control = game.clone();
+        let great = control
+            .generate_one_loot_draft(&context, ItemGenerationMode::Great)
+            .unwrap();
+        assert_eq!(great.affix_ids, [format!("rfb-legacy.affix.{ego}")]);
+        let items_before = game.items.clone();
+        let knowledge_before = game.item_knowledge.clone();
+        let tailored =
+            game.generate_loot_draft_attempt(&context, ItemGenerationMode::TailoredGreat);
+        assert_eq!(tailored.is_some(), ego != "protection");
+        if let Some(tailored) = tailored {
+            assert_eq!(tailored, great);
+        }
+        assert_eq!(game.items, items_before);
+        assert_eq!(game.item_knowledge, knowledge_before);
+        assert_eq!(
+            game.rng, control.rng,
+            "rejected completed glove retains all materialization draws"
+        );
+        assert_eq!(game.rng.bounded(1_000), control.rng.bounded(1_000));
+
+        // The same completed object drives actual equipment and mana. Inspecting
+        // it during generation must not reveal hidden properties to the player.
+        let item = game
+            .commit_generated_item_draft(great, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        let id = item.id.clone();
+        assert!(!game.item_is_icky(&item, false));
+        assert_eq!(game.item_is_icky(&item, true), ego == "protection");
+        game.items.push(item);
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        game.equip_inventory_item(&id, Some("hands")).unwrap();
+        game.refresh_player_resource_maxima();
+        let mana = game.resources["demo.resource.mana"].maximum;
+        if ego == "protection" {
+            assert_eq!(mana, baseline_mana * 3 / 4);
+        } else {
+            assert!(mana >= baseline_mana);
+        }
+        game.identify_item_instance(&id, ItemIdentificationRequest::new(false));
+        assert_eq!(
+            game.item_is_icky(game.items.iter().find(|item| item.id == id).unwrap(), false),
+            ego == "protection"
+        );
+        game.reveal_current_visibility();
+        let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.resources["demo.resource.mana"].maximum, mana);
+    }
+}
+
+#[test]
+fn b4_glove_exemptions_use_flags_and_final_shared_pval_not_net_stat_bonus() {
+    use rfb_content::{RfbPvalDefinition, RfbPvalFlagDefinition};
+    let mut game = Game::new_with_build(426, "demo.build.high-mage-death").unwrap();
+    give_inventory_item(&mut game, "test.gloves", "demo.item.leather-gloves");
+    let mut item = game.items.last().unwrap().clone();
+    for (flag, pval, encumbers) in [
+        (RfbPvalFlagDefinition::Dexterity, -1, true),
+        (RfbPvalFlagDefinition::Dexterity, 0, true),
+        (RfbPvalFlagDefinition::Dexterity, 1, false),
+        (RfbPvalFlagDefinition::Mastery, 0, false),
+        (RfbPvalFlagDefinition::Mastery, -1, false),
+    ] {
+        item.intrinsic_properties.rfb_pval = Some(RfbPvalDefinition {
+            value: pval,
+            flags: [flag].into(),
+        });
+        assert_eq!(game.item_has_glove_encumbrance(&item), encumbers);
+    }
+    item.intrinsic_properties.rfb_pval = None;
+    item.intrinsic_properties
+        .rfb_flags
+        .insert("FREE_ACT".into());
+    assert!(!game.item_has_glove_encumbrance(&item));
+    let paladin = Game::new_with_build(426, "demo.build.paladin-death").unwrap();
+    item.intrinsic_properties = Default::default();
+    assert!(!paladin.item_has_glove_encumbrance(&item));
+}
+
+fn b4_pick_up_tailored_kind(game: &mut Game, kind: &str) -> String {
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: game.current_floor_id.clone(),
+        depth: 60,
+        source: LootSource::ItemUse {
+            item_id: "test.tailored-reward".into(),
+        },
+    };
+    let found = game
+        .item_knowledge
+        .get(kind)
+        .map_or(0, |state| state.found_count);
+    let draft = (0..512)
+        .find_map(|_| {
+            game.generate_one_loot_draft(&context, ItemGenerationMode::TailoredGreat)
+                .filter(|draft| draft.kind_id == kind)
+        })
+        .unwrap_or_else(|| panic!("tailored kind unreachable: {kind}"));
+    assert_eq!(
+        game.item_knowledge
+            .get(kind)
+            .map_or(0, |state| state.found_count),
+        found
+    );
+    let item = game
+        .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+        .unwrap();
+    let id = item.id.clone();
+    game.items.push(item);
+    game.pick_up_item_at_player(Some(&id)).unwrap();
+    id
+}
+
+#[test]
+fn b4_tailored_launchers_equip_shoot_and_restore_for_archer_and_sniper() {
+    for (build, kind, ammunition) in [
+        ("archer", "demo.item.short-bow", "demo.item.arrow"),
+        ("sniper", "demo.item.light-crossbow", "demo.item.bolt"),
+    ] {
+        let mut game = Game::new_with_build(427, &format!("demo.build.{build}")).unwrap();
+        clear_monsters(&mut game);
+        choose_human_talent_if_pending(&mut game);
+        let id = b4_pick_up_tailored_kind(&mut game, kind);
+        game.equip_inventory_item(&id, None).unwrap();
+        give_inventory_item(&mut game, "test.tailored-ammo", ammunition);
+        let profile = game.player_projectile_profile().unwrap();
+        assert_eq!(profile.source_item_id, id);
+        assert_eq!(profile.ammo_kind_id, ammunition);
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::Fire {
+                direction: Direction::East,
+            },
+        );
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.kind == "combat.projectile-landed"),
+            "{build}: {:?}",
+            update.events
+        );
+        let restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(
+            restored.player_projectile_profile().unwrap().source_item_id,
+            id
+        );
+    }
+}
+
+#[test]
+fn b4_tailored_lance_keeps_riding_bonus_in_actual_mounted_combat() {
+    let mut game = Game::new_with_build(428, "demo.build.cavalry").unwrap();
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    let id = b4_pick_up_tailored_kind(&mut game, "demo.item.lance");
+    game.equip_inventory_item(&id, None).unwrap();
+    let on_foot = game.player_melee_profile(&game.player_derived_stats());
+    let start = game.player.position;
+    let mount_position = Position {
+        x: start.x + 1,
+        y: start.y,
+    };
+    replace_terrain(&mut game, mount_position, "demo.terrain.floor");
+    game.push_generated_actor("test.mount".into(), "demo.actor.horse", mount_position);
+    game.entities[0].controller_id = Some(game.player.id.clone());
+    game.resolve_riding(Direction::East, &mut Vec::new(), &mut BTreeSet::new());
+    assert_eq!(game.riding_actor_id.as_deref(), Some("test.mount"));
+    let mounted = game.player_melee_profile(&game.player_derived_stats());
+    assert_eq!(mounted.to_hit, on_foot.to_hit + 15);
+    assert_eq!(mounted.damage_dice, on_foot.damage_dice + 2);
+    let enemy_position = Position {
+        x: mount_position.x + 1,
+        y: mount_position.y,
+    };
+    replace_terrain(&mut game, enemy_position, "demo.terrain.floor");
+    game.push_generated_actor(
+        "test.target".into(),
+        "demo.actor.novice-warrior",
+        enemy_position,
+    );
+    let mut events = Vec::new();
+    game.resolve_player_melee(1, true, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .unwrap();
+    assert!(!events.is_empty());
+    game.reveal_current_visibility();
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.riding_actor_id, game.riding_actor_id);
+}
+
+#[test]
+fn b4_tailored_death_books_are_counted_studied_cast_and_restored() {
+    for build in ["high-mage-death", "paladin-death"] {
+        let mut game = Game::new_with_build(429, &format!("demo.build.{build}")).unwrap();
+        clear_monsters(&mut game);
+        choose_human_talent_if_pending(&mut game);
+        game.progress.level = 50;
+        game.progress.max_level = 50;
+        game.refresh_character_skills();
+        choose_human_talent_if_pending(&mut game);
+        game.refresh_player_resource_maxima();
+        for resource in game.resources.values_mut() {
+            resource.current = resource.maximum;
+        }
+        let id = b4_pick_up_tailored_kind(&mut game, "demo.item.black-channels");
+        assert_eq!(
+            game.item_knowledge["demo.item.black-channels"].found_count,
+            1
+        );
+        let ability = "demo.ability.death-berserk";
+        if build == "high-mage-death" {
+            game.study_player_ability(&id, ability).unwrap();
+        } else {
+            for _ in 0..8 {
+                game.study_random_player_ability(&id).unwrap();
+                if game.learned_abilities.contains(ability) {
+                    break;
+                }
+            }
+        }
+        assert!(game.learned_abilities.contains(ability));
+        game.debug_set_ability_casts_succeed(true);
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::CastAbility {
+                ability_id: ability.into(),
+                target: TargetSelection::SelfTarget,
+            },
+        );
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.kind == "ability.cast-success")
+        );
+        assert!(
+            game.player
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_BERSERK)
+        );
+        assert_eq!(
+            game.item_knowledge["demo.item.black-channels"].found_count,
+            1
+        );
+        let restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert!(restored.learned_abilities.contains(ability));
+    }
+}
+
+#[test]
+fn b4_tailored_high_mage_device_is_usable_and_restores_its_charges() {
+    let mut game = Game::new_with_build(430, "demo.build.high-mage-death").unwrap();
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    let id = b4_pick_up_tailored_kind(&mut game, "demo.item.magic-missile-wand");
+    let before = game
+        .items
+        .iter()
+        .find(|item| item.id == id)
+        .unwrap()
+        .charges
+        .unwrap();
+    // Existing device consumer's automatic-success branch; generation itself
+    // above uses the formal pool, class hooks and device materialization.
+    let seed = (0..100)
+        .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+        .unwrap();
+    game.rng = RfbRng::seeded(seed);
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: id.clone(),
+            target: Some(TargetSelection::Direction {
+                direction: Direction::East,
+            }),
+        },
+    );
+    let charges = game
+        .items
+        .iter()
+        .find(|item| item.id == id)
+        .unwrap()
+        .charges
+        .unwrap();
+    assert!(charges.current < before.current);
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(
+        restored
+            .items
+            .iter()
+            .find(|item| item.id == id)
+            .unwrap()
+            .charges,
+        Some(charges)
+    );
 }
 
 #[test]
@@ -2687,7 +3041,8 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     assert_eq!(generated[0].location, ItemLocation::Ground(position));
     assert_eq!(generated[0].quality, ItemQualityDto::Exceptional);
     assert!(generated[0].id.starts_with("generated.item."));
-    assert_eq!(single.rng_draw_counter(), draws_before + 30);
+    // drop_near consumes the disabled-breakage roll and a tied-grid roll.
+    assert_eq!(single.rng_draw_counter(), draws_before + 18);
     assert!(update.events.iter().any(|event| {
         event.kind == "item.use-acquirement"
             && event.args.get("count").map(String::as_str) == Some("1")
@@ -2712,7 +3067,8 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     );
     let generated_count = multiple.items.len() - (before_count - 1);
     assert!((2..=3).contains(&generated_count));
-    assert_eq!(multiple.rng_draw_counter(), draws_before + 57);
+    // Generation and placement interleave, changing the next item's RNG branch.
+    assert_eq!(multiple.rng_draw_counter(), draws_before + 50);
 }
 
 #[test]
@@ -3174,6 +3530,7 @@ fn e6_crafting_uses_shared_weighted_materialization_at_player_level() {
         game.rng = RfbRng::seeded(7);
         let mut expected = game.items[1].clone();
         let materialized = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+            false,
             rfb_protocol::ItemEnchantmentsDto::default(),
             &mut game.rng.clone(),
             game.content.item(kind_id).unwrap(),

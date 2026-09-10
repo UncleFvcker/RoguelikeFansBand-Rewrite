@@ -360,8 +360,85 @@ pub struct AffixPropertyBundleDefinition {
 pub fn valid_rfb_runtime_flag(flag: &str) -> bool {
     if matches!(
         flag,
-        "AGGRAVATE" | "DRAIN_EXP" | "TY_CURSE" | "LITE" | "DARKNESS" | "NO_TELE"
+        "AGGRAVATE"
+            | "DRAIN_EXP"
+            | "TY_CURSE"
+            | "LITE"
+            | "DARKNESS"
+            | "NO_TELE"
+            | "TELEPORT"
+            | "THROWING"
+            | "ACTIVATE"
+            | "SHOW_MODS"
+            | "RIDING"
+            | "NO_REMOVE"
+            | "IGNORE_ACID"
+            | "IGNORE_ELEC"
+            | "IGNORE_FIRE"
+            | "IGNORE_COLD"
+            | "REGEN"
+            | "SEE_INVIS"
+            | "HOLD_LIFE"
+            | "LEVITATION"
+            | "WARNING"
+            | "SLOW_DIGEST"
+            | "REFLECT"
+            | "AURA_FIRE"
+            | "AURA_COLD"
+            | "AURA_ELEC"
+            | "AURA_REVENGE"
+            | "AURA_SHARDS"
+            | "REGEN_MANA"
+            | "NO_MAGIC"
+            | "NO_SUMMON"
+            | "NIGHT_VISION"
+            | "DUAL_WIELDING"
+            | "NO_ENCHANT"
+            | "DEC_MANA"
+            | "EASY_SPELL"
+            | "LORE2"
+            | "BLESSED"
+            | "TELEPATHY"
+            | "FREE_ACT"
+            | "SUST_STR"
+            | "SUST_INT"
+            | "SUST_WIS"
+            | "SUST_DEX"
+            | "SUST_CON"
+            | "SUST_CHR"
+            | "ESP_ANIMAL"
+            | "ESP_UNDEAD"
+            | "ESP_DEMON"
+            | "ESP_ORC"
+            | "ESP_TROLL"
+            | "ESP_GIANT"
+            | "ESP_DRAGON"
+            | "ESP_HUMAN"
+            | "ESP_GOOD"
+            | "ESP_EVIL"
+            | "ESP_LIVING"
+            | "ESP_NONLIVING"
+            | "BRAND_ACID"
+            | "BRAND_ELEC"
+            | "BRAND_FIRE"
+            | "BRAND_COLD"
+            | "BRAND_POIS"
+            | "BRAND_CHAOS"
+            | "BRAND_VAMP"
+            | "BRAND_MANA"
+            | "BRAND_WILD"
+            | "ORDER"
+            | "VORPAL"
+            | "VORPAL2"
+            | "IMPACT"
+            | "STUN"
     ) {
+        return true;
+    }
+    if RfbPvalFlagDefinition::ALL
+        .iter()
+        .any(|pval| pval.source_flag() == flag)
+    {
         return true;
     }
     match flag.split_once('_') {
@@ -702,6 +779,8 @@ pub enum ItemUseEffectDefinition {
         duration_dice: u16,
         duration_sides: u32,
         duration_bonus: u32,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        blessed: bool,
     },
     ApplyHeroism {
         duration_dice: u16,
@@ -925,6 +1004,14 @@ pub enum ItemUseEffectDefinition {
     MundanifyItem,
     RefillQuiver,
     StarBall,
+    Starlight {
+        damage_dice: u16,
+    },
+    ListUniques,
+    ListArtifacts,
+    EnchantEquipment,
+    SummonOctopus,
+    SummonKraken,
     Escape,
     Starburst {
         damage: u16,
@@ -1152,6 +1239,23 @@ pub struct ItemDeviceGenerationDefinition {
     pub activations: Vec<ItemDeviceActivationDefinition>,
     #[serde(default)]
     pub recovery: Option<ItemDeviceRecoveryDefinition>,
+}
+
+/// Shared source name tables and activation pool, independent of item/Ego identities.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RandomArtifactGenerationDefinition {
+    #[serde(rename = "$schema")]
+    pub schema: String,
+    pub format_version: u16,
+    pub id: String,
+    pub source_commit: String,
+    pub name_tables: BTreeMap<String, String>,
+    pub unresolved_chinese_names: BTreeSet<String>,
+    pub device_generation: ItemDeviceGenerationDefinition,
+    /// Source bit masks in the same order as device_generation.activations.
+    pub activation_biases: Vec<u32>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

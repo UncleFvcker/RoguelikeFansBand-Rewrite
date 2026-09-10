@@ -41,6 +41,7 @@ pub(in crate::game) fn materialize_device(
     } else if exceptional {
         loop {
             let id = roll_rfb_ego_from_affixes(
+                "",
                 content.affix_definitions(),
                 rng,
                 level,
@@ -508,6 +509,7 @@ mod tests {
                 ..Default::default()
             };
             let result = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                false,
                 rfb_protocol::ItemEnchantmentsDto::default(),
                 &mut rng,
                 &definition,
@@ -568,6 +570,7 @@ mod tests {
             .unwrap();
         let quiver_id = game.items[index].id.clone();
         let result = materialize_ego_with_rng(
+            false,
             &game.content,
             &mut game.rng,
             "demo.item.quiver",
@@ -654,6 +657,7 @@ mod tests {
                 // Lower levels also exercise W: maximum generation depths.
                 let level = (seed % 100 + 1) as u16;
                 let result = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                    false,
                     rfb_protocol::ItemEnchantmentsDto::default(),
                     &mut RfbRng::seeded(seed),
                     item,
@@ -723,6 +727,7 @@ mod tests {
         game.items[index].affix_ids = vec!["rfb-legacy.affix.extra-light-light".to_owned()];
         assert_eq!(game.player_light_radius(), Some(radius + 1));
         let result = materialize_ego_with_rng(
+            false,
             &game.content,
             &mut game.rng,
             &game.items[index].kind_id,

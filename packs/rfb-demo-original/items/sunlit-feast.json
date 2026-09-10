@@ -1,17 +1,29 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.sunlit-feast",
-  "nameKey": "item-demo-sunlit-feast-name",
   "appearanceNameKey": "item-demo-unfamiliar-food-name",
   "descriptionKey": "item-demo-sunlit-feast-description",
-  "glyph": ",",
+  "formatVersion": 1,
   "generationLevel": 90,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 2,
+  "glyph": ",",
+  "id": "demo.item.sunlit-feast",
   "maxStack": 20,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-sunlit-feast-name",
+  "rfbBaseKind": {
+    "sourceIndex": 39,
+    "sval": 40,
+    "tval": 80
+  },
+  "tags": [
+    "attribute-restoration",
+    "consumable",
+    "experience",
+    "food",
+    "healing",
+    "poison"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.restorative-feast"
   },
-  "tags": ["attribute-restoration", "consumable", "experience", "food", "healing", "poison"]
+  "weightTenthsPound": 2
 }

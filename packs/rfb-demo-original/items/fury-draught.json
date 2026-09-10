@@ -10,10 +10,15 @@
   "generationLevel": 20,
   "glyph": "!",
   "id": "demo.item.fury-draught",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-fury-draught-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 426,
+    "sval": 33,
+    "tval": 75
+  },
   "tags": [
     "berserk",
     "consumable",

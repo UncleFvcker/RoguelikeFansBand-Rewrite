@@ -5,6 +5,71 @@ use std::collections::BTreeSet;
 use super::*;
 
 #[test]
+fn ordinary_room_and_anywhere_allocations_reach_pickup_and_save() {
+    let mut game = Game::new_with_build(617, "demo.build.warrior").unwrap();
+    let mut definition = game
+        .content
+        .world(DEFAULT_WORLD_ID)
+        .unwrap()
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.warrens-depth-1")
+        .unwrap()
+        .clone();
+    definition.vault_id = None;
+    definition.guaranteed_items.clear();
+    let area = u32::from(definition.width) * u32::from(definition.height);
+    // One placement from each caller, retaining the formal shared pool.
+    definition.loot_allocation = Some(rfb_content::ProceduralLootAllocationDefinition {
+        reference_area_tiles: area,
+        room_objects: rfb_content::ProceduralNormalAllocationDefinition {
+            mean: 1,
+            standard_deviation: 0,
+        },
+        anywhere_objects: rfb_content::ProceduralNormalAllocationDefinition {
+            mean: 1,
+            standard_deviation: 0,
+        },
+    });
+    game.dungeon_states
+        .get_mut("demo.dungeon.warrens")
+        .unwrap()
+        .next_instance_ordinal = 1;
+    let floor = game
+        .generate_procedural_floor(&definition, Some("demo.dungeon.warrens.instance.1".into()))
+        .unwrap();
+    assert_eq!(floor.items.len(), 2);
+    let items = floor.items.clone();
+    game.activate_floor(floor, Vec::new());
+    for item in items {
+        assert!(
+            game.content
+                .item(&item.kind_id)
+                .unwrap()
+                .rfb_base_kind
+                .is_some()
+        );
+        let ItemLocation::Ground(position) = item.location else {
+            panic!("floor loot must be on the ground")
+        };
+        game.player.position = position;
+        game.pick_up_item_at_player(Some(&item.id)).unwrap();
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|value| value.id == item.id)
+                .unwrap()
+                .location,
+            ItemLocation::Inventory
+        );
+    }
+    game.reveal_current_visibility();
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.rng, game.rng);
+}
+
+#[test]
 fn free_room_placement_uses_the_full_floor_without_overlap() {
     let template = Game::new(1);
     let definition = template

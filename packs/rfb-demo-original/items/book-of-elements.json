@@ -1,16 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.book-of-elements",
-  "nameKey": "item-demo-book-of-elements-name",
-  "descriptionKey": "item-demo-book-of-elements-description",
-  "glyph": "?",
-  "weightTenthsPound": 30,
+  "abilityBookId": "demo.ability-book.book-of-elements",
   "baseValue": 100,
+  "descriptionKey": "item-demo-book-of-elements-description",
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
+  "formatVersion": 1,
   "generationLevel": 10,
+  "glyph": "?",
+  "id": "demo.item.book-of-elements",
   "maxStack": 1,
   "mogaminatorRare": false,
-  "elementalDestructionVulnerabilities": ["fire"],
-  "abilityBookId": "demo.ability-book.book-of-elements",
-  "tags": ["armageddon", "book", "spellbook"]
+  "nameKey": "item-demo-book-of-elements-name",
+  "rfbBaseKind": {
+    "sourceIndex": 544,
+    "sval": 0,
+    "tval": 101
+  },
+  "tags": [
+    "armageddon",
+    "book",
+    "spellbook"
+  ],
+  "weightTenthsPound": 30
 }

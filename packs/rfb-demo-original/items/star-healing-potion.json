@@ -10,20 +10,25 @@
   "generationLevel": 80,
   "glyph": "!",
   "id": "demo.item.star-healing-potion",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "mountUse": {
-    "type": "heal",
-    "minimumBond": 2500,
     "amount": 1000,
     "clearStatuses": [
       "rfb.status.confusion",
       "rfb.status.fear",
       "rfb.status.stun"
-    ]
+    ],
+    "minimumBond": 2500,
+    "type": "heal"
   },
   "nameKey": "item-demo-star-healing-potion-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 431,
+    "sval": 38,
+    "tval": 75
+  },
   "shatterEffectProgramId": "demo.effect.star-healing-potion.shatter",
   "shatterRadius": 1,
   "tags": [

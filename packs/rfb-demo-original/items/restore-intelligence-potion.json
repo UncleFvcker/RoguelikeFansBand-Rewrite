@@ -10,10 +10,15 @@
   "generationLevel": 25,
   "glyph": "!",
   "id": "demo.item.restore-intelligence-potion",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-restore-intelligence-potion-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 436,
+    "sval": 43,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "rfb-compatibility",

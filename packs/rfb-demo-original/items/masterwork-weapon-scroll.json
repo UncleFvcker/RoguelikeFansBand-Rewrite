@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-masterwork-weapon-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 335,
+    "sval": 21,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "enchantment",

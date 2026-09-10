@@ -2,6 +2,104 @@ use super::*;
 use std::collections::BTreeSet;
 
 #[test]
+fn source_allocation_references_are_exclusive_and_preserve_source_rows() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let mut content = artifact.content.clone();
+    let base = content
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .unwrap();
+    let row = base
+        .entries
+        .iter()
+        .find(|row| row.item_kind_id == "demo.item.dagger")
+        .unwrap()
+        .clone();
+    base.entries.push(row.clone());
+    base.entries.reverse();
+    validate_and_normalize(&mut content).unwrap();
+    let base = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .unwrap();
+    assert_eq!(
+        base.entries.iter().filter(|entry| **entry == row).count(),
+        2
+    );
+    let keys = base
+        .entries
+        .iter()
+        .map(|row| {
+            (
+                row.min_depth,
+                content
+                    .items
+                    .iter()
+                    .find(|item| item.id == row.item_kind_id)
+                    .unwrap()
+                    .rfb_base_kind
+                    .unwrap()
+                    .source_index,
+            )
+        })
+        .collect::<Vec<_>>();
+    assert!(keys.windows(2).all(|pair| pair[0] <= pair[1]));
+    assert_eq!(
+        base.entries
+            .iter()
+            .find(|row| row.item_kind_id == "demo.item.yoiyami-robe")
+            .unwrap()
+            .weight,
+        0
+    );
+    for invalid_case in 0..5 {
+        let mut invalid = artifact.content.clone();
+        let theme = invalid
+            .loot_tables
+            .iter_mut()
+            .find(|table| table.id == "demo.loot-table.mage")
+            .unwrap();
+        match invalid_case {
+            0 => theme.entries.push(row.clone()),
+            1 => {
+                theme.kind_selection = Some(crate::LootKindSelectionDefinition::RfbTheme {
+                    pool_id: theme.id.clone(),
+                    theme: crate::RfbDropTheme::Mage,
+                })
+            }
+            2 => {
+                theme.kind_selection = Some(crate::LootKindSelectionDefinition::RfbTheme {
+                    pool_id: "demo.loot-table.priest".into(),
+                    theme: crate::RfbDropTheme::Mage,
+                })
+            }
+            3 => {
+                theme.kind_selection = None;
+                theme.entries = vec![row.clone(), row.clone()];
+            }
+            4 => {
+                invalid
+                    .items
+                    .iter_mut()
+                    .find(|item| item.id == row.item_kind_id)
+                    .unwrap()
+                    .rfb_base_kind = None;
+            }
+            _ => unreachable!(),
+        }
+        assert!(
+            matches!(
+                validate_and_normalize(&mut invalid),
+                Err(ContentError::InvalidLootTable(_))
+            ),
+            "case {invalid_case}"
+        );
+    }
+}
+
+#[test]
 fn crafting_uses_the_complete_rfb_policy_without_explicit_candidates() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let action = artifact
@@ -1321,11 +1419,20 @@ fn natural_affix_compatibility_separates_source_policy_and_explicit_pools() {
 
     // Explicit pools still require a no-affix outcome for incompatible bases.
     let mut explicit = artifact.content.clone();
+    let entries = explicit
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .unwrap()
+        .entries
+        .clone();
     let table = explicit
         .loot_tables
         .iter_mut()
         .find(|table| table.id == "demo.loot-table.warrior")
         .unwrap();
+    table.kind_selection = None;
+    table.entries = entries;
     table.rfb_ego_policy = None;
     table.affix_weights = vec![
         LootAffixWeightDefinition {
@@ -1337,6 +1444,7 @@ fn natural_affix_compatibility_separates_source_policy_and_explicit_pools() {
             weight: 1,
         },
     ];
+    validate_and_normalize(&mut explicit).expect("explicit pool should remain valid");
     let mut missing_fallback = explicit.clone();
     missing_fallback
         .loot_tables
@@ -2168,6 +2276,36 @@ fn rfb_base_kind_identity_rejects_duplicate_source_indices_and_kind_values() {
     );
     assert!(matches!(
         validate_and_normalize(&mut duplicate_kind),
+        Err(ContentError::InvalidItemSourceIdentity(_))
+    ));
+}
+
+#[test]
+fn source_allocation_requires_armor_value_and_bounded_physical_book_tiers() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let mut missing_armor_value = artifact.content.clone();
+    missing_armor_value
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.robe")
+        .unwrap()
+        .rfb_value = None;
+    assert!(matches!(
+        validate_and_normalize(&mut missing_armor_value),
+        Err(ContentError::InvalidItemSourceIdentity(_))
+    ));
+    let mut invalid_book_tier = artifact.content;
+    invalid_book_tier
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.black-prayers")
+        .unwrap()
+        .rfb_base_kind
+        .as_mut()
+        .unwrap()
+        .sval = 4;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_book_tier),
         Err(ContentError::InvalidItemSourceIdentity(_))
     ));
 }

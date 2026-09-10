@@ -20,6 +20,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-aether-rupture-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 373,
+    "sval": 61,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "mana",

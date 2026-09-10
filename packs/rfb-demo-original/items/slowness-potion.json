@@ -10,10 +10,15 @@
   "generationLevel": 1,
   "glyph": "!",
   "id": "demo.item.slowness-potion",
-  "potionNutrition": 50,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-slowness-potion-name",
+  "potionNutrition": 50,
+  "rfbBaseKind": {
+    "sourceIndex": 403,
+    "sval": 4,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "potion",

@@ -5,94 +5,185 @@ use crate::game::Game;
 use std::collections::BTreeMap;
 
 #[test]
-#[ignore = "exports the real save used by the explicit E8 desktop acceptance pass"]
+#[ignore = "exports museum-bound saves for the explicit E8.8 standalone acceptance"]
 fn export_ego_desktop_acceptance_save() {
-    use crate::game::inventory::ItemIdentificationRequest;
-    use crate::state::ItemLocation;
-    use rfb_protocol::{
-        CharacterSummary, PROTOCOL_VERSION, SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1,
+    use crate::game::{
+        inventory::ItemIdentificationRequest,
+        loot::{ItemGenerationMode, LootContext, LootSource},
     };
+    use crate::state::ItemLocation;
+    use rfb_protocol::ItemCurseSeverityDto;
+    use std::sync::Arc;
 
-    let mut game = Game::new_with_build(808, "demo.build.high-mage-death").unwrap();
-    game.entities.clear();
-    game.items
-        .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
-    for (id, kind, affix) in [
+    let input = std::path::PathBuf::from(
+        std::env::var("E88_DESKTOP_INPUT").expect("real desktop new-game export required"),
+    );
+    let directory = input.parent().unwrap();
+    let (header, payload) = rfb_save::decode(&std::fs::read(&input).unwrap()).unwrap();
+    assert!(header.museum_binding.is_some());
+    let mut base = Game::from_save(payload).unwrap();
+    base.entities.clear();
+    base.items.clear();
+    let original = base.content.clone();
+    let artifact = rfb_content::compile_pack_dir(
+        &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original"),
+    )
+    .unwrap();
+    let mut report = Vec::new();
+    for (case, kind, mode) in [
         (
-            "e8.light",
-            "demo.item.brass-lantern",
-            Some("rfb-legacy.affix.illumination-light"),
+            "negative",
+            "demo.item.chain-mail",
+            ItemGenerationMode::Ordinary,
         ),
         (
-            "e8.ring",
-            "demo.item.ring",
-            Some("rfb-legacy.affix.combat-ring"),
+            "randart",
+            "demo.item.feanorian-lamp",
+            ItemGenerationMode::Artifact {
+                no_fixed_artifact: true,
+            },
         ),
         (
-            "e8.quiver",
-            "demo.item.quiver",
-            Some("rfb-legacy.affix.endless-quiver"),
+            "dragon",
+            "demo.item.dragon-shield",
+            ItemGenerationMode::Great,
         ),
-        ("e8.dagger", "demo.item.dagger", None),
-        ("e8.identify", "demo.item.revelation-scroll", None),
-        ("e8.craft", "demo.item.crafting-scroll", None),
+        ("bag", "demo.item.fabric-bag", ItemGenerationMode::Great),
     ] {
-        game.debug_add_generated_inventory_item(id, kind, 20)
+        let mut game = base.clone();
+        let mut narrowed = artifact.clone();
+        let table = narrowed
+            .content
+            .loot_tables
+            .iter_mut()
+            .find(|table| table.id == "demo.loot-table.base-items")
             .unwrap();
-        if let Some(affix) = affix {
-            let materialized = materialize_ego_with_rng(
-                &game.content,
-                &mut game.rng,
-                kind,
-                vec![affix.to_owned()],
-                |_| 20,
-                20,
-                2,
-            );
-            let item = game.items.last_mut().unwrap();
-            materialized.apply_to(item);
-            item.quality = rfb_protocol::ItemQualityDto::Exceptional;
-            item.location = ItemLocation::Ground(game.player.position);
-        } else {
-            game.identify_item_instance(id, ItemIdentificationRequest::new(true));
-            if id == "e8.identify" {
-                game.items.last_mut().unwrap().quantity = 3;
+        // Fix only the base allocation; all quality, Ego, dragon and artifact rolls use the shared owner.
+        table.kind_selection = None;
+        table.entries.retain(|entry| entry.item_kind_id == kind);
+        table.entries.truncate(1);
+        assert_eq!(table.entries.len(), 1);
+        table.entries[0].min_depth = 0;
+        table.entries[0].max_depth = 127;
+        game.content = Arc::new(ContentCatalog::from_artifact(narrowed));
+        let context = LootContext {
+            table_id: "demo.loot-table.base-items".into(),
+            floor_id: game.current_floor_id.clone(),
+            depth: if case == "randart" { 30 } else { 50 },
+            source: LootSource::ItemUse {
+                item_id: "e88.source".into(),
+            },
+        };
+        let (seed, draft) = (0..5000)
+            .find_map(|seed| {
+                game.rng = RfbRng::seeded(seed);
+                let draft = game.generate_one_loot_draft(&context, mode)?;
+                let matches = draft.kind_id == kind
+                    && match case {
+                        "negative" => {
+                            draft
+                                .curse
+                                .is_some_and(|curse| curse != ItemCurseSeverityDto::Permanent)
+                                && !draft.affix_ids.is_empty()
+                                && draft.intrinsic_properties.modifiers.speed < 0
+                        }
+                        "randart" => {
+                            draft.artifact_name.is_some()
+                                && draft.curse.is_none()
+                                && draft.activation.as_ref().is_some_and(|activation| {
+                                    activation.profile_id.contains(".detect-")
+                                })
+                        }
+                        "dragon" => {
+                            !draft.intrinsic_properties.resistances.is_empty()
+                                && !draft.affix_ids.is_empty()
+                                && draft.enchantments.to_armor > 0
+                                && draft.curse.is_none()
+                        }
+                        "bag" => {
+                            draft.affix_ids == ["rfb-legacy.affix.holding-quiver"]
+                                && draft.curse.is_none()
+                        }
+                        _ => unreachable!(),
+                    };
+                matches.then_some((seed, draft))
+            })
+            .unwrap_or_else(|| panic!("no acceptance candidate for {case}"));
+        game.content = original.clone();
+        let mut item = game
+            .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        item.id = format!("e88.{case}");
+        let id = item.id.clone();
+        game.items.push(item);
+        game.debug_add_generated_inventory_item("e88.identify", "demo.item.revelation-scroll", 1)
+            .unwrap();
+        game.items.last_mut().unwrap().quantity = if case == "bag" { 1 } else { 20 };
+        game.identify_item_instance("e88.identify", ItemIdentificationRequest::new(true));
+        if case == "bag" {
+            // Distinct inscriptions prevent merging; reach the extra bag slots through real pickup.
+            for index in 0..35 {
+                game.debug_add_generated_inventory_item(
+                    &format!("e88.cargo-{index:02}"),
+                    "demo.item.ration-of-food",
+                    1,
+                )
+                .unwrap();
+                let cargo = game.items.last_mut().unwrap();
+                cargo.inscription = Some(format!("cargo-{index:02}"));
+                cargo.location = if index < 24 {
+                    ItemLocation::Inventory
+                } else {
+                    ItemLocation::Ground(game.player.position)
+                };
             }
         }
+        let game = Game::from_save(game.to_save()).unwrap();
+        let mut equipped = game.clone();
+        equipped
+            .items
+            .iter_mut()
+            .find(|item| item.id == id)
+            .unwrap()
+            .location = ItemLocation::Inventory;
+        assert!(equipped.equip_inventory_item(&id, None).is_some());
+        equipped.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        let instance = equipped.items.iter().find(|item| item.id == id).unwrap();
+        let details = equipped
+            .equipment_dto()
+            .into_iter()
+            .find(|item| item.id == id)
+            .unwrap();
+        let player = equipped.snapshot().player;
+        let mut plain = equipped.clone();
+        let plain_item = plain.items.iter_mut().find(|item| item.id == id).unwrap();
+        plain_item.enchantments = Default::default();
+        plain_item.intrinsic_properties.modifiers.speed = 0;
+        let plain_armor = plain.snapshot().player.armor_class;
+        let plain_speed = plain.snapshot().player.speed;
+        if case == "negative" {
+            assert!(player.speed < plain_speed);
+        }
+        if case == "dragon" {
+            assert!(player.armor_class > plain_armor);
+        }
+        report.push(serde_json::json!({ "case": case, "seed": seed, "id": id, "details": details,
+            "intrinsic": instance.intrinsic_properties, "player": player, "plainArmor": plain_armor, "plainSpeed": plain_speed,
+            "initialWeight": game.carried_weight_tenths_pound(), "initialSlots": game.inventory_used_slots() }));
+        let bytes = rfb_save::encode(&header, &game.to_save()).unwrap();
+        let (_, saved) = rfb_save::decode(&bytes).unwrap();
+        assert_eq!(
+            Game::from_save(saved).unwrap().state_hash(),
+            game.state_hash()
+        );
+        std::fs::write(directory.join(format!("e88-{case}.rfbsave")), bytes).unwrap();
     }
-    // Rebuild derived visibility after preparing ground items and clearing actors.
-    let game = Game::from_save(game.to_save()).unwrap();
-    let snapshot = game.snapshot();
-    let header = SaveHeaderV1 {
-        format: "rfb-save".into(),
-        save_schema_version: SAVE_HEADER_SCHEMA_VERSION,
-        game_version: env!("CARGO_PKG_VERSION").into(),
-        protocol_version: PROTOCOL_VERSION.into(),
-        slot_name: "E8 desktop fixture".into(),
-        created_at: "2026-09-09T00:00:00Z".into(),
-        saved_at: "2026-09-09T00:00:00Z".into(),
-        character_summary: CharacterSummary {
-            display_name: snapshot.player.name,
-            level: snapshot.player.progress.level.into(),
-            location_key: game.location_key().into(),
-            turn: snapshot.turn,
-        },
-        content_id: snapshot.content_id,
-        content_hash: snapshot.content_hash,
-        payload_encoding: "messagepack".into(),
-        museum_binding: None,
-    };
-    let bytes = rfb_save::encode(&header, &game.to_save()).unwrap();
-    let (_, payload) = rfb_save::decode(&bytes).unwrap();
-    assert_eq!(
-        Game::from_save(payload).unwrap().state_hash(),
-        game.state_hash()
-    );
-    let directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../test-results");
-    std::fs::create_dir_all(&directory).unwrap();
-    std::fs::write(directory.join("ego-desktop.rfbsave"), bytes).unwrap();
+    std::fs::write(
+        directory.join("e88-expectations.json"),
+        serde_json::to_vec_pretty(&report).unwrap(),
+    )
+    .unwrap();
 }
-
 #[test]
 fn all_160_source_egos_have_an_effect_and_save_stable_instances() {
     let base = Game::new_with_build(7, "demo.build.warrior").unwrap();
@@ -152,6 +243,7 @@ fn all_160_source_egos_have_an_effect_and_save_stable_instances() {
                 game.debug_add_generated_inventory_item("test.ego.contract", &item.id, level)
                     .unwrap();
                 let materialized = materialize_ego_with_rng(
+                    false,
                     &content,
                     &mut game.rng,
                     &item.id,
@@ -280,6 +372,7 @@ fn adapted_weapon_bases_and_wizardstaff_use_the_shared_owner() {
     assert!(staff.passives.contains(&EquipmentPassive::ReducedManaCost));
     let affix = game.content.affix("rfb-legacy.affix.arcane").unwrap();
     let materialized = materialize_ego_with_rng(
+        false,
         &game.content,
         &mut game.rng,
         &staff.id,

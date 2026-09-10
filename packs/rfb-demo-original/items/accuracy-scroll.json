@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-accuracy-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 332,
+    "sval": 17,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "enchantment",

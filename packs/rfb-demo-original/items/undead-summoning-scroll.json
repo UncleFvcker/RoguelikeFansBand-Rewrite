@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-undead-summoning-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 320,
+    "sval": 5,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "scroll",

@@ -773,6 +773,7 @@ impl Game {
         );
         self.items.push(ItemInstance {
             previously_worn: false,
+            book_counted: false,
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,

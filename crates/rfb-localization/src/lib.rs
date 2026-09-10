@@ -509,12 +509,14 @@ mod tests {
                 "actor-demo-the-wicked-witch-of-the-south-east-name",
                 "东南方坏女巫",
             ),
-            ("item-demo-book-of-the-unicorn-name", "独角兽之书"),
-            ("item-demo-pattern-sorcery-name", "图案咒术"),
-            ("item-demo-natures-gifts-name", "自然的恩赐"),
-            ("item-demo-black-channels-name", "黑暗通道"),
-            ("item-demo-path-of-destruction-name", "毁灭之路"),
-            ("item-demo-major-arcana-name", "大阿卡纳"),
+            // Physical item names use the source kind table, including brackets;
+            // ability-book titles are separate messages.
+            ("item-demo-book-of-the-unicorn-name", "[独角兽之书]"),
+            ("item-demo-pattern-sorcery-name", "[图案咒术]"),
+            ("item-demo-natures-gifts-name", "[自然的恩赐]"),
+            ("item-demo-black-channels-name", "[黑暗通道]"),
+            ("item-demo-path-of-destruction-name", "[毁灭之路]"),
+            ("item-demo-major-arcana-name", "[大阿卡纳]"),
         ] {
             assert_eq!(
                 localizer
@@ -826,7 +828,7 @@ mod tests {
             ("actor-demo-mean-looking-mercenary-name", "面相凶狠的雇佣兵"),
             ("actor-demo-singing-happy-drunk-name", "快乐唱歌的醉汉"),
             ("item-demo-piece-of-elvish-waybread-name", "精灵干粮"),
-            ("item-demo-booze-potion-name", "烈酒"),
+            ("item-demo-booze-potion-name", "烈酒药水"),
         ] {
             assert_eq!(
                 localizer

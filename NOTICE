@@ -15,6 +15,22 @@ adaptation limits are recorded in docs/mindcrafter-source-audit.md. The notice
 from that source's src/angband.h is reproduced in LICENSES/RFB-UPSTREAM-NOTICE.txt;
 it is an upstream notice, not a replacement license for this project.
 
+The random artifact rules in crates/rfb-core/src/game/random_artifact/ and
+random_artifact.rs adapt src/artifact.c and src/ego.c at legacy commit
+a0d92b6378d148c5262cc236b8fa6ed2ca06a54c. The name tables embedded in
+packs/rfb-demo-original/randomArtifacts/source.json copy the 30 lib/file/*.txt
+files identified by that file's nameTables keys. Its activation data comes from
+src/devices.c at the same commit. These are additional exceptions to the
+statement above that legacy content is not included. The upstream terms remain
+applicable; the repository's default licenses do not replace them.
+src/artifact.c carries the following notice:
+
+Copyright (c) 1989 James E. Wilson, Robert A. Koeneke
+
+This software may be copied and distributed for educational, research, and
+not for profit purposes provided that this copyright and statement are
+included in all such copies.
+
 The Angwil town layout in packs/rfb-demo-original/worlds/middle-earth.json is
 adapted from lib/edit/t_angwil.txt at FrogComposband/RoguelikeFansBand commit
 a0d92b6378d148c5262cc236b8fa6ed2ca06a54c. This imported layout is an exception

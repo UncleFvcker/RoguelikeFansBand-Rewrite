@@ -387,6 +387,7 @@ pub(crate) fn item_from_dto(
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         previously_worn: item.previously_worn,
+        book_counted: item.book_counted,
         artifact_name: item.artifact_name,
         intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
         intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
@@ -457,6 +458,7 @@ pub(crate) fn inventory_item_from_dto(
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         previously_worn: item.previously_worn,
+        book_counted: item.book_counted,
         artifact_name: item.artifact_name,
         intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
         intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
@@ -532,6 +534,7 @@ pub(crate) fn equipment_item_from_dto(
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         previously_worn: item.previously_worn,
+        book_counted: item.book_counted,
         artifact_name: item.artifact_name,
         intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
         intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
@@ -604,6 +607,7 @@ pub(crate) fn carried_item_from_dto(
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         previously_worn: item.previously_worn,
+        book_counted: item.book_counted,
         artifact_name: item.artifact_name,
         intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
         intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
@@ -1950,6 +1954,7 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
             };
             Some(ItemSaveDto {
                 previously_worn: item.previously_worn,
+                book_counted: item.book_counted,
                 id: item.id.clone(),
                 kind_id: item.kind_id.clone(),
                 position: *position,
@@ -1997,6 +2002,7 @@ pub(crate) fn inventory_to_save(items: &[ItemInstance]) -> Vec<InventoryItemSave
             }
             Some(InventoryItemSaveDto {
                 previously_worn: item.previously_worn,
+                book_counted: item.book_counted,
                 id: item.id.clone(),
                 kind_id: item.kind_id.clone(),
                 quantity: item.quantity,
@@ -2043,6 +2049,7 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
             };
             Some(EquipmentItemSaveDto {
                 previously_worn: item.previously_worn,
+                book_counted: item.book_counted,
                 id: item.id.clone(),
                 kind_id: item.kind_id.clone(),
                 quantity: item.quantity,
@@ -2094,6 +2101,7 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
             };
             Some(CarriedItemSaveDto {
                 previously_worn: item.previously_worn,
+                book_counted: item.book_counted,
                 id: item.id.clone(),
                 kind_id: item.kind_id.clone(),
                 quantity: item.quantity,

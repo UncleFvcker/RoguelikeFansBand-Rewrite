@@ -43,6 +43,11 @@
   "maxStack": 1,
   "mogaminatorRare": false,
   "nameKey": "item-demo-detect-objects-staff-name",
+  "rfbBaseKind": {
+    "sourceIndex": 313,
+    "sval": 0,
+    "tval": 55
+  },
   "tags": [
     "device",
     "rfb",

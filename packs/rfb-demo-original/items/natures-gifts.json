@@ -1,16 +1,30 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.natures-gifts",
-  "nameKey": "item-demo-natures-gifts-name",
-  "descriptionKey": "item-demo-natures-gifts-description",
-  "glyph": "?",
-  "weightTenthsPound": 30,
+  "abilityBookId": "demo.ability-book.natures-gifts",
   "baseValue": 15000,
+  "descriptionKey": "item-demo-natures-gifts-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
   "generationLevel": 45,
+  "glyph": "?",
+  "id": "demo.item.natures-gifts",
   "maxStack": 1,
   "mogaminatorRare": false,
-  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
-  "abilityBookId": "demo.ability-book.natures-gifts",
-  "tags": ["book", "nature", "spellbook"]
+  "nameKey": "item-demo-natures-gifts-name",
+  "rfbBaseKind": {
+    "sourceIndex": 510,
+    "sval": 2,
+    "tval": 92
+  },
+  "tags": [
+    "book",
+    "nature",
+    "spellbook"
+  ],
+  "weightTenthsPound": 30
 }

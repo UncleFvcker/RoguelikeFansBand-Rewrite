@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-stone-ring-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 361,
+    "sval": 49,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "scroll",

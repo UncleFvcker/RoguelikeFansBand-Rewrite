@@ -59,6 +59,13 @@ impl Game {
         let item_knowledge = save
             .item_knowledge
             .into_iter()
+            // A shared collection transfers awareness, not another character's
+            // cumulative discoveries. OM_COUNTED remains on each stored book.
+            .filter(|entry| entry.tried)
+            .map(|mut entry| {
+                entry.found_count = 0;
+                entry
+            })
             .filter(|entry| inventory.iter().any(|item| item.kind_id == entry.kind_id))
             .collect();
         let item_property_knowledge = save
@@ -115,6 +122,7 @@ impl Game {
         let mut kinds = BTreeSet::new();
         for entry in &museum.item_knowledge {
             if !entry.tried
+                || entry.found_count != 0
                 || !kinds.insert(&entry.kind_id)
                 || !museum
                     .inventory

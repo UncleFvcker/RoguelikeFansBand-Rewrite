@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-recharging-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 336,
+    "sval": 22,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "recharging",

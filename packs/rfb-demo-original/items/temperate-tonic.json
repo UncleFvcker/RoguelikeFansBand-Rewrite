@@ -10,10 +10,15 @@
   "generationLevel": 1,
   "glyph": "!",
   "id": "demo.item.temperate-tonic",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-temperate-tonic-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 423,
+    "sval": 30,
+    "tval": 75
+  },
   "tags": [
     "cold",
     "consumable",

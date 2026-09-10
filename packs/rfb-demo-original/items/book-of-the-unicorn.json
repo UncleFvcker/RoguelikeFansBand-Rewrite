@@ -1,1 +1,30 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.book-of-the-unicorn","nameKey":"item-demo-book-of-the-unicorn-name","descriptionKey":"item-demo-book-of-the-unicorn-description","glyph":"?","weightTenthsPound":30,"baseValue":15000,"generationLevel":45,"maxStack":1,"mogaminatorRare":false,"elementalDestructionImmunities":["acid","electricity","fire","cold"],"abilityBookId":"demo.ability-book.book-of-the-unicorn","tags":["book","life","spellbook"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "abilityBookId": "demo.ability-book.book-of-the-unicorn",
+  "baseValue": 15000,
+  "descriptionKey": "item-demo-book-of-the-unicorn-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 45,
+  "glyph": "?",
+  "id": "demo.item.book-of-the-unicorn",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-book-of-the-unicorn-name",
+  "rfbBaseKind": {
+    "sourceIndex": 502,
+    "sval": 2,
+    "tval": 90
+  },
+  "tags": [
+    "book",
+    "life",
+    "spellbook"
+  ],
+  "weightTenthsPound": 30
+}

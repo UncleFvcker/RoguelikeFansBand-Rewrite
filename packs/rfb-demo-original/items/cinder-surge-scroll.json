@@ -17,6 +17,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-cinder-surge-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 370,
+    "sval": 58,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "fire",

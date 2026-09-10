@@ -694,6 +694,7 @@ fn elemental_brand_is_suppressed_only_by_matching_immunity() {
     );
     game.items.push(ItemInstance {
         previously_worn: false,
+        book_counted: false,
         artifact_name: None,
         intrinsic_melee_damage_dice: None,
         intrinsic_weight_tenths_pound: None,
@@ -761,6 +762,7 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
     let item_id = "test.item.known-offense".to_owned();
     game.items.push(ItemInstance {
         previously_worn: false,
+        book_counted: false,
         artifact_name: None,
         intrinsic_melee_damage_dice: None,
         intrinsic_weight_tenths_pound: None,

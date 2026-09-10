@@ -15,6 +15,11 @@
   "id": "demo.item.destruction-scroll",
   "maxStack": 20,
   "nameKey": "item-demo-destruction-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 353,
+    "sval": 41,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "destruction",

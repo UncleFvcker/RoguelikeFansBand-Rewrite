@@ -10,10 +10,15 @@
   "generationLevel": 10,
   "glyph": "!",
   "id": "demo.item.sickliness-potion",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-sickliness-potion-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 415,
+    "sval": 20,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "rfb-compatibility",

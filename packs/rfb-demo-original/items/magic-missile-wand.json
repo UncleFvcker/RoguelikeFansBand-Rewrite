@@ -44,6 +44,11 @@
   "maxStack": 1,
   "mogaminatorRare": false,
   "nameKey": "item-demo-magic-missile-wand-name",
+  "rfbBaseKind": {
+    "sourceIndex": 312,
+    "sval": 0,
+    "tval": 65
+  },
   "tags": [
     "device",
     "rfb",

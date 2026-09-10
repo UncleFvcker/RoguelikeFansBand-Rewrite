@@ -1,37 +1,52 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.resonance-rod",
-  "nameKey": "item-demo-resonance-rod-name",
   "appearanceNameKey": "item-demo-unfamiliar-rod-name",
   "descriptionKey": "item-demo-resonance-rod-description",
-  "glyph": "-",
-  "generationLevel": 10,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 14,
-  "maxStack": 1,
   "deviceGeneration": {
-    "recovery": {
-      "intervalTicks": 1,
-      "energyPerMille": 10
-    },
     "activations": [
       {
-        "id": "demo.device-activation.trap-sense",
-        "nameKey": "device-activation-demo-trap-sense-name",
-        "weight": 1,
-        "minDepth": 1,
-        "maxDepth": 100,
+        "charges": {
+          "cost": 5,
+          "maximum": 32,
+          "minimum": 18
+        },
         "deviceCheckDifficulty": 20,
-        "charges": { "minimum": 18, "maximum": 32, "cost": 5 },
+        "effectProgramId": "demo.effect.detect-traps",
+        "id": "demo.device-activation.trap-sense",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-demo-trap-sense-name",
         "target": {
-          "modes": ["self"],
+          "modes": [
+            "self"
+          ],
           "range": 0,
           "requiresLineOfEffect": false
         },
-        "effectProgramId": "demo.effect.detect-traps"
+        "weight": 1
       }
-    ]
+    ],
+    "recovery": {
+      "energyPerMille": 10,
+      "intervalTicks": 1
+    }
   },
-  "tags": ["device", "prototype", "rod"]
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "glyph": "-",
+  "id": "demo.item.resonance-rod",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-resonance-rod-name",
+  "rfbBaseKind": {
+    "sourceIndex": 314,
+    "sval": 0,
+    "tval": 66
+  },
+  "tags": [
+    "device",
+    "prototype",
+    "rod"
+  ],
+  "weightTenthsPound": 14
 }

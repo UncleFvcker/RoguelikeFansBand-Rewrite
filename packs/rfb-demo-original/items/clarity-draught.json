@@ -10,10 +10,15 @@
   "generationLevel": 20,
   "glyph": "!",
   "id": "demo.item.clarity-draught",
-  "potionNutrition": 100,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-clarity-draught-name",
+  "potionNutrition": 100,
+  "rfbBaseKind": {
+    "sourceIndex": 463,
+    "sval": 70,
+    "tval": 75
+  },
   "tags": [
     "clarity",
     "consumable",

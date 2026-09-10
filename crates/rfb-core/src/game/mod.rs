@@ -115,6 +115,7 @@ mod chaos_patron;
 mod damage;
 mod death;
 mod ego;
+mod random_artifact;
 pub(crate) use ego::{device_capacity, device_difficulty};
 mod environment_combat;
 mod floor;
@@ -232,7 +233,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 118;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 120;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -707,6 +708,11 @@ pub(crate) fn item_device_generation<'a>(
                     .affix_definitions()
                     .filter_map(|affix| affix.device_generation.as_ref()),
             )
+            .chain(
+                content
+                    .random_artifact_generation()
+                    .map(|data| &data.device_generation),
+            )
             .find(|generation| {
                 generation
                     .activations
@@ -862,6 +868,7 @@ pub struct Game {
     dungeon_states: BTreeMap<String, DungeonState>,
     defeated_limited_actor_counts: BTreeMap<String, u16>,
     generated_artifact_ids: BTreeSet<String>,
+    random_artifact_names: BTreeSet<String>,
     town_states: BTreeMap<String, TownState>,
     shop_states: BTreeMap<String, ShopState>,
     home_states: BTreeMap<String, HomeState>,
@@ -2554,6 +2561,7 @@ impl Game {
             initial_item_runtime_state(&self.content, &mut self.rng, kind_id, &[], depth);
         self.items.push(ItemInstance {
             previously_worn: false,
+            book_counted: false,
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,
@@ -3591,6 +3599,7 @@ impl Game {
                 ItemUseEffectDefinition::AbilityEffect { .. }
                     | ItemUseEffectDefinition::IdentifyItem { .. }
                     | ItemUseEffectDefinition::EnchantItem { .. }
+                    | ItemUseEffectDefinition::EnchantEquipment
                     | ItemUseEffectDefinition::CraftItem { .. }
                     | ItemUseEffectDefinition::RechargeFromDevice { .. }
                     | ItemUseEffectDefinition::RandomTeleport { .. }

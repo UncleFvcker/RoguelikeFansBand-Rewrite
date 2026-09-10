@@ -1,17 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.fast-recovery-mushroom",
-  "nameKey": "item-demo-fast-recovery-mushroom-name",
   "appearanceNameKey": "item-demo-fast-recovery-mushroom-appearance",
-  "descriptionKey": "item-demo-fast-recovery-mushroom-description",
-  "glyph": ",",
-  "generationLevel": 15,
-  "weightTenthsPound": 2,
-  "maxStack": 100,
   "baseValue": 30,
+  "descriptionKey": "item-demo-fast-recovery-mushroom-description",
+  "formatVersion": 1,
+  "generationLevel": 15,
+  "glyph": ",",
+  "id": "demo.item.fast-recovery-mushroom",
+  "maxStack": 100,
+  "nameKey": "item-demo-fast-recovery-mushroom-name",
+  "rfbBaseKind": {
+    "sourceIndex": 20,
+    "sval": 16,
+    "tval": 80
+  },
+  "tags": [
+    "consumable",
+    "food",
+    "mushroom",
+    "rfb-compatibility"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.fast-recovery-mushroom"
   },
-  "tags": ["consumable", "food", "mushroom", "rfb-compatibility"]
+  "weightTenthsPound": 2
 }

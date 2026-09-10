@@ -93,7 +93,13 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::MundanifyItem
         | ItemUseEffectDefinition::RefillQuiver
         | ItemUseEffectDefinition::StarBall
+        | ItemUseEffectDefinition::ListUniques
+        | ItemUseEffectDefinition::ListArtifacts
+        | ItemUseEffectDefinition::EnchantEquipment
+        | ItemUseEffectDefinition::SummonOctopus
+        | ItemUseEffectDefinition::SummonKraken
         | ItemUseEffectDefinition::Escape => true,
+        ItemUseEffectDefinition::Starlight { damage_dice } => (1..=100).contains(damage_dice),
         ItemUseEffectDefinition::Starburst { damage } => (1..=10_000).contains(damage),
         ItemUseEffectDefinition::HealDice { dice, sides } => {
             (1..=100).contains(dice) && (1..=10_000).contains(sides)
@@ -117,6 +123,7 @@ pub(crate) fn valid_item_effect(
             duration_dice,
             duration_sides,
             duration_bonus,
+            ..
         }
         | ItemUseEffectDefinition::ApplyHeroism {
             duration_dice,
@@ -386,7 +393,7 @@ pub(crate) fn valid_item_effect(
                         && (1..=8).contains(group_count_sides)
                         && u16::from(*group_count_dice) * u16::from(*group_count_sides)
                             + u16::from(*group_count_bonus)
-                            <= 8
+                            <= 32
                 }
                 && (!*allow_unique || *hostile)
                 && (1..=8).contains(radius)
@@ -557,6 +564,7 @@ fn item_effect_is_self_targeted(effect: &ItemUseEffectDefinition) -> bool {
         | ItemUseEffectDefinition::RandomElementConeDamage { .. }
         | ItemUseEffectDefinition::IdentifyItem { .. }
         | ItemUseEffectDefinition::EnchantItem { .. }
+        | ItemUseEffectDefinition::EnchantEquipment
         | ItemUseEffectDefinition::MundanifyItem
         | ItemUseEffectDefinition::CraftItem { .. } => false,
         ItemUseEffectDefinition::Sequence { effects } => {
@@ -669,6 +677,11 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::Acquirement { .. }
                     | ItemUseEffectDefinition::RefillQuiver
                     | ItemUseEffectDefinition::StarBall
+                    | ItemUseEffectDefinition::Starlight { .. }
+                    | ItemUseEffectDefinition::ListUniques
+                    | ItemUseEffectDefinition::ListArtifacts
+                    | ItemUseEffectDefinition::SummonOctopus
+                    | ItemUseEffectDefinition::SummonKraken
                     | ItemUseEffectDefinition::Escape
                     | ItemUseEffectDefinition::Starburst { .. }
                     | ItemUseEffectDefinition::ShowRumour { .. }
@@ -737,6 +750,7 @@ pub(super) fn validate_items(
                     }
                     ItemUseEffectDefinition::IdentifyItem { .. }
                     | ItemUseEffectDefinition::EnchantItem { .. }
+                    | ItemUseEffectDefinition::EnchantEquipment
                     | ItemUseEffectDefinition::MundanifyItem
                     | ItemUseEffectDefinition::CraftItem { .. } => {
                         target.modes.as_slice() == [AbilityTargetModeDefinition::Item]
@@ -798,6 +812,9 @@ pub(super) fn validate_items(
         if let Some(base_kind) = item.rfb_base_kind
             && (base_kind.source_index == 0
                 || base_kind.tval == 0
+                || (matches!(base_kind.tval, 30..=38) && item.rfb_value.is_none())
+                || (item.ability_book_id.is_some()
+                    && (!(90..=109).contains(&base_kind.tval) || base_kind.sval > 3))
                 || item.artifact_generation.is_some()
                 || item.tags.iter().any(|tag| tag == "artifact")
                 || !base_kind_source_indices.insert(base_kind.source_index)

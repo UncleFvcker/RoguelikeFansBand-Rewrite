@@ -465,6 +465,7 @@ message-item-use-banishment-no-space = { $source }无法移动{ $target }。
 message-item-use-banishment-no-effect = 你使用{ $source }，但视野内没有生物。
 message-item-activation-detected = { $source }揭示了 { $count } 处隐蔽位置。
 message-item-use-detected = { $source }揭示了附近的 { $count } 处位置。
+message-item-list-entry = { $target }
 message-item-use-teleported = { $source }将你从（{ $fromX }，{ $fromY }）传送至（{ $toX }，{ $toY }）。
 message-item-activation-teleported = { $source }将你从（{ $fromX }，{ $fromY }）传送至（{ $toX }，{ $toY }）。
 message-item-use-teleported-level = { $source }将你从{ $from }转移至{ $to }。

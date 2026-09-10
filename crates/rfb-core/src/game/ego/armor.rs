@@ -49,6 +49,7 @@ pub(super) fn materialize(
     affix: &AffixDefinition,
     level: u16,
     intrinsic_properties: Option<&AffixPropertyBundleDefinition>,
+    bad_luck: bool,
 ) -> Option<EgoMaterialization> {
     use EquipmentPassive as Passive;
     use Pval::*;
@@ -886,7 +887,7 @@ pub(super) fn materialize(
         pval = rng.bounded(3) as u16;
         loop {
             pval += 1;
-            if !one_in(rng, (100_u16.saturating_sub(level) / 6).max(7)) {
+            if !one_in(rng, (100_u16.saturating_sub(level) / 6).max(7)) || bad_luck {
                 break;
             }
         }
@@ -1130,7 +1131,11 @@ pub(super) fn random_activation(
     })
 }
 
-pub(super) fn apply_pval(properties: &mut AffixPropertyBundleDefinition, flag: Pval, value: i32) {
+pub(in crate::game) fn apply_pval(
+    properties: &mut AffixPropertyBundleDefinition,
+    flag: Pval,
+    value: i32,
+) {
     use Pval::*;
     remember_rfb_pval(properties, [flag], value);
     match flag {
@@ -1383,6 +1388,7 @@ mod tests {
         let mut seen = BTreeSet::new();
         for seed in 1..=12_000 {
             let result = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                false,
                 rfb_protocol::ItemEnchantmentsDto::default(),
                 &mut RfbRng::seeded(seed),
                 definition,
@@ -1478,8 +1484,15 @@ mod tests {
             .unwrap();
         let result = (1..10_000)
             .find_map(|seed| {
-                materialize(&mut RfbRng::seeded(seed), definition, affix, 90, None)
-                    .filter(&predicate)
+                materialize(
+                    &mut RfbRng::seeded(seed),
+                    definition,
+                    affix,
+                    90,
+                    None,
+                    false,
+                )
+                .filter(&predicate)
             })
             .expect("requested generated armor property");
         let mut item = item_for(game, &definition.id);
@@ -1518,6 +1531,7 @@ mod tests {
             let definition = game.content.item(&format!("demo.item.{id}")).unwrap();
             for seed in 1..=3000 {
                 let result = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                    false,
                     rfb_protocol::ItemEnchantmentsDto::default(),
                     &mut RfbRng::seeded(seed),
                     definition,
@@ -1644,6 +1658,7 @@ mod tests {
     fn heroic_speed_refreshes_both_timers_from_one_roll() {
         let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
         let effect = rfb_content::ItemUseEffectDefinition::ApplyHeroicSpeed {
+            blessed: false,
             duration_dice: 0,
             duration_sides: 0,
             duration_bonus: 30,
@@ -1725,7 +1740,8 @@ mod tests {
             for seed in 1..=48 {
                 let mut rng = RfbRng::seeded(seed);
                 let result = loop {
-                    if let Some(result) = materialize(&mut rng, definition, affix, 90, None) {
+                    if let Some(result) = materialize(&mut rng, definition, affix, 90, None, false)
+                    {
                         break result;
                     }
                 };
@@ -1764,6 +1780,7 @@ mod tests {
             let item = game.content.item(&format!("demo.item.{id}")).unwrap();
             for seed in 1..=6000 {
                 let result = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                    false,
                     rfb_protocol::ItemEnchantmentsDto::default(),
                     &mut RfbRng::seeded(seed),
                     item,
@@ -1812,9 +1829,16 @@ mod tests {
                 .unwrap();
             for seed in 1..=32 {
                 let mut item = item_for(&game, &definition.id);
-                materialize(&mut RfbRng::seeded(seed), definition, affix, 90, None)
-                    .unwrap()
-                    .apply_to(&mut item);
+                materialize(
+                    &mut RfbRng::seeded(seed),
+                    definition,
+                    affix,
+                    90,
+                    None,
+                    false,
+                )
+                .unwrap()
+                .apply_to(&mut item);
                 let bonuses = game.item_equipment_bonuses(&item);
                 let pval = bonuses.search_skill / 5;
                 assert!(pval > 0);
@@ -2177,7 +2201,7 @@ mod tests {
         let definition = game.content.item("demo.item.small-metal-shield").unwrap();
         let affix = game.content.affix("rfb-legacy.affix.dwarven").unwrap();
         let mut item = item_for(&game, &definition.id);
-        materialize(&mut rng, definition, affix, 30, None)
+        materialize(&mut rng, definition, affix, 30, None, false)
             .unwrap()
             .apply_to(&mut item);
         assert_eq!(
@@ -2191,7 +2215,7 @@ mod tests {
                 .content
                 .item(&format!("demo.item.{id}-dragon-scale-mail"))
                 .unwrap();
-            let result = materialize(&mut rng, definition, breath, 90, None).unwrap();
+            let result = materialize(&mut rng, definition, breath, 90, None, false).unwrap();
             let activation = result.activation.unwrap();
             assert!(activation.profile_id.ends_with(&format!(
                 "-{}",

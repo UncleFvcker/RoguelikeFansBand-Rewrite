@@ -177,6 +177,8 @@ fn naturally_generated_negative_equipment_can_be_equipped_uncursed_and_saved_wit
             .iter_mut()
             .find(|table| table.id == "demo.loot-table.base-items")
             .unwrap();
+        // This test fixes the base kind and exercises materialization.
+        table.kind_selection = None;
         table.entries.retain(|entry| entry.item_kind_id == kind);
         assert_eq!(table.entries.len(), 1, "{kind}");
         table.entries[0].min_depth = 0;
@@ -274,6 +276,8 @@ fn negative_ammunition_devices_and_quivers_keep_their_type_specific_results() {
             .iter_mut()
             .find(|table| table.id == "demo.loot-table.base-items")
             .unwrap();
+        // This test fixes the base kind and exercises materialization.
+        table.kind_selection = None;
         table.entries.retain(|entry| entry.item_kind_id == kind);
         assert!(!table.entries.is_empty(), "{kind}");
         game.content = Arc::new(ContentCatalog::from_artifact(narrowed));

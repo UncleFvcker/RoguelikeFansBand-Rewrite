@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-appraisal-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 327,
+    "sval": 12,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "knowledge",

@@ -9,9 +9,14 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.water-potion",
-  "potionNutrition": 200,
   "maxStack": 20,
   "nameKey": "item-demo-water-potion-name",
+  "potionNutrition": 200,
+  "rfbBaseKind": {
+    "sourceIndex": 400,
+    "sval": 0,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "potion",

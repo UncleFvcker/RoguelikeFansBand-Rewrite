@@ -1,16 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.call-of-the-wild",
-  "nameKey": "item-demo-call-of-the-wild-name",
-  "descriptionKey": "item-demo-call-of-the-wild-description",
-  "glyph": "?",
-  "weightTenthsPound": 30,
+  "abilityBookId": "demo.ability-book.call-of-the-wild",
   "baseValue": 100,
+  "descriptionKey": "item-demo-call-of-the-wild-description",
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
+  "formatVersion": 1,
   "generationLevel": 10,
+  "glyph": "?",
+  "id": "demo.item.call-of-the-wild",
   "maxStack": 1,
   "mogaminatorRare": false,
-  "elementalDestructionVulnerabilities": ["fire"],
-  "abilityBookId": "demo.ability-book.call-of-the-wild",
-  "tags": ["book", "nature", "spellbook"]
+  "nameKey": "item-demo-call-of-the-wild-name",
+  "rfbBaseKind": {
+    "sourceIndex": 508,
+    "sval": 0,
+    "tval": 92
+  },
+  "tags": [
+    "book",
+    "nature",
+    "spellbook"
+  ],
+  "weightTenthsPound": 30
 }

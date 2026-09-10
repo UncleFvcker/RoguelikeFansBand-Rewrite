@@ -1,1 +1,26 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.stupidity-mushroom","nameKey":"item-demo-stupidity-mushroom-name","appearanceNameKey":"item-demo-stupidity-mushroom-appearance","descriptionKey":"item-demo-stupidity-mushroom-description","glyph":",","weightTenthsPound":1,"maxStack":100,"baseValue":0,"useAction":{"effectProgramId":"demo.effect.stupidity-mushroom"},"tags":["consumable","food","mushroom","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-stupidity-mushroom-appearance",
+  "baseValue": 0,
+  "descriptionKey": "item-demo-stupidity-mushroom-description",
+  "formatVersion": 1,
+  "glyph": ",",
+  "id": "demo.item.stupidity-mushroom",
+  "maxStack": 100,
+  "nameKey": "item-demo-stupidity-mushroom-name",
+  "rfbBaseKind": {
+    "sourceIndex": 9,
+    "sval": 8,
+    "tval": 80
+  },
+  "tags": [
+    "consumable",
+    "food",
+    "mushroom",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.stupidity-mushroom"
+  },
+  "weightTenthsPound": 1
+}

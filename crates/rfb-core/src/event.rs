@@ -1301,6 +1301,10 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         resolution: AbilityDetectResolutionDto,
     },
+    ItemListed {
+        kind_id: String,
+        artifact_name: Option<String>,
+    },
     ItemSummoned {
         source_kind_id: String,
         profile_id: Option<String>,
@@ -5144,6 +5148,16 @@ impl DomainEvent {
                 ],
                 GameEventOutcomeDto::AbilityDetect { resolution },
             ),
+            Self::ItemListed {
+                kind_id,
+                artifact_name,
+            } => {
+                let mut event = dto("item.listed", "item-list-entry", [("target", kind_id)]);
+                if let Some(name) = artifact_name {
+                    event.args.insert("name".to_owned(), name);
+                }
+                event
+            }
             Self::ItemSummoned {
                 source_kind_id,
                 profile_id,
