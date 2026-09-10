@@ -52,7 +52,7 @@ function deathCaster<const S extends string>(slug: S) {
 }
 
 export const CAREER_GROUPS = [
-  { id: "melee", options: [career("warrior"), career("berserker")] },
+  { id: "melee", options: [career("warrior"), career("berserker"), { ...career("duelist"), notes: ["duelist-auto-challenge-help", "session-duelist-tonberry-unavailable"] }] },
   { id: "archery", options: [career("archer"), career("sniper")] },
   { id: "magic", options: [deathCaster("high-mage")] },
   { id: "hybrid", options: [deathCaster("paladin")] },

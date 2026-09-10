@@ -1495,8 +1495,9 @@ export class StatusPanel {
     description.textContent = this.#localization.format(ability.descriptionKey as MessageKey);
     const summary = document.createElement("span");
     summary.className = "ability-summary";
+    const usesHp = !ability.resourceId && (ability.source === "class" || ability.hitPointCost > 0);
     summary.textContent = this.#localization.format(
-      !ability.resourceId && ability.hitPointCost > 0
+      usesHp
         ? ability.governingAttribute ? "ability-summary-hp-governed" : "ability-summary-hp"
         : ability.governingAttribute ? "ability-summary-governed" : "ability-summary",
       {
@@ -1505,7 +1506,7 @@ export class StatusPanel {
           ? abilityAttributeAbbreviation(ability.governingAttribute)
           : "",
         baseCost: ability.baseResourceCost,
-        cost: !ability.resourceId && ability.hitPointCost > 0 ? ability.hitPointCost : ability.resourceCost,
+        cost: usesHp ? ability.hitPointCost : ability.resourceCost,
         failure: ability.failurePercent,
       },
     );
@@ -1524,6 +1525,12 @@ export class StatusPanel {
     status.className = "ability-status";
     status.textContent = this.#localization.format(abilityStatusMessageKey(ability));
     details.append(name, description, summary);
+    if (ability.effects.some(effect => effect.type === "duelist-challenge")) {
+      const help = document.createElement("span");
+      help.className = "ability-status";
+      help.textContent = this.#localization.format("duelist-auto-challenge-help");
+      details.append(help);
+    }
     if (ability.source === "learned") details.append(proficiency);
     details.append(status);
     this.#appendAbilityDetails(details, ability);
@@ -1570,7 +1577,7 @@ export class StatusPanel {
     cast.classList.add("ability-cast-action");
     cast.disabled =
       this.#state.busy ||
-      this.#state.playerDead ||
+      this.#state.commandBlocked ||
       this.#state.worldMap ||
       !ability.canCast ||
       (ability.targetSpec.modes.includes("town") && (ability.townTargets?.length ?? 0) === 0);

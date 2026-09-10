@@ -311,6 +311,34 @@ impl AppState {
         Ok(session.recorder.game().snapshot())
     }
 
+    #[cfg(feature = "webdriver")]
+    fn prepare_duelist_e2e(
+        &self,
+        level: u16,
+        target_distance: i32,
+        wounded: bool,
+    ) -> Result<GameSnapshot, String> {
+        let mut session = self.lock_session()?;
+        let session = session.as_mut().ok_or("game session is not initialized")?;
+        let snapshot = session.recorder.game().snapshot();
+        if !(1..=50).contains(&level)
+            || level < snapshot.player.progress.level
+            || !(1..=10).contains(&target_distance)
+            || snapshot
+                .player
+                .build
+                .as_ref()
+                .is_none_or(|build| build.class_id != "demo.class.duelist")
+        {
+            return Err("Duelist E2E requires the current class, an advancing level in 1..=50 and distance 1..=10".to_owned());
+        }
+        let mut game = session.recorder.game().clone();
+        game.debug_prepare_duelist_e2e(level, target_distance, wounded)
+            .map_err(|error| error.to_string())?;
+        session.recorder = ReplayRecorder::new(game);
+        Ok(session.recorder.game().snapshot())
+    }
+
     fn lock_session(&self) -> Result<std::sync::MutexGuard<'_, Option<GameSession>>, String> {
         self.session
             .lock()
@@ -539,6 +567,24 @@ fn prepare_berserker_e2e(
     {
         let _ = (state, level, wounded, with_target);
         Err("Berserker E2E fixture is unavailable".to_owned())
+    }
+}
+
+#[tauri::command]
+fn prepare_duelist_e2e(
+    state: tauri::State<'_, AppState>,
+    level: u16,
+    target_distance: i32,
+    wounded: bool,
+) -> Result<GameSnapshot, String> {
+    #[cfg(feature = "webdriver")]
+    {
+        state.prepare_duelist_e2e(level, target_distance, wounded)
+    }
+    #[cfg(not(feature = "webdriver"))]
+    {
+        let _ = (state, level, target_distance, wounded);
+        Err("Duelist E2E fixture is unavailable".to_owned())
     }
 }
 
@@ -775,6 +821,7 @@ pub fn run() {
             prepare_life_force_e2e,
             prepare_mindcrafter_e2e,
             prepare_berserker_e2e,
+            prepare_duelist_e2e,
             inspect_game_e2e,
             save_game,
             load_game,

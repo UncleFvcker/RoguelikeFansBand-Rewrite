@@ -27,6 +27,7 @@ import { AppState, type ConnectionState } from "./app-state";
 import type { NewSessionRequest } from "./core-transport";
 import { InputController } from "./input-controller";
 import { GameSession } from "./game-session";
+import { DuelistPanel } from "./duelist-panel";
 import {
   SettingsPanel,
   inputPresetMessageKey,
@@ -216,6 +217,7 @@ const gameSession = new GameSession({
     homePanel.updateActions();
     taskServicePanel.updateActions();
     inputController.render();
+    duelistPanel.render();
   },
   showError,
 });
@@ -285,6 +287,14 @@ const inventoryPanel = new InventoryPanel({
   announce: addLocalizedMessage,
   itemCurseSeverityName,
 });
+const duelistPanel = new DuelistPanel({
+  document, state: appState, localization, contentName, dispatch,
+  startTargeting: ability => {
+    playerUiLayout.closePage();
+    inputController.startAbilityTargeting(ability);
+  },
+  beforePrompt: () => playerUiLayout.closePage(),
+});
 const statusPanel = new StatusPanel({
   dom: appDom,
   state: appState,
@@ -298,7 +308,10 @@ const statusPanel = new StatusPanel({
     playerUiLayout.closePage();
     inputController.startAbilityTargeting(ability);
   },
-  reconcileTargeting: (state) => inputController.reconcileStatus(state),
+  reconcileTargeting: (state) => {
+    inputController.reconcileStatus(state);
+    duelistPanel.render();
+  },
   renderTargeting: () => inputController.render(),
   refreshInventoryActions: () => inventoryPanel.updateActions(),
 });

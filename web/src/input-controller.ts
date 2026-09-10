@@ -120,7 +120,7 @@ export class InputController {
   }
 
   startProjectileTargeting(): void {
-    if (this.#state.busy || this.#state.playerDead || !this.#state.status) return;
+    if (this.#state.busy || this.#state.commandBlocked || !this.#state.status) return;
     this.startTargetingWithSpec(
       this.#state.status.player.projectileProfile?.targetSpec,
       { type: "projectile" },
@@ -187,7 +187,7 @@ export class InputController {
   startAbilityTargeting(ability: AbilityDto): void {
     if (
       this.#state.busy ||
-      this.#state.playerDead ||
+      this.#state.commandBlocked ||
       !this.#state.status ||
       !ability.canCast
     ) {
@@ -203,7 +203,7 @@ export class InputController {
     spec: TargetSpecDto | null | undefined,
     intent: TargetingIntent,
   ): void {
-    if (!this.#state.status) return;
+    if (!this.#state.status || this.#state.busy || this.#state.commandBlocked) return;
     const next = beginTargeting(this.#state.status.player.position, spec ?? undefined);
     if (!next) {
       this.#announce("message-target-mode-unavailable", undefined, "system");
@@ -237,6 +237,11 @@ export class InputController {
   }
 
   reconcileStatus(state: GameSnapshot | GameUpdate): void {
+    if (state.player.pendingDuelist) {
+      this.cancelTargeting(false);
+      this.#state.terrainInteractionMode = undefined;
+      this.#ridingDirection = false;
+    }
     this.#worldTravelDestination = state.worldTravelDestination ?? undefined;
     const mapTranslation = "mapTranslation" in state ? state.mapTranslation : undefined;
     if (
@@ -370,6 +375,7 @@ export class InputController {
       this.#state.busy ||
       this.#state.playerDead ||
       this.#state.worldMap ||
+      this.#state.status?.player.pendingDuelist != null ||
       localTravel ||
       (!targeting && !available);
     this.#dom.lookModeToggle.textContent = this.#localization.format(
@@ -463,6 +469,7 @@ export class InputController {
       this.#handleTargetingKey(event);
       return;
     }
+    if (event.target instanceof HTMLButtonElement && (event.key === " " || event.key === "Enter")) return;
     if (this.#state.commandBlocked) return;
     if (this.#state.terrainInteractionMode) {
       this.#handleTerrainDirection(event);
@@ -868,6 +875,7 @@ export function localTravelStopsAfterStep(
     current.mapScale !== "local" ||
     current.floorId !== before.floorId ||
     current.player.isDead ||
+    current.player.pendingDuelist != null ||
     current.player.hp < before.player.hp ||
     current.player.statuses.some((status) => status.kindId === "rfb.status.confusion") ||
     current.entities.some((entity) => entity.faction === "hostile") ||
@@ -907,6 +915,7 @@ function autoGetInterrupted(
     current.mapScale !== "local" ||
     current.floorId !== before.floorId ||
     current.player.isDead ||
+    current.player.pendingDuelist != null ||
     current.player.hp < before.player.hp ||
     current.player.inventoryUsedSlots >= current.player.inventorySlotCapacity ||
     current.player.statuses.some(

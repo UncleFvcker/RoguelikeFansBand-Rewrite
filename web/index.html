@@ -334,6 +334,14 @@
           </section>
 
           <section id="progression-panel" class="status-panel progression-panel">
+            <div id="duelist-status" class="duelist-status" hidden>
+              <p id="duelist-status-value" aria-live="polite"></p>
+              <p id="duelist-status-reason" hidden></p>
+              <div class="duelist-actions">
+                <button id="duelist-mark" type="button"></button>
+                <button id="duelist-clear" type="button"></button>
+              </div>
+            </div>
             <dl class="status-grid player-identity-grid">
               <div class="player-identity-line"><dd id="progression-identity-value">--</dd></div>
               <div class="hud-location-row"><dd id="hud-location-value">--</dd></div>
@@ -879,5 +887,14 @@
       </dialog>
     </div>
     <script type="module" src="/src/main.ts"></script>
+    <dialog id="duelist-choice-dialog" class="duelist-choice-dialog" aria-labelledby="duelist-choice-title" aria-describedby="duelist-choice-description">
+      <h2 id="duelist-choice-title"></h2>
+      <p id="duelist-choice-description"></p>
+      <select id="duelist-choice-target"></select>
+      <div class="duelist-actions">
+        <button id="duelist-choice-accept" type="button"></button>
+        <button id="duelist-choice-decline" type="button"></button>
+      </div>
+    </dialog>
   </body>
 </html>

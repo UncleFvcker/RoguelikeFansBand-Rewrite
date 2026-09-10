@@ -12,6 +12,37 @@ mod choices;
 mod combat_rules;
 mod rewards;
 
+#[test]
+fn ui_fixture_uses_real_levels_and_round_trips_visible_targets_and_hp_costs() {
+    let mut game = Game::new_with_build(923, BUILD).unwrap();
+    game.debug_prepare_duelist_e2e(35, 7, false).unwrap();
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    let snapshot = restored.snapshot();
+    assert_eq!(snapshot.player.progress.level, 35);
+    assert_eq!(snapshot.entities.len(), 2);
+    assert!(
+        snapshot
+            .player
+            .abilities
+            .iter()
+            .any(|ability| ability.id == "demo.ability.duelist-charge"
+                && ability.hit_point_cost == 10)
+    );
+    game.debug_prepare_duelist_e2e(35, 7, true).unwrap();
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.snapshot().player.hp, 1);
+    assert!(
+        restored
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .filter(|ability| ability.hit_point_cost > 1)
+            .all(|ability| !ability.can_cast)
+    );
+}
+
 fn at_level(level: u16) -> Game {
     let mut game = duelist();
     game.apply_player_experience(game.experience_required_for_level(level), &mut Vec::new());

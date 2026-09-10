@@ -282,7 +282,14 @@ export class SessionShell {
       race: raceName,
       career: careerName,
     });
+    if (this.#duelistTonberry) {
+      this.#dom.creationSummary.textContent += ` · ${this.#localization.format("session-duelist-tonberry-unavailable")}`;
+    }
   };
+
+  get #duelistTonberry(): boolean {
+    return this.#careerMenu.selectedId === "demo.build.duelist" && this.#raceMenu.selectedId === "rfb-legacy.race.tonberry";
+  }
 
   showLoad(): void {
     this.#showShell("load");
@@ -321,7 +328,7 @@ export class SessionShell {
   readonly #startNewGame = (event: SubmitEvent): void => {
     event.preventDefault();
     if (this.#busy) return;
-    if (this.#raceMenu.pending || this.#careerMenu.pending) return;
+    if (this.#raceMenu.pending || this.#careerMenu.pending || this.#duelistTonberry) return;
     const seed = canonicalSessionSeed(this.#dom.seedInput.value);
     if (!seed) {
       this.#dom.error.textContent = this.#localization.format("session-seed-invalid");
@@ -480,7 +487,7 @@ export class SessionShell {
       if (control === this.#dom.continueButton) continue;
       control.disabled = this.#busy;
     }
-    this.#dom.startGameButton.disabled = this.#busy || this.#raceMenu.pending || this.#careerMenu.pending;
+    this.#dom.startGameButton.disabled = this.#busy || this.#raceMenu.pending || this.#careerMenu.pending || this.#duelistTonberry;
     for (const button of this.#dom.loadList.querySelectorAll<HTMLButtonElement>("button")) {
       const row = button.closest<HTMLElement>(".native-save-item");
       const summary = this.#saves.find((save) => save.slotId === row?.dataset.slotId);

@@ -6,6 +6,62 @@ use crate::game::visibility::has_line_of_sight;
 use crate::game::*;
 
 impl Game {
+    /// UI acceptance fixture: real experience gains and two explicit targets on a test floor.
+    #[doc(hidden)]
+    pub fn debug_prepare_duelist_e2e(
+        &mut self,
+        level: u16,
+        target_distance: i32,
+        wounded: bool,
+    ) -> Result<(), CoreError> {
+        self.entities.clear();
+        self.items
+            .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
+        self.duelist_target_id = None;
+        self.pending_duelist = None;
+        self.terrain.fill("demo.terrain.floor".to_owned());
+        self.player.position = Position { x: 40, y: 20 };
+        let experience = self
+            .experience_required_for_level(level)
+            .saturating_sub(self.progress.experience);
+        self.apply_player_experience(experience, &mut Vec::new());
+        self.player.hp = if wounded {
+            1
+        } else {
+            self.effective_player_max_hp()
+        };
+        for (id, offset) in [
+            ("e2e.duelist-target", target_distance),
+            ("e2e.duelist-next", -2),
+        ] {
+            let mut actor = self.generated_actor(
+                id.to_owned(),
+                "demo.actor.sheep",
+                Position {
+                    x: 40 + offset,
+                    y: 20,
+                },
+            );
+            actor.energy_need = STANDARD_ACTION_COST;
+            if level >= 35 {
+                actor.hp = 1;
+            }
+            self.entities.push(actor);
+        }
+        if !self
+            .items
+            .iter()
+            .any(|item| item.id == "e2e.duelist-shield")
+        {
+            self.debug_add_generated_inventory_item(
+                "e2e.duelist-shield",
+                "demo.item.small-leather-shield",
+                1,
+            )?;
+        }
+        Ok(())
+    }
+
     pub(in crate::game) fn class_ability_hit_point_cost(
         &self,
         activation: &rfb_content::ClassAbilityDefinition,

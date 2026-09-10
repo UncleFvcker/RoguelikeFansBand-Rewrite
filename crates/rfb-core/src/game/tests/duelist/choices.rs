@@ -154,6 +154,32 @@ fn weapon_kill_waits_before_class_hp_and_world_then_free_challenge_resumes_once(
 }
 
 #[test]
+fn free_challenge_survives_town_actor_storage_during_charge_scroll() {
+    let mut game = at_level(35);
+    game.player.position = Position { x: 40, y: 20 };
+    target(&mut game, "test.dying", 2);
+    target(&mut game, "test.next", -2);
+    game.entities[0].hp = 1;
+    game.duelist_target_id = Some("test.dying".to_owned());
+    dispatch_next(&mut game, cast("demo.ability.duelist-charge"));
+    assert!(matches!(
+        game.duelist_prompt(),
+        Some(DuelistPromptDto::Challenge)
+    ));
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(
+        dispatch_next(&mut game, choose(Some("test.next"))),
+        dispatch_next(&mut restored, choose(Some("test.next")))
+    );
+    assert!(game.entities.iter().any(|actor| actor.id == "test.next"));
+    assert_eq!(game.duelist_target_id.as_deref(), Some("test.next"));
+    assert_eq!(
+        Game::from_save(game.to_save()).unwrap().state_hash(),
+        game.state_hash()
+    );
+}
+
+#[test]
 fn tampered_prompts_callers_and_costs_are_rejected_on_load() {
     let mut game = at_level(8);
     target(&mut game, "test.far", 7);

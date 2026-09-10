@@ -26,10 +26,12 @@ export class GameSession {
 
   async dispatch(command: GameCommand): Promise<void> {
     if (
+      this.#state.busy ||
       (this.#state.commandBlocked &&
         command.type !== "resolve-mutation-direction" &&
         command.type !== "resolve-ability-direction" &&
-        command.type !== "cancel-ability-direction") ||
+        command.type !== "cancel-ability-direction" &&
+        command.type !== "resolve-duelist-choice") ||
       (this.#state.worldMap &&
         command.type !== "move" &&
         command.type !== "travel-world" &&

@@ -4613,6 +4613,13 @@ kbd {
 #app.game-shell .hud-identity-host .player-identity-grid > div { grid-column: 1 / -1; }
 #app.game-shell .hud-vitals-host .resource-panel:has(.resource-empty) { display: none; }
 .hud-location-row { color: var(--ui-muted); }
+.duelist-status { padding: 0.35em 0.5em; border-bottom: 1px solid var(--ui-line-soft); overflow-wrap: anywhere; }
+.duelist-status p { margin: 0 0 0.3em; color: var(--ui-accent-strong); }
+.duelist-actions { display: flex; flex-wrap: wrap; gap: 0.4em; }
+.duelist-actions button { font: inherit; min-height: 2em; padding: 0.2em 0.5em; white-space: normal; }
+.duelist-choice-dialog { box-sizing: border-box; width: min(32em, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; padding: 1em; background: var(--ui-surface); color: var(--ui-text); border: 1px solid var(--ui-accent); font-size: var(--player-font-body); overflow-wrap: anywhere; }
+.duelist-choice-dialog h2 { margin-top: 0; font-size: 1.2em; }
+.duelist-choice-dialog select { box-sizing: border-box; width: 100%; margin-bottom: 1em; padding: 0.4em; font: inherit; }
 .hud-experience {
   display: block;
   appearance: none;

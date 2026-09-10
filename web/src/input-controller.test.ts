@@ -189,6 +189,7 @@ test("local travel stops after damage, a visible enemy, or blocked movement", ()
   const destination = { x: 4, y: 1 };
 
   assert.equal(localTravelStopsAfterStep(before, after, destination), false);
+  assert.equal(localTravelStopsAfterStep(before, { ...after, player: { ...after.player, pendingDuelist: { type: "follow-teleport" } } }, destination), true);
   assert.equal(
     localTravelStopsAfterStep(
       before,
@@ -452,6 +453,7 @@ test("auto-get stops on every authoritative interruption", () => {
   };
 
   assert.equal(autoGetStopsAfterStep(before, moved, target), false);
+  assert.equal(autoGetStopsAfterStep(before, { ...moved, player: { ...moved.player, pendingDuelist: { type: "block-teleport" } } }, target), true);
   assert.equal(
     autoGetStopsAfterStep(
       before,

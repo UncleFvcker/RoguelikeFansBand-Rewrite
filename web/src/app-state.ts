@@ -52,7 +52,8 @@ export class AppState {
       this.playerDead ||
       this.campaignEnded ||
       (this.status?.player.pendingMutationDirection != null ||
-        this.status?.player.pendingAbilityDirection != null)
+        this.status?.player.pendingAbilityDirection != null ||
+        this.status?.player.pendingDuelist != null)
     );
   }
 

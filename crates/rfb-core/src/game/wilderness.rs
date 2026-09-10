@@ -1171,6 +1171,9 @@ impl Game {
         });
 
         let loaded_town_actor_ids = self.load_visible_town_states()?;
+        // Town actors are temporarily absent while scrolling. Clear a challenge only
+        // after reloading the new view, when the opponent may actually have left it.
+        self.refresh_duelist_challenge();
         removed_entities.extend(
             stored_town_actor_ids
                 .difference(&loaded_town_actor_ids)
@@ -1581,7 +1584,6 @@ impl Game {
                 }
             }
             self.entities = active_entities;
-            self.refresh_duelist_challenge();
             floor.entities.sort_by(|left, right| left.id.cmp(&right.id));
 
             let mut active_items = Vec::with_capacity(self.items.len());

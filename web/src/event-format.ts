@@ -36,6 +36,14 @@ export function createPresentationFormatter(
 
   function formatEvent(event: GameEventDto): string {
     switch (event.messageKey) {
+      case "duelist-challenge-cleared":
+        return localization.format(event.messageKey);
+      case "duelist-challenge-issued":
+      case "duelist-block-teleport-success":
+      case "duelist-block-teleport-failure":
+      case "duelist-follow-teleport-success":
+      case "duelist-follow-teleport-failure":
+        return localization.format(event.messageKey, { target: contentName(event.args.target) });
       case "item-list-entry":
         return localization.format("message-item-list-entry", { target: event.args.name ?? contentName(event.args.target) });
       case "player-life-force-exhausted":

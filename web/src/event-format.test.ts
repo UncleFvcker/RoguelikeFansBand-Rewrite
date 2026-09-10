@@ -23,6 +23,17 @@ const formatter = createPresentationFormatter(localization, () => state, {
   itemCurseSeverityName: () => "?",
 });
 
+test("Duelist challenge and teleport events use localized opponent names", () => {
+  for (const locale of ["en-US", "zh-CN"]) {
+    localization.setLocale(locale);
+    for (const messageKey of ["duelist-challenge-issued", "duelist-block-teleport-success", "duelist-block-teleport-failure", "duelist-follow-teleport-success", "duelist-follow-teleport-failure"]) {
+      assert.equal(formatter.formatEvent({ kind: "duelist", messageKey, args: { target: "demo.actor.sheep" } }),
+        localization.format(messageKey, { target: formatter.contentName("demo.actor.sheep") }));
+    }
+    assert.equal(formatter.formatEvent({ kind: "duelist", messageKey: "duelist-challenge-cleared", args: {} }), localization.format("duelist-challenge-cleared"));
+  }
+});
+
 test("psychic outcomes distinguish backlash, extra energy, friendship and unique names", () => {
   localization.setLocale("en-US");
   const mental = (effect) => formatter.formatEvent({
