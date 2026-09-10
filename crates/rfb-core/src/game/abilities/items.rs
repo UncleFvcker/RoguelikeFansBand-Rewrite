@@ -843,12 +843,15 @@ impl Game {
             .expect("planned magic drain item must remain available");
         let item_kind_id = self.items[index].kind_id.clone();
         let artifact = self.items[index].is_artifact(&self.content);
-        let difficulty = self.items[index]
-            .activation
-            .as_ref()
-            .map_or(0, |activation| {
-                u32::try_from(activation.device_check_difficulty.max(0)).unwrap_or(0)
-            });
+        let difficulty = u32::try_from(
+            self.items[index]
+                .activation
+                .as_ref()
+                .expect("planned magic drain item must retain its activation")
+                .device_check_difficulty
+                .max(0),
+        )
+        .expect("nonnegative device difficulty fits u32");
         let charges_before = self.items[index]
             .charges
             .expect("planned magic drain item must retain charges")
@@ -859,7 +862,7 @@ impl Game {
                 / u32::from(level_divisor),
         );
         let failure_odds = power.saturating_sub(difficulty / 2) / 5;
-        let failed = failure_odds > 0 && self.rng.bounded(u64::from(failure_odds)) == 0;
+        let failed = failure_odds == 0 || self.rng.bounded(u64::from(failure_odds)) == 0;
         let mut destroyed = false;
         if failed && !artifact && self.rng.bounded(10) == 0 {
             if self.items[index].quantity == 1 {

@@ -12,6 +12,14 @@
           "minimum": 0,
           "type": "integer"
         },
+        "firstSuccessExperience": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "levelScaling": {
           "items": {
             "$ref": "#/$defs/AbilityLevelScalingDefinition"
@@ -222,7 +230,8 @@
     "CastingLearningFormula": {
       "enum": [
         "linear",
-        "rfb-single-realm"
+        "rfb-single-realm",
+        "rfb-dual-realm"
       ],
       "type": "string"
     },

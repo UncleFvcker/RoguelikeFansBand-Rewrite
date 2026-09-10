@@ -6643,7 +6643,7 @@ fn death_high_mage_damage_bonus_and_level_twenty_five_power_are_active() {
     item.activation
         .as_mut()
         .expect("staff should have an activation")
-        .device_check_difficulty = 120;
+        .device_check_difficulty = 40;
     item.charges
         .as_mut()
         .expect("staff should have charges")
@@ -6655,6 +6655,15 @@ fn death_high_mage_damage_bonus_and_level_twenty_five_power_are_active() {
     mana.maximum = 100;
     mana.current = 10;
     game.debug_ability_casts_succeed = true;
+    // power 60 and difficulty 40 yield odds 8; exercise the success branch.
+    game.rng = (0..100)
+        .map(RfbRng::seeded)
+        .find(|rng| {
+            let mut rng = rng.clone();
+            rng.bounded(100);
+            rng.bounded(8) != 0
+        })
+        .unwrap();
     let mut events = Vec::new();
     game.resolve_player_ability(
         "demo.ability.high-mage-eat-magic",

@@ -561,6 +561,9 @@ pub(super) fn validate_characters(
                             || !(1..=100).contains(&override_.minimum_level)
                             || !(1..=1_000_000).contains(&override_.resource_cost)
                             || override_.base_failure_percent > 95
+                            || override_
+                                .first_success_experience
+                                .is_some_and(|xp| xp > 1_000_000)
                     })
                 {
                     return Err(ContentError::InvalidCastingProfile(class.id.clone()));
@@ -766,6 +769,9 @@ pub(super) fn validate_characters(
         match &class.casting_profile {
             Some(profile)
                 if (!profile.realm_profiles.is_empty() && build.first_realm_id.is_none())
+                    || (profile.learning_formula
+                        == crate::CastingLearningFormula::RfbDualRealm
+                        && build.second_realm_id.is_none())
                     || selected_realms.into_iter().flatten().any(|realm_id| {
                         !profile
                             .realm_profiles

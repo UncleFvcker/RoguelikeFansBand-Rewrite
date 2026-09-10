@@ -437,6 +437,7 @@ pub enum CastingLearningFormula {
     #[default]
     Linear,
     RfbSingleRealm,
+    RfbDualRealm,
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -503,6 +504,8 @@ pub struct AbilityCastingOverrideDefinition {
     pub minimum_level: u16,
     pub resource_cost: u32,
     pub base_failure_percent: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub first_success_experience: Option<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub level_scaling: Vec<AbilityLevelScalingDefinition>,
 }

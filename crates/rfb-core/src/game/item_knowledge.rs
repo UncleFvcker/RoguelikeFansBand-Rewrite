@@ -237,8 +237,8 @@ impl Game {
         knowledge.feeling = Some(feeling);
     }
 
-    pub(super) fn process_mindcrafter_item_sensing(&mut self) {
-        if !self.player_is_mindcrafter()
+    pub(super) fn process_class_item_sensing(&mut self) {
+        if !(self.player_is_mindcrafter() || self.player_is_mage())
             || self.player_has_status_kind(STATUS_CONFUSION)
             || !self.world_tick.is_multiple_of(10)
         {
@@ -252,7 +252,12 @@ impl Game {
         let knowledge = i32::from(self.virtue_current(VirtueKindDto::Knowledge));
         // ponytail: pack, quiver and bag share one inventory; use the pack's
         // 1-in-3 gate until items carry an actual container identity.
-        for (second, frequency) in [(false, 80_000_u32), (true, 20_000)] {
+        let frequencies = if self.player_is_mage() {
+            [(false, 20_000_u32), (true, 9_000)]
+        } else {
+            [(false, 80_000_u32), (true, 20_000)]
+        };
+        for (second, frequency) in frequencies {
             let adjusted =
                 frequency * u32::from(RFB_PSEUDO_ID_ADJUSTMENT[usize::from(wisdom)]) / 100;
             let adjusted = adjusted * (625 - knowledge) as u32 / 625;

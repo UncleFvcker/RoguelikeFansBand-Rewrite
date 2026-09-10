@@ -232,7 +232,7 @@ impl Game {
             return Ok(true);
         }
         self.process_inventory_device_recovery(events);
-        self.process_mindcrafter_item_sensing();
+        self.process_class_item_sensing();
         self.process_captured_actor_regeneration();
         let reality_changed =
             local_floor_active && self.advance_reality_change(events, changed, removed_entities)?;

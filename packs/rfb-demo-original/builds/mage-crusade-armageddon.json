@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json",
+  "formatVersion": 1,
+  "id": "demo.build.mage-crusade-armageddon",
+  "nameKey": "build-demo-mage-crusade-armageddon-name",
+  "descriptionKey": "build-demo-mage-crusade-armageddon-description",
+  "raceId": "demo.race.rfb-human",
+  "classId": "demo.class.mage",
+  "personalityId": "demo.personality.ordinary",
+  "playerActorId": "demo.actor.mage-player",
+  "firstRealmId": "crusade",
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.rites-of-initiation",
+      "quantity": 1
+    },
+    {
+      "itemKindId": "demo.item.book-of-elements",
+      "quantity": 1
+    }
+  ],
+  "attributes": {
+    "strength": 13,
+    "intelligence": 13,
+    "wisdom": 13,
+    "dexterity": 13,
+    "constitution": 13,
+    "charisma": 13
+  },
+  "tags": [
+    "caster",
+    "mage",
+    "crusade",
+    "armageddon",
+    "rfb-compatibility"
+  ],
+  "secondRealmId": "armageddon"
+}

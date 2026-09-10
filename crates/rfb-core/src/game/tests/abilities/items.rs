@@ -466,7 +466,7 @@ fn mutation_eat_magic_and_weigh_magic_use_existing_device_and_status_state() {
     item.activation
         .as_mut()
         .expect("staff should have an activation")
-        .device_check_difficulty = 100;
+        .device_check_difficulty = 40;
     item.charges
         .as_mut()
         .expect("staff should have charges")
@@ -477,6 +477,15 @@ fn mutation_eat_magic_and_weigh_magic_use_existing_device_and_status_state() {
         .unwrap()
         .current = 10;
     let mut events = Vec::new();
+    // At level 17, power 47 and difficulty 40 give an internal failure odds of 5.
+    eater.rng = (0..100)
+        .map(RfbRng::seeded)
+        .find(|rng| {
+            let mut rng = rng.clone();
+            rng.bounded(100);
+            rng.bounded(5) != 0
+        })
+        .unwrap();
     eater
         .resolve_player_ability(
             "rfb.ability.mutation.eat-magic",

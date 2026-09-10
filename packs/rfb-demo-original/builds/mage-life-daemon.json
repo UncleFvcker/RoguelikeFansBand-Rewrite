@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json",
+  "formatVersion": 1,
+  "id": "demo.build.mage-life-daemon",
+  "nameKey": "build-demo-mage-life-daemon-name",
+  "descriptionKey": "build-demo-mage-life-daemon-description",
+  "raceId": "demo.race.rfb-human",
+  "classId": "demo.class.mage",
+  "personalityId": "demo.personality.ordinary",
+  "playerActorId": "demo.actor.mage-player",
+  "firstRealmId": "life",
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.book-of-common-prayer",
+      "quantity": 1
+    },
+    {
+      "itemKindId": "demo.item.dark-incantations",
+      "quantity": 1
+    }
+  ],
+  "attributes": {
+    "strength": 13,
+    "intelligence": 13,
+    "wisdom": 13,
+    "dexterity": 13,
+    "constitution": 13,
+    "charisma": 13
+  },
+  "tags": [
+    "caster",
+    "mage",
+    "life",
+    "daemon",
+    "rfb-compatibility"
+  ],
+  "secondRealmId": "daemon"
+}

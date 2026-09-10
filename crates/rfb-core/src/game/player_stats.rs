@@ -1185,6 +1185,12 @@ impl Game {
             .is_some_and(|(_, _, class, _)| class.id == "demo.class.mindcrafter")
     }
 
+    pub(super) fn player_is_mage(&self) -> bool {
+        self.build
+            .as_ref()
+            .is_some_and(|build| build.class_id == "demo.class.mage")
+    }
+
     pub(super) fn player_is_berserker(&self) -> bool {
         self.build
             .as_ref()
@@ -2222,7 +2228,10 @@ impl Game {
             .value
             .saturating_mul(100)
             .saturating_add(extra_blows);
-        if (self.player_is_mindcrafter() || self.player_is_berserker() || self.player_is_duelist())
+        if (self.player_is_mindcrafter()
+            || self.player_is_berserker()
+            || self.player_is_duelist()
+            || self.player_is_mage())
             && let Some(weapon) = self
                 .items
                 .iter()
@@ -2238,6 +2247,12 @@ impl Game {
                 (
                     "demo.class.duelist",
                     self.class_base_blows(weapon, 100, 70, 40),
+                    0,
+                )
+            } else if self.player_is_mage() {
+                (
+                    "demo.class.mage",
+                    self.class_base_blows(weapon, 400, 100, 20),
                     0,
                 )
             } else {
@@ -2429,7 +2444,7 @@ impl Game {
                     "demo.class.warrior" => 120,
                     "demo.class.berserker" => 170,
                     "demo.class.paladin" => 110,
-                    "demo.class.high-mage" => 80,
+                    "demo.class.high-mage" | "demo.class.mage" => 80,
                     _ => 100,
                 });
         level

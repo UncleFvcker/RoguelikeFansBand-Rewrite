@@ -249,9 +249,24 @@ impl Game {
             player.minimum_level = override_.minimum_level;
             player.resource_cost = override_.resource_cost;
             player.base_failure_percent = override_.base_failure_percent;
+            if let Some(experience) = override_.first_success_experience {
+                player.first_success_experience = experience;
+            }
             if !override_.level_scaling.is_empty() {
                 effective.level_scaling.clone_from(&override_.level_scaling);
             }
+        }
+        // lawyer_hack applies these adjustments to every book caster.
+        if ability.id == "demo.ability.death-vampirism-true" {
+            player.resource_cost =
+                (player.resource_cost + player.resource_cost.clamp(50, 100)).min(250);
+        }
+        if ability.id == "demo.ability.life-warding-true"
+            && self
+                .character_definitions()
+                .is_some_and(|(build, _, _, _)| build.first_realm_id.as_deref() != Some("life"))
+        {
+            player.minimum_level = 99;
         }
         effective
     }
@@ -1096,17 +1111,20 @@ impl Game {
                     .saturating_add(level_bonus)
                     .saturating_add(attribute_bonus)
             }
-            CastingLearningFormula::RfbSingleRealm => {
+            CastingLearningFormula::RfbSingleRealm | CastingLearningFormula::RfbDualRealm => {
                 let index = usize::from(
                     self.effective_player_attributes()
                         .index(Self::casting_attribute_kind(profile.casting_attribute))
                         .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP),
                 );
-                u32::from(RFB_MAGIC_STUDY[index])
+                let capacity = u32::from(RFB_MAGIC_STUDY[index])
                     .saturating_mul(u32::from(self.progress.level))
-                    .saturating_div(2)
-                    .saturating_add(1)
-                    .saturating_div(2)
+                    .saturating_div(2);
+                if profile.learning_formula == CastingLearningFormula::RfbSingleRealm {
+                    capacity.saturating_add(1) / 2
+                } else {
+                    capacity
+                }
             }
         };
         (raw.min(u32::from(

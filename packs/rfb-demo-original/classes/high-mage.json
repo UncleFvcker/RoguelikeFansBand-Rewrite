@@ -422,7 +422,7 @@
       "resourceId": "demo.resource.mana",
       "resourceCost": 1,
       "baseFailurePercent": 90,
-      "minimumFailurePercent": 0
+      "minimumFailurePercent": 11
     }
   ],
   "startingItems": [

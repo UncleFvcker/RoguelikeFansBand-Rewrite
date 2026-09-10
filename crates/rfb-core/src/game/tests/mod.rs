@@ -40,6 +40,7 @@ mod hunger;
 mod inventory;
 mod items;
 mod lighting;
+mod mage;
 mod mindcrafter;
 mod mining_progress;
 mod monster_ai;

@@ -378,7 +378,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     assert!(catalog.affix("rfb-legacy.affix.slaying").is_some());
     assert!(catalog.affix("rfb-legacy.affix.protection").is_some());
     assert!(catalog.affix("rfb-legacy.affix.elemental").is_some());
-    assert!(catalog.class("demo.class.mage").is_none());
+    assert!(catalog.class("demo.class.mage").is_some());
     let world = catalog
         .world("demo.world.middle-earth")
         .expect("Middle-earth should be indexed");

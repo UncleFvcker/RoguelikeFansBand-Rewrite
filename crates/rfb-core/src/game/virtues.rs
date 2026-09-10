@@ -64,6 +64,9 @@ pub(super) fn initial_virtues(
                 VirtueKindDto::Enlightenment,
                 VirtueKindDto::Patience,
             ]),
+            "demo.class.mage" => {
+                kinds.extend([VirtueKindDto::Knowledge, VirtueKindDto::Enchantment])
+            }
             "demo.class.high-mage" => kinds.extend([
                 VirtueKindDto::Enlightenment,
                 VirtueKindDto::Enchantment,

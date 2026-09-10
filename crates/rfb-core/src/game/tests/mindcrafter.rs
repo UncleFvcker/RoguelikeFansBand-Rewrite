@@ -415,11 +415,11 @@ fn sensing_preserves_weak_knowledge_and_uses_the_world_processing_interval() {
         .unwrap();
     game.world_tick = 9;
     let rng = game.rng.clone();
-    game.process_mindcrafter_item_sensing();
+    game.process_class_item_sensing();
     assert_eq!(game.rng, rng);
     assert!(game.item_property_knowledge.is_empty());
     game.world_tick = 10;
-    game.process_mindcrafter_item_sensing();
+    game.process_class_item_sensing();
     assert_eq!(
         game.item_feeling(&game.items[0]),
         Some(rfb_protocol::ItemFeelingDto::Enchanted)
@@ -438,7 +438,7 @@ fn sensing_preserves_weak_knowledge_and_uses_the_world_processing_interval() {
     );
     let known = game.item_property_knowledge.clone();
     let rng = game.rng.clone();
-    game.process_mindcrafter_item_sensing();
+    game.process_class_item_sensing();
     assert_eq!(game.item_property_knowledge, known);
     assert_eq!(game.rng, rng);
 
@@ -446,7 +446,7 @@ fn sensing_preserves_weak_knowledge_and_uses_the_world_processing_interval() {
     game.player
         .statuses
         .push(monster_combat::melee_status(STATUS_CONFUSION, 100, "test.confused").status);
-    game.process_mindcrafter_item_sensing();
+    game.process_class_item_sensing();
     assert!(game.item_property_knowledge.is_empty());
     assert_eq!(game.rng, rng);
     game.player.statuses.clear();
@@ -457,7 +457,7 @@ fn sensing_preserves_weak_knowledge_and_uses_the_world_processing_interval() {
         .unwrap_or(0);
     game.virtues[knowledge].kind = VirtueKindDto::Knowledge;
     game.virtues[knowledge].value = 100;
-    game.process_mindcrafter_item_sensing();
+    game.process_class_item_sensing();
     assert_eq!(
         game.item_feeling(&game.items[0]),
         Some(rfb_protocol::ItemFeelingDto::Good)
@@ -697,7 +697,7 @@ fn bookless_resources_and_sensed_knowledge_round_trip_and_continue() {
         .find(|rng| rng.clone().bounded(3) == 0)
         .unwrap();
     game.world_tick = game.world_tick.next_multiple_of(10);
-    game.process_mindcrafter_item_sensing();
+    game.process_class_item_sensing();
     assert_eq!(
         game.item_property_knowledge[&weapon_id].feeling,
         Some(rfb_protocol::ItemFeelingDto::Enchanted)

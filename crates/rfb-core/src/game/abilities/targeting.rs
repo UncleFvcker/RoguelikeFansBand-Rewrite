@@ -441,6 +441,8 @@ impl Game {
                     .find(|item| {
                         item.id == *item_id
                             && self.item_is_in_pack_or_at_feet(item)
+                            && self.item_is_device(item)
+                            && item.activation.is_some()
                             && item.charges.is_some_and(|charges| charges.current > 0)
                     })
                     .map(|_| AbilityTargetPlan::Item {

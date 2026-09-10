@@ -1,8 +1,8 @@
 # 法师来源与消费者审计
 
-审计日期：2026-09-10。对应[法师计划](mage-class-plan.md)第一步，代码基线 `a09a334df`；本步只交付来源、差异和实施边界，**没有新增职业定义、开放入口或验收游戏行为**。工作树既存 `release/` 保留。
+初审日期：2026-09-10，对应[法师计划](mage-class-plan.md)第一步，代码基线 `a09a334df`。以下源→实现差异表记录初审基线；2026-09-11 完成的第二步见文末当前进度，**普通创角入口尚未开放**。工作树既存 `release/` 保留。
 
-RFB 来源为 `D:/codex/Frogcomposband/master` 的 `master` Git 对象，实际提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。以下源路径和行号均指此提交，通过 `git show` / `git grep` 读取；当前实现路径指本项目。内容仍为 1.412.0，协议 1.249，State Hash Schema 122，save header/payload 14/17。
+RFB 来源为 `D:/codex/Frogcomposband/master` 的 `master` Git 对象，实际提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`，第二步复核未变。以下源路径和行号均指此提交，通过 `git show` / `git grep` 读取；实现路径指本项目。初审内容 1.412.0，第二步内容 1.413.0；协议 1.249、State Hash Schema 122、save header/payload 14/17 未变。
 
 ## 范围和审计方法
 
@@ -37,7 +37,7 @@ RFB 来源为 `D:/codex/Frogcomposband/master` 的 `master` Git 对象，实际�
 | `CLASS_REGEN_MANA` 经 `xtra1.c:4632` 设置 mana_regen，`dungeon.c:1601` 正向 upkeep regen ×2 | 现有 `resourceRecoveryPercent:200` 可复用；不能只添加一个无消费者的 flag | 第二步 |
 | `m_info N:1 T` 每项是 minimum level / mana / fail / sexp | 256 项与 High-Mage 对应三元组均不相同，必须使用 Mage 表；现有 realm abilityOverride 没有 first-success XP 覆盖字段 | 第二步新增必要内容表达，第三步消费奖励 |
 | `do-spell.c:202` beam 概率 Mage 为 L，High-Mage 为 L+10 | 复用 beam 参数按 Mage 配置；不能用专修加成作近似 | 第二步 |
-| `do-spell.c:3609` 死亡 entropy orb、`:6041` 恶魔第 7 项 hellish flame，Mage 属较强职业组：基础伤害 L+L/2，半径 L<30 为 2、否则 3 | 当前 [death-entropy-orb](../packs/rfb-demo-original/abilityPrograms/death-entropy-orb.json)和 [daemon-hellish-flame](../packs/rfb-demo-original/abilityPrograms/daemon-hellish-flame.json)为固定 3d6/radius 2；需补已有 level scaling/效果参数的真实消费。恶魔这里是 `daemon-hellish-flame`，不是高阶 `daemon-hellfire` | 第二步；受影响既有施法者一并验证 |
+| `do-spell.c:3609` 死亡 entropy orb、`:6041` 恶魔第 7 项 hellish flame，Mage 属较强职业组：基础伤害 L+L/2，半径 L<30 为 2、否则 3 | 两个 program 的基值是 3d6/radius 2，但 [death-entropy-orb ability](../packs/rfb-demo-original/abilities/death-entropy-orb.json)和 [daemon-hellish-flame ability](../packs/rfb-demo-original/abilities/daemon-hellish-flame.json)已含 damage-bonus 3L/2 与 radius L/30 的缩放。第二步沿完整装配链复核，纠正第一步只读 program 时的缺口误判；复用即可。恶魔这里不是高阶 `daemon-hellfire` | 第二步验证 Mage 无专修伤害、30 级实际投影 |
 | `lawyer.c:22` Life index 23 `life-warding-true` 在第一领域非 Life 时最低等级 99；`spells3.c:1867` 普通 glyph 总量 11，主 Life 豁免 | 当前 [life-warding-true](../packs/rfb-demo-original/abilityPrograms/life-warding-true.json)仅创建当前/邻接 glyph，静态等级覆盖无法体现主副资格；必须实现主领域限制并核对地形生成限额，不能让副 Life 在 50 级学会此项 | 第二步资格，第三步学习/施法 |
 | `lawyer.c:13` Death index 21 `death-vampirism-true` 费用加 `clamp(base,50,100)`，总量封顶 250；Mage 基础 35→85 | 当前静态绑定/High-Mage 覆盖无此钩子；不能只从 m_info 导入 35。修正发生在熟练度/装备减耗之前 | 第二/三步 |
 | `spells3.c:3238` 熟练度减耗与 DEC_MANA 合并整数除法：`max(1, ((base*(3800-prof)+2399)*factor)/(2400*4))`，factor=3 或 4 | 当前先向上取整再乘 3/4，存在差异，例如 base=3、prof=0、有减耗，源为 4、当前为 3 | 第三步修公共算式，覆盖既有调用者 |
@@ -159,4 +159,17 @@ Build 保留出生身份，主领域不变；当前副领域与必要历史由 R
 4. 第五步：实际 Mage 装置/Tailored/卷轴路径，三件固定神器奖励与重复替代、普通盗贼奖励、两座源 Mage 塔和领域公会、八领域书籍可获得性。证据应触发行为而非只断言数据存在。
 5. 第六/七步：两层领域选择与 Rust 学习/改换投影，完整 56 Build 审计，再按计划做新存档自然流程和显式高等级准备、保存继续与 Tauri standalone。不得以内容数量或构建通过宣称自然升到 50 级/通关。
 
-本步完成的是以上源→当前实现→缺口映射、取消顺序和全部当前领域/生成条件消费者盘点。文档检查涵盖本地引用与 Git 差异；没有运行游戏测试、刷新契约、生成内容或构建程序。第二至七步仍未完成。
+## 当前进度与验证
+
+第二步已在初审后的 `d733ca439` 基础上完成。正式定义见 [Mage Class](../packs/rfb-demo-original/classes/mage.json)、[技能](../packs/rfb-demo-original/skillSets/mage.json)、[玩家 actor](../packs/rfb-demo-original/actors/mage-player.json)、[职业能力](../packs/rfb-demo-original/abilities/mage-eat-magic.json)及 [Build 目录](../packs/rfb-demo-original/builds/)。56 个有序组合各携带双方第一本书，共用职业定义；未添加创角目录项。
+
+- 复用 importer 的 `parse_m_info`，按现有 book rank/书内次序导入 Mage 的 256 项等级、基础费用、失败率和首用经验；逐项对照解析结果通过。新增 `RfbDualRealm` 基础容量和可选首用经验覆盖，复用当前学习、施法和保存状态。重复研习支出、主副熟练度和动态改换状态仍未完成，不把基础容量视作第三步完成。
+- 源属性/技能、武器熟练度（含双节棍 0/0）、400/100/20 攻击参数、MP/再生/负重、周期感知、美德与龙人变形等级已接入。保持公共出生属性和 HP progression 适配；没有复刻源点购或 HP 掷点曲线。
+- `life-warding-true` 在主 Life 的等级为 46，副 Life 调整为 99；`death-vampirism-true` 的附加费用在公共有效参数路径处理，Mage 为 85、High-Mage 为 80，再进入既有减耗。死亡熵球与恶魔 `hellish-flame` 的已有等级缩放经完整 ability→program 装配验证，纠正上表说明的初审误判，没有重写法术效果。glyph 数量限制、减耗舍入和 Death 失败反噬仍按第三步处理。
+- 吞噬魔法复用现有装置执行器，目标要求真实装置、activation、有 SP 且在背包/脚下。odds=0 已按源必败，不掷内部成功骰；仍有外层职业失败骰及失败后的毁坏判定。Mage 和 High-Mage 的最低失败率为 11。既有 High-Mage/突变成功测试原先使用必败难度，现改为合法成功难度并明确选择成功 RNG；没有放宽断言。
+
+核心证据集中于 [mage.rs](../crates/rfb-core/src/game/tests/mage.rs)的 11 项行为测试：全部出生组合、源参数与必要种族交叉、显式经验升级 1–50 级、双方真实学习施放和首用 XP、攻击/超重、感知、吞噬外层/内部失败与实际 SP 消耗、以及保存后相同行动继续。种族覆盖人类、托姆特、冬贝利、幽灵和红色龙人；不表示所有种族组合的桌面验收。领域资格边界复用 [内容校验测试](../crates/rfb-content/src/tests/validation.rs)，拒绝缺失、重复、未知及本轮不支持领域，且校验首用经验上限。
+
+实际检查：Mage 11 项；High-Mage 84、Mindcrafter 32、能力物品 11、能力伤害 27、Paladin 2、随机祈祷学习 3 项均通过；内容校验/编译往返/目录相关检查与本地化 39 项通过。`rfb-core` / `rfb-content` all-targets Clippy、内容 Schema、内容锁与格式检查通过；完整 26 条 active 契约通过，未刷新 fixture。生成适用性只读检查仍为现有 9 个普通入口，未提前登记 56 个 Mage 可用记录。
+
+第三至七步仍待完成：重复研习和完整熟练度/失败规则、改换与新状态、生成/任务/公会关联、正式界面与桌面交付。本批没有运行前端、Tauri 或 Android 验收，也没有发布新的可玩程序。

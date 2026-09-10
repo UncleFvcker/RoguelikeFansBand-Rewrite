@@ -3,6 +3,50 @@ use std::collections::BTreeMap;
 use super::*;
 
 #[test]
+fn mage_requires_two_distinct_supported_realms_and_bounded_spell_experience() {
+    let original = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for (first, second) in [
+        (Some("death"), None),
+        (None, Some("life")),
+        (Some("life"), Some("life")),
+        (Some("death"), Some("missing")),
+        (Some("death"), Some("chaos")),
+    ] {
+        let mut invalid = original.clone();
+        let build = invalid
+            .builds
+            .iter_mut()
+            .find(|build| build.id == "demo.build.mage-death-life")
+            .unwrap();
+        build.first_realm_id = first.map(str::to_owned);
+        build.second_realm_id = second.map(str::to_owned);
+        assert!(
+            matches!(
+                validate_and_normalize(&mut invalid),
+                Err(ContentError::InvalidCharacterBuild(_))
+            ),
+            "{first:?}/{second:?}"
+        );
+    }
+    let mut invalid = original;
+    invalid
+        .classes
+        .iter_mut()
+        .find(|class| class.id == "demo.class.mage")
+        .unwrap()
+        .casting_profile
+        .as_mut()
+        .unwrap()
+        .realm_profiles[0]
+        .ability_overrides[0]
+        .first_success_experience = Some(1_000_001);
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidCastingProfile(_))
+    ));
+}
+
+#[test]
 fn bookless_mana_requires_zero_learning_and_no_selected_realm() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let class = artifact
