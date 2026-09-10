@@ -2614,9 +2614,11 @@ fn tomte_tailored_acquirement_filters_headgear_by_birth_race_only() {
                         target: None,
                     },
                 );
-                // An empty selected category is a normal failed attempt.
+                // Empty categories retry; every accepted reward uses drop_near.
                 for item in &game.items {
-                    assert_eq!(item.location, ItemLocation::Ground(game.player.position));
+                    assert!(
+                        matches!(item.location, ItemLocation::Ground(at) if (at.x-game.player.position.x).pow(2) + (at.y-game.player.position.y).pow(2) <= 10 && game.can_drop_item_at(at))
+                    );
                     assert_eq!(item.quality, ItemQualityDto::Exceptional);
                     seen.insert(item.kind_id.clone());
                 }
@@ -2711,7 +2713,8 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
         assert_eq!(great.affix_ids, [format!("rfb-legacy.affix.{ego}")]);
         let items_before = game.items.clone();
         let knowledge_before = game.item_knowledge.clone();
-        let tailored = game.generate_one_loot_draft(&context, ItemGenerationMode::TailoredGreat);
+        let tailored =
+            game.generate_loot_draft_attempt(&context, ItemGenerationMode::TailoredGreat);
         assert_eq!(tailored.is_some(), ego != "protection");
         if let Some(tailored) = tailored {
             assert_eq!(tailored, great);
@@ -3038,7 +3041,8 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     assert_eq!(generated[0].location, ItemLocation::Ground(position));
     assert_eq!(generated[0].quality, ItemQualityDto::Exceptional);
     assert!(generated[0].id.starts_with("generated.item."));
-    assert_eq!(single.rng_draw_counter(), draws_before + 16);
+    // drop_near consumes the disabled-breakage roll and a tied-grid roll.
+    assert_eq!(single.rng_draw_counter(), draws_before + 18);
     assert!(update.events.iter().any(|event| {
         event.kind == "item.use-acquirement"
             && event.args.get("count").map(String::as_str) == Some("1")
@@ -3063,8 +3067,8 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     );
     let generated_count = multiple.items.len() - (before_count - 1);
     assert!((2..=3).contains(&generated_count));
-    // Category and allocation-depth draws change which item/Ego branches run.
-    assert_eq!(multiple.rng_draw_counter(), draws_before + 119);
+    // Generation and placement interleave, changing the next item's RNG branch.
+    assert_eq!(multiple.rng_draw_counter(), draws_before + 50);
 }
 
 #[test]

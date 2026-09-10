@@ -1979,23 +1979,37 @@ impl Game {
                 )
                 .expect("validated acquirement count must fit u8")
         };
-        let generated = self.generate_loot_instances_internal(
-            &LootContext {
-                table_id: loot_table_id,
-                floor_id: self.current_floor_id.clone(),
-                depth,
-                source: LootSource::ItemUse {
-                    item_id: source_item_id,
-                },
+        let context = LootContext {
+            table_id: loot_table_id,
+            floor_id: self.current_floor_id.clone(),
+            depth,
+            source: LootSource::ItemUse {
+                item_id: source_item_id,
             },
-            ItemLocation::Ground(self.player.position),
-            false,
-            Some(u16::from(count)),
-            ItemGenerationMode::TailoredGreat,
-        )?;
-        let generated_item_ids = generated.iter().map(|item| item.id.clone()).collect();
-        let generated_kind_ids = generated.iter().map(|item| item.kind_id.clone()).collect();
-        self.items.extend(generated);
+        };
+        let mut remaining = count;
+        let mut generated_item_ids = Vec::new();
+        let mut generated_kind_ids = Vec::new();
+        for _ in 0..1_000 {
+            if remaining == 0 {
+                break;
+            }
+            let Some(mut draft) =
+                self.generate_one_loot_draft(&context, ItemGenerationMode::TailoredGreat)
+            else {
+                continue;
+            };
+            remaining -= 1;
+            draft.origin_kind = Some(ItemOriginKindDto::Acquire);
+            let kind_id = draft.kind_id.clone();
+            if let Some((position, ids)) =
+                self.drop_generated_item_near(draft, self.player.position)?
+            {
+                changed.insert(position);
+                generated_kind_ids.extend(std::iter::repeat_n(kind_id, ids.len()));
+                generated_item_ids.extend(ids);
+            }
+        }
         self.mark_item_aware(source_kind_id);
         changed.insert(self.player.position);
         events.push(DomainEvent::ItemAcquirement {
@@ -3569,36 +3583,15 @@ impl Game {
             | ItemUseEffectDefinition::RemoveEquippedCurses { .. } => {
                 self_target.then_some(ItemUsePlan::SelfTarget)
             }
-            ItemUseEffectDefinition::Acquirement {
-                loot_table_id,
-                maximum_count,
-                ..
-            } => {
-                if !self_target
-                    || self
-                        .next_item_instance_serial
-                        .checked_add(u64::from(*maximum_count))
-                        .is_none()
-                {
+            ItemUseEffectDefinition::Acquirement { loot_table_id, .. } => {
+                if !self_target {
                     return None;
                 }
-                let depth = self.floor_depth(&self.current_floor_id);
-                let table = self.content.loot_table(loot_table_id)?;
-                table
-                    .entries
-                    .iter()
-                    .any(|entry| {
-                        entry.min_depth <= depth
-                            && depth <= entry.max_depth
-                            && entry.quantity == 1
-                            && self.content.item(&entry.item_kind_id).is_some_and(|item| {
-                                item.max_stack == 1 && item.equipment_slot.is_some()
-                            })
-                    })
-                    .then(|| ItemUsePlan::Acquirement {
-                        source_item_id: source_item_id.to_owned(),
-                        depth,
-                    })
+                self.content.loot_table(loot_table_id)?;
+                Some(ItemUsePlan::Acquirement {
+                    source_item_id: source_item_id.to_owned(),
+                    depth: self.floor_depth(&self.current_floor_id),
+                })
             }
             ItemUseEffectDefinition::Genocide { .. } => {
                 if target.is_some() {

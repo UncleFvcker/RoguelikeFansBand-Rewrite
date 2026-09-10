@@ -52,7 +52,7 @@ B2 已接入 17 类共享类别权重、身体槽位减半、Good 分配层级 +
 
 主题已使用完整源谓词和 Warrior 首饰逐行随机接受，实际选中的主题统一驱动首饰质量、Ego 与随机神器 bias。8 个既有怪物的 WarriorShoot 已从 Archer 分离，Orc warlord 的死亡、掉落、拾取、装备与保存后继续行动已有验证。Junk 在此 ref 无调用者，保留谓词但没有正式表。主题优先仍保留 tailored 候选和成品检查，映射与组合边界见[分配计划 B3](../design/base-allocation-acquirement-plan.md#b3完整主题谓词)。
 
-当前六个职业的 Tailored 已接入真实装备槽、骑乘武器标记、领域书累计发现数与职业优先 hook；Archer/Sniper 的近战差异、Cavalry 骑枪偏好及 High Mage 装置偏好保持源规则。成品手套按完整 flags/pval 判断，实际法力和带知识门槛的 Mogaminator 共用判断。弓射击、骑乘战斗、Death 书学习施法、装置与手套均有生成到使用及保存恢复验证；详见[分配计划 B4](../design/base-allocation-acquirement-plan.md#b4当前构筑的-tailored-偏好与成品检查)。奖励内外层重试仍待 B5，当前奖励可能少于目标数量，完整桌面验收待 B6。
+当前六个职业的 Tailored 已接入真实装备槽、骑乘武器标记、领域书累计发现数与职业优先 hook；Archer/Sniper 的近战差异、Cavalry 骑枪偏好及 High Mage 装置偏好保持源规则。成品手套按完整 flags/pval 判断，实际法力和带知识门槛的 Mogaminator 共用判断。弓射击、骑乘战斗、Death 书学习施法、装置与手套均有生成到使用及保存恢复验证；详见[分配计划 B4](../design/base-allocation-acquirement-plan.md#b4当前构筑的-tailored-偏好与成品检查)。B5 已实现来源 1/100/1000 次内部重试及 Acquirement 最多 1000 次外层生成；允许耗尽后部分或零奖励，保留失败 RNG 和神器登记，并按源落地顺序处理地形、堆叠与消失。卷轴来源、知识和实例 ID 边界已有定向测试，完整入口矩阵与桌面验收待 B6。
 
 集成保留物品感知与实例神器鉴定边界、托姆特实例头饰重量、冬贝利逐武器伤害/攻次和准确来源显示。种族永久状态与新增物品字段共同进入当前保存和状态哈希，版本统一收口；内容 hash 本身不参与状态哈希。
 

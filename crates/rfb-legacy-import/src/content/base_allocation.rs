@@ -259,7 +259,7 @@ pub fn sync_demo_base_allocation(source: &Path, pack: &Path) -> Result<usize, Le
         "source": K_INFO_SOURCE, "nameSource": K_NAME_ZH_SOURCE,
         "nameFormatSource": "src/flavor.c::object_desc (aware, no flavor; consumable suffixes)", "allocationRowCount": count,
         "unresolvedChineseNames": unresolved_names, "kinds": coverage, "explicitItems": explicit_items,
-        "remainingRules": ["B5-B6 retry scheduling and integration acceptance"]});
+        "remainingRules": ["B6 integration acceptance"]});
     writes.push((
         pack.join("legacy-base-allocation-audit.json"),
         serde_json::to_string_pretty(&report)? + "\n",

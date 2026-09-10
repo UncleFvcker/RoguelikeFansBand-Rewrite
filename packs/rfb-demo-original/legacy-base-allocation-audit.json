@@ -10203,7 +10203,7 @@
   "nameFormatSource": "src/flavor.c::object_desc (aware, no flavor; consumable suffixes)",
   "nameSource": "src/kind_name_zh.inc",
   "remainingRules": [
-    "B5-B6 retry scheduling and integration acceptance"
+    "B6 integration acceptance"
   ],
   "schemaVersion": 1,
   "source": "lib/edit/k_info.txt",

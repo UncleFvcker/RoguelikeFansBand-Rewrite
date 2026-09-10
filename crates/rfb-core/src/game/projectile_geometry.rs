@@ -586,3 +586,16 @@ pub(super) fn has_disintegration_line_of_effect(game: &Game, from: Position, to:
         }
     }
 }
+
+impl Game {
+    pub(super) fn terrain_is_projectable(&self, position: Position) -> bool {
+        self.index(position).is_some_and(|index| {
+            let terrain = self
+                .content
+                .terrain(&self.terrain[index])
+                .expect("validated terrain");
+            (terrain.walkable || terrain.tags.iter().any(|tag| tag == "projectable"))
+                && !terrain.tags.iter().any(|tag| tag == "blocks-projectiles")
+        })
+    }
+}

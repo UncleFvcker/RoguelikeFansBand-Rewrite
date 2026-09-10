@@ -16,6 +16,7 @@ use rfb_protocol::{
 use super::*;
 
 mod abilities;
+mod acquirement;
 mod archer;
 mod artifact_identity;
 mod attribute_sources;

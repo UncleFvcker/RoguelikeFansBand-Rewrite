@@ -57,6 +57,20 @@ impl Game {
             GameAction::UseItem { item_id, .. }
             | GameAction::UseItemForRecharge { item_id, .. } => {
                 self.inventory_item_use_context(item_id)?;
+                if matches!(
+                    action,
+                    GameAction::UseItem {
+                        target: None | Some(TargetSelection::SelfTarget),
+                        target_glyph: None,
+                        ..
+                    }
+                ) && let Some((ItemUseEffectDefinition::Acquirement { maximum_count, .. }, _)) =
+                    self.inventory_item_use_effect(item_id)
+                {
+                    self.next_item_instance_serial
+                        .checked_add(u64::from(*maximum_count))
+                        .ok_or(CoreError::ItemIdExhausted)?;
+                }
             }
             _ => {}
         }
