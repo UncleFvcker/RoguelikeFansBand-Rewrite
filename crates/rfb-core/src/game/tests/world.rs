@@ -5,6 +5,118 @@ use crate::game::initialization::dungeon_substitution_uses_alternate;
 use crate::game::lighting::{DUNGEON_AMBIENT_LIGHT, SURFACE_AMBIENT_LIGHT};
 
 #[test]
+fn guardianless_dungeon_entry_terminal_save_and_return_do_not_conquer() {
+    let pack_root =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).unwrap();
+    let world = &mut artifact.content.worlds[0];
+    world
+        .dungeons
+        .iter_mut()
+        .find(|d| d.id == "demo.dungeon.rlyeh")
+        .unwrap()
+        .guardian_actor_kind_id = None;
+    world.procedural_floors.retain(|floor| {
+        floor.dungeon_id.as_deref() != Some("demo.dungeon.rlyeh") || floor.depth <= 81
+    });
+    let terminal = world
+        .procedural_floors
+        .iter_mut()
+        .find(|f| f.id == "demo.floor.rlyeh-depth-81")
+        .unwrap();
+    terminal.final_floor = true;
+    terminal.next_floor_id = None;
+    terminal.down_stair_terrain_id = None;
+    terminal
+        .layout
+        .as_mut()
+        .unwrap()
+        .stairs
+        .as_mut()
+        .unwrap()
+        .down = None;
+    let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content).unwrap(),
+    ));
+    let mut game = Game::from_content(215, catalog, DEFAULT_WORLD_ID).unwrap();
+    assert!(!game.actor_kind_is_dungeon_guardian("demo.actor.great-cthulhu"));
+    assert!(game.actor_kind_is_dungeon_guardian("demo.actor.thorondor"));
+    dispatch_next(&mut game, enter_world_map_command());
+    let world_position = Position { x: 40, y: 3 };
+    game.wilderness_position = Some(world_position);
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    place_player_on_terrain(&mut game, "demo.terrain.rlyeh-entrance");
+    let departure = game.player.position;
+    p89_defeat_guardian(&mut game, "demo.guardian.rlyeh-entrance.1");
+    assert!(game.dungeon_states["demo.dungeon.rlyeh"].entrance_guardian_defeated);
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    for depth in 80..=81 {
+        let entered = dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(entered.floor_id, format!("demo.floor.rlyeh-depth-{depth}"));
+        assert!(
+            game.entities
+                .iter()
+                .all(|actor| actor.id != "demo.guardian.rlyeh.1")
+        );
+        clear_monsters(&mut game);
+        if depth == 80 {
+            place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+        }
+    }
+    assert!(
+        game.terrain
+            .iter()
+            .all(|id| id != "demo.terrain.stairs-down")
+    );
+    assert!(!game.dungeon_states["demo.dungeon.rlyeh"].guardian_defeated);
+    assert_eq!(game.campaign_counts().0, 0);
+    assert!(!game.generated_artifact_ids.contains("demo.item.razorback"));
+    let hash = game.state_hash();
+    game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(game.state_hash(), hash);
+    let mut invalid = game.to_save();
+    invalid
+        .dungeon_states
+        .iter_mut()
+        .find(|d| d.dungeon_id == "demo.dungeon.rlyeh")
+        .unwrap()
+        .guardian_defeated = true;
+    assert!(matches!(
+        Game::from_save_with_content(invalid, game.content.clone()),
+        Err(CoreError::InvalidSave("dungeon guardian state is invalid"))
+    ));
+    for expected in ["demo.floor.rlyeh-depth-80", wilderness::WILDERNESS_FLOOR_ID] {
+        place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(game.current_floor_id, expected);
+        assert!(
+            game.entities
+                .iter()
+                .all(|actor| actor.id != "demo.guardian.rlyeh-entrance.1")
+        );
+        clear_monsters(&mut game);
+    }
+    assert_eq!(game.wilderness_position, Some(world_position));
+    assert_eq!(game.player.position, departure);
+    game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    game.start_recall(0);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.current_floor_id, "demo.floor.rlyeh-depth-81");
+    clear_monsters(&mut game);
+    game.start_recall(0);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.player.position, departure);
+    assert!(
+        game.entities
+            .iter()
+            .all(|actor| actor.id != "demo.guardian.rlyeh-entrance.1")
+    );
+    assert_eq!(game.campaign_counts().0, 0);
+    assert!(!game.dungeon_states["demo.dungeon.rlyeh"].guardian_defeated);
+}
+
+#[test]
 fn rlyeh_representative_generation_keeps_water_stairs_and_legal_spawns() {
     let base = Game::new_with_build(214, "demo.build.warrior").unwrap();
     // Root seeds without/with a river, then ARENA, lake, and final guardian.

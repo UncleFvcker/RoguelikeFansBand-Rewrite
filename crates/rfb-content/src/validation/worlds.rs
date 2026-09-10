@@ -630,12 +630,9 @@ pub(super) fn validate_world(
                 dungeon.root_floor_id.clone(),
             ));
         }
-        require_actor_role(
-            actor_roles,
-            &dungeon.guardian_actor_kind_id,
-            ActorRole::Monster,
-            &dungeon.id,
-        )?;
+        if let Some(guardian_id) = &dungeon.guardian_actor_kind_id {
+            require_actor_role(actor_roles, guardian_id, ActorRole::Monster, &dungeon.id)?;
+        }
         if matches!(
             dungeon.instance_lifecycle,
             DungeonInstanceLifecycle::TurnTtl { ttl_turns: 0 }
@@ -2917,18 +2914,22 @@ pub(super) fn validate_world(
                 return Err(ContentError::InvalidProceduralFloor(floor.id.clone()));
             }
             let is_leaf = children.is_empty();
-            if floor.final_floor != is_leaf || floor.guardian.is_some() != is_leaf {
+            if floor.final_floor != is_leaf
+                || floor.guardian.is_some() != (is_leaf && dungeon.guardian_actor_kind_id.is_some())
+            {
                 return Err(ContentError::InvalidProceduralFloor(floor.id.clone()));
             }
             if let Some(guardian) = &floor.guardian {
                 final_count += 1;
-                if guardian.actor_kind_id != dungeon.guardian_actor_kind_id {
+                if Some(guardian.actor_kind_id.as_str())
+                    != dungeon.guardian_actor_kind_id.as_deref()
+                {
                     return Err(ContentError::InvalidProceduralFloor(floor.id.clone()));
                 }
             }
             children_by_floor.insert(floor.id.as_str(), children);
         }
-        if final_count == 0 {
+        if dungeon.guardian_actor_kind_id.is_some() && final_count == 0 {
             return Err(ContentError::InvalidProceduralFloor(root.id.clone()));
         }
 

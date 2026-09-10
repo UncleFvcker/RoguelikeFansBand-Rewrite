@@ -1394,6 +1394,9 @@ impl Game {
                     "dungeon entrance guardian state is invalid",
                 ));
             }
+            if dungeon.guardian_actor_kind_id.is_none() && state.guardian_defeated {
+                return Err(CoreError::InvalidSave("dungeon guardian state is invalid"));
+            }
             match (&state.retained_instance_id, state.retained_at_turn) {
                 (None, None) => {}
                 (Some(instance_id), Some(retained_at_turn)) => {
@@ -1455,11 +1458,10 @@ impl Game {
             for final_floor in world.procedural_floors.iter().filter(|floor| {
                 floor.dungeon_id.as_deref() == Some(dungeon_id.as_str()) && floor.final_floor
             }) {
-                let guardian_id = &final_floor
-                    .guardian
-                    .as_ref()
-                    .expect("validated final floor must retain a guardian")
-                    .instance_id;
+                let Some(guardian) = &final_floor.guardian else {
+                    continue;
+                };
+                let guardian_id = &guardian.instance_id;
                 let guardian_present = if self.current_floor_id == final_floor.id {
                     Some(self.entities.iter().any(|actor| &actor.id == guardian_id))
                 } else {

@@ -109,7 +109,10 @@
           "type": "array"
         },
         "guardianActorKindId": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "id": {
           "type": "string"
@@ -147,8 +150,7 @@
       },
       "required": [
         "id",
-        "rootFloorId",
-        "guardianActorKindId"
+        "rootFloorId"
       ],
       "type": "object"
     },

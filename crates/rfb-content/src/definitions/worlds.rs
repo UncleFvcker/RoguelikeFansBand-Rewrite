@@ -277,7 +277,8 @@ pub struct DungeonDefinition {
     #[serde(default)]
     pub legacy_index: Option<u16>,
     pub root_floor_id: String,
-    pub guardian_actor_kind_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub guardian_actor_kind_id: Option<String>,
     #[serde(default)]
     pub substitution: Option<DungeonSubstitutionDefinition>,
     #[serde(default)]

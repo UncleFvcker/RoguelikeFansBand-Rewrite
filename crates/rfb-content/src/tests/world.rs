@@ -3,6 +3,93 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn guardianless_dungeon_keeps_terminal_and_guardian_binding_validation() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let mut content = artifact.content.clone();
+    let world = &mut content.worlds[0];
+    let dungeon = world
+        .dungeons
+        .iter_mut()
+        .find(|d| d.id == "demo.dungeon.rlyeh")
+        .unwrap();
+    dungeon.guardian_actor_kind_id = None;
+    world.procedural_floors.retain(|floor| {
+        floor.dungeon_id.as_deref() != Some("demo.dungeon.rlyeh") || floor.depth <= 81
+    });
+    let terminal = world
+        .procedural_floors
+        .iter_mut()
+        .find(|f| f.id == "demo.floor.rlyeh-depth-81")
+        .unwrap();
+    terminal.final_floor = true;
+    terminal.next_floor_id = None;
+    terminal.down_stair_terrain_id = None;
+    terminal
+        .layout
+        .as_mut()
+        .unwrap()
+        .stairs
+        .as_mut()
+        .unwrap()
+        .down = None;
+    validate_and_normalize(&mut content).unwrap();
+
+    let mut missing_terminal = content.clone();
+    missing_terminal.worlds[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|f| f.id == "demo.floor.rlyeh-depth-81")
+        .unwrap()
+        .final_floor = false;
+    assert!(matches!(
+        validate_and_normalize(&mut missing_terminal),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    // A guardian carrying a reward cannot be smuggled into a guardianless dungeon.
+    let guardian = artifact.content.worlds[0]
+        .procedural_floors
+        .iter()
+        .find(|f| f.id == "demo.floor.rlyeh-depth-96")
+        .unwrap()
+        .guardian
+        .clone();
+    let mut undeclared = content.clone();
+    undeclared.worlds[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|f| f.id == "demo.floor.rlyeh-depth-81")
+        .unwrap()
+        .guardian = guardian;
+    assert!(matches!(
+        validate_and_normalize(&mut undeclared),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    content.worlds[0]
+        .dungeons
+        .iter_mut()
+        .find(|d| d.id == "demo.dungeon.rlyeh")
+        .unwrap()
+        .guardian_actor_kind_id = Some("demo.actor.great-cthulhu".to_owned());
+    assert!(matches!(
+        validate_and_normalize(&mut content),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+    let mut mismatched = artifact.content;
+    mismatched.worlds[0]
+        .dungeons
+        .iter_mut()
+        .find(|d| d.id == "demo.dungeon.rlyeh")
+        .unwrap()
+        .guardian_actor_kind_id = Some("demo.actor.bazooker".to_owned());
+    assert!(matches!(
+        validate_and_normalize(&mut mismatched),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+}
+
+#[test]
 fn outpost_task_entry_states_preserve_source_material_and_return_cells() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let content = &artifact.content;
@@ -4865,7 +4952,7 @@ fn room_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(3));
         assert_eq!(dungeon.root_floor_id, "demo.floor.orc-cave-depth-15");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.othrod-lord-of-the-orcs"
         );
         assert!(
@@ -4977,7 +5064,7 @@ fn room_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(2));
         assert_eq!(dungeon.root_floor_id, "demo.floor.camelot-depth-20");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.arthur-pendragon"
         );
         assert!(
@@ -5111,7 +5198,7 @@ fn room_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(12));
         assert_eq!(dungeon.root_floor_id, "demo.floor.castle-depth-40");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.layzark-the-emperor"
         );
         let entrance_guardian = dungeon
@@ -5295,7 +5382,7 @@ fn room_dungeon_bindings_match_source() {
             .expect("Graveyard should exist");
         assert_eq!(dungeon.legacy_index, Some(6));
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.vecna-the-emperor-lich"
         );
         let entrance = dungeon
@@ -5425,7 +5512,10 @@ fn aquatic_dungeon_bindings_match_source() {
             .expect("Tidal Cave should be active");
         assert_eq!(dungeon.legacy_index, Some(33));
         assert_eq!(dungeon.root_floor_id, "demo.floor.tidal-cave-depth-15");
-        assert_eq!(dungeon.guardian_actor_kind_id, "demo.actor.grendel");
+        assert_eq!(
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
+            "demo.actor.grendel"
+        );
 
         let mut floors = world
             .procedural_floors
@@ -5655,11 +5745,11 @@ fn aquatic_dungeon_bindings_match_source() {
         );
         assert!(atlantis.substitution.is_none());
         assert_eq!(
-            numenor.guardian_actor_kind_id,
+            numenor.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.jormungand-the-midgard-serpent"
         );
         assert_eq!(
-            atlantis.guardian_actor_kind_id,
+            atlantis.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.kundry-queen-of-the-lost-haven"
         );
         let numenor_entrance = numenor
@@ -5933,7 +6023,7 @@ fn special_layout_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(4));
         assert_eq!(dungeon.root_floor_id, "demo.floor.labyrinth-depth-20");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.the-minotaur-of-the-labyrinth"
         );
         assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
@@ -6078,7 +6168,7 @@ fn special_layout_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(15));
         assert_eq!(dungeon.root_floor_id, "demo.floor.mine-depth-75");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.polyphemus-the-blind-cyclops"
         );
         let entrance_guardian = dungeon
@@ -6241,7 +6331,7 @@ fn special_layout_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(32));
         assert_eq!(dungeon.root_floor_id, "demo.floor.battlefield-depth-30");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.khamul-the-easterling"
         );
         let entrance_guardian = dungeon
@@ -6391,7 +6481,10 @@ fn special_layout_dungeon_bindings_match_source() {
             .expect("Chameleon cave should exist");
         assert_eq!(dungeon.legacy_index, Some(18));
         assert_eq!(dungeon.root_floor_id, "demo.floor.chameleon-cave-depth-30");
-        assert_eq!(dungeon.guardian_actor_kind_id, "demo.actor.chameleon-lord");
+        assert_eq!(
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
+            "demo.actor.chameleon-lord"
+        );
 
         let mut floors = world
             .procedural_floors
@@ -6544,7 +6637,7 @@ fn special_layout_dungeon_bindings_match_source() {
             .expect("Crystal Castle should exist");
         assert_eq!(dungeon.legacy_index, Some(20));
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.the-diamond-dragon"
         );
         assert_eq!(
@@ -6646,7 +6739,7 @@ fn lava_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(23));
         assert_eq!(dungeon.root_floor_id, "demo.floor.lonely-mountain-depth-30");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.smaug-the-golden"
         );
         assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
@@ -6882,7 +6975,7 @@ fn lava_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(5));
         assert_eq!(dungeon.root_floor_id, "demo.floor.dragon-lair-depth-60");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.tiamat-celestial-dragon-of-evil"
         );
         let entrance_guardian = dungeon
@@ -7062,7 +7155,7 @@ fn lava_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(8));
         assert_eq!(dungeon.root_floor_id, "demo.floor.volcano-depth-50");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.shooting-star-the-red-dragon"
         );
         let entrance = dungeon
@@ -7180,7 +7273,7 @@ fn substitute_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(31));
         assert_eq!(dungeon.root_floor_id, "demo.floor.hideout-depth-8");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.meng-huo-the-king-of-southerings"
         );
         assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
@@ -7363,7 +7456,7 @@ fn substitute_dungeon_bindings_match_source() {
         assert_eq!(man_cave.legacy_index, Some(40));
         assert_eq!(man_cave.root_floor_id, "demo.floor.man-cave-depth-8");
         assert_eq!(
-            man_cave.guardian_actor_kind_id,
+            man_cave.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.untamo-the-cruel"
         );
 
@@ -7818,7 +7911,10 @@ fn swamp_and_cavern_dungeon_bindings_match_source() {
             .expect("Icky Cave content should exist");
         assert_eq!(dungeon.legacy_index, Some(21));
         assert_eq!(dungeon.root_floor_id, "demo.floor.icky-cave-depth-10");
-        assert_eq!(dungeon.guardian_actor_kind_id, "demo.actor.the-icky-queen");
+        assert_eq!(
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
+            "demo.actor.the-icky-queen"
+        );
         let mut floors = world
             .procedural_floors
             .iter()
@@ -8018,7 +8114,7 @@ fn swamp_and_cavern_dungeon_bindings_match_source() {
         assert_eq!(troll_cave.legacy_index, Some(36));
         assert_eq!(troll_cave.root_floor_id, "demo.floor.troll-cave-depth-18");
         assert_eq!(
-            troll_cave.guardian_actor_kind_id,
+            troll_cave.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.spulga-the-troll-priestess"
         );
 
@@ -8178,7 +8274,10 @@ fn swamp_and_cavern_dungeon_bindings_match_source() {
             .expect("Eyrie should exist");
         assert_eq!(dungeon.legacy_index, Some(14));
         assert_eq!(dungeon.root_floor_id, "demo.floor.eyrie-depth-40");
-        assert_eq!(dungeon.guardian_actor_kind_id, "demo.actor.thorondor");
+        assert_eq!(
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
+            "demo.actor.thorondor"
+        );
         let entrance_guardian = dungeon
             .entrance_guardian
             .as_ref()

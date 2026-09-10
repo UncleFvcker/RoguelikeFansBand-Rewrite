@@ -1083,7 +1083,7 @@ impl Game {
         self.content.world(&self.world_id).is_some_and(|world| {
             world.dungeons.iter().any(|dungeon| {
                 self.dungeon_is_active(&dungeon.id)
-                    && dungeon.guardian_actor_kind_id == actor_kind_id
+                    && dungeon.guardian_actor_kind_id.as_deref() == Some(actor_kind_id)
             })
         })
     }

@@ -568,7 +568,7 @@ struct DemoWildernessDungeonPlan {
     tunnel_percent: Option<u16>,
     #[serde(default)]
     initial_guardian: Option<DemoDungeonGuardianPlan>,
-    guardian: DemoDungeonGuardianPlan,
+    guardian: Option<DemoDungeonGuardianPlan>,
     final_object: Option<DemoDungeonObjectPlan>,
     final_artifact_source_index: Option<u32>,
     final_ego_source_index: Option<u32>,
@@ -14978,7 +14978,15 @@ fn validate_demo_wilderness_plans(
             )));
         }
         if (dungeon.final_object.is_some() && dungeon.final_artifact_source_index.is_some())
-            || dungeon_flag_number(record, "FINAL_GUARDIAN_") != Some(dungeon.guardian.source_index)
+            || (dungeon.guardian.is_none()
+                && (dungeon.final_object.is_some()
+                    || dungeon.final_artifact_source_index.is_some()
+                    || dungeon.final_ego_source_index.is_some()))
+            || dungeon_flag_number(record, "FINAL_GUARDIAN_")
+                != dungeon
+                    .guardian
+                    .as_ref()
+                    .map(|guardian| guardian.source_index)
             || dungeon_final_object(record) != dungeon.final_object
             || dungeon_flag_number(record, "FINAL_ARTIFACT_") != dungeon.final_artifact_source_index
             || dungeon_flag_number(record, "FINAL_EGO_") != dungeon.final_ego_source_index
@@ -14989,26 +14997,28 @@ fn validate_demo_wilderness_plans(
                 dungeon.id
             )));
         }
-        let guardian = monsters
-            .iter()
-            .find(|monster| monster.index == dungeon.guardian.source_index)
-            .ok_or_else(|| {
-                invalid_wilderness_selection(format!(
-                    "planned guardian index {} is absent",
-                    dungeon.guardian.source_index
-                ))
-            })?;
-        let guardian_chinese_name = chinese_monster_names
-            .get(dungeon.guardian.source_index as usize)
-            .and_then(Option::as_deref);
-        if guardian.name != dungeon.guardian.source_name
-            || guardian.level != Some(dungeon.guardian.level)
-            || guardian_chinese_name != Some(&dungeon.guardian.chinese_name)
-        {
-            return Err(invalid_wilderness_selection(format!(
-                "planned dungeon {} guardian identity drifted",
-                dungeon.id
-            )));
+        if let Some(planned_guardian) = &dungeon.guardian {
+            let guardian = monsters
+                .iter()
+                .find(|monster| monster.index == planned_guardian.source_index)
+                .ok_or_else(|| {
+                    invalid_wilderness_selection(format!(
+                        "planned guardian index {} is absent",
+                        planned_guardian.source_index
+                    ))
+                })?;
+            let guardian_chinese_name = chinese_monster_names
+                .get(planned_guardian.source_index as usize)
+                .and_then(Option::as_deref);
+            if guardian.name != planned_guardian.source_name
+                || guardian.level != Some(planned_guardian.level)
+                || guardian_chinese_name != Some(&planned_guardian.chinese_name)
+            {
+                return Err(invalid_wilderness_selection(format!(
+                    "planned dungeon {} guardian identity drifted",
+                    dungeon.id
+                )));
+            }
         }
         if let Some(initial_guardian) = &dungeon.initial_guardian {
             if dungeon_flag_number(record, "INITIAL_GUARDIAN_")
@@ -19270,10 +19280,10 @@ mod tests {
             plan.monster_preferences,
             ["CAN_SWIM", "WILD_SHORE", "AQUATIC"]
         );
-        assert_eq!(plan.guardian.source_index, 431);
-        assert_eq!(plan.guardian.source_name, "Grendel");
-        assert_eq!(plan.guardian.chinese_name, "格伦戴尔");
-        assert_eq!(plan.guardian.level, 27);
+        assert_eq!(plan.guardian.as_ref().unwrap().source_index, 431);
+        assert_eq!(plan.guardian.as_ref().unwrap().source_name, "Grendel");
+        assert_eq!(plan.guardian.as_ref().unwrap().chinese_name, "格伦戴尔");
+        assert_eq!(plan.guardian.as_ref().unwrap().level, 27);
         assert_eq!(
             plan.final_object,
             Some(DemoDungeonObjectPlan { tval: 75, sval: 68 })
@@ -19350,10 +19360,13 @@ mod tests {
             ]
         );
         assert_eq!(plan.tunnel_percent, Some(8));
-        assert_eq!(plan.guardian.source_index, 909);
-        assert_eq!(plan.guardian.source_name, "The Icky Queen");
-        assert_eq!(plan.guardian.chinese_name, "黏糊恶心女王");
-        assert_eq!(plan.guardian.level, 20);
+        assert_eq!(plan.guardian.as_ref().unwrap().source_index, 909);
+        assert_eq!(
+            plan.guardian.as_ref().unwrap().source_name,
+            "The Icky Queen"
+        );
+        assert_eq!(plan.guardian.as_ref().unwrap().chinese_name, "黏糊恶心女王");
+        assert_eq!(plan.guardian.as_ref().unwrap().level, 20);
         assert_eq!(
             plan.final_object,
             Some(DemoDungeonObjectPlan { tval: 46, sval: 0 })
@@ -19388,13 +19401,16 @@ mod tests {
         assert_eq!(hideout.generation_flags, ["COFFEE"]);
         assert_eq!(hideout.monster_preferences, ["R_CHAR_p", "THIEF"]);
         assert_eq!(hideout.tunnel_percent, Some(8));
-        assert_eq!(hideout.guardian.source_index, 1030);
+        assert_eq!(hideout.guardian.as_ref().unwrap().source_index, 1030);
         assert_eq!(
-            hideout.guardian.source_name,
+            hideout.guardian.as_ref().unwrap().source_name,
             "Meng Huo, the King of Southerings"
         );
-        assert_eq!(hideout.guardian.chinese_name, "南蛮王孟获");
-        assert_eq!(hideout.guardian.level, 18);
+        assert_eq!(
+            hideout.guardian.as_ref().unwrap().chinese_name,
+            "南蛮王孟获"
+        );
+        assert_eq!(hideout.guardian.as_ref().unwrap().level, 18);
         assert_eq!(
             hideout.final_object,
             Some(DemoDungeonObjectPlan { tval: 40, sval: 0 })
@@ -19411,10 +19427,16 @@ mod tests {
         assert_eq!(man_cave.generation_flags, ["COFFEE"]);
         assert_eq!(man_cave.monster_preferences, ["R_CHAR_p", "THIEF"]);
         assert_eq!(man_cave.tunnel_percent, Some(8));
-        assert_eq!(man_cave.guardian.source_index, 1275);
-        assert_eq!(man_cave.guardian.source_name, "Untamo the Cruel");
-        assert_eq!(man_cave.guardian.chinese_name, "残酷者温塔莫");
-        assert_eq!(man_cave.guardian.level, 23);
+        assert_eq!(man_cave.guardian.as_ref().unwrap().source_index, 1275);
+        assert_eq!(
+            man_cave.guardian.as_ref().unwrap().source_name,
+            "Untamo the Cruel"
+        );
+        assert_eq!(
+            man_cave.guardian.as_ref().unwrap().chinese_name,
+            "残酷者温塔莫"
+        );
+        assert_eq!(man_cave.guardian.as_ref().unwrap().level, 23);
         assert_eq!(man_cave.final_object, None);
         assert_eq!(man_cave.final_artifact_source_index, Some(104));
         assert_eq!(man_cave.final_ego_source_index, None);
@@ -19483,13 +19505,16 @@ mod tests {
             ]
         );
         assert_eq!(troll_cave.tunnel_percent, Some(14));
-        assert_eq!(troll_cave.guardian.source_index, 1304);
+        assert_eq!(troll_cave.guardian.as_ref().unwrap().source_index, 1304);
         assert_eq!(
-            troll_cave.guardian.source_name,
+            troll_cave.guardian.as_ref().unwrap().source_name,
             "Spulga, the Troll Priestess"
         );
-        assert_eq!(troll_cave.guardian.chinese_name, "巨魔女祭司斯普尔加");
-        assert_eq!(troll_cave.guardian.level, 40);
+        assert_eq!(
+            troll_cave.guardian.as_ref().unwrap().chinese_name,
+            "巨魔女祭司斯普尔加"
+        );
+        assert_eq!(troll_cave.guardian.as_ref().unwrap().level, 40);
         assert_eq!(
             troll_cave.final_object,
             Some(DemoDungeonObjectPlan { tval: 37, sval: 13 })
@@ -19564,10 +19589,13 @@ mod tests {
         assert_eq!(entrance_guardian.source_name, "Jubjub bird");
         assert_eq!(entrance_guardian.chinese_name, "加布加布鸟");
         assert_eq!(entrance_guardian.level, 40);
-        assert_eq!(eyrie.guardian.source_index, 468);
-        assert_eq!(eyrie.guardian.source_name, "Thorondor");
-        assert_eq!(eyrie.guardian.chinese_name, "巨鹰之王索隆多");
-        assert_eq!(eyrie.guardian.level, 55);
+        assert_eq!(eyrie.guardian.as_ref().unwrap().source_index, 468);
+        assert_eq!(eyrie.guardian.as_ref().unwrap().source_name, "Thorondor");
+        assert_eq!(
+            eyrie.guardian.as_ref().unwrap().chinese_name,
+            "巨鹰之王索隆多"
+        );
+        assert_eq!(eyrie.guardian.as_ref().unwrap().level, 55);
         assert_eq!(
             eyrie.final_object,
             Some(DemoDungeonObjectPlan { tval: 75, sval: 63 })
@@ -19614,13 +19642,16 @@ mod tests {
             ]
         );
         assert_eq!(labyrinth.tunnel_percent, Some(100));
-        assert_eq!(labyrinth.guardian.source_index, 1034);
+        assert_eq!(labyrinth.guardian.as_ref().unwrap().source_index, 1034);
         assert_eq!(
-            labyrinth.guardian.source_name,
+            labyrinth.guardian.as_ref().unwrap().source_name,
             "The Minotaur of the Labyrinth"
         );
-        assert_eq!(labyrinth.guardian.chinese_name, "迷宫牛头怪");
-        assert_eq!(labyrinth.guardian.level, 35);
+        assert_eq!(
+            labyrinth.guardian.as_ref().unwrap().chinese_name,
+            "迷宫牛头怪"
+        );
+        assert_eq!(labyrinth.guardian.as_ref().unwrap().level, 35);
         assert_eq!(
             labyrinth.final_object,
             Some(DemoDungeonObjectPlan { tval: 66, sval: 0 })
@@ -19685,10 +19716,16 @@ mod tests {
             ]
         );
         assert_eq!(lonely_mountain.tunnel_percent, Some(0));
-        assert_eq!(lonely_mountain.guardian.source_index, 697);
-        assert_eq!(lonely_mountain.guardian.source_name, "Smaug the Golden");
-        assert_eq!(lonely_mountain.guardian.chinese_name, "黄金史矛革");
-        assert_eq!(lonely_mountain.guardian.level, 45);
+        assert_eq!(lonely_mountain.guardian.as_ref().unwrap().source_index, 697);
+        assert_eq!(
+            lonely_mountain.guardian.as_ref().unwrap().source_name,
+            "Smaug the Golden"
+        );
+        assert_eq!(
+            lonely_mountain.guardian.as_ref().unwrap().chinese_name,
+            "黄金史矛革"
+        );
+        assert_eq!(lonely_mountain.guardian.as_ref().unwrap().level, 45);
         assert_eq!(lonely_mountain.final_object, None);
         assert_eq!(lonely_mountain.final_artifact_source_index, Some(329));
         assert_eq!(lonely_mountain.final_ego_source_index, None);
@@ -19758,13 +19795,16 @@ mod tests {
         assert_eq!(entrance_guardian.source_name, "Ancient multi-hued dragon");
         assert_eq!(entrance_guardian.chinese_name, "上古多彩龙");
         assert_eq!(entrance_guardian.level, 43);
-        assert_eq!(dragon_lair.guardian.source_index, 795);
+        assert_eq!(dragon_lair.guardian.as_ref().unwrap().source_index, 795);
         assert_eq!(
-            dragon_lair.guardian.source_name,
+            dragon_lair.guardian.as_ref().unwrap().source_name,
             "Tiamat, Celestial Dragon of Evil"
         );
-        assert_eq!(dragon_lair.guardian.chinese_name, "邪恶天龙提亚马特");
-        assert_eq!(dragon_lair.guardian.level, 70);
+        assert_eq!(
+            dragon_lair.guardian.as_ref().unwrap().chinese_name,
+            "邪恶天龙提亚马特"
+        );
+        assert_eq!(dragon_lair.guardian.as_ref().unwrap().level, 70);
         assert_eq!(
             dragon_lair.final_object,
             Some(DemoDungeonObjectPlan { tval: 38, sval: 6 })
@@ -19822,10 +19862,13 @@ mod tests {
         assert_eq!(entrance_guardian.source_name, "Anti-paladin");
         assert_eq!(entrance_guardian.chinese_name, "反圣武士");
         assert_eq!(entrance_guardian.level, 33);
-        assert_eq!(castle.guardian.source_index, 882);
-        assert_eq!(castle.guardian.source_name, "Layzark, the Emperor");
-        assert_eq!(castle.guardian.chinese_name, "皇帝雷扎克");
-        assert_eq!(castle.guardian.level, 65);
+        assert_eq!(castle.guardian.as_ref().unwrap().source_index, 882);
+        assert_eq!(
+            castle.guardian.as_ref().unwrap().source_name,
+            "Layzark, the Emperor"
+        );
+        assert_eq!(castle.guardian.as_ref().unwrap().chinese_name, "皇帝雷扎克");
+        assert_eq!(castle.guardian.as_ref().unwrap().level, 65);
         assert_eq!(castle.final_object, None);
         assert_eq!(castle.final_artifact_source_index, None);
         assert_eq!(castle.final_ego_source_index, None);
@@ -19892,10 +19935,13 @@ mod tests {
             [("SNOW_FLOOR", 45), ("SLUSH", 30), ("ICE_FLOOR", 25)]
         );
         for plan in [giants_hall, snow_castle] {
-            assert_eq!(plan.guardian.source_index, 683);
-            assert_eq!(plan.guardian.source_name, "Utgard-Loke");
-            assert_eq!(plan.guardian.chinese_name, "乌特加德-洛基");
-            assert_eq!(plan.guardian.level, 44);
+            assert_eq!(plan.guardian.as_ref().unwrap().source_index, 683);
+            assert_eq!(plan.guardian.as_ref().unwrap().source_name, "Utgard-Loke");
+            assert_eq!(
+                plan.guardian.as_ref().unwrap().chinese_name,
+                "乌特加德-洛基"
+            );
+            assert_eq!(plan.guardian.as_ref().unwrap().level, 44);
             assert_eq!(plan.final_artifact_source_index, Some(185));
         }
     }
@@ -19953,10 +19999,10 @@ mod tests {
         );
         assert_eq!(
             (
-                graveyard.guardian.source_index,
-                graveyard.guardian.source_name.as_str(),
-                graveyard.guardian.chinese_name.as_str(),
-                graveyard.guardian.level,
+                graveyard.guardian.as_ref().unwrap().source_index,
+                graveyard.guardian.as_ref().unwrap().source_name.as_str(),
+                graveyard.guardian.as_ref().unwrap().chinese_name.as_str(),
+                graveyard.guardian.as_ref().unwrap().level,
             ),
             (804, "Vecna, the Emperor Lich", "巫妖之王维克那", 72)
         );
@@ -20026,10 +20072,10 @@ mod tests {
             ),
         ] {
             assert_eq!(dungeon.tunnel_percent, Some(15));
-            assert_eq!(dungeon.guardian.source_index, guardian.0);
-            assert_eq!(dungeon.guardian.source_name, guardian.1);
-            assert_eq!(dungeon.guardian.chinese_name, guardian.2);
-            assert_eq!(dungeon.guardian.level, 40);
+            assert_eq!(dungeon.guardian.as_ref().unwrap().source_index, guardian.0);
+            assert_eq!(dungeon.guardian.as_ref().unwrap().source_name, guardian.1);
+            assert_eq!(dungeon.guardian.as_ref().unwrap().chinese_name, guardian.2);
+            assert_eq!(dungeon.guardian.as_ref().unwrap().level, 40);
             assert_eq!(
                 dungeon.final_object,
                 Some(DemoDungeonObjectPlan { tval: 90, sval: 2 })
@@ -20119,10 +20165,16 @@ mod tests {
         assert_eq!(entrance_guardian.source_name, "Elder storm giant");
         assert_eq!(entrance_guardian.chinese_name, "远古风暴巨人");
         assert_eq!(entrance_guardian.level, 56);
-        assert_eq!(mine.guardian.source_index, 1250);
-        assert_eq!(mine.guardian.source_name, "Polyphemus, the Blind Cyclops");
-        assert_eq!(mine.guardian.chinese_name, "瞎眼独眼巨人波吕斐摩斯");
-        assert_eq!(mine.guardian.level, 80);
+        assert_eq!(mine.guardian.as_ref().unwrap().source_index, 1250);
+        assert_eq!(
+            mine.guardian.as_ref().unwrap().source_name,
+            "Polyphemus, the Blind Cyclops"
+        );
+        assert_eq!(
+            mine.guardian.as_ref().unwrap().chinese_name,
+            "瞎眼独眼巨人波吕斐摩斯"
+        );
+        assert_eq!(mine.guardian.as_ref().unwrap().level, 80);
         assert_eq!(
             mine.final_object,
             Some(DemoDungeonObjectPlan { tval: 75, sval: 38 })
@@ -20183,10 +20235,16 @@ mod tests {
         assert_eq!(entrance_guardian.source_name, "Black wraith");
         assert_eq!(entrance_guardian.chinese_name, "黑幽灵");
         assert_eq!(entrance_guardian.level, 38);
-        assert_eq!(battlefield.guardian.source_index, 738);
-        assert_eq!(battlefield.guardian.source_name, "Khamul the Easterling");
-        assert_eq!(battlefield.guardian.chinese_name, "东方人克哈穆尔");
-        assert_eq!(battlefield.guardian.level, 53);
+        assert_eq!(battlefield.guardian.as_ref().unwrap().source_index, 738);
+        assert_eq!(
+            battlefield.guardian.as_ref().unwrap().source_name,
+            "Khamul the Easterling"
+        );
+        assert_eq!(
+            battlefield.guardian.as_ref().unwrap().chinese_name,
+            "东方人克哈穆尔"
+        );
+        assert_eq!(battlefield.guardian.as_ref().unwrap().level, 53);
         assert_eq!(
             battlefield.final_object,
             Some(DemoDungeonObjectPlan { tval: 23, sval: 34 })
@@ -20257,10 +20315,10 @@ mod tests {
         assert_entrance_guardian(numenor);
         assert_eq!(
             (
-                numenor.guardian.source_index,
-                numenor.guardian.source_name.as_str(),
-                numenor.guardian.chinese_name.as_str(),
-                numenor.guardian.level,
+                numenor.guardian.as_ref().unwrap().source_index,
+                numenor.guardian.as_ref().unwrap().source_name.as_str(),
+                numenor.guardian.as_ref().unwrap().chinese_name.as_str(),
+                numenor.guardian.as_ref().unwrap().level,
             ),
             (
                 854,
@@ -20289,10 +20347,10 @@ mod tests {
         assert_entrance_guardian(atlantis);
         assert_eq!(
             (
-                atlantis.guardian.source_index,
-                atlantis.guardian.source_name.as_str(),
-                atlantis.guardian.chinese_name.as_str(),
-                atlantis.guardian.level,
+                atlantis.guardian.as_ref().unwrap().source_index,
+                atlantis.guardian.as_ref().unwrap().source_name.as_str(),
+                atlantis.guardian.as_ref().unwrap().chinese_name.as_str(),
+                atlantis.guardian.as_ref().unwrap().level,
             ),
             (
                 1254,
@@ -29095,10 +29153,13 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         );
         assert_eq!(cave.tunnel_percent, Some(50));
         assert!(cave.initial_guardian.is_none());
-        assert_eq!(cave.guardian.source_index, 1041);
-        assert_eq!(cave.guardian.source_name, "Chameleon Lord");
-        assert_eq!(cave.guardian.chinese_name, "变色龙领主");
-        assert_eq!(cave.guardian.level, 45);
+        assert_eq!(cave.guardian.as_ref().unwrap().source_index, 1041);
+        assert_eq!(
+            cave.guardian.as_ref().unwrap().source_name,
+            "Chameleon Lord"
+        );
+        assert_eq!(cave.guardian.as_ref().unwrap().chinese_name, "变色龙领主");
+        assert_eq!(cave.guardian.as_ref().unwrap().level, 45);
         assert_eq!(
             cave.final_object,
             Some(DemoDungeonObjectPlan { tval: 75, sval: 66 })
@@ -29158,10 +29219,13 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         assert_eq!((entrance.source_index, entrance.level), (940, 49));
         assert_eq!(entrance.chinese_name, "次级炎魔");
         assert_eq!(
-            (volcano.guardian.source_index, volcano.guardian.level),
+            (
+                volcano.guardian.as_ref().unwrap().source_index,
+                volcano.guardian.as_ref().unwrap().level
+            ),
             (972, 60)
         );
-        assert_eq!(volcano.guardian.chinese_name, "红龙晨星");
+        assert_eq!(volcano.guardian.as_ref().unwrap().chinese_name, "红龙晨星");
         assert_eq!(
             volcano.final_object,
             Some(DemoDungeonObjectPlan { tval: 55, sval: 0 })
@@ -29681,11 +29745,17 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         assert_eq!(entrance.source_name, "Drolem");
         assert_eq!(entrance.chinese_name, "龙魔像");
         assert_eq!(
-            (arena.guardian.source_index, arena.guardian.level),
+            (
+                arena.guardian.as_ref().unwrap().source_index,
+                arena.guardian.as_ref().unwrap().level
+            ),
             (1110, 80)
         );
-        assert_eq!(arena.guardian.source_name, "Metal Babble");
-        assert_eq!(arena.guardian.chinese_name, "散失金属史莱姆");
+        assert_eq!(arena.guardian.as_ref().unwrap().source_name, "Metal Babble");
+        assert_eq!(
+            arena.guardian.as_ref().unwrap().chinese_name,
+            "散失金属史莱姆"
+        );
         assert_eq!(
             arena.final_object,
             Some(DemoDungeonObjectPlan { tval: 70, sval: 52 })
@@ -29781,10 +29851,13 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         assert_eq!((entrance.source_index, entrance.level), (676, 43));
         assert_eq!(entrance.chinese_name, "虚灵龙");
         assert_eq!(
-            (castle.guardian.source_index, castle.guardian.level),
+            (
+                castle.guardian.as_ref().unwrap().source_index,
+                castle.guardian.as_ref().unwrap().level
+            ),
             (1167, 60)
         );
-        assert_eq!(castle.guardian.chinese_name, "钻石巨龙");
+        assert_eq!(castle.guardian.as_ref().unwrap().chinese_name, "钻石巨龙");
         assert_eq!(
             castle.final_object,
             Some(DemoDungeonObjectPlan { tval: 23, sval: 31 })
