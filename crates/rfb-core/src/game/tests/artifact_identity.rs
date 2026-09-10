@@ -588,6 +588,16 @@ fn artifact_identity_natural_generation_preserves_existing_artifacts() {
                     assert!(trial.random_artifact_names.contains(name));
                     assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
                     assert!(!trial.generated_artifact_ids.contains(&item.kind_id));
+                    if trial
+                        .content
+                        .item(&item.kind_id)
+                        .unwrap()
+                        .device_generation
+                        .is_some()
+                    {
+                        assert!(item.activation.is_some(), "base activation on {seed}");
+                        assert!(item.charges.is_some());
+                    }
                 }
             }
             assert_eq!(trial.items[0], game.items[0]);

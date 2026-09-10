@@ -12,7 +12,7 @@ const ABILITY_EFFECT_ACTIVATION_ID: &str = "test.device-activation.ability-effec
 const ABILITY_EFFECT_ITEM_ID: &str = "test.item.ability-effect";
 
 #[test]
-fn mattock_natural_disruption_activation_round_trips() {
+fn mattock_forced_base_disruption_activation_round_trips() {
     let mut game = Game::new_with_build(67, RFB_WARRIOR_BUILD_ID).unwrap();
     let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -21,23 +21,28 @@ fn mattock_natural_disruption_activation_round_trips() {
         .unwrap()
         .join("packs/rfb-demo-original");
     let mut artifact = rfb_content::compile_pack_dir(&pack_root).unwrap();
-    let table = artifact
+    let mut table = artifact
         .content
         .loot_tables
-        .iter_mut()
+        .iter()
         .find(|table| table.id == "demo.loot-table.base-items")
-        .unwrap();
+        .unwrap()
+        .clone();
+    table.id = "test.loot-table.forced-mattock".into();
+    // This test fixes the base kind and exercises materialization.
+    table.kind_selection = None;
     table
         .entries
         .retain(|entry| entry.item_kind_id == "demo.item.mattock");
     table.entries[0].min_depth = 0;
     table.affix_weights.retain(|entry| entry.affix_id.is_none());
+    artifact.content.loot_tables.push(table);
     game.content = std::sync::Arc::new(rfb_content::ContentCatalog::from_artifact(
         rfb_content::encode_content(artifact.content).unwrap(),
     ));
     clear_monsters(&mut game);
     let context = LootContext {
-        table_id: "demo.loot-table.base-items".to_owned(),
+        table_id: "test.loot-table.forced-mattock".to_owned(),
         floor_id: game.current_floor_id.clone(),
         depth: 50,
         source: LootSource::MonsterDeath {

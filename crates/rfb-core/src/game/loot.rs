@@ -575,6 +575,7 @@ impl Game {
                 .as_ref()
                 .is_some_and(|build| build.race_id == "rfb-legacy.race.tomte");
         let rfb_generation = table.rfb_ego_policy.is_some();
+        let source_allocation = table.kind_selection.is_some();
         let (entries, theme) = match &table.kind_selection {
             Some(rfb_content::LootKindSelectionDefinition::RfbTheme { pool_id, theme }) => (
                 self.content
@@ -589,17 +590,10 @@ impl Game {
         let eligible_entries = entries
             .iter()
             .filter(|entry| {
-                entry.weight > 0
+                !source_allocation
+                    && entry.weight > 0
                     && entry.min_depth <= context.depth
                     && context.depth <= entry.max_depth
-                    && theme.is_none_or(|theme| {
-                        allocation::theme_candidate(
-                            theme,
-                            self.content
-                                .item(&entry.item_kind_id)
-                                .expect("validated source item"),
-                        )
-                    })
                     && (!tomte_headgear
                         || self.content.item(&entry.item_kind_id).is_some_and(|item| {
                             item.equipment_slot.as_deref() != Some("head")
@@ -613,7 +607,7 @@ impl Game {
                         }))
             })
             .collect::<Vec<_>>();
-        if eligible_entries.is_empty() {
+        if !source_allocation && eligible_entries.is_empty() {
             return Vec::new();
         }
         let entry_weights = eligible_entries
@@ -660,8 +654,15 @@ impl Game {
                 generated.push(self.fixed_item_draft(context, kind_id));
                 continue;
             }
-            let entry_index = self.roll_weighted_index(&entry_weights);
-            let entry = eligible_entries[entry_index];
+            let entry = if source_allocation {
+                let Some(index) = allocation::select_entry(self, context, mode, &entries, theme)
+                else {
+                    continue;
+                };
+                &entries[index]
+            } else {
+                eligible_entries[self.roll_weighted_index(&entry_weights)]
+            };
             let staff = self
                 .content
                 .item(&entry.item_kind_id)
@@ -911,6 +912,15 @@ impl Game {
                 None
             };
             if (rfb_jewelry && power != 0) || random_artifact.is_some() {
+                // obj_get_effect retains the base kind activation on random
+                // artifacts (notably dragon scale mail), including its value.
+                let (activation, charges) = super::initial_item_runtime_state(
+                    &self.content,
+                    &mut self.rng,
+                    &entry.item_kind_id,
+                    &[],
+                    generation_depth,
+                );
                 let draft = GeneratedItemDraft {
                     artifact_name: None,
                     intrinsic_melee_damage_dice: None,
@@ -934,8 +944,8 @@ impl Game {
                     },
                     damage_dice_override: None,
                     curse: initial_item_curse(&self.content, &entry.item_kind_id),
-                    activation: None,
-                    charges: None,
+                    activation,
+                    charges,
                     fuel,
                 };
                 let draft = if rfb_jewelry {

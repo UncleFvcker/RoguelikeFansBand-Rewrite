@@ -2281,6 +2281,36 @@ fn rfb_base_kind_identity_rejects_duplicate_source_indices_and_kind_values() {
 }
 
 #[test]
+fn source_allocation_requires_armor_value_and_bounded_physical_book_tiers() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let mut missing_armor_value = artifact.content.clone();
+    missing_armor_value
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.robe")
+        .unwrap()
+        .rfb_value = None;
+    assert!(matches!(
+        validate_and_normalize(&mut missing_armor_value),
+        Err(ContentError::InvalidItemSourceIdentity(_))
+    ));
+    let mut invalid_book_tier = artifact.content;
+    invalid_book_tier
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.black-prayers")
+        .unwrap()
+        .rfb_base_kind
+        .as_mut()
+        .unwrap()
+        .sval = 4;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_book_tier),
+        Err(ContentError::InvalidItemSourceIdentity(_))
+    ));
+}
+
+#[test]
 fn bag_identity_uses_pval_and_rejects_invalid_capacity_metadata() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     for pval in [0, -1, 8191] {

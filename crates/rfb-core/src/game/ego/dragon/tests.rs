@@ -204,6 +204,8 @@ fn narrow(game: &mut Game, artifact: &rfb_content::CompiledArtifact, kind: &str)
         .iter_mut()
         .find(|table| table.id == "demo.loot-table.base-items")
         .unwrap();
+    // This test fixes the base kind and exercises materialization.
+    table.kind_selection = None;
     table.entries.retain(|entry| entry.item_kind_id == kind);
     assert_eq!(table.entries.len(), 1);
     game.content = Arc::new(ContentCatalog::from_artifact(artifact));
@@ -228,7 +230,7 @@ fn has_base_properties(item: &GeneratedItemDraft) -> bool {
 }
 
 #[test]
-fn natural_dragon_bases_keep_properties_when_great_power_is_suppressed_and_round_trip() {
+fn forced_dragon_bases_keep_properties_when_great_power_is_suppressed_and_round_trip() {
     let mut game = Game::new_with_build(83, "demo.build.warrior").unwrap();
     let original = game.content.clone();
     let artifact = source_artifact();

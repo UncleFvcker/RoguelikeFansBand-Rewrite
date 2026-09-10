@@ -39,6 +39,8 @@ fn narrow(game: &mut Game, artifact: &CompiledArtifact, kind: &str) {
         .iter_mut()
         .find(|table| table.id == "demo.loot-table.base-items")
         .unwrap();
+    // This test fixes the base kind and exercises materialization.
+    table.kind_selection = None;
     table.entries.retain(|entry| entry.item_kind_id == kind);
     table.entries.truncate(1);
     assert_eq!(table.entries.len(), 1, "{kind}");
@@ -207,7 +209,7 @@ fn random_artifact_jewelry_and_feanor_keep_their_distinct_gates() {
 }
 
 #[test]
-fn random_artifact_natural_pipeline_covers_slots_and_special_robe_and_light() {
+fn random_artifact_forced_base_pipeline_covers_slots_and_special_robe_and_light() {
     let source = source();
     let mut game = Game::new_with_build(85, "demo.build.warrior").unwrap();
     let mut slots = BTreeSet::new();

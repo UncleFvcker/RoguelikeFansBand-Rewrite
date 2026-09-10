@@ -387,7 +387,7 @@ fn direct_warrens_death_drops(
 }
 
 #[test]
-fn natural_ammunition_damage_dice_survive_generation_and_save() {
+fn forced_base_ammunition_damage_dice_survive_generation_and_save() {
     let mut game = Game::new(67);
     let original = game.content.clone();
     let path =
@@ -399,6 +399,8 @@ fn natural_ammunition_damage_dice_survive_generation_and_save() {
         .iter_mut()
         .find(|table| table.id == "demo.loot-table.base-items")
         .unwrap();
+    // This test fixes the base kind and exercises materialization.
+    table.kind_selection = None;
     table
         .entries
         .retain(|entry| entry.item_kind_id == "demo.item.sheaf-arrow");
@@ -435,12 +437,16 @@ fn monster_object_level_and_theme_reach_real_jewelry_generation() {
     let root =
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
     let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
-    let table = artifact
+    let mut table = artifact
         .content
         .loot_tables
-        .iter_mut()
+        .iter()
         .find(|table| table.id == "demo.loot-table.base-items")
-        .unwrap();
+        .unwrap()
+        .clone();
+    table.id = "test.loot-table.forced-jewelry".into();
+    // This test fixes the base kind and exercises materialization.
+    table.kind_selection = None;
     table
         .entries
         .retain(|entry| entry.item_kind_id == "demo.item.ring");
@@ -468,6 +474,7 @@ fn monster_object_level_and_theme_reach_real_jewelry_generation() {
         count_dice: vec![],
         minimum_quality: rfb_content::ItemQuality::Ordinary,
     });
+    artifact.content.loot_tables.push(table);
     let mut actual = Game::new_with_build(81, "demo.build.warrior").unwrap();
     actual.content = Arc::new(rfb_content::ContentCatalog::from_artifact(
         rfb_content::encode_content(artifact.content).unwrap(),
@@ -482,7 +489,7 @@ fn monster_object_level_and_theme_reach_real_jewelry_generation() {
     let mut expected = actual.clone();
     expected.rng.bounded(100); // The real monster theme gate precedes make_object.
     let context = LootContext {
-        table_id: "demo.loot-table.base-items".into(),
+        table_id: "test.loot-table.forced-jewelry".into(),
         floor_id: actual.current_floor_id.clone(),
         depth: 80, // _mon_drop_lvl(1, 80), independently from the floor depth.
         source: LootSource::MonsterDeath {
@@ -526,7 +533,7 @@ fn base_item_natural_egos_cover_all_equipment_types() {
     };
     let mut seen = BTreeSet::new();
     // Fixed representatives exercise the real shared pool without a large seed sweep.
-    for seed in [15, 67, 112, 185, 429, 539, 891, 1709, 1792, 3706] {
+    for seed in [3, 11, 27, 38, 176, 241, 429, 513, 1207, 2489, 4957] {
         let mut game = base.clone();
         game.rng = RfbRng::seeded(seed);
         let drops = game
@@ -604,9 +611,14 @@ fn base_item_natural_egos_cover_all_equipment_types() {
                         assert_eq!(base_kind.tval, 39);
                     }
                     265..=268 => {
-                        seen.insert("quiver");
                         assert_eq!(base_kind.tval, 46);
-                        assert!(item.intrinsic_properties.ammunition_capacity.is_some());
+                        if base_kind.sval == 0 {
+                            seen.insert("quiver");
+                            assert!(item.intrinsic_properties.ammunition_capacity.is_some());
+                        } else {
+                            seen.insert("bag");
+                            assert!(item.intrinsic_properties.bag_capacity.is_some());
+                        }
                     }
                     index => panic!("unexpected natural RFB ego source index {index}"),
                 }
@@ -629,11 +641,11 @@ fn base_item_natural_egos_cover_all_equipment_types() {
         );
         assert_eq!(restored.rng, game.rng, "seed {seed}");
         assert_eq!(restored.state_hash(), game.state_hash(), "seed {seed}");
-        if seen.len() == 11 {
+        if seen.len() == 12 {
             break;
         }
     }
-    assert_eq!(seen.len(), 11, "{seen:?}");
+    assert_eq!(seen.len(), 12, "{seen:?}");
 }
 
 #[test]
@@ -815,7 +827,8 @@ fn warrens_monster_drops_follow_original_probability_and_remains_profiles() {
         )
         .expect("an out-of-depth loot table should resolve without candidates");
     assert!(outside_depth.is_empty());
-    assert_eq!(surface.rng_draw_counter(), draws_before);
+    // The instant-artifact gate precedes even an empty source pool.
+    assert_eq!(surface.rng_draw_counter(), draws_before + 1);
 }
 
 #[test]

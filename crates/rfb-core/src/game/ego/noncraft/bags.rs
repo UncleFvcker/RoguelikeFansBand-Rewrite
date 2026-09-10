@@ -216,7 +216,7 @@ fn equip_bag(game: &mut Game, suffix: &str, ego: Option<&str>) {
 }
 
 #[test]
-fn natural_bags_cover_ordinary_good_great_all_egos_known_capacity_and_save() {
+fn forced_base_bags_cover_ordinary_good_great_all_egos_known_capacity_and_save() {
     let path =
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
     let artifact = rfb_content::compile_pack_dir(&path).unwrap();
@@ -237,6 +237,8 @@ fn natural_bags_cover_ordinary_good_great_all_egos_known_capacity_and_save() {
                 .iter_mut()
                 .find(|table| table.id == "demo.loot-table.base-items")
                 .unwrap();
+            // This test fixes the base kind and exercises materialization.
+            table.kind_selection = None;
             table.entries.retain(|entry| entry.item_kind_id == kind);
             assert_eq!(table.entries.len(), 1);
             let context = LootContext {

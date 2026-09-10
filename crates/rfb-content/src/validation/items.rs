@@ -804,6 +804,9 @@ pub(super) fn validate_items(
         if let Some(base_kind) = item.rfb_base_kind
             && (base_kind.source_index == 0
                 || base_kind.tval == 0
+                || (matches!(base_kind.tval, 30..=38) && item.rfb_value.is_none())
+                || (item.ability_book_id.is_some()
+                    && (!(90..=109).contains(&base_kind.tval) || base_kind.sval > 3))
                 || item.artifact_generation.is_some()
                 || item.tags.iter().any(|tag| tag == "artifact")
                 || !base_kind_source_indices.insert(base_kind.source_index)

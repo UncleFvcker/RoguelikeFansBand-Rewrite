@@ -2602,7 +2602,7 @@ fn tomte_tailored_acquirement_filters_headgear_by_birth_race_only() {
             "demo.item.star-acquirement-scroll",
         ] {
             let mut seen = BTreeSet::new();
-            for seed in 0..32 {
+            for seed in 0..256 {
                 let mut game = base.clone();
                 game.items.clear();
                 give_inventory_item(&mut game, "test.acquirement", scroll);
@@ -2614,7 +2614,7 @@ fn tomte_tailored_acquirement_filters_headgear_by_birth_race_only() {
                         target: None,
                     },
                 );
-                assert!(!game.items.is_empty());
+                // An empty selected category is a normal failed attempt.
                 for item in &game.items {
                     assert_eq!(item.location, ItemLocation::Ground(game.player.position));
                     assert_eq!(item.quality, ItemQualityDto::Exceptional);
@@ -2640,13 +2640,11 @@ fn tomte_tailored_acquirement_filters_headgear_by_birth_race_only() {
             },
         };
         let mut ordinary = BTreeSet::new();
-        for seed in 0..32 {
+        for seed in 0..256 {
             base.rng = RfbRng::seeded(seed);
-            ordinary.insert(
-                base.generate_one_loot_draft(&context, ItemGenerationMode::Great)
-                    .unwrap()
-                    .kind_id,
-            );
+            if let Some(draft) = base.generate_one_loot_draft(&context, ItemGenerationMode::Great) {
+                ordinary.insert(draft.kind_id);
+            }
         }
         assert_eq!(
             ordinary,
@@ -2687,7 +2685,7 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     assert_eq!(generated[0].location, ItemLocation::Ground(position));
     assert_eq!(generated[0].quality, ItemQualityDto::Exceptional);
     assert!(generated[0].id.starts_with("generated.item."));
-    assert_eq!(single.rng_draw_counter(), draws_before + 30);
+    assert_eq!(single.rng_draw_counter(), draws_before + 16);
     assert!(update.events.iter().any(|event| {
         event.kind == "item.use-acquirement"
             && event.args.get("count").map(String::as_str) == Some("1")
@@ -2712,8 +2710,8 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     );
     let generated_count = multiple.items.len() - (before_count - 1);
     assert!((2..=3).contains(&generated_count));
-    // The artifact gate now precedes Ego selection, changing this seed's choices.
-    assert_eq!(multiple.rng_draw_counter(), draws_before + 52);
+    // Category and allocation-depth draws change which item/Ego branches run.
+    assert_eq!(multiple.rng_draw_counter(), draws_before + 119);
 }
 
 #[test]

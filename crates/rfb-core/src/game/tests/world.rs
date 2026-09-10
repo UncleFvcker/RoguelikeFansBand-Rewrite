@@ -2643,7 +2643,7 @@ fn thieves_hideout_inline_floor_preserves_the_fixed_map_and_six_member_formation
     );
     assert_eq!(floor.player_position, Position { x: 1, y: 4 });
     assert_eq!(floor.entities.len(), 6);
-    assert_eq!(floor.items.len(), 4);
+    assert_eq!(floor.items.len(), 3);
 
     let candidates = [
         "demo.actor.agent-of-black-market",
@@ -3698,8 +3698,9 @@ fn warrens_every_generated_floor_has_a_normal_descent_and_return_route() {
             .iter()
             .filter(|item| matches!(item.location, ItemLocation::Ground(_)))
             .collect::<Vec<_>>();
+        // Allocation attempts can select an empty category; five is the budget.
         assert!(
-            (2..=5).contains(&ground_items.len()),
+            ground_items.len() <= 5,
             "seed {seed} depth {depth} generated {} floor items",
             ground_items.len()
         );

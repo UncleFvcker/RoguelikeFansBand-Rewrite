@@ -120,6 +120,31 @@
 
 ### B2：共享类别选择与 `get_obj_num`
 
+已实现。实际来源仍为 RFB `master` Git 对象 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。
+`game/loot/allocation.rs` 负责一次底材选择；`loot.rs` 在瞬时神器尝试失败后调用它，
+保留普通无候选结果。17 类按源顺序抽样，Great 增量优先于 Good；缺少身体槽位时整数减半，
+不读取槽位占用情况。Good 的分配层级 +10、127 截断、1/8 增深和 max level 过滤独立于后续物化等级。
+Good/Great 已使用各自的源候选谓词；普通书本权重读取 B1 的累计发现数，零权重不被提为 1。
+
+本批入口审计：
+
+| 源条件 | 当前入口与处理 |
+| --- | --- |
+| `DF1_BEGINNER` 禁止增深 | 此 ref 的 `d_info` 无 BEGINNER 配置，也没有运行时设置该标记的入口；不新增地牢开关 |
+| Ambrosia / Mead of Poetry 专属地牢 | 按实际楼层所属地牢的 `legacy_index` 检查 Olympus 22 / Asgard 39；当前两件物品和这两个地牢尚未导入，不声明可获取 |
+| `opening_chest` 排除嵌套箱子 | 当前没有开箱生成上下文；不造默认 false 的参数 |
+| `easy_id`、`only_downward()`、Insta Coffee | 当前没有对应游戏选项入口；`only_downward()` 在源端是 coffee_break 或 ironman_downward，不等同普通下楼动作 |
+| `ironman_shops` 取消书本衰减 | 当前没有此选项，沿用正常商店模式的阈值 10/10/3/2，Arcane 各册为 10 |
+| Rage Mage 的高阶 Rage 书上限 8 | 当前无该职业/书本入口；当前 Good/Great 高阶书上限为累计 found < 2 |
+| Monster Ring 双倍 jewelry 类别 | 此源表没有 `kind_is_jewelry` 类别行，该分支不会命中；当前也无该身份入口 |
+| ANY 身体槽、主题随机接受与 tailored hook | 当前身体模板无源 ANY 槽；主题仍沿用 B0 静态候选，完整 hook 优先级及可达身份逻辑由 B3/B4 接续 |
+
+新候选已验证通过生成、地面提交、拾取和保存恢复，覆盖书本、装置、药水与卷轴。
+共享池抽样还暴露了随机神器龙鳞甲漏初始化底材激活的问题；已按 `devices.c::obj_get_effect`
+保留底材激活与充能，再进入神器估值和构造，不放宽存档校验。
+仅验证物化的旧测试显式指定底材；真实共享池测试保留类别选择及正常失败。
+本批没有实现 B5 的内外层重试，因此 Good/Great/Acquirement 仍可能因空类别少产物品；不能宣称奖励完整调度已闭合。
+
 落点：在现有 `game/loot` 职责下增加一个底材分配子模块，`loot.rs` 保留调用协调。
 
 1. 接收当前 `LootContext`、生成模式、真实地牢属性和玩家状态；返回选中的 kind 或正常无候选结果。

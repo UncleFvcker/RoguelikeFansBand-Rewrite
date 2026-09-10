@@ -243,7 +243,7 @@ fn jewelry_exhaustion_uses_a_fresh_1001st_candidate_including_inner_artifact_rng
 }
 
 #[test]
-fn jewelry_natural_pipeline_uses_one_outer_limit_roll_and_saves_complete_candidates() {
+fn jewelry_forced_base_pipeline_uses_one_outer_limit_roll_and_saves_complete_candidates() {
     use std::sync::Arc;
     let artifact = rfb_content::compile_pack_dir(
         &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original"),
@@ -258,6 +258,8 @@ fn jewelry_natural_pipeline_uses_one_outer_limit_roll_and_saves_complete_candida
             .iter_mut()
             .find(|table| table.id == "demo.loot-table.base-items")
             .unwrap();
+        // This test fixes the base kind and exercises materialization.
+        table.kind_selection = None;
         table.entries.retain(|entry| entry.item_kind_id == kind);
         table.entries.truncate(1);
         assert_eq!(table.entries.len(), 1);
@@ -395,6 +397,8 @@ fn jewelry_value_distribution_report() {
             .iter_mut()
             .find(|table| table.id == "demo.loot-table.base-items")
             .unwrap();
+        // This test fixes the base kind and exercises materialization.
+        table.kind_selection = None;
         table.entries.retain(|entry| entry.item_kind_id == kind);
         table.entries.truncate(1);
         assert_eq!(table.entries.len(), 1);
