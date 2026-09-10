@@ -1139,7 +1139,29 @@
       "objectives": [{ "kind": "clear-floor", "floorId": "demo.floor.anambar-orc-camp" }],
       "reward": {
         "itemInstanceId": "demo.task.anambar-orc-camp.reward.1",
-        "entries": [{ "itemKindId": "demo.item.frost-ball-wand", "quantity": 1, "weight": 1 }]
+        "entries": [
+          {"itemKindId": "demo.item.frost-ball-wand", "quantity": 1, "weight": 1}
+        ],
+        "classOverrides": [
+          {
+            "classId": "demo.class.berserker",
+            "entries": [
+              {"itemKindId": "demo.item.ball-and-chain", "quantity": 1, "weight": 100, "affixIds": ["rfb-legacy.affix.slaying"], "generationDepth": 20},
+              {"itemKindId": "demo.item.bo-staff", "quantity": 1, "weight": 100, "affixIds": ["rfb-legacy.affix.slaying"], "generationDepth": 20},
+              {"itemKindId": "demo.item.club", "quantity": 1, "weight": 100, "affixIds": ["rfb-legacy.affix.slaying"], "generationDepth": 20},
+              {"itemKindId": "demo.item.flail", "quantity": 1, "weight": 100, "affixIds": ["rfb-legacy.affix.slaying"], "generationDepth": 20},
+              {"itemKindId": "demo.item.jo-staff", "quantity": 1, "weight": 50, "affixIds": ["rfb-legacy.affix.slaying"], "generationDepth": 20},
+              {"itemKindId": "demo.item.lead-filled-mace", "quantity": 1, "weight": 100, "affixIds": ["rfb-legacy.affix.slaying"], "generationDepth": 20},
+              {"itemKindId": "demo.item.mace", "quantity": 1, "weight": 100, "affixIds": ["rfb-legacy.affix.slaying"], "generationDepth": 20},
+              {"itemKindId": "demo.item.morning-star", "quantity": 1, "weight": 100, "affixIds": ["rfb-legacy.affix.slaying"], "generationDepth": 20},
+              {"itemKindId": "demo.item.nunchaku", "quantity": 1, "weight": 50, "affixIds": ["rfb-legacy.affix.slaying"], "generationDepth": 20},
+              {"itemKindId": "demo.item.quarterstaff", "quantity": 1, "weight": 100, "affixIds": ["rfb-legacy.affix.slaying"], "generationDepth": 20},
+              {"itemKindId": "demo.item.three-piece-rod", "quantity": 1, "weight": 33, "affixIds": ["rfb-legacy.affix.slaying"], "generationDepth": 20},
+              {"itemKindId": "demo.item.war-hammer", "quantity": 1, "weight": 100, "affixIds": ["rfb-legacy.affix.slaying"], "generationDepth": 20},
+              {"itemKindId": "demo.item.whip", "quantity": 1, "weight": 100, "affixIds": ["rfb-legacy.affix.slaying"], "generationDepth": 20}
+            ]
+          }
+        ]
       }
     },
     {
@@ -1237,7 +1259,17 @@
       "objectives": [{ "kind": "clear-floor", "floorId": "demo.floor.anambar-apina-island" }],
       "reward": {
         "itemInstanceId": "demo.task.anambar-apina-island.reward.1",
-        "entries": [{ "itemKindId": "demo.item.confusing-light-staff", "quantity": 1, "weight": 1 }]
+        "entries": [
+          {"itemKindId": "demo.item.confusing-light-staff", "quantity": 1, "weight": 1}
+        ],
+        "classOverrides": [
+          {
+            "classId": "demo.class.berserker",
+            "entries": [
+              {"itemKindId": "demo.item.vitalis-elixir", "quantity": 1, "weight": 1}
+            ]
+          }
+        ]
       }
     },
     {
@@ -1253,7 +1285,17 @@
       "objectives": [{ "kind": "clear-floor", "floorId": "demo.floor.anambar-lord-bovin-treachery" }],
       "reward": {
         "itemInstanceId": "demo.task.anambar-lord-bovin-treachery.reward.1",
-        "entries": [{ "itemKindId": "demo.item.confusing-light-staff", "quantity": 1, "weight": 1 }]
+        "entries": [
+          {"itemKindId": "demo.item.confusing-light-staff", "quantity": 1, "weight": 1}
+        ],
+        "classOverrides": [
+          {
+            "classId": "demo.class.berserker",
+            "entries": [
+              {"itemKindId": "demo.item.vitalis-elixir", "quantity": 1, "weight": 1}
+            ]
+          }
+        ]
       }
     },
     {
@@ -1295,7 +1337,17 @@
       "objectives": [{ "kind": "clear-floor", "floorId": "demo.floor.anambar-cellar-killer" }],
       "reward": {
         "itemInstanceId": "demo.task.anambar-cellar-killer.reward.1",
-        "entries": [{ "itemKindId": "demo.item.destruction-staff", "quantity": 1, "weight": 1 }]
+        "entries": [
+          {"itemKindId": "demo.item.destruction-staff", "quantity": 1, "weight": 1}
+        ],
+        "classOverrides": [
+          {
+            "classId": "demo.class.berserker",
+            "entries": [
+              {"itemKindId": "demo.item.vitalis-elixir", "quantity": 1, "weight": 1}
+            ]
+          }
+        ]
       }
     },
     {
@@ -1346,7 +1398,15 @@
       "reward": {
         "itemInstanceId": "demo.task.crows-nest.reward.1",
         "entries": [
-          { "itemKindId": "demo.item.enlightenment-staff", "quantity": 1, "weight": 1 }
+          {"itemKindId": "demo.item.enlightenment-staff", "quantity": 1, "weight": 1}
+        ],
+        "classOverrides": [
+          {
+            "classId": "demo.class.berserker",
+            "entries": [
+              {"itemKindId": "demo.item.enlightenment-potion", "quantity": 1, "weight": 1}
+            ]
+          }
         ]
       }
     },
@@ -1396,7 +1456,15 @@
       "reward": {
         "itemInstanceId": "demo.task.vapor-quest.reward.1",
         "entries": [
-          { "itemKindId": "demo.item.detection-rod", "quantity": 1, "weight": 1 }
+          {"itemKindId": "demo.item.detection-rod", "quantity": 1, "weight": 1}
+        ],
+        "classOverrides": [
+          {
+            "classId": "demo.class.berserker",
+            "entries": [
+              {"itemKindId": "demo.item.sling", "quantity": 1, "weight": 1, "affixIds": ["rfb-legacy.affix.the-hunter"], "generationDepth": 40}
+            ]
+          }
         ]
       }
     },
@@ -1416,21 +1484,28 @@
       "reward": {
         "itemInstanceId": "demo.task.old-castle.reward.1",
         "entries": [
-          { "itemKindId": "demo.item.crisdurian", "quantity": 1, "weight": 1 }
+          {"itemKindId": "demo.item.crisdurian", "quantity": 1, "weight": 1}
         ],
         "classOverrides": [
           {
             "classId": "demo.class.warrior",
             "entries": [
-              { "itemKindId": "demo.item.slayer", "quantity": 1, "weight": 1 },
-              { "itemKindId": "demo.item.pain", "quantity": 1, "weight": 4 }
+              {"itemKindId": "demo.item.slayer", "quantity": 1, "weight": 1},
+              {"itemKindId": "demo.item.pain", "quantity": 1, "weight": 4}
             ]
           },
           {
             "classId": "demo.class.mindcrafter",
             "entries": [
-              { "itemKindId": "demo.item.eternity", "quantity": 1, "weight": 1 },
-              { "itemKindId": "demo.item.palantir-of-westernesse", "quantity": 1, "weight": 4 }
+              {"itemKindId": "demo.item.eternity", "quantity": 1, "weight": 1},
+              {"itemKindId": "demo.item.palantir-of-westernesse", "quantity": 1, "weight": 4}
+            ]
+          },
+          {
+            "classId": "demo.class.berserker",
+            "entries": [
+              {"itemKindId": "demo.item.slayer", "quantity": 1, "weight": 1},
+              {"itemKindId": "demo.item.pain", "quantity": 1, "weight": 4}
             ]
           }
         ]
@@ -1527,7 +1602,7 @@
     ,{"id":"demo.task.thalos-shadow-fairies","nameKey":"task-demo-thalos-shadow-fairies-name","descriptionKey":"task-demo-thalos-shadow-fairies-description","completedDescriptionKey":"task-demo-thalos-shadow-fairies-completed-description","failedDescriptionKey":"task-demo-thalos-shadow-fairies-failed-description","sourceFacilityId":"demo.town-facility.thalos-palace","location":{"kind":"dedicated-floors","floorIds":["demo.floor.thalos-shadow-fairies"]},"objectives":[{"kind":"clear-floor","floorId":"demo.floor.thalos-shadow-fairies"}],"reward":{"itemInstanceId":"demo.task.thalos-shadow-fairies.reward.1","entries":[{"itemKindId":"demo.item.hard-leather-cap","quantity":1,"weight":1,"affixIds":["rfb-legacy.affix.seeing"]}]}}
     ,{"id":"demo.task.thalos-djinnis-cavern","nameKey":"task-demo-thalos-djinnis-cavern-name","descriptionKey":"task-demo-thalos-djinnis-cavern-description","completedDescriptionKey":"task-demo-thalos-djinnis-cavern-completed-description","failedDescriptionKey":"task-demo-thalos-djinnis-cavern-failed-description","sourceFacilityId":"demo.town-facility.thalos-palace","prerequisiteTaskId":"demo.task.thalos-shadow-fairies","unlockWhenPrerequisiteFailed":true,"substitution":{"groupId":"demo.task-substitution.thalos-palace-line","alternateTaskId":"demo.task.thalos-cyclops-lair"},"location":{"kind":"dedicated-floors","floorIds":["demo.floor.thalos-djinnis-cavern"]},"objectives":[{"kind":"clear-floor","floorId":"demo.floor.thalos-djinnis-cavern"}],"reward":{"itemInstanceId":"demo.task.thalos-djinnis-cavern.reward.1","entries":[{"itemKindId":"demo.item.feanorian-lamp","quantity":1,"weight":1,"affixIds":["rfb-legacy.affix.lite-am-quest"]}]}}
     ,{"id":"demo.task.thalos-cyclops-lair","nameKey":"task-demo-thalos-cyclops-lair-name","descriptionKey":"task-demo-thalos-cyclops-lair-description","completedDescriptionKey":"task-demo-thalos-cyclops-lair-completed-description","failedDescriptionKey":"task-demo-thalos-cyclops-lair-failed-description","sourceFacilityId":"demo.town-facility.thalos-palace","prerequisiteTaskId":"demo.task.thalos-shadow-fairies","unlockWhenPrerequisiteFailed":true,"location":{"kind":"dedicated-floors","floorIds":["demo.floor.thalos-cyclops-lair"]},"objectives":[{"kind":"clear-floor","floorId":"demo.floor.thalos-cyclops-lair"}],"reward":{"itemInstanceId":"demo.task.thalos-cyclops-lair.reward.1","entries":[{"itemKindId":"demo.item.sling","quantity":1,"weight":1}]}}
-    ,{"id":"demo.task.thalos-old-watchtower","nameKey":"task-demo-thalos-old-watchtower-name","descriptionKey":"task-demo-thalos-old-watchtower-description","completedDescriptionKey":"task-demo-thalos-old-watchtower-completed-description","failedDescriptionKey":"task-demo-thalos-old-watchtower-failed-description","sourceFacilityId":"demo.town-facility.thalos-palace","prerequisiteTaskId":"demo.task.thalos-djinnis-cavern","unlockWhenPrerequisiteFailed":true,"location":{"kind":"dedicated-floors","floorIds":["demo.floor.thalos-old-watchtower"]},"objectives":[{"kind":"clear-floor","floorId":"demo.floor.thalos-old-watchtower"}],"reward":{"itemInstanceId":"demo.task.thalos-old-watchtower.reward.1","entries":[{"itemKindId":"demo.item.drain-life-wand","quantity":1,"weight":1}]}}
+    ,{"id":"demo.task.thalos-old-watchtower","nameKey":"task-demo-thalos-old-watchtower-name","descriptionKey":"task-demo-thalos-old-watchtower-description","completedDescriptionKey":"task-demo-thalos-old-watchtower-completed-description","failedDescriptionKey":"task-demo-thalos-old-watchtower-failed-description","sourceFacilityId":"demo.town-facility.thalos-palace","prerequisiteTaskId":"demo.task.thalos-djinnis-cavern","unlockWhenPrerequisiteFailed":true,"location":{"kind":"dedicated-floors","floorIds":["demo.floor.thalos-old-watchtower"]},"objectives":[{"kind":"clear-floor","floorId":"demo.floor.thalos-old-watchtower"}],"reward":{"itemInstanceId":"demo.task.thalos-old-watchtower.reward.1","entries":[{"itemKindId":"demo.item.drain-life-wand","quantity":1,"weight":1}],"classOverrides":[{"classId":"demo.class.berserker","entries":[{"itemKindId":"demo.item.long-sword","quantity":1,"weight":1,"affixIds":["rfb-legacy.affix.death"],"generationDepth":32}]}]}}
     ,{"id":"demo.task.thalos-cloning-pits","nameKey":"task-demo-thalos-cloning-pits-name","descriptionKey":"task-demo-thalos-cloning-pits-description","completedDescriptionKey":"task-demo-thalos-cloning-pits-completed-description","failedDescriptionKey":"task-demo-thalos-cloning-pits-failed-description","sourceFacilityId":"demo.town-facility.thalos-palace","prerequisiteTaskId":"demo.task.thalos-old-watchtower","unlockWhenPrerequisiteFailed":true,"location":{"kind":"dedicated-floors","floorIds":["demo.floor.thalos-cloning-pits"]},"objectives":[{"kind":"clear-floor","floorId":"demo.floor.thalos-cloning-pits"}],"reward":{"itemInstanceId":"demo.task.thalos-cloning-pits.reward.1","entries":[{"itemKindId":"demo.item.pair-of-hard-leather-boots","quantity":1,"weight":1,"affixIds":["rfb-legacy.affix.equipment-am-quest"]}]}}
     ,{"id":"demo.task.thalos-clear-wreckage","nameKey":"task-demo-thalos-clear-wreckage-name","descriptionKey":"task-demo-thalos-clear-wreckage-description","completedDescriptionKey":"task-demo-thalos-clear-wreckage-completed-description","failedDescriptionKey":"task-demo-thalos-clear-wreckage-failed-description","sourceFacilityId":"demo.town-facility.thalos-palace","prerequisiteTaskId":"demo.task.thalos-cloning-pits","unlockWhenPrerequisiteFailed":true,"location":{"kind":"dedicated-floors","floorIds":["demo.floor.thalos-clear-wreckage"]},"objectives":[{"kind":"clear-floor","floorId":"demo.floor.thalos-clear-wreckage"}],"reward":{"itemInstanceId":"demo.task.thalos-clear-wreckage.reward.1","entries":[{"itemKindId":"demo.item.tsunami-wand","quantity":1,"weight":1}]}}
     ,{"id":"demo.task.thalos-tidy-laboratory","nameKey":"task-demo-thalos-tidy-laboratory-name","descriptionKey":"task-demo-thalos-tidy-laboratory-description","completedDescriptionKey":"task-demo-thalos-tidy-laboratory-completed-description","failedDescriptionKey":"task-demo-thalos-tidy-laboratory-failed-description","sourceFacilityId":"demo.town-facility.thalos-royal-academy","prerequisiteTaskId":"demo.task.thalos-mushrooms","unlockWhenPrerequisiteFailed":true,"location":{"kind":"dedicated-floors","floorIds":["demo.floor.thalos-tidy-laboratory"]},"objectives":[{"kind":"clear-floor","floorId":"demo.floor.thalos-tidy-laboratory"}],"reward":{"itemInstanceId":"demo.task.thalos-tidy-laboratory.reward.1","entries":[{"itemKindId":"demo.item.leather-gloves","quantity":1,"weight":1,"affixIds":["rfb-legacy.affix.wizard-gloves"]}]}}

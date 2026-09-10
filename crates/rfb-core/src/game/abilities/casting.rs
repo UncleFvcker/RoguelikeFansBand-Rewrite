@@ -62,7 +62,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
+    ) -> Result<Option<Position>, CoreError> {
         let ability = self.content.ability(ability_id).cloned();
         if self.player_has_status_kind(STATUS_CONFUSION)
             && ability.as_ref().is_none_or(|ability| {
@@ -76,7 +76,7 @@ impl Game {
                 ability_id: ability_id.to_owned(),
                 reason: "confused".to_owned(),
             });
-            return Ok(());
+            return Ok(None);
         }
         let mutation_activation = self.mutation_activation_for_ability(ability_id).cloned();
         let race_activation = self.race_ability_activation(ability_id).cloned();
@@ -91,14 +91,14 @@ impl Game {
                 ability_id: ability_id.to_owned(),
                 reason: "no-casting-profile".to_owned(),
             });
-            return Ok(());
+            return Ok(None);
         }
         let Some(ability) = ability else {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "unknown-ability".to_owned(),
             });
-            return Ok(());
+            return Ok(None);
         };
         if ability.tags.iter().any(|tag| tag == "requires-sight")
             && self.player_has_status_kind(STATUS_BLINDNESS)
@@ -107,7 +107,7 @@ impl Game {
                 ability_id: ability_id.to_owned(),
                 reason: "blind".to_owned(),
             });
-            return Ok(());
+            return Ok(None);
         }
         let source = if mutation_activation.is_some() {
             AbilitySourceDto::Mutation
@@ -139,21 +139,21 @@ impl Game {
                 ability_id: ability_id.to_owned(),
                 reason: "afraid".to_owned(),
             });
-            return Ok(());
+            return Ok(None);
         }
         if source == AbilitySourceDto::Learned && self.player_has_anti_magic() {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "anti-magic".to_owned(),
             });
-            return Ok(());
+            return Ok(None);
         }
         if source == AbilitySourceDto::Learned && self.player_has_status_kind(STATUS_BERSERK) {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "berserk".to_owned(),
             });
-            return Ok(());
+            return Ok(None);
         }
         let mut ability = match source {
             AbilitySourceDto::Learned => self.effective_casting_ability(
@@ -224,13 +224,13 @@ impl Game {
                 ability_id: ability_id.to_owned(),
                 reason: reason.to_owned(),
             });
-            return Ok(());
+            return Ok(None);
         }
         if matches!(ability.effect, AbilityEffectDefinition::Rodeo)
             && self.riding_actor_id.is_some()
         {
             events.push(DomainEvent::RodeoAlreadyRiding);
-            return Ok(());
+            return Ok(None);
         }
 
         // Validate the target before charging resources/HP or drawing the
@@ -240,7 +240,7 @@ impl Game {
             events.push(DomainEvent::AbilityTargetUnavailable {
                 ability_id: ability.id,
             });
-            return Ok(());
+            return Ok(None);
         };
 
         let mutation_progress = AbilityProgress {
@@ -331,7 +331,7 @@ impl Game {
                 ability_id: ability_id.to_owned(),
                 reason: "resource-unavailable".to_owned(),
             });
-            return Ok(());
+            return Ok(None);
         }
         let resource_paid = if innate_power {
             resource_before.min(resource_cost)
@@ -354,7 +354,7 @@ impl Game {
                 ability_id: ability_id.to_owned(),
                 reason: "insufficient-resource".to_owned(),
             });
-            return Ok(());
+            return Ok(None);
         }
         if matches!(
             ability.effect,
@@ -365,7 +365,7 @@ impl Game {
                 ability_id: ability_id.to_owned(),
                 reason: "insufficient-recharge-resource".to_owned(),
             });
-            return Ok(());
+            return Ok(None);
         }
         if resource_paid > 0 {
             let id = resource_id
@@ -435,7 +435,7 @@ impl Game {
                     removed_entities,
                 )?;
             }
-            return Ok(());
+            return Ok(None);
         }
         let cast_event_index = events.len();
         if source == AbilitySourceDto::Class {

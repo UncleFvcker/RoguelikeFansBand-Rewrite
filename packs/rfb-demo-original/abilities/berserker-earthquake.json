@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.berserker-earthquake",
+  "nameKey": "ability-demo-berserker-earthquake-name",
+  "descriptionKey": "ability-demo-berserker-earthquake-description",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "abilityProgramId": "demo.ability-program.nature-earthquake",
+  "tags": [
+    "berserker",
+    "berserker-technique"
+  ]
+}

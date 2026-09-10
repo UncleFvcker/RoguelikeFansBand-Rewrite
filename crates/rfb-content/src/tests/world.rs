@@ -537,6 +537,22 @@ fn task_validation_uses_current_warrens_tasks() {
         validate_and_normalize(&mut invalid),
         Err(ContentError::InvalidTask(_))
     ));
+
+    let mut invalid = artifact.content.clone();
+    let task = invalid
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .unwrap()
+        .tasks
+        .iter_mut()
+        .find(|task| task.id == "demo.task.vapor-quest")
+        .unwrap();
+    task.reward.as_mut().unwrap().class_overrides[0].entries[0].generation_depth = Some(0);
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidTask(_))
+    ));
 }
 
 #[test]
@@ -11506,7 +11522,7 @@ fn fixed_wilderness_task_geometry_and_rewards_match_source() {
             task.reward.as_ref().unwrap().entries[0].item_kind_id,
             "demo.item.crisdurian"
         );
-        assert_eq!(task.reward.as_ref().unwrap().class_overrides.len(), 2);
+        assert_eq!(task.reward.as_ref().unwrap().class_overrides.len(), 3);
         assert_eq!(
             task.reward
                 .as_ref()
@@ -13553,7 +13569,11 @@ fn anambar_service_roles_and_rewards_match_source() {
         };
         assert_eq!(
             facility("demo.town-facility.anambar-warrior-guild").owner_class_ids,
-            ["demo.class.cavalry", "demo.class.warrior"]
+            [
+                "demo.class.berserker",
+                "demo.class.cavalry",
+                "demo.class.warrior"
+            ]
         );
         assert_eq!(
             facility("demo.town-facility.anambar-mammon-temple").member_class_ids,

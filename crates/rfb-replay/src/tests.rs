@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use rfb_core::stats::experience_required_for_level_with_factor;
+use rfb_core::stats::{SkillProgress, experience_required_for_level_with_factor};
 use rfb_protocol::{
     ActorSaveDto, Direction, GameCommand, MapScaleDto, MonsterPackBehaviorDto, Position,
 };
@@ -390,10 +390,9 @@ fn level_thirty_race(seed: u64, race_id: &str) -> Game {
     progress.maximum_experience = progress.experience;
     progress.pending_attribute_increases = 6;
     for skill in &mut progress.skills {
-        skill.current = skill
-            .base
-            .saturating_add(skill.growth_per_ten_levels.saturating_mul(3))
-            .clamp(0, skill.maximum);
+        skill.current =
+            SkillProgress::at_level(skill.base, skill.growth_per_ten_levels, skill.maximum, 30)
+                .current;
     }
     Game::from_save(payload).expect("level 30 race replay precondition should restore")
 }
@@ -419,15 +418,9 @@ fn level_thirty_five_draconian(seed: u64) -> Game {
     progress.maximum_experience = progress.experience;
     progress.pending_attribute_increases = 7;
     for skill in &mut progress.skills {
-        skill.current = skill
-            .base
-            .saturating_add(
-                skill
-                    .growth_per_ten_levels
-                    .saturating_mul(35)
-                    .saturating_div(10),
-            )
-            .clamp(0, skill.maximum);
+        skill.current =
+            SkillProgress::at_level(skill.base, skill.growth_per_ten_levels, skill.maximum, 35)
+                .current;
     }
     Game::from_save(payload).expect("level 35 Draconian replay precondition should restore")
 }

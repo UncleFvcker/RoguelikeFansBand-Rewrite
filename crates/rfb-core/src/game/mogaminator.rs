@@ -29,6 +29,7 @@ pub(super) enum MogaminatorItemResolution {
         rule_line: u32,
         ground: bool,
         captured_actor: Option<CapturedActor>,
+        book_events: Vec<DomainEvent>,
     },
     DestroyUnavailable {
         item_id: String,
@@ -481,13 +482,22 @@ impl Game {
                 }
                 MogaminatorDisposition::Destroy if !self.mogaminator.leave_destroyed_items => {
                     match self.destroy_item(&item_id, quantity) {
-                        Ok(outcome) => outcomes.push(MogaminatorItemResolution::Destroyed {
-                            kind_id: outcome.kind_id,
-                            quantity: outcome.quantity,
-                            rule_line: line_number,
-                            ground,
-                            captured_actor,
-                        }),
+                        Ok(outcome) => {
+                            let mut book_events = Vec::new();
+                            self.reward_destroyed_book(
+                                &outcome.kind_id,
+                                outcome.quantity,
+                                &mut book_events,
+                            );
+                            outcomes.push(MogaminatorItemResolution::Destroyed {
+                                kind_id: outcome.kind_id,
+                                quantity: outcome.quantity,
+                                rule_line: line_number,
+                                ground,
+                                captured_actor,
+                                book_events,
+                            });
+                        }
                         Err(reason) => {
                             outcomes.push(MogaminatorItemResolution::DestroyUnavailable {
                                 item_id,
@@ -703,7 +713,9 @@ impl Game {
                     rule_line,
                     ground,
                     captured_actor,
+                    book_events,
                 } => {
+                    events.extend(book_events);
                     if let Some(captured_actor) = captured_actor {
                         self.release_captured_actor_near(
                             captured_actor,

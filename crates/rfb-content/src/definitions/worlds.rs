@@ -708,6 +708,9 @@ pub struct TaskRewardEntryDefinition {
     pub weight: u32,
     #[serde(default)]
     pub affix_ids: Vec<String>,
+    /// Source object level for scripted rewards which request depth-based magic.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub generation_depth: Option<u16>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

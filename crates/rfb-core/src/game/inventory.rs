@@ -1213,6 +1213,74 @@ impl Game {
         Ok(DestroyItemOutcome { kind_id, quantity })
     }
 
+    pub(super) fn reward_destroyed_book(
+        &mut self,
+        kind_id: &str,
+        quantity: u32,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let Some(book) = self
+            .content
+            .item(kind_id)
+            .and_then(|item| item.ability_book_id.as_deref())
+            .and_then(|id| self.content.ability_book(id))
+        else {
+            return;
+        };
+        let (Some(realm), Some(rank @ 3..=4)) = (book.realm_id.as_deref(), book.rank) else {
+            return;
+        };
+        if !matches!(
+            realm,
+            "life"
+                | "sorcery"
+                | "nature"
+                | "chaos"
+                | "death"
+                | "trump"
+                | "craft"
+                | "daemon"
+                | "crusade"
+                | "necromancy"
+                | "armageddon"
+                | "music"
+                | "law"
+                | "hex"
+        ) {
+            return;
+        }
+        let vitality = match realm {
+            "life" => -1,
+            "death" | "necromancy" => 1,
+            _ => 0,
+        };
+        let gains_experience =
+            self.character_definitions()
+                .is_some_and(|(build, race, class, _)| {
+                    race.id != "rfb-legacy.race.android"
+                        && match class.id.as_str() {
+                            "demo.class.warrior" | "demo.class.berserker" => true,
+                            "demo.class.paladin" => {
+                                matches!(realm, "life" | "crusade")
+                                    != matches!(
+                                        build.first_realm_id.as_deref(),
+                                        Some("life" | "crusade")
+                                    )
+                            }
+                            _ => false,
+                        }
+                });
+        if gains_experience && self.progress.experience < crate::stats::MAX_EXPERIENCE {
+            let amount = (self.progress.maximum_experience / 20).min(10_000);
+            let amount = if rank == 3 { amount / 4 } else { amount };
+            self.apply_player_experience(amount.max(1) * u64::from(quantity), events);
+        }
+        if vitality != 0 {
+            self.add_virtue(rfb_protocol::VirtueKindDto::Unlife, -vitality);
+            self.add_virtue(rfb_protocol::VirtueKindDto::Vitality, vitality);
+        }
+    }
+
     pub(super) fn inscribe_item(
         &mut self,
         item_id: &str,

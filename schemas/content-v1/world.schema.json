@@ -2114,6 +2114,16 @@
           },
           "type": "array"
         },
+        "generationDepth": {
+          "description": "Source object level for scripted rewards which request depth-based magic.",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "itemKindId": {
           "type": "string"
         },

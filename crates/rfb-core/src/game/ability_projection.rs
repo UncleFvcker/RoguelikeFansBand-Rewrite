@@ -651,6 +651,8 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
             },
         },
         AbilityEffectDefinition::MeleeAdjacent => AbilityEffectSpecDto::MeleeAdjacent,
+        AbilityEffectDefinition::ChargeThrough => AbilityEffectSpecDto::ChargeThrough,
+        AbilityEffectDefinition::SmashTrap => AbilityEffectSpecDto::SmashTrap,
         AbilityEffectDefinition::DraconianStrike { .. } => AbilityEffectSpecDto::MeleeAdjacent,
         AbilityEffectDefinition::ProbeMonsters => AbilityEffectSpecDto::ProbeMonsters,
         AbilityEffectDefinition::Concentrate => AbilityEffectSpecDto::Concentrate,

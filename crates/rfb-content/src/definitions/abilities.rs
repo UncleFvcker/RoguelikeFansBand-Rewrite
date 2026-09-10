@@ -908,6 +908,8 @@ pub enum AbilityEffectDefinition {
         mode: SniperShotModeDefinition,
     },
     MeleeAdjacent,
+    ChargeThrough,
+    SmashTrap,
     ProbeMonsters,
     Concentrate,
     Rodeo,

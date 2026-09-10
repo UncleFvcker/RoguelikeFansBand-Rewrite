@@ -3924,6 +3924,8 @@ impl Game {
                 healing_amount,
                 life_force_amount,
             } => {
+                self.add_virtue(VirtueKindDto::Vitality, 1);
+                self.add_virtue(VirtueKindDto::Unlife, -5);
                 self.restore_player_experience_and_life_force(*life_force_amount, events);
                 self.player.statuses.retain(|status| {
                     !matches!(
@@ -3932,6 +3934,8 @@ impl Game {
                             | STATUS_BLINDNESS
                             | STATUS_CONFUSION
                             | STATUS_STUN
+                            | STATUS_HALLUCINATION
+                            | STATUS_UNWELL
                             | STATUS_BLEEDING
                             | STATUS_SLOW
                             | "rfb.status.berserk"

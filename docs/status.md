@@ -7,17 +7,17 @@
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.243 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| 协议 | 1.244 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 118 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 12 / 13 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.405.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.406.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v319，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 8 个 Class、15 个 Build、57 个 Race、32 本能力书、1,855 个 ability 文件、375 个 item、1,404 个 actor、168 个 affix、152 个 mutation。世界定义含 25 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、62 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 8 个 Class、15 个 Build、57 个 Race、32 本能力书、1,861 个 ability 文件、375 个 item、1,404 个 actor、168 个 affix、152 个 mutation。世界定义含 25 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、62 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
 权威内容统计工具是 `rfb-contentc inspect-source`。本次集成已运行内容编译；静态统计不替代行为验收。
 
-狂战士已完成[接入计划](berserker-class-plan.md)前两步：来源审计、正式出生/成长、常驻被动、战斗与使用限制、HP 费用结算基础已实现；六项能力效果及正常创角入口尚未开放。当前玩家仍只能选择下列七个构筑。
+狂战士已完成[接入计划](berserker-class-plan.md)前三步：来源审计、正式出生/成长、常驻被动、战斗与使用限制、六项 HP 能力、八项任务奖励及高阶书销毁收益已实现。核心专项覆盖实际施放、失败/取消、吸血/死亡、陷阱和野外移动、奖励领取与保存恢复；公共适配边界见[来源审计](berserker-source-audit.md)。正常创角入口尚未开放，当前玩家仍只能选择下列七个构筑；狂战士 UI 与桌面验收属于第四、五步。
 
 ## 玩家入口
 

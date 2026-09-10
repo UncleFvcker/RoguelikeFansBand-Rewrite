@@ -1,6 +1,6 @@
 # 狂战士来源与差异审计
 
-第一、二步已完成，核对日期 2026-09-10。对应[职业计划](berserker-class-plan.md)。下文保留第一步的来源与差异分析；第二步已实现范围及复核修正在第 8 节，第三步效果与奖励尚未接入，正常玩家入口仍关闭。
+第一至三步已完成，核对日期 2026-09-10。对应[职业计划](berserker-class-plan.md)。下文保留第一步的来源与差异分析；第二、三步已实现范围及复核修正在第 8、9 节。正常玩家入口仍关闭，UI 与桌面验收留在第四、五步。
 
 ## 1. 基线与审计范围
 
@@ -160,11 +160,11 @@ git -C D:/codex/Frogcomposband/master show master:src/berserker.c
 | `q_old_castle.txt` | `demo.task.old-castle` | `demo.item.slayer` : `demo.item.pain` = 1:4；已有战士奖励池可直接复用 |
 | `q_wtower.txt` | `demo.task.thalos-old-watchtower` | `OBJ(long sword):EGO(death)`；复用现有基底与该 Ego |
 
-`SV_POTION_LIFE` 尚无当前正式对应物品，不能用 `new-life-potion` 或 `healing-potion` 替代。任务的通用 HAFTED/深度修正与现有奖励类型如有表达缺口，只补这两个真实消费者需要的字段/选择，沿现有物品生成路径执行，不新建任务奖励生成器。
+第三步复核更正：`SV_POTION_LIFE` 已对应正式 `demo.item.vitalis-elixir`（中文“生命药水”，`legacy-item-adaptations.json` 的 source index 432），第一步按文件名判断“没有对应物品”有误。三项奖励直接复用该身份和 `demo.effect.life-restoration`，补齐原版幻觉/疾病清除与 Vitality +1、Unlife −5；不另造物品，也不使用 `new-life-potion` 或 `healing-potion` 替代。
 
 五座现有战士公会（Morivant、Angwil、Telmora、Anambar、Thalos）源 `B:7:C:Berserker:Owner` 必须加入正式 `ownerClassIds`。原始 membership 记录已保留，但 `town_facility_membership` 只消费正式 ID；不能把来源表有字样当作会员规则已接通。现有强化价格/上限复用原消费者；源 `t_lite/t_ulite` 两种旧镇表当前没有对应开放地点。
 
-摧毁高阶法术书：源 `cmd3.c::high_level_book` 要求特定魔法书 tval 且 sval>1（不包含 Arcane）；战士/狂战士符合经验奖励，Android 排除。每本经验先取 `min(max_exp/20,10000)`，第三本（sval=2）再除以 4，随后至少 1，最后乘销毁数量；生命书增加 Unlife、减少 Vitality，死亡/死灵高阶书反向。当前 `inventory.rs::destroy_item` 只删物品，手动与 Mogaminator 已共用它：接一个真实奖励消费者，并回归已受影响战士，不在两个入口各写一次。
+摧毁高阶法术书：源 `cmd3.c::high_level_book` 要求特定魔法书 tval 且 sval>1（不包含 Arcane）；战士/狂战士符合经验奖励，Android 排除。每本经验先取 `min(max_exp/20,10000)`，第三本（sval=2）再除以 4，随后至少 1，最后乘销毁数量；生命书增加 Unlife、减少 Vitality，死亡/死灵高阶书反向。第三步在手动/Mogaminator 确实销毁后共用 `reward_destroyed_book`，正常传递经验升级事件；圣骑士同步采用首领域善恶与书领域相反的原版资格。制造弹药、炼金等“消耗物品”不调用销书奖励。
 
 ### 不作为当前职业开放前的虚构依赖
 
@@ -197,4 +197,16 @@ Class HP 费用在成功效果或普通失败后支付；恰好等费可尝试�
 
 沿用第 2 节的公共 HP/出生适配。当前公共近战没有原版的 STR 伤害表及其双持熟练度折减，因此没有新增一套狂战士专用 STR 伤害算法；已实现的职业伤害按每把武器全额计算。武术招式、heavy-spell/Athena/NoSpell 等尚无正式消费者的系统不在本步预造。负攻次装备保留真实负修正，实际可执行攻次最低为零。吸血鬼出生例外按第 5 节修正后的可达性处理。
 
-验收测试位于 [berserker.rs](../crates/rfb-core/src/game/tests/berserker.rs)，覆盖正式出生和保存恢复、负技能/熟练度、药水治疗与常驻效果、各级免疫/反射、驱散/TY_CURSE、物品尝试耗时与自动鉴定限制、强弱/永久诅咒与短路 RNG、替换/容量/失败耗时、双手武器与冬贝利减攻次、负攻次下限、穿无敌/击杀耗时/友方攻击，以及突变/公会/龙人交叉。正式战技、任务奖励、高阶书销毁、UI 与桌面验收仍按第三至五步执行。
+第二步验收测试位于 [berserker.rs](../crates/rfb-core/src/game/tests/berserker.rs)，覆盖正式出生和保存恢复、负技能/熟练度、药水治疗与常驻效果、各级免疫/反射、驱散/TY_CURSE、物品尝试耗时与自动鉴定限制、强弱/永久诅咒与短路 RNG、替换/容量/失败耗时、双手武器与冬贝利减攻次、负攻次下限、穿无敌/击杀耗时/友方攻击，以及突变/公会/龙人交叉。第三步的正式能力与奖励见下节。
+
+## 9. 第三步实现与公共模型边界
+
+实施基线 `501d9ba16`；重新核对的 RFB `master` 仍为 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。六项正式能力绑定职业等级、HP 费用、力量/敏捷失败判定。冲锋与粉碎陷阱只补方向步执行，复用实际近战、移动、陷阱和野外滚动；冲锋不自动拾取，粉碎沿普通步行的自动拾取路径。两者和大屠杀保持完整战技行动费用，不继承普通击杀退还或人类力量暴击的额外近战耗时。费用在效果后结算，接触伤害已致死时不再扣费。
+
+侦测凶意使用原版距离函数和 EMPTY_MIND 排除，允许 WEIRD_MIND、动物及友方，穿墙但不永久保存探测。大屠杀按南、北、东、西、东南、西南、东北、西北顺序即时查找目标并实际近战，遇玩家死亡或换层中止。地震复用现有半径 10 消费者，地表施放成功并扣费但不震动；归还复用原有目的地、延迟与再次施放取消。目标取消继续遵守本项目“验证目标后才掷 RNG”的约定。
+
+八项奖励均使用现有 `classOverrides`。兽人营地采用 13 种已导入且基础等级不高于 20 的 HAFTED，权重来自 `k_info` 的基础分配稀有度；仍采用当前加权单选模型，未复制原版 `get_obj_num` 的越级提升和多次抽取择深流程。`generationDepth` 只补脚本指定的物品生成等级（1–1000）：营地 20、Vapor 25+15=40、旧哨塔 32；沿现有武器强化、Ego 和激活生成路径执行。背包容量预演不提交 RNG，实际领取后才保存物品和任务完成状态。生命药水及高阶书的身份/收益修正见第 6 节。
+
+沿用已有地震/陷阱模型，不声称新增了原版所有陷阱种类；当前陷阱已有伤害、状态、豁免与飞行消费者，粉碎在这些效果之后移除陷阱。未开放的 Darkness 地牢标记、NoSpell 和疲劳/mini-slow 系统仍是公共模型边界。生命药水使用默认 5000 治疗量；源 `_potion_power` 的额外倍率仅属于尚未接入的药水装置大师，不影响狂战士。
+
+行为证据见 [spells.rs](../crates/rfb-core/src/game/tests/berserker/spells.rs) 与 [rewards.rs](../crates/rfb-core/src/game/tests/berserker/rewards.rs)：实际施放、零/不足 HP、失败、目标拒绝、反魔、吸血、死亡中止、陷阱触发/飞行/拾取、野外地图平移、真实动作后的保存继续，以及八奖励领取/容量、手动/自动销书和升级事件。原有战士/圣骑士及共享地震、归还、近战、移动消费者一并回归；回放测试改用核心 `SkillProgress::at_level`，去掉与负技能规则冲突的测试侧截零公式。未改变保存格式或状态哈希输入，26 条既有契约无需刷新。

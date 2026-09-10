@@ -317,6 +317,8 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::FetchItem { .. }
                     | AbilityEffectDefinition::ConsumeTerrain { .. }
                     | AbilityEffectDefinition::MeleeThenTeleport { .. }
+                    | AbilityEffectDefinition::ChargeThrough
+                    | AbilityEffectDefinition::SmashTrap
                     | AbilityEffectDefinition::DraconianStrike { .. }
                     | AbilityEffectDefinition::SwapPosition
                     | AbilityEffectDefinition::TransformTerrain { .. }
@@ -447,6 +449,8 @@ fn ability_program_input_matches_target(
                     || matches!(
                         effect,
                         AbilityEffectDefinition::DarkenRoom
+                            | AbilityEffectDefinition::ChargeThrough
+                            | AbilityEffectDefinition::SmashTrap
                             | AbilityEffectDefinition::FetchItem { .. }
                             | AbilityEffectDefinition::DimensionDoor { .. }
                     ))

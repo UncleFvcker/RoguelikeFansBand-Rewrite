@@ -15,7 +15,7 @@ use crate::game::projectile_geometry::{
 };
 use crate::game::status_effects::apply_ability_status_effect;
 use crate::game::terrain::TerrainChangeSource;
-use crate::game::{Game, TERRAIN_INTERACTION_DIRECTIONS, actor_matches_category};
+use crate::game::{Game, actor_matches_category};
 use crate::resistance::{DamageType, ResistanceLevel, ResistanceProfile};
 use rfb_content::{
     AbilityDefinition, AbilityEffectDefinition, AbilitySpellPowerField,
@@ -2052,32 +2052,29 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
-        let target_ids = TERRAIN_INTERACTION_DIRECTIONS
-            .iter()
-            .filter_map(|direction| {
-                let position = self.position_in_direction(*direction);
-                self.entities
-                    .iter()
-                    .find(|entity| {
-                        entity.hp > 0
-                            && entity.position == position
-                            && !self.actor_is_player_side(entity)
-                    })
-                    .map(|entity| entity.id.clone())
-            })
-            .collect::<Vec<_>>();
-        for target_id in target_ids {
-            let Some(index) = self
-                .entities
-                .iter()
-                .position(|entity| entity.id == target_id && entity.hp > 0)
-            else {
+        use rfb_protocol::Direction::*;
+        // spells_m.c::massacre_spell uses ddy_ddd, not the clockwise terrain order.
+        let floor_id = self.current_floor_id.clone();
+        let energy = self.player.energy_need;
+        for direction in [
+            South, North, East, West, SouthEast, SouthWest, NorthEast, NorthWest,
+        ] {
+            let position = self.position_in_direction(direction);
+            let Some(index) = self.entities.iter().position(|entity| {
+                entity.position == position
+                    && entity.hp > 0
+                    && (self.player_is_berserker() || !self.actor_is_player_side(entity))
+                    && (self.entity_is_visible_to_player(entity) || self.is_walkable(position))
+            }) else {
                 continue;
             };
             self.resolve_player_melee(index, false, events, changed, removed_entities)?;
-            if self.player_is_dead() {
+            if self.player_is_dead() || self.current_floor_id != floor_id {
                 break;
             }
+        }
+        if self.player_is_berserker() {
+            self.player.energy_need = energy;
         }
         Ok(())
     }

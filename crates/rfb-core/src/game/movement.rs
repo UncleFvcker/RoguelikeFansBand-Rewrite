@@ -4,6 +4,13 @@ use super::gold::gold_visual_id;
 use super::projectile_geometry::{has_line_of_effect, rfb_distance};
 use super::*;
 
+#[derive(Default)]
+pub(super) struct PlayerStepOutcome {
+    pub moved: bool,
+    pub map_translation: Option<Position>,
+    pub melee: Option<player_combat::PlayerMeleeOutcome>,
+}
+
 pub(super) fn actor_can_cross_terrain(
     actor: &rfb_content::ActorDefinition,
     terrain: &rfb_content::TerrainDefinition,
@@ -40,6 +47,110 @@ pub(super) fn actor_can_cross_terrain_with_wall_passage(
 }
 
 impl Game {
+    pub(super) fn resolve_local_player_step(
+        &mut self,
+        direction: Direction,
+        smash_trap: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<PlayerStepOutcome, CoreError> {
+        let direction = self.confused_direction(direction, events);
+        let target = self.position_in_direction(direction);
+        if !self.player_can_enter_position(target) {
+            events.push(DomainEvent::MoveBlocked);
+        } else if let Some(index) = self
+            .entities
+            .iter()
+            .position(|entity| entity.position == target)
+        {
+            changed.insert(target);
+            if self.actor_is_player_side(&self.entities[index]) && !self.player_is_berserker() {
+                events.push(DomainEvent::MoveBlocked);
+            } else if self.player_fear_blocks_melee(index) {
+                events.push(DomainEvent::PlayerFearBlocked {
+                    status_kind_id: STATUS_FEAR.to_owned(),
+                });
+            } else {
+                return Ok(PlayerStepOutcome {
+                    melee: Some(self.resolve_player_melee(
+                        index,
+                        true,
+                        events,
+                        changed,
+                        removed_entities,
+                    )?),
+                    ..Default::default()
+                });
+            }
+        } else if !smash_trap && self.warn_player_of_hidden_trap(target, events, changed) {
+            // The ordinary step stops at a warning; smashing deliberately triggers the trap.
+        } else {
+            return self.enter_player_position(
+                target,
+                smash_trap,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
+        Ok(PlayerStepOutcome::default())
+    }
+
+    pub(super) fn enter_player_position(
+        &mut self,
+        target: Position,
+        smash_trap: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<PlayerStepOutcome, CoreError> {
+        let wilderness::WildernessPlayerEntry::Local {
+            target,
+            crossed_world_cell,
+            translation,
+        } = self.scroll_wilderness_for_player_entry(target, removed_entities)?
+        else {
+            events.push(DomainEvent::MoveBlocked);
+            return Ok(PlayerStepOutcome::default());
+        };
+        self.destroy_wall_for_player_entry(target, events, changed);
+        if crossed_world_cell
+            && self.wilderness_is_daytime()
+            && self.wilderness_has_interesting_site()
+        {
+            events.push(DomainEvent::WildernessInterestingDiscovery);
+        }
+        let floor_id = self.current_floor_id.clone();
+        events.extend(self.relocate_player(target, changed));
+        // hit_trap removes the trap only after its existing effects have run.
+        if smash_trap && self.current_floor_id == floor_id {
+            let replacement = self
+                .content
+                .terrain(self.terrain_at(target))
+                .and_then(|terrain| terrain.trap.as_ref())
+                .map(|trap| trap.disarm_to_terrain_id.clone());
+            if let Some(replacement) = replacement {
+                self.replace_terrain_from_source(
+                    target,
+                    &replacement,
+                    terrain::TerrainChangeSource::Dig,
+                    events,
+                    changed,
+                );
+                events.push(DomainEvent::TrapDisarmed { position: target });
+            }
+        }
+        if let Some(translation) = translation {
+            self.populate_scrolled_wilderness(translation);
+        }
+        Ok(PlayerStepOutcome {
+            moved: true,
+            map_translation: translation,
+            melee: None,
+        })
+    }
+
     pub(super) fn player_can_cross_terrain_unmounted(
         &self,
         terrain: &rfb_content::TerrainDefinition,

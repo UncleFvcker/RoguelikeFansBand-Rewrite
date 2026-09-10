@@ -7,7 +7,7 @@ use rfb_content::{
     TaskLocationDefinition, TaskObjectiveDefinition, TaskObjectiveKind, TaskRewardDefinition,
     TaskRewardEntryDefinition, TownFacilityCategory, WorldDefinition,
 };
-use rfb_protocol::{CampaignStatusDto, ItemEnchantmentsDto, ItemQualityDto, TaskStatusKindDto};
+use rfb_protocol::{CampaignStatusDto, ItemQualityDto, TaskStatusKindDto};
 
 use crate::{
     error::CoreError,
@@ -653,13 +653,27 @@ pub(super) fn reward_item(
     rng: &mut crate::rng::RfbRng,
 ) -> ItemInstance {
     let entry = selected_reward_entry(reward, class_id, rng).clone();
+    let depth = entry.generation_depth.unwrap_or(1);
+    let enchantments = entry
+        .generation_depth
+        .and_then(|level| {
+            let item = content
+                .item(&entry.item_kind_id)
+                .expect("validated reward kind");
+            super::ego::roll_rfb_weapon_enchantment(rng, item, level, 2)
+        })
+        .unwrap_or_default();
     let mut materialization = materialize_ego_with_rng(
         content,
         rng,
         &entry.item_kind_id,
         entry.affix_ids,
-        |affix| affix.generation_level.max(1),
-        1,
+        |affix| {
+            entry
+                .generation_depth
+                .unwrap_or_else(|| affix.generation_level.max(1))
+        },
+        depth,
         2,
     );
     if let Some(charges) = &mut materialization.charges {
@@ -689,7 +703,7 @@ pub(super) fn reward_item(
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
         intrinsic_properties: Default::default(),
-        enchantments: ItemEnchantmentsDto::default(),
+        enchantments,
         curse: initial_item_curse(content, &entry.item_kind_id),
         permanent_destruction_immunities: Default::default(),
         activation: None,

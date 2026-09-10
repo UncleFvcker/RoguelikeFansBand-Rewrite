@@ -720,6 +720,11 @@ impl Game {
         else {
             unreachable!("earthquake executor requires an earthquake effect");
         };
+        if self.content.world(&self.world_id).is_none_or(|world| {
+            crate::game::floor_dungeon_id(world, &self.current_floor_id).is_none()
+        }) {
+            return Ok(());
+        }
         self.resolve_earthquake(
             self.player.position,
             radius,

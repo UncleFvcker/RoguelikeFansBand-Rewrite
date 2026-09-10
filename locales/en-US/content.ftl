@@ -1,4 +1,16 @@
 # SPDX-License-Identifier: CC-BY-SA-4.0
+ability-demo-berserker-detect-menace-name = Detect Menace
+ability-demo-berserker-detect-menace-description = Detect nearby minds, including animals and allies, but not empty minds.
+ability-demo-berserker-charge-name = Charge
+ability-demo-berserker-charge-description = Attack an adjacent monster, then try to move to its far side. Unavailable while riding.
+ability-demo-berserker-smash-trap-name = Smash Trap
+ability-demo-berserker-smash-trap-description = Step in the chosen direction, triggering a trap before destroying it.
+ability-demo-berserker-earthquake-name = Earthquake
+ability-demo-berserker-earthquake-description = Cause an earthquake within ten squares.
+ability-demo-berserker-massacre-name = Massacre
+ability-demo-berserker-massacre-description = Attack each adjacent monster with normal melee attacks.
+ability-demo-berserker-recall-name = Recall
+ability-demo-berserker-recall-description = Start or cancel delayed recall, paying with hit points.
 
 build-demo-berserker-name = Berserker
 build-demo-berserker-description = Permanently berserk, spending life on martial techniques and unable to read scrolls or use magical devices.

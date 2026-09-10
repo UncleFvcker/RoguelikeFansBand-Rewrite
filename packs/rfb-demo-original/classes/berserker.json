@@ -60,6 +60,68 @@
       }
     }
   ],
+  "abilities": [
+    {
+      "abilityId": "demo.ability.berserker-detect-menace",
+      "uiGroupNameKey": "class-demo-berserker-name",
+      "minimumLevel": 8,
+      "governingAttribute": "strength",
+    "hitPointCost": 5,
+    "resourceCost": 0,
+      "baseFailurePercent": 40,
+      "minimumFailurePercent": 0
+    },
+    {
+      "abilityId": "demo.ability.berserker-charge",
+      "uiGroupNameKey": "class-demo-berserker-name",
+      "minimumLevel": 15,
+      "governingAttribute": "strength",
+    "hitPointCost": 20,
+    "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0
+    },
+    {
+      "abilityId": "demo.ability.berserker-smash-trap",
+      "uiGroupNameKey": "class-demo-berserker-name",
+      "minimumLevel": 20,
+      "governingAttribute": "strength",
+    "hitPointCost": 15,
+    "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0
+    },
+    {
+      "abilityId": "demo.ability.berserker-earthquake",
+      "uiGroupNameKey": "class-demo-berserker-name",
+      "minimumLevel": 25,
+      "governingAttribute": "strength",
+    "hitPointCost": 20,
+    "resourceCost": 0,
+      "baseFailurePercent": 60,
+      "minimumFailurePercent": 0
+    },
+    {
+      "abilityId": "demo.ability.berserker-massacre",
+      "uiGroupNameKey": "class-demo-berserker-name",
+      "minimumLevel": 30,
+      "governingAttribute": "strength",
+    "hitPointCost": 80,
+    "resourceCost": 0,
+      "baseFailurePercent": 75,
+      "minimumFailurePercent": 0
+    },
+    {
+      "abilityId": "demo.ability.berserker-recall",
+      "uiGroupNameKey": "class-demo-berserker-name",
+      "minimumLevel": 10,
+      "governingAttribute": "dexterity",
+    "hitPointCost": 10,
+    "resourceCost": 0,
+      "baseFailurePercent": 70,
+      "minimumFailurePercent": 0
+    }
+  ],
   "startingItems": [
     {
       "itemKindId": "demo.item.broad-axe",

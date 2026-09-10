@@ -736,6 +736,7 @@ pub(super) fn validate_abilities(
                                 !persistent
                                     && (category == "any-monster"
                                         || category == "normal-monster"
+                                        || category == "mind"
                                         || actor_tag_values.contains(category))
                             }
                             AbilityDetectSubjectDefinition::Item => {
@@ -1053,6 +1054,8 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::RandomChoice { .. } => false,
                 AbilityEffectDefinition::SniperShot { .. }
                 | AbilityEffectDefinition::MeleeAdjacent
+                | AbilityEffectDefinition::ChargeThrough
+                | AbilityEffectDefinition::SmashTrap
                 | AbilityEffectDefinition::ProbeMonsters
                 | AbilityEffectDefinition::Concentrate
                 | AbilityEffectDefinition::Rodeo => true,
@@ -1252,6 +1255,11 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::MeleeThenTeleport { .. }
             | AbilityEffectDefinition::DraconianStrike { .. }
             | AbilityEffectDefinition::SwapPosition => projectile_target_rule,
+            AbilityEffectDefinition::ChargeThrough | AbilityEffectDefinition::SmashTrap => {
+                ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Direction]
+                    && ability.target.range == 1
+                    && !ability.target.requires_line_of_effect
+            }
             AbilityEffectDefinition::CreateAmmunition {
                 source_item_tags, ..
             } => {

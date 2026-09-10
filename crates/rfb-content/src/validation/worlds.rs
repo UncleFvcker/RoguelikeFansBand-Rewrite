@@ -2665,6 +2665,9 @@ pub(super) fn validate_world(
                     ));
                 }
                 if entry.weight == 0
+                    || entry
+                        .generation_depth
+                        .is_some_and(|depth| !(1..=1000).contains(&depth))
                     || (!entry.affix_ids.is_empty()
                         && (*max_stack != 1 || !equippable || entry.quantity != 1))
                     || entry.affix_ids.iter().any(|affix_id| {

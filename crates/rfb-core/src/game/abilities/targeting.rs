@@ -13,6 +13,9 @@ use std::collections::BTreeSet;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::game) enum AbilityTargetPlan {
     SelfTarget,
+    Step {
+        direction: Direction,
+    },
     Detect,
     TerrainTransform {
         center: Position,
@@ -422,6 +425,24 @@ impl Game {
                         item_id: item_id.clone(),
                     })
             }
+            AbilityEffectDefinition::ChargeThrough | AbilityEffectDefinition::SmashTrap => {
+                let TargetSelection::Direction { direction } = target else {
+                    return None;
+                };
+                if matches!(ability.effect, AbilityEffectDefinition::ChargeThrough)
+                    && (self.riding_actor_id.is_some()
+                        || (!self.player_has_status_kind(crate::effect::STATUS_BLINDNESS)
+                            && !self.entities.iter().any(|actor| {
+                                actor.hp > 0
+                                    && actor.position == self.position_in_direction(*direction)
+                            })))
+                {
+                    return None;
+                }
+                Some(AbilityTargetPlan::Step {
+                    direction: *direction,
+                })
+            }
             AbilityEffectDefinition::MeleeThenTeleport { radius, .. } => {
                 let TargetSelection::Direction { direction } = target else {
                     return None;
@@ -512,7 +533,8 @@ impl Game {
                         .target
                         .modes
                         .contains(&AbilityTargetModeDefinition::SelfTarget)
-                    && floor_dungeon_id(world, &self.current_floor_id).is_some())
+                    && (self.player_is_berserker()
+                        || floor_dungeon_id(world, &self.current_floor_id).is_some()))
                 .then_some(AbilityTargetPlan::SelfTarget)
             }
             AbilityEffectDefinition::Summon {

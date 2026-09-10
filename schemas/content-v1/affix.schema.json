@@ -3455,6 +3455,32 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "charge-through",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "smash-trap",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "probe-monsters",
               "type": "string"
             }

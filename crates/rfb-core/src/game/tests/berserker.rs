@@ -5,6 +5,9 @@ use super::*;
 
 const BUILD: &str = "demo.build.berserker";
 
+mod rewards;
+mod spells;
+
 fn berserker(level: u16) -> Game {
     let mut game = Game::new_with_build(923, BUILD).unwrap();
     clear_monsters(&mut game);

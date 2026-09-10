@@ -56,7 +56,7 @@ fn town_facility_game(seed: u64, build_id: &str, facility_id: &str) -> Game {
     game
 }
 
-fn enter_town_facility(game: &mut Game, facility_id: &str) {
+pub(super) fn enter_town_facility(game: &mut Game, facility_id: &str) {
     let facility = game.content.town_facility(facility_id).unwrap();
     let town_id = facility.town_id.clone();
     let entrance = facility.entrance_position;

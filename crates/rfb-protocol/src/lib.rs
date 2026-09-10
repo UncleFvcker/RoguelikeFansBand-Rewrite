@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.243";
+pub const PROTOCOL_VERSION: &str = "1.244";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 12;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 13;
 
@@ -1468,6 +1468,8 @@ pub enum AbilityEffectSpecDto {
         mode: SniperShotModeDto,
     },
     MeleeAdjacent,
+    ChargeThrough,
+    SmashTrap,
     ProbeMonsters,
     Concentrate,
     Rodeo,

@@ -1,4 +1,16 @@
 # SPDX-License-Identifier: CC-BY-SA-4.0
+ability-demo-berserker-detect-menace-name = 侦测凶意
+ability-demo-berserker-detect-menace-description = 侦测附近有心智的怪物，包括动物与友方；无法侦测无心智怪物。
+ability-demo-berserker-charge-name = 冲锋
+ability-demo-berserker-charge-description = 用武器攻击相邻怪物，然后尝试移动到其另一侧。骑乘时无法使用。
+ability-demo-berserker-smash-trap-name = 粉碎陷阱
+ability-demo-berserker-smash-trap-description = 向选定方向移动，先触发陷阱，再将其摧毁。
+ability-demo-berserker-earthquake-name = 地震术
+ability-demo-berserker-earthquake-description = 引发以自身为中心、半径十格的地震。
+ability-demo-berserker-massacre-name = 大屠杀
+ability-demo-berserker-massacre-description = 依次攻击所有相邻怪物，保留每次真实近战的效果。
+ability-demo-berserker-recall-name = 归还术
+ability-demo-berserker-recall-description = 启动或取消延迟归还，以生命支付费用。
 
 build-demo-berserker-name = 狂战士
 build-demo-berserker-description = 常驻狂暴，以生命施展战技，无法阅读卷轴或使用魔法装置。

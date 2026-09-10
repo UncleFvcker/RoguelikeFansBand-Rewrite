@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+mod berserker;
 mod casting;
 mod compound;
 mod control;
@@ -31,8 +32,28 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
+    ) -> Result<Option<Position>, CoreError> {
         match (ability.effect.clone(), target_plan) {
+            (AbilityEffectDefinition::ChargeThrough, AbilityTargetPlan::Step { direction }) => {
+                return self.resolve_player_charge_through(
+                    direction,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
+            (AbilityEffectDefinition::SmashTrap, AbilityTargetPlan::Step { direction }) => {
+                let energy = self.player.energy_need;
+                let step = self.resolve_local_player_step(
+                    direction,
+                    true,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+                self.player.energy_need = energy;
+                return Ok(step.map_translation);
+            }
             (AbilityEffectDefinition::Teleport, AbilityTargetPlan::Teleport { destination }) => {
                 self.resolve_player_teleport_effect(&ability, destination, events, changed);
             }
@@ -715,6 +736,6 @@ impl Game {
             }
             _ => unreachable!("validated ability target plan must match its effect"),
         }
-        Ok(())
+        Ok(None)
     }
 }

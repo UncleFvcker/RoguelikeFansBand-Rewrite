@@ -1113,6 +1113,7 @@ impl Game {
             GameAction::CastAbility { ability_id, target }
                 if self.ability_state_unavailable_reason(ability_id).is_some()
                     || self.mindcraft_cast_is_zero_time_unavailable(ability_id, target)
+                    || self.berserker_cast_is_zero_time_unavailable(ability_id, target)
         );
         if let Some(direction) = local_travel_direction {
             action = GameAction::Move { direction };
@@ -1236,7 +1237,10 @@ impl Game {
             }
             _ => None,
         };
-        let automatic_pickup_after_move = matches!(&action, GameAction::Move { .. });
+        let automatic_pickup_after_move = matches!(&action, GameAction::Move { .. })
+            || matches!(&action, GameAction::CastAbility { ability_id, .. }
+                if self.content.ability(ability_id).is_some_and(|ability|
+                    matches!(ability.effect, AbilityEffectDefinition::SmashTrap)));
         let recover_after_wait = matches!(&action, GameAction::Wait);
         let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
         let mut turn_advance = 1_u32;
@@ -1579,11 +1583,14 @@ impl Game {
                     );
                 }
                 match self.destroy_item(&item_id, quantity) {
-                    Ok(outcome) => events.push(DomainEvent::ItemDestroyed {
-                        target_kind_id: outcome.kind_id,
-                        quantity: outcome.quantity,
-                        rule_line: None,
-                    }),
+                    Ok(outcome) => {
+                        self.reward_destroyed_book(&outcome.kind_id, outcome.quantity, &mut events);
+                        events.push(DomainEvent::ItemDestroyed {
+                            target_kind_id: outcome.kind_id,
+                            quantity: outcome.quantity,
+                            rule_line: None,
+                        });
+                    }
                     Err(reason) => events.push(DomainEvent::ItemDestroyUnavailable {
                         item_id,
                         reason: reason.reason().to_owned(),
@@ -1688,7 +1695,7 @@ impl Game {
                 }
             }
             GameAction::CastAbility { ability_id, target } => {
-                self.resolve_player_ability(
+                map_translation = self.resolve_player_ability(
                     &ability_id,
                     target,
                     &mut events,
@@ -2011,79 +2018,23 @@ impl Game {
                         }
                     }
                 } else {
-                    let direction = self.confused_direction(direction, &mut events);
-                    let (dx, dy) = direction.delta();
-                    let target = Position {
-                        x: self.player.position.x + dx,
-                        y: self.player.position.y + dy,
-                    };
-                    let movement_blocked = !self.player_can_enter_position(target);
-                    if movement_blocked {
-                        events.push(DomainEvent::MoveBlocked);
-                    } else if let Some(index) = self
-                        .entities
-                        .iter()
-                        .position(|entity| entity.position == target)
-                    {
-                        changed.insert(target);
-                        if self.actor_is_player_side(&self.entities[index])
-                            && !self.player_is_berserker()
-                        {
-                            events.push(DomainEvent::MoveBlocked);
-                        } else if self.player_fear_blocks_melee(index) {
-                            events.push(DomainEvent::PlayerFearBlocked {
-                                status_kind_id: STATUS_FEAR.to_owned(),
-                            });
-                        } else {
-                            let melee = self.resolve_player_melee(
-                                index,
-                                true,
-                                &mut events,
-                                &mut changed,
-                                &mut removed_entities,
-                            )?;
-                            if let Some(cost) = melee.energy_cost_on_kill {
-                                action_cost = cost;
-                            } else if melee.killed && self.player_preserves_melee_energy_on_kill() {
-                                action_cost = action_cost
-                                    .saturating_mul(i32::from(melee.attacks_used))
-                                    .saturating_div(i32::from(melee.attacks_available))
-                                    .max(1);
-                            }
-                        }
-                    } else if self.warn_player_of_hidden_trap(target, &mut events, &mut changed) {
-                        // Warning spends the action revealing the danger; a repeated move is the
-                        // player's explicit choice to step onto the now-visible trap.
-                    } else {
-                        match self
-                            .scroll_wilderness_for_player_entry(target, &mut removed_entities)?
-                        {
-                            wilderness::WildernessPlayerEntry::Blocked => {
-                                events.push(DomainEvent::MoveBlocked);
-                            }
-                            wilderness::WildernessPlayerEntry::Local {
-                                target,
-                                crossed_world_cell,
-                                translation,
-                            } => {
-                                map_translation = translation;
-                                self.destroy_wall_for_player_entry(
-                                    target,
-                                    &mut events,
-                                    &mut changed,
-                                );
-                                if crossed_world_cell
-                                    && self.wilderness_is_daytime()
-                                    && self.wilderness_has_interesting_site()
-                                {
-                                    events.push(DomainEvent::WildernessInterestingDiscovery);
-                                }
-                                events.extend(self.relocate_player(target, &mut changed));
-                                player_moved = true;
-                                if let Some(translation) = translation {
-                                    self.populate_scrolled_wilderness(translation);
-                                }
-                            }
+                    let step = self.resolve_local_player_step(
+                        direction,
+                        false,
+                        &mut events,
+                        &mut changed,
+                        &mut removed_entities,
+                    )?;
+                    player_moved = step.moved;
+                    map_translation = step.map_translation;
+                    if let Some(melee) = step.melee {
+                        if let Some(cost) = melee.energy_cost_on_kill {
+                            action_cost = cost;
+                        } else if melee.killed && self.player_preserves_melee_energy_on_kill() {
+                            action_cost = action_cost
+                                .saturating_mul(i32::from(melee.attacks_used))
+                                .saturating_div(i32::from(melee.attacks_available))
+                                .max(1);
                         }
                     }
                 }
@@ -3178,12 +3129,19 @@ impl Game {
 
     fn detect_actor_positions(&self, category: &str, radius: u8) -> (Vec<Position>, Vec<String>) {
         let origin = self.player.position;
+        let distance = |position| {
+            if category == "mind" {
+                projectile_geometry::rfb_distance(origin, position)
+            } else {
+                chebyshev_distance(origin, position)
+            }
+        };
         let mut candidates = self
             .entities
             .iter()
             .filter(|entity| entity.hp > 0)
             .filter(|entity| {
-                chebyshev_distance(origin, entity.position) <= u32::from(radius)
+                distance(entity.position) <= u32::from(radius)
                     && self
                         .content
                         .actor(&entity.kind_id)
@@ -3191,7 +3149,7 @@ impl Game {
             })
             .map(|entity| {
                 (
-                    chebyshev_distance(origin, entity.position),
+                    distance(entity.position),
                     entity.position.y,
                     entity.position.x,
                     entity.id.clone(),
@@ -4794,6 +4752,10 @@ fn slay_target_matches(target: SlayTarget, definition: &rfb_content::ActorDefini
 }
 
 fn actor_matches_category(definition: &rfb_content::ActorDefinition, category: &str) -> bool {
+    if category == "mind" {
+        return definition.role == ActorRole::Monster
+            && !definition.tags.iter().any(|tag| tag == "empty-mind");
+    }
     if category == "any-monster" {
         return definition.role == ActorRole::Monster;
     }
