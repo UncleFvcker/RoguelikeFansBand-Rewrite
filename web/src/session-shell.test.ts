@@ -37,6 +37,7 @@ test("new character creation exposes all formal class slices", () => {
     "demo.build.cavalry",
     "demo.build.sniper",
     "demo.build.mindcrafter",
+    "demo.build.berserker",
   ].sort());
   assert.equal(PLAYTEST_BUILD_IDS.some((id) => id.startsWith("rfb-legacy.")), false);
 });
@@ -115,7 +116,8 @@ test("random session seeds combine two entropy words without truncation", () => 
 
 test("career leaves retain the existing class and realm mapping", () => {
   assert.equal(CAREER_GROUPS.length, 6);
-  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 7);
+  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 8);
+  assert.deepEqual(CAREER_GROUPS.find(group => group.id === "melee").options.map(entry => entry.id), ["demo.build.warrior", "demo.build.berserker"]);
   assert.equal(CAREER_GROUPS.find(group => group.id === "mind").options[0].id, "demo.build.mindcrafter");
   assert.deepEqual(createNewSessionRequest("83", "demo.build.mindcrafter", "demo.race.rfb-human", "心灵术士"), {
     seed: "83", buildId: "demo.build.mindcrafter", raceId: "demo.race.rfb-human", playerName: "心灵术士",

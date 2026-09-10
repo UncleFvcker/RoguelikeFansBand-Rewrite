@@ -12,6 +12,7 @@ import { runEgoScenario } from "./ego.e2e.mjs";
 import { runCharacterCreationScenario, selectCreationRace, selectCreationBuild } from "./character-creation.e2e.mjs";
 import { runCreationLayoutScenario } from "./character-creation-layout.e2e.mjs";
 import { runMindcrafterUiScenario } from "./mindcrafter.e2e.mjs";
+import { runBerserkerUiScenario } from "./berserker.e2e.mjs";
 
 const webDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryDirectory = path.resolve(webDirectory, "..");
@@ -70,7 +71,7 @@ async function main() {
     await rm(diagnosticDirectory, { recursive: true, force: true });
     await rm(desktopLogPath, { force: true });
     const port = await reservePort();
-    const creationLayout = process.argv.includes("--character-creation") || process.argv.includes("--creation-layout") || process.argv.includes("--mindcrafter");
+    const creationLayout = process.argv.includes("--character-creation") || process.argv.includes("--creation-layout") || process.argv.includes("--mindcrafter") || process.argv.includes("--berserker");
     const debugProfile = path.join(repositoryDirectory, "target", "e2e", "creation-webview");
     child = spawn(executable, [], {
       cwd: repositoryDirectory,
@@ -107,6 +108,8 @@ async function main() {
       await runCreationLayoutScenario(client, artifactDirectory, debugProfile);
     } else if (process.argv.includes("--mindcrafter")) {
       await runMindcrafterUiScenario(client, artifactDirectory, debugProfile);
+    } else if (process.argv.includes("--berserker")) {
+      await runBerserkerUiScenario(client, artifactDirectory, debugProfile);
     } else if (lifeForceOnly) {
       await runLifeForceScenario(client);
     } else if (tomteOnly || tonberryOnly || entOnly || spectreOnly) {

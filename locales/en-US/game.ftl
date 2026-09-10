@@ -257,6 +257,7 @@ ability-unavailable-pets-require-attention = your pets need your attention
 ability-unavailable-not-learned = you have not learned it
 ability-unavailable-resource-unavailable = its casting resource is unavailable
 ability-unavailable-insufficient-resource = you do not have enough casting resource
+ability-unavailable-insufficient-hit-points = you do not have enough HP
 ability-unavailable-cooldown = the ability is still cooling down
 ability-unavailable-unknown = the attempt is unavailable
 message-status-player-damage = { $status } deals { $damage } damage to you.

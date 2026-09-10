@@ -1496,14 +1496,16 @@ export class StatusPanel {
     const summary = document.createElement("span");
     summary.className = "ability-summary";
     summary.textContent = this.#localization.format(
-      ability.governingAttribute ? "ability-summary-governed" : "ability-summary",
+      !ability.resourceId && ability.hitPointCost > 0
+        ? ability.governingAttribute ? "ability-summary-hp-governed" : "ability-summary-hp"
+        : ability.governingAttribute ? "ability-summary-governed" : "ability-summary",
       {
         level: ability.minimumLevel,
         attribute: ability.governingAttribute
           ? abilityAttributeAbbreviation(ability.governingAttribute)
           : "",
         baseCost: ability.baseResourceCost,
-        cost: ability.resourceCost,
+        cost: !ability.resourceId && ability.hitPointCost > 0 ? ability.hitPointCost : ability.resourceCost,
         failure: ability.failurePercent,
       },
     );
@@ -1600,7 +1602,7 @@ export class StatusPanel {
     if (ability.minimumConcentration > 0) {
       append("ability-concentration-summary", { concentration: ability.minimumConcentration });
     }
-    if (ability.hitPointCost > 0) {
+    if (ability.resourceId && ability.hitPointCost > 0) {
       append("ability-hit-point-cost-summary", { cost: ability.hitPointCost });
     }
     if (ability.areaRadius != null) append("ability-area-summary", { radius: ability.areaRadius });
@@ -1615,7 +1617,7 @@ export class StatusPanel {
       });
     }
     if (ability.detect != null) {
-      append("ability-detect-summary", {
+      append(ability.detect.category === "mind" ? "ability-detect-mind-summary" : "ability-detect-summary", {
         category: ability.detect.category,
         radius: ability.detect.radius,
         persistence: this.#localization.format(

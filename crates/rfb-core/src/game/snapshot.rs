@@ -568,7 +568,9 @@ impl Game {
                     Some("concentration-too-low")
                 } else if let Some(reason) = self.ability_state_unavailable_reason(&ability_id) {
                     Some(reason)
-                } else if !resource_available || !hit_points_available {
+                } else if !hit_points_available {
+                    Some("insufficient-hit-points")
+                } else if !resource_available {
                     Some("insufficient-resource")
                 } else if !projectile_available {
                     Some("projectile-unavailable")
@@ -963,6 +965,9 @@ impl Game {
             display_name_key: self.item_display_name_key(&item.kind_id),
             artifact_name: self.visible_artifact_name(item),
             knowledge: self.item_knowledge_dto(&item.kind_id),
+            use_unavailable_reason: self
+                .berserker_item_use_rejection_cost(item)
+                .map(|_| "berserker".to_owned()),
             usable: self.berserker_item_use_rejection_cost(item).is_none()
                 && self.content.item(&item.kind_id).is_some_and(|definition| {
                     definition.use_action.as_ref().is_some_and(|action| {
@@ -1078,6 +1083,9 @@ impl Game {
                             item.charges
                                 .is_some_and(|state| state.current >= activation.cost)
                         }),
+                    use_unavailable_reason: self
+                        .berserker_item_use_rejection_cost(item)
+                        .map(|_| "berserker".to_owned()),
                     charges: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
                         .then_some(item.charges)
                         .flatten(),

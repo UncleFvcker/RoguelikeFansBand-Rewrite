@@ -3,6 +3,40 @@
 use crate::game::*;
 
 impl Game {
+    /// Desktop acceptance: real level gains, a quiet floor, and explicit item/HP fixtures.
+    #[doc(hidden)]
+    pub fn debug_prepare_berserker_e2e(
+        &mut self,
+        level: u16,
+        wounded: bool,
+    ) -> Result<(), CoreError> {
+        self.entities.clear();
+        self.items
+            .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
+        let experience = self
+            .experience_required_for_level(level)
+            .saturating_sub(self.progress.experience);
+        self.apply_player_experience(experience, &mut Vec::new());
+        self.player.hp = if wounded {
+            1
+        } else {
+            self.effective_player_max_hp()
+        };
+        for (id, kind) in [
+            ("e2e.scroll", "demo.item.appraisal-scroll"),
+            ("e2e.wand", "demo.item.magic-missile-wand"),
+            ("e2e.activation", "demo.item.dr-jones-whip"),
+        ] {
+            if !self.items.iter().any(|item| item.id == id) {
+                self.debug_add_generated_inventory_item(id, kind, 1)?;
+                self.mark_item_aware(kind);
+            }
+        }
+        self.generated_artifact_ids
+            .insert("demo.item.dr-jones-whip".to_owned());
+        Ok(())
+    }
+
     pub(in crate::game) fn berserker_cast_is_zero_time_unavailable(
         &self,
         ability_id: &str,

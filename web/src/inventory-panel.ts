@@ -261,12 +261,12 @@ export class InventoryPanel {
     }
     for (const button of this.#dom.inventoryDetailActions.querySelectorAll<HTMLButtonElement>("button")) {
       const refuelTargetId = button.dataset.refuelTargetId;
+      const activationItem = this.#state.equipment.find(item => item.id === button.dataset.activationItemId);
       button.disabled =
         this.#state.busy ||
         this.#state.playerDead ||
         worldMap ||
-        (button.dataset.activationItemId !== undefined &&
-          !this.#state.equipment.find((item) => item.id === button.dataset.activationItemId)?.usable) ||
+        Boolean(activationItem?.useUnavailableReason || (activationItem?.activation && !activationItem.usable)) ||
         (refuelTargetId !== undefined && this.#refuelSourceForTarget(refuelTargetId) === undefined);
     }
   }
@@ -596,11 +596,11 @@ export class InventoryPanel {
       const activate = document.createElement("button");
       activate.type = "button";
       activate.className = "equipment-activate";
-      if (item.activation) activate.dataset.activationItemId = item.id;
+      activate.dataset.activationItemId = item.id;
       activate.textContent = this.#localization.format("action-equipment-activate");
-      activate.disabled = this.#state.busy || (Boolean(item.activation) && !item.usable);
+      activate.disabled = this.#state.busy || Boolean(item.useUnavailableReason) || (Boolean(item.activation) && !item.usable);
       activate.addEventListener("click", () => {
-        if (this.#state.busy || this.#state.playerDead || this.#state.worldMap || (item.activation && !item.usable)) return;
+        if (this.#state.busy || this.#state.playerDead || this.#state.worldMap || item.useUnavailableReason || (item.activation && !item.usable)) return;
         if (item.useTargetSpec?.modes.includes("self")) {
           void this.#dispatch({ type: "use-item", itemId: item.id, target: { type: "self" } });
         } else if (item.useTargetSpec) {
@@ -646,6 +646,9 @@ export class InventoryPanel {
     name.className = "inventory-item-name";
     name.textContent = this.#itemName(item);
     container.append(name);
+    if (item.useUnavailableReason) {
+      this.#appendDetail(container, "inventory-use-unavailable", this.#localization.format(`item-use-unavailable-${item.useUnavailableReason}`));
+    }
     this.#appendDetail(container, "inventory-quantity", this.#localization.format("inventory-quantity", { quantity: item.quantity }));
     this.#appendDetail(container, "inventory-item-weight", this.#localization.format("inventory-item-weight", {
       weight: formatTenthsPound(item.weightTenthsPound * item.quantity),

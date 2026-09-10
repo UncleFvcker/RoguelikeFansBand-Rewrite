@@ -8,6 +8,25 @@ const BUILD: &str = "demo.build.berserker";
 mod rewards;
 mod spells;
 
+#[test]
+fn desktop_fixture_preserves_real_level_and_item_save_invariants() {
+    let mut game = Game::new_with_build(923, BUILD).unwrap();
+    game.debug_prepare_berserker_e2e(30, true).unwrap();
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    let snapshot = restored.snapshot();
+    assert_eq!(snapshot.player.progress.level, 30);
+    assert_eq!(snapshot.player.hp, 1);
+    assert!(
+        snapshot
+            .player
+            .abilities
+            .iter()
+            .all(|ability| !ability.can_cast
+                && ability.unavailable_reason.as_deref() == Some("insufficient-hit-points"))
+    );
+}
+
 fn berserker(level: u16) -> Game {
     let mut game = Game::new_with_build(923, BUILD).unwrap();
     clear_monsters(&mut game);
@@ -141,6 +160,12 @@ fn forbidden_item_attempts_preserve_items_and_follow_source_energy() {
             Some(if spends_turn { 100 } else { 0 })
         );
         assert!(!game.inventory_item_dto(&before).usable);
+        assert_eq!(
+            game.inventory_item_dto(&before)
+                .use_unavailable_reason
+                .as_deref(),
+            Some("berserker")
+        );
         let mut events = Vec::new();
         let rng = game.rng.clone();
         game.use_inventory_item(

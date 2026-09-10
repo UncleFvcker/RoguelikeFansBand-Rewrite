@@ -7,7 +7,7 @@
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.244 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| 协议 | 1.245 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 118 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 12 / 13 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
 | 内容包 | 1.406.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
@@ -17,17 +17,18 @@
 
 权威内容统计工具是 `rfb-contentc inspect-source`。本次集成已运行内容编译；静态统计不替代行为验收。
 
-狂战士已完成[接入计划](berserker-class-plan.md)前三步：来源审计、正式出生/成长、常驻被动、战斗与使用限制、六项 HP 能力、八项任务奖励及高阶书销毁收益已实现。核心专项覆盖实际施放、失败/取消、吸血/死亡、陷阱和野外移动、奖励领取与保存恢复；公共适配边界见[来源审计](berserker-source-audit.md)。正常创角入口尚未开放，当前玩家仍只能选择下列七个构筑；狂战士 UI 与桌面验收属于第四、五步。
+狂战士已完成[接入计划](berserker-class-plan.md)前四步：来源审计、正式出生/成长、常驻被动、战斗与使用限制、六项 HP 能力、八项任务奖励及高阶书销毁收益已实现，正常创角已开放“近战 → 狂战士”。核心专项覆盖实际施放、失败/取消、吸血/死亡、陷阱和野外移动、奖励领取与保存恢复；公共适配边界见[来源审计](berserker-source-audit.md)。WebDriver 专项验证正常 1 级空能力面板、真实经验升级后的能力出现、HP 费用/不足、物品禁用说明、键盘取消、中英文、390px 窄屏与 200% 缩放，证据位于 `test-results/berserker-ui-acceptance.json` 和同名前缀截图。高等级使用明确标注的测试入口；第五步的完整试玩链和优化 standalone 产物尚未验收。
 
 ## 玩家入口
 
-职业与种族目录在 [character-creation.ts](../web/src/character-creation.ts)，提交入口在 [session-shell.ts](../web/src/session-shell.ts)，表单在 [web/index.html](../web/index.html)。当前入口提供 7 个构筑、46 个种族；心灵术士的五步接入与约定验收已完成：
+职业与种族目录在 [character-creation.ts](../web/src/character-creation.ts)，提交入口在 [session-shell.ts](../web/src/session-shell.ts)，表单在 [web/index.html](../web/index.html)。当前入口提供 8 个构筑、46 个种族；心灵术士的五步接入与约定验收已完成：
 
 创角界面已完成[四步面板改造](character-creation-ui-plan.md)：桌面固定为 `84vw × 84dvh`，提供概览、种族、职业标签页和常驻摘要/开始按钮。种族按八个原版分类显示，龙人进入九个亚种层；职业现按六个原版分类显示，高阶法师和圣骑士进入死亡领域层，心灵术士在“心智”下直接选择。详情查看与确认选择分开，取消分支保留已选组合。窄屏提供选择/说明切换，支持原生缩放、短屏内部滚动及焦点恢复。原面板改造已验证中英文、多种桌面尺寸、390像素窄屏及200%缩放；当时46个种族、6个构筑、提交校验与失败重试均有覆盖。实际验收人类战士、红色龙人死亡高阶法师、骷髅死亡圣骑士开局及有效动作；结果页路由使用终局投影测试后创建真实新会话。心灵术士新增入口的验证范围见下文；系统输入法、屏幕阅读器和Android人工验收不在已验证范围内。
 
 | 构筑 | 稳定 Build ID | 范围 |
 | --- | --- | --- |
 | 战士 | `demo.build.warrior` | 非施法基线 |
+| 狂战士 | `demo.build.berserker` | 无 MP 的 HP 战技；创角与界面专项通过，第五步交付验收待完成 |
 | 高阶法师（死亡） | `demo.build.high-mage-death` | 死亡领域书本与施法 |
 | 弓箭手 | `demo.build.archer` | 制造弹药与射击 |
 | 圣骑士（死亡） | `demo.build.paladin-death` | 死亡领域与随机祈祷学习 |

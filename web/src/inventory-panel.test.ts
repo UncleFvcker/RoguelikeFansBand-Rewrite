@@ -245,6 +245,13 @@ test("equipped details reuse refuel and unequip commands and retain activation a
   assert.deepEqual(commands[1], { type: "use-item", itemId: "lamp" });
   buttons()[2].dispatchEvent(new Event("click"));
   assert.deepEqual(commands[2], { type: "unequip", slotId: "light" });
+  panel.render([source], [{ ...lamp, usable: false, useUnavailableReason: "berserker" }]);
+  assert.ok(dom.inventoryDetailBody.children.some(child => child.className === "inventory-use-unavailable"
+    && child.textContent.includes("item-use-unavailable-berserker")));
+  panel.updateActions();
+  assert.equal(buttons()[0].disabled, true);
+  buttons()[0].dispatchEvent(new Event("click"));
+  assert.equal(commands.length, 3);
   panel.render([source, item("lamp")], []);
   assert.equal(dom.inventoryDetailDialog.open, true);
   assert.equal(buttons().length, 0);
@@ -262,6 +269,20 @@ test("sensed items display the feeling while retaining the appraisal action", (t
   state.selectedInventoryIds.add(sensed.id);
   panel.updateActions();
   assert.equal(dom.inventoryAppraise.disabled, false);
+});
+
+test("capture-ball details retain the core use restriction through action refresh", (t) => {
+  const { panel, dom, commands } = createInventoryFixture(t);
+  const ball = { ...item("ball", { captureBall: true, useTargetSpec: { modes: ["self"] } }), slotId: "light" };
+  for (const useUnavailableReason of [undefined, "berserker"]) {
+    panel.render([], [{ ...ball, useUnavailableReason }]);
+    panel.openDetail("ball");
+    panel.updateActions();
+    const activate = dom.inventoryDetailActions.querySelectorAll("button")[0];
+    assert.equal(activate.disabled, Boolean(useUnavailableReason));
+    activate.dispatchEvent(new Event("click"));
+  }
+  assert.deepEqual(commands, [{ type: "use-item", itemId: "ball", target: { type: "self" } }]);
 });
 
 test("footer actions reflect selection capabilities while temporary unavailability disables them", (t) => {

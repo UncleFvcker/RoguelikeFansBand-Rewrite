@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.244";
+pub const PROTOCOL_VERSION: &str = "1.245";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 12;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 13;
 
@@ -4122,6 +4122,8 @@ pub struct InventoryItemDto {
     pub knowledge: ItemKnowledgeDto,
     #[serde(default)]
     pub usable: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub use_unavailable_reason: Option<String>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub absorbable: bool,
     #[serde(default)]
@@ -4224,6 +4226,8 @@ pub struct EquipmentItemDto {
     pub use_target_spec: Option<TargetSpecDto>,
     #[serde(default)]
     pub usable: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub use_unavailable_reason: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -6449,6 +6453,7 @@ mod tests {
                 display_name_key: "item-demo-charm-name".to_owned(),
                 knowledge: ItemKnowledgeDto::Aware,
                 usable: false,
+                use_unavailable_reason: None,
                 absorbable: false,
                 mount_usable: false,
                 capture_ball: false,
@@ -6500,6 +6505,7 @@ mod tests {
                 captured_actor: None,
                 use_target_spec: None,
                 usable: false,
+                use_unavailable_reason: None,
                 charges: None,
                 activation: None,
                 quantity: 1,

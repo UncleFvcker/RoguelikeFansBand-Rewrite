@@ -8753,6 +8753,12 @@
             }
           ]
         },
+        "useUnavailableReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "weightTenthsPound": {
           "type": "integer",
           "format": "uint16",
@@ -11550,6 +11556,12 @@
             {
               "type": "null"
             }
+          ]
+        },
+        "useUnavailableReason": {
+          "type": [
+            "string",
+            "null"
           ]
         },
         "weightTenthsPound": {
