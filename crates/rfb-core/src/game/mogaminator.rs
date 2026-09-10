@@ -620,8 +620,28 @@ impl Game {
             })
             .collect::<Vec<_>>();
         sources.sort_by(|left, right| (left.0, &left.1).cmp(&(right.0, &right.1)));
-        let (_, source_item_id, source_kind_id, full, charged, cost) =
-            sources.into_iter().next()?;
+        let Some((_, source_item_id, source_kind_id, full, charged, cost)) =
+            sources.into_iter().next()
+        else {
+            if !self.player_is_mindcrafter() || self.progress.level < 25 {
+                return None;
+            }
+            let resource_id = self.casting_profile()?.resource_id.clone();
+            let pool = self.resources.get_mut(&resource_id)?;
+            if pool.current < 12 {
+                return None;
+            }
+            pool.current -= 12;
+            let outcome =
+                self.identify_item_instance(target_item_id, ItemIdentificationRequest::new(false));
+            return Some(MogaminatorItemResolution::Identified {
+                source_kind_id: "demo.class.mindcrafter".to_owned(),
+                target_item_id: outcome.item_id,
+                target_kind_id: outcome.item_kind_id,
+                full: outcome.full,
+                changed: outcome.changed,
+            });
+        };
         let source_index = self
             .items
             .iter()
@@ -710,7 +730,10 @@ impl Game {
                     full,
                     changed,
                 } => events.push(DomainEvent::ItemIdentified {
-                    display_name_key: self.item_display_name_key(&source_kind_id),
+                    display_name_key: self.content.class(&source_kind_id).map_or_else(
+                        || self.item_display_name_key(&source_kind_id),
+                        |class| class.name_key.clone(),
+                    ),
                     source_kind_id,
                     resolution: ItemIdentifyResolutionDto {
                         item_id: target_item_id,
@@ -958,7 +981,7 @@ impl Game {
                         Some(ItemQualityDto::Fine | ItemQualityDto::Exceptional)
                     )
                 },
-                |feeling| feeling == ItemFeelingDto::Good,
+                |feeling| matches!(feeling, ItemFeelingDto::Good | ItemFeelingDto::Enchanted),
             ),
             MogaminatorPredicate::Cursed => {
                 self.visible_item_curse(item).is_some()
@@ -966,6 +989,7 @@ impl Game {
                         feeling,
                         Some(
                             ItemFeelingDto::Broken
+                                | ItemFeelingDto::Cursed
                                 | ItemFeelingDto::Bad
                                 | ItemFeelingDto::Awful
                                 | ItemFeelingDto::Terrible

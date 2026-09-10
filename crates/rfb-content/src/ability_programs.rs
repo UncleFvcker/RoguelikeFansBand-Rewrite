@@ -241,6 +241,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::DevourFlesh { .. }
                     | AbilityEffectDefinition::Vomit
                     | AbilityEffectDefinition::RestoreVitality { .. }
+                    | AbilityEffectDefinition::ClearMind
                     | AbilityEffectDefinition::AlterReality
                     | AbilityEffectDefinition::VisibleDamage { .. }
                     | AbilityEffectDefinition::VisibleApplyStatus { .. }

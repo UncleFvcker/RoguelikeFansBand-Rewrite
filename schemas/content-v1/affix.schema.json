@@ -2742,6 +2742,19 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "clear-mind",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "alter-reality",
               "type": "string"
             }

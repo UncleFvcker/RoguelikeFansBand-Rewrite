@@ -3,6 +3,12 @@
 use super::*;
 use rfb_protocol::ItemFeelingDto;
 
+// RFB master a0d92b6378: tables.c::adj_pseudo_id.
+const RFB_PSEUDO_ID_ADJUSTMENT: [u16; 38] = [
+    150, 135, 127, 122, 118, 115, 112, 110, 108, 106, 105, 104, 103, 102, 101, 100, 99, 98, 97, 96,
+    95, 94, 93, 92, 91, 90, 88, 86, 84, 82, 80, 78, 76, 74, 72, 70, 68, 65,
+];
+
 pub(super) fn item_can_be_sensed(item: &rfb_content::ItemDefinition) -> bool {
     // RFB master a0d92b6378: obj.c::obj_can_sense1/2.
     if item.capture_ball {
@@ -58,12 +64,12 @@ impl Game {
             .and_then(|knowledge| knowledge.feeling)
     }
 
-    fn sense_item_instance(&mut self, item_id: &str) {
+    fn sense_item_instance(&mut self, item_id: &str, strong: bool) {
         let item = self
             .items
             .iter()
             .find(|item| item.id == item_id)
-            .expect("floor item must exist");
+            .expect("sensed item must exist");
         if self.item_identification(item) != ItemIdentificationDto::Unexamined
             || self.item_feeling(item).is_some()
         {
@@ -76,10 +82,28 @@ impl Game {
         if !item_can_be_sensed(definition) {
             return;
         }
-        // RFB dungeon.c::value_check_aux1(remote = TRUE).
+        // RFB dungeon.c::value_check_aux1/2; weak feelings must not reveal egos/artifacts.
         let broken = definition.base_value == 0;
         let cursed = item.curse.is_some();
-        let feeling = if item.is_artifact(&self.content) {
+        let device = definition
+            .tags
+            .iter()
+            .any(|tag| matches!(tag.as_str(), "wand" | "staff" | "rod"));
+        let known_on_average = matches!(
+            definition.equipment_slot.as_deref(),
+            Some("ring" | "amulet" | "quiver")
+        ) || definition.id == "demo.item.feanorian-lamp";
+        let feeling = if !strong && cursed && !device {
+            ItemFeelingDto::Cursed
+        } else if !strong && broken {
+            ItemFeelingDto::Broken
+        } else if !strong
+            && (item.is_artifact(&self.content)
+                || !item.affix_ids.is_empty()
+                || !item.rolled_affixes.is_empty())
+        {
+            ItemFeelingDto::Enchanted
+        } else if item.is_artifact(&self.content) {
             if cursed || broken {
                 ItemFeelingDto::Terrible
             } else {
@@ -91,15 +115,11 @@ impl Game {
             } else {
                 ItemFeelingDto::Excellent
             }
-        } else if cursed {
+        } else if cursed && (strong || !device) {
             ItemFeelingDto::Bad
         } else if broken {
             ItemFeelingDto::Broken
-        } else if matches!(
-            definition.equipment_slot.as_deref(),
-            Some("ring" | "amulet" | "quiver")
-        ) || definition.id == "demo.item.feanorian-lamp"
-        {
+        } else if strong && known_on_average {
             // These nameless kinds become known instead of retaining an average feeling.
             self.identify_item_instance(item_id, inventory::ItemIdentificationRequest::new(false));
             return;
@@ -138,12 +158,92 @@ impl Game {
                 ItemFeelingDto::Average
             }
         };
+        if !strong && known_on_average && feeling == ItemFeelingDto::Average {
+            self.identify_item_instance(item_id, inventory::ItemIdentificationRequest::new(false));
+            return;
+        }
+        let feeling = if !strong && feeling == ItemFeelingDto::Good {
+            ItemFeelingDto::Enchanted
+        } else {
+            feeling
+        };
         let knowledge = self
             .item_property_knowledge
             .entry(item_id.to_owned())
             .or_default();
         knowledge.discovered = true;
         knowledge.feeling = Some(feeling);
+    }
+
+    pub(super) fn process_mindcrafter_item_sensing(&mut self) {
+        if !self.player_is_mindcrafter()
+            || self.player_has_status_kind(STATUS_CONFUSION)
+            || !self.world_tick.is_multiple_of(10)
+        {
+            return;
+        }
+        let level = u32::from(self.progress.level);
+        let wisdom = self
+            .effective_player_attributes()
+            .index(AttributeKind::Wisdom)
+            .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP);
+        let knowledge = i32::from(self.virtue_current(VirtueKindDto::Knowledge));
+        // ponytail: pack, quiver and bag share one inventory; use the pack's
+        // 1-in-3 gate until items carry an actual container identity.
+        for (second, frequency) in [(false, 80_000_u32), (true, 20_000)] {
+            let adjusted =
+                frequency * u32::from(RFB_PSEUDO_ID_ADJUSTMENT[usize::from(wisdom)]) / 100;
+            let adjusted = adjusted * (625 - knowledge) as u32 / 625;
+            let chance = if level >= 35 {
+                0
+            } else {
+                (adjusted >> (level / 5)) / ((level + 10).pow(2) + 40)
+            };
+            if chance > 1 && self.rng.bounded(u64::from(chance)) != 0 {
+                continue;
+            }
+            let mut candidates = self
+                .items
+                .iter()
+                .filter(|item| {
+                    matches!(
+                        item.location,
+                        ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                    ) && self.item_identification(item) == ItemIdentificationDto::Unexamined
+                        && self.item_feeling(item).is_none()
+                })
+                .filter_map(|item| {
+                    let definition = self.content.item(&item.kind_id)?;
+                    if !item_can_be_sensed(definition) {
+                        return None;
+                    }
+                    let sense2 = definition.rfb_base_kind.map_or_else(
+                        || {
+                            matches!(
+                                definition.equipment_slot.as_deref(),
+                                Some("ring" | "amulet" | "light")
+                            ) || definition.tags.iter().any(|tag| {
+                                matches!(tag.as_str(), "wand" | "staff" | "rod" | "figurine")
+                            })
+                        },
+                        |kind| matches!(kind.tval, 8 | 39 | 40 | 45 | 55 | 65 | 66),
+                    );
+                    (sense2 == second)
+                        .then(|| (item.id.clone(), item.location == ItemLocation::Inventory))
+                })
+                .collect::<Vec<_>>();
+            candidates.sort();
+            for (item_id, in_pack) in candidates {
+                if in_pack && self.rng.bounded(3) != 0 {
+                    continue;
+                }
+                let strong = second
+                    || knowledge >= 100
+                    || (self.player_has_mutation("rfb.mutation.good-luck")
+                        && self.rng.bounded(13) == 0);
+                self.sense_item_instance(&item_id, strong);
+            }
+        }
     }
 
     pub(super) fn apply_player_floor_item_knowledge(&mut self) {
@@ -164,7 +264,7 @@ impl Game {
         item_ids.sort();
         for item_id in item_ids {
             if senses {
-                self.sense_item_instance(&item_id);
+                self.sense_item_instance(&item_id, true);
             }
             if identifies {
                 self.identify_item_instance(

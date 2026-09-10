@@ -3,7 +3,8 @@
 use super::ability_scaling::prorated_level_value;
 use super::*;
 
-const DRACONIAN_BLOW_RANGES: [(u16, u16); 38] = [
+// RFB master a0d92b6378: combat.c::_blows_range and tables.c::adj_str_blow.
+const RFB_BLOW_RANGES: [(u16, u16); 38] = [
     (0, 200),
     (0, 200),
     (10, 200),
@@ -43,7 +44,7 @@ const DRACONIAN_BLOW_RANGES: [(u16, u16); 38] = [
     (390, 725),
     (400, 750),
 ];
-const DRACONIAN_STRENGTH_BLOW: [u16; 38] = [
+const RFB_STRENGTH_BLOW: [u16; 38] = [
     3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110,
     120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240,
 ];
@@ -81,8 +82,8 @@ fn draconian_innate_blows(attributes: AttributeSet, weight: u16, maximum: u16) -
             .index(AttributeKind::Dexterity)
             .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP),
     );
-    let (minimum, maximum_for_dexterity) = DRACONIAN_BLOW_RANGES[dexterity_index];
-    let strength = DRACONIAN_STRENGTH_BLOW[strength_index]
+    let (minimum, maximum_for_dexterity) = RFB_BLOW_RANGES[dexterity_index];
+    let strength = RFB_STRENGTH_BLOW[strength_index]
         .saturating_mul(55)
         .saturating_div(weight.max(70))
         .min(110);
@@ -985,6 +986,9 @@ impl Game {
     pub(super) fn player_sustains_attribute(&self, attribute: AttributeKind) -> bool {
         self.player_equipment_passives()
             .contains(&attribute_sustain_passive(attribute))
+            || self
+                .player_class_passives()
+                .contains(&attribute_sustain_passive(attribute))
             || self.character_definitions().is_some_and(|(_, race, _, _)| {
                 race.attribute_sustains
                     .iter()
@@ -1147,7 +1151,26 @@ impl Game {
                 .is_some_and(|minimum_level| self.progress.level >= minimum_level)
         }) || self.content.mutations().any(|mutation| {
             mutation.telepathy && self.progress.active_mutation_ids.contains(&mutation.id)
-        })
+        }) || self
+            .player_class_passives()
+            .contains(&EquipmentPassive::Telepathy)
+    }
+
+    pub(super) fn player_is_mindcrafter(&self) -> bool {
+        self.character_definitions()
+            .is_some_and(|(_, _, class, _)| class.id == "demo.class.mindcrafter")
+    }
+
+    pub(super) fn player_class_passives(&self) -> Vec<EquipmentPassive> {
+        // RFB master a0d92b6378: mindcrafter.c::_calc_bonuses.
+        [
+            (20, EquipmentPassive::SustainWisdom),
+            (40, EquipmentPassive::Telepathy),
+        ]
+        .into_iter()
+        .filter(|(level, _)| self.player_is_mindcrafter() && self.progress.level >= *level)
+        .map(|(_, passive)| passive)
+        .collect()
     }
 
     pub(super) fn player_regeneration_rate_percent(&self) -> u64 {
@@ -1754,7 +1777,23 @@ impl Game {
         if ring_hand == Some(hand) {
             return true;
         }
-        let other_empty = hands.iter().enumerate().any(|(index, slot)| index != hand && !self.items.iter().any(|item| matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == &slot.id)));
+        self.weapon_uses_two_hands(weapon)
+    }
+
+    fn weapon_uses_two_hands(&self, weapon: &ItemInstance) -> bool {
+        let ItemLocation::Equipped {
+            slot_id: weapon_slot,
+        } = &weapon.location
+        else {
+            return false;
+        };
+        let other_empty = self.body_slots.iter().any(|slot| {
+            matches!(slot.slot_type.as_str(), "weapon" | "shield")
+                && &slot.id != weapon_slot
+                && !self.items.iter().any(|item| {
+                    matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == &slot.id)
+                })
+        });
         let definition = self.content.item(&weapon.kind_id).unwrap();
         other_empty
             && self.riding_mount_level().is_none()
@@ -1762,6 +1801,36 @@ impl Game {
                 || definition
                     .rfb_base_kind
                     .is_some_and(|kind| kind.tval == 22 || (kind.tval == 21 && kind.sval == 51)))
+    }
+
+    fn mindcrafter_base_blows(&self, weapon: &ItemInstance) -> i32 {
+        // RFB combat.c::calculate_base_blows, max=500, wgt=100, mult=35;
+        // xtra1.c applies doubled hold and the omoi check for two-handed weapons.
+        let attributes = self.effective_player_attributes();
+        let strength = attributes
+            .index(AttributeKind::Strength)
+            .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP);
+        let dexterity = attributes
+            .index(AttributeKind::Dexterity)
+            .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP);
+        let weight = self.item_instance_weight(weapon);
+        let two_hands = self.weapon_uses_two_hands(weapon);
+        let hold = crate::stats::strength_hold_pounds(attributes.value(AttributeKind::Strength))
+            * if two_hands { 2 } else { 1 };
+        if hold < weight / 10 {
+            return 100;
+        }
+        let two_hand_bonus = if two_hands && hold >= weight / 5 {
+            10
+        } else {
+            0
+        };
+        let power = (u32::from(RFB_STRENGTH_BLOW[usize::from(strength)]) * 35
+            / u32::from(weight.max(100))
+            + two_hand_bonus)
+            .min(110);
+        let (minimum, maximum) = RFB_BLOW_RANGES[usize::from(dexterity)];
+        (i32::from(minimum) + i32::from(maximum - minimum) * power as i32 / 110).clamp(100, 500)
     }
 
     fn player_melee_profile_for_item(
@@ -2038,6 +2107,19 @@ impl Game {
             .value
             .saturating_mul(100)
             .saturating_add(extra_blows);
+        if self.player_is_mindcrafter()
+            && let Some(weapon) = self
+                .items
+                .iter()
+                .find(|item| Some(item.id.as_str()) == selected_item_id)
+        {
+            let delta = self.mindcrafter_base_blows(weapon) - 100;
+            blows = blows.saturating_add(delta);
+            attack_sources.push(rfb_protocol::CharacterStatSourceDto {
+                source_id: "demo.class.mindcrafter".to_owned(),
+                amount: delta,
+            });
+        }
         if source_item_id.is_some()
             && self
                 .character_definitions()

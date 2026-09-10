@@ -1,5 +1,14 @@
 # SPDX-License-Identifier: CC-BY-SA-4.0
 
+build-demo-mindcrafter-name = Mindcrafter
+build-demo-mindcrafter-description = A Wisdom-based mentalist who chooses no realm and studies no spellbooks.
+class-demo-mindcrafter-name = Mindcrafter
+class-demo-mindcrafter-description = Mindcrafters draw on their minds for extrasensory perception, mental attacks and control. Wisdom determines their aptitude for these powers.
+actor-demo-mindcrafter-player-name = Mindcrafter
+actor-demo-mindcrafter-player-description = A mentalist carrying a small sword, soft leather armour and potions of speed.
+ability-demo-mindcrafter-clear-mind-name = Clear Mind
+ability-demo-mindcrafter-clear-mind-description = Clear your thoughts to recover a little mana. You cannot do this while caring for pets.
+
 build-demo-warrior-name = Warrior
 build-demo-warrior-description = RFB's weapon-first career with exceptional melee and shooting growth, 115% life, limited device skill, and no spellcasting; advanced career powers remain pending.
 build-demo-high-mage-death-name = High-Mage · Death

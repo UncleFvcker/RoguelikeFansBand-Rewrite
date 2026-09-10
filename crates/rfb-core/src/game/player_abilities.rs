@@ -11,6 +11,10 @@ pub(in crate::game) const SPELL_EXP_EXPERT: u16 = 1400;
 pub(in crate::game) const SPELL_EXP_MASTER: u16 = 1600;
 const SPELL_MANA_CONST: u64 = 2400;
 const SPELL_MANA_EXPERT: u64 = 1400;
+
+pub(super) fn clear_mind_recovery_amount(level: u16) -> u32 {
+    2 + u32::from(level / 30)
+}
 const RFB_MAGIC_FAILURE_MINIMUM: [u8; 38] = [
     99, 99, 99, 99, 99, 50, 30, 20, 15, 12, 11, 10, 9, 8, 7, 6, 6, 5, 5, 5, 4, 4, 4, 4, 3, 3, 2, 2,
     2, 2, 1, 1, 1, 1, 1, 0, 0, 0,
@@ -654,14 +658,23 @@ impl Game {
             )
             .saturating_sub((i32::from(RFB_MAGIC_STAT_ADJUSTMENT[index]) - 1).saturating_mul(3))
             .saturating_add(self.player_spell_failure_modifier_percent())
-            .clamp(
-                i32::from(
-                    activation
-                        .minimum_failure_percent
-                        .max(RFB_MAGIC_FAILURE_MINIMUM[index]),
-                ),
-                95,
-            );
+            .max(i32::from(
+                activation
+                    .minimum_failure_percent
+                    .max(RFB_MAGIC_FAILURE_MINIMUM[index]),
+            ))
+            .saturating_add(if self.player_is_mindcrafter() {
+                self.player
+                    .statuses
+                    .iter()
+                    .filter(|status| status.kind_id == STATUS_STUN)
+                    .map(|status| i32::from(status.intensity).min(100) / 2)
+                    .max()
+                    .unwrap_or(0)
+            } else {
+                0
+            })
+            .min(95);
         u8::try_from(chance.max(self.player_spell_failure_minimum_percent()))
             .expect("bounded class ability failure chance must fit u8")
     }
@@ -956,6 +969,9 @@ impl Game {
     }
 
     pub(super) fn ability_learning_capacity(&self, profile: &CastingProfileDefinition) -> u16 {
+        if profile.realm_profiles.is_empty() {
+            return 0;
+        }
         let attribute_index = u32::from(
             self.effective_player_attributes()
                 .index(Self::casting_attribute_kind(profile.casting_attribute)),
@@ -993,6 +1009,29 @@ impl Game {
             profile.learning_capacity_cap.saturating_add(realm_bonus),
         )) as u16)
             .saturating_add(self.bonus_spell_learning_capacity)
+    }
+
+    pub(super) fn resolve_player_clear_mind(&mut self, events: &mut Vec<DomainEvent>) {
+        let amount = clear_mind_recovery_amount(self.progress.level);
+        let resource_id = self
+            .casting_profile()
+            .expect("validated Clear Mind class must have a casting profile")
+            .resource_id
+            .clone();
+        let pool = self
+            .resources
+            .get_mut(&resource_id)
+            .expect("casting resource must exist");
+        let before = pool.current;
+        pool.current = pool.current.saturating_add(amount).min(pool.maximum);
+        events.push(DomainEvent::ResourceRecovered {
+            resolution: ResourceRecoveryResolutionDto {
+                resource_id,
+                before,
+                after: pool.current,
+                recovered: pool.current - before,
+            },
+        });
     }
 
     /// Single source for "which resource pools and abilities does the

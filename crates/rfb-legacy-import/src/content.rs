@@ -16540,7 +16540,8 @@ pub fn audit_demo_weapon_proficiencies(
                 entry.source_index
             ))
         })?;
-        if (19..=23).contains(&item.tval) {
+        // TV_BOW/SV_HARP is equipment, not a shooting proficiency (xtra1.c).
+        if (19..=23).contains(&item.tval) && (item.tval, item.sval) != (19, 70) {
             base_weapons.insert(format!("demo.item.{}", entry.id), *item);
         }
     }
@@ -16552,7 +16553,7 @@ pub fn audit_demo_weapon_proficiencies(
         let Some(item) = items_by_index.get(&entry.source_index) else {
             continue;
         };
-        if (19..=23).contains(&item.tval) {
+        if (19..=23).contains(&item.tval) && (item.tval, item.sval) != (19, 70) {
             base_weapons.insert(entry.item_id.clone(), *item);
         }
     }
@@ -16560,6 +16561,7 @@ pub fn audit_demo_weapon_proficiencies(
     for (file_name, class_index) in [
         ("warrior.json", 0),
         ("paladin.json", 5),
+        ("mindcrafter.json", 9),
         ("high-mage.json", 10),
         ("archer.json", 15),
         ("cavalry.json", 22),
@@ -16646,7 +16648,7 @@ pub fn audit_demo_weapon_proficiencies(
     Ok(DemoWeaponProficiencyAuditReport {
         schema_version: 1,
         source_commit,
-        classes_checked: 6,
+        classes_checked: 7,
         base_weapons_checked: base_weapons.len(),
     })
 }

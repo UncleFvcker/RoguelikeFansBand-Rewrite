@@ -37,12 +37,13 @@ impl Game {
         &self,
         ability_id: &str,
     ) -> Option<&'static str> {
-        self.content
-            .ability(ability_id)
-            .is_some_and(|ability| {
-                matches!(ability.effect, AbilityEffectDefinition::BeginFasting) && self.fasting
-            })
-            .then_some("already-fasting")
+        match self.content.ability(ability_id)?.effect {
+            AbilityEffectDefinition::BeginFasting if self.fasting => Some("already-fasting"),
+            AbilityEffectDefinition::ClearMind if self.pet_upkeep().controlled_pets > 0 => {
+                Some("pets-require-attention")
+            }
+            _ => None,
+        }
     }
 
     pub(in crate::game) fn resolve_player_ability(

@@ -788,6 +788,7 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         restore_attributes: bool,
     },
+    ClearMind,
     AlterReality,
     AnimateDead {
         actor_kind_id: String,

@@ -1,5 +1,14 @@
 # SPDX-License-Identifier: CC-BY-SA-4.0
 
+build-demo-mindcrafter-name = 心灵术士
+build-demo-mindcrafter-description = 以感知驱动心灵力量、无需选择领域或学习法术书的职业。
+class-demo-mindcrafter-name = 心灵术士
+class-demo-mindcrafter-description = 心灵术士不依靠书本魔法，而是依靠心灵的力量。这些心灵力量是该职业所特有的，从超感官知觉到精神攻击，再到对他人的精神支配。感知决定了心灵术士使用心灵力量的能力。
+actor-demo-mindcrafter-player-name = 心灵术士
+actor-demo-mindcrafter-player-description = 携带小剑、软皮甲和速度药水的心灵术士。
+ability-demo-mindcrafter-clear-mind-name = 头脑清明
+ability-demo-mindcrafter-clear-mind-description = 清空杂念，回复少量法力。若你有宠物需要照看，则无法使用。
+
 build-demo-warrior-name = 战士
 build-demo-warrior-description = RFB 的纯武力职业：近战与射击成长极强、生命倍率 115%、装置能力有限且不能施法；高等级职业能力仍待后续接入。
 build-demo-high-mage-death-name = 高阶法师 · 死亡

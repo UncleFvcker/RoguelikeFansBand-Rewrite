@@ -511,12 +511,16 @@ pub(super) fn validate_characters(
                 || profile.spell_damage_bonus_level_divisor == 0
                 || !(1..=400).contains(&profile.capacity_percent)
                 || !(1..=400).contains(&profile.resource_recovery_percent)
-                || profile.realm_profiles.is_empty()
+                || (profile.realm_profiles.is_empty()
+                    && (maximum_learning_capacity != 0
+                        || profile.learning_capacity_cap != 0
+                        || profile.learning_formula != crate::CastingLearningFormula::Linear
+                        || profile.study_mode != crate::CastingStudyMode::Chosen))
                 || profile.realm_profiles.len() > 16
                 || (profile.capacity_formula == crate::CastingCapacityFormula::Linear
                     && maximum_capacity == 0)
                 || maximum_capacity > 1_000_000_000
-                || profile.learning_capacity_cap == 0
+                || (!profile.realm_profiles.is_empty() && profile.learning_capacity_cap == 0)
                 || profile.base_learning_capacity > profile.learning_capacity_cap
                 || maximum_learning_capacity > u64::from(u16::MAX)
                 || profile.encumbrance.as_ref().is_some_and(|encumbrance| {
@@ -624,6 +628,8 @@ pub(super) fn validate_characters(
                     .find(|ability| ability.id == activation.ability_id)
                     .is_none_or(|ability| {
                         ability.player.is_some()
+                            || (matches!(ability.effect, crate::AbilityEffectDefinition::ClearMind)
+                                && class.casting_profile.is_none())
                             || (matches!(
                                 ability.effect,
                                 crate::AbilityEffectDefinition::Concentrate
@@ -759,7 +765,7 @@ pub(super) fn validate_characters(
         ];
         match &class.casting_profile {
             Some(profile)
-                if build.first_realm_id.is_none()
+                if (!profile.realm_profiles.is_empty() && build.first_realm_id.is_none())
                     || selected_realms.into_iter().flatten().any(|realm_id| {
                         !profile
                             .realm_profiles

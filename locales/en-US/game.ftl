@@ -248,6 +248,7 @@ ability-unavailable-no-learnable-abilities = that book contains no prayer you ca
 ability-unavailable-blind = you cannot see
 ability-unavailable-no-light = there is not enough light here
 ability-unavailable-confused = you are too confused
+ability-unavailable-pets-require-attention = your pets need your attention
 ability-unavailable-not-learned = you have not learned it
 ability-unavailable-resource-unavailable = its casting resource is unavailable
 ability-unavailable-insufficient-resource = you do not have enough casting resource

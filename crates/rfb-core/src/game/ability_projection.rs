@@ -707,6 +707,7 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
                 life_force: *life_force,
             }
         }
+        AbilityEffectDefinition::ClearMind => AbilityEffectSpecDto::ClearMind { amount: 2 },
         AbilityEffectDefinition::AlterReality => AbilityEffectSpecDto::AlterReality,
         AbilityEffectDefinition::AnimateDead {
             actor_kind_id,
@@ -881,6 +882,9 @@ pub(super) fn player_ability_effect_spec_dto(
 ) -> AbilityEffectSpecDto {
     let mut spec = ability_effect_spec_dto(effect);
     match &mut spec {
+        AbilityEffectSpecDto::ClearMind { amount } => {
+            *amount = super::player_abilities::clear_mind_recovery_amount(level);
+        }
         AbilityEffectSpecDto::BanishEvil { power } => {
             *power =
                 spell_power_value(100, ability.spell_power_bonus).min(u64::from(u16::MAX)) as u16;

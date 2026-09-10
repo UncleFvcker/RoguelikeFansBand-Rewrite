@@ -30,6 +30,7 @@ mod hunger;
 mod inventory;
 mod items;
 mod lighting;
+mod mindcrafter;
 mod mining_progress;
 mod monster_ai;
 mod monster_doors;

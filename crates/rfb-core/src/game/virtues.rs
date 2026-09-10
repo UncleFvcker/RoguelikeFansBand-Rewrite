@@ -56,6 +56,11 @@ pub(super) fn initial_virtues(
             .expect("resolved character class must remain available");
 
         match class.id.as_str() {
+            "demo.class.mindcrafter" => kinds.extend([
+                VirtueKindDto::Harmony,
+                VirtueKindDto::Enlightenment,
+                VirtueKindDto::Patience,
+            ]),
             "demo.class.high-mage" => kinds.extend([
                 VirtueKindDto::Enlightenment,
                 VirtueKindDto::Enchantment,

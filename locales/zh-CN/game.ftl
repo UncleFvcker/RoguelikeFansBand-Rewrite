@@ -248,6 +248,7 @@ ability-unavailable-no-learnable-abilities = 那本书里没有当前可以学�
 ability-unavailable-blind = 你看不见
 ability-unavailable-no-light = 这里没有足够的光线
 ability-unavailable-confused = 你太混乱了
+ability-unavailable-pets-require-attention = 你现在需要集中注意力在你的宠物上
 ability-unavailable-not-learned = 你尚未学会它
 ability-unavailable-resource-unavailable = 对应的施法资源不可用
 ability-unavailable-insufficient-resource = 施法资源不足

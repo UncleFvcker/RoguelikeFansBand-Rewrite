@@ -21,6 +21,9 @@
     "defaultInitial": 2000,
     "defaultMaximum": 6000,
     "overrides": {
+      "demo.item.diamond-edge": { "initial": 4000, "maximum": 8000 },
+      "demo.item.dragon-fang": { "initial": 4000, "maximum": 8000 },
+      "demo.item.rune-sword": { "initial": 4000, "maximum": 8000 },
       "demo.item.basillard": { "initial": 4000, "maximum": 8000 },
       "demo.item.bastard-sword": { "initial": 4000, "maximum": 8000 },
       "demo.item.blade-of-chaos": { "initial": 4000, "maximum": 8000 },

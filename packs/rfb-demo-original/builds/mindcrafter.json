@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json",
+  "formatVersion": 1,
+  "id": "demo.build.mindcrafter",
+  "nameKey": "build-demo-mindcrafter-name",
+  "descriptionKey": "build-demo-mindcrafter-description",
+  "raceId": "demo.race.rfb-human",
+  "classId": "demo.class.mindcrafter",
+  "personalityId": "demo.personality.ordinary",
+  "playerActorId": "demo.actor.mindcrafter-player",
+  "attributes": { "strength": 13, "intelligence": 13, "wisdom": 13, "dexterity": 13, "constitution": 13, "charisma": 13 },
+  "tags": ["mindcrafter", "caster", "rfb-compatibility"]
+}

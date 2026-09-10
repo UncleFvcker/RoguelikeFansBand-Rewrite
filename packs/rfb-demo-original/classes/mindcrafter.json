@@ -1,0 +1,71 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "id": "demo.class.mindcrafter",
+  "nameKey": "class-demo-mindcrafter-name",
+  "descriptionKey": "class-demo-mindcrafter-description",
+  "modifiers": { "strength": -1, "intelligence": 0, "wisdom": 3, "dexterity": -1, "constitution": -1, "charisma": 2 },
+  "lifePercent": 99,
+  "baseHp": 4,
+  "experiencePercent": 125,
+  "skillSetId": "demo.skill-set.mindcrafter",
+  "weaponProficiency": {
+    "defaultInitial": 2000,
+    "defaultMaximum": 6000,
+    "overrides": {
+      "demo.item.gnomish-shovel": { "initial": 2000, "maximum": 4000 },
+      "demo.item.mattock": { "initial": 2000, "maximum": 4000 },
+      "demo.item.nunchaku": { "initial": 2000, "maximum": 4000 },
+      "demo.item.orcish-pick": { "initial": 2000, "maximum": 4000 },
+      "demo.item.pick": { "initial": 2000, "maximum": 4000 },
+      "demo.item.shovel": { "initial": 2000, "maximum": 4000 },
+      "demo.item.small-sword": { "initial": 4000, "maximum": 6000 },
+      "demo.item.wizardstaff": { "initial": 4000, "maximum": 8000 }
+    }
+  },
+  "ridingProficiency": { "initial": 0, "maximum": 2000 },
+  "dualWieldingMaximum": 4000,
+  "petUpkeepDivisor": 35,
+  "castingProfile": {
+    "resourceId": "demo.resource.mana",
+    "castingAttribute": "wisdom",
+    "capacityFormula": "rfb-mana",
+    "baseCapacity": 0,
+    "capacityPerLevel": 0,
+    "capacityPerAttributeIndex": 0,
+    "failureFormula": "rfb-magic",
+    "baseLearningCapacity": 0,
+    "learningCapacityPerLevel": 0,
+    "learningCapacityPerAttributeIndex": 0,
+    "learningCapacityCap": 0,
+    "minimumFailurePercent": 0,
+    "encumbrance": {
+      "maximumWeightTenthsPound": 400,
+      "weaponWeightPercent": 50,
+      "penaltyWeightTenthsPound": 800,
+      "gloveEncumbrance": false
+    },
+    "realmProfiles": []
+  },
+  "levelResistances": [
+    { "minimumLevel": 10, "resistances": { "fear": "resistant" } },
+    { "minimumLevel": 30, "resistances": { "confusion": "resistant" } }
+  ],
+  "abilities": [
+    {
+      "abilityId": "demo.ability.mindcrafter-clear-mind",
+      "minimumLevel": 15,
+      "governingAttribute": "wisdom",
+      "resourceId": "demo.resource.mana",
+      "resourceCost": 0,
+      "baseFailurePercent": 30,
+      "minimumFailurePercent": 0
+    }
+  ],
+  "startingItems": [
+    { "itemKindId": "demo.item.small-sword", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.soft-leather-armour", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.swiftstep-tonic", "quantity": 2, "maximumQuantity": 5 }
+  ],
+  "tags": ["mindcrafter", "caster", "rfb-compatibility"]
+}

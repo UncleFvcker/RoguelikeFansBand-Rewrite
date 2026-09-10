@@ -101,6 +101,11 @@ impl Game {
                 .is_some_and(|level| self.progress.level >= level);
             sources.push(innate);
             let mut class_source = source(K::Class, &class.id);
+            class_source.passives.extend(
+                self.player_class_passives()
+                    .into_iter()
+                    .map(equipment_passive_dto),
+            );
             for entry in &class.level_resistances {
                 if self.progress.level >= entry.minimum_level {
                     class_source

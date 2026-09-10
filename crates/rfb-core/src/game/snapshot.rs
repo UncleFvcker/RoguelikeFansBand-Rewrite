@@ -259,6 +259,9 @@ impl Game {
 
     pub(super) fn player_ability_learning_dto(&self) -> Option<AbilityLearningDto> {
         let profile = self.casting_profile()?;
+        if profile.realm_profiles.is_empty() {
+            return None;
+        }
         let capacity = self.ability_learning_capacity(profile);
         let learned_count = u16::try_from(self.learned_abilities.len())
             .expect("validated learned ability count must fit u16");
@@ -658,6 +661,7 @@ impl Game {
                                     || ability.tags.iter().any(|tag| tag == "usable-while-afraid"))
                                 && concentration_available
                                 && hit_points_available
+                                && self.ability_state_unavailable_reason(&ability_id).is_none()
                                 && resource_available
                                 && projectile_available
                                 && cooldown_remaining == 0

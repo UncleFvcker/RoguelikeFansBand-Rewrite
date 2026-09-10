@@ -814,6 +814,7 @@ impl Game {
             | AbilityEffectDefinition::HealDice { .. }
             | AbilityEffectDefinition::RemoveEquippedCurses { .. }
             | AbilityEffectDefinition::BeginFasting
+            | AbilityEffectDefinition::ClearMind
             | AbilityEffectDefinition::TurnUndead { .. }
             | AbilityEffectDefinition::SustainAttributes { .. }
             | AbilityEffectDefinition::CureMutation

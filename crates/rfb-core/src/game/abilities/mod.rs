@@ -613,6 +613,9 @@ impl Game {
             (AbilityEffectDefinition::RestoreVitality { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_restore_vitality_effect(&ability, events);
             }
+            (AbilityEffectDefinition::ClearMind, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_clear_mind(events);
+            }
             (AbilityEffectDefinition::AlterReality, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_alter_reality_effect(&ability, events);
             }

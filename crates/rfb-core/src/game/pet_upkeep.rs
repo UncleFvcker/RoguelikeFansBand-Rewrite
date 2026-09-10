@@ -89,7 +89,8 @@ impl Game {
         else {
             return i64::from(base);
         };
-        let upkeep = self.pet_upkeep().percent;
+        let pets = self.pet_upkeep();
+        let upkeep = pets.percent;
         if upkeep <= 100 {
             let recovery_percent = if self
                 .player_equipment_passives()
@@ -101,7 +102,16 @@ impl Game {
             };
             let class_recovery = base.saturating_mul(u32::from(recovery_percent)) / 100;
             return i64::from(
-                class_recovery.saturating_mul(u32::from(100_u16.saturating_sub(upkeep))) / 100,
+                class_recovery.saturating_mul(u32::from(100_u16.saturating_sub(upkeep))) / 100
+                    + if resting
+                        && pets.controlled_pets == 0
+                        && self.player_is_mindcrafter()
+                        && self.progress.level >= 15
+                    {
+                        super::player_abilities::clear_mind_recovery_amount(self.progress.level)
+                    } else {
+                        0
+                    },
             );
         }
 

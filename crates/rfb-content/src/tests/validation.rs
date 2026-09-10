@@ -3,6 +3,67 @@ use std::collections::BTreeMap;
 use super::*;
 
 #[test]
+fn bookless_mana_requires_zero_learning_and_no_selected_realm() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let class = artifact
+        .content
+        .classes
+        .iter()
+        .find(|class| class.id == "demo.class.mindcrafter")
+        .unwrap();
+    assert!(
+        class
+            .casting_profile
+            .as_ref()
+            .unwrap()
+            .realm_profiles
+            .is_empty()
+    );
+    for field in ["base", "cap"] {
+        let mut invalid = artifact.content.clone();
+        let profile = invalid
+            .classes
+            .iter_mut()
+            .find(|class| class.id == "demo.class.mindcrafter")
+            .unwrap()
+            .casting_profile
+            .as_mut()
+            .unwrap();
+        if field == "base" {
+            profile.base_learning_capacity = 1;
+        } else {
+            profile.learning_capacity_cap = 1;
+        }
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidCastingProfile(_))
+        ));
+    }
+    let mut invalid = artifact.content.clone();
+    invalid
+        .builds
+        .iter_mut()
+        .find(|build| build.id == "demo.build.mindcrafter")
+        .unwrap()
+        .first_realm_id = Some("death".to_owned());
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidCharacterBuild(_))
+    ));
+    let mut invalid = artifact.content;
+    invalid
+        .classes
+        .iter_mut()
+        .find(|class| class.id == "demo.class.mindcrafter")
+        .unwrap()
+        .casting_profile = None;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidCharacterSource(_))
+    ));
+}
+
+#[test]
 fn dynamic_devices_require_the_device_skill() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let mut invalid = artifact.content.clone();

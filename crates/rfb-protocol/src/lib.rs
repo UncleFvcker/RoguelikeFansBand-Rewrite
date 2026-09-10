@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.240";
+pub const PROTOCOL_VERSION: &str = "1.241";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 12;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 12;
 
@@ -1498,6 +1498,9 @@ pub enum AbilityEffectSpecDto {
     MassIdentify,
     RestoreVitality {
         life_force: u16,
+    },
+    ClearMind {
+        amount: u32,
     },
     AlterReality,
     AnimateDead {
@@ -3949,6 +3952,8 @@ pub enum ItemFeelingDto {
     Good,
     Excellent,
     Special,
+    Cursed,
+    Enchanted,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
