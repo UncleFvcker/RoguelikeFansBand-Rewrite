@@ -9014,3 +9014,8 @@ town-facility-demo-angwil-library-overview = Angwil has nine shop types, a share
 
 terrain-demo-dark-pit-name = Dark Pit
 terrain-demo-dark-pit-description = A dark pit that can be flown over. Sight and projectiles pass through it.
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, a_info 129; Chinese name unresolved.
+item-demo-razorback-name = 'Razorback'
+item-demo-razorback-description = A massive suit of multicolored dragon scale mail, pulsing with untamed lightning.
+item-activation-demo-razorback-star-ball-name = Star Ball

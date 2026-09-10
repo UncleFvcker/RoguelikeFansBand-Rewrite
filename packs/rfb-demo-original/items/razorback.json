@@ -1,0 +1,109 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.multi-hued-dragon-scale-mail",
+    "instant": false,
+    "rarityOneIn": 9,
+    "sourceIndex": 129
+  },
+  "baseValue": 400000,
+  "descriptionKey": "item-demo-razorback-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "id": "demo.item-activation.razorback-star-ball",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "item-activation-demo-razorback-star-ball-name",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1,
+        "rfbValue": 7500,
+        "effectProgramId": "demo.effect.razorback-star-ball"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 10000
+    }
+  },
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "lightRadius": 1,
+    "meleeSkill": -4
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 90,
+  "glyph": "[",
+  "id": "demo.item.razorback",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 65
+  },
+  "nameKey": "item-demo-razorback-name",
+  "passives": [
+    "see-invisible"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "electricity": "immune",
+    "fire": "resistant",
+    "light": "resistant",
+    "poison": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_ELEC",
+      "LITE",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_DARK",
+      "RES_FIRE",
+      "RES_LITE",
+      "RES_POIS",
+      "SEE_INVIS"
+    ],
+    "pval": 0,
+    "toArmor": 25
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "activatable",
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "weightTenthsPound": 500,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ]
+}

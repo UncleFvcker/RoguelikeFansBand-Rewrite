@@ -5953,17 +5953,25 @@ fn artifact_json(
     apply_offensive_fold(&mut value, &offense);
     apply_equipment_fold(&mut value, &equipment);
     apply_item_destruction_properties(&mut value, entry.tval, &entry.flags);
-    if let Some(activation) = entry
-        .activation
-        .as_ref()
-        .filter(|activation| matches!(activation.token.as_str(), "BEAM_COLD" | "TELEKINESIS"))
-    {
+    if let Some(activation) = entry.activation.as_ref().filter(|activation| {
+        matches!(
+            activation.token.as_str(),
+            "BEAM_COLD" | "TELEKINESIS" | "STAR_BALL"
+        )
+    }) {
         let (activation_id, name_key, target, effect) = if activation.token == "TELEKINESIS" {
             (
                 "rfb-legacy.item-activation.telekinesis",
                 "item-activation-demo-dr-jones-telekinesis-name",
                 serde_json::json!({"modes": ["direction", "position", "entity"], "range": 18, "requiresLineOfEffect": false}),
                 device_fetch_item_effect(activation.power),
+            )
+        } else if activation.token == "STAR_BALL" {
+            (
+                "rfb-legacy.item-activation.star-ball",
+                "item-activation-demo-razorback-star-ball-name",
+                serde_json::json!({"modes": ["self"], "range": 0, "requiresLineOfEffect": false}),
+                serde_json::json!({"type": "star-ball"}),
             )
         } else {
             (
@@ -5994,6 +6002,10 @@ fn artifact_json(
                 "effect": effect
             }]
         });
+        if activation.token == "STAR_BALL" {
+            // devices.c EFFECT_STAR_BALL: value = 50 * default damage (150).
+            value["deviceGeneration"]["activations"][0]["rfbValue"] = serde_json::json!(7_500);
+        }
     } else if entry.has_activation {
         *report
             .item_behavior_gaps
@@ -28435,6 +28447,61 @@ E:BREATHE_ONE_MULTIHUED:40:70:250
         )
         .expect("random breath should compile as a directional item effect");
         assert_eq!(program["input"], "actor");
+    }
+
+    #[test]
+    fn razorback_imports_source_properties_and_star_ball() {
+        // RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, a_info.txt N:129.
+        let mut entries = parse_a_info("N:129:'Razorback'\nI:38:6:0\nW:90:9:500:400000\nP:40:2d4:-4:0:25\nF:RES_FIRE | RES_COLD | RES_POIS | RES_LITE | RES_DARK | RES_ACID |\nF:LITE | SEE_INVIS | AGGRAVATE | FREE_ACT | IM_ELEC |\nE:STAR_BALL:30:1000\n").unwrap();
+        // init1.c adds these flags to every fixed artifact before reading F lines.
+        entries[0].flags.extend(
+            ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"].map(str::to_owned),
+        );
+        entries[0].flags.sort();
+        let mut report = ContentImportReport::default();
+        let mut item = artifact_json(
+            &entries[0],
+            "razorback",
+            Some("demo.item.multi-hued-dragon-scale-mail"),
+            &LauncherAmmoIndex::default(),
+            &mut report,
+        );
+        // Formal package identity and artifact destruction protection follow existing artifacts.
+        item["id"] = serde_json::json!("demo.item.razorback");
+        item["nameKey"] = serde_json::json!("item-demo-razorback-name");
+        item["descriptionKey"] = serde_json::json!("item-demo-razorback-description");
+        item["glyph"] = serde_json::json!("[");
+        item["tags"] = serde_json::json!(["activatable", "artifact", "armor", "equipment"]);
+        item["resistsMonsterDestruction"] = serde_json::json!(true);
+        item["deviceGeneration"]["activations"][0]["id"] =
+            serde_json::json!("demo.item-activation.razorback-star-ball");
+        let activation = item["deviceGeneration"]["activations"][0]
+            .as_object_mut()
+            .unwrap();
+        let program = effect_program_from_inline(
+            "demo.effect.razorback-star-ball",
+            activation.remove("effect").unwrap(),
+        )
+        .unwrap();
+        activation.insert(
+            "effectProgramId".to_owned(),
+            serde_json::json!("demo.effect.razorback-star-ball"),
+        );
+        let formal_program: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../packs/rfb-demo-original/effectPrograms/razorback-star-ball.json"
+        ))
+        .unwrap();
+        assert_eq!(program, formal_program);
+        let formal: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../packs/rfb-demo-original/items/razorback.json"
+        ))
+        .unwrap();
+        assert_eq!(item, formal);
+        assert!(
+            !report
+                .item_behavior_gaps
+                .contains_key("artifact-activation")
+        );
     }
 
     #[test]
