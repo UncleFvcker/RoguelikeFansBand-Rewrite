@@ -1,6 +1,6 @@
 # 拉莱耶地牢接入计划
 
-状态：规划，尚未开始功能开发。推荐作为 Outpost O1–O4 后的下一座新增地牢。
+状态：R1 已完成，内容包 1.401.4；R2–R4 尚未实施，拉莱耶入口与神器 129 尚未开放。推荐作为 Outpost O1–O4 后的下一座新增地牢。
 
 ## 1. 推荐与当前基线
 
@@ -42,7 +42,11 @@
 
 ### R1：校正本批实际使用的水上投射
 
-已观察到的差异：
+**已完成（内容包 1.401.4）**：深水新增 `allowsProjectilePassage=true`，StarBall 选点复用 `projectile_can_cross`，保留距玩家不超过 4 且排除自身的约束。1000 次尝试耗尽时跳过该球，避免使用最后一次无效坐标；这项边界处理比源循环耗尽后继续投射更严格。没有新增能力字段、几何系统或改变水域通行、负重伤害与物品落地算法。保留 `projectable` 标签供现有隔空取物使用。
+
+67 项核心相关测试通过：实际玩家/怪物伤害投射跨浅水和深水；StarBall 全深水邻域正常选点、封闭邻域不向墙或自己发球；玻璃墙/永久墙阻挡、黑坑通行/投射和落地保存回归通过。复用投射、怪物 AI/移动及隔空取物检查。26 条 active 契约无需刷新即通过，Clippy、格式与内容锁验证通过；未改 Schema/协议/存档/State Hash Schema，未制作 standalone。
+
+实施前已观察到的差异（规划基线 `32f828dfc`）：
 
 - 源 `f_info.txt` 的 DEEP_WATER 83、SHALLOW_WATER 84 均有 PROJECT。
 - 当前 `surface-water-deep.json` 为 `walkable=false`，仅在 tags 声明 `projectable`；`projectile_can_cross` 读取 `walkable || allows_projectile_passage`，尚未消费该标签。
@@ -87,4 +91,4 @@
 
 内容进入现有 `packs/rfb-demo-original/{worlds,terrain,encounterTables,items}/`、来源 selection 和两套 locale；必要的规则改动放在 `game/projectile_geometry.rs`、`game/item_use.rs` 及既有 world/loot 职责内。参考 [内容开发](../docs/content-development.md)、[验证与契约](../docs/testing.md)和[并行协作](../docs/parallel-development.md)。
 
-本次不追加其他地牢、城镇任务替代、职业或新游戏领域入口，不要求整套随机神器生成器先行。R1 是本地点和奖励实际暴露的共享边界，R2 是最终奖励的直接依赖，R3/R4 完成后才将拉莱耶标记为正式交付。本轮仅制定计划，不改正式内容或运行时。
+本次不追加其他地牢、城镇任务替代、职业或新游戏领域入口，不要求整套随机神器生成器先行。R1 是本地点和奖励实际暴露的共享边界，R2 是最终奖励的直接依赖，R3/R4 完成后才将拉莱耶标记为正式交付。目前只交付 R1，共享投射修正不等同于地牢入口已开放。

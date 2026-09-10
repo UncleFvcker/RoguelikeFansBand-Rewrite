@@ -10,7 +10,7 @@
 | 协议 | 1.240 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 117 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 12 / 12 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.401.3 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.401.4 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v318，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 6 个 Class、13 个 Build、57 个 Race、32 本能力书、1,840 个 ability 文件、370 个 item、1,402 个 actor、168 个 affix、152 个 mutation。世界定义含 25 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
@@ -59,6 +59,8 @@ O2 复用已有馆藏及桌面事务机制，正式新角色出生时即加载�
 O3 对齐九个任务入口的非开放外观与未接任务底材，保留 `R` 泥土、原有任务生命周期和结算后的可站立返回点。新增出生城显式/继承地形、探索与地面物的滚动、读档、离城再入及城镇传送恢复覆盖，扩展旧城堡和 Warrens 偏移视图返回测试。127 项核心相关测试、3 项内容测试通过，26 条契约无需刷新即通过。出生视图仅第 66 行 198 格参与普通荒野采样，沿用原有面积折算和种子规则；不补旧怪物坐标。未新增运行时机制或版本迁移。
 
 O4 已完成源码与自动验收交付，验收代码为 `58f9951ea`、包 1.401.3。最终 12,870 格与源图逐格匹配，荒野来源审计通过；补跑城镇与黑坑相关 82 项测试通过，复用上述 O3 内容/返回/契约检查及 O2 桌面馆藏事务证据。没有新增实现或契约刷新。完整范围与适配限制见 [O4 验收记录](../design/outpost-map-plan-20260910.md#o4验证与交付)；standalone、桌面 E2E、Android 和人工试玩未执行，两组任务替代仍待后续独立工作。
+
+[拉莱耶 R1](../design/rlyeh-dungeon-plan-20260910.md) 已校正共享水上投射：深水声明投射通行，StarBall 复用同一能力选点，耗尽尝试后不使用无效目标。水域移动和物品落地规则未改。67 项核心相关测试及 26 条 active 契约通过，契约无需刷新；内容包为 1.401.4。神器 129 和拉莱耶正式地点仍未接入，本批未制作可玩产物。
 
 地牢城镇分支已合入 Morivant、Telmora、Angwil 的正常旅行入口、商店和设施，城镇大地图布局与荒野衔接、按名望调整服务价格、分档强化、赌场和博物馆跨角色共享存储。博物馆转移通过 Tauri 的存储事务与角色检查点一同提交；固定神器禁止捐赠和导入，随机神器实例允许共享并保留完整属性。家与博物馆复用背包详情投影，保留物品身份、知识与实例重量。
 

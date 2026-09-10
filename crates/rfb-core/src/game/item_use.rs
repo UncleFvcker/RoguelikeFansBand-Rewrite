@@ -2913,20 +2913,20 @@ impl Game {
                 let count = device_power_value(count as u64, device_power_bonus);
                 let damage = device_power_value(150, device_power_bonus) as i32;
                 for _ in 0..count {
-                    let mut target = self.player.position;
-                    for _ in 0..1000 {
-                        target = Position {
+                    let target = (0..1000).find_map(|_| {
+                        let target = Position {
                             x: self.player.position.x + self.rng.bounded(9) as i32 - 4,
                             y: self.player.position.y + self.rng.bounded(9) as i32 - 4,
                         };
-                        if super::projectile_geometry::rfb_distance(self.player.position, target)
+                        (super::projectile_geometry::rfb_distance(self.player.position, target)
                             <= 4
                             && target != self.player.position
-                            && self.is_walkable(target)
-                        {
-                            break;
-                        }
-                    }
+                            && self.projectile_can_cross(target))
+                        .then_some(target)
+                    });
+                    let Some(target) = target else {
+                        continue;
+                    };
                     if let Some(path) = super::projectile_geometry::projectile_path_through_target(
                         self.player.position,
                         target,
