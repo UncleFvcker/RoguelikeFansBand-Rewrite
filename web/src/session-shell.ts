@@ -73,6 +73,7 @@ export const PLAYTEST_RACE_IDS = [
 ] as const;
 export type PlaytestRaceId = (typeof PLAYTEST_RACE_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";
+type CreationPage = "overview" | "race" | "career";
 
 export function createNewSessionRequest(
   seed: string,
@@ -94,6 +95,9 @@ interface SessionShellDom {
   readonly gameRoot: HTMLElement;
   readonly titleView: HTMLElement;
   readonly newGameView: HTMLFormElement;
+  readonly creationSummary: HTMLElement;
+  readonly overviewRace: HTMLElement;
+  readonly overviewCareer: HTMLElement;
   readonly loadView: HTMLElement;
   readonly settingsView: HTMLElement;
   readonly newGameButton: HTMLButtonElement;
@@ -146,6 +150,7 @@ export class SessionShell {
   readonly #confirm: (message: string) => boolean;
   readonly #logError: (error: unknown) => void;
   #view: SessionView = "title";
+  #creationPage: CreationPage = "overview";
   #busy = false;
   #installed = false;
   #saves: NativeSaveSummary[] = [];
@@ -189,6 +194,10 @@ export class SessionShell {
     this.#dom.settingsButton.addEventListener("click", this.#openSettings);
     this.#dom.exitButton.addEventListener("click", this.#exit);
     this.#dom.newGameView.addEventListener("submit", this.#startNewGame);
+    this.#dom.newGameView.addEventListener("click", this.#creationClick);
+    this.#dom.newGameView.addEventListener("keydown", this.#creationKeydown);
+    this.#dom.newGameView.addEventListener("input", this.#renderCreationSummary);
+    this.#dom.newGameView.addEventListener("change", this.#renderCreationSummary);
     this.#dom.raceSelect.addEventListener("change", this.#changeRace);
     this.#dom.randomizeSeedButton.addEventListener("click", this.#randomizeSeed);
     this.#dom.newGameBackButton.addEventListener("click", this.#backToTitle);
@@ -208,6 +217,10 @@ export class SessionShell {
     this.#dom.settingsButton.removeEventListener("click", this.#openSettings);
     this.#dom.exitButton.removeEventListener("click", this.#exit);
     this.#dom.newGameView.removeEventListener("submit", this.#startNewGame);
+    this.#dom.newGameView.removeEventListener("click", this.#creationClick);
+    this.#dom.newGameView.removeEventListener("keydown", this.#creationKeydown);
+    this.#dom.newGameView.removeEventListener("input", this.#renderCreationSummary);
+    this.#dom.newGameView.removeEventListener("change", this.#renderCreationSummary);
     this.#dom.raceSelect.removeEventListener("change", this.#changeRace);
     this.#dom.randomizeSeedButton.removeEventListener("click", this.#randomizeSeed);
     this.#dom.newGameBackButton.removeEventListener("click", this.#backToTitle);
@@ -236,6 +249,7 @@ export class SessionShell {
     this.#renderReadyStatus();
     this.#renderRunMetadata();
     this.#changeRace();
+    this.#renderCreationSummary();
   }
 
   readonly #changeRace = (): void => {
@@ -271,10 +285,65 @@ export class SessionShell {
   }
 
   showNewGame(randomizeSeed = false): void {
+    if (this.#busy) return;
     this.#showShell("new-game");
+    this.#showCreationPage("overview");
     if (randomizeSeed) this.#dom.seedInput.value = this.#randomSeed();
+    this.#renderCreationSummary();
     this.#dom.characterNameInput.focus();
   }
+
+  #showCreationPage(page: CreationPage, focus = false): void {
+    this.#creationPage = page;
+    for (const panel of this.#dom.newGameView.querySelectorAll<HTMLElement>("[data-creation-panel]")) {
+      panel.hidden = panel.dataset.creationPanel !== page;
+    }
+    for (const tab of this.#dom.newGameView.querySelectorAll<HTMLButtonElement>('[role="tab"]')) {
+      const selected = tab.dataset.creationPage === page;
+      tab.setAttribute("aria-selected", String(selected));
+      tab.tabIndex = selected ? 0 : -1;
+      if (selected && focus) tab.focus();
+    }
+  }
+
+  readonly #creationClick = (event: MouseEvent): void => {
+    if (this.#busy || !(event.target instanceof Element)) return;
+    const page = event.target.closest<HTMLElement>("[data-creation-page]")?.dataset.creationPage;
+    if (page === "overview" || page === "race" || page === "career") this.#showCreationPage(page, true);
+  };
+
+  readonly #creationKeydown = (event: KeyboardEvent): void => {
+    if (this.#busy || event.isComposing || !(event.target instanceof Element)) return;
+    const tab = event.target.closest<HTMLButtonElement>('[role="tab"]');
+    if (tab && ["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+      event.preventDefault();
+      const pages: CreationPage[] = ["overview", "race", "career"];
+      const index = pages.indexOf(this.#creationPage);
+      const next = event.key === "Home" ? 0 : event.key === "End" ? 2 : (index + (event.key === "ArrowRight" ? 1 : 2)) % 3;
+      this.#showCreationPage(pages[next]!, true);
+    } else if (event.key === "Enter" && this.#creationPage !== "overview" && !event.target.closest("button, select")) {
+      event.preventDefault();
+    } else if (event.key === "Escape" && !event.target.closest("input, select, textarea")) {
+      event.preventDefault();
+      if (this.#creationPage !== "overview") this.#showCreationPage("overview", true);
+      else this.#backToTitle();
+    }
+  };
+
+  readonly #renderCreationSummary = (): void => {
+    const race = this.#dom.raceSelect.selectedOptions[0];
+    const group = race?.closest("optgroup")?.label;
+    const raceName = [group, race?.textContent].filter(Boolean).join(" · ");
+    const build = this.#dom.newGameView.querySelector<HTMLInputElement>('input[name="session-build"]:checked');
+    const careerName = build?.closest("label")?.querySelector("strong")?.textContent ?? "";
+    this.#dom.overviewRace.textContent = raceName;
+    this.#dom.overviewCareer.textContent = careerName;
+    this.#dom.creationSummary.textContent = this.#localization.format("session-creation-summary", {
+      name: this.#dom.characterNameInput.value.trim() || this.#localization.format("session-name-empty"),
+      race: raceName,
+      career: careerName,
+    });
+  };
 
   showLoad(): void {
     this.#showShell("load");
@@ -316,23 +385,28 @@ export class SessionShell {
     const seed = canonicalSessionSeed(this.#dom.seedInput.value);
     if (!seed) {
       this.#dom.error.textContent = this.#localization.format("session-seed-invalid");
+      this.#showCreationPage("overview");
       this.#dom.seedInput.focus();
       return;
     }
     const buildId = this.#selectedBuild();
     if (!buildId) {
       this.#dom.error.textContent = this.#localization.format("session-build-invalid");
+      this.#showCreationPage("career");
+      this.#dom.warriorBuild.focus();
       return;
     }
     const raceId = this.#selectedRace();
     if (!raceId) {
       this.#dom.error.textContent = this.#localization.format("session-race-invalid");
+      this.#showCreationPage("race");
       this.#dom.raceSelect.focus();
       return;
     }
     const playerName = canonicalCharacterName(this.#dom.characterNameInput.value);
     if (!playerName) {
       this.#dom.error.textContent = this.#localization.format("session-character-name-invalid");
+      this.#showCreationPage("overview");
       this.#dom.characterNameInput.focus();
       return;
     }
@@ -459,12 +533,14 @@ export class SessionShell {
   #showView(view: SessionView): void {
     this.#view = view;
     this.#dom.root.dataset.view = view;
+    this.#dom.newGameView.parentElement!.setAttribute("aria-labelledby", view === "new-game" ? "session-creation-heading" : "session-heading");
     this.#dom.titleView.hidden = view !== "title";
     this.#dom.newGameView.hidden = view !== "new-game";
     this.#dom.loadView.hidden = view !== "load";
     this.#dom.settingsView.hidden = view !== "settings";
     this.#dom.root.ownerDocument.documentElement.dataset.appMode = view;
     this.#updateControls();
+    this.#renderReadyStatus();
   }
 
   #showShell(view: SessionView): void {
@@ -595,7 +671,7 @@ export class SessionShell {
 
   #renderReadyStatus(): void {
     if (this.#busy) return;
-    this.#dom.status.textContent = this.#localization.format("session-status-ready", {
+    this.#dom.status.textContent = this.#view === "new-game" ? "" : this.#localization.format("session-status-ready", {
       saves: this.#saves.filter((summary) => summary.status !== "corrupt").length,
     });
   }
@@ -631,6 +707,9 @@ export function createSessionShellDom(document: DocumentLookup): SessionShellDom
     gameRoot: element<HTMLElement>(document, "app"),
     titleView: element<HTMLElement>(document, "session-title-view"),
     newGameView: element<HTMLFormElement>(document, "session-new-game-view"),
+    creationSummary: element<HTMLElement>(document, "session-creation-summary"),
+    overviewRace: element<HTMLElement>(document, "session-overview-race"),
+    overviewCareer: element<HTMLElement>(document, "session-overview-career"),
     loadView: element<HTMLElement>(document, "session-load-view"),
     settingsView: element<HTMLElement>(document, "session-settings-view"),
     newGameButton: element<HTMLButtonElement>(document, "session-new-game"),

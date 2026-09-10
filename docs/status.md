@@ -21,6 +21,8 @@
 
 新游戏白名单在 [session-shell.ts](../web/src/session-shell.ts)，表单在 [web/index.html](../web/index.html)。当前开放 6 个构筑、46 个种族：
 
+创角界面已完成[面板改造第一步](character-creation-ui-plan.md)：固定为 `84vw × 84dvh`，提供概览、种族、职业标签页和常驻摘要/开始按钮。1280×720的Tauri桌面聚焦检查覆盖中英文概要、切页、校验定位和红色龙人死亡高阶法师实际创建；多级分类选择仍待后续步骤，当前开放范围不变。
+
 | 构筑 | 稳定 Build ID | 范围 |
 | --- | --- | --- |
 | 战士 | `demo.build.warrior` | 非施法基线 |

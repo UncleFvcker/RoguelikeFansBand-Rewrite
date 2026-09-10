@@ -11,6 +11,7 @@
 | [并行协作](parallel-development.md) | 三个工作树、四个对话如何交付与合并？ |
 | [状态快照](status.md) | 哪些内容存在、哪些入口开放、哪些流程有验收记录？ |
 | [后续工作](next-work.md) | 当前明确缺口是什么，下一批如何选择？ |
+| [创建角色 UI 计划](character-creation-ui-plan.md) | 如何把创角长表单改为约占屏幕七成的多级选择面板？ |
 | [历史档案](archive/README.md) | 去哪里查旧版设计、来源审计与过去的验收记录？ |
 
 [AGENTS.md](../AGENTS.md)集中维护工作约定；机器可读事实在 [Cargo.toml](../Cargo.toml)、[package.json](../web/package.json)、[协议定义](../crates/rfb-protocol/src/lib.rs)、[正式内容](../packs/rfb-demo-original/)和[契约政策](../tests/fixtures/active/baseline-policy.json)。文档提供定位与解释，不复制这些文件成为第二份规格。

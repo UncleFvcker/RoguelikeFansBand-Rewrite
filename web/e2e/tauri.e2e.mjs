@@ -9,6 +9,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { runRendererProfile } from "./render-profile.e2e.mjs";
 import { runEgoScenario } from "./ego.e2e.mjs";
+import { runCharacterCreationScenario } from "./character-creation.e2e.mjs";
 
 const webDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryDirectory = path.resolve(webDirectory, "..");
@@ -94,6 +95,8 @@ async function main() {
     client = await WebDriverClient.create(port, child);
     if (renderProfileOnly) {
       await runRendererProfile(client, artifactDirectory);
+    } else if (process.argv.includes("--character-creation")) {
+      await runCharacterCreationScenario(client, artifactDirectory);
     } else if (lifeForceOnly) {
       await runLifeForceScenario(client);
     } else if (tomteOnly || tonberryOnly || entOnly || spectreOnly) {
