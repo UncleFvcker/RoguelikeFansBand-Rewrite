@@ -10,6 +10,11 @@
   "id": "demo.item.broken-stick",
   "maxStack": 10,
   "nameKey": "item-demo-broken-stick-name",
+  "rfbBaseKind": {
+    "sourceIndex": 703,
+    "sval": 6,
+    "tval": 3
+  },
   "tags": [
     "junk",
     "rfb-compatibility"

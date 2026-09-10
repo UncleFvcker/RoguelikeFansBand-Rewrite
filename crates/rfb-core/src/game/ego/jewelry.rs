@@ -128,7 +128,7 @@ impl Game {
             );
         }
         let materialization = roll(
-            context.drop_theme(),
+            context.drop_theme(&self.content),
             &self.content,
             &mut self.rng,
             definition,

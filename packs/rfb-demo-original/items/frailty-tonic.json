@@ -10,10 +10,15 @@
   "generationLevel": 3,
   "glyph": "!",
   "id": "demo.item.frailty-tonic",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-frailty-tonic-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 411,
+    "sval": 16,
+    "tval": 75
+  },
   "tags": [
     "attribute-drain",
     "consumable",

@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-masterwork-armor-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 334,
+    "sval": 20,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "enchantment",

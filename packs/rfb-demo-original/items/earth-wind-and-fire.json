@@ -1,22 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.earth-wind-and-fire",
-  "nameKey": "item-demo-earth-wind-and-fire-name",
-  "descriptionKey": "item-demo-earth-wind-and-fire-description",
-  "glyph": "?",
-  "weightTenthsPound": 30,
+  "abilityBookId": "demo.ability-book.earth-wind-and-fire",
   "baseValue": 1000,
-  "generationLevel": 20,
-  "maxStack": 1,
-  "mogaminatorRare": false,
+  "descriptionKey": "item-demo-earth-wind-and-fire-description",
   "elementalDestructionVulnerabilities": [
     "fire"
   ],
-  "abilityBookId": "demo.ability-book.earth-wind-and-fire",
+  "formatVersion": 1,
+  "generationLevel": 20,
+  "glyph": "?",
+  "id": "demo.item.earth-wind-and-fire",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-earth-wind-and-fire-name",
+  "rfbBaseKind": {
+    "sourceIndex": 545,
+    "sval": 1,
+    "tval": 101
+  },
   "tags": [
     "armageddon",
     "book",
     "spellbook"
-  ]
+  ],
+  "weightTenthsPound": 30
 }

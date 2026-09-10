@@ -10,10 +10,15 @@
   "generationLevel": 3,
   "glyph": "!",
   "id": "demo.item.venom-draught",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-venom-draught-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 405,
+    "sval": 6,
+    "tval": 75
+  },
   "shatterEffectProgramId": "demo.effect.venom-draught.shatter",
   "shatterRadius": 2,
   "tags": [

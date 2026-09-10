@@ -65,7 +65,7 @@ impl Game {
             .build
             .as_ref()
             .map_or("", |build| build.class_id.as_str());
-        let theme = context.drop_theme();
+        let theme = context.drop_theme(&self.content);
         let bad_luck = self
             .progress
             .active_mutation_ids

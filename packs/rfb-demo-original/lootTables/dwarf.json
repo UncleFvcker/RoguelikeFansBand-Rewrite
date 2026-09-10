@@ -2,19 +2,16 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/loot-table.schema.json",
   "formatVersion": 1,
   "id": "demo.loot-table.dwarf",
-  "rolls": 1,
-  "entries": [
-    { "itemKindId": "demo.item.battle-axe", "weight": 100, "quantity": 1, "minDepth": 15 },
-    { "itemKindId": "demo.item.beaked-axe", "weight": 100, "quantity": 1, "minDepth": 15 },
-    { "itemKindId": "demo.item.broad-axe", "weight": 100, "quantity": 1, "minDepth": 15 },
-    { "itemKindId": "demo.item.iron-helm", "weight": 100, "quantity": 1, "minDepth": 20 },
-    { "itemKindId": "demo.item.pair-of-metal-shod-boots", "weight": 100, "quantity": 1, "minDepth": 20 },
-    { "itemKindId": "demo.item.small-metal-shield", "weight": 100, "quantity": 1, "minDepth": 10 }
-  ],
-  "qualityPolicy": {
-    "kind": "rfb-depth",
-    "goodCapPercent": 75,
-    "greatCapPercent": 20
+  "kindSelection": {
+    "kind": "rfb-theme",
+    "poolId": "demo.loot-table.base-items",
+    "theme": "dwarf"
   },
-  "rfbEgoPolicy": "weapon-digger"
+  "qualityPolicy": {
+    "goodCapPercent": 75,
+    "greatCapPercent": 20,
+    "kind": "rfb-depth"
+  },
+  "rfbEgoPolicy": "weapon-digger",
+  "rolls": 1
 }

@@ -67,6 +67,46 @@
       ],
       "type": "object"
     },
+    "LootKindSelectionDefinition": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "Owns canonical source allocation rows in `entries`.",
+          "properties": {
+            "kind": {
+              "const": "rfb-base",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Selects from one RfbBase table; owns no duplicate entries.",
+          "properties": {
+            "kind": {
+              "const": "rfb-theme",
+              "type": "string"
+            },
+            "poolId": {
+              "type": "string"
+            },
+            "theme": {
+              "$ref": "#/$defs/RfbDropTheme"
+            }
+          },
+          "required": [
+            "kind",
+            "poolId",
+            "theme"
+          ],
+          "type": "object"
+        }
+      ]
+    },
     "LootQualityPolicyDefinition": {
       "oneOf": [
         {
@@ -143,6 +183,25 @@
         "sides"
       ],
       "type": "object"
+    },
+    "RfbDropTheme": {
+      "enum": [
+        "warrior",
+        "warrior-shoot",
+        "archer",
+        "mage",
+        "priest",
+        "priest-evil",
+        "paladin",
+        "paladin-evil",
+        "samurai",
+        "ninja",
+        "rogue",
+        "hobbit",
+        "dwarf",
+        "junk"
+      ],
+      "type": "string"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/loot-table.schema.json",
@@ -173,6 +232,16 @@
     },
     "id": {
       "type": "string"
+    },
+    "kindSelection": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LootKindSelectionDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "qualityPolicy": {
       "anyOf": [
@@ -233,8 +302,7 @@
     "$schema",
     "formatVersion",
     "id",
-    "rolls",
-    "entries"
+    "rolls"
   ],
   "title": "LootTableDefinition",
   "type": "object"

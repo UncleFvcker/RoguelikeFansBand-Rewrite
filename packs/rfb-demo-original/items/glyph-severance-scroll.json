@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-glyph-severance-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 356,
+    "sval": 44,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "genocide",

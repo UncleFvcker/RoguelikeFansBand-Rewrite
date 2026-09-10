@@ -12,6 +12,11 @@
   "id": "demo.item.inventory-protection-scroll",
   "maxStack": 20,
   "nameKey": "item-demo-inventory-protection-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 375,
+    "sval": 63,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "knowledge",

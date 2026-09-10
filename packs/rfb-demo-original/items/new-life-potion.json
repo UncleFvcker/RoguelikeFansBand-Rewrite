@@ -9,9 +9,14 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.new-life-potion",
-  "potionNutrition": 100,
   "maxStack": 20,
   "nameKey": "item-demo-new-life-potion-name",
+  "potionNutrition": 100,
+  "rfbBaseKind": {
+    "sourceIndex": 456,
+    "sval": 63,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "new-life",

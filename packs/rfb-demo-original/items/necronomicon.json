@@ -19,6 +19,11 @@
   "maxStack": 1,
   "mogaminatorRare": false,
   "nameKey": "item-demo-necronomicon-name",
+  "rfbBaseKind": {
+    "sourceIndex": 519,
+    "sval": 3,
+    "tval": 94
+  },
   "tags": [
     "book",
     "death",

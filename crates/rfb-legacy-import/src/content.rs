@@ -7,6 +7,8 @@
 //! the repository: unit tests use synthetic samples only.
 
 mod armor_ego_audit;
+mod base_allocation;
+pub use base_allocation::sync_demo_base_allocation;
 mod noncraft_egos;
 mod random_artifacts;
 pub use noncraft_egos::sync_demo_noncraft_egos;

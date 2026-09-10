@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-spell-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 355,
+    "sval": 43,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "learning",

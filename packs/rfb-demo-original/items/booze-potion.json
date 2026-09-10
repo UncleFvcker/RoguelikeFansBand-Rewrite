@@ -10,10 +10,15 @@
   "generationLevel": 0,
   "glyph": "!",
   "id": "demo.item.booze-potion",
-  "potionNutrition": 50,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-booze-potion-name",
+  "potionNutrition": 50,
+  "rfbBaseKind": {
+    "sourceIndex": 407,
+    "sval": 9,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "potion",

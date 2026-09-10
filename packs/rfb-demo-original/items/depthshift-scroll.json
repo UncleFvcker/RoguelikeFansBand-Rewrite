@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-depthshift-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 325,
+    "sval": 10,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "scroll",

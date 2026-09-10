@@ -10,6 +10,11 @@
   "id": "demo.item.shard-of-pottery",
   "maxStack": 10,
   "nameKey": "item-demo-shard-of-pottery-name",
+  "rfbBaseKind": {
+    "sourceIndex": 702,
+    "sval": 3,
+    "tval": 3
+  },
   "tags": [
     "junk",
     "rfb-compatibility"

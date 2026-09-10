@@ -1,1 +1,27 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.grimoire-of-power","nameKey":"item-demo-grimoire-of-power-name","descriptionKey":"item-demo-grimoire-of-power-description","glyph":"?","weightTenthsPound":30,"baseValue":100000,"generationLevel":80,"maxStack":1,"mogaminatorRare":false,"elementalDestructionVulnerabilities":["fire"],"abilityBookId":"demo.ability-book.grimoire-of-power","tags":["book","sorcery","spellbook"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "abilityBookId": "demo.ability-book.grimoire-of-power",
+  "baseValue": 100000,
+  "descriptionKey": "item-demo-grimoire-of-power-description",
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 80,
+  "glyph": "?",
+  "id": "demo.item.grimoire-of-power",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-grimoire-of-power-name",
+  "rfbBaseKind": {
+    "sourceIndex": 507,
+    "sval": 3,
+    "tval": 91
+  },
+  "tags": [
+    "book",
+    "sorcery",
+    "spellbook"
+  ],
+  "weightTenthsPound": 30
+}

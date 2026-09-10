@@ -10,10 +10,15 @@
   "generationLevel": 25,
   "glyph": "!",
   "id": "demo.item.perfect-focus-elixir",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-perfect-focus-elixir-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 433,
+    "sval": 40,
+    "tval": 75
+  },
   "shatterEffectProgramId": "demo.effect.perfect-focus-elixir.shatter",
   "shatterRadius": 1,
   "tags": [

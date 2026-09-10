@@ -9,9 +9,14 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.giant-strength-potion",
-  "potionNutrition": 250,
   "maxStack": 20,
   "nameKey": "item-demo-giant-strength-potion-name",
+  "potionNutrition": 250,
+  "rfbBaseKind": {
+    "sourceIndex": 461,
+    "sval": 68,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "potion",

@@ -57,6 +57,11 @@
 
 ### B0：权威基础池与内容映射
 
+已实现。`kindSelection: rfb-base` 拥有唯一分配行，`rfb-theme` 以 `poolId` 和有穷 `theme` 枚举引用；未设置策略的表保留固定 entries 语义。
+正式基础池有 327 个 source kind、361 行分配，包含宵暗长袍的零权重行；12 个主题删除重复清单，运行时按源身份取静态候选范围。
+主题随机接受、来源调用映射与完整类别/层级调度仍按 B2/B3 推进。
+来源和逐行缺口见[分配覆盖报告](../packs/rfb-demo-original/legacy-base-allocation-audit.json)，定向同步命令见[内容开发](../docs/content-development.md)。
+
 落点：`crates/rfb-legacy-import/src/content.rs`、`rfb-content` 的模型/校验、正式物品与 lootTables。
 
 1. 为当前正式候选补齐 source kind 身份，包括药水、卷轴、书本、装置和杂项；中文名逐字采用权威表。

@@ -10,16 +10,21 @@
   "generationLevel": 10,
   "glyph": "!",
   "id": "demo.item.cure-serious-wounds-potion",
-  "potionNutrition": 100,
   "maxStack": 20,
   "mogaminatorRare": false,
   "mountUse": {
-    "type": "heal",
-    "minimumBond": 2500,
     "dice": 8,
-    "sides": 8
+    "minimumBond": 2500,
+    "sides": 8,
+    "type": "heal"
   },
   "nameKey": "item-demo-cure-serious-wounds-potion-name",
+  "potionNutrition": 100,
+  "rfbBaseKind": {
+    "sourceIndex": 428,
+    "sval": 35,
+    "tval": 75
+  },
   "shatterEffectProgramId": "demo.effect.cure-serious-wounds-potion.shatter",
   "shatterRadius": 2,
   "tags": [

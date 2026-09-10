@@ -1731,6 +1731,7 @@ fn angwil_trump_tower_prices_and_recall_survive_save_and_return() {
         .unwrap()
         .clone();
     item.id = "test.item.trump-book".to_owned();
+    item.rfb_base_kind = None;
     item.ability_book_id = Some("test.ability-book.trump".to_owned());
     artifact.content.items.push(item);
     let profile = artifact

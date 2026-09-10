@@ -94,7 +94,7 @@ fn real_warrior_gets_mage_and_dwarf_themed_equipment_then_equips_and_restores() 
             .source_index;
         match base.tval {
             30 => assert_eq!(index, 147),
-            32 if context.drop_theme() == "dwarf" => assert_eq!(index, 118),
+            32 if context.drop_theme(&game.content) == "dwarf" => assert_eq!(index, 118),
             34 => assert_eq!(index, 60),
 
             45 => assert!(matches!(index, 200 | 201 | 205 | 208 | 209)),

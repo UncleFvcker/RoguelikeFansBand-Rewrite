@@ -10,18 +10,23 @@
   "generationLevel": 1,
   "glyph": "!",
   "id": "demo.item.swiftstep-tonic",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "mountUse": {
-    "type": "haste",
-    "minimumBond": 5000,
+    "durationBonus": 15,
     "durationDice": 1,
     "durationSides": 25,
-    "durationBonus": 15,
-    "extension": 5
+    "extension": 5,
+    "minimumBond": 5000,
+    "type": "haste"
   },
   "nameKey": "item-demo-swiftstep-tonic-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 422,
+    "sval": 29,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "haste",

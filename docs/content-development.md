@@ -40,6 +40,13 @@ git -C D:/codex/Frogcomposband/master grep -n '目标符号' master -- src lib
 
 ## 内容锁与生成文件
 
+基础分配的定向同步只更新当前正式物品的 source kind 身份、权威中文显示名、基础分配行和主题引用，保留现有物品效果/装置适配。中文词干来自 `kind_name_zh.inc`；药水、卷轴和蘑菇类别后缀沿用 `flavor.c` 的已知无外观显示格式。基础池按层级、source kind 和原分配行顺序排列，零权重及重复行保留。覆盖报告位于包根目录 `legacy-base-allocation-audit.json`，不属于运行时内容。
+
+```powershell
+$env:RFB_LEGACY_SOURCE = 'D:/codex/Frogcomposband/master'
+cargo run -p rfb-legacy-import -- sync-demo-base-allocation packs/rfb-demo-original
+```
+
 随机神器数据单独同步。第一条命令读取 `master` 的名字文件及激活表；第二条通过原版 C 估值补齐激活价值，需要本机 C 编译器。两步完成后再更新包版本与 lock，不重导其他内容。
 
 ```powershell

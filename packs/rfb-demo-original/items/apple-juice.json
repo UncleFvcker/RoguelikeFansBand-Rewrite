@@ -9,9 +9,14 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.apple-juice",
-  "potionNutrition": 250,
   "maxStack": 20,
   "nameKey": "item-demo-apple-juice-name",
+  "potionNutrition": 250,
+  "rfbBaseKind": {
+    "sourceIndex": 401,
+    "sval": 1,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "potion",

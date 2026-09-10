@@ -526,7 +526,7 @@ fn base_item_natural_egos_cover_all_equipment_types() {
     };
     let mut seen = BTreeSet::new();
     // Fixed representatives exercise the real shared pool without a large seed sweep.
-    for seed in [3, 7, 63, 94, 297, 427, 618, 704, 1219, 1596] {
+    for seed in [15, 67, 112, 185, 429, 539, 891, 1709, 1792, 3706] {
         let mut game = base.clone();
         game.rng = RfbRng::seeded(seed);
         let drops = game

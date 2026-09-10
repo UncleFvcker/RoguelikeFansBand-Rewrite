@@ -10,10 +10,15 @@
   "generationLevel": 50,
   "glyph": "!",
   "id": "demo.item.granite-tonic",
-  "potionNutrition": 250,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-granite-tonic-name",
+  "potionNutrition": 250,
+  "rfbBaseKind": {
+    "sourceIndex": 462,
+    "sval": 69,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "potion",

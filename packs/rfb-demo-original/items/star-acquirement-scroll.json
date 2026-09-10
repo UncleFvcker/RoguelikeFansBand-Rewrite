@@ -12,6 +12,11 @@
   "id": "demo.item.star-acquirement-scroll",
   "maxStack": 20,
   "nameKey": "item-demo-star-acquirement-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 359,
+    "sval": 47,
+    "tval": 70
+  },
   "tags": [
     "acquirement",
     "consumable",

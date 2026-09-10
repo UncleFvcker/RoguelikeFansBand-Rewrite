@@ -10,10 +10,15 @@
   "generationLevel": 1,
   "glyph": "!",
   "id": "demo.item.valor-tonic",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-valor-tonic-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 425,
+    "sval": 32,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "heroism",

@@ -1,1 +1,26 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.disease-mushroom","nameKey":"item-demo-disease-mushroom-name","appearanceNameKey":"item-demo-disease-mushroom-appearance","descriptionKey":"item-demo-disease-mushroom-description","glyph":",","weightTenthsPound":1,"maxStack":100,"baseValue":50,"useAction":{"effectProgramId":"demo.effect.disease-mushroom"},"tags":["consumable","food","mushroom","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-disease-mushroom-appearance",
+  "baseValue": 50,
+  "descriptionKey": "item-demo-disease-mushroom-description",
+  "formatVersion": 1,
+  "glyph": ",",
+  "id": "demo.item.disease-mushroom",
+  "maxStack": 100,
+  "nameKey": "item-demo-disease-mushroom-name",
+  "rfbBaseKind": {
+    "sourceIndex": 12,
+    "sval": 11,
+    "tval": 80
+  },
+  "tags": [
+    "consumable",
+    "food",
+    "mushroom",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.disease-mushroom"
+  },
+  "weightTenthsPound": 1
+}

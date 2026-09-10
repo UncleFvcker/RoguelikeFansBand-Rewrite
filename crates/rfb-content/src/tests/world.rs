@@ -3567,21 +3567,12 @@ fn monster_mapped_spell_profiles_match_source() {
                 .loot_tables
                 .iter()
                 .find(|table| table.id == "demo.loot-table.dwarf")
-                .expect("Dwarf drop table should compile")
-                .entries
-                .iter()
-                .map(|entry| entry.item_kind_id.as_str())
-                .collect::<BTreeSet<_>>(),
-            [
-                "demo.item.battle-axe",
-                "demo.item.beaked-axe",
-                "demo.item.broad-axe",
-                "demo.item.iron-helm",
-                "demo.item.pair-of-metal-shod-boots",
-                "demo.item.small-metal-shield",
-            ]
-            .into_iter()
-            .collect()
+                .unwrap()
+                .kind_selection,
+            Some(crate::LootKindSelectionDefinition::RfbTheme {
+                pool_id: "demo.loot-table.base-items".into(),
+                theme: crate::RfbDropTheme::Dwarf,
+            })
         );
     }
 
@@ -11708,6 +11699,7 @@ fn general_store_economy_content_enforces_generic_stock_rules() {
                 .clone();
             item = "demo.item.invalid-zero-value-stock".to_owned();
             definition.id = item.clone();
+            definition.rfb_base_kind = None;
             definition.base_value = 0;
             content.items.push(definition);
             content
@@ -12067,14 +12059,8 @@ fn equipment_allocations_and_drop_themes_match_source() {
             .iter()
             .find(|table| table.id == "demo.loot-table.base-items")
             .expect("base item pool should exist");
-        let warrior = artifact
-            .content
-            .loot_tables
-            .iter()
-            .find(|table| table.id == "demo.loot-table.warrior")
-            .expect("Warrior loot should exist");
 
-        for (item_id, min_depth, warrior_item) in [
+        for (item_id, min_depth, _) in [
             ("demo.item.leather-scale-mail", 15, false),
             ("demo.item.jingasa", 16, true),
             ("demo.item.pair-of-metal-shod-boots", 20, true),
@@ -12092,15 +12078,6 @@ fn equipment_allocations_and_drop_themes_match_source() {
                 .find(|entry| entry.item_kind_id == item_id)
                 .unwrap_or_else(|| panic!("{item_id} should be in the base item pool"));
             assert_eq!((entry.min_depth, entry.max_depth), (min_depth, u16::MAX));
-
-            let warrior_entry = warrior
-                .entries
-                .iter()
-                .find(|entry| entry.item_kind_id == item_id);
-            assert_eq!(warrior_entry.is_some(), warrior_item, "{item_id}");
-            if let Some(entry) = warrior_entry {
-                assert_eq!((entry.min_depth, entry.max_depth), (min_depth, u16::MAX));
-            }
         }
     }
 
@@ -12150,89 +12127,6 @@ fn equipment_allocations_and_drop_themes_match_source() {
                 allocations,
                 vec![(min_depth, u16::MAX, weight)],
                 "{item_id}"
-            );
-        }
-
-        let new_item_ids = expected_allocations
-            .iter()
-            .map(|(item_id, _, _)| *item_id)
-            .collect::<BTreeSet<_>>();
-        for (table_id, expected_item_ids) in [
-            (
-                "demo.loot-table.warrior",
-                &[
-                    "demo.item.battle-axe",
-                    "demo.item.beaked-axe",
-                    "demo.item.broad-axe",
-                    "demo.item.broad-spear",
-                    "demo.item.fauchard",
-                    "demo.item.glaive",
-                    "demo.item.lance",
-                    "demo.item.pike",
-                    "demo.item.ring-mail",
-                    "demo.item.trident",
-                ][..],
-            ),
-            (
-                "demo.loot-table.paladin",
-                &[
-                    "demo.item.battle-axe",
-                    "demo.item.beaked-axe",
-                    "demo.item.broad-axe",
-                    "demo.item.broad-spear",
-                    "demo.item.fauchard",
-                    "demo.item.glaive",
-                    "demo.item.lance",
-                    "demo.item.pike",
-                    "demo.item.ring-mail",
-                    "demo.item.trident",
-                ][..],
-            ),
-            (
-                "demo.loot-table.priest",
-                &[
-                    "demo.item.ball-and-chain",
-                    "demo.item.bo-staff",
-                    "demo.item.flail",
-                    "demo.item.jo-staff",
-                    "demo.item.lead-filled-mace",
-                    "demo.item.nunchaku",
-                    "demo.item.three-piece-rod",
-                    "demo.item.war-hammer",
-                ][..],
-            ),
-            (
-                "demo.loot-table.evil-priest",
-                &[
-                    "demo.item.ball-and-chain",
-                    "demo.item.bo-staff",
-                    "demo.item.flail",
-                    "demo.item.jo-staff",
-                    "demo.item.lead-filled-mace",
-                    "demo.item.nunchaku",
-                    "demo.item.three-piece-rod",
-                    "demo.item.war-hammer",
-                ][..],
-            ),
-            (
-                "demo.loot-table.dwarf",
-                &[
-                    "demo.item.battle-axe",
-                    "demo.item.beaked-axe",
-                    "demo.item.broad-axe",
-                ][..],
-            ),
-        ] {
-            let actual_item_ids = table(table_id)
-                .entries
-                .iter()
-                .map(|entry| entry.item_kind_id.as_str())
-                .filter(|item_id| new_item_ids.contains(item_id))
-                .collect::<BTreeSet<_>>();
-            assert_eq!(
-                actual_item_ids,
-                expected_item_ids.iter().copied().collect(),
-                "{table_id}"
             );
         }
     }
@@ -12365,7 +12259,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 360);
+    assert_eq!(base_items.entries.len(), 361);
     let amulet = base_items
         .entries
         .iter()
@@ -12425,7 +12319,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
     assert_eq!(active_source_items.len(), 334);
 
     let source_items_without_allocations =
-        BTreeSet::from([33, 34, 36, 37, 261, 345, 346, 347, 400, 401, 460]);
+        BTreeSet::from([33, 34, 36, 37, 345, 346, 347, 400, 401, 460]);
     let expected_item_ids = active_source_items
         .iter()
         .filter(|(source_index, _)| !source_items_without_allocations.contains(source_index))
@@ -12442,7 +12336,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 326);
+    assert_eq!(expected_item_ids.len(), 327);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.
@@ -12544,19 +12438,25 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
         great_cap_percent: 20,
     });
 
-    for (table_id, expected_entries) in [
-        ("demo.loot-table.warrior", 59),
-        ("demo.loot-table.archer", 13),
-        ("demo.loot-table.mage", 53),
-        ("demo.loot-table.priest", 39),
-        ("demo.loot-table.evil-priest", 18),
-        ("demo.loot-table.paladin", 73),
-        ("demo.loot-table.dwarf", 6),
-        ("demo.loot-table.ninja", 3),
-        ("demo.loot-table.hobbit", 32),
-        ("demo.loot-table.evil-paladin", 6),
-        ("demo.loot-table.rogue", 8),
-        ("demo.loot-table.samurai", 3),
+    for (table_id, theme) in [
+        ("demo.loot-table.warrior", crate::RfbDropTheme::Warrior),
+        ("demo.loot-table.archer", crate::RfbDropTheme::Archer),
+        ("demo.loot-table.mage", crate::RfbDropTheme::Mage),
+        ("demo.loot-table.priest", crate::RfbDropTheme::Priest),
+        (
+            "demo.loot-table.evil-priest",
+            crate::RfbDropTheme::PriestEvil,
+        ),
+        ("demo.loot-table.paladin", crate::RfbDropTheme::Paladin),
+        ("demo.loot-table.dwarf", crate::RfbDropTheme::Dwarf),
+        ("demo.loot-table.ninja", crate::RfbDropTheme::Ninja),
+        ("demo.loot-table.hobbit", crate::RfbDropTheme::Hobbit),
+        (
+            "demo.loot-table.evil-paladin",
+            crate::RfbDropTheme::PaladinEvil,
+        ),
+        ("demo.loot-table.rogue", crate::RfbDropTheme::Rogue),
+        ("demo.loot-table.samurai", crate::RfbDropTheme::Samurai),
     ] {
         let table = artifact
             .content
@@ -12564,7 +12464,14 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
             .iter()
             .find(|table| table.id == table_id)
             .unwrap_or_else(|| panic!("{table_id} should exist"));
-        assert_eq!(table.entries.len(), expected_entries, "{table_id}");
+        assert!(table.entries.is_empty(), "{table_id}");
+        assert_eq!(
+            table.kind_selection,
+            Some(crate::LootKindSelectionDefinition::RfbTheme {
+                pool_id: "demo.loot-table.base-items".into(),
+                theme,
+            })
+        );
         assert_eq!(table.quality_policy, policy, "{table_id}");
         assert!(table.quality_weights.is_empty(), "{table_id}");
         assert_eq!(
@@ -12573,13 +12480,6 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
             "{table_id}"
         );
         assert!(table.affix_weights.is_empty(), "{table_id}");
-        assert!(
-            table
-                .entries
-                .iter()
-                .all(|entry| !matches!(entry.max_depth, 9 | 32)),
-            "{table_id} should not retain a dungeon depth cap"
-        );
     }
 
     let retired = [
@@ -12614,77 +12514,28 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
             .all(|drop| drop.theme_chance_percent == 50)
     );
 
-    let warrior = artifact
+    let base = artifact
         .content
         .loot_tables
         .iter()
-        .find(|table| table.id == "demo.loot-table.warrior")
-        .expect("Warrior drop table should exist");
-    assert!(warrior.entries.iter().any(|entry| {
-        entry.item_kind_id == "demo.item.bastard-sword"
-            && entry.weight == 100
-            && entry.min_depth == 15
-            && entry.max_depth == u16::MAX
-    }));
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .unwrap();
     assert_eq!(
-        warrior
-            .entries
+        base.entries
             .iter()
             .filter(|entry| entry.item_kind_id == "demo.item.pointy-hat")
             .map(|entry| (entry.min_depth, entry.weight))
             .collect::<Vec<_>>(),
         vec![(10, 20), (40, 33)]
     );
-
-    let hobbit = artifact
-        .content
-        .loot_tables
-        .iter()
-        .find(|table| table.id == "demo.loot-table.hobbit")
-        .expect("Hobbit drop table should exist");
     assert_eq!(
-        hobbit
-            .entries
-            .iter()
-            .map(|entry| entry.item_kind_id.as_str())
-            .collect::<BTreeSet<_>>()
-            .len(),
-        26
-    );
-    assert_eq!(
-        hobbit
-            .entries
-            .iter()
-            .filter(|entry| entry.item_kind_id == "demo.item.sixfold-provision")
-            .map(|entry| (entry.min_depth, entry.weight))
-            .collect::<Vec<_>>(),
-        vec![(20, 12), (30, 25), (40, 100)]
-    );
-    assert_eq!(
-        hobbit
-            .entries
+        base.entries
             .iter()
             .filter(|entry| entry.item_kind_id == "demo.item.ration-of-food")
             .map(|entry| (entry.min_depth, entry.weight))
             .collect::<Vec<_>>(),
         vec![(0, 100), (5, 100), (10, 100), (20, 100)]
     );
-    for excluded in [
-        "demo.item.hard-biscuit",
-        "demo.item.strip-of-venison",
-        "demo.item.pint-of-fine-ale",
-        "demo.item.pint-of-fine-wine",
-        "demo.item.iron-shot",
-        "demo.item.mithril-shot",
-    ] {
-        assert!(
-            hobbit
-                .entries
-                .iter()
-                .all(|entry| entry.item_kind_id != excluded),
-            "{excluded} should not be in the Hobbit theme"
-        );
-    }
 
     let scruffy = artifact
         .content
@@ -12821,40 +12672,6 @@ fn town_shop_items_are_obtainable() {
             "{item_id} should be obtainable"
         );
     }
-}
-
-#[test]
-fn archer_theme_uses_only_implemented_source_predicate_members() {
-    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    let archer_items = artifact
-        .content
-        .loot_tables
-        .iter()
-        .find(|table| table.id == "demo.loot-table.archer")
-        .expect("Archer drop table should exist")
-        .entries
-        .iter()
-        .map(|entry| entry.item_kind_id.as_str())
-        .collect::<BTreeSet<_>>();
-
-    assert_eq!(
-        archer_items,
-        BTreeSet::from([
-            "demo.item.arrow",
-            "demo.item.dwarven-backpack",
-            "demo.item.fabric-bag",
-            "demo.item.heavy-crossbow",
-            "demo.item.leather-pouch",
-            "demo.item.light-crossbow",
-            "demo.item.long-bow",
-            "demo.item.mithril-arrow",
-            "demo.item.ring",
-            "demo.item.seeker-arrow",
-            "demo.item.sheaf-arrow",
-            "demo.item.short-bow",
-            "demo.item.sling",
-        ])
-    );
 }
 
 #[test]

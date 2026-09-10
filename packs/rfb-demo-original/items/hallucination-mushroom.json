@@ -1,1 +1,26 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.hallucination-mushroom","nameKey":"item-demo-hallucination-mushroom-name","appearanceNameKey":"item-demo-hallucination-mushroom-appearance","descriptionKey":"item-demo-hallucination-mushroom-description","glyph":",","weightTenthsPound":1,"maxStack":100,"baseValue":0,"useAction":{"effectProgramId":"demo.effect.hallucination-mushroom"},"tags":["consumable","food","mushroom","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-hallucination-mushroom-appearance",
+  "baseValue": 0,
+  "descriptionKey": "item-demo-hallucination-mushroom-description",
+  "formatVersion": 1,
+  "glyph": ",",
+  "id": "demo.item.hallucination-mushroom",
+  "maxStack": 100,
+  "nameKey": "item-demo-hallucination-mushroom-name",
+  "rfbBaseKind": {
+    "sourceIndex": 5,
+    "sval": 4,
+    "tval": 80
+  },
+  "tags": [
+    "consumable",
+    "food",
+    "mushroom",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.hallucination-mushroom"
+  },
+  "weightTenthsPound": 1
+}

@@ -457,11 +457,11 @@
         "start": 3500,
         "end": 3558,
         "status": "partial-base-allocation",
-        "entry": "12 formal theme tables",
+        "entry": "12 formal enum themes referencing one source pool",
         "change": "theme takes precedence over tailored; source predicates choose full base pools",
-        "consumer": "formal lootTables; loot.rs",
-        "tests": "theme Ego integration only",
-        "prerequisite": "full source base allocation; WARRIOR_SHOOT/JUNK not standalone formal themes"
+        "consumer": "formal lootTables; loot/allocation.rs; loot.rs",
+        "tests": "shared static candidate domains and theme Ego integration",
+        "prerequisite": "full scheduler and stochastic theme acceptance; WARRIOR_SHOOT/JUNK caller mapping pending"
       },
       {
         "id": "tailored-class-hooks",
@@ -1511,7 +1511,7 @@
     },
     {
       "scope": "source base allocation",
-      "contract": "formal tables are an adapted pool; full good/great/tailored/theme allocation, favorite weapon/slot filters, book found counters and Acquirement failure retries remain pending",
+      "contract": "B0 provides canonical source allocation rows, all current candidate identities and shared static theme domains; full category/good/great/tailored allocation, stochastic theme acceptance, favorite weapon/slot filters, book found counters and Acquirement failure retries remain pending",
       "source": "src/object2.c:2416-3678; :4471"
     },
     {
@@ -1532,11 +1532,914 @@
   ],
   "equipmentBases": [
     {
+      "itemId": "demo.item.broken-dagger",
+      "status": "source-type-verified",
+      "sourceIndex": 45,
+      "sval": 1,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.broken-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 46,
+      "sval": 2,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.dagger",
+      "status": "source-type-verified",
+      "sourceIndex": 47,
+      "sval": 4,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.club",
+      "status": "source-type-verified",
+      "sourceIndex": 120,
+      "sval": 1,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.rounded-pebble",
+      "status": "source-type-verified",
+      "sourceIndex": 190,
+      "sval": 1,
+      "tval": 16
+    },
+    {
+      "itemId": "demo.item.filthy-rag",
+      "status": "source-type-verified",
+      "sourceIndex": 246,
+      "sval": 1,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.cloak",
+      "status": "source-type-verified",
+      "sourceIndex": 195,
+      "sval": 1,
+      "tval": 35
+    },
+    {
+      "itemId": "demo.item.leather-gloves",
+      "status": "source-type-verified",
+      "sourceIndex": 227,
+      "sval": 1,
+      "tval": 31
+    },
+    {
+      "itemId": "demo.item.robe",
+      "status": "source-type-verified",
+      "sourceIndex": 247,
+      "sval": 2,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.yoiyami-robe",
+      "status": "source-type-verified",
+      "sourceIndex": 261,
+      "sval": 60,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.wooden-torch",
+      "status": "source-type-verified",
+      "sourceIndex": 600,
+      "sval": 0,
+      "tval": 39
+    },
+    {
+      "itemId": "demo.item.main-gauche",
+      "status": "source-type-verified",
+      "sourceIndex": 48,
+      "sval": 5,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.tanto",
+      "status": "source-type-verified",
+      "sourceIndex": 49,
+      "sval": 6,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.whip",
+      "status": "source-type-verified",
+      "sourceIndex": 121,
+      "sval": 2,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.arrow",
+      "status": "source-type-verified",
+      "sourceIndex": 175,
+      "sval": 1,
+      "tval": 17
+    },
+    {
+      "itemId": "demo.item.iron-shot",
+      "status": "source-type-verified",
+      "sourceIndex": 191,
+      "sval": 2,
+      "tval": 16
+    },
+    {
+      "itemId": "demo.item.soft-leather-boots",
+      "status": "source-type-verified",
+      "sourceIndex": 205,
+      "sval": 2,
+      "tval": 30
+    },
+    {
+      "itemId": "demo.item.hard-leather-cap",
+      "status": "source-type-verified",
+      "sourceIndex": 212,
+      "sval": 2,
+      "tval": 32
+    },
+    {
+      "itemId": "demo.item.knit-cap",
+      "status": "source-type-verified",
+      "sourceIndex": 224,
+      "sval": 1,
+      "tval": 32
+    },
+    {
+      "itemId": "demo.item.small-leather-shield",
+      "status": "source-type-verified",
+      "sourceIndex": 235,
+      "sval": 2,
+      "tval": 34
+    },
+    {
+      "itemId": "demo.item.soft-leather-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 249,
+      "sval": 4,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.soft-studded-leather",
+      "status": "source-type-verified",
+      "sourceIndex": 250,
+      "sval": 5,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.brass-lantern",
+      "status": "source-type-verified",
+      "sourceIndex": 601,
+      "sval": 1,
+      "tval": 39
+    },
+    {
+      "itemId": "demo.item.rapier",
+      "status": "source-type-verified",
+      "sourceIndex": 50,
+      "sval": 7,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.small-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 51,
+      "sval": 8,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.short-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 53,
+      "sval": 10,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.sabre",
+      "status": "source-type-verified",
+      "sourceIndex": 54,
+      "sval": 11,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.cutlass",
+      "status": "source-type-verified",
+      "sourceIndex": 55,
+      "sval": 12,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.tulwar",
+      "status": "source-type-verified",
+      "sourceIndex": 58,
+      "sval": 15,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.spear",
+      "status": "source-type-verified",
+      "sourceIndex": 86,
+      "sval": 2,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.trident",
+      "status": "source-type-verified",
+      "sourceIndex": 89,
+      "sval": 5,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.mace",
+      "status": "source-type-verified",
+      "sourceIndex": 124,
+      "sval": 5,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.war-hammer",
+      "status": "source-type-verified",
+      "sourceIndex": 127,
+      "sval": 8,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.shovel",
+      "status": "source-type-verified",
+      "sourceIndex": 150,
+      "sval": 1,
+      "tval": 20
+    },
+    {
+      "itemId": "demo.item.sling",
+      "status": "source-type-verified",
+      "sourceIndex": 160,
+      "sval": 2,
+      "tval": 19
+    },
+    {
+      "itemId": "demo.item.pair-of-hard-leather-boots",
+      "status": "source-type-verified",
+      "sourceIndex": 206,
+      "sval": 3,
+      "tval": 30
+    },
+    {
+      "itemId": "demo.item.set-of-studded-leather-gloves",
+      "status": "source-type-verified",
+      "sourceIndex": 228,
+      "sval": 2,
+      "tval": 31
+    },
+    {
+      "itemId": "demo.item.hard-leather-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 251,
+      "sval": 6,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.padded-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 255,
+      "sval": 10,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.paper-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 248,
+      "sval": 3,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.cord-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 254,
+      "sval": 9,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.khopesh",
+      "status": "source-type-verified",
+      "sourceIndex": 57,
+      "sval": 14,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.broad-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 59,
+      "sval": 16,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.long-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 60,
+      "sval": 17,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.scimitar",
+      "status": "source-type-verified",
+      "sourceIndex": 61,
+      "sval": 18,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.hatchet",
+      "status": "source-type-verified",
+      "sourceIndex": 85,
+      "sval": 1,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.sickle",
+      "status": "source-type-verified",
+      "sourceIndex": 87,
+      "sval": 3,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.awl-pike",
+      "status": "source-type-verified",
+      "sourceIndex": 88,
+      "sval": 4,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.lucerne-hammer",
+      "status": "source-type-verified",
+      "sourceIndex": 96,
+      "sval": 12,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.lance",
+      "status": "source-type-verified",
+      "sourceIndex": 102,
+      "sval": 20,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.quarterstaff",
+      "status": "source-type-verified",
+      "sourceIndex": 122,
+      "sval": 3,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.morning-star",
+      "status": "source-type-verified",
+      "sourceIndex": 129,
+      "sval": 12,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.flail",
+      "status": "source-type-verified",
+      "sourceIndex": 130,
+      "sval": 13,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.pick",
+      "status": "source-type-verified",
+      "sourceIndex": 153,
+      "sval": 4,
+      "tval": 20
+    },
+    {
+      "itemId": "demo.item.short-bow",
+      "status": "source-type-verified",
+      "sourceIndex": 161,
+      "sval": 12,
+      "tval": 19
+    },
+    {
+      "itemId": "demo.item.bolt",
+      "status": "source-type-verified",
+      "sourceIndex": 185,
+      "sval": 1,
+      "tval": 18
+    },
+    {
+      "itemId": "demo.item.metal-cap",
+      "status": "source-type-verified",
+      "sourceIndex": 213,
+      "sval": 3,
+      "tval": 32
+    },
+    {
+      "itemId": "demo.item.pointy-hat",
+      "status": "source-type-verified",
+      "sourceIndex": 225,
+      "sval": 10,
+      "tval": 32
+    },
+    {
+      "itemId": "demo.item.set-of-gauntlets",
+      "status": "source-type-verified",
+      "sourceIndex": 229,
+      "sval": 3,
+      "tval": 31
+    },
+    {
+      "itemId": "demo.item.small-metal-shield",
+      "status": "source-type-verified",
+      "sourceIndex": 236,
+      "sval": 3,
+      "tval": 34
+    },
+    {
+      "itemId": "demo.item.hard-studded-leather",
+      "status": "source-type-verified",
+      "sourceIndex": 252,
+      "sval": 7,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.ring",
+      "status": "source-type-verified",
+      "sourceIndex": 310,
+      "sval": 0,
+      "tval": 45
+    },
+    {
+      "itemId": "demo.item.amulet",
+      "status": "source-type-verified",
+      "sourceIndex": 311,
+      "sval": 0,
+      "tval": 40
+    },
+    {
+      "itemId": "demo.item.jo-staff",
+      "status": "source-type-verified",
+      "sourceIndex": 126,
+      "sval": 7,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.broad-spear",
+      "status": "source-type-verified",
+      "sourceIndex": 91,
+      "sval": 7,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.basillard",
+      "status": "source-type-verified",
+      "sourceIndex": 52,
+      "sval": 9,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.wakizashi",
+      "status": "source-type-verified",
+      "sourceIndex": 56,
+      "sval": 13,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.ninjato",
+      "status": "source-type-verified",
+      "sourceIndex": 62,
+      "sval": 19,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.bastard-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 64,
+      "sval": 21,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.pike",
+      "status": "source-type-verified",
+      "sourceIndex": 92,
+      "sval": 8,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.beaked-axe",
+      "status": "source-type-verified",
+      "sourceIndex": 94,
+      "sval": 10,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.broad-axe",
+      "status": "source-type-verified",
+      "sourceIndex": 95,
+      "sval": 11,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.battle-axe",
+      "status": "source-type-verified",
+      "sourceIndex": 103,
+      "sval": 22,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.lead-filled-mace",
+      "status": "source-type-verified",
+      "sourceIndex": 132,
+      "sval": 15,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.large-leather-shield",
+      "status": "source-type-verified",
+      "sourceIndex": 237,
+      "sval": 4,
+      "tval": 34
+    },
+    {
+      "itemId": "demo.item.rhino-hide-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 253,
+      "sval": 8,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.leather-scale-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 256,
+      "sval": 11,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.feanorian-lamp",
+      "status": "source-type-verified",
+      "sourceIndex": 603,
+      "sval": 2,
+      "tval": 39
+    },
+    {
+      "itemId": "demo.item.capture-ball",
+      "status": "source-type-verified",
+      "sourceIndex": 704,
+      "sval": 0,
+      "tval": 11
+    },
+    {
+      "itemId": "demo.item.nunchaku",
+      "status": "source-type-verified",
+      "sourceIndex": 123,
+      "sval": 4,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.jingasa",
+      "status": "source-type-verified",
+      "sourceIndex": 214,
+      "sval": 4,
+      "tval": 32
+    },
+    {
+      "itemId": "demo.item.fauchard",
+      "status": "source-type-verified",
+      "sourceIndex": 90,
+      "sval": 6,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.katana",
+      "status": "source-type-verified",
+      "sourceIndex": 63,
+      "sval": 20,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.glaive",
+      "status": "source-type-verified",
+      "sourceIndex": 97,
+      "sval": 13,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.ball-and-chain",
+      "status": "source-type-verified",
+      "sourceIndex": 125,
+      "sval": 6,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.three-piece-rod",
+      "status": "source-type-verified",
+      "sourceIndex": 128,
+      "sval": 11,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.bo-staff",
+      "status": "source-type-verified",
+      "sourceIndex": 131,
+      "sval": 14,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.gnomish-shovel",
+      "status": "source-type-verified",
+      "sourceIndex": 151,
+      "sval": 2,
+      "tval": 20
+    },
+    {
+      "itemId": "demo.item.quiver",
+      "status": "source-type-verified",
+      "sourceIndex": 169,
+      "sval": 0,
+      "tval": 46
+    },
+    {
+      "itemId": "demo.item.fur-cloak",
+      "status": "source-type-verified",
+      "sourceIndex": 197,
+      "sval": 3,
+      "tval": 35
+    },
+    {
+      "itemId": "demo.item.pair-of-metal-shod-boots",
+      "status": "source-type-verified",
+      "sourceIndex": 208,
+      "sval": 5,
+      "tval": 30
+    },
+    {
+      "itemId": "demo.item.iron-helm",
+      "status": "source-type-verified",
+      "sourceIndex": 215,
+      "sval": 5,
+      "tval": 32
+    },
+    {
+      "itemId": "demo.item.set-of-spiked-gauntlets",
+      "status": "source-type-verified",
+      "sourceIndex": 230,
+      "sval": 4,
+      "tval": 31
+    },
+    {
+      "itemId": "demo.item.leather-jacket",
+      "status": "source-type-verified",
+      "sourceIndex": 257,
+      "sval": 12,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.ring-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 271,
+      "sval": 2,
+      "tval": 37
+    },
+    {
+      "itemId": "demo.item.fabric-bag",
+      "status": "source-type-verified",
+      "sourceIndex": 722,
+      "tval": 46,
+      "sval": 1
+    },
+    {
+      "itemId": "demo.item.halberd",
+      "status": "source-type-verified",
+      "sourceIndex": 99,
+      "sval": 15,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.wizardstaff",
+      "status": "source-type-verified",
+      "sourceIndex": 137,
+      "sval": 21,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.light-crossbow",
+      "status": "source-type-verified",
+      "sourceIndex": 163,
+      "sval": 23,
+      "tval": 19
+    },
+    {
+      "itemId": "demo.item.harp",
+      "status": "source-type-verified",
+      "sourceIndex": 168,
+      "sval": 70,
+      "tval": 19
+    },
+    {
+      "itemId": "demo.item.chain-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 273,
+      "sval": 4,
+      "tval": 37
+    },
+    {
+      "itemId": "demo.item.two-handed-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 68,
+      "sval": 25,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.rune-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 77,
+      "sval": 34,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.orcish-pick",
+      "status": "source-type-verified",
+      "sourceIndex": 154,
+      "sval": 5,
+      "tval": 20
+    },
+    {
+      "itemId": "demo.item.long-bow",
+      "status": "source-type-verified",
+      "sourceIndex": 162,
+      "sval": 13,
+      "tval": 19
+    },
+    {
+      "itemId": "demo.item.sheaf-arrow",
+      "status": "source-type-verified",
+      "sourceIndex": 176,
+      "sval": 2,
+      "tval": 17
+    },
+    {
+      "itemId": "demo.item.elven-cloak",
+      "status": "source-type-verified",
+      "sourceIndex": 196,
+      "sval": 2,
+      "tval": 35
+    },
+    {
+      "itemId": "demo.item.iron-crown",
+      "status": "source-type-verified",
+      "sourceIndex": 220,
+      "sval": 10,
+      "tval": 33
+    },
+    {
+      "itemId": "demo.item.large-metal-shield",
+      "status": "source-type-verified",
+      "sourceIndex": 238,
+      "sval": 5,
+      "tval": 34
+    },
+    {
+      "itemId": "demo.item.augmented-chain-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 275,
+      "sval": 6,
+      "tval": 37
+    },
+    {
+      "itemId": "demo.item.no-dachi",
+      "status": "source-type-verified",
+      "sourceIndex": 70,
+      "sval": 27,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.trifurcate-spear",
+      "status": "source-type-verified",
+      "sourceIndex": 105,
+      "sval": 26,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.falchion",
+      "status": "source-type-verified",
+      "sourceIndex": 65,
+      "sval": 22,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.claymore",
+      "status": "source-type-verified",
+      "sourceIndex": 66,
+      "sval": 23,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.espadon",
+      "status": "source-type-verified",
+      "sourceIndex": 67,
+      "sval": 24,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.flamberge",
+      "status": "source-type-verified",
+      "sourceIndex": 69,
+      "sval": 26,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.executioners-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 71,
+      "sval": 28,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.zweihander",
+      "status": "source-type-verified",
+      "sourceIndex": 72,
+      "sval": 29,
+      "tval": 23
+    },
+    {
       "itemId": "demo.item.dragon-fang",
       "status": "source-type-verified",
       "sourceIndex": 78,
       "tval": 23,
       "sval": 35
+    },
+    {
+      "itemId": "demo.item.heavy-crossbow",
+      "status": "source-type-verified",
+      "sourceIndex": 164,
+      "sval": 24,
+      "tval": 19
+    },
+    {
+      "itemId": "demo.item.steel-bolt",
+      "status": "source-type-verified",
+      "sourceIndex": 186,
+      "sval": 2,
+      "tval": 18
+    },
+    {
+      "itemId": "demo.item.mithril-shot",
+      "status": "source-type-verified",
+      "sourceIndex": 192,
+      "sval": 3,
+      "tval": 16
+    },
+    {
+      "itemId": "demo.item.heavy-lance",
+      "status": "source-type-verified",
+      "sourceIndex": 107,
+      "sval": 29,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.metal-lamellar-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 282,
+      "sval": 13,
+      "tval": 37
+    },
+    {
+      "itemId": "demo.item.mattock",
+      "status": "source-type-verified",
+      "sourceIndex": 156,
+      "sval": 7,
+      "tval": 20
+    },
+    {
+      "itemId": "demo.item.mithril-arrow",
+      "status": "source-type-verified",
+      "sourceIndex": 177,
+      "sval": 3,
+      "tval": 17
+    },
+    {
+      "itemId": "demo.item.mithril-shod-boots",
+      "status": "source-type-verified",
+      "sourceIndex": 209,
+      "sval": 6,
+      "tval": 30
+    },
+    {
+      "itemId": "demo.item.gold-dragon-scale-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 302,
+      "sval": 16,
+      "tval": 38
+    },
+    {
+      "itemId": "demo.item.leather-pouch",
+      "status": "source-type-verified",
+      "sourceIndex": 723,
+      "tval": 46,
+      "sval": 1
+    },
+    {
+      "itemId": "demo.item.mithril-bolt",
+      "status": "source-type-verified",
+      "sourceIndex": 187,
+      "sval": 3,
+      "tval": 18
     },
     {
       "itemId": "demo.item.dragon-wings",
@@ -1574,247 +2477,11 @@
       "sval": 6
     },
     {
-      "itemId": "demo.item.amulet",
+      "itemId": "demo.item.law-dragon-scale-mail",
       "status": "source-type-verified",
-      "sourceIndex": 311,
-      "sval": 0,
-      "tval": 40
-    },
-    {
-      "itemId": "demo.item.mattock",
-      "status": "source-type-verified",
-      "sourceIndex": 156,
-      "sval": 7,
-      "tval": 20
-    },
-    {
-      "itemId": "demo.item.adamantine-bolt",
-      "status": "source-type-verified",
-      "sourceIndex": 189,
-      "sval": 5,
-      "tval": 18
-    },
-    {
-      "itemId": "demo.item.arrow",
-      "status": "source-type-verified",
-      "sourceIndex": 175,
-      "sval": 1,
-      "tval": 17
-    },
-    {
-      "itemId": "demo.item.augmented-chain-mail",
-      "status": "source-type-verified",
-      "sourceIndex": 275,
-      "sval": 6,
-      "tval": 37
-    },
-    {
-      "itemId": "demo.item.awl-pike",
-      "status": "source-type-verified",
-      "sourceIndex": 88,
-      "sval": 4,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.ball-and-chain",
-      "status": "source-type-verified",
-      "sourceIndex": 125,
-      "sval": 6,
-      "tval": 21
-    },
-    {
-      "itemId": "demo.item.basillard",
-      "status": "source-type-verified",
-      "sourceIndex": 52,
-      "sval": 9,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.bastard-sword",
-      "status": "source-type-verified",
-      "sourceIndex": 64,
-      "sval": 21,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.battle-axe",
-      "status": "source-type-verified",
-      "sourceIndex": 103,
-      "sval": 22,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.beaked-axe",
-      "status": "source-type-verified",
-      "sourceIndex": 94,
-      "sval": 10,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.blade-of-chaos",
-      "status": "source-type-verified",
-      "sourceIndex": 73,
-      "sval": 30,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.bo-staff",
-      "status": "source-type-verified",
-      "sourceIndex": 131,
-      "sval": 14,
-      "tval": 21
-    },
-    {
-      "itemId": "demo.item.bolt",
-      "status": "source-type-verified",
-      "sourceIndex": 185,
-      "sval": 1,
-      "tval": 18
-    },
-    {
-      "itemId": "demo.item.brass-lantern",
-      "status": "source-type-verified",
-      "sourceIndex": 601,
-      "sval": 1,
-      "tval": 39
-    },
-    {
-      "itemId": "demo.item.broad-axe",
-      "status": "source-type-verified",
-      "sourceIndex": 95,
-      "sval": 11,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.broad-spear",
-      "status": "source-type-verified",
-      "sourceIndex": 91,
-      "sval": 7,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.broad-sword",
-      "status": "source-type-verified",
-      "sourceIndex": 59,
-      "sval": 16,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.broken-dagger",
-      "status": "source-type-verified",
-      "sourceIndex": 45,
-      "sval": 1,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.broken-sword",
-      "status": "source-type-verified",
-      "sourceIndex": 46,
-      "sval": 2,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.capture-ball",
-      "status": "separate-capture-system",
-      "equipmentSlot": "shield"
-    },
-    {
-      "itemId": "demo.item.chain-mail",
-      "status": "source-type-verified",
-      "sourceIndex": 273,
-      "sval": 4,
-      "tval": 37
-    },
-    {
-      "itemId": "demo.item.claymore",
-      "status": "source-type-verified",
-      "sourceIndex": 66,
-      "sval": 23,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.cloak",
-      "status": "source-type-verified",
-      "sourceIndex": 195,
-      "sval": 1,
-      "tval": 35
-    },
-    {
-      "itemId": "demo.item.club",
-      "status": "source-type-verified",
-      "sourceIndex": 120,
-      "sval": 1,
-      "tval": 21
-    },
-    {
-      "itemId": "demo.item.cord-armour",
-      "status": "source-type-verified",
-      "sourceIndex": 254,
-      "sval": 9,
-      "tval": 36
-    },
-    {
-      "itemId": "demo.item.cutlass",
-      "status": "source-type-verified",
-      "sourceIndex": 55,
+      "sourceIndex": 299,
       "sval": 12,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.dagger",
-      "status": "source-type-verified",
-      "sourceIndex": 47,
-      "sval": 4,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.diamond-edge",
-      "status": "source-type-verified",
-      "sourceIndex": 74,
-      "sval": 31,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.dwarven-backpack",
-      "status": "source-type-verified",
-      "sourceIndex": 724,
-      "tval": 46,
-      "sval": 1
-    },
-    {
-      "itemId": "demo.item.elven-cloak",
-      "status": "source-type-verified",
-      "sourceIndex": 196,
-      "sval": 2,
-      "tval": 35
-    },
-    {
-      "itemId": "demo.item.espadon",
-      "status": "source-type-verified",
-      "sourceIndex": 67,
-      "sval": 24,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.executioners-sword",
-      "status": "source-type-verified",
-      "sourceIndex": 71,
-      "sval": 28,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.fabric-bag",
-      "status": "source-type-verified",
-      "sourceIndex": 722,
-      "tval": 46,
-      "sval": 1
-    },
-    {
-      "itemId": "demo.item.falchion",
-      "status": "source-type-verified",
-      "sourceIndex": 65,
-      "sval": 22,
-      "tval": 23
+      "tval": 38
     },
     {
       "itemId": "demo.item.falcon-sword",
@@ -1824,458 +2491,17 @@
       "tval": 23
     },
     {
-      "itemId": "demo.item.fauchard",
+      "itemId": "demo.item.chaos-dragon-scale-mail",
       "status": "source-type-verified",
-      "sourceIndex": 90,
-      "sval": 6,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.filthy-rag",
-      "status": "source-type-verified",
-      "sourceIndex": 246,
-      "sval": 1,
-      "tval": 36
-    },
-    {
-      "itemId": "demo.item.flail",
-      "status": "source-type-verified",
-      "sourceIndex": 130,
-      "sval": 13,
-      "tval": 21
-    },
-    {
-      "itemId": "demo.item.flamberge",
-      "status": "source-type-verified",
-      "sourceIndex": 69,
-      "sval": 26,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.fur-cloak",
-      "status": "source-type-verified",
-      "sourceIndex": 197,
-      "sval": 3,
-      "tval": 35
-    },
-    {
-      "itemId": "demo.item.glaive",
-      "status": "source-type-verified",
-      "sourceIndex": 97,
-      "sval": 13,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.gnomish-shovel",
-      "status": "source-type-verified",
-      "sourceIndex": 151,
-      "sval": 2,
-      "tval": 20
-    },
-    {
-      "itemId": "demo.item.halberd",
-      "status": "source-type-verified",
-      "sourceIndex": 99,
-      "sval": 15,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.hard-leather-armour",
-      "status": "source-type-verified",
-      "sourceIndex": 251,
-      "sval": 6,
-      "tval": 36
-    },
-    {
-      "itemId": "demo.item.hard-leather-cap",
-      "status": "source-type-verified",
-      "sourceIndex": 212,
-      "sval": 2,
-      "tval": 32
-    },
-    {
-      "itemId": "demo.item.hard-studded-leather",
-      "status": "source-type-verified",
-      "sourceIndex": 252,
-      "sval": 7,
-      "tval": 36
-    },
-    {
-      "itemId": "demo.item.harp",
-      "status": "source-type-verified",
-      "sourceIndex": 168,
-      "sval": 70,
-      "tval": 19
-    },
-    {
-      "itemId": "demo.item.hatchet",
-      "status": "source-type-verified",
-      "sourceIndex": 85,
-      "sval": 1,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.heavy-crossbow",
-      "status": "source-type-verified",
-      "sourceIndex": 164,
-      "sval": 24,
-      "tval": 19
-    },
-    {
-      "itemId": "demo.item.heavy-lance",
-      "status": "source-type-verified",
-      "sourceIndex": 107,
-      "sval": 29,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.iron-helm",
-      "status": "source-type-verified",
-      "sourceIndex": 215,
-      "sval": 5,
-      "tval": 32
-    },
-    {
-      "itemId": "demo.item.iron-shot",
-      "status": "source-type-verified",
-      "sourceIndex": 191,
-      "sval": 2,
-      "tval": 16
-    },
-    {
-      "itemId": "demo.item.jingasa",
-      "status": "source-type-verified",
-      "sourceIndex": 214,
-      "sval": 4,
-      "tval": 32
-    },
-    {
-      "itemId": "demo.item.jo-staff",
-      "status": "source-type-verified",
-      "sourceIndex": 126,
-      "sval": 7,
-      "tval": 21
-    },
-    {
-      "itemId": "demo.item.katana",
-      "status": "source-type-verified",
-      "sourceIndex": 63,
-      "sval": 20,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.khopesh",
-      "status": "source-type-verified",
-      "sourceIndex": 57,
-      "sval": 14,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.knit-cap",
-      "status": "source-type-verified",
-      "sourceIndex": 224,
-      "sval": 1,
-      "tval": 32
-    },
-    {
-      "itemId": "demo.item.lance",
-      "status": "source-type-verified",
-      "sourceIndex": 102,
-      "sval": 20,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.large-leather-shield",
-      "status": "source-type-verified",
-      "sourceIndex": 237,
-      "sval": 4,
-      "tval": 34
-    },
-    {
-      "itemId": "demo.item.large-metal-shield",
-      "status": "source-type-verified",
-      "sourceIndex": 238,
-      "sval": 5,
-      "tval": 34
-    },
-    {
-      "itemId": "demo.item.lead-filled-mace",
-      "status": "source-type-verified",
-      "sourceIndex": 132,
-      "sval": 15,
-      "tval": 21
-    },
-    {
-      "itemId": "demo.item.leather-gloves",
-      "status": "source-type-verified",
-      "sourceIndex": 227,
-      "sval": 1,
-      "tval": 31
-    },
-    {
-      "itemId": "demo.item.leather-jacket",
-      "status": "source-type-verified",
-      "sourceIndex": 257,
-      "sval": 12,
-      "tval": 36
-    },
-    {
-      "itemId": "demo.item.leather-pouch",
-      "status": "source-type-verified",
-      "sourceIndex": 723,
-      "tval": 46,
-      "sval": 1
-    },
-    {
-      "itemId": "demo.item.leather-scale-mail",
-      "status": "source-type-verified",
-      "sourceIndex": 256,
-      "sval": 11,
-      "tval": 36
-    },
-    {
-      "itemId": "demo.item.light-crossbow",
-      "status": "source-type-verified",
-      "sourceIndex": 163,
-      "sval": 23,
-      "tval": 19
-    },
-    {
-      "itemId": "demo.item.long-bow",
-      "status": "source-type-verified",
-      "sourceIndex": 162,
-      "sval": 13,
-      "tval": 19
-    },
-    {
-      "itemId": "demo.item.long-sword",
-      "status": "source-type-verified",
-      "sourceIndex": 60,
-      "sval": 17,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.lucerne-hammer",
-      "status": "source-type-verified",
-      "sourceIndex": 96,
-      "sval": 12,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.mace",
-      "status": "source-type-verified",
-      "sourceIndex": 124,
-      "sval": 5,
-      "tval": 21
-    },
-    {
-      "itemId": "demo.item.main-gauche",
-      "status": "source-type-verified",
-      "sourceIndex": 48,
-      "sval": 5,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.metal-cap",
-      "status": "source-type-verified",
-      "sourceIndex": 213,
-      "sval": 3,
-      "tval": 32
-    },
-    {
-      "itemId": "demo.item.metal-lamellar-armour",
-      "status": "source-type-verified",
-      "sourceIndex": 282,
-      "sval": 13,
-      "tval": 37
-    },
-    {
-      "itemId": "demo.item.mirror-shield",
-      "status": "source-type-verified",
-      "sourceIndex": 242,
-      "sval": 10,
-      "tval": 34
-    },
-    {
-      "itemId": "demo.item.mithril-arrow",
-      "status": "source-type-verified",
-      "sourceIndex": 177,
-      "sval": 3,
-      "tval": 17
-    },
-    {
-      "itemId": "demo.item.mithril-bolt",
-      "status": "source-type-verified",
-      "sourceIndex": 187,
-      "sval": 3,
-      "tval": 18
-    },
-    {
-      "itemId": "demo.item.mithril-shot",
-      "status": "source-type-verified",
-      "sourceIndex": 192,
-      "sval": 3,
-      "tval": 16
-    },
-    {
-      "itemId": "demo.item.morning-star",
-      "status": "source-type-verified",
-      "sourceIndex": 129,
-      "sval": 12,
-      "tval": 21
-    },
-    {
-      "itemId": "demo.item.multi-hued-dragon-scale-mail",
-      "status": "source-type-verified",
-      "sourceIndex": 297,
-      "sval": 6,
+      "sourceIndex": 303,
+      "sval": 18,
       "tval": 38
     },
     {
-      "itemId": "demo.item.ninjato",
+      "itemId": "demo.item.blade-of-chaos",
       "status": "source-type-verified",
-      "sourceIndex": 62,
-      "sval": 19,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.no-dachi",
-      "status": "source-type-verified",
-      "sourceIndex": 70,
-      "sval": 27,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.nunchaku",
-      "status": "source-type-verified",
-      "sourceIndex": 123,
-      "sval": 4,
-      "tval": 21
-    },
-    {
-      "itemId": "demo.item.orcish-pick",
-      "status": "source-type-verified",
-      "sourceIndex": 154,
-      "sval": 5,
-      "tval": 20
-    },
-    {
-      "itemId": "demo.item.padded-armour",
-      "status": "source-type-verified",
-      "sourceIndex": 255,
-      "sval": 10,
-      "tval": 36
-    },
-    {
-      "itemId": "demo.item.pair-of-hard-leather-boots",
-      "status": "source-type-verified",
-      "sourceIndex": 206,
-      "sval": 3,
-      "tval": 30
-    },
-    {
-      "itemId": "demo.item.pair-of-metal-shod-boots",
-      "status": "source-type-verified",
-      "sourceIndex": 208,
-      "sval": 5,
-      "tval": 30
-    },
-    {
-      "itemId": "demo.item.paper-armour",
-      "status": "source-type-verified",
-      "sourceIndex": 248,
-      "sval": 3,
-      "tval": 36
-    },
-    {
-      "itemId": "demo.item.pick",
-      "status": "source-type-verified",
-      "sourceIndex": 153,
-      "sval": 4,
-      "tval": 20
-    },
-    {
-      "itemId": "demo.item.pike",
-      "status": "source-type-verified",
-      "sourceIndex": 92,
-      "sval": 8,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.pointy-hat",
-      "status": "source-type-verified",
-      "sourceIndex": 225,
-      "sval": 10,
-      "tval": 32
-    },
-    {
-      "itemId": "demo.item.quarterstaff",
-      "status": "source-type-verified",
-      "sourceIndex": 122,
-      "sval": 3,
-      "tval": 21
-    },
-    {
-      "itemId": "demo.item.rapier",
-      "status": "source-type-verified",
-      "sourceIndex": 50,
-      "sval": 7,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.rhino-hide-armour",
-      "status": "source-type-verified",
-      "sourceIndex": 253,
-      "sval": 8,
-      "tval": 36
-    },
-    {
-      "itemId": "demo.item.ring",
-      "status": "source-type-verified",
-      "sourceIndex": 310,
-      "sval": 0,
-      "tval": 45
-    },
-    {
-      "itemId": "demo.item.ring-mail",
-      "status": "source-type-verified",
-      "sourceIndex": 271,
-      "sval": 2,
-      "tval": 37
-    },
-    {
-      "itemId": "demo.item.robe",
-      "status": "source-type-verified",
-      "sourceIndex": 247,
-      "sval": 2,
-      "tval": 36
-    },
-    {
-      "itemId": "demo.item.rounded-pebble",
-      "status": "source-type-verified",
-      "sourceIndex": 190,
-      "sval": 1,
-      "tval": 16
-    },
-    {
-      "itemId": "demo.item.rune-sword",
-      "status": "source-type-verified",
-      "sourceIndex": 77,
-      "sval": 34,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.sabre",
-      "status": "source-type-verified",
-      "sourceIndex": 54,
-      "sval": 11,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.scimitar",
-      "status": "source-type-verified",
-      "sourceIndex": 61,
-      "sval": 18,
+      "sourceIndex": 73,
+      "sval": 30,
       "tval": 23
     },
     {
@@ -2286,6 +2512,27 @@
       "tval": 17
     },
     {
+      "itemId": "demo.item.mirror-shield",
+      "status": "source-type-verified",
+      "sourceIndex": 242,
+      "sval": 10,
+      "tval": 34
+    },
+    {
+      "itemId": "demo.item.dwarven-backpack",
+      "status": "source-type-verified",
+      "sourceIndex": 724,
+      "tval": 46,
+      "sval": 1
+    },
+    {
+      "itemId": "demo.item.multi-hued-dragon-scale-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 297,
+      "sval": 6,
+      "tval": 38
+    },
+    {
       "itemId": "demo.item.seeker-bolt",
       "status": "source-type-verified",
       "sourceIndex": 188,
@@ -2293,256 +2540,18 @@
       "tval": 18
     },
     {
-      "itemId": "demo.item.set-of-gauntlets",
+      "itemId": "demo.item.diamond-edge",
       "status": "source-type-verified",
-      "sourceIndex": 229,
-      "sval": 3,
-      "tval": 31
-    },
-    {
-      "itemId": "demo.item.set-of-spiked-gauntlets",
-      "status": "source-type-verified",
-      "sourceIndex": 230,
-      "sval": 4,
-      "tval": 31
-    },
-    {
-      "itemId": "demo.item.set-of-studded-leather-gloves",
-      "status": "source-type-verified",
-      "sourceIndex": 228,
-      "sval": 2,
-      "tval": 31
-    },
-    {
-      "itemId": "demo.item.sheaf-arrow",
-      "status": "source-type-verified",
-      "sourceIndex": 176,
-      "sval": 2,
-      "tval": 17
-    },
-    {
-      "itemId": "demo.item.short-bow",
-      "status": "source-type-verified",
-      "sourceIndex": 161,
-      "sval": 12,
-      "tval": 19
-    },
-    {
-      "itemId": "demo.item.short-sword",
-      "status": "source-type-verified",
-      "sourceIndex": 53,
-      "sval": 10,
+      "sourceIndex": 74,
+      "sval": 31,
       "tval": 23
     },
     {
-      "itemId": "demo.item.shovel",
+      "itemId": "demo.item.adamantine-bolt",
       "status": "source-type-verified",
-      "sourceIndex": 150,
-      "sval": 1,
-      "tval": 20
-    },
-    {
-      "itemId": "demo.item.sickle",
-      "status": "source-type-verified",
-      "sourceIndex": 87,
-      "sval": 3,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.sling",
-      "status": "source-type-verified",
-      "sourceIndex": 160,
-      "sval": 2,
-      "tval": 19
-    },
-    {
-      "itemId": "demo.item.small-leather-shield",
-      "status": "source-type-verified",
-      "sourceIndex": 235,
-      "sval": 2,
-      "tval": 34
-    },
-    {
-      "itemId": "demo.item.small-metal-shield",
-      "status": "source-type-verified",
-      "sourceIndex": 236,
-      "sval": 3,
-      "tval": 34
-    },
-    {
-      "itemId": "demo.item.small-sword",
-      "status": "source-type-verified",
-      "sourceIndex": 51,
-      "sval": 8,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.soft-leather-armour",
-      "status": "source-type-verified",
-      "sourceIndex": 249,
-      "sval": 4,
-      "tval": 36
-    },
-    {
-      "itemId": "demo.item.soft-leather-boots",
-      "status": "source-type-verified",
-      "sourceIndex": 205,
-      "sval": 2,
-      "tval": 30
-    },
-    {
-      "itemId": "demo.item.soft-studded-leather",
-      "status": "source-type-verified",
-      "sourceIndex": 250,
+      "sourceIndex": 189,
       "sval": 5,
-      "tval": 36
-    },
-    {
-      "itemId": "demo.item.spear",
-      "status": "source-type-verified",
-      "sourceIndex": 86,
-      "sval": 2,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.steel-bolt",
-      "status": "source-type-verified",
-      "sourceIndex": 186,
-      "sval": 2,
       "tval": 18
-    },
-    {
-      "itemId": "demo.item.tanto",
-      "status": "source-type-verified",
-      "sourceIndex": 49,
-      "sval": 6,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.three-piece-rod",
-      "status": "source-type-verified",
-      "sourceIndex": 128,
-      "sval": 11,
-      "tval": 21
-    },
-    {
-      "itemId": "demo.item.trident",
-      "status": "source-type-verified",
-      "sourceIndex": 89,
-      "sval": 5,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.trifurcate-spear",
-      "status": "source-type-verified",
-      "sourceIndex": 105,
-      "sval": 26,
-      "tval": 22
-    },
-    {
-      "itemId": "demo.item.tulwar",
-      "status": "source-type-verified",
-      "sourceIndex": 58,
-      "sval": 15,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.two-handed-sword",
-      "status": "source-type-verified",
-      "sourceIndex": 68,
-      "sval": 25,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.wakizashi",
-      "status": "source-type-verified",
-      "sourceIndex": 56,
-      "sval": 13,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.war-hammer",
-      "status": "source-type-verified",
-      "sourceIndex": 127,
-      "sval": 8,
-      "tval": 21
-    },
-    {
-      "itemId": "demo.item.whip",
-      "status": "source-type-verified",
-      "sourceIndex": 121,
-      "sval": 2,
-      "tval": 21
-    },
-    {
-      "itemId": "demo.item.wooden-torch",
-      "status": "source-type-verified",
-      "sourceIndex": 600,
-      "sval": 0,
-      "tval": 39
-    },
-    {
-      "itemId": "demo.item.zweihander",
-      "status": "source-type-verified",
-      "sourceIndex": 72,
-      "sval": 29,
-      "tval": 23
-    },
-    {
-      "itemId": "demo.item.law-dragon-scale-mail",
-      "status": "source-type-verified",
-      "sourceIndex": 299,
-      "sval": 12,
-      "tval": 38
-    },
-    {
-      "itemId": "demo.item.gold-dragon-scale-mail",
-      "status": "source-type-verified",
-      "sourceIndex": 302,
-      "sval": 16,
-      "tval": 38
-    },
-    {
-      "itemId": "demo.item.chaos-dragon-scale-mail",
-      "status": "source-type-verified",
-      "sourceIndex": 303,
-      "sval": 18,
-      "tval": 38
-    },
-    {
-      "itemId": "demo.item.mithril-shod-boots",
-      "status": "source-type-verified",
-      "sourceIndex": 209,
-      "sval": 6,
-      "tval": 30
-    },
-    {
-      "itemId": "demo.item.iron-crown",
-      "status": "source-type-verified",
-      "sourceIndex": 220,
-      "sval": 10,
-      "tval": 33
-    },
-    {
-      "itemId": "demo.item.quiver",
-      "status": "source-type-verified",
-      "sourceIndex": 169,
-      "sval": 0,
-      "tval": 46
-    },
-    {
-      "itemId": "demo.item.feanorian-lamp",
-      "status": "source-type-verified",
-      "sourceIndex": 603,
-      "sval": 2,
-      "tval": 39
-    },
-    {
-      "itemId": "demo.item.wizardstaff",
-      "status": "source-type-verified",
-      "sourceIndex": 137,
-      "sval": 21,
-      "tval": 21
     }
   ],
   "unmappedFlagReview": [

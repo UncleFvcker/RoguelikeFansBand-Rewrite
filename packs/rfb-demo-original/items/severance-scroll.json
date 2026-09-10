@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-severance-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 357,
+    "sval": 45,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "genocide",

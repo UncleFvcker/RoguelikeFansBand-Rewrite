@@ -9,9 +9,14 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.self-knowledge-potion",
-  "potionNutrition": 0,
   "maxStack": 20,
   "nameKey": "item-demo-self-knowledge-potion-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 451,
+    "sval": 58,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "knowledge",

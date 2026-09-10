@@ -10,10 +10,15 @@
   "generationLevel": 20,
   "glyph": "!",
   "id": "demo.item.ugliness-potion",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-ugliness-potion-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 416,
+    "sval": 21,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "rfb-compatibility",

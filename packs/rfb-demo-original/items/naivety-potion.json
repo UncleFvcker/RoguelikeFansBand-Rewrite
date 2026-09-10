@@ -10,10 +10,15 @@
   "generationLevel": 20,
   "glyph": "!",
   "id": "demo.item.naivety-potion",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-naivety-potion-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 413,
+    "sval": 18,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "rfb-compatibility",

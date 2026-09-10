@@ -10,10 +10,15 @@
   "generationLevel": 30,
   "glyph": "!",
   "id": "demo.item.wisdom-potion",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-wisdom-potion-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 443,
+    "sval": 50,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "rfb-compatibility",

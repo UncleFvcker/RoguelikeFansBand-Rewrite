@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-door-stair-location-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 343,
+    "sval": 29,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "rfb-compatibility",

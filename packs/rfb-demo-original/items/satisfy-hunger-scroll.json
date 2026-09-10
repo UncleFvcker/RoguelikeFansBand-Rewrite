@@ -12,6 +12,11 @@
   "id": "demo.item.satisfy-hunger-scroll",
   "maxStack": 20,
   "nameKey": "item-demo-satisfy-hunger-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 345,
+    "sval": 32,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "scroll",

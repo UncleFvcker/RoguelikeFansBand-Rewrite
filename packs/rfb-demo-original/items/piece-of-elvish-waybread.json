@@ -1,16 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.piece-of-elvish-waybread",
-  "nameKey": "item-demo-piece-of-elvish-waybread-name",
-  "descriptionKey": "item-demo-piece-of-elvish-waybread-description",
-  "glyph": ",",
-  "generationLevel": 5,
-  "weightTenthsPound": 3,
-  "maxStack": 100,
   "baseValue": 30,
+  "descriptionKey": "item-demo-piece-of-elvish-waybread-description",
+  "formatVersion": 1,
+  "generationLevel": 5,
+  "glyph": ",",
+  "id": "demo.item.piece-of-elvish-waybread",
+  "maxStack": 100,
+  "nameKey": "item-demo-piece-of-elvish-waybread-name",
+  "rfbBaseKind": {
+    "sourceIndex": 38,
+    "sval": 37,
+    "tval": 80
+  },
+  "tags": [
+    "consumable",
+    "food",
+    "rfb-compatibility"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.elvish-waybread"
   },
-  "tags": ["consumable", "food", "rfb-compatibility"]
+  "weightTenthsPound": 3
 }

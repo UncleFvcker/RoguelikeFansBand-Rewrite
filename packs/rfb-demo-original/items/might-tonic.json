@@ -10,10 +10,15 @@
   "generationLevel": 30,
   "glyph": "!",
   "id": "demo.item.might-tonic",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-might-tonic-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 441,
+    "sval": 48,
+    "tval": 75
+  },
   "tags": [
     "attribute-increase",
     "consumable",

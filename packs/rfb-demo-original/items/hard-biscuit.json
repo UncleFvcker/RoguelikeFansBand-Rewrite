@@ -1,1 +1,24 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.hard-biscuit","nameKey":"item-demo-hard-biscuit-name","descriptionKey":"item-demo-hard-biscuit-description","glyph":",","weightTenthsPound":2,"maxStack":100,"baseValue":1,"useAction":{"effectProgramId":"demo.effect.hard-biscuit"},"tags":["consumable","food","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1,
+  "descriptionKey": "item-demo-hard-biscuit-description",
+  "formatVersion": 1,
+  "glyph": ",",
+  "id": "demo.item.hard-biscuit",
+  "maxStack": 100,
+  "nameKey": "item-demo-hard-biscuit-name",
+  "rfbBaseKind": {
+    "sourceIndex": 33,
+    "sval": 32,
+    "tval": 80
+  },
+  "tags": [
+    "consumable",
+    "food",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.hard-biscuit"
+  },
+  "weightTenthsPound": 2
+}

@@ -1,1 +1,26 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.confusion-mushroom","nameKey":"item-demo-confusion-mushroom-name","appearanceNameKey":"item-demo-confusion-mushroom-appearance","descriptionKey":"item-demo-confusion-mushroom-description","glyph":",","weightTenthsPound":1,"maxStack":100,"baseValue":0,"useAction":{"effectProgramId":"demo.effect.confusion-mushroom"},"tags":["consumable","food","mushroom","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-confusion-mushroom-appearance",
+  "baseValue": 0,
+  "descriptionKey": "item-demo-confusion-mushroom-description",
+  "formatVersion": 1,
+  "glyph": ",",
+  "id": "demo.item.confusion-mushroom",
+  "maxStack": 100,
+  "nameKey": "item-demo-confusion-mushroom-name",
+  "rfbBaseKind": {
+    "sourceIndex": 4,
+    "sval": 3,
+    "tval": 80
+  },
+  "tags": [
+    "consumable",
+    "food",
+    "mushroom",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.confusion-mushroom"
+  },
+  "weightTenthsPound": 1
+}

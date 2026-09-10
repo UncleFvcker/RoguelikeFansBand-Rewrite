@@ -9,9 +9,14 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.ruination-potion",
-  "potionNutrition": 0,
   "maxStack": 20,
   "nameKey": "item-demo-ruination-potion-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 410,
+    "sval": 15,
+    "tval": 75
+  },
   "shatterEffectProgramId": "demo.effect.ruination-potion.shatter",
   "shatterRadius": 2,
   "tags": [

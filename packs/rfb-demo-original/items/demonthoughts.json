@@ -1,17 +1,33 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.demonthoughts",
-  "nameKey": "item-demo-demonthoughts-name",
-  "descriptionKey": "item-demo-demonthoughts-description",
-  "glyph": "?",
-  "weightTenthsPound": 30,
+  "abilityBookId": "demo.ability-book.demonthoughts",
   "baseValue": 15000,
+  "descriptionKey": "item-demo-demonthoughts-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
+  "formatVersion": 1,
   "generationLevel": 45,
+  "glyph": "?",
+  "id": "demo.item.demonthoughts",
   "maxStack": 1,
   "mogaminatorRare": false,
-  "elementalDestructionVulnerabilities": ["fire"],
-  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
-  "abilityBookId": "demo.ability-book.demonthoughts",
-  "tags": ["book", "daemon", "spellbook"]
+  "nameKey": "item-demo-demonthoughts-name",
+  "rfbBaseKind": {
+    "sourceIndex": 534,
+    "sval": 2,
+    "tval": 98
+  },
+  "tags": [
+    "book",
+    "daemon",
+    "spellbook"
+  ],
+  "weightTenthsPound": 30
 }

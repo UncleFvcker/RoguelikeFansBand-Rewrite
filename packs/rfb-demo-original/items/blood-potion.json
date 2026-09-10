@@ -10,10 +10,15 @@
   "generationLevel": 75,
   "glyph": "!",
   "id": "demo.item.blood-potion",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-blood-potion-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 460,
+    "sval": 67,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "rfb-compatibility",

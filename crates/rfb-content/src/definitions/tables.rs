@@ -70,6 +70,61 @@ pub enum LootRfbEgoPolicyDefinition {
     WeaponDigger,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum RfbDropTheme {
+    Warrior,
+    WarriorShoot,
+    Archer,
+    Mage,
+    Priest,
+    PriestEvil,
+    Paladin,
+    PaladinEvil,
+    Samurai,
+    Ninja,
+    Rogue,
+    Hobbit,
+    Dwarf,
+    Junk,
+}
+
+impl RfbDropTheme {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Warrior => "warrior",
+            Self::WarriorShoot => "warrior-shoot",
+            Self::Archer => "archer",
+            Self::Mage => "mage",
+            Self::Priest => "priest",
+            Self::PriestEvil => "priest-evil",
+            Self::Paladin => "paladin",
+            Self::PaladinEvil => "paladin-evil",
+            Self::Samurai => "samurai",
+            Self::Ninja => "ninja",
+            Self::Rogue => "rogue",
+            Self::Hobbit => "hobbit",
+            Self::Dwarf => "dwarf",
+            Self::Junk => "junk",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
+pub enum LootKindSelectionDefinition {
+    /// Owns canonical source allocation rows in `entries`.
+    RfbBase,
+    /// Selects from one RfbBase table; owns no duplicate entries.
+    RfbTheme {
+        #[serde(rename = "poolId")]
+        pool_id: String,
+        theme: RfbDropTheme,
+    },
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -92,7 +147,10 @@ pub struct LootTableDefinition {
     pub roll_chance_percent: Option<u8>,
     #[serde(default)]
     pub roll_dice: Option<LootRollDiceDefinition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub entries: Vec<LootEntryDefinition>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind_selection: Option<LootKindSelectionDefinition>,
     #[serde(default)]
     pub quality_weights: Vec<LootQualityWeightDefinition>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

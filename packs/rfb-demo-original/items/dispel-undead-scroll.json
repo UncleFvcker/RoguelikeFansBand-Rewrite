@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-dispel-undead-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 354,
+    "sval": 42,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "dispel",

@@ -1,16 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.major-arcana",
-  "nameKey": "item-demo-major-arcana-name",
-  "descriptionKey": "item-demo-major-arcana-description",
-  "glyph": "?",
-  "weightTenthsPound": 30,
+  "abilityBookId": "demo.ability-book.major-arcana",
   "baseValue": 1000,
+  "descriptionKey": "item-demo-major-arcana-description",
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
+  "formatVersion": 1,
   "generationLevel": 20,
+  "glyph": "?",
+  "id": "demo.item.major-arcana",
   "maxStack": 1,
   "mogaminatorRare": false,
-  "elementalDestructionVulnerabilities": ["fire"],
-  "abilityBookId": "demo.ability-book.major-arcana",
-  "tags": ["arcane", "book", "spellbook"]
+  "nameKey": "item-demo-major-arcana-name",
+  "rfbBaseKind": {
+    "sourceIndex": 526,
+    "sval": 2,
+    "tval": 96
+  },
+  "tags": [
+    "arcane",
+    "book",
+    "spellbook"
+  ],
+  "weightTenthsPound": 30
 }

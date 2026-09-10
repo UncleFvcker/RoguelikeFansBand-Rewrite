@@ -19,6 +19,11 @@
   "maxStack": 1,
   "mogaminatorRare": false,
   "nameKey": "item-demo-black-channels-name",
+  "rfbBaseKind": {
+    "sourceIndex": 518,
+    "sval": 2,
+    "tval": 94
+  },
   "tags": [
     "book",
     "death",

@@ -14,6 +14,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-farstep-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 324,
+    "sval": 9,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "scroll",

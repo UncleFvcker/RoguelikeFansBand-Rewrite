@@ -16,10 +16,15 @@
   "generationLevel": 20,
   "glyph": "!",
   "id": "demo.item.prismatic-elixir",
-  "potionNutrition": 100,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-prismatic-elixir-name",
+  "potionNutrition": 100,
+  "rfbBaseKind": {
+    "sourceIndex": 453,
+    "sval": 60,
+    "tval": 75
+  },
   "tags": [
     "acid",
     "cold",

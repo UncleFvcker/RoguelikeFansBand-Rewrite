@@ -1,16 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.nature-mastery",
-  "nameKey": "item-demo-nature-mastery-name",
-  "descriptionKey": "item-demo-nature-mastery-description",
-  "glyph": "?",
-  "weightTenthsPound": 30,
+  "abilityBookId": "demo.ability-book.nature-mastery",
   "baseValue": 1000,
+  "descriptionKey": "item-demo-nature-mastery-description",
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
+  "formatVersion": 1,
   "generationLevel": 20,
+  "glyph": "?",
+  "id": "demo.item.nature-mastery",
   "maxStack": 1,
   "mogaminatorRare": false,
-  "elementalDestructionVulnerabilities": ["fire"],
-  "abilityBookId": "demo.ability-book.nature-mastery",
-  "tags": ["book", "nature", "spellbook"]
+  "nameKey": "item-demo-nature-mastery-name",
+  "rfbBaseKind": {
+    "sourceIndex": 513,
+    "sval": 1,
+    "tval": 93
+  },
+  "tags": [
+    "book",
+    "nature",
+    "spellbook"
+  ],
+  "weightTenthsPound": 30
 }

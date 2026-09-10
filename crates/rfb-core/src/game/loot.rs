@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 // Item generation, carried loot, and death drops.
 
+mod allocation;
+
 use rfb_content::{
     AffixPropertyBundleDefinition, MonsterDropKindDefinition, affix_is_compatible_with_item,
 };
@@ -32,20 +34,14 @@ pub(super) struct LootContext {
 }
 
 impl LootContext {
-    pub(super) fn drop_theme(&self) -> &str {
-        match self.table_id.as_str() {
-            "demo.loot-table.warrior" => "warrior",
-            "demo.loot-table.archer" => "archer",
-            "demo.loot-table.mage" => "mage",
-            "demo.loot-table.priest" => "priest",
-            "demo.loot-table.evil-priest" => "priest-evil",
-            "demo.loot-table.paladin" => "paladin",
-            "demo.loot-table.evil-paladin" => "paladin-evil",
-            "demo.loot-table.samurai" => "samurai",
-            "demo.loot-table.ninja" => "ninja",
-            "demo.loot-table.rogue" => "rogue",
-            "demo.loot-table.dwarf" => "dwarf",
-            "demo.loot-table.hobbit" => "hobbit",
+    pub(super) fn drop_theme(&self, content: &rfb_content::ContentCatalog) -> &'static str {
+        match content
+            .loot_table(&self.table_id)
+            .and_then(|table| table.kind_selection.as_ref())
+        {
+            Some(rfb_content::LootKindSelectionDefinition::RfbTheme { theme, .. }) => {
+                theme.as_str()
+            }
             _ => "",
         }
     }
@@ -578,12 +574,31 @@ impl Game {
                 .as_ref()
                 .is_some_and(|build| build.race_id == "rfb-legacy.race.tomte");
         let rfb_generation = table.rfb_ego_policy.is_some();
-        let eligible_entries = table
-            .entries
+        let (entries, theme) = match &table.kind_selection {
+            Some(rfb_content::LootKindSelectionDefinition::RfbTheme { pool_id, theme }) => (
+                self.content
+                    .loot_table(pool_id)
+                    .expect("validated source pool")
+                    .entries
+                    .clone(),
+                Some(*theme),
+            ),
+            _ => (table.entries, None),
+        };
+        let eligible_entries = entries
             .iter()
             .filter(|entry| {
-                entry.min_depth <= context.depth
+                entry.weight > 0
+                    && entry.min_depth <= context.depth
                     && context.depth <= entry.max_depth
+                    && theme.is_none_or(|theme| {
+                        allocation::theme_candidate(
+                            theme,
+                            self.content
+                                .item(&entry.item_kind_id)
+                                .expect("validated source item"),
+                        )
+                    })
                     && (!tomte_headgear
                         || self.content.item(&entry.item_kind_id).is_some_and(|item| {
                             item.equipment_slot.as_deref() != Some("head")
@@ -961,7 +976,7 @@ impl Game {
                             self.progress
                                 .active_mutation_ids
                                 .contains("rfb.mutation.bad-luck"),
-                            context.drop_theme(),
+                            context.drop_theme(&self.content),
                             weapon_enchantment,
                             &mut self.rng,
                             item,

@@ -10,10 +10,15 @@
   "generationLevel": 20,
   "glyph": "!",
   "id": "demo.item.renewal-tonic",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-renewal-tonic-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 434,
+    "sval": 41,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "experience",

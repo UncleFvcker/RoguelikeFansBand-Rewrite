@@ -1,1 +1,24 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.slime-mold","nameKey":"item-demo-slime-mold-name","descriptionKey":"item-demo-slime-mold-description","glyph":",","weightTenthsPound":5,"maxStack":100,"baseValue":2,"useAction":{"effectProgramId":"demo.effect.slime-mold"},"tags":["consumable","food","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 2,
+  "descriptionKey": "item-demo-slime-mold-description",
+  "formatVersion": 1,
+  "glyph": ",",
+  "id": "demo.item.slime-mold",
+  "maxStack": 100,
+  "nameKey": "item-demo-slime-mold-name",
+  "rfbBaseKind": {
+    "sourceIndex": 35,
+    "sval": 36,
+    "tval": 80
+  },
+  "tags": [
+    "consumable",
+    "food",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.slime-mold"
+  },
+  "weightTenthsPound": 5
+}

@@ -10,10 +10,15 @@
   "generationLevel": 20,
   "glyph": "!",
   "id": "demo.item.restore-charisma-potion",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-restore-charisma-potion-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 440,
+    "sval": 47,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "rfb-compatibility",

@@ -10,10 +10,15 @@
   "generationLevel": 25,
   "glyph": "!",
   "id": "demo.item.restore-constitution-potion",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-restore-constitution-potion-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 439,
+    "sval": 46,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "rfb-compatibility",

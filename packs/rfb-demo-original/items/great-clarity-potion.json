@@ -9,9 +9,14 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.great-clarity-potion",
-  "potionNutrition": 200,
   "maxStack": 20,
   "nameKey": "item-demo-great-clarity-potion-name",
+  "potionNutrition": 200,
+  "rfbBaseKind": {
+    "sourceIndex": 464,
+    "sval": 71,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "potion",

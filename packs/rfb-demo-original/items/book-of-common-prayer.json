@@ -1,16 +1,27 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.book-of-common-prayer",
-  "nameKey": "item-demo-book-of-common-prayer-name",
-  "descriptionKey": "item-demo-book-of-common-prayer-description",
-  "glyph": "?",
-  "weightTenthsPound": 30,
+  "abilityBookId": "demo.ability-book.book-of-common-prayer",
   "baseValue": 100,
+  "descriptionKey": "item-demo-book-of-common-prayer-description",
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
+  "formatVersion": 1,
   "generationLevel": 10,
+  "glyph": "?",
+  "id": "demo.item.book-of-common-prayer",
   "maxStack": 1,
   "mogaminatorRare": false,
-  "elementalDestructionVulnerabilities": ["fire"],
-  "abilityBookId": "demo.ability-book.book-of-common-prayer",
-  "tags": ["book", "life", "spellbook"]
+  "nameKey": "item-demo-book-of-common-prayer-name",
+  "rfbBaseKind": {
+    "sourceIndex": 500,
+    "sval": 0,
+    "tval": 90
+  },
+  "tags": [
+    "book",
+    "life",
+    "spellbook"
+  ],
+  "weightTenthsPound": 30
 }

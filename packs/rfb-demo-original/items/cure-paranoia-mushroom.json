@@ -1,1 +1,26 @@
-{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json","formatVersion":1,"id":"demo.item.cure-paranoia-mushroom","nameKey":"item-demo-cure-paranoia-mushroom-name","appearanceNameKey":"item-demo-cure-paranoia-mushroom-appearance","descriptionKey":"item-demo-cure-paranoia-mushroom-description","glyph":",","weightTenthsPound":1,"maxStack":100,"baseValue":25,"useAction":{"effectProgramId":"demo.effect.cure-paranoia-mushroom"},"tags":["consumable","food","mushroom","rfb-compatibility"]}
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-cure-paranoia-mushroom-appearance",
+  "baseValue": 25,
+  "descriptionKey": "item-demo-cure-paranoia-mushroom-description",
+  "formatVersion": 1,
+  "glyph": ",",
+  "id": "demo.item.cure-paranoia-mushroom",
+  "maxStack": 100,
+  "nameKey": "item-demo-cure-paranoia-mushroom-name",
+  "rfbBaseKind": {
+    "sourceIndex": 15,
+    "sval": 14,
+    "tval": 80
+  },
+  "tags": [
+    "consumable",
+    "food",
+    "mushroom",
+    "rfb-compatibility"
+  ],
+  "useAction": {
+    "effectProgramId": "demo.effect.cure-paranoia-mushroom"
+  },
+  "weightTenthsPound": 1
+}

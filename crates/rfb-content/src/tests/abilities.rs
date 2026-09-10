@@ -2741,7 +2741,7 @@ fn check_nature_fourth_book(content: &CompiledContentV1) {
             allocation.max_depth,
             allocation.weight
         ),
-        (70, u16::MAX, 50)
+        (85, u16::MAX, 33)
     );
     assert_eq!(
         content

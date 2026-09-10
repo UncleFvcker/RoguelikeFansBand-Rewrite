@@ -12,6 +12,11 @@
   "id": "demo.item.darkness-scroll",
   "maxStack": 20,
   "nameKey": "item-demo-darkness-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 315,
+    "sval": 0,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "rfb-compatibility",

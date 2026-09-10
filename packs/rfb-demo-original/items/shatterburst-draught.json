@@ -10,10 +10,15 @@
   "generationLevel": 60,
   "glyph": "!",
   "id": "demo.item.shatterburst-draught",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-shatterburst-draught-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 417,
+    "sval": 22,
+    "tval": 75
+  },
   "shatterEffectProgramId": "demo.effect.shatterburst-draught.shatter",
   "shatterRadius": 2,
   "tags": [

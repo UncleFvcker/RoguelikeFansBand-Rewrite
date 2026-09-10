@@ -435,10 +435,11 @@ mod tests {
 
     #[test]
     fn mining_artifact_mode_accepts_a_twentieth_attempt_without_allocating_discarded_drafts() {
-        let mut probe = Game::new(9);
-        let context = artifact_context(&probe);
+        let template = Game::new(9);
+        let context = artifact_context(&template);
         let seed = (0..100_000)
             .find(|seed| {
+                let mut probe = template.clone();
                 probe.rng = RfbRng::seeded(*seed);
                 (1..=20).find(|_| {
                     probe

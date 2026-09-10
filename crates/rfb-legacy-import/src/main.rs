@@ -33,6 +33,16 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         "usage: rfb-legacy-import <inspect-prefix|record-catalog|verify-catalog|import-content|audit-egos|sync-demo-armor-ego-identities|sync-demo-armor-egos|sync-demo-noncraft-egos|sync-demo-random-artifacts|sync-demo-ranged-ego-identities|sync-demo-ranged-egos|sync-demo-weapon-digger-egos> <path> | <sync-demo-items|sync-demo-monsters|sync-demo-wilderness> <selection> <output> | sync-demo-item-destruction <selection> <adaptations> <items> | sync-demo-ability-ground-items <abilities> <programs> | audit-demo-monsters <selection> <minimum-level> <maximum-level> | audit-demo-mutations <plan> | audit-demo-item-names <selection> <en-content.ftl> <zh-content.ftl> | audit-demo-items <selection> <adaptations> <plan> <items>",
     )?);
     match mode.to_string_lossy().as_ref() {
+        "sync-demo-base-allocation" => {
+            if args.next().is_some() {
+                return Err("sync-demo-base-allocation accepts one pack path".into());
+            }
+            let source = PathBuf::from(env::var("RFB_LEGACY_SOURCE")?);
+            println!(
+                "{}",
+                rfb_legacy_import::content::sync_demo_base_allocation(&source, &path)?
+            );
+        }
         "inspect-prefix" => {
             if args.next().is_some() {
                 return Err("inspect-prefix accepts exactly one path".into());

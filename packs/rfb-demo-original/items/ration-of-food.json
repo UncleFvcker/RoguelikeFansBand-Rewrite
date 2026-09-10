@@ -1,17 +1,26 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.ration-of-food",
-  "nameKey": "item-demo-ration-of-food-name",
-  "descriptionKey": "item-demo-ration-of-food-description",
-  "glyph": ",",
-  "generationLevel": 0,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 10,
-  "maxStack": 100,
   "baseValue": 3,
+  "descriptionKey": "item-demo-ration-of-food-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "glyph": ",",
+  "id": "demo.item.ration-of-food",
+  "maxStack": 100,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-ration-of-food-name",
+  "rfbBaseKind": {
+    "sourceIndex": 32,
+    "sval": 35,
+    "tval": 80
+  },
+  "tags": [
+    "consumable",
+    "food",
+    "ration"
+  ],
   "useAction": {
     "effectProgramId": "demo.effect.ration-nutrition"
   },
-  "tags": ["consumable", "food", "ration"]
+  "weightTenthsPound": 10
 }

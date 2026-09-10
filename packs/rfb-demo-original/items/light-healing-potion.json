@@ -10,16 +10,21 @@
   "generationLevel": 0,
   "glyph": "!",
   "id": "demo.item.light-healing-potion",
-  "potionNutrition": 50,
   "maxStack": 20,
   "mogaminatorRare": false,
   "mountUse": {
-    "type": "heal",
-    "minimumBond": 2500,
     "dice": 4,
-    "sides": 8
+    "minimumBond": 2500,
+    "sides": 8,
+    "type": "heal"
   },
   "nameKey": "item-demo-light-healing-potion-name",
+  "potionNutrition": 50,
+  "rfbBaseKind": {
+    "sourceIndex": 427,
+    "sval": 34,
+    "tval": 75
+  },
   "shatterEffectProgramId": "demo.effect.light-healing-potion.shatter",
   "shatterRadius": 2,
   "tags": [

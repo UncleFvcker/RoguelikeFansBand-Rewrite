@@ -10,10 +10,15 @@
   "generationLevel": 0,
   "glyph": "!",
   "id": "demo.item.veil-draught",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-veil-draught-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 406,
+    "sval": 7,
+    "tval": 75
+  },
   "tags": [
     "blindness",
     "consumable",

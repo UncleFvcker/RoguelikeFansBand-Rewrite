@@ -10,7 +10,7 @@
 | 协议 | 1.241 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 118 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 13 / 13 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.402.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.403.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v319，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 6 个 Class、13 个 Build、57 个 Race、32 本能力书、1,840 个 ability 文件、370 个 item、1,402 个 actor、168 个 affix、152 个 mutation。世界定义含 25 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、62 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
@@ -44,7 +44,7 @@ Ent、Spectre 的新游戏入口已开放。种族主线还接入原始经验值
 
 法术道具分支已合入护甲、非 Craft Ego、共享加权工艺、真实装备估值、负向装备/诅咒消费者、龙系底材生成、背包与箭袋容量，以及随机神器实例身份和消费者。168 个 affix 定义不等于全部均可自然获取：保留原版零稀有度及专用入口约束。
 
-随机神器已接入武器/挖掘工具、远程/竖琴、护甲、首饰和费艾诺光源的自然调度，保留原版底材例外、概率与强制模式，Craft 不参与抽样。实例保存名称、骰数、重量、特性、诅咒和激活；内部工厂含职业/主题 bias、原版命名、195 项激活池及最多 1001 个独立候选的价值筛选。成功和被拒绝候选的名字登记进入存档，恢复后继续生成保持一致。首饰自然入口另按原版等级/模式阈值筛选完整候选，1000 次拒绝后直接采用新生成的第 1001 个结果；每轮都包含 Ego/随机神器分支及诅咒，显式配置物化保持原入口。生成验收要求规则相同和本项目内确定性，不要求与原版同种子产物相同。无权威中文的名字保留原字符串并记录 unresolved。共享生成已按实际构筑审计职业/种族、变异、人格和主题条件，补齐主题 Ego 筛选、Bad Luck 固定神器参考层级及帽子速度限制。Vortex 分类为装备模板/消费者和间接类别分配；完整底材分配（含当前可达的 Acquirement 偏好/书本计数）仍未闭合，未开放身份不计入可玩验收。八领域入口范围保持上表状态。实现范围见[共享生成计划](../design/ego-shared-generation-plan.md)，实例表示见[随机神器身份契约](../design/contract-v316-random-artifact-identity.md)。
+随机神器已接入武器/挖掘工具、远程/竖琴、护甲、首饰和费艾诺光源的自然调度，保留原版底材例外、概率与强制模式，Craft 不参与抽样。实例保存名称、骰数、重量、特性、诅咒和激活；内部工厂含职业/主题 bias、原版命名、195 项激活池及最多 1001 个独立候选的价值筛选。成功和被拒绝候选的名字登记进入存档，恢复后继续生成保持一致。首饰自然入口另按原版等级/模式阈值筛选完整候选，1000 次拒绝后直接采用新生成的第 1001 个结果；每轮都包含 Ego/随机神器分支及诅咒，显式配置物化保持原入口。生成验收要求规则相同和本项目内确定性，不要求与原版同种子产物相同。无权威中文的名字保留原字符串并记录 unresolved。共享生成已按实际构筑审计职业/种族、变异、人格和主题条件，补齐主题 Ego 筛选、Bad Luck 固定神器参考层级及帽子速度限制。Vortex 分类为装备模板/消费者和间接类别分配；完整底材分配（含当前可达的 Acquirement 偏好/书本计数）仍未闭合，未开放身份不计入可玩验收。基础分配已统一为 327 个 source kind、361 行；12 个主题引用同一池并以枚举选择静态候选。逐行来源及未导入条目见[基础分配覆盖](../packs/rfb-demo-original/legacy-base-allocation-audit.json)，完整调度继续按[分配计划](../design/base-allocation-acquirement-plan.md)推进。八领域入口范围保持上表状态。实现范围见[共享生成计划](../design/ego-shared-generation-plan.md)，实例表示见[随机神器身份契约](../design/contract-v316-random-artifact-identity.md)。
 
 集成保留物品感知与实例神器鉴定边界、托姆特实例头饰重量、冬贝利逐武器伤害/攻次和准确来源显示。种族永久状态与新增物品字段共同进入当前保存和状态哈希，版本统一收口；内容 hash 本身不参与状态哈希。
 

@@ -11,6 +11,11 @@
   "maxStack": 1,
   "mogaminatorRare": false,
   "nameKey": "item-demo-capture-ball-name",
+  "rfbBaseKind": {
+    "sourceIndex": 704,
+    "sval": 0,
+    "tval": 11
+  },
   "tags": [
     "capture-ball",
     "equipment",

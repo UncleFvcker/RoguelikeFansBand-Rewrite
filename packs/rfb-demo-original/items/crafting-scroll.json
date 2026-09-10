@@ -12,6 +12,11 @@
   "id": "demo.item.crafting-scroll",
   "maxStack": 20,
   "nameKey": "item-demo-crafting-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 367,
+    "sval": 55,
+    "tval": 70
+  },
   "tags": [
     "consumable",
     "crafting",

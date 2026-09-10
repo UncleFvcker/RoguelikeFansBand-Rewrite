@@ -20,6 +20,11 @@
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-banishment-scroll-name",
+  "rfbBaseKind": {
+    "sourceIndex": 374,
+    "sval": 62,
+    "tval": 70
+  },
   "tags": [
     "banishment",
     "consumable",

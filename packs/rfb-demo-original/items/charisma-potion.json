@@ -10,10 +10,15 @@
   "generationLevel": 30,
   "glyph": "!",
   "id": "demo.item.charisma-potion",
-  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-charisma-potion-name",
+  "potionNutrition": 0,
+  "rfbBaseKind": {
+    "sourceIndex": 446,
+    "sval": 53,
+    "tval": 75
+  },
   "tags": [
     "consumable",
     "rfb-compatibility",
