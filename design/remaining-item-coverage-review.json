@@ -3,8 +3,8 @@
   "sourceRef": "master",
   "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
   "reviewedAt": "2026-09-10",
-  "codeBaseline": "413b7d8e6",
-  "scope": "Current curated inventory after I1 heavy armor and I2 first 12 utility-device profiles. Groups supply batch/gap/acquisition/consumer for each remaining row; source flags and references identify implementation work, not proof that every source branch is implemented. Gameplay evidence is recorded per completed group; this file enables no content.",
+  "codeBaseline": "befb411eb",
+  "scope": "Current curated inventory after the Duelist/Arena/artifact-scroll integration; I3-I7 replanned against befb411eb. Groups supply batch/gap/acquisition/consumer for each remaining row; source flags and references identify implementation work, not proof that every source branch is implemented. Gameplay evidence is recorded per completed group; this file enables no content.",
   "nameSources": {
     "kinds": "src/kind_name_zh.inc",
     "artifacts": "src/artifact_name_zh.inc",
@@ -16,16 +16,16 @@
   "summary": {
     "sourceKindRecords": 545,
     "validSourceKinds": 544,
-    "mappedCanonicalKinds": 346,
-    "remainingValidKinds": 198,
+    "mappedCanonicalKinds": 347,
+    "remainingValidKinds": 197,
     "excludedPlaceholderKinds": 1,
     "importerMechanicsReady": 49,
-    "importerBlocked": 149,
-    "formalItems": 382,
-    "baseAllocationRows": 367,
+    "importerBlocked": 148,
+    "formalItems": 385,
+    "baseAllocationRows": 368,
     "fixedArtifactRecords": 392,
-    "formalFixedArtifacts": 14,
-    "missingFixedArtifacts": 378,
+    "formalFixedArtifacts": 16,
+    "missingFixedArtifacts": 376,
     "missingArtifactsWithAbsentBase": 96,
     "deviceTableRows": {
       "wand": 39,
@@ -39,6 +39,7 @@
     "deviceRowsWithoutSharedArtifactProfile": 9,
     "unresolvedChineseSourceNames": 0
   },
+  "artifactCreationEntry": {"sourceIndex": 364, "formalItemId": "demo.item.artifact-creation-scroll", "reviewGroup": "artifact-scroll", "implementationCommit": "4079b1131", "integrationCommit": "befb411eb", "desktopAcceptance": "pending-I7"},
   "firstI1Group": {
     "sourceIndices": [
       272,
@@ -94,7 +95,7 @@
     "poison-needle": {
       "batch": "I4",
       "classification": "missing-mechanism",
-      "gap": "缺毒针的特殊命中/致死与攻击限制；普通伤害骰定义不足。",
+      "gap": "缺毒针特殊命中/致死及攻击限制；优先核对已开放决斗者的武器/攻次交叉，普通伤害骰定义不足。",
       "acquisition": "源 A 行；完成专属消费者后接入。",
       "consumer": "crates/rfb-core/src/game/player_combat.rs",
       "sourceConsumer": "src/cmd1.c:2249; src/object2.c:3353"
@@ -102,7 +103,7 @@
     "death-scythe": {
       "batch": "I4",
       "classification": "missing-mechanism",
-      "gap": "缺特殊反噬及攻击消费者；不能只导入 slay/brand/curse 数据。",
+      "gap": "缺特殊反噬及攻击消费者；结合冬贝利、决斗者的实际分支审查，不能只导入 slay/brand/curse 数据。",
       "acquisition": "110 按源 A 行；先完成反噬，再开放。",
       "consumer": "crates/rfb-core/src/game/player_combat.rs; crates/rfb-core/src/game/item_curses.rs",
       "sourceConsumer": "src/cmd1.c:2756; src/cmd1.c:3465; src/object2.c:2306"
@@ -125,16 +126,17 @@
     },
     "artifact-scroll": {
       "batch": "I3",
-      "classification": "missing-entry",
-      "gap": "缺神器创造卷轴的物品选择/取消/消费、职业 bias、德行和生成后登记入口。",
-      "acquisition": "源 A 行；入口闭合前不放入普通池。",
-      "consumer": "crates/rfb-core/src/game/item_use.rs; crates/rfb-core/src/game/random_artifact.rs",
-      "sourceConsumer": "src/devices.c; src/artifact.c CREATE_ART_SCROLL"
+      "classification": "implemented-entry",
+      "gap": "当前可读卷轴构筑的规则与入口已交付，专属桌面链留 I7；Android 装备经验和 Inspired Smithing 重铸仍属独立未开放系统。",
+      "acquisition": "91 层普通分配行与竞技场最终守卫奖励；保留源权重、正常生成及奖励去重。",
+      "consumer": "crates/rfb-core/src/game/item_use/artifact_creation.rs; crates/rfb-core/src/game/random_artifact/materialization.rs; web/src/inventory-panel.ts",
+      "sourceConsumer": "src/devices.c; src/artifact.c CREATE_ART_SCROLL",
+      "evidence": "4079b1131; befb411eb; game::tests::items::artifact_scroll_; game::tests::arena::arena_dungeon_real_entry_full_chain_combat_reward_scroll_and_return; eight readable builds, core/UI/save evidence, no scroll-specific standalone acceptance."
     },
     "madness-scroll": {
       "batch": "I2",
       "classification": "missing-effect-binding",
-      "gap": "SV_SCROLL_MADNESS 的随机分支含诅咒/连锁 Ty curse、毁灭、赛博恶魔、法力爆炸及制造；末分支依赖 I3 的神器创造卷轴 364 入口，未开放。",
+      "gap": "SV_SCROLL_MADNESS 的随机分支含诅咒/连锁 Ty curse、毁灭、赛博恶魔、法力爆炸及制造；364 的消费者已交付；仍缺疯狂卷轴自身随机分支与目标/取消/消费绑定，不能直接标为完成。",
       "acquisition": "源 A 行；通过实际使用链后接入。",
       "consumer": "crates/rfb-core/src/game/item_use.rs; crates/rfb-core/src/game/abilities",
       "sourceConsumer": "src/devices.c; src/cmd6.c"
@@ -415,7 +417,6 @@
     {"sourceIndex": 301, "sourceName": "Silver Dragon Scale Mail", "sourceNameZh": "银龙鳞甲~", "reviewGroup": "dragon-activation", "hasNaturalAllocationRows": true, "sourceFlags": ["FREE_ACT", "IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"], "sourceActivation": "BREATHE_INERTIA:30:40:130", "importerBlockers": []},
     {"sourceIndex": 304, "sourceName": "Balance Dragon Scale Mail", "sourceNameZh": "平衡龙鳞甲~", "reviewGroup": "dragon-activation", "hasNaturalAllocationRows": true, "sourceFlags": ["RES_CHAOS", "RES_DISEN", "RES_SOUND", "RES_SHARDS", "NO_SHUFFLE", "IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"], "sourceActivation": "BREATHE_ONE_BALANCE:50:100:250", "importerBlockers": []},
     {"sourceIndex": 305, "sourceName": "Power Dragon Scale Mail", "sourceNameZh": "力量龙鳞甲~", "reviewGroup": "dragon-activation", "hasNaturalAllocationRows": true, "sourceFlags": ["RES_ACID", "RES_FIRE", "RES_COLD", "RES_ELEC", "RES_POIS", "NO_SHUFFLE", "RES_NETHER", "RES_NEXUS", "RES_CHAOS", "RES_LITE", "RES_DARK", "RES_SHARDS", "RES_SOUND", "RES_DISEN", "RES_CONF", "IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"], "sourceActivation": "BREATHE_ELEMENTS:50:100:300", "importerBlockers": []},
-    {"sourceIndex": 364, "sourceName": "Artifact Creation:engsno argsan", "sourceNameZh": "创造神器", "reviewGroup": "artifact-scroll", "hasNaturalAllocationRows": true, "sourceFlags": [], "sourceActivation": null, "importerBlockers": ["random-artifact-identity"]},
     {"sourceIndex": 368, "sourceName": "Madness:mumblus incognitus", "sourceNameZh": "疯狂", "reviewGroup": "madness-scroll", "hasNaturalAllocationRows": true, "sourceFlags": ["FIXED_FLAVOR"], "sourceActivation": null, "importerBlockers": ["scroll-effect"]},
     {"sourceIndex": 465, "sourceName": "Liquid Logrus:Murky Brown", "sourceNameZh": "液态洛格鲁斯", "reviewGroup": "liquid-logrus", "hasNaturalAllocationRows": true, "sourceFlags": ["NO_SHUFFLE"], "sourceActivation": null, "importerBlockers": ["consumable-effect", "potion-shatter-effect"]},
     {"sourceIndex": 512, "sourceName": "[Sign of Chaos]", "sourceNameZh": "[混沌的标志]", "reviewGroup": "realm-books", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": ["book-system"]},
@@ -721,7 +722,7 @@
     {"sourceIndex": 171, "sourceName": "of Musashi", "sourceNameZh": "武藏的", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [63], "baseItemId": "demo.item.katana", "sourceLevel": 50, "sourceRarity": 15, "sourceFlags": ["DEX", "HIDE_TYPE", "SUST_DEX", "SHOW_MODS"], "sourceActivation": null, "sourceDataNotes": [], "sourceConsumerReferences": ["src/weaponsmith.c:539", "src/xtra1.c:4807", "src/xtra1.c:4814"], "contentReferences": []},
     {"sourceIndex": 172, "sourceName": "of Musashi", "sourceNameZh": "武藏的", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [56], "baseItemId": "demo.item.wakizashi", "sourceLevel": 50, "sourceRarity": 5, "sourceFlags": ["DEX", "HIDE_TYPE", "SUST_DEX", "SHOW_MODS"], "sourceActivation": null, "sourceDataNotes": [], "sourceConsumerReferences": ["src/weaponsmith.c:539", "src/xtra1.c:4807", "src/xtra1.c:4816"], "contentReferences": []},
     {"sourceIndex": 173, "sourceName": "'Iron ball'", "sourceNameZh": "『铁球』", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [125], "baseItemId": "demo.item.ball-and-chain", "sourceLevel": 66, "sourceRarity": 40, "sourceFlags": ["DEC_SPEED", "DEC_STEALTH", "DEC_WIS", "STR", "IMPACT", "SHOW_MODS", "HIDE_TYPE", "CURSED", "HEAVY_CURSE"], "sourceActivation": null, "sourceDataNotes": [], "sourceConsumerReferences": ["src/xtra1.c:5350"], "contentReferences": []},
-    {"sourceIndex": 174, "sourceName": "'Quickthorn'", "sourceNameZh": "『快刺』", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [50], "baseItemId": "demo.item.rapier", "sourceLevel": 35, "sourceRarity": 15, "sourceFlags": ["DEX", "BLOWS", "SLAY_DEMON", "RIDING", "SPEED", "FREE_ACT", "SEE_INVIS", "SHOW_MODS", "RES_CHAOS", "RES_DISEN"], "sourceActivation": null, "sourceDataNotes": [], "sourceConsumerReferences": ["src/xtra1.c:4762"], "contentReferences": []},
+    {"sourceIndex": 174, "sourceName": "'Quickthorn'", "sourceNameZh": "『快刺』", "reviewGroup": "artifact-current", "formalItemId": "demo.item.quickthorn", "baseSourceIndices": [50], "baseItemId": "demo.item.rapier", "sourceLevel": 35, "sourceRarity": 15, "sourceFlags": ["DEX", "BLOWS", "SLAY_DEMON", "RIDING", "SPEED", "FREE_ACT", "SEE_INVIS", "SHOW_MODS", "RES_CHAOS", "RES_DISEN"], "sourceActivation": null, "sourceDataNotes": [], "sourceConsumerReferences": ["src/xtra1.c:4762"], "contentReferences": ["packs/rfb-demo-original/worlds/middle-earth.json#/tasks/15/reward/classOverrides/0/entries/1/itemKindId"], "evidence": "docs/duelist-source-audit.md; crates/rfb-core/src/game/tests/duelist/rewards.rs; befb411eb integration verification. Fixed artifact definition/reward and class consumers exist; no new artifact-specific desktop acceptance claimed."},
     {"sourceIndex": 175, "sourceName": "'Littlethorn'", "sourceNameZh": "『小刺』", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [48], "baseItemId": "demo.item.main-gauche", "sourceLevel": 20, "sourceRarity": 6, "sourceFlags": ["INT", "CHR", "REGEN", "SLAY_EVIL", "RES_NEXUS", "FREE_ACT", "SEE_INVIS", "SHOW_MODS"], "sourceActivation": null, "sourceDataNotes": [], "sourceConsumerReferences": ["src/xtra1.c:4762"], "contentReferences": []},
     {"sourceIndex": 176, "sourceName": "'Excalibur'", "sourceNameZh": "『王者之剑』", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [60], "baseItemId": "demo.item.long-sword", "sourceLevel": 60, "sourceRarity": 100, "sourceFlags": ["WIS", "CHR", "SUST_WIS", "SUST_CHR", "VORPAL", "TUNNEL", "RIDING", "SLAY_EVIL", "SLAY_UNDEAD", "SLAY_DEMON", "RES_SHARDS", "RES_FEAR", "BLESSED", "HOLD_LIFE", "SEE_INVIS", "WARNING", "SHOW_MODS"], "sourceActivation": null, "sourceDataNotes": [], "sourceConsumerReferences": ["src/xtra2.c:1971"], "contentReferences": []},
     {"sourceIndex": 177, "sourceName": "'Excalipur'", "sourceNameZh": "『伪·王者之剑』", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [60], "baseItemId": "demo.item.long-sword", "sourceLevel": 50, "sourceRarity": 15, "sourceFlags": ["DEC_WIS", "DEC_CHR", "VULN_FEAR", "TY_CURSE", "AGGRAVATE", "DRAIN_EXP", "SHOW_MODS", "THROWING"], "sourceActivation": null, "sourceDataNotes": [], "sourceConsumerReferences": [], "contentReferences": []},
@@ -792,7 +793,7 @@
     {"sourceIndex": 245, "sourceName": "of Maglor", "sourceNameZh": "梅格洛尔的", "reviewGroup": "artifact-identity", "formalItemId": null, "baseSourceIndices": [168], "baseItemId": "demo.item.harp", "sourceLevel": 80, "sourceRarity": 5, "sourceFlags": ["STR", "INT", "CHR", "SUST_STR", "SUST_INT", "SUST_CHR", "FREE_ACT", "HOLD_LIFE", "RES_DARK", "RES_NETHER", "RES_BLIND", "FIXED_ART"], "sourceActivation": "RESTORE_MANA:50:777", "sourceDataNotes": [], "sourceConsumerReferences": ["src/object1.c:338"], "contentReferences": []},
     {"sourceIndex": 246, "sourceName": "of Daeron", "sourceNameZh": "戴隆的", "reviewGroup": "artifact-identity", "formalItemId": null, "baseSourceIndices": [168], "baseItemId": "demo.item.harp", "sourceLevel": 70, "sourceRarity": 5, "sourceFlags": ["WIS", "CON", "CHR", "SUST_WIS", "SUST_CON", "SUST_CHR", "SEE_INVIS", "REFLECT", "RES_FIRE", "RES_ELEC", "RES_LITE", "RES_POIS", "FIXED_ART"], "sourceActivation": "HEAL_CURING_HERO:50:300:777", "sourceDataNotes": [], "sourceConsumerReferences": ["src/object1.c:338"], "contentReferences": []},
     {"sourceIndex": 247, "sourceName": "of the Master Tonberry", "sourceNameZh": "冬贝利大师的", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [228], "baseItemId": "demo.item.set-of-studded-leather-gloves", "sourceLevel": 99, "sourceRarity": 150, "sourceFlags": ["FREE_ACT", "SUST_STR", "SUST_CON", "STR", "CON", "RES_TIME", "RES_DISEN", "DEC_BLOWS", "DEC_SPEED", "VULN_CONF", "QUESTITEM"], "sourceActivation": null, "sourceDataNotes": [], "sourceConsumerReferences": ["src/xtra2.c:1809"], "contentReferences": []},
-    {"sourceIndex": 248, "sourceName": "of the Duelist", "sourceNameZh": "决斗者的", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [50], "baseItemId": "demo.item.rapier", "sourceLevel": 50, "sourceRarity": 7, "sourceFlags": ["BRAND_VAMP", "SHOW_MODS", "SPEED", "DEX", "INT", "FREE_ACT"], "sourceActivation": "STRAFING:10:3", "sourceDataNotes": [], "sourceConsumerReferences": [], "contentReferences": []},
+    {"sourceIndex": 248, "sourceName": "of the Duelist", "sourceNameZh": "决斗者的", "reviewGroup": "artifact-current", "formalItemId": "demo.item.duelist", "baseSourceIndices": [50], "baseItemId": "demo.item.rapier", "sourceLevel": 50, "sourceRarity": 7, "sourceFlags": ["BRAND_VAMP", "SHOW_MODS", "SPEED", "DEX", "INT", "FREE_ACT"], "sourceActivation": "STRAFING:10:3", "sourceDataNotes": [], "sourceConsumerReferences": [], "contentReferences": ["packs/rfb-demo-original/worlds/middle-earth.json#/tasks/15/reward/classOverrides/0/entries/0/itemKindId"], "evidence": "docs/duelist-source-audit.md; crates/rfb-core/src/game/tests/duelist/rewards.rs; befb411eb integration verification. Fixed artifact definition/reward and class consumers exist; no new artifact-specific desktop acceptance claimed."},
     {"sourceIndex": 249, "sourceName": "of Saruman", "sourceNameZh": "萨鲁曼的", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [137], "baseItemId": "demo.item.wizardstaff", "sourceLevel": 66, "sourceRarity": 20, "sourceFlags": ["INT", "HIDE_TYPE", "DEC_MANA", "REGEN", "RES_FIRE", "RES_COLD", "RES_ACID", "RES_ELEC", "BRAND_VAMP", "BRAND_POIS", "BRAND_MANA", "SPELL_CAP"], "sourceActivation": "RESISTANCE:25:111", "sourceDataNotes": [], "sourceConsumerReferences": [], "contentReferences": []},
     {"sourceIndex": 250, "sourceName": "of Kaschei", "sourceNameZh": "科谢伊的", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [137], "baseItemId": "demo.item.wizardstaff", "sourceLevel": 90, "sourceRarity": 66, "sourceFlags": ["CURSED", "HEAVY_CURSE", "PERMA_CURSE", "AGGRAVATE", "DRAIN_EXP", "DEC_STR", "DEC_DEX", "DEC_CON", "SPELL_POWER", "DEC_MANA", "INT", "RES_POIS", "RES_NETHER", "RES_DARK", "RES_DISEN"], "sourceActivation": null, "sourceDataNotes": [], "sourceConsumerReferences": [], "contentReferences": []},
     {"sourceIndex": 251, "sourceName": "of Aegir", "sourceNameZh": "埃吉尔的", "reviewGroup": "artifact-missing-base", "formalItemId": null, "baseSourceIndices": [135], "baseItemId": null, "sourceLevel": 80, "sourceRarity": 50, "sourceFlags": ["STR", "CON", "CHR", "RES_COLD", "SLAY_EVIL", "SLAY_UNDEAD", "SLAY_DEMON", "BRAND_COLD"], "sourceActivation": "SUMMON_KRAKEN:50:500", "sourceDataNotes": [], "sourceConsumerReferences": ["src/xtra2.c:2064"], "contentReferences": []},
