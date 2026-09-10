@@ -244,17 +244,34 @@ fn dark_cave_disaster_area_real_entries_all_depths_rewards_and_return() {
 fn dark_cave_disaster_area_formal_generation_keeps_stairs_spawns_and_materials_legal() {
     let game = Game::new(949);
     let world = game.content.world(DEFAULT_WORLD_ID).unwrap();
+    let mut root_rivers = BTreeSet::new();
     for definition in world.procedural_floors.iter().filter(|f| {
         f.id.starts_with("demo.floor.dark-cave-depth-")
             || f.id.starts_with("demo.floor.disaster-area-depth-")
     }) {
-        for seed in [0, 1, 7] {
+        let seeds = if definition.id == "demo.floor.dark-cave-depth-55" {
+            [0, 1, 8] // dry, water, lava through the formal river selection
+        } else {
+            [0, 1, 7]
+        };
+        for seed in seeds {
             let mut generator = game.clone();
             generator.rng = RfbRng::seeded(seed);
             let floor = generator
                 .generate_procedural_floor(definition, None)
                 .unwrap();
             assert_stairs_connected(&floor, &game.content);
+            if definition.id == "demo.floor.dark-cave-depth-55" {
+                let water = floor
+                    .terrain
+                    .iter()
+                    .any(|id| id == "demo.terrain.surface-water-deep");
+                let lava = floor
+                    .terrain
+                    .iter()
+                    .any(|id| id == "demo.terrain.surface-lava-deep");
+                root_rivers.insert((water, lava));
+            }
             if let Some(lake) = definition.layout.as_ref().unwrap().lake.as_ref() {
                 assert!(
                     floor.terrain.contains(&lake.deep_terrain_id),
@@ -292,9 +309,15 @@ fn dark_cave_disaster_area_formal_generation_keeps_stairs_spawns_and_materials_l
                 assert!(floor.terrain.iter().any(|id| id == DEEP));
                 assert!(floor.terrain.iter().any(|id| id == MOUNTAIN));
                 assert!(floor.terrain.iter().any(|id| id == QUARTZ));
+            } else {
+                assert!(floor.glow.iter().all(|glow| !glow));
             }
         }
     }
+    assert_eq!(
+        root_rivers,
+        BTreeSet::from([(false, false), (true, false), (false, true)])
+    );
 }
 
 fn assert_stairs_connected(floor: &FloorState, content: &ContentCatalog) {
@@ -316,7 +339,8 @@ fn assert_stairs_connected(floor: &FloorState, content: &ContentCatalog) {
         .iter()
         .filter(|(_, terrain)| terrain.walkable || terrain.open_to_terrain_id.is_some())
         .map(|(position, _)| *position)
-        .collect();
+        .collect::<BTreeSet<_>>();
+    assert!(walkable.contains(&floor.player_position));
     let reached = maze_floor_distances(&walkable, floor.player_position);
     for (position, terrain) in positions {
         if terrain
