@@ -17,8 +17,8 @@ pub(super) fn arena_geometry_definition(game: &Game) -> ProceduralFloorDefinitio
         .find(|floor| floor.id == "demo.floor.warrens-depth-1")
         .unwrap()
         .clone();
-    // AR1 exercises geometry through the existing floor generator; the real
-    // dungeon and its encounter/reward data remain scheduled for AR2–AR4.
+    // Isolate geometry with the existing minimal floor; formal Arena content
+    // and its entry/reward flow are covered by the arena test module.
     definition.depth = 50;
     definition.width = 96;
     definition.height = 33;

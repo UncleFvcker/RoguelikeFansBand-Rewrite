@@ -2952,7 +2952,7 @@ mod tests {
     };
 
     #[test]
-    fn arena_guardian_resists_spells_and_weapon_damage_but_drops_loot_when_slain() {
+    fn arena_dungeon_guardian_resists_spells_and_weapon_damage_but_drops_loot_when_slain() {
         use super::*;
         let mut game = Game::new(17);
         game.entities.clear();

@@ -7,6 +7,96 @@ const ENTRANCE: &str = "demo.guardian.arena-entrance.1";
 const GUARDIAN: &str = "demo.guardian.arena.1";
 const REWARD: &str = "demo.item.artifact-creation-scroll";
 
+#[test]
+fn arena_dungeon_formal_representative_floors_keep_passages_doors_and_working_traps() {
+    let mut template = Game::new(42);
+    choose_human_talent_if_pending(&mut template);
+    let mut doors = 0;
+    for depth in [50, 65, 80] {
+        let definition = template
+            .content
+            .world(DEFAULT_WORLD_ID)
+            .unwrap()
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == format!("demo.floor.arena-depth-{depth}"))
+            .unwrap();
+        for seed in 0..3 {
+            let mut game = template.clone();
+            game.rng = RfbRng::seeded(seed);
+            let floor = game.generate_procedural_floor(definition, None).unwrap();
+            let traversable = floor
+                .terrain
+                .iter()
+                .enumerate()
+                .filter_map(|(index, id)| {
+                    let terrain = game.content.terrain(id).unwrap();
+                    (terrain.walkable || terrain.open_to_terrain_id.is_some()).then_some(Position {
+                        x: (index % usize::from(floor.width)) as i32,
+                        y: (index / usize::from(floor.width)) as i32,
+                    })
+                })
+                .collect::<BTreeSet<_>>();
+            let reached = crate::game::world::geometry::maze_floor_distances(
+                &traversable,
+                floor.player_position,
+            );
+            assert_eq!(
+                reached.len(),
+                traversable.len(),
+                "depth {depth}, seed {seed}"
+            );
+            doors += floor
+                .terrain
+                .iter()
+                .filter(|id| *id == &definition.closed_door_terrain_id)
+                .count();
+            let trap_index = floor
+                .terrain
+                .iter()
+                .position(|id| id == &definition.trap_terrain_id)
+                .unwrap();
+            let trap = Position {
+                x: (trap_index % usize::from(floor.width)) as i32,
+                y: (trap_index / usize::from(floor.width)) as i32,
+            };
+            assert!(reached.contains_key(&trap));
+            game.activate_floor(floor, Vec::new());
+            clear_monsters(&mut game);
+            let (standing, direction) = [
+                Direction::North,
+                Direction::South,
+                Direction::East,
+                Direction::West,
+            ]
+            .into_iter()
+            .find_map(|direction| {
+                let (dx, dy) = direction.delta();
+                let standing = Position {
+                    x: trap.x - dx,
+                    y: trap.y - dy,
+                };
+                game.content
+                    .terrain(game.terrain_at(standing))
+                    .unwrap()
+                    .walkable
+                    .then_some((standing, direction))
+            })
+            .unwrap();
+            game.player.position = standing;
+            let update = dispatch_next(&mut game, GameCommand::Move { direction });
+            assert_eq!(game.player.position, trap);
+            assert!(
+                update
+                    .events
+                    .iter()
+                    .any(|event| event.kind == "terrain.trap-triggered")
+            );
+        }
+    }
+    assert!(doors > 0);
+}
+
 fn clear_encounters(game: &mut Game) {
     clear_monsters(game);
     // Floor traversal is the subject here; discard incidental monster debuffs.
