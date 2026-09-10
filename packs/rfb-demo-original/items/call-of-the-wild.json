@@ -14,9 +14,9 @@
   "mogaminatorRare": false,
   "nameKey": "item-demo-call-of-the-wild-name",
   "rfbBaseKind": {
-    "sourceIndex": 512,
+    "sourceIndex": 508,
     "sval": 0,
-    "tval": 93
+    "tval": 92
   },
   "tags": [
     "book",

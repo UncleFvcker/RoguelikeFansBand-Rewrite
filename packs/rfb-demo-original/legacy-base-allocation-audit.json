@@ -7410,90 +7410,14 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
-      "maxDepth": 30,
-      "reason": "source kind has no active formal implementation/mapping",
-      "sourceIndex": 508,
-      "sourceName": "[Call of the Wild]",
-      "status": "not-imported",
-      "sval": 0,
-      "tval": 92
-    },
-    {
-      "allocations": [
-        {
-          "chance": 1,
-          "minDepth": 20,
-          "ordinal": 0,
-          "weight": 100
-        }
-      ],
-      "hasNaturalAllocationRows": true,
-      "itemId": null,
-      "maxDepth": 50,
-      "reason": "source kind has no active formal implementation/mapping",
-      "sourceIndex": 509,
-      "sourceName": "[Nature Mastery]",
-      "status": "not-imported",
-      "sval": 1,
-      "tval": 92
-    },
-    {
-      "allocations": [
-        {
-          "chance": 1,
-          "minDepth": 45,
-          "ordinal": 0,
-          "weight": 100
-        }
-      ],
-      "hasNaturalAllocationRows": true,
-      "itemId": null,
-      "maxDepth": 90,
-      "reason": "source kind has no active formal implementation/mapping",
-      "sourceIndex": 510,
-      "sourceName": "[Nature's Gifts]",
-      "status": "not-imported",
-      "sval": 2,
-      "tval": 92
-    },
-    {
-      "allocations": [
-        {
-          "chance": 2,
-          "minDepth": 70,
-          "ordinal": 0,
-          "weight": 50
-        }
-      ],
-      "hasNaturalAllocationRows": true,
-      "itemId": null,
-      "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
-      "sourceIndex": 511,
-      "sourceName": "[Nature's Wrath]",
-      "status": "not-imported",
-      "sval": 3,
-      "tval": 92
-    },
-    {
-      "allocations": [
-        {
-          "chance": 1,
-          "minDepth": 10,
-          "ordinal": 0,
-          "weight": 100
-        }
-      ],
-      "hasNaturalAllocationRows": true,
       "itemId": "demo.item.call-of-the-wild",
       "maxDepth": 30,
       "reason": "source allocation rows mapped without promotion",
-      "sourceIndex": 512,
-      "sourceName": "[Sign of Chaos]",
+      "sourceIndex": 508,
+      "sourceName": "[Call of the Wild]",
       "status": "mapped",
       "sval": 0,
-      "tval": 93
+      "tval": 92
     },
     {
       "allocations": [
@@ -7508,11 +7432,11 @@
       "itemId": "demo.item.nature-mastery",
       "maxDepth": 50,
       "reason": "source allocation rows mapped without promotion",
-      "sourceIndex": 513,
-      "sourceName": "[Chaos Mastery]",
+      "sourceIndex": 509,
+      "sourceName": "[Nature Mastery]",
       "status": "mapped",
       "sval": 1,
-      "tval": 93
+      "tval": 92
     },
     {
       "allocations": [
@@ -7527,9 +7451,85 @@
       "itemId": "demo.item.natures-gifts",
       "maxDepth": 90,
       "reason": "source allocation rows mapped without promotion",
+      "sourceIndex": 510,
+      "sourceName": "[Nature's Gifts]",
+      "status": "mapped",
+      "sval": 2,
+      "tval": 92
+    },
+    {
+      "allocations": [
+        {
+          "chance": 2,
+          "minDepth": 70,
+          "ordinal": 0,
+          "weight": 50
+        }
+      ],
+      "hasNaturalAllocationRows": true,
+      "itemId": "demo.item.natures-wrath",
+      "maxDepth": 65535,
+      "reason": "source allocation rows mapped without promotion",
+      "sourceIndex": 511,
+      "sourceName": "[Nature's Wrath]",
+      "status": "mapped",
+      "sval": 3,
+      "tval": 92
+    },
+    {
+      "allocations": [
+        {
+          "chance": 1,
+          "minDepth": 10,
+          "ordinal": 0,
+          "weight": 100
+        }
+      ],
+      "hasNaturalAllocationRows": true,
+      "itemId": null,
+      "maxDepth": 30,
+      "reason": "source kind has no active formal implementation/mapping",
+      "sourceIndex": 512,
+      "sourceName": "[Sign of Chaos]",
+      "status": "not-imported",
+      "sval": 0,
+      "tval": 93
+    },
+    {
+      "allocations": [
+        {
+          "chance": 1,
+          "minDepth": 20,
+          "ordinal": 0,
+          "weight": 100
+        }
+      ],
+      "hasNaturalAllocationRows": true,
+      "itemId": null,
+      "maxDepth": 50,
+      "reason": "source kind has no active formal implementation/mapping",
+      "sourceIndex": 513,
+      "sourceName": "[Chaos Mastery]",
+      "status": "not-imported",
+      "sval": 1,
+      "tval": 93
+    },
+    {
+      "allocations": [
+        {
+          "chance": 1,
+          "minDepth": 45,
+          "ordinal": 0,
+          "weight": 100
+        }
+      ],
+      "hasNaturalAllocationRows": true,
+      "itemId": null,
+      "maxDepth": 90,
+      "reason": "source kind has no active formal implementation/mapping",
       "sourceIndex": 514,
       "sourceName": "[Chaos Channels]",
-      "status": "mapped",
+      "status": "not-imported",
       "sval": 2,
       "tval": 93
     },
@@ -7543,12 +7543,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": "demo.item.natures-wrath",
+      "itemId": null,
       "maxDepth": 65535,
-      "reason": "source allocation rows mapped without promotion",
+      "reason": "source kind has no active formal implementation/mapping",
       "sourceIndex": 515,
       "sourceName": "[Armageddon Tome]",
-      "status": "mapped",
+      "status": "not-imported",
       "sval": 3,
       "tval": 93
     },

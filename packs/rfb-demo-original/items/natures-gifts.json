@@ -17,9 +17,9 @@
   "mogaminatorRare": false,
   "nameKey": "item-demo-natures-gifts-name",
   "rfbBaseKind": {
-    "sourceIndex": 514,
+    "sourceIndex": 510,
     "sval": 2,
-    "tval": 93
+    "tval": 92
   },
   "tags": [
     "book",

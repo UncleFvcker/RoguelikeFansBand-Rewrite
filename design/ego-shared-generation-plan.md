@@ -1,6 +1,6 @@
 # E8 六项共享生成契约实施计划
 
-日期：2026-09-10。状态：E8.1–E8.6 已实现，早期验证记录见 [contract-v312](contract-v312-real-equipment-value.md)、[contract-v313](contract-v313-negative-equipment.md)、[contract-v314](contract-v314-dragon-base-equipment.md)、[contract-v315](contract-v315-bag-containers.md)、[contract-v316](contract-v316-random-artifact-identity.md)；下一项为 E8.7 的构筑适用性核对。正/负向随机神器和首饰外围价值重试已接回自然调度。
+日期：2026-09-10。状态：E8.1–E8.6、E8.7 当前开放构筑范围及 E8.8 桌面里程碑已完成。早期验证记录见 [contract-v312](contract-v312-real-equipment-value.md)、[contract-v313](contract-v313-negative-equipment.md)、[contract-v314](contract-v314-dragon-base-equipment.md)、[contract-v315](contract-v315-bag-containers.md)、[contract-v316](contract-v316-random-artifact-identity.md)，最终桌面证据见[集成审计](ego-integration-audit.md#e88-当前桌面验收)。全原版范围仍受未开放身份和源内容覆盖限制。
 
 工作树：`D:/codex/RoguelikeFansBand-Rewrite-realms-items`，分支：`codex/realms-items`。
 代码基线：`1c9e62a2e`。缺口来自 [E8 集成审计](ego-integration-audit.md)。
@@ -9,7 +9,7 @@
 
 目标是补齐生成、实例状态和实际消费者。前五项组成当前可玩构筑的收口里程碑；
 第六项随真实职业、种族开放逐项验收，在全部适用分支完成前保留全原版范围的未完成状态。
-Craft 领域四册/32 法术、怪物主题的完整基础物品分配表仍是独立任务。
+Craft 领域四册/32 法术仍是独立任务；当前导入池的类别/主题分配与 Acquirement 已由 B0–B6 接入。
 
 ## 1. 顺序与依赖
 
@@ -27,7 +27,7 @@ Craft 领域四册/32 法术、怪物主题的完整基础物品分配表仍是�
 | E8.5c（已实现） | 各非弹药类型的随机神器调度 | E8.5b | 2；3 的前置 | 中 |
 | E8.6（已实现） | 首饰价值上下限和完整重试 | E8.1、E8.2、E8.5c | 3 | 中 |
 | E8.7 | 职业/种族专属分支逐项接入 | 对应构筑真实可玩，及其用到的前述批次 | 6 | 按构筑拆分 |
-| E8.8 | 当前构筑集成验收与更新审计 | E8.1–E8.6；当前开放构筑适用的 E8.7 | 前五项＋已开放构筑 | 中 |
+| E8.8（已完成） | 当前构筑集成验收与更新审计 | E8.1–E8.6；当前开放构筑适用的 E8.7 | 前五项＋已开放构筑 | 中 |
 
 主依赖链：**真实估值 → 诅咒 → 随机神器 → 首饰完整重试 → 集成验收**。
 龙系和背包无需等随机神器完成才交付。E8.7 的源端分支清单在 E8.1 开始建立，实施随构筑到位。
@@ -257,5 +257,5 @@ TypeScript 与对应 UI 测试。按 2026-09-10 的用户决定，后续生成�
 前五项及全部已开放构筑通过后，可标记“当前可玩范围共享生成契约完成”；
 尚未开放构筑对应契约继续列明依赖，不能把全范围 `runtimeParityComplete` 提前改成 `true`。
 
-下一步为 E8.8 其余桌面里程碑；B6 已完成的 Acquirement 桌面流程无需重复。未开放身份随真实职业/种族入口接入，
-未导入 source kind 与 B1 书本/普通堆叠表示限制继续单列，不计作全源生成对齐。
+E8.8 四类 standalone 流程已完成，B6 的 Acquirement 桌面证据继续复用。可以标记“当前可玩范围共享生成契约完成”；
+未开放身份随真实职业/种族入口接入，未导入 source kind 与 B1 书本/普通堆叠表示限制继续单列，`runtimeParityComplete` 保持 `false`。

@@ -1,10 +1,10 @@
 # E8 Ego 集成审计
 
-日期：2026-09-09。工作分支：`codex/realms-items`。
+核对日期：2026-09-10。工作分支：`codex/realms-items`。
 
-本次完成旧近似清理、160 条身份与实例检查，以及代表性桌面流程。
-**E8 的完整原版等价验收尚未完成**：下列六项共享生成契约仍有缺口。
-E3–E7 的“已接入”表示各类型已有物化分支和消费者，不能据此声称整个 `apply_magic` 调度与原版等价。
+E8.8 已完成当前可玩范围共享生成契约与四类代表性桌面验收，见[当前证据](#e88-当前桌面验收)。
+下列原始六项审计保留 v311 时的发现；后续完成情况以共享生成计划和本页当前证据为准。
+全原版范围仍有未开放身份、未导入底材和对象表示限制，不声明整个 `apply_magic` 与原版等价。
 
 ## 权威来源与可复核产物
 
@@ -55,38 +55,45 @@ node scripts/audit-egos.mjs D:/codex/Frogcomposband/master
 
 E8.7 补齐主题 Ego 筛选、Bad Luck 固定神器参考层级和帽子 pval 限制，并从实际新游戏入口枚举构筑适用性。Vortex 已核实为演化装备模板、正向 BLOWS/天生攻击消费者和类别分配的间接输入，没有以身份直接判断的生成分支。
 
-剩余工作明确分为：未开放职业/种族及神器卷轴/重铸入口；未导入的身份敏感固定神器；完整底材分配器及其当前可达的 Acquirement/书本计数/偏好条件。最后一类不能以职业尚未开放为由注销。正式主题表仍是改编基础池；`runtimeParityComplete` 保持 `false`。Craft 四册/32 法术属于另一个导入任务。
+剩余工作明确分为：未开放职业/种族及神器卷轴/重铸入口；未导入的身份敏感固定神器及其他 source kind；B1 书本单实例和普通物品堆叠表示限制。当前导入池的底材分配器及可达 Acquirement/书本计数/偏好已由 B0–B6 完成，E8.8 补齐其余桌面证据；`runtimeParityComplete` 保持 `false`。Craft 四册/32 法术属于另一个导入任务。
 
-## 验证与桌面复现
+## E8.8 当前桌面验收
 
-本次使用 Protocol 1.234、State Hash Schema v111、save header/payload v6、内容包 1.391.0、contract-v311。
-没有新增持久字段；自然生成 RNG 改变，按明确集成里程碑对全部 26 条 active fixture 刷新并复验，保持场景和命令不变。
-26 条断言复算后与提交内容相同，未产生 assertion 文件差异；基线标记与代码常量统一推进至 v311。
+2026-09-10 在 `codex/realms-items` 完成 Windows Tauri standalone WebDriver 自动验收。
+使用实际新建的人类死亡高阶法师导出存档，保留 museum binding；核心准备器只固定基底并筛选共享生成器的真实实例，
+不增加生产调试接口。每例由界面拾取未知物品、用鉴定卷轴鉴定、装备、验证效果，再导出存档、行动、
+恢复精确状态 hash 与装备详情，最后继续行动。自然概率仍由核心测试验证。
 
-| 验证 | 本次结果 |
+| 案例 | 实际观察 |
 | --- | --- |
-| Rust workspace（排除 Tauri） | 全量通过；最终主题池变更后复验核心 909 项及相关内容检查，后续等价 lint 清理复验首饰 7 项、Ty Curse 6 项、effect program 5 项 |
-| 内容与导入器 | 内容 133 项、导入器 174 项通过；content lock 校验通过 |
-| 契约 | `verify-all` 26 条通过；里程碑专用 `committed_contract_fixtures_pass --ignored` 通过，零 waiver |
-| 前端与生成物 | 181 项前端测试、TypeScript 类型检查、协议 bindings 与 content schemas 一致性检查通过 |
-| 静态检查 | `cargo clippy --workspace --exclude rfb-tauri --all-targets -- -D warnings`、格式和 diff 检查通过 |
-| 桌面 | 最终源码 standalone Tauri 构建、普通 E2E 和 Ego 专项均通过 |
+| 负向 Ego | seed 122；速度负属性 −2，角色速度 108，相同装备去掉该负属性后为 110；诅咒阻止卸下，装备保留 |
+| 随机神器 | seed 1697；实例名 `'Lone Star'`、搜索/潜行/红外等属性正常显示；探测门与楼梯激活充能 1/1 → 0/1，保存恢复保留实例名、属性及充能 |
+| 龙皮盾 | seed 8；基础地狱抗性进入角色减伤投影，Ego 附魔同时贡献护甲；护甲 310，去除附魔值后为 230 |
+| 动态背包 | seed 3；Holding 布袋容量 8，角色总槽位 34；实际装满 34 堆，货物 34.0 磅加袋重 1.0 磅，总重 35.0 磅；满载卸装与继续拾取被拒绝，货物保留 |
 
-桌面专项通过真实 `.rfbsave` 导入准备状态，再由 UI 执行操作，不增加生产调试接口：
+复用 B6 已通过的 Acquirement 桌面流程。本轮发现并修复 Nature 四册旧来源索引错误：
+508–511 / tval 92 才是 Nature，原先 512–515 / tval 93 指向 Chaos。已同步权威名称、来源账本和正式分配池，
+其中第四册恢复深度 70 / 权重 50，并增加源书类别/册数与执行领域绑定的回归检查。
+另对齐 v320 契约常量和已变更的实体书括号、药水后缀测试；内容包版本见[状态快照](../docs/status.md)。
+
+实际检查：
+
+- `cargo test --workspace --exclude rfb-tauri` 全部通过，包含核心 1177、内容 144、导入器 187、本地化 39 项。
+- 26 条 active contract 通过，未刷新断言；content lock 和 Ego 来源审计通过。
+- 前端 195 项、TypeScript/Vite 构建及受影响 crates 的 Clippy 全部通过；协议/内容类型没有变化。
+- 最终内容的 Tauri standalone 构建和四例桌面专项通过。
+
+复现入口（在 `web` 目录）：
 
 ```powershell
-cargo test -p rfb-core export_ego_desktop_acceptance_save -- --ignored
-cd web
 npm run e2e:build
-npm run e2e:tauri
 node e2e/tauri.e2e.mjs --ego
 ```
 
-`e2e:build` 调用 Tauri standalone build，运行不依赖 Vite 开发服务器。
-专项使用未知的照明灯、Combat ring、Endless quiver，拾取后使用 revelation scroll 鉴定并装备；
-实际激活照明灯并确认能量消耗，再对无名匕首使用工艺卷轴，确认已知 Ego 和卷轴消耗；最后导出、继续行动、
-导入存档，验证精确 hash 和装备恢复。自然随机获取分布由核心生成测试覆盖，桌面使用准备存档不冒充自然掉落概率测试。
-产物写入 `test-results/ego-desktop-report.json` 和 `test-results/ego-desktop.png`。
+专项自动导出新角色存档，再调用忽略测试 `export_ego_desktop_acceptance_save` 准备四例。
+无需事先构造无绑定存档；单独调用准备器时必须设置 `E88_DESKTOP_INPUT` 指向真实桌面新角色导出文件。
+报告为 `test-results/ego-desktop-report.json`，截图为 `e88-{negative,randart,dragon,bag}.png` 和 `e88-bag-filled.png`，
+另保留各例操作后的 `.rfbsave`。可运行产物为 `target/e2e/debug/rfb-tauri.exe`，不依赖 Vite。
 
-常规桌面 E2E 另覆盖战士及死亡领域高阶法师的新游戏、菜单、装备、学习施法和保存恢复。
-人工试玩由用户执行，本次不记录为人工试玩、全职业或全部 160 条的逐项桌面验收。
+当前可玩范围共享生成契约完成；全原版范围 `runtimeParityComplete` 仍为 `false`。
+这不是人工试玩、全身份/全部 160 条逐项桌面验收或 Android 验收；未开放身份、未导入 source kind 和 B1 对象表示限制继续单列。

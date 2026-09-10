@@ -279,6 +279,44 @@ mod tests {
     use super::*;
 
     #[test]
+    fn formal_source_spellbooks_keep_their_executable_realm_and_rank() {
+        let pack = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+        for file in fs::read_dir(pack.join("items")).unwrap() {
+            let item: Value =
+                serde_json::from_slice(&fs::read(file.unwrap().path()).unwrap()).unwrap();
+            let Some(book_id) = item["abilityBookId"].as_str() else {
+                continue;
+            };
+            let book_path = pack.join("abilityBooks").join(format!(
+                "{}.json",
+                book_id.strip_prefix("demo.ability-book.").unwrap()
+            ));
+            let book: Value = serde_json::from_slice(&fs::read(book_path).unwrap()).unwrap();
+            let base = &item["rfbBaseKind"];
+            let source_book = player_ability_book_for_item(&LegacyItemEntry {
+                tval: base["tval"].as_u64().unwrap() as u16,
+                sval: base["sval"].as_u64().unwrap() as u16,
+                ..Default::default()
+            })
+            .unwrap_or_else(|| panic!("{} maps to an unimplemented source realm", item["id"]));
+            assert!(
+                source_book.starts_with(&format!(
+                    "rfb-legacy.ability-book.{}-",
+                    book["realmId"].as_str().unwrap()
+                )),
+                "{} source realm differs from its executable book",
+                item["id"]
+            );
+            assert_eq!(
+                base["sval"].as_u64().unwrap() + 1,
+                book["rank"].as_u64().unwrap(),
+                "{} source rank",
+                item["id"]
+            );
+        }
+    }
+
+    #[test]
     fn source_consumable_stems_keep_the_original_display_suffix() {
         let mut entry = LegacyItemEntry {
             tval: 75,

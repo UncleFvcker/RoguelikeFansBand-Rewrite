@@ -2340,6 +2340,13 @@
       "weight": 25
     },
     {
+      "itemKindId": "demo.item.natures-wrath",
+      "maxDepth": 65535,
+      "minDepth": 70,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
       "itemKindId": "demo.item.dwarven-backpack",
       "maxDepth": 65535,
       "minDepth": 70,
@@ -2441,13 +2448,6 @@
       "itemKindId": "demo.item.hellfire-tome",
       "maxDepth": 65535,
       "minDepth": 80,
-      "quantity": 1,
-      "weight": 33
-    },
-    {
-      "itemKindId": "demo.item.natures-wrath",
-      "maxDepth": 65535,
-      "minDepth": 85,
       "quantity": 1,
       "weight": 33
     },

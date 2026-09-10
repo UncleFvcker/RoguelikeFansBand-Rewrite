@@ -17,9 +17,9 @@
   "mogaminatorRare": false,
   "nameKey": "item-demo-natures-wrath-name",
   "rfbBaseKind": {
-    "sourceIndex": 515,
+    "sourceIndex": 511,
     "sval": 3,
-    "tval": 93
+    "tval": 92
   },
   "tags": [
     "book",

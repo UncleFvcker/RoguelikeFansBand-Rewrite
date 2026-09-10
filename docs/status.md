@@ -10,7 +10,7 @@
 | 协议 | 1.242 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 119 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 14 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.404.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.405.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v320，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 6 个 Class、13 个 Build、57 个 Race、32 本能力书、1,840 个 ability 文件、370 个 item、1,402 个 actor、168 个 affix、152 个 mutation。世界定义含 25 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、62 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
@@ -77,6 +77,8 @@ Dr. Jones 的鞭子使用原版神器 162、隔空取物与 300 tick 冷却；�
 | `b84da4ef1`、`dec5bd0fb` | 已提交的 Tomte 规则及其相关测试代码；行为细节可查提交与源文件 | 本次文档整理没有重新执行它们，也没有证明玩家入口开放 |
 
 原始桌面证据见[归档验收记录](archive/2026-09-09/design/playable-release-20260909.md)，重构证据见[归档执行记录](archive/2026-09-09/design/core-large-file-refactor-plan.md)。忽略目录中的机器日志可能已被用户清理；归档记录保留当时结论，不伪称现有缓存仍在。
+
+E8.8 已完成 Windows Tauri standalone 的负向 Ego、随机神器、龙系装备和动态背包四类获取、鉴定、装备及保存恢复流程，并在恢复后继续行动。负向速度与诅咒阻止卸装、神器激活耗能、龙系基础抗性和 Ego 护甲、额外背包槽位与重量/溢出均有 UI 断言。Nature 四册错误的 Chaos 源身份已修正，内容包升级至 1.405.0；契约仍为 v320，26 条断言无需刷新。范围与复现见[E8.8 验收](../design/ego-integration-audit.md#e88-当前桌面验收)。当前可玩范围共享生成契约完成，全原版范围的未开放身份、未导入底材和对象表示限制仍保留。
 
 ## 更新口径
 

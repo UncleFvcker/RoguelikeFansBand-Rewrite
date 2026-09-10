@@ -14,9 +14,9 @@
   "mogaminatorRare": false,
   "nameKey": "item-demo-nature-mastery-name",
   "rfbBaseKind": {
-    "sourceIndex": 513,
+    "sourceIndex": 509,
     "sval": 1,
-    "tval": 93
+    "tval": 92
   },
   "tags": [
     "book",

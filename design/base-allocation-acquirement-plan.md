@@ -346,7 +346,7 @@ Acquirement 每次只抽一次 1 或 2–3 的目标数量，外层最多调用 
 未导入 source kind 继续列在[覆盖报告](../packs/rfb-demo-original/legacy-base-allocation-audit.json)；
 未开放身份继续列在机器矩阵。B1 书本仍为单实例数量 1；普通物品的源 `obj_make_pile` 数量分布及完整
 `obj_can_combine` 来源/题铭/折扣语义不在当前对象表示的对齐结论中。全范围 `runtimeParityComplete` 保持 `false`。
-E8.8 的其余负向装备、随机神器、龙系基础和背包桌面项目仍按共享生成计划单独验收。
+E8.8 已补齐负向装备、随机神器、龙系基础和背包桌面流程，见[当前验收](ego-integration-audit.md#e88-当前桌面验收)。该里程碑另修正 Nature 四册的源身份：508–511 / tval 92，恢复原名与第四册深度 70、权重 50 的分配行；正式书本的源类别/册数与可执行领域绑定已有回归检查。
 
 ## 版本与完成标准
 
