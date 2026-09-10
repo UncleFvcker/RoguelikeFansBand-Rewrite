@@ -2869,11 +2869,12 @@ impl Game {
                 summoned_kind_ids: Vec::new(),
             };
         }
-        let group = match spec.group_chance_percent {
-            0 => false,
-            100 => true,
-            chance => self.rng.bounded(100) < u64::from(chance),
-        };
+        let group = !self.floor_uses_arena_rooms(&self.current_floor_id)
+            && match spec.group_chance_percent {
+                0 => false,
+                100 => true,
+                chance => self.rng.bounded(100) < u64::from(chance),
+            };
         let (dice, sides, bonus) = if group {
             (
                 spec.group_count_dice,

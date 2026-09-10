@@ -18,6 +18,8 @@ fn arena_dungeon_geometry_validates_circle_bounds_and_excludes_other_layouts() {
     floor.theme_table_id = None;
     floor.loot_allocation = None;
     floor.gold_allocation = None;
+    floor.loot_table_id = None;
+    floor.guaranteed_items.clear();
     let layout = floor.layout.as_mut().unwrap();
     layout.mode = ProceduralLayoutMode::ArenaRooms;
     layout.streamers.clear();
@@ -31,13 +33,24 @@ fn arena_dungeon_geometry_validates_circle_bounds_and_excludes_other_layouts() {
         weight: 1,
     }];
     let budget = floor.generation_budget.as_mut().unwrap();
+    budget.actor_slots = 6;
+    budget.loot_placements = 0;
     budget.room_placements = Some(6);
     budget.room_area_tiles = Some(800);
     budget.streamer_placements = None;
     budget.streamer_area_tiles = None;
     validate_and_normalize(&mut content).unwrap();
 
-    for case in ["diameter", "rectangular", "room-budget", "lake", "wall"] {
+    for case in [
+        "diameter",
+        "rectangular",
+        "room-budget",
+        "actor-budget",
+        "loot-budget",
+        "encounter-table",
+        "lake",
+        "wall",
+    ] {
         let mut invalid = content.clone();
         let floor = invalid.worlds[0]
             .procedural_floors
@@ -50,6 +63,9 @@ fn arena_dungeon_geometry_validates_circle_bounds_and_excludes_other_layouts() {
             "diameter" => geometry.max_width = 16,
             "rectangular" => geometry.shapes[0].shape = ProceduralRoomShape::Rectangle,
             "room-budget" => floor.generation_budget.as_mut().unwrap().room_area_tiles = Some(1),
+            "actor-budget" => floor.generation_budget.as_mut().unwrap().actor_slots = 7,
+            "loot-budget" => floor.generation_budget.as_mut().unwrap().loot_placements = 1,
+            "encounter-table" => floor.encounter_table_id = None,
             "lake" => {
                 layout.lake = Some(ProceduralLakeDefinition {
                     deep_terrain_id: "demo.terrain.deep-water".into(),

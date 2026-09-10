@@ -1190,6 +1190,7 @@ impl Game {
                 let Some(damage) = damage else {
                     continue;
                 };
+                let damage = self.apply_metal_monster_resistance(target_index, damage);
                 let shatters = matches!(effect, MeleeBlowEffectDefinition::Shatter { .. })
                     && damage.applied > 23;
                 let quake_center = self.entities[source_index].position;

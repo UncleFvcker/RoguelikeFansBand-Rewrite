@@ -1107,6 +1107,7 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<ProjectileCollisionOutcome, CoreError> {
+        let damage = self.apply_metal_monster_resistance(index, damage);
         let application =
             plan_damage_application(&self.entities[index], damage, FatalityPolicy::AtOrBelowZero);
         commit_damage_application(&mut self.entities[index], &application);
@@ -1188,6 +1189,10 @@ impl Game {
                 DamageType::Physical,
                 target.armor_class.value,
                 self.entities[index].resistances.level(DamageType::Physical),
+            );
+            let damage = scale_damage_outcome(
+                damage,
+                self.actor_spell_damage_percent(index, DamageType::Physical, damage.applied),
             );
             let application = plan_damage_application(
                 &self.entities[index],
@@ -2025,26 +2030,15 @@ impl Game {
                     },
                     events,
                 );
-                let mut rolled_damage = self.scale_player_melee_damage(rolled_damage);
+                let rolled_damage = self.scale_player_melee_damage(rolled_damage);
                 let pierces_invulnerability = profile.source_item_id.is_some()
                     && self.player_is_berserker()
                     && self.rng.bounded(2) == 0;
-                // xtra2.c::mon_damage_mod only gives these two metal monsters /100 physical damage.
-                if rolled_damage > 0
-                    && matches!(
-                        definition.id.as_str(),
-                        "demo.actor.metal-babble" | "demo.actor.metal-babble-unique"
-                    )
-                {
-                    rolled_damage /= 100;
-                    if rolled_damage == 0 && self.rng.bounded(3) == 0 {
-                        rolled_damage = 1;
-                    }
-                }
                 let damage_type = profile.damage_type;
                 let resistance = self.entities[index].resistances.level(damage_type);
                 let damage =
                     resolve_damage(DamagePacket::new(rolled_damage, damage_type), resistance);
+                let damage = self.apply_metal_monster_resistance(index, damage);
                 let damage = scale_damage_outcome(
                     damage,
                     self.actor_incoming_damage_percent(
@@ -2955,6 +2949,113 @@ mod tests {
         projectile_raw_damage, roll_sniper_needle_vital_hit, sniper_explosion_radius,
         sniper_shot_damage_multiplier,
     };
+
+    #[test]
+    fn arena_guardian_resists_spells_and_weapon_damage_but_drops_loot_when_slain() {
+        use super::*;
+        let mut game = Game::new(17);
+        game.entities.clear();
+        game.items.clear();
+        let position = Position {
+            x: game.player.position.x + 1,
+            y: game.player.position.y,
+        };
+        game.push_generated_actor(
+            "test.arena.guardian".into(),
+            "demo.actor.metal-babble-unique",
+            position,
+        );
+        let hp = game.entities[0].hp;
+        assert!((3..=6).contains(&hp));
+        let definition = game.content.actor(&game.entities[0].kind_id).unwrap();
+        assert!(
+            game.actor_derived_stats(&game.entities[0], definition, false)
+                .armor_class
+                .value
+                >= 1000
+        );
+        let trace = ProjectileTrace {
+            origin: game.player.position,
+            impact: position,
+            landing: position,
+            traversed: vec![position],
+        };
+        for kind in [DamageType::Fire, DamageType::PsySpear, DamageType::Physical] {
+            let damage = game
+                .resolve_ability_damage_to_entity(
+                    0,
+                    "test.arena.spell",
+                    kind,
+                    9000,
+                    trace.clone(),
+                    &mut Vec::new(),
+                    &mut BTreeSet::new(),
+                    &mut Vec::new(),
+                )
+                .unwrap();
+            assert_eq!(damage.applied, 0);
+            assert_eq!(game.entities[0].hp, hp);
+        }
+        let mut saw_melee_hit = false;
+        for _ in 0..128 {
+            let mut events = Vec::new();
+            game.resolve_player_melee(0, false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+                .unwrap();
+            if let Some(damage) = events.iter().find_map(|event| match event {
+                DomainEvent::PlayerMeleeHit { damage, .. } => Some(damage),
+                _ => None,
+            }) {
+                assert!(damage.applied <= 1);
+                saw_melee_hit = true;
+                break;
+            }
+        }
+        assert!(saw_melee_hit);
+        let before = game.entities[0].hp;
+        let damage = resolve_damage(
+            DamagePacket::new(150, DamageType::Physical),
+            ResistanceLevel::Normal,
+        );
+        game.commit_player_projectile_damage(
+            0,
+            "demo.actor.metal-babble-unique".into(),
+            "test.arena.guardian".into(),
+            damage,
+            trace.clone(),
+            ProjectileMode::Normal,
+            &[],
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        assert_eq!(game.entities[0].hp, before - 1);
+        let damage = resolve_damage(
+            DamagePacket::new(game.entities[0].hp * 100, DamageType::Physical),
+            ResistanceLevel::Normal,
+        );
+        let result = game
+            .commit_player_projectile_damage(
+                0,
+                "demo.actor.metal-babble-unique".into(),
+                "test.arena.guardian".into(),
+                damage,
+                trace,
+                ProjectileMode::Normal,
+                &[],
+                &mut Vec::new(),
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
+        assert!(result.fatal);
+        assert!(
+            game.items
+                .iter()
+                .any(|item| matches!(item.location, ItemLocation::Ground(_)))
+        );
+        assert!(!game.unique_actor_kind_is_available("demo.actor.metal-babble-unique"));
+    }
 
     #[test]
     fn ammunition_damage_and_bonus_are_scaled_before_launcher_bonus() {

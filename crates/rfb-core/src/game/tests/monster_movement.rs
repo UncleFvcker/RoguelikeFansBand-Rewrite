@@ -27,6 +27,17 @@ fn movement_domains_allow_only_their_supported_terrain() {
         ),
         ("demo.actor.piranha", "demo.terrain.floor", false),
         ("demo.actor.poltergeist", "demo.terrain.wall", true),
+        ("demo.actor.metal-babble-unique", "demo.terrain.floor", true),
+        (
+            "demo.actor.metal-babble-unique",
+            "demo.terrain.surface-water-shallow",
+            true,
+        ),
+        (
+            "demo.actor.metal-babble-unique",
+            "demo.terrain.permanent-wall",
+            false,
+        ),
         (
             "demo.actor.poltergeist",
             "demo.terrain.permanent-wall",

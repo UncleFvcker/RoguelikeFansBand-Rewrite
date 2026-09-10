@@ -1334,6 +1334,16 @@ impl Game {
             .any(|room| room.shape == ProceduralRoomShape::Cavern);
         let (first_center, second_center) = if maze_only {
             maze_floor_anchors(&maze_walkable)
+        } else if arena_rooms {
+            // Keep every room center for its monster, including the entry room.
+            let center = rooms[0].center();
+            (
+                Position {
+                    x: center.x - 1,
+                    y: center.y,
+                },
+                generated_remote_room_center(&rooms),
+            )
         } else if cave_room_layout {
             (rooms[0].center(), generated_remote_room_center(&rooms))
         } else {
@@ -1669,12 +1679,21 @@ impl Game {
                 footprint,
             );
         }
+        let arena_centers = if arena_rooms {
+            rooms
+                .iter()
+                .map(GeneratedRoom::center)
+                .collect::<BTreeSet<_>>()
+        } else {
+            BTreeSet::new()
+        };
         if !definition.connections.is_empty() {
             floor_connections = place_generated_floor_connections(
                 definition,
                 first_center,
                 down_stair_position,
                 fixed_trap_position,
+                &arena_centers,
                 &generated_floor_terrain_id,
                 &mut terrain,
                 &mut self.rng,
@@ -1682,11 +1701,17 @@ impl Game {
         }
         let mut stair_reserved =
             BTreeSet::from([first_center, down_stair_position, fixed_trap_position]);
+        stair_reserved.extend(arena_centers.iter().copied());
         if let Some(door_position) = door_position {
             stair_reserved.insert(door_position);
         }
         if guardian.is_some() {
-            stair_reserved.insert(if maze_only || cave_room_layout {
+            stair_reserved.insert(if arena_rooms {
+                Position {
+                    x: second_center.x + 1,
+                    y: second_center.y,
+                }
+            } else if maze_only || cave_room_layout {
                 second_center
             } else {
                 Position {
@@ -1873,7 +1898,12 @@ impl Game {
             occupied.insert(down_stair_position);
         }
         let guardian_position = guardian.map(|_| {
-            if maze_only || cave_room_layout {
+            if arena_rooms {
+                Position {
+                    x: second_center.x + 1,
+                    y: second_center.y,
+                }
+            } else if maze_only || cave_room_layout {
                 second_center
             } else {
                 Position {
@@ -2045,7 +2075,12 @@ impl Game {
                     .iter()
                     .map(|guardian| guardian.actor_kind_id.clone())
                     .collect::<Vec<_>>();
-                for ordinal in 0..encounter_rolls {
+                let initial_count = if arena_rooms {
+                    rooms.len() as u16
+                } else {
+                    encounter_rolls
+                };
+                for ordinal in 0..initial_count {
                     let placement_room_id = if maze_only {
                         "maze"
                     } else if definition.layout.is_some() {
@@ -2053,7 +2088,13 @@ impl Game {
                     } else {
                         room_id
                     };
-                    let position = if maze_only {
+                    let position = if arena_rooms {
+                        let center = rooms[usize::from(ordinal)].center();
+                        if occupied.contains(&center) {
+                            return Err(CoreError::InvalidSave("arena room center is occupied"));
+                        }
+                        center
+                    } else if maze_only {
                         choose_generated_maze_position(&maze_walkable, first_center, &occupied)
                     } else {
                         self.choose_generated_room_position(
@@ -2081,18 +2122,22 @@ impl Game {
                         continue;
                     };
                     occupied.insert(position);
-                    let members = self.plan_original_group(
-                        &definition.id,
-                        policy,
-                        &kind_id,
-                        position,
-                        definition.depth,
-                        definition.task_id.as_deref(),
-                        &terrain,
-                        width,
-                        height,
-                        &mut occupied,
-                    );
+                    let members = if arena_rooms {
+                        Vec::new()
+                    } else {
+                        self.plan_original_group(
+                            &definition.id,
+                            policy,
+                            &kind_id,
+                            position,
+                            definition.depth,
+                            definition.task_id.as_deref(),
+                            &terrain,
+                            width,
+                            height,
+                            &mut occupied,
+                        )
+                    };
                     let pack_behavior = if members.is_empty() {
                         None
                     } else {
@@ -5114,11 +5159,13 @@ impl Game {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn place_generated_floor_connections(
     definition: &ProceduralFloorDefinition,
     entry_anchor: Position,
     down_stair_anchor: Position,
     fixed_trap_position: Position,
+    reserved: &BTreeSet<Position>,
     floor_terrain_id: &str,
     terrain: &mut [String],
     rng: &mut RfbRng,
@@ -5132,6 +5179,7 @@ fn place_generated_floor_connections(
                     y: i32::from(y),
                 };
                 (position != fixed_trap_position
+                    && !reserved.contains(&position)
                     && terrain_ref[generated_terrain_index(definition.width, position)]
                         == floor_terrain_id)
                     .then_some(position)

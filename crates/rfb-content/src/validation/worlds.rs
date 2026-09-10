@@ -753,6 +753,7 @@ pub(super) fn validate_world(
             .as_ref()
             .map_or(ProceduralLayoutMode::Rooms, |layout| layout.mode);
         let maze_only = layout_mode == ProceduralLayoutMode::MazeOnly;
+        let arena_rooms = layout_mode == ProceduralLayoutMode::ArenaRooms;
         procedural
             .connections
             .sort_by(|left, right| left.id.cmp(&right.id));
@@ -1270,10 +1271,30 @@ pub(super) fn validate_world(
             if procedural.lifecycle != FloorLifecycle::Dungeon
                 || (procedural.region_table_id.is_none()
                     && (procedural.encounter_table_id.is_none()
-                        || procedural.loot_table_id.is_none()))
+                        || (!arena_rooms && procedural.loot_table_id.is_none())))
                 || !(1..=128).contains(&budget.actor_slots)
-                || !(1..=8).contains(&budget.loot_placements)
+                || if arena_rooms {
+                    budget.loot_placements != 0
+                } else {
+                    !(1..=8).contains(&budget.loot_placements)
+                }
                 || reserved_actor_slots >= usize::from(budget.actor_slots)
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+            if arena_rooms
+                && (budget
+                    .room_placements
+                    .map(|rooms| usize::from(rooms) + reserved_actor_slots)
+                    != Some(usize::from(budget.actor_slots))
+                    || procedural
+                        .encounter_table_id
+                        .as_ref()
+                        .and_then(|id| encounter_tables.get(id))
+                        .is_none_or(|table| table.global_allocation.is_none())
+                    || procedural.nest.is_some()
+                    || !procedural.guaranteed_items.is_empty()
+                    || !procedural.loot_spawns.is_empty())
             {
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
             }

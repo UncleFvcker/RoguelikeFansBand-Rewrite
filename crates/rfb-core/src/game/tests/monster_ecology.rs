@@ -13,6 +13,274 @@ use rfb_content::{
 use super::support::*;
 use super::*;
 
+fn arena_ecology_game(depth: u16) -> Game {
+    let geometry = super::generation::arena_geometry_definition(&Game::new(1));
+    let root =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
+    let id = if depth == 80 {
+        "demo.floor.rlyeh-depth-80".to_owned()
+    } else {
+        format!("demo.floor.castle-depth-{depth}")
+    };
+    // Keep an existing depth and layer chain intact; replace only its generation policy.
+    let floor = artifact.content.worlds[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|floor| floor.id == id)
+        .unwrap();
+    floor.width = geometry.width;
+    floor.height = geometry.height;
+    floor.wall_terrain_id = geometry.wall_terrain_id;
+    floor.floor_terrain_id = geometry.floor_terrain_id;
+    floor.layout = geometry.layout;
+    floor.layout.as_mut().unwrap().stairs = None;
+    floor.generation_budget = geometry.generation_budget;
+    floor.terrain_feature_table_id = None;
+    floor.vault_id = None;
+    floor.theme_table_id = None;
+    floor.loot_allocation = None;
+    floor.gold_allocation = None;
+    floor.guaranteed_items.clear();
+    let dungeon_id = floor.dungeon_id.clone();
+    let encounter_id = floor.encounter_table_id.clone();
+    let minimum = u32::from(depth.saturating_sub(5).min(50));
+    for actor in &mut artifact.content.actors {
+        if actor.level == minimum || actor.level == minimum - 1 {
+            actor.tags.push("test-arena-boundary".into());
+        }
+    }
+    artifact.content.worlds[0]
+        .dungeons
+        .iter_mut()
+        .find(|dungeon| Some(&dungeon.id) == dungeon_id.as_ref())
+        .unwrap()
+        .legacy_index = None;
+    let table = artifact
+        .content
+        .encounter_tables
+        .iter_mut()
+        .find(|table| Some(&table.id) == encounter_id.as_ref())
+        .unwrap();
+    table.global_allocation = Some(rfb_content::GlobalMonsterAllocationDefinition {
+        preferred_glyphs: Vec::new(),
+        preferred_tags: Vec::new(),
+        preferred_movement_modes: Vec::new(),
+        preferred_habitats: Vec::new(),
+        preferred_damage_immunities: Vec::new(),
+        preferred_damage_resistances: Vec::new(),
+        special_div: 0,
+        ambient_chance_one_in: 1,
+    });
+    let content = Arc::new(ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content).unwrap(),
+    ));
+    Game::from_content(1, content, DEFAULT_WORLD_ID).unwrap()
+}
+
+#[test]
+fn arena_dungeon_allocates_one_center_monster_per_room_without_floor_loot() {
+    for (depth, minimum) in [(50, 45), (55, 50), (80, 50)] {
+        let template = arena_ecology_game(depth);
+        let mut definition = template
+            .content
+            .world(DEFAULT_WORLD_ID)
+            .unwrap()
+            .procedural_floors
+            .iter()
+            .find(|floor| {
+                floor
+                    .layout
+                    .as_ref()
+                    .is_some_and(|layout| layout.mode == ProceduralLayoutMode::ArenaRooms)
+            })
+            .unwrap()
+            .clone();
+        if depth == 80 {
+            let mut guardian = template
+                .content
+                .world(DEFAULT_WORLD_ID)
+                .unwrap()
+                .procedural_floors
+                .iter()
+                .find_map(|floor| floor.guardian.clone())
+                .unwrap();
+            guardian.instance_id = "test.arena.guardian".into();
+            guardian.actor_kind_id = "demo.actor.metal-babble-unique".into();
+            definition.guardian = Some(guardian);
+            definition.generation_budget.as_mut().unwrap().actor_slots += 1;
+        }
+        for seed in 0..3 {
+            let mut game = template.clone();
+            game.rng = RfbRng::seeded(seed);
+            let rooms = game.clone().generate_budgeted_rooms(
+                &definition,
+                definition.layout.as_ref().unwrap().rooms.as_ref().unwrap(),
+            );
+            let floor = game.generate_procedural_floor(&definition, None).unwrap();
+            assert_eq!(floor.entities.len(), rooms.len() + usize::from(depth == 80));
+            let centers = rooms
+                .iter()
+                .map(GeneratedRoom::center)
+                .collect::<BTreeSet<_>>();
+            assert_eq!(
+                floor
+                    .entities
+                    .iter()
+                    .filter(|actor| actor.id != "test.arena.guardian")
+                    .map(|actor| actor.position)
+                    .collect::<BTreeSet<_>>(),
+                centers
+            );
+            if depth == 80 {
+                let guardian = floor
+                    .entities
+                    .iter()
+                    .find(|actor| actor.id == "test.arena.guardian")
+                    .unwrap();
+                assert!(!centers.contains(&guardian.position));
+                assert_ne!(guardian.position, floor.player_position);
+                assert!(guardian.pack.is_none());
+            }
+            assert!(!centers.contains(&floor.player_position));
+            assert!(floor.entities.iter().all(|actor| actor.pack.is_none()
+                && game.content.actor(&actor.kind_id).unwrap().level >= minimum));
+            assert!(
+                floor
+                    .items
+                    .iter()
+                    .all(|item| matches!(item.location, ItemLocation::CarriedBy { .. }))
+            );
+            assert!(floor.gold_piles.is_empty());
+            assert!(
+                floor
+                    .terrain
+                    .iter()
+                    .any(|terrain| terrain == &definition.trap_terrain_id)
+            );
+        }
+        // Force the boundary candidates, retaining the real selector and source weights.
+        let mut policy = template
+            .content
+            .encounter_table(definition.encounter_table_id.as_ref().unwrap())
+            .unwrap()
+            .global_allocation
+            .clone()
+            .unwrap();
+        policy.preferred_tags = vec!["test-arena-boundary".into()];
+        let mut game = template.clone();
+        for _ in 0..32 {
+            let selected = game
+                .select_original_allocated_monster(
+                    &definition.id,
+                    &policy,
+                    depth,
+                    depth,
+                    None,
+                    &[],
+                    None,
+                    None,
+                )
+                .unwrap();
+            assert_eq!(game.content.actor(&selected).unwrap().level, minimum);
+        }
+    }
+}
+
+#[test]
+fn arena_dungeon_keeps_ambient_allocation_and_low_level_summons_without_companions() {
+    let mut game = arena_ecology_game(55);
+    let definition = game
+        .content
+        .world(DEFAULT_WORLD_ID)
+        .unwrap()
+        .procedural_floors
+        .iter()
+        .find(|floor| {
+            floor
+                .layout
+                .as_ref()
+                .is_some_and(|layout| layout.mode == ProceduralLayoutMode::ArenaRooms)
+        })
+        .unwrap()
+        .clone();
+    let floor = game.generate_procedural_floor(&definition, None).unwrap();
+    game.activate_floor(floor, Vec::new());
+    clear_monsters(&mut game);
+    game.rng = RfbRng::seeded(9);
+    game.process_ambient_monster_allocation(&mut BTreeSet::new())
+        .unwrap();
+    assert_eq!(game.entities.len(), 1);
+    assert!(game.entities[0].pack.is_none());
+    assert!(game.content.actor(&game.entities[0].kind_id).unwrap().level >= 50);
+    assert!(rfb_distance(game.player.position, game.entities[0].position) > 25);
+
+    assert!(
+        game.summon_category_candidate_kind_ids("any-monster", None, 55, false, true)
+            .iter()
+            .any(|id| id == "demo.actor.warg")
+    );
+    let positions =
+        game.open_positions_around_for_actor_kind(game.player.position, 4, "demo.actor.warg");
+    let result = game.resolve_category_summon(
+        CategorySummonSpec {
+            is_spell: true,
+            source_id: "test.arena-summon",
+            owner_id: "player",
+            category: "hound",
+            count_dice: 0,
+            count_sides: 0,
+            count_bonus: 2,
+            maximum_count: None,
+            hostile: false,
+            group_chance_percent: 100,
+            group_count_dice: 0,
+            group_count_sides: 0,
+            group_count_bonus: 8,
+            duration_turns: 0,
+        },
+        vec!["demo.actor.warg".into()],
+        positions,
+        &mut BTreeSet::new(),
+    );
+    assert_eq!(
+        result.entity_ids.len(),
+        2,
+        "independent summons remain; companions do not"
+    );
+    assert!(!result.group);
+    assert!(
+        result
+            .summoned_kind_ids
+            .iter()
+            .all(|id| id == "demo.actor.warg")
+    );
+    let policy = game
+        .content
+        .encounter_table(definition.encounter_table_id.as_ref().unwrap())
+        .unwrap()
+        .global_allocation
+        .clone()
+        .unwrap();
+    let draws = game.rng.draw_counter;
+    assert!(
+        game.plan_original_group(
+            &definition.id,
+            &policy,
+            "demo.actor.warg",
+            game.player.position,
+            55,
+            None,
+            &game.terrain.clone(),
+            game.width,
+            game.height,
+            &mut BTreeSet::new()
+        )
+        .is_empty()
+    );
+    assert_eq!(game.rng.draw_counter, draws);
+}
+
 fn enter_warrens(seed: u64) -> Game {
     let mut game =
         Game::new_with_build(seed, "demo.build.warrior").expect("Warrens journey should create");

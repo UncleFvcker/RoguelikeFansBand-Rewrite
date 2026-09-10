@@ -7,7 +7,7 @@ use rfb_content::ProceduralFloorDefinition;
 use super::*;
 use crate::game::world::geometry::{generated_terrain_index, maze_floor_distances};
 
-fn arena_geometry_definition(game: &Game) -> ProceduralFloorDefinition {
+pub(super) fn arena_geometry_definition(game: &Game) -> ProceduralFloorDefinition {
     let mut definition = game
         .content
         .world(DEFAULT_WORLD_ID)
@@ -42,6 +42,8 @@ fn arena_geometry_definition(game: &Game) -> ProceduralFloorDefinition {
         weight: 1,
     }];
     let budget = definition.generation_budget.as_mut().unwrap();
+    budget.actor_slots = 6;
+    budget.loot_placements = 0;
     budget.room_placements = Some(6);
     budget.room_area_tiles = Some(800);
     budget.streamer_placements = None;
@@ -107,6 +109,7 @@ fn arena_dungeon_passages_light_and_reserved_positions_survive_permanent_walls()
         .iter()
         .find_map(|floor| floor.guardian.clone());
     let guardian_id = &definition.guardian.as_ref().unwrap().instance_id;
+    definition.generation_budget.as_mut().unwrap().actor_slots += 1;
     let mut signatures = BTreeSet::new();
     let mut lit_rooms = 0;
     let mut dark_rooms = 0;
@@ -183,6 +186,15 @@ fn arena_dungeon_passages_light_and_reserved_positions_survive_permanent_walls()
             .iter()
             .find(|actor| &actor.id == guardian_id)
             .unwrap();
+        for room in &rooms {
+            assert_ne!(guardian.position, room.center());
+            assert!(
+                floor
+                    .entities
+                    .iter()
+                    .any(|actor| actor.position == room.center())
+            );
+        }
         assert_ne!(guardian.position, floor.player_position);
         assert!(reached.contains_key(&guardian.position));
         assert!(
