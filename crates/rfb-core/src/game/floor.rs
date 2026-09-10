@@ -996,6 +996,7 @@ impl Game {
         }
         following_summons.sort_by(|left, right| left.id.cmp(&right.id));
         self.entities = remaining_entities;
+        self.refresh_duelist_challenge();
 
         let all_items = std::mem::take(&mut self.items);
         let (floor_items, global_items): (Vec<_>, Vec<_>) =
@@ -1402,6 +1403,7 @@ impl Game {
         mut global_items: Vec<ItemInstance>,
     ) {
         self.current_floor_id = floor.id;
+        self.duelist_target_id = None;
         self.current_dungeon_instance_id = floor.dungeon_instance_id;
         self.reproduction_suppressed = floor.reproduction_suppressed;
         self.width = floor.width;

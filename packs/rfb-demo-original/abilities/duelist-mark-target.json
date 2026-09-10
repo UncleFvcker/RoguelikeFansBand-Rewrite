@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.duelist-mark-target",
+  "nameKey": "ability-demo-duelist-mark-target-name",
+  "descriptionKey": "ability-demo-duelist-mark-target-description",
+  "target": {
+    "modes": [
+      "entity"
+    ],
+    "range": 18,
+    "requiresLineOfEffect": false
+  },
+  "abilityProgramId": "demo.ability-program.duelist-mark-target",
+  "tags": [
+    "duelist",
+    "duelist-technique"
+  ]
+}

@@ -7,15 +7,17 @@
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.246 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | 120 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload / 容器 | 14 / 15 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.408.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 协议 | 1.247 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | 121 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload / 容器 | 14 / 16 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
+| 内容包 | 1.409.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v321，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 8 个 Class、15 个 Build、57 个 Race、32 本能力书、1,861 个 ability 文件、376 个 item、1,404 个 actor、168 个 affix、152 个 mutation。世界定义含 30 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 9 个 Class、16 个 Build、57 个 Race、32 本能力书、1,862 个 ability 文件、376 个 item、1,405 个 actor、168 个 affix、152 个 mutation。世界定义含 30 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
 权威内容统计工具是 `rfb-contentc inspect-source`。本次集成已运行内容编译；静态统计不替代行为验收。
+
+决斗者已完成[计划](duelist-class-plan.md)第二步：正式无 MP 出生、技能/熟练度和强感知、装备失效与基础攻防、手动标记/显式解除，以及挑战状态的保存、哈希、引用校验和生命周期清理。核心专项覆盖人类/托姆特出生、冬贝利出生禁配与后天形态攻次/加伤例外、重量两侧/盾牌/捕获球/双持/反魔、零攻次、标记后保存继续、目标传送/死亡/离层和无效存档拒绝。毒针尚未正式导入，仅用测试源种类验证失效边界。普通创角入口仍关闭；自动挑战、对手攻防、成长打击、其余七能力与高等级中途选择属于第三步，界面及桌面验收尚未进行。
 
 狂战士已完成[五步接入计划](berserker-class-plan.md)：来源审计、正式出生/成长、常驻被动、战斗与使用限制、六项 HP 能力、八项任务奖励及高阶书销毁收益已实现，正常创角已开放“近战 → 狂战士”。核心专项覆盖实际施放、失败/取消、吸血/死亡、陷阱和野外移动、奖励领取与保存恢复；实际经验升级覆盖至 50 级的被动边界，种族交叉覆盖托姆特出生合并、幽灵吸收/种族能力/穿墙恢复，以及已有龙人、冬贝利与突变规则。公共适配边界见[来源审计](berserker-source-audit.md)。
 
@@ -50,7 +52,7 @@ Death、Arcane、Sorcery、Armageddon、Nature、Life、Daemon、Crusade 各有�
 
 托姆特（`rfb-legacy.race.tomte`）已进入正式新游戏白名单。六个当前职业的出生装备合并、知识美德及核心探测、头饰惩罚、39/40 级感知鉴定、拾取、保存恢复和继续行动已验证；桌面抽查战士、死亡高阶法师和弓箭手。其他 Race 仍按定义、入口与实际验收范围区分。
 
-冬贝利（`rfb-legacy.race.tonberry`）已进入正式新游戏白名单。六职业正式出生、军刀熟练度与“独立”美德、成长被动和攻次／混乱抗性边界已有核心测试；完整核心链为装备军刀、升至 10 级、命中、换回原武器、保存恢复并继续行动。普通武器配置在较高等级可能降至零攻次，界面明确提示该下限。尚缺的决斗者／重槌兵／灵能者关联、死神镰刀武器反噬、神器 247 专属掉落、种族首领和变形怪选择关联，见 `602a33a75` 的原版审计，不计入本批完成范围。
+冬贝利（`rfb-legacy.race.tonberry`）已进入正式新游戏白名单。六职业正式出生、军刀熟练度与“独立”美德、成长被动和攻次／混乱抗性边界已有核心测试；完整核心链为装备军刀、升至 10 级、命中、换回原武器、保存恢复并继续行动。普通武器配置在较高等级可能降至零攻次，界面明确提示该下限。决斗者出生禁配及后天形态攻次/加伤例外见上文。仍缺的重槌兵／灵能者关联、死神镰刀武器反噬、神器 247 专属掉落、种族首领和变形怪选择关联，见 `602a33a75` 的原版审计，不计入已完成范围。
 
 世界中存在 Outpost、Anambar、Thalos、Morivant、Telmora、Angwil 六个城镇记录及多种地牢条目。条目存在不证明所有原版设施、守卫、任务链和完整通关已经验证；实际地点进入条件、替代关系和获取路径以运行时与本批测试为准。
 

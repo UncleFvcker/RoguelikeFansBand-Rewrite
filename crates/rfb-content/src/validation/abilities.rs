@@ -1055,6 +1055,7 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::SniperShot { .. }
                 | AbilityEffectDefinition::MeleeAdjacent
                 | AbilityEffectDefinition::ChargeThrough
+                | AbilityEffectDefinition::DuelistChallenge
                 | AbilityEffectDefinition::SmashTrap
                 | AbilityEffectDefinition::ProbeMonsters
                 | AbilityEffectDefinition::Concentrate
@@ -1255,6 +1256,11 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::MeleeThenTeleport { .. }
             | AbilityEffectDefinition::DraconianStrike { .. }
             | AbilityEffectDefinition::SwapPosition => projectile_target_rule,
+            AbilityEffectDefinition::DuelistChallenge => {
+                ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Entity]
+                    && (1..=64).contains(&ability.target.range)
+                    && !ability.target.requires_line_of_effect
+            }
             AbilityEffectDefinition::ChargeThrough | AbilityEffectDefinition::SmashTrap => {
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Direction]
                     && ability.target.range == 1

@@ -610,6 +610,7 @@ impl Game {
             self.riding_actor_id = None;
         }
         self.clear_riding_bond_for(&dying_actor.id);
+        self.clear_duelist_challenge_for(&dying_actor.id);
         let carried_item_ids = self
             .items
             .iter()
@@ -679,6 +680,7 @@ impl Game {
             self.riding_actor_id = None;
         }
         self.clear_riding_bond_for(&dying_actor.id);
+        self.clear_duelist_challenge_for(&dying_actor.id);
         self.entities[index].hp = self.entities[index].hp.min(0);
         events.push(death_event.clone());
         self.apply_infernal_deal(&dying_actor);

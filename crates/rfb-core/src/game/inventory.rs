@@ -2327,6 +2327,7 @@ impl Game {
         self.items[plan.inventory_index].location = ItemLocation::Equipped {
             slot_id: plan.slot_id.clone(),
         };
+        self.refresh_duelist_challenge();
         self.clamp_player_hp_to_effective_max();
         let knowledge = self
             .item_property_knowledge
@@ -2375,6 +2376,7 @@ impl Game {
             return None;
         }
         self.items[plan.item_index].location = ItemLocation::Inventory;
+        self.refresh_duelist_challenge();
         self.clamp_player_hp_to_effective_max();
         Some(plan.kind_id)
     }

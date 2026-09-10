@@ -65,7 +65,10 @@ impl Game {
                     knowledge.feeling = None;
                     knowledge.known_affix_ids.clear();
                 }
-                if self.player_is_berserker() || self.player_has_tomte_item_sensing() {
+                if self.player_is_berserker()
+                    || self.player_is_duelist()
+                    || self.player_has_tomte_item_sensing()
+                {
                     self.sense_item_instance(&id, true);
                 }
             }
@@ -307,7 +310,9 @@ impl Game {
 
     pub(super) fn apply_player_item_knowledge(&mut self, mut item_ids: Vec<String>) {
         let identifies = self.player_auto_identifies_items();
-        let senses = self.player_is_berserker() || self.player_has_tomte_item_sensing();
+        let senses = self.player_is_berserker()
+            || self.player_is_duelist()
+            || self.player_has_tomte_item_sensing();
         if !identifies && !senses {
             return;
         }

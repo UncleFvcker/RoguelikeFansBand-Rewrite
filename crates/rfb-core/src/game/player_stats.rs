@@ -2209,7 +2209,7 @@ impl Game {
             .iter()
             .map(|source| source.amount)
             .sum::<i32>();
-        let extra_blows = if self.player_is_berserker() {
+        let extra_blows = if self.player_is_berserker() || self.player_is_duelist() {
             extra_blows
         } else {
             extra_blows.max(0)
@@ -2222,7 +2222,7 @@ impl Game {
             .value
             .saturating_mul(100)
             .saturating_add(extra_blows);
-        if (self.player_is_mindcrafter() || self.player_is_berserker())
+        if (self.player_is_mindcrafter() || self.player_is_berserker() || self.player_is_duelist())
             && let Some(weapon) = self
                 .items
                 .iter()
@@ -2233,6 +2233,12 @@ impl Game {
                     "demo.class.berserker",
                     self.class_base_blows(weapon, 600, 70, 75),
                     i32::from(self.progress.level) * 4,
+                )
+            } else if self.player_is_duelist() {
+                (
+                    "demo.class.duelist",
+                    self.class_base_blows(weapon, 100, 70, 40),
+                    0,
                 )
             } else {
                 (
@@ -2249,7 +2255,28 @@ impl Game {
             });
         }
         blows = blows.max(0);
+        if self.player_is_duelist()
+            && self.duelist_equipment_error().is_none()
+            && let Some(weapon) = weapons
+                .iter()
+                .find(|item| Some(item.id.as_str()) == source_item_id.as_deref())
+        {
+            let dexterity = i32::from(
+                self.effective_player_attributes()
+                    .index(AttributeKind::Dexterity),
+            );
+            to_damage += dexterity + 3 - 10 + i32::from(self.progress.level / 2)
+                - i32::from(self.item_instance_weight(weapon) / 10);
+            if blows > 100 {
+                attack_sources.push(rfb_protocol::CharacterStatSourceDto {
+                    source_id: "demo.class.duelist".to_owned(),
+                    amount: 100 - blows,
+                });
+                blows = 100;
+            }
+        }
         if source_item_id.is_some()
+            && !self.player_is_duelist()
             && self
                 .character_definitions()
                 .is_some_and(|(_, race, _, _)| race.id == "rfb-legacy.race.tonberry")
@@ -2679,6 +2706,24 @@ impl Game {
         let Some((_, race, class, personality)) = self.character_definitions() else {
             return;
         };
+        if self.player_is_duelist() {
+            let x = i32::from(
+                self.effective_player_attributes()
+                    .index(AttributeKind::Intelligence),
+            ) + 3;
+            let bonus = if self.duelist_equipment_error().is_none() {
+                x / 2 + x * i32::from(self.progress.level) / 50
+            } else {
+                0
+            };
+            add_nonzero_stat(
+                pipeline,
+                StatKind::ArmorClass,
+                StatLayer::Class,
+                &class.id,
+                -50 + bonus,
+            );
+        }
         if self.player_is_berserker() {
             let level = i32::from(self.progress.level);
             for (kind, amount) in [
@@ -3373,6 +3418,11 @@ impl Game {
         } else {
             StatBounds::NON_NEGATIVE
         };
+        let armor_bounds = if include_equipment && self.player_is_duelist() {
+            StatBounds::UNBOUNDED
+        } else {
+            StatBounds::NON_NEGATIVE
+        };
         let saving_throw_skill = pipeline.resolve(StatKind::SavingThrowSkill, skill_bounds);
         let saving_throw_skill =
             if include_equipment && self.player_has_status_kind(STATUS_MAGIC_RESISTANCE) {
@@ -3454,10 +3504,10 @@ impl Game {
             speed,
             melee_skill: pipeline.resolve(StatKind::MeleeSkill, StatBounds::NON_NEGATIVE),
             armor_class: apply_monster_power(
-                pipeline.resolve(StatKind::ArmorClass, StatBounds::NON_NEGATIVE),
+                pipeline.resolve(StatKind::ArmorClass, armor_bounds),
                 actor,
                 definition,
-                StatBounds::NON_NEGATIVE,
+                armor_bounds,
             ),
             melee_attacks: pipeline.resolve(StatKind::MeleeAttacks, StatBounds::NON_NEGATIVE),
             melee_damage_bonus: pipeline.resolve(StatKind::MeleeDamageBonus, StatBounds::UNBOUNDED),

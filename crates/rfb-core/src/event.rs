@@ -171,6 +171,10 @@ pub(crate) enum DomainEvent {
         ability_id: String,
         reason: String,
     },
+    DuelistChallengeIssued {
+        target_kind_id: String,
+    },
+    DuelistChallengeCleared,
     AbilityCastFailed {
         resolution: AbilityCastResolutionDto,
     },
@@ -1727,6 +1731,14 @@ impl DomainEvent {
                 "ability-cast-unavailable",
                 [("target", ability_id), ("reason", reason)],
             ),
+            Self::DuelistChallengeIssued { target_kind_id } => dto(
+                "duelist.challenge-issued",
+                "duelist-challenge-issued",
+                [("target", target_kind_id)],
+            ),
+            Self::DuelistChallengeCleared => {
+                dto("duelist.challenge-cleared", "duelist-challenge-cleared", [])
+            }
             Self::AbilityCastFailed { resolution } => dto_with_outcome(
                 "ability.cast-failure",
                 "ability-cast-failure",

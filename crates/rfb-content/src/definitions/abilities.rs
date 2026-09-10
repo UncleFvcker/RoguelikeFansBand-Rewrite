@@ -909,6 +909,7 @@ pub enum AbilityEffectDefinition {
     },
     MeleeAdjacent,
     ChargeThrough,
+    DuelistChallenge,
     SmashTrap,
     ProbeMonsters,
     Concentrate,

@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.246";
+pub const PROTOCOL_VERSION: &str = "1.247";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 15;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 16;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -147,6 +147,7 @@ pub enum GameCommand {
         target: TargetSelection,
     },
     CancelAbilityDirection,
+    ClearDuelistChallenge,
     CloseDoor {
         direction: Direction,
     },
@@ -1469,6 +1470,7 @@ pub enum AbilityEffectSpecDto {
     },
     MeleeAdjacent,
     ChargeThrough,
+    DuelistChallenge,
     SmashTrap,
     ProbeMonsters,
     Concentrate,
@@ -3672,6 +3674,8 @@ pub struct PlayerDto {
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pending_ability_direction: Option<PendingAbilityDirectionDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub duelist_target_id: Option<String>,
     #[serde(default)]
     pub carried_weight_tenths_pound: u32,
     #[serde(default)]
@@ -5205,6 +5209,7 @@ pub struct PlayerSaveDto {
     pub reality_change_ticks: u8,
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
     pub pending_ability_direction: Option<PendingAbilityDirectionDto>,
+    pub duelist_target_id: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub statuses: Vec<StatusSaveDto>,
     #[serde(default, skip_serializing_if = "is_false")]
@@ -6366,6 +6371,7 @@ mod tests {
                 reality_change_ticks: 0,
                 pending_mutation_direction: None,
                 pending_ability_direction: None,
+                duelist_target_id: None,
                 carried_weight_tenths_pound: 5,
                 carry_capacity_tenths_pound: 100,
                 encumbrance_speed_penalty: 0,
@@ -6655,6 +6661,7 @@ mod tests {
             reality_change_ticks: 0,
             pending_mutation_direction: None,
             pending_ability_direction: None,
+            duelist_target_id: None,
             statuses: Vec::new(),
             confusing_strike_ready: false,
             sniper_concentration: 0,

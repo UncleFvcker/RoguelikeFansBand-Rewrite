@@ -1,0 +1,276 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "id": "demo.class.duelist",
+  "nameKey": "class-demo-duelist-name",
+  "descriptionKey": "class-demo-duelist-description",
+  "modifiers": {
+    "strength": 2,
+    "intelligence": 1,
+    "wisdom": -2,
+    "dexterity": 2,
+    "constitution": -3,
+    "charisma": 2
+  },
+  "lifePercent": 100,
+  "baseHp": 4,
+  "experiencePercent": 150,
+  "skillSetId": "demo.skill-set.duelist",
+  "weaponProficiency": {
+    "defaultInitial": 0,
+    "defaultMaximum": 6000,
+    "overrides": {
+      "demo.item.awl-pike": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.ball-and-chain": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.basillard": {
+        "initial": 0,
+        "maximum": 7000
+      },
+      "demo.item.battle-axe": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.beaked-axe": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.bo-staff": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.broad-axe": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.broad-spear": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.club": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.cutlass": {
+        "initial": 0,
+        "maximum": 7000
+      },
+      "demo.item.dagger": {
+        "initial": 4000,
+        "maximum": 7000
+      },
+      "demo.item.dragon-fang": {
+        "initial": 0,
+        "maximum": 7000
+      },
+      "demo.item.falcon-sword": {
+        "initial": 0,
+        "maximum": 7000
+      },
+      "demo.item.fauchard": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.flail": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.glaive": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.gnomish-shovel": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.halberd": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.hatchet": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.heavy-crossbow": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.heavy-lance": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.jo-staff": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.lance": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.lead-filled-mace": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.light-crossbow": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.long-bow": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.lucerne-hammer": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.mace": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.main-gauche": {
+        "initial": 0,
+        "maximum": 7000
+      },
+      "demo.item.mattock": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.morning-star": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.nunchaku": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.orcish-pick": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.pick": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.pike": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.quarterstaff": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.rapier": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.sabre": {
+        "initial": 0,
+        "maximum": 7000
+      },
+      "demo.item.short-bow": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.short-sword": {
+        "initial": 4000,
+        "maximum": 7000
+      },
+      "demo.item.shovel": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.sickle": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.sling": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.small-sword": {
+        "initial": 4000,
+        "maximum": 7000
+      },
+      "demo.item.spear": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.tanto": {
+        "initial": 0,
+        "maximum": 7000
+      },
+      "demo.item.three-piece-rod": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.trident": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.trifurcate-spear": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.wakizashi": {
+        "initial": 0,
+        "maximum": 7000
+      },
+      "demo.item.war-hammer": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.whip": {
+        "initial": 0,
+        "maximum": 4000
+      },
+      "demo.item.wizardstaff": {
+        "initial": 0,
+        "maximum": 0
+      }
+    }
+  },
+  "ridingProficiency": {
+    "initial": 0,
+    "maximum": 0
+  },
+  "dualWieldingMaximum": 0,
+  "petUpkeepDivisor": 35,
+  "abilities": [
+    {
+      "abilityId": "demo.ability.duelist-mark-target",
+      "uiGroupNameKey": "class-demo-duelist-name",
+      "minimumLevel": 1,
+      "governingAttribute": "dexterity",
+      "hitPointCost": 0,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0,
+      "blockedByDungeonAntiMagic": true
+    }
+  ],
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.rapier",
+      "quantity": 1,
+      "equipped": true
+    },
+    {
+      "itemKindId": "demo.item.soft-leather-armour",
+      "quantity": 1,
+      "equipped": true
+    },
+    {
+      "itemKindId": "demo.item.swiftstep-tonic",
+      "quantity": 1
+    }
+  ],
+  "tags": [
+    "martial",
+    "rfb-compatibility"
+  ]
+}

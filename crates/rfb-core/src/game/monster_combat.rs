@@ -465,6 +465,7 @@ impl Game {
                 item.previously_worn = false;
             }
         }
+        self.refresh_duelist_challenge();
     }
 
     pub(super) fn resolved_player_body_slots(&self) -> Result<Vec<BodySlot>, CoreError> {

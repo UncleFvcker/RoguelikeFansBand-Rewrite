@@ -12,6 +12,9 @@ use std::collections::BTreeSet;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::game) enum AbilityTargetPlan {
+    DuelistChallenge {
+        target_entity_id: String,
+    },
     SelfTarget,
     Step {
         direction: Direction,
@@ -111,6 +114,10 @@ impl Game {
         target: &TargetSelection,
     ) -> Option<AbilityTargetPlan> {
         match ability.effect {
+            AbilityEffectDefinition::DuelistChallenge => self
+                .duelist_challenge_target(target)
+                .filter(|_| self.player_is_duelist())
+                .map(|target_entity_id| AbilityTargetPlan::DuelistChallenge { target_entity_id }),
             // These forms are monster-casting-only. The player cast path
             // never produces a target plan for them.
             AbilityEffectDefinition::BlinkTarget { .. }

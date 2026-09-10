@@ -318,6 +318,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::ConsumeTerrain { .. }
                     | AbilityEffectDefinition::MeleeThenTeleport { .. }
                     | AbilityEffectDefinition::ChargeThrough
+                    | AbilityEffectDefinition::DuelistChallenge
                     | AbilityEffectDefinition::SmashTrap
                     | AbilityEffectDefinition::DraconianStrike { .. }
                     | AbilityEffectDefinition::SwapPosition
@@ -450,6 +451,7 @@ fn ability_program_input_matches_target(
                         effect,
                         AbilityEffectDefinition::DarkenRoom
                             | AbilityEffectDefinition::ChargeThrough
+                            | AbilityEffectDefinition::DuelistChallenge
                             | AbilityEffectDefinition::SmashTrap
                             | AbilityEffectDefinition::FetchItem { .. }
                             | AbilityEffectDefinition::DimensionDoor { .. }

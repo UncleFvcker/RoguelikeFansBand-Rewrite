@@ -270,6 +270,7 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) {
         let removed = self.entities.remove(index);
+        self.clear_duelist_challenge_for(&removed.id);
         if self.riding_actor_id.as_deref() == Some(removed.id.as_str()) {
             self.riding_actor_id = None;
         }

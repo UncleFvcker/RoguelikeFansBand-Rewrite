@@ -23,6 +23,8 @@ pub enum CoreError {
     AbilityDirectionRequired,
     #[error("no ability is waiting for a direction")]
     AbilityDirectionUnavailable,
+    #[error("the duelist challenge request is unavailable")]
+    DuelistChallengeUnavailable,
     #[error("a race mutation reward is waiting for a choice")]
     RaceMutationChoiceRequired,
     #[error("the requested race mutation choice is unavailable")]

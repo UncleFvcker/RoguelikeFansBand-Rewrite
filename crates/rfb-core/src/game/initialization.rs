@@ -310,6 +310,15 @@ impl Game {
         let birth_race = build
             .as_ref()
             .and_then(|identity| content.race(&identity.race_id));
+        if build
+            .as_ref()
+            .is_some_and(|build| build.class_id == "demo.class.duelist")
+            && birth_race.is_some_and(|race| race.id == "rfb-legacy.race.tonberry")
+        {
+            return Err(CoreError::CharacterRaceUnavailable(
+                "rfb-legacy.race.tonberry".to_owned(),
+            ));
+        }
         if let Some(race) = birth_race
             && !race.tags.iter().any(|tag| tag == "rfb-compatibility")
         {
@@ -603,6 +612,7 @@ impl Game {
             reality_change_ticks: 0,
             pending_mutation_direction: None,
             pending_ability_direction: None,
+            duelist_target_id: None,
             next_item_instance_serial,
             next_gold_pile_serial: 1,
             explored: vec![false; usize::from(width) * usize::from(height)],

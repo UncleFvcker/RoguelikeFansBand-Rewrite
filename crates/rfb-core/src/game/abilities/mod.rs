@@ -5,6 +5,7 @@ mod casting;
 mod compound;
 mod control;
 mod damage;
+mod duelist;
 mod items;
 pub(in crate::game) mod mindcraft;
 mod restoration;
@@ -34,6 +35,12 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<Option<Position>, CoreError> {
         match (ability.effect.clone(), target_plan) {
+            (
+                AbilityEffectDefinition::DuelistChallenge,
+                AbilityTargetPlan::DuelistChallenge { target_entity_id },
+            ) => {
+                self.resolve_duelist_challenge(target_entity_id, events);
+            }
             (AbilityEffectDefinition::ChargeThrough, AbilityTargetPlan::Step { direction }) => {
                 return self.resolve_player_charge_through(
                     direction,

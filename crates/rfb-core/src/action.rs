@@ -56,6 +56,7 @@ pub(crate) enum GameAction {
         target: TargetSelection,
     },
     CancelAbilityDirection,
+    ClearDuelistChallenge,
     CloseDoor {
         direction: Direction,
     },
@@ -274,6 +275,7 @@ impl GameAction {
             | Self::ResolveMogaminatorQuery { .. }
             | Self::ResolveMutationDirection { .. }
             | Self::CancelAbilityDirection
+            | Self::ClearDuelistChallenge
             | Self::InscribeItem { .. }
             | Self::SetInterfaceLocale { .. } => 0,
             Self::TravelLocal { .. } => 0,
@@ -344,6 +346,7 @@ impl From<GameCommand> for GameAction {
                 Self::CastAbility { ability_id, target }
             }
             GameCommand::CancelAbilityDirection => Self::CancelAbilityDirection,
+            GameCommand::ClearDuelistChallenge => Self::ClearDuelistChallenge,
             GameCommand::CloseDoor { direction } => Self::CloseDoor { direction },
             GameCommand::ConfigureMogaminator {
                 enabled,

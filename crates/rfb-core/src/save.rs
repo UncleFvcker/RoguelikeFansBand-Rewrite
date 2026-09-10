@@ -894,6 +894,7 @@ pub(crate) fn player_to_save(
         reality_change_ticks: 0,
         pending_mutation_direction: None,
         pending_ability_direction: None,
+        duelist_target_id: None,
         statuses: player
             .statuses
             .iter()

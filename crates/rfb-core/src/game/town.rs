@@ -2274,6 +2274,7 @@ impl Game {
                     && Some(actor.id.as_str()) != riding_actor_id
             });
         self.entities = retained;
+        self.refresh_duelist_challenge();
         self.store_visible_town_states();
         self.wilderness_position = Some(destination_position);
         self.wilderness_view_offset = Position::default();

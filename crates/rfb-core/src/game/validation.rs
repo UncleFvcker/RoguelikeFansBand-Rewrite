@@ -16,6 +16,20 @@ use super::*;
 
 impl Game {
     pub(super) fn validate_runtime_invariants(&self, action: &GameAction) -> Result<(), CoreError> {
+        if matches!(action, GameAction::ClearDuelistChallenge)
+            && (!self.player_is_duelist() || self.duelist_target_id.is_none())
+        {
+            return Err(CoreError::DuelistChallengeUnavailable);
+        }
+        if let GameAction::CastAbility {
+            ability_id,
+            target: TargetSelection::Entity { entity_id },
+        } = action
+            && ability_id == "demo.ability.duelist-mark-target"
+            && self.duelist_target_id.as_ref() == Some(entity_id)
+        {
+            return Err(CoreError::DuelistChallengeUnavailable);
+        }
         if self.map_scale == rfb_protocol::MapScaleDto::World
             && !matches!(
                 action,
@@ -464,6 +478,9 @@ pub(super) fn revealed_terrain_is_valid(
 
 impl Game {
     pub(super) fn validate_loaded_state(&self) -> Result<(), CoreError> {
+        if !self.duelist_challenge_is_valid() {
+            return Err(CoreError::InvalidSave("duelist challenge is invalid"));
+        }
         let world = self
             .content
             .world(&self.world_id)

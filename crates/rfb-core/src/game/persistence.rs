@@ -1069,6 +1069,7 @@ impl Game {
             ));
         }
         let pending_ability_direction = payload.player.pending_ability_direction.clone();
+        let duelist_target_id = payload.player.duelist_target_id.clone();
         if pending_ability_direction.as_ref().is_some_and(|pending| {
             pending.ability_id != "demo.ability.nature-natures-wrath"
                 || !matches!(pending.branch_roll, 2 | 6)
@@ -1491,6 +1492,7 @@ impl Game {
             reality_change_ticks,
             pending_mutation_direction,
             pending_ability_direction,
+            duelist_target_id,
             next_item_instance_serial,
             next_gold_pile_serial,
             explored,
@@ -1767,6 +1769,7 @@ impl Game {
         player.reality_change_ticks = self.reality_change_ticks;
         player.pending_mutation_direction = self.pending_mutation_direction.clone();
         player.pending_ability_direction = self.pending_ability_direction.clone();
+        player.duelist_target_id = self.duelist_target_id.clone();
         player.body_slots = self
             .body_slots
             .iter()

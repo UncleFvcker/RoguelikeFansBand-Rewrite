@@ -233,7 +233,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 120;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 121;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -884,6 +884,7 @@ pub struct Game {
     reality_change_ticks: u8,
     pending_mutation_direction: Option<PendingMutationDirectionDto>,
     pending_ability_direction: Option<PendingAbilityDirectionDto>,
+    duelist_target_id: Option<String>,
     next_item_instance_serial: u64,
     next_gold_pile_serial: u64,
     explored: Vec<bool>,
@@ -1121,6 +1122,7 @@ impl Game {
                 if self.ability_state_unavailable_reason(ability_id).is_some()
                     || self.mindcraft_cast_is_zero_time_unavailable(ability_id, target)
                     || self.berserker_cast_is_zero_time_unavailable(ability_id, target)
+                    || self.duelist_cast_is_zero_time_unavailable(ability_id, target)
         );
         if let Some(direction) = local_travel_direction {
             action = GameAction::Move { direction };
@@ -1148,6 +1150,7 @@ impl Game {
             && !matches!(
                 &action,
                 GameAction::Retire
+                    | GameAction::ClearDuelistChallenge
                     | GameAction::AcceptTask { .. }
                     | GameAction::BuyFromShop { .. }
                     | GameAction::ClaimTaskReward { .. }
@@ -1269,6 +1272,10 @@ impl Game {
         }
 
         match action {
+            GameAction::ClearDuelistChallenge => {
+                self.duelist_target_id = None;
+                events.push(DomainEvent::DuelistChallengeCleared);
+            }
             GameAction::AcceptTask {
                 facility_id,
                 task_id,
@@ -2264,6 +2271,7 @@ impl Game {
             self.record_mogaminator_resolutions(resolutions, &mut events, &mut changed);
         }
 
+        self.refresh_duelist_challenge();
         if advances_world && !self.player_is_dead() {
             events.extend(self.resolve_wilderness_terrain_hazard(self.player.position));
         }
@@ -2372,6 +2380,7 @@ impl Game {
             &mut events,
             &mut changed,
         );
+        self.refresh_duelist_challenge();
 
         if self.world_tick != world_tick_before_command && self.map_scale == MapScaleDto::Local {
             // Clear only the grace windows that existed before this command.
@@ -2751,6 +2760,7 @@ impl Game {
                 continue;
             };
             let removed = self.entities.remove(index);
+            self.clear_duelist_challenge_for(&removed.id);
             if self.riding_actor_id.as_deref() == Some(removed.id.as_str()) {
                 self.riding_actor_id = None;
             }

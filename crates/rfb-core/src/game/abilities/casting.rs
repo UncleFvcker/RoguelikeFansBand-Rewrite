@@ -59,6 +59,17 @@ impl Game {
             return Some("anti-magic");
         }
         let ability = self.content.ability(ability_id)?;
+        if self.player_is_duelist() && ability.tags.iter().any(|tag| tag == "duelist-technique") {
+            if let Some(reason) = self.duelist_equipment_error() {
+                return Some(reason);
+            }
+            if self.player_has_anti_magic() {
+                return Some("anti-magic");
+            }
+            if self.player_has_status_kind(STATUS_BERSERK) {
+                return Some("berserk");
+            }
+        }
         if super::mindcraft::is_mindcraft_spell(ability) {
             if self.player_has_anti_magic() {
                 return Some("anti-magic");

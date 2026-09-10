@@ -170,6 +170,7 @@ impl Game {
         let removed_id = actor.id.clone();
         let position = actor.position;
         self.entities.remove(actor_index);
+        self.clear_duelist_challenge_for(&removed_id);
         let removed_item_ids = self
             .items
             .iter()

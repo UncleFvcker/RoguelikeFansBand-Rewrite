@@ -1581,6 +1581,7 @@ impl Game {
                 }
             }
             self.entities = active_entities;
+            self.refresh_duelist_challenge();
             floor.entities.sort_by(|left, right| left.id.cmp(&right.id));
 
             let mut active_items = Vec::with_capacity(self.items.len());

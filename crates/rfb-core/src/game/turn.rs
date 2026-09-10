@@ -732,6 +732,7 @@ impl Game {
                 let target_kind_id = self.entities[index].kind_id.clone();
                 let removed_id = self.entities[index].id.clone();
                 self.entities.remove(index);
+                self.clear_duelist_challenge_for(&removed_id);
                 if self.riding_actor_id.as_deref() == Some(removed_id.as_str()) {
                     self.riding_actor_id = None;
                 }
