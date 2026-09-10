@@ -1233,7 +1233,8 @@ pub struct DemoItemCoverageReport {
     pub mechanics_ready: Vec<DemoItemCoverageEntry>,
     pub blocked: Vec<DemoItemCoverageEntry>,
     pub original_item_ids: Vec<String>,
-    pub p3_plan: DemoItemPlanProgress,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub p3_plan: Option<DemoItemPlanProgress>,
 }
 
 #[derive(Debug, Serialize, PartialEq, Eq)]
@@ -16265,14 +16266,24 @@ fn item_coverage_blockers(
     blockers
 }
 
-fn formal_item_ids(items_dir: &Path) -> Result<BTreeSet<String>, LegacyImportError> {
+#[derive(Debug, Clone, Copy, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoItemBaseIdentity {
+    source_index: u32,
+    tval: u16,
+    sval: u16,
+}
+
+fn formal_items(
+    items_dir: &Path,
+) -> Result<BTreeMap<String, Option<DemoItemBaseIdentity>>, LegacyImportError> {
     if !items_dir.is_dir() {
         return Err(LegacyImportError::InvalidDemoItemAudit(format!(
             "formal items directory does not exist: {}",
             items_dir.display()
         )));
     }
-    let mut ids = BTreeSet::new();
+    let mut items = BTreeMap::new();
     for entry in fs::read_dir(items_dir)? {
         let path = entry?.path();
         if path.extension().and_then(|value| value.to_str()) != Some("json") {
@@ -16285,13 +16296,17 @@ fn formal_item_ids(items_dir: &Path) -> Result<BTreeSet<String>, LegacyImportErr
                 path.display()
             ))
         })?;
-        if !ids.insert(id.to_owned()) {
+        let base = value
+            .get("rfbBaseKind")
+            .map(|base| serde_json::from_value(base.clone()))
+            .transpose()?;
+        if items.insert(id.to_owned(), base).is_some() {
             return Err(LegacyImportError::InvalidDemoItemAudit(format!(
                 "duplicate formal item id {id}"
             )));
         }
     }
-    Ok(ids)
+    Ok(items)
 }
 
 const DEMO_ITEM_ACTIVE_REQUIREMENTS: [&str; 5] = [
@@ -16554,10 +16569,11 @@ fn build_demo_item_coverage_report(
     entries: &[LegacyItemEntry],
     selection: &DemoItemSelection,
     adaptations: &DemoItemAdaptationLedger,
-    plan: &DemoItemPlan,
-    formal_ids: &BTreeSet<String>,
+    plan: Option<&DemoItemPlan>,
+    formal_items: &BTreeMap<String, Option<DemoItemBaseIdentity>>,
     terrain_creation: &TerrainCreationImportIds,
 ) -> Result<DemoItemCoverageReport, LegacyImportError> {
+    let formal_ids = formal_items.keys().cloned().collect::<BTreeSet<_>>();
     if selection.schema_version != 1 || selection.items.is_empty() {
         return Err(LegacyImportError::InvalidDemoItemAudit(
             "selection must use schemaVersion 1 and contain at least one item".to_owned(),
@@ -16712,6 +16728,38 @@ fn build_demo_item_coverage_report(
         }
     }
 
+    // Newer imports declare their source identity on the formal item itself.
+    // Keep aliases in the ledger, but never count an existing canonical base as missing.
+    let mut canonical_sources = BTreeSet::new();
+    for (id, base) in formal_items {
+        let Some(base) = base else { continue };
+        let source = by_index.get(&base.source_index).ok_or_else(|| {
+            LegacyImportError::InvalidDemoItemAudit(format!(
+                "unknown formal source index {} for {id}",
+                base.source_index
+            ))
+        })?;
+        if (source.tval, source.sval) != (base.tval, base.sval)
+            || !canonical_sources.insert(base.source_index)
+            || formal_item_ids_by_source
+                .iter()
+                .any(|(index, ids)| *index != base.source_index && ids.contains(id))
+            || adaptation_statuses
+                .get(&base.source_index)
+                .is_some_and(|status| *status != DemoItemCoverageStatus::Active)
+        {
+            return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                "conflicting formal source identity for {id}"
+            )));
+        }
+        active_sources.insert(base.source_index);
+        mapped_formal_ids.insert(id.clone());
+        formal_item_ids_by_source
+            .entry(base.source_index)
+            .or_default()
+            .insert(id.clone());
+    }
+
     let ammo = launcher_ammo_index(entries);
     let mut mechanics_ready = Vec::new();
     let mut blocked = Vec::new();
@@ -16747,19 +16795,23 @@ fn build_demo_item_coverage_report(
         .difference(&mapped_formal_ids)
         .cloned()
         .collect::<Vec<_>>();
-    let p3_plan = build_demo_item_plan_progress(
-        source_commit,
-        plan,
-        &by_index,
-        &active_sources,
-        &mechanics_ready,
-        &blocked,
-        &formal_item_ids_by_source,
-        by_index.len(),
-        formal_ids.len(),
-        mapped_formal_ids.len(),
-        original_item_ids.len(),
-    )?;
+    let p3_plan = plan
+        .map(|plan| {
+            build_demo_item_plan_progress(
+                source_commit,
+                plan,
+                &by_index,
+                &active_sources,
+                &mechanics_ready,
+                &blocked,
+                &formal_item_ids_by_source,
+                by_index.len(),
+                formal_ids.len(),
+                mapped_formal_ids.len(),
+                original_item_ids.len(),
+            )
+        })
+        .transpose()?;
     let report = DemoItemCoverageReport {
         schema_version: 1,
         source_commit: source_commit.to_owned(),
@@ -16789,7 +16841,7 @@ pub fn audit_demo_items(
     source: &Path,
     selection_path: &Path,
     adaptations_path: &Path,
-    plan_path: &Path,
+    plan_path: Option<&Path>,
     items_dir: &Path,
 ) -> Result<DemoItemCoverageReport, LegacyImportError> {
     let source_commit = resolve_legacy_content_commit(source)?;
@@ -16806,14 +16858,18 @@ pub fn audit_demo_items(
     let selection: DemoItemSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
     let adaptations: DemoItemAdaptationLedger =
         serde_json::from_slice(&fs::read(adaptations_path)?)?;
-    let plan: DemoItemPlan = serde_json::from_slice(&fs::read(plan_path)?)?;
+    let plan: Option<DemoItemPlan> = plan_path
+        .map(|path| -> Result<_, LegacyImportError> {
+            Ok(serde_json::from_slice(&fs::read(path)?)?)
+        })
+        .transpose()?;
     build_demo_item_coverage_report(
         &source_commit,
         &entries,
         &selection,
         &adaptations,
-        &plan,
-        &formal_item_ids(items_dir)?,
+        plan.as_ref(),
+        &formal_items(items_dir)?,
         &terrain_creation_import_ids(&terrain),
     )
 }
@@ -24467,7 +24523,7 @@ A:1/1
             "demo.item.original",
         ]
         .into_iter()
-        .map(str::to_owned)
+        .map(|id| (id.to_owned(), None))
         .collect();
         let mut plan = DemoItemPlan {
             schema_version: 1,
@@ -24502,7 +24558,7 @@ A:1/1
             &entries,
             &selection,
             &adaptations,
-            &plan,
+            Some(&plan),
             &formal_ids,
             &TerrainCreationImportIds::default(),
         )
@@ -24512,6 +24568,18 @@ A:1/1
                 .to_string()
                 .contains("missing completion requirements")
         );
+        let inventory = build_demo_item_coverage_report(
+            "test-commit",
+            &entries,
+            &selection,
+            &adaptations,
+            None,
+            &formal_ids,
+            &TerrainCreationImportIds::default(),
+        )
+        .expect("inventory does not claim historical P3 acceptance");
+        assert!(inventory.p3_plan.is_none());
+        assert_eq!(inventory.active_source_items, 2);
         plan.batches[0].families[0].items[0].completed_requirements = DEMO_ITEM_ACTIVE_REQUIREMENTS
             .into_iter()
             .map(str::to_owned)
@@ -24522,7 +24590,7 @@ A:1/1
             &entries,
             &selection,
             &adaptations,
-            &plan,
+            Some(&plan),
             &formal_ids,
             &TerrainCreationImportIds::default(),
         )
@@ -24537,11 +24605,64 @@ A:1/1
         assert!(!report.blocker_counts.contains_key("book-system"));
         assert_eq!(report.blocker_counts["potion-shatter-effect"], 1);
         assert_eq!(report.original_item_ids, ["demo.item.original"]);
-        assert_eq!(report.p3_plan.formal_items_delta, 2);
-        assert_eq!(report.p3_plan.mapped_rfb_formal_items_delta, 2);
-        assert_eq!(report.p3_plan.original_formal_items_delta, 0);
-        assert_eq!(report.p3_plan.batches[0].new_rfb_formal_items, 2);
-        assert_eq!(report.p3_plan.batches[0].blocked_to_active.len(), 1);
+        let p3 = report.p3_plan.unwrap();
+        assert_eq!(p3.formal_items_delta, 2);
+        assert_eq!(p3.mapped_rfb_formal_items_delta, 2);
+        assert_eq!(p3.original_formal_items_delta, 0);
+        assert_eq!(p3.batches[0].new_rfb_formal_items, 2);
+        assert_eq!(p3.batches[0].blocked_to_active.len(), 1);
+
+        let mut formal = formal_ids;
+        let base = DemoItemBaseIdentity {
+            source_index: 4,
+            tval: 90,
+            sval: 0,
+        };
+        formal.insert("demo.item.new-book".to_owned(), Some(base));
+        let inventory = build_demo_item_coverage_report(
+            "test-commit",
+            &entries,
+            &selection,
+            &adaptations,
+            None,
+            &formal,
+            &TerrainCreationImportIds::default(),
+        )
+        .expect("formal identity is counted without a duplicate legacy ledger row");
+        assert_eq!(inventory.active_source_items, 3);
+        assert_eq!(inventory.mapped_formal_items, 4);
+        assert_eq!(inventory.original_formal_items, 1);
+        assert!(
+            inventory
+                .mechanics_ready
+                .iter()
+                .all(|item| item.source_index != 4)
+        );
+
+        for (id, bad_base) in [
+            (
+                "demo.item.new-book",
+                DemoItemBaseIdentity { tval: 23, ..base },
+            ),
+            ("demo.item.dagger", base),
+            ("demo.item.new-book-copy", base),
+        ] {
+            let mut conflicting = formal.clone();
+            conflicting.insert(id.to_owned(), Some(bad_base));
+            assert!(
+                build_demo_item_coverage_report(
+                    "test-commit",
+                    &entries,
+                    &selection,
+                    &adaptations,
+                    None,
+                    &conflicting,
+                    &TerrainCreationImportIds::default(),
+                )
+                .is_err(),
+                "reject mismatched or duplicate canonical identity: {id}"
+            );
+        }
     }
 
     #[test]

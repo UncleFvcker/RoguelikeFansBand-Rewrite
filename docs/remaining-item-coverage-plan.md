@@ -1,6 +1,6 @@
 # 剩余物品覆盖计划
 
-状态：待实施。本次只完成现状核对与分批规划，没有导入内容或修改游戏规则。
+状态：I0 已完成，I1–I7 待实施。已校准来源清单和盘点命令，没有导入新物品或修改游戏规则。
 核对日期：2026-09-10；代码基线：`a7aef5bc644517a9dda597cb3f9abf4951df0a96`；工作树：`codex/realms-items`。
 本次来源为 `D:/codex/Frogcomposband/master` 的 `master` Git 对象，实际提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。实施每批时重新记录当时 ref 的实际提交并核对变化。
 
@@ -18,15 +18,15 @@
 | --- | --- | --- |
 | 正式物品 | `items/` 有 376 个定义，内容包 1.408.0 | 定义数量包括神器、改编物和别名，不能直接除以源 kind 数量 |
 | 原版基础记录 | `k_info.txt` 有 545 个 `N:` 记录，包含 `0:something` | 先区分有效内容、占位和特殊对象 |
-| 已有底材报告 | 327 mapped、10 no-natural-allocation、1 explicit-only、207 not-imported；自然分配 361 行 | 这是报告快照，尚未完全反映最新物品定义 |
-| 报告遗漏 | 正式包中有六个物品 ID 不在报告：`crystal-ball`、`mind-stone`、`eternity`、`palantir-of-westernesse`、`razorback`、`stone-of-mind`（均为 `demo.item.*`） | 前两个已带 source kind 609、624；后四个已有固定神器身份，不能重复导入 |
-| 当前底材身份 | 正式定义实际含 340 个不同 `rfbBaseKind.sourceIndex`；从报告的 not-imported 排除 609、624 后有 205 个候选记录，其中 137 个带自然分配行 | 205 是清单校准的起点，不是确认缺少 205 件可玩物品 |
-| 固定神器 | `a_info.txt` 有 392 个 `N:` 记录；正式包有 14 个 `artifactGeneration.sourceIndex` 映射 | 需要单独对表；剩余记录还须核对源用途、唯一性、底材、效果和获取限制，不能把差值直接当可导入数量 |
+| 底材报告 | I0 校准后为 327 mapped、10 no-natural-allocation、3 explicit-only、205 not-imported；自然分配仍为 361 行 | 报告已包含最新正式身份，没有新增自然候选 |
+| 原报告遗漏 | 六个 ID 已归位：`crystal-ball`、`mind-stone` 为 source kind 609、624；`eternity`、`palantir-of-westernesse`、`razorback`、`stone-of-mind` 为固定神器（均为 `demo.item.*`） | 前两个记 explicit-only 专用底材，后四个记显式神器，不能重复导入 |
+| 当前底材身份 | 340 个不同 `rfbBaseKind.sourceIndex`；剩余 205 个记录含占位 0，实际有效未映射记录为 204；其中 137 个带自然分配行 | 已逐项分类；记录存在或有 A 行不等于现在可以开放 |
+| 固定神器 | 392 个源记录已逐项对表；14 个有正式映射，378 个无定义，其中 98 个还缺底材 | I3 分类、flags/激活、源消费者引用和获取限制见核对清单，尚未逐件做规则验收 |
 | 装置 | 三类源底材已映射；当前正式配置的激活列表均为单项 | kind 覆盖不能证明 `devices.c` 的 wand/rod/staff 效果表已完整进入自然生成；必须按效果和入口另查 |
 | 共享生成 | 当前八构筑的五范围审计与已完成行为证据见[职业生成接入计划](class-generation-integration-plan.md) | 复用已有能力和证据；扩大候选池后复查实际受影响的规则和 RNG |
 
 依据：[正式物品](../packs/rfb-demo-original/items/)、[底材报告](../packs/rfb-demo-original/legacy-base-allocation-audit.json)、[来源选择](../packs/rfb-demo-original/legacy-item-selection.json)、[改编记录](../packs/rfb-demo-original/legacy-item-adaptations.json)、[生成矩阵](../design/ego-contract-audit.json)。
-六个漏记 ID 来自正式目录与报告的只读集合比较；本次没有运行会写入内容的 sync，也没有刷新上述报告。
+六个漏记 ID 来自正式目录与报告的集合比较；I0 先在临时副本运行同步，确认只有报告变化后更新正式报告。物品、名称、主题表及基础分配行均未变化。
 
 205 个候选记录可先作以下分流；同组不表示同一实现难度：
 
@@ -50,6 +50,20 @@
 - 旧 `audit-demo-items` 的 mechanics-ready 来自 importer 的 flags/行为支持判断，不等于自然入口或完整运行时验收；旧 P3 计划只作来源索引，不复活已完成待办。
 
 完成标准：没有未归类的剩余源记录，已有物品没有被重复列为待导入；得到 I1 的明确首组 ID 和缺口。清单变化只做文档/记录检查；实际同步若改动正式内容则按内容变更验证。
+
+I0 结果记录在[逐项核对清单](../design/remaining-item-coverage-review.json)。这是来源/依赖审查快照，复用底材报告；各行的 `reviewGroup` 提供所属批次、当前缺口、获取路径与消费者，固定神器另列 flags、激活和源 `ART_*` 引用。引用索引不代替后续逐件消费者审查，清单本身不开放任何内容。
+
+- 基础项：204 个有效剩余项及 1 个明确排除的占位记录，全部有分类。43 个普通装备候选、10 个龙鳞甲激活、39 个神器专用底材、43 本领域/自定义书等按实际依赖分流；毒针及镰刀内部表示不再按 importer 的 ready 标签误排为直接可用。
+- 固定神器：378 个缺失定义分为 269 个已有底材的内容接入、96 个以底材缺失为首要依赖、12 个身份敏感/竖琴分支、1 个零 rarity 专用奖励。98 个缺底材是跨分类统计，不与前述数字相加。源 332 的 W 行尾值按原版解析器忽略，不能擅自“修正”为推测重量/价格。
+- 装置：wand 39、rod 35、staff 47，共 121 行。14 行找到现有改编物品对应，其中只有 3 行属于 canonical 底材单项配置；107 行缺对应装置配置。112 行可找到同 token 的既有随机神器 profile，9 行不能直接复用该池；这不代表源装置参数或生成分布已实现。`tsunami-wand` 当前为锥形水伤害，与源 `BALL_WATER` 的球形不同，已列入 I2。
+- 中文依据：kind/artifact 中文源表及 `do_effect(SPELL_NAME)` 原字符串已记录，未自行翻译；本清单 unresolved 为 0。模板符号及 HEAL 随效果量选择的两个名称原样保留。
+- 记录与工具：修正四本 Sorcery/Nature 书的 `sourceId` 标点归一化，稳定 item ID 不变。现有 `audit-demo-items` 显式传 `-` 可只盘点当前物品，读取正式 `rfbBaseKind`，并拒绝未知、冲突或重复 canonical 身份；提供旧 plan 路径时仍严格检查旧 P3，不补填历史完成标签。
+
+当前盘点复现：设置 `RFB_LEGACY_SOURCE` 后运行 `cargo run -p rfb-legacy-import -- audit-demo-items packs/rfb-demo-original/legacy-item-selection.json packs/rfb-demo-original/legacy-item-adaptations.json - packs/rfb-demo-original/items`。
+当前命令输出 544 个有效源记录、340 个 active、55 个 importer mechanics-ready 和 149 个 blocked；它不检查正常创角可达性或执行游戏行为测试。基础分配的刷新命令仍见[内容开发](content-development.md)。
+
+**I1 首组已确定为六件普通重甲：**272 金属鳞甲、274 双层环甲、276 双层链甲、277 条板链甲、278 金属布面甲、279 板环甲。中文显示沿用源模板的现有单数化规则。
+当前缺口是正式物品定义、来源记录和分配行；复用现有护甲/命中/重量及 Ego 生成。先验证原始参数、真实分配到装备消费者和受影响 RNG/契约，不包含专属激活、神器或新交互。
 
 ### I1：补普通装备底材
 
@@ -116,4 +130,4 @@
 内容变化更新正式包版本及 lock，类型变化才生成对应 Schema/协议；按[内容开发](content-development.md)使用现有命令。普通候选池扩充仍可能改变全局 RNG 消费，按实际影响执行[验证与契约](testing.md)，说明差异再刷新必要 fixture。
 新增物品触及职业/主题/神器条件时同步来源审计、生成矩阵和只读 CI 检查；通用物品不机械复制八职业全套测试，仅补实际差异与缺失证据。
 
-本次规划仅核对 Git 对象、正式 JSON、审计输入与相关代码，检查文档链接、事实统计和 diff；没有运行游戏测试、生成审计、内容同步或桌面构建。下一步是 I0，尚未开始实施。
+I0 的盘点回归验证了当前身份计数、别名去重、显式跳过旧 P3，以及错误身份拒绝；来源清单、文档链接、内容锁和相关 lint/格式按本次变化核验。游戏规则、正式内容与共享 RNG 未变，不重跑游戏或桌面验收。下一步是 I1 首组六件重甲。

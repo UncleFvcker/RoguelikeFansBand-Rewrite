@@ -36,6 +36,9 @@ git -C D:/codex/Frogcomposband/master grep -n '目标符号' master -- src lib
 
 数据结构在 [definitions/](../crates/rfb-content/src/definitions/)，引用和约束在 [validation/](../crates/rfb-content/src/validation/)，源格式差异在 [source/](../crates/rfb-content/src/source/)。Importer 的入口在 [main.rs](../crates/rfb-legacy-import/src/main.rs)，选择和适配记录位于包根目录的 `legacy-*.json`。仅运行对应内容的 audit/sync，不为一个小批次重导整个包。
 
+剩余物品按[覆盖计划](remaining-item-coverage-plan.md)和[逐项核对清单](../design/remaining-item-coverage-review.json)分批接入。基础 kind、固定神器和装置效果分别计数；清单分类不能代替行为验收。
+设置 `RFB_LEGACY_SOURCE` 后，可用 `cargo run -p rfb-legacy-import -- audit-demo-items packs/rfb-demo-original/legacy-item-selection.json packs/rfb-demo-original/legacy-item-adaptations.json - packs/rfb-demo-original/items` 只读盘点当前来源映射与 importer 阻塞。`-` 明确不检查历史 P3 进度；需要核对历史计划时仍传原 plan 路径。正式物品自身的 `rfbBaseKind` 参与计数，不要求为同一身份重复补旧选择表；未覆盖消费者的 mechanics-ready 不得当作可玩完成。
+
 已有八个高阶法师领域，先查[状态](status.md)，不要按旧待办重新实现。种族专属能力归种族职业；领域法术、通用物品归法术道具；任务和设施引用的物品定义与物品方向共享。实际冲突按[并行协作](parallel-development.md)处理。
 
 ## 职业与领域 Build 的生成接入

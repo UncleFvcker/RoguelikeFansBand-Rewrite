@@ -81,6 +81,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.eternity",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.frost-ball-wand",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -112,6 +118,18 @@
     },
     {
       "itemId": "demo.item.pain",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.palantir-of-westernesse",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.razorback",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -162,6 +180,12 @@
       "itemId": "demo.item.staff-of-nothing",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": 313,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.stone-of-mind",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
       "status": "explicit-only"
     },
     {
@@ -8812,12 +8836,12 @@
     {
       "allocations": [],
       "hasNaturalAllocationRows": false,
-      "itemId": null,
+      "itemId": "demo.item.crystal-ball",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "INSTA_ART base; explicit artifact creation only",
       "sourceIndex": 609,
       "sourceName": "Crystal Ball",
-      "status": "not-imported",
+      "status": "explicit-only",
       "sval": 8,
       "tval": 39
     },
@@ -8992,12 +9016,12 @@
     {
       "allocations": [],
       "hasNaturalAllocationRows": false,
-      "itemId": null,
+      "itemId": "demo.item.mind-stone",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "INSTA_ART base; explicit artifact creation only",
       "sourceIndex": 624,
       "sourceName": "Stone",
-      "status": "not-imported",
+      "status": "explicit-only",
       "sval": 23,
       "tval": 39
     },
