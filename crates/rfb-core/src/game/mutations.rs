@@ -625,7 +625,8 @@ impl Game {
     ) -> bool {
         let friendly = self.rng.bounded(friendly_one_in) == 0;
         let depth = self.floor_depth(&self.current_floor_id).max(1);
-        let candidates = self.summon_category_candidate_kind_ids(category, None, depth, !friendly);
+        let candidates =
+            self.summon_category_candidate_kind_ids(category, None, depth, !friendly, friendly);
         if candidates.is_empty() {
             return false;
         }

@@ -223,7 +223,7 @@ impl Game {
             .saturating_add(self.rng.bounded(maximum_level_sides) + 1)
             .min(u64::from(u16::MAX)) as u16;
         let candidates = fixed_actor_kind_id.map_or_else(
-            || self.summon_category_candidate_kind_ids(category, None, maximum_level, false),
+            || self.summon_category_candidate_kind_ids(category, None, maximum_level, false, true),
             |kind_id| {
                 self.content
                     .actor(kind_id)
@@ -231,7 +231,7 @@ impl Game {
                         definition.role == ActorRole::Monster
                             && definition.level <= u32::from(maximum_level)
                             && actor_answers_summons(definition)
-                            && self.dungeon_allows_monster(&self.current_floor_id, definition)
+                            && self.dungeon_allows_monster(&self.current_floor_id, definition, true)
                     })
                     .map(|definition| vec![definition.id.clone()])
                     .unwrap_or_default()
@@ -330,7 +330,7 @@ impl Game {
     ) {
         let level = self.progress.level;
         let candidates =
-            self.summon_category_candidate_kind_ids(category, None, maximum_level, false);
+            self.summon_category_candidate_kind_ids(category, None, maximum_level, false, true);
         let owner_id = self.player.id.clone();
         let Some(kind_id) = (!candidates.is_empty()).then(|| {
             let choice = usize::try_from(self.rng.bounded(candidates.len() as u64))

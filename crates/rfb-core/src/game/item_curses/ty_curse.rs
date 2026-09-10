@@ -210,8 +210,13 @@ impl Game {
             "high-dragon" => "dragon",
             other => other,
         };
-        let mut candidates =
-            self.summon_category_candidate_kind_ids(base_category, None, level.max(1), unique);
+        let mut candidates = self.summon_category_candidate_kind_ids(
+            base_category,
+            None,
+            level.max(1),
+            unique,
+            false,
+        );
         if matches!(category, "high-undead" | "high-dragon") {
             candidates.retain(|id| {
                 self.content.actor(id).is_some_and(|actor| match category {

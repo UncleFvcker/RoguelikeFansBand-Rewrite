@@ -755,6 +755,10 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
+        // GAZE also reaches make_attack_normal / mon_attack_mon through GF_ATTACK.
+        if self.dungeon_blocks_melee() {
+            return Ok(());
+        }
         if target.is_player() {
             if adjacent(self.entities[source_index].position, target.position())
                 && let Some(broken) = self.try_monster_break_warding_glyph(
@@ -1542,6 +1546,9 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<bool, CoreError> {
+        if self.dungeon_blocks_melee() {
+            return Ok(false);
+        }
         let source_entity_id = self.entities[index].id.clone();
         let kind_id = self.entities[index].kind_id.clone();
         let nice = self.entities[index].nice;

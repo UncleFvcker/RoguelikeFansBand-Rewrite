@@ -1516,7 +1516,7 @@ impl Game {
                     return false;
                 };
                 if definition.role != ActorRole::Monster
-                    || !self.dungeon_allows_monster(floor_id, definition)
+                    || !self.dungeon_allows_monster(floor_id, definition, false)
                     || allocation.wild_only
                     || self.actor_kind_is_dungeon_guardian(&definition.id)
                     || definition.level > u32::from(selection_level)
@@ -1940,6 +1940,9 @@ impl Game {
                 .into_iter()
                 .find(|target| target.position() == position)
             {
+                if !self.monster_attempts_melee(index) {
+                    continue;
+                }
                 self.resolve_monster_melee_target(
                     index,
                     &target,

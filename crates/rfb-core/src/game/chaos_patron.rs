@@ -650,6 +650,7 @@ impl Game {
             None,
             maximum_level.max(1),
             allow_unique,
+            !hostile,
         );
         let positions = self
             .open_positions_around_for_actor_kinds(self.player.position, 3, &candidates)

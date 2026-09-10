@@ -413,7 +413,11 @@ fn dungeon_anti_magic_generation_ambient_and_summon_allocation_share_target_cont
         generated
             .entities
             .iter()
-            .all(|a| game.dungeon_allows_monster(FLOOR, game.content.actor(&a.kind_id).unwrap()))
+            .all(|a| game.dungeon_allows_monster(
+                FLOOR,
+                game.content.actor(&a.kind_id).unwrap(),
+                false
+            ))
     );
     game.current_floor_id = FLOOR.to_owned();
     for (kind, allowed) in [
@@ -424,17 +428,21 @@ fn dungeon_anti_magic_generation_ambient_and_summon_allocation_share_target_cont
         ("novice-mage", false),
     ] {
         let actor = game.content.actor(&format!("demo.actor.{kind}")).unwrap();
-        assert_eq!(game.dungeon_allows_monster(FLOOR, actor), allowed, "{kind}");
+        assert_eq!(
+            game.dungeon_allows_monster(FLOOR, actor, false),
+            allowed,
+            "{kind}"
+        );
     }
     let yeti = game.content.actor("demo.actor.yeti").unwrap();
     assert!(yeti.monster_casting.is_none()); // Possessor-only BERSERK still qualifies.
-    let candidates = game.summon_category_candidate_kind_ids("any-monster", None, 80, false);
+    let candidates = game.summon_category_candidate_kind_ids("any-monster", None, 80, false, true);
     assert!(!candidates.is_empty());
-    assert!(
-        candidates
-            .iter()
-            .all(|id| game.dungeon_allows_monster(FLOOR, game.content.actor(id).unwrap()))
-    );
+    assert!(candidates.iter().all(|id| game.dungeon_allows_monster(
+        FLOOR,
+        game.content.actor(id).unwrap(),
+        true
+    )));
     for scroll in [
         "demo.item.summoning-scroll",
         "demo.item.pet-summoning-scroll",
@@ -460,7 +468,11 @@ fn dungeon_anti_magic_generation_ambient_and_summon_allocation_share_target_cont
             .unwrap();
         assert!(!summoned.entities.is_empty(), "{scroll}");
         assert!(summoned.entities.iter().all(|a| {
-            summoned.dungeon_allows_monster(FLOOR, summoned.content.actor(&a.kind_id).unwrap())
+            summoned.dungeon_allows_monster(
+                FLOOR,
+                summoned.content.actor(&a.kind_id).unwrap(),
+                true,
+            )
         }));
         assert!(
             summoned
@@ -486,9 +498,9 @@ fn dungeon_anti_magic_generation_ambient_and_summon_allocation_share_target_cont
     game.process_ambient_monster_allocation(&mut BTreeSet::new())
         .unwrap();
     assert!(!game.entities.is_empty());
-    assert!(
-        game.entities
-            .iter()
-            .all(|a| game.dungeon_allows_monster(FLOOR, game.content.actor(&a.kind_id).unwrap()))
-    );
+    assert!(game.entities.iter().all(|a| game.dungeon_allows_monster(
+        FLOOR,
+        game.content.actor(&a.kind_id).unwrap(),
+        false
+    )));
 }

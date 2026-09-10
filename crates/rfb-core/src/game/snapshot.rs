@@ -645,6 +645,7 @@ impl Game {
                             .is_some_and(|learning| learning.remaining_slots > 0),
                     can_forget: source == AbilitySourceDto::Learned && learned,
                     can_cast: !self.dungeon_blocks_player_ability(&ability.id)
+                        && !self.dungeon_blocks_vampirism(&ability.id)
                         && match source {
                             AbilitySourceDto::Class
                             | AbilitySourceDto::Mutation

@@ -136,6 +136,9 @@
         "noMagic": {
           "type": "boolean"
         },
+        "noMelee": {
+          "type": "boolean"
+        },
         "rootFloorId": {
           "type": "string"
         },

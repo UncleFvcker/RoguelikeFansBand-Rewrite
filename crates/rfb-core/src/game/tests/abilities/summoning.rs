@@ -895,11 +895,13 @@ fn raise_dead_is_deterministic_and_enforces_faction_group_and_unique_rules() {
         Some("high-undead"),
         25 * 3 / 2,
         false,
+        true,
     );
     let shallow_hostile_candidates = shallow_setup.summon_category_candidate_kind_ids(
         "undead",
         Some("high-undead"),
         25 * 3 / 2,
+        true,
         true,
     );
     let (shallow, shallow_resolution) = cast(0, 25);

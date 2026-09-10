@@ -28,14 +28,28 @@ impl Game {
         &self,
         floor_id: &str,
         actor: &rfb_content::ActorDefinition,
+        player_summon: bool,
     ) -> bool {
-        !self
-            .floor_dungeon(floor_id)
-            .is_some_and(|dungeon| dungeon.no_magic)
-            || actor
-                .allocation
-                .as_ref()
-                .is_some_and(|allocation| allocation.legacy_index == 1040)
-            || actor.tags.iter().any(|tag| tag == "innate-spell")
+        let Some(dungeon) = self.floor_dungeon(floor_id) else {
+            return true;
+        };
+        if actor
+            .allocation
+            .as_ref()
+            .is_some_and(|allocation| allocation.legacy_index == 1040)
+        {
+            return true;
+        }
+        // monster2.c: restrict_monster_to_dungeon. Pets are enabled in this game;
+        // the exception follows SUMMON_WHO_PLAYER, even when its result is hostile.
+        (!dungeon.no_magic || actor.tags.iter().any(|tag| tag == "innate-spell"))
+            && (!dungeon.no_melee
+                || player_summon
+                || actor.tags.iter().any(|tag| tag == "attack-spell"))
+    }
+
+    pub(super) fn dungeon_blocks_melee(&self) -> bool {
+        self.floor_dungeon(&self.current_floor_id)
+            .is_some_and(|dungeon| dungeon.no_melee)
     }
 }

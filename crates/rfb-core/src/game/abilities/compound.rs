@@ -1226,7 +1226,8 @@ impl Game {
         let mut all_kind_ids = Vec::new();
         let mut all_positions = Vec::new();
         for _ in 0..12 {
-            let candidates = self.summon_category_candidate_kind_ids("knight", None, level, false);
+            let candidates =
+                self.summon_category_candidate_kind_ids("knight", None, level, false, true);
             let leader_positions =
                 self.open_positions_around_for_actor_kinds(self.player.position, 4, &candidates);
             if candidates.is_empty() || leader_positions.is_empty() {

@@ -1155,7 +1155,8 @@ fn crusade_summon_angel_preserves_one_in_three_hostility_and_fixed_level_cap() {
                 if (expected_rng.bounded(3) == 0) != hostile {
                     return None;
                 }
-                let candidates = game.summon_category_candidate_kind_ids("angel", None, 57, false);
+                let candidates =
+                    game.summon_category_candidate_kind_ids("angel", None, 57, false, true);
                 if candidates.is_empty() {
                     return None;
                 }
@@ -2290,8 +2291,13 @@ fn daemon_summon_demon_preserves_one_in_three_dynamic_level_and_group_boundary()
                     + 1;
                 let maximum_level =
                     spell_power_value(raw_maximum, bonus).min(u64::from(u16::MAX)) as u16;
-                let candidates =
-                    game.summon_category_candidate_kind_ids("demon", None, maximum_level, false);
+                let candidates = game.summon_category_candidate_kind_ids(
+                    "demon",
+                    None,
+                    maximum_level,
+                    false,
+                    true,
+                );
                 if candidates.is_empty() {
                     return None;
                 }

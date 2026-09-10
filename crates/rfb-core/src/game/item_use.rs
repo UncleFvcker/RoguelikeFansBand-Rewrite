@@ -684,7 +684,13 @@ impl Game {
         let candidate_kind_ids = if category == "player-kin" {
             Vec::new()
         } else {
-            self.summon_category_candidate_kind_ids(category, None, maximum_level, *allow_unique)
+            self.summon_category_candidate_kind_ids(
+                category,
+                None,
+                maximum_level,
+                *allow_unique,
+                true,
+            )
         };
         let normal_maximum =
             usize::from(*count_dice) * usize::from(*count_sides) + usize::from(*count_bonus);
