@@ -225,6 +225,7 @@ Bad Luck 在每次固定神器尝试前单独降低参考层级，并在 Tomte �
 **E8.7 尚不等于全部当前入口完成源端对齐。** 按 [E8.1 入口范围](contract-v312-real-equipment-value.md)，
 完整底材分配仍是独立缺口：Acquirement 的 Archer/Sniper 弓、Cavalry 骑乘武器、High Mage 装置/领域书偏好，
 装备兼容/最爱武器筛选、发现书本计数、失败重试及完整主题底材池尚待闭合；不能归入“职业未开放”。
+具体依赖、B0–B6 实施批次与验收见[完整底材分配与 Acquirement 计划](base-allocation-acquirement-plan.md)。
 其余待开放条件包括 Berserker、Sexy/Aphrodite、神器卷轴职业 bias/德行、Inspired Smithing 重铸、
 Draconian Metamorphosis 和固定神器身份分支。正式包已有 Dr Jones 鞭的普通行为，Archaeologist 奖励分支未开放；
 其他九件身份敏感固定神器和固定神器竖琴尚未导入。Monster Ring 的类别加权条件还比较了分配表未使用的
