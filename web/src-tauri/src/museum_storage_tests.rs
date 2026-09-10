@@ -8,7 +8,7 @@ use std::{
     process::{Command, Stdio},
 };
 
-const MUSEUM: &str = "demo.town-facility.thalos-museum";
+const MUSEUM: &str = "demo.town-facility.outpost-museum";
 
 fn fixture(root: &Path, name: &str) -> AppState {
     let state = AppState::new(root.to_owned());
@@ -23,30 +23,11 @@ fn fixture(root: &Path, name: &str) -> AppState {
         .unwrap();
     let mut guard = state.lock_session().unwrap();
     let session = guard.as_mut().unwrap();
-    let mut game = session.recorder.game().clone();
-    game.dispatch(GameCommandEnvelope {
-        command_seq: 1,
-        expected_revision: 0,
-        command: GameCommand::EnterWorldMap {
-            leave_pets: false,
-            cancel_recall: false,
-        },
-    })
-    .unwrap();
-    let mut save = game.to_save();
-    save.wilderness_position = Some(Position { x: 17, y: 29 });
-    let mut game = Game::from_save(save).unwrap();
-    game.dispatch(GameCommandEnvelope {
-        command_seq: 2,
-        expected_revision: 1,
-        command: GameCommand::LeaveWorldMap,
-    })
-    .unwrap();
-    let mut save = game.to_save();
-    save.player.position = Position { x: 108, y: 32 };
+    let mut save = session.recorder.game().to_save();
+    save.player.position = Position { x: 97, y: 46 };
     save.home_states
         .iter_mut()
-        .find(|home| home.facility_id == MUSEUM)
+        .find(|home| home.facility_id == "demo.town-facility.thalos-museum")
         .unwrap()
         .visited = true;
     session.recorder = ReplayRecorder::new(Game::from_save(save).unwrap());
@@ -231,56 +212,42 @@ fn missing_foreign_or_unbound_profiles_are_not_adopted() {
 }
 
 #[test]
-fn entering_a_museum_town_imports_the_profile_through_native_dispatch() {
+fn new_character_imports_the_profile_at_the_outpost_museum() {
     let root = root();
     let donor = fixture(&root, "Donor");
     dispatch(&donor, deposit(&donor)).unwrap();
     let recipient = AppState::new(root);
-    recipient
+    let initial = recipient
         .initialize(
             "43",
             "demo.build.warrior",
             "demo.race.rfb-human",
             "Recipient",
-            "2026-09-09T00:00:00Z".to_owned(),
+            "2026-09-10T00:00:00Z".to_owned(),
         )
         .unwrap();
-    dispatch(
-        &recipient,
-        GameCommand::EnterWorldMap {
-            leave_pets: false,
-            cancel_recall: false,
-        },
-    )
-    .unwrap();
-    {
-        let mut guard = recipient.lock_session().unwrap();
-        let session = guard.as_mut().unwrap();
-        assert!(!session.recorder.game().has_shared_museum());
-        let mut save = session.recorder.game().to_save();
-        save.wilderness_position = Some(Position { x: 17, y: 29 });
-        session.recorder = ReplayRecorder::new(Game::from_save(save).unwrap());
-    }
-    let update = dispatch(&recipient, GameCommand::LeaveWorldMap).unwrap();
-    {
-        let guard = recipient.lock_session().unwrap();
-        let session = guard.as_ref().unwrap();
-        assert_eq!(
-            session
-                .recorder
-                .game()
-                .shared_museum()
-                .unwrap()
-                .inventory
-                .len(),
-            1
-        );
-        assert_eq!(update.state_hash, session.recorder.game().state_hash());
-        assert!(session.recorder.replay_snapshot().commands.is_empty());
-    }
+    let museum = initial.homes.iter().find(|home| home.id == MUSEUM).unwrap();
+    assert_eq!(museum.entrance_position, Position { x: 97, y: 46 });
+    assert!(!museum.player_at_entrance);
+    assert!(museum.stored_items.is_empty());
+    let guard = recipient.lock_session().unwrap();
+    let session = guard.as_ref().unwrap();
+    assert!(session.museum_loaded);
+    assert_eq!(
+        session
+            .recorder
+            .game()
+            .shared_museum()
+            .unwrap()
+            .inventory
+            .len(),
+        1
+    );
+    assert!(session.recorder.replay_snapshot().commands.is_empty());
+    drop(guard);
     assert_eq!(
         recipient.load(&save(&recipient)).unwrap().state_hash,
-        update.state_hash
+        initial.state_hash
     );
 }
 

@@ -10581,7 +10581,7 @@ fn town_entrances_and_shared_facilities_match_source() {
                 .values()
                 .filter(|id| **id == "demo.terrain.permanent-wall")
                 .count(),
-            856
+            855
         );
         assert_eq!(
             tiles
@@ -10591,6 +10591,7 @@ fn town_entrances_and_shared_facilities_match_source() {
             7
         );
         assert_eq!(tiles[&(150, 31)], "demo.terrain.stairs-down");
+        assert_eq!(tiles[&(97, 46)], "demo.terrain.museum-entrance");
         assert_eq!(world.player.position, ContentPosition { x: 99, y: 33 });
         for x in [99, 100, 101] {
             assert_eq!(tiles[&(x, 33)], "demo.terrain.floor");

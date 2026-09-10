@@ -41,7 +41,7 @@
       "playerEnergyNeed": 0,
       "playerSpeed": 120,
       "revision": 2,
-      "stateHash": "0e607a4f1283a3756d8f53107ef45012a88d3431ccac32336976cbfee8aaa68d",
+      "stateHash": "a109aecdb5fee11cd621f67d93baedc7bf179693bb29b55cb52e833d1ab8a55c",
       "turn": 2
     },
     "events": [
@@ -59,6 +59,6 @@
         "args": {}
       }
     ],
-    "saveRoundTripStateHash": "0e607a4f1283a3756d8f53107ef45012a88d3431ccac32336976cbfee8aaa68d"
+    "saveRoundTripStateHash": "a109aecdb5fee11cd621f67d93baedc7bf179693bb29b55cb52e833d1ab8a55c"
   }
 }

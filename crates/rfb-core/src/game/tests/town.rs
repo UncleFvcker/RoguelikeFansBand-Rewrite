@@ -19,6 +19,7 @@ const ANAMBAR_HOME_ID: &str = "demo.town-facility.anambar-home";
 const ANAMBAR_INN_ID: &str = "demo.shop.anambar-inn";
 const THALOS_INN_ID: &str = "demo.shop.thalos-inn";
 const THALOS_MUSEUM_ID: &str = "demo.town-facility.thalos-museum";
+const OUTPOST_MUSEUM_ID: &str = "demo.town-facility.outpost-museum";
 const ANAMBAR_LIBRARY_ID: &str = "demo.town-facility.anambar-library";
 const ANAMBAR_WEAPON_MASTER_ID: &str = "demo.town-facility.anambar-weapon-master";
 const ANAMBAR_WARRIOR_GUILD_ID: &str = "demo.town-facility.anambar-warrior-guild";
@@ -2199,6 +2200,43 @@ fn stock_item_id(game: &Game, kind_id: &str) -> String {
 }
 
 #[test]
+fn outpost_count_three_doors_share_one_task_service_and_accepted_task() {
+    let mut game = outpost_count_game(42);
+    game.player.position = Position { x: 97, y: 23 };
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: OUTPOST_COUNT_ID.to_owned(),
+            task_id: "demo.task.thieves-hideout".to_owned(),
+        },
+    );
+    let tasks = game.task_states.clone();
+    let draws = game.rng_draw_counter();
+    for x in [97, 98, 99] {
+        game.player.position = Position { x, y: 23 };
+        let services = game
+            .snapshot()
+            .task_services
+            .into_iter()
+            .filter(|service| service.id == OUTPOST_COUNT_ID)
+            .collect::<Vec<_>>();
+        assert_eq!(services.len(), 1);
+        assert!(services[0].player_at_entrance);
+        assert_eq!(
+            services[0]
+                .tasks
+                .iter()
+                .find(|task| task.task_id == "demo.task.thieves-hideout")
+                .unwrap()
+                .status,
+            TaskStatusKindDto::Taken
+        );
+        assert_eq!(game.task_states, tasks);
+        assert_eq!(game.rng_draw_counter(), draws);
+    }
+}
+
+#[test]
 fn outpost_shops_are_projected_from_authoritative_content() {
     let game = Game::new_with_build(42, "demo.build.warrior").expect("Warrens game should start");
     let snapshot = game.snapshot();
@@ -2207,13 +2245,23 @@ fn outpost_shops_are_projected_from_authoritative_content() {
     assert_eq!(town.floor_id, "demo.floor.surface");
     assert!(town.visited);
     assert_eq!(snapshot.shops.len(), 10);
-    assert_eq!(snapshot.homes.len(), 1);
+    assert_eq!(snapshot.homes.len(), 2);
     assert_eq!(snapshot.homes[0].id, HOME_ID);
     assert_eq!(
         snapshot.homes[0].entrance_position,
         Position { x: 110, y: 44 }
     );
     assert!(!snapshot.homes[0].visited);
+    let museum = snapshot
+        .homes
+        .iter()
+        .find(|home| home.id == OUTPOST_MUSEUM_ID)
+        .unwrap();
+    assert_eq!(museum.entrance_position, Position { x: 97, y: 46 });
+    assert!(museum.museum);
+    assert!(game.has_shared_museum());
+    assert_eq!(game.home_states.len(), 2);
+    assert!(!game.home_states.contains_key(OUTPOST_MUSEUM_ID));
     let general_store = projected_shop(&snapshot.shops, GENERAL_STORE_ID);
     assert_eq!(general_store.entrance_position, Position { x: 70, y: 39 });
     assert_eq!(
@@ -2343,8 +2391,8 @@ fn p109c_thalos_inn_travels_to_a_visited_town_for_the_projected_price() {
 
 #[test]
 fn museums_share_ordinary_items_across_towns_and_reject_true_artifacts() {
-    let mut game = thalos_game(109);
-    game.player.position = Position { x: 108, y: 32 };
+    let mut game = Game::new_with_build(109, "demo.build.warrior").unwrap();
+    game.player.position = Position { x: 97, y: 46 };
     game.mark_shop_visited_at_player().unwrap();
     support::give_inventory_item(&mut game, "test.museum.dagger", "demo.item.dagger");
     game.items
@@ -2371,8 +2419,8 @@ fn museums_share_ordinary_items_across_towns_and_reject_true_artifacts() {
         .snapshot()
         .homes
         .into_iter()
-        .find(|home| home.id == THALOS_MUSEUM_ID)
-        .expect("Thalos Museum should be projected");
+        .find(|home| home.id == OUTPOST_MUSEUM_ID)
+        .expect("Outpost Museum should be projected");
     assert!(museum.player_at_entrance);
     assert!(
         museum
@@ -2390,7 +2438,7 @@ fn museums_share_ordinary_items_across_towns_and_reject_true_artifacts() {
     let rejected = dispatch_next(
         &mut game,
         GameCommand::DepositAtHome {
-            facility_id: THALOS_MUSEUM_ID.to_owned(),
+            facility_id: OUTPOST_MUSEUM_ID.to_owned(),
             item_id: "test.museum.arkenstone".to_owned(),
             quantity: 1,
         },
@@ -2401,7 +2449,7 @@ fn museums_share_ordinary_items_across_towns_and_reject_true_artifacts() {
     let deposited = dispatch_next(
         &mut game,
         GameCommand::DepositAtHome {
-            facility_id: THALOS_MUSEUM_ID.to_owned(),
+            facility_id: OUTPOST_MUSEUM_ID.to_owned(),
             item_id: "test.museum.dagger".to_owned(),
             quantity: 1,
         },
@@ -2415,8 +2463,8 @@ fn museums_share_ordinary_items_across_towns_and_reject_true_artifacts() {
         .snapshot()
         .homes
         .into_iter()
-        .find(|home| home.id == THALOS_MUSEUM_ID)
-        .expect("Thalos Museum should remain projected")
+        .find(|home| home.id == OUTPOST_MUSEUM_ID)
+        .expect("Outpost Museum should remain projected")
         .stored_items
         .into_iter()
         .find(|item| item.kind_id == "demo.item.dagger")
@@ -2424,6 +2472,14 @@ fn museums_share_ordinary_items_across_towns_and_reject_true_artifacts() {
     assert!(stored.inscription.is_none());
     assert!(stored.details.as_ref().unwrap().inscription.is_none());
     let home_before = game.home_states["demo.town-facility.outpost-home"].clone();
+    enter_town_facility(&mut game, THALOS_MUSEUM_ID);
+    let thalos_collection = game
+        .snapshot()
+        .homes
+        .into_iter()
+        .find(|home| home.id == THALOS_MUSEUM_ID)
+        .unwrap();
+    assert_eq!(thalos_collection.stored_items, vec![stored.clone()]);
     enter_morivant(&mut game);
     game.player.position = game
         .town_local_to_wilderness_view_position(MORIVANT_TOWN_ID, Position { x: 98, y: 17 })
@@ -3574,7 +3630,7 @@ fn anambar_home_uses_the_outpost_home_inventory() {
     game.wilderness_position = Some(Position { x: 26, y: 39 });
     dispatch_next(&mut game, GameCommand::LeaveWorldMap);
     assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
-    assert_eq!(game.home_states.len(), 1);
+    assert_eq!(game.home_states.len(), 2);
     assert!(game.home_states.contains_key(HOME_ID));
     let town_snapshot = game.snapshot();
     assert_eq!(town_snapshot.shops.len(), 10);

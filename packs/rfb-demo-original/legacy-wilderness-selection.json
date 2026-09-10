@@ -490,7 +490,9 @@
           "sourceTag": "BOOKSTORE"
         }
       ],
-      "specialFacilities": [],
+      "specialFacilities": [
+        { "symbol": "M", "sourceIndex": 95, "sourceTag": "MUSEUM", "sourceName": "博物馆" }
+      ],
       "buildings": [
         {
           "buildingIndex": 0,
