@@ -1,6 +1,6 @@
 # E8 六项共享生成契约实施计划
 
-日期：2026-09-10。状态：E8.1–E8.4、E8.5a–c 已实现，早期验证记录见 [contract-v312](contract-v312-real-equipment-value.md)、[contract-v313](contract-v313-negative-equipment.md)、[contract-v314](contract-v314-dragon-base-equipment.md)、[contract-v315](contract-v315-bag-containers.md)、[contract-v316](contract-v316-random-artifact-identity.md)；下一项为 E8.6。正/负向随机神器已接回自然调度，首饰外围价值重试仍待实现。
+日期：2026-09-10。状态：E8.1–E8.6 已实现，早期验证记录见 [contract-v312](contract-v312-real-equipment-value.md)、[contract-v313](contract-v313-negative-equipment.md)、[contract-v314](contract-v314-dragon-base-equipment.md)、[contract-v315](contract-v315-bag-containers.md)、[contract-v316](contract-v316-random-artifact-identity.md)；下一项为 E8.7 的构筑适用性核对。正/负向随机神器和首饰外围价值重试已接回自然调度。
 
 工作树：`D:/codex/RoguelikeFansBand-Rewrite-realms-items`，分支：`codex/realms-items`。
 代码基线：`1c9e62a2e`。缺口来自 [E8 集成审计](ego-integration-audit.md)。
@@ -25,7 +25,7 @@ Craft 领域四册/32 法术、怪物主题的完整基础物品分配表仍是�
 | E8.5a（已实现） | 随机神器实例身份、属性表示及消费者 | E8.1、E8.2 | 2 | 中 |
 | E8.5b（已实现） | 真实 `create_artifact`、命名与估值筛选 | E8.5a；E8.3 的底材处理 | 2 | 大 |
 | E8.5c（已实现） | 各非弹药类型的随机神器调度 | E8.5b | 2；3 的前置 | 中 |
-| E8.6 | 首饰价值上下限和完整重试 | E8.1、E8.2、E8.5c | 3 | 中 |
+| E8.6（已实现） | 首饰价值上下限和完整重试 | E8.1、E8.2、E8.5c | 3 | 中 |
 | E8.7 | 职业/种族专属分支逐项接入 | 对应构筑真实可玩，及其用到的前述批次 | 6 | 按构筑拆分 |
 | E8.8 | 当前构筑集成验收与更新审计 | E8.1–E8.6；当前开放构筑适用的 E8.7 | 前五项＋已开放构筑 | 中 |
 
@@ -173,7 +173,9 @@ UI 显示真实已知容量和权威 Ego 名，不恢复“完全鉴定”“无
 Craft 不新增随机神器抽样、光源特殊入口、随机神器保存后继续生成的序列一致。
 同步检验 E8.2 负向随机神器与 E8.3 龙系底材的交叉分支。
 
-## 7. E8.6：戒指与项链的价值重试
+## 7. E8.6：戒指与项链的价值重试（已实现）
+
+来源提交仍为 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。`jewelry.rs` 在循环外选择阈值并执行一次 `GREAT_OBJ` 抽样，每轮从原始草稿重新执行随机神器判定或 Ego 生成及诅咒结算，再用真实估值筛选；第 1001 个候选无条件采用。淘汰的候选保留 RNG 和神器名字登记，但不分配物品 ID。自然入口覆盖正/负 power 与强制神器模式；阈值函数按源位标志保留 FORCE_EGO/GREAT/QUEST 优先于 GOOD 的规则。现有显式 kind/affix 配置仍直接物化，不把它们宣称为完整的源端 FORCE_EGO/QUEST 奖励调度，入口差异见 [E8.1 契约](contract-v312-real-equipment-value.md)。
 
 来源：`ego.c:373 _get_jewelry_power_limit`、`:408 ego_create_ring`、`:430 ego_create_amulet`，
 以及内部 `_create_ring_aux/_create_amulet_aux`。修改 [jewelry.rs](../crates/rfb-core/src/game/ego/jewelry.rs)。
@@ -188,6 +190,8 @@ Craft 不新增随机神器抽样、光源特殊入口、随机神器保存后�
 验收：每个等级分段前一值/边界值，模式优先级、无上限、恰好上下限、下限不足/上限超出、
 第 1 次/多次/第 1001 次结果、负 power 和内部随机神器；比较最终实例及 RNG 终态。
 保留当前各首饰 Ego 分支测试，并补自然生成集成测试；首饰实测价值分布作为辅助报告。
+
+阈值、完整候选及自然入口验收位于 [generation_tests.rs](../crates/rfb-core/src/game/ego/jewelry/generation_tests.rs)。辅助采样保留正式基础分配的等级约束，按戒指/项链、等级 10/29/59/80 和 Good/Great 各连续生成 128 次；固定神器登记后单独计数，报告只作分布观察。运行 `cargo test -p rfb-core --lib --no-default-features jewelry_value_distribution_report -- --ignored --nocapture`，结果写入 `target/e86-jewelry-value-distribution.json`。
 
 ## 8. E8.7：尚未开放的职业/种族
 

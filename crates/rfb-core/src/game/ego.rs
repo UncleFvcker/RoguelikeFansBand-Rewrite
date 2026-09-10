@@ -3,12 +3,11 @@
 use std::collections::BTreeSet;
 
 pub(super) mod armor;
-pub(super) mod curses;
-mod jewelry;
-pub(super) use jewelry::roll as roll_jewelry;
 #[cfg(test)]
 mod contracts;
+pub(super) mod curses;
 pub(super) mod dragon;
+mod jewelry;
 mod noncraft;
 pub(super) use noncraft::base_bag_capacity;
 pub(super) use noncraft::item_has_ego;

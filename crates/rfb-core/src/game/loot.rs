@@ -857,10 +857,12 @@ impl Game {
                     self.content.item(&entry.item_kind_id).unwrap(),
                     generation_depth,
                 );
-            if rfb_generation
+            let random_artifact = if rfb_generation
+                && !rfb_jewelry
                 && !special_robe
                 && (!rfb_weapon || allow_weapon_ego)
-                && let Some((value_level, adjusted)) = base_kind.and_then(|base| {
+            {
+                base_kind.and_then(|base| {
                     super::random_artifact::scheduling::select(
                         &mut self.rng,
                         base,
@@ -869,7 +871,10 @@ impl Game {
                         mode,
                     )
                 })
-            {
+            } else {
+                None
+            };
+            if (rfb_jewelry && power != 0) || random_artifact.is_some() {
                 let draft = GeneratedItemDraft {
                     artifact_name: None,
                     intrinsic_melee_damage_dice: None,
@@ -897,26 +902,22 @@ impl Game {
                     charges: None,
                     fuel,
                 };
-                generated.push(self.materialize_random_artifact_draft(
-                    draft,
-                    context,
-                    value_level,
-                    power,
-                    adjusted,
-                ));
+                let draft = if rfb_jewelry {
+                    self.generate_jewelry_draft(draft, context, generation_depth, power, mode)
+                } else {
+                    let (value_level, adjusted) = random_artifact.unwrap();
+                    self.materialize_random_artifact_draft(
+                        draft,
+                        context,
+                        value_level,
+                        power,
+                        adjusted,
+                    )
+                };
+                generated.push(draft);
                 continue;
             }
-            let rfb_materialization = if rfb_jewelry && power != 0 {
-                self.content.item(&entry.item_kind_id).and_then(|item| {
-                    super::ego::roll_jewelry(
-                        &self.content,
-                        &mut self.rng,
-                        item,
-                        generation_depth,
-                        power,
-                    )
-                })
-            } else if rfb_device {
+            let rfb_materialization = if rfb_device {
                 self.content.item(&entry.item_kind_id).and_then(|item| {
                     super::ego::materialize_device(
                         &self.content,
