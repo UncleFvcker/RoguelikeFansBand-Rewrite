@@ -9028,3 +9028,11 @@ item-activation-demo-razorback-star-ball-name = 星之球
 floor-demo-rlyeh-depth-name = 拉莱耶 { $depth } 层
 terrain-demo-rlyeh-entrance-name = 拉莱耶入口
 terrain-demo-rlyeh-entrance-description = 通向拉莱耶的道路
+
+floor-demo-anti-magic-cave-depth-name = 反魔洞穴 { $depth } 层
+terrain-demo-anti-magic-cave-entrance-name = 反魔洞穴入口
+terrain-demo-anti-magic-cave-entrance-description = 通向充满反魔云雾的洞穴的入口
+
+floor-demo-anti-melee-cave-depth-name = 反近战洞穴 { $depth } 层
+terrain-demo-anti-melee-cave-entrance-name = 反近战洞穴入口
+terrain-demo-anti-melee-cave-entrance-description = 通向充满限制魔法场的洞穴的入口

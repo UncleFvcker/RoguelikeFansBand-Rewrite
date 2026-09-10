@@ -1441,6 +1441,15 @@ impl Game {
             .as_ref()
             .expect("allocation candidate must retain metadata");
         let base = 100 / allocation.rarity;
+        // RFB's default MODE_NONE accepts every race when no preferences are set.
+        if policy.preferred_glyphs.is_empty()
+            && policy.preferred_tags.is_empty()
+            && policy.preferred_movement_modes.is_empty()
+            && policy.preferred_habitats.is_empty()
+            && policy.preferred_damage_immunities.is_empty()
+        {
+            return base;
+        }
         if policy
             .preferred_glyphs
             .iter()

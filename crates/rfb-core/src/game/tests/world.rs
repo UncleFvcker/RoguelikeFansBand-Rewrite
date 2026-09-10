@@ -5,6 +5,268 @@ use crate::game::initialization::dungeon_substitution_uses_alternate;
 use crate::game::lighting::{DUNGEON_AMBIENT_LIGHT, SURFACE_AMBIENT_LIGHT};
 
 #[test]
+fn anti_magic_cave_real_entry_chain_and_return() {
+    anti_cave_round_trip(
+        1,
+        "anti-magic-cave",
+        "anti-melee-cave",
+        Position { x: 84, y: 6 },
+    );
+}
+
+#[test]
+fn anti_melee_cave_real_entry_chain_and_return() {
+    anti_cave_round_trip(
+        785,
+        "anti-melee-cave",
+        "anti-magic-cave",
+        Position { x: 47, y: 45 },
+    );
+}
+
+fn anti_cave_round_trip(seed: u64, slug: &str, suppressed: &str, world_position: Position) {
+    let mut game = Game::new_with_build(seed, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    // Use a legal high-level character for the turns spent entering level-40 ecology.
+    game.apply_player_experience(game.experience_required_for_level(50), &mut Vec::new());
+    choose_human_talent_if_pending(&mut game);
+    let dungeon_id = format!("demo.dungeon.{slug}");
+    let suppressed_id = format!("demo.dungeon.{suppressed}");
+    let guardian_id = format!("demo.guardian.{slug}-entrance.1");
+    assert!(game.dungeon_is_active(&dungeon_id));
+    assert!(!game.dungeon_is_active(&suppressed_id));
+    let suppressed_position = if slug == "anti-magic-cave" {
+        Position { x: 47, y: 45 }
+    } else {
+        Position { x: 84, y: 6 }
+    };
+    assert!(
+        game.wilderness_cell_dto(suppressed_position)
+            .locations
+            .iter()
+            .all(|l| l.id != suppressed_id)
+    );
+    assert!(
+        game.wilderness_cell_dto(world_position)
+            .locations
+            .iter()
+            .any(|l| l.id == dungeon_id)
+    );
+    dispatch_next(&mut game, enter_world_map_command());
+    game.wilderness_position = Some(suppressed_position);
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    assert!(
+        game.terrain
+            .iter()
+            .all(|t| t != &format!("demo.terrain.{suppressed}-entrance"))
+    );
+    assert!(
+        game.entities
+            .iter()
+            .all(|a| a.id != format!("demo.guardian.{suppressed}-entrance.1"))
+    );
+    assert!(
+        game.transition_floor(
+            format!("demo.floor.{suppressed}-depth-40"),
+            None,
+            None,
+            false
+        )
+        .unwrap()
+        .is_none()
+    );
+    clear_monsters(&mut game);
+    dispatch_next(&mut game, enter_world_map_command());
+    game.wilderness_position = Some(world_position);
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    place_player_on_terrain(&mut game, &format!("demo.terrain.{slug}-entrance"));
+    let departure = game.player.position;
+    let guardian = game
+        .entities
+        .iter_mut()
+        .find(|a| a.id == guardian_id)
+        .unwrap();
+    assert_eq!(
+        guardian.position,
+        Position {
+            x: departure.x + if slug == "anti-magic-cave" { 1 } else { -1 },
+            y: departure.y
+        }
+    );
+    guardian.hp = 7;
+    let hash = game.state_hash();
+    game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(hash, game.state_hash());
+    assert_eq!(
+        game.entities.iter().filter(|a| a.id == guardian_id).count(),
+        1
+    );
+    assert_eq!(
+        game.entities
+            .iter()
+            .find(|a| a.id == guardian_id)
+            .unwrap()
+            .hp,
+        7
+    );
+    assert!(!game.dungeon_blocks_magic());
+    assert!(!game.dungeon_blocks_melee());
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    clear_monsters(&mut game);
+    place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.player.position, departure);
+    assert_eq!(
+        game.entities.iter().filter(|a| a.id == guardian_id).count(),
+        1
+    );
+    assert_eq!(
+        game.entities
+            .iter()
+            .find(|a| a.id == guardian_id)
+            .unwrap()
+            .hp,
+        7
+    );
+    defeat_guardian_with_status(&mut game, &guardian_id, STATUS_BLEEDING);
+    assert!(game.dungeon_states[&dungeon_id].entrance_guardian_defeated);
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    let mut monster_count = 0;
+    for depth in 40..=50 {
+        game.player.hp = game.player_derived_stats().max_hp.value;
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(
+            game.current_floor_id,
+            format!("demo.floor.{slug}-depth-{depth}")
+        );
+        assert_eq!(game.dungeon_blocks_magic(), slug == "anti-magic-cave");
+        assert_eq!(game.dungeon_blocks_melee(), slug == "anti-melee-cave");
+        monster_count += game.entities.len();
+        for actor in &game.entities {
+            assert!(game.dungeon_allows_monster(
+                &game.current_floor_id,
+                game.content.actor(&actor.kind_id).unwrap(),
+                false
+            ));
+            assert!(!game.actor_kind_is_dungeon_guardian(&actor.kind_id));
+        }
+        clear_monsters(&mut game);
+        if depth < 50 {
+            place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+        }
+    }
+    assert!(
+        monster_count > 0,
+        "specialDiv=0 must retain ordinary monsters"
+    );
+    assert!(game.terrain.iter().all(|t| t != "demo.terrain.stairs-down"));
+    assert!(!game.dungeon_states[&dungeon_id].guardian_defeated);
+    assert_eq!(game.campaign_counts().0, 0);
+    let hash = game.state_hash();
+    game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(hash, game.state_hash());
+    for depth in (39..=49).rev() {
+        place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(
+            game.current_floor_id,
+            if depth == 39 {
+                wilderness::WILDERNESS_FLOOR_ID.to_owned()
+            } else {
+                format!("demo.floor.{slug}-depth-{depth}")
+            }
+        );
+        clear_monsters(&mut game);
+    }
+    assert_eq!(game.player.position, departure);
+    assert_eq!(game.wilderness_position, Some(world_position));
+    assert!(!game.dungeon_blocks_magic());
+    assert!(!game.dungeon_blocks_melee());
+    assert!(game.dungeon_states[&dungeon_id].entrance_guardian_defeated);
+    game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut invalid = game.to_save();
+    let recall = invalid.player.recall.as_mut().unwrap();
+    recall.dungeon_id = suppressed_id.clone();
+    recall.floor_id = format!("demo.floor.{suppressed}-depth-40");
+    assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+    game.start_recall(0);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.current_floor_id, format!("demo.floor.{slug}-depth-50"));
+    clear_monsters(&mut game);
+    game.start_recall(0);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.player.position, departure);
+    assert!(game.entities.iter().all(|a| a.id != guardian_id));
+    assert!(!game.dungeon_blocks_magic());
+    assert!(!game.dungeon_blocks_melee());
+    assert_eq!(game.campaign_counts().0, 0);
+    assert!(!game.dungeon_is_active(&suppressed_id));
+}
+
+#[test]
+fn anti_magic_cave_and_anti_melee_cave_representative_generation() {
+    let base = Game::new_with_build(1, "demo.build.warrior").unwrap();
+    for slug in ["anti-magic-cave", "anti-melee-cave"] {
+        for depth in [40_u16, 42, 45, 46, 48, 49, 50] {
+            let mut game = base.clone();
+            let definition = game
+                .content
+                .world(DEFAULT_WORLD_ID)
+                .unwrap()
+                .procedural_floors
+                .iter()
+                .find(|f| f.id == format!("demo.floor.{slug}-depth-{depth}"))
+                .unwrap()
+                .clone();
+            game.rng = RfbRng::seeded(u64::from(depth));
+            let floor = game.generate_procedural_floor(&definition, None).unwrap();
+            assert_eq!((floor.width, floor.height), (66, 22));
+            let at = |position: Position| {
+                game.content
+                    .terrain(
+                        &floor.terrain
+                            [position.y as usize * usize::from(floor.width) + position.x as usize],
+                    )
+                    .unwrap()
+            };
+            assert!(at(floor.player_position).walkable);
+            let mut occupied = BTreeSet::from([floor.player_position]);
+            for actor in &floor.entities {
+                assert!(occupied.insert(actor.position));
+                assert!(super::super::movement::actor_can_cross_terrain(
+                    game.content.actor(&actor.kind_id).unwrap(),
+                    at(actor.position)
+                ));
+            }
+            let count = |id: &str| floor.terrain.iter().filter(|t| t.as_str() == id).count();
+            assert!((1..=2).contains(&count("demo.terrain.stairs-up")));
+            if depth == 50 {
+                assert_eq!(count("demo.terrain.stairs-down"), 0);
+            } else {
+                assert!((4..=5).contains(&count("demo.terrain.stairs-down")));
+            }
+            if depth == 45 {
+                assert!(
+                    floor
+                        .terrain
+                        .iter()
+                        .filter(|t| t.as_str() != "demo.terrain.wall")
+                        .count()
+                        > 900
+                );
+            }
+            if depth == 46 || depth == 49 {
+                assert!(count("demo.terrain.rubble") > 0);
+            }
+            if depth == 48 {
+                assert!(count("demo.terrain.surface-tree") > 0);
+            }
+        }
+    }
+}
+
+#[test]
 fn guardianless_dungeon_entry_terminal_save_and_return_do_not_conquer() {
     let pack_root =
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");

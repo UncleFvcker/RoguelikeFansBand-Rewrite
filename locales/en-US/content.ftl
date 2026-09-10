@@ -9024,3 +9024,11 @@ item-activation-demo-razorback-star-ball-name = Star Ball
 floor-demo-rlyeh-depth-name = R'lyeh Depth { $depth }
 terrain-demo-rlyeh-entrance-name = R'lyeh Entrance
 terrain-demo-rlyeh-entrance-description = The road to R'lyeh.
+
+floor-demo-anti-magic-cave-depth-name = Anti-magic cave depth { $depth }
+terrain-demo-anti-magic-cave-entrance-name = Anti-magic cave entrance
+terrain-demo-anti-magic-cave-entrance-description = An entrance to Anti-magic cave.
+
+floor-demo-anti-melee-cave-depth-name = Anti-melee cave depth { $depth }
+terrain-demo-anti-melee-cave-entrance-name = Anti-melee cave entrance
+terrain-demo-anti-melee-cave-entrance-description = An entrance to Anti-melee cave.

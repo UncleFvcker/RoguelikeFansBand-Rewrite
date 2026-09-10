@@ -3,6 +3,66 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn anti_caves_bind_source_positions_rules_guardians_and_terminal_floors() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let world = &artifact.content.worlds[0];
+    for (slug, index, guardian) in [
+        ("anti-magic-cave", 16, "juggernaut-of-khorne"),
+        ("anti-melee-cave", 17, "bazooker"),
+    ] {
+        let id = format!("demo.dungeon.{slug}");
+        let dungeon = world.dungeons.iter().find(|d| d.id == id).unwrap();
+        assert_eq!(dungeon.legacy_index, Some(index));
+        assert_eq!(dungeon.no_magic, index == 16);
+        assert_eq!(dungeon.no_melee, index == 17);
+        assert!(dungeon.guardian_actor_kind_id.is_none());
+        assert_eq!(
+            dungeon.entrance_guardian.as_ref().unwrap().actor_kind_id,
+            format!("demo.actor.{guardian}")
+        );
+        assert_eq!(
+            dungeon
+                .substitution
+                .as_ref()
+                .map(|s| s.alternate_dungeon_id.as_str()),
+            if index == 16 {
+                Some("demo.dungeon.anti-melee-cave")
+            } else {
+                None
+            }
+        );
+        let floors = world
+            .procedural_floors
+            .iter()
+            .filter(|f| f.dungeon_id.as_deref() == Some(&id))
+            .collect::<Vec<_>>();
+        assert_eq!(floors.len(), 11);
+        for floor in floors {
+            assert!((40..=50).contains(&floor.depth));
+            assert_eq!((floor.width, floor.height), (66, 22));
+            assert_eq!(floor.final_floor, floor.depth == 50);
+            assert!(floor.guardian.is_none());
+            assert_eq!(
+                floor.next_floor_id,
+                (floor.depth < 50).then(|| format!("demo.floor.{slug}-depth-{}", floor.depth + 1))
+            );
+            let layout = floor.layout.as_ref().unwrap();
+            if matches!(floor.depth, 46 | 48) {
+                assert!(layout.river.is_none());
+            } else {
+                let river = layout.river.as_ref().unwrap();
+                assert_eq!(river.chance_one_in, Some(7));
+                let alternative = river.alternative.as_ref().unwrap();
+                assert_eq!(
+                    (alternative.chance_numerator, alternative.chance_denominator),
+                    (floor.depth + 1, 256)
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn guardianless_dungeon_keeps_terminal_and_guardian_binding_validation() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let mut content = artifact.content.clone();
@@ -6136,7 +6196,7 @@ fn special_layout_dungeon_bindings_match_source() {
             .find(|table| table.id == "demo.encounter-table.labyrinth")
             .and_then(|table| table.global_allocation.as_mut())
             .expect("Labyrinth policy should exist")
-            .special_div = 16;
+            .special_div = 65;
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidEncounterTable(id)) if id == "demo.encounter-table.labyrinth"
@@ -10604,6 +10664,10 @@ fn town_entrances_and_shared_facilities_match_source() {
                     dungeon_id: "demo.dungeon.lonely-mountain".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 47, y: 45 },
+                    dungeon_id: "demo.dungeon.anti-melee-cave".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 47, y: 53 },
                     dungeon_id: "demo.dungeon.tidal-cave".to_owned(),
                 },
@@ -10638,6 +10702,10 @@ fn town_entrances_and_shared_facilities_match_source() {
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 76, y: 46 },
                     dungeon_id: "demo.dungeon.eyrie".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 84, y: 6 },
+                    dungeon_id: "demo.dungeon.anti-magic-cave".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 85, y: 19 },

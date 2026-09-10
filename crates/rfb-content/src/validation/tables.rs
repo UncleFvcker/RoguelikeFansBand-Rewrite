@@ -266,12 +266,6 @@ pub(super) fn validate_tables(
             allocation.preferred_damage_immunities.sort_unstable();
             let mut glyphs = BTreeSet::new();
             if !table.entries.is_empty()
-                || (allocation.special_div != 64
-                    && allocation.preferred_glyphs.is_empty()
-                    && allocation.preferred_tags.is_empty()
-                    && allocation.preferred_movement_modes.is_empty()
-                    && allocation.preferred_habitats.is_empty()
-                    && allocation.preferred_damage_immunities.is_empty())
                 || allocation.preferred_glyphs.len() > 64
                 || allocation.preferred_tags.len() > 64
                 || allocation.special_div > 64

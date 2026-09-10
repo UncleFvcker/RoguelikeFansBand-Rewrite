@@ -496,6 +496,25 @@ fn preferred_glyph_or_tag_uses_full_original_weight_without_rng() {
 }
 
 #[test]
+fn anti_magic_cave_empty_preferences_keep_rarity_weight_without_division_rng() {
+    let mut game = Game::new_with_build(1, "demo.build.warrior").unwrap();
+    let policy = game
+        .content
+        .encounter_table("demo.encounter-table.anti-magic-cave")
+        .unwrap()
+        .global_allocation
+        .clone()
+        .unwrap();
+    let actor = game.content.actor("demo.actor.beholder").unwrap().clone();
+    let before = game.rng.draw_counter;
+    assert_eq!(
+        game.original_dungeon_weight(&actor, &policy),
+        100 / actor.allocation.as_ref().unwrap().rarity
+    );
+    assert_eq!(game.rng.draw_counter, before);
+}
+
+#[test]
 fn p87b_movement_mode_or_habitat_preference_uses_full_original_weight() {
     let mut game = enter_warrens(87);
     let policy = game

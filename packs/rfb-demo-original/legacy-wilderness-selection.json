@@ -101,6 +101,16 @@
       "sourceIndex": 13,
       "sourceName": "R'lyeh",
       "id": "demo.dungeon.rlyeh"
+    },
+    {
+      "sourceIndex": 16,
+      "sourceName": "Anti-magic cave",
+      "id": "demo.dungeon.anti-magic-cave"
+    },
+    {
+      "sourceIndex": 17,
+      "sourceName": "Anti-melee cave",
+      "id": "demo.dungeon.anti-melee-cave"
     }
   ],
   "townPlans": [
@@ -1922,6 +1932,100 @@
         "level": 96
       },
       "finalArtifactSourceIndex": 129
+    },
+    {
+      "sourceIndex": 16,
+      "sourceName": "Anti-magic cave",
+      "id": "demo.dungeon.anti-magic-cave",
+      "position": {
+        "x": 84,
+        "y": 6
+      },
+      "minimumDepth": 40,
+      "maximumDepth": 50,
+      "monsterDivisor": 0,
+      "generationFlags": [
+        "CAVERN",
+        "WATER_RIVER",
+        "LAVA_RIVER",
+        "ARENA",
+        "DESTROY",
+        "LAKE_WATER",
+        "LAKE_LAVA",
+        "LAKE_RUBBLE",
+        "LAKE_TREE",
+        "NO_MAGIC"
+      ],
+      "monsterPreferences": [],
+      "floorTerrainDistribution": [
+        {
+          "sourceTag": "FLOOR",
+          "percent": 100
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        }
+      ],
+      "tunnelPercent": 50,
+      "initialGuardian": {
+        "sourceIndex": 672,
+        "sourceName": "Juggernaut of Khorne",
+        "chineseName": "恐虐钢牛",
+        "level": 43
+      },
+      "substituteSourceIndex": 17
+    },
+    {
+      "sourceIndex": 17,
+      "sourceName": "Anti-melee cave",
+      "id": "demo.dungeon.anti-melee-cave",
+      "position": {
+        "x": 47,
+        "y": 45
+      },
+      "minimumDepth": 40,
+      "maximumDepth": 50,
+      "monsterDivisor": 0,
+      "generationFlags": [
+        "CAVERN",
+        "WATER_RIVER",
+        "LAVA_RIVER",
+        "ARENA",
+        "DESTROY",
+        "LAKE_WATER",
+        "LAKE_LAVA",
+        "LAKE_RUBBLE",
+        "LAKE_TREE",
+        "NO_MELEE",
+        "GLASS_ROOM"
+      ],
+      "monsterPreferences": [],
+      "floorTerrainDistribution": [
+        {
+          "sourceTag": "FLOOR",
+          "percent": 100
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        }
+      ],
+      "tunnelPercent": 50,
+      "initialGuardian": {
+        "sourceIndex": 896,
+        "sourceName": "Bazooker",
+        "chineseName": "火箭筒兵",
+        "level": 35
+      }
     }
   ]
 }

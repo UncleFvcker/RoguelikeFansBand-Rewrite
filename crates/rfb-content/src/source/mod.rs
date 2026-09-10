@@ -33,7 +33,7 @@ use crate::{
 pub(crate) use items::SourceItemDefinition;
 #[cfg(test)]
 pub(crate) use items::SourceItemUseActionDefinition;
-const MAX_SOURCE_FILE_LENGTH: usize = 2 * 1024 * 1024;
+const MAX_SOURCE_FILE_LENGTH: usize = 4 * 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
 const MAX_SOURCE_FILES: usize = 32_768;
 pub(crate) const SUPPORTED_ROOTS: [&str; 27] = [
@@ -271,6 +271,22 @@ fn read_json<T: DeserializeOwned>(
 mod tests {
     use super::*;
     use crate::{EffectProgramDefinition, ItemUseEffectDefinition};
+
+    #[test]
+    fn source_file_limit_accepts_large_worlds_and_rejects_oversize() {
+        let path =
+            std::env::temp_dir().join(format!("rfb-source-size-{}.json", std::process::id()));
+        let mut bytes = vec![b' '; MAX_SOURCE_FILE_LENGTH];
+        bytes[..2].copy_from_slice(b"{}");
+        fs::write(&path, &bytes).unwrap();
+        let value: serde_json::Value = read_json(&path, &mut SourceBudget::default()).unwrap();
+        assert_eq!(value, serde_json::json!({}));
+        bytes.push(b' ');
+        fs::write(&path, bytes).unwrap();
+        let result = read_json::<serde_json::Value>(&path, &mut SourceBudget::default());
+        fs::remove_file(&path).unwrap();
+        assert!(matches!(result, Err(ContentError::SourceFileTooLarge(_))));
+    }
 
     #[test]
     fn affix_activation_resolves_shared_effect_program() {

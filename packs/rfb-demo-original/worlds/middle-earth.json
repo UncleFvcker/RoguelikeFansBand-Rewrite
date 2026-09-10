@@ -436,6 +436,22 @@
           "y": 3
         },
         "dungeonId": "demo.dungeon.rlyeh"
+      },
+      {
+        "kind": "dungeon",
+        "position": {
+          "x": 84,
+          "y": 6
+        },
+        "dungeonId": "demo.dungeon.anti-magic-cave"
+      },
+      {
+        "kind": "dungeon",
+        "position": {
+          "x": 47,
+          "y": 45
+        },
+        "dungeonId": "demo.dungeon.anti-melee-cave"
       }
     ],
     "rows": [
@@ -1412,6 +1428,37 @@
           "y": 32
         }
       }
+    },
+    {
+      "id": "demo.dungeon.anti-magic-cave",
+      "legacyIndex": 16,
+      "rootFloorId": "demo.floor.anti-magic-cave-depth-40",
+      "entranceGuardian": {
+        "instanceId": "demo.guardian.anti-magic-cave-entrance.1",
+        "actorKindId": "demo.actor.juggernaut-of-khorne",
+        "position": {
+          "x": 100,
+          "y": 33
+        }
+      },
+      "noMagic": true,
+      "substitution": {
+        "alternateDungeonId": "demo.dungeon.anti-melee-cave"
+      }
+    },
+    {
+      "id": "demo.dungeon.anti-melee-cave",
+      "legacyIndex": 17,
+      "rootFloorId": "demo.floor.anti-melee-cave-depth-40",
+      "entranceGuardian": {
+        "instanceId": "demo.guardian.anti-melee-cave-entrance.1",
+        "actorKindId": "demo.actor.bazooker",
+        "position": {
+          "x": 98,
+          "y": 33
+        }
+      },
+      "noMelee": true
     }
   ],
   "campaign": {
@@ -23449,6 +23496,1928 @@
         "rewardLootTableId": "demo.loot-table.rlyeh-final-replacement",
         "rewardArtifactItemKindId": "demo.item.razorback"
       }
+    },
+    {
+      "id": "demo.floor.anti-magic-cave-depth-40",
+      "nameKey": "floor-demo-anti-magic-cave-depth-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-magic-cave",
+      "encounterTableId": "demo.encounter-table.anti-magic-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 41,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "entryTerrainId": "demo.terrain.anti-magic-cave-entrance",
+      "nextFloorId": "demo.floor.anti-magic-cave-depth-41",
+      "depth": 40,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-magic-cave-depth-41",
+      "nameKey": "floor-demo-anti-magic-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-magic-cave-depth-40",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-magic-cave",
+      "encounterTableId": "demo.encounter-table.anti-magic-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 42,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.anti-magic-cave-depth-42",
+      "depth": 41,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-magic-cave-depth-42",
+      "nameKey": "floor-demo-anti-magic-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-magic-cave-depth-41",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-magic-cave",
+      "encounterTableId": "demo.encounter-table.anti-magic-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 9
+            },
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 43,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.anti-magic-cave-depth-43",
+      "depth": 42,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-magic-cave-depth-43",
+      "nameKey": "floor-demo-anti-magic-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-magic-cave-depth-42",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-magic-cave",
+      "encounterTableId": "demo.encounter-table.anti-magic-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 44,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.anti-magic-cave-depth-44",
+      "depth": 43,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-magic-cave-depth-44",
+      "nameKey": "floor-demo-anti-magic-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-magic-cave-depth-43",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-magic-cave",
+      "encounterTableId": "demo.encounter-table.anti-magic-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 45,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.anti-magic-cave-depth-45",
+      "depth": 44,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-magic-cave-depth-45",
+      "nameKey": "floor-demo-anti-magic-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-magic-cave-depth-44",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-magic-cave",
+      "encounterTableId": "demo.encounter-table.anti-magic-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 2,
+        "roomAreaTiles": 1200,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "partitioned",
+          "minWidth": 28,
+          "maxWidth": 32,
+          "minHeight": 17,
+          "maxHeight": 19,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 46,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.anti-magic-cave-depth-46",
+      "depth": 45,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-magic-cave-depth-46",
+      "nameKey": "floor-demo-anti-magic-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-magic-cave-depth-45",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-magic-cave",
+      "encounterTableId": "demo.encounter-table.anti-magic-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32,
+        "lakeAreaTiles": 360,
+        "lakeDeepAreaTiles": 120
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "lake": {
+          "deepTerrainId": "demo.terrain.rubble",
+          "shallowTerrainId": "demo.terrain.dirt"
+        }
+      },
+      "nextFloorId": "demo.floor.anti-magic-cave-depth-47",
+      "depth": 46,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-magic-cave-depth-47",
+      "nameKey": "floor-demo-anti-magic-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-magic-cave-depth-46",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-magic-cave",
+      "encounterTableId": "demo.encounter-table.anti-magic-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 48,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.anti-magic-cave-depth-48",
+      "depth": 47,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-magic-cave-depth-48",
+      "nameKey": "floor-demo-anti-magic-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-magic-cave-depth-47",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-magic-cave",
+      "encounterTableId": "demo.encounter-table.anti-magic-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32,
+        "lakeAreaTiles": 360,
+        "lakeDeepAreaTiles": 120
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "lake": {
+          "deepTerrainId": "demo.terrain.surface-tree",
+          "shallowTerrainId": "demo.terrain.surface-grass"
+        }
+      },
+      "nextFloorId": "demo.floor.anti-magic-cave-depth-49",
+      "depth": 48,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-magic-cave-depth-49",
+      "nameKey": "floor-demo-anti-magic-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-magic-cave-depth-48",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-magic-cave",
+      "encounterTableId": "demo.encounter-table.anti-magic-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32,
+        "destructionCenters": 1,
+        "destroyedAreaTiles": 96
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 50,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "destroyed": {
+          "terrainId": "demo.terrain.rubble"
+        }
+      },
+      "nextFloorId": "demo.floor.anti-magic-cave-depth-50",
+      "depth": 49,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-magic-cave-depth-50",
+      "nameKey": "floor-demo-anti-magic-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-magic-cave-depth-49",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-magic-cave",
+      "encounterTableId": "demo.encounter-table.anti-magic-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 51,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "depth": 50,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "finalFloor": true
+    },
+    {
+      "id": "demo.floor.anti-melee-cave-depth-40",
+      "nameKey": "floor-demo-anti-melee-cave-depth-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-melee-cave",
+      "encounterTableId": "demo.encounter-table.anti-melee-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 41,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "entryTerrainId": "demo.terrain.anti-melee-cave-entrance",
+      "nextFloorId": "demo.floor.anti-melee-cave-depth-41",
+      "depth": 40,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-melee-cave-depth-41",
+      "nameKey": "floor-demo-anti-melee-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-melee-cave-depth-40",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-melee-cave",
+      "encounterTableId": "demo.encounter-table.anti-melee-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 42,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.anti-melee-cave-depth-42",
+      "depth": 41,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-melee-cave-depth-42",
+      "nameKey": "floor-demo-anti-melee-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-melee-cave-depth-41",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-melee-cave",
+      "encounterTableId": "demo.encounter-table.anti-melee-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 9
+            },
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 43,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.anti-melee-cave-depth-43",
+      "depth": 42,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-melee-cave-depth-43",
+      "nameKey": "floor-demo-anti-melee-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-melee-cave-depth-42",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-melee-cave",
+      "encounterTableId": "demo.encounter-table.anti-melee-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 44,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.anti-melee-cave-depth-44",
+      "depth": 43,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-melee-cave-depth-44",
+      "nameKey": "floor-demo-anti-melee-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-melee-cave-depth-43",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-melee-cave",
+      "encounterTableId": "demo.encounter-table.anti-melee-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 45,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.anti-melee-cave-depth-45",
+      "depth": 44,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-melee-cave-depth-45",
+      "nameKey": "floor-demo-anti-melee-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-melee-cave-depth-44",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-melee-cave",
+      "encounterTableId": "demo.encounter-table.anti-melee-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 2,
+        "roomAreaTiles": 1200,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "partitioned",
+          "minWidth": 28,
+          "maxWidth": 32,
+          "minHeight": 17,
+          "maxHeight": 19,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 46,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.anti-melee-cave-depth-46",
+      "depth": 45,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-melee-cave-depth-46",
+      "nameKey": "floor-demo-anti-melee-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-melee-cave-depth-45",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-melee-cave",
+      "encounterTableId": "demo.encounter-table.anti-melee-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32,
+        "lakeAreaTiles": 360,
+        "lakeDeepAreaTiles": 120
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "lake": {
+          "deepTerrainId": "demo.terrain.rubble",
+          "shallowTerrainId": "demo.terrain.dirt"
+        }
+      },
+      "nextFloorId": "demo.floor.anti-melee-cave-depth-47",
+      "depth": 46,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-melee-cave-depth-47",
+      "nameKey": "floor-demo-anti-melee-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-melee-cave-depth-46",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-melee-cave",
+      "encounterTableId": "demo.encounter-table.anti-melee-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 48,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.anti-melee-cave-depth-48",
+      "depth": 47,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-melee-cave-depth-48",
+      "nameKey": "floor-demo-anti-melee-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-melee-cave-depth-47",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-melee-cave",
+      "encounterTableId": "demo.encounter-table.anti-melee-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32,
+        "lakeAreaTiles": 360,
+        "lakeDeepAreaTiles": 120
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "lake": {
+          "deepTerrainId": "demo.terrain.surface-tree",
+          "shallowTerrainId": "demo.terrain.surface-grass"
+        }
+      },
+      "nextFloorId": "demo.floor.anti-melee-cave-depth-49",
+      "depth": 48,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-melee-cave-depth-49",
+      "nameKey": "floor-demo-anti-melee-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-melee-cave-depth-48",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-melee-cave",
+      "encounterTableId": "demo.encounter-table.anti-melee-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32,
+        "destructionCenters": 1,
+        "destroyedAreaTiles": 96
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 50,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "destroyed": {
+          "terrainId": "demo.terrain.rubble"
+        }
+      },
+      "nextFloorId": "demo.floor.anti-melee-cave-depth-50",
+      "depth": 49,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.anti-melee-cave-depth-50",
+      "nameKey": "floor-demo-anti-melee-cave-depth-name",
+      "returnFloorId": "demo.floor.anti-melee-cave-depth-49",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.anti-melee-cave",
+      "encounterTableId": "demo.encounter-table.anti-melee-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 51,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "depth": 50,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "finalFloor": true
     }
   ]
 }

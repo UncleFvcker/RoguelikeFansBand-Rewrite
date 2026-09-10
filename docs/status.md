@@ -10,10 +10,10 @@
 | 协议 | 1.240 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 117 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 12 / 12 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.401.7 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.401.8 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v318，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 6 个 Class、13 个 Build、57 个 Race、32 本能力书、1,840 个 ability 文件、371 个 item、1,402 个 actor、168 个 affix、152 个 mutation。世界定义含 26 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 6 个 Class、13 个 Build、57 个 Race、32 本能力书、1,840 个 ability 文件、371 个 item、1,402 个 actor、168 个 affix、152 个 mutation。世界定义含 28 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
 权威内容统计工具是 `rfb-contentc inspect-source`。本次集成已运行内容编译；静态统计不替代行为验收。
 
@@ -50,7 +50,7 @@ Ent、Spectre 的新游戏入口已开放。种族主线还接入原始经验值
 
 ## 城镇与共享存储
 
-[反魔洞穴／反近战洞穴 A1–A3](../design/anti-caves-dungeon-plan-20260910.md) 已支持无最终守卫地牢、`noMagic` 与 `noMelee`。禁近战覆盖玩家、怪物、友军/宠物、反击和既有特殊打击；GAZE 按原版 GF_ATTACK 的近战执行语义处理，各入口保留其回合与资源规则。自然生态的攻击法术资格与禁魔的天生资格独立；玩家召唤保留原版例外，宠物自身施法仍按怪物来源筛选。A3 的 476 项核心回归（含 8 项专项）、58 项内容、39 项本地化与 26 条 active 契约通过；A2 的源分类审计和职业例外记录见计划。正式包/lock 仍为 1.401.7，仅更新内容 Schema；16/17 正式入口留待 A4，本批没有可玩构建或人工试玩。
+[反魔洞穴／反近战洞穴 A1–A4](../design/anti-caves-dungeon-plan-20260910.md) 已接入 `noMagic`、`noMelee` 与原版 16/17 替代组，各 40–50 层；新角色按种子只开放 (84,6)/(47,45) 中所选地点的真实入口和守卫。无最终首领或固定征服奖励。近战/特殊打击和施法保留各自来源语义，生态分别筛选天生/攻击法术资格，玩家召唤保留原版例外；空偏好 `specialDiv=0` 已可走全局分配。A4 的 122 项核心、63 项内容/源读取、39 项本地化与 26 条 active 契约通过，两个正常种子的全层往返、保存和召回已自动验证。包/lock 为 1.401.8；源分类、代表层与河流概率适配详见计划。A5 最终聚焦验收待执行，没有本批可玩构建或人工试玩。
 
 Outpost O1 已恢复 RFB master `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c` 的 198×65 模板：4,383 个显式格与 8,487 个继承格，地图原点为 (0,0)，初始构造和后续叠加共用已有种子化荒野 chunk。出生 (99,33) 是本项目落点选择；原有短剑与两瓶轻伤治疗药水的实例 ID、数量保留，分别移至 (100,33)/(101,33)。黑坑要求飞行通行、允许投射且不遮挡视线；射落物、丢弃物与怪物掉落在附近合法地板落地，命中点仍保留在坑上。
 
