@@ -210,6 +210,243 @@ fn hobbit_fixed_artifacts_generate_equip_and_preserve_uniqueness_after_save() {
 }
 
 #[test]
+fn fixed_weapon_pair_generates_and_preserves_combat_and_passives_after_save() {
+    let mut game = Game::new_with_build(418, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    game.items.clear();
+    let origin = game.player.position;
+    let adjacent = Position {
+        x: origin.x + 1,
+        y: origin.y,
+    };
+    replace_terrain(&mut game, origin, "demo.terrain.floor");
+    replace_terrain(&mut game, adjacent, "demo.terrain.floor");
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-30".into(),
+        depth: 30,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.ordinary-drop".into(),
+        },
+    };
+    let mut remaining = BTreeSet::from(["demo.item.gondricam", "demo.item.forasgil"]);
+    // Controlled depth and repeated production drops retain the full ordinary
+    // pool, quality, rarity and unique-artifact registration.
+    for _ in 0..50_000 {
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            if !remaining.remove(item.kind_id.as_str()) {
+                continue;
+            }
+            assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+            assert!(item.activation.is_none() && item.curse.is_none());
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+            assert!(game.item_property_knowledge[&id].identified);
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "artifacts never generated: {remaining:?}"
+    );
+    assert_eq!(game.carried_weight_tenths_pound(), 150);
+    for (kind, base, hit, damage, sides) in [
+        ("gondricam", "cutlass", 10, 11, 9),
+        ("forasgil", "rapier", 12, 19, 8),
+    ] {
+        let mut equipped = game.clone();
+        let id = equipped
+            .items
+            .iter()
+            .find(|item| item.kind_id == format!("demo.item.{kind}"))
+            .unwrap()
+            .id
+            .clone();
+        equipped
+            .equip_inventory_item(&id, Some("right-hand"))
+            .unwrap();
+        let profile = equipped.player_melee_profile(&equipped.player_derived_stats());
+        assert_eq!(profile.source_item_id.as_deref(), Some(id.as_str()));
+        assert_eq!((profile.damage_dice, profile.damage_sides), (1, sides));
+        assert_eq!(profile.to_hit, hit);
+        assert!(profile.to_damage >= damage);
+        if kind == "gondricam" {
+            assert_eq!(equipped.equipment_modifiers().dexterity, 3);
+            assert_eq!(equipped.player_equipment_bonuses().stealth_skill, 3);
+            assert!(equipped.player_levitates());
+            assert_eq!(equipped.player_see_invisible_sources(), 1);
+            for element in [
+                DamageType::Acid,
+                DamageType::Electricity,
+                DamageType::Fire,
+                DamageType::Cold,
+            ] {
+                assert_eq!(
+                    equipped.effective_player_resistances().level(element),
+                    ResistanceLevel::Resistant
+                );
+            }
+        } else {
+            assert_eq!(equipped.equipment_modifiers().speed, 1);
+            assert_eq!(equipped.player_equipment_bonuses().light_radius, 1);
+            for element in [DamageType::Cold, DamageType::Light] {
+                assert_eq!(
+                    equipped.effective_player_resistances().level(element),
+                    ResistanceLevel::Resistant
+                );
+            }
+        }
+        equipped.reveal_current_visibility();
+        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), equipped.state_hash());
+        assert_eq!(
+            restored
+                .player_melee_profile(&restored.player_derived_stats())
+                .to_damage,
+            profile.to_damage
+        );
+        assert!(
+            restored
+                .generated_artifact_ids
+                .contains(&format!("demo.item.{kind}"))
+        );
+        let next = equipped
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap();
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            next
+        );
+        assert_eq!(restored.rng, equipped.rng);
+        assert_ne!(
+            restored.roll_fixed_artifact_kind_id(
+                &context,
+                Some(&format!("demo.item.{base}")),
+                false
+            ),
+            Some(format!("demo.item.{kind}"))
+        );
+        if kind == "gondricam" {
+            // Exercise the existing flat equipment recovery, separately from
+            // natural percentage regeneration; do not claim source regen parity.
+            restored.player.hp = 1;
+            restored.world_tick = 0;
+            let update = dispatch_next(&mut restored, GameCommand::Wait);
+            assert!(
+                update
+                    .events
+                    .iter()
+                    .any(|event| event.message_key == "equipment-regenerated")
+            );
+            assert!(restored.player.hp > 1);
+            let pit = adjacent;
+            replace_terrain(&mut restored, pit, "demo.terrain.dark-pit");
+            let mut unarmed = restored.clone();
+            unarmed
+                .items
+                .iter_mut()
+                .find(|item| item.id == id)
+                .unwrap()
+                .location = ItemLocation::Inventory;
+            dispatch_next(
+                &mut unarmed,
+                GameCommand::Move {
+                    direction: Direction::East,
+                },
+            );
+            assert_eq!(unarmed.player.position, origin);
+            dispatch_next(
+                &mut restored,
+                GameCommand::Move {
+                    direction: Direction::East,
+                },
+            );
+            assert_eq!(restored.player.position, pit);
+            restored.player.position = origin;
+            replace_terrain(&mut restored, adjacent, "demo.terrain.floor");
+        }
+        {
+            let mut damages = Vec::new();
+            // Matching cold immunity suppresses only the brand. Animal slay
+            // remains active; a matching slay and brand do not multiply together.
+            let targets = if kind == "gondricam" {
+                vec![("goblin", ResistanceLevel::Immune, 10)]
+            } else {
+                vec![
+                    ("goblin", ResistanceLevel::Resistant, 24),
+                    ("goblin", ResistanceLevel::Immune, 10),
+                    ("sheep", ResistanceLevel::Immune, 24),
+                    ("sheep", ResistanceLevel::Resistant, 24),
+                ]
+            };
+            for (target_kind, cold, multiplier) in targets {
+                let mut combat = restored.clone();
+                combat.push_generated_actor(
+                    "test.weapon-target".into(),
+                    &format!("demo.actor.{target_kind}"),
+                    adjacent,
+                );
+                let target = &mut combat.entities[0];
+                target.hp = 10_000;
+                target.max_hp = 10_000;
+                target.resistances.set(DamageType::Cold, cold);
+                let profile = combat.player_melee_profile(&combat.player_derived_stats());
+                let target = &combat.entities[0];
+                assert_eq!(
+                    combat.player_melee_damage_multiplier(
+                        &profile,
+                        target,
+                        combat.content.actor(&target.kind_id).unwrap()
+                    ),
+                    multiplier
+                );
+                let actual = (0..100)
+                    .find_map(|seed| {
+                        let mut trial = combat.clone();
+                        trial.rng = RfbRng::seeded(seed);
+                        let mut events = Vec::new();
+                        trial
+                            .resolve_player_melee(
+                                0,
+                                false,
+                                &mut events,
+                                &mut BTreeSet::new(),
+                                &mut Vec::new(),
+                            )
+                            .unwrap();
+                        events
+                            .into_iter()
+                            .map(DomainEvent::into_dto)
+                            .find_map(|event| match event.outcome {
+                                Some(GameEventOutcomeDto::Damage { resolution }) => {
+                                    assert!(trial.entities[0].hp < 10_000);
+                                    Some(resolution.raw_damage)
+                                }
+                                _ => None,
+                            })
+                    })
+                    .expect("seed range includes a weapon hit");
+                damages.push(actual);
+            }
+            if kind == "forasgil" {
+                assert!(damages[0] > damages[1]);
+                assert_eq!(damages[2], damages[3]);
+            }
+        }
+    }
+}
+
+#[test]
 fn fixed_armor_pair_generates_equips_and_preserves_consumers_after_save() {
     let mut game = Game::new_with_build(417, "demo.build.warrior").unwrap();
     clear_monsters(&mut game);

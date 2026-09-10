@@ -135,7 +135,19 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.forasgil",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.frost-ball-wand",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.gondricam",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"

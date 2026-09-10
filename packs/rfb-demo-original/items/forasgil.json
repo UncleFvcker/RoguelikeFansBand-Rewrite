@@ -1,0 +1,73 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.forasgil",
+  "nameKey": "item-demo-forasgil-name",
+  "descriptionKey": "item-demo-forasgil-description",
+  "glyph": "|",
+  "generationLevel": 15,
+  "weightTenthsPound": 40,
+  "maxStack": 1,
+  "baseValue": 15000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 86,
+    "baseItemKindId": "demo.item.rapier",
+    "instant": false,
+    "rarityOneIn": 8
+  },
+  "weaponProficiencyBaseItemId": "demo.item.rapier",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 12,
+    "toDamage": 19,
+    "damageDice": 1,
+    "damageSides": 8
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "BRAND_COLD",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "RES_COLD",
+      "RES_LITE",
+      "SHOW_MODS",
+      "SLAY_ANIMAL",
+      "SPEED"
+    ],
+    "pval": 1,
+    "toArmor": 0
+  },
+  "modifiers": {
+    "speed": 1
+  },
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "slays": {
+    "animal": "slay"
+  },
+  "brands": [
+    "cold"
+  ],
+  "resistances": {
+    "cold": "resistant",
+    "light": "resistant"
+  }
+}
