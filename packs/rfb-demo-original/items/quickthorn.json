@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.quickthorn",
+  "nameKey": "item-demo-quickthorn-name",
+  "descriptionKey": "item-demo-quickthorn-description",
+  "glyph": "|",
+  "generationLevel": 35,
+  "weightTenthsPound": 55,
+  "maxStack": 1,
+  "baseValue": 75000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "old-castle-reward",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 174,
+    "baseItemKindId": "demo.item.rapier",
+    "instant": false,
+    "rarityOneIn": 15
+  },
+  "weaponProficiencyBaseItemId": "demo.item.rapier",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 27,
+    "toDamage": 9,
+    "damageDice": 1,
+    "damageSides": 8
+  },
+  "modifiers": {
+    "dexterity": 4,
+    "speed": 4
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "BLOWS",
+      "DEX",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_CHAOS",
+      "RES_DISEN",
+      "RIDING",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_DEMON",
+      "SPEED"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "equipmentBonuses": {
+    "meleeAttacks": 4
+  },
+  "passives": [
+    "see-invisible"
+  ],
+  "slays": {
+    "demon": "slay"
+  },
+  "ridingWeaponKind": "compatible",
+  "resistances": {
+    "chaos": "resistant",
+    "disenchant": "resistant"
+  }
+}

@@ -1111,6 +1111,7 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.lance",
                 "demo.item.long-sword",
                 "demo.item.pain",
+                "demo.item.quickthorn",
                 "demo.item.sabre",
                 "demo.item.spear",
                 "demo.item.trident",

@@ -121,6 +121,10 @@ impl Game {
             pending_mutation_direction: self.pending_mutation_direction.clone(),
             pending_ability_direction: self.pending_ability_direction.clone(),
             duelist_target_id: self.duelist_target_id.clone(),
+            pending_duelist: self
+                .pending_duelist
+                .as_ref()
+                .and_then(|pending| pending.prompt.clone()),
             carried_weight_tenths_pound: self.carried_weight_tenths_pound(),
             carry_capacity_tenths_pound: self.player_carry_capacity_tenths_pound(),
             encumbrance_speed_penalty: u16::try_from(self.player_encumbrance_speed_penalty())
@@ -464,7 +468,7 @@ impl Game {
                             base_cost,
                             effective_cost,
                             activation.minimum_concentration,
-                            activation.hit_point_cost,
+                            self.class_ability_hit_point_cost(activation),
                             self.class_ability_failure_percent(activation),
                             AbilityProgress {
                                 proficiency: 0,

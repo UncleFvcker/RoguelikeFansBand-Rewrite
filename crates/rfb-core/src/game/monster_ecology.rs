@@ -255,7 +255,12 @@ impl Game {
             1
         };
         let power = definition.level.saturating_div(divisor).max(1);
-        if self.monster_fear_saving_throw(&definition.id, power, events) {
+        if self.monster_fear_saving_throw(
+            Some(&self.entities[index].id.clone()),
+            &definition.id,
+            power,
+            events,
+        ) {
             return false;
         }
         if scale_by_distance && self.last_non_melee_fear_aura_tick == Some(self.world_tick) {

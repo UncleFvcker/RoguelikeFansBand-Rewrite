@@ -613,6 +613,7 @@ impl Game {
             pending_mutation_direction: None,
             pending_ability_direction: None,
             duelist_target_id: None,
+            pending_duelist: None,
             next_item_instance_serial,
             next_gold_pile_serial: 1,
             explored: vec![false; usize::from(width) * usize::from(height)],

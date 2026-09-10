@@ -57,6 +57,9 @@ pub(crate) enum GameAction {
     },
     CancelAbilityDirection,
     ClearDuelistChallenge,
+    ResolveDuelistChoice {
+        choice: rfb_protocol::DuelistChoiceDto,
+    },
     CloseDoor {
         direction: Direction,
     },
@@ -276,6 +279,7 @@ impl GameAction {
             | Self::ResolveMutationDirection { .. }
             | Self::CancelAbilityDirection
             | Self::ClearDuelistChallenge
+            | Self::ResolveDuelistChoice { .. }
             | Self::InscribeItem { .. }
             | Self::SetInterfaceLocale { .. } => 0,
             Self::TravelLocal { .. } => 0,
@@ -347,6 +351,7 @@ impl From<GameCommand> for GameAction {
             }
             GameCommand::CancelAbilityDirection => Self::CancelAbilityDirection,
             GameCommand::ClearDuelistChallenge => Self::ClearDuelistChallenge,
+            GameCommand::ResolveDuelistChoice { choice } => Self::ResolveDuelistChoice { choice },
             GameCommand::CloseDoor { direction } => Self::CloseDoor { direction },
             GameCommand::ConfigureMogaminator {
                 enabled,

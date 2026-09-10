@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::effect::STATUS_SLEEP;
 use crate::error::CoreError;
 use crate::event::DomainEvent;
 use crate::game::floor::{FloorTransitionTarget, RecallUseAction};
-use crate::game::projectile_geometry::rfb_distance;
+use crate::game::projectile_geometry::{has_line_of_effect, rfb_distance};
+use crate::game::visibility::has_line_of_sight;
 use crate::game::{Game, actor_matches_category};
 use rfb_content::{AbilityDefinition, AbilityEffectDefinition};
+use rfb_protocol::MapScaleDto;
 use rfb_protocol::{
     AbilityEffectResolutionDto, AbilityEffectsResolutionDto, AbilityRecallActionDto,
     AbilityTeleportResolutionDto, Position,
@@ -13,6 +16,184 @@ use rfb_protocol::{
 use std::collections::BTreeSet;
 
 impl Game {
+    pub(in crate::game) fn player_can_teleport_to(
+        &self,
+        position: Position,
+        passive: bool,
+    ) -> bool {
+        let Some(index) = self.index(position) else {
+            return false;
+        };
+        let terrain = self
+            .content
+            .terrain(&self.terrain[index])
+            .expect("active terrain exists");
+        if self.vault_cells[index]
+            || terrain.trap.is_some()
+            || terrain.allows_wall_passage
+            || (!terrain.walkable && terrain.movement_modes.is_empty())
+            || self.entities.iter().any(|actor| {
+                actor.hp > 0
+                    && actor.position == position
+                    && self.riding_actor_id.as_ref() != Some(&actor.id)
+            })
+        {
+            return false;
+        }
+        if passive {
+            return true;
+        }
+        if !self.player_can_cross_terrain(terrain) {
+            return false;
+        }
+        let has_tag = |tag: &str| terrain.tags.iter().any(|value| value == tag);
+        let flies = self.active_traveler_has_mode(rfb_content::ActorMovementMode::Fly);
+        if has_tag("water")
+            && has_tag("deep")
+            && !flies
+            && !self.active_traveler_has_mode(rfb_content::ActorMovementMode::Swim)
+            && !self.active_traveler_has_mode(rfb_content::ActorMovementMode::Aquatic)
+        {
+            return false;
+        }
+        if has_tag("lava")
+            && self
+                .effective_player_resistances()
+                .level(crate::resistance::DamageType::Fire)
+                != crate::resistance::ResistanceLevel::Immune
+            && !self.player_has_status_kind(crate::effect::STATUS_INVULNERABILITY)
+            && (has_tag("deep") || !flies)
+        {
+            return false;
+        }
+        true
+    }
+
+    #[allow(clippy::too_many_arguments)] // Source teleport flags and the existing event/change outputs.
+    pub(super) fn resolve_player_teleport_with_range(
+        &mut self,
+        ability_id: &str,
+        range: u16,
+        line_of_sight: bool,
+        passive: bool,
+        excluded_follower: Option<&str>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        if self.player_has_anti_teleport() || self.map_scale == MapScaleDto::World {
+            return;
+        }
+        let from = self.player.position;
+        let mut candidates = Vec::new();
+        for y in 1..self.height.saturating_sub(1) {
+            for x in 1..self.width.saturating_sub(1) {
+                let position = Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                };
+                if rfb_distance(from, position) <= u32::from(range)
+                    && self.player_can_teleport_to(position, passive)
+                    && (!line_of_sight || has_line_of_sight(self, from, position))
+                {
+                    candidates.push(position);
+                }
+            }
+        }
+        if candidates.is_empty() {
+            return;
+        }
+        // Keep complete distance rings, as teleport_player_aux does, including tied distances.
+        let mut distances: Vec<_> = candidates
+            .iter()
+            .map(|position| rfb_distance(from, *position))
+            .collect();
+        distances.sort_unstable_by(|a, b| b.cmp(a));
+        let minimum = distances[(distances.len() / 2).max(1) - 1];
+        candidates.retain(|position| rfb_distance(from, *position) >= minimum);
+        let destination = candidates[self.rng.bounded(candidates.len() as u64) as usize];
+        if destination == from {
+            return;
+        }
+        let floor_id = self.current_floor_id.clone();
+        events.push(DomainEvent::AbilityTeleported {
+            ability_id: ability_id.to_owned(),
+            resolution: AbilityTeleportResolutionDto {
+                from,
+                to: destination,
+            },
+        });
+        events.extend(self.relocate_player(destination, changed));
+        if self.player_is_dead()
+            || self.current_floor_id != floor_id
+            || self.floor_depth(&floor_id) == 0
+        {
+            return;
+        }
+        let mut followers: Vec<_> = self
+            .entities
+            .iter()
+            .filter(|actor| {
+                actor.hp > 0
+                    && actor.position.x.abs_diff(from.x) <= 2
+                    && actor.position.y.abs_diff(from.y) <= 2
+                    && self.riding_actor_id.as_ref() != Some(&actor.id)
+                    && excluded_follower != Some(actor.id.as_str())
+                    && has_line_of_effect(self, actor.position, from)
+                    && self
+                        .actor_runtime_definition(actor)
+                        .is_some_and(|definition| {
+                            definition.id == "demo.actor.monkey-clone"
+                                || (!actor
+                                    .statuses
+                                    .iter()
+                                    .any(|status| status.kind_id == STATUS_SLEEP)
+                                    && !definition.tags.iter().any(|tag| tag == "resist-teleport")
+                                    && definition.monster_casting.as_ref().is_some_and(|casting| {
+                                        casting.abilities.iter().any(|candidate| {
+                                            self.content.ability(&candidate.ability_id).is_some_and(
+                                                |ability| {
+                                                    matches!(
+                                                        ability.effect,
+                                                        AbilityEffectDefinition::TeleportSelf { .. }
+                                                    )
+                                                },
+                                            )
+                                        })
+                                    }))
+                        })
+            })
+            .map(|actor| (actor.position.x, actor.position.y, actor.id.clone()))
+            .collect();
+        followers.sort();
+        for (_, _, id) in followers {
+            let index = self
+                .entities
+                .iter()
+                .position(|actor| actor.id == id)
+                .expect("follower remains present");
+            let definition = self
+                .actor_runtime_definition(&self.entities[index])
+                .expect("follower definition exists");
+            let level = if definition.id == "demo.actor.monkey-clone" {
+                10_000
+            } else {
+                definition.level
+            };
+            if self.rng.bounded(100) + 1 > u64::from(level) {
+                continue;
+            }
+            let destinations = self.displacement_destinations(index, |position| {
+                rfb_distance(destination, position) <= 2
+            });
+            if !destinations.is_empty() {
+                let to = destinations[self.rng.bounded(destinations.len() as u64) as usize];
+                changed.insert(self.entities[index].position);
+                self.entities[index].position = to;
+                changed.insert(to);
+            }
+        }
+    }
+
     pub(super) fn resolve_player_alter_reality_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -71,6 +252,22 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
+        if let AbilityEffectDefinition::BlinkSelf {
+            radius,
+            line_of_sight: true,
+        } = ability.effect
+        {
+            self.resolve_player_teleport_with_range(
+                &ability.id,
+                u16::from(radius),
+                true,
+                false,
+                None,
+                events,
+                changed,
+            );
+            return;
+        }
         let index = usize::try_from(self.rng.bounded(candidates.len() as u64))
             .expect("bounded teleport candidate index must fit usize");
         self.resolve_player_teleport_effect(ability, candidates[index], events, changed);

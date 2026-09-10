@@ -35,7 +35,7 @@ fn monster_effect_game_with_method(
 
 fn resolve_p62_polymorph(game: &mut Game) -> Vec<DomainEvent> {
     let mut events = Vec::new();
-    game.resolve_player_polymorph("demo.actor.lord-of-change", 61, &mut events);
+    game.resolve_player_polymorph(None, "demo.actor.lord-of-change", 61, &mut events);
     events
 }
 
@@ -87,7 +87,7 @@ fn p62_polymorph_immunity_and_successful_save_do_not_draw_a_form_or_duration() {
             let mut probe = Game::new_with_build(0, "demo.build.warrior").ok()?;
             probe.rng = RfbRng::seeded(seed);
             let saved =
-                probe.monster_saving_throw("demo.actor.lord-of-change", 61, &mut Vec::new());
+                probe.monster_saving_throw(None, "demo.actor.lord-of-change", 61, &mut Vec::new());
             saved.then_some((seed, probe.rng))
         })
         .expect("a bounded seed should pass the polymorph saving throw");
@@ -150,7 +150,7 @@ fn p62_polymorph_preserves_legacy_branches_rejection_rng_and_temporary_state() {
         .find_map(|seed| {
             let mut probe = rejection_base.clone();
             probe.rng = RfbRng::seeded(seed);
-            if probe.monster_saving_throw("demo.actor.lord-of-change", 61, &mut Vec::new()) {
+            if probe.monster_saving_throw(None, "demo.actor.lord-of-change", 61, &mut Vec::new()) {
                 return None;
             }
             let save_draws = probe.rng.draw_counter;
@@ -570,7 +570,7 @@ fn effectless_beg_always_succeeds_without_damage_contact_or_rng() {
 
 #[test]
 fn monster_contact_auras_apply_elemental_damage_and_curse_saves() {
-    let template = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
+    let mut template = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
         actor.level = 50;
         actor.contact_auras = vec![
             rfb_content::ActorContactAuraDefinition {
@@ -610,6 +610,17 @@ fn monster_contact_auras_apply_elemental_damage_and_curse_saves() {
             },
         ];
     });
+    clear_monsters(&mut template);
+    let position = Position {
+        x: template.player.position.x + 1,
+        y: template.player.position.y,
+    };
+    let source = template.generated_actor(
+        "test.aura-source".to_owned(),
+        "demo.actor.small-kobold",
+        position,
+    );
+    template.entities.push(source);
     let (game, events) = (0..1_000)
         .find_map(|seed| {
             let mut game = template.clone();

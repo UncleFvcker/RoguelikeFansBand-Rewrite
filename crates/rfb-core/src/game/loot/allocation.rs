@@ -227,7 +227,11 @@ fn tailored_candidate(game: &Game, item: &ItemDefinition) -> bool {
         })
     };
     match base.tval {
-        19 | 30 | 31 | 34..=38 | 40 | 45 => can_equip(),
+        34 => class != Some("demo.class.duelist") && can_equip(),
+        36..=38 => {
+            (class != Some("demo.class.duelist") || item.weight_tenths_pound <= 200) && can_equip()
+        }
+        19 | 30 | 31 | 35 | 40 | 45 => can_equip(),
         32 | 33 => {
             if game
                 .build
@@ -452,6 +456,30 @@ mod tests {
                 item_id: "test.allocation".into(),
             },
         }
+    }
+
+    #[test]
+    fn duelist_tailored_armor_uses_fixed_twenty_pound_limit_and_excludes_shields() {
+        let game = Game::new_with_build(421, "demo.build.duelist").unwrap();
+        let mut armor = game
+            .content
+            .item("demo.item.soft-leather-armour")
+            .unwrap()
+            .clone();
+        armor.weight_tenths_pound = 200;
+        assert!(tailored_candidate(&game, &armor));
+        armor.weight_tenths_pound = 201;
+        assert!(!tailored_candidate(&game, &armor));
+        let shield = game
+            .content
+            .item_definitions()
+            .find(|item| item.rfb_base_kind.is_some_and(|base| base.tval == 34))
+            .unwrap();
+        assert!(!tailored_candidate(&game, shield));
+        assert!(tailored_candidate(
+            &game,
+            game.content.item("demo.item.rapier").unwrap()
+        ));
     }
 
     #[test]

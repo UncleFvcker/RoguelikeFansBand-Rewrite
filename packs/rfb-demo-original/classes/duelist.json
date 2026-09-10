@@ -251,6 +251,83 @@
       "baseFailurePercent": 0,
       "minimumFailurePercent": 0,
       "blockedByDungeonAntiMagic": true
+    },
+    {
+      "abilityId": "demo.ability.duelist-charge",
+      "uiGroupNameKey": "class-demo-duelist-name",
+      "minimumLevel": 8,
+      "governingAttribute": "dexterity",
+      "hitPointCost": 10,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0,
+      "blockedByDungeonAntiMagic": true
+    },
+    {
+      "abilityId": "demo.ability.duelist-strafing",
+      "uiGroupNameKey": "class-demo-duelist-name",
+      "minimumLevel": 16,
+      "governingAttribute": "dexterity",
+      "hitPointCost": 8,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0,
+      "blockedByDungeonAntiMagic": true
+    },
+    {
+      "abilityId": "demo.ability.duelist-disengage",
+      "uiGroupNameKey": "class-demo-duelist-name",
+      "minimumLevel": 24,
+      "governingAttribute": "dexterity",
+      "hitPointCost": 25,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0,
+      "blockedByDungeonAntiMagic": true
+    },
+    {
+      "abilityId": "demo.ability.duelist-acrobatic-charge",
+      "uiGroupNameKey": "class-demo-duelist-name",
+      "minimumLevel": 32,
+      "governingAttribute": "dexterity",
+      "hitPointCost": 30,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0,
+      "blockedByDungeonAntiMagic": true
+    },
+    {
+      "abilityId": "demo.ability.duelist-isolation",
+      "uiGroupNameKey": "class-demo-duelist-name",
+      "minimumLevel": 40,
+      "governingAttribute": "dexterity",
+      "hitPointCost": 60,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0,
+      "blockedByDungeonAntiMagic": true
+    },
+    {
+      "abilityId": "demo.ability.duelist-darting-duel",
+      "uiGroupNameKey": "class-demo-duelist-name",
+      "minimumLevel": 45,
+      "governingAttribute": "dexterity",
+      "hitPointCost": 60,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0,
+      "blockedByDungeonAntiMagic": true
+    },
+    {
+      "abilityId": "demo.ability.duelist-phase-charge",
+      "uiGroupNameKey": "class-demo-duelist-name",
+      "minimumLevel": 48,
+      "governingAttribute": "dexterity",
+      "hitPointCost": 80,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0,
+      "blockedByDungeonAntiMagic": true
     }
   ],
   "startingItems": [

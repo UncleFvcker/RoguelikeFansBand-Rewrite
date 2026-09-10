@@ -9186,3 +9186,30 @@ actor-demo-duelist-player-name = 决斗者
 actor-demo-duelist-player-description = 轻装迎敌的决斗者。
 ability-demo-duelist-mark-target-name = 标记目标
 ability-demo-duelist-mark-target-description = 挑战一个可见生物，唤醒并使其敌对，替换当前挑战。
+
+ability-demo-duelist-charge-name = 冲锋
+ability-demo-duelist-charge-description = 最多移动 5 格并攻击你标记的敌人。
+
+ability-demo-duelist-strafing-name = 侧步
+ability-demo-duelist-strafing-description = 闪烁到当前视线内的一个新位置。
+
+ability-demo-duelist-disengage-name = 脱离战斗
+ability-demo-duelist-disengage-description = 你进行传送（距离 100），并阻止你标记的敌人跟随，即使它是通常可以跟随传送的怪物。传送后，你的敌人不再被标记。
+
+ability-demo-duelist-acrobatic-charge-name = 杂技冲锋
+ability-demo-duelist-acrobatic-charge-description = 最多移动 7 格并攻击你标记的敌人，推开路线上的任何怪物。
+
+ability-demo-duelist-isolation-name = 孤立
+ability-demo-duelist-isolation-description = 尝试传送走视线内除你标记的敌人之外的所有怪物。
+
+ability-demo-duelist-darting-duel-name = 灵动决斗
+ability-demo-duelist-darting-duel-description = 最多移动 5 格并攻击你标记的敌人。如果你攻击了敌人，则进行一次侧步。
+
+ability-demo-duelist-phase-charge-name = 相位冲锋
+ability-demo-duelist-phase-charge-description = 最多移动 10 格并攻击你标记的敌人。即使你和目标之间有墙壁或关着的门，该技能也有效。
+
+item-demo-duelist-name = 决斗者的
+item-demo-duelist-description = 原版旧城堡决斗者奖励细剑。
+
+item-demo-quickthorn-name = 『快刺』
+item-demo-quickthorn-description = 原版旧城堡决斗者奖励细剑。

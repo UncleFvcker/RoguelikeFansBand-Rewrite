@@ -233,7 +233,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 121;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 122;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -320,13 +320,7 @@ struct MonsterAbilityPlanResolution {
     trace: Option<ProjectileTrace>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct ActorDeathRecord {
-    actor_id: String,
-    actor_kind_id: String,
-    position: Position,
-    credit_player: bool,
-}
+type ActorDeathRecord = rfb_protocol::DuelistActorDeathDto;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct MonsterAbilityPlanRejection {
@@ -885,6 +879,7 @@ pub struct Game {
     pending_mutation_direction: Option<PendingMutationDirectionDto>,
     pending_ability_direction: Option<PendingAbilityDirectionDto>,
     duelist_target_id: Option<String>,
+    pending_duelist: Option<rfb_protocol::PendingDuelistDto>,
     next_item_instance_serial: u64,
     next_gold_pile_serial: u64,
     explored: Vec<bool>,
@@ -932,6 +927,19 @@ impl Game {
         let mut action = GameAction::from(envelope.command);
         let pending_race_mutation_choice = self.pending_race_mutation_choice();
         let race_mutation_choice_pending = pending_race_mutation_choice.is_some();
+        if self.duelist_prompt().is_some()
+            && !matches!(
+                action,
+                GameAction::ResolveDuelistChoice { .. } | GameAction::SetInterfaceLocale { .. }
+            )
+            && !(race_mutation_choice_pending
+                && matches!(action, GameAction::ChooseRaceMutation { .. }))
+        {
+            return Err(CoreError::DuelistChoiceRequired);
+        }
+        if let GameAction::ResolveDuelistChoice { choice } = &action {
+            self.validate_duelist_choice(choice)?;
+        }
         if self.pending_mutation_direction.is_some()
             && !matches!(action, GameAction::ResolveMutationDirection { .. })
             && !(race_mutation_choice_pending
@@ -1002,7 +1010,7 @@ impl Game {
             .mogaminator
             .enabled
             .then(|| self.item_knowledge.clone());
-        let nice_entities_at_command_start = self
+        let mut nice_entities_at_command_start = self
             .entities
             .iter()
             .filter(|entity| entity.nice)
@@ -1012,10 +1020,11 @@ impl Game {
         self.validate_runtime_invariants(&action)?;
         self.refresh_daily_bounty_target();
         let base_revision = self.revision;
-        let world_tick_before_command = self.world_tick;
+        let mut world_tick_before_command = self.world_tick;
         let player_position_before_command = self.player.position;
         let floor_before_command = self.current_floor_id.clone();
-        let visible_monster_auras_before_action = self.visible_monster_aura_entity_ids();
+        let mut visible_monster_auras_before_action = self.visible_monster_aura_entity_ids();
+        let mut duelist_completion = None;
         let wilderness_position_before_command = self.wilderness_position;
         let wilderness_view_offset_before_command = self.wilderness_view_offset;
         let light_radius_before_command = self.player_light_radius();
@@ -1123,6 +1132,7 @@ impl Game {
                     || self.mindcraft_cast_is_zero_time_unavailable(ability_id, target)
                     || self.berserker_cast_is_zero_time_unavailable(ability_id, target)
                     || self.duelist_cast_is_zero_time_unavailable(ability_id, target)
+                    || self.duelist_charge_prompt(ability_id, target).is_some()
         );
         if let Some(direction) = local_travel_direction {
             action = GameAction::Move { direction };
@@ -1151,6 +1161,7 @@ impl Game {
                 &action,
                 GameAction::Retire
                     | GameAction::ClearDuelistChallenge
+                    | GameAction::ResolveDuelistChoice { .. }
                     | GameAction::AcceptTask { .. }
                     | GameAction::BuyFromShop { .. }
                     | GameAction::ClaimTaskReward { .. }
@@ -1224,7 +1235,11 @@ impl Game {
                     && self.content.ability(ability_id).is_some_and(|ability| {
                         let mut ability = ability.clone();
                         self.apply_mindcraft_variant(&mut ability);
-                        matches!(ability.effect, AbilityEffectDefinition::BlinkSelf { .. })
+                        matches!(
+                            ability.effect,
+                            AbilityEffectDefinition::BlinkSelf { .. }
+                                | AbilityEffectDefinition::Strafing
+                        )
                     }) =>
             {
                 Some(ability_id.clone())
@@ -1272,6 +1287,17 @@ impl Game {
         }
 
         match action {
+            GameAction::ResolveDuelistChoice { choice } => {
+                turn_advance = 0;
+                duelist_completion = self.resolve_duelist_choice(
+                    choice,
+                    &mut events,
+                    &mut changed,
+                    &mut removed_entities,
+                    &mut chaos_patron_event_cursor,
+                )?;
+                visible_monster_auras_before_action = self.visible_monster_aura_entity_ids();
+            }
             GameAction::ClearDuelistChallenge => {
                 self.duelist_target_id = None;
                 events.push(DomainEvent::DuelistChallengeCleared);
@@ -1578,6 +1604,15 @@ impl Game {
                     &mut changed,
                     &mut removed_entities,
                 )?;
+                if self.pending_duelist.is_some() && self.duelist_prompt().is_none() {
+                    duelist_completion = self.resume_duelist_continuations(
+                        &mut events,
+                        &mut changed,
+                        &mut removed_entities,
+                        &mut chaos_patron_event_cursor,
+                    )?;
+                    visible_monster_auras_before_action = self.visible_monster_aura_entity_ids();
+                }
             }
             GameAction::DestroyItem { item_id, quantity } => {
                 let opens_capture_ball = self.items.iter().any(|item| {
@@ -1711,13 +1746,18 @@ impl Game {
                 }
             }
             GameAction::CastAbility { ability_id, target } => {
-                map_translation = self.resolve_player_ability(
-                    &ability_id,
-                    target,
-                    &mut events,
-                    &mut changed,
-                    &mut removed_entities,
-                )?;
+                if let Some(prompt) = self.duelist_charge_prompt(&ability_id, &target) {
+                    self.begin_duelist_choice(prompt);
+                    turn_advance = 0;
+                } else {
+                    map_translation = self.resolve_player_ability(
+                        &ability_id,
+                        target,
+                        &mut events,
+                        &mut changed,
+                        &mut removed_entities,
+                    )?;
+                }
                 if defer_ability_cooldowns {
                     if events.iter().any(|event| matches!(event,
                         DomainEvent::AbilityCastUnavailable { reason, .. } if reason == "anti-melee")) {
@@ -1939,7 +1979,15 @@ impl Game {
                     &mut changed,
                     &mut removed_entities,
                 )?;
-                self.decrement_ability_cooldowns(resolution.completed_turns);
+                if self.duelist_prompt().is_some() {
+                    self.continue_after_duelist_choice(
+                        rfb_protocol::DuelistContinuationDto::RestRecovery {
+                            completed_turns: resolution.completed_turns,
+                        },
+                    );
+                } else {
+                    self.decrement_ability_cooldowns(resolution.completed_turns);
+                }
                 turn_advance = u32::from(resolution.completed_turns).max(1);
                 if matches!(
                     resolution.stop_reason,
@@ -2210,6 +2258,13 @@ impl Game {
             }
         }
 
+        if let Some(completion) = &duelist_completion {
+            turn_advance = completion.turn_advance;
+            world_tick_before_command = completion.world_tick_before;
+            nice_entities_at_command_start = completion.nice_entity_ids.iter().cloned().collect();
+            self.command_actor_deaths
+                .extend(completion.actor_deaths.clone());
+        }
         if player_moved {
             action_cost = self.player_snow_movement_action_cost(action_cost);
             action_cost = self.player_wall_movement_action_cost(action_cost);
@@ -2222,11 +2277,13 @@ impl Game {
             &mut removed_entities,
         )?;
 
-        self.resolve_newly_visible_monster_auras(
-            &visible_monster_auras_before_action,
-            &mut events,
-            &mut changed,
-        );
+        if self.pending_duelist.is_none() {
+            self.resolve_newly_visible_monster_auras(
+                &visible_monster_auras_before_action,
+                &mut events,
+                &mut changed,
+            );
+        }
 
         self.apply_player_floor_item_knowledge();
         if automatic_pickup_after_move
@@ -2272,7 +2329,7 @@ impl Game {
         }
 
         self.refresh_duelist_challenge();
-        if advances_world && !self.player_is_dead() {
+        if advances_world && self.pending_duelist.is_none() && !self.player_is_dead() {
             events.extend(self.resolve_wilderness_terrain_hazard(self.player.position));
         }
         if advances_world {
@@ -2285,7 +2342,15 @@ impl Game {
                     )
                 })
             }) {
-                action_cost /= 3;
+                action_cost = if astral_guide_blink.as_ref().is_some_and(|id| {
+                    self.content.ability(id).is_some_and(|ability| {
+                        matches!(ability.effect, AbilityEffectDefinition::Strafing)
+                    })
+                }) {
+                    30
+                } else {
+                    action_cost / 3
+                };
             }
             if let Some(ability_id) = dimension_door {
                 let failed = events.iter().find_map(|event| match event {
@@ -2329,30 +2394,45 @@ impl Game {
             if let Some(extra_energy_cost) = ability_extra_energy {
                 action_cost = action_cost.saturating_add(i32::from(extra_energy_cost));
             }
-            spend_energy(&mut self.player.energy_need, action_cost);
-            self.advance_until_player_ready(
-                false,
-                self.map_scale != MapScaleDto::World,
-                pet_neglect_allowed,
-                &mut events,
-                &mut changed,
-                &mut removed_entities,
-            )?;
-            if recover_after_wait
-                && !self.player_is_dead()
-                && !self.wilderness_blocks_regeneration()
-            {
-                self.recover_player_resources(false, &mut events);
-            } else if !self.player_is_dead() && !self.wilderness_blocks_regeneration() {
-                self.apply_pet_upkeep_mana_loss(&mut events);
+            if self.duelist_prompt().is_some() {
+                self.continue_after_duelist_choice(
+                    rfb_protocol::DuelistContinuationDto::PlayerAction {
+                        energy_cost: action_cost,
+                        recover_after_wait,
+                        pet_neglect_allowed,
+                        visible_auras_before: visible_monster_auras_before_action
+                            .iter()
+                            .cloned()
+                            .collect(),
+                    },
+                );
+            } else {
+                spend_energy(&mut self.player.energy_need, action_cost);
+                self.advance_until_player_ready(
+                    false,
+                    self.map_scale != MapScaleDto::World,
+                    pet_neglect_allowed,
+                    &mut events,
+                    &mut changed,
+                    &mut removed_entities,
+                )?;
+                if self.pending_duelist.is_some() {
+                    self.continue_after_duelist_choice(
+                        rfb_protocol::DuelistContinuationDto::PlayerWorld { recover_after_wait },
+                    );
+                } else {
+                    self.finish_duelist_player_world(recover_after_wait, &mut events);
+                }
             }
         }
-        self.refresh_daily_bounty_target();
-        if let Some(actor_kind_id) = self.apply_bounty_deaths() {
-            events.push(DomainEvent::BountyMissionCompleted { actor_kind_id });
+        if self.pending_duelist.is_none() {
+            self.refresh_daily_bounty_target();
+            if let Some(actor_kind_id) = self.apply_bounty_deaths() {
+                events.push(DomainEvent::BountyMissionCompleted { actor_kind_id });
+            }
+            self.apply_deferred_task_events(duelist_completion.as_ref(), &mut events)?;
+            self.apply_campaign_events(&mut events);
         }
-        self.apply_task_events(&mut events)?;
-        self.apply_campaign_events(&mut events);
         self.process_chaos_patron_level_rewards(
             &mut events,
             &mut chaos_patron_event_cursor,
@@ -2360,29 +2440,70 @@ impl Game {
             &mut removed_entities,
         )?;
         self.clear_stale_mogaminator_query();
+        if self.pending_duelist.is_some() {
+            self.bind_external_tasks_to_floor_transitions(&events);
+        }
 
-        let full_visibility_refresh = self.player.position != player_position_before_command
+        let full_visibility_refresh = duelist_completion
+            .as_ref()
+            .is_some_and(|completion| completion.refresh_visibility)
+            || self.player.position != player_position_before_command
             || self.current_floor_id != floor_before_command
             || self.player_light_radius() != light_radius_before_command
             || self.player_see_invisible_sources() != see_invisible_sources_before_command
             || self.player_has_telepathy() != telepathy_before_command;
         let visible_monster_auras_before_invisible_refresh = self.visible_monster_aura_entity_ids();
-        self.refresh_invisible_visibility(
-            full_visibility_refresh,
-            &entity_positions_before_command,
-        );
-        self.refresh_weird_mind_visibility(
-            full_visibility_refresh,
-            &entity_positions_before_command,
-        );
-        self.resolve_newly_visible_monster_auras(
-            &visible_monster_auras_before_invisible_refresh,
-            &mut events,
-            &mut changed,
-        );
+        if self.pending_duelist.is_none() {
+            self.refresh_invisible_visibility(
+                full_visibility_refresh,
+                &entity_positions_before_command,
+            );
+            self.refresh_weird_mind_visibility(
+                full_visibility_refresh,
+                &entity_positions_before_command,
+            );
+            self.resolve_newly_visible_monster_auras(
+                &visible_monster_auras_before_invisible_refresh,
+                &mut events,
+                &mut changed,
+            );
+        }
         self.refresh_duelist_challenge();
 
-        if self.world_tick != world_tick_before_command && self.map_scale == MapScaleDto::Local {
+        if let Some(pending) = self.pending_duelist.as_mut() {
+            let completion = pending.command_completion.get_or_insert(
+                rfb_protocol::DuelistCommandCompletionDto {
+                    turn_advance,
+                    world_tick_before: world_tick_before_command,
+                    nice_entity_ids: nice_entities_at_command_start.iter().cloned().collect(),
+                    refresh_visibility: false,
+                    actor_deaths: Vec::new(),
+                    picked_up_kind_ids: Vec::new(),
+                    entered_floor_ids: Vec::new(),
+                },
+            );
+            completion
+                .actor_deaths
+                .append(&mut self.command_actor_deaths);
+            for event in &events {
+                match event {
+                    DomainEvent::ItemPickedUp { target_kind_id, .. } => {
+                        completion.picked_up_kind_ids.push(target_kind_id.clone())
+                    }
+                    DomainEvent::FloorTransitioned { to_floor_id, .. } => {
+                        completion.entered_floor_ids.push(to_floor_id.clone())
+                    }
+                    _ => {}
+                }
+            }
+            completion.refresh_visibility |= full_visibility_refresh;
+            turn_advance = 0;
+        }
+
+        if self.pending_duelist.is_none()
+            && self.world_tick != world_tick_before_command
+            && self.map_scale == MapScaleDto::Local
+        {
             // Clear only the grace windows that existed before this command.
             // Monsters generated while entering a floor keep their grace for
             // the player's first action on that floor.
@@ -3709,12 +3830,18 @@ impl Game {
             );
         }
         let mut difficulty = DerivedStatsPipeline::new();
+        let difficulty_scale =
+            if self.progress.level >= 5 && self.duelist_opponent(&self.entities[target_index].id) {
+                1
+            } else {
+                3
+            };
         difficulty.add_with_origin(
             StatKind::ActionDifficulty,
             StatLayer::Status,
             &fear.kind_id,
             fear.source_id,
-            i32::from(fear.intensity).saturating_mul(40),
+            i32::from(fear.intensity).saturating_mul(40) * difficulty_scale / 3,
         );
         !resolve_check(
             &mut self.rng,

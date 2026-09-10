@@ -1070,6 +1070,7 @@ impl Game {
         }
         let pending_ability_direction = payload.player.pending_ability_direction.clone();
         let duelist_target_id = payload.player.duelist_target_id.clone();
+        let pending_duelist = payload.player.pending_duelist.clone();
         if pending_ability_direction.as_ref().is_some_and(|pending| {
             pending.ability_id != "demo.ability.nature-natures-wrath"
                 || !matches!(pending.branch_roll, 2 | 6)
@@ -1493,6 +1494,7 @@ impl Game {
             pending_mutation_direction,
             pending_ability_direction,
             duelist_target_id,
+            pending_duelist,
             next_item_instance_serial,
             next_gold_pile_serial,
             explored,
@@ -1770,6 +1772,7 @@ impl Game {
         player.pending_mutation_direction = self.pending_mutation_direction.clone();
         player.pending_ability_direction = self.pending_ability_direction.clone();
         player.duelist_target_id = self.duelist_target_id.clone();
+        player.pending_duelist = self.pending_duelist.clone();
         player.body_slots = self
             .body_slots
             .iter()

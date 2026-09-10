@@ -1878,6 +1878,7 @@
           {"itemKindId": "demo.item.crisdurian", "quantity": 1, "weight": 1}
         ],
         "classOverrides": [
+          {"classId": "demo.class.duelist", "entries": [{"itemKindId": "demo.item.duelist", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.quickthorn", "quantity": 1, "weight": 4}]},
           {
             "classId": "demo.class.warrior",
             "entries": [
@@ -1919,6 +1920,7 @@
       ],
       "reward": {
         "itemInstanceId": "demo.task.thieves-hideout.reward.1",
+        "classOverrides": [{"classId": "demo.class.duelist", "entries": [{"itemKindId": "demo.item.rapier", "quantity": 1, "weight": 1}]}],
         "entries": [
           { "itemKindId": "demo.item.broad-sword", "quantity": 1, "weight": 1 }
         ]

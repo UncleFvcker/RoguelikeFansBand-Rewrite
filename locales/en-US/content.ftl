@@ -9182,3 +9182,30 @@ actor-demo-duelist-player-name = Duelist
 actor-demo-duelist-player-description = A lightly armored duelist.
 ability-demo-duelist-mark-target-name = Mark Target
 ability-demo-duelist-mark-target-description = Challenge a visible creature, waking it and making it hostile. Replaces the current challenge.
+
+ability-demo-duelist-charge-name = Charge
+ability-demo-duelist-charge-description = Move up to 5 grids and attack your marked foe.
+
+ability-demo-duelist-strafing-name = Strafing
+ability-demo-duelist-strafing-description = Blink to a new location within your current line of sight.
+
+ability-demo-duelist-disengage-name = Disengage
+ability-demo-duelist-disengage-description = Teleport up to 100 grids, prevent your marked foe from following, and clear the challenge.
+
+ability-demo-duelist-acrobatic-charge-name = Acrobatic Charge
+ability-demo-duelist-acrobatic-charge-description = Move up to 7 grids and attack your marked foe, displacing intervening monsters.
+
+ability-demo-duelist-isolation-name = Isolation
+ability-demo-duelist-isolation-description = Try to teleport away all monsters in line of sight except your marked foe.
+
+ability-demo-duelist-darting-duel-name = Darting Duel
+ability-demo-duelist-darting-duel-description = Charge up to 5 grids; if the attack retains your challenge, follow it with Strafing.
+
+ability-demo-duelist-phase-charge-name = Phase Charge
+ability-demo-duelist-phase-charge-description = Move up to 10 grids and attack your marked foe, passing through eligible walls and closed doors.
+
+item-demo-duelist-name = of the Duelist
+item-demo-duelist-description = A source rapier from the Duelist Old Castle rewards.
+
+item-demo-quickthorn-name = 'Quickthorn'
+item-demo-quickthorn-description = A source rapier from the Duelist Old Castle rewards.

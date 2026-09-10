@@ -481,6 +481,9 @@ impl Game {
         if !self.duelist_challenge_is_valid() {
             return Err(CoreError::InvalidSave("duelist challenge is invalid"));
         }
+        if !self.pending_duelist_is_valid() {
+            return Err(CoreError::InvalidSave("pending duelist choice is invalid"));
+        }
         let world = self
             .content
             .world(&self.world_id)
@@ -836,6 +839,15 @@ impl Game {
             .progress
             .validate(self.character_experience_percent(), victory_cap_unlocked)
             || self.progress.skills != expected_skills
+            || self
+                .character_definitions()
+                .is_some_and(|(_, race, class, _)| {
+                    race.mutation_choice_exclusions_by_class
+                        .get(&class.id)
+                        .is_some_and(|excluded| {
+                            !excluded.is_disjoint(&self.progress.active_mutation_ids)
+                        })
+                })
             || !super::weapon_proficiency::weapon_proficiency_progress_is_valid(
                 &self.content,
                 self.build.as_ref(),
@@ -1776,7 +1788,17 @@ impl Game {
             || (expected_role == ActorRole::Player && actor.hp < -1_000_000)
             || (expected_role == ActorRole::Monster
                 && !(1..=STANDARD_ACTION_COST).contains(&actor.energy_need))
-            || (expected_role == ActorRole::Player && actor.hp >= 0 && actor.energy_need > 0)
+            || (expected_role == ActorRole::Player
+                && actor.hp >= 0
+                && actor.energy_need > 0
+                && !self.pending_duelist.as_ref().is_some_and(|pending| {
+                    pending.continuations.iter().any(|frame| {
+                        matches!(
+                            frame,
+                            rfb_protocol::DuelistContinuationDto::WorldTick { .. }
+                        )
+                    })
+                }))
             || actor.energy_need < -STANDARD_ACTION_COST
             || actor.hp > effective_max_hp
             || (expected_role == ActorRole::Player && actor.pack.is_some())
@@ -1789,9 +1811,7 @@ impl Game {
             || (actor.summon.is_some() && actor.pack.is_some())
             || actor.anger > 100
             || (actor.anger > 0
-                && (expected_role != ActorRole::Monster
-                    || runtime_definition.monster_casting.is_none()
-                    || self.actor_is_player_side(actor)))
+                && (expected_role != ActorRole::Monster || self.actor_is_player_side(actor)))
             || (actor.friendly
                 && (expected_role != ActorRole::Monster
                     || actor.summon.is_none()

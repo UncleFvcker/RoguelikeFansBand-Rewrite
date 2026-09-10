@@ -118,6 +118,32 @@ impl Game {
                 .duelist_challenge_target(target)
                 .filter(|_| self.player_is_duelist())
                 .map(|target_entity_id| AbilityTargetPlan::DuelistChallenge { target_entity_id }),
+            AbilityEffectDefinition::DuelistCharge
+            | AbilityEffectDefinition::DuelistAcrobaticCharge
+            | AbilityEffectDefinition::DuelistPhaseCharge
+            | AbilityEffectDefinition::DuelistDartingDuel
+            | AbilityEffectDefinition::DuelistDisengage
+            | AbilityEffectDefinition::DuelistIsolation => {
+                if !self.player_is_duelist() || !matches!(target, TargetSelection::SelfTarget) {
+                    return None;
+                }
+                let opponent = self
+                    .entities
+                    .iter()
+                    .find(|actor| self.duelist_opponent(&actor.id) && actor.hp > 0)?;
+                let isolation = matches!(ability.effect, AbilityEffectDefinition::DuelistIsolation);
+                let needs_los = !matches!(
+                    ability.effect,
+                    AbilityEffectDefinition::DuelistIsolation
+                        | AbilityEffectDefinition::DuelistDisengage
+                        | AbilityEffectDefinition::DuelistPhaseCharge
+                );
+                ((!needs_los || has_line_of_sight(self, self.player.position, opponent.position))
+                    && (isolation || self.entity_is_visible_to_player(opponent)))
+                .then_some(AbilityTargetPlan::SelfTarget)
+            }
+            AbilityEffectDefinition::Strafing => matches!(target, TargetSelection::SelfTarget)
+                .then_some(AbilityTargetPlan::SelfTarget),
             // These forms are monster-casting-only. The player cast path
             // never produces a target plan for them.
             AbilityEffectDefinition::BlinkTarget { .. }

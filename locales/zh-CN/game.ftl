@@ -692,3 +692,7 @@ ability-unavailable-duelist-heavy-armor = 护甲过重，决斗天赋失效。
 ability-unavailable-duelist-shield = 盾牌或捕获球使决斗天赋失效。
 ability-unavailable-duelist-multiple-weapons = 多把武器使决斗天赋失效。
 ability-unavailable-duelist-poison-needle = 毒针使决斗天赋失效。
+duelist-block-teleport-success = 你阻止了 { $target } 将你传送走。
+duelist-block-teleport-failure = 你未能阻止 { $target } 将你传送走。
+duelist-follow-teleport-success = 你跟上了 { $target } 的传送。
+duelist-follow-teleport-failure = 你在追随 { $target } 的传送时迷失了方向。

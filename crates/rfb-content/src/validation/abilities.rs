@@ -1056,6 +1056,13 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::MeleeAdjacent
                 | AbilityEffectDefinition::ChargeThrough
                 | AbilityEffectDefinition::DuelistChallenge
+                | AbilityEffectDefinition::DuelistCharge
+                | AbilityEffectDefinition::DuelistAcrobaticCharge
+                | AbilityEffectDefinition::DuelistPhaseCharge
+                | AbilityEffectDefinition::DuelistDartingDuel
+                | AbilityEffectDefinition::Strafing
+                | AbilityEffectDefinition::DuelistDisengage
+                | AbilityEffectDefinition::DuelistIsolation
                 | AbilityEffectDefinition::SmashTrap
                 | AbilityEffectDefinition::ProbeMonsters
                 | AbilityEffectDefinition::Concentrate
@@ -1256,6 +1263,13 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::MeleeThenTeleport { .. }
             | AbilityEffectDefinition::DraconianStrike { .. }
             | AbilityEffectDefinition::SwapPosition => projectile_target_rule,
+            AbilityEffectDefinition::DuelistCharge
+            | AbilityEffectDefinition::DuelistAcrobaticCharge
+            | AbilityEffectDefinition::DuelistPhaseCharge
+            | AbilityEffectDefinition::DuelistDartingDuel
+            | AbilityEffectDefinition::Strafing
+            | AbilityEffectDefinition::DuelistDisengage
+            | AbilityEffectDefinition::DuelistIsolation => self_target_rule,
             AbilityEffectDefinition::DuelistChallenge => {
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Entity]
                     && (1..=64).contains(&ability.target.range)

@@ -6,6 +6,7 @@ mod compound;
 mod control;
 mod damage;
 mod duelist;
+mod duelist_choices;
 mod items;
 pub(in crate::game) mod mindcraft;
 mod restoration;
@@ -40,6 +41,43 @@ impl Game {
                 AbilityTargetPlan::DuelistChallenge { target_entity_id },
             ) => {
                 self.resolve_duelist_challenge(target_entity_id, events);
+            }
+            (AbilityEffectDefinition::Strafing, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_teleport_with_range(
+                    &ability.id,
+                    10,
+                    true,
+                    false,
+                    None,
+                    events,
+                    changed,
+                );
+            }
+            (AbilityEffectDefinition::DuelistDisengage, AbilityTargetPlan::SelfTarget) => {
+                let excluded = self.duelist_target_id.clone();
+                self.resolve_player_teleport_with_range(
+                    &ability.id,
+                    100,
+                    false,
+                    false,
+                    excluded.as_deref(),
+                    events,
+                    changed,
+                );
+                self.duelist_target_id = None;
+                events.push(DomainEvent::DuelistChallengeCleared);
+            }
+            (AbilityEffectDefinition::DuelistIsolation, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_duelist_isolation(&ability.id, events, changed);
+            }
+            (
+                AbilityEffectDefinition::DuelistCharge
+                | AbilityEffectDefinition::DuelistAcrobaticCharge
+                | AbilityEffectDefinition::DuelistPhaseCharge
+                | AbilityEffectDefinition::DuelistDartingDuel,
+                AbilityTargetPlan::SelfTarget,
+            ) => {
+                return self.resolve_duelist_charge(&ability, events, changed, removed_entities);
             }
             (AbilityEffectDefinition::ChargeThrough, AbilityTargetPlan::Step { direction }) => {
                 return self.resolve_player_charge_through(

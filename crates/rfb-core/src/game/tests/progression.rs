@@ -1703,7 +1703,7 @@ fn draconian_metamorphosis_replaces_body_and_derives_combat_save_and_hash_state(
     );
 
     let rng_before_polymorph = game.rng.clone();
-    game.resolve_player_polymorph("demo.actor.lord-of-change", 61, &mut Vec::new());
+    game.resolve_player_polymorph(None, "demo.actor.lord-of-change", 61, &mut Vec::new());
     assert_eq!(game.rng, rng_before_polymorph);
     assert!(
         !game
@@ -1759,6 +1759,7 @@ fn draconian_metamorphosis_uses_class_multipliers_and_original_exclusions() {
         "demo.build.archer",
         "demo.build.cavalry",
         "demo.build.sniper",
+        "demo.build.duelist",
     ] {
         let mut game = draconian_reward_game_for_build(build_id);
         clear_monsters(&mut game);
@@ -1769,6 +1770,22 @@ fn draconian_metamorphosis_uses_class_multipliers_and_original_exclusions() {
             .pending_race_mutation_choice
             .expect("Draconian power should remain selectable");
         assert_eq!(pending.candidates.len(), 8, "{build_id}");
+        assert!(!game.choose_race_mutation(
+            "draconian-power",
+            DRACONIAN_METAMORPHOSIS_MUTATION_ID,
+            &mut Vec::new()
+        ));
+        let mut invalid = game.clone();
+        invalid
+            .progress
+            .active_mutation_ids
+            .insert(DRACONIAN_METAMORPHOSIS_MUTATION_ID.to_owned());
+        invalid
+            .progress
+            .locked_mutation_ids
+            .insert(DRACONIAN_METAMORPHOSIS_MUTATION_ID.to_owned());
+        invalid.reconcile_player_body_slots_for_current_form();
+        assert!(Game::from_save_with_content(invalid.to_save(), invalid.content.clone()).is_err());
         assert!(
             !pending
                 .candidates

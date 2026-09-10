@@ -357,9 +357,9 @@ impl Game {
             .and_then(|id| self.resources.get(id))
             .map_or(0, |pool| pool.current);
         let class_hit_point_cost = if source == AbilitySourceDto::Class {
-            class_activation
-                .as_ref()
-                .map_or(0, |activation| activation.hit_point_cost)
+            class_activation.as_ref().map_or(0, |activation| {
+                self.class_ability_hit_point_cost(activation)
+            })
         } else {
             0
         };
@@ -525,7 +525,13 @@ impl Game {
             changed,
             removed_entities,
         );
-        if result.is_ok() && source == AbilitySourceDto::Class {
+        if result.is_ok() && source == AbilitySourceDto::Class && self.duelist_prompt().is_some() {
+            events.remove(cast_event_index);
+            self.continue_after_duelist_choice(rfb_protocol::DuelistContinuationDto::ClassCast {
+                resolution,
+                hit_point_cost: hp_paid,
+            });
+        } else if result.is_ok() && source == AbilitySourceDto::Class {
             let paid = self.pay_class_ability_hit_points(hp_paid);
             if let DomainEvent::AbilityCastSucceeded { resolution } = &mut events[cast_event_index]
             {
@@ -546,7 +552,7 @@ impl Game {
         result
     }
 
-    fn pay_class_ability_hit_points(&mut self, cost: u32) -> u32 {
+    pub(in crate::game) fn pay_class_ability_hit_points(&mut self, cost: u32) -> u32 {
         // spells.c: CASTER_USE_HP pays after the effect, including vampiric healing.
         // take_hit ignores a player who already died during the effect.
         if cost == 0 || self.player_is_dead() {

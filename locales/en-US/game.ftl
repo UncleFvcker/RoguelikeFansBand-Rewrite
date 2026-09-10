@@ -707,3 +707,7 @@ ability-unavailable-duelist-heavy-armor = Your armor is too heavy for dueling.
 ability-unavailable-duelist-shield = A shield or capture ball disrupts your dueling talents.
 ability-unavailable-duelist-multiple-weapons = Multiple weapons disrupt your dueling talents.
 ability-unavailable-duelist-poison-needle = A poison needle disrupts your dueling talents.
+duelist-block-teleport-success = You stop { $target } from teleporting you away.
+duelist-block-teleport-failure = You fail to stop { $target } from teleporting you away.
+duelist-follow-teleport-success = You follow { $target } through the teleport.
+duelist-follow-teleport-failure = You lose your way while following { $target } through the teleport.

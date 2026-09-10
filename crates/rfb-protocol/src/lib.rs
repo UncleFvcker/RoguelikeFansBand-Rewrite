@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.247";
+pub const PROTOCOL_VERSION: &str = "1.248";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 16;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 17;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -102,6 +102,153 @@ pub struct PendingAbilityDirectionDto {
     rename_all = "kebab-case",
     rename_all_fields = "camelCase"
 )]
+pub enum DuelistPromptDto {
+    Charge {
+        ability_id: String,
+        target_entity_id: String,
+        distance: u32,
+        range: u16,
+    },
+    BlockTeleport {
+        source_entity_id: String,
+    },
+    FollowTeleport {
+        source_entity_id: String,
+    },
+    Challenge,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase"
+)]
+pub enum DuelistChoiceDto {
+    Confirm { accepted: bool },
+    Challenge { entity_id: Option<String> },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct DuelistCommandCompletionDto {
+    pub turn_advance: u32,
+    pub world_tick_before: u32,
+    pub nice_entity_ids: Vec<String>,
+    pub refresh_visibility: bool,
+    pub actor_deaths: Vec<DuelistActorDeathDto>,
+    pub picked_up_kind_ids: Vec<String>,
+    pub entered_floor_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct DuelistActorDeathDto {
+    pub actor_id: String,
+    pub actor_kind_id: String,
+    pub position: Position,
+    pub credit_player: bool,
+}
+
+// These are the concrete suspended callers of the Duelist's three in-action choices.
+// PlayerDto projects only the prompt; saved actors retain the remaining execution.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase"
+)]
+pub enum DuelistContinuationDto {
+    ChaosReward {
+        level: u16,
+    },
+    Melee {
+        impact_item_id: String,
+    },
+    Charge {
+        ability_id: String,
+        target_entity_id: String,
+        floor_id: String,
+        succeeded: bool,
+    },
+    ClassCast {
+        resolution: AbilityCastResolutionDto,
+        hit_point_cost: u32,
+    },
+    MeleeTeleport {
+        ability_id: String,
+        target_entity_id: String,
+        target_kind_id: String,
+        floor_id: String,
+        player_from: Position,
+        candidates: Vec<Position>,
+    },
+    AdjacentMelee {
+        directions: Vec<Direction>,
+        floor_id: String,
+    },
+    MonsterTeleport {
+        source_entity_id: String,
+        ability_id: String,
+        blocked: bool,
+    },
+    MonsterCast {
+        resolution: Box<MonsterAbilityCastResolutionDto>,
+        player_hp_before: i32,
+    },
+    MonsterWorld {
+        source_entity_id: String,
+        remaining_actions: u8,
+        floor_id: String,
+        surround_reservations: Vec<Position>,
+        visible_auras_before: Vec<String>,
+    },
+    MonsterPulse {
+        remaining_entity_ids: Vec<String>,
+        floor_id: String,
+        surround_reservations: Vec<Position>,
+        visible_auras_before: Vec<String>,
+        pet_neglect_allowed: bool,
+    },
+    WorldTick {
+        resting: bool,
+        local_floor_active: bool,
+        pet_neglect_allowed: bool,
+    },
+    PlayerAction {
+        energy_cost: i32,
+        recover_after_wait: bool,
+        pet_neglect_allowed: bool,
+        visible_auras_before: Vec<String>,
+    },
+    PlayerWorld {
+        recover_after_wait: bool,
+    },
+    RestRecovery {
+        completed_turns: u16,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PendingDuelistDto {
+    pub prompt: Option<DuelistPromptDto>,
+    pub continuations: Vec<DuelistContinuationDto>,
+    pub command_completion: Option<DuelistCommandCompletionDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase"
+)]
 pub enum GameCommand {
     Casino {
         facility_id: String,
@@ -148,6 +295,9 @@ pub enum GameCommand {
     },
     CancelAbilityDirection,
     ClearDuelistChallenge,
+    ResolveDuelistChoice {
+        choice: DuelistChoiceDto,
+    },
     CloseDoor {
         direction: Direction,
     },
@@ -1471,6 +1621,13 @@ pub enum AbilityEffectSpecDto {
     MeleeAdjacent,
     ChargeThrough,
     DuelistChallenge,
+    DuelistCharge,
+    DuelistAcrobaticCharge,
+    DuelistPhaseCharge,
+    DuelistDartingDuel,
+    Strafing,
+    DuelistDisengage,
+    DuelistIsolation,
     SmashTrap,
     ProbeMonsters,
     Concentrate,
@@ -3500,6 +3657,7 @@ pub enum RestStopReasonDto {
     InvalidTurns,
     PlayerDied,
     MutationDirectionRequired,
+    DuelistChoiceRequired,
     PetDismissalRequired,
     TurnLimit,
 }
@@ -3676,6 +3834,8 @@ pub struct PlayerDto {
     pub pending_ability_direction: Option<PendingAbilityDirectionDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub duelist_target_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pending_duelist: Option<DuelistPromptDto>,
     #[serde(default)]
     pub carried_weight_tenths_pound: u32,
     #[serde(default)]
@@ -4942,6 +5102,12 @@ pub fn generated_typescript() -> String {
     push_declaration!(Direction);
     push_declaration!(PendingMutationDirectionDto);
     push_declaration!(PendingAbilityDirectionDto);
+    push_declaration!(DuelistPromptDto);
+    push_declaration!(DuelistChoiceDto);
+    push_declaration!(DuelistContinuationDto);
+    push_declaration!(DuelistCommandCompletionDto);
+    push_declaration!(DuelistActorDeathDto);
+    push_declaration!(PendingDuelistDto);
     push_declaration!(LocaleDto);
     push_declaration!(AutoGetModeDto);
     push_declaration!(MogaminatorDispositionDto);
@@ -5210,6 +5376,7 @@ pub struct PlayerSaveDto {
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
     pub pending_ability_direction: Option<PendingAbilityDirectionDto>,
     pub duelist_target_id: Option<String>,
+    pub pending_duelist: Option<PendingDuelistDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub statuses: Vec<StatusSaveDto>,
     #[serde(default, skip_serializing_if = "is_false")]
@@ -6372,6 +6539,7 @@ mod tests {
                 pending_mutation_direction: None,
                 pending_ability_direction: None,
                 duelist_target_id: None,
+                pending_duelist: None,
                 carried_weight_tenths_pound: 5,
                 carry_capacity_tenths_pound: 100,
                 encumbrance_speed_penalty: 0,
@@ -6662,6 +6830,7 @@ mod tests {
             pending_mutation_direction: None,
             pending_ability_direction: None,
             duelist_target_id: None,
+            pending_duelist: None,
             statuses: Vec::new(),
             confusing_strike_ready: false,
             sniper_concentration: 0,

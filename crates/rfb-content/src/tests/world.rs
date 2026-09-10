@@ -11922,7 +11922,21 @@ fn fixed_wilderness_task_geometry_and_rewards_match_source() {
             task.reward.as_ref().unwrap().entries[0].item_kind_id,
             "demo.item.crisdurian"
         );
-        assert_eq!(task.reward.as_ref().unwrap().class_overrides.len(), 3);
+        assert_eq!(task.reward.as_ref().unwrap().class_overrides.len(), 4);
+        assert_eq!(
+            task.reward
+                .as_ref()
+                .unwrap()
+                .class_overrides
+                .iter()
+                .find(|entry| entry.class_id == "demo.class.duelist")
+                .unwrap()
+                .entries
+                .iter()
+                .map(|entry| (entry.item_kind_id.as_str(), entry.weight))
+                .collect::<BTreeMap<_, _>>(),
+            BTreeMap::from([("demo.item.duelist", 1), ("demo.item.quickthorn", 4)])
+        );
         assert_eq!(
             task.reward
                 .as_ref()

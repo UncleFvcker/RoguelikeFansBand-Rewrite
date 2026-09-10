@@ -151,12 +151,16 @@ impl Game {
         dice: u16,
         sides: u16,
         nice: bool,
+        target_player: bool,
     ) -> i32 {
         let rolled = self.roll_damage(dice, sides);
-        nice_melee_roll(
-            scale_actor_power(rolled, self.entities[source_index].power_per_mille),
-            nice,
-        )
+        let damage = scale_actor_power(rolled, self.entities[source_index].power_per_mille);
+        let damage = if target_player {
+            self.duelist_reduce_damage(&self.entities[source_index].id, damage)
+        } else {
+            damage
+        };
+        nice_melee_roll(damage, nice)
     }
 
     pub(super) fn resolve_monster_unlife_against_player(
@@ -495,12 +499,13 @@ impl Game {
 
     pub(super) fn resolve_player_polymorph(
         &mut self,
+        source_entity_id: Option<&str>,
         source_kind_id: &str,
         source_level: u32,
         events: &mut Vec<DomainEvent>,
     ) {
         if self.player_is_polymorph_immune()
-            || self.monster_saving_throw(source_kind_id, source_level, events)
+            || self.monster_saving_throw(source_entity_id, source_kind_id, source_level, events)
         {
             return;
         }
@@ -634,6 +639,20 @@ impl Game {
                 .clamp(0, 15)
         };
         let prepared_damage = prepared_damage - prepared_damage * magic_resistance / 100;
+        let duelist_opponent = self.duelist_opponent(source_entity_id);
+        let prepared_damage = if duelist_opponent {
+            // GF applies Evasion before the Duelist reduction and elemental resistance.
+            let evaded = self.apply_evasion_to_monster_ability_damage(
+                ability_id,
+                resolve_damage(
+                    DamagePacket::after_armor(raw_damage, prepared_damage, damage_type),
+                    ResistanceLevel::Normal,
+                ),
+            );
+            self.duelist_reduce_damage(source_entity_id, evaded.applied)
+        } else {
+            prepared_damage
+        };
         let resistance = self.effective_player_resistances().level(damage_type);
         self.record_monster_player_resistance(source_entity_id, damage_type, resistance);
         let damage = self.resist_player_damage(resolve_damage(
@@ -666,7 +685,11 @@ impl Game {
             damage,
             self.player_spell_damage_percent(damage_type, damage.applied),
         );
-        let damage = self.apply_evasion_to_monster_ability_damage(ability_id, damage);
+        let damage = if duelist_opponent {
+            damage
+        } else {
+            self.apply_evasion_to_monster_ability_damage(ability_id, damage)
+        };
         let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
         let damage = application.damage;
         self.damage_player_inventory(source_kind_id, damage_type, false, damage.applied, events);
@@ -943,6 +966,7 @@ impl Game {
                             *damage_dice,
                             *damage_sides,
                             false,
+                            false,
                         );
                         let damage_type = DamageType::from(*damage_type);
                         let resistance = self.entities[target_index].resistances.level(damage_type);
@@ -967,6 +991,7 @@ impl Game {
                             *damage_dice,
                             *damage_sides,
                             false,
+                            false,
                         );
                         Some(resolve_armored_damage(
                             raw,
@@ -986,6 +1011,7 @@ impl Game {
                             source_index,
                             *damage_dice,
                             *damage_sides,
+                            false,
                             false,
                         );
                         let duration = resolve_damage(
@@ -1015,6 +1041,7 @@ impl Game {
                             *damage_dice,
                             *damage_sides,
                             false,
+                            false,
                         );
                         Some(resolve_damage(
                             DamagePacket::new(raw, DamageType::Poison),
@@ -1043,6 +1070,7 @@ impl Game {
                                 *amount_dice,
                                 *amount_sides,
                                 false,
+                                false,
                             )
                             .max(0),
                         )
@@ -1065,6 +1093,7 @@ impl Game {
                             source_index,
                             *duration_dice,
                             *duration_sides,
+                            false,
                             false,
                         );
                         self.apply_actor_melee_status(
@@ -1098,6 +1127,7 @@ impl Game {
                                 source_index,
                                 *damage_dice,
                                 *damage_sides,
+                                false,
                                 false,
                             )
                         });
@@ -1155,6 +1185,7 @@ impl Game {
                             source_index,
                             *duration_dice,
                             *duration_sides,
+                            false,
                             false,
                         );
                         self.apply_actor_melee_status(
@@ -1594,7 +1625,15 @@ impl Game {
                 continue;
             }
             // A preceding blow may permanently change the player's body and armor.
-            let target = self.player_derived_stats();
+            let mut target = self.player_derived_stats();
+            if self.duelist_opponent(&source_entity_id) {
+                target.armor_class = target.armor_class.with_modifier(
+                    StatLayer::Class,
+                    "demo.class.duelist",
+                    100,
+                    StatBounds::UNBOUNDED,
+                );
+            }
             let armor_class = target.armor_class.value;
             let player_hp_before = self.player.hp;
             let ability = attacker.melee_skill.with_modifier(
@@ -1667,9 +1706,10 @@ impl Game {
                             *damage_dice,
                             *damage_sides,
                             nice,
+                            true,
                         );
                         if *damage_type == ActorDamageType::Curse
-                            && self.monster_curse_save(&kind_id, events)
+                            && self.monster_curse_save(Some(&source_entity_id), &kind_id, events)
                         {
                             None
                         } else {
@@ -1702,6 +1742,7 @@ impl Game {
                             *damage_dice,
                             *damage_sides,
                             nice,
+                            true,
                         );
                         Some(
                             self.reduce_player_damage(resolve_armored_damage(
@@ -1723,6 +1764,7 @@ impl Game {
                             *damage_dice,
                             *damage_sides,
                             nice,
+                            true,
                         );
                         let duration = resolve_damage(
                             DamagePacket::new(raw, DamageType::Poison),
@@ -1755,6 +1797,7 @@ impl Game {
                             *damage_dice,
                             *damage_sides,
                             nice,
+                            true,
                         );
                         Some(
                             self.reduce_player_damage(resolve_damage(
@@ -1786,6 +1829,7 @@ impl Game {
                                 *amount_dice,
                                 *amount_sides,
                                 nice,
+                                true,
                             )
                             .max(0),
                         )
@@ -1889,6 +1933,7 @@ impl Game {
                             *amount_dice,
                             *amount_sides,
                             nice,
+                            true,
                         );
                         let requested = u64::try_from(rolled.max(0))
                             .unwrap_or(u64::MAX)
@@ -1908,6 +1953,7 @@ impl Game {
                                 *amount_dice,
                                 *amount_sides,
                                 nice,
+                                true,
                             )
                             .max(0),
                         )
@@ -1930,6 +1976,7 @@ impl Game {
                             *duration_dice,
                             *duration_sides,
                             nice,
+                            true,
                         );
                         if duration > 0
                             && !self.player_status_immunities().contains(STATUS_BLEEDING)
@@ -1959,7 +2006,13 @@ impl Game {
                             .effective_player_resistances()
                             .level(DamageType::Confusion);
                         let raw = (*damage_dice > 0).then(|| {
-                            self.roll_monster_melee_effect(index, *damage_dice, *damage_sides, nice)
+                            self.roll_monster_melee_effect(
+                                index,
+                                *damage_dice,
+                                *damage_sides,
+                                nice,
+                                true,
+                            )
                         });
                         let duration = status_effects::resisted_status_duration_with_percent(
                             u32::try_from(10 + self.roll_damage(1, 20)).unwrap_or(u32::MAX),
@@ -1986,7 +2039,7 @@ impl Game {
                         None
                     }
                     MeleeBlowEffectDefinition::Amnesia { .. } => {
-                        if !self.monster_curse_save(&kind_id, events) {
+                        if !self.monster_curse_save(Some(&source_entity_id), &kind_id, events) {
                             let cleared_cells = self.clear_current_floor_memory(changed);
                             events.push(DomainEvent::MonsterMeleeAmnesia {
                                 source_kind_id: kind_id.clone(),
@@ -2013,7 +2066,12 @@ impl Game {
                         None
                     }
                     MeleeBlowEffectDefinition::PolymorphPlayer { .. } => {
-                        self.resolve_player_polymorph(&kind_id, definition.level, events);
+                        self.resolve_player_polymorph(
+                            Some(&source_entity_id),
+                            &kind_id,
+                            definition.level,
+                            events,
+                        );
                         None
                     }
                     MeleeBlowEffectDefinition::Stun {
@@ -2026,6 +2084,7 @@ impl Game {
                             *duration_dice,
                             *duration_sides,
                             nice,
+                            true,
                         );
                         self.apply_player_melee_status(STATUS_STUN, duration, &kind_id);
                         None

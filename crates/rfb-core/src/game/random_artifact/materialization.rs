@@ -4,6 +4,86 @@ use crate::state::ItemInstance;
 use rfb_content::*;
 use rfb_protocol::{ItemQualityDto, MeleeDamageDiceDto, WeaponTraitDto};
 
+/// artifact.c::create_replacement_art, used when a named quest reward already exists.
+/// Candidate rejection still consumes RNG and interns names, exactly like creation.
+pub(in crate::game) fn materialize_replacement(
+    content: &ContentCatalog,
+    rng: &mut RfbRng,
+    fixed: &ItemInstance,
+    class_id: &str,
+    quarks: &mut BTreeSet<String>,
+) -> Option<ItemInstance> {
+    let definition = content.item(&fixed.kind_id)?;
+    let base = content.item(&definition.artifact_generation.as_ref()?.base_item_kind_id)?;
+    let data = content.random_artifact_generation()?;
+    let mut original_value = crate::game::item_value::instance::value_object(content, fixed)?;
+    if matches!(original_value.tval, 16..=18 | 21..=23) {
+        original_value.to_h = original_value.to_h.max(10);
+        original_value.to_d = original_value.to_d.max(10);
+    } else if (30..=38).contains(&original_value.tval) {
+        original_value.to_a = original_value.to_a.max(10);
+    }
+    let mut base_power = crate::game::item_value::object_value(original_value)?;
+    if !(16..=18).contains(&base.rfb_base_kind?.tval) {
+        base_power = base_power.max(7500);
+    }
+    let minimum = (base_power * 4 / 5).max(base_power - 10_000);
+    let maximum = (base_power * 6 / 5).min(base_power + 10_000);
+    let mut original = fixed.clone();
+    original.kind_id = base.id.clone();
+    original.activation = None;
+    original.charges = None;
+    original.device_recovery_progress = 0;
+    original.fuel = crate::game::initial_item_fuel(content, &base.id);
+    let mut object = crate::game::item_value::instance::value_object(content, &original)?;
+    object.flags.retain(|flag| valid_rfb_runtime_flag(flag));
+    let creation = Creation {
+        level: i32::from(definition.generation_level),
+        class_id,
+        good: true,
+        base_flags: Some(&base.rfb_value.as_ref()?.flags),
+        ..Default::default()
+    };
+    let mut best = None;
+    let mut worst = None;
+    let mut best_power = i32::MIN;
+    let mut worst_power = i32::MAX;
+    for _ in 0..10_000 {
+        let roll = create_artifact(
+            rng,
+            data,
+            object.clone(),
+            creation,
+            quarks,
+            None,
+            false,
+            i32::from(base.weight_tenths_pound),
+        )?;
+        let power = score(&roll.object, creation.base_flags);
+        let item = apply_roll(base, &original, roll);
+        if (minimum..=maximum).contains(&power) {
+            let mut item = item;
+            item.intrinsic_weight_tenths_pound = Some(definition.weight_tenths_pound);
+            return Some(item);
+        }
+        if power > best_power {
+            best_power = power;
+            best = Some(item.clone());
+        }
+        if power < worst_power {
+            worst_power = power;
+            worst = Some(item);
+        }
+    }
+    let mut item = if worst_power > base_power {
+        worst?
+    } else {
+        best?
+    };
+    item.intrinsic_weight_tenths_pound = Some(definition.weight_tenths_pound);
+    Some(item)
+}
+
 /// E8.5b's item factory. The caller supplies the name table shared by consecutive
 /// generations and commits only the returned instance; IDs are never allocated here.
 #[allow(clippy::too_many_arguments)] // Mirrors the caller's existing generation state.

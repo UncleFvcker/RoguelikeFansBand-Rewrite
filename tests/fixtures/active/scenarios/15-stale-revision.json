@@ -19,13 +19,13 @@
   "assertions": {
     "finalState": {
       "lastCommandSeq": 0,
-      "stateHash": "62b540fd8f4ca8afa560057a84d5669636ecd397818414d577f412b107c3634a"
+      "stateHash": "9ae34c53123a56e849c587f2bab15184ac6df5688b5f015e8228638918feaf02"
     },
     "errors": [
       {
         "step": 1,
         "kind": "revision-mismatch",
-        "stateHash": "62b540fd8f4ca8afa560057a84d5669636ecd397818414d577f412b107c3634a"
+        "stateHash": "9ae34c53123a56e849c587f2bab15184ac6df5688b5f015e8228638918feaf02"
       }
     ]
   }

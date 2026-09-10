@@ -193,14 +193,25 @@ impl Game {
             if self.pending_mutation_direction.is_some() {
                 return Ok(());
             }
-            if self.finish_world_tick_after_periodic_mutations(
+            let ready = self.finish_world_tick_after_periodic_mutations(
                 local_floor_active,
                 pet_neglect_allowed,
                 &visible_monster_auras_before_tick,
                 events,
                 changed,
                 removed_entities,
-            )? {
+            )?;
+            if self.duelist_prompt().is_some() {
+                self.continue_after_duelist_choice(
+                    rfb_protocol::DuelistContinuationDto::WorldTick {
+                        resting,
+                        local_floor_active,
+                        pet_neglect_allowed,
+                    },
+                );
+                return Ok(());
+            }
+            if ready {
                 break;
             }
         }
@@ -240,6 +251,9 @@ impl Game {
                 changed,
                 removed_entities,
             )?;
+            if self.duelist_prompt().is_some() {
+                return Ok(false);
+            }
         }
         if self.player_is_dead() {
             return Ok(true);
@@ -265,6 +279,33 @@ impl Game {
         Ok(())
     }
 
+    pub(super) fn resume_duelist_world_tick(
+        &mut self,
+        resting: bool,
+        local_floor_active: bool,
+        pet_neglect_allowed: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        if !self.player_is_dead() {
+            let speed = derived_speed(&self.player_derived_stats().speed);
+            gain_energy(&mut self.player.energy_need, speed);
+        }
+        if self.player_is_dead() || self.player.energy_need <= 0 {
+            self.finish_player_ready_advance(local_floor_active, events, changed, removed_entities)
+        } else {
+            self.advance_until_player_ready(
+                resting,
+                local_floor_active,
+                pet_neglect_allowed,
+                events,
+                changed,
+                removed_entities,
+            )
+        }
+    }
+
     pub(super) fn resume_after_periodic_mutation(
         &mut self,
         pending: PendingMutationDirectionDto,
@@ -278,14 +319,23 @@ impl Game {
             return Ok(());
         }
         let visible_monster_auras = self.visible_monster_aura_entity_ids();
-        if self.finish_world_tick_after_periodic_mutations(
+        let ready = self.finish_world_tick_after_periodic_mutations(
             local_floor_active,
             self.pet_upkeep().unsafe_warning(),
             &visible_monster_auras,
             events,
             changed,
             removed_entities,
-        )? {
+        )?;
+        if self.duelist_prompt().is_some() {
+            self.continue_after_duelist_choice(rfb_protocol::DuelistContinuationDto::WorldTick {
+                resting: pending.resting,
+                local_floor_active,
+                pet_neglect_allowed: self.pet_upkeep().unsafe_warning(),
+            });
+            return Ok(());
+        }
+        if ready {
             self.finish_player_ready_advance(local_floor_active, events, changed, removed_entities)
         } else {
             self.advance_until_player_ready(
@@ -937,9 +987,27 @@ impl Game {
             .map(|entity| entity.id.clone())
             .collect::<Vec<_>>();
         entity_ids.sort();
-        let mut surround_reservations = BTreeSet::new();
+        self.continue_monster_energy_pulse(
+            entity_ids,
+            BTreeSet::new(),
+            pet_neglect_allowed,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
 
-        for entity_id in entity_ids {
+    pub(super) fn continue_monster_energy_pulse(
+        &mut self,
+        entity_ids: Vec<String>,
+        mut surround_reservations: BTreeSet<Position>,
+        pet_neglect_allowed: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let mut entity_ids = entity_ids.into_iter();
+        while let Some(entity_id) = entity_ids.next() {
             if self.player_is_dead() {
                 break;
             }
@@ -1004,6 +1072,20 @@ impl Game {
                 removed_entities,
                 &mut surround_reservations,
             )?;
+            if self.duelist_prompt().is_some() {
+                self.continue_after_duelist_choice(
+                    rfb_protocol::DuelistContinuationDto::MonsterPulse {
+                        remaining_entity_ids: entity_ids.collect(),
+                        floor_id,
+                        surround_reservations: surround_reservations.into_iter().collect(),
+                        visible_auras_before: visible_monster_auras_before_action
+                            .into_iter()
+                            .collect(),
+                        pet_neglect_allowed,
+                    },
+                );
+                break;
+            }
             self.resolve_newly_visible_monster_auras(
                 &visible_monster_auras_before_action,
                 events,

@@ -5426,6 +5426,90 @@
           "properties": {
             "type": {
               "type": "string",
+              "const": "duelist-charge"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "duelist-acrobatic-charge"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "duelist-phase-charge"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "duelist-darting-duel"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "strafing"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "duelist-disengage"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "duelist-isolation"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
               "const": "smash-trap"
             }
           },
@@ -8268,6 +8352,125 @@
         "north-west"
       ]
     },
+    "DuelistChoiceDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "accepted": {
+              "type": "boolean"
+            },
+            "type": {
+              "type": "string",
+              "const": "confirm"
+            }
+          },
+          "required": [
+            "type",
+            "accepted"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "entityId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "challenge"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        }
+      ]
+    },
+    "DuelistPromptDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "abilityId": {
+              "type": "string"
+            },
+            "distance": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "range": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "targetEntityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "charge"
+            }
+          },
+          "required": [
+            "type",
+            "abilityId",
+            "targetEntityId",
+            "distance",
+            "range"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sourceEntityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "block-teleport"
+            }
+          },
+          "required": [
+            "type",
+            "sourceEntityId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sourceEntityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "follow-teleport"
+            }
+          },
+          "required": [
+            "type",
+            "sourceEntityId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "challenge"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        }
+      ]
+    },
     "EntityDto": {
       "type": "object",
       "properties": {
@@ -9173,6 +9376,22 @@
           },
           "required": [
             "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "choice": {
+              "$ref": "#/$defs/DuelistChoiceDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "resolve-duelist-choice"
+            }
+          },
+          "required": [
+            "type",
+            "choice"
           ]
         },
         {
@@ -13213,6 +13432,16 @@
             }
           ]
         },
+        "pendingDuelist": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DuelistPromptDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "pendingMutationDirection": {
           "anyOf": [
             {
@@ -13883,6 +14112,7 @@
         "invalid-turns",
         "player-died",
         "mutation-direction-required",
+        "duelist-choice-required",
         "pet-dismissal-required",
         "turn-limit"
       ]

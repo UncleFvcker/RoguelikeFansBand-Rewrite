@@ -94,12 +94,16 @@ pub(super) fn task_definition<'a>(
 }
 
 fn task_substitution_uses_alternate(group_id: &str, seed: u64) -> bool {
+    task_selection_seed(group_id, seed) & 1 == 1
+}
+
+fn task_selection_seed(group_id: &str, seed: u64) -> u64 {
     let hash = group_id
         .bytes()
         .fold(0xcbf2_9ce4_8422_2325_u64, |hash, byte| {
             (hash ^ u64::from(byte)).wrapping_mul(0x1000_0000_01b3)
         });
-    (seed ^ hash) & 1 == 1
+    seed ^ hash
 }
 
 fn selected_task_id<'a>(
@@ -411,6 +415,7 @@ fn active_task_objective(
     Ok(Some((task_id.clone(), objective, next_required)))
 }
 
+#[allow(clippy::too_many_arguments)] // Existing task reducer plus deaths/events saved at the paused action.
 fn plan_task_event_reduction(
     world: &WorldDefinition,
     task_states: &BTreeMap<String, TaskState>,
@@ -419,6 +424,7 @@ fn plan_task_event_reduction(
     clear_floor_completed: bool,
     actor_deaths: &[ActorDeathRecord],
     events: &[DomainEvent],
+    deferred: Option<&rfb_protocol::DuelistCommandCompletionDto>,
 ) -> Result<Option<TaskProgressPlan>, CoreError> {
     let Some((task_id, objective, next_required)) =
         active_task_objective(world, task_states, current_floor_id)?
@@ -427,10 +433,17 @@ fn plan_task_event_reduction(
     };
     let increment = match objective.kind {
         TaskObjectiveKind::ClearFloor => clear_floor_completed as u32,
-        TaskObjectiveKind::CollectItem => events.iter().any(|event| {
-            matches!(event, DomainEvent::ItemPickedUp { target_kind_id, .. }
+        TaskObjectiveKind::CollectItem => {
+            ({
+                (events.iter().any(|event| {
+                    matches!(event, DomainEvent::ItemPickedUp { target_kind_id, .. }
                 if objective.item_kind_id.as_ref() == Some(target_kind_id))
-                && items.iter().any(|item| {
+                }) || deferred.is_some_and(|facts| {
+                    facts
+                        .picked_up_kind_ids
+                        .iter()
+                        .any(|id| objective.item_kind_id.as_ref() == Some(id))
+                })) && items.iter().any(|item| {
                     objective.item_kind_id.as_ref() == Some(&item.kind_id)
                         && objective
                             .item_instance_id
@@ -441,14 +454,22 @@ fn plan_task_event_reduction(
                             ItemLocation::Inventory | ItemLocation::Equipped { .. }
                         )
                 })
-        }) as u32,
-        TaskObjectiveKind::EnterFloor => events.iter().any(|event| {
-            matches!(
-                event,
-                DomainEvent::FloorTransitioned { to_floor_id, .. }
-                    if objective.floor_id.as_deref() == Some(to_floor_id.as_str())
-            )
-        }) as u32,
+            }) as u32
+        }
+        TaskObjectiveKind::EnterFloor => {
+            (events.iter().any(|event| {
+                matches!(
+                    event,
+                    DomainEvent::FloorTransitioned { to_floor_id, .. }
+                        if objective.floor_id.as_deref() == Some(to_floor_id.as_str())
+                )
+            }) || deferred.is_some_and(|facts| {
+                facts
+                    .entered_floor_ids
+                    .iter()
+                    .any(|id| objective.floor_id.as_ref() == Some(id))
+            })) as u32
+        }
         TaskObjectiveKind::KillActor => actor_deaths.iter().any(|death| {
             death.credit_player
                 && objective
@@ -855,7 +876,7 @@ impl Game {
         if !facility.task_ids.iter().any(|id| id == task_id) {
             return Err("task-unavailable");
         }
-        let Some((task, floor_id)) = self.content.world(&self.world_id).and_then(|world| {
+        let Some((mut task, floor_id)) = self.content.world(&self.world_id).and_then(|world| {
             let task = task_definition(world, task_id)?;
             let floor_id = task_floors(world, task_id).next()?.id.clone();
             Some((task.clone(), floor_id))
@@ -871,6 +892,19 @@ impl Game {
             .is_none_or(|state| state.status != TaskStatusKindDto::RewardAvailable)
         {
             return Err("reward-unavailable");
+        }
+        // q_old_castle's RANDOM27 is a birth-time choice. Use the existing durable
+        // selection seed, so intervening commands and failed claims cannot reroll it.
+        if self.player_is_duelist()
+            && task_id == "demo.task.old-castle"
+            && let Some(reward) = task.reward.as_mut()
+        {
+            let mut selection =
+                crate::rng::RfbRng::seeded(task_selection_seed(task_id, self.wilderness_seed));
+            let entry =
+                selected_reward_entry(reward, Some("demo.class.duelist"), &mut selection).clone();
+            reward.entries = vec![entry];
+            reward.class_overrides.clear();
         }
         let Some(reward_definition) = task.reward.as_ref() else {
             self.task_states
@@ -909,7 +943,7 @@ impl Game {
             return Err("inventory-full");
         }
 
-        let reward = reward_item(
+        let mut reward = reward_item(
             self.progress
                 .active_mutation_ids
                 .contains("rfb.mutation.bad-luck"),
@@ -919,6 +953,19 @@ impl Game {
             ItemLocation::Inventory,
             &mut self.rng,
         );
+        if self.player_is_duelist()
+            && task_id == "demo.task.old-castle"
+            && self.generated_artifact_ids.contains(&reward.kind_id)
+        {
+            reward = super::random_artifact::materialize_replacement(
+                &self.content,
+                &mut self.rng,
+                &reward,
+                "demo.class.duelist",
+                &mut self.random_artifact_names,
+            )
+            .expect("validated Duelist reward has an RFB base and random artifact data");
+        }
         let outcome = TaskRewardOutcome {
             item_kind_id: reward.kind_id.clone(),
             quantity: reward.quantity,
@@ -966,7 +1013,7 @@ impl Game {
         Ok(TaskServiceCompletionOutcome::Rewarded(outcome))
     }
 
-    fn bind_external_tasks_to_floor_transitions(&mut self, events: &[DomainEvent]) {
+    pub(super) fn bind_external_tasks_to_floor_transitions(&mut self, events: &[DomainEvent]) {
         let Some((from_floor_id, to_floor_id)) =
             events.iter().rev().find_map(|event| match event {
                 DomainEvent::FloorTransitioned {
@@ -1118,8 +1165,9 @@ impl Game {
         Ok(position)
     }
 
-    pub(super) fn apply_task_events(
+    pub(super) fn apply_deferred_task_events(
         &mut self,
+        deferred: Option<&rfb_protocol::DuelistCommandCompletionDto>,
         events: &mut Vec<DomainEvent>,
     ) -> Result<(), CoreError> {
         let clear_floor_completed = self
@@ -1139,6 +1187,7 @@ impl Game {
                 clear_floor_completed,
                 &self.command_actor_deaths,
                 events,
+                deferred,
             )?;
             let completion_exit = plan.as_ref().and_then(|plan| {
                 (plan.state.status == TaskStatusKindDto::RewardAvailable
@@ -1316,6 +1365,7 @@ mod collect_item_tests {
                     target_kind_id: pickup_kind.to_owned(),
                     quantity: 1,
                 }],
+                None,
             )
             .unwrap();
             assert_eq!(plan.is_some_and(|plan| plan.state.current == 1), completes);

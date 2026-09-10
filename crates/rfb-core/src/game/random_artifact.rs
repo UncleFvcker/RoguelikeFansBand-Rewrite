@@ -10,6 +10,7 @@ pub(super) mod scheduling;
 #[cfg(test)]
 mod tests;
 pub(super) use materialization::materialize;
+pub(super) use materialization::materialize_replacement;
 pub(super) use materialization::resistance_elements;
 
 pub(super) fn names_are_valid(names: &BTreeSet<String>) -> bool {

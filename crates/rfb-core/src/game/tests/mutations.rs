@@ -690,11 +690,16 @@ fn human_intelligence_only_reduces_fear_checks() {
         .find(|seed| {
             let mut ordinary = base.clone();
             ordinary.rng = RfbRng::seeded(*seed);
-            let ordinary_saved =
-                ordinary.monster_saving_throw("demo.actor.fearmaster", difficulty, &mut Vec::new());
+            let ordinary_saved = ordinary.monster_saving_throw(
+                None,
+                "demo.actor.fearmaster",
+                difficulty,
+                &mut Vec::new(),
+            );
             let mut fear = base.clone();
             fear.rng = RfbRng::seeded(*seed);
             let fear_saved = fear.monster_fear_saving_throw(
+                None,
                 "demo.actor.fearmaster",
                 difficulty,
                 &mut Vec::new(),
@@ -705,10 +710,20 @@ fn human_intelligence_only_reduces_fear_checks() {
 
     let mut ordinary = base.clone();
     ordinary.rng = RfbRng::seeded(seed);
-    assert!(ordinary.monster_saving_throw("demo.actor.fearmaster", difficulty, &mut Vec::new()));
+    assert!(ordinary.monster_saving_throw(
+        None,
+        "demo.actor.fearmaster",
+        difficulty,
+        &mut Vec::new()
+    ));
     let mut fear = base;
     fear.rng = RfbRng::seeded(seed);
-    assert!(!fear.monster_fear_saving_throw("demo.actor.fearmaster", difficulty, &mut Vec::new()));
+    assert!(!fear.monster_fear_saving_throw(
+        None,
+        "demo.actor.fearmaster",
+        difficulty,
+        &mut Vec::new()
+    ));
 }
 
 #[test]

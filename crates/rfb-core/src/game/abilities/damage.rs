@@ -2058,9 +2058,34 @@ impl Game {
         // spells_m.c::massacre_spell uses ddy_ddd, not the clockwise terrain order.
         let floor_id = self.current_floor_id.clone();
         let energy = self.player.energy_need;
-        for direction in [
-            South, North, East, West, SouthEast, SouthWest, NorthEast, NorthWest,
-        ] {
+        self.continue_player_melee_adjacent_effect(
+            vec![
+                South, North, East, West, SouthEast, SouthWest, NorthEast, NorthWest,
+            ],
+            &floor_id,
+            events,
+            changed,
+            removed_entities,
+        )?;
+        if self.player_is_berserker() {
+            self.player.energy_need = energy;
+        }
+        Ok(())
+    }
+
+    pub(in crate::game) fn continue_player_melee_adjacent_effect(
+        &mut self,
+        directions: Vec<rfb_protocol::Direction>,
+        floor_id: &str,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let mut directions = directions.into_iter();
+        while let Some(direction) = directions.next() {
+            if self.player_is_dead() || self.current_floor_id != floor_id {
+                break;
+            }
             let position = self.position_in_direction(direction);
             let Some(index) = self.entities.iter().position(|entity| {
                 entity.position == position
@@ -2071,12 +2096,18 @@ impl Game {
                 continue;
             };
             self.resolve_player_melee(index, false, events, changed, removed_entities)?;
+            if self.duelist_prompt().is_some() {
+                self.continue_after_duelist_choice(
+                    rfb_protocol::DuelistContinuationDto::AdjacentMelee {
+                        directions: directions.collect(),
+                        floor_id: floor_id.to_owned(),
+                    },
+                );
+                break;
+            }
             if self.player_is_dead() || self.current_floor_id != floor_id {
                 break;
             }
-        }
-        if self.player_is_berserker() {
-            self.player.energy_need = energy;
         }
         Ok(())
     }

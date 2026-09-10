@@ -1588,7 +1588,7 @@ fn trouble_at_home_runs_from_white_horse_targets_only_mercenaries_and_rewards_wa
         .retain(|actor| actor.kind_id != "demo.actor.mean-looking-mercenary");
     game.command_actor_deaths.extend(targets);
     let mut events = Vec::new();
-    game.apply_task_events(&mut events)
+    game.apply_deferred_task_events(None, &mut events)
         .expect("five mercenary deaths should complete Trouble at Home");
     assert_eq!(
         game.task_states["demo.task.trouble-at-home"].status,
@@ -1769,7 +1769,7 @@ fn old_man_willow_unlocks_after_crows_nest_and_rewards_an_elemental_ring() {
         .retain(|actor| actor.kind_id != "demo.actor.old-man-willow");
     game.command_actor_deaths.push(death);
     let mut events = Vec::new();
-    game.apply_task_events(&mut events)
+    game.apply_deferred_task_events(None, &mut events)
         .expect("Old Man Willow's death should complete the objective");
     assert_eq!(
         game.task_states[task_id].status,
@@ -2365,7 +2365,7 @@ fn final_pest_control_kill_reveals_a_magic_stair_and_draws_only_fame() {
         credit_player: true,
     });
     let mut events = Vec::new();
-    game.apply_task_events(&mut events)
+    game.apply_deferred_task_events(None, &mut events)
         .expect("final Warg kill should complete Pest Control");
 
     assert_eq!(
@@ -2403,7 +2403,7 @@ fn leaving_pest_control_incomplete_fails_and_discards_the_blocked_floor() {
         from_floor_id: "demo.floor.warrens-depth-5".to_owned(),
         to_floor_id: "demo.floor.warrens-depth-4".to_owned(),
     }];
-    game.apply_task_events(&mut events)
+    game.apply_deferred_task_events(None, &mut events)
         .expect("early departure should resolve");
 
     assert_eq!(

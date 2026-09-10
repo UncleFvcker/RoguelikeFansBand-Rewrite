@@ -2768,6 +2768,7 @@ impl Game {
 
     pub(super) fn monster_curse_save(
         &mut self,
+        source_entity_id: Option<&str>,
         source_kind_id: &str,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
@@ -2775,20 +2776,28 @@ impl Game {
             .content
             .actor(source_kind_id)
             .map_or(1, |definition| definition.level);
-        self.monster_saving_throw(source_kind_id, caster_level, events)
+        self.monster_saving_throw(source_entity_id, source_kind_id, caster_level, events)
     }
 
     pub(super) fn monster_saving_throw(
         &mut self,
+        source_entity_id: Option<&str>,
         source_kind_id: &str,
         difficulty: u32,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
-        self.monster_saving_throw_with_modifier(source_kind_id, difficulty, 0, events)
+        self.monster_saving_throw_with_modifier(
+            source_entity_id,
+            source_kind_id,
+            difficulty,
+            0,
+            events,
+        )
     }
 
     pub(super) fn monster_fear_saving_throw(
         &mut self,
+        _source_entity_id: Option<&str>,
         source_kind_id: &str,
         difficulty: u32,
         events: &mut Vec<DomainEvent>,
@@ -2798,17 +2807,27 @@ impl Game {
         } else {
             0
         };
-        self.monster_saving_throw_with_modifier(source_kind_id, difficulty, modifier, events)
+        // fear_save_p does not use duelist_skill_sav; only ordinary GF/curse saves do.
+        self.monster_saving_throw_with_modifier(None, source_kind_id, difficulty, modifier, events)
     }
 
     fn monster_saving_throw_with_modifier(
         &mut self,
+        source_entity_id: Option<&str>,
         source_kind_id: &str,
         difficulty: u32,
         ability_modifier: i32,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         let mut ability_stat = self.player_derived_stats().saving_throw_skill;
+        if source_entity_id.is_some_and(|id| self.duelist_opponent(id)) {
+            ability_stat = ability_stat.with_modifier(
+                StatLayer::Class,
+                "demo.class.duelist",
+                15 + i32::from(self.progress.level),
+                StatBounds::NON_NEGATIVE,
+            );
+        }
         if ability_modifier != 0 {
             ability_stat = ability_stat.with_modifier(
                 StatLayer::Status,
@@ -2930,7 +2949,7 @@ impl Game {
                     // A successful saving throw negates the curse before any
                     // damage dice are drawn; difficulty follows the caster's
                     // definition level.
-                    if self.monster_curse_save(source_kind_id, events) {
+                    if self.monster_curse_save(Some(source_entity_id), source_kind_id, events) {
                         AbilityEffectResolutionDto::Skipped {
                             effect_index,
                             reason: AbilityEffectSkipReasonDto::Saved,
@@ -2959,7 +2978,7 @@ impl Game {
                     }
                 }
                 AbilityEffectDefinition::PolymorphTarget => {
-                    if self.monster_curse_save(source_kind_id, events) {
+                    if self.monster_curse_save(Some(source_entity_id), source_kind_id, events) {
                         AbilityEffectResolutionDto::Skipped {
                             effect_index,
                             reason: AbilityEffectSkipReasonDto::Saved,
@@ -2986,7 +3005,7 @@ impl Game {
                         < u64::try_from(nexus.reduction_percent().max(0)).unwrap_or(0);
                     if self.player_has_anti_teleport()
                         || nexus_resisted
-                        || self.monster_curse_save(source_kind_id, events)
+                        || self.monster_curse_save(Some(source_entity_id), source_kind_id, events)
                     {
                         AbilityEffectResolutionDto::Skipped {
                             effect_index,
@@ -3087,7 +3106,7 @@ impl Game {
                 AbilityEffectDefinition::Amnesia => {
                     // The saving throw gates the memory wipe exactly like the
                     // curse family; success costs no further RNG.
-                    if self.monster_curse_save(source_kind_id, events) {
+                    if self.monster_curse_save(Some(source_entity_id), source_kind_id, events) {
                         AbilityEffectResolutionDto::Skipped {
                             effect_index,
                             reason: AbilityEffectSkipReasonDto::Saved,
@@ -3146,7 +3165,12 @@ impl Game {
                                 effective.level(kind.into()),
                             )
                         });
-                        let target_level = u32::from(self.progress.level);
+                        let target_level = u32::from(self.progress.level)
+                            + if self.duelist_opponent(source_entity_id) {
+                                15 + u32::from(self.progress.level)
+                            } else {
+                                0
+                            };
                         let resolution = apply_ability_status_effect(
                             &mut self.player,
                             &ability.id,

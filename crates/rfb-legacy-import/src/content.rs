@@ -6149,7 +6149,12 @@ fn artifact_json(
     if let Some(activation) = entry.activation.as_ref().filter(|activation| {
         matches!(
             activation.token.as_str(),
-            "BEAM_COLD" | "TELEKINESIS" | "RESTORE_MANA" | "LIST_UNIQUES" | "STAR_BALL"
+            "BEAM_COLD"
+                | "TELEKINESIS"
+                | "RESTORE_MANA"
+                | "LIST_UNIQUES"
+                | "STAR_BALL"
+                | "STRAFING"
         )
     }) {
         let (activation_id, name_key, target, effect) = if activation.token == "TELEKINESIS" {
@@ -6172,6 +6177,15 @@ fn artifact_json(
                 "item-activation-demo-list-unique-monsters-name",
                 device_self_target(),
                 serde_json::json!({"type": "list-unique-monsters"}),
+            )
+        } else if activation.token == "STRAFING" {
+            (
+                "rfb-legacy.item-activation.strafing",
+                "device-activation-e5-strafing-name",
+                device_self_target(),
+                device_ability_effect(
+                    serde_json::json!({"type": "blink-self", "radius": 10, "lineOfSight": true}),
+                ),
             )
         } else if activation.token == "STAR_BALL" {
             (
@@ -6212,6 +6226,9 @@ fn artifact_json(
         if activation.token == "STAR_BALL" {
             // devices.c EFFECT_STAR_BALL: value = 50 * default damage (150).
             value["deviceGeneration"]["activations"][0]["rfbValue"] = serde_json::json!(7_500);
+        }
+        if activation.token == "STRAFING" {
+            value["deviceGeneration"]["activations"][0]["rfbValue"] = serde_json::json!(1_500);
         }
     } else if entry.has_activation {
         *report
@@ -29059,6 +29076,79 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                 .contains_key("XTRA_RES_OR_POWER")
         );
         assert!(!report.unmapped_artifact_flags.contains_key("BLESSED"));
+    }
+
+    #[test]
+    fn duelist_reward_artifacts_keep_source_combat_flags_and_strafing_activation() {
+        // master a0d92b6378: a_info.txt 174 and 248; the Chinese names are in artifact_name_zh.inc.
+        let source = "N:174:'Quickthorn'\nI:23:7:4\nW:35:15:55:75000\nP:0:1d8:27:9:0\nF:DEX | BLOWS | SLAY_DEMON | RIDING | SPEED | FREE_ACT | SEE_INVIS | SHOW_MODS | RES_CHAOS | RES_DISEN\nN:248:of the Duelist\nI:23:7:4\nW:50:7:30:150000\nP:0:1d8:7:17:17\nF:BRAND_VAMP | SHOW_MODS | SPEED | DEX | INT | FREE_ACT\nE:STRAFING:10:3\n";
+        for (entry, slug) in parse_a_info(source)
+            .unwrap()
+            .iter()
+            .zip(["quickthorn", "duelist"])
+        {
+            let mut report = ContentImportReport::default();
+            let mut imported = artifact_json(
+                entry,
+                slug,
+                Some("demo.item.rapier"),
+                &LauncherAmmoIndex::default(),
+                &mut report,
+            );
+            let mut flags = entry
+                .flags
+                .iter()
+                .map(String::as_str)
+                .collect::<BTreeSet<_>>();
+            flags.extend(["IGNORE_ACID", "IGNORE_COLD", "IGNORE_ELEC", "IGNORE_FIRE"]);
+            imported["rfbValue"]["flags"] = serde_json::json!(flags);
+            let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+            let formal: serde_json::Value =
+                serde_json::from_slice(&fs::read(root.join(format!("items/{slug}.json"))).unwrap())
+                    .unwrap();
+            for field in [
+                "weightTenthsPound",
+                "baseValue",
+                "generationLevel",
+                "meleeProfile",
+                "modifiers",
+                "equipmentBonuses",
+                "passives",
+                "resistances",
+                "slays",
+                "statusImmunities",
+                "ridingWeaponKind",
+                "artifactGeneration",
+                "rfbValue",
+            ] {
+                assert_eq!(imported[field], formal[field], "{slug}: {field}");
+            }
+            if entry.has_activation {
+                assert!(
+                    !report
+                        .item_behavior_gaps
+                        .contains_key("artifact-activation")
+                );
+                assert_eq!(
+                    imported["deviceGeneration"]["recovery"],
+                    formal["deviceGeneration"]["recovery"]
+                );
+                for field in ["charges", "deviceCheckDifficulty", "target", "rfbValue"] {
+                    assert_eq!(
+                        imported["deviceGeneration"]["activations"][0][field],
+                        formal["deviceGeneration"]["activations"][0][field]
+                    );
+                }
+                let program: serde_json::Value = serde_json::from_slice(
+                    &fs::read(root.join("effectPrograms/duelist-strafing.json")).unwrap(),
+                )
+                .unwrap();
+                assert_eq!(
+                    imported["deviceGeneration"]["activations"][0]["effect"],
+                    program["steps"][0]
+                );
+            }
+        }
     }
 
     #[test]

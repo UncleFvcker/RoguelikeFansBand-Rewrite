@@ -182,6 +182,24 @@ impl Game {
         self.entities[index].casting_cooldown_remaining =
             monster_casting_cooldown(casting.frequency_percent);
         self.entities[index].anger = 0;
+        if self.progress.level >= 30
+            && self.duelist_opponent(&source_entity_id)
+            && matches!(&plan.target, MonsterAbilityTargetPlan::BanishTarget { target, .. } if target.is_player())
+        {
+            self.begin_duelist_choice(rfb_protocol::DuelistPromptDto::BlockTeleport {
+                source_entity_id: source_entity_id.clone(),
+            });
+            self.continue_after_duelist_choice(
+                rfb_protocol::DuelistContinuationDto::MonsterTeleport {
+                    source_entity_id,
+                    ability_id: plan.ability.id,
+                    blocked: false,
+                },
+            );
+            return Ok(true);
+        }
+        let follow_teleport = matches!(plan.target, MonsterAbilityTargetPlan::EscapeSelf { .. })
+            && self.duelist_can_follow_teleport(index, world_stopped);
         let player_hp_before = self.player.hp;
         let gaze = plan.ability.tags.iter().any(|tag| tag == "gaze");
         let MonsterAbilityPlanResolution {
@@ -224,20 +242,28 @@ impl Game {
                 removed_entities,
             )
         };
-        events.push(DomainEvent::MonsterAbilityCast {
-            resolution: Box::new(MonsterAbilityCastResolutionDto {
-                source_entity_id: source_entity_id.clone(),
-                source_kind_id,
-                ability_id: plan.ability.id,
-                target_entity_id,
-                target_kind_id,
-                affected_positions,
-                summon,
-                effects,
-                targets,
-            }),
-            trace,
+        let resolution = Box::new(MonsterAbilityCastResolutionDto {
+            source_entity_id: source_entity_id.clone(),
+            source_kind_id,
+            ability_id: plan.ability.id,
+            target_entity_id,
+            target_kind_id,
+            affected_positions,
+            summon,
+            effects,
+            targets,
         });
+        if follow_teleport && !self.player_is_dead() {
+            self.begin_duelist_choice(rfb_protocol::DuelistPromptDto::FollowTeleport {
+                source_entity_id: source_entity_id.clone(),
+            });
+            self.continue_after_duelist_choice(rfb_protocol::DuelistContinuationDto::MonsterCast {
+                resolution,
+                player_hp_before,
+            });
+            return Ok(true);
+        }
+        events.push(DomainEvent::MonsterAbilityCast { resolution, trace });
         if !gaze {
             self.resolve_vengeance_retaliation(
                 &source_entity_id,
@@ -258,6 +284,76 @@ impl Game {
         Ok(true)
     }
 
+    pub(super) fn resume_duelist_monster_teleport(
+        &mut self,
+        source_entity_id: &str,
+        ability_id: &str,
+        blocked: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let index = self
+            .entities
+            .iter()
+            .position(|actor| actor.id == source_entity_id)
+            .ok_or(CoreError::DuelistChoiceUnavailable)?;
+        let source_kind_id = self.entities[index].kind_id.clone();
+        let player_hp_before = self.player.hp;
+        let ability = self
+            .content
+            .ability(ability_id)
+            .expect("saved teleport ability exists")
+            .clone();
+        let plan = self
+            .monster_ability_target_plan(index, ability, 1)
+            .map_err(|_| CoreError::DuelistChoiceUnavailable)?;
+        let result = if blocked {
+            MonsterAbilityPlanResolution {
+                target_entity_id: self.player.id.clone(),
+                target_kind_id: self.player.kind_id.clone(),
+                affected_positions: vec![self.player.position],
+                summon: None,
+                effects: vec![AbilityEffectResolutionDto::Skipped {
+                    effect_index: 0,
+                    reason: AbilityEffectSkipReasonDto::Saved,
+                }],
+                targets: Vec::new(),
+                trace: None,
+            }
+        } else {
+            self.resolve_monster_ability_plan(
+                index,
+                &source_kind_id,
+                &plan,
+                events,
+                changed,
+                removed_entities,
+            )
+        };
+        events.push(DomainEvent::MonsterAbilityCast {
+            resolution: Box::new(MonsterAbilityCastResolutionDto {
+                source_entity_id: source_entity_id.to_owned(),
+                source_kind_id,
+                ability_id: ability_id.to_owned(),
+                target_entity_id: result.target_entity_id,
+                target_kind_id: result.target_kind_id,
+                affected_positions: result.affected_positions,
+                summon: result.summon,
+                effects: result.effects,
+                targets: result.targets,
+            }),
+            trace: result.trace,
+        });
+        self.resolve_vengeance_retaliation(
+            source_entity_id,
+            player_hp_before.saturating_sub(self.player.hp),
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
     fn resolve_monster_world_actions(
         &mut self,
         source_entity_id: &str,
@@ -267,8 +363,29 @@ impl Game {
     ) -> Result<(), CoreError> {
         let extra_actions = self.rng.bounded(2) + 3;
         let floor_id = self.current_floor_id.clone();
-        let mut surround_reservations = BTreeSet::new();
-        for _ in 0..extra_actions {
+        self.continue_monster_world_actions(
+            source_entity_id,
+            extra_actions as u8,
+            &floor_id,
+            BTreeSet::new(),
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)] // Resumes the existing actor loop with its local reservations.
+    pub(super) fn continue_monster_world_actions(
+        &mut self,
+        source_entity_id: &str,
+        extra_actions: u8,
+        floor_id: &str,
+        mut surround_reservations: BTreeSet<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        for action_index in 0..extra_actions {
             if self.player_is_dead() || self.current_floor_id != floor_id {
                 break;
             }
@@ -288,6 +405,20 @@ impl Game {
                 &mut surround_reservations,
                 true,
             )?;
+            if self.duelist_prompt().is_some() {
+                self.continue_after_duelist_choice(
+                    rfb_protocol::DuelistContinuationDto::MonsterWorld {
+                        source_entity_id: source_entity_id.to_owned(),
+                        remaining_actions: extra_actions - action_index - 1,
+                        floor_id: floor_id.to_owned(),
+                        surround_reservations: surround_reservations.into_iter().collect(),
+                        visible_auras_before: visible_monster_auras_before_action
+                            .into_iter()
+                            .collect(),
+                    },
+                );
+                break;
+            }
             self.resolve_newly_visible_monster_auras(
                 &visible_monster_auras_before_action,
                 events,
@@ -345,7 +476,22 @@ impl Game {
             .saturating_mul(target_multiplier)
             .saturating_mul(resistance_percent)
             / 100;
-        plan.effective_weight = weighted.max(1);
+        let duelist_anti_magic = self.player_is_duelist()
+            && monster_plan_target(&plan.target).is_some_and(MonsterHostileTarget::is_player)
+            && self.actor_runtime_definition(&self.entities[index]).and_then(|actor| actor.monster_casting.as_ref()).is_some_and(|casting| casting.smart)
+            && plan.ability.effect.ordered_effects().iter().any(|effect| matches!(effect, AbilityEffectDefinition::ApplyStatus { status_kind_id, .. } if status_kind_id == crate::effect::STATUS_ANTI_MAGIC));
+        plan.effective_weight = if duelist_anti_magic {
+            if self.player_has_anti_magic() { 0 } else { 10 }
+        } else {
+            weighted.max(1)
+        };
+        if plan.effective_weight == 0 {
+            return Err(MonsterAbilityPlanRejection {
+                reason: MonsterAbilityRejectionReasonDto::NoUtility,
+                enemy_target_count: plan.enemy_target_count,
+                friendly_risk_count: plan.friendly_risk_count,
+            });
+        }
         Ok(plan)
     }
 

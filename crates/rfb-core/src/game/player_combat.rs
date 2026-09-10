@@ -1880,6 +1880,18 @@ impl Game {
         let mut allow_criticals = true;
         let mut impact_earthquake_item_id = None;
         'profiles: for (hand, (profile, profile_attacks)) in profiles.into_iter().enumerate() {
+            if (profile_attacks > 0 || profile.source_item_id.is_none())
+                && self.duelist_auto_challenge(
+                    index,
+                    profile.source_item_id.is_some(),
+                    revenge,
+                    events,
+                )
+            {
+                break 'profiles;
+            }
+            let duelist_attack =
+                profile.source_item_id.is_some() && self.duelist_opponent(&target_entity_id);
             let vorpal_weapon = profile.source_item_id.as_ref().is_some_and(|item_id| {
                 self.items
                     .iter()
@@ -1913,16 +1925,28 @@ impl Game {
             for attack_number in 1..=profile_attacks {
                 attacks_used = attacks_used.saturating_add(1);
                 self.apply_easy_tiring_fatigue(50);
-                if profile.melee_skill.value <= 0
-                    || !self
-                        .resolve_player_hit_check(CheckContext {
-                            kind: CheckKind::MeleeHit,
-                            actor_id: self.player.id.clone(),
-                            target_id: Some(self.entities[index].id.clone()),
-                            ability: profile.melee_skill.clone(),
-                            difficulty: target.armor_class.clone(),
-                        })
-                        .succeeded()
+                let perfect_strike = duelist_attack && self.rng.bounded(2) == 0;
+                let melee_skill = if duelist_attack {
+                    profile.melee_skill.with_modifier(
+                        StatLayer::Class,
+                        "demo.class.duelist",
+                        self.progress.level as i32 * 3,
+                        StatBounds::NON_NEGATIVE,
+                    )
+                } else {
+                    profile.melee_skill.clone()
+                };
+                if !perfect_strike
+                    && (melee_skill.value <= 0
+                        || !self
+                            .resolve_player_hit_check(CheckContext {
+                                kind: CheckKind::MeleeHit,
+                                actor_id: self.player.id.clone(),
+                                target_id: Some(self.entities[index].id.clone()),
+                                ability: melee_skill,
+                                difficulty: target.armor_class.clone(),
+                            })
+                            .succeeded())
                 {
                     events.push(profile.miss_event(&target_kind));
                     self.check_human_dexterity_sprain(
@@ -1994,6 +2018,7 @@ impl Game {
                     || stun
                         && self.rng.bounded(100) + 1
                             < u64::try_from(base_damage.max(0)).unwrap_or(u64::MAX);
+                let mut ordinary_drain = base_damage;
                 if let Some(chance) = vorpal_chance
                     && self.rng.bounded(chance.saturating_mul(3).saturating_div(2)) == 0
                 {
@@ -2002,6 +2027,7 @@ impl Game {
                         multiplier += 1;
                     }
                     base_damage = base_damage.saturating_mul(multiplier);
+                    ordinary_drain = ordinary_drain.saturating_mul(3) / 2;
                 }
                 let mut rolled_damage = base_damage.saturating_add(profile.to_damage).max(0);
                 if (vorpal_weapon
@@ -2013,6 +2039,7 @@ impl Game {
                         multiplier += 1;
                     }
                     rolled_damage = rolled_damage.saturating_mul(multiplier);
+                    ordinary_drain = ordinary_drain.saturating_mul(3) / 2;
                 }
                 if wild && let Some(source_item_id) = profile.source_item_id.as_deref() {
                     self.resolve_wild_weapon_strike(source_item_id, events);
@@ -2025,7 +2052,11 @@ impl Game {
                     },
                     events,
                 );
-                let mut rolled_damage = self.scale_player_melee_damage(rolled_damage);
+                let mut rolled_damage = if duelist_attack {
+                    rolled_damage
+                } else {
+                    self.scale_player_melee_damage(rolled_damage)
+                };
                 let pierces_invulnerability = profile.source_item_id.is_some()
                     && self.player_is_berserker()
                     && self.rng.bounded(2) == 0;
@@ -2053,6 +2084,22 @@ impl Game {
                         pierces_invulnerability,
                     ),
                 );
+                let (damage, drain_damage) = if duelist_attack {
+                    let (special_damage, drain) = self.duelist_strike_damage(index, damage.applied);
+                    let applied = self.scale_player_melee_damage(special_damage);
+                    let mut result = damage;
+                    result.raw = result.raw.saturating_add(applied - damage.applied);
+                    result.requested = result.requested.saturating_add(applied - damage.applied);
+                    result.applied = applied;
+                    (
+                        result,
+                        drain
+                            .unwrap_or(ordinary_drain.saturating_add(profile.to_damage).max(0))
+                            .min(self.entities[index].hp),
+                    )
+                } else {
+                    (damage, damage.applied)
+                };
                 let application = plan_damage_application(
                     &self.entities[index],
                     damage,
@@ -2121,13 +2168,13 @@ impl Game {
                 }
                 if vampiric_weapon
                     && vampiric_drain_remaining > 0
-                    && damage.applied > 5
+                    && drain_damage > 5
                     && actor_matches_category(&definition, "living")
                 {
                     let raw_requested = self
                         .roll_damage(
                             2,
-                            u16::try_from(damage.applied / 6)
+                            u16::try_from(drain_damage / 6)
                                 .expect("positive vampiric healing die must fit u16"),
                         )
                         .min(vampiric_drain_remaining);
@@ -2165,6 +2212,9 @@ impl Game {
                         changed,
                         removed_entities,
                     )?;
+                    if duelist_attack {
+                        self.begin_duelist_endless_challenge();
+                    }
                     break 'profiles;
                 }
                 touched_surviving_target = true;
@@ -2183,12 +2233,18 @@ impl Game {
         if !self.player_is_dead()
             && let Some(source_item_id) = impact_earthquake_item_id
         {
-            self.resolve_player_impact_earthquake(
-                source_item_id,
-                events,
-                changed,
-                removed_entities,
-            )?;
+            if self.duelist_prompt().is_some() {
+                self.continue_after_duelist_choice(rfb_protocol::DuelistContinuationDto::Melee {
+                    impact_item_id: source_item_id,
+                });
+            } else {
+                self.resolve_player_impact_earthquake(
+                    source_item_id,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
         }
         Ok(PlayerMeleeOutcome {
             attacks_used,
@@ -2354,7 +2410,11 @@ impl Game {
                 self.resolve_time_melee(&definition.id, events);
             }
             if aura.damage_type == rfb_content::ActorDamageType::Curse
-                && self.monster_curse_save(&definition.id, events)
+                && self.monster_curse_save(
+                    Some(&self.entities[source_index].id.clone()),
+                    &definition.id,
+                    events,
+                )
             {
                 continue;
             }
@@ -2626,6 +2686,7 @@ impl Game {
                             *damage_dice,
                             *damage_sides,
                             false,
+                            false,
                         );
                         let damage_type = DamageType::from(*damage_type);
                         let resistance = self.entities[target_index].resistances.level(damage_type);
@@ -2650,6 +2711,7 @@ impl Game {
                             *damage_dice,
                             *damage_sides,
                             false,
+                            false,
                         );
                         Some(resolve_armored_damage(
                             raw,
@@ -2669,6 +2731,7 @@ impl Game {
                             source_index,
                             *damage_dice,
                             *damage_sides,
+                            false,
                             false,
                         );
                         let duration = resolve_damage(
@@ -2698,6 +2761,7 @@ impl Game {
                             *damage_dice,
                             *damage_sides,
                             false,
+                            false,
                         );
                         Some(resolve_damage(
                             DamagePacket::new(raw, DamageType::Poison),
@@ -2725,6 +2789,7 @@ impl Game {
                                 *amount_dice,
                                 *amount_sides,
                                 false,
+                                false,
                             )
                             .max(0),
                         )
@@ -2747,6 +2812,7 @@ impl Game {
                             source_index,
                             *duration_dice,
                             *duration_sides,
+                            false,
                             false,
                         );
                         self.apply_actor_melee_status(
@@ -2780,6 +2846,7 @@ impl Game {
                                 source_index,
                                 *damage_dice,
                                 *damage_sides,
+                                false,
                                 false,
                             )
                         });
@@ -2837,6 +2904,7 @@ impl Game {
                             source_index,
                             *duration_dice,
                             *duration_sides,
+                            false,
                             false,
                         );
                         self.apply_actor_melee_status(

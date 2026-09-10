@@ -1167,6 +1167,20 @@ impl Game {
             MogaminatorPredicate::MoreValueThan(value) => aware && definition.base_value > value,
             MogaminatorPredicate::Weapons => slot == Some("weapon") || tagged("weapon"),
             MogaminatorPredicate::FavoriteWeapons => class.is_some_and(|class| {
+                if class.id == "demo.class.duelist" {
+                    let base_id = definition
+                        .weapon_proficiency_base_item_id
+                        .as_deref()
+                        .unwrap_or(&definition.id);
+                    return definition.melee_profile.is_some()
+                        && class.weapon_proficiency.as_ref().is_some_and(|profile| {
+                            profile
+                                .overrides
+                                .get(base_id)
+                                .map_or(profile.default_maximum, |bounds| bounds.maximum)
+                                > 4000
+                        });
+                }
                 class.favorite_weapon_tags.iter().any(|favorite| {
                     (favorite == "weapon" && (slot == Some("weapon") || tagged("weapon")))
                         || (favorite == "shooter"
@@ -1285,6 +1299,30 @@ fn compare_values(left: &str, right: &str) -> std::cmp::Ordering {
 mod tests {
     use super::*;
     use rfb_protocol::GameCommand;
+
+    #[test]
+    fn duelist_favorites_use_base_weapon_cap_including_fixed_artifact_aliases() {
+        let mut game = Game::new_with_build(421, "demo.build.duelist").unwrap();
+        game.progress
+            .active_mutation_ids
+            .insert("rfb.mutation.weapon-skills".to_owned());
+        for (kind, expected) in [
+            ("rapier", true),
+            ("dagger", true),
+            ("duelist", true),
+            ("quickthorn", true),
+            ("broad-axe", false),
+            ("short-bow", false),
+        ] {
+            let mut item = game.items[0].clone();
+            item.kind_id = format!("demo.item.{kind}");
+            assert_eq!(
+                game.mogaminator_predicate_matches(MogaminatorPredicate::FavoriteWeapons, &item),
+                expected,
+                "{kind}"
+            );
+        }
+    }
 
     fn auto_get_test_game(mode: AutoGetModeDto, source: &str) -> Game {
         let mut game = Game::new(41);

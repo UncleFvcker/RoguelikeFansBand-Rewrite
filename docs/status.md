@@ -7,17 +7,17 @@
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.247 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | 121 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload / 容器 | 14 / 16 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.409.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
-| 契约政策 | contract-v321，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
+| 协议 | 1.248 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | 122 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload / 容器 | 14 / 17 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
+| 内容包 | 1.410.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 契约政策 | contract-v322，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 9 个 Class、16 个 Build、57 个 Race、32 本能力书、1,862 个 ability 文件、376 个 item、1,405 个 actor、168 个 affix、152 个 mutation。世界定义含 30 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 9 个 Class、16 个 Build、57 个 Race、32 本能力书、1,869 个 ability 文件、378 个 item、1,405 个 actor、168 个 affix、152 个 mutation。世界定义含 30 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
 权威内容统计工具是 `rfb-contentc inspect-source`。本次集成已运行内容编译；静态统计不替代行为验收。
 
-决斗者已完成[计划](duelist-class-plan.md)第二步：正式无 MP 出生、技能/熟练度和强感知、装备失效与基础攻防、手动标记/显式解除，以及挑战状态的保存、哈希、引用校验和生命周期清理。核心专项覆盖人类/托姆特出生、冬贝利出生禁配与后天形态攻次/加伤例外、重量两侧/盾牌/捕获球/双持/反魔、零攻次、标记后保存继续、目标传送/死亡/离层和无效存档拒绝。毒针尚未正式导入，仅用测试源种类验证失效边界。普通创角入口仍关闭；自动挑战、对手攻防、成长打击、其余七能力与高等级中途选择属于第三步，界面及桌面验收尚未进行。
+决斗者已完成[计划](duelist-class-plan.md)前三步：正式无 MP 出生、装备天赋、手动/自动挑战、来源实例相关攻防与成长打击，以及全部八项 HP 能力。30 级传送选择、35 级免费重选和超距冲锋确认接入保存、哈希、引用验证与原动作继续；选择期间不提前执行后续怪物动作或 HP 付款。量身分配、武器偏好、龙人变形天赋排除、盗贼/旧城堡奖励、两件固定神器及扫射激活、重复神器替代与公会非会员规则已实现。37 项决斗者相关测试覆盖这些行为和保存继续；全核心回归的唯一旧光环测试场景问题已修正并单独复验，相关共享检查及 26 条 active 契约通过。契约刷新只改变新增持久状态对应的哈希预期，行为断言保持不变。毒针和 Death Scythe 尚未正式导入，公共适配边界见[来源审计](duelist-source-audit.md)。普通创角入口仍关闭；第四步界面和第五步 Tauri standalone 验收尚未进行。
 
 狂战士已完成[五步接入计划](berserker-class-plan.md)：来源审计、正式出生/成长、常驻被动、战斗与使用限制、六项 HP 能力、八项任务奖励及高阶书销毁收益已实现，正常创角已开放“近战 → 狂战士”。核心专项覆盖实际施放、失败/取消、吸血/死亡、陷阱和野外移动、奖励领取与保存恢复；实际经验升级覆盖至 50 级的被动边界，种族交叉覆盖托姆特出生合并、幽灵吸收/种族能力/穿墙恢复，以及已有龙人、冬贝利与突变规则。公共适配边界见[来源审计](berserker-source-audit.md)。
 

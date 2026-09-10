@@ -175,6 +175,14 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
     },
     DuelistChallengeCleared,
+    DuelistTeleportBlocked {
+        source_kind_id: String,
+        succeeded: bool,
+    },
+    DuelistFollowedTeleport {
+        source_kind_id: String,
+        succeeded: bool,
+    },
     AbilityCastFailed {
         resolution: AbilityCastResolutionDto,
     },
@@ -1739,6 +1747,30 @@ impl DomainEvent {
             Self::DuelistChallengeCleared => {
                 dto("duelist.challenge-cleared", "duelist-challenge-cleared", [])
             }
+            Self::DuelistTeleportBlocked {
+                source_kind_id,
+                succeeded,
+            } => dto(
+                "duelist.block-teleport",
+                if succeeded {
+                    "duelist-block-teleport-success"
+                } else {
+                    "duelist-block-teleport-failure"
+                },
+                [("target", source_kind_id)],
+            ),
+            Self::DuelistFollowedTeleport {
+                source_kind_id,
+                succeeded,
+            } => dto(
+                "duelist.follow-teleport",
+                if succeeded {
+                    "duelist-follow-teleport-success"
+                } else {
+                    "duelist-follow-teleport-failure"
+                },
+                [("target", source_kind_id)],
+            ),
             Self::AbilityCastFailed { resolution } => dto_with_outcome(
                 "ability.cast-failure",
                 "ability-cast-failure",
@@ -6057,6 +6089,7 @@ fn rest_stop_reason(reason: &RestStopReasonDto) -> String {
         RestStopReasonDto::FullResources => "full-resources",
         RestStopReasonDto::InvalidTurns => "invalid-turns",
         RestStopReasonDto::MutationDirectionRequired => "mutation-direction-required",
+        RestStopReasonDto::DuelistChoiceRequired => "duelist-choice-required",
         RestStopReasonDto::PetDismissalRequired => "pet-dismissal-required",
         RestStopReasonDto::PlayerDied => "player-died",
         RestStopReasonDto::TurnLimit => "turn-limit",

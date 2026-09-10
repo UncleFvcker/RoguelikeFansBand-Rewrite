@@ -273,6 +273,13 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::SustainAttributes { .. }
                     | AbilityEffectDefinition::CureMutation
                     | AbilityEffectDefinition::MeleeAdjacent
+                    | AbilityEffectDefinition::DuelistCharge
+                    | AbilityEffectDefinition::DuelistAcrobaticCharge
+                    | AbilityEffectDefinition::DuelistPhaseCharge
+                    | AbilityEffectDefinition::DuelistDartingDuel
+                    | AbilityEffectDefinition::Strafing
+                    | AbilityEffectDefinition::DuelistDisengage
+                    | AbilityEffectDefinition::DuelistIsolation
                     | AbilityEffectDefinition::ProbeMonsters
                     | AbilityEffectDefinition::Concentrate
                     | AbilityEffectDefinition::Probe

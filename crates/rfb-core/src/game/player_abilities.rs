@@ -1617,6 +1617,9 @@ impl Game {
                     removed_entities,
                 )?;
                 completed_turns = completed_turns.saturating_add(1);
+                if self.duelist_prompt().is_some() {
+                    break RestStopReasonDto::DuelistChoiceRequired;
+                }
                 if self.pending_mutation_direction.is_some() {
                     break RestStopReasonDto::MutationDirectionRequired;
                 }

@@ -97,13 +97,24 @@ impl Game {
                     .contains(CHAOS_GIFT_MUTATION_ID)
                 && !self.player_is_dead()
             {
-                self.resolve_chaos_patron_level_reward(level, events, changed, removed_entities)?;
+                if self.pending_duelist.is_some() {
+                    self.continue_after_duelist_choice(
+                        rfb_protocol::DuelistContinuationDto::ChaosReward { level },
+                    );
+                } else {
+                    self.resolve_chaos_patron_level_reward(
+                        level,
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
             }
         }
         Ok(())
     }
 
-    fn resolve_chaos_patron_level_reward(
+    pub(super) fn resolve_chaos_patron_level_reward(
         &mut self,
         level: u16,
         events: &mut Vec<DomainEvent>,

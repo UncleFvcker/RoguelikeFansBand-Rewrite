@@ -110,6 +110,7 @@
   "mutationChoiceExclusionsByClass": {
     "demo.class.archer": ["rfb.mutation.draconian-metamorphosis"],
     "demo.class.cavalry": ["rfb.mutation.draconian-metamorphosis"],
+    "demo.class.duelist": ["rfb.mutation.draconian-metamorphosis"],
     "demo.class.sniper": ["rfb.mutation.draconian-metamorphosis"]
   },
   "mutationOverrides": {

@@ -408,12 +408,6 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
-        let AbilityEffectDefinition::MeleeThenTeleport {
-            failure_threshold, ..
-        } = ability.effect
-        else {
-            unreachable!("panic melee executor requires a melee-then-teleport effect");
-        };
         let index = self
             .entities
             .iter()
@@ -421,7 +415,55 @@ impl Game {
             .expect("planned panic-hit target must remain available");
         let target_kind_id = self.entities[index].kind_id.clone();
         let player_from = self.player.position;
+        let floor_id = self.current_floor_id.clone();
         self.resolve_player_melee(index, false, events, changed, removed_entities)?;
+        if self.duelist_prompt().is_some() {
+            self.continue_after_duelist_choice(
+                rfb_protocol::DuelistContinuationDto::MeleeTeleport {
+                    ability_id: ability.id.clone(),
+                    target_entity_id: target_entity_id.to_owned(),
+                    target_kind_id,
+                    floor_id,
+                    player_from,
+                    candidates: teleport_candidates,
+                },
+            );
+            return Ok(());
+        }
+        self.finish_player_melee_then_teleport_effect(
+            ability,
+            target_entity_id,
+            target_kind_id,
+            &floor_id,
+            player_from,
+            teleport_candidates,
+            events,
+            changed,
+        );
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)] // Resumes the existing melee effect with its saved caller state.
+    pub(in crate::game) fn finish_player_melee_then_teleport_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        target_entity_id: &str,
+        target_kind_id: String,
+        floor_id: &str,
+        player_from: Position,
+        teleport_candidates: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        if self.player_is_dead() || self.current_floor_id != floor_id {
+            return;
+        }
+        let AbilityEffectDefinition::MeleeThenTeleport {
+            failure_threshold, ..
+        } = ability.effect
+        else {
+            unreachable!("panic melee effect");
+        };
         let skill =
             u64::try_from(self.player_derived_stats().disarm_skill.value.max(1)).unwrap_or(1);
         let teleport_attempted = self.rng.bounded(skill) >= u64::from(failure_threshold);
@@ -466,7 +508,6 @@ impl Game {
             },
             trace: None,
         });
-        Ok(())
     }
 
     pub(super) fn resolve_player_nature_wrath_effect(

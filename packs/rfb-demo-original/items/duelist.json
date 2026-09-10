@@ -1,0 +1,100 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.duelist",
+  "nameKey": "item-demo-duelist-name",
+  "descriptionKey": "item-demo-duelist-description",
+  "glyph": "|",
+  "generationLevel": 50,
+  "weightTenthsPound": 30,
+  "maxStack": 1,
+  "baseValue": 150000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "activatable",
+    "artifact",
+    "equipment",
+    "old-castle-reward",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 248,
+    "baseItemKindId": "demo.item.rapier",
+    "instant": false,
+    "rarityOneIn": 7
+  },
+  "weaponProficiencyBaseItemId": "demo.item.rapier",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 7,
+    "toDamage": 17,
+    "damageDice": 1,
+    "damageSides": 8
+  },
+  "modifiers": {
+    "dexterity": 4,
+    "speed": 4,
+    "intelligence": 4,
+    "defense": 17
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "BRAND_VAMP",
+      "DEX",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "SHOW_MODS",
+      "SPEED"
+    ],
+    "pval": 4,
+    "toArmor": 17
+  },
+  "passives": [
+    "vampiric"
+  ],
+  "deviceGeneration": {
+    "recovery": {
+      "intervalTicks": 30,
+      "energyPerMille": 1000
+    },
+    "activations": [
+      {
+        "id": "demo.item-activation.duelist-strafing",
+        "nameKey": "device-activation-e5-strafing-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 10,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "rfbValue": 1500,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.duelist-strafing"
+      }
+    ]
+  }
+}

@@ -7,6 +7,19 @@ use crate::effect::STATUS_ANTI_MAGIC;
 const BUILD: &str = "demo.build.duelist";
 const MARK: &str = "demo.ability.duelist-mark-target";
 
+mod abilities;
+mod choices;
+mod combat_rules;
+mod rewards;
+
+fn at_level(level: u16) -> Game {
+    let mut game = duelist();
+    game.apply_player_experience(game.experience_required_for_level(level), &mut Vec::new());
+    super::support::choose_human_talent_if_pending(&mut game);
+    game.player.hp = game.effective_player_max_hp();
+    game
+}
+
 fn duelist() -> Game {
     let mut game = Game::new_with_build(923, BUILD).unwrap();
     clear_monsters(&mut game);
