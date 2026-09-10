@@ -3,8 +3,8 @@
   "sourceRef": "master",
   "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
   "reviewedAt": "2026-09-11",
-  "codeBaseline": "9d3222610",
-  "scope": "Current curated inventory after the first I5 Craft book family on 9d3222610. Groups supply batch/gap/acquisition/consumer for each remaining row; source flags and references identify implementation work, not proof that every source branch is implemented. Gameplay evidence is recorded per completed group; this file enables no content.",
+  "codeBaseline": "6f8e962bf",
+  "scope": "Current curated inventory with the first I6 stack metadata batch on 6f8e962bf; no item coverage counts change. Groups supply batch/gap/acquisition/consumer for each remaining row; source flags and references identify implementation work, not proof that every source branch is implemented. Gameplay evidence is recorded per completed group; this file enables no content.",
   "nameSources": {
     "kinds": "src/kind_name_zh.inc",
     "artifacts": "src/artifact_name_zh.inc",
@@ -81,6 +81,13 @@
     "source": "master a0d92b6378: do-spell.c::do_craft_spell(0..31), m_info.txt N10/R7, k_info.txt and kind_name_zh.inc",
     "scope": "Four books, 32 spells, High Mage Craft entry; existing seven realm menus remain independent. Remaining book kinds: 39.",
     "evidence": "crates/rfb-core/src/game/tests/craft.rs; web/e2e/craft.e2e.mjs; docs/craft-source-audit.md"
+  },
+  "firstI6Group": {
+    "status": "completed-core",
+    "source": "master a0d92b6378: src/obj.c::obj_can_combine/obj_combine; src/tables.c default stack_force_notes and stack_force_costs",
+    "scope": "Existing physical merge paths blend origin kind, one-sided inscriptions and the maximum discount. Mixed origin extends the existing saved enum; corpse species remains identity. Separate shop/home projections retain exact metadata and prices until transfer.",
+    "evidence": "game::tests::inventory::i6_*; game::tests::town::i6_*: partial merges, split/pickup/destroy, generated placement IDs, full-pack withdrawal, exact trade prices, save and continued actions",
+    "limits": "Physical books remain quantity one. Ordinary generated pile distributions, knowledge blending, reorganization triggers, normal dropped-stack recombination and full source place/discovery history remain open. Current discounts stay 0/99. No desktop acceptance for this batch."
   },
   "reviewGroups": {
     "ordinary-weapon": {

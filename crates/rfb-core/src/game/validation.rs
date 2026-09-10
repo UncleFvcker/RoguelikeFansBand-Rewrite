@@ -177,6 +177,12 @@ pub(super) fn item_creation_state_is_valid(
             item.artifact_name.is_some() && matches!(item.discount_percent, 0 | 99)
         }
         None => item.discount_percent == 0,
+        Some(ItemOriginKindDto::Mixed) => {
+            item.artifact_name.is_none()
+                && !definition.tags.iter().any(|tag| tag == "artifact")
+                && (item.discount_percent == 0
+                    || (item.discount_percent == 99 && definition.ammunition_profile.is_some()))
+        }
         Some(ItemOriginKindDto::PlayerMade) => {
             item.discount_percent == 99
                 && (definition.melee_profile.is_some()

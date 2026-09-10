@@ -892,6 +892,10 @@ fn validate_item_creation_state(
     let origin_is_valid = match origin_kind {
         Some(ItemOriginKindDto::ArtifactCreation) => matches!(discount_percent, 0 | 99),
         None => discount_percent == 0,
+        Some(ItemOriginKindDto::Mixed) => {
+            !definition.tags.iter().any(|tag| tag == "artifact")
+                && (discount_percent == 0 || (discount_percent == 99 && ammunition))
+        }
         Some(ItemOriginKindDto::PlayerMade) => {
             discount_percent == 99
                 && (definition.melee_profile.is_some()

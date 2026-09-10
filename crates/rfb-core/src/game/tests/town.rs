@@ -2067,6 +2067,171 @@ fn store_game(seed: u64) -> Game {
     game
 }
 
+#[test]
+fn i6_shop_quotes_keep_discounts_separate_and_purchase_blends_only_the_transfer() {
+    let mut game = store_game(606);
+    game.items.clear();
+    game.item_property_knowledge.clear();
+    game.gold = 10_000;
+    for id in ["test.full", "test.discount", "test.carried"] {
+        super::support::give_inventory_item(&mut game, id, "demo.item.mithril-arrow");
+    }
+    game.items[0].quantity = 2;
+    game.items[1].quantity = 3;
+    game.items[1].origin_kind = Some(ItemOriginKindDto::PlayerMade);
+    game.items[1].discount_percent = 99;
+    game.items[2].origin_kind = Some(ItemOriginKindDto::Acquire);
+    game.items[2].inscription = Some("keep".into());
+    game.shop_states
+        .get_mut(GENERAL_STORE_ID)
+        .unwrap()
+        .inventory = game.items.drain(..2).collect();
+    let before = game.snapshot();
+    let stock = &projected_shop(&before.shops, GENERAL_STORE_ID).stock;
+    assert_eq!(stock.len(), 2);
+    let full = stock.iter().find(|item| item.id == "test.full").unwrap();
+    let discount = stock
+        .iter()
+        .find(|item| item.id == "test.discount")
+        .unwrap();
+    assert_eq!(full.quantity, 2);
+    assert_eq!(discount.quantity, 3);
+    assert!(full.unit_price > discount.unit_price);
+    let gold_before = game.gold;
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::BuyFromShop {
+            shop_id: GENERAL_STORE_ID.into(),
+            item_id: discount.id.clone(),
+            quantity: 2,
+        },
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "shop.purchase")
+    );
+    assert_eq!(game.gold, gold_before - 2 * discount.unit_price);
+    assert_eq!(game.items.len(), 1);
+    let merged = &game.items[0];
+    assert_eq!(merged.id, "test.carried");
+    assert_eq!(merged.quantity, 3);
+    assert_eq!(merged.origin_kind, Some(ItemOriginKindDto::Mixed));
+    assert_eq!(merged.discount_percent, 99);
+    assert_eq!(merged.inscription.as_deref(), Some("keep"));
+    let after = game.snapshot();
+    let shop = projected_shop(&after.shops, GENERAL_STORE_ID);
+    assert_eq!(shop.stock.len(), 2);
+    assert_eq!(
+        shop.stock
+            .iter()
+            .find(|item| item.id == "test.full")
+            .unwrap()
+            .quantity,
+        2
+    );
+    assert_eq!(
+        shop.stock
+            .iter()
+            .find(|item| item.id == "test.discount")
+            .unwrap()
+            .quantity,
+        1
+    );
+    assert_eq!(
+        shop.sell_quotes
+            .iter()
+            .find(|quote| quote.item_id == "test.carried")
+            .unwrap()
+            .unit_price,
+        1
+    );
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    for current in [&mut game, &mut restored] {
+        let update = dispatch_next(
+            current,
+            GameCommand::SellToShop {
+                shop_id: GENERAL_STORE_ID.into(),
+                item_id: "test.carried".into(),
+                quantity: 1,
+            },
+        );
+        assert!(update.events.iter().any(|event| event.kind == "shop.sale"));
+    }
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(game.items[0].quantity, 2);
+}
+
+#[test]
+fn i6_home_withdrawal_merges_into_a_full_pack_and_preserves_saved_metadata() {
+    let mut game = Game::new_with_build(606, "demo.build.warrior").unwrap();
+    game.player.position = Position { x: 110, y: 44 };
+    game.mark_shop_visited_at_player().unwrap();
+    game.items.clear();
+    game.item_property_knowledge.clear();
+    for id in ["test.stored", "test.carried"] {
+        super::support::give_inventory_item(&mut game, id, "demo.item.ration-of-food");
+    }
+    game.items[0].quantity = 2;
+    game.items[0].origin_kind = Some(ItemOriginKindDto::Acquire);
+    game.items[0].inscription = Some("keep".into());
+    let deposit = dispatch_next(
+        &mut game,
+        GameCommand::DepositAtHome {
+            facility_id: HOME_ID.into(),
+            item_id: "test.stored".into(),
+            quantity: 2,
+        },
+    );
+    assert!(
+        deposit
+            .events
+            .iter()
+            .any(|event| event.kind == "home.deposit")
+    );
+    for index in 0..25 {
+        super::support::give_inventory_item(
+            &mut game,
+            &format!("test.filler.{index}"),
+            "demo.item.dagger",
+        );
+    }
+    assert_eq!(game.inventory_used_slots(), game.inventory_slot_capacity());
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    for current in [&mut game, &mut restored] {
+        let update = dispatch_next(
+            current,
+            GameCommand::WithdrawFromHome {
+                facility_id: HOME_ID.into(),
+                item_id: "test.stored".into(),
+                quantity: 2,
+            },
+        );
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.kind == "home.withdraw")
+        );
+        let merged = current
+            .items
+            .iter()
+            .find(|item| item.id == "test.carried")
+            .unwrap();
+        assert_eq!(merged.quantity, 3);
+        assert_eq!(merged.origin_kind, Some(ItemOriginKindDto::Mixed));
+        assert_eq!(merged.inscription.as_deref(), Some("keep"));
+        assert_eq!(
+            current.inventory_used_slots(),
+            current.inventory_slot_capacity()
+        );
+        assert!(current.snapshot().homes[0].stored_items.is_empty());
+    }
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert!(Game::from_save(game.to_save()).is_ok());
+}
+
 fn anambar_inn_game(seed: u64) -> Game {
     let mut game =
         Game::new_with_build(seed, "demo.build.warrior").expect("Middle-earth game should start");

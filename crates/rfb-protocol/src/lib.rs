@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.250";
+pub const PROTOCOL_VERSION: &str = "1.251";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 17;
 
@@ -4177,6 +4177,7 @@ pub enum ItemQualityDto {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ItemOriginKindDto {
+    Mixed,
     Mundanity,
     ArtifactCreation,
     Acquire,

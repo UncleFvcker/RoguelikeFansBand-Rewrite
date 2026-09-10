@@ -1,13 +1,13 @@
 # 状态快照
 
-核对日期：2026-09-11；I5 工艺首组已追加。本次集成包含种族职业主线 `080005368`、法术道具 `ea723f342` 与地牢城镇 `bd94fe086`。本页记录代码/配置事实和注明范围的验收证据。当前数值以链接的源文件为准。
+核对日期：2026-09-11；I5 工艺和 I6 堆叠元数据首组已追加。本次集成包含种族职业主线 `080005368`、法术道具 `ea723f342` 与地牢城镇 `bd94fe086`。本页记录代码/配置事实和注明范围的验收证据。当前数值以链接的源文件为准。
 
 ## 版本与源内容
 
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.250 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| 协议 | 1.251 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 122 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 17 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
 | 内容包 | 1.415.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
@@ -34,6 +34,8 @@ I5 工艺首组已接入四册和全部 32 法术，普通入口为高阶法师�
 2026-09-11 的 Tauri standalone WebDriver 专项通过普通矮人高阶法师工艺创角，验证 32 项法术、五种中文元素选项、寒冷烙印、取消物品目标不改状态、武器 +3 附魔、魔法护甲和原生保存/界面读回哈希一致。高等级操作显式准备等级 50、现有潜力内的智力、三册高阶书、已鉴定匕首及四项大师熟练度法术；不表示自然练级。复现命令和本机报告路径见来源审计。Craft 11 项、受影响核心 186 项、内容 155 项（旧数量断言修正后聚焦复验）、本地化 39 项、相关前端 91 项、26 条既有契约、内容锁、Schema/协议绑定、相关 Clippy 和格式检查通过；未刷新契约，未执行 Android 或全量桌面流程。
 
 ## 玩家入口
+
+I6 首组已使现有物理合堆路径允许不同获取来源、单边铭文和折扣；合并后保留混合来源、铭文和较高折扣，交易报价与独立储存分组保持精确元数据。核心专项验证部分合并/拆分/销毁、生成落地不多分配 ID、购买/卖回、满背包取回和保存后继续操作；范围及剩余表示差异见[物品计划 I6](remaining-item-coverage-plan.md#i6对象表示差异)。本批未新增物品、改动内容锁或刷新契约，也没有新增桌面/Android 验收。
 
 职业与种族目录在 [character-creation.ts](../web/src/character-creation.ts)，提交入口在 [session-shell.ts](../web/src/session-shell.ts)，表单在 [web/index.html](../web/index.html)。当前入口提供 10 个构筑、46 个种族；心灵术士的五步接入与约定验收已完成：
 
