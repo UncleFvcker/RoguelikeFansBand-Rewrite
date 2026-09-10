@@ -126,6 +126,11 @@
       "sourceIndex": 25,
       "sourceName": "Arena",
       "id": "demo.dungeon.arena"
+    },
+    {
+      "sourceIndex": 22,
+      "sourceName": "Mount Olympus",
+      "id": "demo.dungeon.mount-olympus"
     }
   ],
   "townPlans": [
@@ -2209,6 +2214,80 @@
       "finalObject": {
         "tval": 90,
         "sval": 3
+      }
+    },
+    {
+      "sourceIndex": 22,
+      "sourceName": "Mount Olympus",
+      "id": "demo.dungeon.mount-olympus",
+      "position": {
+        "x": 5,
+        "y": 9
+      },
+      "minimumDepth": 80,
+      "maximumDepth": 90,
+      "monsterDivisor": 8,
+      "generationFlags": [
+        "WATER_RIVER",
+        "CAVE",
+        "CAVERN",
+        "NO_DOORS",
+        "BIG",
+        "PANTHEON_1"
+      ],
+      "monsterPreferences": [
+        "GIANT",
+        "OLYMPIAN",
+        "OLYMPIAN2"
+      ],
+      "floorTerrainDistribution": [
+        {
+          "sourceTag": "FLOOR",
+          "percent": 100
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        }
+      ],
+      "tunnelPercent": 8,
+      "initialGuardian": {
+        "sourceIndex": 793,
+        "sourceName": "Sky Drake",
+        "chineseName": "天空飞龙",
+        "level": 74
+      },
+      "guardian": {
+        "sourceIndex": 1096,
+        "sourceName": "Zeus, King of the Olympians",
+        "chineseName": "奥林匹斯之王宙斯",
+        "level": 90
+      },
+      "wallTerrain": {
+        "distribution": [
+          {
+            "sourceTag": "PERMANENT",
+            "percent": 40
+          },
+          {
+            "sourceTag": "MOUNTAIN_WALL",
+            "percent": 0
+          },
+          {
+            "sourceTag": "GRANITE",
+            "percent": 60
+          }
+        ],
+        "outer": "GRANITE",
+        "inner": "GRANITE",
+        "streamers": [
+          "NONE",
+          "NONE"
+        ]
       }
     }
   ]

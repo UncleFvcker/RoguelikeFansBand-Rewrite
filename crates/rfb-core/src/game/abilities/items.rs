@@ -257,7 +257,6 @@ impl Game {
         }
         if plain {
             item.discount_percent = 99;
-            item.origin_kind = Some(ItemOriginKindDto::PlayerMade);
         }
         self.add_virtue(VirtueKindDto::Enchantment, 1);
         true
@@ -912,7 +911,7 @@ impl Game {
         Ok(())
     }
 
-    pub(super) fn resolve_player_create_ammunition_effect(
+    pub(in crate::game) fn resolve_player_create_ammunition_effect(
         &mut self,
         ability: &AbilityDefinition,
         source_item_id: Option<String>,
@@ -977,6 +976,10 @@ impl Game {
             location: ItemLocation::Inventory,
         };
         self.apply_rfb_ammunition_magic(&mut item);
+        // Artemis creates the same enchanted ammunition without consuming material.
+        if source_item_id.is_none() && source_terrain.is_none() {
+            item.origin_kind = Some(ItemOriginKindDto::Acquire);
+        }
 
         if let Some(item_id) = source_item_id.as_deref() {
             self.destroy_item(item_id, 1)
@@ -1191,12 +1194,23 @@ impl Game {
         let AbilityEffectDefinition::RechargeFromPlayer { power } = ability.effect else {
             unreachable!("recharge executor requires a player recharge effect");
         };
-        let resource_id = Self::player_ability_parameters(ability).resource_id.clone();
-        let available = self
-            .resources
-            .get(&resource_id)
-            .expect("validated recharge resource must remain available")
-            .current;
+        let item_activation = ability.tags.iter().any(|tag| tag == "item-activation");
+        let resource_id = if item_activation {
+            "demo.resource.mana"
+        } else {
+            &Self::player_ability_parameters(ability).resource_id
+        };
+        let available = if item_activation {
+            // Classes without MP can activate Athena, but cannot supply energy.
+            self.resources
+                .get(resource_id)
+                .map_or(0, |pool| pool.current)
+        } else {
+            self.resources
+                .get(resource_id)
+                .expect("validated recharge resource must remain available")
+                .current
+        };
         let missing = self
             .items
             .iter()
@@ -1205,16 +1219,18 @@ impl Game {
             .map(|charges| charges.maximum.saturating_sub(charges.current))
             .expect("preflighted recharge target must retain charge capacity");
         let attempted = u32::from(power).min(available).min(missing);
-        self.resources
-            .get_mut(&resource_id)
-            .expect("validated recharge resource must remain available")
-            .current -= attempted;
+        if attempted > 0 {
+            self.resources
+                .get_mut(resource_id)
+                .expect("spent recharge resource must be present")
+                .current -= attempted;
+        }
         let outcome =
             self.recharge_inventory_item_from_player(item_id, attempted, u32::from(power));
         events.push(device_recharge_resolved_event(
             outcome,
             ability.id.clone(),
-            false,
+            item_activation,
             false,
         ));
     }

@@ -1864,7 +1864,10 @@ fn vapor_quest_unlocks_after_old_man_willow_clears_the_cellar_and_rewards_detect
     assert_eq!(game.terrain_at(entry), "demo.terrain.vapor-quest-entry");
 
     game.player.position = entry;
-    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    // Inspect the initial cellar before monster turns can destroy its ground items.
+    game.transition_floor("demo.floor.vapor-quest".into(), None, None, false)
+        .unwrap()
+        .expect("accepted quest should admit the player");
     assert_eq!(game.current_floor_id, "demo.floor.vapor-quest");
     assert_eq!(game.entities.len(), 18);
     assert_eq!(

@@ -889,12 +889,20 @@ fn validate_item_creation_state(
     discount_percent: u8,
 ) -> Result<(), CoreError> {
     let ammunition = definition.tags.iter().any(|tag| tag == "ammunition");
+    // cast_enchantment discounts nameless equipment while preserving its origin.
+    let discounted_equipment = discount_percent == 99
+        && definition.artifact_generation.is_none()
+        && (definition.melee_profile.is_some()
+            || definition
+                .tags
+                .iter()
+                .any(|tag| matches!(tag.as_str(), "weapon" | "launcher" | "ammunition" | "armor")));
     let origin_is_valid = match origin_kind {
         Some(ItemOriginKindDto::ArtifactCreation) => matches!(discount_percent, 0 | 99),
-        None => discount_percent == 0,
+        None => discount_percent == 0 || discounted_equipment,
         Some(ItemOriginKindDto::Mixed) => {
             !definition.tags.iter().any(|tag| tag == "artifact")
-                && (discount_percent == 0 || (discount_percent == 99 && ammunition))
+                && (discount_percent == 0 || discounted_equipment)
         }
         Some(ItemOriginKindDto::PlayerMade) => {
             discount_percent == 99
@@ -903,9 +911,12 @@ fn validate_item_creation_state(
                         matches!(tag.as_str(), "weapon" | "launcher" | "ammunition" | "armor")
                     }))
         }
-        Some(ItemOriginKindDto::Acquire | ItemOriginKindDto::Mundanity) => discount_percent == 0,
-        Some(ItemOriginKindDto::Rubble) => discount_percent == 0,
-        Some(ItemOriginKindDto::EndlessQuiver) => discount_percent == 0,
+        Some(
+            ItemOriginKindDto::Acquire
+            | ItemOriginKindDto::Mundanity
+            | ItemOriginKindDto::Rubble
+            | ItemOriginKindDto::EndlessQuiver,
+        ) => discount_percent == 0 || discounted_equipment,
     };
     let damage_override_is_valid =
         damage_dice_override.is_none_or(|dice| (1..=9).contains(&dice) && ammunition);

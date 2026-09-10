@@ -200,5 +200,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.zeus",
+    "chancePercent": 20
   }
 }

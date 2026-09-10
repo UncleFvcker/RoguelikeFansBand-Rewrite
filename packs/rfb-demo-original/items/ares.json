@@ -1,0 +1,108 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.iron-helm",
+    "instant": false,
+    "rarityOneIn": 127,
+    "sourceIndex": 260
+  },
+  "baseValue": 555555,
+  "descriptionKey": "item-demo-ares-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeDamage": 12,
+    "meleeSkill": 12,
+    "meleeAttacksDeltaPercent": 100
+  },
+  "equipmentSlot": "head",
+  "formatVersion": 1,
+  "generationLevel": 90,
+  "glyph": "]",
+  "id": "demo.item.ares",
+  "maxStack": 1,
+  "modifiers": {
+    "constitution": 2,
+    "dexterity": 2,
+    "speed": 2,
+    "strength": 2
+  },
+  "nameKey": "item-demo-ares-name",
+  "passives": [
+    "reflects-bolts",
+    "warning"
+  ],
+  "resistances": {
+    "fear": "immune"
+  },
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "BLOWS",
+      "CON",
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_FEAR",
+      "PERMA_CURSE",
+      "QUESTITEM",
+      "REFLECT",
+      "SPEED",
+      "STR",
+      "TOWN",
+      "WARNING"
+    ],
+    "pval": 2,
+    "toArmor": -5
+  },
+  "tags": [
+    "activatable",
+    "armor",
+    "artifact",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 75,
+  "initialCurse": "permanent",
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.ares",
+        "nameKey": "item-activation-demo-ares-name",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "effectProgramId": "demo.effect.ares",
+        "deviceCheckDifficulty": 8,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "rfbValue": 2125
+      }
+    ],
+    "recovery": {
+      "intervalTicks": 200,
+      "energyPerMille": 1000
+    }
+  }
+}

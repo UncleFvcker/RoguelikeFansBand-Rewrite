@@ -2,6 +2,97 @@
 use super::*;
 
 impl Game {
+    pub(in crate::game) fn hermes_range(&self) -> u16 {
+        device_power_value(
+            u64::from(self.progress.level / 2 + 10),
+            self.effective_player_device_power_bonus(),
+        ) as u16
+    }
+
+    pub(super) fn resolve_item_monster_summon(
+        &mut self,
+        source: &str,
+        profile: Option<&str>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let count = self.rng.bounded(3) + 1;
+        let hostile = self.rng.bounded(10) == 0;
+        for _ in 0..count {
+            // devices.c retries the pet branch when a hostile summon cannot be placed.
+            for hostile in if hostile {
+                vec![true, false]
+            } else {
+                vec![false]
+            } {
+                let depth = self.floor_depth(&self.current_floor_id);
+                let level = depth.saturating_add(if hostile { 5 } else { 0 });
+                let candidates = self
+                    .summon_category_candidate_kind_ids("any-monster", None, level, false, true)
+                    .into_iter()
+                    .filter(|id| {
+                        hostile
+                            || !self
+                                .original_pack_spell_flags(self.content.actor(id).unwrap())
+                                .1
+                    })
+                    .collect::<Vec<_>>();
+                if candidates.is_empty() {
+                    continue;
+                }
+                let kind = candidates[self.rng.bounded(candidates.len() as u64) as usize].clone();
+                let definition = self.content.actor(&kind).unwrap().clone();
+                let group = !self.floor_uses_arena_rooms(&self.current_floor_id)
+                    && definition
+                        .allocation
+                        .as_ref()
+                        .is_some_and(|a| a.friends.is_some());
+                let total = if group {
+                    self.original_friend_total(&definition, depth)
+                } else {
+                    1
+                };
+                let positions = self
+                    .open_positions_around_for_actor_kind(self.player.position, 2, &kind)
+                    .into_iter()
+                    .take(usize::from(total))
+                    .collect();
+                let owner = self.player.id.clone();
+                let resolution = self.resolve_category_summon(
+                    CategorySummonSpec {
+                        is_spell: true,
+                        source_id: source,
+                        owner_id: &owner,
+                        category: "any-monster",
+                        count_dice: 0,
+                        count_sides: 0,
+                        count_bonus: 1,
+                        maximum_count: None,
+                        hostile,
+                        group_chance_percent: if group { 100 } else { 0 },
+                        group_count_dice: 0,
+                        group_count_sides: 0,
+                        group_count_bonus: total as u8,
+                        duration_turns: 0,
+                    },
+                    vec![kind],
+                    positions,
+                    changed,
+                );
+                let summoned = !resolution.entity_ids.is_empty();
+                events.push(DomainEvent::ItemSummoned {
+                    source_kind_id: source.into(),
+                    profile_id: profile.map(str::to_owned),
+                    resolution,
+                });
+                if summoned {
+                    self.mark_item_aware(source);
+                    break;
+                }
+            }
+        }
+    }
+
     pub(super) fn resolve_item_starlight(
         &mut self,
         source: &str,
@@ -104,10 +195,12 @@ impl Game {
             .expect("planned enchantment target");
         let item = &self.items[index];
         let total = self.item_total_enchantments(item);
-        let weapon = self
-            .content
-            .item(&item.kind_id)
-            .unwrap()
+        let definition = self.content.item(&item.kind_id).unwrap();
+        let base = match &definition.artifact_generation {
+            Some(artifact) => self.content.item(&artifact.base_item_kind_id).unwrap(),
+            None => definition,
+        };
+        let weapon = base
             .rfb_base_kind
             .is_some_and(|kind| (16..=23).contains(&kind.tval));
         let before = item.enchantments;

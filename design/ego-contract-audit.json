@@ -3166,11 +3166,32 @@
       "tval": 16
     },
     {
+      "itemId": "demo.item.jewel-encrusted-crown",
+      "status": "source-type-verified",
+      "sourceIndex": 222,
+      "sval": 12,
+      "tval": 33
+    },
+    {
+      "itemId": "demo.item.black-clothes",
+      "status": "source-type-verified",
+      "sourceIndex": 258,
+      "sval": 13,
+      "tval": 36
+    },
+    {
       "itemId": "demo.item.heavy-lance",
       "status": "source-type-verified",
       "sourceIndex": 107,
       "sval": 29,
       "tval": 22
+    },
+    {
+      "itemId": "demo.item.great-hammer",
+      "status": "source-type-verified",
+      "sourceIndex": 135,
+      "sval": 19,
+      "tval": 21
     },
     {
       "itemId": "demo.item.metal-lamellar-armour",

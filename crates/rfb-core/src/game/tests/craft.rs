@@ -132,6 +132,7 @@ fn enchantment_caps_bonuses_and_rejects_forbidden_targets_before_payment() {
         .unwrap();
     target.enchantments.to_hit = 14;
     target.enchantments.to_damage = 13;
+    target.origin_kind = Some(ItemOriginKindDto::Acquire);
     cast(&mut game, &id, item("test.weapon"));
     let target = game.items.iter().find(|i| i.id == "test.weapon").unwrap();
     assert_eq!(
@@ -139,6 +140,7 @@ fn enchantment_caps_bonuses_and_rejects_forbidden_targets_before_payment() {
         (15, 15)
     );
     assert_eq!(target.discount_percent, 99);
+    assert_eq!(target.origin_kind, Some(ItemOriginKindDto::Acquire));
     let events = cast(&mut game, &id, item("test.weapon"));
     assert!(events.iter().any(|e| matches!(e, DomainEvent::AbilityEffectsResolved { resolution, .. } if matches!(resolution.effects[0], rfb_protocol::AbilityEffectResolutionDto::ItemMagic { succeeded: false, .. }))));
     give_inventory_item(&mut game, "test.needle", "demo.item.poison-needle");
@@ -437,8 +439,11 @@ fn mana_brand_consumes_mana_on_real_weapon_hits_and_elemental_brand_changes_dama
             break;
         }
     }
-    let hit = hit.expect("fixed seed range includes a weapon hit");
+    let mut hit = hit.expect("fixed seed range includes a weapon hit");
     assert!(hit.resources["demo.resource.mana"].current < before);
+    // Direct melee bypasses command completion; reveal dropped-item knowledge
+    // before comparing against loading, which performs the same visibility step.
+    hit.reveal_current_visibility();
     assert_eq!(
         Game::from_save(hit.to_save()).unwrap().state_hash(),
         hit.state_hash()

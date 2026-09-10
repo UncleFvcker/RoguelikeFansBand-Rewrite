@@ -280,10 +280,6 @@ fn demo_monster_audit_omission_is_safe(flag: &str) -> bool {
             | "POS_SUST_STR"
             | "POS_SUST_WIS"
             | "POS_TELEPATHY"
-            | "EGYPTIAN2"
-            | "HINDU2"
-            | "NORSE2"
-            | "OLYMPIAN2"
             | "RES_WALL"
             | "STUPID"
             | "KILL_EXP"
@@ -10217,6 +10213,10 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "HINDU"
             | "EGYPTIAN"
             | "OLYMPIAN"
+            | "OLYMPIAN2"
+            | "NORSE2"
+            | "HINDU2"
+            | "EGYPTIAN2"
             | "NO_SUMMON"
             | "KNIGHT"
     ) {
@@ -10416,6 +10416,10 @@ fn monster_json(
         ("HINDU", "hindu"),
         ("EGYPTIAN", "egyptian"),
         ("OLYMPIAN", "olympian"),
+        ("OLYMPIAN2", "olympian2"),
+        ("NORSE2", "norse2"),
+        ("HINDU2", "hindu2"),
+        ("EGYPTIAN2", "egyptian2"),
         ("NO_SUMMON", "no-summon"),
         ("KNIGHT", "knight"),
     ] {
@@ -11265,6 +11269,10 @@ fn demo_monster_json(
         ("HINDU", "hindu"),
         ("EGYPTIAN", "egyptian"),
         ("OLYMPIAN", "olympian"),
+        ("OLYMPIAN2", "olympian2"),
+        ("NORSE2", "norse2"),
+        ("HINDU2", "hindu2"),
+        ("EGYPTIAN2", "egyptian2"),
         ("NO_SUMMON", "no-summon"),
         ("KNIGHT", "knight"),
     ] {
@@ -19406,10 +19414,14 @@ mod tests {
         assert!(demo_monster_audit_omission_is_safe("POS_SUST_INT"));
         assert!(demo_monster_audit_omission_is_safe("KILL_EXP"));
         assert!(demo_monster_flag_is_handled("EGYPTIAN"));
-        assert!(demo_monster_audit_omission_is_safe("EGYPTIAN2"));
-        assert!(demo_monster_audit_omission_is_safe("HINDU2"));
-        assert!(demo_monster_audit_omission_is_safe("NORSE2"));
-        assert!(demo_monster_audit_omission_is_safe("OLYMPIAN2"));
+        assert!(!demo_monster_audit_omission_is_safe("EGYPTIAN2"));
+        assert!(demo_monster_flag_is_handled("EGYPTIAN2"));
+        assert!(!demo_monster_audit_omission_is_safe("HINDU2"));
+        assert!(demo_monster_flag_is_handled("HINDU2"));
+        assert!(!demo_monster_audit_omission_is_safe("NORSE2"));
+        assert!(demo_monster_flag_is_handled("NORSE2"));
+        assert!(!demo_monster_audit_omission_is_safe("OLYMPIAN2"));
+        assert!(demo_monster_flag_is_handled("OLYMPIAN2"));
         assert!(demo_monster_flag_is_handled("AURA_REVENGE"));
         assert!(demo_monster_flag_is_handled("AURA_FEAR"));
         assert!(demo_monster_flag_is_handled("TANUKI"));
@@ -21072,7 +21084,7 @@ mod tests {
                 source_id: None,
                 id: "rolento".to_owned(),
                 tags: vec!["orc-cave".to_owned()],
-                omitted_flags: vec!["NORSE2".to_owned(), "POS_BACKSTAB".to_owned()],
+                omitted_flags: vec!["POS_BACKSTAB".to_owned()],
                 omitted_spells: Vec::new(),
             },
             &mut abilities,
@@ -22900,7 +22912,7 @@ F:ANIMAL | COLD_BLOOD\n";
     #[test]
     fn olympian_and_no_summon_flags_become_runtime_tags() {
         let monsters = parse_r_info(
-            "N:1044:Olympian test\nG:P:w\nI:110:1d1:1:1:1:1\nW:1:1:1:1:0:0\nB:HIT:HURT(1d1)\nF:UNIQUE | OLYMPIAN | NO_SUMMON\n",
+            "N:1044:Olympian test\nG:P:w\nI:110:1d1:1:1:1:1\nW:1:1:1:1:0:0\nB:HIT:HURT(1d1)\nF:UNIQUE | OLYMPIAN | OLYMPIAN2 | EGYPTIAN2 | HINDU2 | NORSE2 | NO_SUMMON\n",
         )
         .expect("synthetic Olympian should parse");
         let selection: DemoMonsterSelectionEntry = serde_json::from_value(serde_json::json!({
@@ -22915,6 +22927,9 @@ F:ANIMAL | COLD_BLOOD\n";
         let tags = actor["tags"].as_array().expect("tags should be an array");
         assert!(tags.iter().any(|tag| tag == "olympian"));
         assert!(tags.iter().any(|tag| tag == "no-summon"));
+        for tag in ["olympian2", "egyptian2", "hindu2", "norse2"] {
+            assert!(tags.iter().any(|candidate| candidate == tag));
+        }
     }
 
     #[test]

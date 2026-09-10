@@ -1,0 +1,111 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.jewel-encrusted-crown",
+    "instant": false,
+    "rarityOneIn": 127,
+    "sourceIndex": 265
+  },
+  "baseValue": 555555,
+  "descriptionKey": "item-demo-hera-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.hera",
+        "nameKey": "item-activation-demo-hera-name",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "effectProgramId": "demo.effect.perfect-focus-restoration",
+        "deviceCheckDifficulty": 50,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "rfbValue": 10000
+      }
+    ],
+    "recovery": {
+      "intervalTicks": 550,
+      "energyPerMille": 1000
+    }
+  },
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentSlot": "head",
+  "formatVersion": 1,
+  "generationLevel": 90,
+  "glyph": "]",
+  "id": "demo.item.hera",
+  "maxStack": 1,
+  "modifiers": {
+    "charisma": 3,
+    "defense": 20,
+    "intelligence": 3,
+    "speed": 3,
+    "wisdom": 3
+  },
+  "nameKey": "item-demo-hera-name",
+  "passives": [
+    "reduced-mana-cost",
+    "sustain-charisma",
+    "sustain-intelligence",
+    "sustain-wisdom"
+  ],
+  "resistances": {
+    "confusion": "resistant",
+    "sound": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "DEC_MANA",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "PERMA_CURSE",
+      "QUESTITEM",
+      "RES_CONF",
+      "RES_SOUND",
+      "SPEED",
+      "SPELL_CAP",
+      "SUST_CHR",
+      "SUST_INT",
+      "SUST_WIS",
+      "WIS"
+    ],
+    "pval": 3,
+    "toArmor": 20
+  },
+  "tags": [
+    "activatable",
+    "armor",
+    "artifact",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 40,
+  "initialCurse": "permanent",
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentBonuses": {
+    "spellCapacityBonus": 3
+  }
+}

@@ -36,7 +36,7 @@
       },
       "lastCommandSeq": 1,
       "revision": 1,
-      "stateHash": "5da9cfe28247da97b336a9e71d45e8a89cfba6be62217e930ab52fbe13750f66",
+      "stateHash": "bfd70674dadd172ea911482f479d39ea7ab65923aea1ac2d4a7d0747c3ab8442",
       "turn": 1
     },
     "events": [
@@ -52,9 +52,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "5da9cfe28247da97b336a9e71d45e8a89cfba6be62217e930ab52fbe13750f66"
+        "stateHash": "bfd70674dadd172ea911482f479d39ea7ab65923aea1ac2d4a7d0747c3ab8442"
       }
     ],
-    "saveRoundTripStateHash": "5da9cfe28247da97b336a9e71d45e8a89cfba6be62217e930ab52fbe13750f66"
+    "saveRoundTripStateHash": "bfd70674dadd172ea911482f479d39ea7ab65923aea1ac2d4a7d0747c3ab8442"
   }
 }

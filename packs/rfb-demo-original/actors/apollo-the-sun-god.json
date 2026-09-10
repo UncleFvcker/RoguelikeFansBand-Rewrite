@@ -192,5 +192,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.apollo",
+    "chancePercent": 20
   }
 }

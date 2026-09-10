@@ -1,0 +1,47 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 5000,
+  "descriptionKey": "item-demo-black-clothes-description",
+  "elementalDestructionImmunities": [
+    "fire"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentBonuses": {
+    "stealthSkill": 1
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 15,
+  "glyph": "(",
+  "id": "demo.item.black-clothes",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 16
+  },
+  "mogaminatorRare": true,
+  "nameKey": "item-demo-black-clothes-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 258,
+    "sval": 13,
+    "tval": 36
+  },
+  "rfbValue": {
+    "flags": [
+      "STEALTH",
+      "IGNORE_FIRE",
+      "PLURAL"
+    ],
+    "pval": 1,
+    "toArmor": 12
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 80
+}

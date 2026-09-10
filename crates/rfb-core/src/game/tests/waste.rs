@@ -601,6 +601,7 @@ fn waste_generated_river_keeps_items_gold_and_monsters_on_legal_tiles() {
         .find(|floor| floor.id == "demo.floor.warrens-depth-1")
         .unwrap();
     floor.layout.as_mut().unwrap().river = Some(rfb_content::ProceduralRiverDefinition {
+        rfb_depth_chance: false,
         deep_terrain_id: DEEP.to_owned(),
         shallow_terrain_id: SHALLOW.to_owned(),
         chance_one_in: None,

@@ -1,19 +1,21 @@
 # 状态快照
 
-核对日期：2026-09-11；I5 工艺和 I6 堆叠元数据首组已追加。本次集成包含种族职业主线 `080005368`、法术道具 `ea723f342` 与地牢城镇 `bd94fe086`。本页记录代码/配置事实和注明范围的验收证据。当前数值以链接的源文件为准。
+核对日期：2026-09-11；法术道具分支在 `d93fef625` 上接入地牢方向 `ca8e843ba` 的 OL1–OL4，保留 I3 霍比特人装备、I4 毒针、I5 工艺和 I6 堆叠首组。此处为独立分支集成快照，未同步 main 的后续 Mage 批次。本页记录代码/配置事实和注明范围的验收证据。当前数值以链接的源文件为准。
 
 ## 版本与源内容
 
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.251 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | 122 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload / 容器 | 14 / 17 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.415.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
-| 契约政策 | contract-v323，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
+| 协议 | 1.252 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | 123 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload / 容器 | 14 / 18 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
+| 内容包 | 1.416.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 契约政策 | contract-v324，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 9 个 Class、17 个 Build、57 个 Race、36 本能力书、1,901 个 ability 文件、393 个 item、1,405 个 actor、168 个 affix、152 个 mutation。世界定义含 31 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 9 个 Class、17 个 Build、57 个 Race、36 本能力书、1,901 个 ability 文件、408 个 item、1,405 个 actor、168 个 affix、152 个 mutation。世界定义含 32 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+
+[奥林匹斯计划 OL1–OL4](../design/mount-olympus-dungeon-plan-20260910.md) 已实现：新角色按原版默认从四个神系随机保留两个，激活结果进入保存与状态哈希；主／次神系标记用于普通、环境及随机召唤资格，未激活地牢的入口与守卫受到抑制。固定家族召唤保留独立的唯一额度规则，并修复其合法来源保存恢复。OL2 补齐洞窟／水河的源深度触发与水河永久墙保护；测试中的 96×33 代表层覆盖混合填充墙、无门、连通、普通战利品和神系生态。OL3 新增十二神祇专属神器及三种底材，接通 20%（Bad Luck 15%）独立掉落、装备／激活／冷却保存；沿用仙馔密酒身份并补齐食用数值。提前击杀守卫、域外唯一死亡、独立征服卷轴及实际使用均有核心证据。具体适配及验证范围见计划。OL4 已开放 (5,9) 入口和 80–90 共 11 层；未激活奥林匹斯神系的角色不获得入口资格。正式层链的守卫击杀、奖励拾取／使用、逐层返回、召回和保存继续均有核心测试；原先借用拉莱耶的专项已迁入正式内容。新增地牢记录使 26 条契约的状态哈希变化，核对仅哈希差异后刷新并复验通过。**OL5 尚待最终收口；当前证据使用明确的测试前置，不代表自然练级、桌面试玩或可玩构建。未开放半神父母身份的 100% 神器掉落分支仍未实现。**
 
 权威内容统计工具是 `rfb-contentc inspect-source`。本次集成已运行内容编译；静态统计不替代行为验收。
 
@@ -34,6 +36,8 @@ I5 工艺首组已接入四册和全部 32 法术，普通入口为高阶法师�
 2026-09-11 的 Tauri standalone WebDriver 专项通过普通矮人高阶法师工艺创角，验证 32 项法术、五种中文元素选项、寒冷烙印、取消物品目标不改状态、武器 +3 附魔、魔法护甲和原生保存/界面读回哈希一致。高等级操作显式准备等级 50、现有潜力内的智力、三册高阶书、已鉴定匕首及四项大师熟练度法术；不表示自然练级。复现命令和本机报告路径见来源审计。Craft 11 项、受影响核心 186 项、内容 155 项（旧数量断言修正后聚焦复验）、本地化 39 项、相关前端 91 项、26 条既有契约、内容锁、Schema/协议绑定、相关 Clippy 和格式检查通过；未刷新契约，未执行 Android 或全量桌面流程。
 
 ## 玩家入口
+
+I3 首步已在本分支衔接奥林匹斯十二件神器及其特殊掉落，固定神器正式映射为 31/392。新增专项验证阿尔忒弥斯造箭后的部分合堆、原堆/剩余堆来源与折扣、拆分拾取和保存继续；赫菲斯托斯附魔验证 Mundanity/Mixed 来源保留及非法折扣拒绝。工艺附魔同样保留获取来源。既有奥林匹斯专项继续覆盖唯一性、QUESTITEM 普通生成排除及十二件装备/激活/冷却；来源和边界见[物品计划 I3](remaining-item-coverage-plan.md#i3固定神器与神器创造入口)。沿用地牢方向的 contract-v324，本次衔接复验 26 条契约通过，未追加刷新；没有新增桌面/Android 验收。
 
 I6 首组已使现有物理合堆路径允许不同获取来源、单边铭文和折扣；合并后保留混合来源、铭文和较高折扣，交易报价与独立储存分组保持精确元数据。核心专项验证部分合并/拆分/销毁、生成落地不多分配 ID、购买/卖回、满背包取回和保存后继续操作；范围及剩余表示差异见[物品计划 I6](remaining-item-coverage-plan.md#i6对象表示差异)。本批未新增物品、改动内容锁或刷新契约，也没有新增桌面/Android 验收。
 
@@ -74,7 +78,7 @@ Ent、Spectre 的新游戏入口已开放。种族主线还接入原始经验值
 
 法术道具分支已合入护甲、非 Craft Ego、共享加权工艺、真实装备估值、负向装备/诅咒消费者、龙系底材生成、背包与箭袋容量，以及随机神器实例身份和消费者。168 个 affix 定义不等于全部均可自然获取：保留原版零稀有度及专用入口约束。
 
-随机神器已接入武器/挖掘工具、远程/竖琴、护甲、首饰和费艾诺光源的自然调度，保留原版底材例外、概率与强制模式，Craft 不参与抽样。实例保存名称、骰数、重量、特性、诅咒和激活；内部工厂含职业/主题 bias、原版命名、195 项激活池及最多 1001 个独立候选的价值筛选。成功和被拒绝候选的名字登记进入存档，恢复后继续生成保持一致。首饰自然入口另按原版等级/模式阈值筛选完整候选，1000 次拒绝后直接采用新生成的第 1001 个结果；每轮都包含 Ego/随机神器分支及诅咒，显式配置物化保持原入口。生成验收要求规则相同和本项目内确定性，不要求与原版同种子产物相同。无权威中文的名字保留原字符串并记录 unresolved。共享生成已按实际构筑审计职业/种族、变异、人格和主题条件，补齐主题 Ego 筛选、Bad Luck 固定神器参考层级及帽子速度限制。Vortex 分类为装备模板/消费者和间接类别分配；B0–B6 已完成当前可玩构筑与导入基础池的底材分配、Acquirement 偏好/书本计数和保存验收；未开放身份不计入可玩验收。基础分配已统一为 335 个 source kind、369 行；13 个正式主题引用同一池并以枚举执行源谓词。逐行来源及未导入条目见[基础分配覆盖](../packs/rfb-demo-original/legacy-base-allocation-audit.json)，范围、证据和源对象表示限制见[分配计划](../design/base-allocation-acquirement-plan.md)。八领域入口范围保持上表状态。实现范围见[共享生成计划](../design/ego-shared-generation-plan.md)，实例表示见[随机神器身份契约](../design/contract-v316-random-artifact-identity.md)。
+随机神器已接入武器/挖掘工具、远程/竖琴、护甲、首饰和费艾诺光源的自然调度，保留原版底材例外、概率与强制模式，Craft 不参与抽样。实例保存名称、骰数、重量、特性、诅咒和激活；内部工厂含职业/主题 bias、原版命名、195 项激活池及最多 1001 个独立候选的价值筛选。成功和被拒绝候选的名字登记进入存档，恢复后继续生成保持一致。首饰自然入口另按原版等级/模式阈值筛选完整候选，1000 次拒绝后直接采用新生成的第 1001 个结果；每轮都包含 Ego/随机神器分支及诅咒，显式配置物化保持原入口。生成验收要求规则相同和本项目内确定性，不要求与原版同种子产物相同。无权威中文的名字保留原字符串并记录 unresolved。共享生成已按实际构筑审计职业/种族、变异、人格和主题条件，补齐主题 Ego 筛选、Bad Luck 固定神器参考层级及帽子速度限制。Vortex 分类为装备模板/消费者和间接类别分配；B0–B6 已完成当前可玩构筑与导入基础池的底材分配、Acquirement 偏好/书本计数和保存验收；未开放身份不计入可玩验收。基础分配已统一为 342 个 source kind、376 行；13 个正式主题引用同一池并以枚举执行源谓词。逐行来源及未导入条目见[基础分配覆盖](../packs/rfb-demo-original/legacy-base-allocation-audit.json)，范围、证据和源对象表示限制见[分配计划](../design/base-allocation-acquirement-plan.md)。八领域入口范围保持上表状态。实现范围见[共享生成计划](../design/ego-shared-generation-plan.md)，实例表示见[随机神器身份契约](../design/contract-v316-random-artifact-identity.md)。
 
 书本已在现有物品知识中累计发现数，实例保留防重复标记；出生、拾取、鉴定、销毁、交易、存储及保存恢复按原版统计事件区分。购买与出售只标记，不增加 found；累计数不随库存减少，也不经博物馆转给其他角色。普通分配权重衰减与 Good/Great 高阶书条件已读取累计数，来源映射见[分配计划 B1](../design/base-allocation-acquirement-plan.md#b1发现计数与保存完整性)。
 

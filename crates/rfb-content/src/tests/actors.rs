@@ -3,6 +3,30 @@ use std::collections::BTreeSet;
 use super::*;
 
 #[test]
+fn special_artifact_drops_require_a_real_artifact_and_nonzero_probability() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    for (kind, chance) in [
+        ("demo.item.zeus", 0),
+        ("demo.item.sunlit-feast", 20),
+        ("demo.item.missing", 20),
+    ] {
+        let mut content = artifact.content.clone();
+        let actor = content
+            .actors
+            .iter_mut()
+            .find(|a| a.id == "demo.actor.zeus-king-of-the-olympians")
+            .unwrap();
+        let drop = actor.special_artifact_drop.as_mut().unwrap();
+        drop.item_kind_id = kind.into();
+        drop.chance_percent = chance;
+        assert!(matches!(
+            validate_and_normalize(&mut content),
+            Err(ContentError::InvalidActorLootTable(_))
+        ));
+    }
+}
+
+#[test]
 fn capture_policies_distinguish_normal_unique_and_immune_monsters() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let policy = |id: &str| {

@@ -183,5 +183,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.hades",
+    "chancePercent": 20
   }
 }

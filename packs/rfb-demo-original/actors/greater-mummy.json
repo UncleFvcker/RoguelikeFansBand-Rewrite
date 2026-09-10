@@ -210,7 +210,8 @@
     "outpost-quest",
     "resist-teleport",
     "royal-crypt",
-    "undead"
+    "undead",
+    "egyptian2"
   ],
   "terrainInteraction": {
     "picksUpItems": true

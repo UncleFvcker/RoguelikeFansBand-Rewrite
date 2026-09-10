@@ -1,0 +1,119 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.short-bow",
+    "instant": false,
+    "rarityOneIn": 127,
+    "sourceIndex": 263
+  },
+  "baseValue": 555555,
+  "descriptionKey": "item-demo-artemis-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentBonuses": {
+    "stealthSkill": 3,
+    "baseShotDeltaPercent": 45
+  },
+  "equipmentSlot": "launcher",
+  "formatVersion": 1,
+  "generationLevel": 90,
+  "glyph": "}",
+  "id": "demo.item.artemis",
+  "maxStack": 1,
+  "modifiers": {
+    "charisma": 3,
+    "dexterity": 3,
+    "strength": 3
+  },
+  "nameKey": "item-demo-artemis-name",
+  "passives": [
+    "see-invisible",
+    "sustain-charisma",
+    "sustain-dexterity",
+    "sustain-strength"
+  ],
+  "projectileProfile": {
+    "ammunitionType": "arrow",
+    "damageMultiplierPercent": 350,
+    "range": 17,
+    "toDamage": 28,
+    "toHit": 12,
+    "shotEnergy": 8888
+  },
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "PERMA_CURSE",
+      "QUESTITEM",
+      "RES_BLIND",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "STEALTH",
+      "STR",
+      "SUST_CHR",
+      "SUST_DEX",
+      "SUST_STR",
+      "TOWN",
+      "XTRA_SHOTS"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "statusImmunities": [
+    "rfb.status.blindness"
+  ],
+  "tags": [
+    "activatable",
+    "artifact",
+    "equipment",
+    "launcher",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 30,
+  "initialCurse": "permanent",
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.artemis",
+        "nameKey": "item-activation-demo-artemis-name",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "effectProgramId": "demo.effect.artemis",
+        "deviceCheckDifficulty": 30,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "rfbValue": 7500
+      }
+    ],
+    "recovery": {
+      "intervalTicks": 10000,
+      "energyPerMille": 1000
+    }
+  }
+}

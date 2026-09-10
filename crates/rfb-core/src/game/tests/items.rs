@@ -427,6 +427,7 @@ fn razorback_guardian_reward_shares_natural_generation_uniqueness() {
         })
         .unwrap();
     let floor_id = floor.id.clone();
+    let dungeon_id = floor.dungeon_id.clone().unwrap();
     let guardian = floor.guardian.as_mut().unwrap();
     guardian.reward_artifact_item_kind_id = Some("demo.item.razorback".to_owned());
     let guardian = guardian.clone();
@@ -436,6 +437,7 @@ fn razorback_guardian_reward_shares_natural_generation_uniqueness() {
     let (mut game, _) = razorback_game();
     game.content = content;
     game.current_floor_id = floor_id;
+    game.dungeon_states.get_mut(&dungeon_id).unwrap().suppressed = false;
     let mut actor = game.player.clone();
     actor.id = guardian.instance_id;
     actor.kind_id = guardian.actor_kind_id;
@@ -725,7 +727,7 @@ fn p90b_olog_hai_affix_materializes_and_runs_existing_berserk_activation() {
         .iter()
         .find(|status| status.kind_id == STATUS_BERSERK)
         .expect("Olog-hai activation should apply Berserk");
-    assert!((26..=50).contains(&berserk.remaining_ticks));
+    assert!((260..=500).contains(&berserk.remaining_ticks));
     assert_eq!(
         game.items
             .iter()
@@ -3528,6 +3530,8 @@ fn b4_tailored_high_mage_device_is_usable_and_restores_its_charges() {
 fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     let mut single = Game::new(503);
     clear_monsters(&mut single);
+    // Bound this fixture to item use, independently of birth RNG consumption.
+    single.rng = RfbRng::seeded(503);
     give_inventory_item(
         &mut single,
         "test.item.acquirement.1",
@@ -3556,8 +3560,9 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     assert_eq!(generated[0].location, ItemLocation::Ground(position));
     assert_eq!(generated[0].quality, ItemQualityDto::Exceptional);
     assert!(generated[0].id.starts_with("generated.item."));
-    // drop_near consumes the disabled-breakage roll and a tied-grid roll.
-    assert_eq!(single.rng_draw_counter(), draws_before + 34);
+    // Fixed action seed includes generation plus drop_near's disabled-breakage
+    // roll and tied-grid roll; it does not include character creation.
+    assert_eq!(single.rng_draw_counter(), draws_before + 641);
     assert!(update.events.iter().any(|event| {
         event.kind == "item.use-acquirement"
             && event.args.get("count").map(String::as_str) == Some("1")

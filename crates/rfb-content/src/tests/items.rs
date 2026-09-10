@@ -976,8 +976,8 @@ fn item_shape_validation_uses_current_rfb_content() {
     invalid
         .items
         .iter_mut()
-        .find(|item| item.id == "demo.item.short-bow")
-        .expect("short bow should exist")
+        .find(|item| item.id == "demo.item.long-bow")
+        .expect("long bow should exist")
         .equipment_slot = Some("weapon".to_owned());
     assert!(matches!(
         validate_and_normalize(&mut invalid),
@@ -1065,7 +1065,7 @@ fn equipment_and_ego_identities_match_source() {
             .filter_map(|item| item.rfb_base_kind)
             .filter(|kind| matches!(kind.tval, 20..=23))
             .collect::<Vec<_>>();
-        assert_eq!(base_kinds.len(), 70);
+        assert_eq!(base_kinds.len(), 71);
         assert_eq!(
             base_kinds
                 .iter()
@@ -1141,6 +1141,7 @@ fn equipment_and_ego_identities_match_source() {
         assert_eq!(
             actual,
             [
+                "demo.item.athena",
                 "demo.item.ball-and-chain",
                 "demo.item.broad-spear",
                 "demo.item.broad-sword",
@@ -1153,6 +1154,7 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.lance",
                 "demo.item.long-sword",
                 "demo.item.pain",
+                "demo.item.poseidon",
                 "demo.item.quickthorn",
                 "demo.item.sabre",
                 "demo.item.spear",

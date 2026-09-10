@@ -1873,7 +1873,7 @@ impl Game {
         let item_id = self.items[item_index].id.clone();
         let item_kind_id = self.items[item_index].kind_id.clone();
         let blessed = !request.blast
-            && Self::item_has_weapon_trait(&self.items[item_index], WeaponTraitDto::Blessed);
+            && self.item_has_weapon_trait(&self.items[item_index], WeaponTraitDto::Blessed);
         let artifact = self.items[item_index].is_artifact(&self.content);
         let can_resist = artifact || blessed;
         let resisted = can_resist

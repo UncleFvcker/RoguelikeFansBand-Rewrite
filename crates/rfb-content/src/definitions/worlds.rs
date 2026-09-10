@@ -282,6 +282,9 @@ pub struct CampaignDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DungeonDefinition {
     pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemas", schemars(range(min = 1, max = 4)))]
+    pub pantheon: Option<u8>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub darkness: bool,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -917,6 +920,9 @@ pub struct ProceduralPitDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ProceduralCavernDefinition {
     pub terrain_id: String,
+    /// RFB CAVERN: depth > 20 and randint1(1000) < depth, without lake/destruction.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub rfb_depth_chance: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -933,6 +939,10 @@ pub struct ProceduralLakeDefinition {
 pub struct ProceduralRiverDefinition {
     pub deep_terrain_id: String,
     pub shallow_terrain_id: String,
+    /// RFB water river gates after chanceOneIn: randint1(depth) > 5,
+    /// then randint0(MAX_DEPTH * 2) > depth (MAX_DEPTH = 128).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub rfb_depth_chance: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub chance_one_in: Option<u16>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

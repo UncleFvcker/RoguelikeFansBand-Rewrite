@@ -146,7 +146,8 @@
     "kin-glyph-114",
     "legacy-import",
     "orc-cave",
-    "unique"
+    "unique",
+    "norse2"
   ],
   "terrainInteraction": {
     "picksUpItems": true

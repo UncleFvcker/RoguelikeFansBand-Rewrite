@@ -200,7 +200,8 @@
     "kin-glyph-122",
     "legacy-import",
     "orc-cave",
-    "undead"
+    "undead",
+    "egyptian2"
   ],
   "terrainInteraction": {
     "picksUpItems": true

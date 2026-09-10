@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.251";
+pub const PROTOCOL_VERSION: &str = "1.252";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 17;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 18;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -6165,6 +6165,7 @@ pub struct SavePayloadV1 {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub task_states: Vec<TaskStateSaveDto>,
     pub bounty_state: BountyStateSaveDto,
+    pub active_pantheons: u8,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dungeon_states: Vec<DungeonStateSaveDto>,
     pub defeated_limited_actor_counts: Vec<DefeatedActorCountSaveDto>,
@@ -6796,6 +6797,7 @@ mod tests {
         );
         let mut current = serde_json::to_value(&legacy).expect("fixture should serialize");
         current["randomArtifactNames"] = serde_json::json!([]);
+        current["activePantheons"] = serde_json::json!(2 | 8);
         current["entities"][0]["nice"] = serde_json::json!(false);
         current["entities"][0]["experience"] = serde_json::json!(0);
         current["entities"][0]["anger"] = serde_json::json!(0);

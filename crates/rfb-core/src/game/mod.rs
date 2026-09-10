@@ -234,7 +234,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 122;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 123;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -870,6 +870,7 @@ pub struct Game {
     task_states: BTreeMap<String, TaskState>,
     bounty_state: bounty::BountyState,
     command_actor_deaths: Vec<ActorDeathRecord>,
+    active_pantheons: u8,
     dungeon_states: BTreeMap<String, DungeonState>,
     defeated_limited_actor_counts: BTreeMap<String, u16>,
     generated_artifact_ids: BTreeSet<String>,
@@ -2984,7 +2985,8 @@ impl Game {
                     .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
                 definition.role == ActorRole::Monster
                     && definition.level <= u32::from(maximum_level)
-                    && (category == "any-monster" || actor_matches_category(definition, category))
+                    && self.actor_matches_summon_category(definition, category)
+                    && self.pantheon_allows_allocation(&self.current_floor_id, definition)
                     && excluded_category
                         .is_none_or(|category| !actor_matches_category(definition, category))
                     && !definition.tags.iter().any(|tag| tag == "guardian")

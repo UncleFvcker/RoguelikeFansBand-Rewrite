@@ -1015,18 +1015,20 @@ fn p76_unique_summons_use_the_caster_level_window_and_exclude_unique2() {
 #[test]
 fn p76_osiris_family_summon_creates_horus_and_isis_as_one_cast() {
     let mut game = Game::new(251);
+    game.active_pantheons = 2 | 8;
+    assert!(
+        game.actor_is_pantheon_suppressed(
+            game.content.actor("demo.actor.osiris-the-reborn").unwrap()
+        )
+    );
     clear_monsters(&mut game);
     game.terrain.fill("demo.terrain.floor".to_owned());
     game.player.position = Position { x: 80, y: 20 };
-    game.entities.push(actor_from_runtime_spawn(
-        "generated.actor.osiris",
+    game.push_generated_actor(
+        "generated.actor.osiris".into(),
         "demo.actor.osiris-the-reborn",
         Position { x: 20, y: 20 },
-        1_000,
-        135,
-        100,
-        true,
-    ));
+    );
     let ability = game
         .content
         .ability("rfb-legacy.ability.summon-family-osiris-the-reborn")
@@ -1052,6 +1054,34 @@ fn p76_osiris_family_summon_creates_horus_and_isis_as_one_cast() {
         ]
     );
     assert_eq!(summon.duration_turns, 10_000);
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(game.state_hash(), restored.state_hash());
+    let mut invalid = game.clone();
+    invalid
+        .entities
+        .iter_mut()
+        .find(|actor| actor.summon.is_some())
+        .unwrap()
+        .summon
+        .as_mut()
+        .unwrap()
+        .source_ability_id = "rfb-legacy.ability.summon-family-artemis-the-moon-goddess".into();
+    assert!(matches!(
+        Game::from_save(invalid.to_save()),
+        Err(CoreError::InvalidSave("summon state is invalid"))
+    ));
+    for kind_id in &summon.summoned_kind_ids {
+        assert_eq!(restored.actor_kind_available_instance_count(kind_id), 0);
+    }
+    restored
+        .entities
+        .retain(|actor| !summon.summoned_kind_ids.contains(&actor.kind_id));
+    for kind_id in &summon.summoned_kind_ids {
+        restored
+            .defeated_limited_actor_counts
+            .insert(kind_id.clone(), 1);
+        assert_eq!(restored.actor_kind_available_instance_count(kind_id), 0);
+    }
 }
 
 #[test]

@@ -22,7 +22,7 @@ pub(in crate::game) fn value_object(
         tval: kind.tval,
         sval: kind.sval,
         // obj_create_lite moves the kind's fuel pval to xtra4, then clears pval.
-        pval: if kind.tval == 39 && kind.sval <= 1 {
+        pval: if kind.tval == 39 && kind.sval <= 1 && !item.is_artifact(content) {
             0
         } else {
             i32::from(raw.pval)

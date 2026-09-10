@@ -3,6 +3,55 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn water_river_depth_policy_requires_water_without_an_alternate() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    for case in 0..4 {
+        let mut content = artifact.content.clone();
+        let floor = content.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|f| f.id == "demo.floor.rlyeh-depth-80")
+            .unwrap();
+        let river = floor.layout.as_mut().unwrap().river.as_mut().unwrap();
+        river.rfb_depth_chance = true;
+        match case {
+            1 => floor.depth = 0,
+            2 => {
+                river.deep_terrain_id = "demo.terrain.surface-lava-deep".into();
+                river.shallow_terrain_id = "demo.terrain.surface-lava-shallow".into();
+            }
+            3 => {
+                river.alternative = Some(crate::ProceduralRiverAlternativeDefinition {
+                    deep_terrain_id: river.deep_terrain_id.clone(),
+                    shallow_terrain_id: river.shallow_terrain_id.clone(),
+                    chance_numerator: 1,
+                    chance_denominator: 2,
+                })
+            }
+            _ => {}
+        }
+        assert_eq!(
+            validate_and_normalize(&mut content).is_ok(),
+            case == 0,
+            "case {case}"
+        );
+    }
+}
+
+#[test]
+fn dungeon_pantheon_association_accepts_only_source_ids() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    for id in [0, 1, 2, 3, 4, 5] {
+        let mut content = artifact.content.clone();
+        content.worlds[0].dungeons[0].pantheon = Some(id);
+        assert_eq!(
+            validate_and_normalize(&mut content).is_ok(),
+            (1..=4).contains(&id)
+        );
+    }
+}
+
+#[test]
 fn arena_dungeon_formal_entry_chain_guardians_and_reward_match_source() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let world = &artifact.content.worlds[0];
@@ -10971,6 +11020,10 @@ fn town_entrances_and_shared_facilities_match_source() {
                     town_id: "demo.town.telmora".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 5, y: 9 },
+                    dungeon_id: "demo.dungeon.mount-olympus".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 5, y: 48 },
                     dungeon_id: "demo.dungeon.labyrinth".to_owned(),
                 },
@@ -12928,7 +12981,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 373);
+    assert_eq!(base_items.entries.len(), 376);
     let amulet = base_items
         .entries
         .iter()
@@ -13003,6 +13056,9 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
             "demo.item.grade-holders-book",
             "demo.item.note-of-acting-master",
             "demo.item.spiritual-enlightenment",
+            "demo.item.black-clothes",
+            "demo.item.great-hammer",
+            "demo.item.jewel-encrusted-crown",
         ])
         .collect::<BTreeSet<_>>();
     let actual_item_ids = base_items
@@ -13010,7 +13066,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 339);
+    assert_eq!(expected_item_ids.len(), 342);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.

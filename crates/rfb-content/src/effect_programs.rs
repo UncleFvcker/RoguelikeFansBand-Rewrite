@@ -96,6 +96,15 @@ fn effect_program_input_for_step(
 ) -> Option<EffectProgramInputDefinition> {
     match effect {
         ItemUseEffectDefinition::Sequence { .. } => None,
+        ItemUseEffectDefinition::Hermes => Some(EffectProgramInputDefinition::Actor),
+        ItemUseEffectDefinition::AbilityEffect { effect, .. }
+            if matches!(
+                effect.as_ref(),
+                AbilityEffectDefinition::RechargeFromPlayer { .. }
+            ) =>
+        {
+            Some(EffectProgramInputDefinition::Item)
+        }
         ItemUseEffectDefinition::AbilityEffect { effect, .. }
             if matches!(
                 effect.as_ref(),
@@ -116,6 +125,7 @@ fn effect_program_input_for_step(
             Some(EffectProgramInputDefinition::SelfTarget)
         }
         ItemUseEffectDefinition::IdentifyItem { .. }
+        | ItemUseEffectDefinition::EnchantEquipment
         | ItemUseEffectDefinition::EnchantItem { .. }
         | ItemUseEffectDefinition::MundanifyItem
         | ItemUseEffectDefinition::CreateArtifact
@@ -183,7 +193,8 @@ pub(super) fn effect_program_input_matches_device_target(
                     )
                 })
                 && (1..=64).contains(&target.range)
-                && (target.requires_line_of_effect
+                && (matches!(effect, ItemUseEffectDefinition::Hermes)
+                    || target.requires_line_of_effect
                     || matches!(effect, ItemUseEffectDefinition::AbilityEffect { effect, .. }
                         if matches!(effect.as_ref(), AbilityEffectDefinition::FetchItem { .. })))
         }

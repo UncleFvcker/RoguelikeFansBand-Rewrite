@@ -137,7 +137,8 @@
     "legacy-import",
     "nonliving",
     "orc-cave",
-    "unique"
+    "unique",
+    "norse2"
   ],
   "terrainInteraction": {
     "destroysWalls": true
