@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-outpost-white-horse-description",
   "townId": "demo.town.outpost",
   "category": "general-store",
-  "entrancePosition": { "x": 63, "y": 13 },
+  "entrancePosition": {"x": 124, "y": 35},
   "entranceTerrainId": "demo.terrain.inn-entrance",
   "innReputationCost": 1,
   "innStayCost": 20,

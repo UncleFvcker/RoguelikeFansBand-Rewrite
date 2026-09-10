@@ -3,6 +3,28 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn inherited_birth_town_requires_explicit_spawn_floor_and_guardian_references() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let mut content = artifact.content.clone();
+    content.worlds[0].player.position = ContentPosition { x: 0, y: 0 };
+    assert!(matches!(
+        validate_and_normalize(&mut content),
+        Err(ContentError::SpawnOnBlockedTerrain(_))
+    ));
+    let mut content = artifact.content.clone();
+    content.worlds[0]
+        .dungeons
+        .iter_mut()
+        .find_map(|dungeon| dungeon.entrance_guardian.as_mut())
+        .unwrap()
+        .actor_kind_id = "missing.guardian".to_owned();
+    assert!(validate_and_normalize(&mut content).is_err());
+    let mut content = artifact.content.clone();
+    content.worlds[0].wilderness = None;
+    assert!(validate_and_normalize(&mut content).is_err());
+}
+
+#[test]
 fn angwil_inherits_forest_and_preserves_unopened_entrances() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let floor = artifact.content.worlds[0]
@@ -10345,7 +10367,7 @@ fn town_entrances_and_shared_facilities_match_source() {
                 },
                 WildernessLocationDefinition::Town {
                     position: ContentPosition { x: 28, y: 52 },
-                    map_origin: ContentPosition { x: 51, y: 17 },
+                    map_origin: ContentPosition { x: 0, y: 0 },
                     town_id: "demo.town.outpost".to_owned(),
                 },
                 WildernessLocationDefinition::Town {
@@ -10494,39 +10516,39 @@ fn town_entrances_and_shared_facilities_match_source() {
         let entrances = [
             (
                 "demo.terrain.general-store-entrance",
-                ContentPosition { x: 32, y: 13 },
+                ContentPosition { x: 70, y: 39 },
             ),
             (
                 "demo.terrain.temple-entrance",
-                ContentPosition { x: 45, y: 19 },
+                ContentPosition { x: 70, y: 29 },
             ),
             (
                 "demo.terrain.alchemist-entrance",
-                ContentPosition { x: 53, y: 13 },
+                ContentPosition { x: 74, y: 43 },
             ),
             (
                 "demo.terrain.magic-shop-entrance",
-                ContentPosition { x: 57, y: 13 },
+                ContentPosition { x: 84, y: 43 },
             ),
             (
                 "demo.terrain.bookstore-entrance",
-                ContentPosition { x: 55, y: 13 },
+                ContentPosition { x: 89, y: 44 },
             ),
             (
                 "demo.terrain.armoury-entrance",
-                ContentPosition { x: 30, y: 19 },
+                ContentPosition { x: 115, y: 28 },
             ),
             (
                 "demo.terrain.weaponsmith-entrance",
-                ContentPosition { x: 34, y: 19 },
+                ContentPosition { x: 126, y: 31 },
             ),
             (
                 "demo.terrain.black-market-entrance",
-                ContentPosition { x: 55, y: 19 },
+                ContentPosition { x: 115, y: 43 },
             ),
             (
                 "demo.terrain.shroomery-entrance",
-                ContentPosition { x: 61, y: 19 },
+                ContentPosition { x: 78, y: 26 },
             ),
         ];
         for (terrain_id, entrance) in entrances {
@@ -10534,14 +10556,8 @@ fn town_entrances_and_shared_facilities_match_source() {
                 terrain.terrain_id == terrain_id && terrain.positions == [entrance]
             }));
         }
-
-        let fortifications = world
-            .terrain_overrides
-            .iter()
-            .find(|terrain| terrain.terrain_id == "demo.terrain.outpost-fortification")
-            .expect("fixture should contain town fortifications");
-        assert_eq!((world.width, world.height), (96, 32));
-        assert_eq!(world.border_terrain_id, "demo.terrain.surface-grass");
+        assert_eq!((world.width, world.height), (198, 65));
+        assert!(world.inherit_wilderness_terrain);
         assert!(
             world
                 .procedural_floors
@@ -10549,47 +10565,36 @@ fn town_entrances_and_shared_facilities_match_source() {
                 .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.warrens"))
                 .all(|floor| (floor.width, floor.height) == (66, 22))
         );
-        let expected_fortifications = (22..=66)
-            .flat_map(|x| [ContentPosition { x, y: 6 }, ContentPosition { x, y: 25 }])
-            .chain(
-                (7..=24).flat_map(|y| [ContentPosition { x: 22, y }, ContentPosition { x: 66, y }]),
-            )
-            .filter(|position| position.y != 16)
-            .collect::<BTreeSet<_>>();
-        assert_eq!(
-            fortifications
-                .positions
-                .iter()
-                .copied()
-                .collect::<BTreeSet<_>>(),
-            expected_fortifications,
-            "the Outpost should have one continuous perimeter interrupted only by its gates"
-        );
-        let gates = world
+        let tiles = world
             .terrain_overrides
             .iter()
-            .find(|terrain| terrain.terrain_id == "demo.terrain.outpost-gate")
-            .expect("fixture should contain town gates");
+            .flat_map(|entry| {
+                entry
+                    .positions
+                    .iter()
+                    .map(|p| ((p.x, p.y), entry.terrain_id.as_str()))
+            })
+            .collect::<BTreeMap<_, _>>();
+        assert_eq!(tiles.len(), 4383);
         assert_eq!(
-            gates.positions,
-            [
-                ContentPosition { x: 22, y: 16 },
-                ContentPosition { x: 66, y: 16 }
-            ]
+            tiles
+                .values()
+                .filter(|id| **id == "demo.terrain.permanent-wall")
+                .count(),
+            856
         );
-        assert!(entrances.iter().all(|(_, position)| {
-            position.x > 22 && position.x < 66 && position.y > 6 && position.y < 25
-        }));
-        let warrens_entrance = world
-            .terrain_overrides
-            .iter()
-            .find(|terrain| terrain.terrain_id == "demo.terrain.stairs-down")
-            .expect("fixture should contain the Warrens entrance");
         assert_eq!(
-            warrens_entrance.positions,
-            [ContentPosition { x: 74, y: 16 }]
+            tiles
+                .values()
+                .filter(|id| **id == "demo.terrain.dark-pit")
+                .count(),
+            7
         );
-        assert!(warrens_entrance.positions[0].x > 66);
+        assert_eq!(tiles[&(150, 31)], "demo.terrain.stairs-down");
+        assert_eq!(world.player.position, ContentPosition { x: 99, y: 33 });
+        for x in [99, 100, 101] {
+            assert_eq!(tiles[&(x, 33)], "demo.terrain.floor");
+        }
 
         let mut wrong_entrance = artifact.content.clone();
         wrong_entrance
@@ -10656,7 +10661,7 @@ fn town_entrances_and_shared_facilities_match_source() {
             .expect("Outpost should place the public Hideout entrance");
         assert_eq!(
             hideout_entrance.positions,
-            [ContentPosition { x: 93, y: 29 }]
+            [ContentPosition { x: 188, y: 58 }]
         );
         assert_eq!(
             world
@@ -10665,7 +10670,7 @@ fn town_entrances_and_shared_facilities_match_source() {
                 .find(|terrain| terrain.terrain_id == "demo.terrain.stairs-down")
                 .expect("Warrens entrance should remain available")
                 .positions,
-            [ContentPosition { x: 74, y: 16 }]
+            [ContentPosition { x: 150, y: 31 }]
         );
         let task_floor = world
             .procedural_floors
@@ -13588,7 +13593,7 @@ fn anambar_service_roles_and_rewards_match_source() {
         let anambar = facility("demo.town-facility.anambar-police-station");
         assert_eq!(outpost.category, TownFacilityCategory::QuestGiver);
         assert_eq!(anambar.category, TownFacilityCategory::QuestGiver);
-        assert_eq!(outpost.entrance_position, ContentPosition { x: 57, y: 19 });
+        assert_eq!(outpost.entrance_position, ContentPosition { x: 84, y: 26 });
         assert_eq!(anambar.entrance_position, ContentPosition { x: 12, y: 9 });
         assert_eq!(
             outpost.entrance_terrain_id,
@@ -13621,7 +13626,7 @@ fn anambar_service_roles_and_rewards_match_source() {
             override_.terrain_id == "demo.terrain.bounty-office-entrance"
                 && override_
                     .positions
-                    .contains(&ContentPosition { x: 57, y: 19 })
+                    .contains(&ContentPosition { x: 84, y: 26 })
         }));
         let anambar_floor = world
             .procedural_floors

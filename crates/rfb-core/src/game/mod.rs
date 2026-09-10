@@ -1597,12 +1597,12 @@ impl Game {
                 }),
             },
             GameAction::Drop { item_ids } => {
-                if let Some((stacks, quantity)) = self.drop_inventory_items(&item_ids) {
-                    changed.insert(self.player.position);
+                if let Some((stacks, quantity, position)) = self.drop_inventory_items(&item_ids) {
+                    changed.insert(position);
                     for item_id in &item_ids {
                         self.force_open_capture_ball(
                             item_id,
-                            self.player.position,
+                            position,
                             true,
                             &mut events,
                             &mut changed,
@@ -1614,13 +1614,13 @@ impl Game {
                 }
             }
             GameAction::DropQuantity { item_id, quantity } => {
-                if let Some((stacks, dropped_quantity)) =
+                if let Some((stacks, dropped_quantity, position)) =
                     self.drop_inventory_quantity(&item_id, quantity)?
                 {
-                    changed.insert(self.player.position);
+                    changed.insert(position);
                     self.force_open_capture_ball(
                         &item_id,
-                        self.player.position,
+                        position,
                         true,
                         &mut events,
                         &mut changed,
@@ -3422,7 +3422,9 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
-        let broken = hit_body && self.rng.bounded(100) < u64::from(break_chance_percent);
+        let drop_position = self.ground_drop_position(landing);
+        let broken = (hit_body && self.rng.bounded(100) < u64::from(break_chance_percent))
+            || drop_position.is_none();
         if broken {
             self.item_property_knowledge.remove(&ammunition.id);
             events.push(DomainEvent::ProjectileAmmoBroken {
@@ -3430,6 +3432,7 @@ impl Game {
             });
             return;
         }
+        let landing = drop_position.expect("unbroken ammunition has a valid drop position");
         ammunition.location = ItemLocation::Ground(landing);
         let ammo_kind_id = ammunition.kind_id.clone();
         self.items.push(ammunition);

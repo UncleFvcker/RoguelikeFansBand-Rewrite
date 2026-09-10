@@ -819,7 +819,7 @@ impl Game {
                     break;
                 }
             }
-            if !self.is_walkable(position) {
+            if !self.projectile_can_cross(position) {
                 break;
             }
             landing = position;
@@ -1606,11 +1606,20 @@ impl Game {
                 trace,
             });
         }
-        thrown.location = ItemLocation::Ground(landing);
-        let thrown_id = thrown.id.clone();
-        self.items.push(thrown);
-        changed.insert(landing);
-        self.force_open_capture_ball(&thrown_id, landing, true, events, changed);
+        if let Some(position) = self.ground_drop_position(landing) {
+            thrown.location = ItemLocation::Ground(position);
+            let thrown_id = thrown.id.clone();
+            self.items.push(thrown);
+            changed.insert(position);
+            self.force_open_capture_ball(&thrown_id, position, true, events, changed);
+        } else {
+            self.item_property_knowledge.remove(&thrown.id);
+            events.push(DomainEvent::ItemDestroyed {
+                target_kind_id: thrown.kind_id,
+                quantity: thrown.quantity,
+                rule_line: None,
+            });
+        }
         self.apply_easy_tiring_fatigue(STANDARD_ACTION_COST);
         Ok(())
     }

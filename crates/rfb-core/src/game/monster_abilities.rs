@@ -4150,7 +4150,7 @@ impl Game {
         let mut landing = origin;
         let mut traversed = Vec::new();
         for position in path {
-            if self.index(position).is_none() || !self.is_walkable(position) {
+            if !self.projectile_can_cross(position) {
                 impact = position;
                 break;
             }

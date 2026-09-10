@@ -843,10 +843,19 @@ impl Game {
         {
             self.carry_shop_purchase_item(item)
         } else {
-            item.location = ItemLocation::Ground(self.player.position);
-            self.items.push(item);
-            changed.insert(self.player.position);
-            vec![item_id]
+            if let Some(position) = self.ground_drop_position(self.player.position) {
+                item.location = ItemLocation::Ground(position);
+                self.items.push(item);
+                changed.insert(position);
+                vec![item_id]
+            } else {
+                events.push(DomainEvent::ItemDestroyed {
+                    target_kind_id: item.kind_id,
+                    quantity: item.quantity,
+                    rule_line: None,
+                });
+                Vec::new()
+            }
         };
         self.mark_item_aware(&item_kind_id);
         for destination_id in &destination_item_ids {

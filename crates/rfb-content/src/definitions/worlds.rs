@@ -23,6 +23,8 @@ pub struct TerrainDefinition {
     pub glyph: String,
     pub walkable: bool,
     pub blocks_sight: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub allows_projectile_passage: bool,
     #[serde(default)]
     pub allows_wall_passage: bool,
     #[serde(default)]
@@ -163,6 +165,8 @@ pub struct WorldDefinition {
     pub height: u16,
     pub fill_terrain_id: String,
     pub border_terrain_id: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub inherit_wilderness_terrain: bool,
     pub terrain_overrides: Vec<TerrainOverride>,
     pub player: ActorSpawn,
     #[serde(default)]

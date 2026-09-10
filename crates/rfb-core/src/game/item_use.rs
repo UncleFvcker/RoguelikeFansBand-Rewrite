@@ -2772,10 +2772,10 @@ impl Game {
         if definition.tags.iter().any(|tag| tag == "potion") {
             self.apply_potion_nutrition(&definition, events);
         }
-        if skeleton_food_falls_through {
-            self.drop_inventory_quantity(item_id, 1)?
-                .expect("used Skeleton food must remain droppable");
-            changed.insert(self.player.position);
+        if skeleton_food_falls_through
+            && let Some((_, _, position)) = self.drop_inventory_quantity(item_id, 1)?
+        {
+            changed.insert(position);
         }
         if let Some(shatter) = skeleton_potion_shatter {
             self.resolve_ground_item_shatter_effect(

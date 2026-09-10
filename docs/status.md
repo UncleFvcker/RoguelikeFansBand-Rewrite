@@ -1,6 +1,6 @@
 # 状态快照
 
-核对日期：2026-09-10。本次集成包含种族主线 `decec518a` 、法术道具 `934a83392` 与地牢城镇 `78a9cc982`；本页记录已合入的代码/配置事实和注明范围的验收证据。当前数值以链接的源文件为准。
+核对日期：2026-09-10。集成基线包含种族主线 `decec518a`、法术道具 `934a83392` 与地牢城镇 `78a9cc982`；当前地牢城镇分支另完成下述 Outpost O1。本页记录代码/配置事实和注明范围的验收证据。当前数值以链接的源文件为准。
 
 ## 版本与源内容
 
@@ -10,7 +10,7 @@
 | 协议 | 1.240 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 117 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 12 / 12 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.401.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.401.1 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v318，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 6 个 Class、13 个 Build、57 个 Race、32 本能力书、1,840 个 ability 文件、370 个 item、1,402 个 actor、168 个 affix、152 个 mutation。世界定义含 25 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、62 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
@@ -49,6 +49,10 @@ Ent、Spectre 的新游戏入口已开放。种族主线还接入原始经验值
 集成保留物品感知与实例神器鉴定边界、托姆特实例头饰重量、冬贝利逐武器伤害/攻次和准确来源显示。种族永久状态与新增物品字段共同进入当前保存和状态哈希，版本统一收口；内容 hash 本身不参与状态哈希。
 
 ## 城镇与共享存储
+
+Outpost O1 已恢复 RFB master `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c` 的 198×65 模板：4,383 个显式格与 8,487 个继承格，地图原点为 (0,0)，初始构造和后续叠加共用已有种子化荒野 chunk。出生 (99,33) 是本项目落点选择；原有短剑与两瓶轻伤治疗药水的实例 ID、数量保留，分别移至 (100,33)/(101,33)。黑坑要求飞行通行、允许投射且不遮挡视线；射落物、丢弃物与怪物掉落在附近合法地板落地，命中点仍保留在坑上。
+
+为使 O1 地形与既有功能一致，同步迁移了十家商店、四个设施、九个任务入口及 Warrens/Hideout–Man cave 入口，伯爵三个门归属同一设施。**Outpost 博物馆 M 仍封闭，留待 O2；两组任务替代仍未交付。** 表面怪物分配仍为 12 次、等级 9；扩大的城镇矩形按原有规则排除采样，不补造旧位置的怪物。来源逐格核对、核心相关回归、内容世界校验和 26 条 active 契约已覆盖本批；未制作 standalone 或进行桌面/Android 试玩。实施范围见 [Outpost 计划](../design/outpost-map-plan-20260910.md)。
 
 地牢城镇分支已合入 Morivant、Telmora、Angwil 的正常旅行入口、商店和设施，城镇大地图布局与荒野衔接、按名望调整服务价格、分档强化、赌场和博物馆跨角色共享存储。博物馆转移通过 Tauri 的存储事务与角色检查点一同提交；固定神器禁止捐赠和导入，随机神器实例允许共享并保留完整属性。家与博物馆复用背包详情投影，保留物品身份、知识与实例重量。
 

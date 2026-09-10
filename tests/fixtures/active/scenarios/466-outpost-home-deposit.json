@@ -10,8 +10,8 @@
     "debugClearEntities": true,
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
-      "x": 93,
-      "y": 30
+      "x": 110,
+      "y": 44
     }
   },
   "commands": [
@@ -79,7 +79,7 @@
       },
       "lastCommandSeq": 1,
       "revision": 1,
-      "stateHash": "ff3718814330af6e1e967b372fc1a22433bea0dfc4a0a0ab3a07dbf1b592d179",
+      "stateHash": "fdbd7fd4e26a26b524cc000e23ad89db9c4ced002868ed99f1a3ddb0c3b92f2a",
       "turn": 1
     },
     "events": [

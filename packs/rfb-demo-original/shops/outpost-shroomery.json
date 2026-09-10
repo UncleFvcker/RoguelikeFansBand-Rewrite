@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-outpost-shroomery-description",
   "townId": "demo.town.outpost",
   "category": "shroomery",
-  "entrancePosition": { "x": 61, "y": 19 },
+  "entrancePosition": {"x": 78, "y": 26},
   "entranceTerrainId": "demo.terrain.shroomery-entrance",
   "owner": {
     "id": "demo.shop-owner.outpost-martin",

@@ -14154,7 +14154,12 @@ fn invalid_wilderness_selection(message: impl Into<String>) -> LegacyImportError
 }
 
 fn selected_town_source_file(text: &str, source_index: u32) -> Option<&str> {
-    let selector = format!("?:[EQU $TOWN {source_index}]");
+    // The normal-wilderness Outpost shares index 1 with two lite-town modes.
+    let selector = if source_index == 1 {
+        "?:[AND [EQU $TOWN 1] [EQU $WILDERNESS NORMAL] [LEQ $SPEED 1] ]".to_owned()
+    } else {
+        format!("?:[EQU $TOWN {source_index}]")
+    };
     let mut selected = false;
     for line in text.lines().map(str::trim) {
         if line.starts_with("?:") {
@@ -18892,6 +18897,14 @@ pub fn sync_demo_item_destruction(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn outpost_source_selection_uses_normal_wilderness_instead_of_lite_variants() {
+        let text = "?:[AND [EQU $TOWN 1] [EQU $SPEED 2] ]\n%:t_ulite.txt\n?:[AND [EQU $TOWN 1] [EQU $WILDERNESS NONE] [LEQ $SPEED 1] ]\n%:t_lite.txt\n?:[AND [EQU $TOWN 1] [EQU $WILDERNESS NORMAL] [LEQ $SPEED 1] ]\n%:t_outp.txt\n?:[EQU $TOWN 2]\n%:t_telmo.txt\n";
+        assert_eq!(selected_town_source_file(text, 1), Some("t_outp.txt"));
+        assert_eq!(selected_town_source_file(text, 2), Some("t_telmo.txt"));
+        assert_eq!(selected_town_source_file(text, 3), None);
+    }
 
     #[test]
     fn monster_w_line_retains_evolution_fields() {

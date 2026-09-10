@@ -2391,6 +2391,9 @@
     "id": {
       "type": "string"
     },
+    "inheritWildernessTerrain": {
+      "type": "boolean"
+    },
     "initialFloorId": {
       "type": "string"
     },

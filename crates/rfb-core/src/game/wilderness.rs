@@ -4,7 +4,7 @@ use super::*;
 use rfb_content::{
     ActorHabitat, ActorMovementMode, ProceduralFloorDefinition, WILDERNESS_WORLD_CELL_HEIGHT,
     WILDERNESS_WORLD_CELL_WIDTH, WildernessDefinition, WildernessLegendEntry,
-    WildernessLocationDefinition, WildernessTerrain,
+    WildernessLocationDefinition, WildernessTerrain, WorldDefinition,
 };
 
 pub(super) const WILDERNESS_FLOOR_ID: &str = "core.floor.wilderness";
@@ -630,6 +630,96 @@ fn wilderness_monster_rolls_for_allowed_area(
     let remainder = scaled % denominator;
     let rounded = remainder > 0 && seed % denominator < remainder;
     u16::try_from(whole + u64::from(rounded)).expect("scaled wilderness rolls must fit u16")
+}
+
+fn inherited_town_terrain(
+    content: &ContentCatalog,
+    wilderness: &WildernessDefinition,
+    seed: u64,
+    floor_id: &str,
+    width: u16,
+    height: u16,
+) -> Vec<String> {
+    let (position, origin) = wilderness
+        .locations
+        .iter()
+        .find_map(|location| {
+            if let WildernessLocationDefinition::Town {
+                position,
+                map_origin,
+                town_id,
+            } = location
+                && content
+                    .town(town_id)
+                    .is_some_and(|town| town.floor_id == floor_id)
+            {
+                Some((*position, *map_origin))
+            } else {
+                None
+            }
+        })
+        .expect("validated inherited town floor must have a wilderness location");
+    let chunk_width = i32::from(WILDERNESS_CHUNK_WIDTH);
+    let chunk_height = i32::from(WILDERNESS_CHUNK_HEIGHT);
+    let mut chunks = BTreeMap::new();
+    let mut terrain = Vec::with_capacity(usize::from(width) * usize::from(height));
+    for y in 0..height {
+        for x in 0..width {
+            let surface_x = i32::from(origin.x) + i32::from(x);
+            let surface_y = i32::from(origin.y) + i32::from(y);
+            let chunk = Position {
+                x: i32::from(position.x) * 3 - 1 + surface_x / chunk_width,
+                y: i32::from(position.y) * 3 - 1 + surface_y / chunk_height,
+            };
+            let source = chunks
+                .entry(chunk)
+                .or_insert_with(|| generate_wilderness_chunk(wilderness, seed, chunk));
+            let source_index = (surface_y % chunk_height) * chunk_width + surface_x % chunk_width;
+            terrain.push(source[source_index as usize].clone());
+        }
+    }
+    terrain
+}
+
+pub(super) fn initial_world_terrain(
+    content: &ContentCatalog,
+    world: &WorldDefinition,
+    seed: u64,
+) -> Vec<String> {
+    let mut terrain = if world.inherit_wilderness_terrain {
+        inherited_town_terrain(
+            content,
+            world
+                .wilderness
+                .as_ref()
+                .expect("inherited birth town must have wilderness"),
+            seed,
+            &world.initial_floor_id,
+            world.width,
+            world.height,
+        )
+    } else {
+        let mut terrain = vec![
+            world.fill_terrain_id.clone();
+            usize::from(world.width) * usize::from(world.height)
+        ];
+        for y in 0..world.height {
+            for x in 0..world.width {
+                if x == 0 || y == 0 || x + 1 == world.width || y + 1 == world.height {
+                    terrain[usize::from(y) * usize::from(world.width) + usize::from(x)] =
+                        world.border_terrain_id.clone();
+                }
+            }
+        }
+        terrain
+    };
+    for terrain_override in &world.terrain_overrides {
+        for position in &terrain_override.positions {
+            terrain[usize::from(position.y) * usize::from(world.width) + usize::from(position.x)] =
+                terrain_override.terrain_id.clone();
+        }
+    }
+    terrain
 }
 
 impl Game {
@@ -1736,59 +1826,26 @@ impl Game {
         &self,
         floor: &ProceduralFloorDefinition,
     ) -> Vec<String> {
-        let mut terrain = vec![
-            floor.wall_terrain_id.clone();
-            usize::from(floor.width) * usize::from(floor.height)
-        ];
-        if !floor
+        if floor
             .inline_map
             .as_ref()
             .expect("inline floor must retain its map")
             .inherit_wilderness_terrain
         {
-            return terrain;
+            inherited_town_terrain(
+                &self.content,
+                self.wilderness(),
+                self.wilderness_seed,
+                &floor.id,
+                floor.width,
+                floor.height,
+            )
+        } else {
+            vec![
+                floor.wall_terrain_id.clone();
+                usize::from(floor.width) * usize::from(floor.height)
+            ]
         }
-        let (position, origin) = self
-            .wilderness()
-            .locations
-            .iter()
-            .find_map(|location| {
-                if let WildernessLocationDefinition::Town {
-                    position,
-                    map_origin,
-                    town_id,
-                } = location
-                    && self
-                        .content
-                        .town(town_id)
-                        .is_some_and(|town| town.floor_id == floor.id)
-                {
-                    return Some((*position, *map_origin));
-                }
-                None
-            })
-            .expect("validated inherited town floor must have a wilderness location");
-        let chunk_width = i32::from(WILDERNESS_CHUNK_WIDTH);
-        let chunk_height = i32::from(WILDERNESS_CHUNK_HEIGHT);
-        let mut chunks = BTreeMap::new();
-        for y in 0..floor.height {
-            for x in 0..floor.width {
-                let surface_x = i32::from(origin.x) + i32::from(x);
-                let surface_y = i32::from(origin.y) + i32::from(y);
-                let chunk = Position {
-                    x: i32::from(position.x) * 3 - 1 + surface_x / chunk_width,
-                    y: i32::from(position.y) * 3 - 1 + surface_y / chunk_height,
-                };
-                let source = chunks.entry(chunk).or_insert_with(|| {
-                    generate_wilderness_chunk(self.wilderness(), self.wilderness_seed, chunk)
-                });
-                let source_index =
-                    (surface_y % chunk_height) * chunk_width + surface_x % chunk_width;
-                terrain[usize::from(y) * usize::from(floor.width) + usize::from(x)] =
-                    source[source_index as usize].clone();
-            }
-        }
-        terrain
     }
 
     fn town_template_terrain(&self, town_id: &str) -> (u16, u16, Vec<String>) {
@@ -1801,25 +1858,11 @@ impl Game {
             .town(town_id)
             .expect("validated wilderness town must remain available");
         if town.floor_id == world.initial_floor_id {
-            let mut terrain = vec![
-                world.fill_terrain_id.clone();
-                usize::from(world.width) * usize::from(world.height)
-            ];
-            for y in 0..world.height {
-                for x in 0..world.width {
-                    if x == 0 || y == 0 || x + 1 == world.width || y + 1 == world.height {
-                        terrain[usize::from(y) * usize::from(world.width) + usize::from(x)] =
-                            world.border_terrain_id.clone();
-                    }
-                }
-            }
-            for terrain_override in &world.terrain_overrides {
-                for position in &terrain_override.positions {
-                    terrain[usize::from(position.y) * usize::from(world.width)
-                        + usize::from(position.x)] = terrain_override.terrain_id.clone();
-                }
-            }
-            return (world.width, world.height, terrain);
+            return (
+                world.width,
+                world.height,
+                initial_world_terrain(&self.content, world, self.wilderness_seed),
+            );
         }
 
         let floor = world
@@ -2567,8 +2610,8 @@ mod tests {
             .wilderness_position
             .expect("Warrens journey should define a wilderness start");
         let terrain = game.cached_wilderness_view_terrain(position);
-        let view_index = 23 * usize::from(WILDERNESS_VIEW_WIDTH) + 73;
-        assert_eq!(terrain[view_index], "demo.terrain.outpost-fortification");
+        let view_index = 23 * usize::from(WILDERNESS_VIEW_WIDTH) + 96;
+        assert_eq!(terrain[view_index], "demo.terrain.permanent-wall");
 
         let center = wilderness_view_center_chunk(position, Position::default());
         let map_chunk = center;
@@ -2576,8 +2619,8 @@ mod tests {
             .wilderness_terrain_cache
             .get(&map_chunk)
             .expect("visible base chunk should remain cached");
-        let chunk_index = usize::from(WILDERNESS_CHUNK_WIDTH) + 7;
-        assert_ne!(cached[chunk_index], "demo.terrain.outpost-fortification");
+        let chunk_index = usize::from(WILDERNESS_CHUNK_WIDTH) + 30;
+        assert_ne!(cached[chunk_index], "demo.terrain.permanent-wall");
     }
 
     #[test]
@@ -2668,6 +2711,55 @@ mod tests {
     }
 
     #[test]
+    fn birth_town_blank_cells_inherit_the_same_seeded_chunks_as_later_overlays() {
+        for seed in [42, 83] {
+            let game = Game::new_with_build(seed, "demo.build.warrior").unwrap();
+            let world = game.content.world(&game.world_id).unwrap();
+            let painted = world
+                .terrain_overrides
+                .iter()
+                .flat_map(|entry| entry.positions.iter().map(|p| (p.x, p.y)))
+                .collect::<BTreeSet<_>>();
+            let initial = initial_world_terrain(&game.content, world, seed);
+            let (_, _, overlay) = game.town_template_terrain("demo.town.outpost");
+            assert_eq!(initial, overlay);
+            let mut inherited = 0;
+            for y in 0..world.height {
+                for x in 0..world.width {
+                    if painted.contains(&(x, y)) {
+                        continue;
+                    }
+                    let chunk = Position {
+                        x: 28 * 3 - 1 + i32::from(x / WILDERNESS_CHUNK_WIDTH),
+                        y: 52 * 3 - 1 + i32::from(y / WILDERNESS_CHUNK_HEIGHT),
+                    };
+                    let chunk_index = usize::from(y % WILDERNESS_CHUNK_HEIGHT)
+                        * usize::from(WILDERNESS_CHUNK_WIDTH)
+                        + usize::from(x % WILDERNESS_CHUNK_WIDTH);
+                    let expected = &game.wilderness_terrain_cache[&chunk][chunk_index];
+                    assert_eq!(
+                        &initial[usize::from(y) * usize::from(world.width) + usize::from(x)],
+                        expected
+                    );
+                    assert_eq!(
+                        game.terrain_at(Position {
+                            x: i32::from(x),
+                            y: i32::from(y)
+                        }),
+                        expected
+                    );
+                    inherited += 1;
+                }
+            }
+            assert_eq!(inherited, 8487);
+            assert_eq!(
+                Game::from_save(game.to_save()).unwrap().state_hash(),
+                game.state_hash()
+            );
+        }
+    }
+
+    #[test]
     fn birth_town_uses_the_continuous_wilderness_surface() {
         let game =
             Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
@@ -2681,7 +2773,7 @@ mod tests {
         assert!(game.stored_floors.contains_key("demo.floor.surface"));
         assert!(game.items.iter().any(|item| {
             item.id == "demo.item.warrens-short-sword.1"
-                && item.location == ItemLocation::Ground(Position { x: 96, y: 33 })
+                && item.location == ItemLocation::Ground(Position { x: 100, y: 33 })
         }));
         assert!(game.stored_floors["demo.floor.surface"].items.is_empty());
     }
@@ -2690,7 +2782,7 @@ mod tests {
     fn town_state_moves_to_backing_storage_and_returns_with_the_view() {
         let mut game =
             Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
-        let local = Position { x: 10, y: 10 };
+        let local = Position { x: 61, y: 27 };
         let remembered = Position { x: 61, y: 27 };
         let actor_definition = game
             .content
@@ -2711,6 +2803,10 @@ mod tests {
             .find(|item| item.id == "demo.item.warrens-short-sword.1")
             .expect("birth town item should remain active");
         item.location = ItemLocation::Ground(Position { x: 62, y: 27 });
+        for position in [Position { x: 62, y: 27 }, Position { x: 63, y: 27 }] {
+            let index = game.index(position).unwrap();
+            game.terrain[index] = "demo.terrain.floor".to_owned();
+        }
         let gold = game
             .generate_gold_pile(Position { x: 63, y: 27 }, 1, false)
             .expect("test gold should generate");
@@ -2733,7 +2829,7 @@ mod tests {
         game.relocate_player(target, &mut BTreeSet::new());
 
         let backing = &game.stored_floors["demo.floor.surface"];
-        let backing_index = 10 * usize::from(backing.width) + 10;
+        let backing_index = 27 * usize::from(backing.width) + 61;
         assert_eq!(backing.terrain[backing_index], "demo.terrain.created-trap");
         assert!(backing.glow[backing_index]);
         assert!(backing.daylight_suppressed[backing_index]);
@@ -2747,13 +2843,13 @@ mod tests {
         );
         assert!(backing.items.iter().any(|item| {
             item.id == "demo.item.warrens-short-sword.1"
-                && item.location == ItemLocation::Ground(Position { x: 11, y: 10 })
+                && item.location == ItemLocation::Ground(Position { x: 62, y: 27 })
         }));
         assert!(
             backing
                 .gold_piles
                 .iter()
-                .any(|pile| pile.id == gold_id && pile.position == Position { x: 12, y: 10 })
+                .any(|pile| pile.id == gold_id && pile.position == Position { x: 63, y: 27 })
         );
         assert!(
             !game

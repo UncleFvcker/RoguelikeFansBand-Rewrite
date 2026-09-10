@@ -9011,3 +9011,6 @@ town-facility-demo-angwil-trump-tower-name = Trump Tower
 town-facility-demo-angwil-trump-tower-description = 科鲁斯（安珀人）：Recall to a recorded dungeon.
 town-facility-demo-angwil-trump-tower-owner-name = 科鲁斯
 town-facility-demo-angwil-library-overview = Angwil has nine shop types, a shared Home, a Museum, and an Inn. Its Library, Casino, Beastmaster, Weaponmaster, Warrior Guild, Mage Tower, Inner Temple, Thieves Den, Archer Tavern, Paladin Sanctuary, and Trump Tower provide their respective services. The Manor is not yet accepting quests.
+
+terrain-demo-dark-pit-name = Dark Pit
+terrain-demo-dark-pit-description = A dark pit that can be flown over. Sight and projectiles pass through it.

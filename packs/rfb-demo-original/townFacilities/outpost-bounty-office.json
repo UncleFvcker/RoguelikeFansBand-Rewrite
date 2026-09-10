@@ -31,6 +31,6 @@
       "demo.item.crafting-scroll"
     ]
   },
-  "entrancePosition": { "x": 57, "y": 19 },
+  "entrancePosition": {"x": 84, "y": 26},
   "entranceTerrainId": "demo.terrain.bounty-office-entrance"
 }

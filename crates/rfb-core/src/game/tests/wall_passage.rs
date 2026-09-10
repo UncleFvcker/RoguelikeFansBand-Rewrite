@@ -60,6 +60,115 @@ fn tick(game: &mut Game) -> Vec<DomainEvent> {
 }
 
 #[test]
+fn dark_pit_requires_flight_but_allows_projectiles_and_keeps_drops_on_floor() {
+    let pit = "demo.terrain.dark-pit";
+    let mut game = game(false);
+    replace_terrain(&mut game, EAST, pit);
+    assert!(!game.player_can_enter_position(EAST));
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(game.player.position, START);
+    assert!(projectile_geometry::has_line_of_effect(
+        &game,
+        START,
+        Position { x: 101, y: 33 }
+    ));
+    let (trace, _) = game.trace_projectile_path(vec![EAST, Position { x: 101, y: 33 }]);
+    assert_eq!(trace.traversed, vec![EAST, Position { x: 101, y: 33 }]);
+    assert_eq!(game.trace_projectile_path(vec![EAST]).0.landing, EAST);
+    give_inventory_item(&mut game, "test.pit-ammunition", "demo.item.arrow");
+    let ammunition = game.items.pop().unwrap();
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+    game.settle_projectile_ammunition(ammunition, EAST, false, 0, &mut events, &mut changed);
+    let item = game
+        .items
+        .iter()
+        .find(|item| item.id == "test.pit-ammunition")
+        .unwrap();
+    let ItemLocation::Ground(position) = item.location else {
+        panic!("ammunition should land");
+    };
+    assert_ne!(position, EAST);
+    assert!(game.is_walkable(position));
+    assert!(changed.contains(&position));
+    game.player.statuses.push(form(SPECTRE, 100));
+    game.refresh_player_resource_maxima();
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(game.player.position, EAST);
+    give_inventory_item(&mut game, "test.pit-drop", "demo.item.short-sword");
+    let (_, _, position) = game
+        .drop_inventory_quantity("test.pit-drop", 1)
+        .unwrap()
+        .unwrap();
+    assert!(game.is_walkable(position));
+    assert_ne!(position, EAST);
+    game.reveal_current_visibility();
+    assert_eq!(
+        Game::from_save(game.to_save()).unwrap().state_hash(),
+        game.state_hash()
+    );
+    replace_terrain(&mut game, EAST, "demo.terrain.glass-wall");
+    assert!(!game.projectile_can_cross(EAST));
+}
+
+#[test]
+fn a_flying_monster_killed_above_a_pit_drops_its_carried_item_on_nearby_floor() {
+    let mut game = game(false);
+    replace_terrain(&mut game, EAST, "demo.terrain.dark-pit");
+    game.push_generated_actor("test.pit-bat".to_owned(), "demo.actor.fruit-bat", EAST);
+    give_inventory_item(&mut game, "test.pit-loot", "demo.item.short-sword");
+    game.items[0].location = ItemLocation::CarriedBy {
+        actor_id: "test.pit-bat".to_owned(),
+    };
+    let mut changed = BTreeSet::new();
+    game.resolve_actor_death(
+        0,
+        DomainEvent::PlayerSlew {
+            target_kind_id: "demo.actor.fruit-bat".to_owned(),
+            damage: DamageOutcome {
+                raw: 1,
+                armor_reduction: 0,
+                requested: 1,
+                applied: 1,
+                resistance_delta: 0,
+                damage_type: DamageType::Physical,
+                resistance: ResistanceLevel::Normal,
+            },
+        },
+        &mut Vec::new(),
+        &mut changed,
+        &mut Vec::new(),
+    )
+    .unwrap();
+    let item = game
+        .items
+        .iter()
+        .find(|item| item.id == "test.pit-loot")
+        .unwrap();
+    let ItemLocation::Ground(position) = item.location else {
+        panic!("carried loot should drop");
+    };
+    assert!(game.is_walkable(position));
+    assert_ne!(position, EAST);
+    assert!(changed.contains(&position));
+    game.reveal_current_visibility();
+    assert_eq!(
+        Game::from_save(game.to_save()).unwrap().state_hash(),
+        game.state_hash()
+    );
+}
+
+#[test]
 fn spectre_passives_follow_current_form_and_consume_existing_stat_and_hunger_rules() {
     for native in [false, true] {
         let mut game = game(native);
@@ -449,7 +558,7 @@ fn wall_positions_round_trip_after_form_expiry_and_in_departed_floor_cache() {
     );
     assert_eq!(restored.state_hash(), game.state_hash());
 
-    game.player.position = Position { x: 144, y: 46 };
+    game.player.position = Position { x: 188, y: 58 };
     game.traverse_stairs(false).unwrap().unwrap();
     clear_monsters(&mut game);
     game.items.clear();

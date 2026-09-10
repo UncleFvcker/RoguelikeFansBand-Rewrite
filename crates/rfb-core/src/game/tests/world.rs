@@ -258,11 +258,11 @@ fn p89c_outpost_shared_entrance_routes_only_to_the_active_dungeon() {
         assert!(game.actor_kind_is_dungeon_guardian(active_guardian));
         assert!(!game.actor_kind_is_dungeon_guardian(suppressed_guardian));
         assert_eq!(
-            game.terrain_at(Position { x: 125, y: 33 }),
+            game.terrain_at(Position { x: 150, y: 31 }),
             "demo.terrain.stairs-down"
         );
 
-        game.player.position = Position { x: 144, y: 46 };
+        game.player.position = Position { x: 188, y: 58 };
         assert_eq!(
             game.terrain_at(game.player.position),
             "demo.terrain.hideout-entrance"
@@ -814,7 +814,7 @@ fn p89d_hideout_reward_materializes_a_nonblank_am_quest_amulet() {
 
 fn p89_reach_shared_dungeon_guardian(seed: u64, dungeon_id: &str) -> Game {
     let mut game = game_with_dungeon_substitution(seed);
-    game.player.position = Position { x: 144, y: 46 };
+    game.player.position = Position { x: 188, y: 58 };
     for depth in 8..=18 {
         let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
         assert_eq!(
@@ -2522,25 +2522,25 @@ fn middle_earth_starts_on_an_outdoor_surface_with_a_working_warrens_entrance() {
     assert_eq!(game.world_id, DEFAULT_WORLD_ID);
     assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
     assert_eq!((game.width, game.height), (198, 66));
-    assert_eq!(game.player.position, Position { x: 95, y: 33 });
+    assert_eq!(game.player.position, Position { x: 99, y: 33 });
     assert_eq!(
-        game.terrain_at(Position { x: 95, y: 33 }),
-        "demo.terrain.surface-path"
+        game.terrain_at(Position { x: 99, y: 33 }),
+        "demo.terrain.floor"
     );
     assert_eq!(
-        game.terrain_at(Position { x: 125, y: 33 }),
+        game.terrain_at(Position { x: 150, y: 31 }),
         "demo.terrain.stairs-down"
     );
     assert_eq!(
-        game.terrain_at(Position { x: 51, y: 17 }),
-        "demo.terrain.surface-grass"
+        game.terrain_at(Position { x: 78, y: 28 }),
+        "demo.terrain.floor"
     );
 
-    game.player.position = Position { x: 124, y: 33 };
+    game.player.position = Position { x: 150, y: 32 };
     dispatch_next(
         &mut game,
         GameCommand::Move {
-            direction: Direction::East,
+            direction: Direction::North,
         },
     );
     let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
@@ -2567,7 +2567,7 @@ fn dungeon_round_trip_restores_the_scrolled_town_position() {
     game.relocate_player(target, &mut BTreeSet::new());
     assert_eq!(game.wilderness_view_offset, Position { x: 1, y: 0 });
 
-    let entrance = Position { x: 59, y: 33 };
+    let entrance = Position { x: 84, y: 31 };
     assert_eq!(game.terrain_at(entrance), "demo.terrain.stairs-down");
     game.player.position = entrance;
     dispatch_next(&mut game, GameCommand::TraverseStairs);

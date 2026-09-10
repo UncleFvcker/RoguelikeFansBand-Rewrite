@@ -1175,7 +1175,7 @@ impl Game {
             };
             if path
                 .iter()
-                .all(|position| self.index(*position).is_some() && self.is_walkable(*position))
+                .all(|position| self.projectile_can_cross(*position))
             {
                 reflected_path = Some(path);
                 break;
@@ -1208,7 +1208,7 @@ impl Game {
         let mut hit_actor_index = None;
         for position in path {
             impact = position;
-            if self.index(position).is_none() || !self.is_walkable(position) {
+            if !self.projectile_can_cross(position) {
                 break;
             }
             landing = position;

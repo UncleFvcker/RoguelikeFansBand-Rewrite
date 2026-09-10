@@ -23,11 +23,11 @@
     "finalState": {
       "lastCommandSeq": 1,
       "playerPosition": {
-        "x": 95,
+        "x": 99,
         "y": 33
       },
       "revision": 1,
-      "stateHash": "08fb390f725c40a85b7991b3780e70bddec72b978b01e99ec1a0dd18d7ef88ce",
+      "stateHash": "d06e204324a7c1c9644476112245aad1fa2a35dbe139890e81f67d17ed54595f",
       "turn": 1
     },
     "events": [

@@ -133,6 +133,8 @@ fn spectre_six_classes_complete_absorb_level_scare_wall_and_save_sequence() {
             })
             .unwrap_or_else(|| panic!("{build}: successful fear must be reachable"));
         clear_monsters(&mut game);
+        game.items
+            .retain(|item| item.location != ItemLocation::Ground(EAST));
         replace_terrain(&mut game, EAST, "demo.terrain.wall");
         let before_tick = game.world_tick;
         let before_hp = game.player.hp;

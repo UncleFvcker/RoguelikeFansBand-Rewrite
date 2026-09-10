@@ -1301,12 +1301,40 @@ impl Game {
         destination_ids
     }
 
-    pub(super) fn drop_inventory_items(&mut self, item_ids: &[String]) -> Option<(usize, u64)> {
-        let plan = plan_batch_drop(&self.items, item_ids)?;
-        for index in &plan.item_indices {
-            self.items[*index].location = ItemLocation::Ground(self.player.position);
+    // Keep ordinary drops in place. Non-floor impact grids (such as pits) need
+    // a nearby floor, within the original drop_near search radius.
+    pub(super) fn ground_drop_position(&self, origin: Position) -> Option<Position> {
+        if self.is_walkable(origin) {
+            return Some(origin);
         }
-        Some((plan.item_indices.len(), plan.quantity))
+        (-3..=3)
+            .flat_map(|dy| (-3..=3).map(move |dx| (dx, dy)))
+            .filter(|(dx, dy)| dx * dx + dy * dy <= 10)
+            .map(|(dx, dy)| Position {
+                x: origin.x + dx,
+                y: origin.y + dy,
+            })
+            .filter(|position| {
+                self.is_walkable(*position)
+                    && super::projectile_geometry::has_line_of_effect(self, origin, *position)
+            })
+            .min_by_key(|position| {
+                let dx = position.x - origin.x;
+                let dy = position.y - origin.y;
+                dx * dx + dy * dy
+            })
+    }
+
+    pub(super) fn drop_inventory_items(
+        &mut self,
+        item_ids: &[String],
+    ) -> Option<(usize, u64, Position)> {
+        let plan = plan_batch_drop(&self.items, item_ids)?;
+        let position = self.ground_drop_position(self.player.position)?;
+        for index in &plan.item_indices {
+            self.items[*index].location = ItemLocation::Ground(position);
+        }
+        Some((plan.item_indices.len(), plan.quantity, position))
     }
 
     pub(super) fn appraise_inventory_item(
@@ -1995,12 +2023,15 @@ impl Game {
         &mut self,
         item_id: &str,
         quantity: u32,
-    ) -> Result<Option<(usize, u64)>, CoreError> {
+    ) -> Result<Option<(usize, u64, Position)>, CoreError> {
         let Some(plan) = plan_drop_quantity(&self.items, item_id, quantity) else {
             return Ok(None);
         };
+        let Some(position) = self.ground_drop_position(self.player.position) else {
+            return Ok(None);
+        };
         if !plan.split_stack {
-            self.items[plan.item_index].location = ItemLocation::Ground(self.player.position);
+            self.items[plan.item_index].location = ItemLocation::Ground(position);
         } else {
             let id = self.allocate_item_instance_id()?;
             let mut split = self.items[plan.item_index].clone();
@@ -2008,13 +2039,13 @@ impl Game {
             self.items[plan.item_index].quantity -= plan.quantity;
             split.id = id.clone();
             split.quantity = plan.quantity;
-            split.location = ItemLocation::Ground(self.player.position);
+            split.location = ItemLocation::Ground(position);
             self.items.push(split);
             if let Some(knowledge) = knowledge {
                 self.item_property_knowledge.insert(id, knowledge);
             }
         }
-        Ok(Some((1, u64::from(plan.quantity))))
+        Ok(Some((1, u64::from(plan.quantity), position)))
     }
 
     pub(super) fn equip_inventory_item(

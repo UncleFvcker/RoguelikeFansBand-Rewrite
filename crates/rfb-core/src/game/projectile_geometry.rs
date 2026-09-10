@@ -8,6 +8,12 @@ use super::{Game, actor_matches_category};
 use crate::{event::ProjectileTrace, resistance::DamageType};
 
 impl Game {
+    pub(super) fn projectile_can_cross(&self, position: Position) -> bool {
+        self.index(position)
+            .and_then(|index| self.content.terrain(&self.terrain[index]))
+            .is_some_and(|terrain| terrain.walkable || terrain.allows_projectile_passage)
+    }
+
     pub(super) fn ability_path(
         &self,
         ability: &AbilityDefinition,
@@ -207,7 +213,7 @@ impl Game {
                         .terrain(&self.terrain[index])
                         .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "permanent"))
                 } else {
-                    self.is_walkable(position)
+                    self.projectile_can_cross(position)
                 }
             });
             if !traversable {
@@ -532,7 +538,7 @@ pub(super) fn has_line_of_effect(game: &Game, from: Position, to: Position) -> b
         if x == to.x && y == to.y {
             return true;
         }
-        if !(game.is_walkable(Position { x, y }) || (x == from.x && y == from.y)) {
+        if !(game.projectile_can_cross(Position { x, y }) || (x == from.x && y == from.y)) {
             return false;
         }
         let double_error = error * 2;

@@ -574,6 +574,9 @@ pub(super) fn validate_world(
     if world.width < 3 || world.height < 3 || world.width > 512 || world.height > 512 {
         return Err(ContentError::InvalidWorldDimensions(world.id.clone()));
     }
+    if world.inherit_wilderness_terrain && (world.town_id.is_none() || world.wilderness.is_none()) {
+        return Err(ContentError::InvalidWorldDimensions(world.id.clone()));
+    }
     if world.surface_actor_allocation.is_some_and(|allocation| {
         !(1..=64).contains(&allocation.rolls) || !(1..=100).contains(&allocation.level)
     }) {
@@ -3093,7 +3096,7 @@ pub(super) fn validate_world(
                     && position.y.abs_diff(world.height / 2) <= 1
                     || (position.y == 0 || position.y == world.height - 1)
                         && position.x.abs_diff(world.width / 2) <= 1);
-            if (on_border && !valid_town_exit)
+            if (on_border && !valid_town_exit && !world.inherit_wilderness_terrain)
                 || override_terrain
                     .insert(*position, terrain_override.terrain_id.clone())
                     .is_some()
@@ -3188,12 +3191,16 @@ pub(super) fn validate_world(
             map_origin,
             town_width,
             town_height,
-            world
-                .procedural_floors
-                .iter()
-                .find(|floor| floor.id == town.floor_id)
-                .and_then(|floor| floor.inline_map.as_ref())
-                .is_some_and(|map| map.inherit_wilderness_terrain),
+            if town.floor_id == world.initial_floor_id {
+                world.inherit_wilderness_terrain
+            } else {
+                world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| floor.id == town.floor_id)
+                    .and_then(|floor| floor.inline_map.as_ref())
+                    .is_some_and(|map| map.inherit_wilderness_terrain)
+            },
             town_fill_terrain_id,
             town_border_terrain_id,
             &town_terrain,
@@ -3283,7 +3290,7 @@ pub(super) fn validate_world(
             terrain,
         )?;
     }
-    for dungeon in &world.dungeons {
+    for dungeon in world.dungeons.iter().filter(|_| world.wilderness.is_none()) {
         let Some(guardian) = &dungeon.entrance_guardian else {
             continue;
         };
@@ -3317,7 +3324,11 @@ fn require_walkable_spawn(
     override_terrain: &BTreeMap<ContentPosition, String>,
     terrain_walkability: &BTreeMap<String, bool>,
 ) -> Result<(), ContentError> {
-    let terrain_id = if position.x == 0
+    let terrain_id = if world.inherit_wilderness_terrain {
+        override_terrain
+            .get(&position)
+            .ok_or_else(|| ContentError::SpawnOnBlockedTerrain(world.id.clone()))?
+    } else if position.x == 0
         || position.y == 0
         || position.x == world.width - 1
         || position.y == world.height - 1
@@ -3342,7 +3353,11 @@ fn require_actor_enterable_spawn(
     actors: &[ActorDefinition],
     terrain: &[TerrainDefinition],
 ) -> Result<(), ContentError> {
-    let terrain_id = if position.x == 0
+    let terrain_id = if world.inherit_wilderness_terrain {
+        override_terrain
+            .get(&position)
+            .ok_or_else(|| ContentError::SpawnOnBlockedTerrain(world.id.clone()))?
+    } else if position.x == 0
         || position.y == 0
         || position.x == world.width - 1
         || position.y == world.height - 1

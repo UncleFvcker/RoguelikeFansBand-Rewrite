@@ -20,21 +20,21 @@
     "finalState": {
       "lastCommandSeq": 1,
       "playerPosition": {
-        "x": 96,
+        "x": 100,
         "y": 33
       },
       "revision": 1,
-      "stateHash": "c0a18e8ade1c4e4d335c8a69e5606c4b1a13b82bb042d17c7a36fa33902fbdf6",
+      "stateHash": "f008a66514615cdcb798c75c5e5a503e3c6a9a50ce09ccafa814ff85c5448970",
       "turn": 1,
       "worldTick": 10
     },
     "changedCells": [
       {
-        "x": 95,
+        "x": 99,
         "y": 33
       },
       {
-        "x": 96,
+        "x": 100,
         "y": 33
       }
     ]

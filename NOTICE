@@ -19,6 +19,18 @@ as a mainly elven town. Source mapping and this adaptation's scope are recorded
 in design/angwil-town-plan-20260909.md and
 packs/rfb-demo-original/legacy-wilderness-selection.json.
 
+The Outpost town layout in packs/rfb-demo-original/worlds/middle-earth.json
+is adapted from lib/edit/t_outp.txt and lib/edit/t_pref.txt at the same
+FrogComposband/RoguelikeFansBand commit above. The source identifies the map
+as "Outpost" and declares T:TOWN:NORMAL:NO_ROTATE; it does not name an
+individual author. This layout is also an exception to the statement above
+that legacy content is not included, and remains subject to its upstream
+terms rather than this repository's default content license. No permission
+statement from the Angwil map is attributed to this material. The source
+selection and adaptation scope are recorded in
+packs/rfb-demo-original/legacy-wilderness-selection.json and
+design/outpost-map-plan-20260910.md.
+
 The generated Android Gradle/Kotlin scaffold under web/src-tauri/gen/android is derived
 from Tauri CLI templates. Tauri is available under the Apache License 2.0 or MIT License:
 https://github.com/tauri-apps/tauri

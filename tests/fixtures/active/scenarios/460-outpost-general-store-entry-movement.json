@@ -10,15 +10,15 @@
     "debugClearEntities": true,
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
-      "x": 83,
-      "y": 31
+      "x": 71,
+      "y": 39
     }
   },
   "commands": [
     {
       "command": {
         "type": "move",
-        "direction": "north"
+        "direction": "west"
       }
     }
   ],
@@ -26,8 +26,8 @@
     "finalState": {
       "lastCommandSeq": 1,
       "playerPosition": {
-        "x": 83,
-        "y": 30
+        "x": 70,
+        "y": 39
       },
       "revision": 1,
       "shops": {
@@ -36,17 +36,17 @@
           "visited": true
         }
       },
-      "stateHash": "c26f3c050bac5f60c3effd50ade96f0f413ee84a3e2b9523401732290bea21cb",
+      "stateHash": "5705b57c65224b21160adc6b7b65ef90b67a960ce7c586a9c9d8793e2f1dd081",
       "turn": 1
     },
     "changedCells": [
       {
-        "x": 83,
-        "y": 30
+        "x": 70,
+        "y": 39
       },
       {
-        "x": 83,
-        "y": 31
+        "x": 71,
+        "y": 39
       }
     ]
   }

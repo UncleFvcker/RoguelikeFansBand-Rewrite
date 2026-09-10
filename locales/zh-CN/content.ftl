@@ -9015,3 +9015,6 @@ town-facility-demo-angwil-trump-tower-name = 王牌之塔
 town-facility-demo-angwil-trump-tower-description = 科鲁斯（安珀人）：召回已记录的地下城。
 town-facility-demo-angwil-trump-tower-owner-name = 科鲁斯
 town-facility-demo-angwil-library-overview = 安格维尔设有九类商店、家、博物馆与旅店；图书馆、赌场、驯兽师、武器大师、战士公会、法师塔、内殿、盗贼巢穴、弓手酒馆、圣武士圣所及王牌之塔提供各自的服务。庄园暂不受理任务。
+
+terrain-demo-dark-pit-name = 黑坑
+terrain-demo-dark-pit-description = 深不见底的黑坑，可以飞越，视线与投射物能够通过。
