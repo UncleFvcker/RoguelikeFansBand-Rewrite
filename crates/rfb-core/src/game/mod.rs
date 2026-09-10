@@ -3092,6 +3092,7 @@ impl Game {
         persistent: bool,
         through_walls: bool,
     ) -> Vec<Position> {
+        let radius = self.dungeon_detection_radius(radius);
         let origin = self.player.position;
         let radius_distance = u32::from(radius);
         let radius_offset = i32::from(radius);
@@ -3155,6 +3156,7 @@ impl Game {
     }
 
     fn detect_actor_positions(&self, category: &str, radius: u8) -> (Vec<Position>, Vec<String>) {
+        let radius = self.dungeon_detection_radius(radius);
         let origin = self.player.position;
         let mut candidates = self
             .entities
@@ -3199,6 +3201,7 @@ impl Game {
         radius: u8,
         through_walls: bool,
     ) -> (Vec<Position>, Vec<String>) {
+        let radius = self.dungeon_detection_radius(radius);
         let origin = self.player.position;
         let mut candidates = self
             .items
@@ -3263,6 +3266,7 @@ impl Game {
         radius: u8,
         through_walls: bool,
     ) -> (Vec<Position>, Vec<String>) {
+        let radius = self.dungeon_detection_radius(radius);
         let origin = self.player.position;
         let mut candidates = self
             .gold_piles

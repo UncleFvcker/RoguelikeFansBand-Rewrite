@@ -434,6 +434,7 @@ message-device-recharge-source-destroyed = 作为来源的设备被消耗了。
 message-light-refuel-unavailable = 无法使用所选物品为该光源补充燃料。
 message-light-refueled = 你用{ $source }为{ $target }补充了 { $amount } 点燃料（{ $current } / { $maximum }）。
 message-light-extinguished = 你的{ $target }熄灭了。
+message-dungeon-darkness-absorbed-light = 这个地下城的黑暗吸收了你的光。
 message-item-activation-landed = { $source }的力量落在空处。
 message-item-activation-hit = { $source }命中{ $target }，造成 { $damage } 点伤害。
 message-item-activation-slay = { $source }摧毁了{ $target }。

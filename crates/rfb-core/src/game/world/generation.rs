@@ -2777,11 +2777,14 @@ impl Game {
                 }
             }
         }
+        let room_glow = !self
+            .floor_dungeon(&definition.id)
+            .is_some_and(|dungeon| dungeon.darkness);
         for position in rooms.iter().flat_map(generated_room_cells) {
             let index = usize::try_from(position.y).expect("generated room y must fit usize")
                 * usize::from(width)
                 + usize::try_from(position.x).expect("generated room x must fit usize");
-            glow[index] = true;
+            glow[index] = room_glow;
         }
         Ok(FloorState {
             id: definition.id.clone(),

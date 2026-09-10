@@ -1250,6 +1250,9 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
+        if glow && self.dungeon_has_darkness() {
+            events.push(DomainEvent::DungeonDarknessAbsorbedLight);
+        }
         let mut positions = if radius == u8::MAX {
             (0..self.height)
                 .flat_map(|y| {
@@ -1654,7 +1657,7 @@ impl Game {
         let resolution = AbilityDetectResolutionDto {
             subject: ability_detect_subject_dto(subject),
             category,
-            radius,
+            radius: self.dungeon_detection_radius(radius),
             persistent,
             through_walls,
             detected_positions,

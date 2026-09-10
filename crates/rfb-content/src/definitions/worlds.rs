@@ -275,6 +275,8 @@ pub struct CampaignDefinition {
 pub struct DungeonDefinition {
     pub id: String,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub darkness: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub no_magic: bool,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub no_melee: bool,

@@ -438,6 +438,7 @@ message-device-recharge-source-destroyed = The source device is consumed.
 message-light-refuel-unavailable = That light cannot be refueled from the selected item.
 message-light-refueled = You refuel { $target } from { $source } by { $amount } ({ $current } / { $maximum }).
 message-light-extinguished = Your { $target } goes out.
+message-dungeon-darkness-absorbed-light = The darkness of this dungeon absorbs your light.
 message-item-activation-landed = { $source } releases its power into empty space.
 message-item-activation-hit = { $source } hits { $target } for { $damage } damage.
 message-item-activation-slay = { $source } destroys { $target }.

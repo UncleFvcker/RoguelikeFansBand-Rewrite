@@ -1013,7 +1013,9 @@ impl Game {
                 .unwrap_or_else(|| path.clone());
             let raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
             let impact = self.trace_projectile_path(path.clone()).0.impact;
-            if let Some(index) = self.index(impact) {
+            if !self.dungeon_has_darkness()
+                && let Some(index) = self.index(impact)
+            {
                 self.glow[index] = true;
                 changed.insert(impact);
             }

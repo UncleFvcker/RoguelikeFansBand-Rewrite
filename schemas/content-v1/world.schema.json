@@ -90,6 +90,9 @@
     "DungeonDefinition": {
       "additionalProperties": false,
       "properties": {
+        "darkness": {
+          "type": "boolean"
+        },
         "entranceGuardian": {
           "anyOf": [
             {

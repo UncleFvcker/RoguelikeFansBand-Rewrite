@@ -24,6 +24,11 @@ impl Game {
             .is_some_and(|dungeon| dungeon.no_magic)
     }
 
+    pub(super) fn dungeon_has_darkness(&self) -> bool {
+        self.floor_dungeon(&self.current_floor_id)
+            .is_some_and(|dungeon| dungeon.darkness)
+    }
+
     pub(super) fn dungeon_allows_monster(
         &self,
         floor_id: &str,

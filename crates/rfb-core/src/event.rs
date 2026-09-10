@@ -637,6 +637,7 @@ pub(crate) enum DomainEvent {
         current: u16,
         maximum: u16,
     },
+    DungeonDarknessAbsorbedLight,
     LightExtinguished {
         target_item_id: String,
         target_kind_id: String,
@@ -2950,6 +2951,10 @@ impl DomainEvent {
                     ("current", current.to_string()),
                     ("maximum", maximum.to_string()),
                 ],
+            ),
+            Self::DungeonDarknessAbsorbedLight => dto_without_args(
+                "dungeon.darkness-absorbed-light",
+                "dungeon-darkness-absorbed-light",
             ),
             Self::LightExtinguished {
                 target_item_id,

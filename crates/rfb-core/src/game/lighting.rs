@@ -128,6 +128,9 @@ impl Game {
     }
 
     pub(super) fn set_floor_glow_at(&mut self, position: Position, glow: bool) -> bool {
+        if glow && self.dungeon_has_darkness() {
+            return false;
+        }
         let Some(index) = self.index(position) else {
             return false;
         };
@@ -209,6 +212,9 @@ impl Game {
         // entities, then ground items) so strict-greater comparisons keep
         // resolving ties identically.
         let mut sources = Vec::new();
+        let darkness = self.dungeon_has_darkness();
+        let monster_distance_limit = (darkness && !self.player_has_night_vision())
+            .then(|| (self.player_monster_sight_radius() + 1) as u32);
         if let Some(radius) = self.player_light_radius() {
             sources.push(LightSource {
                 position: self.player.position,
@@ -225,6 +231,12 @@ impl Game {
             let Some(light) = definition.light else {
                 continue;
             };
+            // cave.c:update_mon_lite limits both positive and negative sources.
+            if monster_distance_limit
+                .is_some_and(|limit| rfb_distance(self.player.position, entity.position) > limit)
+            {
+                continue;
+            }
             if !light.intrinsic
                 && entity
                     .statuses
@@ -235,7 +247,11 @@ impl Game {
             }
             sources.push(LightSource {
                 position: entity.position,
-                radius: i32::from(light.radius),
+                radius: if darkness && !light.darkness {
+                    1
+                } else {
+                    i32::from(light.radius)
+                },
                 maximum: 64,
                 color: ACTOR_LIGHT_COLOR,
                 darkness: light.darkness,
@@ -480,6 +496,12 @@ impl Game {
         let radius = equipment
             .max(self.player_mutation_light_radius())
             .max(status);
+        // xtra1.c:calc_torch caps positive light before the intrinsic weak glow.
+        let radius = if self.dungeon_has_darkness() {
+            radius.min(1)
+        } else {
+            radius
+        };
         let radius = if radius <= 0 && self.player_is_vampire() {
             equipment.saturating_add(1)
         } else {
