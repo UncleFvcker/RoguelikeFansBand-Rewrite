@@ -1303,11 +1303,15 @@ impl Game {
 
     // Keep ordinary drops in place. Non-floor impact grids (such as pits) need
     // a nearby floor, within the original drop_near search radius.
-    pub(super) fn ground_drop_position(&self, origin: Position) -> Option<Position> {
+    pub(super) fn ground_drop_position(
+        &self,
+        origin: Position,
+        artifact: bool,
+    ) -> Option<Position> {
         if self.is_walkable(origin) {
             return Some(origin);
         }
-        (-3..=3)
+        let nearby = (-3..=3)
             .flat_map(|dy| (-3..=3).map(move |dx| (dx, dy)))
             .filter(|(dx, dy)| dx * dx + dy * dy <= 10)
             .map(|(dx, dy)| Position {
@@ -1322,6 +1326,19 @@ impl Game {
                 let dx = position.x - origin.x;
                 let dy = position.y - origin.y;
                 dx * dx + dy * dy
+            });
+        if nearby.is_some() || !artifact {
+            return nearby;
+        }
+        // RFB drop_near preserves artifacts by searching beyond the local radius.
+        // Choose the nearest legal grid deterministically instead of random bouncing.
+        (0..i32::from(self.height))
+            .flat_map(|y| (0..i32::from(self.width)).map(move |x| Position { x, y }))
+            .filter(|position| self.is_walkable(*position))
+            .min_by_key(|position| {
+                let dx = i64::from(position.x) - i64::from(origin.x);
+                let dy = i64::from(position.y) - i64::from(origin.y);
+                dx * dx + dy * dy
             })
     }
 
@@ -1330,7 +1347,11 @@ impl Game {
         item_ids: &[String],
     ) -> Option<(usize, u64, Position)> {
         let plan = plan_batch_drop(&self.items, item_ids)?;
-        let position = self.ground_drop_position(self.player.position)?;
+        let artifact = plan
+            .item_indices
+            .iter()
+            .all(|index| self.items[*index].is_artifact(&self.content));
+        let position = self.ground_drop_position(self.player.position, artifact)?;
         for index in &plan.item_indices {
             self.items[*index].location = ItemLocation::Ground(position);
         }
@@ -2027,7 +2048,10 @@ impl Game {
         let Some(plan) = plan_drop_quantity(&self.items, item_id, quantity) else {
             return Ok(None);
         };
-        let Some(position) = self.ground_drop_position(self.player.position) else {
+        let Some(position) = self.ground_drop_position(
+            self.player.position,
+            self.items[plan.item_index].is_artifact(&self.content),
+        ) else {
             return Ok(None);
         };
         if !plan.split_stack {

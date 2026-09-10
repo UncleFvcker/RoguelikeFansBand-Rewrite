@@ -96,6 +96,11 @@
       "sourceIndex": 20,
       "sourceName": "Crystal castle",
       "id": "demo.dungeon.crystal-castle"
+    },
+    {
+      "sourceIndex": 13,
+      "sourceName": "R'lyeh",
+      "id": "demo.dungeon.rlyeh"
     }
   ],
   "townPlans": [
@@ -1868,6 +1873,55 @@
         "level": 80
       },
       "finalObject": { "tval": 70, "sval": 52 }
+    },
+    {
+      "sourceIndex": 13,
+      "sourceName": "R'lyeh",
+      "id": "demo.dungeon.rlyeh",
+      "position": {
+        "x": 40,
+        "y": 3
+      },
+      "minimumDepth": 80,
+      "maximumDepth": 96,
+      "monsterDivisor": 16,
+      "generationFlags": [
+        "ARENA",
+        "WATER_RIVER",
+        "LAKE_WATER"
+      ],
+      "monsterPreferences": [
+        "DEMON",
+        "ELDRITCH_HORROR"
+      ],
+      "floorTerrainDistribution": [
+        {
+          "sourceTag": "FLOOR",
+          "percent": 50
+        },
+        {
+          "sourceTag": "SHALLOW_WATER",
+          "percent": 30
+        },
+        {
+          "sourceTag": "DEEP_WATER",
+          "percent": 20
+        }
+      ],
+      "tunnelPercent": 100,
+      "initialGuardian": {
+        "sourceIndex": 812,
+        "sourceName": "Warp demon",
+        "chineseName": "跃迁恶魔",
+        "level": 76
+      },
+      "guardian": {
+        "sourceIndex": 857,
+        "sourceName": "Great Cthulhu",
+        "chineseName": "伟大之克苏鲁",
+        "level": 96
+      },
+      "finalArtifactSourceIndex": 129
     }
   ]
 }

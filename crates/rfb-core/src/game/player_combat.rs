@@ -1606,7 +1606,9 @@ impl Game {
                 trace,
             });
         }
-        if let Some(position) = self.ground_drop_position(landing) {
+        if let Some(position) =
+            self.ground_drop_position(landing, thrown.is_artifact(&self.content))
+        {
             thrown.location = ItemLocation::Ground(position);
             let thrown_id = thrown.id.clone();
             self.items.push(thrown);

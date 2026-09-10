@@ -9019,3 +9019,8 @@ terrain-demo-dark-pit-description = A dark pit that can be flown over. Sight and
 item-demo-razorback-name = 'Razorback'
 item-demo-razorback-description = A massive suit of multicolored dragon scale mail, pulsing with untamed lightning.
 item-activation-demo-razorback-star-ball-name = Star Ball
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, d_info 13.
+floor-demo-rlyeh-depth-name = R'lyeh Depth { $depth }
+terrain-demo-rlyeh-entrance-name = R'lyeh Entrance
+terrain-demo-rlyeh-entrance-description = The road to R'lyeh.

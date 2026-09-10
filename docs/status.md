@@ -10,10 +10,10 @@
 | 协议 | 1.240 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 117 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 12 / 12 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.401.5 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.401.6 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v318，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 6 个 Class、13 个 Build、57 个 Race、32 本能力书、1,840 个 ability 文件、370 个 item、1,402 个 actor、168 个 affix、152 个 mutation。世界定义含 25 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 6 个 Class、13 个 Build、57 个 Race、32 本能力书、1,840 个 ability 文件、371 个 item、1,402 个 actor、168 个 affix、152 个 mutation。世界定义含 26 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
 权威内容统计工具是 `rfb-contentc inspect-source`。本次集成已运行内容编译；静态统计不替代行为验收。
 
@@ -60,7 +60,7 @@ O3 对齐九个任务入口的非开放外观与未接任务底材，保留 `R` 
 
 O4 已完成源码与自动验收交付，验收代码为 `58f9951ea`、包 1.401.3。最终 12,870 格与源图逐格匹配，荒野来源审计通过；补跑城镇与黑坑相关 82 项测试通过，复用上述 O3 内容/返回/契约检查及 O2 桌面馆藏事务证据。没有新增实现或契约刷新。完整范围与适配限制见 [O4 验收记录](../design/outpost-map-plan-20260910.md#o4验证与交付)；standalone、桌面 E2E、Android 和人工试玩未执行，两组任务替代仍待后续独立工作。
 
-[拉莱耶 R1/R2](../design/rlyeh-dungeon-plan-20260910.md) 已校正共享水上投射，并接入唯一固定神器 `demo.item.razorback`（源神器 129）。实际装备、StarBall 激活、1000 原版回合（10000 tick）冷却及读档通过验证；自然生成与共享守卫奖励使用同一唯一性记录。中文神器名 unresolved，保留源名。73 项核心、3 项导入器、2 项内容测试和 26 条 active 契约通过，契约无需刷新；内容包为 1.401.5。拉莱耶正式地点及守卫奖励入口仍未开放，本批未制作可玩产物。
+[拉莱耶 R1–R3](../design/rlyeh-dungeon-plan-20260910.md) 已开放 (40,3) 入口及 80–96 层，复用跃迁恶魔、伟大之克苏鲁和固定神器 `demo.item.razorback`。完整往返、征服去重、读档、召回及水面奖励落地通过验证；神器中文名仍 unresolved，保留源名。共享掉落已保护近邻无承物格时的神器，选择全图最近合法格。R3 的 223 项核心、3 项内容、2 项本地化测试及 Clippy 通过；26 条 active 契约仅因新增地牢状态刷新哈希，复验通过。内容包为 1.401.6；具体布局和重复神器替代适配见计划，R4 最终专项验收待做，尚无可玩构建或人工试玩记录。
 
 地牢城镇分支已合入 Morivant、Telmora、Angwil 的正常旅行入口、商店和设施，城镇大地图布局与荒野衔接、按名望调整服务价格、分档强化、赌场和博物馆跨角色共享存储。博物馆转移通过 Tauri 的存储事务与角色检查点一同提交；固定神器禁止捐赠和导入，随机神器实例允许共享并保留完整属性。家与博物馆复用背包详情投影，保留物品身份、知识与实例重量。
 

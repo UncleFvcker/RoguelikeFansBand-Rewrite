@@ -109,6 +109,44 @@ fn razorback_equipment_and_unique_identity_survive_save() {
 }
 
 #[test]
+fn artifact_inventory_drop_finds_distant_land_without_relaxing_ordinary_drops() {
+    let (mut game, artifact_id) = razorback_game();
+    game.player.position = Position { x: 99, y: 33 };
+    for y in 29..=37 {
+        for x in 95..=103 {
+            replace_terrain(
+                &mut game,
+                Position { x, y },
+                "demo.terrain.surface-water-deep",
+            );
+        }
+    }
+    give_inventory_item(&mut game, "test.ordinary-drop", "demo.item.iron-shot");
+    assert!(
+        game.drop_inventory_items(&[artifact_id.clone(), "test.ordinary-drop".to_owned()])
+            .is_none()
+    );
+    assert!(
+        game.drop_inventory_quantity("test.ordinary-drop", 1)
+            .unwrap()
+            .is_none()
+    );
+    let (_, _, landing) = game
+        .drop_inventory_quantity(&artifact_id, 1)
+        .unwrap()
+        .unwrap();
+    assert!(game.is_walkable(landing));
+    assert!(
+        game.items
+            .iter()
+            .any(|item| item.id == artifact_id && item.location == ItemLocation::Ground(landing))
+    );
+    assert!(game.items.iter().any(|item| item.id == "test.ordinary-drop" && item.location == ItemLocation::Inventory));
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
 fn razorback_star_ball_and_full_10000_tick_cooldown_survive_save() {
     let (mut game, id) = razorback_game();
     assert!(game.equip_inventory_item(&id, None).is_some());

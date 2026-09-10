@@ -843,7 +843,9 @@ impl Game {
         {
             self.carry_shop_purchase_item(item)
         } else {
-            if let Some(position) = self.ground_drop_position(self.player.position) {
+            if let Some(position) =
+                self.ground_drop_position(self.player.position, item.is_artifact(&self.content))
+            {
                 item.location = ItemLocation::Ground(position);
                 self.items.push(item);
                 changed.insert(position);

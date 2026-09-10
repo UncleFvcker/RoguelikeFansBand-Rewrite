@@ -3422,7 +3422,8 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
-        let drop_position = self.ground_drop_position(landing);
+        let drop_position =
+            self.ground_drop_position(landing, ammunition.is_artifact(&self.content));
         let broken = (hit_body && self.rng.bounded(100) < u64::from(break_chance_percent))
             || drop_position.is_none();
         if broken {

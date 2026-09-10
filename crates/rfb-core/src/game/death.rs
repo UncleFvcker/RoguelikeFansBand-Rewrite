@@ -846,7 +846,7 @@ impl Game {
             }
         }
 
-        let drop_position = self.ground_drop_position(removed.position);
+        let drop_position = self.ground_drop_position(removed.position, false);
         for CarriedDrop {
             item_id,
             kind_id,
@@ -858,7 +858,11 @@ impl Game {
                 .iter()
                 .position(|item| item.id == item_id)
                 .expect("carried item collected from authoritative item set");
-            let Some(position) = drop_position else {
+            let position = self.ground_drop_position(
+                removed.position,
+                self.items[item_index].is_artifact(&self.content),
+            );
+            let Some(position) = position else {
                 self.items.remove(item_index);
                 self.item_property_knowledge.remove(&item_id);
                 events.push(DomainEvent::ItemDestroyed {
@@ -869,6 +873,7 @@ impl Game {
                 continue;
             };
             self.items[item_index].location = ItemLocation::Ground(position);
+            changed.insert(position);
             events.push(DomainEvent::LootDropped {
                 source_kind_id: removed.kind_id.clone(),
                 target_kind_id: kind_id,
@@ -876,7 +881,11 @@ impl Game {
             });
         }
         for mut item in generated_loot {
-            let Some(position) = drop_position else {
+            let ItemLocation::Ground(origin) = item.location else {
+                unreachable!("death loot must be generated on the ground");
+            };
+            let position = self.ground_drop_position(origin, item.is_artifact(&self.content));
+            let Some(position) = position else {
                 events.push(DomainEvent::ItemDestroyed {
                     target_kind_id: item.kind_id,
                     quantity: item.quantity,
@@ -885,6 +894,7 @@ impl Game {
                 continue;
             };
             item.location = ItemLocation::Ground(position);
+            changed.insert(position);
             events.push(DomainEvent::LootDropped {
                 source_kind_id: removed.kind_id.clone(),
                 target_kind_id: item.kind_id.clone(),

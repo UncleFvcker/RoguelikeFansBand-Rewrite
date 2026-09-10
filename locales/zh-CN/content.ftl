@@ -9023,3 +9023,8 @@ terrain-demo-dark-pit-description = 深不见底的黑坑，可以飞越，视�
 item-demo-razorback-name = 'Razorback'
 item-demo-razorback-description = 一套巨大的重型龙鳞盔甲，深深地渗透着多种色彩。它随着愤怒的能量而悸动，当你穿上它时，你能感受到未被驯服的闪电那原始的元素力量。
 item-activation-demo-razorback-star-ball-name = 星之球
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, d_info 13.
+floor-demo-rlyeh-depth-name = 拉莱耶 { $depth } 层
+terrain-demo-rlyeh-entrance-name = 拉莱耶入口
+terrain-demo-rlyeh-entrance-description = 通向拉莱耶的道路
