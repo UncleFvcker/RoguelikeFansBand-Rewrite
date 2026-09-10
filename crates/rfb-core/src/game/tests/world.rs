@@ -81,11 +81,13 @@ fn anti_cave_round_trip(seed: u64, slug: &str, suppressed: &str, world_position:
     dispatch_next(&mut game, GameCommand::LeaveWorldMap);
     place_player_on_terrain(&mut game, &format!("demo.terrain.{slug}-entrance"));
     let departure = game.player.position;
-    let guardian = game
-        .entities
-        .iter_mut()
-        .find(|a| a.id == guardian_id)
-        .unwrap();
+    let guardian = game.entities.iter().find(|a| a.id == guardian_id).unwrap();
+    assert!(super::super::movement::actor_can_cross_terrain(
+        game.content.actor(&guardian.kind_id).unwrap(),
+        game.content
+            .terrain(game.terrain_at(guardian.position))
+            .unwrap()
+    ));
     assert_eq!(
         guardian.position,
         Position {
@@ -93,7 +95,11 @@ fn anti_cave_round_trip(seed: u64, slug: &str, suppressed: &str, world_position:
             y: departure.y
         }
     );
-    guardian.hp = 7;
+    game.entities
+        .iter_mut()
+        .find(|a| a.id == guardian_id)
+        .unwrap()
+        .hp = 7;
     let hash = game.state_hash();
     game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
     assert_eq!(hash, game.state_hash());
@@ -208,7 +214,18 @@ fn anti_cave_round_trip(seed: u64, slug: &str, suppressed: &str, world_position:
 fn anti_magic_cave_and_anti_melee_cave_representative_generation() {
     let base = Game::new_with_build(1, "demo.build.warrior").unwrap();
     for slug in ["anti-magic-cave", "anti-melee-cave"] {
-        for depth in [40_u16, 42, 45, 46, 48, 49, 50] {
+        // Root: dry, water, lava; then cavern, arena, rubble/tree lakes, destruction, terminal.
+        for (depth, seed) in [
+            (40, 0),
+            (40, 1),
+            (40, 56),
+            (42, 42),
+            (45, 45),
+            (46, 46),
+            (48, 48),
+            (49, 49),
+            (50, 50),
+        ] {
             let mut game = base.clone();
             let definition = game
                 .content
@@ -219,10 +236,12 @@ fn anti_magic_cave_and_anti_melee_cave_representative_generation() {
                 .find(|f| f.id == format!("demo.floor.{slug}-depth-{depth}"))
                 .unwrap()
                 .clone();
-            game.rng = RfbRng::seeded(u64::from(depth));
+            game.rng = RfbRng::seeded(seed);
             let floor = game.generate_procedural_floor(&definition, None).unwrap();
             assert_eq!((floor.width, floor.height), (66, 22));
             let at = |position: Position| {
+                assert!((0..i32::from(floor.width)).contains(&position.x));
+                assert!((0..i32::from(floor.height)).contains(&position.y));
                 game.content
                     .terrain(
                         &floor.terrain
@@ -239,7 +258,58 @@ fn anti_magic_cave_and_anti_melee_cave_representative_generation() {
                     at(actor.position)
                 ));
             }
+            assert!(!floor.items.is_empty());
+            for item in &floor.items {
+                match &item.location {
+                    ItemLocation::Ground(position) => {
+                        let terrain = at(*position);
+                        assert!(
+                            terrain.walkable || terrain.tags.iter().any(|tag| tag == "item-drop")
+                        );
+                    }
+                    ItemLocation::CarriedBy { actor_id } => {
+                        assert!(floor.entities.iter().any(|a| &a.id == actor_id))
+                    }
+                    _ => {
+                        panic!("generated floor item must be on the ground or carried by a monster")
+                    }
+                }
+            }
+            assert!(
+                floor
+                    .gold_piles
+                    .iter()
+                    .all(|pile| at(pile.position).walkable)
+            );
             let count = |id: &str| floor.terrain.iter().filter(|t| t.as_str() == id).count();
+            let water = count("demo.terrain.surface-water-deep")
+                + count("demo.terrain.surface-water-shallow");
+            let lava = count("demo.terrain.surface-lava-deep")
+                + count("demo.terrain.surface-lava-shallow");
+            let budget = definition.generation_budget.as_ref().unwrap();
+            assert!(water + lava <= budget.river_area_tiles.unwrap_or(0) as usize);
+            assert!(water == 0 || lava == 0);
+            if depth == 40 {
+                assert_eq!(
+                    (water > 0, lava > 0),
+                    (seed == 1, seed == 56),
+                    "{slug} seed {seed}"
+                );
+            }
+            if let Some(lake) = &definition.layout.as_ref().unwrap().lake {
+                assert!(
+                    count(&lake.deep_terrain_id) <= budget.lake_deep_area_tiles.unwrap() as usize
+                );
+                assert!(
+                    count(&lake.deep_terrain_id) + count(&lake.shallow_terrain_id)
+                        <= budget.lake_area_tiles.unwrap() as usize
+                );
+            }
+            if depth == 49 {
+                assert!(
+                    count("demo.terrain.rubble") <= budget.destroyed_area_tiles.unwrap() as usize
+                );
+            }
             assert!((1..=2).contains(&count("demo.terrain.stairs-up")));
             if depth == 50 {
                 assert_eq!(count("demo.terrain.stairs-down"), 0);

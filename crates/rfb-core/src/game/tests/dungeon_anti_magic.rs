@@ -3,7 +3,7 @@ use super::support::*;
 use super::*;
 use std::sync::OnceLock;
 
-const FLOOR: &str = "demo.floor.castle-depth-40";
+const FLOOR: &str = "demo.floor.anti-magic-cave-depth-40";
 const CASTER: &str = "demo.actor.ash-drake";
 const BREATH: &str = "demo.ability.ash-breath";
 const MAGIC: &str = "demo.ability.cinder-bolt";
@@ -16,12 +16,6 @@ fn catalog() -> Arc<ContentCatalog> {
                 .join("../../packs/rfb-demo-original");
             let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
             enable_test_caster(&mut artifact.content);
-            artifact.content.worlds[0]
-                .dungeons
-                .iter_mut()
-                .find(|d| d.id == "demo.dungeon.castle")
-                .unwrap()
-                .no_magic = true;
             let actor = artifact
                 .content
                 .actors

@@ -3,7 +3,7 @@ use super::support::*;
 use super::*;
 use std::sync::OnceLock;
 
-const FLOOR: &str = "demo.floor.castle-depth-40";
+const FLOOR: &str = "demo.floor.anti-melee-cave-depth-40";
 const MONSTER: &str = "demo.actor.small-kobold";
 
 fn catalog() -> Arc<ContentCatalog> {
@@ -14,12 +14,6 @@ fn catalog() -> Arc<ContentCatalog> {
                 .join("../../packs/rfb-demo-original");
             let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
             enable_test_caster(&mut artifact.content);
-            artifact.content.worlds[0]
-                .dungeons
-                .iter_mut()
-                .find(|d| d.id == "demo.dungeon.castle")
-                .unwrap()
-                .no_melee = true;
             artifact
                 .content
                 .items
@@ -57,7 +51,8 @@ fn arena() -> Game {
 }
 
 fn arena_with_build(build_id: &str) -> Game {
-    let mut game = Game::from_content_with_build(0, catalog(), DEFAULT_WORLD_ID, build_id).unwrap();
+    let mut game =
+        Game::from_content_with_build(785, catalog(), DEFAULT_WORLD_ID, build_id).unwrap();
     choose_human_talent_if_pending(&mut game);
     clear_monsters(&mut game);
     game.current_floor_id = FLOOR.to_owned();
@@ -666,7 +661,7 @@ fn dungeon_anti_melee_allocation_filters_attack_spells_without_improving_player_
         .unwrap()
         .procedural_floors
         .iter()
-        .find(|floor| floor.depth == 40 && floor.id != FLOOR)
+        .find(|floor| floor.id == "demo.floor.castle-depth-40")
         .unwrap()
         .id
         .clone();
