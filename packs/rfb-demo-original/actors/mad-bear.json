@@ -91,6 +91,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "innate-spell",
     "animal",
     "bear",
     "evil",

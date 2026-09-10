@@ -105,7 +105,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-nuke-17-600-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.ball-water-1d38-50",
@@ -140,6 +141,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "evil",
     "kin-glyph-108",
     "legacy-import",

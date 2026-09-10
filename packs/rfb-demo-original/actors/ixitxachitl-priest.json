@@ -92,6 +92,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "attack-spell",
     "animal",
     "evil",
     "fish",

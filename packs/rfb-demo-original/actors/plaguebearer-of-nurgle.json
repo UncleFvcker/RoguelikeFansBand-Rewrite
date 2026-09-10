@@ -104,6 +104,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "attack-spell",
     "demon",
     "evil",
     "kin-glyph-122",

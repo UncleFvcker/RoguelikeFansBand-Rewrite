@@ -60,6 +60,14 @@ impl Game {
             .min(100);
         let mut candidates = Vec::with_capacity(casting.abilities.len());
         let mut viable = Vec::new();
+        let no_magic = self.dungeon_blocks_magic();
+        let stupid = self
+            .actor_runtime_definition(&self.entities[index])
+            .is_some_and(|actor| actor.tags.iter().any(|tag| tag == "stupid"));
+        let default_player_target = self
+            .monster_hostile_targets(index)
+            .first()
+            .is_some_and(MonsterHostileTarget::is_player);
         for candidate in &casting.abilities {
             let ability = self
                 .content
@@ -83,6 +91,19 @@ impl Game {
             }
             match self.monster_ability_plan(index, ability, candidate.weight) {
                 Ok(plan) => {
+                    let player_target = monster_plan_target(&plan.target)
+                        .map_or(default_player_target, MonsterHostileTarget::is_player);
+                    // default_ai_mon removes magic before choosing, except for STUPID.
+                    if no_magic && !candidate.innate && !player_target && !stupid {
+                        let mut rejected = self.monster_ability_candidate_dto(
+                            index,
+                            &plan,
+                            Some(MonsterAbilityRejectionReasonDto::NoUtility),
+                        );
+                        rejected.effective_weight = 0;
+                        candidates.push(rejected);
+                        continue;
+                    }
                     candidates.push(self.monster_ability_candidate_dto(index, &plan, None));
                     viable.push(plan);
                 }
@@ -144,6 +165,19 @@ impl Game {
             return Ok(false);
         };
         let plan = viable[selected_index].clone();
+        let innate = casting
+            .abilities
+            .iter()
+            .find(|candidate| candidate.ability_id == plan.ability.id)
+            .expect("selected spell retains its source classification")
+            .innate;
+        let player_target = monster_plan_target(&plan.target)
+            .map_or(default_player_target, MonsterHostileTarget::is_player);
+        // mon_spell_cast rejects after the normal draw; no replacement draw or cooldown.
+        // mon_spell_cast_mon's failure check exempts STUPID casters.
+        if no_magic && !innate && (player_target || !stupid) {
+            return Ok(false);
+        }
         let stops_world = plan.ability.tags.iter().any(|tag| tag == "monster-world");
         self.entities[index].casting_cooldown_remaining =
             monster_casting_cooldown(casting.frequency_percent);

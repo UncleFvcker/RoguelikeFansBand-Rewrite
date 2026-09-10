@@ -143,6 +143,7 @@
   "role": "monster",
   "speed": 117,
   "tags": [
+    "attack-spell",
     "evil",
     "invisible",
     "kin-glyph-104",

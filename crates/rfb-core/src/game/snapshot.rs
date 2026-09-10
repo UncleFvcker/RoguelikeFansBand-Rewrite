@@ -644,36 +644,40 @@ impl Game {
                             .player_ability_learning_dto()
                             .is_some_and(|learning| learning.remaining_slots > 0),
                     can_forget: source == AbilitySourceDto::Learned && learned,
-                    can_cast: match source {
-                        AbilitySourceDto::Class
-                        | AbilitySourceDto::Mutation
-                        | AbilitySourceDto::Race => {
-                            level_available
-                                && (!self.player_has_status_kind(STATUS_CONFUSION)
-                                    || ability
-                                        .tags
-                                        .iter()
-                                        .any(|tag| tag == "usable-while-confused"))
-                                && (!self.player_has_status_kind(STATUS_FEAR)
-                                    || ability.tags.iter().any(|tag| tag == "usable-while-afraid"))
-                                && concentration_available
-                                && hit_points_available
-                                && resource_available
-                                && projectile_available
-                                && cooldown_remaining == 0
-                        }
-                        AbilitySourceDto::Learned => {
-                            learned
-                                && !self.player_has_status_kind(STATUS_CONFUSION)
-                                && !self.player_has_anti_magic()
-                                && !self.player_has_status_kind(STATUS_BERSERK)
-                                && level_available
-                                && resource_available
-                                && projectile_available
-                                && cooldown_remaining == 0
-                                && book_item_id.is_some()
-                        }
-                    },
+                    can_cast: !self.dungeon_blocks_player_ability(&ability.id)
+                        && match source {
+                            AbilitySourceDto::Class
+                            | AbilitySourceDto::Mutation
+                            | AbilitySourceDto::Race => {
+                                level_available
+                                    && (!self.player_has_status_kind(STATUS_CONFUSION)
+                                        || ability
+                                            .tags
+                                            .iter()
+                                            .any(|tag| tag == "usable-while-confused"))
+                                    && (!self.player_has_status_kind(STATUS_FEAR)
+                                        || ability
+                                            .tags
+                                            .iter()
+                                            .any(|tag| tag == "usable-while-afraid"))
+                                    && concentration_available
+                                    && hit_points_available
+                                    && resource_available
+                                    && projectile_available
+                                    && cooldown_remaining == 0
+                            }
+                            AbilitySourceDto::Learned => {
+                                learned
+                                    && !self.player_has_status_kind(STATUS_CONFUSION)
+                                    && !self.player_has_anti_magic()
+                                    && !self.player_has_status_kind(STATUS_BERSERK)
+                                    && level_available
+                                    && resource_available
+                                    && projectile_available
+                                    && cooldown_remaining == 0
+                                    && book_item_id.is_some()
+                            }
+                        },
                 })
             })
             .collect()

@@ -69,7 +69,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.ball-shards-1d1-499",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.heal-258",
@@ -116,6 +117,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "aura-fear",
     "kin-glyph-80",
     "legacy-import",

@@ -239,6 +239,7 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
     "evil",
     "fixed-placement",
     "fixed-unique",

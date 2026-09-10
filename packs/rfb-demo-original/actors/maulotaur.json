@@ -114,6 +114,9 @@
   "role": "monster",
   "speed": 130,
   "tags": [
+    "stupid",
+    "attack-spell",
+    "innate-spell",
     "evil",
     "kin-glyph-72",
     "legacy-import",

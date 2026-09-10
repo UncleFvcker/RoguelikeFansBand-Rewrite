@@ -168,6 +168,7 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
     "good",
     "kin-glyph-80",
     "legacy-import",

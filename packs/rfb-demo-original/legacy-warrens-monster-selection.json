@@ -18,7 +18,7 @@
       "sourceIndex": 40,
       "id": "shrieker-mushroom-patch",
       "tags": ["mushroom", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 42,
@@ -30,7 +30,7 @@
       "sourceIndex": 47,
       "id": "yellow-mushroom-patch",
       "tags": ["mushroom", "warrens"],
-      "omittedFlags": ["STUPID"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 49,
@@ -81,7 +81,7 @@
       "sourceIndex": 58,
       "id": "slimy-worm-mass",
       "tags": ["warrens", "worm"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 59,
@@ -105,13 +105,13 @@
       "sourceIndex": 64,
       "id": "slimy-ooze",
       "tags": ["ooze", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 66,
       "id": "green-jelly",
       "tags": ["jelly", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 67,
@@ -129,7 +129,7 @@
       "sourceIndex": 72,
       "id": "spotted-mushroom-patch",
       "tags": ["mushroom", "warrens"],
-      "omittedFlags": ["STUPID"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 74,
@@ -147,7 +147,7 @@
       "sourceIndex": 76,
       "id": "yellow-mold",
       "tags": ["mold", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 77,
@@ -159,7 +159,7 @@
       "sourceIndex": 78,
       "id": "yellow-worm-mass",
       "tags": ["warrens", "worm"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 80,
@@ -177,7 +177,7 @@
       "sourceIndex": 84,
       "id": "frosty-jelly",
       "tags": ["jelly", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 85,
@@ -201,7 +201,7 @@
       "sourceIndex": 89,
       "id": "white-worm-mass",
       "tags": ["warrens", "worm"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 90,
@@ -237,13 +237,13 @@
       "sourceIndex": 99,
       "id": "slush-pile",
       "tags": ["jelly", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 101,
       "id": "slimy-jelly",
       "tags": ["jelly", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 103,
@@ -255,7 +255,7 @@
       "sourceIndex": 105,
       "id": "red-worm-mass",
       "tags": ["warrens", "worm"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 106,
@@ -267,7 +267,7 @@
       "sourceIndex": 108,
       "id": "purple-mushroom-patch",
       "tags": ["mushroom", "warrens"],
-      "omittedFlags": ["STUPID"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 109,
@@ -291,7 +291,7 @@
       "sourceIndex": 113,
       "id": "brown-mold",
       "tags": ["mold", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 114,
@@ -369,7 +369,7 @@
       "sourceIndex": 131,
       "id": "pink-jelly",
       "tags": ["jelly", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 132,
@@ -423,7 +423,7 @@
       "sourceIndex": 146,
       "id": "green-mold",
       "tags": ["mold", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 147,
@@ -567,7 +567,7 @@
       "sourceIndex": 953,
       "id": "broken-death-sword",
       "tags": ["construct", "sword", "warrens"],
-      "omittedFlags": ["NASTY_GLYPH", "STUPID"]
+      "omittedFlags": ["NASTY_GLYPH"]
     },
     {
       "sourceIndex": 1020,
@@ -639,7 +639,7 @@
       "sourceIndex": 79,
       "id": "clear-worm-mass",
       "tags": ["warrens", "worm"],
-      "omittedFlags": ["ATTR_CLEAR", "POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["ATTR_CLEAR", "POS_GAIN_AC"]
     },
     {
       "sourceIndex": 88,
@@ -785,7 +785,7 @@
       "sourceIndex": 48,
       "id": "yellow-jelly",
       "tags": ["jelly", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 98,
@@ -827,7 +827,7 @@
       "sourceIndex": 73,
       "id": "silver-jelly",
       "tags": ["jelly", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 122,
@@ -875,7 +875,7 @@
       "sourceIndex": 184,
       "id": "clear-mushroom-patch",
       "tags": ["mushroom", "warrens"],
-      "omittedFlags": ["ATTR_CLEAR", "STUPID"]
+      "omittedFlags": ["ATTR_CLEAR"]
     },
     {
       "sourceIndex": 186,
@@ -905,7 +905,7 @@
       "sourceIndex": 190,
       "id": "hairy-mold",
       "tags": ["mold", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 195,
@@ -983,13 +983,13 @@
       "sourceIndex": 185,
       "id": "quiver-slot",
       "tags": ["warrens"],
-      "omittedFlags": ["NASTY_GLYPH", "STUPID"]
+      "omittedFlags": ["NASTY_GLYPH"]
     },
     {
       "sourceIndex": 192,
       "id": "disenchanter-mold",
       "tags": ["mold", "warrens"],
-      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC"]
     },
     {
       "sourceIndex": 194,
@@ -1049,7 +1049,7 @@
       "sourceIndex": 212,
       "id": "grape-jelly",
       "tags": ["jelly", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 1298,
@@ -1103,13 +1103,13 @@
       "sourceIndex": 213,
       "id": "nether-worm-mass",
       "tags": ["warrens", "worm"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 214,
       "id": "abyss-worm-mass",
       "tags": ["warrens", "worm"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 215,
@@ -1175,7 +1175,7 @@
       "sourceIndex": 233,
       "id": "spotted-jelly",
       "tags": ["jelly", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 1072,
@@ -1283,7 +1283,7 @@
       "sourceIndex": 243,
       "id": "cloaker",
       "tags": ["cloaker", "warrens"],
-      "omittedFlags": ["CHAR_MULTI", "NASTY_GLYPH", "STUPID"]
+      "omittedFlags": ["CHAR_MULTI", "NASTY_GLYPH"]
     },
     {
       "sourceIndex": 244,
@@ -1295,7 +1295,7 @@
       "sourceIndex": 245,
       "id": "ochre-jelly",
       "tags": ["jelly", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 962,
@@ -1307,7 +1307,7 @@
       "sourceIndex": 107,
       "id": "death-sword",
       "tags": ["sword", "warrens"],
-      "omittedFlags": ["CHAR_MULTI", "NASTY_GLYPH", "STUPID"]
+      "omittedFlags": ["CHAR_MULTI", "NASTY_GLYPH"]
     },
     {
       "sourceIndex": 246,
@@ -1511,7 +1511,7 @@
       "sourceIndex": 876,
       "id": "unstable-worm-mass",
       "tags": ["worm", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 1003,
@@ -1631,7 +1631,7 @@
       "sourceIndex": 284,
       "id": "rust-monster",
       "tags": ["rust-monster", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 285,
@@ -1643,7 +1643,7 @@
       "sourceIndex": 286,
       "id": "gelatinous-cube",
       "tags": ["jelly", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 287,
@@ -1853,7 +1853,7 @@
       "sourceIndex": 911,
       "id": "quartz-vein",
       "tags": ["warrens"],
-      "omittedFlags": ["NASTY_GLYPH", ]
+      "omittedFlags": ["NASTY_GLYPH"]
     },
     {
       "sourceIndex": 925,
@@ -1883,7 +1883,7 @@
       "sourceIndex": 324,
       "id": "red-mold",
       "tags": ["mold", "warrens"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 910,
@@ -2045,7 +2045,7 @@
       "sourceIndex": 316,
       "id": "shambling-mound",
       "tags": ["warrens"],
-      "omittedFlags": ["NASTY_GLYPH", "STUPID"]
+      "omittedFlags": ["NASTY_GLYPH"]
     },
     {
       "sourceIndex": 322,
@@ -2195,7 +2195,7 @@
       "sourceIndex": 342,
       "id": "quylthulg",
       "tags": ["quylthulg", "warrens"],
-      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 1038,
@@ -2405,7 +2405,7 @@
       "sourceIndex": 371,
       "id": "black-ooze",
       "tags": ["orc-cave"],
-      "omittedFlags": ["STUPID", "POS_GAIN_AC"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 372,
@@ -2447,7 +2447,7 @@
       "sourceIndex": 904,
       "id": "chaos-mushroom",
       "tags": ["orc-cave"],
-      "omittedFlags": ["STUPID", "NASTY_GLYPH"]
+      "omittedFlags": ["NASTY_GLYPH"]
     },
     {
       "sourceIndex": 944,
@@ -2585,7 +2585,7 @@
       "sourceIndex": 399,
       "id": "disenchanter-beast",
       "tags": ["orc-cave"],
-      "omittedFlags": ["STUPID", "ATTR_MULTI", "POS_GAIN_AC"]
+      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC"]
     },
     {
       "sourceIndex": 400,
@@ -2759,7 +2759,7 @@
       "sourceIndex": 1035,
       "id": "living-armor",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NASTY_GLYPH", "STUPID", "CHAR_MULTI"]
+      "omittedFlags": ["NASTY_GLYPH", "CHAR_MULTI"]
     },
     {
       "sourceIndex": 1044,
@@ -3131,7 +3131,7 @@
       "sourceIndex": 898,
       "id": "granite-wall",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NASTY_GLYPH", ]
+      "omittedFlags": ["NASTY_GLYPH"]
     },
     {
       "sourceIndex": 926,
@@ -3203,7 +3203,7 @@
       "sourceIndex": 480,
       "id": "nexus-quylthulg",
       "tags": ["orc-cave"],
-      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 481,
@@ -3221,13 +3221,13 @@
       "sourceIndex": 486,
       "id": "memory-moss",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NASTY_GLYPH", "STUPID"]
+      "omittedFlags": ["NASTY_GLYPH"]
     },
     {
       "sourceIndex": 488,
       "id": "spectator",
       "tags": ["orc-cave"],
-      "omittedFlags": ["POS_GAIN_AC", "POS_TELEPATHY", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 546,
@@ -3707,7 +3707,7 @@
       "sourceIndex": 541,
       "id": "acidic-cytoplasm",
       "tags": ["orc-cave"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 547,
@@ -3773,7 +3773,7 @@
       "sourceIndex": 585,
       "id": "black-pudding",
       "tags": ["orc-cave"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 586,
@@ -3815,7 +3815,7 @@
       "sourceIndex": 632,
       "id": "disenchanter-worm-mass",
       "tags": ["orc-cave"],
-      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC"]
     },
     {
       "sourceIndex": 639,
@@ -4517,7 +4517,7 @@
       "sourceIndex": 633,
       "id": "rotting-quylthulg",
       "tags": ["orc-cave"],
-      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 635,
@@ -4721,7 +4721,7 @@
       "sourceIndex": 863,
       "id": "quantum-dot",
       "tags": ["orc-cave"],
-      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "NASTY_GLYPH", "STUPID"]
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "NASTY_GLYPH"]
     },
     {
       "sourceIndex": 558,
@@ -4883,7 +4883,7 @@
       "sourceIndex": 678,
       "id": "colour-out-of-space",
       "tags": ["orc-cave"],
-      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "CHAR_CLEAR", "NASTY_GLYPH", ]
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "CHAR_CLEAR", "NASTY_GLYPH"]
     },
     {
       "sourceIndex": 999,
@@ -5219,7 +5219,7 @@
       "sourceIndex": 519,
       "id": "gas-spore",
       "tags": ["gas-spore", "outpost-quest", "vapor-quest"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 526,
@@ -5441,7 +5441,7 @@
       "sourceIndex": 723,
       "id": "maulotaur",
       "tags": ["orc-cave"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 916,
@@ -5519,7 +5519,7 @@
       "sourceIndex": 727,
       "id": "demonic-quylthulg",
       "tags": ["orc-cave"],
-      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 729,
@@ -5579,7 +5579,7 @@
       "sourceIndex": 1290,
       "id": "arachnotron",
       "tags": ["orc-cave"],
-      "omittedFlags": ["POS_SEE_INVIS", "STUPID"]
+      "omittedFlags": ["POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 1291,
@@ -5705,7 +5705,7 @@
       "sourceIndex": 759,
       "id": "draconic-quylthulg",
       "tags": ["orc-cave"],
-      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 890,
@@ -6107,7 +6107,7 @@
       "sourceIndex": 1287,
       "id": "angelic-quylthulg",
       "tags": ["orc-cave"],
-      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 777,
@@ -6407,7 +6407,7 @@
       "sourceIndex": 889,
       "id": "bouncing-mine",
       "tags": ["orc-cave"],
-      "omittedFlags": ["ATTR_CLEAR", "CHAR_CLEAR", "NASTY_GLYPH", "STUPID"]
+      "omittedFlags": ["ATTR_CLEAR", "CHAR_CLEAR", "NASTY_GLYPH"]
     },
     {
       "sourceIndex": 949,
@@ -6485,25 +6485,25 @@
       "sourceIndex": 800,
       "id": "master-quylthulg",
       "tags": ["orc-cave"],
-      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 801,
       "id": "greater-draconic-quylthulg",
       "tags": ["orc-cave"],
-      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 802,
       "id": "greater-rotting-quylthulg",
       "tags": ["orc-cave"],
-      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 1123,
       "id": "greater-demonic-quylthulg",
       "tags": ["orc-cave"],
-      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 1233,
@@ -6521,7 +6521,7 @@
       "sourceIndex": 803,
       "id": "null-the-living-void",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NASTY_GLYPH", ]
+      "omittedFlags": ["NASTY_GLYPH"]
     },
     {
       "sourceIndex": 804,
@@ -6725,7 +6725,7 @@
       "sourceIndex": 821,
       "id": "the-emperor-quylthulg",
       "tags": ["orc-cave"],
-      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 823,
@@ -7026,13 +7026,13 @@
       "sourceIndex": 1353,
       "id": "njord-lord-of-the-vanir",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_SEE_INVIS"]
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 833,
       "id": "abhoth-source-of-uncleanness",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "NO_STUN", "POS_GAIN_AC"]
+      "omittedFlags": ["CAN_SPEAK", "POS_GAIN_AC"]
     },
     {
       "sourceIndex": 834,
@@ -7050,7 +7050,7 @@
       "sourceIndex": 1031,
       "id": "wahha-man-the-golden",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS", "RES_WALL"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS", "RES_WALL"]
     },
     {
       "sourceIndex": 1127,
@@ -7086,7 +7086,7 @@
       "sourceIndex": 1364,
       "id": "hanuman-the-monkey-god",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "RES_WALL"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "RES_WALL"]
     },
     {
       "sourceIndex": 836,
@@ -7104,19 +7104,19 @@
       "sourceIndex": 1349,
       "id": "thor-the-thunderer",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN", "POS_GAIN_AC", "POS_SUST_STR"]
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_SUST_STR"]
     },
     {
       "sourceIndex": 1370,
       "id": "rama-the-exiled-prince",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 1371,
       "id": "krishna-avatar-of-vishnu",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_SEE_INVIS"]
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 840,
@@ -7134,7 +7134,7 @@
       "sourceIndex": 1351,
       "id": "vidarr-the-silent-avenger",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS", "RES_WALL"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_SEE_INVIS", "RES_WALL"]
     },
     {
       "sourceIndex": 1366,
@@ -7146,13 +7146,13 @@
       "sourceIndex": 1166,
       "id": "thanatos-god-of-death",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN", "OLYMPIAN2"]
+      "omittedFlags": ["CAN_SPEAK", "MALE", "OLYMPIAN2"]
     },
     {
       "sourceIndex": 1242,
       "id": "anubis-keeper-of-the-balance",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 1263,
@@ -7176,13 +7176,13 @@
       "sourceIndex": 1169,
       "id": "chitauli",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "NO_STUN"]
+      "omittedFlags": ["CAN_SPEAK"]
     },
     {
       "sourceIndex": 1245,
       "id": "apophis-the-primordial-chaos",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "EGYPTIAN2", "NO_STUN"]
+      "omittedFlags": ["CAN_SPEAK", "EGYPTIAN2"]
     },
     {
       "sourceIndex": 846,
@@ -7200,49 +7200,49 @@
       "sourceIndex": 866,
       "id": "caaws",
       "tags": ["orc-cave"],
-      "omittedFlags": ["KILL_EXP", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "RES_WALL", "STUPID"]
+      "omittedFlags": ["KILL_EXP", "POS_GAIN_AC", "POS_HOLD_LIFE", "RES_WALL"]
     },
     {
       "sourceIndex": 1178,
       "id": "star-blade",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 1193,
       "id": "the-storm-of-unmagic",
       "tags": ["orc-cave"],
-      "omittedFlags": ["ATTR_ANY", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["ATTR_ANY", "POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 1194,
       "id": "beelzebub-lord-of-the-flies",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 1204,
       "id": "jack-the-ripper",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN", "POS_TELEPATHY"]
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 1384,
       "id": "kali-mother-of-rage",
       "tags": ["orc-cave"],
-      "omittedFlags": ["FEMALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SUST_STR", "POS_TELEPATHY"]
+      "omittedFlags": ["FEMALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SUST_STR", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 1192,
       "id": "wiruin-the-maelstrom",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 1230,
       "id": "festivus-the-teenage-offscreen-ninja-drolem",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_TELEPATHY", "RES_WALL"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_TELEPATHY", "RES_WALL"]
     },
     {
       "sourceIndex": 1260,
@@ -7260,7 +7260,7 @@
       "sourceIndex": 1170,
       "id": "umbaba-samahongo",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN"]
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     },
     {
       "sourceIndex": 1244,
@@ -7272,19 +7272,19 @@
       "sourceIndex": 852,
       "id": "azathoth-seething-nuclear-chaos",
       "tags": ["orc-cave"],
-      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "POS_GAIN_AC", "POS_HOLD_LIFE", "STUPID"]
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 1191,
       "id": "the-maw-of-hell",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 1395,
       "id": "c-blue",
       "tags": ["orc-cave"],
-      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "STUPID"]
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI"]
     },
     {
       "sourceIndex": 853,
@@ -7296,25 +7296,25 @@
       "sourceIndex": 855,
       "id": "the-destroyer",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NORSE2", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "RES_WALL"]
+      "omittedFlags": ["NORSE2", "POS_GAIN_AC", "POS_HOLD_LIFE", "RES_WALL"]
     },
     {
       "sourceIndex": 1205,
       "id": "the-babbage-analytical-engine",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 1207,
       "id": "the-etheric-dimensional-phase-automaton",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 1181,
       "id": "dor",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_TELEPATHY"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 1247,
@@ -7326,19 +7326,19 @@
       "sourceIndex": 1179,
       "id": "michael-the-guardian-overlord",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 1195,
       "id": "lucifer-father-of-lies",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_TELEPATHY"]
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 1253,
       "id": "metatron-the-high-angel",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 1095,
@@ -7392,13 +7392,13 @@
       "sourceIndex": 1352,
       "id": "freyja-lady-of-the-slain",
       "tags": ["orc-cave"],
-      "omittedFlags": ["FEMALE", "NO_STUN", "POS_TELEPATHY", "RES_WALL"]
+      "omittedFlags": ["FEMALE", "POS_TELEPATHY", "RES_WALL"]
     },
     {
       "sourceIndex": 1383,
       "id": "durga-the-goddess-of-war",
       "tags": ["orc-cave"],
-      "omittedFlags": ["FEMALE", "NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_SUST_STR"]
+      "omittedFlags": ["FEMALE", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_SUST_STR"]
     },
     {
       "sourceIndex": 1271,
@@ -7416,19 +7416,19 @@
       "sourceIndex": 1391,
       "id": "indra-the-heavenly-king-of-meru",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_SUST_STR"]
+      "omittedFlags": ["MALE", "POS_SUST_STR"]
     },
     {
       "sourceIndex": 1266,
       "id": "amun-the-mysterious",
       "tags": ["orc-cave"],
-      "omittedFlags": ["ATTR_MULTI", "MALE", "NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY", "RES_WALL"]
+      "omittedFlags": ["ATTR_MULTI", "MALE", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY", "RES_WALL"]
     },
     {
       "sourceIndex": 864,
       "id": "a-plain-gold-ring",
       "tags": ["orc-cave"],
-      "omittedFlags": ["KILL_EXP", "NO_STUN", "RES_WALL"]
+      "omittedFlags": ["KILL_EXP", "RES_WALL"]
     },
     {
       "sourceIndex": 1376,
@@ -7470,7 +7470,7 @@
       "sourceIndex": 1086,
       "id": "talos-masterwork-spellwarp-automaton",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 1390,
@@ -7482,13 +7482,13 @@
       "sourceIndex": 1389,
       "id": "brahma-the-creating-spirit",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 822,
       "id": "qlzqqlzuup-the-lord-of-flesh",
       "tags": ["orc-cave"],
-      "omittedFlags": ["ATTR_MULTI", "CAN_SPEAK", "POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+      "omittedFlags": ["ATTR_MULTI", "CAN_SPEAK", "POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 844,
@@ -7578,7 +7578,7 @@
       "sourceIndex": 1180,
       "id": "tik-srvzllat",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "NO_STUN", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["CAN_SPEAK", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 1259,
@@ -7596,31 +7596,31 @@
       "sourceIndex": 1281,
       "id": "aijem-the-walrus",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SUST_INT"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SUST_INT"]
     },
     {
       "sourceIndex": 1365,
       "id": "vayu-the-embodied-wind",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS", "RES_WALL"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_SEE_INVIS", "RES_WALL"]
     },
     {
       "sourceIndex": 1372,
       "id": "vishnu-the-preserver",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_TELEPATHY", "RES_WALL"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_TELEPATHY", "RES_WALL"]
     },
     {
       "sourceIndex": 1373,
       "id": "lakshmi-the-goddess-of-prosperity",
       "tags": ["orc-cave"],
-      "omittedFlags": ["FEMALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["FEMALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 1380,
       "id": "shiva-the-destroyer",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_TELEPATHY"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 1382,
@@ -7638,7 +7638,7 @@
       "sourceIndex": 1337,
       "id": "greater-cyber-wyrm-angel-daemon-lich",
       "tags": ["wilderness"],
-      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "CAN_SPEAK", "NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS", "RES_WALL", "STUPID"]
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "CAN_SPEAK", "POS_GAIN_AC", "POS_SEE_INVIS", "RES_WALL"]
     },
     {
       "sourceIndex": 858,
@@ -7662,7 +7662,7 @@
       "sourceIndex": 1303,
       "id": "the-resurrection-machine",
       "tags": ["fixed-placement"],
-      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 135,
@@ -7699,7 +7699,7 @@
       "sourceIndex": 267,
       "id": "magic-mushroom-patch",
       "tags": ["orc-cave"],
-      "omittedFlags": ["STUPID"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 1295,
@@ -7759,13 +7759,13 @@
       "sourceIndex": 841,
       "id": "shuma-gorath",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_TELEPATHY"]
+      "omittedFlags": ["CAN_SPEAK", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 1200,
       "id": "pandemonium",
       "tags": ["orc-cave"],
-      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 883,
@@ -7819,7 +7819,7 @@
       "sourceIndex": 869,
       "id": "boadile",
       "tags": ["ocean", "shore"],
-      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 467,
@@ -7903,7 +7903,7 @@
       "sourceIndex": 1307,
       "id": "burning-bush",
       "tags": ["plains-of-oz"],
-      "omittedFlags": ["STUPID"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 1332,
@@ -7957,7 +7957,7 @@
       "sourceIndex": 1381,
       "id": "nandi-the-bull-of-shiva",
       "tags": ["mount-meru"],
-      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_TELEPATHY"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 1116,
@@ -8107,7 +8107,7 @@
       "sourceIndex": 19,
       "id": "nick-the-butcher",
       "tags": ["town"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN"]
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     },
     {
       "sourceIndex": 955,

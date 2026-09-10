@@ -114,7 +114,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.shriek",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.haste-self",
@@ -229,6 +230,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "evil",
     "giant",
     "kin-glyph-80",

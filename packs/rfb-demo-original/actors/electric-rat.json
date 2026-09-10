@@ -89,7 +89,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-electricity-20-900-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.bolt-electricity-4d8-8",
@@ -111,6 +112,8 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "kin-glyph-114",
     "legacy-import",

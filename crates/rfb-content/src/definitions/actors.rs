@@ -609,6 +609,9 @@ pub struct MonsterCastingDefinition {
 pub struct MonsterAbilityCandidateDefinition {
     pub ability_id: String,
     pub weight: u32,
+    /// RFB monspell MSF_INNATE, independent of damage type.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub innate: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]

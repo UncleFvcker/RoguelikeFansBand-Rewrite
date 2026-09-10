@@ -131,6 +131,7 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "innate-spell",
     "aura-revenge",
     "evil",
     "giant",

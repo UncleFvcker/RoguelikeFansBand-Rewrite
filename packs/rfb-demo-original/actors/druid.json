@@ -123,6 +123,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "attack-spell",
     "druid",
     "human",
     "humanoid",

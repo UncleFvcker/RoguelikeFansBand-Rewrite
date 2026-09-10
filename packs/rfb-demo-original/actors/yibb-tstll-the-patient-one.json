@@ -96,15 +96,18 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-nuke-17-600-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-nexus-33-250-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-chaos-17-600-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.summon-demon-l46-1d3-1",
@@ -149,6 +152,8 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "eldritch-horror",
     "evil",
     "kin-glyph-80",

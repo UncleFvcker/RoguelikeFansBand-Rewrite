@@ -122,11 +122,13 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-force-33-200-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-gravity-33-200-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.kin-lloigor",
@@ -171,6 +173,8 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "eldritch-horror",
     "evil",
     "invisible",

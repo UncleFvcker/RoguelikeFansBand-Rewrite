@@ -118,6 +118,7 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "attack-spell",
     "good",
     "human",
     "kin-glyph-112",

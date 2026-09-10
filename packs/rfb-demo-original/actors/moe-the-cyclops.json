@@ -120,7 +120,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-1d1-146",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.ball-water-1d128-55",
@@ -173,6 +174,8 @@
   "role": "monster",
   "speed": 132,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "giant",
     "kin-glyph-80",
     "legacy-import",

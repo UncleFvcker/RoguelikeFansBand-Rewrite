@@ -9945,7 +9945,8 @@ const MONSTER_CONTACT_AURA_FLAGS: [(&str, &str); 3] = [
 fn monster_flag_is_mapped(flag: &str) -> bool {
     if matches!(
         flag,
-        "RES_ALL"
+        "STUPID"
+            | "RES_ALL"
             | "RES_TELE"
             | "NO_CONF"
             | "NO_FEAR"
@@ -10119,6 +10120,21 @@ fn monster_json(
     // Legacy type flags become category tags so summon filters can select
     // by monster class; the shared legacy-import tag doubles as "any".
     let mut tags = vec!["legacy-import".to_owned()];
+    // Allocation sees all source spells, including possessor-only BERSERK.
+    if entry
+        .spells
+        .iter()
+        .any(|spell| source_monster_spell_class(spell).is_some_and(|(innate, _)| innate))
+    {
+        tags.push("innate-spell".to_owned());
+    }
+    if entry
+        .spells
+        .iter()
+        .any(|spell| source_monster_spell_class(spell).is_some_and(|(_, attack)| attack))
+    {
+        tags.push("attack-spell".to_owned());
+    }
     if let Some(glyph) = entry.glyph {
         tags.push(format!("kin-glyph-{}", u32::from(glyph)));
     }
@@ -10146,6 +10162,7 @@ fn monster_json(
         tags.push("cyber".to_owned());
     }
     for (flag, tag) in [
+        ("STUPID", "stupid"),
         ("ANIMAL", "animal"),
         ("AUSSIE", "aussie"),
         ("EVIL", "evil"),
@@ -10691,6 +10708,7 @@ fn demo_monster_json(
 
     let mut frequency_percent = None;
     let mut ability_ids = Vec::new();
+    let mut innate_abilities = BTreeSet::new();
     let level = entry.level.unwrap_or(1).max(1);
     let breath_radius = if level >= 50 || entry.glyph == Some('D') {
         3
@@ -10719,6 +10737,11 @@ fn demo_monster_json(
             continue;
         }
         let base_token = spell.split('(').next().unwrap_or(spell);
+        let (innate, _) = source_monster_spell_class(spell).ok_or_else(|| {
+            LegacyImportError::InvalidDemoMonsterSelection(format!(
+                "unclassified source monster spell {spell}"
+            ))
+        })?;
         if POSSESSOR_ONLY_SPELLS.contains(&base_token) {
             continue;
         }
@@ -10747,6 +10770,9 @@ fn demo_monster_json(
                 selection.id
             )));
         };
+        if innate {
+            innate_abilities.insert(ability_id.clone());
+        }
         if !ability_ids.contains(&ability_id) {
             ability_ids.push(ability_id);
         }
@@ -10762,7 +10788,11 @@ fn demo_monster_json(
             "frequencyPercent": frequency_percent.unwrap_or(10),
             "abilities": ability_ids
                 .iter()
-                .map(|ability_id| serde_json::json!({ "abilityId": ability_id, "weight": 1 }))
+                .map(|ability_id| {
+                    let mut candidate = serde_json::json!({ "abilityId": ability_id, "weight": 1 });
+                    if innate_abilities.contains(ability_id) { candidate["innate"] = true.into(); }
+                    candidate
+                })
                 .collect::<Vec<_>>(),
         });
         if entry.flags.iter().any(|flag| flag == "SMART") {
@@ -10922,6 +10952,15 @@ fn demo_monster_json(
     }
 
     let mut tags = selection.tags.iter().cloned().collect::<BTreeSet<_>>();
+    tags.extend(
+        value["tags"]
+            .as_array()
+            .expect("monster tags are an array")
+            .iter()
+            .filter_map(serde_json::Value::as_str)
+            .filter(|tag| matches!(*tag, "innate-spell" | "attack-spell" | "stupid"))
+            .map(str::to_owned),
+    );
     tags.insert("legacy-import".to_owned());
     if let Some(glyph) = entry.glyph {
         tags.insert(format!("kin-glyph-{}", u32::from(glyph)));
@@ -11332,6 +11371,34 @@ fn demo_traps_ability() -> serde_json::Value {
 /// Spells parsed from r_info that the legacy engine restricts to the
 /// possessor/mimic player: monsters never cast them, so they are recorded as
 /// not-applicable instead of unmapped gaps.
+// RFB master monspell.c: MSF_INNATE and mon_race_has_attack_spell.
+// None is an unknown token, never an implicit magical classification.
+fn source_monster_spell_class(spell: &str) -> Option<(bool, bool)> {
+    let token = spell.split('(').next()?;
+    if token.starts_with("BR_") {
+        return Some((true, true));
+    }
+    if token.starts_with("BA_") || token.starts_with("BO_") {
+        return Some((false, true));
+    }
+    if token.starts_with("S_") || token.starts_with("JMP_") {
+        return Some((false, false));
+    }
+    match token {
+        "ROCKET" | "THROW" | "CHICKEN" | "SHOOT" => Some((true, true)),
+        "SHRIEK" | "BERSERK" => Some((true, false)),
+        "MANA_STORM" | "BRAIN_SMASH" | "DRAIN_MANA" | "MIND_BLAST" | "PULVERISE" | "GAZE"
+        | "MISSILE" | "PSY_SPEAR" | "HELL_LANCE" | "HOLY_LANCE" | "CAUSE_1" | "CAUSE_2"
+        | "CAUSE_3" | "CAUSE_4" | "HAND_DOOM" => Some((false, true)),
+        "AMNESIA" | "ANIM_DEAD" | "BLIND" | "CONFUSE" | "DARKNESS" | "PARALYZE" | "SCARE"
+        | "SLOW" | "TELE_LEVEL" | "TELE_TO" | "TRAPS" | "WORLD" | "NO_AIR" | "ANTI_MAGIC"
+        | "DISPEL_MAGIC" | "POLYMORPH" | "HASTE" | "INVULN" | "TELE_OTHER" | "TELE_SELF"
+        | "BLINK" | "BLINK_OTHER" | "HEAL" | "SPECIAL" | "BIRD_DROP" => Some((false, false)),
+        token if POSSESSOR_ONLY_SPELLS.contains(&token) => Some((false, false)),
+        _ => None,
+    }
+}
+
 const POSSESSOR_ONLY_SPELLS: [&str; 11] = [
     "DETECT_TRAPS",
     "DETECT_EVIL",
@@ -12716,6 +12783,7 @@ fn convert_content_from(
         let caster_kind_id = format!("rfb-legacy.actor.{id}");
         let mut frequency_percent: Option<u32> = None;
         let mut mapped_ability_ids: Vec<String> = Vec::new();
+        let mut innate_abilities = BTreeSet::new();
         let mut has_unmapped_spell = false;
         // Legacy breaths widen with stature: level 50+ casters and dragon
         // glyphs use the larger cone.
@@ -12738,6 +12806,11 @@ fn convert_content_from(
                 continue;
             }
             let base_token = spell.split('(').next().unwrap_or(spell);
+            let Some((innate, _)) = source_monster_spell_class(spell) else {
+                has_unmapped_spell = true;
+                *report.unmapped_spells.entry(spell.clone()).or_default() += 1;
+                continue;
+            };
             if POSSESSOR_ONLY_SPELLS.contains(&base_token) {
                 *report
                     .not_applicable_spells
@@ -12752,6 +12825,9 @@ fn convert_content_from(
                 &caster_kind_id,
                 &mut shared_abilities,
             ) {
+                if innate {
+                    innate_abilities.insert(ability_id.clone());
+                }
                 if !mapped_ability_ids.contains(&ability_id) {
                     mapped_ability_ids.push(ability_id);
                 }
@@ -12780,7 +12856,11 @@ fn convert_content_from(
                 "frequencyPercent": frequency_percent.unwrap_or(10),
                 "abilities": mapped_ability_ids
                     .iter()
-                    .map(|ability_id| serde_json::json!({ "abilityId": ability_id, "weight": 1 }))
+                    .map(|ability_id| {
+                    let mut candidate = serde_json::json!({ "abilityId": ability_id, "weight": 1 });
+                    if innate_abilities.contains(ability_id) { candidate["innate"] = true.into(); }
+                    candidate
+                })
                     .collect::<Vec<_>>(),
             })
         });
@@ -20844,7 +20924,7 @@ mod tests {
                 source_id: None,
                 id: "quantum-dot".to_owned(),
                 tags: vec!["orc-cave".to_owned()],
-                omitted_flags: vec!["STUPID".to_owned()],
+                omitted_flags: Vec::new(),
                 omitted_spells: Vec::new(),
             },
             &mut BTreeMap::new(),
@@ -21125,9 +21205,37 @@ mod tests {
     }
 
     #[test]
+    fn source_innate_classification_keeps_possessor_allocation_separate_from_casting() {
+        let entries = parse_r_info(
+            "N:154:Yeti\nG:Y:w\nI:110:1d3:8:4:20:10\nW:12:1:50:40:0:0\nB:HIT:HURT(1d1)\nS:BERSERK\n",
+        ).unwrap();
+        let selection = DemoMonsterSelectionEntry {
+            source_index: 154,
+            source_id: None,
+            id: "yeti".to_owned(),
+            tags: Vec::new(),
+            omitted_flags: Vec::new(),
+            omitted_spells: Vec::new(),
+        };
+        let actor = demo_monster_json(&entries[0], &selection, &mut BTreeMap::new()).unwrap();
+        assert!(
+            actor["tags"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|tag| tag == "innate-spell")
+        );
+        assert!(actor.get("monsterCasting").is_none());
+        // Source GAZE belongs to MST_BOLT but does not set MSF_INNATE.
+        assert_eq!(source_monster_spell_class("GAZE"), Some((false, true)));
+        assert_eq!(source_monster_spell_class("ROCKET"), Some((true, true)));
+        assert_eq!(source_monster_spell_class("SHRIEK"), Some((true, false)));
+    }
+
+    #[test]
     fn demo_monster_import_requires_exact_unsupported_spell_omissions() {
         let monsters = parse_r_info(
-            "N:1:test old castle caster\nG:p:D\nI:110:1d3:8:4:20:10\nW:40:1:50:40:0:0\nB:HIT:HURT(1d1)\nS:1_IN_5 | TEST_UNSUPPORTED\n",
+            "N:1:test old castle caster\nG:p:D\nI:110:1d3:8:4:20:10\nW:40:1:50:40:0:0\nB:HIT:HURT(1d1)\nS:1_IN_5 | BR_TEST_UNSUPPORTED\n",
         )
         .expect("synthetic caster should parse");
         let selection = DemoMonsterSelectionEntry {
@@ -21136,11 +21244,17 @@ mod tests {
             id: "test-old-castle-caster".to_owned(),
             tags: vec!["old-castle".to_owned()],
             omitted_flags: Vec::new(),
-            omitted_spells: vec!["TEST_UNSUPPORTED".to_owned()],
+            omitted_spells: vec!["BR_TEST_UNSUPPORTED".to_owned()],
         };
         let actor = demo_monster_json(&monsters[0], &selection, &mut BTreeMap::new())
             .expect("declared unsupported spell should be omitted");
         assert!(actor.get("monsterCasting").is_none());
+        let mut unclassified = monsters[0].clone();
+        unclassified.spells = vec!["TEST_UNCLASSIFIED".to_owned()];
+        assert!(
+            matches!(demo_monster_json(&unclassified, &selection, &mut BTreeMap::new()),
+            Err(LegacyImportError::InvalidDemoMonsterSelection(message)) if message.contains("unclassified"))
+        );
 
         let mut supported = monsters[0].clone();
         supported.spells = vec!["SCARE".to_owned()];

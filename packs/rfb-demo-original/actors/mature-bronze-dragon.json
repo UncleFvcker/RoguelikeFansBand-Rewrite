@@ -109,7 +109,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-confusion-17-400-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 9
@@ -134,6 +135,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "dragon",
     "kin-glyph-100",
     "legacy-import",

@@ -449,6 +449,9 @@ fn dr_jones_fetch_and_full_300_tick_cooldown_survive_save() {
 fn p90b_olog_hai_affix_materializes_and_runs_existing_berserk_activation() {
     let mut game =
         Game::new_with_build(90, "demo.build.warrior").expect("Olog-hai reward game should create");
+    let original_content = game.content.clone();
+    let original_floor_id = game.current_floor_id.clone();
+    super::dungeon_anti_magic::enter_context(&mut game);
     clear_monsters(&mut game);
     let mut rewards = game
         .generate_loot_instances(
@@ -541,6 +544,11 @@ fn p90b_olog_hai_affix_materializes_and_runs_existing_berserk_activation() {
         0
     );
 
+    // The activation above runs in NO_MAGIC; keep the existing independent
+    // save/recharge fixture on its original floor and content catalog.
+    clear_monsters(&mut game);
+    game.content = original_content;
+    game.current_floor_id = original_floor_id;
     let hash = game.state_hash();
     let mut restored = Game::from_save(game.to_save()).expect("Olog-hai reward should restore");
     assert_eq!(restored.state_hash(), hash);
@@ -1981,6 +1989,7 @@ fn visible_actor_scrolls_consume_empty_results_without_rng_or_awareness() {
         ),
     ] {
         let mut game = skill_check_game(seed, "demo.build.warrior");
+        super::dungeon_anti_magic::enter_context(&mut game);
         give_inventory_item(&mut game, item_id, kind_id);
         game.rng = RfbRng::seeded(seed);
         let mut events = Vec::new();
@@ -3790,6 +3799,7 @@ fn p107e_frost_ball_and_confusing_light_reuse_area_and_status_resolvers() {
     const FROST_ITEM_ID: &str = "test.item.frost-ball-wand.1";
     let mut frost =
         Game::new_with_build(207, "demo.build.warrior").expect("Frost Ball test should create");
+    super::dungeon_anti_magic::enter_context(&mut frost);
     clear_monsters(&mut frost);
     frost.terrain.fill("demo.terrain.floor".to_owned());
     frost.player.position = Position { x: 10, y: 10 };

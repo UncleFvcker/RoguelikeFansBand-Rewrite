@@ -57,7 +57,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.shriek",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 16
@@ -74,6 +75,7 @@
   "role": "monster",
   "speed": 114,
   "tags": [
+    "innate-spell",
     "animal",
     "kin-glyph-108",
     "legacy-import",

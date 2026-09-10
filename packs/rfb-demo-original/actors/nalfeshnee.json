@@ -94,7 +94,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-fire-20-900-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.summon-demon-l45-1d3-1",
@@ -110,6 +111,8 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "demon",
     "evil",
     "kin-glyph-85",

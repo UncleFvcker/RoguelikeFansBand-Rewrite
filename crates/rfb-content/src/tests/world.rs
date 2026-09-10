@@ -10596,6 +10596,10 @@ fn town_entrances_and_shared_facilities_match_source() {
                     dungeon_id: "demo.dungeon.crystal-castle".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 40, y: 3 },
+                    dungeon_id: "demo.dungeon.rlyeh".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 42, y: 58 },
                     dungeon_id: "demo.dungeon.lonely-mountain".to_owned(),
                 },

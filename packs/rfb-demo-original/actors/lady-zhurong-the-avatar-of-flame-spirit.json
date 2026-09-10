@@ -110,7 +110,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.shriek",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 11
@@ -129,6 +130,7 @@
   "role": "monster",
   "speed": 115,
   "tags": [
+    "innate-spell",
     "evil",
     "hideout",
     "human",

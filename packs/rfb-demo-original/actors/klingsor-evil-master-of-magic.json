@@ -203,6 +203,7 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
     "evil",
     "human",
     "invisible",

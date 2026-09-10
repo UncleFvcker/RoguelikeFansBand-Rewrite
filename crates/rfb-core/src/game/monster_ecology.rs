@@ -1238,6 +1238,7 @@ impl Game {
             };
             occupied.insert(position);
             let mut members = self.plan_original_group(
+                &self.current_floor_id.clone(),
                 &group_policy,
                 &kind_id,
                 position,
@@ -1481,6 +1482,7 @@ impl Game {
     #[allow(clippy::too_many_arguments)]
     pub(super) fn select_original_allocated_monster(
         &mut self,
+        floor_id: &str,
         policy: &GlobalMonsterAllocationDefinition,
         base_level: u16,
         floor_depth: u16,
@@ -1489,19 +1491,9 @@ impl Game {
         escort_leader_kind_id: Option<&str>,
         required_terrain: Option<&rfb_content::TerrainDefinition>,
     ) -> Option<String> {
-        let current_legacy_dungeon_index = self.content.world(&self.world_id).and_then(|world| {
-            let dungeon_id = world
-                .procedural_floors
-                .iter()
-                .find(|floor| floor.id == self.current_floor_id)?
-                .dungeon_id
-                .as_deref()?;
-            world
-                .dungeons
-                .iter()
-                .find(|dungeon| dungeon.id == dungeon_id)?
-                .legacy_index
-        });
+        let current_legacy_dungeon_index = self
+            .floor_dungeon(floor_id)
+            .and_then(|dungeon| dungeon.legacy_index);
         let unique_count = target_floor_kind_ids
             .iter()
             .filter(|kind_id| self.content.actor(kind_id).is_some_and(actor_is_unique))
@@ -1524,6 +1516,7 @@ impl Game {
                     return false;
                 };
                 if definition.role != ActorRole::Monster
+                    || !self.dungeon_allows_monster(floor_id, definition)
                     || allocation.wild_only
                     || self.actor_kind_is_dungeon_guardian(&definition.id)
                     || definition.level > u32::from(selection_level)
@@ -1695,6 +1688,7 @@ impl Game {
     #[allow(clippy::too_many_arguments)]
     pub(super) fn plan_original_group(
         &mut self,
+        floor_id: &str,
         policy: &GlobalMonsterAllocationDefinition,
         leader_kind_id: &str,
         leader_position: Position,
@@ -1774,6 +1768,7 @@ impl Game {
                 // every escort position before drawing a candidate.
                 self.monster_division_remainders.clear();
                 let Some(kind_id) = self.select_original_allocated_monster(
+                    floor_id,
                     policy,
                     u16::try_from(leader.level).unwrap_or(u16::MAX),
                     depth,
@@ -2042,6 +2037,7 @@ impl Game {
         };
         let current_task_id = self.current_floor_task_id().map(str::to_owned);
         let Some(kind_id) = self.select_original_allocated_monster(
+            &self.current_floor_id.clone(),
             policy,
             depth,
             depth,
@@ -2061,6 +2057,7 @@ impl Game {
         occupied.insert(leader_position);
         let terrain = self.terrain.clone();
         let members = self.plan_original_group(
+            &self.current_floor_id.clone(),
             policy,
             &kind_id,
             leader_position,

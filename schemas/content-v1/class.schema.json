@@ -434,6 +434,10 @@
           "minimum": 0,
           "type": "integer"
         },
+        "blockedByDungeonAntiMagic": {
+          "description": "Source command-m techniques subject to the dungeon NO_MAGIC gate.",
+          "type": "boolean"
+        },
         "governingAttribute": {
           "anyOf": [
             {

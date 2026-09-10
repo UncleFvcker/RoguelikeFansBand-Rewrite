@@ -115,6 +115,7 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "attack-spell",
     "evil",
     "kin-glyph-104",
     "legacy-import",

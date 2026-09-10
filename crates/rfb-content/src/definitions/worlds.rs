@@ -274,6 +274,8 @@ pub struct CampaignDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DungeonDefinition {
     pub id: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub no_magic: bool,
     #[serde(default)]
     pub legacy_index: Option<u16>,
     pub root_floor_id: String,

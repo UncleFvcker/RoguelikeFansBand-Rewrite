@@ -124,7 +124,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-1d1-254",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.beam-holy-fire-1d1-169",
@@ -166,6 +167,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "good",
     "hindu",

@@ -2824,6 +2824,7 @@ impl Game {
                         .is_none_or(|category| !actor_matches_category(definition, category))
                     && !definition.tags.iter().any(|tag| tag == "guardian")
                     && actor_answers_summons(definition)
+                    && self.dungeon_allows_monster(&self.current_floor_id, definition)
                     && definition.allocation.as_ref().is_none_or(|allocation| {
                         monster_ecology::actor_allocation_matches_task(allocation, current_task_id)
                     })

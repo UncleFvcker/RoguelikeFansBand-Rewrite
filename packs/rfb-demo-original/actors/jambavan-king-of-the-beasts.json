@@ -108,7 +108,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-1d1-221",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.blink",
@@ -166,6 +167,8 @@
     "rfb.status.stun"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "kin-glyph-113",
     "legacy-import",

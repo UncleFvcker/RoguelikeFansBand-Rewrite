@@ -95,7 +95,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-poison-17-600-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 20
@@ -123,6 +124,8 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "cold-blooded",
     "kin-glyph-110",
     "legacy-import",

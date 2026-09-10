@@ -10,7 +10,7 @@
 | 协议 | 1.240 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 117 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 12 / 12 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.401.6 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.401.7 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v318，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 6 个 Class、13 个 Build、57 个 Race、32 本能力书、1,840 个 ability 文件、371 个 item、1,402 个 actor、168 个 affix、152 个 mutation。世界定义含 26 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
@@ -50,7 +50,7 @@ Ent、Spectre 的新游戏入口已开放。种族主线还接入原始经验值
 
 ## 城镇与共享存储
 
-[反魔洞穴／反近战洞穴 A1](../design/anti-caves-dungeon-plan-20260910.md) 已支持无最终守卫的地牢定义、来源审计和保存校验。两层最小场景验证入口守卫死亡、终点、保存、返回及召回不触发征服；104 项核心、9 项内容、26 项导入计划检查通过，既有首领绑定和征服保留。内容 Schema 已更新，正式包仍为 1.401.6；16/17 的规则与正式入口尚未接入。
+[反魔洞穴／反近战洞穴 A1–A2](../design/anti-caves-dungeon-plan-20260910.md) 已支持无最终守卫地牢与 `noMagic` 规则。玩家执行、零耗时拒绝和可用性投影共用禁魔判断；当前六职业的源例外、种族/变异、卷轴、装置及装备激活已验证。普通分配、补怪和召唤使用真实楼层语境；敌人按正常抽取后拒绝魔法，友军/STUPID/变形按当前形态处理。来源分类审计及 175 项核心、146 项内容、187 项 importer、26 条 active 契约通过，既有减伤/闪避规则与契约预期未改。包为 1.401.7，内容 Schema 与 lock 已更新；16/17 的正式入口仍未开放，反近战规则留在 A3，尚无本批可玩构建或人工试玩。
 
 Outpost O1 已恢复 RFB master `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c` 的 198×65 模板：4,383 个显式格与 8,487 个继承格，地图原点为 (0,0)，初始构造和后续叠加共用已有种子化荒野 chunk。出生 (99,33) 是本项目落点选择；原有短剑与两瓶轻伤治疗药水的实例 ID、数量保留，分别移至 (100,33)/(101,33)。黑坑要求飞行通行、允许投射且不遮挡视线；射落物、丢弃物与怪物掉落在附近合法地板落地，命中点仍保留在坑上。
 

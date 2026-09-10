@@ -15,6 +15,12 @@ fn guardianless_dungeon_entry_terminal_save_and_return_do_not_conquer() {
         .iter_mut()
         .find(|d| d.id == "demo.dungeon.rlyeh")
         .unwrap()
+        .no_magic = true;
+    world
+        .dungeons
+        .iter_mut()
+        .find(|d| d.id == "demo.dungeon.rlyeh")
+        .unwrap()
         .guardian_actor_kind_id = None;
     world.procedural_floors.retain(|floor| {
         floor.dungeon_id.as_deref() != Some("demo.dungeon.rlyeh") || floor.depth <= 81
@@ -54,6 +60,7 @@ fn guardianless_dungeon_entry_terminal_save_and_return_do_not_conquer() {
     for depth in 80..=81 {
         let entered = dispatch_next(&mut game, GameCommand::TraverseStairs);
         assert_eq!(entered.floor_id, format!("demo.floor.rlyeh-depth-{depth}"));
+        assert!(game.dungeon_blocks_magic());
         assert!(
             game.entities
                 .iter()
@@ -74,6 +81,7 @@ fn guardianless_dungeon_entry_terminal_save_and_return_do_not_conquer() {
     assert!(!game.generated_artifact_ids.contains("demo.item.razorback"));
     let hash = game.state_hash();
     game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert!(game.dungeon_blocks_magic());
     assert_eq!(game.state_hash(), hash);
     let mut invalid = game.to_save();
     invalid
@@ -97,6 +105,7 @@ fn guardianless_dungeon_entry_terminal_save_and_return_do_not_conquer() {
         );
         clear_monsters(&mut game);
     }
+    assert!(!game.dungeon_blocks_magic());
     assert_eq!(game.wilderness_position, Some(world_position));
     assert_eq!(game.player.position, departure);
     game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();

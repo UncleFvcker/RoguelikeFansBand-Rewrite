@@ -154,6 +154,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "attack-spell",
     "cold-blooded",
     "evil",
     "kin-glyph-122",

@@ -71,7 +71,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.shriek",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 25
@@ -85,6 +86,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "stupid",
+    "innate-spell",
     "empty-mind",
     "evil",
     "kin-glyph-44",

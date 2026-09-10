@@ -221,6 +221,7 @@ impl Game {
                         .modes
                         .contains(&ActorMovementMode::Aquatic)
                     && actor_answers_summons(definition)
+                    && self.dungeon_allows_monster(&self.current_floor_id, definition)
                     && !(in_wilderness
                         && definition.tags.iter().any(|tag| tag == "evil")
                         && !definition.tags.iter().any(|tag| tag == "good"))
@@ -3393,6 +3394,7 @@ impl Game {
                         && (category == "guardian"
                             || !definition.tags.iter().any(|tag| tag == "guardian"))
                         && actor_answers_summons(definition)
+                        && self.dungeon_allows_monster(&self.current_floor_id, definition)
                         && definition.allocation.as_ref().is_none_or(|allocation| {
                             monster_ecology::actor_allocation_matches_task(
                                 allocation,

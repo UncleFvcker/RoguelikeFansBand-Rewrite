@@ -33,10 +33,23 @@ pub(in crate::game) fn nature_wrath_direction_roll(events: &[DomainEvent]) -> Op
 }
 
 impl Game {
+    pub(in crate::game) fn dungeon_blocks_player_ability(&self, ability_id: &str) -> bool {
+        self.dungeon_blocks_magic()
+            && self.mutation_activation_for_ability(ability_id).is_none()
+            && self.race_ability_activation(ability_id).is_none()
+            && self.class_ability_activation(ability_id).map_or_else(
+                || self.casting_profile().is_some(),
+                |activation| activation.blocked_by_dungeon_anti_magic,
+            )
+    }
+
     pub(in crate::game) fn ability_state_unavailable_reason(
         &self,
         ability_id: &str,
     ) -> Option<&'static str> {
+        if self.dungeon_blocks_player_ability(ability_id) {
+            return Some("anti-magic");
+        }
         self.content
             .ability(ability_id)
             .is_some_and(|ability| {
@@ -115,6 +128,13 @@ impl Game {
                 .tags
                 .iter()
                 .any(|tag| tag == "uses-casting-profile-offense");
+        if self.dungeon_blocks_player_ability(ability_id) {
+            events.push(DomainEvent::AbilityCastUnavailable {
+                ability_id: ability_id.to_owned(),
+                reason: "anti-magic".to_owned(),
+            });
+            return Ok(());
+        }
         let innate_power = matches!(source, AbilitySourceDto::Mutation | AbilitySourceDto::Race);
         let innate_activation = match source {
             AbilitySourceDto::Mutation => mutation_activation.as_ref(),

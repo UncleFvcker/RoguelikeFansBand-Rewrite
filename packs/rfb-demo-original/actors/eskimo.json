@@ -123,7 +123,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-cold-20-900-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.ball-cold-1d132-40",
@@ -135,7 +136,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-1d1-87",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 25
@@ -166,6 +168,8 @@
     "rfb.status.stun"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "human",
     "kin-glyph-112",
     "legacy-import",

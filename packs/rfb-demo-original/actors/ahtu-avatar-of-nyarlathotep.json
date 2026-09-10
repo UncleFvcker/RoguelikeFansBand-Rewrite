@@ -114,7 +114,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-fire-20-900-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.summon-demon-l56-1d3-1",
@@ -126,11 +127,13 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-plasma-17-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-nether-14-550-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.brain-smash-12d12",
@@ -153,6 +156,8 @@
   "role": "monster",
   "speed": 130,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "demon",
     "eldritch-horror",
     "evil",

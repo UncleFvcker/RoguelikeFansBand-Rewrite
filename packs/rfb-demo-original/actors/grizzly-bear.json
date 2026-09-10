@@ -86,6 +86,7 @@
   "role": "monster",
   "speed": 115,
   "tags": [
+    "innate-spell",
     "animal",
     "bear",
     "kin-glyph-113",

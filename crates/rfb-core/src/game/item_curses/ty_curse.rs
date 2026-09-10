@@ -270,6 +270,7 @@ impl Game {
             let terrain = self.terrain.clone();
             let task = self.current_floor_task_id().map(str::to_owned);
             let members = self.plan_original_group(
+                &self.current_floor_id.clone(),
                 &policy,
                 &kind_id,
                 resolution.positions[0],

@@ -81,7 +81,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-disintegrate-17-150-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 15
@@ -104,6 +105,8 @@
   "role": "monster",
   "speed": 125,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "evil",
     "good",
     "human",

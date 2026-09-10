@@ -116,6 +116,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "attack-spell",
     "evil",
     "human",
     "humanoid",

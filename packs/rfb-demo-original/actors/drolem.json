@@ -107,11 +107,13 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-5d8",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-poison-17-600-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.blind",
@@ -149,6 +151,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "cold-blooded",
     "dragon",
     "empty-mind",

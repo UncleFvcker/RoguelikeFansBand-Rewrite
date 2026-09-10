@@ -231,6 +231,7 @@ impl Game {
                         definition.role == ActorRole::Monster
                             && definition.level <= u32::from(maximum_level)
                             && actor_answers_summons(definition)
+                            && self.dungeon_allows_monster(&self.current_floor_id, definition)
                     })
                     .map(|definition| vec![definition.id.clone()])
                     .unwrap_or_default()

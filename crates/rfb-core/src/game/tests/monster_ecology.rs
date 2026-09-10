@@ -674,7 +674,16 @@ fn dungeon_allocation_preserves_ecology_location_locks_and_guardian_exclusions()
                         .all(|allocation| allocation.wild_only)
                 );
                 assert_eq!(
-                    game.select_original_allocated_monster(&policy, 0, 15, None, &[], None, None),
+                    game.select_original_allocated_monster(
+                        &game.current_floor_id.clone(),
+                        &policy,
+                        0,
+                        15,
+                        None,
+                        &[],
+                        None,
+                        None
+                    ),
                     None
                 );
 
@@ -739,7 +748,16 @@ fn dungeon_allocation_preserves_ecology_location_locks_and_guardian_exclusions()
         let mut selected_preferred = 0;
         for _ in 0..256 {
             let selected = game
-                .select_original_allocated_monster(&policy, level, level, None, &[], None, None)
+                .select_original_allocated_monster(
+                    &game.current_floor_id.clone(),
+                    &policy,
+                    level,
+                    level,
+                    None,
+                    &[],
+                    None,
+                    None,
+                )
                 .unwrap_or_else(|| panic!("{ecology} should retain ordinary dungeon candidates"));
             let actor = game.content.actor(&selected).expect("selected actor");
             let allocation = actor.allocation.as_ref().expect("selected allocation");
@@ -836,6 +854,7 @@ fn mughash_escort_uses_lower_level_kobolds() {
     let terrain = game.terrain.clone();
 
     let members = game.plan_original_group(
+        &game.current_floor_id.clone(),
         &policy,
         "demo.actor.warrens-keeper",
         leader_position,

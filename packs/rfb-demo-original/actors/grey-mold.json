@@ -35,5 +35,5 @@
   },
   "allocation": { "legacyIndex": 20, "rarity": 1, "maxDepth": 10 },
   "movement": { "neverMoves": true },
-  "tags": ["mold", "warrens"]
+  "tags": ["stupid", "mold", "warrens"]
 }

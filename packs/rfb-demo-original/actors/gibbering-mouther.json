@@ -49,7 +49,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-light-17-400-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 14
@@ -71,6 +72,8 @@
     "rfb.status.fear"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "empty-mind",
     "evil",
     "kin-glyph-106",

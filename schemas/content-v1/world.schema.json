@@ -133,6 +133,9 @@
             "null"
           ]
         },
+        "noMagic": {
+          "type": "boolean"
+        },
         "rootFloorId": {
           "type": "string"
         },

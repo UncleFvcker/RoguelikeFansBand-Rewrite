@@ -133,7 +133,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-light-10-400-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 10
@@ -152,6 +153,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "death-pumpkin",
     "evil",
     "kin-glyph-35",

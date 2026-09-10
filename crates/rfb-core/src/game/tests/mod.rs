@@ -22,6 +22,7 @@ mod attribute_sources;
 mod capture_ball;
 mod cavalry;
 mod combat;
+mod dungeon_anti_magic;
 mod experience;
 mod generation;
 mod gold;

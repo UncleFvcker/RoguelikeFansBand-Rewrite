@@ -95,7 +95,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-gravity-33-200-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 10
@@ -122,6 +123,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "hound",
     "kin-glyph-90",

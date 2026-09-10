@@ -72,7 +72,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-4d5",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 10
@@ -98,6 +99,8 @@
   "role": "monster",
   "speed": 115,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "griffon",
     "kin-glyph-72",

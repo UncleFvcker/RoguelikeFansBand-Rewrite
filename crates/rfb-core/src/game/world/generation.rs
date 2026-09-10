@@ -1978,6 +1978,7 @@ impl Game {
                         .cloned()
                         .expect("generated actor terrain must remain available");
                     let Some(kind_id) = self.select_original_allocated_monster(
+                        &definition.id,
                         policy,
                         definition.depth,
                         definition.depth,
@@ -1990,6 +1991,7 @@ impl Game {
                     };
                     occupied.insert(position);
                     let members = self.plan_original_group(
+                        &definition.id,
                         policy,
                         &kind_id,
                         position,
@@ -2284,6 +2286,7 @@ impl Game {
                 && actor_definition.allocation.is_some()
             {
                 let members = self.plan_original_group(
+                    &definition.id,
                     &policy,
                     &guardian.actor_kind_id,
                     position,

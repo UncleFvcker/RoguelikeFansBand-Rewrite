@@ -80,7 +80,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-16d6",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.banish",
@@ -140,6 +141,8 @@
     "rfb.status.confusion"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "evil",
     "invisible",
     "kin-glyph-71",

@@ -93,6 +93,7 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "innate-spell",
     "animal",
     "humanoid",
     "kin-glyph-89",

@@ -32,7 +32,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-4d6",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 100
@@ -41,6 +42,8 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "culverin",
     "kin-glyph-73",

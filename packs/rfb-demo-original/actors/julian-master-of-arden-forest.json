@@ -116,11 +116,13 @@
       },
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-10d15",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.shriek",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.scare",
@@ -183,6 +185,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "amberite",
     "evil",
     "human",

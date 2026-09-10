@@ -124,6 +124,7 @@
   "role": "monster",
   "speed": 113,
   "tags": [
+    "innate-spell",
     "evil",
     "humanoid",
     "kin-glyph-111",
