@@ -378,7 +378,7 @@ fn artifact_identity_mogaminator_matches_known_name_and_artifact_but_never_namel
     configure(&mut game, "!artifact items");
     let items = game.items.clone();
     let outcomes = game
-        .apply_mogaminator_to_items(vec![ID.to_owned()], false)
+        .apply_mogaminator_to_items(vec![ID.to_owned()], false, true)
         .unwrap();
     assert!(
         matches!(outcomes.as_slice(), [crate::game::mogaminator::MogaminatorItemResolution::DestroyUnavailable { reason, .. }] if reason == "artifact")

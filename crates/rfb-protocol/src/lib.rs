@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.250";
+pub const PROTOCOL_VERSION: &str = "1.251";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 18;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 19;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -464,6 +464,12 @@ pub enum GameCommand {
     },
     StudyPrayer {
         book_item_id: String,
+    },
+    BeginRealmChange {
+        book_item_id: String,
+    },
+    ResolveRealmChange {
+        confirm: bool,
     },
     Throw {
         item_id: String,
@@ -1091,7 +1097,7 @@ pub struct ResourcePoolDto {
     pub rest_recovery_amount: u32,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct AbilityLearningDto {
@@ -1100,6 +1106,35 @@ pub struct AbilityLearningDto {
     pub remaining_slots: u16,
     #[serde(default)]
     pub study_mode: AbilityStudyModeDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub realms: Option<SpellRealmsDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct SpellRealmsDto {
+    pub first_realm_id: String,
+    pub second_realm_id: String,
+    pub previous_realm_ids: Vec<String>,
+    pub change_books: Vec<RealmChangeBookDto>,
+    pub pending_change: Option<RealmChangeBookDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct RealmChangeBookDto {
+    pub book_item_id: String,
+    pub realm_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MageRealmsSaveDto {
+    pub second_realm_id: String,
+    pub previous_realm_ids: Vec<String>,
+    pub pending_change_book_item_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -5171,6 +5206,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(TargetSpecDto);
     push_declaration!(ResourcePoolDto);
     push_declaration!(AbilityLearningDto);
+    push_declaration!(SpellRealmsDto);
+    push_declaration!(RealmChangeBookDto);
     push_declaration!(AbilityStudyModeDto);
     push_declaration!(AbilityProficiencyRankDto);
     push_declaration!(AbilitySourceDto);
@@ -5406,6 +5443,8 @@ pub struct PlayerSaveDto {
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub bonus_spell_learning_capacity: u16,
     pub spent_spell_learning: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mage_realms: Option<MageRealmsSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub learned_ability_ids: Vec<String>,
     pub ability_learning_order: Vec<String>,
@@ -6404,6 +6443,11 @@ mod tests {
             GameCommand::StudyPrayer {
                 book_item_id: "generated.item.2".to_owned(),
             },
+            GameCommand::BeginRealmChange {
+                book_item_id: "generated.item.2".to_owned(),
+            },
+            GameCommand::ResolveRealmChange { confirm: true },
+            GameCommand::ResolveRealmChange { confirm: false },
             GameCommand::ForgetAbility {
                 ability_id: "demo.ability.death-dark-bolt".to_owned(),
             },
@@ -6864,6 +6908,7 @@ mod tests {
             resources: Vec::new(),
             bonus_spell_learning_capacity: 0,
             spent_spell_learning: 0,
+            mage_realms: None,
             learned_ability_ids: Vec::new(),
             ability_learning_order: Vec::new(),
             ability_progress: Vec::new(),

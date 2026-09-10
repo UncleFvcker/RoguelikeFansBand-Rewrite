@@ -1013,6 +1013,7 @@ pub(crate) fn player_to_save(
         resources: Vec::new(),
         bonus_spell_learning_capacity: 0,
         spent_spell_learning: 0,
+        mage_realms: None,
         learned_ability_ids: Vec::new(),
         ability_learning_order: Vec::new(),
         ability_progress: Vec::new(),

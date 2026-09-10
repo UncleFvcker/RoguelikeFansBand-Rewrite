@@ -483,6 +483,7 @@ pub(super) fn revealed_terrain_is_valid(
 
 impl Game {
     pub(super) fn validate_loaded_state(&self) -> Result<(), CoreError> {
+        self.validate_mage_realms()?;
         if !self.duelist_challenge_is_valid() {
             return Err(CoreError::InvalidSave("duelist challenge is invalid"));
         }
@@ -1619,6 +1620,16 @@ impl Game {
                 return Err(CoreError::InvalidSave(
                     "pending mage spell progress is invalid",
                 ));
+            }
+            if self.pending_realm_change_book().is_some_and(|id| {
+                self.realm_change_book(id).is_err()
+                    || self.pending_ability_direction.is_some()
+                    || self.pending_mutation_direction.is_some()
+                    || self.pending_duelist.is_some()
+                    || self.casino.is_some()
+                    || self.pending_race_mutation_choice().is_some()
+            }) {
+                return Err(CoreError::InvalidSave("pending realm change is invalid"));
             }
             if !self.player_spell_memory_is_valid()
                 || !pools_valid

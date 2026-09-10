@@ -53,6 +53,7 @@ export class AppState {
       this.campaignEnded ||
       (this.status?.player.pendingMutationDirection != null ||
         this.status?.player.pendingAbilityDirection != null ||
+        this.status?.player.abilityLearning?.realms?.pendingChange != null ||
         this.status?.player.pendingDuelist != null)
     );
   }

@@ -609,7 +609,7 @@ fn tomte_sensing_and_free_identification_precede_paid_mindcraft_without_replacin
             );
         }
         let outcomes = game
-            .apply_mogaminator_to_items(vec!["test.sensed".to_owned()], false)
+            .apply_mogaminator_to_items(vec!["test.sensed".to_owned()], false, true)
             .unwrap();
         assert_eq!(outcomes.len(), usize::from(expected_cost > 0));
         assert_eq!(game.resources[MANA].current, 12 - expected_cost);

@@ -578,6 +578,7 @@ impl Game {
             last_visual_cells: None,
             bonus_spell_learning_capacity: 0,
             spent_spell_learning: 0,
+            mage_realms: None,
             learned_abilities: BTreeSet::new(),
             ability_learning_order: Vec::new(),
             ability_progress: BTreeMap::new(),
@@ -637,6 +638,19 @@ impl Game {
             monster_division_remainders: BTreeMap::new(),
         };
         game.initialize_birth_race_mutations();
+        if game.player_is_mage() {
+            game.mage_realms = Some(rfb_protocol::MageRealmsSaveDto {
+                second_realm_id: game
+                    .character_definitions()
+                    .expect("Mage build")
+                    .0
+                    .second_realm_id
+                    .clone()
+                    .expect("Mage secondary realm"),
+                previous_realm_ids: Vec::new(),
+                pending_change_book_item_id: None,
+            });
+        }
         game.initialize_player_ability_state();
         game.initialize_starting_item_knowledge();
         for index in 0..game.items.len() {

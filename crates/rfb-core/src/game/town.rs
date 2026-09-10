@@ -1246,7 +1246,7 @@ impl Game {
         };
         let realms = [
             build.first_realm_id.as_deref(),
-            build.second_realm_id.as_deref(),
+            self.current_second_realm_id(),
         ];
         let matches_role = |class_ids: &[String], race_ids: &[String], realm_ids: &[String]| {
             class_ids.contains(&class.id)

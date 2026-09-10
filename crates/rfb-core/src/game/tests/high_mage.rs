@@ -6530,6 +6530,7 @@ fn death_high_mage_projects_original_mana_and_spell_table() {
             capacity: 1,
             remaining_slots: 1,
             study_mode: rfb_protocol::AbilityStudyModeDto::Chosen,
+            realms: None,
         })
     );
 

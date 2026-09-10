@@ -31,6 +31,7 @@ export class GameSession {
         command.type !== "resolve-mutation-direction" &&
         command.type !== "resolve-ability-direction" &&
         command.type !== "cancel-ability-direction" &&
+        command.type !== "resolve-realm-change" &&
         command.type !== "resolve-duelist-choice") ||
       (this.#state.worldMap &&
         command.type !== "move" &&

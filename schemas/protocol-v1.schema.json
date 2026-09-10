@@ -6465,6 +6465,16 @@
           "maximum": 65535,
           "minimum": 0
         },
+        "realms": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SpellRealmsDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "remainingSlots": {
           "type": "integer",
           "format": "uint16",
@@ -10271,6 +10281,38 @@
         {
           "type": "object",
           "properties": {
+            "bookItemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "begin-realm-change"
+            }
+          },
+          "required": [
+            "type",
+            "bookItemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "confirm": {
+              "type": "boolean"
+            },
+            "type": {
+              "type": "string",
+              "const": "resolve-realm-change"
+            }
+          },
+          "required": [
+            "type",
+            "confirm"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "direction": {
               "$ref": "#/$defs/Direction"
             },
@@ -13923,6 +13965,21 @@
         "traversed"
       ]
     },
+    "RealmChangeBookDto": {
+      "type": "object",
+      "properties": {
+        "bookItemId": {
+          "type": "string"
+        },
+        "realmId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "bookItemId",
+        "realmId"
+      ]
+    },
     "RecallStateDto": {
       "type": "object",
       "properties": {
@@ -14556,6 +14613,45 @@
         "thunder",
         "needle",
         "final"
+      ]
+    },
+    "SpellRealmsDto": {
+      "type": "object",
+      "properties": {
+        "changeBooks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RealmChangeBookDto"
+          }
+        },
+        "firstRealmId": {
+          "type": "string"
+        },
+        "pendingChange": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RealmChangeBookDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "previousRealmIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "secondRealmId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "firstRealmId",
+        "secondRealmId",
+        "previousRealmIds",
+        "changeBooks"
       ]
     },
     "StatModifiersDto": {

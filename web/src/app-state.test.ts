@@ -28,6 +28,11 @@ test("application state owns map dimensions and terminal command gating", () => 
   assert.equal(state.mapWidth, 80);
   assert.equal(state.mapHeight, 45);
   assert.equal(state.commandBlocked, true);
+  state.campaignEnded = false;
+  state.status = { player: { abilityLearning: { realms: { pendingChange: { bookItemId: "book", realmId: "nature" } } } } };
+  assert.equal(state.commandBlocked, true);
+  state.status.player.abilityLearning.realms.pendingChange = null;
+  assert.equal(state.commandBlocked, false);
 });
 
 test("application state maintains authoritative visibility deltas for look mode", () => {

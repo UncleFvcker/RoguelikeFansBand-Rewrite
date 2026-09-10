@@ -380,7 +380,7 @@ impl Game {
             .map(|item| item.id.clone())
             .collect::<Vec<_>>();
         item_ids.sort();
-        self.apply_mogaminator_to_items(item_ids, true)
+        self.apply_mogaminator_to_items(item_ids, true, true)
     }
 
     pub(super) fn apply_mogaminator_to_carried_items(
@@ -388,13 +388,14 @@ impl Game {
         mut item_ids: Vec<String>,
     ) -> Result<Vec<MogaminatorItemResolution>, CoreError> {
         item_ids.sort();
-        self.apply_mogaminator_to_items(item_ids, false)
+        self.apply_mogaminator_to_items(item_ids, false, true)
     }
 
     pub(super) fn apply_mogaminator_to_items(
         &mut self,
         item_ids: Vec<String>,
         allow_pickup: bool,
+        allow_destroy: bool,
     ) -> Result<Vec<MogaminatorItemResolution>, CoreError> {
         self.apply_player_floor_item_knowledge();
         if self.player_is_berserker() {
@@ -480,7 +481,9 @@ impl Game {
                         outcome: self.pick_up_item_at_player(Some(&item_id))?,
                     });
                 }
-                MogaminatorDisposition::Destroy if !self.mogaminator.leave_destroyed_items => {
+                MogaminatorDisposition::Destroy
+                    if allow_destroy && !self.mogaminator.leave_destroyed_items =>
+                {
                     match self.destroy_item(&item_id, quantity) {
                         Ok(outcome) => {
                             let mut book_events = Vec::new();
@@ -929,9 +932,8 @@ impl Game {
                             .unwrap_or_default();
                     }
                     MogaminatorVariable::SecondRealm => {
-                        return definition
-                            .second_realm_id
-                            .as_deref()
+                        return self
+                            .current_second_realm_id()
                             .map(|id| localized_realm_name(id, locale))
                             .unwrap_or_default();
                     }
@@ -1081,10 +1083,9 @@ impl Game {
                 book.realm_id.as_ref()
                     == build_definition.and_then(|build| build.first_realm_id.as_ref())
             }),
-            MogaminatorPredicate::SecondRealm => book.is_some_and(|book| {
-                book.realm_id.as_ref()
-                    == build_definition.and_then(|build| build.second_realm_id.as_ref())
-            }),
+            MogaminatorPredicate::SecondRealm => {
+                book.is_some_and(|book| book.realm_id.as_deref() == self.current_second_realm_id())
+            }
             MogaminatorPredicate::FirstBook => book.is_some_and(|book| book.rank == Some(1)),
             MogaminatorPredicate::SecondBook => book.is_some_and(|book| book.rank == Some(2)),
             MogaminatorPredicate::ThirdBook => book.is_some_and(|book| book.rank == Some(3)),
@@ -1217,6 +1218,20 @@ fn localization_locale(locale: LocaleDto) -> Locale {
 
 fn localized_realm_name(realm_id: &str, locale: Locale) -> String {
     match (realm_id, locale) {
+        ("life", Locale::ZhCn) => "生命".to_owned(),
+        ("life", Locale::EnUs) => "Life".to_owned(),
+        ("sorcery", Locale::ZhCn) => "咒术".to_owned(),
+        ("sorcery", Locale::EnUs) => "Sorcery".to_owned(),
+        ("nature", Locale::ZhCn) => "自然".to_owned(),
+        ("nature", Locale::EnUs) => "Nature".to_owned(),
+        ("arcane", Locale::ZhCn) => "奥秘".to_owned(),
+        ("arcane", Locale::EnUs) => "Arcane".to_owned(),
+        ("daemon", Locale::ZhCn) => "恶魔".to_owned(),
+        ("daemon", Locale::EnUs) => "Daemon".to_owned(),
+        ("crusade", Locale::ZhCn) => "圣战".to_owned(),
+        ("crusade", Locale::EnUs) => "Crusade".to_owned(),
+        ("armageddon", Locale::ZhCn) => "毁灭".to_owned(),
+        ("armageddon", Locale::EnUs) => "Armageddon".to_owned(),
         ("death", Locale::ZhCn) => "死亡".to_owned(),
         ("death", Locale::EnUs) => "Death".to_owned(),
         ("healing", Locale::ZhCn) => "治愈".to_owned(),
@@ -1854,5 +1869,42 @@ mod tests {
         rare.kind_id = "demo.item.adamantine-bolt".to_owned();
         assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::Rare, &rare));
         assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::MoreLevelThan(39), &rare));
+    }
+
+    #[test]
+    fn realm_change_updates_bilingual_variables_and_book_predicates() {
+        use crate::game::tests::support::{dispatch_next, give_inventory_item};
+        let mut game = Game::new_with_build(925, "demo.build.mage-death-sorcery").unwrap();
+        give_inventory_item(&mut game, "test.new-realm", "demo.item.call-of-the-wild");
+        let old = game
+            .items
+            .iter()
+            .find(|item| item.kind_id == "demo.item.beginners-handbook")
+            .unwrap()
+            .clone();
+        let new = game.items.last().unwrap().clone();
+        assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::SecondRealm, &old));
+        assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::Unreadable, &new));
+        dispatch_next(
+            &mut game,
+            GameCommand::BeginRealmChange {
+                book_item_id: new.id.clone(),
+            },
+        );
+        dispatch_next(&mut game, GameCommand::ResolveRealmChange { confirm: true });
+        for (locale, name) in [(Locale::ZhCn, "自然"), (Locale::EnUs, "Nature")] {
+            assert_eq!(
+                game.mogaminator_variable_value(MogaminatorVariable::SecondRealm, locale),
+                name
+            );
+        }
+        assert_eq!(
+            game.mogaminator_variable_value(MogaminatorVariable::FirstRealm, Locale::ZhCn),
+            "死亡"
+        );
+        assert!(!game.mogaminator_predicate_matches(MogaminatorPredicate::SecondRealm, &old));
+        assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::Unreadable, &old));
+        assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::SecondRealm, &new));
+        assert!(!game.mogaminator_predicate_matches(MogaminatorPredicate::Unreadable, &new));
     }
 }

@@ -182,7 +182,7 @@ impl Game {
         };
         [
             build.first_realm_id.as_deref(),
-            build.second_realm_id.as_deref(),
+            self.current_second_realm_id(),
         ]
         .into_iter()
         .flatten()
@@ -1085,7 +1085,7 @@ impl Game {
         }
     }
 
-    fn study_book_id(&self, book_item_id: &str) -> Option<&str> {
+    pub(super) fn study_book_id(&self, book_item_id: &str) -> Option<&str> {
         self.items
             .iter()
             .find(|item| {
@@ -1161,10 +1161,21 @@ impl Game {
                 .sum();
             let historical_capacity = (3 * u32::from(self.progress.max_level)).min(100)
                 + u32::from(self.bonus_spell_learning_capacity);
+            let has_replaced_realm = self
+                .mage_realms
+                .as_ref()
+                .is_some_and(|realms| !realms.previous_realm_ids.is_empty());
+            // Replaced realm entries no longer bound cumulative spending. The source
+            // counter survives replacement; at most 64 forgotten slots can augment capacity.
             self.spent_spell_learning >= self.ability_learning_order.len() as u32
-                && self.spent_spell_learning <= maximum_studies
+                && (has_replaced_realm || self.spent_spell_learning <= maximum_studies)
                 && self.spent_spell_learning
-                    <= historical_capacity + self.ability_learning_order.len() as u32
+                    <= historical_capacity
+                        + if has_replaced_realm {
+                            64
+                        } else {
+                            self.ability_learning_order.len() as u32
+                        }
                 && self.ability_progress.iter().all(|(id, progress)| {
                     self.ability_learning_order.contains(id)
                         || (progress.proficiency == 0

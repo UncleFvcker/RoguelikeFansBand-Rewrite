@@ -26,6 +26,7 @@ fn death_paladin_projects_divine_study_mana_and_the_original_spell_table() {
             capacity: 1,
             remaining_slots: 1,
             study_mode: rfb_protocol::AbilityStudyModeDto::DivineRandom,
+            realms: None,
         })
     );
 

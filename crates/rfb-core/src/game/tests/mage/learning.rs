@@ -4,7 +4,7 @@ use super::*;
 const DETECT: &str = "demo.ability.sorcery-detect-monsters";
 const UNLIFE: &str = "demo.ability.death-detect-unlife";
 
-fn prepared(build: &str, level: u16) -> Game {
+pub(super) fn prepared(build: &str, level: u16) -> Game {
     let mut game = at_level(build, level);
     game.progress.attributes.intelligence = game.progress.attribute_potentials.intelligence;
     game.progress.maximum_attributes.intelligence = game.progress.attributes.intelligence;
@@ -19,7 +19,7 @@ fn refill(game: &mut Game) {
     mana.current = mana.maximum;
 }
 
-fn book_for(game: &mut Game, ability: &str) -> String {
+pub(super) fn book_for(game: &mut Game, ability: &str) -> String {
     if let Some(item) = game.ability_book_item_id(game.casting_profile().unwrap(), ability) {
         return item;
     }
@@ -47,7 +47,7 @@ fn book_for(game: &mut Game, ability: &str) -> String {
     id
 }
 
-fn learn(game: &mut Game, ability: &str) -> String {
+pub(super) fn learn(game: &mut Game, ability: &str) -> String {
     let book = book_for(game, ability);
     game.study_player_ability(&book, ability).unwrap();
     book

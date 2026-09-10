@@ -5,6 +5,7 @@ use super::support::{
 use super::*;
 
 mod learning;
+mod realm_change;
 
 const BUILD: &str = "demo.build.mage-death-sorcery";
 const MANA: &str = "demo.resource.mana";

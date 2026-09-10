@@ -134,10 +134,12 @@ test("pending directions block ordinary commands but accept their resolver and c
   await session.dispatch({ type: "resolve-mutation-direction", direction: "east" });
   await session.dispatch({ type: "resolve-ability-direction", direction: "east" });
   await session.dispatch({ type: "cancel-ability-direction" });
+  await session.dispatch({ type: "resolve-realm-change", confirm: false });
 
   assert.deepEqual(calls, [
     "resolve-mutation-direction",
     "resolve-ability-direction",
     "cancel-ability-direction",
+    "resolve-realm-change",
   ]);
 });

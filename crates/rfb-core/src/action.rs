@@ -195,6 +195,12 @@ pub(crate) enum GameAction {
     StudyPrayer {
         book_item_id: String,
     },
+    BeginRealmChange {
+        book_item_id: String,
+    },
+    ResolveRealmChange {
+        confirm: bool,
+    },
     Equip {
         item_id: String,
         slot_id: Option<String>,
@@ -247,6 +253,8 @@ impl GameAction {
     pub(crate) const fn energy_cost(&self) -> i32 {
         match self {
             Self::BuyFromShop { .. }
+            | Self::BeginRealmChange { .. }
+            | Self::ResolveRealmChange { .. }
             | Self::AcceptTask { .. }
             | Self::ClaimTaskReward { .. }
             | Self::DepositAtHome { .. }
@@ -518,6 +526,10 @@ impl From<GameCommand> for GameAction {
                 ability_id,
             },
             GameCommand::StudyPrayer { book_item_id } => Self::StudyPrayer { book_item_id },
+            GameCommand::BeginRealmChange { book_item_id } => {
+                Self::BeginRealmChange { book_item_id }
+            }
+            GameCommand::ResolveRealmChange { confirm } => Self::ResolveRealmChange { confirm },
             GameCommand::Equip { item_id, slot_id } => Self::Equip { item_id, slot_id },
             GameCommand::Fire { direction } => Self::Fire { direction },
             GameCommand::FireTarget { target } => Self::FireTarget { target },

@@ -75,7 +75,7 @@
         "y": 33
       },
       "revision": 2,
-      "stateHash": "32d9be6ae005e2e4369fc3fa93f176236175ab68b27e9a1bed252342844add59",
+      "stateHash": "fb24134eb16c0340e3260e5ec31f8b36812af1f1bc7227bcc7e7dca6fc8591b7",
       "turn": 2
     },
     "events": [
@@ -106,6 +106,6 @@
         "args": {}
       }
     ],
-    "saveRoundTripStateHash": "32d9be6ae005e2e4369fc3fa93f176236175ab68b27e9a1bed252342844add59"
+    "saveRoundTripStateHash": "fb24134eb16c0340e3260e5ec31f8b36812af1f1bc7227bcc7e7dca6fc8591b7"
   }
 }

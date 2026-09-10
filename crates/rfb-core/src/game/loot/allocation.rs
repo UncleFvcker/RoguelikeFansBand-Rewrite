@@ -564,6 +564,85 @@ mod tests {
     }
 
     #[test]
+    fn mage_realm_change_updates_book_need_and_actual_allocation_without_resetting_discovery() {
+        use crate::game::tests::support::{dispatch_next, give_inventory_item};
+        use rfb_protocol::GameCommand;
+        let mut game = Game::new_with_build(925, "demo.build.mage-death-sorcery").unwrap();
+        let active = game.active_casting_book_ids();
+        let found: Vec<_> = game
+            .content
+            .item_definitions()
+            .filter_map(|item| {
+                let id = item.ability_book_id.as_deref()?;
+                let rank = game.content.ability_book(id)?.rank?;
+                (active.contains(&id) && rank >= 3)
+                    .then(|| (item.id.clone(), if rank == 3 { 3 } else { 2 }))
+            })
+            .collect();
+        for (id, count) in &found {
+            game.item_knowledge
+                .entry(id.clone())
+                .or_default()
+                .found_count = *count;
+        }
+        assert!(!needs_book(&game));
+        give_inventory_item(&mut game, "test.new-realm", "demo.item.call-of-the-wild");
+        dispatch_next(
+            &mut game,
+            GameCommand::BeginRealmChange {
+                book_item_id: "test.new-realm".to_owned(),
+            },
+        );
+        dispatch_next(&mut game, GameCommand::ResolveRealmChange { confirm: true });
+        assert!(needs_book(&game));
+        for (id, count) in found {
+            assert_eq!(game.item_knowledge[&id].found_count, count);
+        }
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let rows = ["grimoire-of-power", "natures-wrath"].map(|id| LootEntryDefinition {
+            item_kind_id: format!("demo.item.{id}"),
+            weight: 100,
+            min_depth: 0,
+            max_depth: u16::MAX,
+            quantity: 1,
+        });
+        for game in [&mut game, &mut restored] {
+            assert!(!tailored_candidate(
+                game,
+                game.content.item(&rows[0].item_kind_id).unwrap()
+            ));
+            assert!(tailored_candidate(
+                game,
+                game.content.item(&rows[1].item_kind_id).unwrap()
+            ));
+            assert_eq!(
+                select_entry(
+                    game,
+                    &context(80),
+                    ItemGenerationMode::TailoredGreat,
+                    &rows,
+                    Some(RfbDropTheme::Mage)
+                ),
+                Some(1)
+            );
+            game.item_knowledge
+                .entry("demo.item.natures-gifts".to_owned())
+                .or_default()
+                .found_count = 3;
+            game.item_knowledge
+                .entry("demo.item.natures-wrath".to_owned())
+                .or_default()
+                .found_count = 2;
+            assert!(!needs_book(game));
+            let before = game.rng.clone();
+            assert_eq!(tailored_category(game), None);
+            assert_eq!(game.rng, before);
+        }
+        assert_eq!(game.rng, restored.rng);
+        assert_eq!(game.state_hash(), restored.state_hash());
+    }
+
+    #[test]
     fn tailored_preference_draws_follow_class_then_book_then_device() {
         use crate::rng::RfbRng;
         for build in ["warrior", "berserker", "mindcrafter"] {

@@ -154,6 +154,7 @@ mod psychic;
 mod riding_bond;
 mod riding_proficiency;
 mod snapshot;
+mod spell_realms;
 mod status_effects;
 mod tasks;
 mod terrain;
@@ -233,7 +234,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 123;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 124;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -854,6 +855,7 @@ pub struct Game {
     last_visual_cells: Option<Vec<CellVisualDto>>,
     bonus_spell_learning_capacity: u16,
     spent_spell_learning: u32,
+    mage_realms: Option<rfb_protocol::MageRealmsSaveDto>,
     learned_abilities: BTreeSet<String>,
     ability_learning_order: Vec<String>,
     ability_progress: BTreeMap<String, AbilityProgress>,
@@ -938,6 +940,20 @@ impl Game {
         let mut action = GameAction::from(envelope.command);
         let pending_race_mutation_choice = self.pending_race_mutation_choice();
         let race_mutation_choice_pending = pending_race_mutation_choice.is_some();
+        if self.pending_realm_change_book().is_some()
+            && !matches!(action, GameAction::ResolveRealmChange { .. })
+        {
+            return Err(CoreError::RealmChangeRequired);
+        }
+        match &action {
+            GameAction::BeginRealmChange { book_item_id } => {
+                self.realm_change_book(book_item_id)?;
+            }
+            GameAction::ResolveRealmChange { .. } if self.pending_realm_change_book().is_none() => {
+                return Err(CoreError::RealmChangeUnavailable("no-pending-change"));
+            }
+            _ => {}
+        }
         if self.duelist_prompt().is_some()
             && !matches!(
                 action,
@@ -1011,6 +1027,10 @@ impl Game {
         let reevaluate_all_mogaminator_items = matches!(
             &action,
             GameAction::ConfigureMogaminator { .. } | GameAction::SetInterfaceLocale { .. }
+        );
+        let realm_change_action = matches!(
+            &action,
+            GameAction::BeginRealmChange { .. } | GameAction::ResolveRealmChange { .. }
         );
         let configuring_mogaminator = matches!(&action, GameAction::ConfigureMogaminator { .. });
         let item_property_knowledge_before = self
@@ -1171,6 +1191,8 @@ impl Game {
             && !matches!(
                 &action,
                 GameAction::Retire
+                    | GameAction::BeginRealmChange { .. }
+                    | GameAction::ResolveRealmChange { .. }
                     | GameAction::ClearDuelistChallenge
                     | GameAction::ResolveDuelistChoice { .. }
                     | GameAction::AcceptTask { .. }
@@ -1964,6 +1986,17 @@ impl Game {
             } => {
                 self.use_recharging_item(&item_id, &source_item_id, &target_item_id, &mut events);
             }
+            GameAction::BeginRealmChange { book_item_id } => {
+                self.mage_realms
+                    .as_mut()
+                    .expect("validated Mage")
+                    .pending_change_book_item_id = Some(book_item_id);
+                turn_advance = 0;
+            }
+            GameAction::ResolveRealmChange { confirm } => {
+                self.resolve_realm_change(confirm, &mut events, &mut changed)?;
+                turn_advance = 0;
+            }
             GameAction::ForgetAbility { ability_id } => {
                 if deferred_spell_study {
                     advances_world = false;
@@ -2063,7 +2096,8 @@ impl Game {
                     let outcome = self.pick_up_item_at_player(Some(&object_id))?;
                     self.record_pick_up_outcome(outcome, &mut events, &mut changed);
                 } else {
-                    let resolutions = self.apply_mogaminator_to_items(vec![object_id], true)?;
+                    let resolutions =
+                        self.apply_mogaminator_to_items(vec![object_id], true, true)?;
                     self.record_mogaminator_resolutions(resolutions, &mut events, &mut changed);
                 }
             }
@@ -2356,7 +2390,9 @@ impl Game {
             }
         }
 
-        if self.mogaminator.enabled {
+        // Realm confirmation already alters its selected book with destruction disabled.
+        // Do not turn auto-identification into a second, destructive carried-item pass.
+        if self.mogaminator.enabled && !realm_change_action {
             let reevaluate_all = reevaluate_all_mogaminator_items
                 && (!configuring_mogaminator || mogaminator_diagnostics.is_empty());
             let item_ids = self

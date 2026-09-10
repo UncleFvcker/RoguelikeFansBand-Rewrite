@@ -1005,6 +1005,7 @@ impl Game {
         let saved_learned_ability_ids = payload.player.learned_ability_ids.clone();
         let saved_ability_learning_order = payload.player.ability_learning_order.clone();
         let saved_spent_spell_learning = payload.player.spent_spell_learning;
+        let mage_realms = payload.player.mage_realms.clone();
         let saved_ability_progress = payload.player.ability_progress.clone();
         let summon_command = payload.player.summon_command.clone();
         let recall = payload.player.recall.clone();
@@ -1465,6 +1466,7 @@ impl Game {
             last_visual_cells: None,
             bonus_spell_learning_capacity,
             spent_spell_learning: 0,
+            mage_realms,
             learned_abilities: BTreeSet::new(),
             ability_learning_order: Vec::new(),
             ability_progress: BTreeMap::new(),
@@ -1518,6 +1520,7 @@ impl Game {
             debug_item_curses_resisted: false,
             monster_division_remainders: BTreeMap::new(),
         };
+        game.validate_mage_realms()?;
         game.restore_player_ability_state(
             saved_resources,
             saved_learned_ability_ids,
@@ -1741,6 +1744,7 @@ impl Game {
             .collect();
         player.bonus_spell_learning_capacity = self.bonus_spell_learning_capacity;
         player.spent_spell_learning = self.spent_spell_learning;
+        player.mage_realms = self.mage_realms.clone();
         player.learned_ability_ids = self.learned_abilities.iter().cloned().collect();
         player.ability_learning_order = self.ability_learning_order.clone();
         player.ability_progress = self

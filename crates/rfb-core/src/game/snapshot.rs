@@ -274,6 +274,7 @@ impl Game {
             learned_count,
             capacity,
             remaining_slots: self.ability_learning_remaining(profile),
+            realms: self.spell_realms_dto(),
             study_mode: match profile.study_mode {
                 CastingStudyMode::Chosen => AbilityStudyModeDto::Chosen,
                 CastingStudyMode::DivineRandom => AbilityStudyModeDto::DivineRandom,
