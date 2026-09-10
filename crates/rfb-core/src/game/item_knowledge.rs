@@ -43,6 +43,19 @@ pub(super) fn item_can_be_sensed(item: &rfb_content::ItemDefinition) -> bool {
 }
 
 impl Game {
+    pub(super) fn item_activation_is_known(&self, item: &ItemInstance) -> bool {
+        if self
+            .content
+            .item(&item.kind_id)
+            .and_then(|definition| definition.device_generation.as_ref())
+            .is_some_and(|generation| generation.rfb_device.is_some())
+        {
+            self.item_identification(item) != ItemIdentificationDto::Unexamined
+        } else {
+            self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware
+        }
+    }
+
     pub(super) fn lose_mindcraft_information(&mut self, changed: &mut BTreeSet<Position>) {
         if !self.player_auto_identifies_items() {
             let ids = self

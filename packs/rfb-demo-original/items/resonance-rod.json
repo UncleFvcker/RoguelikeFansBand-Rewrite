@@ -5,30 +5,128 @@
   "deviceGeneration": {
     "activations": [
       {
-        "charges": {
-          "cost": 5,
-          "maximum": 32,
-          "minimum": 18
-        },
-        "deviceCheckDifficulty": 20,
-        "effectProgramId": "demo.effect.detect-traps",
         "id": "demo.device-activation.trap-sense",
-        "maxDepth": 100,
-        "minDepth": 1,
-        "nameKey": "device-activation-demo-trap-sense-name",
+        "nameKey": "device-activation-rfb-rod-detect-traps-name",
+        "weight": 1,
+        "minDepth": 5,
+        "maxDepth": 30,
+        "deviceCheckDifficulty": 5,
+        "charges": {
+          "cost": 9,
+          "minimum": 18,
+          "maximum": 1000
+        },
+        "effectProgramId": "rfb.effect.device-detect-traps",
         "target": {
           "modes": [
             "self"
           ],
           "range": 0,
           "requiresLineOfEffect": false
+        }
+      },
+      {
+        "id": "rfb.device-activation.rod.detect-door-stairs",
+        "nameKey": "device-activation-rfb-rod-detect-door-stairs-name",
+        "weight": 1,
+        "minDepth": 12,
+        "maxDepth": 40,
+        "deviceCheckDifficulty": 12,
+        "charges": {
+          "cost": 10,
+          "minimum": 20,
+          "maximum": 1000
         },
-        "weight": 1
+        "effectProgramId": "rfb.effect.device-detect-door-stairs",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        }
+      },
+      {
+        "id": "rfb.device-activation.rod.detect-monsters",
+        "nameKey": "device-activation-rfb-rod-detect-monsters-name",
+        "weight": 1,
+        "minDepth": 15,
+        "maxDepth": 40,
+        "deviceCheckDifficulty": 15,
+        "charges": {
+          "cost": 10,
+          "minimum": 20,
+          "maximum": 1000
+        },
+        "effectProgramId": "rfb.effect.device-detect-monsters",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        }
+      },
+      {
+        "id": "rfb.device-activation.rod.detect-all",
+        "nameKey": "device-activation-rfb-rod-detect-all-name",
+        "weight": 1,
+        "minDepth": 30,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 30,
+        "charges": {
+          "cost": 17,
+          "minimum": 34,
+          "maximum": 1000
+        },
+        "effectProgramId": "rfb.effect.device-detect-all",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        }
       }
     ],
     "recovery": {
       "energyPerMille": 10,
       "intervalTicks": 1
+    },
+    "rfbDevice": {
+      "fixedActivationId": "demo.device-activation.trap-sense",
+      "effects": [
+        {
+          "activationId": "demo.device-activation.trap-sense",
+          "rarity": 1,
+          "difficultyBase": 10,
+          "difficultyExtra": 0,
+          "flags": []
+        },
+        {
+          "activationId": "rfb.device-activation.rod.detect-door-stairs",
+          "rarity": 1,
+          "difficultyBase": 10,
+          "difficultyExtra": 0,
+          "flags": []
+        },
+        {
+          "activationId": "rfb.device-activation.rod.detect-monsters",
+          "rarity": 1,
+          "difficultyBase": 10,
+          "difficultyExtra": 0,
+          "flags": []
+        },
+        {
+          "activationId": "rfb.device-activation.rod.detect-all",
+          "rarity": 2,
+          "difficultyBase": 10,
+          "difficultyExtra": 0,
+          "flags": [
+            "common"
+          ]
+        }
+      ]
     }
   },
   "formatVersion": 1,

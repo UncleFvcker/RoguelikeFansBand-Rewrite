@@ -12,6 +12,8 @@ pub(super) mod dragon;
 mod jewelry;
 mod noncraft;
 pub(super) use noncraft::base_bag_capacity;
+pub(super) use noncraft::device::fixed as initialize_fixed_device;
+pub(crate) use noncraft::device::valid_runtime as source_device_runtime_valid;
 pub(super) use noncraft::item_has_ego;
 pub(super) use noncraft::roll_container_capacity;
 pub(crate) use noncraft::{device_capacity, device_difficulty};
@@ -197,8 +199,15 @@ pub(super) fn materialize_ego_with_rng(
     if let [affix_id] = affix_ids.as_slice()
         && let Some(item) = content.item(kind_id)
         && let Some(affix) = content.affix(affix_id)
-        && let Some(result) =
-            noncraft::materialize_device(content, rng, item, roll_depth(affix), true, Some(affix))
+        && let Some(result) = noncraft::materialize_device(
+            content,
+            rng,
+            item,
+            roll_depth(affix),
+            true,
+            crate::game::loot::ItemGenerationMode::Ordinary,
+            Some(affix),
+        )
     {
         return result;
     }
@@ -2837,6 +2846,7 @@ mod tests {
                 }],
             );
             affix.device_generation = Some(ItemDeviceGenerationDefinition {
+                rfb_device: None,
                 activation_optional: false,
                 activations: vec![ego_activation_profile(
                     profile_id,
@@ -2875,6 +2885,7 @@ mod tests {
         );
         excluded.max_depth = 49;
         let generation = ItemDeviceGenerationDefinition {
+            rfb_device: None,
             activation_optional: false,
             activations: vec![
                 ego_activation_profile("test.activation.fixed", 1, BTreeSet::new(), 1),
@@ -2919,6 +2930,7 @@ mod tests {
             vec![RfbEgoTypeDefinition::Weapon],
         );
         affix.device_generation = Some(ItemDeviceGenerationDefinition {
+            rfb_device: None,
             activation_optional: false,
             activations: vec![
                 ego_activation_profile("test.activation.destruction", 1, BTreeSet::new(), 50),
@@ -2972,6 +2984,7 @@ mod tests {
             vec![RfbEgoTypeDefinition::Weapon],
         );
         mana_affix.device_generation = Some(ItemDeviceGenerationDefinition {
+            rfb_device: None,
             activation_optional: false,
             activations: vec![activation.clone()],
             recovery: None,
@@ -2996,6 +3009,7 @@ mod tests {
             vec![RfbEgoTypeDefinition::Weapon],
         );
         arcane_affix.device_generation = Some(ItemDeviceGenerationDefinition {
+            rfb_device: None,
             activation_optional: false,
             activations: vec![activation],
             recovery: None,

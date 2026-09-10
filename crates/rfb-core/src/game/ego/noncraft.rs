@@ -2,6 +2,8 @@
 
 use super::*;
 
+pub(in crate::game) mod device;
+
 #[cfg(test)]
 mod bags;
 
@@ -26,15 +28,28 @@ pub(in crate::game) fn materialize_device(
     item: &ItemDefinition,
     level: u16,
     exceptional: bool,
+    mode: crate::game::loot::ItemGenerationMode,
     forced_affix: Option<&AffixDefinition>,
 ) -> Option<EgoMaterialization> {
     if !item.tags.iter().any(|tag| tag == "device") {
         return None;
     }
     // obj_create_device initializes the effect and energy before choosing its ego.
-    let (activation, charges) = initial_item_runtime_state(content, rng, &item.id, &[], level);
-    let (Some(mut activation), Some(mut charges)) = (activation, charges) else {
-        return None;
+    let (mut activation, mut charges, level) = if let Some(generation) = item
+        .device_generation
+        .as_ref()
+        .filter(|g| g.rfb_device.is_some())
+    {
+        device::natural(
+            rng,
+            generation,
+            level,
+            mode,
+            item.tags.iter().any(|tag| tag == "rod"),
+        )?
+    } else {
+        let (activation, charges) = initial_item_runtime_state(content, rng, &item.id, &[], level);
+        (activation?, charges?, level)
     };
     let affix = if let Some(affix) = forced_affix {
         affix
@@ -402,6 +417,7 @@ mod tests {
                     definition,
                     100,
                     true,
+                    crate::game::loot::ItemGenerationMode::Ordinary,
                     None,
                 )
                 .unwrap();
@@ -464,8 +480,16 @@ mod tests {
             .content
             .affix("rfb-legacy.affix.regeneration-device")
             .unwrap();
-        let result =
-            materialize_device(&game.content, &mut game.rng, item, 100, true, Some(affix)).unwrap();
+        let result = materialize_device(
+            &game.content,
+            &mut game.rng,
+            item,
+            100,
+            true,
+            crate::game::loot::ItemGenerationMode::Ordinary,
+            Some(affix),
+        )
+        .unwrap();
         game.debug_add_generated_inventory_item("test.device", "demo.item.magic-missile-wand", 100)
             .unwrap();
         let index = game.items.len() - 1;

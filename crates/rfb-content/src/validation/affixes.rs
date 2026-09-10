@@ -119,7 +119,10 @@ pub(super) fn validate_affixes(
 }
 
 pub(super) fn valid_affix_device_generation(generation: &ItemDeviceGenerationDefinition) -> bool {
-    if generation.activations.is_empty() || generation.activations.len() > 256 {
+    if generation.rfb_device.is_some()
+        || generation.activations.is_empty()
+        || generation.activations.len() > 256
+    {
         return false;
     }
     let valid_recovery = |recovery: ItemDeviceRecoveryDefinition| {

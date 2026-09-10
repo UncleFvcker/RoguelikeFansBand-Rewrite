@@ -9192,3 +9192,17 @@ item-demo-metal-brigandine-armour-description = Ordinary heavy body armor.
 
 item-demo-splint-mail-name = Splint Mail
 item-demo-splint-mail-description = Ordinary heavy body armor.
+
+### Source device utility effects
+device-activation-rfb-rod-detect-traps-name = detect traps
+device-activation-rfb-rod-detect-door-stairs-name = detect door stairs
+device-activation-rfb-rod-detect-monsters-name = detect monsters
+device-activation-rfb-rod-detect-all-name = detect all
+device-activation-rfb-staff-detect-gold-name = detect gold
+device-activation-rfb-staff-detect-objects-name = detect objects
+device-activation-rfb-staff-detect-invisible-name = detect invisible
+device-activation-rfb-staff-detect-traps-name = detect traps
+device-activation-rfb-staff-detect-door-stairs-name = detect door stairs
+device-activation-rfb-staff-detect-evil-name = detect evil
+device-activation-rfb-staff-identify-name = identify
+device-activation-rfb-staff-identify-full-name = identify full

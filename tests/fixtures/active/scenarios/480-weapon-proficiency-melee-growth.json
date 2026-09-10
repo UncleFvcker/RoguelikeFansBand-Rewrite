@@ -61,8 +61,8 @@
         "y": 33
       },
       "revision": 1,
-      "rngDrawCounter": 200,
-      "stateHash": "c81813dd553b2e57bfe33547adcbf78c027d984f55b70e816c06411e5d838c1d",
+      "rngDrawCounter": 198,
+      "stateHash": "afa27af21de4f55a8523ac59a26f4d0257888f5e517937fd9e75492a816e3652",
       "turn": 1
     },
     "events": [
@@ -70,16 +70,16 @@
         "kind": "combat.hit",
         "messageKey": "combat-player-hit",
         "args": {
-          "damage": "7",
+          "damage": "10",
           "target": "demo.actor.adobe-golem"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 7,
+            "rawDamage": 10,
             "armorReduction": 0,
             "resistanceAdjustment": 0,
-            "finalDamage": 7,
+            "finalDamage": 10,
             "damageType": "physical",
             "resistance": "normal"
           }

@@ -3417,7 +3417,7 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     assert_eq!(generated[0].quality, ItemQualityDto::Exceptional);
     assert!(generated[0].id.starts_with("generated.item."));
     // drop_near consumes the disabled-breakage roll and a tied-grid roll.
-    assert_eq!(single.rng_draw_counter(), draws_before + 18);
+    assert_eq!(single.rng_draw_counter(), draws_before + 34);
     assert!(update.events.iter().any(|event| {
         event.kind == "item.use-acquirement"
             && event.args.get("count").map(String::as_str) == Some("1")

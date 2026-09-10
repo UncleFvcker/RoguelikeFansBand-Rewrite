@@ -1591,7 +1591,7 @@ impl Game {
         effect: ItemUseEffectDefinition,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
-    ) {
+    ) -> bool {
         let ItemUseEffectDefinition::Detect {
             subject,
             category,
@@ -1654,7 +1654,16 @@ impl Game {
         {
             changed.extend(detected_positions.iter().copied());
         }
-        self.mark_item_aware(&source_kind_id);
+        let noticed = !detected_positions.is_empty() || !detected_entity_ids.is_empty();
+        if noticed
+            || self
+                .content
+                .item(&source_kind_id)
+                .and_then(|item| item.device_generation.as_ref())
+                .is_none_or(|generation| generation.rfb_device.is_none())
+        {
+            self.mark_item_aware(&source_kind_id);
+        }
         let resolution = AbilityDetectResolutionDto {
             subject: ability_detect_subject_dto(subject),
             category,
@@ -1676,6 +1685,7 @@ impl Game {
                 resolution,
             });
         }
+        noticed
     }
 
     pub(super) fn recharging_item_unavailable_reason(
@@ -2357,11 +2367,12 @@ impl Game {
         device_power_bonus: i32,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
-    ) {
+    ) -> bool {
+        let mut noticed = false;
         for effect in effects {
             match effect {
                 effect @ ItemUseEffectDefinition::Detect { .. } => {
-                    self.resolve_item_detection(
+                    noticed |= self.resolve_item_detection(
                         source_kind_id.to_owned(),
                         None,
                         effect,
@@ -2394,10 +2405,11 @@ impl Game {
                     );
                 }
                 effect => {
-                    self.resolve_item_self_effect(source_kind_id, &effect, events);
+                    noticed |= self.resolve_item_self_effect(source_kind_id, &effect, events);
                 }
             }
         }
+        noticed
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -2640,6 +2652,7 @@ impl Game {
         .then_some(STANDARD_ACTION_COST)
     }
 
+    /// Returns true when a successful cancelled source-device use refunds time.
     pub(super) fn use_inventory_item(
         &mut self,
         item_id: &str,
@@ -2648,10 +2661,10 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
+    ) -> Result<bool, CoreError> {
         let Some((index, definition)) = self.inventory_item_use_context(item_id)? else {
             events.push(DomainEvent::ItemUseUnavailable);
-            return Ok(());
+            return Ok(false);
         };
         let kind_id = self.items[index].kind_id.clone();
         if self
@@ -2659,17 +2672,17 @@ impl Game {
             .is_some()
         {
             events.push(DomainEvent::ItemUseUnavailable);
-            return Ok(());
+            return Ok(false);
         }
         if definition.capture_ball {
             self.use_capture_ball(index, target, events, changed, removed_entities);
-            return Ok(());
+            return Ok(false);
         }
         if self.mount_item_target_is_valid(item_id, target).is_some()
             && let Some(mount_use) = definition.mount_use.clone()
         {
             self.use_inventory_mount_item(index, &kind_id, &mount_use, target, events, changed);
-            return Ok(());
+            return Ok(false);
         }
         let activation = self.items[index].activation.clone();
         let (profile_id, difficulty, cost, effect, plan) =
@@ -2696,7 +2709,7 @@ impl Game {
                     target_glyph,
                 ) else {
                     events.push(DomainEvent::ItemUseUnavailable);
-                    return Ok(());
+                    return Ok(false);
                 };
                 (
                     Some(activation.profile_id.clone()),
@@ -2710,7 +2723,7 @@ impl Game {
                     self.item_use_plan(item_id, &action.effect, None, target, target_glyph)
                 else {
                     events.push(DomainEvent::ItemUseUnavailable);
-                    return Ok(());
+                    return Ok(false);
                 };
                 (
                     None,
@@ -2721,7 +2734,7 @@ impl Game {
                 )
             } else {
                 events.push(DomainEvent::ItemUseUnavailable);
-                return Ok(());
+                return Ok(false);
             };
         if cost.is_some_and(|cost| {
             self.items[index]
@@ -2729,7 +2742,7 @@ impl Game {
                 .is_none_or(|state| state.current < cost)
         }) {
             events.push(DomainEvent::ItemUseUnavailable);
-            return Ok(());
+            return Ok(false);
         }
 
         let player_is_skeleton = self.player_is_skeleton();
@@ -2785,7 +2798,7 @@ impl Game {
                 resolution: check.to_dto(skill_id),
             });
             if !succeeded {
-                return Ok(());
+                return Ok(false);
             }
         }
 
@@ -2798,7 +2811,18 @@ impl Game {
         // RFB checks an equipment activation before asking for its direction.
         // Cancelling that attempt keeps the spent turn/check, but not the cooldown.
         if matches!(plan, ItemUsePlan::CancelledActivation) {
-            return Ok(());
+            if matches!(effect, ItemUseEffectDefinition::IdentifyItem { .. })
+                && definition
+                    .device_generation
+                    .as_ref()
+                    .is_some_and(|generation| generation.rfb_device.is_some())
+            {
+                // cmd6.c: successful device check followed by cancel identifies
+                // the device, spends no SP and refunds the action energy.
+                self.identify_item_instance(item_id, ItemIdentificationRequest::new(false));
+                return Ok(true);
+            }
+            return Ok(false);
         }
         if let Some(cost) = cost {
             self.items[index]
@@ -2816,7 +2840,7 @@ impl Game {
             .map(|_| self.effective_player_device_power_bonus())
             .unwrap_or(0)
             + item_device_power_bonus;
-        self.resolve_inventory_item_effect(
+        let noticed = self.resolve_inventory_item_effect(
             SettledItemUse {
                 kind_id,
                 profile_id,
@@ -2828,6 +2852,14 @@ impl Game {
             changed,
             removed_entities,
         )?;
+        if noticed
+            && definition
+                .device_generation
+                .as_ref()
+                .is_some_and(|generation| generation.rfb_device.is_some())
+        {
+            self.identify_item_instance(item_id, ItemIdentificationRequest::new(false));
+        }
         if snotling_mushroom_boost {
             self.apply_snotling_mushroom_boost(&definition.id, events);
         }
@@ -2850,7 +2882,7 @@ impl Game {
                 removed_entities,
             );
         }
-        Ok(())
+        Ok(false)
     }
 
     fn boost_item_ability_effect(&mut self, effect: &mut AbilityEffectDefinition, bonus: i32) {
@@ -2915,7 +2947,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
+    ) -> Result<bool, CoreError> {
         let SettledItemUse {
             kind_id,
             profile_id,
@@ -2923,6 +2955,7 @@ impl Game {
             plan,
             device_power_bonus,
         } = settled;
+        let mut noticed = false;
         match (effect, plan) {
             (ItemUseEffectDefinition::RefillQuiver, ItemUsePlan::SelfTarget) => {
                 self.refill_quiver(&kind_id, profile_id.as_deref(), events)?;
@@ -3152,15 +3185,16 @@ impl Game {
             (ItemUseEffectDefinition::ApplyBooze, ItemUsePlan::SelfTarget) => {
                 self.resolve_item_booze(&kind_id, events, changed);
             }
-            (ItemUseEffectDefinition::Sequence { effects }, ItemUsePlan::SelfTarget) => self
-                .resolve_item_sequence(
+            (ItemUseEffectDefinition::Sequence { effects }, ItemUsePlan::SelfTarget) => {
+                noticed = self.resolve_item_sequence(
                     &kind_id,
                     profile_id.as_deref(),
                     effects,
                     device_power_bonus,
                     events,
                     changed,
-                ),
+                );
+            }
             (
                 ItemUseEffectDefinition::Acquirement {
                     loot_table_id,
@@ -3460,7 +3494,7 @@ impl Game {
                 changed,
             ),
             (effect @ ItemUseEffectDefinition::Detect { .. }, ItemUsePlan::Detect) => {
-                self.resolve_item_detection(kind_id, profile_id, effect, events, changed);
+                noticed = self.resolve_item_detection(kind_id, profile_id, effect, events, changed);
             }
             (
                 effect @ ItemUseEffectDefinition::SummonCategory { .. },
@@ -3469,6 +3503,7 @@ impl Game {
                 .resolve_item_category_summon(kind_id, profile_id, effect, plan, events, changed),
             (ItemUseEffectDefinition::IdentifyItem { full }, ItemUsePlan::Item { item_id }) => {
                 self.resolve_item_identification(&kind_id, &item_id, full, events);
+                noticed = true;
             }
             (
                 ItemUseEffectDefinition::EnchantItem {
@@ -3519,7 +3554,7 @@ impl Game {
             ) => self.resolve_item_recall(kind_id, effect, plan, events),
             _ => unreachable!("validated item effect and target plan must remain compatible"),
         }
-        Ok(())
+        Ok(noticed)
     }
 
     pub(super) fn item_use_plan(
@@ -3752,6 +3787,17 @@ impl Game {
                 self_target.then(|| self.item_category_summon_plan(effect))
             }
             ItemUseEffectDefinition::IdentifyItem { .. } => {
+                if target.is_none()
+                    && self
+                        .items
+                        .iter()
+                        .find(|item| item.id == source_item_id)
+                        .and_then(|item| self.content.item(&item.kind_id))
+                        .and_then(|definition| definition.device_generation.as_ref())
+                        .is_some_and(|generation| generation.rfb_device.is_some())
+                {
+                    return Some(ItemUsePlan::CancelledActivation);
+                }
                 let TargetSelection::Item {
                     item_id: target_item_id,
                 } = target?

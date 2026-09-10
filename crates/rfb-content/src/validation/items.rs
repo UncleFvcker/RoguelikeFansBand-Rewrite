@@ -2,6 +2,22 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+fn source_utility_device_effect(effect: &crate::ItemUseEffectDefinition) -> bool {
+    use crate::ItemUseEffectDefinition as Effect;
+    match effect {
+        Effect::Detect { .. } | Effect::IdentifyItem { .. } => true,
+        Effect::Sequence { effects } => {
+            effects
+                .iter()
+                .any(|effect| matches!(effect, Effect::Detect { .. }))
+                && effects
+                    .iter()
+                    .all(|effect| matches!(effect, Effect::Detect { .. } | Effect::NoNumericEffect))
+        }
+        _ => false,
+    }
+}
+
 use crate::{
     AbilityDetectSubjectDefinition, AbilityEffectDefinition, AbilityTargetDefinition,
     AbilityTargetModeDefinition, ContentError, EquipmentBonuses, ITEM_SCHEMA, ItemDefinition,
@@ -531,7 +547,8 @@ pub(crate) fn valid_item_effect(
                     }
                     AbilityDetectSubjectDefinition::Actor => {
                         !persistent
-                            && (category == "any-monster" || actor_tag_values.contains(category))
+                            && (matches!(category.as_str(), "any-monster" | "normal-monster")
+                                || actor_tag_values.contains(category))
                     }
                     AbilityDetectSubjectDefinition::Item => {
                         !persistent && (category == "item" || item_tag_values.contains(category))
@@ -1200,6 +1217,47 @@ pub(super) fn validate_items(
             }
         }
         if let Some(generation) = &mut item.device_generation {
+            if let Some(source) = &generation.rfb_device {
+                let capacity_multiplier = match item.rfb_base_kind.map(|kind| kind.tval) {
+                    Some(66) => 2,
+                    Some(55 | 65) => 4,
+                    _ => return Err(ContentError::InvalidItemUseAction(item.id.clone())),
+                };
+                let ids = source
+                    .effects
+                    .iter()
+                    .map(|row| &row.activation_id)
+                    .collect::<BTreeSet<_>>();
+                let valid = !generation.activation_optional
+                    && ids.len() == source.effects.len()
+                    && ids.len() == generation.activations.len()
+                    && ids.contains(&source.fixed_activation_id)
+                    && generation.activations.iter().all(|profile| {
+                        let Some(row) = source
+                            .effects
+                            .iter()
+                            .find(|row| row.activation_id == profile.id)
+                        else {
+                            return false;
+                        };
+                        let spread = profile.max_depth.saturating_sub(profile.min_depth);
+                        row.rarity <= 64
+                            && row.difficulty_base <= 100
+                            && row.difficulty_extra <= 100
+                            && spread * 2 / 7 > 0
+                            && profile.device_check_difficulty == i32::from(profile.min_depth)
+                            && profile.rfb_value.is_none()
+                            && profile.rfb_biases.is_empty()
+                            && profile.weight == 1
+                            && profile.charges.cost <= 250
+                            && profile.charges.minimum == capacity_multiplier * profile.charges.cost
+                            && profile.charges.maximum == 1000
+                            && source_utility_device_effect(&profile.effect)
+                    });
+                if !valid {
+                    return Err(ContentError::InvalidItemUseAction(item.id.clone()));
+                }
+            }
             generation
                 .activations
                 .sort_by(|left, right| left.id.cmp(&right.id));
@@ -1270,11 +1328,12 @@ pub(super) fn validate_items(
                         )
                         && valid_item_effect_target(&activation.effect, &activation.target)
                 })
-                && (1..=100).all(|depth| {
-                    generation.activations.iter().any(|activation| {
-                        activation.min_depth <= depth && depth <= activation.max_depth
-                    })
-                });
+                && (generation.rfb_device.is_some()
+                    || (1..=100).all(|depth| {
+                        generation.activations.iter().any(|activation| {
+                            activation.min_depth <= depth && depth <= activation.max_depth
+                        })
+                    }));
             let equipment_activation = item.equipment_slot.is_some()
                 && ((item.artifact_generation.is_some()
                     && item.tags.iter().any(|tag| tag == "artifact"))

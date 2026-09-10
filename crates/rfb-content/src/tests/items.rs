@@ -1739,6 +1739,30 @@ fn restorative_item_sequences_require_bounded_effects_and_known_resources() {
 #[test]
 fn dynamic_devices_require_stable_profiles_depth_coverage_and_capacity() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    for defect in 0..4 {
+        let mut invalid = artifact.content.clone();
+        let generation = invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.detect-objects-staff")
+            .unwrap()
+            .device_generation
+            .as_mut()
+            .unwrap();
+        match defect {
+            0 => {
+                generation.rfb_device.as_mut().unwrap().fixed_activation_id =
+                    "missing.profile".into()
+            }
+            1 => generation.rfb_device.as_mut().unwrap().effects[0].difficulty_base = 101,
+            2 => generation.activations[0].charges.maximum = 1001,
+            _ => generation.activations[0].effect = ItemUseEffectDefinition::Heal { amount: 1 },
+        }
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidItemUseAction(_))
+        ));
+    }
     let wand = artifact
         .content
         .items

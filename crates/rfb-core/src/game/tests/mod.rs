@@ -26,6 +26,7 @@ mod book_discovery;
 mod capture_ball;
 mod cavalry;
 mod combat;
+mod devices;
 mod disaster_area;
 mod dungeon_anti_magic;
 mod dungeon_anti_melee;

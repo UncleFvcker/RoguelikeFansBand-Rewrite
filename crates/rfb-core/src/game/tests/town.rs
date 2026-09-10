@@ -4438,7 +4438,8 @@ fn magic_shop_purchase_device_use_and_save_are_authoritative() {
     let charges_before = bought
         .charges
         .expect("purchased staff should retain its generated energy");
-    assert_eq!(charges_before.maximum, 45);
+    // Fixed DETECT_OBJECTS: power max(source level 5, 7), capacity 3 * 7.
+    assert_eq!(charges_before.maximum, 21);
     assert!(charges_before.current >= 4);
     let staff_id = bought.id.clone();
 

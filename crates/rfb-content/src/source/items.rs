@@ -179,6 +179,8 @@ struct SourceItemDeviceGenerationDefinition {
     activations: Vec<SourceItemDeviceActivationDefinition>,
     #[serde(default)]
     recovery: Option<ItemDeviceRecoveryDefinition>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    rfb_device: Option<crate::RfbDeviceGenerationDefinition>,
 }
 
 impl SourceItemUseActionDefinition {
@@ -230,6 +232,7 @@ impl SourceItemDeviceGenerationDefinition {
         programs: &BTreeMap<String, ResolvedEffectProgram>,
     ) -> Result<ItemDeviceGenerationDefinition, ContentError> {
         Ok(ItemDeviceGenerationDefinition {
+            rfb_device: self.rfb_device,
             activation_optional: self.activation_optional,
             activations: self
                 .activations

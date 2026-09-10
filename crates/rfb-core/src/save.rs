@@ -763,6 +763,26 @@ fn validate_item_runtime_state(
                             crate::game::device_difficulty(profile.device_check_difficulty, pval)
                         },
                     );
+                    if let Some(source) = &generation.rfb_device {
+                        return source
+                            .effects
+                            .iter()
+                            .find(|row| row.activation_id == profile.id)
+                            .is_some_and(|row| {
+                                activation.name_key == profile.name_key
+                                    && activation.target_spec == target_spec
+                                    && charges.current <= charges.maximum
+                                    && device_recovery_progress.is_multiple_of(10)
+                                    && crate::game::source_device_runtime_valid(
+                                        profile,
+                                        row,
+                                        activation,
+                                        charges,
+                                        definition.tags.iter().any(|tag| tag == "rod"),
+                                        device_ego,
+                                    )
+                            });
+                    }
                     activation.name_key == profile.name_key
                         && activation.cost == profile.charges.cost
                         && activation.device_check_difficulty == difficulty

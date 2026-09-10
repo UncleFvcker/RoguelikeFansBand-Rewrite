@@ -1253,6 +1253,9 @@ mod tests {
             },
         };
         assert_eq!(context.drop_theme(&game.content), "hobbit");
+        // Test the unboosted depth boundary independently of birth RNG.
+        game.rng = crate::RfbRng::seeded(1);
+        assert_ne!(game.rng.clone().bounded(8), 0);
         assert!(
             game.generate_one_loot_draft(&context, ItemGenerationMode::Ordinary)
                 .is_none()
