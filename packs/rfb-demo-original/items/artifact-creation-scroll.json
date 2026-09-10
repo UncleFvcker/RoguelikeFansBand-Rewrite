@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.artifact-creation-scroll",
+  "nameKey": "item-demo-artifact-creation-scroll-name",
+  "appearanceNameKey": "item-demo-artifact-creation-scroll-appearance",
+  "descriptionKey": "item-demo-artifact-creation-scroll-description",
+  "glyph": "?",
+  "maxStack": 20,
+  "weightTenthsPound": 5,
+  "baseValue": 200000,
+  "rfbBaseKind": { "sourceIndex": 364, "tval": 70, "sval": 52 },
+  "tags": ["consumable", "mutation", "rfb-compatibility", "scroll"],
+  "elementalDestructionVulnerabilities": ["acid", "fire"],
+  "useAction": { "effectProgramId": "demo.effect.artifact-creation-scroll" }
+}

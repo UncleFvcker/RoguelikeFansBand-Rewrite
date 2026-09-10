@@ -25,7 +25,9 @@ impl Game {
             TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
             TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
             TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
-            TargetSelection::CraftingItem { .. } => return None,
+            TargetSelection::CraftingItem { .. } | TargetSelection::ArtifactCreationItem { .. } => {
+                return None;
+            }
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
         };
         if !ability.target.modes.contains(&mode) {
@@ -45,7 +47,9 @@ impl Game {
             TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
             TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
             TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
-            TargetSelection::CraftingItem { .. } => return None,
+            TargetSelection::CraftingItem { .. } | TargetSelection::ArtifactCreationItem { .. } => {
+                return None;
+            }
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
         };
         if !ability.target.modes.contains(&mode) {
@@ -68,7 +72,9 @@ impl Game {
             }
             TargetSelection::SelfTarget => None,
             TargetSelection::Item { .. } => None,
-            TargetSelection::Town { .. } | TargetSelection::CraftingItem { .. } => None,
+            TargetSelection::Town { .. }
+            | TargetSelection::CraftingItem { .. }
+            | TargetSelection::ArtifactCreationItem { .. } => None,
         }
     }
 
@@ -105,7 +111,9 @@ impl Game {
             }
             TargetSelection::SelfTarget => None,
             TargetSelection::Item { .. } => None,
-            TargetSelection::Town { .. } | TargetSelection::CraftingItem { .. } => None,
+            TargetSelection::Town { .. }
+            | TargetSelection::CraftingItem { .. }
+            | TargetSelection::ArtifactCreationItem { .. } => None,
         }
     }
 

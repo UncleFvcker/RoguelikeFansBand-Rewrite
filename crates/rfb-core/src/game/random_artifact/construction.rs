@@ -118,7 +118,10 @@ impl Generator<'_, '_> {
         if self.has("BRAND_FIRE") {
             self.add("LITE");
         }
-        if !self.has_activation && self.one(if self.armor() { 10 } else { 5 }) {
+        if !self.has_activation
+            && !(16..=18).contains(&self.object.tval)
+            && self.one(if self.armor() { 10 } else { 5 })
+        {
             self.random_activation();
         }
         if self.armor() || matches!(self.object.tval, 45 | 40) {
@@ -339,8 +342,41 @@ impl Generator<'_, '_> {
         }
         while powers > 0 {
             powers -= 1;
-            let n = self.roll(if self.object.tval == 19 { 9 } else { 7 });
+            let n = if (16..=18).contains(&self.object.tval) {
+                0
+            } else {
+                self.roll(if self.object.tval == 19 { 9 } else { 7 })
+            };
             match self.object.tval {
+                16..=18 => {
+                    if self.roll(225) < level && self.slaying == 0 {
+                        if self.one(3) {
+                            powers -= self.object.dd - 1;
+                            self.object.dd *= 2;
+                            self.slaying += self.object.dd;
+                        } else {
+                            powers += 2;
+                            loop {
+                                self.object.dd += 1;
+                                powers -= 1;
+                                self.slaying += 1;
+                                if !self.one(self.object.dd) {
+                                    break;
+                                }
+                            }
+                            loop {
+                                self.object.ds += 1;
+                                powers -= 1;
+                                self.slaying += 1;
+                                if !self.one(self.object.ds) {
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        self.slay();
+                    }
+                }
                 39 => match n {
                     1 | 2 => self.plus(),
                     3 => {

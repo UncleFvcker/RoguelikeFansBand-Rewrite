@@ -58,6 +58,29 @@ pub(super) fn commit_damage_application(target: &mut Actor, plan: &DamageApplica
 }
 
 impl Game {
+    pub(super) fn apply_metal_monster_resistance(
+        &mut self,
+        index: usize,
+        mut damage: DamageOutcome,
+    ) -> DamageOutcome {
+        // xtra2.c::mon_damage_mod(_mon): only these two races reduce
+        // weapon/blow damage by 100; other RES_ALL races remain melee-vulnerable.
+        if damage.applied > 0
+            && matches!(
+                self.entities[index].kind_id.as_str(),
+                "demo.actor.metal-babble" | "demo.actor.metal-babble-unique"
+            )
+        {
+            let before = damage.applied;
+            damage.applied /= 100;
+            if damage.applied == 0 && self.rng.bounded(3) == 0 {
+                damage.applied = 1;
+            }
+            damage.resistance_delta += before - damage.applied;
+        }
+        damage
+    }
+
     pub(super) fn apply_final_player_damage(
         &mut self,
         damage: DamageOutcome,

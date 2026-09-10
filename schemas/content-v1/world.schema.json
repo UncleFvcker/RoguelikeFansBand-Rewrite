@@ -1474,11 +1474,20 @@
       "type": "object"
     },
     "ProceduralLayoutMode": {
-      "enum": [
-        "rooms",
-        "maze-only"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "rooms",
+            "maze-only"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "arena-rooms",
+          "description": "Dungeon 25's circular rooms, tunnel selection and occasional room light.",
+          "type": "string"
+        }
+      ]
     },
     "ProceduralLootAllocationDefinition": {
       "additionalProperties": false,
@@ -1738,12 +1747,21 @@
       "type": "string"
     },
     "ProceduralRoomShape": {
-      "enum": [
-        "rectangle",
-        "cross",
-        "cavern"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "rectangle",
+            "cross",
+            "cavern"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "circle",
+          "description": "Odd square footprint including its outer wall; uses RFB grid distance.",
+          "type": "string"
+        }
+      ]
     },
     "ProceduralRoomShapeCandidateDefinition": {
       "additionalProperties": false,

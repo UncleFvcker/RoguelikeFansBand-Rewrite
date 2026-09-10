@@ -898,6 +898,8 @@ pub enum ProceduralLayoutMode {
     #[default]
     Rooms,
     MazeOnly,
+    /// Dungeon 25's circular rooms, tunnel selection and occasional room light.
+    ArenaRooms,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -997,6 +999,16 @@ pub enum ProceduralRoomShape {
     Rectangle,
     Cross,
     Cavern,
+    /// Odd square footprint including its outer wall; uses RFB grid distance.
+    Circle,
+}
+
+pub fn circular_room_area(diameter: u16) -> u32 {
+    let radius = i32::from(diameter) / 2 - 1;
+    (-radius..=radius)
+        .flat_map(|y| (-radius..=radius).map(move |x| (x.abs(), y.abs())))
+        .filter(|(x, y)| x.max(y) + x.min(y) / 2 <= radius)
+        .count() as u32
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

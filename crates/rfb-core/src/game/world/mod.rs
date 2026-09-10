@@ -5,6 +5,17 @@ pub(super) mod geometry;
 use super::*;
 
 impl Game {
+    pub(super) fn floor_uses_arena_rooms(&self, floor_id: &str) -> bool {
+        self.content.world(&self.world_id).is_some_and(|world| {
+            world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == floor_id)
+                .and_then(|floor| floor.layout.as_ref())
+                .is_some_and(|layout| layout.mode == ProceduralLayoutMode::ArenaRooms)
+        })
+    }
+
     pub(super) fn floor_dungeon(&self, floor_id: &str) -> Option<&rfb_content::DungeonDefinition> {
         let world = self.content.world(&self.world_id)?;
         let dungeon_id = world

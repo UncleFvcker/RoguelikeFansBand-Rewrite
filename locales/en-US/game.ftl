@@ -687,6 +687,9 @@ player-life-force-death = You die from life force exhaustion.
 monster-unlife-drained-restored = { $source } drains { $amount } life force; after transformation, your life force returns to { $lifeForceFinal }.
 monster-unlife-drained-ranged = { $source } drains { $amount } life force.
 message-item-use-crafting-failed = Crafting { $target } failed.
+message-item-artifact-creation-success = Turned { $target } into an artifact.
+message-item-artifact-creation-failed = Artifact creation failed for { $target }. The scroll and turn are retained.
+message-item-artifact-creation-stack = Destroyed the other { $quantity } items in the stack.
 
 inn-reputation-unknown = Who are you?
 inn-reputation-unheard = I have never even heard of you!

@@ -246,6 +246,7 @@ fn tailored_candidate(game: &Game, item: &ItemDefinition) -> bool {
         21..=23 => {
             can_equip()
                 && class != Some("demo.class.archer")
+                && (class != Some("demo.class.duelist") || game.duelist_favorite_weapon(item))
                 && (class != Some("demo.class.cavalry") || item.riding_weapon_kind.is_some())
         }
         55 | 65 | 66 => class == Some("demo.class.high-mage"),
@@ -467,6 +468,10 @@ mod tests {
             .unwrap()
             .clone();
         armor.weight_tenths_pound = 200;
+        assert!(!tailored_candidate(
+            &game,
+            game.content.item("demo.item.broad-axe").unwrap()
+        ));
         assert!(tailored_candidate(&game, &armor));
         armor.weight_tenths_pound = 201;
         assert!(!tailored_candidate(&game, &armor));
@@ -488,6 +493,7 @@ mod tests {
             "warrior",
             "berserker",
             "mindcrafter",
+            "duelist",
             "archer",
             "sniper",
             "cavalry",
@@ -524,7 +530,7 @@ mod tests {
                 assert!(!accepts(id), "{build}: {id}");
             }
             assert_eq!(accepts("dagger"), !matches!(build, "archer" | "cavalry"));
-            assert_eq!(accepts("lance"), build != "archer");
+            assert_eq!(accepts("lance"), !matches!(build, "archer" | "duelist"));
             assert_eq!(accepts("magic-missile-wand"), build == "high-mage-death");
             assert_eq!(
                 accepts("black-channels"),

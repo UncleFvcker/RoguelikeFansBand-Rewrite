@@ -6,6 +6,7 @@ use super::projectile_geometry::{has_line_of_effect, rfb_distance};
 use super::visibility::{VISIBILITY_RADIUS, has_line_of_sight};
 use super::{abilities::AbilityTargetPlan, *};
 mod artifact_activations;
+mod artifact_creation;
 
 const WAYBREAD_INTOLERANCE_MUTATION_ID: &str = "rfb.mutation.waybread-into";
 const SKELETON_RACE_ID: &str = "rfb-legacy.race.skeleton";
@@ -62,6 +63,10 @@ pub(super) enum ItemUsePlan {
     },
     Item {
         item_id: String,
+    },
+    ArtifactCreation {
+        item_id: String,
+        name: Option<String>,
     },
     RandomTeleport {
         candidates: Vec<Position>,
@@ -2653,7 +2658,7 @@ impl Game {
         .then_some(STANDARD_ACTION_COST)
     }
 
-    /// Returns true when a successful cancelled source-device use refunds time.
+    /// Returns true when a cancelled device use or failed artifact creation refunds time.
     pub(super) fn use_inventory_item(
         &mut self,
         item_id: &str,
@@ -2668,6 +2673,12 @@ impl Game {
             return Ok(false);
         };
         let kind_id = self.items[index].kind_id.clone();
+        if self.items[index].is_artifact_mushroom(&self.content)
+            && self.items[index].device_recovery_progress > 0
+        {
+            events.push(DomainEvent::ItemUseUnavailable);
+            return Ok(false);
+        }
         if self
             .berserker_item_use_rejection_cost(&self.items[index])
             .is_some()
@@ -2825,7 +2836,21 @@ impl Game {
             }
             return Ok(false);
         }
-        if let Some(cost) = cost {
+        if let ItemUsePlan::ArtifactCreation { item_id, name } = &plan
+            && !self.resolve_artifact_creation(
+                &kind_id,
+                item_id,
+                name.as_deref(),
+                events,
+                changed,
+            )?
+        {
+            return Ok(true);
+        }
+        if self.items[index].is_artifact_mushroom(&self.content) {
+            self.items[index].device_recovery_progress =
+                crate::state::ARTIFACT_MUSHROOM_COOLDOWN_TICKS;
+        } else if let Some(cost) = cost {
             self.items[index]
                 .charges
                 .as_mut()
@@ -2841,6 +2866,9 @@ impl Game {
             .map(|_| self.effective_player_device_power_bonus())
             .unwrap_or(0)
             + item_device_power_bonus;
+        if matches!(plan, ItemUsePlan::ArtifactCreation { .. }) {
+            return Ok(false);
+        }
         let noticed = self.resolve_inventory_item_effect(
             SettledItemUse {
                 kind_id,
@@ -3837,6 +3865,9 @@ impl Game {
                 .then(|| ItemUsePlan::Item {
                     item_id: target_item_id.clone(),
                 })
+            }
+            ItemUseEffectDefinition::CreateArtifact => {
+                self.artifact_creation_plan(source_item_id, target?)
             }
             effect @ ItemUseEffectDefinition::EnchantItem { .. } => {
                 let TargetSelection::Item {
@@ -6013,6 +6044,7 @@ impl Game {
             | ItemUseEffectDefinition::IdentifyItem { .. }
             | ItemUseEffectDefinition::Acquirement { .. }
             | ItemUseEffectDefinition::MundanifyItem
+            | ItemUseEffectDefinition::CreateArtifact
             | ItemUseEffectDefinition::CraftItem { .. }
             | ItemUseEffectDefinition::ShowRumour { .. }
             | ItemUseEffectDefinition::EnchantItem { .. }

@@ -11,7 +11,9 @@ pub(super) mod scheduling;
 mod tests;
 pub(super) use materialization::materialize;
 pub(super) use materialization::materialize_replacement;
+pub(super) use materialization::materialize_scroll;
 pub(super) use materialization::resistance_elements;
+pub(super) use names::intern as intern_name;
 
 pub(super) fn names_are_valid(names: &BTreeSet<String>) -> bool {
     names.len() <= names::QUARK_CAPACITY
@@ -43,6 +45,7 @@ pub(super) struct Creation<'a> {
 }
 
 pub(super) struct ArtifactRoll<'a> {
+    pub value: i32,
     pub object: ValueObject,
     pub name: String,
     pub activation: Option<&'a rfb_content::ItemDeviceActivationDefinition>,
@@ -197,7 +200,7 @@ pub(super) fn create_artifact<'a>(
 ) -> Option<ArtifactRoll<'a>> {
     if creation.no_artifacts
         || object.flags.contains("NO_REMOVE")
-        || !matches!(object.tval, 19..=23 | 30..=40 | 45)
+        || !matches!(object.tval, 16..=23 | 30..=40 | 45)
     {
         return None;
     }
@@ -289,6 +292,7 @@ pub(super) fn create_artifact<'a>(
     let name = names::intern(quarks, name);
     generator.object.artifact = true;
     Some(ArtifactRoll {
+        value: cost,
         object: generator.object,
         name,
         activation: generator.activation,

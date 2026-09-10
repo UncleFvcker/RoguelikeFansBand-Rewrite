@@ -1280,7 +1280,13 @@ impl Game {
         let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
         let mut turn_advance = 1_u32;
         let mut player_moved = false;
-        let deferred_item_turn = matches!(&action, GameAction::UseItem { target: None, .. });
+        let deferred_item_turn = matches!(
+            &action,
+            GameAction::UseItem {
+                target: None | Some(TargetSelection::ArtifactCreationItem { .. }),
+                ..
+            }
+        );
         let defer_ability_cooldowns = matches!(&action, GameAction::CastAbility { ability_id, .. }
             if self.dungeon_blocks_vampirism(ability_id));
         if advances_world && !defer_ability_cooldowns && !deferred_item_turn {
@@ -3019,11 +3025,12 @@ impl Game {
                 summoned_kind_ids: Vec::new(),
             };
         }
-        let group = match spec.group_chance_percent {
-            0 => false,
-            100 => true,
-            chance => self.rng.bounded(100) < u64::from(chance),
-        };
+        let group = !self.floor_uses_arena_rooms(&self.current_floor_id)
+            && match spec.group_chance_percent {
+                0 => false,
+                100 => true,
+                chance => self.rng.bounded(100) < u64::from(chance),
+            };
         let (dice, sides, bonus) = if group {
             (
                 spec.group_count_dice,
@@ -3644,6 +3651,9 @@ impl Game {
         }) else {
             return false;
         };
+        if item.is_artifact_mushroom(&self.content) {
+            return item.device_recovery_progress > 0;
+        }
         let cost = item
             .activation
             .as_ref()
@@ -3775,6 +3785,7 @@ impl Game {
                     | ItemUseEffectDefinition::EnchantItem { .. }
                     | ItemUseEffectDefinition::EnchantEquipment
                     | ItemUseEffectDefinition::CraftItem { .. }
+                    | ItemUseEffectDefinition::CreateArtifact
                     | ItemUseEffectDefinition::RechargeFromDevice { .. }
                     | ItemUseEffectDefinition::RandomTeleport { .. }
                     | ItemUseEffectDefinition::TeleportLevel
@@ -3803,7 +3814,9 @@ impl Game {
             TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
             TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
             TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
-            TargetSelection::CraftingItem { .. } => return None,
+            TargetSelection::CraftingItem { .. } | TargetSelection::ArtifactCreationItem { .. } => {
+                return None;
+            }
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
         };
         target_definition

@@ -4,8 +4,28 @@
 use crate::game::projectile_geometry::{projectile_path_through_target, rfb_distance};
 use crate::game::visibility::has_line_of_sight;
 use crate::game::*;
+use rfb_content::ItemDefinition;
 
 impl Game {
+    pub(in crate::game) fn duelist_favorite_weapon(&self, item: &ItemDefinition) -> bool {
+        let base_id = item
+            .weapon_proficiency_base_item_id
+            .as_deref()
+            .unwrap_or(&item.id);
+        item.melee_profile.is_some()
+            && self
+                .character_definitions()
+                .is_some_and(|(_, _, class, _)| {
+                    class.weapon_proficiency.as_ref().is_some_and(|profile| {
+                        profile
+                            .overrides
+                            .get(base_id)
+                            .map_or(profile.default_maximum, |bounds| bounds.maximum)
+                            > 4000
+                    })
+                })
+    }
+
     /// UI acceptance fixture: real experience gains and two targets on a lit test floor.
     #[doc(hidden)]
     pub fn debug_prepare_duelist_e2e(

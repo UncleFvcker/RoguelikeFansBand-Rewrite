@@ -1002,6 +1002,7 @@ pub enum ItemUseEffectDefinition {
         maximum_count: u8,
     },
     MundanifyItem,
+    CreateArtifact,
     RefillQuiver,
     StarBall,
     Starlight {

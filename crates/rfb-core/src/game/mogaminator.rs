@@ -1168,18 +1168,7 @@ impl Game {
             MogaminatorPredicate::Weapons => slot == Some("weapon") || tagged("weapon"),
             MogaminatorPredicate::FavoriteWeapons => class.is_some_and(|class| {
                 if class.id == "demo.class.duelist" {
-                    let base_id = definition
-                        .weapon_proficiency_base_item_id
-                        .as_deref()
-                        .unwrap_or(&definition.id);
-                    return definition.melee_profile.is_some()
-                        && class.weapon_proficiency.as_ref().is_some_and(|profile| {
-                            profile
-                                .overrides
-                                .get(base_id)
-                                .map_or(profile.default_maximum, |bounds| bounds.maximum)
-                                > 4000
-                        });
+                    return self.duelist_favorite_weapon(definition);
                 }
                 class.favorite_weapon_tags.iter().any(|favorite| {
                     (favorite == "weapon" && (slot == Some("weapon") || tagged("weapon")))

@@ -1265,6 +1265,8 @@ action-bounty-claim-mission = Claim bounty reward
 status-life-force = Life force
 status-life-force-detail = Life force: { $lifeForce } / 1000
 inventory-crafting-confirm = Crafting all { $quantity } projectiles has a { $chance }% chance of failure. The use is consumed even on failure. Continue?
+inventory-artifact-creation-confirm = Artifact creation keeps one target item and destroys the other { $quantity }. Continue?
+inventory-artifact-creation-name = Artifact name (up to 79 bytes; leave blank or cancel for a random name; mushrooms have a fixed name):
 
 action-inn-food = Buy food and drink ({ $cost } gold)
 inn-food-completed = { $food } Paid { $cost } gold; { $balance } remaining.

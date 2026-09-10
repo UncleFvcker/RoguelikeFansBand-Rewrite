@@ -344,7 +344,7 @@ fn random_artifact_special_bases_keep_their_constraints_and_base_flags() {
             &mut rng,
             data,
             ValueObject {
-                tval: 17,
+                tval: 15,
                 ..dagger()
             },
             Creation::default(),
@@ -433,6 +433,7 @@ fn random_artifact_current_classes_and_themes_select_eligible_biases_and_activat
     }
     for (class, bias) in [
         ("warrior", Bias::Warrior),
+        ("duelist", Bias::Warrior),
         ("berserker", Bias::Warrior),
         ("mindcrafter", Bias::Priestly),
         ("archer", Bias::Warrior),
@@ -513,7 +514,7 @@ fn real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary() {
         assert_eq!(gen_.bias, bias);
         assert_eq!(rng, before, "natural mode must not draw for class bias");
     }
-    // Scroll mode remains a factory contract: no playable scroll entry exists.
+    // Factory boundary evidence complements the actual artifact-scroll command tests.
     for (gate, roll, bias) in [
         (0, 19, Bias::Warrior),
         (0, 20, Bias::Priestly),

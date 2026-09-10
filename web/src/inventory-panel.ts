@@ -835,6 +835,24 @@ export class InventoryPanel {
     if (selected.length !== 1 || !selected[0]?.usable) return;
     const item = selected[0];
     if (item.requiresRechargeTargets) return;
+    if (item.artifactCreationTargets) {
+      const candidates = itemTargetCandidates(this.#state, item.id,
+        (key, kind, name) => this.#formatter.visibleItemName(key, kind, name))
+        .filter((candidate) => item.artifactCreationTargets!.includes(candidate.id));
+      this.#selectItemTargetFrom(candidates, async (targetItemId) => {
+        const target = [...this.#state.inventory, ...this.#state.equipment, ...(this.#state.status?.items ?? [])]
+          .find((candidate) => candidate.id === targetItemId);
+        if (!target || this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
+        const view = this.#dom.inventoryList.ownerDocument.defaultView;
+        if (target.quantity > 1 && !view?.confirm(this.#localization.format("inventory-artifact-creation-confirm", {
+          quantity: target.quantity - 1,
+        }))) return;
+        const name = view?.prompt(this.#localization.format("inventory-artifact-creation-name"), "") || undefined;
+        await this.#dispatch({ type: "use-item", itemId: item.id,
+          target: { type: "artifact-creation-item", itemId: targetItemId, quantity: target.quantity, ...(name ? { name } : {}) } });
+      });
+      return;
+    }
     if (item.requiresCraftingTarget) {
       this.selectItemTarget(item.id, async (targetItemId) => {
         const target = [...this.#state.inventory, ...this.#state.equipment, ...(this.#state.status?.items ?? [])]

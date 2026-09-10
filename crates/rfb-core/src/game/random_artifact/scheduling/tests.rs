@@ -299,7 +299,7 @@ fn random_artifact_forced_base_pipeline_covers_slots_and_special_robe_and_light(
 
 #[test]
 fn random_artifact_save_preserves_rejected_names_and_continued_generation() {
-    for build in ["warrior", "berserker", "mindcrafter"] {
+    for build in ["warrior", "berserker", "mindcrafter", "duelist"] {
         let mut game = Game::new_with_build(85, &format!("demo.build.{build}")).unwrap();
         game.items.clear();
         game.entities.clear();

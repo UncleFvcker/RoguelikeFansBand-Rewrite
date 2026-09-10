@@ -665,6 +665,10 @@ impl Game {
         let world_tick = self.world_tick;
         let content = &self.content;
         for item in &mut self.items {
+            if item.location == ItemLocation::Inventory && item.is_artifact_mushroom(content) {
+                item.device_recovery_progress = item.device_recovery_progress.saturating_sub(1);
+                continue;
+            }
             if !matches!(
                 item.location,
                 ItemLocation::Inventory | ItemLocation::Equipped { .. }

@@ -527,6 +527,15 @@ impl Game {
         kind: DamageType,
         damage: i32,
     ) -> u8 {
+        // gf.c::_BABBLE_HACK blocks damage projections, including PSY_SPEAR.
+        // Actual weapon shots and melee use their separate damage consumers.
+        if self
+            .content
+            .actor(&self.entities[index].kind_id)
+            .is_some_and(|actor| actor.tags.iter().any(|tag| tag == "resist-all"))
+        {
+            return 0;
+        }
         self.actor_incoming_damage_percent(index, damage, kind == DamageType::PsySpear)
     }
 

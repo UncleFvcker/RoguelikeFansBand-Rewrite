@@ -173,6 +173,9 @@ pub(super) fn item_creation_state_is_valid(
         return false;
     }
     let player_made_state_is_valid = match item.origin_kind {
+        Some(ItemOriginKindDto::ArtifactCreation) => {
+            item.artifact_name.is_some() && matches!(item.discount_percent, 0 | 99)
+        }
         None => item.discount_percent == 0,
         Some(ItemOriginKindDto::PlayerMade) => {
             item.discount_percent == 99
@@ -212,10 +215,12 @@ pub(super) fn item_creation_state_is_valid(
                 && name.len() < 1024
                 && !name.chars().any(char::is_control)
                 && item.quantity == 1
-                && definition
-                    .rfb_base_kind
-                    .is_some_and(|base| matches!(base.tval, 16..=23 | 30..=40 | 45 | 46))
-                && definition.rfb_value.is_some()
+                && definition.rfb_base_kind.is_some_and(|base| {
+                    matches!(base.tval, 16..=23 | 30..=40 | 45 | 46)
+                        || definition.tags.iter().any(|tag| tag == "mushroom")
+                })
+                && (definition.rfb_value.is_some()
+                    || definition.tags.iter().any(|tag| tag == "mushroom"))
                 && definition.artifact_generation.is_none()
                 && !definition.tags.iter().any(|tag| tag == "artifact")
                 && item
@@ -224,7 +229,7 @@ pub(super) fn item_creation_state_is_valid(
                     .all(|id| id == "rfb-legacy.affix.blasted")
         })
         && item.intrinsic_melee_damage_dice.is_none_or(|dice| {
-            definition.melee_profile.is_some()
+            (definition.melee_profile.is_some() || definition.ammunition_profile.is_some())
                 && (1..=255).contains(&dice.dice)
                 && (1..=255).contains(&dice.sides)
         })

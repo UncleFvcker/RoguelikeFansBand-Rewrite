@@ -261,8 +261,16 @@ impl Game {
                     .iter()
                     .find(|floor| floor.id == self.current_floor_id)
             })
-            .and_then(|floor| floor.guardian.as_ref())
-            .filter(|guardian| guardian.instance_id == actor.id)
+            .and_then(|floor| {
+                floor.guardian.as_ref().filter(|guardian| {
+                    guardian.instance_id == actor.id
+                        && !self.dungeon_states[floor
+                            .dungeon_id
+                            .as_deref()
+                            .expect("guardian floor must have a dungeon ID")]
+                        .guardian_defeated
+                })
+            })
             .map(|guardian| {
                 (
                     guardian.reward_loot_table_id.clone(),

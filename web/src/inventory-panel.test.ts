@@ -454,6 +454,43 @@ test("crafting confirms risky whole stacks and cancelling dispatches nothing", (
   assert.equal(commands[1].target.quantity, 30);
 });
 
+test("artifact creation uses core candidates, confirms stack loss, and distinguishes target and name cancellation", (t) => {
+  const { panel, dom, state, commands, document } = createInventoryFixture(t);
+  const source = item("scroll", { usable: true, artifactCreationTargets: ["target"] });
+  let accepted = false;
+  let name = "圆月";
+  const prompts = [];
+  document.defaultView = {
+    confirm: (message) => { prompts.push(message); return accepted; },
+    prompt: () => name,
+  };
+  const choose = (quantity) => {
+    panel.render([source, item("target", { quantity }), item("ineligible")], []);
+    state.selectedInventoryIds.add("scroll");
+    dom.inventoryUse.dispatchEvent(new Event("click"));
+    const form = document.body.children[0].children[0];
+    const select = form.children[1].children[1];
+    assert.deepEqual(select.children.map((option) => option.value), ["target"]);
+    select.value = "target";
+    return form;
+  };
+  choose(4).children[2].children[0].dispatchEvent(new Event("click"));
+  assert.equal(commands.length, 0);
+  choose(4).dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.equal(commands.length, 0);
+  assert.match(prompts[0], /"quantity":3/);
+  accepted = true;
+  choose(4).dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.deepEqual(commands[0], { type: "use-item", itemId: "scroll", target: {
+    type: "artifact-creation-item", itemId: "target", quantity: 4, name: "圆月",
+  } });
+  for (name of [null, ""]) {
+    choose(1).dispatchEvent(new Event("submit", { cancelable: true }));
+    assert.deepEqual(commands.at(-1).target, { type: "artifact-creation-item", itemId: "target", quantity: 1 });
+  }
+  assert.equal(prompts.length, 2);
+});
+
 function createInventoryFixture(t) {
   // The controller's DOM boundary only; this does not simulate browser layout.
   class Element extends EventTarget {

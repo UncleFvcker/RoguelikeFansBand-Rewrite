@@ -985,7 +985,7 @@ mod tests {
                     Some("demo.device-activation.trap-sense"),
                 )
                 .expect("device activation should resolve"),
-            "陷阱感知魔棒"
+            "探测陷阱魔棒"
         );
     }
 
@@ -1033,7 +1033,7 @@ mod tests {
                     Some("demo.device-activation.trap-sense"),
                 )
                 .expect("device activation should resolve"),
-            "Rod of trap sense"
+            "Rod of detect traps"
         );
     }
 

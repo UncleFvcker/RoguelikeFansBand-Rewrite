@@ -47,6 +47,7 @@
     "playableBuilds": [
       "demo.build.warrior",
       "demo.build.berserker",
+      "demo.build.duelist",
       "demo.build.archer",
       "demo.build.sniper",
       "demo.build.high-mage-death",
@@ -106,6 +107,7 @@
       "demo.class.archer",
       "demo.class.berserker",
       "demo.class.cavalry",
+      "demo.class.duelist",
       "demo.class.high-mage",
       "demo.class.mindcrafter",
       "demo.class.paladin",
@@ -122,6 +124,12 @@
       {
         "buildId": "demo.build.berserker",
         "classId": "demo.class.berserker",
+        "firstRealmId": null,
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.duelist",
+        "classId": "demo.class.duelist",
         "firstRealmId": null,
         "secondRealmId": null
       },
@@ -179,7 +187,7 @@
           {
             "review": "random-artifact",
             "status": "no-special-difference",
-            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Deferred scroll-only result: Warrior."
+            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Warrior."
           },
           {
             "review": "fixed-artifact-reward",
@@ -250,6 +258,57 @@
         "complete": true
       },
       {
+        "buildId": "demo.build.duelist",
+        "gapIds": [],
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "No realms or tailored device preference. Base weapon proficiency >4000 controls favorite melee kinds; body armor is limited to 200 and shields are excluded. Normal generation retains nonpreferred equipment. Source object2.c:2415-2520, obj_kind.c:97-162 and skills.c skills_weapon_is_icky; docs/duelist-source-audit.md records source and class identity.",
+            "tests": [
+              "crates/rfb-core/src/game/loot/allocation.rs#duelist_tailored_armor_uses_fixed_twenty_pound_limit_and_excludes_shields",
+              "crates/rfb-core/src/game/mogaminator.rs#duelist_favorites_use_base_weapon_cap_including_fixed_artifact_aliases"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "Shared Ego/negative materialization applies. Generated curse handling and source Duelist attack caps remain equipment consumers.",
+            "tests": [
+              "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_negative_power_reaches_a_cursed_equippable_instance",
+              "crates/rfb-core/src/game/tests/duelist.rs#weapon_damage_and_positive_cap_preserve_zero_attacks"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "implemented",
+            "reason": "Natural/themed mode uses shared rules; artifact.c:2223 selects Warrior on the scroll-only 1/4 class gate. The actual scroll command and saved item consumer use a real Duelist build.",
+            "tests": [
+              "crates/rfb-core/src/game/random_artifact/tests.rs#random_artifact_current_classes_and_themes_select_eligible_biases_and_activations",
+              "crates/rfb-core/src/game/tests/items.rs#artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "Thieves reward is a rapier; Old Castle selects Duelist/Quickthorn with the source 1:4 weights. Already generated artifacts produce a named rapier replacement; activation and positive blows use Duelist consumers.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/duelist/rewards.rs"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "A real new-game Duelist obtains a generated tailored weapon, equips it, saves and continues generation with identical state/RNG. Negative random artifacts, source equipment limits and actual scroll use reuse the specific tests above.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/items.rs#tailored_duelist_weapon_equips_and_preserves_continued_generation_after_save",
+              "crates/rfb-core/src/game/tests/duelist.rs#armor_threshold_and_equipment_restrictions_clear_without_restoring_challenges"
+            ]
+          }
+        ],
+        "complete": true
+      },
+      {
         "buildId": "demo.build.archer",
         "areas": [
           {
@@ -265,7 +324,7 @@
           {
             "review": "random-artifact",
             "status": "no-special-difference",
-            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Deferred scroll-only result: Warrior."
+            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Warrior."
           },
           {
             "review": "fixed-artifact-reward",
@@ -300,7 +359,7 @@
           {
             "review": "random-artifact",
             "status": "no-special-difference",
-            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Deferred scroll-only result: Ranger, with 30% Warrior conversion after bias selection."
+            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Ranger, with 30% Warrior conversion after bias selection."
           },
           {
             "review": "fixed-artifact-reward",
@@ -335,7 +394,7 @@
           {
             "review": "random-artifact",
             "status": "no-special-difference",
-            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Deferred scroll-only result: Mage, with 20% Warrior conversion after bias selection."
+            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Mage, with 20% Warrior conversion after bias selection."
           },
           {
             "review": "fixed-artifact-reward",
@@ -372,7 +431,7 @@
           {
             "review": "random-artifact",
             "status": "no-special-difference",
-            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Deferred scroll-only result: Priestly, with 60% Warrior conversion after bias selection; Death realm does not change the scroll class switch."
+            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Priestly, with 60% Warrior conversion after bias selection; Death realm does not change the scroll class switch."
           },
           {
             "review": "fixed-artifact-reward",
@@ -407,7 +466,7 @@
           {
             "review": "random-artifact",
             "status": "no-special-difference",
-            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Deferred scroll-only result: Warrior."
+            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Warrior."
           },
           {
             "review": "fixed-artifact-reward",
@@ -447,7 +506,7 @@
           {
             "review": "random-artifact",
             "status": "no-special-difference",
-            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Deferred scroll-only result: Priestly, with 20% Warrior conversion after bias selection; no natural-generation Mindcrafter bias.",
+            "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Priestly, with 20% Warrior conversion after bias selection; no natural-generation Mindcrafter bias.",
             "tests": [
               "crates/rfb-core/src/game/random_artifact/tests.rs#real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary"
             ]
@@ -494,7 +553,7 @@
           "base-harp-bard"
         ],
         "entry": "Natural floor/monster allocation and existing Acquirement service; ordinary modes retain non-tailored kinds.",
-        "reason": "All eight default builds resolve to the human standard body; race selection supplies real body slots and Tomte birth-headgear rules. Source object_is_favorite defaults to all melee weapons for Warrior, Berserker, Sniper, High Mage, Paladin and Mindcrafter; Archer and Cavalry have explicit filters. Source device-class membership is independent of ability to use devices. Completed-item rejection follows caster glove encumbrance, not general usability.",
+        "reason": "All nine default builds resolve to the human standard body; race selection supplies real body slots and Tomte birth-headgear rules. Source object_is_favorite defaults to all melee weapons for Warrior, Berserker, Sniper, High Mage, Paladin and Mindcrafter; Archer and Cavalry have explicit filters. Source device-class membership is independent of ability to use devices. Completed-item rejection follows caster glove encumbrance, not general usability. Duelist uses source base weapon proficiency caps above Beginner for melee favorites; tailored body armor has the fixed 200 weight limit and shields are excluded. The ordinary pool remains unchanged.",
         "sourceEvidence": [
           "src/obj_kind.c:97-162 object_is_favorite",
           "src/autopick.c:848-868 object_is_icky",
@@ -508,14 +567,17 @@
           "crates/rfb-core/src/game/loot.rs#generate_loot_draft_attempt",
           "crates/rfb-core/src/game/player_abilities.rs#item_is_icky",
           "crates/rfb-core/src/game/item_knowledge.rs",
-          "packs/rfb-demo-original/races/rfb-human.json"
+          "packs/rfb-demo-original/races/rfb-human.json",
+          "crates/rfb-core/src/game/abilities/duelist.rs#duelist_favorite_weapon"
         ],
         "tests": [
           "crates/rfb-core/src/game/loot/allocation.rs#tailored_uses_playable_class_equipment_realms_and_birth_race",
           "crates/rfb-core/src/game/loot/allocation.rs#tailored_preference_draws_follow_class_then_book_then_device",
-          "crates/rfb-core/src/game/tests/book_discovery.rs"
+          "crates/rfb-core/src/game/tests/book_discovery.rs",
+          "crates/rfb-core/src/game/loot/allocation.rs#duelist_tailored_armor_uses_fixed_twenty_pound_limit_and_excludes_shields",
+          "crates/rfb-core/src/game/tests/items.rs#tailored_duelist_weapon_equips_and_preserves_continued_generation_after_save"
         ],
-        "limits": "The real-build allocation loop covers all eight builds and the existing Tomte/body-slot intersection. Good/Great advanced-book limits and Tailored found<3 remain distinct; book instances retain B1 quantity-one representation."
+        "limits": "The real-build allocation loop covers the prior eight builds and added Duelist and the existing Tomte/body-slot intersection. Good/Great advanced-book limits and Tailored found<3 remain distinct; book instances retain B1 quantity-one representation."
       },
       {
         "id": "ego-negative",
@@ -529,7 +591,7 @@
           "theme-reset"
         ],
         "entry": "Shared natural/Ego materialization, existing configured rewards and Craft consumers; no new Craft realm.",
-        "reason": "No eight-class-specific Ego materializer appears in reviewed source: weight adjustment belongs to unavailable Mauler. Existing luck mutations, Chance virtue, themes, race/body properties and curse consumers still apply and can differ by real character state; no-special-difference means no additional class branch, not identical output.",
+        "reason": "No current-class-specific Ego materializer appears in reviewed source: weight adjustment belongs to unavailable Mauler. Existing luck mutations, Chance virtue, themes, race/body properties and curse consumers still apply and can differ by real character state; no-special-difference means no additional class branch, not identical output.",
         "implementation": [
           "crates/rfb-core/src/game/ego.rs",
           "crates/rfb-core/src/game/ego/armor.rs",
@@ -556,23 +618,26 @@
           "bard-slot-value",
           "bad-luck-randart"
         ],
-        "entry": "Natural/themed scheduler passes real class and theme with scroll=false; CREATE_ART_SCROLL player entry is unavailable.",
+        "entry": "Natural/themed scheduler passes real class and theme with scroll=false; the Arena reward and ordinary pool now expose the artifact creation scroll to classes that can read scrolls.",
         "reason": "Theme supplies initial bias. Without a theme there is no class initial bias in natural mode. Only scroll mode with no prior bias and the 1/4 gate applies class bias; later Warrior conversion depends on mode. Non-Bard harp value and shared value/curse retries apply. Berserker alone changes random_misc case 31 among current classes.",
         "implementation": [
           "crates/rfb-core/src/game/random_artifact.rs#initial_bias",
           "crates/rfb-core/src/game/random_artifact/scheduling.rs#materialize_random_artifact_draft",
           "crates/rfb-core/src/game/random_artifact/powers.rs",
           "crates/rfb-core/src/game/random_artifact/materialization.rs",
-          "crates/rfb-core/src/game/item_value.rs"
+          "crates/rfb-core/src/game/item_value.rs",
+          "crates/rfb-core/src/game/item_use/artifact_creation.rs"
         ],
         "tests": [
           "crates/rfb-core/src/game/random_artifact/tests.rs#random_artifact_current_classes_and_themes_select_eligible_biases_and_activations",
           "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_save_preserves_rejected_names_and_continued_generation",
           "crates/rfb-core/src/game/random_artifact/tests.rs#real_build_misc_warning_and_no_tele_follow_source_boundaries",
           "crates/rfb-core/src/game/random_artifact/tests.rs#real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary",
-          "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#real_berserker_generated_flags_and_activation_rejection_survive_save_and_continue"
+          "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#real_berserker_generated_flags_and_activation_rejection_survive_save_and_continue",
+          "crates/rfb-core/src/game/tests/items.rs#artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name",
+          "crates/rfb-core/src/game/tests/arena.rs"
         ],
-        "limits": "Boundary tests use real Build-derived class IDs and deterministic source draws. A second real Warrior build checks scheduler class forwarding against Berserker with equal generation inputs. Flag/activation consumers use the existing forced-randart mode and a fixed dagger base; ordinary negative generation is covered separately. Scroll probability tests remain factory evidence for an unavailable entry, not desktop acceptance."
+        "limits": "Factory tests cover source probability boundaries; actual commands cover all eight scroll-capable creation builds, selected equipment, saved names and continued actions. Berserker scroll rejection remains a class consumer rule. Arena reward pickup/use is core acceptance; this integration does not claim a new desktop run."
       },
       {
         "id": "fixed-artifact-reward",
@@ -628,12 +693,10 @@
       {
         "status": "deferred",
         "conditionIds": [
-          "artifact-scroll-class-bias",
-          "artifact-scroll-virtues",
           "inspired-smithing"
         ],
-        "reason": "No artifact scroll or reforge player entry; factory coverage cannot close playable acceptance.",
-        "prerequisite": "Implement the requested actual entry and verify its mode-specific bias/virtue/value consumers before activation."
+        "reason": "Reforge entry remains unavailable; the artifact creation scroll now has a separate actual player consumer.",
+        "prerequisite": "Implement and verify the requested reforge entry before activation."
       },
       {
         "status": "deferred",
@@ -761,24 +824,24 @@
         "file": "src/artifact.c",
         "start": 2211,
         "end": 2325,
-        "status": "deferred-unavailable-entry",
-        "entry": "CREATE_ART_SCROLL has no player creation entry",
+        "status": "implemented-current-builds",
+        "entry": "demo.item.artifact-creation-scroll; ordinary allocation and Arena final reward",
         "change": "class/subclass bias on the scroll branch; ordinary natural generation does not run it",
-        "consumer": "crates/rfb-core/src/game/random_artifact.rs initial_bias; future artifact scroll",
-        "tests": "crates/rfb-core/src/game/random_artifact/tests.rs#random_artifact_current_classes_and_themes_select_eligible_biases_and_activations (scroll=true factory only; not real-build acceptance); crates/rfb-core/src/game/random_artifact/tests.rs#real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary (real class configuration; natural no-draw and scroll 1/4, 20% boundaries; scroll entry remains unavailable)",
-        "prerequisite": "artifact scroll entry; each listed class needs actual new-game configuration"
+        "consumer": "crates/rfb-core/src/game/item_use/artifact_creation.rs; random_artifact/materialization.rs; virtues.rs",
+        "tests": "crates/rfb-core/src/game/tests/items.rs#artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name; crates/rfb-core/src/game/tests/arena.rs; crates/rfb-core/src/game/random_artifact/tests.rs",
+        "prerequisite": null
       },
       {
         "id": "artifact-scroll-virtues",
         "file": "src/artifact.c",
         "start": 3160,
         "end": 3170,
-        "status": "deferred-unavailable-entry",
-        "entry": "CREATE_ART_SCROLL has no player creation entry",
+        "status": "implemented-current-builds",
+        "entry": "demo.item.artifact-creation-scroll; ordinary allocation and Arena final reward",
         "change": "Individualism +2 and Enchantment +5",
-        "consumer": "virtue state/save",
-        "tests": null,
-        "prerequisite": "artifact scroll success consumer"
+        "consumer": "crates/rfb-core/src/game/item_use/artifact_creation.rs; random_artifact/materialization.rs; virtues.rs",
+        "tests": "crates/rfb-core/src/game/tests/items.rs#artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name; crates/rfb-core/src/game/tests/arena.rs; crates/rfb-core/src/game/random_artifact/tests.rs",
+        "prerequisite": null
       },
       {
         "id": "fixed-artifact-identity",
@@ -933,9 +996,9 @@
         "start": 2415,
         "end": 2428,
         "status": "implemented-current-builds",
-        "entry": "Acquirement on eight open builds",
-        "change": "Archer rejects melee; Sniper retains it; Cavalry uses source riding weapon flags",
-        "consumer": "loot/allocation.rs; mounted combat and projectile consumers",
+        "entry": "Acquirement on nine open builds",
+        "change": "Archer rejects melee; Sniper retains it; Cavalry uses source riding weapon flags; Duelist uses base weapon proficiency maximum >4000",
+        "consumer": "loot/allocation.rs; mounted combat and projectile consumers; abilities/duelist.rs duelist_favorite_weapon",
         "tests": "game::loot::allocation::tests::tailored_uses_playable_class_equipment_realms_and_birth_race; game::tests::items::b4_tailored_launchers_equip_shoot_and_restore_for_archer_and_sniper; game::tests::items::b4_tailored_lance_keeps_riding_bonus_in_actual_mounted_combat",
         "prerequisite": "unavailable classes require real entry and favorite-weapon consumer"
       },
@@ -957,8 +1020,8 @@
         "start": 2455,
         "end": 2570,
         "status": "implemented-current-builds",
-        "entry": "eight open builds; real body slots; birth Tomte knit cap",
-        "change": "slot/favorite/book filters; full materialized glove flags and pval reject caster encumbrance",
+        "entry": "nine open builds; real body slots; birth Tomte knit cap",
+        "change": "slot/favorite/book filters; full materialized glove flags and pval reject caster encumbrance; Duelist excludes shields and body armor heavier than 200",
         "consumer": "loot/allocation.rs; mod.rs slot helper; player_abilities.rs; inventory.rs",
         "tests": "game::loot::allocation::tests::; game::tests::items::tomte_tailored_acquirement_filters_headgear_by_birth_race_only; game::tests::items::b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
         "prerequisite": "unavailable identities/body forms remain separate; physical books retain the B1 one-instance representation"

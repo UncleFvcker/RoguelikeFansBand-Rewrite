@@ -3,6 +3,201 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn arena_dungeon_formal_entry_chain_guardians_and_reward_match_source() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let world = &artifact.content.worlds[0];
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|d| d.id == "demo.dungeon.arena")
+        .unwrap();
+    assert_eq!(dungeon.legacy_index, Some(25));
+    assert!(dungeon.substitution.is_none());
+    assert_eq!(dungeon.root_floor_id, "demo.floor.arena-depth-50");
+    assert_eq!(
+        dungeon.entrance_guardian.as_ref().unwrap().actor_kind_id,
+        "demo.actor.drolem"
+    );
+    assert_eq!(
+        dungeon.guardian_actor_kind_id.as_deref(),
+        Some("demo.actor.metal-babble-unique")
+    );
+    let floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some(&dungeon.id))
+        .collect::<Vec<_>>();
+    assert_eq!(floors.len(), 31);
+    assert_eq!(
+        floors.iter().map(|f| f.depth).collect::<BTreeSet<_>>(),
+        (50..=80).collect()
+    );
+    for floor in floors {
+        assert_eq!(
+            floor.return_floor_id,
+            if floor.depth == 50 {
+                "demo.floor.surface".into()
+            } else {
+                format!("demo.floor.arena-depth-{}", floor.depth - 1)
+            }
+        );
+        assert_eq!(
+            floor.next_floor_id,
+            (floor.depth < 80).then(|| format!("demo.floor.arena-depth-{}", floor.depth + 1))
+        );
+        assert_eq!(floor.final_floor, floor.depth == 80);
+        assert_eq!(floor.down_stair_terrain_id.is_some(), floor.depth < 80);
+        assert_eq!(floor.entry_terrain_id.is_some(), floor.depth == 50);
+        assert_eq!(floor.guardian.is_some(), floor.depth == 80);
+        assert_eq!((floor.width, floor.height), (96, 33));
+        assert_eq!(floor.wall_terrain_id, "demo.terrain.permanent-wall");
+        assert_eq!(floor.floor_terrain_id, "demo.terrain.floor");
+        assert_eq!(
+            floor.encounter_table_id.as_deref(),
+            Some("demo.encounter-table.arena")
+        );
+        let layout = floor.layout.as_ref().unwrap();
+        assert_eq!(layout.mode, ProceduralLayoutMode::ArenaRooms);
+        assert_eq!(
+            layout.rooms.as_ref().unwrap().shapes[0].shape,
+            ProceduralRoomShape::Circle
+        );
+        assert!(layout.streamers.is_empty() && floor.vault_id.is_none());
+        let budget = floor.generation_budget.as_ref().unwrap();
+        assert_eq!(budget.actor_slots, if floor.depth == 80 { 7 } else { 6 });
+        assert_eq!(budget.loot_placements, 0);
+        if let Some(guardian) = &floor.guardian {
+            let reward = artifact
+                .content
+                .loot_tables
+                .iter()
+                .find(|t| Some(&t.id) == guardian.reward_loot_table_id.as_ref())
+                .unwrap();
+            assert_eq!(reward.rolls, 1);
+            assert_eq!(reward.entries.len(), 1);
+            assert_eq!(
+                reward.entries[0].item_kind_id,
+                "demo.item.artifact-creation-scroll"
+            );
+            assert_eq!(reward.entries[0].quantity, 1);
+        }
+    }
+    let policy = artifact
+        .content
+        .encounter_tables
+        .iter()
+        .find(|t| t.id == "demo.encounter-table.arena")
+        .unwrap()
+        .global_allocation
+        .as_ref()
+        .unwrap();
+    assert_eq!(policy.special_div, 0);
+    assert!(policy.preferred_glyphs.is_empty() && policy.preferred_tags.is_empty());
+    assert_eq!(policy.ambient_chance_one_in, 160);
+    let source: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(original_pack_path().join("legacy-wilderness-selection.json")).unwrap(),
+    )
+    .unwrap();
+    let plan = source["dungeonPlans"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|d| d["sourceIndex"] == 25)
+        .unwrap();
+    assert_eq!(plan["position"], serde_json::json!({"x":67,"y":7}));
+    assert_eq!(plan["tunnelPercent"], 8);
+    assert_eq!(
+        plan["wallTerrain"],
+        serde_json::json!({
+            "distribution":[{"sourceTag":"PERMANENT","percent":100},{"sourceTag":"MOUNTAIN_WALL","percent":0},{"sourceTag":"GRANITE","percent":0}],
+            "outer":"PERMANENT","inner":"GRANITE","streamers":["NONE","NONE"]
+        })
+    );
+}
+
+#[test]
+fn arena_dungeon_geometry_validates_circle_bounds_and_excludes_other_layouts() {
+    let mut content = compile_pack_dir(&original_pack_path()).unwrap().content;
+    let floor_id = "demo.floor.warrens-depth-1";
+    let floor = content.worlds[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|floor| floor.id == floor_id)
+        .unwrap();
+    floor.width = 96;
+    floor.height = 33;
+    floor.wall_terrain_id = "demo.terrain.permanent-wall".into();
+    floor.vault_id = None;
+    floor.theme_table_id = None;
+    floor.loot_allocation = None;
+    floor.gold_allocation = None;
+    floor.loot_table_id = None;
+    floor.guaranteed_items.clear();
+    let layout = floor.layout.as_mut().unwrap();
+    layout.mode = ProceduralLayoutMode::ArenaRooms;
+    layout.streamers.clear();
+    let geometry = layout.rooms.as_mut().unwrap();
+    geometry.min_width = 7;
+    geometry.max_width = 15;
+    geometry.min_height = 7;
+    geometry.max_height = 15;
+    geometry.shapes = vec![ProceduralRoomShapeCandidateDefinition {
+        shape: ProceduralRoomShape::Circle,
+        weight: 1,
+    }];
+    let budget = floor.generation_budget.as_mut().unwrap();
+    budget.actor_slots = 6;
+    budget.loot_placements = 0;
+    budget.room_placements = Some(6);
+    budget.room_area_tiles = Some(800);
+    budget.streamer_placements = None;
+    budget.streamer_area_tiles = None;
+    validate_and_normalize(&mut content).unwrap();
+
+    for case in [
+        "diameter",
+        "rectangular",
+        "room-budget",
+        "actor-budget",
+        "loot-budget",
+        "encounter-table",
+        "lake",
+        "wall",
+    ] {
+        let mut invalid = content.clone();
+        let floor = invalid.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == floor_id)
+            .unwrap();
+        let layout = floor.layout.as_mut().unwrap();
+        let geometry = layout.rooms.as_mut().unwrap();
+        match case {
+            "diameter" => geometry.max_width = 16,
+            "rectangular" => geometry.shapes[0].shape = ProceduralRoomShape::Rectangle,
+            "room-budget" => floor.generation_budget.as_mut().unwrap().room_area_tiles = Some(1),
+            "actor-budget" => floor.generation_budget.as_mut().unwrap().actor_slots = 7,
+            "loot-budget" => floor.generation_budget.as_mut().unwrap().loot_placements = 1,
+            "encounter-table" => floor.encounter_table_id = None,
+            "lake" => {
+                layout.lake = Some(ProceduralLakeDefinition {
+                    deep_terrain_id: "demo.terrain.deep-water".into(),
+                    shallow_terrain_id: "demo.terrain.shallow-water".into(),
+                });
+                let budget = floor.generation_budget.as_mut().unwrap();
+                budget.lake_area_tiles = Some(80);
+                budget.lake_deep_area_tiles = Some(20);
+            }
+            _ => floor.wall_terrain_id = "demo.terrain.wall".into(),
+        }
+        assert!(
+            matches!(validate_and_normalize(&mut invalid), Err(ContentError::InvalidProceduralFloor(id)) if id == floor_id),
+            "{case}"
+        );
+    }
+}
+
+#[test]
 fn disaster_area_shaft_graph_rejects_disconnected_parity_and_invalid_boundaries() {
     let content = compile_pack_dir(&original_pack_path()).unwrap().content;
     for case in ["parity", "surface", "depth", "reciprocal"] {
@@ -10868,6 +11063,10 @@ fn town_entrances_and_shared_facilities_match_source() {
                     dungeon_id: "demo.dungeon.plains-of-oz".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 67, y: 7 },
+                    dungeon_id: "demo.dungeon.arena".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 74, y: 28 },
                     dungeon_id: "demo.dungeon.dragon-lair".to_owned(),
                 },
@@ -12729,7 +12928,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 367);
+    assert_eq!(base_items.entries.len(), 368);
     let amulet = base_items
         .entries
         .iter()
@@ -12796,6 +12995,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .map(|(_, item_id)| item_id.as_str())
         .chain([
             "demo.item.diamond-edge",
+            "demo.item.artifact-creation-scroll",
             "demo.item.quiver",
             "demo.item.feanorian-lamp",
             "demo.item.amulet",
@@ -12806,7 +13006,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 333);
+    assert_eq!(expected_item_ids.len(), 334);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.

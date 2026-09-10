@@ -1991,6 +1991,9 @@ item-demo-rumour-scroll-name = Scroll of Rumour
 item-demo-rumour-scroll-appearance = Scroll titled "an gan nagblaa"
 item-demo-rumour-scroll-description = A rumour is written inside.
 item-demo-crafting-scroll-name = Scroll of Crafting
+item-demo-artifact-creation-scroll-name = Scroll of Artifact Creation
+item-demo-artifact-creation-scroll-appearance = Scroll titled "engsno argsan"
+item-demo-artifact-creation-scroll-description = Turns a nameless item into an artifact; greater depths generally give better results. Only one item survives from a stack. Snotlings can also create a reusable artifact mushroom.
 item-demo-crafting-scroll-appearance = Scroll titled "enchantus maximus"
 item-demo-crafting-scroll-description = Turns the selected weapon, armour, or ammunition into an ego item.
 rumour-demo-warrens-depths = The oldest warrens hide their best steel below the roots.
@@ -9168,6 +9171,9 @@ terrain-demo-anti-melee-cave-entrance-name = Anti-melee cave entrance
 terrain-demo-anti-melee-cave-entrance-description = An entrance to Anti-melee cave.
 
 floor-demo-dark-cave-depth-name = Dark cave depth { $depth }
+floor-demo-arena-depth-name = Arena depth { $depth }
+terrain-demo-arena-entrance-name = Arena entrance
+terrain-demo-arena-entrance-description = An entrance to the Arena.
 terrain-demo-dark-cave-entrance-name = Dark cave entrance
 terrain-demo-dark-cave-entrance-description = An entrance to Dark cave.
 

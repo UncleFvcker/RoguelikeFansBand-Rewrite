@@ -1238,6 +1238,12 @@ pub(crate) enum DomainEvent {
         target_item_id: String,
         target_kind_id: String,
     },
+    ItemArtifactCreation {
+        target_item_id: String,
+        target_kind_id: String,
+        succeeded: bool,
+        destroyed_quantity: u32,
+    },
     ItemCrafted {
         source_kind_id: String,
         display_name_key: String,
@@ -5002,6 +5008,21 @@ impl DomainEvent {
                     ("target", target_kind_id),
                     ("affix", affix_id),
                     ("split", split.to_string()),
+                ],
+            ),
+            Self::ItemArtifactCreation {
+                target_item_id,
+                target_kind_id,
+                succeeded,
+                destroyed_quantity,
+            } => dto(
+                "item.artifact-creation",
+                "item-artifact-creation",
+                [
+                    ("targetId", target_item_id),
+                    ("target", target_kind_id),
+                    ("succeeded", succeeded.to_string()),
+                    ("destroyedQuantity", destroyed_quantity.to_string()),
                 ],
             ),
             Self::ItemUniqueMonsterListed {

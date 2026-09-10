@@ -1296,10 +1296,11 @@ impl Game {
                 .actor(&kind_id)
                 .expect("selected knight definition must remain available")
                 .clone();
-            let group = definition
-                .allocation
-                .as_ref()
-                .is_some_and(|allocation| allocation.friends.is_some());
+            let group = !self.floor_uses_arena_rooms(&self.current_floor_id)
+                && definition
+                    .allocation
+                    .as_ref()
+                    .is_some_and(|allocation| allocation.friends.is_some());
             let count = if group {
                 self.original_friend_total(&definition, self.floor_depth(&self.current_floor_id))
             } else {

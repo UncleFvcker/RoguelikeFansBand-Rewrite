@@ -1564,6 +1564,13 @@ impl Game {
             self.rng.bounded(odds) == 0
         };
         let selection_level = self.original_allocation_level(base_level);
+        // get_mon_num applies this before its out-of-depth boosts. Summons use
+        // their own candidate path and must not inherit the ordinary lower bound.
+        let minimum_level = if self.floor_uses_arena_rooms(floor_id) {
+            base_level.saturating_sub(5).min(50)
+        } else {
+            0
+        };
         let escort_leader = escort_leader_kind_id
             .and_then(|kind_id| self.content.actor(kind_id))
             .cloned();
@@ -1579,6 +1586,7 @@ impl Game {
                     || allocation.wild_only
                     || self.actor_kind_is_dungeon_guardian(&definition.id)
                     || definition.level > u32::from(selection_level)
+                    || definition.level < u32::from(minimum_level)
                     || (allocation.max_depth != 0 && allocation.max_depth < selection_level)
                     || (allocation.force_depth && definition.level > u32::from(floor_depth))
                     || !actor_allocation_matches_task(allocation, current_task_id)
@@ -1771,6 +1779,11 @@ impl Game {
         height: u16,
         occupied: &mut BTreeSet<Position>,
     ) -> Vec<OriginalGroupMember> {
+        // place_monster_aux excludes friends and escorts in dungeon 25,
+        // including ambient allocation and summoned leaders.
+        if self.floor_uses_arena_rooms(floor_id) {
+            return Vec::new();
+        }
         let leader = self
             .content
             .actor(leader_kind_id)

@@ -326,6 +326,11 @@
         }
       },
       {
+        "dungeonId": "demo.dungeon.arena",
+        "kind": "dungeon",
+        "position": { "x": 67, "y": 7 }
+      },
+      {
         "dungeonId": "demo.dungeon.dragon-lair",
         "kind": "dungeon",
         "position": {
@@ -1506,6 +1511,17 @@
           "x": 100,
           "y": 32
         }
+      }
+    },
+    {
+      "id": "demo.dungeon.arena",
+      "legacyIndex": 25,
+      "rootFloorId": "demo.floor.arena-depth-50",
+      "guardianActorKindId": "demo.actor.metal-babble-unique",
+      "entranceGuardian": {
+        "instanceId": "demo.guardian.arena-entrance.1",
+        "actorKindId": "demo.actor.drolem",
+        "position": { "x": 100, "y": 34 }
       }
     }
   ],
@@ -28929,6 +28945,1619 @@
         "actorKindId": "demo.actor.godzilla",
         "rewardLootTableId": "demo.loot-table.first-realm-fourth-book-fallback",
         "rewardFirstRealmBookRank": 4
+      }
+    },
+    {
+      "id": "demo.floor.arena-depth-50",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "entryTerrainId": "demo.terrain.arena-entrance",
+      "nextFloorId": "demo.floor.arena-depth-51",
+      "depth": 50,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-51",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-50",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-52",
+      "depth": 51,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-52",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-51",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-53",
+      "depth": 52,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-53",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-52",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-54",
+      "depth": 53,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-54",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-53",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-55",
+      "depth": 54,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-55",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-54",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-56",
+      "depth": 55,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-56",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-55",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-57",
+      "depth": 56,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-57",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-56",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-58",
+      "depth": 57,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-58",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-57",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-59",
+      "depth": 58,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-59",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-58",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-60",
+      "depth": 59,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-60",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-59",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-61",
+      "depth": 60,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-61",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-60",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-62",
+      "depth": 61,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-62",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-61",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-63",
+      "depth": 62,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-63",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-62",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-64",
+      "depth": 63,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-64",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-63",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-65",
+      "depth": 64,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-65",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-64",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-66",
+      "depth": 65,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-66",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-65",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-67",
+      "depth": 66,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-67",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-66",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-68",
+      "depth": 67,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-68",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-67",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-69",
+      "depth": 68,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-69",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-68",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-70",
+      "depth": 69,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-70",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-69",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-71",
+      "depth": 70,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-71",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-70",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-72",
+      "depth": 71,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-72",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-71",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-73",
+      "depth": 72,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-73",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-72",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-74",
+      "depth": 73,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-74",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-73",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-75",
+      "depth": 74,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-75",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-74",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-76",
+      "depth": 75,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-76",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-75",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-77",
+      "depth": 76,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-77",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-76",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-78",
+      "depth": 77,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-78",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-77",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-79",
+      "depth": 78,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-79",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-78",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 6,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        }
+      },
+      "nextFloorId": "demo.floor.arena-depth-80",
+      "depth": 79,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.arena-depth-80",
+      "nameKey": "floor-demo-arena-depth-name",
+      "returnFloorId": "demo.floor.arena-depth-79",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.arena",
+      "encounterTableId": "demo.encounter-table.arena",
+      "generationBudget": {
+        "actorSlots": 7,
+        "lootPlacements": 0,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800
+      },
+      "layout": {
+        "mode": "arena-rooms",
+        "rooms": {
+          "placement": "free",
+          "minWidth": 7,
+          "maxWidth": 15,
+          "minHeight": 7,
+          "maxHeight": 15,
+          "shapes": [
+            {
+              "shape": "circle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          }
+        }
+      },
+      "finalFloor": true,
+      "depth": 80,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.permanent-wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "guardian": {
+        "instanceId": "demo.guardian.arena.1",
+        "actorKindId": "demo.actor.metal-babble-unique",
+        "rewardLootTableId": "demo.loot-table.arena-final-reward"
       }
     }
   ]

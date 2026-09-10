@@ -753,6 +753,7 @@ pub(super) fn validate_world(
             .as_ref()
             .map_or(ProceduralLayoutMode::Rooms, |layout| layout.mode);
         let maze_only = layout_mode == ProceduralLayoutMode::MazeOnly;
+        let arena_rooms = layout_mode == ProceduralLayoutMode::ArenaRooms;
         procedural
             .connections
             .sort_by(|left, right| left.id.cmp(&right.id));
@@ -1235,7 +1236,7 @@ pub(super) fn validate_world(
                     None
                 }
                 (Some(layout), Some(placements), Some(area_tiles))
-                    if layout.mode == ProceduralLayoutMode::Rooms && layout.rooms.is_some() =>
+                    if layout.mode != ProceduralLayoutMode::MazeOnly && layout.rooms.is_some() =>
                 {
                     Some((placements, area_tiles))
                 }
@@ -1270,10 +1271,30 @@ pub(super) fn validate_world(
             if procedural.lifecycle != FloorLifecycle::Dungeon
                 || (procedural.region_table_id.is_none()
                     && (procedural.encounter_table_id.is_none()
-                        || procedural.loot_table_id.is_none()))
+                        || (!arena_rooms && procedural.loot_table_id.is_none())))
                 || !(1..=128).contains(&budget.actor_slots)
-                || !(1..=8).contains(&budget.loot_placements)
+                || if arena_rooms {
+                    budget.loot_placements != 0
+                } else {
+                    !(1..=8).contains(&budget.loot_placements)
+                }
                 || reserved_actor_slots >= usize::from(budget.actor_slots)
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+            if arena_rooms
+                && (budget
+                    .room_placements
+                    .map(|rooms| usize::from(rooms) + reserved_actor_slots)
+                    != Some(usize::from(budget.actor_slots))
+                    || procedural
+                        .encounter_table_id
+                        .as_ref()
+                        .and_then(|id| encounter_tables.get(id))
+                        .is_none_or(|table| table.global_allocation.is_none())
+                    || procedural.nest.is_some()
+                    || !procedural.guaranteed_items.is_empty()
+                    || !procedural.loot_spawns.is_empty())
             {
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
             }
@@ -1413,6 +1434,48 @@ pub(super) fn validate_world(
                     .rooms
                     .as_mut()
                     .expect("rooms mode requires room geometry");
+                let has_circle = geometry
+                    .shapes
+                    .iter()
+                    .any(|candidate| candidate.shape == ProceduralRoomShape::Circle);
+                if has_circle
+                    && (!(7..=15).contains(&geometry.min_width)
+                        || !(geometry.min_width..=15).contains(&geometry.max_width)
+                        || geometry.min_width % 2 == 0
+                        || geometry.max_width % 2 == 0
+                        || geometry.min_height != geometry.min_width
+                        || geometry.max_height != geometry.max_width)
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                if layout.mode == ProceduralLayoutMode::ArenaRooms
+                    && (!has_circle
+                        || geometry.shapes.len() != 1
+                        || geometry.placement != ProceduralRoomPlacement::Free
+                        || !layout.floor_mix.is_empty()
+                        || !layout.wall_mix.is_empty()
+                        || layout.cavern.is_some()
+                        || layout.lake.is_some()
+                        || layout.river.is_some()
+                        || layout.maze.is_some()
+                        || layout.destroyed.is_some()
+                        || !layout.streamers.is_empty()
+                        || layout.pit.is_some()
+                        || terrain
+                            .iter()
+                            .find(|entry| entry.id == procedural.wall_terrain_id)
+                            .is_none_or(|entry| {
+                                entry.digging.as_ref().is_none_or(|digging| {
+                                    digging.resolution != TerrainDiggingResolution::Permanent
+                                })
+                            })
+                        || procedural.vault_id.is_some()
+                        || budget.vault_placements.is_some()
+                        || procedural.theme_table_id.is_some()
+                        || procedural.region_table_id.is_some())
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
                 geometry.shapes.sort_by_key(|candidate| candidate.shape);
                 let shape_count = geometry
                     .shapes
@@ -1437,6 +1500,7 @@ pub(super) fn validate_world(
                         ProceduralRoomShape::Cavern => {
                             cavern_room_area(geometry.min_width, geometry.min_height)
                         }
+                        ProceduralRoomShape::Circle => circular_room_area(geometry.min_width),
                     })
                     .min()
                     .unwrap_or(0);

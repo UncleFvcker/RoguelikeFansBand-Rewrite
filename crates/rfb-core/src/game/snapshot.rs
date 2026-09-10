@@ -976,6 +976,7 @@ impl Game {
                 .berserker_item_use_rejection_cost(item)
                 .map(|_| "berserker".to_owned()),
             usable: self.berserker_item_use_rejection_cost(item).is_none()
+                && !(item.is_artifact_mushroom(&self.content) && item.device_recovery_progress > 0)
                 && self.content.item(&item.kind_id).is_some_and(|definition| {
                     definition.use_action.as_ref().is_some_and(|action| {
                         action.charges.is_none_or(|charges| {
@@ -1021,6 +1022,28 @@ impl Game {
             requires_crafting_target: self.inventory_item_use_effect(&item.id).is_some_and(
                 |(effect, _)| matches!(effect, ItemUseEffectDefinition::CraftItem { .. }),
             ),
+            artifact_creation_targets: self
+                .inventory_item_use_effect(&item.id)
+                .is_some_and(|(effect, _)| {
+                    matches!(effect, ItemUseEffectDefinition::CreateArtifact)
+                })
+                .then(|| {
+                    self.items
+                        .iter()
+                        .filter(|candidate| {
+                            self.artifact_creation_plan(
+                                &item.id,
+                                &rfb_protocol::TargetSelection::ArtifactCreationItem {
+                                    item_id: candidate.id.clone(),
+                                    quantity: candidate.quantity,
+                                    name: None,
+                                },
+                            )
+                            .is_some()
+                        })
+                        .map(|candidate| candidate.id.clone())
+                        .collect()
+                }),
             requires_target_glyph: self.inventory_item_use_effect(&item.id).is_some_and(
                 |(effect, _)| matches!(effect, ItemUseEffectDefinition::Genocide { .. }),
             ),

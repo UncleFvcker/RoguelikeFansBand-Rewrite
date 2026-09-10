@@ -11556,6 +11556,15 @@
             }
           ]
         },
+        "artifactCreationTargets": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
         "artifactName": {
           "type": [
             "string",
@@ -14872,6 +14881,34 @@
             "type": {
               "type": "string",
               "const": "crafting-item"
+            }
+          },
+          "required": [
+            "type",
+            "itemId",
+            "quantity"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "quantity": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "artifact-creation-item"
             }
           },
           "required": [

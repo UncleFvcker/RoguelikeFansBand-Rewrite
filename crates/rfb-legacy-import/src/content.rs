@@ -30339,7 +30339,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
     }
 
     #[test]
-    fn arena_plan_locks_source_facts_without_activating_the_dungeon() {
+    fn arena_plan_locks_source_facts_and_matches_the_activated_dungeon() {
         let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
@@ -30388,24 +30388,24 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         assert_eq!(arena.final_artifact_source_index, None);
         assert_eq!(arena.substitute_source_index, None);
         assert!(
-            !selection
+            selection
                 .dungeons
                 .iter()
-                .any(|entry| { entry.source_index == arena.source_index || entry.id == arena.id })
+                .any(|entry| { entry.source_index == arena.source_index && entry.id == arena.id })
         );
         let world: serde_json::Value = serde_json::from_slice(include_bytes!(
             "../../../packs/rfb-demo-original/worlds/middle-earth.json"
         ))
         .expect("Middle-earth should parse");
-        assert!(world["dungeons"].as_array().unwrap().iter().all(|dungeon| {
-            dungeon["id"] != arena.id && dungeon["legacyIndex"] != arena.source_index
+        assert!(world["dungeons"].as_array().unwrap().iter().any(|dungeon| {
+            dungeon["id"] == arena.id && dungeon["legacyIndex"] == arena.source_index
         }));
         assert!(
             world["wilderness"]["locations"]
                 .as_array()
                 .unwrap()
                 .iter()
-                .all(|location| location["dungeonId"] != arena.id)
+                .any(|location| location["dungeonId"] == arena.id)
         );
     }
 

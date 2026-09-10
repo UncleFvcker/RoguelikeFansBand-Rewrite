@@ -357,7 +357,8 @@ impl Game {
             .actor(&kind_id)
             .expect("selected group summon candidate must remain available")
             .clone();
-        let group = (hostile || level >= 50)
+        let group = !self.floor_uses_arena_rooms(&self.current_floor_id)
+            && (hostile || level >= 50)
             && definition
                 .allocation
                 .as_ref()
@@ -424,10 +425,11 @@ impl Game {
                 .actor(&kind_id)
                 .expect("selected greater demon must remain available")
                 .clone();
-            let group = definition
-                .allocation
-                .as_ref()
-                .is_some_and(|allocation| allocation.friends.is_some());
+            let group = !self.floor_uses_arena_rooms(&self.current_floor_id)
+                && definition
+                    .allocation
+                    .as_ref()
+                    .is_some_and(|allocation| allocation.friends.is_some());
             let count = if group {
                 let depth = self.floor_depth(&self.current_floor_id);
                 self.original_friend_total(&definition, depth)

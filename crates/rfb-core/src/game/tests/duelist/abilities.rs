@@ -369,6 +369,7 @@ fn disengage_excludes_even_the_sleeping_monkey_clone_that_follows_strafing() {
     super::super::support::choose_human_talent_if_pending(&mut base);
     base.player.hp = base.effective_player_max_hp();
     base.terrain.fill("demo.terrain.floor".to_owned());
+    base.glow.fill(true);
     base.player.position = Position {
         x: i32::from(base.width / 2),
         y: i32::from(base.height / 2),
@@ -384,6 +385,12 @@ fn disengage_excludes_even_the_sleeping_monkey_clone_that_follows_strafing() {
         .push(monster_combat::melee_status(STATUS_SLEEP, 100, "test").status);
     base.entities.push(clone);
     base.duelist_target_id = Some("test.clone".to_owned());
+    // This case exercises successful teleport pursuit, independently of birth/floor RNG.
+    base.rng = RfbRng::seeded(
+        (0..1000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(100) == 99)
+            .unwrap(),
+    );
     for slug in ["strafing", "disengage"] {
         let mut game = base.clone();
         cast(&mut game, slug);

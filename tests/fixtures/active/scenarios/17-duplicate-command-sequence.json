@@ -24,7 +24,7 @@
   "assertions": {
     "finalState": {
       "lastCommandSeq": 1,
-      "stateHash": "930fa5e0dd0b2e6a6c9ac3fd1ec3b442a0607c19ae91eb5cbcfb7338266b1fe7"
+      "stateHash": "b23b3e504313f8a2b4060b889fcfa32a95b26b0448064335a94af751b6070b4d"
     },
     "events": [
       {
@@ -37,7 +37,7 @@
       {
         "step": 2,
         "kind": "command-sequence",
-        "stateHash": "930fa5e0dd0b2e6a6c9ac3fd1ec3b442a0607c19ae91eb5cbcfb7338266b1fe7"
+        "stateHash": "b23b3e504313f8a2b4060b889fcfa32a95b26b0448064335a94af751b6070b4d"
       }
     ]
   }

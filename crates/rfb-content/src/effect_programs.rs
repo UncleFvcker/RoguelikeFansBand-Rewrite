@@ -118,6 +118,7 @@ fn effect_program_input_for_step(
         ItemUseEffectDefinition::IdentifyItem { .. }
         | ItemUseEffectDefinition::EnchantItem { .. }
         | ItemUseEffectDefinition::MundanifyItem
+        | ItemUseEffectDefinition::CreateArtifact
         | ItemUseEffectDefinition::CraftItem { .. }
         | ItemUseEffectDefinition::RechargeFromDevice { .. } => {
             Some(EffectProgramInputDefinition::Item)

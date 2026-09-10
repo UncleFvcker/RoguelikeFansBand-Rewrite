@@ -2550,6 +2550,13 @@
       "weight": 11
     },
     {
+      "itemKindId": "demo.item.artifact-creation-scroll",
+      "maxDepth": 65535,
+      "minDepth": 91,
+      "quantity": 1,
+      "weight": 6
+    },
+    {
       "itemKindId": "demo.item.adamantine-bolt",
       "maxDepth": 65535,
       "minDepth": 100,

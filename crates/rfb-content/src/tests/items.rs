@@ -100,6 +100,48 @@ fn source_allocation_references_are_exclusive_and_preserve_source_rows() {
 }
 
 #[test]
+fn artifact_creation_scroll_keeps_p3_identity_and_source_allocation() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let item = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.artifact-creation-scroll")
+        .unwrap();
+    assert_eq!(
+        item.rfb_base_kind,
+        Some(RfbBaseKindDefinition {
+            source_index: 364,
+            tval: 70,
+            sval: 52
+        })
+    );
+    assert_eq!((item.base_value, item.weight_tenths_pound), (200_000, 5));
+    assert!(matches!(
+        item.use_action.as_ref().unwrap().effect,
+        ItemUseEffectDefinition::CreateArtifact
+    ));
+    let pool = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .unwrap();
+    let row = pool
+        .entries
+        .iter()
+        .find(|row| row.item_kind_id == item.id)
+        .unwrap();
+    assert_eq!((row.min_depth, row.weight, row.quantity), (91, 6, 1));
+    assert!(
+        std::fs::read_to_string(original_pack_path().join("../../locales/zh-CN/content.ftl"))
+            .unwrap()
+            .lines()
+            .any(|line| line == "item-demo-artifact-creation-scroll-name = 创造神器卷轴")
+    );
+}
+
+#[test]
 fn crafting_uses_the_complete_rfb_policy_without_explicit_candidates() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let action = artifact
@@ -2162,7 +2204,7 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
         .filter(|item| item.tags.iter().any(|tag| tag == "potion"))
         .collect::<Vec<_>>();
 
-    assert_eq!(scrolls.len(), 59);
+    assert_eq!(scrolls.len(), 60);
     assert_eq!(potions.len(), 66);
     assert!(scrolls.iter().all(|item| item.weight_tenths_pound == 5));
     assert!(potions.iter().all(|item| item.weight_tenths_pound == 4));
@@ -2176,7 +2218,7 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
                 .expect("supported consumables should have source flavor")
         })
         .collect::<std::collections::BTreeSet<_>>();
-    assert_eq!(appearance_keys.len(), 125);
+    assert_eq!(appearance_keys.len(), 126);
 
     let added_values = [
         ("demo.item.door-stair-location-scroll", 10),

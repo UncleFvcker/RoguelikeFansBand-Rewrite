@@ -672,6 +672,9 @@ player-life-force-death = 你因生命力枯竭而死。
 monster-unlife-drained-restored = { $source }吸取了{ $amount }点生命力；你转化后的生命力恢复至{ $lifeForceFinal }。
 monster-unlife-drained-ranged = { $source }吸取了{ $amount }点生命力。
 message-item-use-crafting-failed = 对{ $target }的工艺附魔失败了。
+message-item-artifact-creation-success = 已将{ $target }变成神器。
+message-item-artifact-creation-failed = 对{ $target }的神器创造失败了，保留卷轴且不消耗回合。
+message-item-artifact-creation-stack = 堆叠中额外的 { $quantity } 件物品已被销毁。
 
 inn-reputation-unknown = 你到底是谁？
 inn-reputation-unheard = 我甚至从未听说过你！
