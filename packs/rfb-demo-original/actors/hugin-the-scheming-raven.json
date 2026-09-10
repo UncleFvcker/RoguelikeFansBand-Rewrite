@@ -150,6 +150,7 @@
     "legacy-import",
     "no-quest",
     "resist-teleport",
-    "unique"
+    "unique",
+    "norse2"
   ]
 }

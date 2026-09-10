@@ -282,6 +282,9 @@ pub struct CampaignDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DungeonDefinition {
     pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemas", schemars(range(min = 1, max = 4)))]
+    pub pantheon: Option<u8>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub darkness: bool,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]

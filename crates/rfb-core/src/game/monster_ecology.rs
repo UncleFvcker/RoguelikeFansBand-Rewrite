@@ -1140,6 +1140,7 @@ impl Game {
                 };
                 definition.role == ActorRole::Monster
                     && !self.actor_kind_is_dungeon_guardian(&definition.id)
+                    && self.pantheon_allows_allocation("", definition)
                     && definition.level <= u32::from(level)
                     && (allocation.max_depth == 0 || allocation.max_depth >= level)
                     && (!actor_is_unique(definition)
@@ -1583,6 +1584,7 @@ impl Game {
                 };
                 if definition.role != ActorRole::Monster
                     || !self.dungeon_allows_monster(floor_id, definition, false)
+                    || !self.pantheon_allows_allocation(floor_id, definition)
                     || allocation.wild_only
                     || self.actor_kind_is_dungeon_guardian(&definition.id)
                     || definition.level > u32::from(selection_level)

@@ -1,19 +1,21 @@
 # 状态快照
 
-核对日期：2026-09-10。本次集成包含种族职业主线 `080005368`、法术道具 `ea723f342` 与地牢城镇 `bd94fe086`。本页记录代码/配置事实和注明范围的验收证据。当前数值以链接的源文件为准。
+核对日期：2026-09-10。在包含种族职业主线 `080005368`、法术道具 `ea723f342` 与地牢城镇 `bd94fe086` 的集成基线上完成 OL1 神系状态与分配资格。本页记录代码/配置事实和注明范围的验收证据。当前数值以链接的源文件为准。
 
 ## 版本与源内容
 
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.249 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | 122 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload / 容器 | 14 / 17 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.412.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
-| 契约政策 | contract-v323，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
+| 协议 | 1.250 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | 123 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload / 容器 | 14 / 18 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
+| 内容包 | 1.413.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 契约政策 | contract-v324，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 9 个 Class、16 个 Build、57 个 Race、32 本能力书、1,869 个 ability 文件、385 个 item、1,405 个 actor、168 个 affix、152 个 mutation。世界定义含 31 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+
+[奥林匹斯计划 OL1](../design/mount-olympus-dungeon-plan-20260910.md) 已实现：新角色按原版默认从四个神系随机保留两个，激活结果进入保存与状态哈希；主／次神系标记用于普通、环境及随机召唤资格，未激活地牢的入口与守卫受到抑制。固定家族召唤保留独立的唯一额度规则，并修复其合法来源保存恢复。神系专项、相关回归复测和 26 条完整契约通过，详细失败修正与 RNG 差异见计划验收记录。**奥林匹斯正式楼层、入口、神祇神器和仙馔密酒仍待 OL2–OL5，未计入开放地点或物品数量。**
 
 权威内容统计工具是 `rfb-contentc inspect-source`。本次集成已运行内容编译；静态统计不替代行为验收。
 

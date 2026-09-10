@@ -49,6 +49,7 @@ mod monster_hit_points;
 mod monster_movement;
 mod mutations;
 mod paladin;
+mod pantheons;
 mod persistence;
 mod pet_upkeep;
 mod prayer_study;

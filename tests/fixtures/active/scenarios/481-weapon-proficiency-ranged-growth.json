@@ -61,16 +61,28 @@
         "y": 33
       },
       "revision": 1,
-      "rngDrawCounter": 191,
-      "stateHash": "5c970b49b5adfd36c20fb08a41ee64b3807ea2dcc6a2d3da4fee6bccad3ebb2a",
+      "rngDrawCounter": 198,
+      "stateHash": "29f8c71aad27eb28ba8713fc6671d2b537851fc9ff14fa7ee07e7b78799291e6",
       "turn": 1
     },
     "events": [
       {
-        "kind": "combat.projectile-miss",
-        "messageKey": "projectile-miss",
+        "kind": "combat.projectile-hit",
+        "messageKey": "projectile-hit",
         "args": {
+          "damage": "12",
           "target": "demo.actor.adobe-golem"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 15,
+            "armorReduction": 3,
+            "resistanceAdjustment": 0,
+            "finalDamage": 12,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
         },
         "trace": {
           "origin": {
@@ -98,8 +110,8 @@
         }
       },
       {
-        "kind": "combat.projectile-ammo-broken",
-        "messageKey": "projectile-ammo-broken",
+        "kind": "combat.projectile-ammo-recovered",
+        "messageKey": "projectile-ammo-recovered",
         "args": {
           "target": "demo.item.arrow"
         }

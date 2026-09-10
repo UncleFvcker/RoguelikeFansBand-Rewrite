@@ -1367,6 +1367,9 @@ impl Game {
                 return Err(CoreError::InvalidSave("task state is invalid"));
             }
         }
+        if self.active_pantheons & !0x1e != 0 || self.active_pantheons.count_ones() != 2 {
+            return Err(CoreError::InvalidSave("active pantheons are invalid"));
+        }
         let expected_dungeons = base_dungeon_states(world);
         if self.dungeon_states.len() != expected_dungeons.len()
             || self
@@ -1376,25 +1379,46 @@ impl Game {
         {
             return Err(CoreError::InvalidSave("dungeon state set is invalid"));
         }
+        let pantheon_suppressed = |dungeon: &rfb_content::DungeonDefinition| {
+            dungeon
+                .pantheon
+                .is_some_and(|id| self.active_pantheons & (1 << id) == 0)
+        };
         let mut substituted_dungeon_ids = BTreeSet::new();
         for primary in &world.dungeons {
             let Some(substitution) = &primary.substitution else {
                 continue;
             };
-            let primary_state = &self.dungeon_states[&primary.id];
-            let alternate_state = &self.dungeon_states[&substitution.alternate_dungeon_id];
-            if primary_state.suppressed == alternate_state.suppressed {
+            let alternate = world
+                .dungeons
+                .iter()
+                .find(|dungeon| dungeon.id == substitution.alternate_dungeon_id)
+                .expect("validated alternate dungeon");
+            if !pantheon_suppressed(primary)
+                && !pantheon_suppressed(alternate)
+                && self.dungeon_states[&primary.id].suppressed
+                    == self.dungeon_states[&alternate.id].suppressed
+            {
                 return Err(CoreError::InvalidSave(
                     "dungeon substitution state is invalid",
                 ));
             }
             substituted_dungeon_ids.insert(primary.id.as_str());
-            substituted_dungeon_ids.insert(substitution.alternate_dungeon_id.as_str());
+            substituted_dungeon_ids.insert(alternate.id.as_str());
         }
         for (dungeon_id, state) in &self.dungeon_states {
-            if state.suppressed && !substituted_dungeon_ids.contains(dungeon_id.as_str()) {
+            let dungeon = world
+                .dungeons
+                .iter()
+                .find(|dungeon| dungeon.id == *dungeon_id)
+                .expect("validated dungeon state");
+            let suppressed_by_pantheon = pantheon_suppressed(dungeon);
+            if (suppressed_by_pantheon && !state.suppressed)
+                || (!substituted_dungeon_ids.contains(dungeon_id.as_str())
+                    && state.suppressed != suppressed_by_pantheon)
+            {
                 return Err(CoreError::InvalidSave(
-                    "dungeon substitution state is invalid",
+                    "dungeon suppression state is invalid",
                 ));
             }
             if state.suppressed
@@ -1409,11 +1433,6 @@ impl Game {
                     "suppressed dungeon state is invalid",
                 ));
             }
-            let dungeon = world
-                .dungeons
-                .iter()
-                .find(|dungeon| dungeon.id == *dungeon_id)
-                .expect("validated dungeon state must retain its definition");
             if state.recall_floor_id.as_ref().is_some_and(|id| {
                 !world.procedural_floors.iter().any(|floor| {
                     floor.id == *id
@@ -1862,6 +1881,23 @@ impl Game {
                     if ability
                         .tags
                         .iter()
+                        .any(|tag| tag == super::monster_abilities::MONSTER_FAMILY_SUMMON_TAG)
+                    {
+                        return self.content.actor_definitions().any(|source| {
+                            source.monster_casting.as_ref().is_some_and(|casting| {
+                                casting
+                                    .abilities
+                                    .iter()
+                                    .any(|entry| entry.ability_id == ability.id)
+                            }) && super::monster_abilities::monster_family_summon_candidates(
+                                &source.id,
+                            )
+                            .is_some_and(|candidates| candidates.contains(&actor.kind_id.as_str()))
+                        });
+                    }
+                    if ability
+                        .tags
+                        .iter()
                         .any(|tag| tag == super::monster_abilities::MONSTER_DEAD_UNIQUE_SUMMON_TAG)
                     {
                         return actor.kind_id == "demo.actor.star-blade"
@@ -1886,12 +1922,11 @@ impl Game {
                             maximum_level,
                             ..
                         } => self.content.actor(&actor.kind_id).is_some_and(|kind| {
-                            kind.tags.iter().any(|tag| {
-                                tag == category
-                                    || upgraded_category
-                                        .as_ref()
-                                        .is_some_and(|upgraded| tag == upgraded)
-                            }) && kind.level <= u32::from(*maximum_level)
+                            (self.actor_matches_summon_category(kind, category)
+                                || upgraded_category.as_ref().is_some_and(|upgraded| {
+                                    self.actor_matches_summon_category(kind, upgraded)
+                                }))
+                                && kind.level <= u32::from(*maximum_level)
                         }),
                         _ => false,
                     }

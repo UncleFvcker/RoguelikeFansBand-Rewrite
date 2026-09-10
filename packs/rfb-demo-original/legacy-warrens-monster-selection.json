@@ -3485,7 +3485,7 @@
       "sourceIndex": 522,
       "id": "greater-mummy",
       "tags": ["outpost-quest", "royal-crypt"],
-      "omittedFlags": ["EGYPTIAN2", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 554,
@@ -4679,7 +4679,7 @@
       "sourceIndex": 1357,
       "id": "ratatosk-the-world-tree-squirrel",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NORSE2", "POS_SEE_INVIS"]
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 1013,
@@ -4709,7 +4709,7 @@
       "sourceIndex": 1130,
       "id": "marilith",
       "tags": ["orc-cave"],
-      "omittedFlags": ["FEMALE", "HINDU2", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["FEMALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 517,
@@ -5141,7 +5141,7 @@
       "sourceIndex": 1268,
       "id": "mummified-sorcerer",
       "tags": ["orc-cave"],
-      "omittedFlags": ["EGYPTIAN2", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 691,
@@ -5555,7 +5555,7 @@
       "sourceIndex": 991,
       "id": "sleipnir-the-odin-s-steed",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NORSE2", "POS_GAIN_AC"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 1032,
@@ -5621,7 +5621,7 @@
       "sourceIndex": 743,
       "id": "the-phoenix",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "EGYPTIAN2", "POS_GAIN_AC"]
+      "omittedFlags": ["CAN_SPEAK", "POS_GAIN_AC"]
     },
     {
       "sourceIndex": 744,
@@ -5801,7 +5801,7 @@
       "sourceIndex": 1267,
       "id": "mummy-king",
       "tags": ["orc-cave"],
-      "omittedFlags": ["EGYPTIAN2", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 942,
@@ -5969,7 +5969,7 @@
       "sourceIndex": 1269,
       "id": "serpopard",
       "tags": ["orc-cave"],
-      "omittedFlags": ["EGYPTIAN2", "POS_GAIN_AC", "POS_TELEPATHY"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 768,
@@ -6113,7 +6113,7 @@
       "sourceIndex": 777,
       "id": "bast-goddess-of-cats",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "EGYPTIAN2", "FEMALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+      "omittedFlags": ["CAN_SPEAK", "FEMALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 936,
@@ -6185,7 +6185,7 @@
       "sourceIndex": 1346,
       "id": "hugin-the-scheming-raven",
       "tags": ["asgard"],
-      "omittedFlags": ["MALE", "NORSE2", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 1374,
@@ -6215,7 +6215,7 @@
       "sourceIndex": 1257,
       "id": "wadjet-the-protector",
       "tags": ["orc-cave"],
-      "omittedFlags": ["EGYPTIAN2", "FEMALE", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY"]
+      "omittedFlags": ["FEMALE", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 778,
@@ -6275,13 +6275,13 @@
       "sourceIndex": 1270,
       "id": "sha",
       "tags": ["orc-cave"],
-      "omittedFlags": ["EGYPTIAN2", "POS_GAIN_AC", "RES_WALL"]
+      "omittedFlags": ["POS_GAIN_AC", "RES_WALL"]
     },
     {
       "sourceIndex": 1345,
       "id": "valkyrie",
       "tags": ["orc-cave"],
-      "omittedFlags": ["FEMALE", "NORSE2", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY"]
+      "omittedFlags": ["FEMALE", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 783,
@@ -6437,7 +6437,7 @@
       "sourceIndex": 787,
       "id": "hypnos-lord-of-sleep",
       "tags": ["orc-cave"],
-      "omittedFlags": ["ATTR_MULTI", "CAN_SPEAK", "MALE", "OLYMPIAN2", "POS_SEE_INVIS"]
+      "omittedFlags": ["ATTR_MULTI", "CAN_SPEAK", "MALE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 781,
@@ -6467,7 +6467,7 @@
       "sourceIndex": 1360,
       "id": "vasuki-the-serpent-king",
       "tags": ["orc-cave"],
-      "omittedFlags": ["HINDU2", "MALE", "POS_GAIN_AC"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
     },
     {
       "sourceIndex": 878,
@@ -6563,7 +6563,7 @@
       "sourceIndex": 1243,
       "id": "ammit-the-devourer",
       "tags": ["orc-cave"],
-      "omittedFlags": ["EGYPTIAN2", "FEMALE"]
+      "omittedFlags": ["FEMALE"]
     },
     {
       "sourceIndex": 1272,
@@ -6701,7 +6701,7 @@
       "sourceIndex": 817,
       "id": "hela-queen-of-the-dead",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "FEMALE", "NORSE2"]
+      "omittedFlags": ["CAN_SPEAK", "FEMALE"]
     },
     {
       "sourceIndex": 818,
@@ -6827,7 +6827,7 @@
       "sourceIndex": 1361,
       "id": "shesha-the-infinite",
       "tags": ["orc-cave"],
-      "omittedFlags": ["HINDU2", "MALE", "POS_GAIN_AC"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
     },
     {
       "sourceIndex": 1138,
@@ -6876,7 +6876,7 @@
       "sourceIndex": 1355,
       "id": "skadi-the-huntress",
       "tags": ["orc-cave"],
-      "omittedFlags": ["FEMALE", "NORSE2", "POS_SUST_STR"]
+      "omittedFlags": ["FEMALE", "POS_SUST_STR"]
     },
     {
       "sourceIndex": 1359,
@@ -6912,7 +6912,7 @@
       "sourceIndex": 1277,
       "id": "aegir-god-king-of-the-sea-giants",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "NORSE2"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 932,
@@ -6966,7 +6966,7 @@
       "sourceIndex": 1369,
       "id": "vali-king-of-the-vanaras",
       "tags": ["mount-meru", "vanara"],
-      "omittedFlags": ["HINDU2", "MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 1385,
@@ -7146,7 +7146,7 @@
       "sourceIndex": 1166,
       "id": "thanatos-god-of-death",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "OLYMPIAN2"]
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     },
     {
       "sourceIndex": 1242,
@@ -7182,7 +7182,7 @@
       "sourceIndex": 1245,
       "id": "apophis-the-primordial-chaos",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "EGYPTIAN2"]
+      "omittedFlags": ["CAN_SPEAK"]
     },
     {
       "sourceIndex": 846,
@@ -7296,7 +7296,7 @@
       "sourceIndex": 855,
       "id": "the-destroyer",
       "tags": ["orc-cave"],
-      "omittedFlags": ["NORSE2", "POS_GAIN_AC", "POS_HOLD_LIFE", "RES_WALL"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "RES_WALL"]
     },
     {
       "sourceIndex": 1205,
@@ -7572,7 +7572,7 @@
       "sourceIndex": 1161,
       "id": "atropos-the-sister-of-fate",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "FEMALE", "OLYMPIAN2"]
+      "omittedFlags": ["CAN_SPEAK", "FEMALE"]
     },
     {
       "sourceIndex": 1180,
@@ -7717,7 +7717,7 @@
       "sourceIndex": 390,
       "id": "mummified-human",
       "tags": ["orc-cave"],
-      "omittedFlags": ["EGYPTIAN2", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 901,
@@ -7741,19 +7741,19 @@
       "sourceIndex": 1258,
       "id": "nekhbet-the-vulture-mother",
       "tags": ["orc-cave"],
-      "omittedFlags": ["EGYPTIAN2", "FEMALE", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY"]
+      "omittedFlags": ["FEMALE", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY"]
     },
     {
       "sourceIndex": 1246,
       "id": "thoth-the-voice-of-ra",
       "tags": ["orc-cave"],
-      "omittedFlags": ["EGYPTIAN2", "MALE"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 835,
       "id": "loki-the-trickster",
       "tags": ["orc-cave"],
-      "omittedFlags": ["CAN_SPEAK", "MALE", "NORSE2", "POS_SUST_STR"]
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SUST_STR"]
     },
     {
       "sourceIndex": 841,
@@ -7777,7 +7777,7 @@
       "sourceIndex": 1344,
       "id": "einheri-berserker",
       "tags": ["asgard"],
-      "omittedFlags": ["NORSE2", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 1101,
@@ -7951,7 +7951,7 @@
       "sourceIndex": 1368,
       "id": "sugriva-lord-of-kishkindha",
       "tags": ["mount-meru", "vanara"],
-      "omittedFlags": ["HINDU2", "MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
     },
     {
       "sourceIndex": 1381,

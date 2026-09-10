@@ -142,6 +142,15 @@
         "noMelee": {
           "type": "boolean"
         },
+        "pantheon": {
+          "format": "uint8",
+          "maximum": 4,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "rootFloorId": {
           "type": "string"
         },

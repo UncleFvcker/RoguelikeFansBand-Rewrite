@@ -251,6 +251,7 @@ mod tests {
             item_property_knowledge: Vec::new(),
             task_progress: Vec::new(),
             task_states: Vec::new(),
+            active_pantheons: 2 | 8,
             bounty_state: rfb_protocol::BountyStateSaveDto {
                 daily_day: 0,
                 daily_actor_kind_id: "demo.actor.test-target".to_owned(),

@@ -3,6 +3,19 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn dungeon_pantheon_association_accepts_only_source_ids() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    for id in [0, 1, 2, 3, 4, 5] {
+        let mut content = artifact.content.clone();
+        content.worlds[0].dungeons[0].pantheon = Some(id);
+        assert_eq!(
+            validate_and_normalize(&mut content).is_ok(),
+            (1..=4).contains(&id)
+        );
+    }
+}
+
+#[test]
 fn arena_dungeon_formal_entry_chain_guardians_and_reward_match_source() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let world = &artifact.content.worlds[0];

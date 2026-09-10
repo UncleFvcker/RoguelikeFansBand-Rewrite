@@ -610,7 +610,7 @@ fn dungeon_anti_melee_allocation_filters_attack_spells_without_improving_player_
     assert!(player_candidates.contains(&"demo.actor.kobold".to_owned()));
     assert!(!natural_candidates.contains(&"demo.actor.kobold".to_owned()));
     let mut normal = game.clone();
-    normal.current_floor_id = "demo.floor.surface".to_owned();
+    normal.current_floor_id = "demo.floor.castle-depth-40".to_owned();
     assert_eq!(
         player_candidates,
         normal.summon_category_candidate_kind_ids("any-monster", None, 80, false, true)
