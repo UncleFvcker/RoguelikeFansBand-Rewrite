@@ -10,7 +10,7 @@
 | 协议 | 1.240 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 117 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 12 / 12 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.401.9 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.401.10 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v318，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 6 个 Class、13 个 Build、57 个 Race、32 本能力书、1,840 个 ability 文件、371 个 item、1,402 个 actor、168 个 affix、152 个 mutation。世界定义含 28 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
@@ -52,7 +52,7 @@ Ent、Spectre 的新游戏入口已开放。种族主线还接入原始经验值
 
 [反魔洞穴／反近战洞穴 A1–A5](../design/anti-caves-dungeon-plan-20260910.md) 已完成规则、内容、入口与聚焦自动验收。原版 16/17 替代组各 40–50 层；新角色按种子只开放 (84,6)/(47,45) 中所选地点的真实入口和守卫，无最终首领或固定征服奖励。`noMagic`/`noMelee` 保留各入口的回合、资源与召唤语义，生态分别筛选天生/攻击法术资格，空偏好 `specialDiv=0` 可走全局分配。A5 的 105 项核心检查、最终两项守卫落点复核、正式内容绑定、来源审计、26 条契约、Schema、Clippy 和格式检查通过；生成覆盖每座 9 个代表场景，两种替代结果的全层往返、保存/召回及守卫状态已验证。包/lock 保持 1.401.8；代表层与河流概率适配详见计划。没有本批可玩构建或人工试玩。
 
-[黑暗洞穴／灾难区 D1–D5](../design/dark-cave-disaster-area-plan-20260910.md) 已完成 D1 魔法黑暗及 D2 深浅废水规则。包 `1.401.9` 新增毒酸液／有毒废料：周期酸伤、中毒累加、飞行/骑乘、损甲、体质检定和恢复抑制进入核心；可走但不可承物的深层使用统一落点及存档校验，怪物分配与通行分别执行源条件。D2 的 14 个新增场景和 51 项既有核心检查、固定布局内容校验、本地化与 Clippy 通过。D1 的照明、视觉/夜视/ESP、探测及源例外保持；D3–D5 的地牢生成/生态配置、39 个楼层、守卫奖励绑定和替代入口尚未加入。现有抗性/中毒/护甲与视觉尺度的适配边界见计划；本批没有新增持久字段、协议 DTO 或可玩构建。
+[黑暗洞穴／灾难区 D1–D5](../design/dark-cave-disaster-area-plan-20260910.md) 已完成 D1 魔法黑暗、D2 深浅废水及 D3 混合地形/生态/第四册奖励依赖。正式包 `1.401.10` 含毒酸液／有毒废料、两座生态表和生命系第四册默认奖励表；混合材质在房间通路生成后按候选格预算分配，保护固定落点，额外楼梯排除不可达水域。生态使用真实抗毒或免毒，四名守卫沿固定实例路径验证，哥斯拉仍保留 `wildOnly`；第一领域第四册和无领域默认书的合法掉落、保存及重访去重已验证。D3 的 55 项相关核心检查、2 项内容校验、26 条 active 契约、Schema、core/content Clippy 和 source/lock 校验通过；D1/D2 的照明、探测、周期酸毒、损甲/体质/恢复抑制及承物边界保持。D4–D5 的正式 39 层、守卫奖励绑定和替代入口尚未加入。混合比例、通道类型、抗性/中毒/护甲与视觉尺度的适配边界见计划；本批没有新增持久字段、协议 DTO 或可玩构建。
 
 Outpost O1 已恢复 RFB master `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c` 的 198×65 模板：4,383 个显式格与 8,487 个继承格，地图原点为 (0,0)，初始构造和后续叠加共用已有种子化荒野 chunk。出生 (99,33) 是本项目落点选择；原有短剑与两瓶轻伤治疗药水的实例 ID、数量保留，分别移至 (100,33)/(101,33)。黑坑要求飞行通行、允许投射且不遮挡视线；射落物、丢弃物与怪物掉落在附近合法地板落地，命中点仍保留在坑上。
 

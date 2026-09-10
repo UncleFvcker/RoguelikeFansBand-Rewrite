@@ -846,6 +846,10 @@ pub enum ProceduralRoomPlacement {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ProceduralLayoutDefinition {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub floor_mix: Vec<ProceduralTerrainMixDefinition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub wall_mix: Vec<ProceduralTerrainMixDefinition>,
     #[serde(default)]
     pub mode: ProceduralLayoutMode,
     #[serde(default)]
@@ -872,6 +876,16 @@ pub struct ProceduralLayoutDefinition {
 
 const fn default_place_doors() -> bool {
     true
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralTerrainMixDefinition {
+    pub terrain_id: String,
+    /// Percentage of replaceable base material; the remainder keeps the base.
+    #[cfg_attr(feature = "schemas", schemars(range(min = 1, max = 100)))]
+    pub percent: u8,
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

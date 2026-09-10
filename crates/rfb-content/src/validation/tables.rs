@@ -264,6 +264,7 @@ pub(super) fn validate_tables(
             allocation.preferred_movement_modes.sort_unstable();
             allocation.preferred_habitats.sort_unstable();
             allocation.preferred_damage_immunities.sort_unstable();
+            allocation.preferred_damage_resistances.sort_unstable();
             let mut glyphs = BTreeSet::new();
             if !table.entries.is_empty()
                 || allocation.preferred_glyphs.len() > 64
@@ -288,6 +289,10 @@ pub(super) fn validate_tables(
                     .any(|pair| pair[0] == pair[1])
                 || allocation
                     .preferred_damage_immunities
+                    .windows(2)
+                    .any(|pair| pair[0] == pair[1])
+                || allocation
+                    .preferred_damage_resistances
                     .windows(2)
                     .any(|pair| pair[0] == pair[1])
             {

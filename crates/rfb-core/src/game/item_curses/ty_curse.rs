@@ -262,6 +262,7 @@ impl Game {
                 preferred_movement_modes: Vec::new(),
                 preferred_habitats: Vec::new(),
                 preferred_damage_immunities: Vec::new(),
+                preferred_damage_resistances: Vec::new(),
                 special_div: 64,
                 ambient_chance_one_in: 1,
             };

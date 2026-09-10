@@ -22,6 +22,7 @@ mod attribute_sources;
 mod capture_ball;
 mod cavalry;
 mod combat;
+mod disaster_area;
 mod dungeon_anti_magic;
 mod dungeon_anti_melee;
 mod experience;

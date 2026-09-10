@@ -1034,6 +1034,37 @@ pub(super) fn validate_world(
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
             }
         }
+        if let Some(layout) = &procedural.layout {
+            for (mix, base, walkable) in [
+                (&layout.floor_mix, &procedural.floor_terrain_id, true),
+                (&layout.wall_mix, &procedural.wall_terrain_id, false),
+            ] {
+                let mut ids = BTreeSet::new();
+                if mix.len() > 3
+                    || mix
+                        .iter()
+                        .map(|entry| u16::from(entry.percent))
+                        .sum::<u16>()
+                        > 100
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                for entry in mix {
+                    require_reference(terrain_ids, &entry.terrain_id, &procedural.id)?;
+                    if entry.percent == 0
+                        || entry.terrain_id == *base
+                        || !ids.insert(&entry.terrain_id)
+                        || terrain
+                            .iter()
+                            .find(|terrain| terrain.id == entry.terrain_id)
+                            .is_none_or(|terrain| terrain.walkable != walkable)
+                        || layout.mode != ProceduralLayoutMode::Rooms
+                    {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                }
+            }
+        }
         let eligible_theme_entries = if let Some(table_id) = &procedural.theme_table_id {
             let Some(table) = theme_tables.get(table_id) else {
                 return Err(ContentError::DanglingReference {

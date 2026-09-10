@@ -3,6 +3,77 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn disaster_area_terrain_mix_validates_percentages_materials_and_references() {
+    let mut content = compile_pack_dir(&original_pack_path()).unwrap().content;
+    let floor_id = "demo.floor.warrens-depth-1";
+    let layout = content.worlds[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|f| f.id == floor_id)
+        .unwrap()
+        .layout
+        .as_mut()
+        .unwrap();
+    layout.floor_mix = vec![
+        ProceduralTerrainMixDefinition {
+            terrain_id: "demo.terrain.shallow-waste".to_owned(),
+            percent: 21,
+        },
+        ProceduralTerrainMixDefinition {
+            terrain_id: "demo.terrain.deep-waste".to_owned(),
+            percent: 3,
+        },
+    ];
+    layout.wall_mix = vec![
+        ProceduralTerrainMixDefinition {
+            terrain_id: "demo.terrain.mountain-wall".to_owned(),
+            percent: 18,
+        },
+        ProceduralTerrainMixDefinition {
+            terrain_id: "demo.terrain.quartz-vein".to_owned(),
+            percent: 2,
+        },
+    ];
+    validate_and_normalize(&mut content).unwrap();
+    for (id, percent) in [
+        ("demo.terrain.shallow-waste", 0),
+        ("demo.terrain.shallow-waste", 98),
+        ("demo.terrain.deep-waste", 21),
+        ("demo.terrain.floor", 21),
+        ("demo.terrain.mountain-wall", 21),
+        ("demo.terrain.missing", 21),
+    ] {
+        let mut invalid = content.clone();
+        let floor = invalid.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|f| f.id == floor_id)
+            .unwrap();
+        floor.layout.as_mut().unwrap().floor_mix[0] = ProceduralTerrainMixDefinition {
+            terrain_id: id.to_owned(),
+            percent,
+        };
+        assert!(
+            validate_and_normalize(&mut invalid).is_err(),
+            "{id}: {percent}"
+        );
+    }
+    let layout = content.worlds[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|f| f.id == floor_id)
+        .unwrap()
+        .layout
+        .as_mut()
+        .unwrap();
+    layout.wall_mix[0].terrain_id = "demo.terrain.shallow-waste".to_owned();
+    assert!(matches!(
+        validate_and_normalize(&mut content),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+}
+
+#[test]
 fn anti_caves_bind_source_positions_rules_guardians_and_terminal_floors() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let world = &artifact.content.worlds[0];
@@ -1569,7 +1640,24 @@ fn global_monster_allocation_accepts_known_actor_tags() {
         .expect("Warrens global allocation policy");
     allocation.preferred_glyphs.clear();
     allocation.preferred_tags = vec!["animal".to_owned()];
+    allocation.preferred_damage_resistances = vec![ActorDamageType::Poison];
     validate_and_normalize(&mut content).expect("known actor tag should be accepted");
+
+    let mut duplicate = content.clone();
+    duplicate
+        .encounter_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.encounter-table.warrens")
+        .unwrap()
+        .global_allocation
+        .as_mut()
+        .unwrap()
+        .preferred_damage_resistances
+        .push(ActorDamageType::Poison);
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate),
+        Err(ContentError::InvalidEncounterTable(_))
+    ));
 
     let allocation = content
         .encounter_tables

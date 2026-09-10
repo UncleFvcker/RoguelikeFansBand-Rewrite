@@ -277,6 +277,12 @@
           },
           "type": "array"
         },
+        "preferredDamageResistances": {
+          "items": {
+            "$ref": "#/$defs/ActorDamageType"
+          },
+          "type": "array"
+        },
         "preferredGlyphs": {
           "items": {
             "type": "string"

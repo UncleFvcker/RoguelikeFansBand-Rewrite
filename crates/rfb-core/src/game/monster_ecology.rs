@@ -1214,6 +1214,7 @@ impl Game {
             preferred_movement_modes: Vec::new(),
             preferred_habitats: Vec::new(),
             preferred_damage_immunities: Vec::new(),
+            preferred_damage_resistances: Vec::new(),
             special_div: 64,
             ambient_chance_one_in: 1,
         };
@@ -1477,6 +1478,7 @@ impl Game {
             && policy.preferred_movement_modes.is_empty()
             && policy.preferred_habitats.is_empty()
             && policy.preferred_damage_immunities.is_empty()
+            && policy.preferred_damage_resistances.is_empty()
         {
             return base;
         }
@@ -1502,6 +1504,19 @@ impl Game {
                 .any(|damage_type| {
                     definition.resistances.get(damage_type)
                         == Some(&rfb_content::ActorResistanceLevel::Immune)
+                })
+            || policy
+                .preferred_damage_resistances
+                .iter()
+                .any(|damage_type| {
+                    matches!(
+                        definition.resistances.get(damage_type),
+                        Some(
+                            rfb_content::ActorResistanceLevel::Resistant
+                                | rfb_content::ActorResistanceLevel::Strong
+                                | rfb_content::ActorResistanceLevel::Immune
+                        )
+                    )
                 })
         {
             return base;
@@ -1608,7 +1623,14 @@ impl Game {
                 .allocation
                 .as_ref()
                 .expect("filtered allocation candidate must retain metadata");
-            let mut weight = self.original_dungeon_weight(&definition, policy);
+            // restrict_monster_to_dungeon accepts associated races before MODE_OR.
+            let mut weight = if current_legacy_dungeon_index
+                .is_some_and(|index| allocation.legacy_dungeon_indices.contains(&index))
+            {
+                100 / allocation.rarity
+            } else {
+                self.original_dungeon_weight(&definition, policy)
+            };
             if weight > 0
                 && allocation.max_depth != 999
                 && u32::from(selection_level) > definition.level.saturating_add(9)
