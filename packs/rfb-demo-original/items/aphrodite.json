@@ -1,0 +1,112 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.amulet",
+    "instant": false,
+    "rarityOneIn": 127,
+    "sourceIndex": 267
+  },
+  "baseValue": 555555,
+  "descriptionKey": "item-demo-aphrodite-description",
+  "equipmentSlot": "amulet",
+  "formatVersion": 1,
+  "generationLevel": 90,
+  "glyph": "\"",
+  "id": "demo.item.aphrodite",
+  "maxStack": 1,
+  "modifiers": {
+    "charisma": 5,
+    "defense": 25
+  },
+  "nameKey": "item-demo-aphrodite-name",
+  "passives": [
+    "levitation",
+    "reflects-bolts",
+    "see-invisible",
+    "sustain-charisma",
+    "telepathy"
+  ],
+  "resistances": {
+    "chaos": "resistant",
+    "disenchant": "resistant",
+    "nexus": "resistant",
+    "poison": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "CHR",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION",
+      "PERMA_CURSE",
+      "QUESTITEM",
+      "REFLECT",
+      "RES_BLIND",
+      "RES_CHAOS",
+      "RES_DISEN",
+      "RES_NEXUS",
+      "RES_POIS",
+      "SEE_INVIS",
+      "SUST_CHR",
+      "TELEPATHY"
+    ],
+    "pval": 5,
+    "toArmor": 25
+  },
+  "statusImmunities": [
+    "rfb.status.blindness",
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "activatable",
+    "artifact",
+    "equipment",
+    "jewelry",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 2,
+  "initialCurse": "permanent",
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentBonuses": {},
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.aphrodite",
+        "nameKey": "item-activation-demo-aphrodite-name",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "effectProgramId": "demo.effect.aphrodite",
+        "deviceCheckDifficulty": 40,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "rfbValue": 1000
+      }
+    ],
+    "recovery": {
+      "intervalTicks": 250,
+      "energyPerMille": 1000
+    }
+  }
+}

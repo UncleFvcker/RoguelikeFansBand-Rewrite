@@ -8,6 +8,604 @@ const PERMANENT: &str = "demo.terrain.permanent-wall";
 const DEEP: &str = "demo.terrain.surface-water-deep";
 const SHALLOW: &str = "demo.terrain.surface-water-shallow";
 
+const ZEUS: &str = "demo.actor.zeus-king-of-the-olympians";
+
+fn ol3_game() -> Game {
+    let mut game = (0..32)
+        .map(|seed| {
+            Game::from_content_with_build(
+                seed,
+                catalog(),
+                DEFAULT_WORLD_ID,
+                "demo.build.high-mage-sorcery",
+            )
+            .unwrap()
+        })
+        .find(|g| g.active_pantheons & 2 != 0)
+        .unwrap();
+    game.transition_floor("demo.floor.rlyeh-depth-90".into(), None, None, false)
+        .unwrap()
+        .unwrap();
+    game.entities.clear();
+    game.items.clear();
+    game.terrain.fill("demo.terrain.floor".into());
+    game.player.position = Position { x: 20, y: 15 };
+    game
+}
+
+fn ol3_god(game: &Game, kind: &str) -> Actor {
+    let def = game.content.actor(kind).unwrap();
+    spawn_actor_from_definition(
+        &mut RfbRng::seeded(0),
+        def,
+        "test.olympus.summoned",
+        Position { x: 21, y: 15 },
+        0,
+        true,
+    )
+}
+
+fn ol3_artifact(game: &mut Game, name: &str) -> String {
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: game.current_floor_id.clone(),
+        depth: 90,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.olympus.drop".into(),
+        },
+    };
+    let draft = game.fixed_item_draft(&context, format!("demo.item.{name}"));
+    let item = game
+        .commit_generated_item_draft(draft, ItemLocation::Inventory)
+        .unwrap();
+    let id = item.id.clone();
+    game.items.push(item);
+    game.identify_item_instance(
+        &id,
+        crate::game::inventory::ItemIdentificationRequest::new(true),
+    );
+    assert!(game.equip_inventory_item(&id, None).is_some(), "{name}");
+    game.refresh_player_resource_maxima();
+    let slot = match &game.items.iter().find(|i| i.id == id).unwrap().location {
+        ItemLocation::Equipped { slot_id } => slot_id.clone(),
+        _ => unreachable!(),
+    };
+    assert!(
+        game.unequip_slot(&slot).is_none(),
+        "permanent curse: {name}"
+    );
+    id
+}
+
+fn ol3_activate(game: &mut Game, id: &str, target: Option<&TargetSelection>) -> Vec<DomainEvent> {
+    let base = game.clone();
+    for seed in 0..256 {
+        let mut attempt = base.clone();
+        attempt.rng = RfbRng::seeded(seed);
+        let mut events = Vec::new();
+        attempt
+            .use_inventory_item(
+                id,
+                target,
+                None,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
+        if events.iter().any(|e| {
+            matches!(
+                e,
+                DomainEvent::DeviceSkillChecked {
+                    succeeded: true,
+                    ..
+                }
+            )
+        }) {
+            *game = attempt;
+            return events;
+        }
+    }
+    panic!("activation never accepted: {id} {target:?}");
+}
+
+#[test]
+fn mount_olympus_special_drop_rolls_source_boundaries_and_preserves_other_rewards() {
+    let base = ol3_game();
+    for (bad_luck, roll, expected) in [
+        (false, 19, true),
+        (false, 20, false),
+        (true, 14, true),
+        (true, 15, false),
+    ] {
+        let mut game = base.clone();
+        if bad_luck {
+            game.progress
+                .active_mutation_ids
+                .insert("rfb.mutation.bad-luck".into());
+        }
+        let seed = (0..10_000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(100) == roll)
+            .unwrap();
+        game.rng = RfbRng::seeded(seed);
+        let actor = ol3_god(&game, ZEUS);
+        let (drops, _) = game.generate_death_loot(&actor).unwrap();
+        assert_eq!(
+            drops.iter().any(|i| i.kind_id == "demo.item.zeus"),
+            expected,
+            "{bad_luck} {roll}"
+        );
+        assert_eq!(
+            drops
+                .iter()
+                .filter(|i| i.kind_id == "demo.item.acquirement-scroll")
+                .count(),
+            1
+        );
+        assert!(drops.iter().any(|i| !matches!(
+            i.kind_id.as_str(),
+            "demo.item.zeus" | "demo.item.acquirement-scroll"
+        )));
+        if expected {
+            assert!(game.generated_artifact_ids.contains("demo.item.zeus"));
+            game.rng = RfbRng::seeded(seed);
+            assert!(
+                game.generate_death_loot(&actor)
+                    .unwrap()
+                    .0
+                    .iter()
+                    .all(|i| i.kind_id != "demo.item.zeus")
+            );
+        }
+    }
+}
+
+#[test]
+fn mount_olympus_guardians_use_real_melee_and_quest_artifacts_skip_normal_generation() {
+    let base = ol3_game();
+    for kind in ["demo.actor.sky-drake", ZEUS] {
+        let mut game = base.clone();
+        game.entities.push(ol3_god(&game, kind));
+        // Isolate incoming combat with ample HP; no natural levelling claim.
+        game.player.hp = 100_000;
+        let target = MonsterHostileTarget::Player {
+            entity_id: game.player.id.clone(),
+            kind_id: game.player.kind_id.clone(),
+            position: game.player.position,
+        };
+        let mut events = Vec::new();
+        for _ in 0..8 {
+            game.resolve_monster_melee_target(
+                0,
+                &target,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
+        }
+        assert!(game.player.hp < 100_000, "{kind}");
+        assert!(!events.is_empty());
+    }
+    let mut game = base;
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: game.current_floor_id.clone(),
+        depth: 100,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.natural".into(),
+        },
+    };
+    let draws = game.rng_draw_counter();
+    assert!(
+        game.roll_fixed_artifact_kind_id(&context, Some("demo.item.trident"), false)
+            .is_none()
+    );
+    assert_eq!(
+        game.rng_draw_counter(),
+        draws,
+        "QUESTITEM is excluded before its rarity draw"
+    );
+    let id = ol3_artifact(&mut game, "poseidon");
+    let item = game.items.iter().find(|i| i.id == id).unwrap();
+    assert!(game.item_has_weapon_trait(item, WeaponTraitDto::Order));
+    assert_eq!(
+        game.content
+            .item(&item.kind_id)
+            .unwrap()
+            .melee_profile
+            .as_ref()
+            .unwrap()
+            .damage_dice,
+        20
+    );
+}
+
+#[test]
+fn mount_olympus_dead_zeus_outside_does_not_grant_conquest_or_respawn() {
+    let mut game = ol3_game();
+    let surface = game
+        .content
+        .world(&game.world_id)
+        .unwrap()
+        .initial_floor_id
+        .clone();
+    game.transition_floor(surface.clone(), None, None, false)
+        .unwrap()
+        .unwrap();
+    game.transition_floor("demo.floor.warrens-depth-3".into(), None, None, false)
+        .unwrap()
+        .unwrap();
+    game.entities.clear();
+    let mut actor = ol3_god(&game, ZEUS);
+    actor.position = game.player.position;
+    game.entities.push(actor);
+    let (update, _) = super::world::defeat_guardian_with_status(
+        &mut game,
+        "test.olympus.summoned",
+        STATUS_POISON,
+    );
+    assert!(
+        !update
+            .events
+            .iter()
+            .any(|e| e.kind == "dungeon.guardian-defeated")
+    );
+    assert!(!game.dungeon_states["demo.dungeon.rlyeh"].guardian_defeated);
+    game.transition_floor(surface, None, None, false)
+        .unwrap()
+        .unwrap();
+    game.transition_floor("demo.floor.rlyeh-depth-96".into(), None, None, false)
+        .unwrap()
+        .unwrap();
+    assert!(game.entities.iter().all(|a| a.kind_id != ZEUS));
+    assert!(!game.dungeon_states["demo.dungeon.rlyeh"].guardian_defeated);
+}
+
+#[test]
+fn mount_olympus_early_zeus_conquest_survives_save_and_reward_scroll_is_usable() {
+    use super::support::dispatch_next;
+    let mut game = ol3_game();
+    let mut actor = ol3_god(&game, ZEUS);
+    actor.hp = 1;
+    game.entities.push(actor);
+    let (update, _) = super::world::defeat_guardian_with_status(
+        &mut game,
+        "test.olympus.summoned",
+        STATUS_POISON,
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|e| e.kind == "dungeon.guardian-defeated")
+    );
+    assert!(game.dungeon_states["demo.dungeon.rlyeh"].guardian_defeated);
+    assert!(!game.unique_actor_kind_is_available(ZEUS));
+    super::support::choose_human_talent_if_pending(&mut game);
+    let scroll = game
+        .items
+        .iter_mut()
+        .find(|i| i.kind_id == "demo.item.acquirement-scroll")
+        .unwrap();
+    scroll.location = ItemLocation::Inventory;
+    let id = scroll.id.clone();
+    let before = game.items.len();
+    let used = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: id.clone(),
+            target: None,
+        },
+    );
+    assert!(!game.items.iter().any(|i| i.id == id));
+    assert!(game.items.len() >= before, "{used:?}");
+    assert!(
+        game.items
+            .iter()
+            .any(|i| i.origin_kind == Some(rfb_protocol::ItemOriginKindDto::Acquire))
+    );
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    let mut restored = restored;
+    restored
+        .transition_floor("demo.floor.rlyeh-depth-96".into(), None, None, false)
+        .unwrap()
+        .unwrap();
+    assert!(restored.entities.iter().all(|a| a.kind_id != ZEUS));
+    assert!(
+        !restored
+            .items
+            .iter()
+            .any(|i| i.kind_id == "demo.item.acquirement-scroll")
+    );
+}
+
+#[test]
+fn mount_olympus_artifacts_equip_activate_and_round_trip() {
+    use super::support::give_inventory_item;
+    let base = ol3_game();
+    for name in [
+        "zeus",
+        "poseidon",
+        "hades",
+        "athena",
+        "ares",
+        "hermes",
+        "apollo",
+        "artemis",
+        "hephaestus",
+        "hera",
+        "demeter",
+        "aphrodite",
+    ] {
+        let mut game = base.clone();
+        let id = ol3_artifact(&mut game, name);
+        assert_eq!(
+            game.items.iter().find(|i| i.id == id).unwrap().curse,
+            Some(rfb_protocol::ItemCurseSeverityDto::Permanent)
+        );
+        let mut target = None;
+        if name == "zeus" {
+            let mut actor = ol3_god(&game, "demo.actor.sky-drake");
+            actor.hp = 10_000;
+            actor.max_hp = 10_000;
+            game.entities.push(actor);
+            target = Some(TargetSelection::Direction {
+                direction: Direction::East,
+            });
+        }
+        if name == "hermes" {
+            let item = game.items.iter().find(|i| i.id == id).unwrap();
+            assert_eq!(
+                game.inventory_item_dto(item).use_target_spec.unwrap().range,
+                10
+            );
+            target = Some(TargetSelection::Position {
+                position: Position { x: 22, y: 15 },
+            });
+        }
+        if name == "athena" {
+            give_inventory_item(&mut game, "test.device", "demo.item.magic-missile-wand");
+            game.items
+                .last_mut()
+                .unwrap()
+                .charges
+                .as_mut()
+                .unwrap()
+                .current = 0;
+            target = Some(TargetSelection::Item {
+                item_id: "test.device".into(),
+            });
+        }
+        if name == "hephaestus" {
+            give_inventory_item(&mut game, "test.weapon", "demo.item.dagger");
+            target = Some(TargetSelection::Item {
+                item_id: "test.weapon".into(),
+            });
+            assert!(
+                game.item_use_plan(
+                    &id,
+                    &rfb_content::ItemUseEffectDefinition::EnchantEquipment,
+                    None,
+                    Some(&TargetSelection::Item {
+                        item_id: id.clone()
+                    }),
+                    None
+                )
+                .is_none()
+            );
+        }
+        if name == "hera" {
+            game.resources
+                .get_mut("demo.resource.mana")
+                .unwrap()
+                .current = 0;
+        }
+        if name == "hades" {
+            game.progress.attributes.strength -= 1;
+        }
+        game.player.hp = 1;
+        game.nutrition = 1_000;
+        let events = ol3_activate(&mut game, &id, target.as_ref());
+        match name {
+            "zeus" => assert!(game.entities[0].hp < 10_000, "{events:?}"),
+            "poseidon" => {
+                assert!(game.terrain.iter().any(|t| t != "demo.terrain.floor"));
+                assert_eq!(game.items.iter().find(|i| i.id == id).unwrap().charges.unwrap().current, 1);
+                ol3_activate(&mut game, &id, None);
+            }
+            "hades" => assert_eq!(game.progress.attributes.strength, game.progress.maximum_attributes.strength),
+            "athena" => assert!(events.iter().any(|e| matches!(e, DomainEvent::DeviceRechargeResolved { attempted, .. } if *attempted > 0))),
+            "ares" => { assert!(game.player.hp > 1); assert!(game.player.statuses.iter().any(|s| s.kind_id == STATUS_BERSERK && s.remaining_ticks >= 260)); }
+            "hermes" => {
+                assert!(game.player.statuses.iter().any(|s| s.kind_id == STATUS_HASTE && s.remaining_ticks >= 760));
+                assert_eq!(game.player.position, Position { x: 22, y: 15 });
+            }
+            "apollo" => { assert!(game.glow.iter().all(|g| *g)); assert!(game.explored.iter().all(|e| *e)); }
+            "artemis" => { let arrows = game.items.iter().find(|i| i.kind_id == "demo.item.arrow" || i.kind_id == "demo.item.sheaf-arrow").unwrap(); assert!((5..=10).contains(&arrows.quantity)); assert_eq!(arrows.discount_percent, 99); assert_eq!(arrows.origin_kind, Some(rfb_protocol::ItemOriginKindDto::Acquire)); }
+            "hephaestus" => assert_eq!(game.items.iter().find(|i| i.id == "test.weapon").unwrap().enchantments.to_hit, 3),
+            "hera" => { let mana = game.resources["demo.resource.mana"]; assert_eq!(mana.current, mana.maximum); }
+            "demeter" => { assert!(game.player.hp > 1); assert_eq!(game.nutrition, 14_999); }
+            "aphrodite" => assert!(events.iter().any(|e| matches!(e, DomainEvent::ItemSummoned { resolution, .. } if !resolution.entity_ids.is_empty()))),
+            _ => unreachable!(),
+        }
+        // Combat fixture uses inflated monster HP only before its damage assertion.
+        if name == "zeus" {
+            game.entities.clear();
+        }
+        game.reveal_current_visibility();
+        let save = game.to_save();
+        let restored = Game::from_save_with_content(save.clone(), game.content.clone())
+            .unwrap_or_else(|e| panic!("{name}: {e}"));
+        let left = serde_json::to_value(restored.to_save()).unwrap();
+        let right = serde_json::to_value(&save).unwrap();
+        let differences = right
+            .as_object()
+            .unwrap()
+            .keys()
+            .filter(|k| left[*k] != right[*k])
+            .collect::<Vec<_>>();
+        assert!(
+            differences.is_empty(),
+            "{name}: save differences {differences:?}"
+        );
+        if matches!(name, "artemis" | "hephaestus") {
+            let mut invalid = game.clone();
+            invalid
+                .items
+                .iter_mut()
+                .find(|i| i.discount_percent == 99)
+                .unwrap()
+                .discount_percent = 98;
+            assert!(Game::from_save_with_content(invalid.to_save(), game.content.clone()).is_err());
+        }
+        if name != "poseidon" {
+            let state = game.to_save();
+            game.use_inventory_item(
+                &id,
+                target.as_ref(),
+                None,
+                &mut Vec::new(),
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
+            assert_eq!(game.to_save(), state, "cooldown: {name}");
+        }
+    }
+}
+
+#[test]
+fn mount_olympus_aphrodite_summons_follow_the_hostile_roll_and_keep_pet_ownership() {
+    let mut base = ol3_game();
+    let id = ol3_artifact(&mut base, "aphrodite");
+    for roll in [0, 1] {
+        let seed = (0..100_000)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                rng.bounded(100) < 5 && rng.bounded(3) == 0 && rng.bounded(10) == roll
+            })
+            .unwrap();
+        let mut game = base.clone();
+        game.rng = RfbRng::seeded(seed);
+        let mut events = Vec::new();
+        game.use_inventory_item(
+            &id,
+            None,
+            None,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        let resolutions = events
+            .iter()
+            .filter_map(|event| match event {
+                DomainEvent::ItemSummoned { resolution, .. } => Some(resolution),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(resolutions.len(), 1);
+        assert_eq!(resolutions[0].hostile, roll == 0);
+        assert!(!resolutions[0].entity_ids.is_empty());
+        for actor in &game.entities {
+            assert_eq!(
+                actor.controller_id.as_deref(),
+                (roll != 0).then_some(game.player.id.as_str())
+            );
+            if roll != 0 {
+                assert!(
+                    !game
+                        .original_pack_spell_flags(game.content.actor(&actor.kind_id).unwrap())
+                        .1
+                );
+            }
+        }
+        game.reveal_current_visibility();
+        let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+    }
+}
+
+#[test]
+fn mount_olympus_ambrosia_is_local_and_preserves_satiated_nutrition() {
+    use super::support::give_inventory_item;
+    let mut game = ol3_game();
+    let context = LootContext {
+        table_id: "test.loot-table.olympus-food".into(),
+        floor_id: game.current_floor_id.clone(),
+        depth: 100,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.food".into(),
+        },
+    };
+    let mut found = false;
+    for seed in 0..128 {
+        game.rng = RfbRng::seeded(seed);
+        let drops = game
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap();
+        found |= drops.iter().any(|i| i.kind_id == "demo.item.sunlit-feast");
+    }
+    assert!(found);
+    let outside = LootContext {
+        floor_id: "demo.floor.warrens-depth-3".into(),
+        ..context
+    };
+    assert!(
+        game.generate_loot_instances(&outside, ItemLocation::Inventory)
+            .unwrap()
+            .is_empty()
+    );
+    for food in [1_000, 15_000] {
+        game.nutrition = food;
+        game.player.hp = 1;
+        game.player.statuses =
+            vec![super::monster_combat::melee_status(STATUS_POISON, 1500, "test").status];
+        give_inventory_item(&mut game, "test.food", "demo.item.sunlit-feast");
+        game.use_inventory_item(
+            "test.food",
+            None,
+            None,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        assert_eq!(game.nutrition, food.max(14_999));
+        assert!(game.player.hp > 1);
+        assert_eq!(
+            game.player
+                .statuses
+                .iter()
+                .find(|s| s.kind_id == STATUS_POISON)
+                .unwrap()
+                .remaining_ticks,
+            500
+        );
+        assert!(!game.items.iter().any(|i| i.id == "test.food"));
+    }
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+
+    let mut zombie = super::support::zombie_game(47);
+    super::support::clear_monsters(&mut zombie);
+    zombie.nutrition = 1_000;
+    give_inventory_item(&mut zombie, "test.food", "demo.item.sunlit-feast");
+    zombie
+        .use_inventory_item(
+            "test.food",
+            None,
+            None,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+    assert_eq!(zombie.nutrition, 1_375);
+}
+
 fn catalog() -> Arc<ContentCatalog> {
     static CONTENT: OnceLock<Arc<ContentCatalog>> = OnceLock::new();
     CONTENT
@@ -16,8 +614,8 @@ fn catalog() -> Arc<ContentCatalog> {
                 .join("../../packs/rfb-demo-original");
             let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
             let world = &mut artifact.content.worlds[0];
-            // OL2 stages the source policy on an existing valid chain. The actual
-            // Olympus entrance, guardian rewards and eleven floors belong to OL3/4.
+            // Stage Olympus on an existing valid chain; the formal entrance and
+            // eleven-floor chain remain OL4 work.
             let dungeon = world
                 .dungeons
                 .iter_mut()
@@ -25,6 +623,19 @@ fn catalog() -> Arc<ContentCatalog> {
                 .unwrap();
             dungeon.legacy_index = Some(22);
             dungeon.pantheon = Some(1);
+            dungeon.guardian_actor_kind_id = Some(ZEUS.into());
+            let guardian = world
+                .procedural_floors
+                .iter_mut()
+                .find(|f| f.id == "demo.floor.rlyeh-depth-96")
+                .unwrap()
+                .guardian
+                .as_mut()
+                .unwrap();
+            guardian.actor_kind_id = "demo.actor.zeus-king-of-the-olympians".into();
+            guardian.reward_artifact_item_kind_id = None;
+            guardian.reward_loot_table_id =
+                Some("demo.loot-table.mount-olympus-final-reward".into());
             for depth in [80, 85, 90] {
                 let floor = world
                     .procedural_floors
@@ -87,6 +698,17 @@ fn catalog() -> Arc<ContentCatalog> {
                 .to_vec();
             policy.special_div = 8;
             policy.ambient_chance_one_in = 160;
+            let mut food = artifact
+                .content
+                .loot_tables
+                .iter()
+                .find(|t| t.id == "demo.loot-table.base-items")
+                .unwrap()
+                .clone();
+            food.id = "test.loot-table.olympus-food".into();
+            food.entries
+                .retain(|e| e.item_kind_id == "demo.item.sunlit-feast");
+            artifact.content.loot_tables.push(food);
             Arc::new(ContentCatalog::from_artifact(
                 rfb_content::encode_content(artifact.content).unwrap(),
             ))

@@ -172,5 +172,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.demeter",
+    "chancePercent": 20
   }
 }

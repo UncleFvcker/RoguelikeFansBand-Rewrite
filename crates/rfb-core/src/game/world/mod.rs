@@ -12,6 +12,31 @@ const PANTHEON_TAGS: [(u8, &str, &str); 4] = [
 ];
 
 impl Game {
+    /// quest.c::_dungeon_boss_death recognizes the race anywhere in its dungeon,
+    /// including a summoned boss before the fixed final-floor encounter.
+    pub(super) fn dungeon_guardian_floor_for_actor(
+        &self,
+        kind_id: &str,
+    ) -> Option<&rfb_content::ProceduralFloorDefinition> {
+        let world = self.content.world(&self.world_id)?;
+        let dungeon_id = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == self.current_floor_id)?
+            .dungeon_id
+            .as_deref()?;
+        if !self.dungeon_is_active(dungeon_id) {
+            return None;
+        }
+        world.procedural_floors.iter().find(|floor| {
+            floor.dungeon_id.as_deref() == Some(dungeon_id)
+                && floor
+                    .guardian
+                    .as_ref()
+                    .is_some_and(|guardian| guardian.actor_kind_id == kind_id)
+        })
+    }
+
     pub(super) fn actor_is_pantheon_suppressed(
         &self,
         actor: &rfb_content::ActorDefinition,

@@ -172,11 +172,18 @@ pub(super) fn item_creation_state_is_valid(
     if item.book_counted && (definition.ability_book_id.is_none() || item.quantity != 1) {
         return false;
     }
+    let discounted_equipment = item.discount_percent == 99
+        && definition.artifact_generation.is_none()
+        && (definition.melee_profile.is_some()
+            || definition
+                .tags
+                .iter()
+                .any(|tag| matches!(tag.as_str(), "weapon" | "launcher" | "ammunition" | "armor")));
     let player_made_state_is_valid = match item.origin_kind {
         Some(ItemOriginKindDto::ArtifactCreation) => {
             item.artifact_name.is_some() && matches!(item.discount_percent, 0 | 99)
         }
-        None => item.discount_percent == 0,
+        None => item.discount_percent == 0 || discounted_equipment,
         Some(ItemOriginKindDto::PlayerMade) => {
             item.discount_percent == 99
                 && (definition.melee_profile.is_some()
@@ -184,10 +191,12 @@ pub(super) fn item_creation_state_is_valid(
                         matches!(tag.as_str(), "weapon" | "launcher" | "ammunition" | "armor")
                     }))
         }
-        Some(ItemOriginKindDto::Acquire) => item.discount_percent == 0,
-        Some(ItemOriginKindDto::Rubble) => item.discount_percent == 0,
+        Some(ItemOriginKindDto::Acquire | ItemOriginKindDto::Rubble) => {
+            item.discount_percent == 0 || discounted_equipment
+        }
         Some(ItemOriginKindDto::EndlessQuiver) => {
-            item.discount_percent == 0 && definition.ammunition_profile.is_some()
+            (item.discount_percent == 0 || discounted_equipment)
+                && definition.ammunition_profile.is_some()
         }
     };
     let damage_override_is_valid = item.damage_dice_override.is_none_or(|dice| {

@@ -168,5 +168,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.athena",
+    "chancePercent": 20
   }
 }

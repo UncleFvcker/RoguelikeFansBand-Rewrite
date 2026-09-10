@@ -1363,8 +1363,14 @@ impl Game {
             })
     }
 
-    pub(super) fn item_has_weapon_trait(item: &ItemInstance, trait_: WeaponTraitDto) -> bool {
+    pub(super) fn item_has_weapon_trait(
+        &self,
+        item: &ItemInstance,
+        trait_: WeaponTraitDto,
+    ) -> bool {
         item.intrinsic_weapon_traits.contains(&trait_)
+            || (trait_ == WeaponTraitDto::Order && self.item_has_rfb_flag(item, "BRAND_ORDER"))
+            || (trait_ == WeaponTraitDto::Blessed && self.item_has_rfb_flag(item, "BLESSED"))
             || item
                 .rolled_affixes
                 .iter()
@@ -1991,7 +1997,7 @@ impl Game {
                                 priest_class,
                                 good_realm,
                                 item_definition.rfb_base_kind.map(|kind| kind.tval),
-                                Self::item_has_weapon_trait(item, WeaponTraitDto::Blessed),
+                                self.item_has_weapon_trait(item, WeaponTraitDto::Blessed),
                             ),
                         )
                     })

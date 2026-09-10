@@ -1,0 +1,98 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.wooden-torch",
+    "instant": false,
+    "rarityOneIn": 127,
+    "sourceIndex": 266
+  },
+  "baseValue": 555555,
+  "descriptionKey": "item-demo-demeter-description",
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
+  "equipmentBonuses": {
+    "lightRadius": 4
+  },
+  "equipmentSlot": "light",
+  "formatVersion": 1,
+  "generationLevel": 90,
+  "glyph": "~",
+  "id": "demo.item.demeter",
+  "maxStack": 1,
+  "modifiers": {
+    "constitution": 2,
+    "wisdom": 2
+  },
+  "nameKey": "item-demo-demeter-name",
+  "passives": [
+    "regeneration"
+  ],
+  "resistances": {
+    "time": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "PERMA_CURSE",
+      "QUESTITEM",
+      "REGEN",
+      "RES_TIME",
+      "TOWN",
+      "WIS"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "tags": [
+    "activatable",
+    "artifact",
+    "equipment",
+    "light-source"
+  ],
+  "weightTenthsPound": 30,
+  "initialCurse": "permanent",
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.demeter",
+        "nameKey": "item-activation-demo-demeter-name",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "effectProgramId": "demo.effect.demeter",
+        "deviceCheckDifficulty": 50,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "rfbValue": 10000
+      }
+    ],
+    "recovery": {
+      "intervalTicks": 1000,
+      "energyPerMille": 1000
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "formatVersion": 1,
+  "id": "demo.effect.ares",
+  "input": "self",
+  "steps": [
+    {
+      "type": "apply-berserk-strength",
+      "durationDice": 1,
+      "durationSides": 25,
+      "durationBonus": 25
+    }
+  ],
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json"
+}

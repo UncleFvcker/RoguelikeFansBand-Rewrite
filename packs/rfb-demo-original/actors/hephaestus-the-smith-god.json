@@ -129,5 +129,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.hephaestus",
+    "chancePercent": 20
   }
 }

@@ -1,9 +1,39 @@
 {
   "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits",
-  "allocationRowCount": 368,
+  "allocationRowCount": 371,
   "explicitItems": [
     {
+      "itemId": "demo.item.aphrodite",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.apollo",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.ares",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.arkenstone-of-thrain",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.artemis",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.athena",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -34,6 +64,12 @@
     },
     {
       "itemId": "demo.item.crisdurian",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.demeter",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -99,6 +135,30 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.hades",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.hephaestus",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.hera",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.hermes",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.human-skeleton",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -130,6 +190,12 @@
     },
     {
       "itemId": "demo.item.palantir-of-westernesse",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.poseidon",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -226,6 +292,12 @@
     },
     {
       "itemId": "demo.item.wizardstaff-of-mokomagi",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.zeus",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -2224,12 +2296,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.great-hammer",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 135,
       "sourceName": "Great Hammer",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 19,
       "tval": 21
     },
@@ -3282,12 +3354,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.jewel-encrusted-crown",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 222,
       "sourceName": "Jewel Encrusted Crown",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 12,
       "tval": 33
     },
@@ -3931,12 +4003,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.black-clothes",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 258,
       "sourceName": "Black Clothes",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 13,
       "tval": 36
     },

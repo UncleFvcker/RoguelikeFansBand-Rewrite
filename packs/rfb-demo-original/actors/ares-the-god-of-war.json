@@ -173,5 +173,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.ares",
+    "chancePercent": 20
   }
 }

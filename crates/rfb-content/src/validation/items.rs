@@ -41,7 +41,7 @@ pub(crate) fn valid_item_effect(
     loot_table_ids: &BTreeSet<String>,
 ) -> bool {
     match effect {
-        ItemUseEffectDefinition::AbilityEffect { .. } => true,
+        ItemUseEffectDefinition::AbilityEffect { .. } | ItemUseEffectDefinition::Hermes => true,
         ItemUseEffectDefinition::NoNumericEffect => true,
         ItemUseEffectDefinition::IncreaseNutrition { amount } => (1..=15_000).contains(amount),
         ItemUseEffectDefinition::SatisfyHunger => true,
@@ -108,6 +108,8 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::TriggerTsuyoshiCrash
         | ItemUseEffectDefinition::MundanifyItem
         | ItemUseEffectDefinition::CreateArtifact
+        | ItemUseEffectDefinition::CreateArrows
+        | ItemUseEffectDefinition::SummonMonsters
         | ItemUseEffectDefinition::RefillQuiver
         | ItemUseEffectDefinition::StarBall
         | ItemUseEffectDefinition::ListUniques
@@ -576,7 +578,8 @@ pub(crate) fn valid_item_effect(
 
 fn item_effect_is_self_targeted(effect: &ItemUseEffectDefinition) -> bool {
     match effect {
-        ItemUseEffectDefinition::Damage { .. }
+        ItemUseEffectDefinition::Hermes
+        | ItemUseEffectDefinition::Damage { .. }
         | ItemUseEffectDefinition::AreaDamage { .. }
         | ItemUseEffectDefinition::BeamDamage { .. }
         | ItemUseEffectDefinition::RandomElementConeDamage { .. }
@@ -648,6 +651,11 @@ pub(super) fn validate_items(
             let projectile_target = actor_target && target.requires_line_of_effect;
             modes_are_unique
                 && match effect {
+                    ItemUseEffectDefinition::Hermes => {
+                        target.modes.as_slice() == [AbilityTargetModeDefinition::Position]
+                            && target.range == 35
+                            && !target.requires_line_of_effect
+                    }
                     ItemUseEffectDefinition::AbilityEffect { effect, .. } => {
                         let item_target = target.modes.as_slice()
                             == [AbilityTargetModeDefinition::Item]
@@ -694,6 +702,8 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::ListUniqueMonsters
                     | ItemUseEffectDefinition::SelfKnowledge
                     | ItemUseEffectDefinition::Acquirement { .. }
+                    | ItemUseEffectDefinition::CreateArrows
+                    | ItemUseEffectDefinition::SummonMonsters
                     | ItemUseEffectDefinition::RefillQuiver
                     | ItemUseEffectDefinition::StarBall
                     | ItemUseEffectDefinition::Starlight { .. }
@@ -1297,7 +1307,11 @@ pub(super) fn validate_items(
                         && (1..=1_000_000).contains(&activation.charges.minimum)
                         && activation.charges.minimum <= activation.charges.maximum
                         && activation.charges.maximum <= 1_000_000
-                        && (1..=activation.charges.minimum).contains(&activation.charges.cost)
+                        && activation.charges.cost <= activation.charges.minimum
+                        && (activation.charges.cost > 0
+                            || (generation.rfb_device.is_none()
+                                && generation.recovery.is_none()
+                                && activation.recovery.is_none()))
                         && valid_item_effect(
                             &activation.effect,
                             terrain_tags,
@@ -1313,12 +1327,10 @@ pub(super) fn validate_items(
                                 | ItemUseEffectDefinition::ApplySpeed { .. }
                                 | ItemUseEffectDefinition::ApplyHeroicSpeed { .. }
                                 | ItemUseEffectDefinition::ApplyHeroism { .. }
-                                | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
                                 | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
                                 | ItemUseEffectDefinition::ApplyStoneSkin { .. }
                                 | ItemUseEffectDefinition::RestoreLifeLevels { .. }
                                 | ItemUseEffectDefinition::RestoreAllAttributes
-                                | ItemUseEffectDefinition::RestoreAllVitality { .. }
                                 | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
                                 | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
                                 | ItemUseEffectDefinition::IncreaseAttribute { .. }

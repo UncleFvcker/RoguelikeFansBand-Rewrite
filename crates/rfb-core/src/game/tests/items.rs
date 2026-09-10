@@ -306,6 +306,7 @@ fn razorback_guardian_reward_shares_natural_generation_uniqueness() {
         })
         .unwrap();
     let floor_id = floor.id.clone();
+    let dungeon_id = floor.dungeon_id.clone().unwrap();
     let guardian = floor.guardian.as_mut().unwrap();
     guardian.reward_artifact_item_kind_id = Some("demo.item.razorback".to_owned());
     let guardian = guardian.clone();
@@ -315,6 +316,7 @@ fn razorback_guardian_reward_shares_natural_generation_uniqueness() {
     let (mut game, _) = razorback_game();
     game.content = content;
     game.current_floor_id = floor_id;
+    game.dungeon_states.get_mut(&dungeon_id).unwrap().suppressed = false;
     let mut actor = game.player.clone();
     actor.id = guardian.instance_id;
     actor.kind_id = guardian.actor_kind_id;
@@ -604,7 +606,7 @@ fn p90b_olog_hai_affix_materializes_and_runs_existing_berserk_activation() {
         .iter()
         .find(|status| status.kind_id == STATUS_BERSERK)
         .expect("Olog-hai activation should apply Berserk");
-    assert!((26..=50).contains(&berserk.remaining_ticks));
+    assert!((260..=500).contains(&berserk.remaining_ticks));
     assert_eq!(
         game.items
             .iter()

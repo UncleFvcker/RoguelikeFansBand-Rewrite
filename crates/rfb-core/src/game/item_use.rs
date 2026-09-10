@@ -2377,6 +2377,10 @@ impl Game {
         let mut noticed = false;
         for effect in effects {
             match effect {
+                ItemUseEffectDefinition::Heal { amount } => {
+                    let amount = device_power_value(u64::from(amount), device_power_bonus) as i32;
+                    noticed |= self.resolve_item_healing(source_kind_id, amount, events);
+                }
                 effect @ ItemUseEffectDefinition::Detect { .. } => {
                     noticed |= self.resolve_item_detection(
                         source_kind_id.to_owned(),
@@ -2962,6 +2966,7 @@ impl Game {
             AbilityEffectDefinition::VisibleApplyStatus {
                 power: Some(power), ..
             }
+            | AbilityEffectDefinition::RechargeFromPlayer { power }
             | AbilityEffectDefinition::Control { power, .. }
             | AbilityEffectDefinition::TeleportAway { power, .. } => {
                 *power = device_power_value(u64::from(*power), bonus) as u16;
@@ -2986,6 +2991,90 @@ impl Game {
         } = settled;
         let mut noticed = false;
         match (effect, plan) {
+            (
+                ItemUseEffectDefinition::ApplyBerserkStrength {
+                    duration_dice,
+                    duration_sides,
+                    duration_bonus,
+                },
+                ItemUsePlan::SelfTarget,
+            ) if profile_id.is_some() => {
+                let turns =
+                    self.roll_damage(duration_dice, duration_sides as u16) as u32 + duration_bonus;
+                let ticks = (device_power_value(u64::from(turns), device_power_bonus) as u32) * 10;
+                let before = self
+                    .player
+                    .statuses
+                    .iter()
+                    .find(|s| s.kind_id == STATUS_BERSERK)
+                    .map_or(0, |s| s.remaining_ticks);
+                self.resolve_item_berserk_strength(
+                    &kind_id,
+                    0,
+                    0,
+                    ticks.saturating_sub(before),
+                    events,
+                );
+            }
+            (ItemUseEffectDefinition::CreateArrows, ItemUsePlan::SelfTarget) => {
+                let ability = AbilityDefinition::item_activation(
+                    kind_id.clone(),
+                    AbilityTargetDefinition {
+                        modes: vec![AbilityTargetModeDefinition::SelfTarget],
+                        range: 0,
+                        requires_line_of_effect: false,
+                    },
+                    AbilityEffectDefinition::CreateAmmunition {
+                        item_kind_ids: vec![
+                            "demo.item.arrow".into(),
+                            "demo.item.sheaf-arrow".into(),
+                        ],
+                        quantity_minimum: 5,
+                        quantity_maximum: 10,
+                        source_item_tags: Vec::new(),
+                        source_terrain_tags: Vec::new(),
+                    },
+                    false,
+                );
+                self.resolve_player_create_ammunition_effect(
+                    &ability, None, None, events, changed,
+                )?;
+                self.mark_item_aware(&kind_id);
+            }
+            (ItemUseEffectDefinition::SummonMonsters, ItemUsePlan::SelfTarget) => {
+                self.resolve_item_monster_summon(&kind_id, profile_id.as_deref(), events, changed);
+            }
+            (
+                ItemUseEffectDefinition::Hermes,
+                ItemUsePlan::AbilityEffect {
+                    ability,
+                    target_plan,
+                },
+            ) => {
+                let duration = self.roll_damage(1, 75) + 75;
+                let duration = device_power_value(duration as u64, device_power_bonus) as u32;
+                self.resolve_item_status(
+                    &kind_id,
+                    STATUS_HASTE,
+                    0,
+                    0,
+                    duration,
+                    AbilityStatusStackingDefinition::KeepStrongest,
+                    None,
+                    &BTreeMap::new(),
+                    &StatModifiers::default(),
+                    &EquipmentBonuses::default(),
+                    100,
+                    events,
+                );
+                self.resolve_player_ability_effect(
+                    *ability,
+                    target_plan,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
             (ItemUseEffectDefinition::RefillQuiver, ItemUsePlan::SelfTarget) => {
                 self.refill_quiver(&kind_id, profile_id.as_deref(), events)?;
             }
@@ -3599,6 +3688,19 @@ impl Game {
         }
         let self_target = target.is_none_or(|target| matches!(target, TargetSelection::SelfTarget));
         match effect {
+            ItemUseEffectDefinition::Hermes => {
+                let range = self.hermes_range();
+                self.item_use_plan(
+                    source_item_id,
+                    &ItemUseEffectDefinition::AbilityEffect {
+                        effect: Box::new(AbilityEffectDefinition::DimensionDoor { range }),
+                        affects_ground_items: false,
+                    },
+                    target_definition,
+                    target,
+                    None,
+                )
+            }
             ItemUseEffectDefinition::AbilityEffect {
                 effect,
                 affects_ground_items,
@@ -3680,6 +3782,8 @@ impl Game {
             | ItemUseEffectDefinition::RechargeCarriedDevices
             | ItemUseEffectDefinition::ListUniqueMonsters
             | ItemUseEffectDefinition::SelfKnowledge
+            | ItemUseEffectDefinition::CreateArrows
+            | ItemUseEffectDefinition::SummonMonsters
             | ItemUseEffectDefinition::RefillQuiver
             | ItemUseEffectDefinition::StarBall
             | ItemUseEffectDefinition::Starlight { .. }
@@ -3887,7 +3991,18 @@ impl Game {
                 };
                 self.item_mutation_target(source_item_id, item_id)
                     .filter(|item| !self.item_resists_enchantment(item))
-                    .and_then(|item| self.content.item(&item.kind_id)?.rfb_base_kind)
+                    .filter(|item| item.kind_id != "demo.item.hephaestus")
+                    .and_then(|item| {
+                        let definition = self.content.item(&item.kind_id)?;
+                        match &definition.artifact_generation {
+                            Some(artifact) => {
+                                self.content
+                                    .item(&artifact.base_item_kind_id)?
+                                    .rfb_base_kind
+                            }
+                            None => definition.rfb_base_kind,
+                        }
+                    })
                     .filter(|base| {
                         matches!(base.tval, 16..=23 | 30..=38) && (base.tval, base.sval) != (23, 32)
                     })
@@ -4025,7 +4140,7 @@ impl Game {
                     .position(|status| status.kind_id == STATUS_POISON)
                 {
                     let before = self.player.statuses[index].remaining_ticks;
-                    let reduction = (before / 5).max(100);
+                    let reduction = (before / 5).max(1_000);
                     let after = before.saturating_sub(reduction);
                     if after == 0 {
                         self.player.statuses.remove(index);
@@ -4037,6 +4152,11 @@ impl Game {
                 self.apply_player_healing(healing);
                 self.restore_all_player_attributes();
                 self.restore_player_experience_and_life_force(0, events);
+                if self.player_food_nutrition_divisor() > 1 {
+                    self.resolve_item_nutrition_increase(source_kind_id, 7_500, events);
+                } else {
+                    self.resolve_item_satisfy_hunger(source_kind_id, true, events);
+                }
                 self.mark_item_aware(source_kind_id);
                 events.push(DomainEvent::ItemRestorationResolved {
                     source_kind_id: source_kind_id.to_owned(),
@@ -6010,7 +6130,8 @@ impl Game {
             ItemUseEffectDefinition::SelfKnowledge => {
                 self.resolve_item_self_knowledge(source_kind_id, events)
             }
-            ItemUseEffectDefinition::AbilityEffect { .. }
+            ItemUseEffectDefinition::Hermes
+            | ItemUseEffectDefinition::AbilityEffect { .. }
             | ItemUseEffectDefinition::Damage { .. }
             | ItemUseEffectDefinition::AreaDamage { .. }
             | ItemUseEffectDefinition::BeamDamage { .. }
@@ -6025,6 +6146,8 @@ impl Game {
             | ItemUseEffectDefinition::CreateAdjacentTerrain { .. }
             | ItemUseEffectDefinition::CreateCurrentTerrain { .. }
             | ItemUseEffectDefinition::SetFloorGlow { .. }
+            | ItemUseEffectDefinition::CreateArrows
+            | ItemUseEffectDefinition::SummonMonsters
             | ItemUseEffectDefinition::RefillQuiver
             | ItemUseEffectDefinition::StarBall
             | ItemUseEffectDefinition::Starlight { .. }

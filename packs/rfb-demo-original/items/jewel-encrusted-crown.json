@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 2000,
+  "descriptionKey": "item-demo-jewel-encrusted-crown-description",
+  "elementalDestructionImmunities": [
+    "acid"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentSlot": "head",
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "glyph": "]",
+  "id": "demo.item.jewel-encrusted-crown",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-jewel-encrusted-crown-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 222,
+    "sval": 12,
+    "tval": 33
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 40
+}

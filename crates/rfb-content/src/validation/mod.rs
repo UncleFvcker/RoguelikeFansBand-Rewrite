@@ -373,6 +373,19 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         &mut all_ids,
     )?;
 
+    for actor in &content.actors {
+        if let Some(drop) = &actor.special_artifact_drop
+            && (actor.role != ActorRole::Monster
+                || !(1..=100).contains(&drop.chance_percent)
+                || !content
+                    .items
+                    .iter()
+                    .any(|item| item.id == drop.item_kind_id && item.artifact_generation.is_some()))
+        {
+            return Err(ContentError::InvalidActorLootTable(actor.id.clone()));
+        }
+    }
+
     if content.random_artifact_generation.is_empty()
         && content
             .loot_tables

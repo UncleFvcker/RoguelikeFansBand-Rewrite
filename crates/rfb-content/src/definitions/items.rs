@@ -1004,6 +1004,9 @@ pub enum ItemUseEffectDefinition {
     MundanifyItem,
     CreateArtifact,
     RefillQuiver,
+    CreateArrows,
+    SummonMonsters,
+    Hermes,
     StarBall,
     Starlight {
         damage_dice: u16,

@@ -1,0 +1,12 @@
+{
+  "formatVersion": 1,
+  "id": "demo.effect.hades",
+  "input": "self",
+  "steps": [
+    {
+      "type": "restore-all-vitality",
+      "lifeForceAmount": 1000
+    }
+  ],
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json"
+}

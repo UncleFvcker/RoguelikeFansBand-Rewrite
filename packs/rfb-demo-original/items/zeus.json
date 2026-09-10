@@ -1,0 +1,106 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.amulet",
+    "instant": false,
+    "rarityOneIn": 127,
+    "sourceIndex": 256
+  },
+  "baseValue": 555555,
+  "descriptionKey": "item-demo-zeus-description",
+  "equipmentBonuses": {
+    "deviceSkill": 40,
+    "lightRadius": 1,
+    "meleeDamage": 5,
+    "meleeSkill": 5
+  },
+  "equipmentSlot": "amulet",
+  "formatVersion": 1,
+  "generationLevel": 90,
+  "glyph": "\"",
+  "id": "demo.item.zeus",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 5,
+    "speed": 5
+  },
+  "nameKey": "item-demo-zeus-name",
+  "passives": [
+    "electricity-aura",
+    "regeneration"
+  ],
+  "resistances": {
+    "shards": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "AURA_ELEC",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "MAGIC_MASTERY",
+      "PERMA_CURSE",
+      "QUESTITEM",
+      "REGEN",
+      "RES_SHARDS",
+      "SPEED"
+    ],
+    "pval": 5,
+    "toArmor": 5
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "activatable",
+    "artifact",
+    "equipment",
+    "jewelry",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 2,
+  "initialCurse": "permanent",
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.zeus",
+        "nameKey": "item-activation-demo-zeus-name",
+        "target": {
+          "modes": [
+            "direction",
+            "entity",
+            "position"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "effectProgramId": "demo.effect.zeus",
+        "deviceCheckDifficulty": 50,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "rfbValue": 16650
+      }
+    ],
+    "recovery": {
+      "intervalTicks": 50,
+      "energyPerMille": 1000
+    }
+  }
+}

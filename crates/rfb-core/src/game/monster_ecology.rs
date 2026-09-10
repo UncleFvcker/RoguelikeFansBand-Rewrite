@@ -865,7 +865,7 @@ impl Game {
         self.entities[index].appearance_kind_id = self.roll_shapechanger_appearance(&kind_id);
     }
 
-    fn original_pack_spell_flags(&self, leader: &ActorDefinition) -> (bool, bool) {
+    pub(super) fn original_pack_spell_flags(&self, leader: &ActorDefinition) -> (bool, bool) {
         fn classify(effect: &AbilityEffectDefinition) -> (bool, bool) {
             match effect {
                 AbilityEffectDefinition::Damage { .. }

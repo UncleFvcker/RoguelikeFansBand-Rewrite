@@ -1972,7 +1972,7 @@ impl Game {
                     .and_then(|item_id| self.items.iter().position(|item| item.id == item_id));
                 let has_trait = |trait_| {
                     source_weapon_index.is_some_and(|item_index| {
-                        Self::item_has_weapon_trait(&self.items[item_index], trait_)
+                        self.item_has_weapon_trait(&self.items[item_index], trait_)
                     })
                 };
                 let order = has_trait(WeaponTraitDto::Order);

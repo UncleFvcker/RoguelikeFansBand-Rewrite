@@ -133,10 +133,7 @@ fn artifact_identity_keeps_base_properties_value_knowledge_and_equipment() {
         if case.kind_id == "demo.item.dagger" {
             let melee = game.item_melee_profile(&game.items[0]).unwrap();
             assert_eq!((melee.damage.dice, melee.damage.sides), (3, 7));
-            assert!(Game::item_has_weapon_trait(
-                &game.items[0],
-                WeaponTraitDto::Blessed
-            ));
+            assert!(game.item_has_weapon_trait(&game.items[0], WeaponTraitDto::Blessed));
             let attack = game.player_melee_profile(&game.player_derived_stats());
             assert_eq!(attack.damage_dice, 3);
             assert_eq!(attack.damage_sides, 7);

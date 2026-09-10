@@ -1,12 +1,13 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "appearanceNameKey": "item-demo-unfamiliar-food-name",
+  "baseValue": 5000,
   "descriptionKey": "item-demo-sunlit-feast-description",
   "formatVersion": 1,
   "generationLevel": 90,
   "glyph": ",",
   "id": "demo.item.sunlit-feast",
-  "maxStack": 20,
+  "maxStack": 100,
   "mogaminatorRare": false,
   "nameKey": "item-demo-sunlit-feast-name",
   "rfbBaseKind": {
@@ -25,5 +26,5 @@
   "useAction": {
     "effectProgramId": "demo.effect.restorative-feast"
   },
-  "weightTenthsPound": 2
+  "weightTenthsPound": 3
 }

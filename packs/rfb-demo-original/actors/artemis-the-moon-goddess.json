@@ -104,5 +104,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.artemis",
+    "chancePercent": 20
   }
 }

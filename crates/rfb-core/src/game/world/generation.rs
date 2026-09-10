@@ -1119,12 +1119,13 @@ impl Game {
             let vault_id = &eligible_vault_candidates[self.roll_weighted_index(&weights)].vault_id;
             self.content.vault(vault_id).cloned()
         };
-        let guardian = definition.guardian.as_ref().filter(|_| {
-            definition.dungeon_id.as_ref().is_some_and(|dungeon_id| {
-                self.dungeon_states
-                    .get(dungeon_id)
-                    .is_some_and(|state| !state.guardian_defeated)
-            })
+        let guardian = definition.guardian.as_ref().filter(|guardian| {
+            self.unique_actor_kind_is_available(&guardian.actor_kind_id)
+                && definition.dungeon_id.as_ref().is_some_and(|dungeon_id| {
+                    self.dungeon_states
+                        .get(dungeon_id)
+                        .is_some_and(|state| !state.guardian_defeated)
+                })
         });
         let task_definitions = self
             .content

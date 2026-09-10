@@ -1,0 +1,114 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.harp",
+    "instant": false,
+    "rarityOneIn": 127,
+    "sourceIndex": 262
+  },
+  "baseValue": 555555,
+  "descriptionKey": "item-demo-apollo-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentSlot": "launcher",
+  "formatVersion": 1,
+  "generationLevel": 90,
+  "glyph": "}",
+  "id": "demo.item.apollo",
+  "maxStack": 1,
+  "modifiers": {
+    "charisma": 5,
+    "intelligence": 5,
+    "speed": 5,
+    "strength": 5
+  },
+  "nameKey": "item-demo-apollo-name",
+  "passives": [
+    "sustain-charisma",
+    "sustain-intelligence",
+    "sustain-strength"
+  ],
+  "resistances": {
+    "light": "resistant",
+    "nether": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "NO_ENCHANT",
+      "PERMA_CURSE",
+      "QUESTITEM",
+      "RES_FEAR",
+      "RES_LITE",
+      "RES_NETHER",
+      "SPEED",
+      "STR",
+      "SUST_CHR",
+      "SUST_INT",
+      "SUST_STR"
+    ],
+    "pval": 5,
+    "toArmor": 0
+  },
+  "statusImmunities": [
+    "rfb.status.fear",
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "activatable",
+    "artifact",
+    "equipment",
+    "launcher",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 40,
+  "initialCurse": "permanent",
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentBonuses": {},
+  "resistsEnchantment": true,
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.apollo",
+        "nameKey": "item-activation-demo-apollo-name",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "effectProgramId": "demo.effect.arkenstone-clairvoyance",
+        "deviceCheckDifficulty": 30,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "rfbValue": 10000
+      }
+    ],
+    "recovery": {
+      "intervalTicks": 200,
+      "energyPerMille": 1000
+    }
+  }
+}
