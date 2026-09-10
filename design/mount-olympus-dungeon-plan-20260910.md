@@ -1,6 +1,6 @@
 # 奥林匹斯山地牢接入计划
 
-状态：**OL1–OL4 已完成；OL5 待收口**。奥林匹斯神系激活的新角色已可进入 (5,9) 入口及 80–90 层；当前竞技场 AR1–AR5 已完成。
+状态：**OL1–OL5 已完成**。奥林匹斯神系激活的新角色已可进入 (5,9) 入口及 80–90 层；验收范围与适配边界见 OL5，不包含自然练级通关、桌面试玩或可玩构建。当前竞技场 AR1–AR5 已完成。
 
 ## 1. 推荐目标与依据
 
@@ -8,7 +8,7 @@
 
 OL1 实施基线为已合并三个方向的 `main@befb411eb464b67d0a75f23d6561d3382c9395b3`，本方向分支为 `codex/dungeons-towns`，工作树 `D:/codex/RoguelikeFansBand-Rewrite-dungeons-towns`。当前版本见[状态页](../docs/status.md)，后续按实际模型变化确定，不预留编号。
 
-权威来源是 `D:/codex/Frogcomposband/master` 的 `master` Git ref，规划及 OL1–OL4 实施实际提交均为 **`a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`**；读取均来自 Git 对象。
+权威来源是 `D:/codex/Frogcomposband/master` 的 `master` Git ref，规划、OL1–OL4 实施及 OL5 核对实际提交均为 **`a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`**；读取均来自 Git 对象。
 
 | 候选 | 优势 | 本轮新增工作与取舍 |
 | --- | --- | --- |
@@ -183,12 +183,24 @@ OL3 专项覆盖真实两守卫近战命中、20/15% 两侧边界、普通／特
 
 本批验证：正式奥林匹斯／神系既有专项 15 项、新增完整往返 1 项、world 回归 72 项均通过。内容 world 64 项覆盖，其中入口清单补入 (5,9) 后定向复测通过；本地化 39 项通过。Clippy（core/content、all-targets、`-D warnings`）、内容锁、格式和 diff 检查通过。内容类型与协议未变，没有重生成 Schema／绑定。没有运行桌面／Android 构建、全量前端或人工试玩。
 
-### OL5：聚焦验收与交付
+### OL5：聚焦验收与交付（完成）
 
-- 汇总来源身份、神系、11 层链、两名守卫、默认卷轴／特殊神器／当地食物三条物品路径和中文名，检查正式内容与 lock。
-- 按实际变化运行 world／generation／monster_ecology、守卫战斗、相关 item use／artifact、保存及必要前端检查；复用仍有效的前批结果，不重复全量测试凑验收数量。
-- 神系状态和全局分配会影响公共初始化／RNG，按最终实际影响执行 active 契约检查。contentHash 自身不升级状态哈希格式；真实状态字段变化则更新对应契约。刷新前逐项解释差异，不删断言或增 waiver。
-- 更新 `docs/status.md` 与本计划，记录地图与源规则适配、实际验收和已知限制。可玩 EXE 另行要求时使用 Tauri standalone；本计划不默认包含全量前端、桌面 E2E、Android 或人工试玩。
+2026-09-11 在 `ca8e843ba8306aa021b6f5133efb89616165b280` 上完成收口核对。实现提交依次为 OL1 `4c0d0f470`、OL2 `1ebd9088f`、OL3 `0c99f55eb`、OL4 `ca8e843ba`；本批仅更新计划与[状态页](../docs/status.md)，没有改变运行时、内容、测试或契约预期。
+
+| 完成条件 | 正式内容与行为证据 |
+| --- | --- |
+| 来源身份与中文 | 地牢 22 / pantheon 1、(5,9)、80–90、守卫 793／1096 与源 Git 对象一致；正式稳定 ID 见第 2 节，十二件神器 256–267 的名称与激活见 OL3。中文键位于[正式中文内容](../locales/zh-CN/content.ftl)，沿用源名称及既有物品身份 |
+| 可保存的神系资格 | [pantheons 专项](../crates/rfb-core/src/game/tests/pantheons.rs)覆盖出生组合、保存恢复与非法状态拒绝、未激活入口／守卫抑制和直接进入拒绝，以及主次神系、分配与随机召唤边界；OL4 已改为正式奥林匹斯内容并通过 |
+| 生成与生态 | [mount_olympus 专项](../crates/rfb-core/src/game/tests/mount_olympus.rs)的 `representative_floors`、`cavern_gate`、`water_river`、`preferences` 覆盖正式 80／85／90 层连通、普通物品、怪物资格与稀有度、源深度触发及永久墙；OL2 适配表仍适用 |
+| 两守卫与完整层链 | 同一专项的 `formal_eleven_floor_round_trip_uses_rewards_and_preserves_conquest` 经真实入口、两次近战死亡、11 层往返及召回验证[正式世界](../packs/rfb-demo-original/worlds/middle-earth.json)；读档继续哈希一致，重入不复生守卫或重复征服 |
+| 默认卷轴与特殊神器 | `special_drop_rolls_source_boundaries`、`early_zeus_conquest`、`dead_zeus_outside` 分开覆盖 20%／15% 掉落、提前与域外死亡和独立征服奖励；`artifacts_equip_activate_and_round_trip` 覆盖十二件装备、实际激活、冷却及读档；完整往返专项实际拾取并使用征服卷轴与宙斯护身符 |
+| 当地食物 | `ambrosia_is_local_and_preserves_satiated_nutrition` 使用正式地牢身份与隔离候选表验证仙馔密酒当地分配／域外排除，实际食用、治疗／解毒、饱食边界、僵尸折算及保存；源 kind 39 / 80/40 与稳定 ID `demo.item.sunlit-feast` 保留 |
+
+**本批实际检查：**重新确认源 `master` 提交及地牢记录，核对正式层链、守卫、奖励引用和中文显示键；运行 `cargo run -p rfb-content --bin rfb-contentc -- verify-source packs/rfb-demo-original` 通过。正式包仍为 **1.415.0**，lock 为 `ae41330a5fe4c13b227fa6e6136241df58dc6947114155c33293ec1b6b130e38`；文档链接及 diff 检查通过。
+
+**复用检查：**OL4 的正式奥林匹斯／神系专项 16 项、world 72 项、内容 world 64 项（含修正后的定向复测）、本地化 39 项、core/content Clippy，以及最终 26 条 active 契约结果仍有效。生成／生态、物品使用／神器／保存与前端 targeting／typecheck 的影响范围和回归记录见 OL2、OL3；OL4 对正式入口及层链的影响已有上述专项。各批结果不相加冒充互不重复的测试总数，本批未重跑这些测试。OL1 的初始化／RNG 契约调整与 OL4 的仅哈希刷新原因已逐项记录；本批没有刷新 fixture、增 waiver 或变更版本。
+
+**交付边界：**核心闭环在 OL3、OL4 明示的场地、位置、守卫 HP 和 RNG 前置下通过，不能据此宣称自然练级或完整血量首领通关。地图采用 96×33 和既有房间／通道／河道适配；源 vault、CRYPT、具体模板及递归分叉河流未完整移植。尚未开放的半神父母身份 100% 掉落分支，以及当前对象模型未表达的克隆／曾为宠物分支仍未实现；激活与召唤适配见 OL3。不包含桌面 E2E、Android、人工试玩或 EXE；另行要求可玩产物时使用 Tauri standalone 构建。
 
 ## 5. 范围与完成条件
 
