@@ -449,6 +449,9 @@ impl Game {
         if amount <= 0 {
             return;
         }
+        if self.player_is_berserker() && self.player_status_immunities().contains(kind) {
+            return;
+        }
         let mut status = monster_combat::melee_status(kind, amount as u32, source);
         if kind == STATUS_STUN {
             status.status.intensity = self
@@ -471,6 +474,10 @@ impl Game {
     }
 
     fn psychic_free_action_save(&mut self, level: u32) -> bool {
+        // berserker.c grants three FREE_ACT sources, which always save.
+        if self.player_is_berserker() {
+            return true;
+        }
         let mut count = self
             .player
             .statuses
@@ -520,12 +527,20 @@ impl Game {
         kind: DamageType,
         damage: i32,
     ) -> u8 {
+        self.actor_incoming_damage_percent(index, damage, kind == DamageType::PsySpear)
+    }
+
+    pub(super) fn actor_incoming_damage_percent(
+        &mut self,
+        index: usize,
+        damage: i32,
+        pierces: bool,
+    ) -> u8 {
         let invulnerable = self.entities[index]
             .statuses
             .iter()
             .any(|status| status.kind_id == crate::effect::STATUS_INVULNERABILITY);
-        let pierces = kind == DamageType::PsySpear
-            || (damage > 0 && invulnerable && self.rng.bounded(13) == 0);
+        let pierces = pierces || (damage > 0 && invulnerable && self.rng.bounded(13) == 0);
         self.entities[index]
             .statuses
             .iter()

@@ -1575,6 +1575,12 @@ impl Game {
         definition: &MutationDefinition,
         operation: RandomMutationOperation,
     ) -> u64 {
+        if self.player_is_berserker()
+            && matches!(operation, RandomMutationOperation::Gain)
+            && definition.activation.is_some()
+        {
+            return 0;
+        }
         let base = u64::from(definition.random_weight);
         if base == 0 {
             return 0;
@@ -1773,7 +1779,8 @@ impl Game {
             GameAction::Move { .. } | GameAction::TravelWorld { .. }
         );
         let item_tags = match action {
-            GameAction::UseItem { item_id, .. } => self
+            GameAction::UseItem { item_id, .. }
+            | GameAction::UseItemForRecharge { item_id, .. } => self
                 .items
                 .iter()
                 .find(|item| item.id == *item_id)

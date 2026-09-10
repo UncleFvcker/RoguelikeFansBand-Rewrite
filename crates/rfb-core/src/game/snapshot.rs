@@ -963,17 +963,18 @@ impl Game {
             display_name_key: self.item_display_name_key(&item.kind_id),
             artifact_name: self.visible_artifact_name(item),
             knowledge: self.item_knowledge_dto(&item.kind_id),
-            usable: self.content.item(&item.kind_id).is_some_and(|definition| {
-                definition.use_action.as_ref().is_some_and(|action| {
-                    action.charges.is_none_or(|charges| {
+            usable: self.berserker_item_use_rejection_cost(item).is_none()
+                && self.content.item(&item.kind_id).is_some_and(|definition| {
+                    definition.use_action.as_ref().is_some_and(|action| {
+                        action.charges.is_none_or(|charges| {
+                            item.charges
+                                .is_some_and(|state| state.current >= charges.cost)
+                        })
+                    }) || item.activation.as_ref().is_some_and(|activation| {
                         item.charges
-                            .is_some_and(|state| state.current >= charges.cost)
+                            .is_some_and(|state| state.current >= activation.cost)
                     })
-                }) || item.activation.as_ref().is_some_and(|activation| {
-                    item.charges
-                        .is_some_and(|state| state.current >= activation.cost)
-                })
-            }),
+                }),
             absorbable: self.item_can_be_absorbed(item),
             mount_usable: self.mount_item_is_usable(&item.kind_id),
             capture_ball: self
@@ -1072,10 +1073,11 @@ impl Game {
                         .as_ref()
                         .map(|activation| activation.target_spec.clone())
                         .or_else(|| self.capture_ball_target_spec(item)),
-                    usable: item.activation.as_ref().is_some_and(|activation| {
-                        item.charges
-                            .is_some_and(|state| state.current >= activation.cost)
-                    }),
+                    usable: self.berserker_item_use_rejection_cost(item).is_none()
+                        && item.activation.as_ref().is_some_and(|activation| {
+                            item.charges
+                                .is_some_and(|state| state.current >= activation.cost)
+                        }),
                     charges: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
                         .then_some(item.charges)
                         .flatten(),

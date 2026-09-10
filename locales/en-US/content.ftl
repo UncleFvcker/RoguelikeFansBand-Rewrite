@@ -1,5 +1,11 @@
 # SPDX-License-Identifier: CC-BY-SA-4.0
 
+build-demo-berserker-name = Berserker
+build-demo-berserker-description = Permanently berserk, spending life on martial techniques and unable to read scrolls or use magical devices.
+class-demo-berserker-name = Berserker
+class-demo-berserker-description = A permanently berserk melee fighter who spends life on martial techniques and can tear off cursed equipment unless its curse is permanent. Cannot read scrolls or use magical devices.
+actor-demo-berserker-player-name = Berserker
+actor-demo-berserker-player-description = A berserker carrying a broad axe, augmented chain mail and a potion of healing.
 build-demo-mindcrafter-name = Mindcrafter
 build-demo-mindcrafter-description = A Wisdom-based mentalist who chooses no realm and studies no spellbooks.
 class-demo-mindcrafter-name = Mindcrafter

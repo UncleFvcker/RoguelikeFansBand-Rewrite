@@ -370,6 +370,7 @@ pub(super) struct PlayerMeleeOutcome {
     pub(super) attacks_used: u16,
     pub(super) attacks_available: u16,
     pub(super) killed: bool,
+    pub(super) energy_cost_on_kill: Option<i32>,
 }
 
 impl Game {
@@ -1858,12 +1859,14 @@ impl Game {
             .max(1);
         let mut attacks_used = 0_u16;
         let mut killed = false;
+        let mut energy_cost_on_kill = None;
+        let weapon_count = self.equipped_melee_weapons().len().max(1) as i32;
         let mut vampiric_drain_remaining = 50_i32;
         let mut retaliation_blow_index = 0_usize;
         let mut touched_surviving_target = false;
         let mut allow_criticals = true;
         let mut impact_earthquake_item_id = None;
-        'profiles: for (profile, profile_attacks) in profiles {
+        'profiles: for (hand, (profile, profile_attacks)) in profiles.into_iter().enumerate() {
             let vorpal_weapon = profile.source_item_id.as_ref().is_some_and(|item_id| {
                 self.items
                     .iter()
@@ -1894,7 +1897,7 @@ impl Game {
                 &definition,
                 strike_mode,
             );
-            for _ in 0..profile_attacks {
+            for attack_number in 1..=profile_attacks {
                 attacks_used = attacks_used.saturating_add(1);
                 self.apply_easy_tiring_fatigue(50);
                 if profile.melee_skill.value <= 0
@@ -2009,11 +2012,34 @@ impl Game {
                     },
                     events,
                 );
-                let rolled_damage = self.scale_player_melee_damage(rolled_damage);
+                let mut rolled_damage = self.scale_player_melee_damage(rolled_damage);
+                let pierces_invulnerability = profile.source_item_id.is_some()
+                    && self.player_is_berserker()
+                    && self.rng.bounded(2) == 0;
+                // xtra2.c::mon_damage_mod only gives these two metal monsters /100 physical damage.
+                if rolled_damage > 0
+                    && matches!(
+                        definition.id.as_str(),
+                        "demo.actor.metal-babble" | "demo.actor.metal-babble-unique"
+                    )
+                {
+                    rolled_damage /= 100;
+                    if rolled_damage == 0 && self.rng.bounded(3) == 0 {
+                        rolled_damage = 1;
+                    }
+                }
                 let damage_type = profile.damage_type;
                 let resistance = self.entities[index].resistances.level(damage_type);
                 let damage =
                     resolve_damage(DamagePacket::new(rolled_damage, damage_type), resistance);
+                let damage = scale_damage_outcome(
+                    damage,
+                    self.actor_incoming_damage_percent(
+                        index,
+                        damage.applied,
+                        pierces_invulnerability,
+                    ),
+                );
                 let application = plan_damage_application(
                     &self.entities[index],
                     damage,
@@ -2108,6 +2134,17 @@ impl Game {
                 }
                 if application.fatal {
                     killed = true;
+                    if self.player_is_berserker() && profile.source_item_id.is_some() && !revenge {
+                        let fraction = if allow_criticals { 100 } else { 120 } / weapon_count;
+                        energy_cost_on_kill = Some(
+                            hand as i32 * fraction
+                                + i32::from(attack_number) * fraction / i32::from(profile_attacks),
+                        );
+                        if !allow_criticals {
+                            // The refunded 120-based cost already includes the human STR surcharge.
+                            self.player.energy_need -= STANDARD_ACTION_COST / 5;
+                        }
+                    }
                     self.resolve_actor_death(
                         index,
                         profile.slew_event(&target_kind, damage),
@@ -2144,6 +2181,7 @@ impl Game {
             attacks_used,
             attacks_available,
             killed,
+            energy_cost_on_kill,
         })
     }
 

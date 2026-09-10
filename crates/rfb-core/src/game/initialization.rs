@@ -369,6 +369,10 @@ impl Game {
             progress.attributes = initial_character_attributes(definition);
             progress.maximum_attributes = progress.attributes;
             progress.riding_proficiency = class.riding_proficiency.initial;
+            // RFB s_info:23: Berserkers begin at skilled dual wielding.
+            if class.id == "demo.class.berserker" {
+                progress.dual_wielding_proficiency = 4_000;
+            }
         }
         progress.replace_skills(character_skill_progress(
             &content,

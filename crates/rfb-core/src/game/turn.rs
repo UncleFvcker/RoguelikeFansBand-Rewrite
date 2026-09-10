@@ -649,9 +649,16 @@ impl Game {
         removed_entities: &mut Vec<String>,
         process_entities: bool,
     ) -> Result<(), CoreError> {
-        if self.player_is_nonliving() {
+        let nonliving = self.player_is_nonliving();
+        let berserker = self.player_is_berserker();
+        let no_stun = berserker && self.progress.level >= 35;
+        if nonliving || berserker {
             self.player.statuses.retain(|status| {
-                if matches!(status.kind_id.as_str(), STATUS_BLEEDING | STATUS_UNWELL) {
+                if (nonliving && matches!(status.kind_id.as_str(), STATUS_BLEEDING | STATUS_UNWELL))
+                    || (berserker
+                        && matches!(status.kind_id.as_str(), STATUS_FEAR | STATUS_PARALYSIS))
+                    || (no_stun && status.kind_id == STATUS_STUN)
+                {
                     events.push(DomainEvent::PlayerStatusExpired {
                         status_kind_id: status.kind_id.clone(),
                     });

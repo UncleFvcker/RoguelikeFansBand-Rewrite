@@ -65,7 +65,7 @@ impl Game {
                     knowledge.feeling = None;
                     knowledge.known_affix_ids.clear();
                 }
-                if self.player_has_tomte_item_sensing() {
+                if self.player_is_berserker() || self.player_has_tomte_item_sensing() {
                     self.sense_item_instance(&id, true);
                 }
             }
@@ -296,17 +296,21 @@ impl Game {
         if self.map_scale != MapScaleDto::Local {
             return;
         }
-        let identifies = self.player_auto_identifies_items();
-        let senses = self.player_has_tomte_item_sensing();
-        if !identifies && !senses {
-            return;
-        }
-        let mut item_ids = self
+        let item_ids = self
             .items
             .iter()
             .filter(|item| item.location == ItemLocation::Ground(self.player.position))
             .map(|item| item.id.clone())
             .collect::<Vec<_>>();
+        self.apply_player_item_knowledge(item_ids);
+    }
+
+    pub(super) fn apply_player_item_knowledge(&mut self, mut item_ids: Vec<String>) {
+        let identifies = self.player_auto_identifies_items();
+        let senses = self.player_is_berserker() || self.player_has_tomte_item_sensing();
+        if !identifies && !senses {
+            return;
+        }
         item_ids.sort();
         for item_id in item_ids {
             if senses {

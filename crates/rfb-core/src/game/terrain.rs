@@ -486,7 +486,19 @@ impl Game {
     pub(super) fn bash_door(&mut self, direction: Direction) -> Option<DoorBashOutcome> {
         let plan = plan_bash_door(&self.terrain_interaction_context(), direction)?;
         let ability = self.player_derived_stats().bash_power;
-        if !self.terrain_check_succeeded(&plan, CheckKind::BashDoor, ability) {
+        let succeeds = if self.player_is_berserker() {
+            let door_power = self
+                .content
+                .terrain(&plan.source_id)
+                .expect("planned terrain exists")
+                .monster_door_power
+                .unwrap_or(0);
+            let chance = ((ability.value - i32::from(door_power) * 10) * 2).max(1);
+            self.rng.bounded(100) < chance as u64
+        } else {
+            self.terrain_check_succeeded(&plan, CheckKind::BashDoor, ability)
+        };
+        if !succeeds {
             return Some(DoorBashOutcome::Failed {
                 position: plan.position,
             });

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "id": "demo.class.berserker",
+  "nameKey": "class-demo-berserker-name",
+  "descriptionKey": "class-demo-berserker-description",
+  "modifiers": {
+    "strength": 8,
+    "intelligence": -20,
+    "wisdom": -20,
+    "dexterity": 4,
+    "constitution": 4,
+    "charisma": 4
+  },
+  "lifePercent": 200,
+  "baseHp": 22,
+  "experiencePercent": 160,
+  "skillSetId": "demo.skill-set.berserker",
+  "weaponProficiency": {
+    "defaultInitial": 4000,
+    "defaultMaximum": 8000,
+    "overrides": {
+      "demo.item.wizardstaff": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.sling": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.short-bow": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.long-bow": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.light-crossbow": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.heavy-crossbow": {
+        "initial": 0,
+        "maximum": 0
+      }
+    }
+  },
+  "ridingProficiency": {
+    "initial": 0,
+    "maximum": 0
+  },
+  "dualWieldingMaximum": 8000,
+  "petUpkeepDivisor": 255,
+  "levelResistances": [
+    {
+      "minimumLevel": 1,
+      "resistances": {
+        "fear": "immune"
+      }
+    }
+  ],
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.broad-axe",
+      "quantity": 1,
+      "equipped": true
+    },
+    {
+      "itemKindId": "demo.item.augmented-chain-mail",
+      "quantity": 1,
+      "equipped": true
+    },
+    {
+      "itemKindId": "demo.item.healing-potion",
+      "quantity": 1
+    }
+  ],
+  "favoriteWeaponTags": [
+    "weapon"
+  ],
+  "tags": [
+    "martial",
+    "rfb-compatibility"
+  ]
+}

@@ -668,17 +668,19 @@ impl Game {
                     .minimum_failure_percent
                     .max(RFB_MAGIC_FAILURE_MINIMUM[index]),
             ))
-            .saturating_add(if self.player_is_mindcrafter() {
-                self.player
-                    .statuses
-                    .iter()
-                    .filter(|status| status.kind_id == STATUS_STUN)
-                    .map(|status| i32::from(status.intensity).min(100) / 2)
-                    .max()
-                    .unwrap_or(0)
-            } else {
-                0
-            })
+            .saturating_add(
+                if self.player_is_mindcrafter() || self.player_is_berserker() {
+                    self.player
+                        .statuses
+                        .iter()
+                        .filter(|status| status.kind_id == STATUS_STUN)
+                        .map(|status| i32::from(status.intensity).min(100) / 2)
+                        .max()
+                        .unwrap_or(0)
+                } else {
+                    0
+                },
+            )
             .min(95)
             .saturating_sub(if self.player_has_mindcraft_stone() {
                 1

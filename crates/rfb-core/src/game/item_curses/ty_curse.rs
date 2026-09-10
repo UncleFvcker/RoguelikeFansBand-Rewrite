@@ -8,7 +8,7 @@ use rfb_content::AbilityTerrainBeamOperationDefinition;
 
 impl Game {
     // RFB master spells2.c activate_ty_curse: cases deliberately fall through.
-    pub(super) fn resolve_equipped_ty_curse(
+    pub(in crate::game) fn resolve_equipped_ty_curse(
         &mut self,
         source: &str,
         events: &mut Vec<DomainEvent>,
@@ -103,7 +103,8 @@ impl Game {
                             || free_action
                                 && (self.rng.bounded(125) + 1)
                                     < self.player_derived_stats().saving_throw_skill.value.max(0)
-                                        as u64)
+                                        as u64
+                            || self.player_is_berserker())
                         {
                             let duration =
                                 1 + self.rng.bounded(if free_action { 2 } else { 13 }) as u32;
@@ -125,6 +126,20 @@ impl Game {
                             knowledge.appraised = false;
                             knowledge.identified = false;
                             knowledge.known_affix_ids.clear();
+                        }
+                        if self.player_is_berserker() {
+                            let item_ids = self
+                                .items
+                                .iter()
+                                .filter(|item| {
+                                    matches!(
+                                        item.location,
+                                        ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                                    )
+                                })
+                                .map(|item| item.id.clone())
+                                .collect();
+                            self.apply_player_item_knowledge(item_ids);
                         }
                     }
                     11 => {

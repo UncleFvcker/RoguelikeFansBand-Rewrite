@@ -290,7 +290,7 @@ impl SkillProgress {
             .saturating_mul(i32::from(level))
             .saturating_div(10);
         Self {
-            current: base.saturating_add(growth).clamp(0, maximum),
+            current: base.saturating_add(growth).min(maximum),
             maximum,
             base,
             growth_per_ten_levels,
@@ -814,7 +814,14 @@ impl CharacterProgress {
             && self.skills.iter().all(|(id, skill)| {
                 !id.is_empty()
                     && skill.maximum > 0
-                    && skill.current >= 0
+                    && skill.current
+                        == SkillProgress::at_level(
+                            skill.base,
+                            skill.growth_per_ten_levels,
+                            skill.maximum,
+                            self.level,
+                        )
+                        .current
                     && skill.current <= skill.maximum
                     && (-1_000_000..=1_000_000).contains(&skill.base)
                     && (-1_000_000..=1_000_000).contains(&skill.growth_per_ten_levels)

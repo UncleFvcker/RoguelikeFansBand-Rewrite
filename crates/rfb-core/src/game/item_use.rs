@@ -1674,6 +1674,14 @@ impl Game {
         source_item_id: &str,
         target_item_id: &str,
     ) -> Option<&'static str> {
+        if self
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .is_some_and(|item| self.berserker_item_use_rejection_cost(item).is_some())
+        {
+            return Some("class-restriction");
+        }
         if item_id == source_item_id || item_id == target_item_id {
             return Some("recharging-item-is-device");
         }
@@ -2585,6 +2593,26 @@ impl Game {
         noticed
     }
 
+    /// RFB cmd6/devices: forbidden scroll/activation attempts take a turn;
+    /// wand, staff and rod failures do not. Scroll speed still uses the usual energy modifier.
+    pub(super) fn berserker_item_use_rejection_cost(&self, item: &ItemInstance) -> Option<i32> {
+        if !self.player_is_berserker() {
+            return None;
+        }
+        let definition = self.content.item(&item.kind_id)?;
+        if self.item_is_device(item) {
+            return Some(0);
+        }
+        (definition.capture_ball
+            || item.activation.is_some()
+            || definition.tags.iter().any(|tag| tag == "scroll")
+            || definition
+                .use_action
+                .as_ref()
+                .is_some_and(|action| action.device_check_difficulty.is_some()))
+        .then_some(STANDARD_ACTION_COST)
+    }
+
     pub(super) fn use_inventory_item(
         &mut self,
         item_id: &str,
@@ -2599,6 +2627,13 @@ impl Game {
             return Ok(());
         };
         let kind_id = self.items[index].kind_id.clone();
+        if self
+            .berserker_item_use_rejection_cost(&self.items[index])
+            .is_some()
+        {
+            events.push(DomainEvent::ItemUseUnavailable);
+            return Ok(());
+        }
         if definition.capture_ball {
             self.use_capture_ball(index, target, events, changed, removed_entities);
             return Ok(());
@@ -4838,6 +4873,22 @@ impl Game {
         duration_bonus: u32,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
+        if self.player_is_berserker() {
+            let duration = (0..duration_dice).fold(duration_bonus, |total, _| {
+                total.saturating_add(if duration_sides == 0 {
+                    0
+                } else {
+                    (self.rng.bounded(u64::from(duration_sides)) + 1) as u32
+                })
+            });
+            events.push(DomainEvent::ItemBerserkStrengthResolved {
+                source_kind_id: source_kind_id.to_owned(),
+                display_name_key: self.item_display_name_key(source_kind_id),
+                duration,
+                noticed: false,
+            });
+            return self.resolve_item_healing(source_kind_id, 30, events);
+        }
         let resolution = apply_ability_status_effect(
             &mut self.player,
             source_kind_id,

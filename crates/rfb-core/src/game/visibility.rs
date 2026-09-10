@@ -182,7 +182,11 @@ impl Game {
         previous_positions: &BTreeMap<String, Position>,
     ) {
         let sources = self.player_see_invisible_sources();
-        let search_skill = self.player_derived_stats().search_skill.value.max(0) as u64;
+        let search_skill = if self.player_is_berserker() {
+            10
+        } else {
+            self.player_derived_stats().search_skill.value.max(0) as u64
+        };
         let candidates = self
             .entities
             .iter()

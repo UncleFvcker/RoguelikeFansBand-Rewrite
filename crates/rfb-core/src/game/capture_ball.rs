@@ -39,6 +39,10 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) {
+        if self.player_is_berserker() {
+            events.push(DomainEvent::ItemUseUnavailable);
+            return;
+        }
         if self.items[item_index].captured_actor.is_some() {
             self.release_capture_ball(item_index, target, events, changed);
         } else {

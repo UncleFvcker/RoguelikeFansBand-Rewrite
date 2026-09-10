@@ -7,7 +7,7 @@
   "townId": "demo.town.thalos",
   "category": "service",
   "ownerNameKey": "town-facility-demo-thalos-warrior-guild-owner-name",
-  "ownerClassIds": ["demo.class.warrior", "demo.class.cavalry"],
+  "ownerClassIds": ["demo.class.warrior", "demo.class.cavalry", "demo.class.berserker"],
   "serviceActions": [
     { "kind": "enchant-weapon", "ownerCost": 0, "otherCost": 0 },
     { "kind": "enchant-armor", "ownerCost": 0, "otherCost": 0 }

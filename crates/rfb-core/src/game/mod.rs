@@ -1061,14 +1061,14 @@ impl Game {
         );
         let cursed_unequip = matches!(
             &action,
-            GameAction::Unequip { slot_id } if self.cursed_equipment_in_slot(slot_id).is_some()
+            GameAction::Unequip { slot_id } if self.cursed_equipment_in_slot(slot_id).is_some_and(|(_, severity)| !self.player_can_force_remove_curse(severity))
         );
         let cursed_equip_replacement = matches!(
             &action,
             GameAction::Equip { item_id, slot_id }
                 if self
                     .cursed_equipment_replaced_by(item_id, slot_id.as_deref())
-                    .is_some()
+                    .is_some_and(|(_, _, severity)| !self.player_can_force_remove_curse(severity))
         );
         let unavailable_light_refuel = matches!(
             &action,
@@ -1088,6 +1088,9 @@ impl Game {
             } if self
                 .recharging_item_unavailable_reason(item_id, source_item_id, target_item_id)
                 .is_some()
+                && self.items.iter().find(|item| item.id == *item_id)
+                    .and_then(|item| self.berserker_item_use_rejection_cost(item))
+                    .is_none_or(|cost| cost == 0)
         );
         let world_travel_direction = match &action {
             GameAction::TravelWorld { destination } => {
@@ -1640,8 +1643,9 @@ impl Game {
                 }
             }
             GameAction::Equip { item_id, slot_id } => {
-                if let Some((target_kind_id, slot_id, severity)) =
-                    self.cursed_equipment_replaced_by(&item_id, slot_id.as_deref())
+                if let Some((target_kind_id, slot_id, severity)) = self
+                    .cursed_equipment_replaced_by(&item_id, slot_id.as_deref())
+                    .filter(|(_, _, severity)| !self.player_can_force_remove_curse(*severity))
                 {
                     events.push(DomainEvent::ItemUnequipCursed {
                         target_kind_id,
@@ -1671,6 +1675,14 @@ impl Game {
                             property_name_key,
                         });
                     }
+                } else if let Some((target_kind_id, slot_id, severity)) =
+                    self.cursed_equipment_replaced_by(&item_id, slot_id.as_deref())
+                {
+                    events.push(DomainEvent::ItemUnequipCursed {
+                        target_kind_id,
+                        slot_id,
+                        severity,
+                    });
                 } else {
                     events.push(DomainEvent::ItemEquipUnavailable);
                 }
@@ -1954,7 +1966,10 @@ impl Game {
                 }
             }
             GameAction::Unequip { slot_id } => {
-                if let Some((target_kind_id, severity)) = self.cursed_equipment_in_slot(&slot_id) {
+                if let Some((target_kind_id, severity)) = self
+                    .cursed_equipment_in_slot(&slot_id)
+                    .filter(|(_, severity)| !self.player_can_force_remove_curse(*severity))
+                {
                     events.push(DomainEvent::ItemUnequipCursed {
                         target_kind_id,
                         slot_id,
@@ -1965,6 +1980,14 @@ impl Game {
                     events.push(DomainEvent::ItemUnequipped {
                         target_kind_id: kind_id,
                         slot_id,
+                    });
+                } else if let Some((target_kind_id, severity)) =
+                    self.cursed_equipment_in_slot(&slot_id)
+                {
+                    events.push(DomainEvent::ItemUnequipCursed {
+                        target_kind_id,
+                        slot_id,
+                        severity,
                     });
                 } else {
                     events.push(DomainEvent::ItemUnequipUnavailable { slot_id });
@@ -2003,7 +2026,9 @@ impl Game {
                         .position(|entity| entity.position == target)
                     {
                         changed.insert(target);
-                        if self.actor_is_player_side(&self.entities[index]) {
+                        if self.actor_is_player_side(&self.entities[index])
+                            && !self.player_is_berserker()
+                        {
                             events.push(DomainEvent::MoveBlocked);
                         } else if self.player_fear_blocks_melee(index) {
                             events.push(DomainEvent::PlayerFearBlocked {
@@ -2017,7 +2042,9 @@ impl Game {
                                 &mut changed,
                                 &mut removed_entities,
                             )?;
-                            if melee.killed && self.player_preserves_melee_energy_on_kill() {
+                            if let Some(cost) = melee.energy_cost_on_kill {
+                                action_cost = cost;
+                            } else if melee.killed && self.player_preserves_melee_energy_on_kill() {
                                 action_cost = action_cost
                                     .saturating_mul(i32::from(melee.attacks_used))
                                     .saturating_div(i32::from(melee.attacks_available))
@@ -2177,7 +2204,9 @@ impl Game {
                     }
                     Some(TerrainDigOutcome::ActorBlocked { position, index }) => {
                         changed.insert(position);
-                        if self.actor_is_player_side(&self.entities[index]) {
+                        if self.actor_is_player_side(&self.entities[index])
+                            && !self.player_is_berserker()
+                        {
                             events.push(DomainEvent::MoveBlocked);
                         } else if self.player_fear_blocks_melee(index) {
                             events.push(DomainEvent::PlayerFearBlocked {
@@ -2191,7 +2220,9 @@ impl Game {
                                 &mut changed,
                                 &mut removed_entities,
                             )?;
-                            if melee.killed && self.player_preserves_melee_energy_on_kill() {
+                            if let Some(cost) = melee.energy_cost_on_kill {
+                                action_cost = cost;
+                            } else if melee.killed && self.player_preserves_melee_energy_on_kill() {
                                 action_cost = action_cost
                                     .saturating_mul(i32::from(melee.attacks_used))
                                     .saturating_div(i32::from(melee.attacks_available))
@@ -3580,6 +3611,14 @@ impl Game {
         target: Option<&TargetSelection>,
         target_glyph: Option<&str>,
     ) -> bool {
+        if let Some(cost) = self
+            .items
+            .iter()
+            .find(|item| item.id == source_item_id)
+            .and_then(|item| self.berserker_item_use_rejection_cost(item))
+        {
+            return cost == 0;
+        }
         if let Some(valid) = self.mount_item_target_is_valid(source_item_id, target) {
             return !valid;
         }
@@ -3638,10 +3677,12 @@ impl Game {
     }
 
     fn player_has_status_kind(&self, kind_id: &str) -> bool {
-        self.player
-            .statuses
-            .iter()
-            .any(|status| status.kind_id == kind_id)
+        (kind_id == STATUS_BERSERK && self.player_is_berserker())
+            || self
+                .player
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == kind_id)
     }
 
     fn player_fear_blocks_melee(&mut self, target_index: usize) -> bool {

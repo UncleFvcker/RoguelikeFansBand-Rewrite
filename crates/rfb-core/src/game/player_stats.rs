@@ -667,6 +667,7 @@ impl Game {
 
     pub(super) fn player_reflects_bolts(&self) -> bool {
         self.player_equipment_passives().contains(&EquipmentPassive::ReflectsBolts)
+        || self.player_class_passives().contains(&EquipmentPassive::ReflectsBolts)
         || self.character_definitions().is_some_and(|(_, race, _, _)| {
             race.reflects_bolts_minimum_level
                 .is_some_and(|minimum_level| self.progress.level >= minimum_level)
@@ -749,6 +750,12 @@ impl Game {
     /// innate immunities and every equipped item's (plus affixes').
     pub(super) fn player_status_immunities(&self) -> BTreeSet<String> {
         let mut immunities = BTreeSet::new();
+        if self.player_is_berserker() {
+            immunities.extend([STATUS_FEAR.to_owned(), STATUS_PARALYSIS.to_owned()]);
+            if self.progress.level >= 35 {
+                immunities.insert(STATUS_STUN.to_owned());
+            }
+        }
         // effects.c::set_cut/set_unwell reject these conditions for the current nonliving body.
         if self.player_is_nonliving() {
             immunities.extend([STATUS_BLEEDING.to_owned(), STATUS_UNWELL.to_owned()]);
@@ -1161,7 +1168,24 @@ impl Game {
             .is_some_and(|(_, _, class, _)| class.id == "demo.class.mindcrafter")
     }
 
+    pub(super) fn player_is_berserker(&self) -> bool {
+        self.build
+            .as_ref()
+            .is_some_and(|build| build.class_id == "demo.class.berserker")
+    }
+
     pub(super) fn player_class_passives(&self) -> Vec<EquipmentPassive> {
+        if self.player_is_berserker() {
+            let mut passives = vec![
+                EquipmentPassive::SustainStrength,
+                EquipmentPassive::SustainDexterity,
+                EquipmentPassive::SustainConstitution,
+            ];
+            if self.progress.level >= 40 {
+                passives.push(EquipmentPassive::ReflectsBolts);
+            }
+            return passives;
+        }
         // RFB master a0d92b6378: mindcrafter.c::_calc_bonuses.
         [
             (20, EquipmentPassive::SustainWisdom),
@@ -1195,6 +1219,7 @@ impl Game {
             100_i32
                 .saturating_add(modifier)
                 .saturating_add(timed_regeneration)
+                .saturating_add(if self.player_is_berserker() { 100 } else { 0 })
                 .max(0),
         )
         .expect("non-negative regeneration rate must fit u64")
@@ -1435,7 +1460,13 @@ impl Game {
     }
 
     pub(super) fn player_carry_capacity_tenths_pound(&self) -> u32 {
-        crate::stats::carry_capacity_tenths_pound(self.effective_player_attributes().strength)
+        let capacity =
+            crate::stats::carry_capacity_tenths_pound(self.effective_player_attributes().strength);
+        if self.player_is_berserker() {
+            capacity * 3 / 2
+        } else {
+            capacity
+        }
     }
 
     pub(super) fn player_encumbrance_speed_penalty(&self) -> i32 {
@@ -1803,8 +1834,14 @@ impl Game {
                     .is_some_and(|kind| kind.tval == 22 || (kind.tval == 21 && kind.sval == 51)))
     }
 
-    fn mindcrafter_base_blows(&self, weapon: &ItemInstance) -> i32 {
-        // RFB combat.c::calculate_base_blows, max=500, wgt=100, mult=35;
+    fn class_base_blows(
+        &self,
+        weapon: &ItemInstance,
+        cap: i32,
+        minimum_weight: u16,
+        multiplier: u32,
+    ) -> i32 {
+        // RFB combat.c::calculate_base_blows;
         // xtra1.c applies doubled hold and the omoi check for two-handed weapons.
         let attributes = self.effective_player_attributes();
         let strength = attributes
@@ -1825,12 +1862,12 @@ impl Game {
         } else {
             0
         };
-        let power = (u32::from(RFB_STRENGTH_BLOW[usize::from(strength)]) * 35
-            / u32::from(weight.max(100))
+        let power = (u32::from(RFB_STRENGTH_BLOW[usize::from(strength)]) * multiplier
+            / u32::from(weight.max(minimum_weight))
             + two_hand_bonus)
             .min(110);
         let (minimum, maximum) = RFB_BLOW_RANGES[usize::from(dexterity)];
-        (i32::from(minimum) + i32::from(maximum - minimum) * power as i32 / 110).clamp(100, 500)
+        (i32::from(minimum) + i32::from(maximum - minimum) * power as i32 / 110).clamp(100, cap)
     }
 
     fn player_melee_profile_for_item(
@@ -2005,6 +2042,28 @@ impl Game {
             .position(|item| Some(item.id.as_str()) == source_item_id.as_deref())
             .unwrap_or(0) as i32;
         let count = weapons.len().max(1) as i32;
+        if self.player_is_berserker()
+            && let Some(weapon) = weapons
+                .iter()
+                .find(|item| Some(item.id.as_str()) == source_item_id.as_deref())
+        {
+            let attributes = self.effective_player_attributes();
+            let two_hands = self.weapon_uses_two_hands(weapon)
+                && crate::stats::strength_hold_pounds(attributes.strength) * 2
+                    >= self.item_instance_weight(weapon) / 5;
+            let multiplier = if two_hands { 2 } else { 1 };
+            let class_hit = i32::from(self.progress.level / 5) * multiplier;
+            // xtra1.c adds a second +12 actual to-hit to the first two hands.
+            let extra_hit = if hand < 2 { 12 } else { 0 };
+            melee_skill = melee_skill.with_modifier(
+                StatLayer::Class,
+                "demo.class.berserker",
+                class_hit + extra_hit,
+                StatBounds::UNBOUNDED,
+            );
+            to_hit += class_hit + 12 + extra_hit;
+            to_damage += i32::from(self.progress.level / 6) * multiplier;
+        }
         let mut mastery = 0;
         for item in &self.items {
             let ItemLocation::Equipped { slot_id } = &item.location else {
@@ -2097,9 +2156,13 @@ impl Game {
         let extra_blows = extra_sources
             .iter()
             .map(|source| source.amount)
-            .sum::<i32>()
-            .max(0);
-        if extra_blows > 0 {
+            .sum::<i32>();
+        let extra_blows = if self.player_is_berserker() {
+            extra_blows
+        } else {
+            extra_blows.max(0)
+        };
+        if extra_blows != 0 {
             attack_sources.extend(extra_sources);
         }
         let mut blows = stats
@@ -2107,19 +2170,33 @@ impl Game {
             .value
             .saturating_mul(100)
             .saturating_add(extra_blows);
-        if self.player_is_mindcrafter()
+        if (self.player_is_mindcrafter() || self.player_is_berserker())
             && let Some(weapon) = self
                 .items
                 .iter()
                 .find(|item| Some(item.id.as_str()) == selected_item_id)
         {
-            let delta = self.mindcrafter_base_blows(weapon) - 100;
+            let (class_id, base, extra) = if self.player_is_berserker() {
+                (
+                    "demo.class.berserker",
+                    self.class_base_blows(weapon, 600, 70, 75),
+                    i32::from(self.progress.level) * 4,
+                )
+            } else {
+                (
+                    "demo.class.mindcrafter",
+                    self.class_base_blows(weapon, 500, 100, 35),
+                    0,
+                )
+            };
+            let delta = base - 100 + extra;
             blows = blows.saturating_add(delta);
             attack_sources.push(rfb_protocol::CharacterStatSourceDto {
-                source_id: "demo.class.mindcrafter".to_owned(),
+                source_id: class_id.to_owned(),
                 amount: delta,
             });
         }
+        blows = blows.max(0);
         if source_item_id.is_some()
             && self
                 .character_definitions()
@@ -2271,6 +2348,7 @@ impl Game {
                 .as_ref()
                 .map_or(100, |build| match build.class_id.as_str() {
                     "demo.class.warrior" => 120,
+                    "demo.class.berserker" => 170,
                     "demo.class.paladin" => 110,
                     "demo.class.high-mage" => 80,
                     _ => 100,
@@ -2549,6 +2627,38 @@ impl Game {
         let Some((_, race, class, personality)) = self.character_definitions() else {
             return;
         };
+        if self.player_is_berserker() {
+            let level = i32::from(self.progress.level);
+            for (kind, amount) in [
+                (
+                    StatKind::Speed,
+                    2 + [30, 40, 45, 50]
+                        .into_iter()
+                        .filter(|threshold| level >= *threshold)
+                        .count() as i32,
+                ),
+                (StatKind::ArmorClass, 10 + level / 2),
+                (StatKind::DigSkill, 100 + 8 * level),
+            ] {
+                add_nonzero_stat(pipeline, kind, StatLayer::Class, &class.id, amount);
+            }
+            // Permanent shero uses the ordinary combat modifiers, without its +30 HP.
+            for (kind, amount) in [
+                (StatKind::ArmorClass, -10),
+                (StatKind::MeleeSkill, 12),
+                (StatKind::MeleeDamageBonus, 3 + level / 5),
+                (StatKind::RangedSkill, -12),
+                (StatKind::ThrowingSkill, -20),
+                (StatKind::DeviceSkill, -20),
+                (StatKind::SavingThrowSkill, -30),
+                (StatKind::StealthSkill, -7),
+                (StatKind::SearchSkill, -15),
+                (StatKind::PerceptionSkill, -15),
+                (StatKind::DigSkill, 30),
+            ] {
+                add_nonzero_stat(pipeline, kind, StatLayer::Class, &class.id, amount);
+            }
+        }
         if race.id == "rfb-legacy.race.ent"
             && !self.items.iter().any(|item| {
                 matches!(item.location, ItemLocation::Equipped { .. })
@@ -3085,6 +3195,9 @@ impl Game {
         }
 
         for status in &actor.statuses {
+            if include_equipment && self.player_is_berserker() && status.kind_id == STATUS_BERSERK {
+                continue;
+            }
             let modifiers = status.granted_modifiers;
             for (kind, value) in [
                 (StatKind::MaxHp, modifiers.max_hp),
@@ -3192,8 +3305,12 @@ impl Game {
         } else {
             speed
         };
-        let saving_throw_skill =
-            pipeline.resolve(StatKind::SavingThrowSkill, StatBounds::NON_NEGATIVE);
+        let skill_bounds = if include_equipment && self.player_is_berserker() {
+            StatBounds::UNBOUNDED
+        } else {
+            StatBounds::NON_NEGATIVE
+        };
+        let saving_throw_skill = pipeline.resolve(StatKind::SavingThrowSkill, skill_bounds);
         let saving_throw_skill =
             if include_equipment && self.player_has_status_kind(STATUS_MAGIC_RESISTANCE) {
                 let minimum = 95_i32.saturating_add(i32::from(self.progress.level));
@@ -3281,13 +3398,13 @@ impl Game {
             ),
             melee_attacks: pipeline.resolve(StatKind::MeleeAttacks, StatBounds::NON_NEGATIVE),
             melee_damage_bonus: pipeline.resolve(StatKind::MeleeDamageBonus, StatBounds::UNBOUNDED),
-            ranged_skill: pipeline.resolve(StatKind::RangedSkill, StatBounds::NON_NEGATIVE),
-            throwing_skill: pipeline.resolve(StatKind::ThrowingSkill, StatBounds::NON_NEGATIVE),
-            door_skill: pipeline.resolve(StatKind::DoorSkill, StatBounds::NON_NEGATIVE),
+            ranged_skill: pipeline.resolve(StatKind::RangedSkill, skill_bounds),
+            throwing_skill: pipeline.resolve(StatKind::ThrowingSkill, skill_bounds),
+            door_skill: pipeline.resolve(StatKind::DoorSkill, skill_bounds),
             bash_power: pipeline.resolve(StatKind::BashPower, StatBounds::NON_NEGATIVE),
-            search_skill: pipeline.resolve(StatKind::SearchSkill, StatBounds::NON_NEGATIVE),
+            search_skill: pipeline.resolve(StatKind::SearchSkill, skill_bounds),
             device_skill: {
-                let skill = pipeline.resolve(StatKind::DeviceSkill, StatBounds::NON_NEGATIVE);
+                let skill = pipeline.resolve(StatKind::DeviceSkill, skill_bounds);
                 let penalty = if include_equipment {
                     self.items
                         .iter()
@@ -3303,13 +3420,13 @@ impl Game {
                     StatLayer::Equipment,
                     "equipment.curse.low-device",
                     -penalty,
-                    StatBounds::NON_NEGATIVE,
+                    skill_bounds,
                 )
             },
             saving_throw_skill,
             stealth_skill,
-            perception_skill: pipeline.resolve(StatKind::PerceptionSkill, StatBounds::NON_NEGATIVE),
-            disarm_skill: pipeline.resolve(StatKind::DisarmSkill, StatBounds::NON_NEGATIVE),
+            perception_skill: pipeline.resolve(StatKind::PerceptionSkill, skill_bounds),
+            disarm_skill: pipeline.resolve(StatKind::DisarmSkill, skill_bounds),
             dig_skill: pipeline.resolve(StatKind::DigSkill, StatBounds::NON_NEGATIVE),
         }
     }

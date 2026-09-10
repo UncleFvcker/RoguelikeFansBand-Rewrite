@@ -800,6 +800,17 @@ fn plan_equip(
     })
 }
 
+fn clear_item_curse(item: &mut ItemInstance) {
+    item.curse = None;
+    item.intrinsic_properties.rfb_heavy_curse = false;
+    item.intrinsic_curse_effects.clear();
+    for roll in &mut item.rolled_affixes {
+        roll.curse_effects.clear();
+        roll.properties.rfb_heavy_curse = false;
+    }
+    item.rolled_affixes.retain(|roll| roll.has_instance_state());
+}
+
 fn plan_unequip(items: &[ItemInstance], slot_id: &str) -> Option<UnequipPlan> {
     let item_index = items.iter().position(|item| {
         matches!(
@@ -1729,13 +1740,7 @@ impl Game {
                 Some(ItemCurseSeverityDto::Heavy) | None => {}
             }
             if was_cursed && item.curse.is_none() {
-                item.intrinsic_properties.rfb_heavy_curse = false;
-                item.intrinsic_curse_effects.clear();
-                for roll in &mut item.rolled_affixes {
-                    roll.curse_effects.clear();
-                    roll.properties.rfb_heavy_curse = false;
-                }
-                item.rolled_affixes.retain(|roll| roll.has_instance_state());
+                clear_item_curse(item);
             }
         }
         removed_item_ids.sort();
@@ -1807,7 +1812,7 @@ impl Game {
             || item.location == ItemLocation::Ground(self.player.position)
     }
 
-    fn item_is_device(&self, item: &ItemInstance) -> bool {
+    pub(super) fn item_is_device(&self, item: &ItemInstance) -> bool {
         self.content
             .item(&item.kind_id)
             .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "device"))
@@ -2017,6 +2022,33 @@ impl Game {
         Ok(Some((1, u64::from(plan.quantity))))
     }
 
+    pub(super) fn player_can_force_remove_curse(&self, severity: ItemCurseSeverityDto) -> bool {
+        self.player_is_berserker() && severity != ItemCurseSeverityDto::Permanent
+    }
+
+    fn try_remove_equipment_curse(&mut self, index: usize) -> bool {
+        let Some(severity) = self.items[index].curse else {
+            return true;
+        };
+        if !self.player_can_force_remove_curse(severity) {
+            return false;
+        }
+        // equip.c::_can_takeoff: the second roll is made only if the first fails.
+        if !((severity == ItemCurseSeverityDto::Heavy && self.rng.bounded(7) == 0)
+            || self.rng.bounded(4) == 0)
+        {
+            return false;
+        }
+        clear_item_curse(&mut self.items[index]);
+        let knowledge = self
+            .item_property_knowledge
+            .entry(self.items[index].id.clone())
+            .or_default();
+        knowledge.appraised = true;
+        knowledge.feeling = None;
+        true
+    }
+
     pub(super) fn equip_inventory_item(
         &mut self,
         item_id: &str,
@@ -2029,12 +2061,6 @@ impl Game {
             item_id,
             slot_id,
         )?;
-        if plan
-            .replaced_index
-            .is_some_and(|index| self.items[index].curse.is_some())
-        {
-            return None;
-        }
         let mut projected_items = self.items.clone();
         if let Some(index) = plan.replaced_index {
             projected_items[index].location = ItemLocation::Inventory;
@@ -2043,6 +2069,12 @@ impl Game {
             slot_id: plan.slot_id.clone(),
         };
         if !self.inventory_fits(&projected_items) {
+            return None;
+        }
+        if plan
+            .replaced_index
+            .is_some_and(|index| !self.try_remove_equipment_curse(index))
+        {
             return None;
         }
         let replaced_kind_id = plan.replaced_index.map(|index| {
@@ -2096,12 +2128,12 @@ impl Game {
 
     pub(super) fn unequip_slot(&mut self, slot_id: &str) -> Option<String> {
         let plan = plan_unequip(&self.items, slot_id)?;
-        if plan.curse.is_some() {
-            return None;
-        }
         let mut projected_items = self.items.clone();
         projected_items[plan.item_index].location = ItemLocation::Inventory;
         if !self.inventory_fits(&projected_items) {
+            return None;
+        }
+        if !self.try_remove_equipment_curse(plan.item_index) {
             return None;
         }
         self.items[plan.item_index].location = ItemLocation::Inventory;

@@ -25,6 +25,7 @@
     }
   ],
   "ownerClassIds": [
+    "demo.class.berserker",
     "demo.class.warrior",
     "demo.class.cavalry"
   ]

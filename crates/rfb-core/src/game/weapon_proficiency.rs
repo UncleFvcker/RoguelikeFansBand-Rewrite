@@ -203,6 +203,7 @@ impl Game {
             self.character_definitions()
                 .map_or(8, |(_, _, class, _)| match class.id.as_str() {
                     "demo.class.warrior" => 18,
+                    "demo.class.berserker" => 24,
                     "demo.class.paladin" => 12,
                     _ => 8,
                 });

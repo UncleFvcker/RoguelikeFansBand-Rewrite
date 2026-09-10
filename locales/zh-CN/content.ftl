@@ -1,5 +1,11 @@
 # SPDX-License-Identifier: CC-BY-SA-4.0
 
+build-demo-berserker-name = 狂战士
+build-demo-berserker-description = 常驻狂暴，以生命施展战技，无法阅读卷轴或使用魔法装置。
+class-demo-berserker-name = 狂战士
+class-demo-berserker-description = 常驻狂暴的近战职业，以生命为战技费用，能强行卸下非永久诅咒装备。无法阅读卷轴或使用魔法装置。
+actor-demo-berserker-player-name = 狂战士
+actor-demo-berserker-player-description = 携带阔斧、强化链甲和治愈药水的狂战士。
 build-demo-mindcrafter-name = 心灵术士
 build-demo-mindcrafter-description = 以感知驱动心灵力量、无需选择领域或学习法术书的职业。
 class-demo-mindcrafter-name = 心灵术士

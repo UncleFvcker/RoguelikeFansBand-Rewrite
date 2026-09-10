@@ -396,6 +396,21 @@ impl Game {
         allow_pickup: bool,
     ) -> Result<Vec<MogaminatorItemResolution>, CoreError> {
         self.apply_player_floor_item_knowledge();
+        if self.player_is_berserker() {
+            let carried = self
+                .items
+                .iter()
+                .filter(|item| {
+                    item_ids.contains(&item.id)
+                        && matches!(
+                            item.location,
+                            ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                        )
+                })
+                .map(|item| item.id.clone())
+                .collect();
+            self.apply_player_item_knowledge(carried);
+        }
         if !self.mogaminator.enabled || item_ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -549,6 +564,9 @@ impl Game {
         &mut self,
         target_item_id: &str,
     ) -> Option<MogaminatorItemResolution> {
+        if self.player_is_berserker() {
+            return None;
+        }
         let target = self.items.iter().find(|item| item.id == target_item_id)?;
         if self.item_identification(target) != ItemIdentificationDto::Unexamined {
             return None;

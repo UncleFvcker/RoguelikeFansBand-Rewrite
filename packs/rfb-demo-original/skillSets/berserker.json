@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/skill-set.schema.json",
+  "formatVersion": 1,
+  "id": "demo.skill-set.berserker",
+  "entries": [
+    {
+      "skillId": "demo.skill.disarming",
+      "base": -100
+    },
+    {
+      "skillId": "demo.skill.device",
+      "base": -1000
+    },
+    {
+      "skillId": "demo.skill.saving-throw",
+      "base": -200
+    },
+    {
+      "skillId": "demo.skill.stealth",
+      "base": -100
+    },
+    {
+      "skillId": "demo.skill.search",
+      "base": -100
+    },
+    {
+      "skillId": "demo.skill.perception",
+      "base": -100
+    },
+    {
+      "skillId": "demo.skill.melee",
+      "base": 120,
+      "growthPerTenLevels": 50
+    },
+    {
+      "skillId": "demo.skill.ranged",
+      "base": -2000
+    },
+    {
+      "skillId": "demo.skill.throwing",
+      "base": -2000
+    }
+  ]
+}

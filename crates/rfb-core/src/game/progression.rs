@@ -1049,6 +1049,12 @@ impl Game {
                         .iter()
                         .filter(|mutation_id| {
                             excluded.is_none_or(|excluded| !excluded.contains(*mutation_id))
+                                && !(self.player_is_berserker()
+                                    && matches!(
+                                        mutation_id.as_str(),
+                                        "rfb.mutation.astral-guide"
+                                            | "rfb.mutation.fantastic-frenzy"
+                                    ))
                         })
                         .cloned()
                         .collect(),

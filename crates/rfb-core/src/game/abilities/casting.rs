@@ -377,7 +377,7 @@ impl Game {
                 .expect("positive resource payment requires an available pool");
             pool.current -= resource_paid;
         }
-        if hp_paid > 0 {
+        if hp_paid > 0 && source != AbilitySourceDto::Class {
             self.player.hp = self.player.hp.saturating_sub(
                 i32::try_from(hp_paid).expect("validated innate power cost must fit i32"),
             );
@@ -397,7 +397,7 @@ impl Game {
         } else {
             self.record_ability_cast(&ability, succeeded)
         };
-        let resolution = AbilityCastResolutionDto {
+        let mut resolution = AbilityCastResolutionDto {
             ability_id: ability.id.clone(),
             resource_id,
             base_resource_cost,
@@ -422,6 +422,9 @@ impl Game {
             },
         };
         if !succeeded {
+            if source == AbilitySourceDto::Class {
+                resolution.hp_paid = self.pay_class_ability_hit_points(hp_paid);
+            }
             events.push(DomainEvent::AbilityCastFailed { resolution });
             if super::mindcraft::is_mindcraft_spell(&ability) {
                 self.resolve_mindcraft_failure(
@@ -433,6 +436,10 @@ impl Game {
                 )?;
             }
             return Ok(());
+        }
+        let cast_event_index = events.len();
+        if source == AbilitySourceDto::Class {
+            resolution.hp_paid = 0;
         }
         events.push(DomainEvent::AbilityCastSucceeded {
             resolution: resolution.clone(),
@@ -465,6 +472,13 @@ impl Game {
             changed,
             removed_entities,
         );
+        if result.is_ok() && source == AbilitySourceDto::Class {
+            let paid = self.pay_class_ability_hit_points(hp_paid);
+            if let DomainEvent::AbilityCastSucceeded { resolution } = &mut events[cast_event_index]
+            {
+                resolution.hp_paid = paid;
+            }
+        }
         if result.is_ok()
             && ability_id == DEATH_INVOKE_SPIRITS_ABILITY_ID
             && random_branch_index == Some(0)
@@ -477,6 +491,23 @@ impl Game {
             self.apply_player_experience(u64::from(first_success_experience), events);
         }
         result
+    }
+
+    fn pay_class_ability_hit_points(&mut self, cost: u32) -> u32 {
+        // spells.c: CASTER_USE_HP pays after the effect, including vampiric healing.
+        // take_hit ignores a player who already died during the effect.
+        if cost == 0 || self.player_is_dead() {
+            return 0;
+        }
+        self.player.hp = self
+            .player
+            .hp
+            .saturating_sub(i32::try_from(cost).expect("validated class HP cost fits i32"));
+        if self.player.hp == 0 {
+            self.add_virtue(VirtueKindDto::Sacrifice, 1);
+            self.add_virtue(VirtueKindDto::Chance, 2);
+        }
+        cost
     }
 
     fn select_player_random_choice_branch(

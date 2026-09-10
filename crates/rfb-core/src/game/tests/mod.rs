@@ -19,6 +19,7 @@ mod abilities;
 mod archer;
 mod artifact_identity;
 mod attribute_sources;
+mod berserker;
 mod capture_ball;
 mod cavalry;
 mod combat;
