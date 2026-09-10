@@ -33,6 +33,7 @@ pub enum AbilityTargetModeDefinition {
     Position,
     Entity,
     Item,
+    Element,
     Town,
     #[serde(rename = "self")]
     SelfTarget,
@@ -898,6 +899,20 @@ pub enum AbilityEffectDefinition {
         resistance: Option<ActorDamageType>,
     },
     ProtectFromCorrosion,
+    CraftEnchant {
+        maximum: u16,
+        increment: u16,
+        #[serde(default)]
+        level_divisor: u16,
+    },
+    CraftItem,
+    PolishShield,
+    Mundanity,
+    ElementalBrand,
+    ElementalImmunity {
+        duration_base: u32,
+    },
+    LivingTrump,
     RandomChoice {
         roll_sides: u16,
         #[serde(default)]

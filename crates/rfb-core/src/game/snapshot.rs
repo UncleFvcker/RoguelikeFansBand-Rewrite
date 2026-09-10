@@ -682,6 +682,8 @@ impl Game {
                         })
                         .collect(),
                     target_spec,
+                    element_targets: self.ability_element_targets(&effective_ability),
+                    item_targets: self.craft_ability_item_targets(&effective_ability),
                     town_targets: matches!(ability.effect, AbilityEffectDefinition::TeleportTown)
                         .then(|| self.teleport_town_targets())
                         .unwrap_or_default(),
@@ -1018,6 +1020,10 @@ impl Game {
             requires_crafting_target: self.inventory_item_use_effect(&item.id).is_some_and(
                 |(effect, _)| matches!(effect, ItemUseEffectDefinition::CraftItem { .. }),
             ),
+            mundanity_targets: self
+                .inventory_item_use_effect(&item.id)
+                .is_some_and(|(effect, _)| matches!(effect, ItemUseEffectDefinition::MundanifyItem))
+                .then(|| self.mundanity_item_targets(Some(&item.id))),
             artifact_creation_targets: self
                 .inventory_item_use_effect(&item.id)
                 .is_some_and(|(effect, _)| {

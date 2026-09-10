@@ -205,6 +205,11 @@ export function createPresentationFormatter(
         });
       case "ability-effects":
         if (event.outcome?.type === "ability-effects") {
+          const itemMagic = event.outcome.resolution.effects.find(effect => effect.type === "item-magic");
+          if (itemMagic?.type === "item-magic") return localization.format(
+            itemMagic.succeeded ? "message-ability-item-magic-success" : "message-ability-item-magic-failed",
+            { ability: contentName(event.args.target) },
+          );
           const mental = event.outcome.resolution.effects.find(
             (effect) => effect.type === "mindcraft-backlash" || effect.type === "extra-energy" || effect.type === "control",
           );
@@ -1943,6 +1948,15 @@ export function createPresentationFormatter(
   }
 
   function statusName(statusId: string | undefined): string {
+    const craftStatuses: Record<string, string> = {
+      "hero": "heroism", "berserk": "berserk", "resist-cold": "resist-cold", "resist-fire": "resist-fire",
+      "resist-electricity": "resist-electricity", "resist-acid": "resist-acid", "resist-poison": "resist-poison",
+      "see-invisible": "see-invisible", "telepathy": "telepathy", "stone-skin": "stone-skin", "basic-resistance": "resistance",
+      "weapon-mastery": "weapon-mastery", "magic-armor": "magic-armor", "mana-brand": "mana-brand",
+      "elemental-brand": "elemental-brand", "elemental-immunity": "elemental-immunity",
+    };
+    const craft = statusId?.startsWith("rfb.status.") && craftStatuses[statusId.slice(11)];
+    if (craft) return localization.format(`ability-demo-craft-${craft}-name`);
     if (statusId === "rfb.status.bleeding") {
       return localization.format("status-bleeding-name");
     }

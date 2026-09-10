@@ -175,6 +175,10 @@ impl Game {
                 entry.passives.push(equipment_passive_dto(passive));
             }
             let id = status.kind_id.as_str();
+            if id == STATUS_MAGIC_ARMOR {
+                entry.reflects_bolts = true;
+                entry.passives.push(P::Levitation);
+            }
             if id == STATUS_ULTIMATE_RESISTANCE {
                 entry.passives.extend([
                     P::SustainStrength,

@@ -3587,7 +3587,7 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
 }
 
 #[test]
-fn p3_5_mundanity_splits_one_unit_and_rejects_fixed_artifacts_atomically() {
+fn p3_5_mundanity_preserves_stack_identity_and_rejects_unmapped_demo_artifacts() {
     let mut game = Game::new(521);
     clear_monsters(&mut game);
     game.items.clear();
@@ -3616,29 +3616,29 @@ fn p3_5_mundanity_splits_one_unit_and_rejects_fixed_artifacts_atomically() {
             }),
         },
     );
-    let remainder = game
-        .items
-        .iter()
-        .find(|item| item.id == "test.item.mundane-target.1")
-        .expect("remainder should keep the selected stack id");
-    assert_eq!(remainder.quantity, 2);
-    assert_eq!(remainder.quality, ItemQualityDto::Exceptional);
     let mundane = game
         .items
         .iter()
-        .find(|item| item.kind_id == "demo.item.arrow" && item.id != "test.item.mundane-target.1")
-        .expect("one separated unit should become mundane");
-    assert_eq!(mundane.quantity, 1);
+        .find(|item| item.id == "test.item.mundane-target.1")
+        .unwrap();
+    assert_eq!(mundane.quantity, 3);
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.arrow")
+            .count(),
+        1
+    );
     assert_eq!(mundane.quality, ItemQualityDto::Ordinary);
     assert!(mundane.affix_ids.is_empty());
     assert!(mundane.enchantments.is_empty());
     assert_eq!(game.rng_draw_counter(), draws_before);
     assert!(update.events.iter().any(|event| {
         event.kind == "item.use-mundanity"
-            && event.args.get("split").map(String::as_str) == Some("true")
+            && event.args.get("split").map(String::as_str) == Some("false")
             && event.args.get("targetId") == Some(&mundane.id)
     }));
-    Game::from_save(game.to_save()).expect("split mundane ammunition should round-trip");
+    Game::from_save(game.to_save()).expect("mundane ammunition stack should round-trip");
 
     give_inventory_item(
         &mut game,

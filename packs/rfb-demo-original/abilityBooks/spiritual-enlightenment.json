@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.spiritual-enlightenment",
+  "nameKey": "ability-book-demo-spiritual-enlightenment-name",
+  "descriptionKey": "ability-book-demo-spiritual-enlightenment-description",
+  "realmId": "craft",
+  "rank": 4,
+  "abilityIds": [
+    "demo.ability.craft-remove-all-curses",
+    "demo.ability.craft-mundanity",
+    "demo.ability.craft-knowledge-true",
+    "demo.ability.craft-enchantment",
+    "demo.ability.craft-crafting",
+    "demo.ability.craft-living-trump",
+    "demo.ability.craft-elemental-immunity",
+    "demo.ability.craft-mana-brand"
+  ],
+  "tags": [
+    "craft",
+    "spellbook"
+  ]
+}

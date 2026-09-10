@@ -25,7 +25,10 @@ impl Game {
             TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
             TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
             TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
-            TargetSelection::CraftingItem { .. } | TargetSelection::ArtifactCreationItem { .. } => {
+            TargetSelection::CraftingItem { .. }
+            | TargetSelection::Element { .. }
+            | TargetSelection::MundanityItem { .. }
+            | TargetSelection::ArtifactCreationItem { .. } => {
                 return None;
             }
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
@@ -47,7 +50,10 @@ impl Game {
             TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
             TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
             TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
-            TargetSelection::CraftingItem { .. } | TargetSelection::ArtifactCreationItem { .. } => {
+            TargetSelection::CraftingItem { .. }
+            | TargetSelection::Element { .. }
+            | TargetSelection::MundanityItem { .. }
+            | TargetSelection::ArtifactCreationItem { .. } => {
                 return None;
             }
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
@@ -74,6 +80,8 @@ impl Game {
             TargetSelection::Item { .. } => None,
             TargetSelection::Town { .. }
             | TargetSelection::CraftingItem { .. }
+            | TargetSelection::Element { .. }
+            | TargetSelection::MundanityItem { .. }
             | TargetSelection::ArtifactCreationItem { .. } => None,
         }
     }
@@ -113,6 +121,8 @@ impl Game {
             TargetSelection::Item { .. } => None,
             TargetSelection::Town { .. }
             | TargetSelection::CraftingItem { .. }
+            | TargetSelection::Element { .. }
+            | TargetSelection::MundanityItem { .. }
             | TargetSelection::ArtifactCreationItem { .. } => None,
         }
     }

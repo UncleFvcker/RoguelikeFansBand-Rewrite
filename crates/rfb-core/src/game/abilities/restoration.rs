@@ -48,6 +48,103 @@ fn set_attribute_value(attributes: &mut AttributeSet, kind: AttributeKind, value
 }
 
 impl Game {
+    pub(in crate::game) fn ability_element_targets(
+        &self,
+        ability: &AbilityDefinition,
+    ) -> Vec<rfb_protocol::DamageTypeDto> {
+        use rfb_protocol::DamageTypeDto as E;
+        match ability.effect {
+            AbilityEffectDefinition::ElementalBrand => [
+                (0, E::Fire),
+                (30, E::Cold),
+                (35, E::Poison),
+                (40, E::Acid),
+                (45, E::Electricity),
+            ]
+            .into_iter()
+            .filter_map(|(level, element)| (self.progress.level >= level).then_some(element))
+            .collect(),
+            AbilityEffectDefinition::ElementalImmunity { .. } => {
+                vec![E::Fire, E::Cold, E::Acid, E::Electricity]
+            }
+            _ => Vec::new(),
+        }
+    }
+
+    pub(super) fn resolve_player_elemental_enchantment(
+        &mut self,
+        ability: &AbilityDefinition,
+        element: rfb_protocol::DamageTypeDto,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        use rfb_protocol::DamageTypeDto as E;
+        let damage_type = match element {
+            E::Fire => ActorDamageType::Fire,
+            E::Cold => ActorDamageType::Cold,
+            E::Poison => ActorDamageType::Poison,
+            E::Acid => ActorDamageType::Acid,
+            E::Electricity => ActorDamageType::Electricity,
+            _ => unreachable!("validated elemental choice"),
+        };
+        let mut brands = BTreeSet::new();
+        let mut resistances = BTreeMap::new();
+        let (kind, base) = match ability.effect {
+            AbilityEffectDefinition::ElementalBrand => {
+                brands.insert(match element {
+                    E::Fire => rfb_content::WeaponBrand::Fire,
+                    E::Cold => rfb_content::WeaponBrand::Cold,
+                    E::Poison => rfb_content::WeaponBrand::Poison,
+                    E::Acid => rfb_content::WeaponBrand::Acid,
+                    E::Electricity => rfb_content::WeaponBrand::Electricity,
+                    _ => unreachable!("validated elemental brand"),
+                });
+                (
+                    "rfb.status.elemental-brand",
+                    u32::from(self.progress.level / 2),
+                )
+            }
+            AbilityEffectDefinition::ElementalImmunity { duration_base } => {
+                resistances.insert(damage_type, ActorResistanceLevel::Immune);
+                ("rfb.status.elemental-immunity", duration_base)
+            }
+            _ => unreachable!("elemental enchantment effect"),
+        };
+        // A single status per family replaces the previous choice and duration.
+        let resolution = apply_ability_status_effect(
+            &mut self.player,
+            &ability.id,
+            0,
+            kind,
+            1,
+            base,
+            1,
+            base,
+            AbilityStatusStackingDefinition::Replace,
+            None,
+            None,
+            &resistances,
+            &brands,
+            &StatModifiers::default(),
+            &EquipmentBonuses::default(),
+            &BTreeSet::new(),
+            None,
+            false,
+            100,
+            None,
+            None,
+            &mut self.rng,
+        );
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![resolution],
+            },
+            trace: None,
+        });
+    }
+
     pub(in crate::game) fn resolve_player_healing_effect(
         &mut self,
         ability: &AbilityDefinition,

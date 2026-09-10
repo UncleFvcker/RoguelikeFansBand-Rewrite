@@ -3,8 +3,8 @@
   "sourceRef": "master",
   "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
   "reviewedAt": "2026-09-11",
-  "codeBaseline": "696aea620",
-  "scope": "Current curated inventory after the first I4 Poison Needle family on 696aea620. Groups supply batch/gap/acquisition/consumer for each remaining row; source flags and references identify implementation work, not proof that every source branch is implemented. Gameplay evidence is recorded per completed group; this file enables no content.",
+  "codeBaseline": "9d3222610",
+  "scope": "Current curated inventory after the first I5 Craft book family on 9d3222610. Groups supply batch/gap/acquisition/consumer for each remaining row; source flags and references identify implementation work, not proof that every source branch is implemented. Gameplay evidence is recorded per completed group; this file enables no content.",
   "nameSources": {
     "kinds": "src/kind_name_zh.inc",
     "artifacts": "src/artifact_name_zh.inc",
@@ -16,13 +16,13 @@
   "summary": {
     "sourceKindRecords": 545,
     "validSourceKinds": 544,
-    "mappedCanonicalKinds": 348,
-    "remainingValidKinds": 196,
+    "mappedCanonicalKinds": 352,
+    "remainingValidKinds": 192,
     "excludedPlaceholderKinds": 1,
     "importerMechanicsReady": 48,
-    "importerBlocked": 148,
-    "formalItems": 389,
-    "baseAllocationRows": 369,
+    "importerBlocked": 144,
+    "formalItems": 393,
+    "baseAllocationRows": 373,
     "fixedArtifactRecords": 392,
     "formalFixedArtifacts": 19,
     "missingFixedArtifacts": 373,
@@ -68,6 +68,19 @@
     "acquisition": "Formal ordinary base-items allocation at depth 30, source rarity 6; existing Ego, enchantment, branding and artifact-scroll exclusions retained.",
     "evidence": "game::tests::poison_needle: controlled full-pool generation, pickup/identify/equip, crafting rejection, restored combat and next generation/RNG; single/dual weapons, extra blows, Tonberry, Berserker and Duelist; unique/unique2/Metal Babble, invulnerability, ordinary vampiric drain and no healing on vital kills. Existing Duelist and Death branding tests use the actual formal item. Source C value case is 2500.",
     "limits": "Core acceptance with controlled level/generation/combat preconditions; no natural leveling or desktop acceptance. Death Scythe and other I4 families remain open. No saved state or protocol type added."
+  },
+  "firstI5Group": {
+    "sourceIndices": [
+      528,
+      529,
+      530,
+      531
+    ],
+    "buildId": "demo.build.high-mage-craft",
+    "status": "implemented",
+    "source": "master a0d92b6378: do-spell.c::do_craft_spell(0..31), m_info.txt N10/R7, k_info.txt and kind_name_zh.inc",
+    "scope": "Four books, 32 spells, High Mage Craft entry; existing seven realm menus remain independent. Remaining book kinds: 39.",
+    "evidence": "crates/rfb-core/src/game/tests/craft.rs; web/e2e/craft.e2e.mjs; docs/craft-source-audit.md"
   },
   "reviewGroups": {
     "ordinary-weapon": {
@@ -436,10 +449,6 @@
     {"sourceIndex": 521, "sourceName": "[Deck of Many Things]", "sourceNameZh": "[万象无常牌]", "reviewGroup": "realm-books", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": ["book-system"]},
     {"sourceIndex": 522, "sourceName": "[Trumps of Doom]", "sourceNameZh": "[末日王牌]", "reviewGroup": "realm-books", "hasNaturalAllocationRows": true, "sourceFlags": ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"], "sourceActivation": null, "importerBlockers": ["book-system"]},
     {"sourceIndex": 523, "sourceName": "[Five Aces]", "sourceNameZh": "[五张王牌]", "reviewGroup": "realm-books", "hasNaturalAllocationRows": true, "sourceFlags": ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"], "sourceActivation": null, "importerBlockers": ["book-system"]},
-    {"sourceIndex": 528, "sourceName": "[Handbook for Pupils]", "sourceNameZh": "[学徒手册]", "reviewGroup": "realm-books", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": ["book-system"]},
-    {"sourceIndex": 529, "sourceName": "[Grade Holder's Book]", "sourceNameZh": "[持阶者之书]", "reviewGroup": "realm-books", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": ["book-system"]},
-    {"sourceIndex": 530, "sourceName": "[Note of Acting Master]", "sourceNameZh": "[代理宗师笔记]", "reviewGroup": "realm-books", "hasNaturalAllocationRows": true, "sourceFlags": ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"], "sourceActivation": null, "importerBlockers": ["book-system"]},
-    {"sourceIndex": 531, "sourceName": "[Spiritual Enlightenment]", "sourceNameZh": "[灵性启迪]", "reviewGroup": "realm-books", "hasNaturalAllocationRows": true, "sourceFlags": ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"], "sourceActivation": null, "importerBlockers": ["book-system"]},
     {"sourceIndex": 540, "sourceName": "[Stench of Death]", "sourceNameZh": "[死亡之恶臭]", "reviewGroup": "realm-books", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": ["book-system"]},
     {"sourceIndex": 541, "sourceName": "[Sepulchral Ways]", "sourceNameZh": "[坟茔之道]", "reviewGroup": "realm-books", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": ["book-system"]},
     {"sourceIndex": 542, "sourceName": "[Return of the Dead]", "sourceNameZh": "[死者归来]", "reviewGroup": "realm-books", "hasNaturalAllocationRows": true, "sourceFlags": ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"], "sourceActivation": null, "importerBlockers": ["book-system"]},

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.craft-resist-cold",
+  "minimumLevel": 4,
+  "resourceCost": 4,
+  "baseFailurePercent": 30,
+  "resourceId": "demo.resource.mana",
+  "firstSuccessExperience": 20
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.craft-stone-skin",
+  "minimumLevel": 11,
+  "resourceCost": 8,
+  "baseFailurePercent": 65,
+  "resourceId": "demo.resource.mana",
+  "firstSuccessExperience": 1320
+}

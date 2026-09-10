@@ -345,13 +345,21 @@ impl Game {
                 15 => &[STATUS_TELEPATHY],
                 16 => &[STATUS_REGENERATION],
                 17 => &[STATUS_VENGEANCE],
-                18 => &[STATUS_MAGIC_RESISTANCE],
+                18 => &[STATUS_MAGIC_ARMOR],
                 19 => &[
                     STATUS_BASIC_RESISTANCE,
                     STATUS_THERMAL_RESISTANCE,
                     crate::effect::STATUS_POISON_RESISTANCE,
+                    "rfb.status.resist-acid",
+                    "rfb.status.resist-electricity",
+                    "rfb.status.resist-fire",
+                    "rfb.status.resist-cold",
+                    "rfb.status.resist-poison",
                 ],
                 20 => &[STATUS_ULTIMATE_RESISTANCE],
+                21 => &["rfb.status.elemental-brand"],
+                22 => &["rfb.status.elemental-immunity"],
+                24 => &[STATUS_MANA_BRAND],
                 28 => &[STATUS_INVENTORY_PROTECTION],
                 // Other original branches belong to statuses/classes not opened here;
                 // failed attempts still consume their original 1..33 draw.

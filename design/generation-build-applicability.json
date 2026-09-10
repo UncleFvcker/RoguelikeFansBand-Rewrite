@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "sourceRef": "master",
   "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
-  "reviewedAt": "2026-09-10",
-  "codeBaseline": "080005368 + ea723f342 + bd94fe086",
+  "reviewedAt": "2026-09-11",
+  "codeBaseline": "9d3222610 + I5 Craft",
   "entrySource": "web/src/character-creation.ts CREATION_BUILDS / PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
-  "scope": "Source and behavior applicability review of nine real creation builds, five areas each, within the imported canonical pool. Current reachable generation evidence is covered by the referenced tests; unavailable identities/content and object representation limits remain separate. This input and the audit CLI do not execute gameplay tests.",
+  "scope": "Source and behavior applicability review of ten real creation builds, five areas each, within the imported canonical pool. Current reachable generation evidence is covered by the referenced tests; unavailable identities/content and object representation limits remain separate. This input and the audit CLI do not execute gameplay tests.",
   "recordSemantics": {
     "implemented": "Reachable implementation exists; gapIds still block acceptance completion.",
     "no-special-difference": "Source and indirect consumers reviewed; shared path applies without an additional class generation branch.",
@@ -28,7 +28,7 @@
         "base-harp-bard"
       ],
       "entry": "Natural floor/monster allocation and existing Acquirement service; ordinary modes retain non-tailored kinds.",
-      "reason": "All nine default builds resolve to the human standard body; race selection supplies real body slots and Tomte birth-headgear rules. Source object_is_favorite defaults to all melee weapons for Warrior, Berserker, Sniper, High Mage, Paladin and Mindcrafter; Archer and Cavalry have explicit filters. Source device-class membership is independent of ability to use devices. Completed-item rejection follows caster glove encumbrance, not general usability. Duelist uses source base weapon proficiency caps above Beginner for melee favorites; tailored body armor has the fixed 200 weight limit and shields are excluded. The ordinary pool remains unchanged.",
+      "reason": "All ten default builds resolve to the human standard body; race selection supplies real body slots and Tomte birth-headgear rules. Source object_is_favorite defaults to all melee weapons for Warrior, Berserker, Sniper, High Mage, Paladin and Mindcrafter; Archer and Cavalry have explicit filters. Source device-class membership is independent of ability to use devices. Completed-item rejection follows caster glove encumbrance, not general usability. Duelist uses source base weapon proficiency caps above Beginner for melee favorites; tailored body armor has the fixed 200 weight limit and shields are excluded. The ordinary pool remains unchanged.",
       "sourceEvidence": [
         "src/obj_kind.c:97-162 object_is_favorite",
         "src/autopick.c:848-868 object_is_icky",
@@ -826,6 +826,43 @@
           "reason": "Death books are found, studied/cast and saved; generated devices are used and charges restored; glove rejection shares casting logic.",
           "tests": [
             "crates/rfb-core/src/game/tests/items.rs#b4_tailored_death_books_are_counted_studied_cast_and_restored",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_high_mage_device_is_usable_and_restores_its_charges",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.high-mage-craft",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Craft realm selects only its advanced books with persistent discovery limits. Ordered book preference 1/10 precedes device preference 1/7; completed gloves use full flags/pval to reject caster encumbrance. High Mage is the sole current tailored device class."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save."
+        },
+        {
+          "review": "random-artifact",
+          "status": "no-special-difference",
+          "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Mage, with 20% Warrior conversion after bias selection."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "no-special-difference",
+          "reason": "No reachable identity-specific construction branch in the imported fixed artifacts; ordinary construction and configured reward paths apply."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Craft books are found, studied/cast and saved; generated devices are used and charges restored; glove rejection shares casting logic.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/craft.rs#generated_craft_book_is_counted_studied_cast_and_restored",
+            "crates/rfb-core/src/game/tests/craft.rs#mundanity_converts_fixed_artifact_preserves_ledger_and_erases_device_magic",
             "crates/rfb-core/src/game/tests/items.rs#b4_tailored_high_mage_device_is_usable_and_restores_its_charges",
             "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng"
           ]

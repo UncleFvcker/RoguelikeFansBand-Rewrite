@@ -471,6 +471,8 @@ impl Game {
             | TargetSelection::Item { .. }
             | TargetSelection::Town { .. }
             | TargetSelection::CraftingItem { .. }
+            | TargetSelection::Element { .. }
+            | TargetSelection::MundanityItem { .. }
             | TargetSelection::ArtifactCreationItem { .. } => None,
         }
     }
@@ -1991,7 +1993,9 @@ impl Game {
                     None
                 };
                 let mut damage_multiplier = base_damage_multiplier;
-                if has_trait(WeaponTraitDto::ManaBrand)
+                if (has_trait(WeaponTraitDto::ManaBrand)
+                    || (profile.source_item_id.is_some()
+                        && self.player_has_status_kind(STATUS_MANA_BRAND)))
                     && let Some(resource_id) = self
                         .casting_profile()
                         .map(|profile| profile.resource_id.clone())

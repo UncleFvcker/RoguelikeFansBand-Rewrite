@@ -933,6 +933,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.handbook-for-pupils",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.dark-incantations",
       "maxDepth": 30,
       "minDepth": 10,
@@ -1467,6 +1474,13 @@
     {
       "itemKindId": "demo.item.major-arcana",
       "maxDepth": 90,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.grade-holders-book",
+      "maxDepth": 50,
       "minDepth": 20,
       "quantity": 1,
       "weight": 100
@@ -2109,6 +2123,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.note-of-acting-master",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.demonthoughts",
       "maxDepth": 90,
       "minDepth": 45,
@@ -2488,6 +2509,13 @@
     },
     {
       "itemKindId": "demo.item.necronomicon",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.spiritual-enlightenment",
       "maxDepth": 65535,
       "minDepth": 80,
       "quantity": 1,

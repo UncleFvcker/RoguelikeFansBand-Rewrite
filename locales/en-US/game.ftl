@@ -714,3 +714,6 @@ duelist-block-teleport-success = You stop { $target } from teleporting you away.
 duelist-block-teleport-failure = You fail to stop { $target } from teleporting you away.
 duelist-follow-teleport-success = You follow { $target } through the teleport.
 duelist-follow-teleport-failure = You lose your way while following { $target } through the teleport.
+
+message-ability-item-magic-success = { $ability } changed the item.
+message-ability-item-magic-failed = { $ability } did not change the item.

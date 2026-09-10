@@ -27,6 +27,7 @@ mod book_discovery;
 mod capture_ball;
 mod cavalry;
 mod combat;
+mod craft;
 mod devices;
 mod disaster_area;
 mod duelist;

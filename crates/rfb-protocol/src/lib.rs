@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.249";
+pub const PROTOCOL_VERSION: &str = "1.250";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 17;
 
@@ -937,6 +937,7 @@ pub enum TargetModeDto {
     Position,
     Entity,
     Item,
+    Element,
     Town,
     #[serde(rename = "self")]
     SelfTarget,
@@ -970,6 +971,14 @@ pub enum TargetSelection {
     },
     Item {
         item_id: String,
+    },
+    Element {
+        element: DamageTypeDto,
+    },
+    MundanityItem {
+        item_id: String,
+        quantity: u32,
+        confirm_resistance_loss: bool,
     },
     CraftingItem {
         item_id: String,
@@ -1777,6 +1786,18 @@ pub enum AbilityEffectSpecDto {
         resistance: Option<DamageTypeDto>,
     },
     ProtectFromCorrosion,
+    CraftEnchant {
+        maximum: u16,
+        increment: u16,
+    },
+    CraftItem,
+    PolishShield,
+    Mundanity,
+    ElementalBrand,
+    ElementalImmunity {
+        duration_base: u32,
+    },
+    LivingTrump,
     RandomChoice {
         roll_sides: u16,
         level_bonus_divisor: u16,
@@ -1880,6 +1901,10 @@ pub struct AbilityDto {
     pub target_spec: TargetSpecDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub town_targets: Vec<AbilityTownTargetDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub element_targets: Vec<DamageTypeDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub item_targets: Option<Vec<AbilityItemTargetDto>>,
     pub learned: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub book_item_id: Option<String>,
@@ -1897,6 +1922,16 @@ pub struct AbilityDto {
 pub struct AbilityTownTargetDto {
     pub town_id: String,
     pub town_name_key: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbilityItemTargetDto {
+    pub item_id: String,
+    pub target: TargetSelection,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub confirmation_key: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -3071,6 +3106,11 @@ pub enum AbilityRecallActionDto {
     rename_all_fields = "camelCase"
 )]
 pub enum AbilityEffectResolutionDto {
+    ItemMagic {
+        effect_index: u8,
+        item_id: String,
+        succeeded: bool,
+    },
     MindcraftBacklash {
         effect_index: u8,
         roll: u8,
@@ -4137,6 +4177,7 @@ pub enum ItemQualityDto {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ItemOriginKindDto {
+    Mundanity,
     ArtifactCreation,
     Acquire,
     PlayerMade,
@@ -4317,6 +4358,8 @@ pub struct InventoryItemDto {
     pub requires_recharge_targets: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub requires_crafting_target: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mundanity_targets: Option<Vec<AbilityItemTargetDto>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_creation_targets: Option<Vec<String>>,
     #[serde(default)]
@@ -5191,6 +5234,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(AbilityDetectSpecDto);
     push_declaration!(AbilityTerrainTransformSpecDto);
     push_declaration!(AbilityTownTargetDto);
+    push_declaration!(AbilityItemTargetDto);
     push_declaration!(AbilityDto);
     push_declaration!(TargetSelection);
     push_declaration!(ProjectileProfileDto);
@@ -6659,6 +6703,7 @@ mod tests {
                 requires_target_glyph: false,
                 requires_recharge_targets: false,
                 requires_crafting_target: false,
+                mundanity_targets: None,
                 artifact_creation_targets: None,
                 can_receive_recharge: false,
                 can_supply_recharge: false,

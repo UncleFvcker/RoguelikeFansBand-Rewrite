@@ -376,6 +376,7 @@ pub(crate) fn item_from_dto(
         item.artifact_name.is_some() && definition.tags.iter().any(|tag| tag == "mushroom"),
         item.enchantments,
         saved_device_ego(content, &item.affix_ids, &item.rolled_affixes),
+        item.origin_kind == Some(ItemOriginKindDto::Mundanity),
     )?;
     validate_item_creation_state(
         definition,
@@ -448,6 +449,7 @@ pub(crate) fn inventory_item_from_dto(
         item.artifact_name.is_some() && definition.tags.iter().any(|tag| tag == "mushroom"),
         item.enchantments,
         saved_device_ego(content, &item.affix_ids, &item.rolled_affixes),
+        item.origin_kind == Some(ItemOriginKindDto::Mundanity),
     )?;
     validate_item_creation_state(
         definition,
@@ -525,6 +527,7 @@ pub(crate) fn equipment_item_from_dto(
         item.artifact_name.is_some() && definition.tags.iter().any(|tag| tag == "mushroom"),
         item.enchantments,
         saved_device_ego(content, &item.affix_ids, &item.rolled_affixes),
+        item.origin_kind == Some(ItemOriginKindDto::Mundanity),
     )?;
     validate_item_creation_state(
         definition,
@@ -599,6 +602,7 @@ pub(crate) fn carried_item_from_dto(
         item.artifact_name.is_some() && definition.tags.iter().any(|tag| tag == "mushroom"),
         item.enchantments,
         saved_device_ego(content, &item.affix_ids, &item.rolled_affixes),
+        item.origin_kind == Some(ItemOriginKindDto::Mundanity),
     )?;
     validate_item_creation_state(
         definition,
@@ -718,6 +722,7 @@ fn validate_item_runtime_state(
     artifact_mushroom: bool,
     enchantments: ItemEnchantmentsDto,
     device_ego: Option<(u32, u16)>,
+    mundanity: bool,
 ) -> Result<(), CoreError> {
     if device_ego.is_some_and(|(index, pval)| {
         !definition.tags.iter().any(|tag| tag == "device")
@@ -733,7 +738,13 @@ fn validate_item_runtime_state(
         .use_action
         .as_ref()
         .and_then(|action| action.charges);
-    let valid = if let Some(generation) = device_generation {
+    let valid = if mundanity
+        && definition.tags.iter().any(|tag| tag == "device")
+        && activation.is_none()
+        && charges.is_none()
+    {
+        device_ego.is_none() && device_recovery_progress == 0
+    } else if let Some(generation) = device_generation {
         match (activation, charges) {
             (Some(activation), Some(charges)) => generation
                 .activations
@@ -750,6 +761,7 @@ fn validate_item_runtime_state(
                                 AbilityTargetModeDefinition::Position => TargetModeDto::Position,
                                 AbilityTargetModeDefinition::Entity => TargetModeDto::Entity,
                                 AbilityTargetModeDefinition::Item => TargetModeDto::Item,
+                                AbilityTargetModeDefinition::Element => TargetModeDto::Element,
                                 AbilityTargetModeDefinition::Town => TargetModeDto::Town,
                                 AbilityTargetModeDefinition::SelfTarget => {
                                     TargetModeDto::SelfTarget
@@ -887,7 +899,7 @@ fn validate_item_creation_state(
                         matches!(tag.as_str(), "weapon" | "launcher" | "ammunition" | "armor")
                     }))
         }
-        Some(ItemOriginKindDto::Acquire) => discount_percent == 0,
+        Some(ItemOriginKindDto::Acquire | ItemOriginKindDto::Mundanity) => discount_percent == 0,
         Some(ItemOriginKindDto::Rubble) => discount_percent == 0,
         Some(ItemOriginKindDto::EndlessQuiver) => discount_percent == 0,
     };

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.note-of-acting-master",
+  "nameKey": "ability-book-demo-note-of-acting-master-name",
+  "descriptionKey": "ability-book-demo-note-of-acting-master-description",
+  "realmId": "craft",
+  "rank": 3,
+  "abilityIds": [
+    "demo.ability.craft-telepathy",
+    "demo.ability.craft-stone-skin",
+    "demo.ability.craft-resistance",
+    "demo.ability.craft-haste-self",
+    "demo.ability.craft-whirlwind-attack",
+    "demo.ability.craft-polish-shield",
+    "demo.ability.craft-weapon-mastery",
+    "demo.ability.craft-magic-armor"
+  ],
+  "tags": [
+    "craft",
+    "spellbook"
+  ]
+}

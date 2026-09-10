@@ -185,6 +185,7 @@ pub(super) fn item_creation_state_is_valid(
                     }))
         }
         Some(ItemOriginKindDto::Acquire) => item.discount_percent == 0,
+        Some(ItemOriginKindDto::Mundanity) => item.discount_percent == 0,
         Some(ItemOriginKindDto::Rubble) => item.discount_percent == 0,
         Some(ItemOriginKindDto::EndlessQuiver) => {
             item.discount_percent == 0 && definition.ammunition_profile.is_some()

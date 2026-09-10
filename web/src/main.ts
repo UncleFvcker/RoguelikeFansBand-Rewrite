@@ -302,8 +302,8 @@ const statusPanel = new StatusPanel({
   dispatch,
   contentName,
   statusName,
-  selectItemTarget: (excludedItemId, onSelect) =>
-    inventoryPanel.selectItemTarget(excludedItemId, onSelect),
+  selectItemTarget: (excludedItemId, onSelect, allowedItemIds) =>
+    inventoryPanel.selectItemTarget(excludedItemId, onSelect, undefined, allowedItemIds),
   startAbilityTargeting: (ability) => {
     playerUiLayout.closePage();
     inputController.startAbilityTargeting(ability);

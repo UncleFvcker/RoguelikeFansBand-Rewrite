@@ -32,6 +32,7 @@ test("new character creation exposes all formal class slices", () => {
   assert.deepEqual([...PLAYTEST_BUILD_IDS].sort(), [
     "demo.build.warrior",
     "demo.build.high-mage-death",
+    "demo.build.high-mage-craft",
     "demo.build.archer",
     "demo.build.paladin-death",
     "demo.build.cavalry",
@@ -117,7 +118,7 @@ test("random session seeds combine two entropy words without truncation", () => 
 
 test("career leaves retain the existing class and realm mapping", () => {
   assert.equal(CAREER_GROUPS.length, 6);
-  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 9);
+  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 10);
   assert.deepEqual(CAREER_GROUPS.find(group => group.id === "melee").options.map(entry => entry.id), ["demo.build.warrior", "demo.build.berserker", "demo.build.duelist"]);
   assert.equal(CAREER_GROUPS.find(group => group.id === "mind").options[0].id, "demo.build.mindcrafter");
   assert.deepEqual(createNewSessionRequest("83", "demo.build.mindcrafter", "demo.race.rfb-human", "心灵术士"), {
@@ -132,8 +133,10 @@ test("career leaves retain the existing class and realm mapping", () => {
       assert.equal(entry.nameKey, cls.nameKey);
       assert.equal(entry.descriptionKey, cls.descriptionKey);
       if ("children" in entry) {
-        assert.equal(leaves.length, 1);
-        assert.equal(build.firstRealmId, "death");
+        assert.deepEqual(leaves.map(leaf => leaf.id), entry.id === "high-mage"
+          ? ["demo.build.high-mage-death", "demo.build.high-mage-craft"]
+          : ["demo.build.paladin-death"]);
+        assert.equal(build.firstRealmId, leaf.id.endsWith("-craft") ? "craft" : "death");
         assert.equal(leaf.descriptionKey, build.descriptionKey);
         assert.ok(!PLAYTEST_BUILD_IDS.includes(entry.id));
       } else assert.equal(build.firstRealmId, undefined);

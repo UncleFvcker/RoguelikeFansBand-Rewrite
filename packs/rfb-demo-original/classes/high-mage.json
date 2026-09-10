@@ -412,6 +412,50 @@
           { "abilityId": "demo.ability.crusade-divine-intervention", "minimumLevel": 42, "resourceCost": 85, "baseFailurePercent": 85 },
           { "abilityId": "demo.ability.crusade-crusade", "minimumLevel": 45, "resourceCost": 90, "baseFailurePercent": 75 }
         ]
+      },
+      {
+        "realmId": "craft",
+        "abilityBookIds": [
+          "demo.ability-book.handbook-for-pupils",
+          "demo.ability-book.grade-holders-book",
+          "demo.ability-book.note-of-acting-master",
+          "demo.ability-book.spiritual-enlightenment"
+        ],
+        "learningCapacityBonus": 4,
+        "abilityOverrides": [
+          { "abilityId": "demo.ability.craft-minor-enchantment", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 15 },
+          { "abilityId": "demo.ability.craft-regeneration", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 15 },
+          { "abilityId": "demo.ability.craft-satisfy-hunger", "minimumLevel": 3, "resourceCost": 2, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.craft-resist-cold", "minimumLevel": 4, "resourceCost": 4, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.craft-resist-fire", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.craft-heroism", "minimumLevel": 6, "resourceCost": 5, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.craft-resist-electricity", "minimumLevel": 7, "resourceCost": 4, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.craft-resist-acid", "minimumLevel": 8, "resourceCost": 4, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.craft-see-invisible", "minimumLevel": 10, "resourceCost": 10, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.craft-remove-curse", "minimumLevel": 13, "resourceCost": 12, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.craft-resist-poison", "minimumLevel": 14, "resourceCost": 13, "baseFailurePercent": 55 },
+          { "abilityId": "demo.ability.craft-berserk", "minimumLevel": 16, "resourceCost": 15, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.craft-self-knowledge", "minimumLevel": 20, "resourceCost": 12, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.craft-identify", "minimumLevel": 21, "resourceCost": 19, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.craft-curing", "minimumLevel": 25, "resourceCost": 25, "baseFailurePercent": 45 },
+          { "abilityId": "demo.ability.craft-elemental-brand", "minimumLevel": 35, "resourceCost": 60, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.craft-telepathy", "minimumLevel": 9, "resourceCost": 10, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.craft-stone-skin", "minimumLevel": 11, "resourceCost": 8, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.craft-resistance", "minimumLevel": 16, "resourceCost": 15, "baseFailurePercent": 55 },
+          { "abilityId": "demo.ability.craft-haste-self", "minimumLevel": 20, "resourceCost": 10, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.craft-whirlwind-attack", "minimumLevel": 27, "resourceCost": 25, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.craft-polish-shield", "minimumLevel": 31, "resourceCost": 40, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.craft-weapon-mastery", "minimumLevel": 38, "resourceCost": 40, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.craft-magic-armor", "minimumLevel": 42, "resourceCost": 50, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.craft-remove-all-curses", "minimumLevel": 10, "resourceCost": 10, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.craft-mundanity", "minimumLevel": 27, "resourceCost": 45, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.craft-knowledge-true", "minimumLevel": 29, "resourceCost": 40, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.craft-enchantment", "minimumLevel": 32, "resourceCost": 80, "baseFailurePercent": 85 },
+          { "abilityId": "demo.ability.craft-crafting", "minimumLevel": 37, "resourceCost": 80, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.craft-living-trump", "minimumLevel": 40, "resourceCost": 90, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.craft-elemental-immunity", "minimumLevel": 44, "resourceCost": 65, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.craft-mana-brand", "minimumLevel": 47, "resourceCost": 60, "baseFailurePercent": 70 }
+        ]
       }
     ]
   },

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.craft-curing",
+  "nameKey": "ability-demo-craft-curing-name",
+  "descriptionKey": "ability-demo-craft-curing-description",
+  "abilityProgramId": "demo.ability-program.craft-curing",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "craft",
+    "spell"
+  ]
+}

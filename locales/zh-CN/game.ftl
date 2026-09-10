@@ -699,3 +699,6 @@ duelist-block-teleport-success = 你阻止了 { $target } 将你传送走。
 duelist-block-teleport-failure = 你未能阻止 { $target } 将你传送走。
 duelist-follow-teleport-success = 你跟上了 { $target } 的传送。
 duelist-follow-teleport-failure = 你在追随 { $target } 的传送时迷失了方向。
+
+message-ability-item-magic-success = { $ability }完成了物品处理。
+message-ability-item-magic-failed = { $ability }未能改变物品。

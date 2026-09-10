@@ -24,15 +24,16 @@ use crate::{
         STATUS_CONFUSION, STATUS_DEMON_LORD_TRANSFORMATION, STATUS_FEAR, STATUS_FIRE_AURA,
         STATUS_GIANT_STRENGTH, STATUS_HALLUCINATION, STATUS_HASTE, STATUS_HOLD_LIFE,
         STATUS_HOLY_AURA, STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY, STATUS_LEVITATION,
-        STATUS_LIGHT_SPEED, STATUS_MAGIC_RESISTANCE, STATUS_NO_AIR, STATUS_PARALYSIS,
-        STATUS_PLAYER_POLYMORPH, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION,
-        STATUS_SEE_INVISIBLE, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN,
-        STATUS_SUSTAIN_CHARISMA, STATUS_SUSTAIN_CONSTITUTION, STATUS_SUSTAIN_DEXTERITY,
-        STATUS_SUSTAIN_INTELLIGENCE, STATUS_SUSTAIN_STRENGTH, STATUS_SUSTAIN_WISDOM,
-        STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE, STATUS_TRANSCENDENCE, STATUS_TSUYOSHI,
+        STATUS_LIGHT_SPEED, STATUS_MAGIC_ARMOR, STATUS_MAGIC_RESISTANCE, STATUS_MANA_BRAND,
+        STATUS_NO_AIR, STATUS_PARALYSIS, STATUS_PLAYER_POLYMORPH, STATUS_POISON,
+        STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION, STATUS_SEE_INVISIBLE, STATUS_SIGHT,
+        STATUS_SLEEP, STATUS_SLOW, STATUS_STUN, STATUS_SUSTAIN_CHARISMA,
+        STATUS_SUSTAIN_CONSTITUTION, STATUS_SUSTAIN_DEXTERITY, STATUS_SUSTAIN_INTELLIGENCE,
+        STATUS_SUSTAIN_STRENGTH, STATUS_SUSTAIN_WISDOM, STATUS_TELEPATHY,
+        STATUS_THERMAL_RESISTANCE, STATUS_TRANSCENDENCE, STATUS_TSUYOSHI,
         STATUS_ULTIMATE_RESISTANCE, STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE,
-        STATUS_WRAITHFORM, StatusApplication, StatusChange, StatusInstance, StatusStacking,
-        apply_effect, apply_status, resolve_damage,
+        STATUS_WEAPON_MASTERY, STATUS_WRAITHFORM, StatusApplication, StatusChange, StatusInstance,
+        StatusStacking, apply_effect, apply_status, resolve_damage,
     },
     error::CoreError,
     event::{
@@ -3689,6 +3690,12 @@ impl Game {
                 item.id, item.kind_id
             ))
         })?;
+        if item.origin_kind == Some(ItemOriginKindDto::Mundanity)
+            && self.item_is_device(item)
+            && item.activation.is_none()
+        {
+            return Ok(None);
+        }
         if item.location != ItemLocation::Inventory
             && !(matches!(item.location, ItemLocation::Equipped { .. })
                 && (definition.capture_ball || item.activation.is_some()))
@@ -3785,6 +3792,7 @@ impl Game {
                     | ItemUseEffectDefinition::EnchantItem { .. }
                     | ItemUseEffectDefinition::EnchantEquipment
                     | ItemUseEffectDefinition::CraftItem { .. }
+                    | ItemUseEffectDefinition::MundanifyItem
                     | ItemUseEffectDefinition::CreateArtifact
                     | ItemUseEffectDefinition::RechargeFromDevice { .. }
                     | ItemUseEffectDefinition::RandomTeleport { .. }
@@ -3812,7 +3820,10 @@ impl Game {
             TargetSelection::Direction { .. } => AbilityTargetModeDefinition::Direction,
             TargetSelection::Position { .. } => AbilityTargetModeDefinition::Position,
             TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
-            TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
+            TargetSelection::Element { .. } => AbilityTargetModeDefinition::Element,
+            TargetSelection::MundanityItem { .. } | TargetSelection::Item { .. } => {
+                AbilityTargetModeDefinition::Item
+            }
             TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
             TargetSelection::CraftingItem { .. } | TargetSelection::ArtifactCreationItem { .. } => {
                 return None;

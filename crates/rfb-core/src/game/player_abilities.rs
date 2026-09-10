@@ -834,6 +834,20 @@ impl Game {
     }
 
     pub(super) fn apply_player_dynamic_effect(&self, ability: &mut AbilityDefinition) {
+        match &mut ability.effect {
+            AbilityEffectDefinition::CraftEnchant {
+                maximum,
+                level_divisor,
+                ..
+            } if *level_divisor > 0 => {
+                *maximum += self.progress.level / *level_divisor;
+            }
+            AbilityEffectDefinition::ElementalImmunity { duration_base } => {
+                *duration_base =
+                    spell_power_value(u64::from(*duration_base), ability.spell_power_bonus) as u32;
+            }
+            _ => {}
+        }
         let AbilityEffectDefinition::DraconianBreathDamage {
             base_hp_percent,
             level_cubic_percent_numerator,

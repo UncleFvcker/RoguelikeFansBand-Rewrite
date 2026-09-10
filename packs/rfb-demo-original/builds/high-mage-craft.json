@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json",
+  "formatVersion": 1,
+  "id": "demo.build.high-mage-craft",
+  "nameKey": "build-demo-high-mage-craft-name",
+  "descriptionKey": "build-demo-high-mage-craft-description",
+  "raceId": "demo.race.rfb-human",
+  "classId": "demo.class.high-mage",
+  "personalityId": "demo.personality.ordinary",
+  "playerActorId": "demo.actor.high-mage-player",
+  "firstRealmId": "craft",
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.handbook-for-pupils",
+      "quantity": 1
+    }
+  ],
+  "attributes": {
+    "strength": 13,
+    "intelligence": 13,
+    "wisdom": 13,
+    "dexterity": 13,
+    "constitution": 13,
+    "charisma": 13
+  },
+  "tags": [
+    "caster",
+    "high-mage",
+    "craft",
+    "rfb-compatibility"
+  ]
+}

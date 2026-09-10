@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.craft-identify",
+  "minimumLevel": 21,
+  "resourceCost": 19,
+  "baseFailurePercent": 40,
+  "resourceId": "demo.resource.mana",
+  "firstSuccessExperience": 84
+}

@@ -1335,3 +1335,10 @@ casino-poker-four = 四条
 casino-poker-five-aces = 五个A
 casino-poker-five = 五条
 casino-poker-no-pair = 无牌型
+
+session-career-craft-name = 工艺
+session-high-mage-available-realms = 当前可选领域：死亡、工艺。
+ability-target-element = 元素
+ability-element-target = 选择元素
+item-crafting-quantity-confirm = 这叠弹药数量超过 30，工艺有可能失败并消耗本次施法。继续吗？
+item-mundanity-resistance-confirm = 该物品上的所有抗性都将丢失。确定要继续吗？

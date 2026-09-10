@@ -24,6 +24,22 @@ use crate::{
 
 pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpecDto {
     match effect {
+        AbilityEffectDefinition::CraftEnchant {
+            maximum, increment, ..
+        } => AbilityEffectSpecDto::CraftEnchant {
+            maximum: *maximum,
+            increment: *increment,
+        },
+        AbilityEffectDefinition::CraftItem => AbilityEffectSpecDto::CraftItem,
+        AbilityEffectDefinition::PolishShield => AbilityEffectSpecDto::PolishShield,
+        AbilityEffectDefinition::Mundanity => AbilityEffectSpecDto::Mundanity,
+        AbilityEffectDefinition::ElementalBrand => AbilityEffectSpecDto::ElementalBrand,
+        AbilityEffectDefinition::ElementalImmunity { duration_base } => {
+            AbilityEffectSpecDto::ElementalImmunity {
+                duration_base: *duration_base,
+            }
+        }
+        AbilityEffectDefinition::LivingTrump => AbilityEffectSpecDto::LivingTrump,
         AbilityEffectDefinition::JumpDamage { .. }
         | AbilityEffectDefinition::BirdDrop
         | AbilityEffectDefinition::DraconianBreathDamage { .. } => {
@@ -1138,6 +1154,7 @@ pub(super) fn target_spec_dto(target: &AbilityTargetDefinition) -> TargetSpecDto
                 AbilityTargetModeDefinition::Position => TargetModeDto::Position,
                 AbilityTargetModeDefinition::Entity => TargetModeDto::Entity,
                 AbilityTargetModeDefinition::Item => TargetModeDto::Item,
+                AbilityTargetModeDefinition::Element => TargetModeDto::Element,
                 AbilityTargetModeDefinition::Town => TargetModeDto::Town,
                 AbilityTargetModeDefinition::SelfTarget => TargetModeDto::SelfTarget,
             })

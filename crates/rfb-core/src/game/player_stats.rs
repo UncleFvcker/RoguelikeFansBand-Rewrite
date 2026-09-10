@@ -702,6 +702,7 @@ impl Game {
             race.reflects_bolts_minimum_level
                 .is_some_and(|minimum_level| self.progress.level >= minimum_level)
         }) || self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
+            || self.player_has_status_kind(STATUS_MAGIC_ARMOR)
             || self.items.iter().any(|item| {
             matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
                 && self
@@ -1122,6 +1123,7 @@ impl Game {
                 .character_definitions()
                 .is_some_and(|(_, race, _, _)| race.levitation)
             || self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
+            || self.player_has_status_kind(STATUS_MAGIC_ARMOR)
             || self.player_has_status_kind(STATUS_DEMON_LORD_TRANSFORMATION)
             || self
                 .player_equipment_passives()
@@ -2129,7 +2131,12 @@ impl Game {
             to_hit += class_hit + 12 + extra_hit;
             to_damage += i32::from(self.progress.level / 6) * multiplier;
         }
-        let mut mastery = 0;
+        let mut mastery =
+            if source_item_id.is_some() && self.player_has_status_kind(STATUS_WEAPON_MASTERY) {
+                i32::from(self.progress.level / 23)
+            } else {
+                0
+            };
         for item in &self.items {
             let ItemLocation::Equipped { slot_id } = &item.location else {
                 continue;
@@ -3336,7 +3343,13 @@ impl Game {
             if include_equipment && self.player_is_berserker() && status.kind_id == STATUS_BERSERK {
                 continue;
             }
-            let modifiers = status.granted_modifiers;
+            let mut modifiers = status.granted_modifiers;
+            if include_equipment
+                && status.kind_id == STATUS_MAGIC_ARMOR
+                && self.player_has_status_kind("rfb.status.stone-skin")
+            {
+                modifiers.defense = 0;
+            }
             for (kind, value) in [
                 (StatKind::MaxHp, modifiers.max_hp),
                 (StatKind::Attack, modifiers.attack),
@@ -3454,18 +3467,20 @@ impl Game {
             StatBounds::NON_NEGATIVE
         };
         let saving_throw_skill = pipeline.resolve(StatKind::SavingThrowSkill, skill_bounds);
-        let saving_throw_skill =
-            if include_equipment && self.player_has_status_kind(STATUS_MAGIC_RESISTANCE) {
-                let minimum = 95_i32.saturating_add(i32::from(self.progress.level));
-                saving_throw_skill.with_modifier(
-                    StatLayer::Status,
-                    STATUS_MAGIC_RESISTANCE,
-                    minimum.saturating_sub(saving_throw_skill.value).max(0),
-                    StatBounds::NON_NEGATIVE,
-                )
-            } else {
-                saving_throw_skill
-            };
+        let saving_throw_skill = if include_equipment
+            && (self.player_has_status_kind(STATUS_MAGIC_RESISTANCE)
+                || self.player_has_status_kind(STATUS_MAGIC_ARMOR))
+        {
+            let minimum = 95_i32.saturating_add(i32::from(self.progress.level));
+            saving_throw_skill.with_modifier(
+                StatLayer::Status,
+                STATUS_MAGIC_RESISTANCE,
+                minimum.saturating_sub(saving_throw_skill.value).max(0),
+                StatBounds::NON_NEGATIVE,
+            )
+        } else {
+            saving_throw_skill
+        };
         let saving_throw_skill = if let Some((status, value)) =
             actor.statuses.iter().find_map(|status| {
                 status

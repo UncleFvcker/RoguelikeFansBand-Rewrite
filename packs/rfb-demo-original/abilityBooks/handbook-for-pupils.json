@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.handbook-for-pupils",
+  "nameKey": "ability-book-demo-handbook-for-pupils-name",
+  "descriptionKey": "ability-book-demo-handbook-for-pupils-description",
+  "realmId": "craft",
+  "rank": 1,
+  "abilityIds": [
+    "demo.ability.craft-minor-enchantment",
+    "demo.ability.craft-regeneration",
+    "demo.ability.craft-satisfy-hunger",
+    "demo.ability.craft-resist-cold",
+    "demo.ability.craft-resist-fire",
+    "demo.ability.craft-heroism",
+    "demo.ability.craft-resist-electricity",
+    "demo.ability.craft-resist-acid"
+  ],
+  "tags": [
+    "craft",
+    "spellbook"
+  ]
+}

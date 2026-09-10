@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.craft-elemental-brand",
+  "nameKey": "ability-demo-craft-elemental-brand-name",
+  "descriptionKey": "ability-demo-craft-elemental-brand-description",
+  "abilityProgramId": "demo.ability-program.craft-elemental-brand",
+  "target": {
+    "modes": [
+      "element"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "craft",
+    "spell"
+  ]
+}

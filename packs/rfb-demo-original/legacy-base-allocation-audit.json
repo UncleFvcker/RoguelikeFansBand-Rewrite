@@ -1,6 +1,6 @@
 {
   "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits",
-  "allocationRowCount": 369,
+  "allocationRowCount": 373,
   "explicitItems": [
     {
       "itemId": "demo.item.arkenstone-of-thrain",
@@ -7844,12 +7844,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.handbook-for-pupils",
       "maxDepth": 30,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 528,
       "sourceName": "[Handbook for Pupils]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 0,
       "tval": 97
     },
@@ -7863,12 +7863,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.grade-holders-book",
       "maxDepth": 50,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 529,
       "sourceName": "[Grade Holder's Book]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 1,
       "tval": 97
     },
@@ -7882,12 +7882,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.note-of-acting-master",
       "maxDepth": 90,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 530,
       "sourceName": "[Note of Acting Master]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 2,
       "tval": 97
     },
@@ -7901,12 +7901,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.spiritual-enlightenment",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 531,
       "sourceName": "[Spiritual Enlightenment]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 3,
       "tval": 97
     },

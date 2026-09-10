@@ -477,6 +477,12 @@
             "$ref": "#/$defs/AbilityEffectSpecDto"
           }
         },
+        "elementTargets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DamageTypeDto"
+          }
+        },
         "failCount": {
           "type": "integer",
           "format": "uint32",
@@ -507,6 +513,15 @@
         },
         "id": {
           "type": "string"
+        },
+        "itemTargets": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/AbilityItemTargetDto"
+          }
         },
         "learned": {
           "type": "boolean"
@@ -620,6 +635,33 @@
     },
     "AbilityEffectResolutionDto": {
       "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "itemId": {
+              "type": "string"
+            },
+            "succeeded": {
+              "type": "boolean"
+            },
+            "type": {
+              "type": "string",
+              "const": "item-magic"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "itemId",
+            "succeeded"
+          ]
+        },
         {
           "type": "object",
           "properties": {
@@ -6342,6 +6384,110 @@
         {
           "type": "object",
           "properties": {
+            "increment": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "maximum": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "craft-enchant"
+            }
+          },
+          "required": [
+            "type",
+            "maximum",
+            "increment"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "craft-item"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "polish-shield"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "mundanity"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "elemental-brand"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "durationBase": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "elemental-immunity"
+            }
+          },
+          "required": [
+            "type",
+            "durationBase"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "living-trump"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "branches": {
               "type": "array",
               "items": {
@@ -6448,6 +6594,27 @@
         "single",
         "glyph",
         "nearby"
+      ]
+    },
+    "AbilityItemTargetDto": {
+      "type": "object",
+      "properties": {
+        "confirmationKey": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "itemId": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/TargetSelection"
+        }
+      },
+      "required": [
+        "itemId",
+        "target"
       ]
     },
     "AbilityLearningDto": {
@@ -11722,6 +11889,15 @@
           "type": "boolean",
           "default": false
         },
+        "mundanityTargets": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/AbilityItemTargetDto"
+          }
+        },
         "passives": {
           "type": "array",
           "items": {
@@ -14797,6 +14973,7 @@
         "position",
         "entity",
         "item",
+        "element",
         "town",
         "self"
       ]
@@ -14865,6 +15042,48 @@
           "required": [
             "type",
             "itemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "element": {
+              "$ref": "#/$defs/DamageTypeDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "element"
+            }
+          },
+          "required": [
+            "type",
+            "element"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "confirmResistanceLoss": {
+              "type": "boolean"
+            },
+            "itemId": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "mundanity-item"
+            }
+          },
+          "required": [
+            "type",
+            "itemId",
+            "quantity",
+            "confirmResistanceLoss"
           ]
         },
         {
