@@ -15,6 +15,16 @@ mod rewards;
 #[test]
 fn ui_fixture_uses_real_levels_and_round_trips_visible_targets_and_hp_costs() {
     let mut game = Game::new_with_build(923, BUILD).unwrap();
+    super::support::descend_one_floor(&mut game);
+    let revealed_trap = game.player.position;
+    let trap_index = game.index(revealed_trap).unwrap();
+    game.terrain[trap_index] = "demo.terrain.warren-snare".to_owned();
+    game.revealed_terrain.insert(revealed_trap);
+    give_inventory_item(&mut game, "test.newly-visible", "demo.item.healing-potion");
+    let item_position = Position { x: 40, y: 20 };
+    super::support::replace_terrain(&mut game, item_position, "demo.terrain.floor");
+    game.items.last_mut().unwrap().location = ItemLocation::Ground(item_position);
+    Game::from_save(game.to_save()).unwrap();
     game.debug_prepare_duelist_e2e(35, 7, false).unwrap();
     let restored = Game::from_save(game.to_save()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());

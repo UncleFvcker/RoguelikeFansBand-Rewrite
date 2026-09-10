@@ -6,6 +6,7 @@ import path from "node:path";
 import { Localization } from "../src/localization.ts";
 import { connectKeyboard } from "./character-creation-layout.e2e.mjs";
 import { selectCreationRace } from "./character-creation.e2e.mjs";
+import { nextWalk } from "./berserker.e2e.mjs";
 
 // UI acceptance. High levels and targets are explicitly prepared, not natural progression.
 export async function runDuelistUiScenario(driver, directory, profile) {
@@ -102,6 +103,101 @@ export async function runDuelistUiScenario(driver, directory, profile) {
     await focus(row(slug) + " .ability-cast-action"); await keyboard.key("Enter");
     return changed(before, slug);
   }
+  async function actKey(key) {
+    const before = await hash();
+    await keyboard.key(key);
+    return changed(before, `native key ${key}`);
+  }
+  async function playNaturalBirth() {
+    const born = await snapshot();
+    assert.equal(born.player.progress.level, 1);
+    assert.equal(born.player.build.classId, "demo.class.duelist");
+    assert.equal(born.player.build.raceId, "demo.race.rfb-human");
+    await click("#player-ui-inventory-open");
+    const torch = born.inventory.find(item => item.kindId === "demo.item.wooden-torch");
+    assert.ok(torch);
+    await click(`[data-item-id="${torch.id}"] input[type="checkbox"]`);
+    const beforeTorch = await hash(); await click("#inventory-equip");
+    await changed(beforeTorch, "birth torch equipped"); await keyboard.key("Escape");
+    const entrance = born.cells.find(cell => cell.terrainId === "demo.terrain.stairs-down").position;
+    let walked = await snapshot();
+    for (let step = 0; step < 120; step++) {
+      const entry = walked.cells.find(cell => cell.terrainId === "demo.terrain.stairs-down").position;
+      if (walked.player.position.x === entry.x && walked.player.position.y === entry.y) break;
+      walked = await actKey(nextWalk(walked, new Set(), entry));
+    }
+    const outside = await hash(); await click("#traverse-stairs");
+    let combat = await changed(outside, "normal dungeon entry");
+    assert.equal(combat.floorId, "demo.floor.warrens-depth-1");
+    const visited = new Set();
+    let challenged, hit;
+    for (let step = 0; step < 120 && !hit; step++) {
+      visited.add(`${combat.player.position.x},${combat.player.position.y}`);
+      const distance = position => Math.max(Math.abs(position.x - combat.player.position.x), Math.abs(position.y - combat.player.position.y));
+      const target = combat.entities.filter(entity => entity.faction === "hostile").sort((a, b) => distance(a.position) - distance(b.position))[0];
+      if (target && !challenged) {
+        combat = await mark(target.id);
+        challenged = { id: target.id, kindId: target.kindId, hash: combat.stateHash, level: combat.player.progress.level };
+        assert.equal(challenged.level, 1);
+        await screenshot("natural-monster-marked");
+        continue;
+      }
+      const before = combat;
+      combat = await actKey(nextWalk(combat, visited, target?.position));
+      assert.equal(combat.player.isDead, false);
+      const messages = await driver.execute('return document.querySelector("#message-list").textContent');
+      if (messages.includes("你击中了")) {
+        assert.ok(challenged);
+        assert.equal(before.player.progress.level, 1);
+        hit = { before: before.stateHash, after: combat.stateHash, target: target?.id, hp: combat.player.hp, messages };
+      }
+    }
+    assert.ok(hit, "normal level-one character must mark and hit a natural monster");
+    await screenshot("natural-monster-melee");
+    await click("#player-ui-inventory-open");
+    const potion = combat.inventory.find(item => item.kindId === "demo.item.swiftstep-tonic");
+    assert.ok(potion?.usable);
+    await click(`[data-item-id="${potion.id}"] input[type="checkbox"]`);
+    const beforePotion = await hash(); await click("#inventory-use");
+    const used = await changed(beforePotion, "ordinary potion used");
+    assert.equal(used.inventory.find(item => item.id === potion.id)?.quantity ?? 0, potion.quantity - 1);
+    await keyboard.key("Escape"); await screenshot("natural-start-potion");
+    checks.push({ naturalBirth: { hash: born.stateHash, entrance, challenged, hit, potion: potion.kindId, afterPotion: used.stateHash }, precondition: "Ordinary level-one Human; normal dungeon generation and keyboard movement, no experience, actor or item preparation." });
+  }
+  async function saveChargeContinue() {
+    const saved = await snapshot();
+    assert.equal(saved.player.progress.level, 8);
+    assert.equal(saved.player.duelistTargetId, "e2e.duelist-target");
+    await driver.execute(`window.__duelistExport = null;
+      window.__duelistDownloadHooks = [URL.createObjectURL, URL.revokeObjectURL, HTMLAnchorElement.prototype.click];
+      URL.createObjectURL = blob => { window.__duelistExport = { blob }; return "blob:duelist-acceptance"; };
+      URL.revokeObjectURL = () => {};
+      HTMLAnchorElement.prototype.click = function () { window.__duelistExport.name = this.download; };
+      document.querySelector('.hud-menu').open = true; return true;`);
+    await click("#save-button");
+    await driver.waitFor('return window.__duelistExport?.name?.endsWith(".rfbsave")', "menu save export");
+    await driver.execute(`document.querySelector('.hud-menu').open = false;
+      [URL.createObjectURL, URL.revokeObjectURL, HTMLAnchorElement.prototype.click] = window.__duelistDownloadHooks;
+      window.__duelistSaveBytes = null; window.__duelistExport.blob.arrayBuffer().then(buffer => window.__duelistSaveBytes = Array.from(new Uint8Array(buffer))); return true;`);
+    await driver.waitFor('return window.__duelistSaveBytes != null', "exported bytes");
+    await writeFile(path.join(directory, "level8-test-upgraded-marked.rfbsave"), Buffer.from(await driver.execute('return window.__duelistSaveBytes')));
+    const continued = await cast("charge"); await keyboard.key("Escape");
+    assert.notDeepEqual(continued.player.position, saved.player.position);
+    assert.ok((continued.entities.find(entity => entity.id === saved.player.duelistTargetId)?.hp ?? 0) < saved.entities.find(entity => entity.id === saved.player.duelistTargetId).hp, "level-eight charge must hit the challenged actor");
+    await driver.execute(`const transfer = new DataTransfer(); transfer.items.add(new File([window.__duelistExport.blob], window.__duelistExport.name));
+      const input = document.querySelector('#load-input'); input.files = transfer.files; input.dispatchEvent(new Event('change', { bubbles: true })); return true;`);
+    await driver.waitFor('return document.querySelector("#hash-value").title === arguments[0]', "marked save restored", 30_000, [saved.stateHash]);
+    await ready();
+    const restored = await snapshot();
+    assert.deepEqual(restored.player, saved.player);
+    assert.deepEqual(restored.inventory, saved.inventory);
+    assert.deepEqual(restored.equipment, saved.equipment);
+    assert.equal(await driver.execute('return document.querySelector("#duelist-status").dataset.targetId'), saved.player.duelistTargetId);
+    const replayed = await cast("charge"); await keyboard.key("Escape");
+    assert.equal(replayed.stateHash, continued.stateHash, "same charge preserves complete state and RNG after loading");
+    await screenshot("marked-save-charge-continue");
+    checks.push({ saveContinue: { saved: saved.stateHash, challenge: saved.player.duelistTargetId, continued: continued.stateHash, restoredContinuation: replayed.stateHash, hpBefore: saved.player.hp, hpAfter: replayed.player.hp, origin: saved.player.position, landing: replayed.player.position }, precondition: "Explicit experience to level 8, a lit test floor and source Sheep targets; menu export and native save loading, real charge/combat/RNG." });
+  }
   async function checkAbilities(prepared) {
     await abilitiesPage();
     const actual = await driver.execute(`return [...document.querySelectorAll('#ability-list .ability-row')].map(row => ({
@@ -154,6 +250,9 @@ export async function runDuelistUiScenario(driver, directory, profile) {
     await viewport(1280, 720); await focus("#session-start-game"); await keyboard.key("Enter");
     await driver.waitFor('return document.documentElement.dataset.appMode === "playing"', "Duelist created", 60_000); await ready();
     await checkAbilities(await snapshot()); await keyboard.key("Escape");
+    await playNaturalBirth();
+    await prepare(8, 4); await mark("e2e.duelist-target");
+    await saveChargeContinue();
     await prepare(8, 8);
     let marked = await mark("e2e.duelist-target");
     const cancelHash = await hash();
@@ -173,6 +272,14 @@ export async function runDuelistUiScenario(driver, directory, profile) {
     const beforeClear = await hash(); await focus("#duelist-clear"); await keyboard.key(" ");
     const cleared = await changed(beforeClear, "clear challenge");
     assert.equal(cleared.player.duelistTargetId ?? null, null); assert.equal(cleared.worldTick, declined.worldTick); assert.equal(cleared.player.hp, declined.player.hp);
+    await prepare(24, 3);
+    const beforeDisengage = await mark("e2e.duelist-target");
+    const disengaged = await cast("disengage"); await keyboard.key("Escape");
+    assert.equal(disengaged.player.duelistTargetId ?? null, null);
+    assert.notDeepEqual(disengaged.player.position, beforeDisengage.player.position);
+    assert.equal(disengaged.player.isDead, false);
+    await screenshot("level24-disengage");
+    checks.push({ disengage: { level: 24, before: beforeDisengage.stateHash, after: disengaged.stateHash, origin: beforeDisengage.player.position, landing: disengaged.player.position, hpBefore: beforeDisengage.player.hp, hpAfter: disengaged.player.hp, challengeCleared: true }, precondition: "Explicit level and source actor preparation; real Disengage command." });
     await prepare(35, 2);
     marked = await mark("e2e.duelist-target");
     for (let attempt = 0; attempt < 20; attempt++) {
@@ -216,7 +323,7 @@ export async function runDuelistUiScenario(driver, directory, profile) {
     assert.equal(await driver.execute('return document.querySelector("#duelist-mark").disabled'), true);
     await checkAbilities(equipped); await screenshot("equipment-unavailable-en");
     assert.deepEqual(keyboard.errors, []);
-    await writeFile(path.join(directory, "checks.json"), JSON.stringify({ fixture: "Explicit levels/targets; real Rust commands, native keyboard, UI save loading and WebView layout. No natural progression or release EXE acceptance.", checks }, null, 2));
-    console.log(`Duelist UI passed: ${checks.length} projection/layout checks and challenge/charge/free-choice/equipment flows`);
+    await writeFile(path.join(directory, "checks.json"), JSON.stringify({ fixture: "Ordinary level-one birth and natural-monster play, followed by explicit levels/targets on a lit test floor. Real Rust commands, native keyboard, menu export, native save loading and WebView layout. High levels are not natural progression; optimized EXE acceptance is recorded separately.", checks }, null, 2));
+    console.log(`Duelist UI passed: ${checks.length} gameplay and projection/layout records`);
   } finally { keyboard.close(); }
 }

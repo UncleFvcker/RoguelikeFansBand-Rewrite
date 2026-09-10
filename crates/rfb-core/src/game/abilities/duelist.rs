@@ -6,7 +6,7 @@ use crate::game::visibility::has_line_of_sight;
 use crate::game::*;
 
 impl Game {
-    /// UI acceptance fixture: real experience gains and two explicit targets on a test floor.
+    /// UI acceptance fixture: real experience gains and two targets on a lit test floor.
     #[doc(hidden)]
     pub fn debug_prepare_duelist_e2e(
         &mut self,
@@ -20,6 +20,8 @@ impl Game {
         self.duelist_target_id = None;
         self.pending_duelist = None;
         self.terrain.fill("demo.terrain.floor".to_owned());
+        self.revealed_terrain.clear();
+        self.glow.fill(true);
         self.player.position = Position { x: 40, y: 20 };
         let experience = self
             .experience_required_for_level(level)
@@ -59,6 +61,7 @@ impl Game {
                 1,
             )?;
         }
+        self.reveal_current_visibility();
         Ok(())
     }
 

@@ -6,6 +6,25 @@ import path from "node:path";
 import { Localization } from "../src/localization.ts";
 import { connectKeyboard } from "./character-creation-layout.e2e.mjs";
 
+const directions = [[1, 0, "6"], [0, 1, "2"], [-1, 0, "4"], [0, -1, "8"], [1, 1, "3"], [-1, 1, "1"], [-1, -1, "7"], [1, -1, "9"]];
+const positionKey = position => `${position.x},${position.y}`;
+// Navigation for the acceptance player; every step still goes through normal keyboard input.
+export function nextWalk(state, visited, target) {
+  const floor = new Set(state.cells.filter(cell => cell.terrainId === "demo.terrain.floor" || cell.terrainId.includes("stairs")).map(cell => positionKey(cell.position)));
+  const queue = [{ ...state.player.position, key: undefined }];
+  const seen = new Set([positionKey(state.player.position)]);
+  for (let index = 0; index < queue.length; index++) {
+    const position = queue[index];
+    if (position.key && (target ? positionKey(position) === positionKey(target) : !visited.has(positionKey(position)))) return position.key;
+    for (const [dx, dy, key] of directions) {
+      const next = { x: position.x + dx, y: position.y + dy, key: position.key ?? key };
+      const id = positionKey(next);
+      if (floor.has(id) && !seen.has(id)) { seen.add(id); queue.push(next); }
+    }
+  }
+  throw new Error("No reachable acceptance destination");
+}
+
 export async function runBerserkerUiScenario(driver, directory, profile) {
   await mkdir(directory, { recursive: true });
   const keyboard = await connectKeyboard(profile);
@@ -22,24 +41,6 @@ export async function runBerserkerUiScenario(driver, directory, profile) {
   const hash = () => driver.execute('return document.querySelector("#hash-value").title;');
   const ready = () => driver.waitFor('return document.querySelector("#connection-status").classList.contains("ready")', "ready UI");
   const row = slug => `[data-ability-id="demo.ability.berserker-${slug}"]`;
-  const directions = [[1, 0, "6"], [0, 1, "2"], [-1, 0, "4"], [0, -1, "8"], [1, 1, "3"], [-1, 1, "1"], [-1, -1, "7"], [1, -1, "9"]];
-  const positionKey = position => `${position.x},${position.y}`;
-  // Navigation for the acceptance player; every step still goes through normal keyboard input.
-  function nextWalk(state, visited, target) {
-    const floor = new Set(state.cells.filter(cell => cell.terrainId === "demo.terrain.floor" || cell.terrainId.includes("stairs")).map(cell => positionKey(cell.position)));
-    const queue = [{ ...state.player.position, key: undefined }];
-    const seen = new Set([positionKey(state.player.position)]);
-    for (let index = 0; index < queue.length; index++) {
-      const position = queue[index];
-      if (position.key && (target ? positionKey(position) === positionKey(target) : !visited.has(positionKey(position)))) return position.key;
-      for (const [dx, dy, key] of directions) {
-        const next = { x: position.x + dx, y: position.y + dy, key: position.key ?? key };
-        const id = positionKey(next);
-        if (floor.has(id) && !seen.has(id)) { seen.add(id); queue.push(next); }
-      }
-    }
-    throw new Error("No reachable acceptance destination");
-  }
   async function actKey(key) {
     const before = await hash();
     await keyboard.key(key);
