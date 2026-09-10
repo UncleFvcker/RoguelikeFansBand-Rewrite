@@ -1876,9 +1876,16 @@ fn old_castle_unlocks_after_vapor_quest_and_rewards_the_warrior_artifact_pool() 
     assert_eq!(game.task_states[task_id].status, TaskStatusKindDto::Taken);
     assert_eq!(game.terrain_at(entry), "demo.terrain.old-castle-entry");
 
+    game.player.position = Position { x: 66, y: 33 };
+    game.scroll_wilderness_for_player_entry(Position { x: 65, y: 33 }, &mut Vec::new())
+        .unwrap();
+    let entry = Position { x: 97, y: 6 };
+    assert_eq!(game.wilderness_view_offset, Position { x: -1, y: 0 });
+    assert_eq!(game.terrain_at(entry), "demo.terrain.old-castle-entry");
     game.player.position = entry;
     dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(game.current_floor_id, "demo.floor.old-castle");
+    game = Game::from_save(game.to_save()).unwrap();
     assert!(game.entities.len() >= 75);
     game.entities.clear();
     dispatch_next(&mut game, GameCommand::Wait);
@@ -1889,6 +1896,20 @@ fn old_castle_unlocks_after_vapor_quest_and_rewards_the_warrior_artifact_pool() 
 
     game.player.position = Position { x: 31, y: 1 };
     dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.player.position, entry);
+    assert_eq!(game.wilderness_view_offset, Position { x: -1, y: 0 });
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.old-castle-entry-completed"
+    );
+    game.player.position = Position { x: 131, y: 33 };
+    game.scroll_wilderness_for_player_entry(Position { x: 132, y: 33 }, &mut Vec::new())
+        .unwrap();
+    assert_eq!(game.wilderness_view_offset, Position::default());
+    assert_eq!(
+        game.terrain_at(Position { x: 31, y: 6 }),
+        "demo.terrain.old-castle-entry-completed"
+    );
     game.player.position = Position { x: 124, y: 35 };
     dispatch_next(
         &mut game,

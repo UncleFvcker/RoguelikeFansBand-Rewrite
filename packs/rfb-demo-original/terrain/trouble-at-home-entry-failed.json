@@ -4,8 +4,8 @@
   "id": "demo.terrain.trouble-at-home-entry-failed",
   "nameKey": "terrain-demo-trouble-at-home-entry-failed-name",
   "descriptionKey": "terrain-demo-trouble-at-home-entry-failed-description",
-  "glyph": "×",
+  "glyph": "#",
   "walkable": true,
   "blocksSight": false,
-  "tags": ["building", "outdoor", "surface", "task-entry-failed"]
+  "tags": ["building", "outdoor", "surface", "task-entry-failed", "stone"]
 }

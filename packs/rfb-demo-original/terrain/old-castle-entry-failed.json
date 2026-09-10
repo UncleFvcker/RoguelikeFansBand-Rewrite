@@ -4,8 +4,8 @@
   "id": "demo.terrain.old-castle-entry-failed",
   "nameKey": "terrain-demo-old-castle-entry-failed-name",
   "descriptionKey": "terrain-demo-old-castle-entry-failed-description",
-  "glyph": "×",
+  "glyph": "\"",
   "walkable": true,
   "blocksSight": false,
-  "tags": ["building", "outdoor", "surface", "task-entry-failed"]
+  "tags": ["outdoor", "surface", "task-entry-failed", "grass"]
 }

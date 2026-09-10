@@ -4,8 +4,8 @@
   "id": "demo.terrain.thieves-hideout-entry-failed",
   "nameKey": "terrain-demo-thieves-hideout-entry-failed-name",
   "descriptionKey": "terrain-demo-thieves-hideout-entry-failed-description",
-  "glyph": "×",
+  "glyph": "#",
   "walkable": true,
   "blocksSight": false,
-  "tags": ["outdoor", "surface", "task-entry-failed"]
+  "tags": ["outdoor", "surface", "task-entry-failed", "stone", "building"]
 }

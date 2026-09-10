@@ -4,8 +4,8 @@
   "id": "demo.terrain.thieves-hideout-entry-abandoned",
   "nameKey": "terrain-demo-thieves-hideout-entry-abandoned-name",
   "descriptionKey": "terrain-demo-thieves-hideout-entry-abandoned-description",
-  "glyph": "×",
+  "glyph": "#",
   "walkable": true,
   "blocksSight": false,
-  "tags": ["outdoor", "surface", "task-entry-abandoned"]
+  "tags": ["outdoor", "surface", "task-entry-abandoned", "stone", "building"]
 }

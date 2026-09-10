@@ -4,8 +4,8 @@
   "id": "demo.terrain.vapor-quest-entry-completed",
   "nameKey": "terrain-demo-vapor-quest-entry-completed-name",
   "descriptionKey": "terrain-demo-vapor-quest-entry-completed-description",
-  "glyph": "·",
+  "glyph": "#",
   "walkable": true,
   "blocksSight": false,
-  "tags": ["building", "outdoor", "surface", "task-entry-completed"]
+  "tags": ["building", "outdoor", "surface", "task-entry-completed", "stone"]
 }

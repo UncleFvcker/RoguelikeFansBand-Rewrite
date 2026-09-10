@@ -4,8 +4,9 @@
   "id": "demo.terrain.trouble-at-home-entry-available",
   "nameKey": "terrain-demo-trouble-at-home-entry-available-name",
   "descriptionKey": "terrain-demo-trouble-at-home-entry-available-description",
-  "glyph": "▓",
+  "glyph": "#",
   "walkable": false,
   "blocksSight": true,
-  "tags": ["building", "outdoor", "surface", "task-entry-available"]
+  "digging": {"power": 1, "resolution": "permanent"},
+  "tags": ["building", "outdoor", "surface", "task-entry-available", "stone", "permanent"]
 }

@@ -4,8 +4,8 @@
   "id": "demo.terrain.old-castle-entry-abandoned",
   "nameKey": "terrain-demo-old-castle-entry-abandoned-name",
   "descriptionKey": "terrain-demo-old-castle-entry-abandoned-description",
-  "glyph": "×",
+  "glyph": "\"",
   "walkable": true,
   "blocksSight": false,
-  "tags": ["building", "outdoor", "surface", "task-entry-abandoned"]
+  "tags": ["outdoor", "surface", "task-entry-abandoned", "grass"]
 }

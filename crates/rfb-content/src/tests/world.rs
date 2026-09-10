@@ -3,6 +3,69 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn outpost_task_entry_states_preserve_source_material_and_return_cells() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let content = &artifact.content;
+    let world = &content.worlds[0];
+    // master a0d92b6378: t_outp.txt default L: rules; Taken replaces these cells.
+    for (name, x, y, material) in [
+        ("thieves-hideout", 125, 28, "permanent-wall"),
+        ("outpost-sewer", 83, 30, "floor"),
+        ("outpost-haunted-house", 124, 43, "permanent-wall"),
+        ("outpost-royal-crypt", 120, 16, "permanent-wall"),
+        ("trouble-at-home", 121, 36, "permanent-wall"),
+        ("crows-nest", 181, 59, "surface-grass"),
+        ("old-man-willow", 176, 19, "surface-grass"),
+        ("vapor-quest", 127, 41, "permanent-wall"),
+        ("old-castle", 31, 6, "surface-grass"),
+    ] {
+        let base = content
+            .terrain
+            .iter()
+            .find(|t| t.id == format!("demo.terrain.{material}"))
+            .unwrap();
+        let entry_id = format!("demo.terrain.{name}-entry-available");
+        let entry = world
+            .terrain_overrides
+            .iter()
+            .find(|entry| entry.terrain_id == entry_id)
+            .unwrap();
+        assert_eq!(entry.positions, [ContentPosition { x, y }]);
+        for state in ["available", "completed", "failed", "abandoned"] {
+            let terrain = content
+                .terrain
+                .iter()
+                .find(|t| t.id == format!("demo.terrain.{name}-entry-{state}"))
+                .unwrap();
+            assert_eq!(terrain.glyph, base.glyph, "{name} {state}");
+            assert!(
+                terrain
+                    .tags
+                    .iter()
+                    .any(|tag| tag == &format!("task-entry-{state}"))
+            );
+            if state == "available" {
+                assert_eq!(
+                    (terrain.walkable, terrain.blocks_sight),
+                    (base.walkable, base.blocks_sight)
+                );
+                assert_eq!(terrain.digging, base.digging);
+                assert!(!terrain.allows_wall_passage);
+            } else {
+                // Existing task completion returns the player to the departure cell.
+                assert!(terrain.walkable);
+            }
+        }
+    }
+    let unused = world
+        .terrain_overrides
+        .iter()
+        .find(|entry| entry.positions.contains(&ContentPosition { x: 167, y: 60 }))
+        .unwrap();
+    assert_eq!(unused.terrain_id, "demo.terrain.dirt");
+}
+
+#[test]
 fn inherited_birth_town_requires_explicit_spawn_floor_and_guardian_references() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let mut content = artifact.content.clone();

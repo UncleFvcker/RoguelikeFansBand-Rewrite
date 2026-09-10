@@ -2760,6 +2760,132 @@ mod tests {
     }
 
     #[test]
+    fn outpost_changes_survive_scroll_world_travel_and_town_teleport() {
+        use crate::game::tests::support::dispatch_next;
+        use rfb_protocol::GameCommand;
+
+        let mut game = Game::new_with_build(42, "demo.build.warrior").unwrap();
+        let inherited = Position { x: 0, y: 0 };
+        let painted = Position { x: 100, y: 33 };
+        let world = game.content.world(&game.world_id).unwrap();
+        assert!(
+            !world
+                .terrain_overrides
+                .iter()
+                .any(|entry| entry.positions.iter().any(|p| p.x == 0 && p.y == 0))
+        );
+        assert_eq!(game.terrain_at(painted), "demo.terrain.floor");
+        for position in [inherited, painted] {
+            let index = game.index(position).unwrap();
+            game.terrain[index] = "demo.terrain.created-trap".to_owned();
+            game.explored[index] = true;
+        }
+        let item_id = "demo.item.warrens-short-sword.1";
+        game.items
+            .iter_mut()
+            .find(|item| item.id == item_id)
+            .unwrap()
+            .location = ItemLocation::Ground(inherited);
+        let assert_restored = |game: &Game| {
+            assert_eq!(game.wilderness_view_offset, Position::default());
+            assert_eq!(game.current_town().unwrap().id, "demo.town.outpost");
+            for position in [inherited, painted] {
+                assert_eq!(game.terrain_at(position), "demo.terrain.created-trap");
+                assert!(game.explored[game.index(position).unwrap()]);
+            }
+            assert_eq!(
+                game.items.iter().filter(|item| item.id == item_id).count(),
+                1
+            );
+            assert_eq!(
+                game.items
+                    .iter()
+                    .find(|item| item.id == item_id)
+                    .unwrap()
+                    .location,
+                ItemLocation::Ground(inherited)
+            );
+            assert!(
+                !game.stored_floors["demo.floor.surface"]
+                    .items
+                    .iter()
+                    .any(|item| item.id == item_id)
+            );
+        };
+
+        game.player.position = Position { x: 131, y: 33 };
+        game.scroll_wilderness_for_player_entry(Position { x: 132, y: 33 }, &mut Vec::new())
+            .unwrap();
+        assert!(
+            game.stored_floors["demo.floor.surface"]
+                .items
+                .iter()
+                .any(|item| item.id == item_id && item.location == ItemLocation::Ground(inherited))
+        );
+        game = Game::from_save(game.to_save()).unwrap();
+        game.player.position = Position { x: 66, y: 33 };
+        game.scroll_wilderness_for_player_entry(Position { x: 65, y: 33 }, &mut Vec::new())
+            .unwrap();
+        assert_restored(&game);
+
+        game.player.position = Position { x: 99, y: 33 };
+        for destination in [Position { x: 26, y: 39 }, Position { x: 28, y: 52 }] {
+            dispatch_next(
+                &mut game,
+                GameCommand::EnterWorldMap {
+                    leave_pets: false,
+                    cancel_recall: false,
+                },
+            );
+            game.wilderness_position = Some(destination);
+            dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+        }
+        assert_restored(&game);
+        game.teleport_to_town("demo.town.anambar").unwrap();
+        game = Game::from_save(game.to_save()).unwrap();
+        game.teleport_to_town("demo.town.outpost").unwrap();
+        assert_eq!(game.player.position, Position { x: 124, y: 35 });
+        assert_restored(&game);
+        game.reveal_current_visibility();
+        assert_eq!(
+            Game::from_save(game.to_save()).unwrap().state_hash(),
+            game.state_hash()
+        );
+    }
+
+    #[test]
+    fn full_outpost_excludes_its_rectangle_but_keeps_the_natural_sixty_sixth_row() {
+        for seed in [42, 83] {
+            let game = Game::new_with_build(seed, "demo.build.warrior").unwrap();
+            let allocation = game
+                .content
+                .world(&game.world_id)
+                .unwrap()
+                .surface_actor_allocation
+                .as_ref()
+                .unwrap();
+            assert_eq!((allocation.rolls, allocation.level), (12, 9));
+            let allowed =
+                game.wilderness_positions_outside_visible_towns(wilderness_view_positions());
+            assert_eq!(allowed.len(), 198);
+            assert!(allowed.iter().all(|p| p.y == 65));
+            assert!(
+                game.entities
+                    .iter()
+                    .all(|actor| allowed.contains(&actor.position))
+            );
+            let position = game.wilderness_position.unwrap();
+            let rolls = wilderness_monster_rolls_for_allowed_area(
+                game.wilderness_initial_monster_rolls_at(position),
+                allowed.len(),
+                198 * 66,
+                coordinate_seed(game.wilderness_seed, position),
+            );
+            assert!(rolls <= 1);
+        }
+    }
+
+    #[test]
     fn birth_town_uses_the_continuous_wilderness_surface() {
         let game =
             Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");

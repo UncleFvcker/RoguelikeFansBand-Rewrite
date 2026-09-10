@@ -2554,6 +2554,11 @@ fn dungeon_round_trip_restores_the_scrolled_town_position() {
     let world_position = game
         .wilderness_position
         .expect("Warrens journey should start in the wilderness");
+    for position in [Position { x: 0, y: 0 }, Position { x: 100, y: 33 }] {
+        let index = game.index(position).unwrap();
+        game.terrain[index] = "demo.terrain.created-trap".to_owned();
+        game.explored[index] = true;
+    }
     game.player.position = Position { x: 131, y: 33 };
     let target = Position { x: 132, y: 33 };
     let target_index = game.index(target).expect("scroll target should exist");
@@ -2583,6 +2588,12 @@ fn dungeon_round_trip_restores_the_scrolled_town_position() {
     assert_eq!(game.wilderness_position, Some(world_position));
     assert_eq!(game.wilderness_view_offset, Position { x: 1, y: 0 });
     assert_eq!(game.player.position, entrance);
+    let backing = &game.stored_floors["demo.floor.surface"];
+    assert_eq!(backing.terrain[0], "demo.terrain.created-trap");
+    assert!(backing.explored[0]);
+    let painted = Position { x: 34, y: 33 };
+    assert_eq!(game.terrain_at(painted), "demo.terrain.created-trap");
+    assert!(game.explored[game.index(painted).unwrap()]);
     assert_eq!(
         game.current_town().map(|town| town.id.as_str()),
         Some("demo.town.outpost")

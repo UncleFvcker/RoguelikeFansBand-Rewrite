@@ -1,6 +1,6 @@
 # 状态快照
 
-核对日期：2026-09-10。集成基线包含种族主线 `decec518a`、法术道具 `934a83392` 与地牢城镇 `78a9cc982`；当前地牢城镇分支另完成下述 Outpost O1/O2。本页记录代码/配置事实和注明范围的验收证据。当前数值以链接的源文件为准。
+核对日期：2026-09-10。集成基线包含种族主线 `decec518a`、法术道具 `934a83392` 与地牢城镇 `78a9cc982`；当前地牢城镇分支另完成下述 Outpost O1–O3。本页记录代码/配置事实和注明范围的验收证据。当前数值以链接的源文件为准。
 
 ## 版本与源内容
 
@@ -10,7 +10,7 @@
 | 协议 | 1.240 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 117 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 12 / 12 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.401.2 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.401.3 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v318，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 6 个 Class、13 个 Build、57 个 Race、32 本能力书、1,840 个 ability 文件、370 个 item、1,402 个 actor、168 个 affix、152 个 mutation。世界定义含 25 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
@@ -55,6 +55,8 @@ Outpost O1 已恢复 RFB master `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c` 的 1
 为使 O1 地形与既有功能一致，同步迁移了十家商店、四个设施、九个任务入口及 Warrens/Hideout–Man cave 入口，伯爵三个门归属同一设施。O2 已开放 `(97,46)` 的 Outpost 博物馆，共享既有萨洛斯馆藏；两组任务替代仍未交付。 表面怪物分配仍为 12 次、等级 9；扩大的城镇矩形按原有规则排除采样，不补造旧位置的怪物。来源逐格核对、核心相关回归、内容世界校验和 26 条 active 契约已覆盖本批；未制作 standalone 或进行桌面/Android 试玩。实施范围见 [Outpost 计划](../design/outpost-map-plan-20260910.md)。
 
 O2 复用已有馆藏及桌面事务机制，正式新角色出生时即加载同一本地资料的馆藏，抵达博物馆门口后显示物品。71 项城镇/入口核心测试、内容入口测试与馆藏原生测试通过，覆盖三城同库存、伯爵三门、地牢替代选择、Home 独立、固定神器拒收及跨角色转移/恢复/并发边界。26 条契约复验通过；本批仅刷新新增博物馆地形和初始共享仓库状态引起的哈希，所有命令、前置条件及行为断言未变，Schema/协议/存档版本未改。
+
+O3 对齐九个任务入口的非开放外观与未接任务底材，保留 `R` 泥土、原有任务生命周期和结算后的可站立返回点。新增出生城显式/继承地形、探索与地面物的滚动、读档、离城再入及城镇传送恢复覆盖，扩展旧城堡和 Warrens 偏移视图返回测试。127 项核心相关测试、3 项内容测试通过，26 条契约无需刷新即通过。出生视图仅第 66 行 198 格参与普通荒野采样，沿用原有面积折算和种子规则；不补旧怪物坐标。未新增运行时机制或版本迁移。
 
 地牢城镇分支已合入 Morivant、Telmora、Angwil 的正常旅行入口、商店和设施，城镇大地图布局与荒野衔接、按名望调整服务价格、分档强化、赌场和博物馆跨角色共享存储。博物馆转移通过 Tauri 的存储事务与角色检查点一同提交；固定神器禁止捐赠和导入，随机神器实例允许共享并保留完整属性。家与博物馆复用背包详情投影，保留物品身份、知识与实例重量。
 

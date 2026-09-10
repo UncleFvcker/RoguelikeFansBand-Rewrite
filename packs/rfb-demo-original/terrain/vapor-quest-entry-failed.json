@@ -4,8 +4,8 @@
   "id": "demo.terrain.vapor-quest-entry-failed",
   "nameKey": "terrain-demo-vapor-quest-entry-failed-name",
   "descriptionKey": "terrain-demo-vapor-quest-entry-failed-description",
-  "glyph": "×",
+  "glyph": "#",
   "walkable": true,
   "blocksSight": false,
-  "tags": ["building", "outdoor", "surface", "task-entry-failed"]
+  "tags": ["building", "outdoor", "surface", "task-entry-failed", "stone"]
 }
