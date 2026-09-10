@@ -3,6 +3,21 @@
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { RACE_GROUPS, PLAYTEST_RACE_IDS } from "../src/character-creation.ts";
+
+export async function selectCreationRace(driver, raceId) {
+  const group = RACE_GROUPS.find(group => group.races.some(entry => entry.id === raceId || ("children" in entry && entry.children.some(child => child.id === raceId))));
+  assert.ok(group, `Creation race missing: ${raceId}`);
+  await driver.execute(`
+    document.querySelector("#session-tab-race").click();
+    document.querySelector('[data-race-group="' + arguments[0] + '"]').click();
+    if (arguments[1].startsWith("rfb-legacy.race.draconian-")) document.querySelector('[data-race-id="draconian"]').click();
+    const button = document.querySelector('[data-race-id="' + arguments[1] + '"]');
+    if (!button || !button.checkVisibility()) throw new Error("Race option is not visible");
+    button.focus(); button.click();
+    return true;
+  `, [group.id, raceId]);
+}
 
 export async function runCharacterCreationScenario(driver, artifactDirectory) {
   await mkdir(artifactDirectory, { recursive: true });
@@ -15,7 +30,10 @@ export async function runCharacterCreationScenario(driver, artifactDirectory) {
   const click = (selector) => driver.execute(`document.querySelector(arguments[0]).click(); return true;`, [selector]);
   const fill = (selector, value) => driver.execute(`const input = document.querySelector(arguments[0]); input.value = arguments[1]; input.dispatchEvent(new Event("input", { bubbles: true })); input.dispatchEvent(new Event("change", { bubbles: true })); return true;`, [selector, value]);
   const key = (selector, value) => driver.execute(`const node = document.querySelector(arguments[0]); node.focus(); node.dispatchEvent(new KeyboardEvent("keydown", { key: arguments[1], bubbles: true, cancelable: true })); return true;`, [selector, value]);
-  const screenshot = async (name) => writeFile(path.join(artifactDirectory, `creation-${name}.png`), await driver.screenshot(), "base64");
+  const screenshot = async (name) => {
+    await new Promise(resolve => setTimeout(resolve, 150)); // Let the existing focus/selection transition settle.
+    await writeFile(path.join(artifactDirectory, `creation-${name}.png`), await driver.screenshot(), "base64");
+  };
   const measurements = [];
   async function checkFrame(page) {
     const layout = await driver.execute(`
@@ -42,6 +60,12 @@ export async function runCharacterCreationScenario(driver, artifactDirectory) {
     await click("#session-new-game");
     await checkFrame("overview");
     await screenshot(`${locale}-overview`);
+    if (locale === "en-US") {
+      await selectCreationRace(driver, "rfb-legacy.race.draconian-red");
+      await checkFrame("race");
+      await screenshot("en-US-subrace");
+      await selectCreationRace(driver, "demo.race.rfb-human");
+    }
     await click("#session-new-game-back");
   }
   await click("#session-settings");
@@ -53,7 +77,54 @@ export async function runCharacterCreationScenario(driver, artifactDirectory) {
   await key("#session-tab-overview", "ArrowRight");
   await checkFrame("race");
   assert.equal(await driver.execute("return document.activeElement.id"), "session-tab-race");
-  await fill("#session-race", "rfb-legacy.race.draconian-red");
+  const beforePreview = await driver.execute(`return document.querySelector("#session-creation-summary").textContent`);
+  await key('[data-race-id="demo.race.rfb-human"]', "Home");
+  assert.equal(await driver.execute(`return document.querySelector("#session-creation-summary").textContent`), beforePreview);
+  assert.equal(await driver.execute(`return document.querySelector("#session-race-detail-title").textContent`), "安珀人");
+  await click('[data-race-group="other"]');
+  await click('[data-race-id="draconian"]');
+  assert.equal(await driver.execute(`return document.querySelector("#session-start-game").disabled`), true);
+  await key("#session-tab-race", "Escape");
+  assert.equal(await driver.execute(`return document.activeElement.dataset.raceId`), "draconian");
+  assert.equal(await driver.execute(`return document.querySelector("#session-start-game").disabled`), false);
+  assert.equal(await driver.execute(`return document.querySelector("#session-creation-summary").textContent`), beforePreview);
+  await click('[data-race-id="draconian"]');
+  await click("#session-tab-overview");
+  assert.equal(await driver.execute(`return document.querySelector("#session-start-game").disabled`), false);
+  assert.equal(await driver.execute(`return document.querySelector("#session-creation-summary").textContent`), beforePreview);
+
+  const visited = [];
+  for (const id of PLAYTEST_RACE_IDS) {
+    await selectCreationRace(driver, id);
+    const selected = await driver.execute(`
+      const button = document.querySelector('[data-race-id="' + arguments[0] + '"]');
+      const description = document.querySelector("#session-race-description");
+      return { selected: button.getAttribute("aria-pressed"), selectedCount: document.querySelectorAll('#session-race-options [aria-pressed="true"]').length, pending: document.querySelector("#session-start-game").disabled, name: document.querySelector("#session-race-detail-title").textContent, summary: document.querySelector("#session-creation-summary").textContent, description: description.textContent, notes: document.querySelector("#session-race-notes").children.length, fits: description.scrollWidth <= description.clientWidth };
+    `, [id]);
+    assert.equal(selected.selected, "true");
+    assert.equal(selected.selectedCount, 1);
+    assert.equal(selected.pending, false);
+    assert.ok(selected.summary.includes(selected.name));
+    assert.ok(selected.description.length > 20 && !selected.description.startsWith("["));
+    assert.equal(selected.fits, true);
+    const specialNotes = { "rfb-legacy.race.tomte": 1, "rfb-legacy.race.tonberry": 6, "rfb-legacy.race.ent": 8, "rfb-legacy.race.spectre": 8 };
+    if (id in specialNotes) {
+      assert.equal(selected.notes, specialNotes[id]);
+      await screenshot(`race-${id.split(".").at(-1)}`);
+    }
+    visited.push(id);
+  }
+  assert.equal(new Set(visited).size, 46);
+  await selectCreationRace(driver, "rfb-legacy.race.draconian-red");
+  await checkFrame("race");
+  await screenshot("zh-CN-subrace");
+  await selectCreationRace(driver, "demo.race.rfb-human");
+  assert.doesNotMatch(await driver.execute(`return document.querySelector("#session-creation-summary").textContent`), /龙人分支/);
+  await selectCreationRace(driver, "rfb-legacy.race.draconian-red");
+  await click("#session-tab-overview");
+  await click('[data-creation-page="race"]:not([role="tab"])');
+  assert.match(await driver.execute(`return document.querySelector("#session-race-path").textContent`), /龙人分支/);
+  assert.equal(await driver.execute(`return document.querySelector('[data-race-id="rfb-legacy.race.draconian-red"]').getAttribute("aria-pressed")`), "true");
   await click("#session-tab-career");
   await click("#session-build-high-mage-death");
   await checkFrame("career");
@@ -87,5 +158,5 @@ export async function runCharacterCreationScenario(driver, artifactDirectory) {
   assert.match(identity.race, /红色/);
   assert.equal(identity.build, "demo.build.high-mage-death");
   assert.equal(identity.seed, "83");
-  await writeFile(path.join(artifactDirectory, "character-creation-acceptance.json"), JSON.stringify({ measurements, identity }, null, 2));
+  await writeFile(path.join(artifactDirectory, "character-creation-acceptance.json"), JSON.stringify({ measurements, visited, identity }, null, 2));
 }

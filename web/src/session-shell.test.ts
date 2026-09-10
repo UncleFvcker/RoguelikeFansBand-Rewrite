@@ -2,7 +2,8 @@
 // @ts-nocheck -- Executed directly by Node's built-in TypeScript test runner.
 
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { CREATION_RACES, DRACONIAN_RACES, RACE_GROUPS } from "./character-creation.ts";
 import test from "node:test";
 
 test("the main window explicitly permits the close command used by both exit buttons", () => {
@@ -39,59 +40,41 @@ test("new character creation exposes all formal class slices", () => {
   assert.equal(PLAYTEST_BUILD_IDS.some((id) => id.startsWith("rfb-legacy.")), false);
 });
 
-test("the New Game race options match the formal race list", () => {
-  const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
-  const select = indexHtml.match(/<select\b[^>]*\bid="session-race"[^>]*>([\s\S]*?)<\/select>/)?.[1];
-  assert.ok(select, "New Game should expose the race selector");
-  const raceIds = [...select.matchAll(/<option\b[^>]*\bvalue="([^"]+)"/g)]
-    .map((match) => match[1]);
-  assert.deepEqual(raceIds, PLAYTEST_RACE_IDS);
-  assert.equal(raceIds.length, 46);
-  assert.ok(raceIds.includes("rfb-legacy.race.tomte"));
-  assert.ok(raceIds.includes("rfb-legacy.race.tonberry"));
-  assert.ok(raceIds.includes("rfb-legacy.race.ent"));
-  assert.ok(raceIds.includes("rfb-legacy.race.spectre"));
+test("the race menu exposes exactly the races accepted by core creation", () => {
+  const directory = new URL("../../packs/rfb-demo-original/races/", import.meta.url);
+  const formal = readdirSync(directory).map(file => JSON.parse(readFileSync(new URL(file, directory), "utf8")))
+    .filter(race => race.tags.includes("rfb-compatibility"));
+  assert.deepEqual([...PLAYTEST_RACE_IDS].sort(), formal.map(race => race.id).sort());
+  assert.equal(PLAYTEST_RACE_IDS.length, 46);
+  assert.equal(new Set(PLAYTEST_RACE_IDS).size, 46);
+  assert.equal(RACE_GROUPS.length, 8);
+  assert.ok(RACE_GROUPS.every(group => group.races.length > 0));
+  for (const entry of CREATION_RACES) {
+    const source = formal.find(race => race.id === entry.id);
+    assert.equal(entry.nameKey, source.nameKey);
+    assert.equal(entry.descriptionKey, source.descriptionKey);
+  }
 });
 
-test("the New Game form groups all nine formal Draconian subraces", () => {
-  const draconianRaceIds = [
-    "rfb-legacy.race.draconian-red",
-    "rfb-legacy.race.draconian-white",
-    "rfb-legacy.race.draconian-blue",
-    "rfb-legacy.race.draconian-black",
-    "rfb-legacy.race.draconian-green",
-    "rfb-legacy.race.draconian-bronze",
-    "rfb-legacy.race.draconian-crystal",
-    "rfb-legacy.race.draconian-gold",
-    "rfb-legacy.race.draconian-shadow",
-  ];
-  const draconianStart = PLAYTEST_RACE_IDS.indexOf("rfb-legacy.race.draconian-red");
-  assert.deepEqual(
-    PLAYTEST_RACE_IDS.slice(draconianStart, draconianStart + draconianRaceIds.length),
-    draconianRaceIds,
-  );
+test("all nine Draconian subraces are leaves of the same parent", () => {
+  const parent = RACE_GROUPS.flatMap(group => group.races).find(entry => "children" in entry);
+  assert.equal(parent.id, "draconian");
+  assert.deepEqual(parent.children, DRACONIAN_RACES);
+  assert.deepEqual(DRACONIAN_RACES.map(race => race.id), [
+    "red", "white", "blue", "black", "green", "bronze", "crystal", "gold", "shadow",
+  ].map(color => `rfb-legacy.race.draconian-${color}`));
+  assert.equal(PLAYTEST_RACE_IDS.includes("draconian"), false);
+});
 
-  const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
-  const groupStart = indexHtml.indexOf(
-    '<optgroup label="" data-l10n-label="session-race-group-draconian">',
-  );
-  const groupEnd = indexHtml.indexOf("</optgroup>", groupStart);
-  assert.ok(groupStart >= 0 && groupEnd > groupStart);
-  const groupMarkup = indexHtml.slice(groupStart, groupEnd);
-  for (const raceId of draconianRaceIds) {
-    assert.ok(groupMarkup.includes(`<option value="${raceId}"`), raceId);
+test("every race description and migrated special note is localized", () => {
+  for (const locale of ["en-US", "zh-CN"]) {
+    const text = ["content", "ui"].map(file => readFileSync(new URL(`../../locales/${locale}/${file}.ftl`, import.meta.url), "utf8")).join("\n");
+    const keys = new Set([...text.matchAll(/^([a-z][a-z0-9-]*) =/gm)].map(match => match[1]));
+    for (const race of CREATION_RACES) {
+      for (const key of [race.nameKey, race.descriptionKey, ...race.notes]) assert.ok(keys.has(key), `${locale}: ${key}`);
+    }
+    for (const group of RACE_GROUPS) assert.ok(keys.has(`session-race-category-${group.id}`));
   }
-
-  const english = readFileSync(
-    new URL("../../locales/en-US/ui.ftl", import.meta.url),
-    "utf8",
-  );
-  const chinese = readFileSync(
-    new URL("../../locales/zh-CN/ui.ftl", import.meta.url),
-    "utf8",
-  );
-  assert.match(english, /^session-race-group-draconian = Draconians$/m);
-  assert.match(chinese, /^session-race-group-draconian = 龙人分支$/m);
 });
 
 test("new character requests preserve the selected setup", () => {

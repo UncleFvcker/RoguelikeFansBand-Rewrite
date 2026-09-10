@@ -9,7 +9,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { runRendererProfile } from "./render-profile.e2e.mjs";
 import { runEgoScenario } from "./ego.e2e.mjs";
-import { runCharacterCreationScenario } from "./character-creation.e2e.mjs";
+import { runCharacterCreationScenario, selectCreationRace } from "./character-creation.e2e.mjs";
 
 const webDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryDirectory = path.resolve(webDirectory, "..");
@@ -351,28 +351,28 @@ async function runRaceScenario(driver, raceId) {
   await mkdir(artifactDirectory, { recursive: true });
   for (const build of builds) {
     await click(driver, "#session-new-game");
+    await selectCreationRace(driver, "rfb-legacy.race." + raceId);
     const description = await driver.execute(`
       window.__raceErrors = [];
       window.addEventListener("error", event => window.__raceErrors.push(event.message));
-      const race = document.querySelector("#session-race"); race.value = "rfb-legacy.race." + arguments[1];
-      race.dispatchEvent(new Event("change", { bubbles: true }));
       const build = document.querySelector("#session-build-" + arguments[0]); build.checked = true;
       build.dispatchEvent(new Event("change", { bubbles: true }));
       document.querySelector("#session-seed").value = "83";
       document.querySelector("#session-character-name").value = arguments[2] + "验收";
-      const note = document.querySelector("#session-" + arguments[1] + "-description");
-      return { visible: !note.hidden, text: note.textContent, name: race.selectedOptions[0].textContent, descriptionId: race.getAttribute("aria-describedby") };
+      const note = document.querySelector("#session-race-details");
+      const race = document.querySelector('[data-race-id="rfb-legacy.race.' + arguments[1] + '"]');
+      return { visible: note.checkVisibility(), text: note.textContent, name: document.querySelector("#session-race-detail-title").textContent, descriptionId: race.getAttribute("aria-describedby") };
     `, [build, raceId, raceName]);
     assert.equal(description.name, raceName);
     assert.equal(description.visible, true);
-    assert.equal(description.descriptionId, `session-${raceId}-description`);
+    assert.equal(description.descriptionId, "session-race-description");
     assert.ok(isSpectre ? description.text.includes("150") && description.text.includes("5000") && description.text.includes("恐吓怪物")
       : isEnt ? description.text.includes("4200") && description.text.includes("14999") && description.text.includes("召唤树人")
       : isTomte ? description.text.includes("1.0 磅") && description.text.includes("40")
       : description.text.includes("偏爱菜刀和宽刃刀") && description.text.includes("0.04") && description.text.includes("军刀"));
     if (isEnt || isSpectre) {
       const layout = await driver.execute(`
-        const note = document.querySelector("#session-" + arguments[0] + "-description");
+        const note = document.querySelector("#session-race-details");
         note.scrollIntoView({ block: "start" });
         return { bullets: note.querySelectorAll("li").length, fits: note.scrollWidth <= note.clientWidth };
       `, [raceId]);
@@ -484,20 +484,22 @@ async function runRaceScenario(driver, raceId) {
         await afterTurn(turn);
         return wallState();
       };
-      // Outpost's fixed map starts at (44,16), with a passable building wall at (44,13).
-      assert.equal((await wallState()).position, "44, 16");
+      // Outpost's building wall is three tiles north of birth. The continuous
+      // wilderness translates the town template, so use the actual birth origin.
+      const [birthX, birthY] = (await wallState()).position.split(", ").map(Number);
+      const northOfBirth = distance => `${birthX}, ${birthY - distance}`;
       await step("Numpad8", "8");
       const before = await step("Numpad8", "8");
-      assert.equal(before.position, "44, 14");
+      assert.equal(before.position, northOfBirth(2));
       const inside = await step("Numpad8", "8");
-      assert.equal(inside.position, "44, 13");
+      assert.equal(inside.position, northOfBirth(3));
       assert.ok(inside.hp < before.hp);
       assert.equal(inside.densityMessage, true);
       const waited = await step("Numpad5", "5");
       assert.equal(waited.hp, inside.hp - 1);
       await writeFile(path.join(artifactDirectory, `${raceId}-${build}-wall.png`), await driver.screenshot(), "base64");
       const outside = await step("Numpad2", "2");
-      assert.equal(outside.position, "44, 14");
+      assert.equal(outside.position, northOfBirth(2));
       assert.ok(outside.hp >= waited.hp);
       report.checks.push({ build, wall: { before, inside, waited, outside } });
     }
@@ -576,11 +578,10 @@ async function runLifeForceScenario(driver) {
     ["archer", "demo.race.rfb-human", "吸血鬼"],
   ]) {
     await click(driver, "#session-new-game");
+    await selectCreationRace(driver, raceId);
     await driver.execute(`
       window.__lifeForceErrors = [];
       window.addEventListener("error", event => window.__lifeForceErrors.push(event.message));
-      const race = document.querySelector("#session-race"); race.value = arguments[1];
-      race.dispatchEvent(new Event("change", { bubbles: true }));
       const build = document.querySelector("#session-build-" + arguments[0]); build.checked = true;
       build.dispatchEvent(new Event("change", { bubbles: true }));
       document.querySelector("#session-seed").value = "83";

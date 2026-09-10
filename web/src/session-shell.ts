@@ -12,6 +12,8 @@ import {
 } from "./native-save-storage.ts";
 import { nativeSaveErrorKey } from "./save-panel.ts";
 import type { GameSnapshot } from "./protocol.ts";
+import { RaceMenu, type PlaytestRaceId } from "./character-creation.ts";
+export { PLAYTEST_RACE_IDS, type PlaytestRaceId } from "./character-creation.ts";
 
 export const PLAYTEST_BUILD_IDS = [
   "demo.build.warrior",
@@ -23,55 +25,6 @@ export const PLAYTEST_BUILD_IDS = [
 ] as const;
 
 export type PlaytestBuildId = (typeof PLAYTEST_BUILD_IDS)[number];
-export const PLAYTEST_RACE_IDS = [
-  "demo.race.rfb-human",
-  "rfb-legacy.race.half-orc",
-  "rfb-legacy.race.high-elf",
-  "rfb-legacy.race.dunadan",
-  "rfb-legacy.race.barbarian",
-  "rfb-legacy.race.hobbit",
-  "rfb-legacy.race.kobold",
-  "rfb-legacy.race.dwarf",
-  "rfb-legacy.race.nibelung",
-  "rfb-legacy.race.gnome",
-  "rfb-legacy.race.half-giant",
-  "rfb-legacy.race.half-troll",
-  "rfb-legacy.race.half-titan",
-  "rfb-legacy.race.cyclops",
-  "rfb-legacy.race.yeek",
-  "rfb-legacy.race.klackon",
-  "rfb-legacy.race.dark-elf",
-  "rfb-legacy.race.mindflayer",
-  "rfb-legacy.race.imp",
-  "rfb-legacy.race.draconian-red",
-  "rfb-legacy.race.draconian-white",
-  "rfb-legacy.race.draconian-blue",
-  "rfb-legacy.race.draconian-black",
-  "rfb-legacy.race.draconian-green",
-  "rfb-legacy.race.draconian-bronze",
-  "rfb-legacy.race.draconian-crystal",
-  "rfb-legacy.race.draconian-gold",
-  "rfb-legacy.race.draconian-shadow",
-  "rfb-legacy.race.golem",
-  "rfb-legacy.race.zombie",
-  "rfb-legacy.race.skeleton",
-  "rfb-legacy.race.wood-elf",
-  "rfb-legacy.race.archon",
-  "rfb-legacy.race.sprite",
-  "rfb-legacy.race.snotling",
-  "rfb-legacy.race.boit",
-  "rfb-legacy.race.einheri",
-  "rfb-legacy.race.kutar",
-  "rfb-legacy.race.amberite",
-  "rfb-legacy.race.beastman",
-  "rfb-legacy.race.shadow-fairy",
-  "rfb-legacy.race.ogre",
-  "rfb-legacy.race.tomte",
-  "rfb-legacy.race.tonberry",
-  "rfb-legacy.race.ent",
-  "rfb-legacy.race.spectre",
-] as const;
-export type PlaytestRaceId = (typeof PLAYTEST_RACE_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";
 type CreationPage = "overview" | "race" | "career";
 
@@ -111,11 +64,7 @@ interface SessionShellDom {
   readonly paladinDeathBuild: HTMLInputElement;
   readonly cavalryBuild: HTMLInputElement;
   readonly sniperBuild: HTMLInputElement;
-  readonly raceSelect: HTMLSelectElement;
-  readonly tomteDescription: HTMLElement;
-  readonly tonberryDescription: HTMLElement;
-  readonly entDescription: HTMLElement;
-  readonly spectreDescription: HTMLElement;
+  readonly racePanel: HTMLElement;
   readonly characterNameInput: HTMLInputElement;
   readonly seedInput: HTMLInputElement;
   readonly randomizeSeedButton: HTMLButtonElement;
@@ -135,6 +84,7 @@ interface SessionShellDom {
 
 export class SessionShell {
   readonly #dom: SessionShellDom;
+  readonly #raceMenu: RaceMenu;
   readonly #storage: SessionStorage;
   readonly #localization: Localization;
   readonly #onStart: (request: NewSessionRequest) => Promise<GameSnapshot>;
@@ -183,6 +133,10 @@ export class SessionShell {
     this.#randomSeed = options.randomSeed ?? randomSessionSeed;
     this.#confirm = options.confirm ?? ((message) => window.confirm(message));
     this.#logError = options.logError ?? console.error;
+    this.#raceMenu = new RaceMenu(this.#dom.racePanel, this.#localization, () => {
+      this.#renderCreationSummary();
+      this.#updateControls();
+    }, () => this.#showCreationPage("overview", true));
   }
 
   install(): void {
@@ -198,7 +152,7 @@ export class SessionShell {
     this.#dom.newGameView.addEventListener("keydown", this.#creationKeydown);
     this.#dom.newGameView.addEventListener("input", this.#renderCreationSummary);
     this.#dom.newGameView.addEventListener("change", this.#renderCreationSummary);
-    this.#dom.raceSelect.addEventListener("change", this.#changeRace);
+    this.#raceMenu.install();
     this.#dom.randomizeSeedButton.addEventListener("click", this.#randomizeSeed);
     this.#dom.newGameBackButton.addEventListener("click", this.#backToTitle);
     this.#dom.loadRefreshButton.addEventListener("click", this.#refreshSaves);
@@ -221,7 +175,7 @@ export class SessionShell {
     this.#dom.newGameView.removeEventListener("keydown", this.#creationKeydown);
     this.#dom.newGameView.removeEventListener("input", this.#renderCreationSummary);
     this.#dom.newGameView.removeEventListener("change", this.#renderCreationSummary);
-    this.#dom.raceSelect.removeEventListener("change", this.#changeRace);
+    this.#raceMenu.dispose();
     this.#dom.randomizeSeedButton.removeEventListener("click", this.#randomizeSeed);
     this.#dom.newGameBackButton.removeEventListener("click", this.#backToTitle);
     this.#dom.loadRefreshButton.removeEventListener("click", this.#refreshSaves);
@@ -248,19 +202,10 @@ export class SessionShell {
     this.#renderSaves();
     this.#renderReadyStatus();
     this.#renderRunMetadata();
-    this.#changeRace();
+    this.#raceMenu.localize();
     this.#renderCreationSummary();
+    this.#updateControls();
   }
-
-  readonly #changeRace = (): void => {
-    this.#dom.tomteDescription.hidden = this.#dom.raceSelect.value !== "rfb-legacy.race.tomte";
-    this.#dom.tonberryDescription.hidden = this.#dom.raceSelect.value !== "rfb-legacy.race.tonberry";
-    this.#dom.entDescription.hidden = this.#dom.raceSelect.value !== "rfb-legacy.race.ent";
-    this.#dom.spectreDescription.hidden = this.#dom.raceSelect.value !== "rfb-legacy.race.spectre";
-    const description = [this.#dom.tomteDescription, this.#dom.tonberryDescription, this.#dom.entDescription, this.#dom.spectreDescription].find((node) => !node.hidden);
-    if (description) this.#dom.raceSelect.setAttribute("aria-describedby", description.id);
-    else this.#dom.raceSelect.removeAttribute("aria-describedby");
-  };
 
   showGame(snapshot: GameSnapshot, request?: NewSessionRequest): void {
     this.#activeSnapshot = snapshot;
@@ -294,6 +239,7 @@ export class SessionShell {
   }
 
   #showCreationPage(page: CreationPage, focus = false): void {
+    this.#raceMenu.reset();
     this.#creationPage = page;
     for (const panel of this.#dom.newGameView.querySelectorAll<HTMLElement>("[data-creation-panel]")) {
       panel.hidden = panel.dataset.creationPanel !== page;
@@ -304,6 +250,7 @@ export class SessionShell {
       tab.tabIndex = selected ? 0 : -1;
       if (selected && focus) tab.focus();
     }
+    this.#updateControls();
   }
 
   readonly #creationClick = (event: MouseEvent): void => {
@@ -325,15 +272,14 @@ export class SessionShell {
       event.preventDefault();
     } else if (event.key === "Escape" && !event.target.closest("input, select, textarea")) {
       event.preventDefault();
-      if (this.#creationPage !== "overview") this.#showCreationPage("overview", true);
+      if (this.#creationPage === "race") this.#raceMenu.back();
+      else if (this.#creationPage !== "overview") this.#showCreationPage("overview", true);
       else this.#backToTitle();
     }
   };
 
   readonly #renderCreationSummary = (): void => {
-    const race = this.#dom.raceSelect.selectedOptions[0];
-    const group = race?.closest("optgroup")?.label;
-    const raceName = [group, race?.textContent].filter(Boolean).join(" · ");
+    const raceName = this.#raceMenu.selectedName;
     const build = this.#dom.newGameView.querySelector<HTMLInputElement>('input[name="session-build"]:checked');
     const careerName = build?.closest("label")?.querySelector("strong")?.textContent ?? "";
     this.#dom.overviewRace.textContent = raceName;
@@ -382,6 +328,7 @@ export class SessionShell {
   readonly #startNewGame = (event: SubmitEvent): void => {
     event.preventDefault();
     if (this.#busy) return;
+    if (this.#raceMenu.pending) return;
     const seed = canonicalSessionSeed(this.#dom.seedInput.value);
     if (!seed) {
       this.#dom.error.textContent = this.#localization.format("session-seed-invalid");
@@ -396,13 +343,7 @@ export class SessionShell {
       this.#dom.warriorBuild.focus();
       return;
     }
-    const raceId = this.#selectedRace();
-    if (!raceId) {
-      this.#dom.error.textContent = this.#localization.format("session-race-invalid");
-      this.#showCreationPage("race");
-      this.#dom.raceSelect.focus();
-      return;
-    }
+    const raceId = this.#raceMenu.raceId;
     const playerName = canonicalCharacterName(this.#dom.characterNameInput.value);
     if (!playerName) {
       this.#dom.error.textContent = this.#localization.format("session-character-name-invalid");
@@ -523,13 +464,6 @@ export class SessionShell {
       .find((input) => input.checked)?.value as PlaytestBuildId | undefined;
   }
 
-  #selectedRace(): PlaytestRaceId | undefined {
-    const raceId = this.#dom.raceSelect.value;
-    return PLAYTEST_RACE_IDS.includes(raceId as PlaytestRaceId)
-      ? (raceId as PlaytestRaceId)
-      : undefined;
-  }
-
   #showView(view: SessionView): void {
     this.#view = view;
     this.#dom.root.dataset.view = view;
@@ -559,6 +493,7 @@ export class SessionShell {
   }
 
   #updateControls(): void {
+    this.#raceMenu.setBusy(this.#busy);
     const validSave = this.#saves.some((summary) => summary.status !== "corrupt");
     this.#dom.continueButton.disabled = this.#busy || !validSave;
     for (const control of this.#dom.root.querySelectorAll<
@@ -567,6 +502,7 @@ export class SessionShell {
       if (control === this.#dom.continueButton) continue;
       control.disabled = this.#busy;
     }
+    this.#dom.startGameButton.disabled = this.#busy || this.#raceMenu.pending;
     for (const button of this.#dom.loadList.querySelectorAll<HTMLButtonElement>("button")) {
       const row = button.closest<HTMLElement>(".native-save-item");
       const summary = this.#saves.find((save) => save.slotId === row?.dataset.slotId);
@@ -723,11 +659,7 @@ export function createSessionShellDom(document: DocumentLookup): SessionShellDom
     paladinDeathBuild: element<HTMLInputElement>(document, "session-build-paladin-death"),
     cavalryBuild: element<HTMLInputElement>(document, "session-build-cavalry"),
     sniperBuild: element<HTMLInputElement>(document, "session-build-sniper"),
-    raceSelect: element<HTMLSelectElement>(document, "session-race"),
-    tomteDescription: element<HTMLElement>(document, "session-tomte-description"),
-    tonberryDescription: element<HTMLElement>(document, "session-tonberry-description"),
-    entDescription: element<HTMLElement>(document, "session-ent-description"),
-    spectreDescription: element<HTMLElement>(document, "session-spectre-description"),
+    racePanel: element<HTMLElement>(document, "session-page-race"),
     characterNameInput: element<HTMLInputElement>(document, "session-character-name"),
     seedInput: element<HTMLInputElement>(document, "session-seed"),
     randomizeSeedButton: element<HTMLButtonElement>(document, "session-randomize-seed"),

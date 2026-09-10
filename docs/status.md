@@ -19,9 +19,9 @@
 
 ## 玩家入口
 
-新游戏白名单在 [session-shell.ts](../web/src/session-shell.ts)，表单在 [web/index.html](../web/index.html)。当前开放 6 个构筑、46 个种族：
+职业入口在 [session-shell.ts](../web/src/session-shell.ts)，种族目录在 [character-creation.ts](../web/src/character-creation.ts)，表单在 [web/index.html](../web/index.html)。当前开放 6 个构筑、46 个种族：
 
-创角界面已完成[面板改造第一步](character-creation-ui-plan.md)：固定为 `84vw × 84dvh`，提供概览、种族、职业标签页和常驻摘要/开始按钮。1280×720的Tauri桌面聚焦检查覆盖中英文概要、切页、校验定位和红色龙人死亡高阶法师实际创建；多级分类选择仍待后续步骤，当前开放范围不变。
+创角界面已完成[面板改造前两步](character-creation-ui-plan.md)：固定为 `84vw × 84dvh`，提供概览、种族、职业标签页和常驻摘要/开始按钮。种族按八个原版分类显示，龙人进入九个亚种层，详情查看与确认选择分开，取消分支保留已选种族。1280×720的Tauri桌面聚焦检查走通46个叶子、专项说明、分支取消和焦点恢复，并实际创建红色龙人死亡高阶法师；多级职业选择与完整窄屏验收仍待后续步骤，开放范围不变。
 
 | 构筑 | 稳定 Build ID | 范围 |
 | --- | --- | --- |

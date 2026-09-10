@@ -3217,6 +3217,23 @@ kbd {
 #session-creation-tabs > button:focus-visible { outline-offset: -3px; }
 .session-creation-body { display: grid; min-height: 0; min-width: 0; overflow: hidden; }
 [data-creation-panel] { min-height: 0; min-width: 0; overflow: auto; padding: 1em; }
+#session-page-race { display: grid; grid-template-rows: auto auto minmax(0, 1fr); padding: 0; overflow: hidden; }
+.session-race-path { grid-row: 1; display: flex; align-items: center; justify-content: space-between; gap: 0.5em; padding: 0.5em 0.8em; border-bottom: 1px solid var(--ui-line); }
+#session-race-path { margin: 0; color: var(--ui-muted); overflow-wrap: anywhere; }
+#session-race-back { flex: none; }
+#session-race-pending { grid-row: 2; margin: 0; padding: 0.35em 0.8em; color: var(--ui-accent-strong); font-size: var(--player-font-note); }
+.session-race-workspace { grid-row: 3; display: grid; grid-template-columns: minmax(0, 20fr) minmax(0, 30fr) minmax(0, 50fr); min-height: 0; min-width: 0; }
+#session-race-groups, #session-race-options { display: flex; flex-direction: column; gap: 0.15em; overflow: auto; min-width: 0; padding: 0.5em; border-right: 1px solid var(--ui-line); }
+#session-new-game-view :is(#session-race-groups, #session-race-options) > button { flex: none; text-align: left; border: 1px solid transparent; border-radius: 0; color: var(--ui-text); background: transparent; overflow-wrap: anywhere; }
+#session-new-game-view :is(#session-race-groups, #session-race-options) > button[aria-pressed="true"] { border-color: var(--ui-accent); color: var(--ui-accent-strong); background: var(--ui-surface-raised); }
+#session-new-game-view :is(#session-race-groups, #session-race-options) > button:hover { background: var(--ui-surface-raised); }
+#session-race-options > button { display: flex; align-items: center; justify-content: space-between; gap: 0.4em; }
+.session-race-parent::after { content: "›"; }
+#session-race-details { min-width: 0; min-height: 0; overflow: auto; padding: 0.8em 1em; line-height: 1.65; }
+.session-race-viewing { margin: 0; color: var(--ui-muted); font-size: var(--player-font-note); }
+#session-race-detail-title { margin: 0.2em 0 0.7em; color: var(--ui-accent-strong); font-size: var(--player-font-title); font-weight: 500; }
+#session-race-description { margin: 0; }
+#session-race-notes { padding-left: 1.2em; }
 #session-page-overview { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-content: start; gap: 1.5em; }
 .session-creation-identity, .session-creation-world { min-width: 0; }
 .session-creation-world h3 { margin: 0 0 0.75em; color: var(--ui-accent); font-size: var(--player-font-title); font-weight: 500; }
@@ -3247,6 +3264,9 @@ kbd {
 .session-shell[data-view="new-game"] .session-feedback > p:empty { display: none; }
 
 @media (max-width: 900px) {
+  .session-race-workspace { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); grid-template-rows: auto minmax(0, 1fr); }
+  #session-race-groups { grid-column: 1 / -1; flex-direction: row; border-right: 0; border-bottom: 1px solid var(--ui-line); }
+  #session-race-groups > button { white-space: nowrap; }
   #session-page-overview { grid-template-columns: minmax(0, 1fr); }
   #session-new-game-view .session-builds { grid-template-columns: minmax(0, 1fr); }
 }
