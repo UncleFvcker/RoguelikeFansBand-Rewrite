@@ -1665,6 +1665,16 @@ pub(super) fn validate_world(
                                 + 1,
                         );
                         if !(maximum_centerline_tiles..=interior_area).contains(&area_tiles)
+                            || (river.rfb_depth_chance
+                                && (procedural.depth == 0
+                                    || river.alternative.is_some()
+                                    || [&river.deep_terrain_id, &river.shallow_terrain_id]
+                                        .iter()
+                                        .any(|id| {
+                                            !terrain_tags
+                                                .get(id.as_str())
+                                                .is_some_and(|tags| tags.contains("water"))
+                                        })))
                             || river
                                 .chance_one_in
                                 .is_some_and(|chance| !(1..=10_000).contains(&chance))

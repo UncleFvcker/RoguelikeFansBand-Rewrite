@@ -1203,9 +1203,19 @@ impl Game {
             .as_ref()
             .filter(|layout| !layout.floor_mix.is_empty() || !layout.wall_mix.is_empty());
         let cavern_origin = definition.layout.as_ref().and_then(|layout| {
-            layout.cavern.as_ref().map(|cavern| {
-                self.generate_connected_cavern(definition, &cavern.terrain_id, &mut terrain)
-            })
+            layout
+                .cavern
+                .as_ref()
+                .filter(|cavern| {
+                    !cavern.rfb_depth_chance
+                        || (definition.depth > 20
+                            && layout.lake.is_none()
+                            && layout.destroyed.is_none()
+                            && self.rng.bounded(1000) + 1 < u64::from(definition.depth))
+                })
+                .map(|cavern| {
+                    self.generate_connected_cavern(definition, &cavern.terrain_id, &mut terrain)
+                })
         });
         let lake_origin = definition
             .layout
@@ -1407,6 +1417,9 @@ impl Game {
             && river
                 .chance_one_in
                 .is_none_or(|chance| self.rng.bounded(u64::from(chance)) == 0)
+            && (!river.rfb_depth_chance
+                || (self.rng.bounded(u64::from(definition.depth)) + 1 > 5
+                    && self.rng.bounded(256) > u64::from(definition.depth)))
         {
             let (deep_terrain_id, shallow_terrain_id) = river
                 .alternative
@@ -3930,7 +3943,18 @@ impl Game {
         debug_assert!(centerline.len() <= area);
         let mut painted = centerline.iter().copied().collect::<BTreeSet<_>>();
         for position in &centerline {
-            set_generated_terrain(terrain, definition.width, *position, deep_terrain_id);
+            // The base fill is still excavatable generation material (including
+            // Eyrie's mountain fill). Preserve permanent features added on top,
+            // such as Olympus' mixed walls, following streams.c's boundary.
+            let id = &terrain[generated_terrain_index(definition.width, *position)];
+            if id == &definition.wall_terrain_id
+                || !self
+                    .content
+                    .terrain(id)
+                    .is_some_and(|tile| tile.tags.iter().any(|tag| tag == "permanent"))
+            {
+                set_generated_terrain(terrain, definition.width, *position, deep_terrain_id);
+            }
         }
 
         while painted.len() < area {
@@ -3963,7 +3987,15 @@ impl Game {
             };
             let position = frontier[index];
             painted.insert(position);
-            set_generated_terrain(terrain, definition.width, position, shallow_terrain_id);
+            let id = &terrain[generated_terrain_index(definition.width, position)];
+            if id == &definition.wall_terrain_id
+                || !self
+                    .content
+                    .terrain(id)
+                    .is_some_and(|tile| tile.tags.iter().any(|tag| tag == "permanent"))
+            {
+                set_generated_terrain(terrain, definition.width, position, shallow_terrain_id);
+            }
         }
     }
 

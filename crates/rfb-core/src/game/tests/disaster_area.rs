@@ -516,6 +516,7 @@ fn disaster_area_mixed_cave_hydrology_keeps_connections_and_legal_spawns() {
         let budget = definition.generation_budget.as_mut().unwrap();
         if river {
             layout.river = Some(rfb_content::ProceduralRiverDefinition {
+                rfb_depth_chance: false,
                 deep_terrain_id: deep.to_owned(),
                 shallow_terrain_id: shallow.to_owned(),
                 chance_one_in: None,

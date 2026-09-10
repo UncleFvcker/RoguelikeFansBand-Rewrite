@@ -3,6 +3,42 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn water_river_depth_policy_requires_water_without_an_alternate() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    for case in 0..4 {
+        let mut content = artifact.content.clone();
+        let floor = content.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|f| f.id == "demo.floor.rlyeh-depth-80")
+            .unwrap();
+        let river = floor.layout.as_mut().unwrap().river.as_mut().unwrap();
+        river.rfb_depth_chance = true;
+        match case {
+            1 => floor.depth = 0,
+            2 => {
+                river.deep_terrain_id = "demo.terrain.surface-lava-deep".into();
+                river.shallow_terrain_id = "demo.terrain.surface-lava-shallow".into();
+            }
+            3 => {
+                river.alternative = Some(crate::ProceduralRiverAlternativeDefinition {
+                    deep_terrain_id: river.deep_terrain_id.clone(),
+                    shallow_terrain_id: river.shallow_terrain_id.clone(),
+                    chance_numerator: 1,
+                    chance_denominator: 2,
+                })
+            }
+            _ => {}
+        }
+        assert_eq!(
+            validate_and_normalize(&mut content).is_ok(),
+            case == 0,
+            "case {case}"
+        );
+    }
+}
+
+#[test]
 fn dungeon_pantheon_association_accepts_only_source_ids() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     for id in [0, 1, 2, 3, 4, 5] {

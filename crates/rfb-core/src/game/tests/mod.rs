@@ -47,6 +47,7 @@ mod monster_doors;
 mod monster_ecology;
 mod monster_hit_points;
 mod monster_movement;
+mod mount_olympus;
 mod mutations;
 mod paladin;
 mod pantheons;
