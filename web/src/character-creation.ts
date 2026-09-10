@@ -79,12 +79,14 @@ export class CreationMenu {
   readonly #onBack: () => void;
   readonly #kind: "race" | "career";
   readonly #catalog: readonly CreationGroup[];
+  readonly #narrow: MediaQueryList;
   #selected: CreationLeaf;
   #group: CreationGroup;
   #branch: CreationBranch | undefined;
   #pending = false;
   #viewed: CreationOption;
   #busy = false;
+  #lastFocused: HTMLElement | undefined;
 
   constructor(kind: "race" | "career", root: HTMLElement, localization: Localization, onChange: () => void, onBack: () => void) {
     this.#kind = kind;
@@ -93,6 +95,7 @@ export class CreationMenu {
     this.#group = this.#catalog[0]!;
     this.#viewed = this.#selected;
     this.#root = root;
+    this.#narrow = root.ownerDocument.defaultView!.matchMedia("(max-width: 640px)");
     this.#localization = localization;
     this.#onChange = onChange;
     this.#onBack = onBack;
@@ -111,16 +114,18 @@ export class CreationMenu {
   get selectedName(): string { return this.#name(this.#selected); }
 
   install(): void {
+    this.#narrow.addEventListener("change", this.#resize);
     this.#root.addEventListener("click", this.#click);
     this.#root.addEventListener("focusin", this.#focus);
-    this.#root.addEventListener("pointerover", this.#hover);
+    this.#root.addEventListener("pointermove", this.#hover);
     this.#root.addEventListener("keydown", this.#keydown);
   }
 
   dispose(): void {
+    this.#narrow.removeEventListener("change", this.#resize);
     this.#root.removeEventListener("click", this.#click);
     this.#root.removeEventListener("focusin", this.#focus);
-    this.#root.removeEventListener("pointerover", this.#hover);
+    this.#root.removeEventListener("pointermove", this.#hover);
     this.#root.removeEventListener("keydown", this.#keydown);
   }
 
@@ -128,6 +133,7 @@ export class CreationMenu {
 
   // Entering or leaving the page cancels a draft branch, never the confirmed leaf.
   reset(): void {
+    this.#showMenuView("options");
     this.#group = this.#catalog.find(group => group.options.some(entry => entry.id === this.#selected.id || ("children" in entry && entry.children.some(leaf => leaf.id === this.#selected.id))))!;
     this.#branch = this.#parent(this.#selected.id);
     this.#pending = false;
@@ -158,7 +164,7 @@ export class CreationMenu {
       return button;
     }));
     this.#path.textContent = [this.#localization.format(`session-${this.#kind}-label`), this.#localization.format(`session-${this.#kind}-category-${this.#group.id}`), ...(this.#branch ? [this.#localization.format(this.#branch.nameKey)] : [])].join(" › ");
-    this.#backButton.textContent = this.#localization.format(this.#branch ? "session-menu-back" : "session-menu-back-overview");
+    this.#renderBackButton();
     this.#pendingNote.hidden = !this.#pending;
     this.#preview(this.#viewed);
     if (focusedId) this.#optionButton(focusedId)?.focus();
@@ -203,9 +209,12 @@ export class CreationMenu {
     if (this.#busy || !(event.target instanceof Element)) return;
     const button = event.target.closest<HTMLButtonElement>("button");
     if (!button) return;
+    const view = button.dataset.menuView;
+    if (view === "options" || view === "details") { this.#showMenuView(view); return; }
     if (button === this.#backButton) { this.back(); return; }
     const group = this.#catalog.find(group => group.id === button.dataset[this.#kind + "Group"]);
     if (group) {
+      this.#showMenuView("options");
       this.#group = group;
       this.#branch = undefined;
       this.#pending = false;
@@ -233,6 +242,11 @@ export class CreationMenu {
   };
 
   back(): void {
+    if (this.#narrow.matches && this.#root.dataset.menuView === "details") {
+      this.#showMenuView("options");
+      this.#optionButton(this.#viewed.id)!.focus();
+      return;
+    }
     if (!this.#branch) { this.#onBack(); return; }
     const parent = this.#branch;
     this.#branch = undefined;
@@ -244,6 +258,7 @@ export class CreationMenu {
   }
 
   readonly #focus = (event: FocusEvent): void => {
+    if (event.target instanceof HTMLElement) this.#lastFocused = event.target;
     if (this.#busy || !(event.target instanceof HTMLButtonElement)) return;
     if (event.target.dataset[this.#kind + "Id"] || event.target.dataset[this.#kind + "Group"]) {
       for (const button of event.target.parentElement!.querySelectorAll<HTMLButtonElement>("button")) button.tabIndex = button === event.target ? 0 : -1;
@@ -253,7 +268,7 @@ export class CreationMenu {
   };
 
   readonly #hover = (event: PointerEvent): void => {
-    if (this.#busy || !(event.target instanceof Element)) return;
+    if (this.#busy || (event.movementX === 0 && event.movementY === 0) || !(event.target instanceof Element)) return;
     const id = event.target.closest<HTMLElement>(`[data-${this.#kind}-id]`)?.dataset[this.#kind + "Id"];
     const entry = this.#entries.find(entry => entry.id === id);
     if (entry && entry.id !== this.#viewed.id) this.#preview(entry);
@@ -264,12 +279,37 @@ export class CreationMenu {
     if (event.key === "Escape") {
       event.preventDefault(); event.stopPropagation(); this.back(); return;
     }
-    if (!(event.target instanceof HTMLButtonElement) || !["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
+    if (!(event.target instanceof HTMLButtonElement)) return;
+    const horizontal = event.target.parentElement === this.#groups && this.#root.ownerDocument.defaultView!.getComputedStyle(this.#groups).flexDirection === "row";
+    if (!["ArrowUp", "ArrowDown", "Home", "End", ...(horizontal ? ["ArrowLeft", "ArrowRight"] : [])].includes(event.key)) return;
     if (!event.target.dataset[this.#kind + "Id"] && !event.target.dataset[this.#kind + "Group"]) return;
     event.preventDefault(); event.stopPropagation();
     const buttons = [...event.target.parentElement!.querySelectorAll<HTMLButtonElement>("button")];
     const index = buttons.indexOf(event.target);
-    const next = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1 : (index + (event.key === "ArrowDown" ? 1 : buttons.length - 1)) % buttons.length;
+    const next = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1 : (index + (["ArrowDown", "ArrowRight"].includes(event.key) ? 1 : buttons.length - 1)) % buttons.length;
     buttons[next]!.focus();
+  };
+
+  #showMenuView(view: "options" | "details"): void {
+    this.#root.dataset.menuView = view;
+    this.#renderBackButton();
+    for (const button of this.#root.querySelectorAll<HTMLButtonElement>("[data-menu-view]")) {
+      button.setAttribute("aria-pressed", String(button.dataset.menuView === view));
+    }
+  }
+
+  #renderBackButton(): void {
+    const childView = this.#branch || (this.#narrow.matches && this.#root.dataset.menuView === "details");
+    this.#backButton.textContent = this.#localization.format(childView ? "session-menu-back" : "session-menu-back-overview");
+  }
+
+  readonly #resize = (): void => {
+    this.#renderBackButton();
+    const document = this.#root.ownerDocument;
+    const active = document.activeElement === document.body ? this.#lastFocused : document.activeElement;
+    if (!(active instanceof HTMLElement) || !this.#root.contains(active) || this.#root.hidden || active.checkVisibility()) return;
+    if (this.#narrow.matches) {
+      this.#root.querySelector<HTMLButtonElement>(`[data-menu-view="${this.#root.dataset.menuView}"]`)!.focus();
+    } else this.#optionButton(this.#viewed.id)!.focus();
   };
 }

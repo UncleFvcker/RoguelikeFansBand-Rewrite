@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { runRendererProfile } from "./render-profile.e2e.mjs";
 import { runEgoScenario } from "./ego.e2e.mjs";
 import { runCharacterCreationScenario, selectCreationRace, selectCreationBuild } from "./character-creation.e2e.mjs";
+import { runCreationLayoutScenario } from "./character-creation-layout.e2e.mjs";
 
 const webDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryDirectory = path.resolve(webDirectory, "..");
@@ -68,10 +69,13 @@ async function main() {
     await rm(diagnosticDirectory, { recursive: true, force: true });
     await rm(desktopLogPath, { force: true });
     const port = await reservePort();
+    const creationLayout = process.argv.includes("--character-creation") || process.argv.includes("--creation-layout");
+    const debugProfile = path.join(repositoryDirectory, "target", "e2e", "creation-webview");
     child = spawn(executable, [], {
       cwd: repositoryDirectory,
       env: {
         ...process.env,
+        ...(creationLayout ? { WEBVIEW2_USER_DATA_FOLDER: debugProfile } : {}),
         WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: [
           process.env.WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS,
           "--disable-gpu",
@@ -97,6 +101,9 @@ async function main() {
       await runRendererProfile(client, artifactDirectory);
     } else if (process.argv.includes("--character-creation")) {
       await runCharacterCreationScenario(client, artifactDirectory);
+      await runCreationLayoutScenario(client, artifactDirectory, debugProfile);
+    } else if (process.argv.includes("--creation-layout")) {
+      await runCreationLayoutScenario(client, artifactDirectory, debugProfile);
     } else if (lifeForceOnly) {
       await runLifeForceScenario(client);
     } else if (tomteOnly || tonberryOnly || entOnly || spectreOnly) {

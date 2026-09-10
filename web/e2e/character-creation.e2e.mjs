@@ -151,6 +151,9 @@ export async function runCharacterCreationScenario(driver, artifactDirectory) {
   await key('[data-career-id="demo.build.archer"]', "End");
   assert.equal(await driver.execute('return document.querySelector("#session-creation-summary").textContent'), beforeCareer);
   assert.equal(await driver.execute('return document.querySelector("#session-career-detail-title").textContent'), "狙击手");
+  await driver.execute(`document.querySelector('[data-career-id="demo.build.archer"]').dispatchEvent(new PointerEvent("pointermove", { bubbles:true, movementX:1 })); return true;`);
+  assert.equal(await driver.execute('return document.querySelector("#session-career-detail-title").textContent'), "弓箭手");
+  assert.equal(await driver.execute('return document.querySelector("#session-creation-summary").textContent'), beforeCareer);
   for (const [group, parent] of [["magic", "high-mage"], ["hybrid", "paladin"]]) {
     await click(`[data-career-group="${group}"]`);
     await click(`[data-career-id="${parent}"]`);

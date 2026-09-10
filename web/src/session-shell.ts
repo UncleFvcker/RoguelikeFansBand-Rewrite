@@ -469,6 +469,7 @@ export class SessionShell {
   }
 
   #updateControls(): void {
+    this.#dom.error.parentElement!.tabIndex = !this.#busy && this.#dom.error.textContent ? 0 : -1;
     this.#raceMenu.setBusy(this.#busy);
     this.#careerMenu.setBusy(this.#busy);
     const validSave = this.#saves.some((summary) => summary.status !== "corrupt");
@@ -602,6 +603,7 @@ export class SessionShell {
 
   #clearError(): void {
     this.#dom.error.replaceChildren();
+    this.#dom.error.parentElement!.tabIndex = -1;
   }
 
   #showError(error: unknown): void {

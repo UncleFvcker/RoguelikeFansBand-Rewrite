@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -14,10 +15,20 @@ const tauriCli = path.join(
   "cli",
   "tauri.js",
 );
+const { app } = JSON.parse(readFileSync(path.join(webDirectory, "src-tauri", "tauri.conf.json"), "utf8"));
 
+// Browser debugging and viewport permissions exist only in the WebDriver build.
 const child = spawn(
   process.execPath,
-  [tauriCli, "build", "--debug", "--no-bundle", "--features", "webdriver"],
+  [tauriCli, "build", "--debug", "--no-bundle", "--features", "webdriver", "--config", JSON.stringify({
+    app: {
+      windows: app.windows.map(window => ({ ...window, additionalBrowserArgs: "--disable-gpu --remote-debugging-port=0" })),
+      security: { capabilities: ["default", {
+        identifier: "e2e-viewport", windows: ["main"],
+        permissions: ["core:webview:allow-set-webview-zoom", "core:window:allow-set-min-size"],
+      }] },
+    },
+  })],
   {
     cwd: webDirectory,
     env: {

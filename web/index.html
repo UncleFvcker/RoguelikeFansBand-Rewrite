@@ -39,6 +39,10 @@
           <section id="session-page-career" class="session-menu" data-creation-panel="career" role="tabpanel" aria-labelledby="session-tab-career" tabindex="0" hidden>
             <div class="session-menu-navigation">
               <p id="session-career-path" class="session-menu-path" aria-live="polite"></p>
+              <div class="session-menu-views" role="group" data-l10n-aria-label="session-menu-views">
+                <button type="button" data-menu-view="options" aria-pressed="true" aria-controls="session-career-groups session-career-options" data-l10n-id="session-menu-select"></button>
+                <button type="button" data-menu-view="details" aria-pressed="false" aria-controls="session-career-details" data-l10n-id="session-menu-details"></button>
+              </div>
               <button id="session-career-back" class="session-menu-back" type="button"></button>
             </div>
             <p id="session-career-pending" class="session-menu-pending" role="status" data-l10n-id="session-career-pending" hidden></p>
@@ -56,6 +60,10 @@
           <section id="session-page-race" class="session-menu" data-creation-panel="race" role="tabpanel" aria-labelledby="session-tab-race" tabindex="0" hidden>
             <div class="session-menu-navigation">
               <p id="session-race-path" class="session-menu-path" aria-live="polite"></p>
+              <div class="session-menu-views" role="group" data-l10n-aria-label="session-menu-views">
+                <button type="button" data-menu-view="options" aria-pressed="true" aria-controls="session-race-groups session-race-options" data-l10n-id="session-menu-select"></button>
+                <button type="button" data-menu-view="details" aria-pressed="false" aria-controls="session-race-details" data-l10n-id="session-menu-details"></button>
+              </div>
               <button id="session-race-back" class="session-menu-back" type="button"></button>
             </div>
             <p id="session-race-pending" class="session-menu-pending" role="status" data-l10n-id="session-race-pending" hidden></p>
@@ -142,7 +150,7 @@
           </div>
         </section>
 
-        <div class="session-feedback">
+        <div class="session-feedback" role="region" tabindex="-1" data-l10n-aria-label="session-feedback-label">
           <p id="session-status" class="session-status" aria-live="polite"></p>
           <p id="session-error" class="session-error" aria-live="assertive"></p>
         </div>
