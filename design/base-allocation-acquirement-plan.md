@@ -1,6 +1,6 @@
 # 完整底材分配与 Acquirement 实施计划
 
-状态：待实施。承接 E8.7 提交 `5e28b2ab9`，本计划不表示生成契约已经通过。
+状态：B0、B1 已实现，B2–B6 待实施。承接 E8.7 提交 `5e28b2ab9`，本计划不表示完整生成契约已经通过。
 
 本次规划核对的 RFB 来源：`D:/codex/Frogcomposband/master` 的 `master` Git 对象
 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。实施时重新解析 `master`，记录实际提交；
@@ -28,7 +28,7 @@
 | 类别选择 | 直接在表中选物品 | `_kind_alloc_table` 的类别权重、Good/Great 调整、装备槽判断以及主题/职业 hook 优先级 |
 | 层级抽样 | 直接按 `context.depth` 过滤 | Good 的底材层级 +10、`get_obj_num` 限制/增深、分配最大层级和来源限制 |
 | Good/Great | 以单件可装备物品近似优质池 | 分别实现源谓词；装置、高阶书、特定药水/卷轴和弹药按源规则参与 |
-| 书本状态 | `ItemKnowledgeState` 只有 tried/aware | 按 kind 累计发现数及必要去重状态；同时用于普通权重衰减与 tailored 条件 |
+| 书本状态 | B1 已在 `ItemKnowledgeState` 保存 found_count，实例保存 book_counted | B2/B4 将累计发现数接到普通权重衰减与 tailored 条件 |
 | Tailored | 当前主要是 Tomte 针织帽偏好 | 装备兼容、最爱武器、弓/骑乘武器/装置/领域书 hook，以及物化后的不合用检查 |
 | 重试 | Acquirement 按数量批量调用生成器 | 区分 `make_object` 内部重试和 Acquirement 外部重试；成功数量、失败 RNG 和状态副作用各按来源处理 |
 
@@ -77,6 +77,31 @@
 确认每个当前分配类别都有可解释的候选来源或明确的缺口，不用比例报表代替映射证据。
 
 ### B1：发现计数与保存完整性
+
+已实现。实际来源为 RFB `master` Git 对象 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。
+以下映射限定当前物理书本，不扩建 bought/used/destroyed 等完整统计。
+
+| 源事件与实际调用链 | 本项目落点与语义 |
+| --- | --- |
+| `py_birth.c:124–170,193` → `pack_carry` → `stats_on_pickup`（`pack.c:46–65`） | `initialization.rs` 完成出生知识后统计随身书本；书本自带 awareness，因此每本计 found 一次；其他出生物品不新增计数 |
+| 地面生成尚未调用统计 | `commit_generated_item_draft`/地图生成只创建未计数地面实例；能看到书本也不等于拾取 |
+| `stats_on_pickup`（`object2.c:1019`） | `pick_up_item_at_player` 成功转移后计数；直接入包的生成/任务/悬赏奖励与现有入包帮助函数同样记录；失败预检不改计数 |
+| `stats_on_purchase`（`object2.c:873`） | `buy_from_shop` 只设置实例标记，found 不变；购入书本以后鉴定、销毁、掉落再拾取均不补 found |
+| `shop.c::_buy_aux:1570` 与 `_sell_aux:1812` **都调用 `stats_on_purchase`** | `sell_to_shop` 同样只标记；源码 `stats_on_sell` 虽定义了 found 行为，但该 ref 无调用者，不能凭函数名接入 |
+| `stats_on_identify` 由鉴定路径单独调用；`obj_identify_fully` 本身不调用统计 | `identify_item_instance` 统计未计数书；商店设置物品知识不经这一发现路径 |
+| `stats_on_combine`（`object2.c:950`） | 当前内容校验要求书本 `max_stack == 1`；没有物理书堆分裂/合并，商店和家仅将独立实例投影为组，部分组转移逐本保留标记 |
+| `stats_on_p_destroy` / `stats_on_m_destroy`（`object2.c:978,1010`） | 玩家 `destroy_item` 先记录未计数书再移除；怪物/环境移除不触发新发现，已累计 found 不递减 |
+| `OM_COUNTED` 随物品转移；kind 统计属角色 | 地面、背包、怪物携带、商店、家、存储楼层的保存均保留标记；跨角色博物馆保留实例标记，禁止转入捐赠者的累计 found |
+| `stats_on_notice`（`object2.c:928`） | 当前书本无消耗/use_action；学习与阅读不消耗物理书，也不重记 found。未来若增加消耗书本的真实入口，再核对源事件 |
+
+`found_count` 是按 kind 的非负累计数；上限取源 `counts_t` 的 `i32::MAX`，达到表示上限后饱和，
+不以分配器阈值截断，不溢出回零。保存拒绝未知 kind、非书 found、越界计数、非书计数标记和非法书堆。
+实例标记与累计数分别进入现有保存/hash；不要求 found 等于当前标记实例数，因为购买和跨角色转移允许两者不同。
+
+版本见 [状态快照](../docs/status.md)。现有绑定生成器覆盖命令和前端投影，保存 DTO 不在导出集合；
+已执行生成与一致性检查，B1 未改变前端投影，因此 TypeScript/协议 JSON Schema 无差异，不手加仅供分配器使用的状态到 UI。
+专项测试覆盖出生、生成/拾取、鉴定/销毁、失败预检、出售回购、部分组存取、跨楼层/跨角色及保存校验；
+累计 1–11 与表示上限的测试证明计数跨越分配边界仍保留。三套分配谓词本身留给 B2/B3/B4，不提前宣称通过。
 
 落点：现有物品知识/库存、商店、物品使用、状态与保存模块。
 

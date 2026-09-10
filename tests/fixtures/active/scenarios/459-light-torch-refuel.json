@@ -64,7 +64,7 @@
       "inventoryStackCount": 8,
       "lastCommandSeq": 2,
       "revision": 2,
-      "stateHash": "6a9817e8bcb254883613ceb828d53efb1772664146f59f89eb7410495a0ee353",
+      "stateHash": "3826ad032f702d59fdb0a1ddfda8eb23b7f42f84a80332e3c32118312437f994",
       "turn": 2
     },
     "events": [
@@ -89,6 +89,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "6a9817e8bcb254883613ceb828d53efb1772664146f59f89eb7410495a0ee353"
+    "saveRoundTripStateHash": "3826ad032f702d59fdb0a1ddfda8eb23b7f42f84a80332e3c32118312437f994"
   }
 }

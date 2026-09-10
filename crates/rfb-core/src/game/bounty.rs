@@ -551,6 +551,7 @@ impl Game {
             initial_item_runtime_state(&self.content, &mut self.rng, kind_id, &[], 1);
         Ok(ItemInstance {
             previously_worn: false,
+            book_counted: false,
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,
@@ -580,7 +581,8 @@ impl Game {
         })
     }
 
-    fn grant_bounty_reward(&mut self, reward: ItemInstance) {
+    fn grant_bounty_reward(&mut self, mut reward: ItemInstance) {
+        super::inventory::record_book_found(&self.content, &mut self.item_knowledge, &mut reward);
         let kind_id = reward.kind_id.clone();
         let definition = self
             .content

@@ -396,6 +396,7 @@ pub(in crate::game) fn give_inventory_item(game: &mut Game, id: &str, kind_id: &
         initial_item_runtime_state(&game.content, &mut game.rng, kind_id, &[], 1);
     game.items.push(ItemInstance {
         previously_worn: false,
+        book_counted: false,
         artifact_name: None,
         intrinsic_melee_damage_dice: None,
         intrinsic_weight_tenths_pound: None,

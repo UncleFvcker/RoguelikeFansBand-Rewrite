@@ -2709,6 +2709,7 @@ mod tests {
     fn launcher_instance(kind_id: &str) -> ItemInstance {
         ItemInstance {
             previously_worn: false,
+            book_counted: false,
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,
@@ -3514,6 +3515,7 @@ mod tests {
     fn ego_materialization_commits_complete_instance_state_only_after_success() {
         let mut item = ItemInstance {
             previously_worn: false,
+            book_counted: false,
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,
@@ -3607,6 +3609,7 @@ mod tests {
         let game = Game::new(57);
         let mut item = ItemInstance {
             previously_worn: false,
+            book_counted: false,
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,
@@ -3667,7 +3670,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(crate::STATE_HASH_SCHEMA_VERSION, 118);
+        assert_eq!(crate::STATE_HASH_SCHEMA_VERSION, 119);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,
@@ -3682,6 +3685,7 @@ mod tests {
         };
         let mut item = ItemInstance {
             previously_worn: false,
+            book_counted: false,
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,

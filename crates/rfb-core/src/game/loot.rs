@@ -119,6 +119,7 @@ impl GeneratedItemDraft {
     pub(super) fn into_item_instance(self, id: String, location: ItemLocation) -> ItemInstance {
         ItemInstance {
             previously_worn: false,
+            book_counted: false,
             artifact_name: self.artifact_name,
             intrinsic_melee_damage_dice: self.intrinsic_melee_damage_dice,
             intrinsic_weight_tenths_pound: self.intrinsic_weight_tenths_pound,
@@ -1269,7 +1270,11 @@ impl Game {
     ) -> Result<ItemInstance, CoreError> {
         let id = self.allocate_item_instance_id()?;
         self.register_generated_artifact(&draft.kind_id);
-        Ok(draft.into_item_instance(id, location))
+        let mut item = draft.into_item_instance(id, location);
+        if matches!(item.location, ItemLocation::Inventory) {
+            super::inventory::record_book_found(&self.content, &mut self.item_knowledge, &mut item);
+        }
+        Ok(item)
     }
 
     pub(super) fn register_generated_artifact(&mut self, kind_id: &str) {

@@ -175,6 +175,7 @@ fn append_starting_item(
         });
     items.push(ItemInstance {
         previously_worn: false,
+        book_counted: false,
         artifact_name: None,
         intrinsic_melee_damage_dice: None,
         intrinsic_weight_tenths_pound: None,
@@ -431,6 +432,7 @@ impl Game {
                 );
                 let mut item = ItemInstance {
                     previously_worn: false,
+                    book_counted: false,
                     artifact_name: None,
                     intrinsic_melee_damage_dice: None,
                     intrinsic_weight_tenths_pound: None,
@@ -636,6 +638,18 @@ impl Game {
         game.initialize_birth_race_mutations();
         game.initialize_player_ability_state();
         game.initialize_starting_item_knowledge();
+        for index in 0..game.items.len() {
+            if matches!(
+                game.items[index].location,
+                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            ) {
+                super::inventory::record_book_found(
+                    &game.content,
+                    &mut game.item_knowledge,
+                    &mut game.items[index],
+                );
+            }
+        }
         let mut initial_entities = std::mem::take(&mut game.entities);
         for actor in &mut initial_entities {
             game.maybe_initialize_chameleon_form(actor);
@@ -668,6 +682,7 @@ impl Game {
                     ItemKnowledgeState {
                         tried: true,
                         aware: true,
+                        found_count: 0,
                     },
                 );
             }

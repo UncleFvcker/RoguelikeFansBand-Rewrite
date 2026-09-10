@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.241";
-pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 13;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 13;
+pub const PROTOCOL_VERSION: &str = "1.242";
+pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 14;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -5422,6 +5422,8 @@ pub struct CapturedActorSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct ItemSaveDto {
     pub previously_worn: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub book_counted: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5477,6 +5479,8 @@ pub struct ItemSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct InventoryItemSaveDto {
     pub previously_worn: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub book_counted: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5531,6 +5535,8 @@ pub struct InventoryItemSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct EquipmentItemSaveDto {
     pub previously_worn: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub book_counted: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5586,6 +5592,8 @@ pub struct EquipmentItemSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct CarriedItemSaveDto {
     pub previously_worn: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub book_counted: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5688,6 +5696,8 @@ pub struct FloorSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct ItemKnowledgeSaveDto {
     pub kind_id: String,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    pub found_count: u32,
     #[serde(default)]
     pub tried: bool,
     #[serde(default)]

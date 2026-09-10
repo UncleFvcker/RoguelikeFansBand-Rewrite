@@ -562,17 +562,21 @@ fn item_knowledge_from_save(
 ) -> Result<BTreeMap<String, ItemKnowledgeState>, CoreError> {
     let mut knowledge = BTreeMap::new();
     for entry in entries {
-        let valid_kind = content
-            .item(&entry.kind_id)
-            .is_some_and(|definition| definition.appearance_name_key.is_some());
+        let valid_kind = content.item(&entry.kind_id).is_some_and(|definition| {
+            (definition.appearance_name_key.is_some() || (!entry.tried && !entry.aware))
+                && (entry.found_count == 0 || definition.ability_book_id.is_some())
+        });
         if !valid_kind
-            || !entry.tried
+            || (entry.aware && !entry.tried)
+            || (!entry.tried && entry.found_count == 0)
+            || entry.found_count > super::inventory::MAX_BOOK_FOUND_COUNT
             || knowledge
                 .insert(
                     entry.kind_id,
                     ItemKnowledgeState {
                         tried: entry.tried,
                         aware: entry.aware,
+                        found_count: entry.found_count,
                     },
                 )
                 .is_some()
@@ -1781,6 +1785,7 @@ impl Game {
                 kind_id: kind_id.clone(),
                 tried: knowledge.tried,
                 aware: knowledge.aware,
+                found_count: knowledge.found_count,
             })
             .collect()
     }

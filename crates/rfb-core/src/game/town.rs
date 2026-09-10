@@ -494,6 +494,7 @@ fn plain_shop_item(
     let (activation, charges) = initial_item_runtime_state(content, rng, item_kind_id, &[], 15);
     Ok(ItemInstance {
         previously_worn: false,
+        book_counted: false,
         artifact_name: None,
         intrinsic_melee_damage_dice: None,
         intrinsic_weight_tenths_pound: None,
@@ -939,6 +940,7 @@ fn transfer_home_group_to_inventory(
 }
 
 fn carry_home_withdrawal_item(game: &mut Game, mut item: ItemInstance) -> Vec<String> {
+    super::inventory::record_book_found(&game.content, &mut game.item_knowledge, &mut item);
     let definition = game
         .content
         .item(&item.kind_id)
@@ -2497,7 +2499,14 @@ impl Game {
             .map_err(|_| "item-id-exhausted")?;
         let purchased = transfer_group_to_inventory(self, shop_id, &source_ids, quantity, split_id);
         let mut destination_ids = Vec::new();
-        for item in purchased {
+        for mut item in purchased {
+            if self
+                .content
+                .item(&item.kind_id)
+                .is_some_and(|kind| kind.ability_book_id.is_some())
+            {
+                item.book_counted = true;
+            }
             destination_ids.extend(self.carry_shop_purchase_item(item));
         }
         let purchased_id = destination_ids
@@ -2596,7 +2605,18 @@ impl Game {
             .then(|| self.allocate_item_instance_id())
             .transpose()
             .map_err(|_| "item-id-exhausted")?;
-        let sold = transfer_group_to_shop(self, shop_id, &source_ids, quantity, split_id);
+        let mut sold = transfer_group_to_shop(self, shop_id, &source_ids, quantity, split_id);
+        for item in &mut sold {
+            // shop.c::_buy_aux also calls stats_on_purchase (stats_on_sell is
+            // unused). Preserve that source behavior for an uncounted book.
+            if self
+                .content
+                .item(&item.kind_id)
+                .is_some_and(|kind| kind.ability_book_id.is_some())
+            {
+                item.book_counted = true;
+            }
+        }
         let sold_id = sold
             .first()
             .expect("successful sale must have a destination")

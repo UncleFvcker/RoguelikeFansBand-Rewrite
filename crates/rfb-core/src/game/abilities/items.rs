@@ -806,6 +806,7 @@ impl Game {
         let item_id = self.allocate_item_instance_id()?;
         let mut item = ItemInstance {
             previously_worn: false,
+            book_counted: false,
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,

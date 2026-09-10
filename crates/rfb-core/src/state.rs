@@ -96,6 +96,8 @@ pub(crate) struct ItemInstance {
     pub(crate) quantity: u32,
     pub(crate) inscription: Option<String>,
     pub(crate) previously_worn: bool,
+    /// Book equivalent of OM_COUNTED; includes purchases, which do not add found.
+    pub(crate) book_counted: bool,
     pub(crate) origin_actor_kind_id: Option<String>,
     pub(crate) origin_kind: Option<ItemOriginKindDto>,
     pub(crate) damage_dice_override: Option<u16>,

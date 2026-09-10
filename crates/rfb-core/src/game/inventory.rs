@@ -23,6 +23,33 @@ use super::{
 pub(super) struct ItemKnowledgeState {
     pub(super) tried: bool,
     pub(super) aware: bool,
+    pub(super) found_count: u32,
+}
+
+// Source counts_t uses a signed 32-bit count. Saturation keeps every allocator
+// predicate unchanged at the representational limit, without wrapping to zero.
+pub(super) const MAX_BOOK_FOUND_COUNT: u32 = i32::MAX as u32;
+
+pub(super) fn record_book_found(
+    content: &ContentCatalog,
+    knowledge: &mut BTreeMap<String, ItemKnowledgeState>,
+    item: &mut ItemInstance,
+) {
+    if item.book_counted
+        || content
+            .item(&item.kind_id)
+            .is_none_or(|kind| kind.ability_book_id.is_none())
+    {
+        return;
+    }
+    // Content validation keeps physical books at max_stack == 1.
+    debug_assert_eq!(item.quantity, 1);
+    item.book_counted = true;
+    let state = knowledge.entry(item.kind_id.clone()).or_default();
+    state.found_count = state
+        .found_count
+        .saturating_add(item.quantity)
+        .min(MAX_BOOK_FOUND_COUNT);
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -1198,6 +1225,11 @@ impl Game {
         if quantity == 0 || quantity > self.items[index].quantity {
             return Err(DestroyItemFailure::InvalidQuantity);
         }
+        record_book_found(
+            &self.content,
+            &mut self.item_knowledge,
+            &mut self.items[index],
+        );
         let kind_id = self.items[index].kind_id.clone();
         if quantity == self.items[index].quantity {
             let removed = self.items.remove(index);
@@ -1268,6 +1300,7 @@ impl Game {
     }
 
     pub(super) fn carry_shop_purchase_item(&mut self, mut item: ItemInstance) -> Vec<String> {
+        record_book_found(&self.content, &mut self.item_knowledge, &mut item);
         let definition = self
             .content
             .item(&item.kind_id)
@@ -1344,11 +1377,17 @@ impl Game {
         item_id: &str,
         request: ItemIdentificationRequest,
     ) -> ItemIdentificationOutcome {
-        let item = self
+        let index = self
             .items
             .iter()
-            .find(|item| item.id == item_id)
+            .position(|item| item.id == item_id)
             .expect("planned identify target must remain available");
+        record_book_found(
+            &self.content,
+            &mut self.item_knowledge,
+            &mut self.items[index],
+        );
+        let item = &self.items[index];
         let item_kind_id = item.kind_id.clone();
         let affix_ids = item
             .affix_ids
@@ -2155,6 +2194,11 @@ impl Game {
                 capacity,
             }),
             PickUpPlan::Picked(plan) => {
+                record_book_found(
+                    &self.content,
+                    &mut self.item_knowledge,
+                    &mut self.items[plan.ground_index],
+                );
                 for (stack_index, transferred) in plan.stack_transfers {
                     self.items[stack_index].quantity += transferred;
                 }

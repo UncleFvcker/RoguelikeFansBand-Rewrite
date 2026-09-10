@@ -674,6 +674,7 @@ pub(super) fn reward_item(
     };
     let mut item = ItemInstance {
         previously_worn: false,
+        book_counted: false,
         artifact_name: None,
         intrinsic_melee_damage_dice: None,
         intrinsic_weight_tenths_pound: None,
@@ -936,6 +937,11 @@ impl Game {
         if remaining > 0 {
             let mut reward = reward;
             reward.quantity = remaining;
+            super::inventory::record_book_found(
+                &self.content,
+                &mut self.item_knowledge,
+                &mut reward,
+            );
             self.items.push(reward);
         }
         self.register_generated_artifact(&outcome.item_kind_id);

@@ -141,6 +141,9 @@ pub(super) fn item_creation_state_is_valid(
     item: &ItemInstance,
     definition: &rfb_content::ItemDefinition,
 ) -> bool {
+    if item.book_counted && (definition.ability_book_id.is_none() || item.quantity != 1) {
+        return false;
+    }
     let player_made_state_is_valid = match item.origin_kind {
         None => item.discount_percent == 0,
         Some(ItemOriginKindDto::PlayerMade) => {

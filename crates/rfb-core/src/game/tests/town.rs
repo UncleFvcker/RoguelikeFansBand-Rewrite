@@ -4016,6 +4016,140 @@ fn temple_purchase_and_alchemist_visit_use_independent_shop_state() {
 }
 
 #[test]
+fn book_discovery_shop_groups_and_repurchase_do_not_count_as_found() {
+    let mut game = Game::new_with_build(42, "demo.build.warrior").unwrap();
+    game.gold = 10_000;
+    game.player.position = Position { x: 106, y: 30 };
+    game.mark_shop_visited_at_player().unwrap();
+    let first = projected_shop(&game.snapshot().shops, BOOKSTORE_ID).stock[0].clone();
+    let mut another = game.shop_states[BOOKSTORE_ID]
+        .inventory
+        .iter()
+        .find(|item| item.id == first.id)
+        .unwrap()
+        .clone();
+    another.id = game.allocate_item_instance_id().unwrap();
+    game.shop_states
+        .get_mut(BOOKSTORE_ID)
+        .unwrap()
+        .inventory
+        .push(another);
+    let book = projected_shop(&game.snapshot().shops, BOOKSTORE_ID).stock[0].clone();
+    assert!(book.quantity >= 2);
+    let before = game.state_hash();
+    assert!(
+        game.buy_from_shop(BOOKSTORE_ID, &book.id, book.quantity + 1)
+            .is_err()
+    );
+    assert_eq!(game.state_hash(), before);
+    let purchase = game.buy_from_shop(BOOKSTORE_ID, &book.id, 2).unwrap();
+    assert!(!game.item_knowledge.contains_key(&book.kind_id));
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| item.kind_id == book.kind_id
+                && item.location == ItemLocation::Inventory
+                && item.book_counted)
+            .count(),
+        2
+    );
+    let sale = game
+        .sell_to_shop(BOOKSTORE_ID, &purchase.item_id, 1)
+        .unwrap();
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    game = restored;
+    let repurchase = game.buy_from_shop(BOOKSTORE_ID, &sale.item_id, 1).unwrap();
+    game.drop_inventory_quantity(&repurchase.item_id, 1)
+        .unwrap()
+        .unwrap();
+    game.pick_up_item_at_player(Some(&repurchase.item_id))
+        .unwrap();
+    game.destroy_item(&repurchase.item_id, 1).unwrap();
+    assert!(!game.item_knowledge.contains_key(&book.kind_id));
+
+    // Source shop.c uses stats_on_purchase in both trade directions, including
+    // an uncounted item entering the shop. It must not create a found count.
+    support::give_inventory_item(&mut game, "test.uncounted-book", &book.kind_id);
+    let sale = game
+        .sell_to_shop(BOOKSTORE_ID, "test.uncounted-book", 1)
+        .unwrap();
+    assert!(
+        game.shop_states[BOOKSTORE_ID]
+            .inventory
+            .iter()
+            .find(|item| item.id == sale.item_id)
+            .unwrap()
+            .book_counted
+    );
+    assert!(!game.item_knowledge.contains_key(&book.kind_id));
+}
+
+#[test]
+fn book_discovery_home_partial_groups_preserve_each_instance_through_save() {
+    let mut game = Game::new_with_build(406, "demo.build.warrior").unwrap();
+    game.player.position = Position { x: 93, y: 30 };
+    game.mark_shop_visited_at_player().unwrap();
+    let kind = "demo.item.black-prayers";
+    for id in ["test.book-one", "test.book-two"] {
+        support::give_inventory_item(&mut game, id, kind);
+        game.identify_item_instance(id, ItemIdentificationRequest::new(true));
+    }
+    let deposit = game.deposit_at_home(HOME_ID, "test.book-one", 2).unwrap();
+    assert_eq!(game.item_knowledge[kind].found_count, 2);
+    assert_eq!(game.home_states[HOME_ID].inventory.len(), 2);
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    game = restored;
+    game.withdraw_from_home(HOME_ID, &deposit.item_id, 1)
+        .unwrap();
+    assert_eq!(game.home_states[HOME_ID].inventory.len(), 1);
+    assert!(game.home_states[HOME_ID].inventory[0].book_counted);
+    assert!(
+        game.items
+            .iter()
+            .filter(|item| item.kind_id == kind)
+            .all(|item| item.book_counted)
+    );
+    assert_eq!(game.item_knowledge[kind].found_count, 2);
+}
+
+#[test]
+fn book_discovery_is_character_history_not_shared_museum_knowledge() {
+    let facility = "demo.town-facility.morivant-museum";
+    let kind = "demo.item.black-prayers";
+    let mut donor = town_facility_game(407, "demo.build.warrior", facility);
+    donor.mark_shop_visited_at_player().unwrap();
+    donor.reveal_current_visibility();
+    support::give_inventory_item(&mut donor, "test.book", kind);
+    donor.identify_item_instance("test.book", ItemIdentificationRequest::new(true));
+    donor.deposit_at_home(facility, "test.book", 1).unwrap();
+    let museum = donor.shared_museum().unwrap();
+    assert!(museum.item_knowledge.is_empty());
+    assert!(museum.inventory[0].book_counted);
+    assert_eq!(donor.item_knowledge[kind].found_count, 1);
+    let mut recipient = town_facility_game(408, "demo.build.warrior", facility);
+    recipient.mark_shop_visited_at_player().unwrap();
+    recipient.reveal_current_visibility();
+    let mut recipient = recipient.with_shared_museum(&museum).unwrap().unwrap();
+    let imported = recipient.shared_museum().unwrap();
+    recipient
+        .withdraw_from_home(facility, &imported.inventory[0].id, 1)
+        .unwrap();
+    assert!(!recipient.item_knowledge.contains_key(kind));
+    let mut corrupt = museum;
+    corrupt
+        .item_knowledge
+        .push(rfb_protocol::ItemKnowledgeSaveDto {
+            kind_id: kind.to_owned(),
+            tried: false,
+            aware: false,
+            found_count: 1,
+        });
+    assert!(recipient.with_shared_museum(&corrupt).is_err());
+}
+
+#[test]
 fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
     let mut game = test_caster_game(42);
     game.gold = 10_000;

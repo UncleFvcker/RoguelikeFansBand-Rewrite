@@ -681,6 +681,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
     {
         payload.inventory.push(InventoryItemSaveDto {
             previously_worn: false,
+            book_counted: false,
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,

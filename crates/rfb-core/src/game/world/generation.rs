@@ -740,6 +740,7 @@ impl Game {
         );
         let mut item = ItemInstance {
             previously_worn: false,
+            book_counted: false,
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,
@@ -2558,6 +2559,7 @@ impl Game {
             );
             items.push(ItemInstance {
                 previously_worn: false,
+                book_counted: false,
                 artifact_name: None,
                 intrinsic_melee_damage_dice: None,
                 intrinsic_weight_tenths_pound: None,
@@ -2605,6 +2607,7 @@ impl Game {
                     let fuel = initial_item_fuel(&self.content, &kind_id);
                     items.push(ItemInstance {
                         previously_worn: false,
+                        book_counted: false,
                         artifact_name: None,
                         intrinsic_melee_damage_dice: None,
                         intrinsic_weight_tenths_pound: None,
