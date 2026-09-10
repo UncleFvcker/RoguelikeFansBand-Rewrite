@@ -3175,6 +3175,7 @@ fn e6_crafting_uses_shared_weighted_materialization_at_player_level() {
         game.rng = RfbRng::seeded(7);
         let mut expected = game.items[1].clone();
         let materialized = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+            false,
             rfb_protocol::ItemEnchantmentsDto::default(),
             &mut game.rng.clone(),
             game.content.item(kind_id).unwrap(),

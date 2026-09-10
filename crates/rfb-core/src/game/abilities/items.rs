@@ -601,6 +601,9 @@ impl Game {
             .item(&item.kind_id)
             .expect("created ammunition kind must remain defined");
         let materialization = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+            self.progress
+                .active_mutation_ids
+                .contains("rfb.mutation.bad-luck"),
             rfb_protocol::ItemEnchantmentsDto::default(),
             &mut self.rng,
             definition,

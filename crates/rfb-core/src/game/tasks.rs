@@ -646,6 +646,7 @@ fn selected_reward_entry<'a>(
 }
 
 pub(super) fn reward_item(
+    bad_luck: bool,
     content: &ContentCatalog,
     class_id: Option<&str>,
     reward: &TaskRewardDefinition,
@@ -654,6 +655,7 @@ pub(super) fn reward_item(
 ) -> ItemInstance {
     let entry = selected_reward_entry(reward, class_id, rng).clone();
     let mut materialization = materialize_ego_with_rng(
+        bad_luck,
         content,
         rng,
         &entry.item_kind_id,
@@ -879,6 +881,9 @@ impl Game {
             .map(|identity| identity.class_id.as_str());
         let mut preview_rng = self.rng.clone();
         let preview = reward_item(
+            self.progress
+                .active_mutation_ids
+                .contains("rfb.mutation.bad-luck"),
             &self.content,
             class_id,
             reward_definition,
@@ -890,6 +895,9 @@ impl Game {
         }
 
         let reward = reward_item(
+            self.progress
+                .active_mutation_ids
+                .contains("rfb.mutation.bad-luck"),
             &self.content,
             class_id,
             reward_definition,

@@ -31,6 +31,26 @@ pub(super) struct LootContext {
     pub(super) source: LootSource,
 }
 
+impl LootContext {
+    pub(super) fn drop_theme(&self) -> &str {
+        match self.table_id.as_str() {
+            "demo.loot-table.warrior" => "warrior",
+            "demo.loot-table.archer" => "archer",
+            "demo.loot-table.mage" => "mage",
+            "demo.loot-table.priest" => "priest",
+            "demo.loot-table.evil-priest" => "priest-evil",
+            "demo.loot-table.paladin" => "paladin",
+            "demo.loot-table.evil-paladin" => "paladin-evil",
+            "demo.loot-table.samurai" => "samurai",
+            "demo.loot-table.ninja" => "ninja",
+            "demo.loot-table.rogue" => "rogue",
+            "demo.loot-table.dwarf" => "dwarf",
+            "demo.loot-table.hobbit" => "hobbit",
+            _ => "",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum ItemGenerationMode {
     Ordinary,
@@ -938,6 +958,10 @@ impl Game {
                 .then(|| {
                     self.content.item(&entry.item_kind_id).and_then(|item| {
                         roll_and_materialize_rfb_ego_after_artifact_check(
+                            self.progress
+                                .active_mutation_ids
+                                .contains("rfb.mutation.bad-luck"),
+                            context.drop_theme(),
                             weapon_enchantment,
                             &mut self.rng,
                             item,
@@ -965,6 +989,9 @@ impl Game {
                     Vec::new()
                 };
                 materialize_ego_with_rng(
+                    self.progress
+                        .active_mutation_ids
+                        .contains("rfb.mutation.bad-luck"),
                     &self.content,
                     &mut self.rng,
                     &entry.item_kind_id,
@@ -1092,7 +1119,16 @@ impl Game {
         base_item_kind_id: Option<&str>,
         instant: bool,
     ) -> Option<String> {
-        let reference_depth = self.fixed_artifact_reference_depth(context);
+        let mut reference_depth = self.fixed_artifact_reference_depth(context);
+        // make_artifact[_special] rolls Bad Luck separately on every attempt,
+        // including attempts which then stop at the town/depth-zero guard.
+        if self
+            .progress
+            .active_mutation_ids
+            .contains("rfb.mutation.bad-luck")
+        {
+            reference_depth -= reference_depth / (4 * (1 + self.rng.bounded(4) as u16));
+        }
         if reference_depth == 0 {
             return None;
         }
@@ -1174,6 +1210,9 @@ impl Game {
             charges,
             ..
         } = materialize_ego_with_rng(
+            self.progress
+                .active_mutation_ids
+                .contains("rfb.mutation.bad-luck"),
             &self.content,
             &mut self.rng,
             &kind_id,

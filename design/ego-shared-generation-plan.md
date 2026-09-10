@@ -203,12 +203,32 @@ Craft 不新增随机神器抽样、光源特殊入口、随机神器保存后�
 | Mauler | `ego.c:1641 ego_weapon_adjust_weight`；`artifact.c` bias 等分支；`object2.c` 相关底材选择 | 真实职业入口和重武器消费者；骰数强化后的重量、负重/战斗结果、Ego 与随机神器路径 |
 | Bard | `object2.c:2298` 竖琴基础 pval；`artifact.c:2044` 槽位估值比例、bias 与竖琴相关修正 | 真实职业及竖琴使用；与非 Bard 在同输入下比较 pval、价值限制和实际能力 |
 | Monster Ring | `ego.c:455 ACTIVATION_CHANCE`；`object2.c` 首饰选择/主题分支 | 真实种族与装备/激活入口；首饰基础池、激活概率及可实际使用的结果 |
-| Vortex | 本次在 `ego.c/object2.c/artifact.c` 未发现以该名称/常量直接判断的生成分支；现有审计将其笼统归为生成修正，证据不足 | 沿真实种族装备模板和调用链核对；如属于装备/能力消费者，应更正分类，不为凑齐清单编造生成修正 |
+| Vortex | 三个生成源文件没有直接身份分支；`r_vortex.c:764-810` 使用演化后的 `mon_get_equip_template`，`b_info.txt` 定义 3–8 个 ANY 槽；`equip.c:1622` 对正向 BLOWS 减半 | 分类为装备模板/天生攻击消费者；`equip.c:372` 的 ANY 接受除 BOW 外的类别，因此 `object2.c:3078` 间接将弓/箭袋、弹药类别权重减半。等待真实种族入口，不增加直接生成开关 |
 | 其余条件 | 枚举上述源码中的其他职业、种族、变异、人格和主题条件，不把前三个例子当成穷举 | 区分已开放、待开放、源端无对应生成分支；按真实适用范围分别完成 |
 
 每个构筑使用可从新游戏创建的真实配置验证生成、装备/激活和保存恢复；
 测试中伪造身份只能做函数级分支测试，不能作为该构筑已接入的验收。
 把 Vortex 等证据修正同步到 `scripts/audit-egos.mjs` 和生成的审计矩阵；本计划不提前修改机器审计结果。
+
+本批来源为 `master` 对象 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。
+[机器矩阵](ego-contract-audit.json) 的 `buildApplicability` 从前端实际新游戏入口读取 6 个构筑、46 个种族，
+逐行收录三个源文件的身份、变异、人格、领域、德行和主题条件，并按生成变化、入口、消费者、测试和前置条件分类。
+运行 `node scripts/audit-egos.mjs D:/codex/Frogcomposband/master` 重生成；源提交改变或出现未分类条件时审计失败。
+矩阵中的测试路径是证据索引，审计命令本身不执行这些测试。
+
+已补共享生成的两个实际缺口：主题先筛选首饰/护甲 Ego 候选，只有主题类型池为空才回到通用池；
+Bad Luck 在每次固定神器尝试前单独降低参考层级，并在 Tomte 帽速度 pval 增长时先掷继续骰、再停止增长。
+帽子规则由自然生成、Craft 和显式物化共同使用。验收见 [applicability.rs](../crates/rfb-core/src/game/ego/applicability.rs)：
+真实 Warrior 接收 Mage/Dwarf 主题装备后装备与保存恢复，真实 Tomte 获得 Bad Luck 后比较帽子生成、速度消费者和恢复；
+空主题池及参考层级/RNG 顺序另做函数级验证。没有把伪造 Mauler/Bard/Monster Ring 身份的测试当成入口验收。
+
+**E8.7 尚不等于全部当前入口完成源端对齐。** 按 [E8.1 入口范围](contract-v312-real-equipment-value.md)，
+完整底材分配仍是独立缺口：Acquirement 的 Archer/Sniper 弓、Cavalry 骑乘武器、High Mage 装置/领域书偏好，
+装备兼容/最爱武器筛选、发现书本计数、失败重试及完整主题底材池尚待闭合；不能归入“职业未开放”。
+其余待开放条件包括 Berserker、Sexy/Aphrodite、神器卷轴职业 bias/德行、Inspired Smithing 重铸、
+Draconian Metamorphosis 和固定神器身份分支。正式包已有 Dr Jones 鞭的普通行为，Archaeologist 奖励分支未开放；
+其他九件身份敏感固定神器和固定神器竖琴尚未导入。Monster Ring 的类别加权条件还比较了分配表未使用的
+`kind_is_jewelry` hook，矩阵记作源表下不可达，不据此编造加权规则。全范围 `runtimeParityComplete` 保持 `false`。
 
 ## 9. 验证、版本与完成判定
 
@@ -236,4 +256,4 @@ TypeScript 与对应 UI 测试。按 2026-09-10 的用户决定，后续生成�
 前五项及全部已开放构筑通过后，可标记“当前可玩范围共享生成契约完成”；
 尚未开放构筑对应契约继续列明依赖，不能把全范围 `runtimeParityComplete` 提前改成 `true`。
 
-下一步实施从 **E8.1：生成入口/模式清单、表示缺口和真实装备估值** 开始。
+下一步处理上文明确列出的完整底材分配缺口；未开放身份随真实职业/种族入口接入。E8.8 的桌面里程碑另行验收。

@@ -420,6 +420,7 @@ impl Game {
             .iter()
             .map(|spawn| {
                 let materialization = materialize_ego_with_rng(
+                    false,
                     &content,
                     &mut rng,
                     &spawn.kind_id,

@@ -86,6 +86,7 @@ fn real_value_ignores_knowledge_and_round_trips_without_rng() {
     game.debug_add_generated_inventory_item("test.value", "demo.item.ring", 80)
         .unwrap();
     let materialized = materialize_ego_with_rng(
+        false,
         &game.content,
         &mut game.rng,
         "demo.item.ring",
@@ -125,6 +126,7 @@ fn object_flags_and_random_curse_effects_keep_distinct_real_values() {
     game.debug_add_generated_inventory_item("test.value", "demo.item.ring", 80)
         .unwrap();
     let materialized = crate::game::ego::materialize_ego_with_rng(
+        false,
         &game.content,
         &mut game.rng,
         "demo.item.ring",

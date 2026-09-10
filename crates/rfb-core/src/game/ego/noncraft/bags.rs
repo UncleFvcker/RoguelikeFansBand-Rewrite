@@ -62,6 +62,7 @@ fn containers_match_972_original_c_capacity_ego_rng_and_value_results() {
         if case.power > 1 {
             let result = if case.forced_ego == 0 {
                 roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                    false,
                     Default::default(),
                     &mut rng,
                     &definition,
@@ -82,6 +83,7 @@ fn containers_match_972_original_c_capacity_ego_rng_and_value_results() {
                     })
                     .unwrap();
                 materialize_ego_with_rng(
+                    false,
                     &game.content,
                     &mut rng,
                     &definition.id,
@@ -199,6 +201,7 @@ fn equip_bag(game: &mut Game, suffix: &str, ego: Option<&str>) {
     add(game, "test.bag", &kind, 1);
     if let Some(ego) = ego {
         let result = materialize_ego_with_rng(
+            false,
             &game.content,
             &mut game.rng,
             &kind,

@@ -2,6 +2,8 @@
 
 use std::collections::BTreeSet;
 
+#[cfg(test)]
+mod applicability;
 pub(super) mod armor;
 #[cfg(test)]
 mod contracts;
@@ -170,7 +172,9 @@ impl EgoMaterialization {
 
 /// Materializes static affix identities, dynamic roll groups, and activation
 /// state before a caller commits the result to a generated or existing item.
+#[allow(clippy::too_many_arguments)] // Explicit source inputs shared by several entry points.
 pub(super) fn materialize_ego_with_rng(
+    bad_luck: bool,
     content: &ContentCatalog,
     rng: &mut RfbRng,
     kind_id: &str,
@@ -251,7 +255,9 @@ pub(super) fn materialize_ego_with_rng(
         && armor::can_apply(ego.source_index, base.tval, base.sval)
     {
         loop {
-            if let Some(result) = armor::materialize(rng, item, affix, roll_depth(affix), None) {
+            if let Some(result) =
+                armor::materialize(rng, item, affix, roll_depth(affix), None, bad_luck)
+            {
                 return result;
             }
         }
@@ -273,6 +279,7 @@ pub(crate) fn roll_rfb_ego_affix_id(
     allowed_types: &[RfbEgoTypeDefinition],
 ) -> Option<String> {
     roll_rfb_ego_from_affixes(
+        "",
         content.affix_definitions(),
         rng,
         generation_level,
@@ -1368,6 +1375,7 @@ pub(super) fn roll_rfb_armor_enchantment(rng: &mut RfbRng, level: u16, power: i1
 }
 
 pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
+    bad_luck: bool,
     weapon_enchantments: ItemEnchantmentsDto,
     rng: &mut RfbRng,
     item: &ItemDefinition,
@@ -1377,6 +1385,8 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
 ) -> Option<EgoMaterialization> {
     let special_robe = roll_special_robe(rng, item, generation_level);
     roll_and_materialize_rfb_ego_after_artifact_check(
+        bad_luck,
+        "",
         weapon_enchantments,
         rng,
         item,
@@ -1395,7 +1405,10 @@ pub(super) fn roll_special_robe(rng: &mut RfbRng, item: &ItemDefinition, level: 
 }
 
 /// Natural generation has already selected the robe branch before its artifact check.
+#[allow(clippy::too_many_arguments)] // Keep the pre-rolled robe branch and real player/drop inputs.
 pub(super) fn roll_and_materialize_rfb_ego_after_artifact_check<'a>(
+    bad_luck: bool,
+    theme: &str,
     weapon_enchantments: ItemEnchantmentsDto,
     rng: &mut RfbRng,
     item: &ItemDefinition,
@@ -1459,6 +1472,7 @@ pub(super) fn roll_and_materialize_rfb_ego_after_artifact_check<'a>(
 
     loop {
         let affix_id = roll_rfb_ego_from_affixes(
+            theme,
             affixes.clone(),
             rng,
             generation_level,
@@ -1489,9 +1503,14 @@ pub(super) fn roll_and_materialize_rfb_ego_after_artifact_check<'a>(
             | RfbEgoTypeDefinition::Shield
             | RfbEgoTypeDefinition::BodyArmor
             | RfbEgoTypeDefinition::Robe
-            | RfbEgoTypeDefinition::DragonArmor => {
-                armor::materialize(rng, item, affix, generation_level, intrinsic_properties)
-            }
+            | RfbEgoTypeDefinition::DragonArmor => armor::materialize(
+                rng,
+                item,
+                affix,
+                generation_level,
+                intrinsic_properties,
+                bad_luck,
+            ),
             RfbEgoTypeDefinition::Ammo => {
                 materialize_rfb_ammunition_ego_with_rng(rng, item, affix, generation_level)
             }
@@ -2507,7 +2526,39 @@ const fn actor_resistance_rank(level: ActorResistanceLevel) -> u8 {
     }
 }
 
+// RFB master a0d92b6378, ego.c::_ego_p_*; themes belong to drops, not the player.
+fn theme_allows_ego(theme: &str, types: &[RfbEgoTypeDefinition], index: u32) -> bool {
+    use RfbEgoTypeDefinition::*;
+    let [category] = types else { return true };
+    match (category, theme) {
+        (Ring, "warrior" | "warrior-shoot" | "samurai") => index == 206,
+        (Ring, "archer") => index == 207,
+        (Ring, "mage") => matches!(index, 200 | 201 | 205 | 208 | 209),
+        (Ring, "priest" | "priest-evil") => matches!(index, 200 | 201 | 205 | 209),
+        (Ring, "paladin" | "paladin-evil") => matches!(index, 200 | 205 | 209),
+        (Ring, "rogue" | "ninja") => matches!(index, 206 | 207 | 209),
+        (Amulet, "warrior" | "warrior-shoot") => matches!(index, 220 | 225),
+        (Amulet, "dwarf") => matches!(index, 201 | 223),
+        (Amulet, "mage") => matches!(index, 200 | 201 | 224),
+        (Amulet, "priest" | "paladin") => matches!(index, 200 | 201 | 221 | 226),
+        (Amulet, "priest-evil" | "paladin-evil") => matches!(index, 201 | 222),
+        (Amulet, "rogue" | "ninja" | "hobbit") => matches!(index, 200 | 201 | 227),
+        (BodyArmor, "dwarf") => index == 70,
+        (Shield, "dwarf") => index == 60,
+        (Helmet, "dwarf") => index == 118,
+        (Boots, "dwarf") => index == 147,
+        (Gloves, "warrior" | "warrior-shoot" | "samurai") => {
+            matches!(index, 55 | 135 | 137 | 140 | 142)
+        }
+        (Gloves, "archer") => index == 141,
+        (Gloves, "mage") => index == 138,
+        (Gloves, "rogue") => index == 136,
+        _ => true,
+    }
+}
+
 fn roll_rfb_ego_from_affixes<'a>(
+    theme: &str,
     affixes: impl IntoIterator<Item = &'a AffixDefinition>,
     rng: &mut RfbRng,
     generation_level: u16,
@@ -2537,6 +2588,13 @@ fn roll_rfb_ego_from_affixes<'a>(
             ))
         })
         .collect::<Vec<_>>();
+    // ego_choose_type falls back only when the themed type pool is empty.
+    if candidates
+        .iter()
+        .any(|candidate| theme_allows_ego(theme, allowed_types, candidate.0))
+    {
+        candidates.retain(|candidate| theme_allows_ego(theme, allowed_types, candidate.0));
+    }
     candidates.sort_unstable_by_key(|candidate| candidate.0);
     if candidates.is_empty() {
         return None;
@@ -3353,6 +3411,7 @@ mod tests {
         );
         let mut rng = RfbRng::seeded(1);
         let materialized = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+            false,
             rfb_protocol::ItemEnchantmentsDto::default(),
             &mut rng,
             &item,
@@ -3430,11 +3489,13 @@ mod tests {
             game.content.affix(&affix_ids[0]).unwrap(),
             36,
             None,
+            false,
         )
         .unwrap();
 
         let mut rng = RfbRng::seeded(91);
         let materialized = materialize_ego_with_rng(
+            false,
             &game.content,
             &mut rng,
             "demo.item.metal-lamellar-armour",
@@ -3489,6 +3550,7 @@ mod tests {
         let rng_before = failed_rng.clone();
         assert_eq!(
             roll_rfb_ego_from_affixes(
+                "",
                 std::iter::empty::<&AffixDefinition>(),
                 &mut failed_rng,
                 30,
@@ -3808,6 +3870,7 @@ mod tests {
         let mut missing_base_rng = RfbRng::seeded(0xE4_4195);
         assert!(
             roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                false,
                 rfb_protocol::ItemEnchantmentsDto::default(),
                 &mut missing_base_rng,
                 &definition,
@@ -3819,6 +3882,7 @@ mod tests {
         );
         assert_eq!(missing_base_rng.draw_counter, 0);
         let materialization = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+            false,
             rfb_protocol::ItemEnchantmentsDto::default(),
             &mut rng,
             &definition,
@@ -4216,6 +4280,7 @@ mod tests {
         ] {
             let mut rng = RfbRng::seeded(seed);
             let materialization = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                false,
                 rfb_protocol::ItemEnchantmentsDto::default(),
                 &mut rng,
                 &rfb_launcher_item(kind_id),
@@ -4229,6 +4294,7 @@ mod tests {
 
             let mut selection_rng = RfbRng::seeded(seed);
             while roll_rfb_ego_from_affixes(
+                "",
                 affixes.iter(),
                 &mut selection_rng,
                 80,
@@ -4330,6 +4396,7 @@ mod tests {
 
         assert_eq!(
             roll_rfb_ego_from_affixes(
+                "",
                 affixes.iter(),
                 &mut rng,
                 10,
@@ -4374,6 +4441,7 @@ mod tests {
 
         assert_eq!(
             roll_rfb_ego_from_affixes(
+                "",
                 affixes.iter(),
                 &mut rng,
                 10,
@@ -4387,6 +4455,7 @@ mod tests {
         let unchanged = zero_only_rng.clone();
         assert_eq!(
             roll_rfb_ego_from_affixes(
+                "",
                 affixes[..2].iter(),
                 &mut zero_only_rng,
                 10,

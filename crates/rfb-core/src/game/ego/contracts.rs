@@ -41,6 +41,7 @@ fn export_ego_desktop_acceptance_save() {
             .unwrap();
         if let Some(affix) = affix {
             let materialized = materialize_ego_with_rng(
+                false,
                 &game.content,
                 &mut game.rng,
                 kind,
@@ -152,6 +153,7 @@ fn all_160_source_egos_have_an_effect_and_save_stable_instances() {
                 game.debug_add_generated_inventory_item("test.ego.contract", &item.id, level)
                     .unwrap();
                 let materialized = materialize_ego_with_rng(
+                    false,
                     &content,
                     &mut game.rng,
                     &item.id,
@@ -280,6 +282,7 @@ fn adapted_weapon_bases_and_wizardstaff_use_the_shared_owner() {
     assert!(staff.passives.contains(&EquipmentPassive::ReducedManaCost));
     let affix = game.content.affix("rfb-legacy.affix.arcane").unwrap();
     let materialized = materialize_ego_with_rng(
+        false,
         &game.content,
         &mut game.rng,
         &staff.id,

@@ -296,6 +296,7 @@ mod tests {
             let mut expected_rng = game.rng.clone();
             let names_before = game.random_artifact_names.clone();
             let expected = crate::game::ego::roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                false,
                 ItemEnchantmentsDto::default(),
                 &mut expected_rng,
                 game.content.item(kind).unwrap(),

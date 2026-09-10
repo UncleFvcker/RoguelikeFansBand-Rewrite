@@ -65,21 +65,7 @@ impl Game {
             .build
             .as_ref()
             .map_or("", |build| build.class_id.as_str());
-        let theme = match context.table_id.as_str() {
-            "demo.loot-table.warrior" => "warrior",
-            "demo.loot-table.archer" => "archer",
-            "demo.loot-table.mage" => "mage",
-            "demo.loot-table.priest" => "priest",
-            "demo.loot-table.evil-priest" => "priest-evil",
-            "demo.loot-table.paladin" => "paladin",
-            "demo.loot-table.evil-paladin" => "paladin-evil",
-            "demo.loot-table.samurai" => "samurai",
-            "demo.loot-table.ninja" => "ninja",
-            "demo.loot-table.rogue" => "rogue",
-            "demo.loot-table.dwarf" => "dwarf",
-            "demo.loot-table.hobbit" => "hobbit",
-            _ => "",
-        };
+        let theme = context.drop_theme();
         let bad_luck = self
             .progress
             .active_mutation_ids

@@ -127,8 +127,15 @@ impl Game {
                 adjusted,
             );
         }
-        let materialization = roll(&self.content, &mut self.rng, definition, level, power)
-            .expect("validated jewelry has eligible source egos");
+        let materialization = roll(
+            context.drop_theme(),
+            &self.content,
+            &mut self.rng,
+            definition,
+            level,
+            power,
+        )
+        .expect("validated jewelry has eligible source egos");
         let final_curse = materialization.curse_on_finalize;
         let mut item = original
             .clone()
@@ -156,6 +163,7 @@ fn level_check(rng: &mut RfbRng, power: u16, level: i32) -> bool {
 }
 
 fn roll(
+    theme: &str,
     content: &ContentCatalog,
     rng: &mut RfbRng,
     item: &ItemDefinition,
@@ -167,7 +175,8 @@ fn roll(
         45 => RfbEgoTypeDefinition::Ring,
         _ => return None,
     };
-    let id = roll_rfb_ego_from_affixes(content.affix_definitions(), rng, level, &[category])?;
+    let id =
+        roll_rfb_ego_from_affixes(theme, content.affix_definitions(), rng, level, &[category])?;
     materialize(rng, item, content.affix(id)?, level, power)
 }
 
@@ -1274,6 +1283,7 @@ mod tests {
             let definition = game.content.item(kind).unwrap();
             for seed in 1..=1500 {
                 let result = roll(
+                    "",
                     &game.content,
                     &mut RfbRng::seeded(seed),
                     definition,

@@ -727,6 +727,9 @@ impl Game {
         position: ContentPosition,
     ) -> ItemInstance {
         let materialization = materialize_ego_with_rng(
+            self.progress
+                .active_mutation_ids
+                .contains("rfb.mutation.bad-luck"),
             &self.content,
             &mut self.rng,
             &spawn.kind_id,
