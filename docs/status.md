@@ -114,7 +114,7 @@ Dr. Jones 的鞭子使用原版神器 162、隔空取物与 300 tick 冷却；�
 
 E8.8 已完成 Windows Tauri standalone 的负向 Ego、随机神器、龙系装备和动态背包四类获取、鉴定、装备及保存恢复流程，并在恢复后继续行动。负向速度与诅咒阻止卸装、神器激活耗能、龙系基础抗性和 Ego 护甲、额外背包槽位与重量/溢出均有 UI 断言。Nature 四册错误的 Chaos 源身份已修正，内容包升级至 1.405.0；契约仍为 v320，26 条断言无需刷新。范围与复现见[E8.8 验收](../design/ego-integration-audit.md#e88-当前桌面验收)。当时六职业范围的共享生成契约完成，全原版范围的未开放身份、未导入底材和对象表示限制仍保留。
 
-当前八构筑的[生成接入计划](class-generation-integration-plan.md)已完成第一至三批：[审计输入](../design/generation-build-applicability.json)维护 36 条条件与八构筑五个范围的结论，[生成矩阵](../design/ego-contract-audit.json)由只读 CI 检查约束。狂战士 WARNING/NO_TELE 的概率边界、实际调度与消费者，以及两个新构筑的 Tailored/Ego、自然负向神器、装置使用/拒绝、保存和连续 RNG 证据已补齐；两组当前可达缺口关闭，八构筑完成标记及当前共享生成完成标记为 true。随机神器 22 项、分配 16 项、手套消费者 1 项、相关 Clippy、完整来源审计及 Node 24 的检查与 8 项工具测试通过。未发现生产规则缺陷，未修改游戏规则或内容/协议，也未新增桌面验收。未开放的神器卷轴、缺失身份/内容和对象表示限制继续单列，全原版完成标记仍为 false；第四批将整理日常接入与协作流程。
+当前八构筑的[生成接入计划](class-generation-integration-plan.md)四批均已完成：[审计输入](../design/generation-build-applicability.json)维护 36 条条件与八构筑五个范围的结论，[生成矩阵](../design/ego-contract-audit.json)由只读 CI 检查约束。狂战士 WARNING/NO_TELE 的概率边界、实际调度与消费者，以及两个新构筑的 Tailored/Ego、自然负向神器、装置使用/拒绝、保存和连续 RNG 证据已补齐；两组当前可达缺口关闭，八构筑完成标记及当前共享生成完成标记为 true。第三批的随机神器 22 项、分配 16 项、手套消费者 1 项、相关 Clippy、完整来源审计及 Node 24 的检查与 8 项工具测试通过。未发现生产规则缺陷，未修改游戏规则或内容/协议，也未新增桌面验收。未开放的神器卷轴、缺失身份/内容和对象表示限制继续单列，全原版完成标记仍为 false；后续职业/领域计划按[内容开发](content-development.md#职业与领域-build-的生成接入)维护审计，责任交接与合并检查按[并行协作](parallel-development.md#职业与领域生成审计的交接)执行。第四批仅更新文档并检查链接、引用和 diff，沿用第三批生成矩阵与验收结果。
 
 ## 更新口径
 

@@ -18,7 +18,7 @@ git -C D:/codex/Frogcomposband/master grep -n '目标符号' master -- src lib
 
 1. 搜索正式包的稳定 ID 与当前运行时，明确这次缺的是数据、行为还是玩家入口。
 2. 复用已有机制，只补当前内容确实缺失的表达或执行路径。不要为下一职业、下一领域预造配置与抽象。
-3. 建立引用、参数、来源和所需文案；入口开放是单独的改动，不能只写 JSON 就报告玩家可用。
+3. 建立引用、参数、来源和所需文案；入口开放是单独的改动，不能只写 JSON 就报告玩家可用。新增职业或领域 Build 执行下文的[生成接入闭环](#职业与领域-build-的生成接入)。
 4. 内容变化更新包版本和 lock；实际类型变化才运行相应生成器。
 5. 运行直接相关验证，检查通过后提交。详见[验证与契约](testing.md)。
 
@@ -28,7 +28,7 @@ git -C D:/codex/Frogcomposband/master grep -n '目标符号' master -- src lib
 
 | 内容 | 数据入口（正式包内） | 运行时与接入重点 |
 | --- | --- | --- |
-| 种族 / 职业 | `races/`、`classes/`、`skillSets/`、`builds/`、专属能力及 binding | 出生、属性/成长、实际专属行为、临时形态；菜单来源见 `PLAYTEST_*_IDS` |
+| 种族 / 职业 | `races/`、`classes/`、`skillSets/`、`builds/`、专属能力及 binding | 出生、属性/成长、实际专属行为、临时形态；实际菜单来源见 [character-creation.ts](../web/src/character-creation.ts)，新 Build 同步生成适用性审计 |
 | 领域 / 书本 | `abilities/`、`abilityPrograms/`、`playerAbilityBindings/`、`abilityBooks/`、实体书 `items/` | 源槽位、职业施法参数、学习与获取路径；施法使用现有 casting/targeting/effect |
 | 物品 / Ego / 神器 / 装置 | `items/`、`affixes/`、`randomArtifacts/`、`effectPrograms/` 及激活能力 | 生成、使用、装备、知识与实例生命周期；复用 loot 与已有物品规则 |
 | 地牢 / 城镇 / 任务 | `worlds/middle-earth.json`、`towns/`、`townFacilities/`、`shops/`、`terrain/`、生态/掉落表 | 正式地点与 planned 地点区分，入口与楼层链、设施服务、奖励及必要保存恢复 |
@@ -37,6 +37,30 @@ git -C D:/codex/Frogcomposband/master grep -n '目标符号' master -- src lib
 数据结构在 [definitions/](../crates/rfb-content/src/definitions/)，引用和约束在 [validation/](../crates/rfb-content/src/validation/)，源格式差异在 [source/](../crates/rfb-content/src/source/)。Importer 的入口在 [main.rs](../crates/rfb-legacy-import/src/main.rs)，选择和适配记录位于包根目录的 `legacy-*.json`。仅运行对应内容的 audit/sync，不为一个小批次重导整个包。
 
 已有八个高阶法师领域，先查[状态](status.md)，不要按旧待办重新实现。种族专属能力归种族职业；领域法术、通用物品归法术道具；任务和设施引用的物品定义与物品方向共享。实际冲突按[并行协作](parallel-development.md)处理。
+
+## 职业与领域 Build 的生成接入
+
+后续职业或领域接入计划必须把以下闭环写入来源核对、入口开放和验收步骤：**新增 Build → 核对来源 → 记录差异或无差异 → 完成实现与消费者证据 → 通过 CI 检查**。
+已有 Class 新开放另一领域 Build 也要单独记录。详细依据和已完成的接入工作见[生成接入计划](class-generation-integration-plan.md)，当前范围见[状态页](status.md)。
+
+1. 从[创角目录](../web/src/character-creation.ts)取得实际 Build，读取正式 `builds/`、`classes/` 的 Class、领域和装备能力。核对原版 `master` 的 `ego.c`、`object2.c`、`artifact.c` 及关联消费者，记录实际来源提交；不仅查直接职业判断，也检查身体槽位、骑乘、书本发现数和成品可用性。
+2. 在[审计输入](../design/generation-build-applicability.json)补充该 Build 的五个范围：基础分配/Tailored、Ego/负向生成、随机神器、固定神器/奖励、使用/保存。复用共同条件 ID 与实现/测试引用，条件只在这里维护，不另建职业生成允许列表。
+3. `implemented` 需要实际入口、实现和验证引用；`no-special-difference` 需要来源及间接消费者的核对理由。当前可达范围尚未完成时，保留 `deferred` 的依赖及与 Build 双向关联的 gap，不标为完成。未开放卷轴、缺失身份或内容单列；`deferred-unavailable-build` 必须明确 `unavailableClassIds` 或 `unavailableRaceIds`，身份开放后重新核对这些依赖。
+4. 只补缺失的实际行为与证据。使用真实新游戏 Build 验证生成物的装备、使用或按规则拒绝、保存恢复和必要的后续 RNG；复用已有共同覆盖，概率分支用可复现边界，不伪造 Class ID 代替可玩验收。自然/主题/卷轴模式分开记录，职业不能使用某物品本身不是从普通生成池删除它的依据。
+5. 更新输入后运行完整来源审计，重生成[生成矩阵](../design/ego-contract-audit.json)，再运行只读检查并随该 Build 的改动提交。不要手改报告使其通过，也不要只补一个完成标签来关闭 gap。
+
+仓库根目录使用 Node 24：
+
+```powershell
+# 输入或来源审查结果变化后：需要 Rust 和原版 Git 仓库
+node scripts/audit-egos.mjs D:/codex/Frogcomposband/master
+# 日常检查与 CI 使用同一只读入口：不启动 Rust、不读取原版仓库、不写文件
+node scripts/audit-egos.mjs --check-applicability
+```
+
+来源提交变化时先复核差异，再更新审计依据，不仅替换提交号。检查脚本自身发生变化时，运行 `node --test scripts/generation-applicability.test.mjs`；现有前端 CI 同时运行只读检查和这些工具测试。
+缺失 Build、悬空引用、身份开放矛盾、报告过期或与 gap 矛盾的完成标记都会失败。CI 通过只证明记录和入口一致，引用存在也不表示游戏测试已经执行；交付须写明实际检查结果、开放范围和剩余依赖。
+有记录的缺口是否允许按受限范围开放，由该职业/领域的明确需求决定，不能由脚本自动豁免或禁止。负责人和合并检查见[并行协作](parallel-development.md#职业与领域生成审计的交接)。
 
 ## 内容锁与生成文件
 
