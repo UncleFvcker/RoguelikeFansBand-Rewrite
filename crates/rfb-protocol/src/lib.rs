@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.242";
+pub const PROTOCOL_VERSION: &str = "1.243";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 12;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 13;
 
@@ -1720,6 +1720,8 @@ pub struct AbilityDto {
     #[serde(default)]
     pub can_forget: bool,
     pub can_cast: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unavailable_reason: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

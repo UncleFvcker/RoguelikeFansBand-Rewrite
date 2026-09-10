@@ -7,7 +7,7 @@ import { selectCreationBuild, selectCreationRace } from "./character-creation.e2
 
 // CDP supplies browser default keyboard behavior; the WebDriver plugin's keys
 // only dispatch JS events and cannot exercise native Tab/Enter/Space handling.
-async function connectKeyboard(profile) {
+export async function connectKeyboard(profile) {
   const port = (await readFile(path.join(profile, "EBWebView", "DevToolsActivePort"), "utf8")).split("\n")[0];
   const pages = await (await fetch(`http://127.0.0.1:${port}/json/list`).catch(error => { throw new Error(`WebView2 debugging port ${port}: ${String(error.cause)}`); })).json();
   const page = pages.find(page => page.type === "page" && page.url.includes("tauri.localhost"));

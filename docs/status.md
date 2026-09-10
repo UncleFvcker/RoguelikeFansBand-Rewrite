@@ -7,10 +7,10 @@
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.242 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| 协议 | 1.243 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 118 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 12 / 13 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.403.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.404.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v319，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 7 个 Class、14 个 Build、57 个 Race、32 本能力书、1,855 个 ability 文件、375 个 item、1,403 个 actor、168 个 affix、152 个 mutation。世界定义含 25 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、62 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
@@ -19,9 +19,9 @@
 
 ## 玩家入口
 
-职业入口在 [session-shell.ts](../web/src/session-shell.ts)，种族目录在 [character-creation.ts](../web/src/character-creation.ts)，表单在 [web/index.html](../web/index.html)。当前开放 6 个构筑、46 个种族：
+职业与种族目录在 [character-creation.ts](../web/src/character-creation.ts)，提交入口在 [session-shell.ts](../web/src/session-shell.ts)，表单在 [web/index.html](../web/index.html)。当前入口提供 7 个构筑、46 个种族；心灵术士通过第四步专项 UI 检查，完整职业交付验收仍待第五步：
 
-创角界面已完成[四步面板改造](character-creation-ui-plan.md)：桌面固定为 `84vw × 84dvh`，提供概览、种族、职业标签页和常驻摘要/开始按钮。种族按八个原版分类显示，龙人进入九个亚种层；职业按五个原版分类显示，高阶法师和圣骑士进入死亡领域层。详情查看与确认选择分开，取消分支保留已选组合。窄屏提供选择/说明切换，支持原生缩放、短屏内部滚动及焦点恢复。中英文、多种桌面尺寸、390像素窄屏及200%缩放已通过Windows/WebView2检查；46个种族、6个构筑、提交校验与失败重试均有覆盖。实际验收人类战士、红色龙人死亡高阶法师、骷髅死亡圣骑士开局及有效动作；结果页路由使用终局投影测试后创建真实新会话。开放范围不变，系统输入法、屏幕阅读器和Android人工验收不在本次已验证范围内。
+创角界面已完成[四步面板改造](character-creation-ui-plan.md)：桌面固定为 `84vw × 84dvh`，提供概览、种族、职业标签页和常驻摘要/开始按钮。种族按八个原版分类显示，龙人进入九个亚种层；职业现按六个原版分类显示，高阶法师和圣骑士进入死亡领域层，心灵术士在“心智”下直接选择。详情查看与确认选择分开，取消分支保留已选组合。窄屏提供选择/说明切换，支持原生缩放、短屏内部滚动及焦点恢复。原面板改造已验证中英文、多种桌面尺寸、390像素窄屏及200%缩放；当时46个种族、6个构筑、提交校验与失败重试均有覆盖。实际验收人类战士、红色龙人死亡高阶法师、骷髅死亡圣骑士开局及有效动作；结果页路由使用终局投影测试后创建真实新会话。心灵术士新增入口的验证范围见下文；系统输入法、屏幕阅读器和Android人工验收不在已验证范围内。
 
 | 构筑 | 稳定 Build ID | 范围 |
 | --- | --- | --- |
@@ -31,8 +31,9 @@
 | 圣骑士（死亡） | `demo.build.paladin-death` | 死亡领域与随机祈祷学习 |
 | 骑兵 | `demo.build.cavalry` | 骑乘相关行为 |
 | 狙击手 | `demo.build.sniper` | 专注与特殊射击 |
+| 心灵术士 | `demo.build.mindcrafter` | 无书心灵能力；入口及 UI 专项通过，完整职业交付验收待第五步 |
 
-心灵术士（`demo.build.mindcrafter`）已完成[计划第三步](mindcrafter-class-plan.md)：出生/成长、无书感知法力、被动和“头脑清明”，以及全部 14 项心灵法术、等级变化、精神 GF 和失败反噬。已接入冥想之石、永恒长袍、西方之地的真知晶球与旧城堡职业奖励。核心专项覆盖真实施放、三种攻防方向、知识/宠物和保存恢复；新增 NOPET 状态进入当前保存及哈希。正常创角入口、UI 完整流程和 Tauri standalone 验收留待第四、五步，未计开放。
+心灵术士（`demo.build.mindcrafter`）已完成[计划第四步](mindcrafter-class-plan.md)：出生/成长、无书感知法力、被动和“头脑清明”，以及全部 14 项心灵法术、等级变化、精神 GF 和失败反噬。已接入冥想之石、永恒长袍、西方之地的真知晶球与旧城堡职业奖励。核心专项覆盖真实施放、三种攻防方向、知识/宠物和保存恢复；NOPET 状态进入当前保存及哈希。正常创角可选“心智 → 心灵术士”，能力面板按等级显示职业分组，消费 Rust 的名称、说明、费用、失败率、目标与不可用原因。Windows Tauri standalone WebDriver 调试包已验证正常创角、1/19/20/24/25/29/30/44/45 级投影及原生保存恢复、键盘选择与取消、中文 390 像素窄屏、英文 200% 缩放和实际法力不足提示。高等级通过专用经验授予入口准备；第五步完整开局/优化 standalone 交付验收仍未完成。复现：在 `web` 执行 `npm run e2e:build` 和 `node e2e/tauri.e2e.mjs --mindcrafter`，报告及截图在本机 `test-results/mindcrafter-*`。
 
 Death、Arcane、Sorcery、Armageddon、Nature、Life、Daemon、Crusade 各有四册内容、领域 Build 和相关规则测试路径；当前新游戏仅开放 Death。其余七领域应补入口与相应流程验证，而非从头重做导入。
 

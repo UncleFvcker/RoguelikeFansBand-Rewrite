@@ -1484,6 +1484,7 @@ export class StatusPanel {
     const document = this.#dom.abilityList.ownerDocument;
     const row = document.createElement("li");
     row.className = "ability-row";
+    row.dataset.abilityId = ability.id;
     const details = document.createElement("div");
     details.className = "ability-details";
     const name = document.createElement("span");
@@ -1520,7 +1521,9 @@ export class StatusPanel {
     const status = document.createElement("span");
     status.className = "ability-status";
     status.textContent = this.#localization.format(abilityStatusMessageKey(ability));
-    details.append(name, description, summary, proficiency, status);
+    details.append(name, description, summary);
+    if (ability.source === "learned") details.append(proficiency);
+    details.append(status);
     this.#appendAbilityDetails(details, ability);
     const actions = document.createElement("div");
     actions.className = "ability-actions";
@@ -1569,8 +1572,11 @@ export class StatusPanel {
       this.#state.worldMap ||
       !ability.canCast ||
       (ability.targetSpec.modes.includes("town") && (ability.townTargets?.length ?? 0) === 0);
-    if (studyMode === "chosen") actions.append(study);
-    actions.append(forget, cast);
+    if (ability.source === "learned") {
+      if (studyMode === "chosen") actions.append(study);
+      actions.append(forget);
+    }
+    actions.append(cast);
     row.append(details, actions);
     return row;
   }
@@ -1582,6 +1588,15 @@ export class StatusPanel {
       element.textContent = this.#localization.format(key, args);
       details.append(element);
     };
+    append(ability.targetSpec.range > 0 ? "ability-target-range-summary" : "ability-target-summary", {
+      modes: ability.targetSpec.modes.map(mode => this.#localization.format(`ability-target-${mode}`)).join(" / "),
+      range: ability.targetSpec.range,
+    });
+    if (ability.unavailableReason) {
+      append("ability-disabled-summary", {
+        reason: this.#localization.format(`ability-unavailable-${ability.unavailableReason}`),
+      });
+    }
     if (ability.minimumConcentration > 0) {
       append("ability-concentration-summary", { concentration: ability.minimumConcentration });
     }

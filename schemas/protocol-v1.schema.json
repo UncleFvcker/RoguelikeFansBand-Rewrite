@@ -596,6 +596,12 @@
             "string",
             "null"
           ]
+        },
+        "unavailableReason": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [

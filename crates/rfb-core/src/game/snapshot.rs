@@ -538,6 +538,47 @@ impl Game {
                 {
                     target_spec.range = profile.range;
                 }
+                let unavailable_reason = if self.player_has_status_kind(STATUS_CONFUSION)
+                    && !ability
+                        .tags
+                        .iter()
+                        .any(|tag| tag == "usable-while-confused")
+                {
+                    Some("confused")
+                } else if self.player_has_status_kind(crate::effect::STATUS_BLINDNESS)
+                    && ability.tags.iter().any(|tag| tag == "requires-sight")
+                {
+                    Some("blind")
+                } else if source != AbilitySourceDto::Learned
+                    && self.player_has_status_kind(STATUS_FEAR)
+                    && !ability.tags.iter().any(|tag| tag == "usable-while-afraid")
+                {
+                    Some("afraid")
+                } else if source == AbilitySourceDto::Learned && self.player_has_anti_magic() {
+                    Some("anti-magic")
+                } else if source == AbilitySourceDto::Learned
+                    && self.player_has_status_kind(STATUS_BERSERK)
+                {
+                    Some("berserk")
+                } else if source == AbilitySourceDto::Learned && !learned {
+                    Some("not-learned")
+                } else if !level_available {
+                    Some("level-too-low")
+                } else if !concentration_available {
+                    Some("concentration-too-low")
+                } else if let Some(reason) = self.ability_state_unavailable_reason(&ability_id) {
+                    Some(reason)
+                } else if !resource_available || !hit_points_available {
+                    Some("insufficient-resource")
+                } else if !projectile_available {
+                    Some("projectile-unavailable")
+                } else if cooldown_remaining > 0 {
+                    Some("cooldown")
+                } else if source == AbilitySourceDto::Learned && book_item_id.is_none() {
+                    Some("book-unavailable")
+                } else {
+                    None
+                };
                 Some(AbilityDto {
                     id: ability.id.clone(),
                     name_key: effective_ability.name_key.clone(),
@@ -650,37 +691,8 @@ impl Game {
                             .player_ability_learning_dto()
                             .is_some_and(|learning| learning.remaining_slots > 0),
                     can_forget: source == AbilitySourceDto::Learned && learned,
-                    can_cast: match source {
-                        AbilitySourceDto::Class
-                        | AbilitySourceDto::Mutation
-                        | AbilitySourceDto::Race => {
-                            level_available
-                                && (!self.player_has_status_kind(STATUS_CONFUSION)
-                                    || ability
-                                        .tags
-                                        .iter()
-                                        .any(|tag| tag == "usable-while-confused"))
-                                && (!self.player_has_status_kind(STATUS_FEAR)
-                                    || ability.tags.iter().any(|tag| tag == "usable-while-afraid"))
-                                && concentration_available
-                                && hit_points_available
-                                && self.ability_state_unavailable_reason(&ability_id).is_none()
-                                && resource_available
-                                && projectile_available
-                                && cooldown_remaining == 0
-                        }
-                        AbilitySourceDto::Learned => {
-                            learned
-                                && !self.player_has_status_kind(STATUS_CONFUSION)
-                                && !self.player_has_anti_magic()
-                                && !self.player_has_status_kind(STATUS_BERSERK)
-                                && level_available
-                                && resource_available
-                                && projectile_available
-                                && cooldown_remaining == 0
-                                && book_item_id.is_some()
-                        }
-                    },
+                    can_cast: unavailable_reason.is_none(),
+                    unavailable_reason: unavailable_reason.map(str::to_owned),
                 })
             })
             .collect()

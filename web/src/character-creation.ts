@@ -57,6 +57,7 @@ export const CAREER_GROUPS = [
   { id: "magic", options: [deathCaster("high-mage")] },
   { id: "hybrid", options: [deathCaster("paladin")] },
   { id: "riding", options: [career("cavalry")] },
+  { id: "mind", options: [career("mindcrafter")] },
 ] as const satisfies readonly CreationGroup[];
 type CareerEntry = (typeof CAREER_GROUPS)[number]["options"][number];
 export type PlaytestBuildId = Exclude<CareerEntry, { children: unknown }>["id"] | Extract<CareerEntry, { children: unknown }>["children"][number]["id"];

@@ -89,6 +89,21 @@ fn mind_armor_resistances(
 }
 
 impl Game {
+    /// Desktop UI acceptance: advance through real experience thresholds and refill mana.
+    #[doc(hidden)]
+    pub fn debug_prepare_mindcrafter_e2e(&mut self, level: u16) {
+        self.entities.clear();
+        self.items
+            .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
+        let experience = self
+            .experience_required_for_level(level)
+            .saturating_sub(self.progress.experience);
+        self.apply_player_experience(experience, &mut Vec::new());
+        for pool in self.resources.values_mut() {
+            pool.current = pool.maximum;
+        }
+    }
+
     pub(in crate::game) fn mindcraft_cast_is_zero_time_unavailable(
         &self,
         ability_id: &str,

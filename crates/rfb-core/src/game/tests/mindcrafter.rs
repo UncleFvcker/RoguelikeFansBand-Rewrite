@@ -9,6 +9,72 @@ const MANA: &str = "demo.resource.mana";
 
 mod spells;
 
+#[test]
+fn normal_creation_projects_cast_reasons_and_preserves_upgraded_abilities_after_loading() {
+    let mut game =
+        Game::new_with_build_race_and_name(924, BUILD, "demo.race.rfb-human", " 心灵旅人 ")
+            .unwrap();
+    assert_eq!(game.snapshot().player.name, "心灵旅人");
+    let ability = |game: &Game, slug: &str| {
+        game.snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .find(|ability| ability.id == format!("demo.ability.mindcrafter-{slug}"))
+            .unwrap()
+    };
+    assert!(ability(&game, "neural-blast").can_cast);
+    game.debug_prepare_mindcrafter_e2e(2);
+    assert!(ability(&game, "precognition").can_cast);
+    assert_eq!(
+        ability(&game, "psycho-storm").unavailable_reason.as_deref(),
+        Some("level-too-low")
+    );
+    for (status, reason) in [
+        (STATUS_CONFUSION, "confused"),
+        (STATUS_FEAR, "afraid"),
+        (STATUS_BERSERK, "berserk"),
+        (crate::effect::STATUS_ANTI_MAGIC, "anti-magic"),
+    ] {
+        game.apply_player_mental_status(status, 10, "test");
+        let projected = ability(&game, "precognition");
+        assert!(!projected.can_cast);
+        assert_eq!(projected.unavailable_reason.as_deref(), Some(reason));
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            &projected.id,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        assert!(events.iter().any(|event| matches!(event, DomainEvent::AbilityCastUnavailable { reason: actual, .. } if actual == reason)));
+        game.player.statuses.clear();
+    }
+    game.resources.get_mut(MANA).unwrap().current = 0;
+    assert_eq!(
+        ability(&game, "precognition").unavailable_reason.as_deref(),
+        Some("insufficient-resource")
+    );
+    game.debug_prepare_mindcrafter_e2e(45);
+    super::support::choose_human_talent_if_pending(&mut game);
+    let door = ability(&game, "minor-displacement");
+    assert_eq!(door.resource_cost, 42);
+    assert_eq!(
+        door.target_spec.modes,
+        [rfb_protocol::TargetModeDto::Position]
+    );
+    assert!(door.can_cast);
+    assert!(game.snapshot().player.ability_learning.is_none());
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(
+        restored.snapshot().player.abilities,
+        game.snapshot().player.abilities
+    );
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
 fn mindcrafter(level: u16) -> Game {
     let mut game = Game::new_with_build(924, BUILD).expect("formal Mindcrafter build");
     clear_monsters(&mut game);
