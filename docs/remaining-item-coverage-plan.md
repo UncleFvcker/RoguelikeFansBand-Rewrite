@@ -1,7 +1,7 @@
 # 剩余物品覆盖计划
 
-状态：I0 已完成，I1–I7 待实施。已校准来源清单和盘点命令，没有导入新物品或修改游戏规则。
-核对日期：2026-09-10；代码基线：`a7aef5bc644517a9dda597cb3f9abf4951df0a96`；工作树：`codex/realms-items`。
+状态：I0 已完成；I1 首组六件普通重甲已接入并完成核心验收，其他 I1 机制族及 I2–I7 待实施。
+核对日期：2026-09-10；本批代码基线：`413b7d8e6`；工作树：`codex/realms-items`。
 本次来源为 `D:/codex/Frogcomposband/master` 的 `master` Git 对象，实际提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。实施每批时重新记录当时 ref 的实际提交并核对变化。
 
 ## 目标与完成口径
@@ -16,19 +16,19 @@
 
 | 维度 | 本次只读核对 | 对计划的含义 |
 | --- | --- | --- |
-| 正式物品 | `items/` 有 376 个定义，内容包 1.408.0 | 定义数量包括神器、改编物和别名，不能直接除以源 kind 数量 |
+| 正式物品 | `items/` 有 382 个定义，内容包 1.409.0 | 定义数量包括神器、改编物和别名，不能直接除以源 kind 数量 |
 | 原版基础记录 | `k_info.txt` 有 545 个 `N:` 记录，包含 `0:something` | 先区分有效内容、占位和特殊对象 |
-| 底材报告 | I0 校准后为 327 mapped、10 no-natural-allocation、3 explicit-only、205 not-imported；自然分配仍为 361 行 | 报告已包含最新正式身份，没有新增自然候选 |
+| 底材报告 | 333 mapped、10 no-natural-allocation、3 explicit-only、199 not-imported；自然分配为 367 行 | I1 首组新增六个普通重甲候选，均保留源 A 行 |
 | 原报告遗漏 | 六个 ID 已归位：`crystal-ball`、`mind-stone` 为 source kind 609、624；`eternity`、`palantir-of-westernesse`、`razorback`、`stone-of-mind` 为固定神器（均为 `demo.item.*`） | 前两个记 explicit-only 专用底材，后四个记显式神器，不能重复导入 |
-| 当前底材身份 | 340 个不同 `rfbBaseKind.sourceIndex`；剩余 205 个记录含占位 0，实际有效未映射记录为 204；其中 137 个带自然分配行 | 已逐项分类；记录存在或有 A 行不等于现在可以开放 |
-| 固定神器 | 392 个源记录已逐项对表；14 个有正式映射，378 个无定义，其中 98 个还缺底材 | I3 分类、flags/激活、源消费者引用和获取限制见核对清单，尚未逐件做规则验收 |
+| 当前底材身份 | 346 个不同 `rfbBaseKind.sourceIndex`；剩余 199 个记录含占位 0，实际有效未映射记录为 198；其中 131 个带自然分配行 | 已逐项分类；记录存在或有 A 行不等于现在可以开放 |
+| 固定神器 | 392 个源记录已逐项对表；14 个有正式映射，378 个无定义，其中 96 个还缺底材 | 六件重甲解除两个神器的底材依赖，神器本身尚未接入；I3 分类、flags/激活和源消费者见核对清单 |
 | 装置 | 三类源底材已映射；当前正式配置的激活列表均为单项 | kind 覆盖不能证明 `devices.c` 的 wand/rod/staff 效果表已完整进入自然生成；必须按效果和入口另查 |
 | 共享生成 | 当前八构筑的五范围审计与已完成行为证据见[职业生成接入计划](class-generation-integration-plan.md) | 复用已有能力和证据；扩大候选池后复查实际受影响的规则和 RNG |
 
 依据：[正式物品](../packs/rfb-demo-original/items/)、[底材报告](../packs/rfb-demo-original/legacy-base-allocation-audit.json)、[来源选择](../packs/rfb-demo-original/legacy-item-selection.json)、[改编记录](../packs/rfb-demo-original/legacy-item-adaptations.json)、[生成矩阵](../design/ego-contract-audit.json)。
 六个漏记 ID 来自正式目录与报告的集合比较；I0 先在临时副本运行同步，确认只有报告变化后更新正式报告。物品、名称、主题表及基础分配行均未变化。
 
-205 个候选记录可先作以下分流；同组不表示同一实现难度：
+I0 最初的 205 个候选记录按下表分流；I1 已完成其中六件普通重甲。同组不表示同一实现难度，当前剩余集合以逐项清单为准：
 
 | 候选组 | 数量 | 主要边界 |
 | --- | --- | --- |
@@ -60,10 +60,10 @@ I0 结果记录在[逐项核对清单](../design/remaining-item-coverage-review.
 - 记录与工具：修正四本 Sorcery/Nature 书的 `sourceId` 标点归一化，稳定 item ID 不变。现有 `audit-demo-items` 显式传 `-` 可只盘点当前物品，读取正式 `rfbBaseKind`，并拒绝未知、冲突或重复 canonical 身份；提供旧 plan 路径时仍严格检查旧 P3，不补填历史完成标签。
 
 当前盘点复现：设置 `RFB_LEGACY_SOURCE` 后运行 `cargo run -p rfb-legacy-import -- audit-demo-items packs/rfb-demo-original/legacy-item-selection.json packs/rfb-demo-original/legacy-item-adaptations.json - packs/rfb-demo-original/items`。
-当前命令输出 544 个有效源记录、340 个 active、55 个 importer mechanics-ready 和 149 个 blocked；它不检查正常创角可达性或执行游戏行为测试。基础分配的刷新命令仍见[内容开发](content-development.md)。
+I1 首组完成后，当前命令输出 544 个有效源记录、346 个 active、49 个 importer mechanics-ready 和 149 个 blocked；它不检查正常创角可达性或执行游戏行为测试。基础分配的刷新命令仍见[内容开发](content-development.md)。
 
-**I1 首组已确定为六件普通重甲：**272 金属鳞甲、274 双层环甲、276 双层链甲、277 条板链甲、278 金属布面甲、279 板环甲。中文显示沿用源模板的现有单数化规则。
-当前缺口是正式物品定义、来源记录和分配行；复用现有护甲/命中/重量及 Ego 生成。先验证原始参数、真实分配到装备消费者和受影响 RNG/契约，不包含专属激活、神器或新交互。
+**I1 首组六件普通重甲已完成：**272 金属鳞甲、274 双层环甲、276 双层链甲、277 条板链甲、278 金属布面甲、279 板环甲。中文显示沿用源模板的现有单数化规则。
+通过现有 `sync-demo-items` 只导入六个 ID，再用基础分配同步接入正式池；源等级为 25/25/30/35/35/35，每件保留一条 `A:等级/1`。护甲、命中、重量、估值、酸销毁及 Ego 复用已有规则，未新增专属激活或神器。
 
 ### I1：补普通装备底材
 
@@ -72,6 +72,10 @@ I0 结果记录在[逐项核对清单](../design/remaining-item-coverage-review.
 - 龙鳞甲另作小批：复用已有底材生成，逐项核对抗性与激活，确认 Ego/随机神器生成后仍保留应有底材能力。毒针、死神镰刀等专属战斗分支留给 I4。
 
 完成标准：实际生产分配路径生成目标机制族，鉴定/装备后属性、攻击或防御消费者正确；新实例保存恢复一致。候选池扩大引起的 RNG/契约变化有可解释差异，完成受影响契约检查。
+
+首组证据：[核心物品测试](../crates/rfb-core/src/game/tests/items.rs)中的 `ordinary_heavy_armor_allocation_reaches_equipment_and_save` 从人类战士新角色开始，受控设置生成深度 35，反复调用正式普通掉落生成，保留完整候选池、权重与质量抽样。六种普通品质实例均实际拾取、鉴定、装备，验证现有 AC 换算、命中惩罚与负重；保存恢复后，下一次生成的实例、ID 和 RNG 一致。这是核心受控前置验收，不是自然练级或桌面试玩。
+
+当前 26 条 active 契约全部通过，无需刷新 fixture 或调整 State Hash Schema；候选池虽扩大，现有 fixture 的观察结果未变。生成矩阵已覆盖 152 个装备底材，八构筑适用性检查通过。逐项清单移除本组六个 gap，并更新两个固定神器的底材依赖；其他 37 个普通装备候选和 10 个龙鳞甲激活候选仍待后续小批。
 
 ### I2：装置效果与普通消耗品
 
@@ -130,4 +134,4 @@ I0 结果记录在[逐项核对清单](../design/remaining-item-coverage-review.
 内容变化更新正式包版本及 lock，类型变化才生成对应 Schema/协议；按[内容开发](content-development.md)使用现有命令。普通候选池扩充仍可能改变全局 RNG 消费，按实际影响执行[验证与契约](testing.md)，说明差异再刷新必要 fixture。
 新增物品触及职业/主题/神器条件时同步来源审计、生成矩阵和只读 CI 检查；通用物品不机械复制八职业全套测试，仅补实际差异与缺失证据。
 
-I0 的盘点回归验证了当前身份计数、别名去重、显式跳过旧 P3，以及错误身份拒绝；来源清单、文档链接、内容锁和相关 lint/格式按本次变化核验。游戏规则、正式内容与共享 RNG 未变，不重跑游戏或桌面验收。下一步是 I1 首组六件重甲。
+I0 的盘点回归已覆盖当前身份计数、别名去重、显式跳过旧 P3，以及错误身份拒绝。I1 首组按实际内容和候选池影响补充核心生成、装备与保存证据，并验证当前契约；后续继续按机制族补齐 I1，桌面整体验收仍留在 I7。

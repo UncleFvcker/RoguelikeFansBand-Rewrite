@@ -1,6 +1,6 @@
 {
   "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits",
-  "allocationRowCount": 361,
+  "allocationRowCount": 367,
   "explicitItems": [
     {
       "itemId": "demo.item.arkenstone-of-thrain",
@@ -4045,12 +4045,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.metal-scale-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 272,
       "sourceName": "Metal Scale Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 3,
       "tval": 37
     },
@@ -4083,12 +4083,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.double-ring-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 274,
       "sourceName": "Double Ring Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 5,
       "tval": 37
     },
@@ -4121,12 +4121,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.double-chain-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 276,
       "sourceName": "Double Chain Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 7,
       "tval": 37
     },
@@ -4140,12 +4140,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.bar-chain-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 277,
       "sourceName": "Bar Chain Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 8,
       "tval": 37
     },
@@ -4159,12 +4159,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.metal-brigandine-armour",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 278,
       "sourceName": "Metal Brigandine Armour",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 9,
       "tval": 37
     },
@@ -4178,12 +4178,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.splint-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 279,
       "sourceName": "Splint Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 10,
       "tval": 37
     },

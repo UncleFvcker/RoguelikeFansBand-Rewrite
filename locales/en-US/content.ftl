@@ -9174,3 +9174,21 @@ terrain-demo-dark-cave-entrance-description = An entrance to Dark cave.
 floor-demo-disaster-area-depth-name = Disaster area depth { $depth }
 terrain-demo-disaster-area-entrance-name = Disaster area entrance
 terrain-demo-disaster-area-entrance-description = An entrance to Disaster area.
+
+item-demo-metal-scale-mail-name = Metal Scale Mail
+item-demo-metal-scale-mail-description = Ordinary heavy body armor.
+
+item-demo-double-ring-mail-name = Double Ring Mail
+item-demo-double-ring-mail-description = Ordinary heavy body armor.
+
+item-demo-double-chain-mail-name = Double Chain Mail
+item-demo-double-chain-mail-description = Ordinary heavy body armor.
+
+item-demo-bar-chain-mail-name = Bar Chain Mail
+item-demo-bar-chain-mail-description = Ordinary heavy body armor.
+
+item-demo-metal-brigandine-armour-name = Metal Brigandine Armour
+item-demo-metal-brigandine-armour-description = Ordinary heavy body armor.
+
+item-demo-splint-mail-name = Splint Mail
+item-demo-splint-mail-description = Ordinary heavy body armor.

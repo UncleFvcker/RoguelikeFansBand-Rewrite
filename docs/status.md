@@ -10,10 +10,10 @@
 | 协议 | 1.246 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 120 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 15 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.408.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.409.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v321，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 8 个 Class、15 个 Build、57 个 Race、32 本能力书、1,861 个 ability 文件、376 个 item、1,404 个 actor、168 个 affix、152 个 mutation。世界定义含 30 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 8 个 Class、15 个 Build、57 个 Race、32 本能力书、1,861 个 ability 文件、382 个 item、1,404 个 actor、168 个 affix、152 个 mutation。世界定义含 30 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
 权威内容统计工具是 `rfb-contentc inspect-source`。本次集成已运行内容编译；静态统计不替代行为验收。
 
@@ -60,7 +60,7 @@ Ent、Spectre 的新游戏入口已开放。种族主线还接入原始经验值
 
 法术道具分支已合入护甲、非 Craft Ego、共享加权工艺、真实装备估值、负向装备/诅咒消费者、龙系底材生成、背包与箭袋容量，以及随机神器实例身份和消费者。168 个 affix 定义不等于全部均可自然获取：保留原版零稀有度及专用入口约束。
 
-随机神器已接入武器/挖掘工具、远程/竖琴、护甲、首饰和费艾诺光源的自然调度，保留原版底材例外、概率与强制模式，Craft 不参与抽样。实例保存名称、骰数、重量、特性、诅咒和激活；内部工厂含职业/主题 bias、原版命名、195 项激活池及最多 1001 个独立候选的价值筛选。成功和被拒绝候选的名字登记进入存档，恢复后继续生成保持一致。首饰自然入口另按原版等级/模式阈值筛选完整候选，1000 次拒绝后直接采用新生成的第 1001 个结果；每轮都包含 Ego/随机神器分支及诅咒，显式配置物化保持原入口。生成验收要求规则相同和本项目内确定性，不要求与原版同种子产物相同。无权威中文的名字保留原字符串并记录 unresolved。共享生成已按实际构筑审计职业/种族、变异、人格和主题条件，补齐主题 Ego 筛选、Bad Luck 固定神器参考层级及帽子速度限制。Vortex 分类为装备模板/消费者和间接类别分配；B0–B6 已完成当前可玩构筑与导入基础池的底材分配、Acquirement 偏好/书本计数和保存验收；未开放身份不计入可玩验收。基础分配已统一为 327 个 source kind、361 行；13 个正式主题引用同一池并以枚举执行源谓词。逐行来源及未导入条目见[基础分配覆盖](../packs/rfb-demo-original/legacy-base-allocation-audit.json)，范围、证据和源对象表示限制见[分配计划](../design/base-allocation-acquirement-plan.md)。八领域入口范围保持上表状态。实现范围见[共享生成计划](../design/ego-shared-generation-plan.md)，实例表示见[随机神器身份契约](../design/contract-v316-random-artifact-identity.md)。
+随机神器已接入武器/挖掘工具、远程/竖琴、护甲、首饰和费艾诺光源的自然调度，保留原版底材例外、概率与强制模式，Craft 不参与抽样。实例保存名称、骰数、重量、特性、诅咒和激活；内部工厂含职业/主题 bias、原版命名、195 项激活池及最多 1001 个独立候选的价值筛选。成功和被拒绝候选的名字登记进入存档，恢复后继续生成保持一致。首饰自然入口另按原版等级/模式阈值筛选完整候选，1000 次拒绝后直接采用新生成的第 1001 个结果；每轮都包含 Ego/随机神器分支及诅咒，显式配置物化保持原入口。生成验收要求规则相同和本项目内确定性，不要求与原版同种子产物相同。无权威中文的名字保留原字符串并记录 unresolved。共享生成已按实际构筑审计职业/种族、变异、人格和主题条件，补齐主题 Ego 筛选、Bad Luck 固定神器参考层级及帽子速度限制。Vortex 分类为装备模板/消费者和间接类别分配；B0–B6 已完成当前可玩构筑与导入基础池的底材分配、Acquirement 偏好/书本计数和保存验收；未开放身份不计入可玩验收。基础分配已统一为 333 个 source kind、367 行；13 个正式主题引用同一池并以枚举执行源谓词。逐行来源及未导入条目见[基础分配覆盖](../packs/rfb-demo-original/legacy-base-allocation-audit.json)，范围、证据和源对象表示限制见[分配计划](../design/base-allocation-acquirement-plan.md)。八领域入口范围保持上表状态。实现范围见[共享生成计划](../design/ego-shared-generation-plan.md)，实例表示见[随机神器身份契约](../design/contract-v316-random-artifact-identity.md)。
 
 书本已在现有物品知识中累计发现数，实例保留防重复标记；出生、拾取、鉴定、销毁、交易、存储及保存恢复按原版统计事件区分。购买与出售只标记，不增加 found；累计数不随库存减少，也不经博物馆转给其他角色。普通分配权重衰减与 Good/Great 高阶书条件已读取累计数，来源映射见[分配计划 B1](../design/base-allocation-acquirement-plan.md#b1发现计数与保存完整性)。
 
@@ -74,7 +74,7 @@ B2 已接入 17 类共享类别权重、身体槽位减半、Good 分配层级 +
 
 集成保留物品感知与实例神器鉴定边界、托姆特实例头饰重量、冬贝利逐武器伤害/攻次和准确来源显示。种族永久状态与新增物品字段共同进入当前保存和状态哈希，版本统一收口；内容 hash 本身不参与状态哈希。
 
-物品覆盖 I0 已完成[清单校准](remaining-item-coverage-plan.md#i0校准覆盖清单)：340 个有效基础身份已映射，204 个有效剩余 kind 与占位 0 分开分类；固定神器 392 个源记录中 14 个已有定义，三类装置效果表共 121 行单独审查。六个漏记物品已进入底材报告，四本书的来源 ID 已修正；正式物品、内容版本、自然分配 361 行和运行时规则未变。后续从六件普通重甲开始，具体依赖及装置改编差异见[逐项清单](../design/remaining-item-coverage-review.json)。这是盘点结果，不新增可玩验收结论。
+物品覆盖 I0 已完成清单校准，[I1 首组](remaining-item-coverage-plan.md#i1补普通装备底材)已接入金属鳞甲、双层环甲、双层链甲、条板链甲、金属布面甲和板环甲。当前映射 346 个有效基础身份，余 198 个有效 kind 与占位 0；固定神器仍为 14/392 个定义，装置效果表仍为 121 行独立审查。六件重甲保留源等级、分配、中文名和装备参数，复用现有生成/装备规则；核心测试通过完整正式池的受控深度生成，实际拾取、鉴定、装备及保存恢复后的下一次生成/RNG 验证。26 条 active 契约通过且未刷新，八构筑适用性检查通过；未作自然练级或本批桌面试玩。其他 I1 机制族与后续依赖见[逐项清单](../design/remaining-item-coverage-review.json)。
 
 ## 城镇与共享存储
 

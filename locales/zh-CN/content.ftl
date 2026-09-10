@@ -9178,3 +9178,21 @@ terrain-demo-dark-cave-entrance-description = 通向充满魔法黑暗的洞穴�
 floor-demo-disaster-area-depth-name = 灾难区 { $depth } 层
 terrain-demo-disaster-area-entrance-name = 灾难区入口
 terrain-demo-disaster-area-entrance-description = 通向灾难区的钢铁大门
+
+item-demo-metal-scale-mail-name = 金属鳞甲
+item-demo-metal-scale-mail-description = 一件沉重的鳞甲衫，由皮革支撑的重叠钢鳞制成，配有相配的裙子和袖子。
+
+item-demo-double-ring-mail-name = 双层环甲
+item-demo-double-ring-mail-description = 普通重型躯干护甲。
+
+item-demo-double-chain-mail-name = 双层链甲
+item-demo-double-chain-mail-description = 普通重型躯干护甲。
+
+item-demo-bar-chain-mail-name = 条板链甲
+item-demo-bar-chain-mail-description = 普通重型躯干护甲。
+
+item-demo-metal-brigandine-armour-name = 金属布面甲
+item-demo-metal-brigandine-armour-description = 普通重型躯干护甲。
+
+item-demo-splint-mail-name = 板环甲
+item-demo-splint-mail-description = 普通重型躯干护甲。

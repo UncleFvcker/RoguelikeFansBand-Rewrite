@@ -1528,7 +1528,21 @@
       "weight": 25
     },
     {
+      "itemKindId": "demo.item.metal-scale-mail",
+      "maxDepth": 65535,
+      "minDepth": 25,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.chain-mail",
+      "maxDepth": 65535,
+      "minDepth": 25,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.double-ring-mail",
       "maxDepth": 65535,
       "minDepth": 25,
       "quantity": 1,
@@ -1675,6 +1689,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.double-chain-mail",
+      "maxDepth": 65535,
+      "minDepth": 30,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.pet-summoning-scroll",
       "maxDepth": 65535,
       "minDepth": 30,
@@ -1785,6 +1806,27 @@
       "minDepth": 35,
       "quantity": 1,
       "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.bar-chain-mail",
+      "maxDepth": 65535,
+      "minDepth": 35,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.metal-brigandine-armour",
+      "maxDepth": 65535,
+      "minDepth": 35,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.splint-mail",
+      "maxDepth": 65535,
+      "minDepth": 35,
+      "quantity": 1,
+      "weight": 100
     },
     {
       "itemKindId": "demo.item.greater-cleansing-scroll",

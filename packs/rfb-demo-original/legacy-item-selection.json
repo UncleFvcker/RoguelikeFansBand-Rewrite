@@ -1,6 +1,12 @@
 {
   "schemaVersion": 1,
   "items": [
+    {"sourceIndex": 272, "sourceId": "metal-scale-mail", "id": "metal-scale-mail"},
+    {"sourceIndex": 274, "sourceId": "double-ring-mail", "id": "double-ring-mail"},
+    {"sourceIndex": 276, "sourceId": "double-chain-mail", "id": "double-chain-mail"},
+    {"sourceIndex": 277, "sourceId": "bar-chain-mail", "id": "bar-chain-mail"},
+    {"sourceIndex": 278, "sourceId": "metal-brigandine-armour", "id": "metal-brigandine-armour"},
+    {"sourceIndex": 279, "sourceId": "splint-mail", "id": "splint-mail"},
     {"sourceIndex":78,"id":"dragon-fang"},
     {"sourceIndex":200,"sourceId":"pair-of-dragon-wings","id":"dragon-wings"},
     {"sourceIndex":207,"sourceId":"pair-of-dragon-boots","id":"dragon-boots"},

@@ -2855,10 +2855,24 @@
       "tval": 19
     },
     {
+      "itemId": "demo.item.metal-scale-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 272,
+      "sval": 3,
+      "tval": 37
+    },
+    {
       "itemId": "demo.item.chain-mail",
       "status": "source-type-verified",
       "sourceIndex": 273,
       "sval": 4,
+      "tval": 37
+    },
+    {
+      "itemId": "demo.item.double-ring-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 274,
+      "sval": 5,
       "tval": 37
     },
     {
@@ -2925,6 +2939,13 @@
       "tval": 37
     },
     {
+      "itemId": "demo.item.double-chain-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 276,
+      "sval": 7,
+      "tval": 37
+    },
+    {
       "itemId": "demo.item.no-dachi",
       "status": "source-type-verified",
       "sourceIndex": 70,
@@ -2937,6 +2958,27 @@
       "sourceIndex": 105,
       "sval": 26,
       "tval": 22
+    },
+    {
+      "itemId": "demo.item.bar-chain-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 277,
+      "sval": 8,
+      "tval": 37
+    },
+    {
+      "itemId": "demo.item.metal-brigandine-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 278,
+      "sval": 9,
+      "tval": 37
+    },
+    {
+      "itemId": "demo.item.splint-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 279,
+      "sval": 10,
+      "tval": 37
     },
     {
       "itemId": "demo.item.falchion",

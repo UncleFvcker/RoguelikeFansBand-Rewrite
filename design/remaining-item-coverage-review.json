@@ -3,8 +3,8 @@
   "sourceRef": "master",
   "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
   "reviewedAt": "2026-09-10",
-  "codeBaseline": "59d72f52c",
-  "scope": "I0 curated inventory, not gameplay acceptance. Groups supply batch/gap/acquisition/consumer for each row; source flags and references identify implementation work, not proof that every source branch is implemented. No gameplay/content is enabled by this file.",
+  "codeBaseline": "413b7d8e6",
+  "scope": "Current curated inventory after I1 first ordinary heavy-armor group. Groups supply batch/gap/acquisition/consumer for each remaining row; source flags and references identify implementation work, not proof that every source branch is implemented. Gameplay evidence is recorded per completed group; this file enables no content.",
   "nameSources": {
     "kinds": "src/kind_name_zh.inc",
     "artifacts": "src/artifact_name_zh.inc",
@@ -16,17 +16,17 @@
   "summary": {
     "sourceKindRecords": 545,
     "validSourceKinds": 544,
-    "mappedCanonicalKinds": 340,
-    "remainingValidKinds": 204,
+    "mappedCanonicalKinds": 346,
+    "remainingValidKinds": 198,
     "excludedPlaceholderKinds": 1,
-    "importerMechanicsReady": 55,
+    "importerMechanicsReady": 49,
     "importerBlocked": 149,
-    "formalItems": 376,
-    "baseAllocationRows": 361,
+    "formalItems": 382,
+    "baseAllocationRows": 367,
     "fixedArtifactRecords": 392,
     "formalFixedArtifacts": 14,
     "missingFixedArtifacts": 378,
-    "missingArtifactsWithAbsentBase": 98,
+    "missingArtifactsWithAbsentBase": 96,
     "deviceTableRows": {
       "wand": 39,
       "rod": 35,
@@ -48,13 +48,15 @@
       278,
       279
     ],
-    "gap": "Formal ordinary heavy-armor bases and allocation entries only; no artifact/activation/identity-specific mechanic.",
+    "gap": "None for this six-base content batch; other I1 equipment families remain open.",
     "requiredChecks": [
       "authoritative names/identity/parameters",
       "source allocation and content lock",
       "armor hit/AC/weight consumers",
       "affected shared-generation RNG/contracts"
-    ]
+    ],
+    "status": "completed",
+    "evidence": "game::tests::items::ordinary_heavy_armor_allocation_reaches_equipment_and_save: controlled depth 35 and repeated ordinary generation from the unchanged formal pool, all six bases picked up/identified/equipped, existing AC/hit/weight consumers, save restore and next generated instances/RNG. Not natural leveling or desktop acceptance."
   },
   "reviewGroups": {
     "ordinary-weapon": {
@@ -386,12 +388,6 @@
     {"sourceIndex": 260, "sourceName": "Sexy Swimsuit", "sourceNameZh": "性感泳装~", "reviewGroup": "swimsuit", "hasNaturalAllocationRows": true, "sourceFlags": ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD", "AGGRAVATE"], "sourceActivation": null, "importerBlockers": ["item-flag:AGGRAVATE"]},
     {"sourceIndex": 262, "sourceName": "Costume", "sourceNameZh": "戏服~", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["INSTA_ART"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART"]},
     {"sourceIndex": 270, "sourceName": "Rusty Chain Mail", "sourceNameZh": "生锈的链甲~", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": [], "sourceActivation": null, "importerBlockers": []},
-    {"sourceIndex": 272, "sourceName": "Metal Scale Mail", "sourceNameZh": "金属鳞甲~", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": []},
-    {"sourceIndex": 274, "sourceName": "Double Ring Mail", "sourceNameZh": "双层环甲~", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": []},
-    {"sourceIndex": 276, "sourceName": "Double Chain Mail", "sourceNameZh": "双层链甲~", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": []},
-    {"sourceIndex": 277, "sourceName": "Bar Chain Mail", "sourceNameZh": "条板链甲~", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": []},
-    {"sourceIndex": 278, "sourceName": "Metal Brigandine Armour", "sourceNameZh": "金属布面甲~", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": []},
-    {"sourceIndex": 279, "sourceName": "Splint Mail", "sourceNameZh": "板环甲~", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": []},
     {"sourceIndex": 280, "sourceName": "Do-maru", "sourceNameZh": "胴丸~", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": []},
     {"sourceIndex": 281, "sourceName": "Partial Plate Armour", "sourceNameZh": "半身板甲~", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": []},
     {"sourceIndex": 283, "sourceName": "Haramakido", "sourceNameZh": "腹卷~", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": []},
@@ -566,9 +562,9 @@
     {"sourceIndex": 18, "sourceName": "of Faramir", "sourceNameZh": "法拉米尔的", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [311], "baseItemId": "demo.item.amulet", "sourceLevel": 30, "sourceRarity": 30, "sourceFlags": ["STEALTH", "SHOW_MODS", "HIDE_TYPE", "RES_CONF", "SUST_DEX"], "sourceActivation": "PESTICIDE:10:5", "sourceDataNotes": [], "sourceConsumerReferences": [], "contentReferences": []},
     {"sourceIndex": 19, "sourceName": "'Soulkeeper'", "sourceNameZh": "『守魂者』", "reviewGroup": "artifact-missing-base", "formalItemId": null, "baseSourceIndices": [289], "baseItemId": null, "sourceLevel": 75, "sourceRarity": 9, "sourceFlags": ["CON", "HOLD_LIFE", "SUST_CON", "RES_ACID", "RES_COLD", "RES_DARK", "RES_NETHER", "RES_NEXUS", "RES_CHAOS"], "sourceActivation": "HEAL:35:888:1000", "sourceDataNotes": [], "sourceConsumerReferences": [], "contentReferences": []},
     {"sourceIndex": 20, "sourceName": "of Isildur", "sourceNameZh": "埃西铎的", "reviewGroup": "artifact-missing-base", "formalItemId": null, "baseSourceIndices": [284], "baseItemId": null, "sourceLevel": 65, "sourceRarity": 3, "sourceFlags": ["CON", "RES_ACID", "RES_FIRE", "RES_COLD", "XTRA_H_RES", "RES_SOUND", "RES_CONF", "RES_NEXUS"], "sourceActivation": null, "sourceDataNotes": [], "sourceConsumerReferences": [], "contentReferences": []},
-    {"sourceIndex": 21, "sourceName": "of the Rohirrim", "sourceNameZh": "洛汗骠骑的", "reviewGroup": "artifact-missing-base", "formalItemId": null, "baseSourceIndices": [278], "baseItemId": null, "sourceLevel": 35, "sourceRarity": 3, "sourceFlags": ["STR", "DEX", "HIDE_TYPE", "XTRA_H_RES", "RES_ACID", "RES_ELEC", "RES_COLD", "RES_CONF", "RES_SOUND"], "sourceActivation": null, "sourceDataNotes": [], "sourceConsumerReferences": [], "contentReferences": []},
+    {"sourceIndex": 21, "sourceName": "of the Rohirrim", "sourceNameZh": "洛汗骠骑的", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [278], "baseItemId": "demo.item.metal-brigandine-armour", "sourceLevel": 35, "sourceRarity": 3, "sourceFlags": ["STR", "DEX", "HIDE_TYPE", "XTRA_H_RES", "RES_ACID", "RES_ELEC", "RES_COLD", "RES_CONF", "RES_SOUND"], "sourceActivation": null, "sourceDataNotes": [], "sourceConsumerReferences": [], "contentReferences": []},
     {"sourceIndex": 22, "sourceName": "of Lohengrin", "sourceNameZh": "罗恩格林的", "reviewGroup": "artifact-missing-base", "formalItemId": null, "baseSourceIndices": [287], "baseItemId": null, "sourceLevel": 80, "sourceRarity": 9, "sourceFlags": ["STEALTH", "WIS", "INT", "SEE_INVIS", "RES_ACID", "RES_ELEC", "RES_FIRE", "RES_COLD", "RES_POIS", "HOLD_LIFE", "RES_NETHER", "RES_DARK", "RES_FEAR"], "sourceActivation": "HEAL_CURING_HERO:50:300:777", "sourceDataNotes": [], "sourceConsumerReferences": ["src/xtra2.c:2045"], "contentReferences": []},
-    {"sourceIndex": 23, "sourceName": "of Julian", "sourceNameZh": "朱利安的", "reviewGroup": "artifact-missing-base", "formalItemId": null, "baseSourceIndices": [272], "baseItemId": null, "sourceLevel": 75, "sourceRarity": 15, "sourceFlags": ["STR", "CHR", "HIDE_TYPE", "RES_ACID", "RES_ELEC", "RES_FIRE", "RES_COLD", "RES_DARK", "RES_DISEN", "XTRA_H_RES", "ESP_ANIMAL"], "sourceActivation": "GENOCIDE:40:500:200", "sourceDataNotes": [], "sourceConsumerReferences": ["src/xtra2.c:1792"], "contentReferences": []},
+    {"sourceIndex": 23, "sourceName": "of Julian", "sourceNameZh": "朱利安的", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [272], "baseItemId": "demo.item.metal-scale-mail", "sourceLevel": 75, "sourceRarity": 15, "sourceFlags": ["STR", "CHR", "HIDE_TYPE", "RES_ACID", "RES_ELEC", "RES_FIRE", "RES_COLD", "RES_DARK", "RES_DISEN", "XTRA_H_RES", "ESP_ANIMAL"], "sourceActivation": "GENOCIDE:40:500:200", "sourceDataNotes": [], "sourceConsumerReferences": ["src/xtra2.c:1792"], "contentReferences": []},
     {"sourceIndex": 24, "sourceName": "of Arvedui", "sourceNameZh": "阿维杜伊的", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [273], "baseItemId": "demo.item.chain-mail", "sourceLevel": 40, "sourceRarity": 3, "sourceFlags": ["STR", "CHR", "HIDE_TYPE", "XTRA_H_RES", "RES_ELEC", "RES_FIRE", "RES_COLD", "RES_SHARDS", "RES_NEXUS"], "sourceActivation": null, "sourceDataNotes": [], "sourceConsumerReferences": [], "contentReferences": []},
     {"sourceIndex": 25, "sourceName": "of Caspanion", "sourceNameZh": "卡斯帕尼安的", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [275], "baseItemId": "demo.item.augmented-chain-mail", "sourceLevel": 45, "sourceRarity": 9, "sourceFlags": ["INT", "WIS", "CON", "HIDE_TYPE", "XTRA_H_RES", "RES_ACID", "RES_POIS", "RES_CONF"], "sourceActivation": "DESTROY_TRAP:20:10", "sourceDataNotes": [], "sourceConsumerReferences": [], "contentReferences": []},
     {"sourceIndex": 26, "sourceName": "of Shiva's Avatar", "sourceNameZh": "湿婆化身的", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [257], "baseItemId": "demo.item.leather-jacket", "sourceLevel": 70, "sourceRarity": 50, "sourceFlags": ["BLOWS", "RES_SHARDS", "HOLD_LIFE", "SLOW_DIGEST", "SUST_STR", "SUST_DEX", "SUST_CON", "SUST_INT", "SUST_WIS", "SUST_CHR", "RES_ACID", "RES_ELEC", "RES_FIRE", "RES_COLD"], "sourceActivation": null, "sourceDataNotes": [], "sourceConsumerReferences": ["src/xtra2.c:2187"], "contentReferences": []},

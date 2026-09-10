@@ -13,6 +13,78 @@ fn artifact_loot_context(depth: u16) -> LootContext {
     }
 }
 
+#[test]
+fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
+    let mut game = Game::new_with_build(409, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    game.items.clear();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: game.current_floor_id.clone(),
+        depth: 35,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.ordinary-drop".into(),
+        },
+    };
+    // Controlled depth and repeated drops; the formal pool, weights, quality
+    // rolls and materialization remain intact. This is not a leveling test.
+    let mut remaining = BTreeSet::from([272, 274, 276, 277, 278, 279]);
+    for _ in 0..10_000 {
+        let generated = game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        for item in generated {
+            let definition = game.content.item(&item.kind_id).unwrap();
+            let Some(base) = definition.rfb_base_kind else {
+                continue;
+            };
+            if item.quality != ItemQualityDto::Ordinary || !remaining.remove(&base.source_index) {
+                continue;
+            }
+            let defense = definition.modifiers.defense;
+            let hit = definition.equipment_bonuses.melee_skill;
+            let weight = u32::from(definition.weight_tenths_pound);
+            let baseline = game.player_derived_stats();
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            assert_eq!(game.carried_weight_tenths_pound(), weight);
+            game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+            assert!(game.item_property_knowledge[&id].identified);
+            game.equip_inventory_item(&id, Some("body")).unwrap();
+            let equipped = game.player_derived_stats();
+            assert_eq!(
+                equipped.armor_class.value - baseline.armor_class.value,
+                defense * 10
+            );
+            assert_eq!(equipped.melee_skill.value - baseline.melee_skill.value, hit);
+            game.reveal_current_visibility();
+            let mut restored = Game::from_save(game.to_save()).unwrap();
+            assert_eq!(restored.state_hash(), game.state_hash());
+            assert_eq!(restored.rng, game.rng);
+            assert_eq!(
+                restored.player_derived_stats().armor_class,
+                equipped.armor_class
+            );
+            assert_eq!(restored.carried_weight_tenths_pound(), weight);
+            let next = game
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap();
+            let replay = restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap();
+            assert_eq!(next, replay);
+            assert_eq!(restored.rng, game.rng);
+            game.items.clear();
+        }
+        if remaining.is_empty() {
+            return;
+        }
+    }
+    panic!("ordinary heavy armor was not generated: {remaining:?}");
+}
+
 fn razorback_game() -> (Game, String) {
     let mut game = Game::new_with_build(129, "demo.build.warrior").unwrap();
     clear_monsters(&mut game);
