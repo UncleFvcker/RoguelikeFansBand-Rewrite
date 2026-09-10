@@ -33,6 +33,7 @@ export async function connectKeyboard(profile) {
     socket.send(JSON.stringify({ id, method, params }));
   });
   const keys = { Tab: ["Tab", 9], Enter: ["Enter", 13], Escape: ["Escape", 27], " ": ["Space", 32], Home: ["Home", 36], End: ["End", 35], ArrowLeft: ["ArrowLeft", 37], ArrowUp: ["ArrowUp", 38], ArrowRight: ["ArrowRight", 39], ArrowDown: ["ArrowDown", 40], a: ["KeyA", 65], "2": ["Numpad2", 98], "5": ["Numpad5", 101], "6": ["Numpad6", 102] };
+  for (const digit of ["1", "3", "4", "7", "8", "9"]) keys[digit] = [`Numpad${digit}`, 96 + Number(digit)];
   const errors = [];
   socket.addEventListener("message", event => {
     const message = JSON.parse(event.data);

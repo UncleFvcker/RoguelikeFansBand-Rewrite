@@ -17,7 +17,11 @@
 
 权威内容统计工具是 `rfb-contentc inspect-source`。本次集成已运行内容编译；静态统计不替代行为验收。
 
-狂战士已完成[接入计划](berserker-class-plan.md)前四步：来源审计、正式出生/成长、常驻被动、战斗与使用限制、六项 HP 能力、八项任务奖励及高阶书销毁收益已实现，正常创角已开放“近战 → 狂战士”。核心专项覆盖实际施放、失败/取消、吸血/死亡、陷阱和野外移动、奖励领取与保存恢复；公共适配边界见[来源审计](berserker-source-audit.md)。WebDriver 专项验证正常 1 级空能力面板、真实经验升级后的能力出现、HP 费用/不足、物品禁用说明、键盘取消、中英文、390px 窄屏与 200% 缩放，证据位于 `test-results/berserker-ui-acceptance.json` 和同名前缀截图。高等级使用明确标注的测试入口；第五步的完整试玩链和优化 standalone 产物尚未验收。
+狂战士已完成[五步接入计划](berserker-class-plan.md)：来源审计、正式出生/成长、常驻被动、战斗与使用限制、六项 HP 能力、八项任务奖励及高阶书销毁收益已实现，正常创角已开放“近战 → 狂战士”。核心专项覆盖实际施放、失败/取消、吸血/死亡、陷阱和野外移动、奖励领取与保存恢复；实际经验升级覆盖至 50 级的被动边界，种族交叉覆盖托姆特出生合并、幽灵吸收/种族能力/穿墙恢复，以及已有龙人、冬贝利与突变规则。公共适配边界见[来源审计](berserker-source-audit.md)。
+
+2026-09-10 的 Tauri standalone WebDriver 专项从普通人类 1 级开局完成装备出生火把、移动、进入兽穴、自然怪物近战及使用治疗药水。明确授予经验至 15 级并放置源定义石巨魔后，实际完成侦测、冲锋、归还启动/取消/再次启动与延迟返回；自然失败保留真实费用和 RNG。菜单导出的存档经原生加载后，玩家、装备、背包投影一致，相同后续行动的状态哈希完全相同。还验证能力出现边界、HP 费用/不足、物品禁用说明、键盘取消、中英文、390px 窄屏与 200% 缩放。证据为 `test-results/berserker-ui-acceptance.json`、`berserker-*.png` 和明确标注测试升级的 15 级存档；不表示自然练级或完整通关。
+
+优化 EXE 经 `npm run build -- --no-bundle` 构建，实际启动到标题/创角页并正常退出。本机原生抓屏接口不受支持，完整交互和截图来自同源 WebDriver 包。程序、许可、来源、校验值和证据交付于 `release/RoguelikeFansBand-Rewrite_0.1.0_berserker-20260910_windows-x64/`。本步 workspace（除 Tauri）、Tauri 原生层 23 项、前端 198 项及受影响补充测试、相关 Clippy、类型检查、内容锁和 26 条完整契约通过；内容/协议/保存格式未变，无需重生成或刷新 fixture。复现桌面流程：在 `web` 执行 `npm run e2e:build` 后运行 `node e2e/tauri.e2e.mjs --berserker`。未验收 Android。
 
 ## 玩家入口
 
@@ -28,7 +32,7 @@
 | 构筑 | 稳定 Build ID | 范围 |
 | --- | --- | --- |
 | 战士 | `demo.build.warrior` | 非施法基线 |
-| 狂战士 | `demo.build.berserker` | 无 MP 的 HP 战技；创角与界面专项通过，第五步交付验收待完成 |
+| 狂战士 | `demo.build.berserker` | 无 MP 的 HP 战技；正式开局、成长/能力、保存恢复和桌面交付专项通过 |
 | 高阶法师（死亡） | `demo.build.high-mage-death` | 死亡领域书本与施法 |
 | 弓箭手 | `demo.build.archer` | 制造弹药与射击 |
 | 圣骑士（死亡） | `demo.build.paladin-death` | 死亡领域与随机祈祷学习 |

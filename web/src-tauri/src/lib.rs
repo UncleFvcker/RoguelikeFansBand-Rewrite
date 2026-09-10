@@ -282,7 +282,12 @@ impl AppState {
     }
 
     #[cfg(feature = "webdriver")]
-    fn prepare_berserker_e2e(&self, level: u16, wounded: bool) -> Result<GameSnapshot, String> {
+    fn prepare_berserker_e2e(
+        &self,
+        level: u16,
+        wounded: bool,
+        with_target: bool,
+    ) -> Result<GameSnapshot, String> {
         let mut session = self.lock_session()?;
         let session = session.as_mut().ok_or("game session is not initialized")?;
         let snapshot = session.recorder.game().snapshot();
@@ -300,7 +305,7 @@ impl AppState {
             );
         }
         let mut game = session.recorder.game().clone();
-        game.debug_prepare_berserker_e2e(level, wounded)
+        game.debug_prepare_berserker_e2e(level, wounded, with_target)
             .map_err(|error| error.to_string())?;
         session.recorder = ReplayRecorder::new(game);
         Ok(session.recorder.game().snapshot())
@@ -524,15 +529,35 @@ fn prepare_berserker_e2e(
     state: tauri::State<'_, AppState>,
     level: u16,
     wounded: bool,
+    with_target: bool,
 ) -> Result<GameSnapshot, String> {
     #[cfg(feature = "webdriver")]
     {
-        state.prepare_berserker_e2e(level, wounded)
+        state.prepare_berserker_e2e(level, wounded, with_target)
     }
     #[cfg(not(feature = "webdriver"))]
     {
-        let _ = (state, level, wounded);
+        let _ = (state, level, wounded, with_target);
         Err("Berserker E2E fixture is unavailable".to_owned())
+    }
+}
+
+#[tauri::command]
+fn inspect_game_e2e(state: tauri::State<'_, AppState>) -> Result<GameSnapshot, String> {
+    #[cfg(feature = "webdriver")]
+    {
+        let session = state.lock_session()?;
+        Ok(session
+            .as_ref()
+            .ok_or("game session is not initialized")?
+            .recorder
+            .game()
+            .snapshot())
+    }
+    #[cfg(not(feature = "webdriver"))]
+    {
+        let _ = state;
+        Err("E2E inspection is unavailable".to_owned())
     }
 }
 
@@ -750,6 +775,7 @@ pub fn run() {
             prepare_life_force_e2e,
             prepare_mindcrafter_e2e,
             prepare_berserker_e2e,
+            inspect_game_e2e,
             save_game,
             load_game,
             export_replay,

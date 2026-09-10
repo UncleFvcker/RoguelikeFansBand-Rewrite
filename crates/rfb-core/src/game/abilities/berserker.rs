@@ -9,6 +9,7 @@ impl Game {
         &mut self,
         level: u16,
         wounded: bool,
+        with_target: bool,
     ) -> Result<(), CoreError> {
         self.entities.clear();
         self.items
@@ -34,6 +35,41 @@ impl Game {
         }
         self.generated_artifact_ids
             .insert("demo.item.dr-jones-whip".to_owned());
+        if with_target {
+            let position = [
+                Direction::East,
+                Direction::South,
+                Direction::West,
+                Direction::North,
+            ]
+            .into_iter()
+            .find_map(|direction| {
+                let (dx, dy) = direction.delta();
+                (1..=2)
+                    .all(|step| {
+                        let position = Position {
+                            x: self.player.position.x + dx * step,
+                            y: self.player.position.y + dy * step,
+                        };
+                        self.index(position).is_some()
+                            && self.content.terrain(self.terrain_at(position)).is_some_and(
+                                |terrain| {
+                                    self.player_can_cross_terrain(terrain) && terrain.trap.is_none()
+                                },
+                            )
+                    })
+                    .then(|| self.position_in_direction(direction))
+            })
+            .ok_or(CoreError::InvalidSave(
+                "Berserker E2E needs two open adjacent cells",
+            ))?;
+            let actor = self.generated_actor(
+                "e2e.charge-target".to_owned(),
+                "demo.actor.stone-troll",
+                position,
+            );
+            self.entities.push(actor);
+        }
         Ok(())
     }
 

@@ -50,9 +50,10 @@ fn cast(game: &mut Game) -> Vec<DomainEvent> {
 }
 
 #[test]
-fn spectre_six_classes_complete_absorb_level_scare_wall_and_save_sequence() {
+fn spectre_classes_complete_absorb_level_scare_wall_and_save_sequence() {
     for build in [
         "demo.build.warrior",
+        "demo.build.berserker",
         "demo.build.high-mage-death",
         "demo.build.archer",
         "demo.build.paladin-death",
@@ -143,7 +144,15 @@ fn spectre_six_classes_complete_absorb_level_scare_wall_and_save_sequence() {
             },
         );
         assert_eq!(game.player.position, EAST);
-        assert_eq!(game.world_tick - before_tick, 15);
+        // Berserker's permanent +2 speed also applies to the 150-energy wall step.
+        assert_eq!(
+            game.world_tick - before_tick,
+            if build == "demo.build.berserker" {
+                13
+            } else {
+                15
+            }
+        );
         assert!(game.player.hp < before_hp);
         assert!(
             entry
@@ -152,7 +161,12 @@ fn spectre_six_classes_complete_absorb_level_scare_wall_and_save_sequence() {
                 .any(|event| event.message_key == "player-wall-density")
         );
         let before_hp = game.player.hp;
+        let before_tick = game.world_tick;
         dispatch_next(&mut game, GameCommand::Wait);
+        // Faster characters may act again before the next ten-tick damage/recovery cycle.
+        if game.world_tick / 10 == before_tick / 10 {
+            dispatch_next(&mut game, GameCommand::Wait);
+        }
         assert_eq!(game.player.hp, before_hp - 1);
         let leave = dispatch_next(
             &mut game,

@@ -11,7 +11,7 @@ mod spells;
 #[test]
 fn desktop_fixture_preserves_real_level_and_item_save_invariants() {
     let mut game = Game::new_with_build(923, BUILD).unwrap();
-    game.debug_prepare_berserker_e2e(30, true).unwrap();
+    game.debug_prepare_berserker_e2e(30, true, true).unwrap();
     let restored = Game::from_save(game.to_save()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     let snapshot = restored.snapshot();
@@ -133,13 +133,20 @@ fn permanent_berserk_has_level_boundaries_and_potions_only_heal() {
         (45, 115, true, true),
         (50, 116, true, true),
     ] {
-        game.progress.level = level;
-        game.refresh_character_skills();
+        let experience = game
+            .experience_required_for_level(level)
+            .saturating_sub(game.progress.experience);
+        game.apply_player_experience(experience, &mut Vec::new());
+        assert_eq!(game.progress.level, level);
+        assert!(game.resources.is_empty());
+        assert!(game.player_has_status_kind(STATUS_BERSERK));
         assert_eq!(game.player_derived_stats().speed.value, speed);
         assert_eq!(game.player_status_immunities().contains(STATUS_STUN), stun);
         assert_eq!(game.player_reflects_bolts(), reflect);
         assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
     }
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
 }
 
 #[test]

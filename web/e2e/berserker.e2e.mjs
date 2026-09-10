@@ -22,6 +22,31 @@ export async function runBerserkerUiScenario(driver, directory, profile) {
   const hash = () => driver.execute('return document.querySelector("#hash-value").title;');
   const ready = () => driver.waitFor('return document.querySelector("#connection-status").classList.contains("ready")', "ready UI");
   const row = slug => `[data-ability-id="demo.ability.berserker-${slug}"]`;
+  const directions = [[1, 0, "6"], [0, 1, "2"], [-1, 0, "4"], [0, -1, "8"], [1, 1, "3"], [-1, 1, "1"], [-1, -1, "7"], [1, -1, "9"]];
+  const positionKey = position => `${position.x},${position.y}`;
+  // Navigation for the acceptance player; every step still goes through normal keyboard input.
+  function nextWalk(state, visited, target) {
+    const floor = new Set(state.cells.filter(cell => cell.terrainId === "demo.terrain.floor" || cell.terrainId.includes("stairs")).map(cell => positionKey(cell.position)));
+    const queue = [{ ...state.player.position, key: undefined }];
+    const seen = new Set([positionKey(state.player.position)]);
+    for (let index = 0; index < queue.length; index++) {
+      const position = queue[index];
+      if (position.key && (target ? positionKey(position) === positionKey(target) : !visited.has(positionKey(position)))) return position.key;
+      for (const [dx, dy, key] of directions) {
+        const next = { x: position.x + dx, y: position.y + dy, key: position.key ?? key };
+        const id = positionKey(next);
+        if (floor.has(id) && !seen.has(id)) { seen.add(id); queue.push(next); }
+      }
+    }
+    throw new Error("No reachable acceptance destination");
+  }
+  async function actKey(key) {
+    const before = await hash();
+    await keyboard.key(key);
+    await driver.waitFor('return document.querySelector("#hash-value").title !== arguments[0]', `native key ${key}`, 10_000, [before]);
+    await ready();
+    return invoke("inspect_game_e2e");
+  }
   async function tabTo(selector) {
     for (let step = 0; step < 50; step++) {
       if (await focusIs(selector)) return;
@@ -31,9 +56,10 @@ export async function runBerserkerUiScenario(driver, directory, profile) {
   }
   async function invoke(command, args) {
     await driver.execute(`window.__berserkerInvokeDone = false; window.__berserkerInvokeError = null;
-      window.__TAURI_INTERNALS__.invoke(arguments[0], arguments[1]).then(() => window.__berserkerInvokeDone = true, error => window.__berserkerInvokeError = String(error)); return true;`, [command, args]);
+      window.__TAURI_INTERNALS__.invoke(arguments[0], arguments[1]).then(result => { window.__berserkerInvokeResult = result; window.__berserkerInvokeDone = true; }, error => window.__berserkerInvokeError = String(error)); return true;`, [command, args]);
     await driver.waitFor('return window.__berserkerInvokeDone || window.__berserkerInvokeError', command);
     assert.equal(await driver.execute('return window.__berserkerInvokeError'), null);
+    return driver.execute('return window.__berserkerInvokeResult');
   }
   async function viewport(width, height, zoom = 1) {
     await invoke("plugin:webview|set_webview_zoom", { label: "main", value: zoom });
@@ -52,16 +78,16 @@ export async function runBerserkerUiScenario(driver, directory, profile) {
     await click(open ? "#player-page-tab-ability" : "#player-ui-ability-open");
     await driver.waitFor('return document.querySelector("#ability-list").checkVisibility()', "ability page");
   }
-  async function prepareLevel(level, wounded = false) {
+  async function prepareLevel(level, wounded = false, withTarget = false) {
     await driver.execute(`window.__berserkerPrepared = null; window.__berserkerPrepareError = null;
       (async () => {
-        const snapshot = await window.__TAURI_INTERNALS__.invoke("prepare_berserker_e2e", { level: arguments[0], wounded: arguments[1] });
+        const snapshot = await window.__TAURI_INTERNALS__.invoke("prepare_berserker_e2e", { level: arguments[0], wounded: arguments[1], withTarget: arguments[2] });
         const bytes = await window.__TAURI_INTERNALS__.invoke("save_game", { savedAt: "2026-09-10T12:00:00Z" });
         const files = new DataTransfer(); files.items.add(new File([new Uint8Array(bytes)], "berserker-ui.rfbsave"));
         const input = document.querySelector("#load-input"); input.files = files.files;
         input.dispatchEvent(new Event("change", { bubbles: true }));
         window.__berserkerPrepared = { level: snapshot.player.progress.level, hash: snapshot.stateHash, abilities: snapshot.player.abilities, player: snapshot.player, inventory: snapshot.inventory };
-      })().catch(error => window.__berserkerPrepareError = String(error)); return true;`, [level, wounded]);
+      })().catch(error => window.__berserkerPrepareError = String(error)); return true;`, [level, wounded, withTarget]);
     await driver.waitFor('return window.__berserkerPrepared || window.__berserkerPrepareError', "real level and save preparation", 30_000);
     assert.equal(await driver.execute('return window.__berserkerPrepareError'), null);
     const prepared = await driver.execute('return window.__berserkerPrepared');
@@ -104,6 +130,77 @@ export async function runBerserkerUiScenario(driver, directory, profile) {
     }
     checks.push({ locale: localization.locale, level: prepared.level, abilities: actual.map(value => ({ id: value.id, name: value.name, summary: value.summary })), hash: prepared.hash });
   }
+  async function castPower(slug, cost, direction) {
+    const attempts = [];
+    for (let attempt = 0; attempt < 20; attempt++) {
+      await abilitiesPage();
+      const before = await invoke("inspect_game_e2e");
+      assert.ok(before.player.hp > cost, `Insufficient safe HP for ${slug}: ${JSON.stringify(attempts)}`);
+      await tabTo(row(slug) + " .ability-cast-action"); await keyboard.key("Enter");
+      if (direction) {
+        await driver.waitFor('return !document.querySelector("#target-cursor").hidden', "power direction");
+        await keyboard.key(direction); await keyboard.key("Enter");
+      }
+      await driver.waitFor('return document.querySelector("#hash-value").title !== arguments[0]', `real ${slug} cast`, 10_000, [before.stateHash]);
+      await ready();
+      const after = await invoke("inspect_game_e2e");
+      const message = await driver.execute('const row = [...document.querySelectorAll("#message-list .message-ability-cast-success, #message-list .message-ability-cast-failure")].at(-1); return { success: row.classList.contains("message-ability-cast-success"), text: row.lastElementChild.textContent };');
+      assert.ok(message.text.includes(localization.format("message-ability-cast-cost-hp", { amount: cost })));
+      attempts.push({ before: before.stateHash, after: after.stateHash, hpBefore: before.player.hp, hpAfter: after.player.hp, message });
+      if (message.success) return { before, after, attempts };
+    }
+    throw new Error(`No successful ${slug} in twenty natural casting rolls: ${JSON.stringify(attempts)}`);
+  }
+  async function playPowers() {
+    const detection = await castPower("detect-menace", 5);
+    const detected = await driver.execute('return [...document.querySelectorAll("#message-list .message-ability-detect")].at(-1).lastElementChild.textContent;');
+    assert.equal(detected, localization.format("message-ability-detect-mind", { ability: localization.format("ability-demo-berserker-detect-menace-name"), count: 1 }));
+    const target = detection.after.entities.find(entity => entity.id === "e2e.charge-target");
+    assert.ok(target);
+    const origin = detection.after.player.position;
+    const dx = target.position.x - origin.x, dy = target.position.y - origin.y;
+    assert.equal(Math.max(Math.abs(dx), Math.abs(dy)), 1);
+    const charge = await castPower("charge", 20, directions.find(([x, y]) => x === dx && y === dy)[2]);
+    assert.deepEqual(charge.after.player.position, { x: origin.x + dx * 2, y: origin.y + dy * 2 });
+    assert.ok((charge.after.entities.find(entity => entity.id === target.id)?.hp ?? 0) < target.hp, "charge must actually hit");
+    await screenshot("detection-charge");
+    const recallStart = await castPower("recall", 10);
+    assert.ok(recallStart.after.player.recall.remainingTurns > 0);
+    const recallCancel = await castPower("recall", 10);
+    assert.equal(recallCancel.after.player.recall.remainingTurns, undefined);
+    const recallAgain = await castPower("recall", 10);
+    assert.ok(recallAgain.after.player.recall.remainingTurns > 0);
+    await driver.execute(`window.__berserkerDownload = null;
+      URL.createObjectURL = blob => { window.__berserkerDownload = { blob }; return "blob:berserker-acceptance"; };
+      URL.revokeObjectURL = () => {};
+      HTMLAnchorElement.prototype.click = function () { window.__berserkerDownload.name = this.download; };
+      document.querySelector('.hud-menu').open = true; return true;`);
+    const saved = await invoke("inspect_game_e2e"); await click("#save-button");
+    await driver.waitFor('return window.__berserkerDownload?.name?.endsWith(".rfbsave")', "native save export from menu");
+    await driver.execute('document.querySelector(".hud-menu").open = false; window.__berserkerSaveBytes = null; window.__berserkerDownload.blob.arrayBuffer().then(buffer => window.__berserkerSaveBytes = Array.from(new Uint8Array(buffer))); return true;');
+    await driver.waitFor('return window.__berserkerSaveBytes != null', "exported save bytes");
+    await writeFile(path.join(directory, "berserker-level15-test-upgraded.rfbsave"), Buffer.from(await driver.execute('return window.__berserkerSaveBytes')));
+    const continued = await actKey("5");
+    await driver.execute(`const saved = window.__berserkerDownload;
+      const files = new DataTransfer(); files.items.add(new File([saved.blob], saved.name));
+      const input = document.querySelector('#load-input'); input.files = files.files;
+      input.dispatchEvent(new Event('change', { bubbles: true })); return true;`);
+    await driver.waitFor('return document.querySelector("#hash-value").title === arguments[0]', "exact played save restored", 30_000, [saved.stateHash]);
+    await ready();
+    const restored = await invoke("inspect_game_e2e");
+    assert.deepEqual(restored.player, saved.player);
+    assert.deepEqual(restored.inventory, saved.inventory);
+    assert.deepEqual(restored.equipment, saved.equipment);
+    const replayed = await actKey("5");
+    assert.equal(replayed.stateHash, continued.stateHash, "same command preserves state and RNG after loading");
+    let recalled = replayed;
+    for (let turn = 0; turn < 40 && recalled.floorId === saved.floorId; turn++) recalled = await actKey("5");
+    assert.equal(recalled.floorId, "core.floor.wilderness");
+    assert.equal(recalled.player.recall.remainingTurns, undefined);
+    assert.equal(recalled.player.isDead, false);
+    await screenshot("recall-save-continue");
+    checks.push({ powers: { detection: detection.attempts, detected, charge: charge.attempts, chargeOrigin: origin, chargeLanding: charge.after.player.position, recallStart: recallStart.attempts, recallCancel: recallCancel.attempts, recallAgain: recallAgain.attempts, saved: saved.stateHash, continued: continued.stateHash, restoredContinuation: replayed.stateHash, recalled: recalled.stateHash, returnedFloor: recalled.floorId }, precondition: "Real XP grant to level 15 and one source-defined Stone Troll target; natural casting, combat and recall rolls, menu save, native load and deterministic continuation" });
+  }
   try {
     await invoke("plugin:window|set_min_size", { label: "main", value: null });
     await viewport(1280, 720);
@@ -133,12 +230,63 @@ export async function runBerserkerUiScenario(driver, directory, profile) {
     assert.equal(await driver.execute('return document.querySelectorAll("#resource-list .resource-row").length'), 0);
     await screenshot("birth-no-powers");
     checks.push({ normalBirthHash: await hash(), level: 1, abilities: [], precondition: "Normal new Human, no debug preparation" });
+    const born = await invoke("inspect_game_e2e");
+    await keyboard.key("Escape");
+    await click("#player-ui-inventory-open");
+    const torch = born.inventory.find(item => item.kindId === "demo.item.wooden-torch");
+    await click(`[data-item-id="${torch.id}"] input[type="checkbox"]`);
+    const beforeTorch = await hash(); await click("#inventory-equip");
+    await driver.waitFor('return document.querySelector("#hash-value").title !== arguments[0]', "starting torch equipped", 10_000, [beforeTorch]);
+    await ready(); await click("#player-page-close");
+    const entrance = born.cells.find(cell => cell.terrainId === "demo.terrain.stairs-down").position;
+    assert.equal(entrance.y, born.player.position.y);
+    let walked = born;
+    while (walked.player.position.x < entrance.x) {
+      const beforeX = walked.player.position.x;
+      walked = await actKey("6");
+      assert.equal(walked.player.position.x, beforeX + 1);
+    }
+    const outsideHash = await hash(); await click("#traverse-stairs");
+    await driver.waitFor('return document.querySelector("#hash-value").title !== arguments[0]', "normal dungeon entry", 10_000, [outsideHash]);
+    await ready();
+    const dungeon = await invoke("inspect_game_e2e");
+    assert.equal(dungeon.floorId, "demo.floor.warrens-depth-1");
+    assert.equal(dungeon.player.progress.level, 1);
+    let combat = dungeon;
+    let birthHit;
+    const visited = new Set();
+    for (let step = 0; step < 120 && !birthHit; step++) {
+      visited.add(positionKey(combat.player.position));
+      const distance = position => Math.max(Math.abs(position.x - combat.player.position.x), Math.abs(position.y - combat.player.position.y));
+      const target = combat.entities.filter(entity => entity.faction === "hostile").sort((a, b) => distance(a.position) - distance(b.position))[0];
+      const before = combat;
+      combat = await actKey(nextWalk(combat, visited, target?.position));
+      assert.equal(combat.player.isDead, false);
+      const messages = await driver.execute('return document.querySelector("#message-list").textContent');
+      if (messages.includes("你击中了")) {
+        assert.equal(before.player.progress.level, 1, "first melee uses the normal level-one character");
+        birthHit = { steps: step + 1, before: before.stateHash, after: combat.stateHash, hp: combat.player.hp, target: target?.kindId, messages };
+      }
+    }
+    assert.ok(birthHit, "normal new character must land a real melee hit");
+    await screenshot("birth-melee");
+    await click("#player-ui-inventory-open");
+    const potion = combat.inventory.find(item => item.kindId === "demo.item.healing-potion");
+    assert.ok(potion?.usable);
+    await click(`[data-item-id="${potion.id}"] input[type="checkbox"]`);
+    const beforePotion = await hash(); await click("#inventory-use");
+    await driver.waitFor('return document.querySelector("#hash-value").title !== arguments[0]', "normal birth potion used", 10_000, [beforePotion]);
+    await ready();
+    const afterPotion = await invoke("inspect_game_e2e");
+    assert.equal(afterPotion.inventory.find(item => item.id === potion.id)?.quantity ?? 0, potion.quantity - 1);
+    checks.push({ normalBirth: { birth: born.stateHash, walked: walked.stateHash, entrance, dungeon: dungeon.floorId, birthHit, potionBefore: beforePotion, potionAfter: afterPotion.stateHash }, precondition: "Normal new character, keyboard road and dungeon exploration, natural monster melee and starting potion; no test preparation" });
 
     for (const level of [7, 8, 9, 10, 14, 15, 19, 20, 24, 25, 29, 30]) {
-      const prepared = await prepareLevel(level);
+      const prepared = await prepareLevel(level, false, level === 15);
       await checkAbilities(prepared);
       assert.equal(prepared.player.abilityLearning, undefined);
       assert.equal(prepared.player.resources, undefined);
+      if (level === 15) await playPowers();
     }
     // Resolve the normal Human level-30 talent prompt before targeting.
     while (await driver.execute('return !!document.querySelector(".mutation-choice-candidate")')) {
@@ -174,9 +322,6 @@ export async function runBerserkerUiScenario(driver, directory, profile) {
         await screenshot("forbidden-" + id.slice(4) + "-" + localization.locale);
         await keyboard.key("Escape");
       }
-      const potion = prepared.inventory.find(item => item.kindId === "demo.item.healing-potion");
-      assert.equal(potion.usable, true);
-      assert.equal(potion.useUnavailableReason, undefined);
     }
     await checkItems(final);
     for (const locale of ["zh-CN", "en-US"]) {
