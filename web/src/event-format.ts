@@ -195,6 +195,20 @@ export function createPresentationFormatter(
         });
       case "ability-effects":
         if (event.outcome?.type === "ability-effects") {
+          const mental = event.outcome.resolution.effects.find(
+            (effect) => effect.type === "mindcraft-backlash" || effect.type === "extra-energy" || effect.type === "control",
+          );
+          if (mental?.type === "mindcraft-backlash") {
+            return localization.format("message-mindcraft-backlash");
+          }
+          if (mental?.type === "extra-energy") {
+            return localization.format("message-ability-extra-energy", { amount: mental.amount });
+          }
+          if (mental?.type === "control") {
+            return localization.format(`message-ability-control-${mental.outcome}`, {
+              target: contentName(mental.targetKindId),
+            });
+          }
           if (event.outcome.resolution.effects.some(
             (effect) => effect.type === "no-op" && effect.reason === "no-trees-answer",
           )) {
@@ -1435,6 +1449,10 @@ export function createPresentationFormatter(
           source: visibleItemName(event.args.nameKey, event.args.source),
           rumour: localization.format(event.args.rumourKey ?? ""),
         });
+      case "item-unique-monster-listed":
+        return localization.format("message-item-unique-monster-listed", {
+          name: localization.format(event.args.nameKey ?? ""),
+        });
       case "item-use-enchanted":
         return localization.format("message-item-use-enchanted", {
           source: visibleItemNameForKind(event.args.source),
@@ -1706,6 +1724,9 @@ export function createPresentationFormatter(
       ice: "damage-type-ice-name",
       water: "damage-type-water-name",
       psi: "damage-type-psi-name",
+      "psi-drain": "damage-type-psi-drain-name",
+      "psi-storm": "damage-type-psi-storm-name",
+      "psy-spear": "damage-type-psy-spear-name",
       curse: "damage-type-curse-name",
       meteor: "damage-type-meteor-name",
       rocket: "damage-type-rocket-name",

@@ -915,6 +915,8 @@ pub enum ItemUseEffectDefinition {
     },
     IdentifyInventory,
     SelfKnowledge,
+    ListUniqueMonsters,
+    RechargeCarriedDevices,
     Acquirement {
         loot_table_id: String,
         minimum_count: u8,

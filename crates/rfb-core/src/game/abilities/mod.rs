@@ -5,6 +5,7 @@ mod compound;
 mod control;
 mod damage;
 mod items;
+pub(in crate::game) mod mindcraft;
 mod restoration;
 mod summoning;
 mod targeting;
@@ -511,11 +512,17 @@ impl Game {
             }
             (
                 AbilityEffectDefinition::BoltOrBeamDamage { .. },
-                AbilityTargetPlan::Projectile { path, .. },
+                AbilityTargetPlan::BoltOrBeam {
+                    path,
+                    ball_landing,
+                    stop_at_actor,
+                },
             ) => {
                 self.resolve_player_bolt_or_beam_damage_effect(
                     &ability,
                     path,
+                    ball_landing,
+                    stop_at_actor,
                     events,
                     changed,
                     removed_entities,
@@ -615,6 +622,18 @@ impl Game {
             }
             (AbilityEffectDefinition::ClearMind, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_clear_mind(events);
+            }
+            (
+                AbilityEffectDefinition::Precognition
+                | AbilityEffectDefinition::Psychometry
+                | AbilityEffectDefinition::MindArmor
+                | AbilityEffectDefinition::Adrenaline,
+                target,
+            ) => {
+                self.resolve_player_mindcraft_effect(&ability, target, events, changed);
+            }
+            (AbilityEffectDefinition::Domination { .. }, target) => {
+                self.resolve_player_domination_effect(&ability, target, events, changed)
             }
             (AbilityEffectDefinition::AlterReality, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_alter_reality_effect(&ability, events);

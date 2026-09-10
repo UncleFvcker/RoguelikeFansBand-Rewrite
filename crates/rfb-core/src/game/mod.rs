@@ -149,6 +149,7 @@ mod player_combat;
 mod player_stats;
 mod progression;
 mod projectile_geometry;
+mod psychic;
 mod riding_bond;
 mod riding_proficiency;
 mod snapshot;
@@ -231,7 +232,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 117;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 118;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -1106,8 +1107,9 @@ impl Game {
             matches!(&action, GameAction::TravelLocal { .. }) && local_travel_direction.is_none();
         let zero_time_unavailable_ability = matches!(
             &action,
-            GameAction::CastAbility { ability_id, .. }
+            GameAction::CastAbility { ability_id, target }
                 if self.ability_state_unavailable_reason(ability_id).is_some()
+                    || self.mindcraft_cast_is_zero_time_unavailable(ability_id, target)
         );
         if let Some(direction) = local_travel_direction {
             action = GameAction::Move { direction };
@@ -1206,6 +1208,8 @@ impl Game {
             GameAction::CastAbility { ability_id, .. }
                 if self.player_has_astral_guide()
                     && self.content.ability(ability_id).is_some_and(|ability| {
+                        let mut ability = ability.clone();
+                        self.apply_mindcraft_variant(&mut ability);
                         matches!(ability.effect, AbilityEffectDefinition::BlinkSelf { .. })
                     }) =>
             {
@@ -1217,6 +1221,8 @@ impl Game {
             GameAction::CastAbility { ability_id, .. }
                 if !self.player_has_astral_guide()
                     && self.content.ability(ability_id).is_some_and(|ability| {
+                        let mut ability = ability.clone();
+                        self.apply_mindcraft_variant(&mut ability);
                         matches!(
                             ability.effect,
                             AbilityEffectDefinition::DimensionDoor { .. }
@@ -2301,18 +2307,19 @@ impl Game {
                     });
                 }
             }
-            let vomit_extra_energy = events.iter().find_map(|event| match event {
+            let ability_extra_energy = events.iter().find_map(|event| match event {
                 DomainEvent::AbilityEffectsResolved { resolution, .. } => {
                     resolution.effects.iter().find_map(|effect| match effect {
                         AbilityEffectResolutionDto::Vomit {
                             extra_energy_cost, ..
                         } => Some(*extra_energy_cost),
+                        AbilityEffectResolutionDto::ExtraEnergy { amount, .. } => Some(*amount),
                         _ => None,
                     })
                 }
                 _ => None,
             });
-            if let Some(extra_energy_cost) = vomit_extra_energy {
+            if let Some(extra_energy_cost) = ability_extra_energy {
                 action_cost = action_cost.saturating_add(i32::from(extra_energy_cost));
             }
             spend_energy(&mut self.player.energy_need, action_cost);

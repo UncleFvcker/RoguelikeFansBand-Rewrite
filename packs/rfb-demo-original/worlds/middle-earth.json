@@ -1425,6 +1425,13 @@
               { "itemKindId": "demo.item.slayer", "quantity": 1, "weight": 1 },
               { "itemKindId": "demo.item.pain", "quantity": 1, "weight": 4 }
             ]
+          },
+          {
+            "classId": "demo.class.mindcrafter",
+            "entries": [
+              { "itemKindId": "demo.item.eternity", "quantity": 1, "weight": 1 },
+              { "itemKindId": "demo.item.palantir-of-westernesse", "quantity": 1, "weight": 4 }
+            ]
           }
         ]
       }

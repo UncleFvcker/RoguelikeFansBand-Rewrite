@@ -109,6 +109,9 @@ pub enum ActorDamageType {
     Meteor,
     Rocket,
     Telekinesis,
+    PsiDrain,
+    PsiStorm,
+    PsySpear,
 }
 
 /// Content-declared resistance tier; `normal` is expressed by omission.

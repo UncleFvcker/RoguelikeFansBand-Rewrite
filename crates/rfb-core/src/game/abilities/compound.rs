@@ -1125,12 +1125,13 @@ impl Game {
             };
             let already_controlled =
                 self.entities[index].controller_id.as_deref() == Some(self.player.id.as_str());
-            let forbidden = definition.tags.iter().any(|tag| {
-                matches!(
-                    tag.as_str(),
-                    "unique" | "unique2" | "questor" | "guardian" | "no-pet"
-                )
-            });
+            let forbidden = self.entities[index].no_pet
+                || definition.tags.iter().any(|tag| {
+                    matches!(
+                        tag.as_str(),
+                        "unique" | "unique2" | "questor" | "guardian" | "no-pet"
+                    )
+                });
             let roll = (good && !already_controlled && !forbidden).then(|| {
                 u16::try_from(self.rng.bounded(u64::from(power.max(1))) + 1)
                     .expect("Crusade charm roll must fit u16")

@@ -592,6 +592,15 @@
             "psi": {
               "$ref": "#/$defs/ActorResistanceLevel"
             },
+            "psi-drain": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "psi-storm": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "psy-spear": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
             "rock": {
               "$ref": "#/$defs/ActorResistanceLevel"
             },

@@ -34,6 +34,9 @@ impl Game {
         category: &str,
         power: u16,
     ) -> AbilityEffectResolutionDto {
+        if category == "any-monster" {
+            return self.resolve_psychic_charm(target_index, effect_index, power);
+        }
         let target_entity_id = self.entities[target_index].id.clone();
         let target_kind_id = self.entities[target_index].kind_id.clone();
         let definition = self
@@ -46,7 +49,13 @@ impl Game {
         let already_controlled = self.entity_is_player_aligned(target_index);
         let (roll, outcome) = if already_controlled {
             (None, AbilityControlOutcomeDto::AlreadyControlled)
-        } else if !eligible {
+        } else if !eligible
+            || self.entities[target_index].no_pet
+            || definition
+                .tags
+                .iter()
+                .any(|tag| matches!(tag.as_str(), "no-pet" | "resist-all"))
+        {
             (None, AbilityControlOutcomeDto::Ineligible)
         } else {
             let range = power.saturating_sub(10).max(1);

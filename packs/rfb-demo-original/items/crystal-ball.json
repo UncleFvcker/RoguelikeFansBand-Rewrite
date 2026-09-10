@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 60000,
+  "descriptionKey": "item-demo-crystal-ball-description",
+  "equipmentSlot": "light",
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "glyph": "*",
+  "id": "demo.item.crystal-ball",
+  "maxStack": 1,
+  "nameKey": "item-demo-crystal-ball-name",
+  "rfbBaseKind": {
+    "sourceIndex": 609,
+    "sval": 8,
+    "tval": 39
+  },
+  "rfbValue": {
+    "flags": [
+      "INSTA_ART"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "equipment",
+    "instant-artifact-base",
+    "light-source"
+  ],
+  "weightTenthsPound": 10
+}

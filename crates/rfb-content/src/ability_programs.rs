@@ -242,6 +242,10 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::Vomit
                     | AbilityEffectDefinition::RestoreVitality { .. }
                     | AbilityEffectDefinition::ClearMind
+                    | AbilityEffectDefinition::Precognition
+                    | AbilityEffectDefinition::MindArmor
+                    | AbilityEffectDefinition::Adrenaline
+                    | AbilityEffectDefinition::Domination { mass: true, .. }
                     | AbilityEffectDefinition::AlterReality
                     | AbilityEffectDefinition::VisibleDamage { .. }
                     | AbilityEffectDefinition::VisibleApplyStatus { .. }
@@ -320,6 +324,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::ApplyStatus { .. }
                     | AbilityEffectDefinition::RemoveStatus { .. }
                     | AbilityEffectDefinition::Control { .. }
+                    | AbilityEffectDefinition::Domination { mass: false, .. }
                     | AbilityEffectDefinition::DrainLife { .. }
                     | AbilityEffectDefinition::BlinkTarget { .. }
                     | AbilityEffectDefinition::TeleportTarget
@@ -348,6 +353,7 @@ fn ability_program_input_accepts_step(
             matches!(
                 effect,
                 AbilityEffectDefinition::IdentifyItem { .. }
+                    | AbilityEffectDefinition::Psychometry
                     | AbilityEffectDefinition::IdentifyOrMassIdentify { .. }
                     | AbilityEffectDefinition::SummonGreaterDemon { .. }
                     | AbilityEffectDefinition::BrandWeapon { .. }

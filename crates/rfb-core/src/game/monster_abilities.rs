@@ -1004,6 +1004,7 @@ impl Game {
             DamageType::Physical,
             target,
             events,
+            changed,
         );
         let effects = vec![effect];
         self.remove_defeated_monster_targets(
@@ -1317,6 +1318,7 @@ impl Game {
                 resolved_damage_type,
                 &affected_target,
                 events,
+                changed,
             );
             if air_breath && !self.player_is_dead() {
                 if affected_target.is_player() {
@@ -1444,6 +1446,7 @@ impl Game {
                 DamageType::from(*damage_type),
                 &affected_target,
                 events,
+                changed,
             );
             changed.insert(affected_target.position());
             targets.push(MonsterAbilityTargetResolutionDto {
@@ -1543,6 +1546,7 @@ impl Game {
                 DamageType::from(*damage_type),
                 &affected_target,
                 events,
+                changed,
             );
             changed.insert(position);
             targets.push(MonsterAbilityTargetResolutionDto {
@@ -1637,6 +1641,7 @@ impl Game {
                 DamageType::from(*damage_type),
                 &target,
                 events,
+                changed,
             );
             changed.insert(position);
             targets.push(MonsterAbilityTargetResolutionDto {
@@ -2622,6 +2627,7 @@ impl Game {
                         damage_type,
                         target,
                         events,
+                        changed,
                     )
                 }
                 AbilityEffectDefinition::CurseDamage {
@@ -2668,6 +2674,7 @@ impl Game {
                             DamageType::Curse,
                             target,
                             events,
+                            changed,
                         )
                     }
                 }

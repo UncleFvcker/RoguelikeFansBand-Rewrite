@@ -43,6 +43,9 @@ pub enum DamageType {
     Meteor,
     Rocket,
     Telekinesis,
+    PsiDrain,
+    PsiStorm,
+    PsySpear,
 }
 
 /// A compact first-pass resistance scale.
@@ -140,6 +143,9 @@ impl From<DamageType> for DamageTypeDto {
             DamageType::Meteor => Self::Meteor,
             DamageType::Rocket => Self::Rocket,
             DamageType::Telekinesis => Self::Telekinesis,
+            DamageType::PsiDrain => Self::PsiDrain,
+            DamageType::PsiStorm => Self::PsiStorm,
+            DamageType::PsySpear => Self::PsySpear,
         }
     }
 }
@@ -183,6 +189,9 @@ impl From<DamageTypeDto> for DamageType {
             DamageTypeDto::Meteor => Self::Meteor,
             DamageTypeDto::Rocket => Self::Rocket,
             DamageTypeDto::Telekinesis => Self::Telekinesis,
+            DamageTypeDto::PsiDrain => Self::PsiDrain,
+            DamageTypeDto::PsiStorm => Self::PsiStorm,
+            DamageTypeDto::PsySpear => Self::PsySpear,
         }
     }
 }
@@ -226,6 +235,9 @@ impl From<rfb_content::ActorDamageType> for DamageType {
             rfb_content::ActorDamageType::Meteor => Self::Meteor,
             rfb_content::ActorDamageType::Rocket => Self::Rocket,
             rfb_content::ActorDamageType::Telekinesis => Self::Telekinesis,
+            rfb_content::ActorDamageType::PsiDrain => Self::PsiDrain,
+            rfb_content::ActorDamageType::PsiStorm => Self::PsiStorm,
+            rfb_content::ActorDamageType::PsySpear => Self::PsySpear,
         }
     }
 }

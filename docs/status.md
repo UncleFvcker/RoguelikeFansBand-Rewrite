@@ -7,13 +7,13 @@
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.241 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | 117 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload / 容器 | 12 / 12 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.402.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
-| 契约政策 | contract-v318，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
+| 协议 | 1.242 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | 118 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload / 容器 | 12 / 13 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
+| 内容包 | 1.403.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 契约政策 | contract-v319，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 7 个 Class、14 个 Build、57 个 Race、32 本能力书、1,841 个 ability 文件、370 个 item、1,403 个 actor、168 个 affix、152 个 mutation。世界定义含 25 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、62 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 7 个 Class、14 个 Build、57 个 Race、32 本能力书、1,855 个 ability 文件、375 个 item、1,403 个 actor、168 个 affix、152 个 mutation。世界定义含 25 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、62 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
 权威内容统计工具是 `rfb-contentc inspect-source`。本次集成已运行内容编译；静态统计不替代行为验收。
 
@@ -32,7 +32,7 @@
 | 骑兵 | `demo.build.cavalry` | 骑乘相关行为 |
 | 狙击手 | `demo.build.sniper` | 专注与特殊射击 |
 
-心灵术士（`demo.build.mindcrafter`）已完成[计划第二步](mindcrafter-class-plan.md)：正式出生/成长、无书感知法力、攻次与负重、等级被动、物品感知、付费自动鉴定和“头脑清明”。核心专项与共享回归已覆盖上述路径；14 项心灵法术、失败反噬和相关神器/任务尚待第三步，正常创角入口及桌面验收尚未开放。
+心灵术士（`demo.build.mindcrafter`）已完成[计划第三步](mindcrafter-class-plan.md)：出生/成长、无书感知法力、被动和“头脑清明”，以及全部 14 项心灵法术、等级变化、精神 GF 和失败反噬。已接入冥想之石、永恒长袍、西方之地的真知晶球与旧城堡职业奖励。核心专项覆盖真实施放、三种攻防方向、知识/宠物和保存恢复；新增 NOPET 状态进入当前保存及哈希。正常创角入口、UI 完整流程和 Tauri standalone 验收留待第四、五步，未计开放。
 
 Death、Arcane、Sorcery、Armageddon、Nature、Life、Daemon、Crusade 各有四册内容、领域 Build 和相关规则测试路径；当前新游戏仅开放 Death。其余七领域应补入口与相应流程验证，而非从头重做导入。
 

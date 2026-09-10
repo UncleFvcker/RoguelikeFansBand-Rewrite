@@ -1216,7 +1216,7 @@ impl Game {
         });
     }
 
-    fn reveal_and_light_floor(
+    pub(super) fn reveal_and_light_floor(
         &mut self,
         ability_id: &str,
         events: &mut Vec<DomainEvent>,

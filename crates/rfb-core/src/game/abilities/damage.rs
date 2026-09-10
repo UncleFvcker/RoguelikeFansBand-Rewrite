@@ -475,6 +475,15 @@ impl Game {
             u64::try_from(base_raw_damage).expect("area damage must be non-negative"),
         ))
         .expect("spell-powered area damage must fit i32");
+        let noticed_drain = ability.id == "demo.ability.mindcrafter-psychic-drain" && {
+            let (trace, _) =
+                self.trace_projectile_path_with_actor_policy(path.clone(), stop_at_actor);
+            self.entities.iter().any(|entity| {
+                entity.hp > 0
+                    && entity.position == trace.landing
+                    && self.entity_is_visible_to_player(entity)
+            })
+        };
         self.resolve_player_area_damage_with_base(
             &ability.id,
             path,
@@ -487,7 +496,23 @@ impl Game {
             events,
             changed,
             removed_entities,
-        )
+        )?;
+        if noticed_drain {
+            let amount = (self.rng.bounded(150) + 1) as u16;
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability.id.clone(),
+                trace: None,
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: None,
+                    target_kind_id: None,
+                    effects: vec![AbilityEffectResolutionDto::ExtraEnergy {
+                        effect_index: 0,
+                        amount,
+                    }],
+                },
+            });
+        }
+        Ok(())
     }
 
     pub(super) fn resolve_player_lava_flow_effect(
@@ -858,10 +883,13 @@ impl Game {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub(in crate::game) fn resolve_player_bolt_or_beam_damage_effect(
         &mut self,
         ability: &AbilityDefinition,
-        path: Vec<Position>,
+        mut path: Vec<Position>,
+        ball_landing: Option<Position>,
+        stop_at_actor: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -872,6 +900,7 @@ impl Game {
             damage_bonus,
             damage_type,
             beam_chance_percent,
+            ball_when_not_beam,
             ..
         } = &ability.effect
         else {
@@ -937,6 +966,25 @@ impl Game {
                     removed_entities,
                 )?;
             }
+        } else if *ball_when_not_beam {
+            if let Some(landing) = ball_landing
+                && let Some(index) = path.iter().position(|position| *position == landing)
+            {
+                path.truncate(index + 1);
+            }
+            self.resolve_player_area_damage_with_base(
+                &ability.id,
+                path,
+                stop_at_actor,
+                damage_type,
+                0,
+                None,
+                base_raw_damage,
+                ability.affects_ground_items,
+                events,
+                changed,
+                removed_entities,
+            )?;
         } else {
             let (trace, target_index) = self.trace_projectile_path_with_actor_policy(path, true);
             self.resolve_projectile_terrain_effects(&[trace.impact], damage_type, changed);
@@ -1542,7 +1590,15 @@ impl Game {
             .iter()
             .filter(|entity| {
                 entity.hp > 0
-                    && self.entity_is_visible_to_player(entity)
+                    && if source_id == "demo.ability.mindcrafter-mind-wave" {
+                        crate::game::visibility::has_line_of_sight(
+                            self,
+                            self.player.position,
+                            entity.position,
+                        )
+                    } else {
+                        self.entity_is_visible_to_player(entity)
+                    }
                     && target_category.is_none_or(|category| {
                         self.content
                             .actor(&entity.kind_id)

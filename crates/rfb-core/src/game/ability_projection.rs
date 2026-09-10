@@ -130,6 +130,7 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
             damage_bonus,
             damage_type,
             beam_chance_percent,
+            ball_when_not_beam,
             ..
         } => AbilityEffectSpecDto::BoltOrBeamDamage {
             damage_dice: *damage_dice,
@@ -137,6 +138,7 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
             damage_bonus: *damage_bonus,
             damage_type: DamageType::from(*damage_type).into(),
             beam_chance_percent: *beam_chance_percent,
+            ball_when_not_beam: *ball_when_not_beam,
             final_damage_spell_power_bonus: None,
         },
         AbilityEffectDefinition::Stardust {
@@ -708,6 +710,31 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
             }
         }
         AbilityEffectDefinition::ClearMind => AbilityEffectSpecDto::ClearMind { amount: 2 },
+        AbilityEffectDefinition::Precognition => AbilityEffectSpecDto::Precognition {
+            detect_invisible: false,
+            detect_traps_and_doors: false,
+            detect_objects_and_stairs: false,
+            maps_area: false,
+            illuminates_floor: false,
+            telepathy_minimum_ticks: 0,
+            telepathy_maximum_ticks: 0,
+        },
+        AbilityEffectDefinition::Psychometry => AbilityEffectSpecDto::Psychometry,
+        AbilityEffectDefinition::MindArmor => AbilityEffectSpecDto::MindArmor {
+            minimum_duration_ticks: 0,
+            maximum_duration_ticks: 0,
+            armor_class: 50,
+            resistances: Vec::new(),
+        },
+        AbilityEffectDefinition::Adrenaline => AbilityEffectSpecDto::Adrenaline {
+            minimum_duration_ticks: 0,
+            maximum_duration_ticks: 0,
+            healing_if_not_already_hasted_and_heroic: 0,
+        },
+        AbilityEffectDefinition::Domination { power, mass } => AbilityEffectSpecDto::Domination {
+            power: *power,
+            mass: *mass,
+        },
         AbilityEffectDefinition::AlterReality => AbilityEffectSpecDto::AlterReality,
         AbilityEffectDefinition::AnimateDead {
             actor_kind_id,
@@ -881,6 +908,11 @@ pub(super) fn player_ability_effect_spec_dto(
     spell_damage_bonus: u16,
 ) -> AbilityEffectSpecDto {
     let mut spec = ability_effect_spec_dto(effect);
+    super::abilities::mindcraft::project_mindcraft_effect(
+        &mut spec,
+        level,
+        ability.spell_power_bonus,
+    );
     match &mut spec {
         AbilityEffectSpecDto::ClearMind { amount } => {
             *amount = super::player_abilities::clear_mind_recovery_amount(level);

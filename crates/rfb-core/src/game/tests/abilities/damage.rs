@@ -537,6 +537,7 @@ fn bolt_or_beam_damage_uses_one_roll_and_changes_only_penetration() {
         ability.id = id.to_owned();
         ability.affects_ground_items = true;
         ability.effect = AbilityEffectDefinition::BoltOrBeamDamage {
+            ball_when_not_beam: false,
             damage_dice: 1,
             damage_sides: 1,
             damage_bonus: 3,
@@ -555,6 +556,8 @@ fn bolt_or_beam_damage_uses_one_roll_and_changes_only_penetration() {
     beam.resolve_player_bolt_or_beam_damage_effect(
         &beam_ability,
         path.clone(),
+        None,
+        true,
         &mut beam_events,
         &mut BTreeSet::new(),
         &mut Vec::new(),
@@ -574,6 +577,8 @@ fn bolt_or_beam_damage_uses_one_roll_and_changes_only_penetration() {
     bolt.resolve_player_bolt_or_beam_damage_effect(
         &bolt_ability,
         path,
+        None,
+        true,
         &mut bolt_events,
         &mut BTreeSet::new(),
         &mut Vec::new(),
@@ -887,6 +892,7 @@ fn reflecting_monsters_redirect_only_single_target_bolts() {
         unreachable!("dark bolt must remain bolt-or-beam damage");
     };
     ability.effect = AbilityEffectDefinition::BoltOrBeamDamage {
+        ball_when_not_beam: false,
         damage_dice,
         damage_sides,
         damage_bonus,
@@ -899,6 +905,8 @@ fn reflecting_monsters_redirect_only_single_target_bolts() {
     beam.resolve_player_bolt_or_beam_damage_effect(
         &ability,
         path,
+        None,
+        true,
         &mut events,
         &mut BTreeSet::new(),
         &mut Vec::new(),

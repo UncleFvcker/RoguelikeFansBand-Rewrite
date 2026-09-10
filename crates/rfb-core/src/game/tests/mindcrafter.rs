@@ -7,6 +7,8 @@ const BUILD: &str = "demo.build.mindcrafter";
 const CLEAR_MIND: &str = "demo.ability.mindcrafter-clear-mind";
 const MANA: &str = "demo.resource.mana";
 
+mod spells;
+
 fn mindcrafter(level: u16) -> Game {
     let mut game = Game::new_with_build(924, BUILD).expect("formal Mindcrafter build");
     clear_monsters(&mut game);
@@ -576,10 +578,7 @@ fn bookless_resources_and_sensed_knowledge_round_trip_and_continue() {
         .filter(|(key, value)| after.get(*key) != Some(*value))
         .map(|(key, _)| key)
         .collect::<Vec<_>>();
-    assert!(
-        before == after,
-        "snapshot fields differ: {differences:?}"
-    );
+    assert!(before == after, "snapshot fields differ: {differences:?}");
     assert_eq!(game.state_hash(), restored.state_hash());
     let original = dispatch_next(&mut game, GameCommand::Rest { turns: 1 });
     let loaded = dispatch_next(&mut restored, GameCommand::Rest { turns: 1 });

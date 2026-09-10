@@ -370,6 +370,7 @@ impl Game {
                     | AbilitySourceDto::Mutation
                     | AbilitySourceDto::Race => ability.clone(),
                 };
+                self.apply_mindcraft_variant(&mut effective_ability);
                 Self::apply_player_level_scaling(&mut effective_ability, self.progress.level);
                 if let Some(profile) = casting_profile {
                     if uses_casting_profile_offense {
@@ -453,12 +454,14 @@ impl Game {
                     AbilitySourceDto::Class => {
                         let activation =
                             class_activation.expect("class ability source requires an activation");
+                        let (base_cost, effective_cost) =
+                            self.class_ability_resource_cost(activation);
                         (
                             activation.minimum_level,
                             activation.ui_group_name_key.clone(),
                             activation.resource_id.clone(),
-                            activation.resource_cost,
-                            activation.resource_cost,
+                            base_cost,
+                            effective_cost,
                             activation.minimum_concentration,
                             activation.hit_point_cost,
                             self.class_ability_failure_percent(activation),
@@ -537,8 +540,8 @@ impl Game {
                 }
                 Some(AbilityDto {
                     id: ability.id.clone(),
-                    name_key: ability.name_key.clone(),
-                    description_key: ability.description_key.clone(),
+                    name_key: effective_ability.name_key.clone(),
+                    description_key: effective_ability.description_key.clone(),
                     ui_group_name_key,
                     book_name_key: book.map(|book| book.name_key.clone()),
                     book_rank: book.and_then(|book| book.rank),
@@ -559,15 +562,15 @@ impl Game {
                     cooldown_remaining,
                     cooldown_turns,
                     cooldown_group_id,
-                    area_radius: match ability.effect {
+                    area_radius: match effective_ability.effect {
                         AbilityEffectDefinition::AreaDamage { radius, .. } => Some(radius),
                         _ => None,
                     },
                     beam_damage: matches!(
-                        ability.effect,
+                        effective_ability.effect,
                         AbilityEffectDefinition::BeamDamage { .. }
                     ),
-                    cone_radius: match ability.effect {
+                    cone_radius: match effective_ability.effect {
                         AbilityEffectDefinition::ConeDamage { radius, .. } => Some(radius),
                         _ => None,
                     },

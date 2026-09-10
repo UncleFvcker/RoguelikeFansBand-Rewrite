@@ -116,6 +116,7 @@ pub(crate) fn actor_from_spawn(
         eldritch_horror_triggered: false,
         anger: 0,
         friendly: false,
+        no_pet: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: BTreeMap::new(),
         statuses: Vec::new(),
@@ -154,6 +155,7 @@ pub(crate) fn actor_from_runtime_spawn(
         eldritch_horror_triggered: false,
         anger: 0,
         friendly: false,
+        no_pet: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: BTreeMap::new(),
         statuses: Vec::new(),
@@ -205,6 +207,7 @@ pub(crate) fn actor_from_player(
         eldritch_horror_triggered: false,
         anger: 0,
         friendly: false,
+        no_pet: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: BTreeMap::new(),
         statuses,
@@ -327,6 +330,7 @@ pub(crate) fn actor_from_entity(
         eldritch_horror_triggered: entity.eldritch_horror_triggered,
         anger: entity.anger,
         friendly: entity.friendly,
+        no_pet: entity.no_pet,
         casting_cooldown_remaining: entity.casting_cooldown_remaining,
         observed_player_resistances,
         statuses,
@@ -1004,6 +1008,7 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
             eldritch_horror_triggered: entity.eldritch_horror_triggered,
             anger: entity.anger,
             friendly: entity.friendly,
+            no_pet: entity.no_pet,
             casting_cooldown_remaining: entity.casting_cooldown_remaining,
             observed_player_resistances: entity
                 .observed_player_resistances
@@ -1681,6 +1686,9 @@ const fn damage_type_dto(value: ActorDamageType) -> DamageTypeDto {
         ActorDamageType::Meteor => DamageTypeDto::Meteor,
         ActorDamageType::Rocket => DamageTypeDto::Rocket,
         ActorDamageType::Telekinesis => DamageTypeDto::Telekinesis,
+        ActorDamageType::PsiDrain => DamageTypeDto::PsiDrain,
+        ActorDamageType::PsiStorm => DamageTypeDto::PsiStorm,
+        ActorDamageType::PsySpear => DamageTypeDto::PsySpear,
     }
 }
 
@@ -1722,6 +1730,9 @@ const fn actor_damage_type(value: DamageTypeDto) -> Option<ActorDamageType> {
         DamageTypeDto::Meteor => ActorDamageType::Meteor,
         DamageTypeDto::Rocket => ActorDamageType::Rocket,
         DamageTypeDto::Telekinesis => ActorDamageType::Telekinesis,
+        DamageTypeDto::PsiDrain => ActorDamageType::PsiDrain,
+        DamageTypeDto::PsiStorm => ActorDamageType::PsiStorm,
+        DamageTypeDto::PsySpear => ActorDamageType::PsySpear,
     })
 }
 

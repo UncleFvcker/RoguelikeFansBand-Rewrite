@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.mindcrafter-psycho-spear",
+  "input": "cast-target",
+  "steps": [
+    {
+      "type": "beam-damage",
+      "damageDice": 1,
+      "damageSides": 105,
+      "damageBonus": 105,
+      "damageType": "psy-spear"
+    }
+  ]
+}

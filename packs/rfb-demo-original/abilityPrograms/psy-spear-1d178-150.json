@@ -8,7 +8,7 @@
       "damageBonus": 150,
       "damageDice": 1,
       "damageSides": 178,
-      "damageType": "psi",
+      "damageType": "psy-spear",
       "type": "beam-damage"
     }
   ]

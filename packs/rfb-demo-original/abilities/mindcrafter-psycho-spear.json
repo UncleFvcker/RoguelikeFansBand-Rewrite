@@ -1,0 +1,43 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.mindcrafter-psycho-spear",
+  "nameKey": "ability-demo-mindcrafter-psycho-spear-name",
+  "descriptionKey": "ability-demo-mindcrafter-psycho-spear-description",
+  "target": {
+    "modes": [
+      "direction",
+      "position"
+    ],
+    "range": 20,
+    "requiresLineOfEffect": true
+  },
+  "abilityProgramId": "demo.ability-program.mindcrafter-psycho-spear",
+  "tags": [
+    "mindcrafter",
+    "mindcrafter-spell",
+    "spell"
+  ],
+  "levelScaling": [
+    {
+      "effectIndex": 0,
+      "field": "damage-sides",
+      "multiplier": 3,
+      "divisor": 1,
+      "levelOffset": 35
+    },
+    {
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "multiplier": 3,
+      "divisor": 1,
+      "levelOffset": 35
+    }
+  ],
+  "spellPowerFields": [
+    {
+      "effectIndex": 0,
+      "field": "final-damage"
+    }
+  ]
+}

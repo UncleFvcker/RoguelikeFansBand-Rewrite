@@ -2452,6 +2452,9 @@ fn unlife_endpoint_nether_diverts_before_incoming_damage_reduction_without_empow
         game.rng = RfbRng::seeded(0);
         let mut expected = game.clone();
         expected.drain_player_life_force(3, "demo.actor.small-kobold", &mut Vec::new());
+        if invulnerable {
+            assert_ne!(expected.rng.bounded(13), 0);
+        }
         let mut events = Vec::new();
         let result = game.resolve_monster_damage_to_player(
             "test.unlife",

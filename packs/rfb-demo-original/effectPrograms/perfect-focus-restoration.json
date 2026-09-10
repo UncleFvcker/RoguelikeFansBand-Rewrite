@@ -9,6 +9,9 @@
       "resourceId": "demo.resource.mana"
     },
     {
+      "type": "recharge-carried-devices"
+    },
+    {
       "type": "remove-status",
       "statusKindId": "rfb.status.berserk"
     }

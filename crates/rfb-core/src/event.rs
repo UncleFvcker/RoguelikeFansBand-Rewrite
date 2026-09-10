@@ -1223,6 +1223,10 @@ pub(crate) enum DomainEvent {
         affix_id: String,
         split: bool,
     },
+    ItemUniqueMonsterListed {
+        source_kind_id: String,
+        name_key: String,
+    },
     ItemRumour {
         source_kind_id: String,
         display_name_key: String,
@@ -4901,6 +4905,14 @@ impl DomainEvent {
                     ("affix", affix_id),
                     ("split", split.to_string()),
                 ],
+            ),
+            Self::ItemUniqueMonsterListed {
+                source_kind_id,
+                name_key,
+            } => dto(
+                "item.unique-monster-listed",
+                "item-unique-monster-listed",
+                [("source", source_kind_id), ("nameKey", name_key)],
             ),
             Self::ItemRumour {
                 source_kind_id,

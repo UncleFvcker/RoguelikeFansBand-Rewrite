@@ -282,7 +282,9 @@
         "ineligible",
         "resisted",
         "controlled",
-        "already-controlled"
+        "already-controlled",
+        "friendly",
+        "affected"
       ]
     },
     "AbilityDetectResolutionDto": {
@@ -612,6 +614,58 @@
     },
     "AbilityEffectResolutionDto": {
       "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "roll": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "mindcraft-backlash"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "roll"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "extra-energy"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "amount"
+          ]
+        },
         {
           "type": "object",
           "properties": {
@@ -3264,6 +3318,9 @@
         {
           "type": "object",
           "properties": {
+            "ballWhenNotBeam": {
+              "type": "boolean"
+            },
             "beamChancePercent": {
               "type": "integer",
               "format": "uint8",
@@ -5542,6 +5599,156 @@
           "required": [
             "type",
             "amount"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "detectInvisible": {
+              "type": "boolean"
+            },
+            "detectObjectsAndStairs": {
+              "type": "boolean"
+            },
+            "detectTrapsAndDoors": {
+              "type": "boolean"
+            },
+            "illuminatesFloor": {
+              "type": "boolean"
+            },
+            "mapsArea": {
+              "type": "boolean"
+            },
+            "telepathyMaximumTicks": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "telepathyMinimumTicks": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "precognition"
+            }
+          },
+          "required": [
+            "type",
+            "detectInvisible",
+            "detectTrapsAndDoors",
+            "detectObjectsAndStairs",
+            "mapsArea",
+            "illuminatesFloor",
+            "telepathyMinimumTicks",
+            "telepathyMaximumTicks"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "psychometry"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "armorClass": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "maximumDurationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "minimumDurationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "resistances": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ResistanceDto"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "mind-armor"
+            }
+          },
+          "required": [
+            "type",
+            "minimumDurationTicks",
+            "maximumDurationTicks",
+            "armorClass",
+            "resistances"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "healingIfNotAlreadyHastedAndHeroic": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "maximumDurationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "minimumDurationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "adrenaline"
+            }
+          },
+          "required": [
+            "type",
+            "minimumDurationTicks",
+            "maximumDurationTicks",
+            "healingIfNotAlreadyHastedAndHeroic"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mass": {
+              "type": "boolean"
+            },
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "domination"
+            }
+          },
+          "required": [
+            "type",
+            "power",
+            "mass"
           ]
         },
         {
@@ -8000,7 +8207,10 @@
         "curse",
         "meteor",
         "rocket",
-        "telekinesis"
+        "telekinesis",
+        "psi-drain",
+        "psi-storm",
+        "psy-spear"
       ]
     },
     "Direction": {

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.mindcrafter-character-armor",
+  "nameKey": "ability-demo-mindcrafter-character-armor-name",
+  "descriptionKey": "ability-demo-mindcrafter-character-armor-description",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "abilityProgramId": "demo.ability-program.mindcrafter-character-armor",
+  "tags": [
+    "mindcrafter",
+    "mindcrafter-spell",
+    "spell"
+  ]
+}

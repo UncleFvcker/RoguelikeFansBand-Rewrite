@@ -3048,6 +3048,8 @@ impl Game {
                 | ItemUseEffectDefinition::RestoreResourceFull { .. }
                 | ItemUseEffectDefinition::DrainResourceFull { .. }
                 | ItemUseEffectDefinition::IdentifyInventory
+                | ItemUseEffectDefinition::RechargeCarriedDevices
+                | ItemUseEffectDefinition::ListUniqueMonsters
                 | ItemUseEffectDefinition::SelfKnowledge),
                 ItemUsePlan::SelfTarget,
             ) => {
@@ -3527,6 +3529,8 @@ impl Game {
             | ItemUseEffectDefinition::RestoreResourceFull { .. }
             | ItemUseEffectDefinition::DrainResourceFull { .. }
             | ItemUseEffectDefinition::IdentifyInventory
+            | ItemUseEffectDefinition::RechargeCarriedDevices
+            | ItemUseEffectDefinition::ListUniqueMonsters
             | ItemUseEffectDefinition::SelfKnowledge
             | ItemUseEffectDefinition::RefillQuiver
             | ItemUseEffectDefinition::StarBall
@@ -5707,6 +5711,102 @@ impl Game {
             }
             ItemUseEffectDefinition::IdentifyInventory => {
                 self.resolve_item_inventory_identification(source_kind_id, events)
+            }
+            ItemUseEffectDefinition::RechargeCarriedDevices => {
+                let mut noticed = false;
+                for item in &mut self.items {
+                    if item.location != ItemLocation::Inventory {
+                        continue;
+                    }
+                    let definition = self
+                        .content
+                        .item(&item.kind_id)
+                        .expect("carried item must exist");
+                    if !definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "wand" | "staff" | "rod"))
+                    {
+                        continue;
+                    }
+                    let Some(activation) = &item.activation else {
+                        continue;
+                    };
+                    let profile = item_device_generation(
+                        &self.content,
+                        &item.kind_id,
+                        &item.affix_ids,
+                        Some(&activation.profile_id),
+                        item.artifact_name.is_some(),
+                    )
+                    .and_then(|generation| {
+                        generation
+                            .activations
+                            .iter()
+                            .find(|profile| profile.id == activation.profile_id)
+                    });
+                    if profile.is_some_and(|profile| matches!(&profile.effect, ItemUseEffectDefinition::Sequence { effects } if effects.iter().any(|effect| matches!(effect, ItemUseEffectDefinition::RechargeCarriedDevices)))) { continue; }
+                    let Some(charges) = &mut item.charges else {
+                        continue;
+                    };
+                    noticed = true;
+                    if charges.current >= charges.maximum {
+                        continue;
+                    }
+                    // cmd6.c::restore_mana: rods gain 50%, other devices 25%; retain fractional energy.
+                    let per_mille = if definition.tags.iter().any(|tag| tag == "rod") {
+                        500
+                    } else {
+                        250
+                    };
+                    let scaled =
+                        charges.maximum * per_mille + u32::from(item.device_recovery_progress);
+                    let _fractional_roll = self.rng.bounded(1000);
+                    let before = charges.current;
+                    charges.current = (charges.current + scaled / 1000).min(charges.maximum);
+                    item.device_recovery_progress = if charges.current == charges.maximum {
+                        0
+                    } else {
+                        (scaled % 1000) as u16
+                    };
+                    if charges.current > before {
+                        events.push(DomainEvent::DeviceEnergyRecovered {
+                            target_item_id: item.id.clone(),
+                            target_kind_id: item.kind_id.clone(),
+                            amount: charges.current - before,
+                            current: charges.current,
+                            maximum: charges.maximum,
+                        });
+                    }
+                }
+                if noticed {
+                    self.mark_item_aware(source_kind_id);
+                }
+                noticed
+            }
+            ItemUseEffectDefinition::ListUniqueMonsters => {
+                let names = self
+                    .entities
+                    .iter()
+                    .rev()
+                    .filter(|actor| actor.hp > 0)
+                    .filter_map(|actor| {
+                        self.actor_runtime_definition(actor)
+                            .filter(|definition| definition.tags.iter().any(|tag| tag == "unique"))
+                            .map(|definition| definition.name_key.clone())
+                    })
+                    .collect::<Vec<_>>();
+                let noticed = !names.is_empty();
+                if noticed {
+                    self.mark_item_aware(source_kind_id);
+                }
+                for name_key in names {
+                    events.push(DomainEvent::ItemUniqueMonsterListed {
+                        source_kind_id: source_kind_id.to_owned(),
+                        name_key,
+                    });
+                }
+                noticed
             }
             ItemUseEffectDefinition::SelfKnowledge => {
                 self.resolve_item_self_knowledge(source_kind_id, events)

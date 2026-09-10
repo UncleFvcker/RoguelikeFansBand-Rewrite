@@ -1,0 +1,72 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.stone-of-mind",
+  "nameKey": "item-demo-stone-of-mind-name",
+  "descriptionKey": "item-demo-stone-of-mind-description",
+  "glyph": "*",
+  "generationLevel": 50,
+  "weightTenthsPound": 20,
+  "maxStack": 1,
+  "baseValue": 100000,
+  "equipmentSlot": "light",
+  "tags": [
+    "artifact",
+    "equipment",
+    "light-source"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 328,
+    "baseItemKindId": "demo.item.mind-stone",
+    "instant": true,
+    "rarityOneIn": 150
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "FULL_NAME",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INSTA_ART",
+      "WIS"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "modifiers": {
+    "wisdom": 2
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.stone-of-mind",
+        "nameKey": "item-activation-demo-stone-of-mind-name",
+        "effectProgramId": "demo.effect.perfect-focus-restoration",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 10000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        }
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 7770
+    }
+  }
+}

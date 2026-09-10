@@ -52,6 +52,20 @@
     { "minimumLevel": 30, "resistances": { "confusion": "resistant" } }
   ],
   "abilities": [
+{"abilityId":"demo.ability.mindcrafter-neural-blast","minimumLevel":1,"governingAttribute":"wisdom","resourceId":"demo.resource.mana","resourceCost":1,"baseFailurePercent":15,"minimumFailurePercent":0},
+{"abilityId":"demo.ability.mindcrafter-precognition","minimumLevel":2,"governingAttribute":"wisdom","resourceId":"demo.resource.mana","resourceCost":1,"baseFailurePercent":20,"minimumFailurePercent":0},
+{"abilityId":"demo.ability.mindcrafter-minor-displacement","minimumLevel":3,"governingAttribute":"wisdom","resourceId":"demo.resource.mana","resourceCost":2,"baseFailurePercent":25,"minimumFailurePercent":0},
+{"abilityId":"demo.ability.mindcrafter-major-displacement","minimumLevel":7,"governingAttribute":"wisdom","resourceId":"demo.resource.mana","resourceCost":6,"baseFailurePercent":35,"minimumFailurePercent":0},
+{"abilityId":"demo.ability.mindcrafter-domination","minimumLevel":9,"governingAttribute":"wisdom","resourceId":"demo.resource.mana","resourceCost":7,"baseFailurePercent":50,"minimumFailurePercent":0},
+{"abilityId":"demo.ability.mindcrafter-pulverise","minimumLevel":11,"governingAttribute":"wisdom","resourceId":"demo.resource.mana","resourceCost":7,"baseFailurePercent":30,"minimumFailurePercent":0},
+{"abilityId":"demo.ability.mindcrafter-psychometry","minimumLevel":13,"governingAttribute":"wisdom","resourceId":"demo.resource.mana","resourceCost":12,"baseFailurePercent":50,"minimumFailurePercent":0},
+{"abilityId":"demo.ability.mindcrafter-character-armor","minimumLevel":15,"governingAttribute":"wisdom","resourceId":"demo.resource.mana","resourceCost":12,"baseFailurePercent":60,"minimumFailurePercent":0},
+{"abilityId":"demo.ability.mindcrafter-mind-wave","minimumLevel":18,"governingAttribute":"wisdom","resourceId":"demo.resource.mana","resourceCost":10,"baseFailurePercent":45,"minimumFailurePercent":0},
+{"abilityId":"demo.ability.mindcrafter-adrenaline","minimumLevel":23,"governingAttribute":"wisdom","resourceId":"demo.resource.mana","resourceCost":15,"baseFailurePercent":50,"minimumFailurePercent":0},
+{"abilityId":"demo.ability.mindcrafter-telekinesis","minimumLevel":26,"governingAttribute":"wisdom","resourceId":"demo.resource.mana","resourceCost":28,"baseFailurePercent":60,"minimumFailurePercent":0},
+{"abilityId":"demo.ability.mindcrafter-psychic-drain","minimumLevel":28,"governingAttribute":"wisdom","resourceId":"demo.resource.mana","resourceCost":10,"baseFailurePercent":40,"minimumFailurePercent":0},
+{"abilityId":"demo.ability.mindcrafter-psycho-spear","minimumLevel":35,"governingAttribute":"wisdom","resourceId":"demo.resource.mana","resourceCost":35,"baseFailurePercent":75,"minimumFailurePercent":0},
+{"abilityId":"demo.ability.mindcrafter-psycho-storm","minimumLevel":45,"governingAttribute":"wisdom","resourceId":"demo.resource.mana","resourceCost":50,"baseFailurePercent":80,"minimumFailurePercent":0},
     {
       "abilityId": "demo.ability.mindcrafter-clear-mind",
       "minimumLevel": 15,

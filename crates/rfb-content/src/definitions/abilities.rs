@@ -392,6 +392,8 @@ pub enum AbilityEffectDefinition {
         beam_chance_percent: u8,
         #[serde(default)]
         beam_chance_modifier: i8,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        ball_when_not_beam: bool,
     },
     Stardust {
         damage_dice: u16,
@@ -789,6 +791,15 @@ pub enum AbilityEffectDefinition {
         restore_attributes: bool,
     },
     ClearMind,
+    Precognition,
+    Psychometry,
+    MindArmor,
+    Adrenaline,
+    Domination {
+        power: u16,
+        #[serde(default)]
+        mass: bool,
+    },
     AlterReality,
     AnimateDead {
         actor_kind_id: String,
@@ -1073,6 +1084,7 @@ fn ability_level_scaling_base_and_limit(
         )),
         (
             AbilityEffectDefinition::Control { power, .. }
+            | AbilityEffectDefinition::Domination { power, .. }
             | AbilityEffectDefinition::InsanityCircle {
                 control_power: power,
                 ..
@@ -1324,6 +1336,7 @@ pub(crate) fn valid_ability_spell_power(
                     matches!(
                         effect,
                         AbilityEffectDefinition::Control { .. }
+                            | AbilityEffectDefinition::Domination { .. }
                             | AbilityEffectDefinition::InsanityCircle { .. }
                     )
                 }

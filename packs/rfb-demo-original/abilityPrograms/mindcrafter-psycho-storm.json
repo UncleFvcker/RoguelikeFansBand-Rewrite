@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.mindcrafter-psycho-storm",
+  "input": "cast-target",
+  "steps": [
+    {
+      "type": "area-damage",
+      "damageDice": 10,
+      "damageSides": 10,
+      "damageBonus": 225,
+      "damageType": "psi-storm",
+      "radius": 4
+    }
+  ]
+}

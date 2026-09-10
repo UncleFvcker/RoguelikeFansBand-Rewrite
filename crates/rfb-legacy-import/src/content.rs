@@ -5706,11 +5706,7 @@ fn legacy_device_item_effect(
             self_target,
             false,
         ),
-        "RESTORE_MANA" => (
-            serde_json::json!({"type": "restore-resource-full", "resourceId": "demo.resource.mana"}),
-            self_target,
-            false,
-        ),
+        "RESTORE_MANA" => (device_restore_mana_effect(), self_target, false),
         "RESTORE_STATS" => (
             device_ability_effect(
                 serde_json::json!({"type": "restore-vitality", "lifeForce": 1, "restoreAttributes": true}),
@@ -5820,6 +5816,14 @@ fn legacy_device_item_effect(
     Some(result)
 }
 
+fn device_restore_mana_effect() -> serde_json::Value {
+    serde_json::json!({"type": "sequence", "effects": [
+        {"type": "restore-resource-full", "resourceId": "demo.resource.mana"},
+        {"type": "recharge-carried-devices"},
+        {"type": "remove-status", "statusKindId": "rfb.status.berserk"}
+    ]})
+}
+
 fn artifact_json(
     entry: &LegacyArtifactEntry,
     id: &str,
@@ -5836,7 +5840,7 @@ fn artifact_json(
         "descriptionKey": format!("item-legacy-artifact-{id}-description"),
         "glyph": "*",
         "generationLevel": entry.level,
-        "weightTenthsPound": entry.weight_tenths_pound.max(1),
+        "weightTenthsPound": if base_item_kind_id.is_some() { entry.weight_tenths_pound } else { entry.weight_tenths_pound.max(1) },
         "maxStack": 1,
         "baseValue": entry.base_value,
         "resistsProjectionDestruction": true,
@@ -5953,17 +5957,32 @@ fn artifact_json(
     apply_offensive_fold(&mut value, &offense);
     apply_equipment_fold(&mut value, &equipment);
     apply_item_destruction_properties(&mut value, entry.tval, &entry.flags);
-    if let Some(activation) = entry
-        .activation
-        .as_ref()
-        .filter(|activation| matches!(activation.token.as_str(), "BEAM_COLD" | "TELEKINESIS"))
-    {
+    if let Some(activation) = entry.activation.as_ref().filter(|activation| {
+        matches!(
+            activation.token.as_str(),
+            "BEAM_COLD" | "TELEKINESIS" | "RESTORE_MANA" | "LIST_UNIQUES"
+        )
+    }) {
         let (activation_id, name_key, target, effect) = if activation.token == "TELEKINESIS" {
             (
                 "rfb-legacy.item-activation.telekinesis",
                 "item-activation-demo-dr-jones-telekinesis-name",
                 serde_json::json!({"modes": ["direction", "position", "entity"], "range": 18, "requiresLineOfEffect": false}),
                 device_fetch_item_effect(activation.power),
+            )
+        } else if activation.token == "RESTORE_MANA" {
+            (
+                "rfb-legacy.item-activation.restore-mana",
+                "item-activation-demo-stone-of-mind-name",
+                device_self_target(),
+                device_restore_mana_effect(),
+            )
+        } else if activation.token == "LIST_UNIQUES" {
+            (
+                "rfb-legacy.item-activation.list-uniques",
+                "item-activation-demo-list-unique-monsters-name",
+                device_self_target(),
+                serde_json::json!({"type": "list-unique-monsters"}),
             )
         } else {
             (
@@ -9846,7 +9865,7 @@ fn psi_beam_ability(suffix: &str, dice: u32, sides: u32, bonus: u32) -> serde_js
         "type": "beam-damage",
         "damageDice": dice,
         "damageSides": sides,
-        "damageType": "psi",
+        "damageType": "psy-spear",
     });
     if bonus > 0 {
         effect["damageBonus"] = serde_json::json!(bonus);
@@ -28569,6 +28588,62 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
     }
 
     #[test]
+    fn mindcrafter_artifacts_keep_source_weights_attributes_and_activation_effects() {
+        let source = "N:15:Palantir of Westernesse\nI:39:8:3\nW:60:50:10:60000\nP:0:1d1:0:0:0\nF:WIS | CHR | TELEPATHY | INSTA_ART | FULL_NAME | FIXED_ACT\nE:LIST_UNIQUES:60:200\nN:244:of Eternity\nI:36:2:3\nW:70:120:0:100000\nP:0:0d0:0:0:42\nF:CON | SUST_STR | SUST_INT | SUST_WIS | SUST_DEX | SUST_CON | SUST_CHR | FREE_ACT | LEVITATION | SEE_INVIS | HOLD_LIFE | RES_LITE | RES_DARK | RES_DISEN | RES_TIME\nN:328:& Meditation Stone\nI:39:23:2\nW:50:150:20:100000\nP:0:1d1:0:0:0\nF:FULL_NAME | WIS | INSTA_ART\nE:RESTORE_MANA:50:777\n";
+        let entries = parse_a_info(source).unwrap();
+        for (entry, (slug, base)) in entries.iter().zip([
+            ("palantir-of-westernesse", "crystal-ball"),
+            ("eternity", "robe"),
+            ("stone-of-mind", "mind-stone"),
+        ]) {
+            let mut report = ContentImportReport::default();
+            let imported = artifact_json(
+                entry,
+                slug,
+                Some(&format!("demo.item.{base}")),
+                &LauncherAmmoIndex::default(),
+                &mut report,
+            );
+            let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join(format!("../../packs/rfb-demo-original/items/{slug}.json"));
+            let formal: serde_json::Value =
+                serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+            for field in [
+                "weightTenthsPound",
+                "modifiers",
+                "resistances",
+                "statusImmunities",
+                "artifactGeneration",
+            ] {
+                assert_eq!(imported[field], formal[field], "{slug}: {field}");
+            }
+            if entry.has_activation {
+                assert!(
+                    !report
+                        .item_behavior_gaps
+                        .contains_key("artifact-activation")
+                );
+                let program_id = formal["deviceGeneration"]["activations"][0]["effectProgramId"]
+                    .as_str()
+                    .unwrap();
+                let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(format!(
+                    "../../packs/rfb-demo-original/effectPrograms/{}.json",
+                    program_id.strip_prefix("demo.effect.").unwrap()
+                ));
+                let program: serde_json::Value =
+                    serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+                let effect = &imported["deviceGeneration"]["activations"][0]["effect"];
+                let steps = if effect["type"] == "sequence" {
+                    effect["effects"].clone()
+                } else {
+                    serde_json::json!([effect])
+                };
+                assert_eq!(steps, program["steps"]);
+            }
+        }
+    }
+
+    #[test]
     fn a_info_artifacts_import_with_fixed_bonuses() {
         const SYNTHETIC_A_INFO: &str = "V:1.1.0
 N:1:of Test Radiance
@@ -28960,7 +29035,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             .map(|(_, value)| value)
             .expect("psy spear should be generated");
         assert_eq!(spear["effect"]["type"], "beam-damage");
-        assert_eq!(spear["effect"]["damageType"], "psi");
+        assert_eq!(spear["effect"]["damageType"], "psy-spear");
         assert_eq!(spear["effect"]["damageSides"], 45);
         assert_eq!(spear["effect"]["damageBonus"], 100);
     }

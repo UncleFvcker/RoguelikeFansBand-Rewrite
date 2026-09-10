@@ -66,6 +66,11 @@ pub(in crate::game) enum AbilityTargetPlan {
         path: Vec<Position>,
         stop_at_actor: bool,
     },
+    BoltOrBeam {
+        path: Vec<Position>,
+        ball_landing: Option<Position>,
+        stop_at_actor: bool,
+    },
     SniperShot {
         target: TargetSelection,
     },
@@ -664,7 +669,7 @@ impl Game {
                     positions,
                 })
             }
-            AbilityEffectDefinition::IdentifyItem { .. } => {
+            AbilityEffectDefinition::IdentifyItem { .. } | AbilityEffectDefinition::Psychometry => {
                 let TargetSelection::Item { item_id } = target else {
                     return None;
                 };
@@ -794,6 +799,7 @@ impl Game {
             AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
             | AbilityEffectDefinition::Control { .. }
+            | AbilityEffectDefinition::Domination { mass: false, .. }
             | AbilityEffectDefinition::Sequence { .. } => {
                 if ability
                     .target
@@ -815,6 +821,10 @@ impl Game {
             | AbilityEffectDefinition::RemoveEquippedCurses { .. }
             | AbilityEffectDefinition::BeginFasting
             | AbilityEffectDefinition::ClearMind
+            | AbilityEffectDefinition::Precognition
+            | AbilityEffectDefinition::MindArmor
+            | AbilityEffectDefinition::Adrenaline
+            | AbilityEffectDefinition::Domination { mass: true, .. }
             | AbilityEffectDefinition::TurnUndead { .. }
             | AbilityEffectDefinition::SustainAttributes { .. }
             | AbilityEffectDefinition::CureMutation
@@ -938,12 +948,21 @@ impl Game {
             AbilityEffectDefinition::BeamDamage { .. }
             | AbilityEffectDefinition::LightLine { .. }
             | AbilityEffectDefinition::TerrainBeam { .. }
-            | AbilityEffectDefinition::BoltOrBeamDamage { .. }
             | AbilityEffectDefinition::Stardust { .. } => self
                 .beam_ability_path(ability, target)
                 .map(|path| AbilityTargetPlan::Projectile {
                     path,
                     stop_at_actor: false,
+                }),
+            AbilityEffectDefinition::BoltOrBeamDamage { .. } => self
+                .beam_ability_path(ability, target)
+                .map(|path| AbilityTargetPlan::BoltOrBeam {
+                    path,
+                    ball_landing: match target {
+                        TargetSelection::Position { position } => Some(*position),
+                        _ => None,
+                    },
+                    stop_at_actor: matches!(target, TargetSelection::Direction { .. }),
                 }),
             AbilityEffectDefinition::BoltOrAreaDamage { .. } => self
                 .ability_path(ability, target)

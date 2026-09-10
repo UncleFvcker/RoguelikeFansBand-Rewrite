@@ -43,6 +43,38 @@ pub(super) fn item_can_be_sensed(item: &rfb_content::ItemDefinition) -> bool {
 }
 
 impl Game {
+    pub(super) fn lose_mindcraft_information(&mut self, changed: &mut BTreeSet<Position>) {
+        if !self.player_auto_identifies_items() {
+            let ids = self
+                .items
+                .iter()
+                .filter(|item| {
+                    matches!(
+                        item.location,
+                        ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                    )
+                })
+                .map(|item| item.id.clone())
+                .collect::<Vec<_>>();
+            for id in ids {
+                if let Some(knowledge) = self.item_property_knowledge.get_mut(&id) {
+                    if knowledge.identified {
+                        continue;
+                    }
+                    knowledge.appraised = false;
+                    knowledge.feeling = None;
+                    knowledge.known_affix_ids.clear();
+                }
+                if self.player_has_tomte_item_sensing() {
+                    self.sense_item_instance(&id, true);
+                }
+            }
+        }
+        self.add_virtue(VirtueKindDto::Knowledge, -5);
+        self.add_virtue(VirtueKindDto::Enlightenment, -5);
+        self.clear_current_floor_memory(changed);
+    }
+
     fn item_base_properties_known(&self, item: &ItemInstance) -> bool {
         self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware
             && (self.item_identification(item) != ItemIdentificationDto::Unexamined
@@ -65,13 +97,21 @@ impl Game {
     }
 
     fn sense_item_instance(&mut self, item_id: &str, strong: bool) {
+        self.sense_item(item_id, strong, false);
+    }
+
+    pub(super) fn psychometry_item(&mut self, item_id: &str) {
+        self.sense_item(item_id, true, true);
+    }
+
+    fn sense_item(&mut self, item_id: &str, strong: bool, psychometry: bool) {
         let item = self
             .items
             .iter()
             .find(|item| item.id == item_id)
             .expect("sensed item must exist");
         if self.item_identification(item) != ItemIdentificationDto::Unexamined
-            || self.item_feeling(item).is_some()
+            || (!psychometry && self.item_feeling(item).is_some())
         {
             return;
         }
@@ -79,7 +119,7 @@ impl Game {
             .content
             .item(&item.kind_id)
             .expect("item kind must exist");
-        if !item_can_be_sensed(definition) {
+        if !psychometry && !item_can_be_sensed(definition) {
             return;
         }
         // RFB dungeon.c::value_check_aux1/2; weak feelings must not reveal egos/artifacts.
@@ -122,6 +162,12 @@ impl Game {
         } else if strong && known_on_average {
             // These nameless kinds become known instead of retaining an average feeling.
             self.identify_item_instance(item_id, inventory::ItemIdentificationRequest::new(false));
+            if psychometry {
+                self.item_property_knowledge
+                    .entry(item_id.to_owned())
+                    .or_default()
+                    .feeling = Some(ItemFeelingDto::Average);
+            }
             return;
         } else if item.enchantments.to_armor > 0 {
             ItemFeelingDto::Good

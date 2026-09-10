@@ -23,6 +23,18 @@ const formatter = createPresentationFormatter(localization, () => state, {
   itemCurseSeverityName: () => "?",
 });
 
+test("psychic outcomes distinguish backlash, extra energy, friendship and unique names", () => {
+  localization.setLocale("en-US");
+  const mental = (effect) => formatter.formatEvent({
+    kind: "ability.effects", messageKey: "ability-effects", args: {},
+    outcome: { type: "ability-effects", resolution: { effects: [effect] } },
+  });
+  assert.equal(mental({ type: "mindcraft-backlash", effectIndex: 0, roll: 90 }), "Your uncontrolled psychic power lashes back at you!");
+  assert.equal(mental({ type: "extra-energy", effectIndex: 0, amount: 75 }), "Psychic Drain consumes 75 extra action energy.");
+  assert.match(mental({ type: "control", effectIndex: 0, outcome: "friendly", targetKindId: "demo.actor.gloom-weaver" }), /becomes friendly toward you/);
+  assert.match(formatter.formatEvent({ kind: "item.unique-monster-listed", messageKey: "item-unique-monster-listed", args: { nameKey: "actor-demo-gloom-weaver-name" } }), /Unique monster on this floor:/);
+});
+
 test("life force exhaustion, permanent race change, recovery and death use localized events", () => {
   const event = (messageKey, args = {}) => ({ kind: "test", messageKey, args });
   for (const [locale, expected] of [

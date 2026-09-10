@@ -1831,6 +1831,7 @@ fn racial_projectile_and_control_bindings_match_source() {
             damage_type: ActorDamageType::Physical,
             beam_chance_percent: 0,
             beam_chance_modifier: 0,
+            ball_when_not_beam: false,
         }
     ));
     assert_eq!(ability.level_scaling.len(), 2);

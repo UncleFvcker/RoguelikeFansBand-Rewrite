@@ -11506,9 +11506,15 @@ fn fixed_wilderness_task_geometry_and_rewards_match_source() {
             task.reward.as_ref().unwrap().entries[0].item_kind_id,
             "demo.item.crisdurian"
         );
-        assert_eq!(task.reward.as_ref().unwrap().class_overrides.len(), 1);
+        assert_eq!(task.reward.as_ref().unwrap().class_overrides.len(), 2);
         assert_eq!(
-            task.reward.as_ref().unwrap().class_overrides[0]
+            task.reward
+                .as_ref()
+                .unwrap()
+                .class_overrides
+                .iter()
+                .find(|entry| entry.class_id == "demo.class.warrior")
+                .unwrap()
                 .entries
                 .iter()
                 .map(|entry| (entry.item_kind_id.as_str(), entry.weight))

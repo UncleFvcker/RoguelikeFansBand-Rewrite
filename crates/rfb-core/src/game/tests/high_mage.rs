@@ -1993,7 +1993,7 @@ fn daemon_insanity_circle_applies_both_balls_then_confusion_and_charm() {
     assert!(events.iter().any(|event| matches!(
         event,
         DomainEvent::AbilityEffectsResolved { resolution, .. }
-            if matches!(resolution.effects.as_slice(), [_, AbilityEffectResolutionDto::Control { outcome: AbilityControlOutcomeDto::Controlled, power: 70, .. }])
+            if matches!(resolution.effects.as_slice(), [_, AbilityEffectResolutionDto::Control { outcome: AbilityControlOutcomeDto::Controlled, power: 69, .. }])
     )));
 }
 

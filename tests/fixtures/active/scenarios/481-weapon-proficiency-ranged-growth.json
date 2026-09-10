@@ -31,6 +31,7 @@
         "visibleInvisible": false,
         "anger": 0,
         "friendly": false,
+        "noPet": false,
         "castingCooldownRemaining": 0
       }
     ]
@@ -61,7 +62,7 @@
       },
       "revision": 1,
       "rngDrawCounter": 194,
-      "stateHash": "1075287192d43e0877c72422415ba7fd71400f657a2c405690e66405119f084f",
+      "stateHash": "d5d3d420f4ed5279db7fdf459b07e709211f856ef21bbe8655dc9ea5dcb8bbfc",
       "turn": 1
     },
     "events": [

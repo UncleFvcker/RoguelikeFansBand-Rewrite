@@ -35,6 +35,7 @@ pub(crate) struct Actor {
     pub(crate) eldritch_horror_triggered: bool,
     pub(crate) anger: u8,
     pub(crate) friendly: bool,
+    pub(crate) no_pet: bool,
     pub(crate) casting_cooldown_remaining: u16,
     pub(crate) observed_player_resistances: BTreeMap<DamageType, ResistanceLevel>,
     pub(crate) statuses: Vec<StatusInstance>,

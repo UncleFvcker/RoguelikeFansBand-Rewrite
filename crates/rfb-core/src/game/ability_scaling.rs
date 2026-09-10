@@ -269,6 +269,7 @@ pub(super) fn apply_ability_level_scaling(
         )
         | (
             AbilityEffectDefinition::Control { power, .. }
+            | AbilityEffectDefinition::Domination { power, .. }
             | AbilityEffectDefinition::InsanityCircle {
                 control_power: power,
                 ..
@@ -493,7 +494,11 @@ pub(super) fn apply_ability_spell_power(
             | AbilityEffectDefinition::Entangle { power, .. },
             AbilitySpellPowerField::StatusPower,
         )
-        | (AbilityEffectDefinition::Control { power, .. }, AbilitySpellPowerField::ControlPower)
+        | (
+            AbilityEffectDefinition::Control { power, .. }
+            | AbilityEffectDefinition::Domination { power, .. },
+            AbilitySpellPowerField::ControlPower,
+        )
         | (
             AbilityEffectDefinition::InsanityCircle {
                 control_power: power,

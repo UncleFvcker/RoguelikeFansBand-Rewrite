@@ -474,7 +474,7 @@ impl Game {
     }
 }
 
-fn monster_stun_amount(damage: i32) -> i32 {
+pub(super) fn monster_stun_amount(damage: i32) -> i32 {
     let damage = damage.max(0);
     if damage < 1 {
         return 1;
@@ -493,7 +493,7 @@ fn monster_stun_amount(damage: i32) -> i32 {
 }
 
 impl Game {
-    fn passive_teleport_actor(
+    pub(super) fn passive_teleport_actor(
         &mut self,
         index: usize,
         distance: u32,
@@ -630,17 +630,6 @@ impl Game {
                 }
                 if !teleport_resisted {
                     self.passive_teleport_actor(index, 10, changed);
-                }
-            }
-            DamageType::Telekinesis => {
-                let moves = self.rng.bounded(4) == 0 && !has_tag("guardian");
-                let level_multiplier = if has_tag("unique") { 2_u64 } else { 1 };
-                let save_sides = u64::try_from(raw_damage.max(1)).unwrap_or(1);
-                if level_multiplier * level <= 5 + self.rng.bounded(save_sides) + 1 {
-                    self.apply_actor_melee_status(index, STATUS_STUN, stun_amount, ability_id);
-                }
-                if moves {
-                    self.passive_teleport_actor(index, 7, changed);
                 }
             }
             _ => {}
@@ -1360,6 +1349,9 @@ impl Game {
             .expect("ability target definition must remain available")
             .clone();
         let target_kind_id = definition.id.clone();
+        let psychic =
+            self.prepare_psychic_damage(index, ability_id, damage_type, raw_damage, events);
+        let raw_damage = psychic.damage;
         let has_tag = |tag: &str| definition.tags.iter().any(|candidate| candidate == tag);
         let raw_damage = match damage_type {
             DamageType::HellFire if has_tag("good") => raw_damage.saturating_mul(2),
@@ -1399,6 +1391,10 @@ impl Game {
             target.armor_class.value,
             resistance,
         );
+        let damage = crate::game::damage::scale_damage_outcome(
+            damage,
+            self.actor_spell_damage_percent(index, damage_type, damage.applied),
+        );
         let application =
             plan_damage_application(&self.entities[index], damage, FatalityPolicy::AtOrBelowZero);
         commit_damage_application(&mut self.entities[index], &application);
@@ -1410,6 +1406,7 @@ impl Game {
         });
         self.wake_entity_after_damage(index, damage.applied, events);
         if !application.fatal {
+            self.apply_psychic_damage_riders(index, ability_id, psychic, changed);
             self.anger_monster_from_spell_damage(index, damage.applied);
             self.resolve_ability_damage_rider(
                 index,

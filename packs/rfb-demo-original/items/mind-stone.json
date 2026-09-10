@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 25000,
+  "descriptionKey": "item-demo-mind-stone-description",
+  "equipmentSlot": "light",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "*",
+  "id": "demo.item.mind-stone",
+  "maxStack": 1,
+  "nameKey": "item-demo-mind-stone-name",
+  "rfbBaseKind": {
+    "sourceIndex": 624,
+    "sval": 23,
+    "tval": 39
+  },
+  "rfbValue": {
+    "flags": [
+      "INSTA_ART"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "equipment",
+    "instant-artifact-base",
+    "light-source"
+  ],
+  "weightTenthsPound": 5
+}

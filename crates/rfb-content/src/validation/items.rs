@@ -86,6 +86,8 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::NewLife
         | ItemUseEffectDefinition::PolymorphMutations
         | ItemUseEffectDefinition::IdentifyInventory
+        | ItemUseEffectDefinition::RechargeCarriedDevices
+        | ItemUseEffectDefinition::ListUniqueMonsters
         | ItemUseEffectDefinition::SelfKnowledge
         | ItemUseEffectDefinition::TriggerTsuyoshiCrash
         | ItemUseEffectDefinition::MundanifyItem
@@ -420,6 +422,8 @@ pub(crate) fn valid_item_effect(
                             | ItemUseEffectDefinition::RestoreResourceFull { .. }
                             | ItemUseEffectDefinition::DrainResourceFull { .. }
                             | ItemUseEffectDefinition::IdentifyInventory
+                            | ItemUseEffectDefinition::RechargeCarriedDevices
+                            | ItemUseEffectDefinition::ListUniqueMonsters
                             | ItemUseEffectDefinition::SelfKnowledge
                             | ItemUseEffectDefinition::Detect { .. }
                             | ItemUseEffectDefinition::SetFloorGlow { .. }
@@ -659,6 +663,8 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::NewLife
                     | ItemUseEffectDefinition::PolymorphMutations
                     | ItemUseEffectDefinition::IdentifyInventory
+                    | ItemUseEffectDefinition::RechargeCarriedDevices
+                    | ItemUseEffectDefinition::ListUniqueMonsters
                     | ItemUseEffectDefinition::SelfKnowledge
                     | ItemUseEffectDefinition::Acquirement { .. }
                     | ItemUseEffectDefinition::RefillQuiver
@@ -784,7 +790,9 @@ pub(super) fn validate_items(
             }
         }
         validate_glyph(&item.id, &item.glyph)?;
-        if item.weight_tenths_pound == 0 || item.weight_tenths_pound > 10_000 {
+        if (item.weight_tenths_pound == 0 && item.artifact_generation.is_none())
+            || item.weight_tenths_pound > 10_000
+        {
             return Err(ContentError::InvalidItemWeight(item.id.clone()));
         }
         if let Some(base_kind) = item.rfb_base_kind
@@ -1077,6 +1085,8 @@ pub(super) fn validate_items(
                         | ItemUseEffectDefinition::IncreaseAttribute { .. }
                         | ItemUseEffectDefinition::AugmentAttributes
                         | ItemUseEffectDefinition::IdentifyInventory
+                        | ItemUseEffectDefinition::RechargeCarriedDevices
+                        | ItemUseEffectDefinition::ListUniqueMonsters
                         | ItemUseEffectDefinition::SelfKnowledge
                         | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                         | ItemUseEffectDefinition::ApplyBasicResistance { .. }

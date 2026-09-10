@@ -1,0 +1,75 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.eternity",
+  "nameKey": "item-demo-eternity-name",
+  "descriptionKey": "item-demo-eternity-description",
+  "glyph": "(",
+  "generationLevel": 70,
+  "weightTenthsPound": 0,
+  "maxStack": 1,
+  "baseValue": 100000,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 244,
+    "baseItemKindId": "demo.item.robe",
+    "instant": false,
+    "rarityOneIn": 120
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "FREE_ACT",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION",
+      "RES_DARK",
+      "RES_DISEN",
+      "RES_LITE",
+      "RES_TIME",
+      "SEE_INVIS",
+      "SUST_CHR",
+      "SUST_CON",
+      "SUST_DEX",
+      "SUST_INT",
+      "SUST_STR",
+      "SUST_WIS"
+    ],
+    "pval": 3,
+    "toArmor": 42
+  },
+  "modifiers": {
+    "defense": 42,
+    "constitution": 3
+  },
+  "passives": [
+    "levitation",
+    "see-invisible",
+    "hold-life",
+    "sustain-strength",
+    "sustain-intelligence",
+    "sustain-wisdom",
+    "sustain-dexterity",
+    "sustain-constitution",
+    "sustain-charisma"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "resistances": {
+    "light": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "time": "resistant"
+  }
+}

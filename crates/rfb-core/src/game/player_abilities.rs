@@ -658,6 +658,11 @@ impl Game {
             )
             .saturating_sub((i32::from(RFB_MAGIC_STAT_ADJUSTMENT[index]) - 1).saturating_mul(3))
             .saturating_add(self.player_spell_failure_modifier_percent())
+            .saturating_sub(if self.player_has_mindcraft_stone() {
+                4
+            } else {
+                0
+            })
             .max(i32::from(
                 activation
                     .minimum_failure_percent
@@ -674,7 +679,12 @@ impl Game {
             } else {
                 0
             })
-            .min(95);
+            .min(95)
+            .saturating_sub(if self.player_has_mindcraft_stone() {
+                1
+            } else {
+                0
+            });
         u8::try_from(chance.max(self.player_spell_failure_minimum_percent()))
             .expect("bounded class ability failure chance must fit u8")
     }

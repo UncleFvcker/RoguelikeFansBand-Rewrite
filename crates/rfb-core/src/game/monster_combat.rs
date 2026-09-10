@@ -541,6 +541,7 @@ impl Game {
         damage_type: DamageType,
         target: &MonsterHostileTarget,
         events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
     ) -> AbilityEffectResolutionDto {
         if target.is_player() {
             return self.resolve_monster_damage_to_player(
@@ -566,10 +567,22 @@ impl Game {
         };
         let raw_damage = self.scale_monster_damage(source_entity_id, raw_damage);
         let prepared_damage = self.scale_monster_damage(source_entity_id, prepared_damage);
+        let psychic = self.prepare_psychic_damage(
+            target_index,
+            ability_id,
+            damage_type,
+            prepared_damage,
+            events,
+        );
+        let prepared_damage = psychic.damage;
         let resistance = self.entities[target_index].resistances.level(damage_type);
         let damage = resolve_damage(
             DamagePacket::after_armor(raw_damage, prepared_damage, damage_type),
             resistance,
+        );
+        let damage = scale_damage_outcome(
+            damage,
+            self.actor_spell_damage_percent(target_index, damage_type, damage.applied),
         );
         let application = plan_damage_application(
             &self.entities[target_index],
@@ -578,6 +591,9 @@ impl Game {
         );
         commit_damage_application(&mut self.entities[target_index], &application);
         self.wake_entity_after_damage(target_index, damage.applied, events);
+        if !application.fatal {
+            self.apply_psychic_damage_riders(target_index, ability_id, psychic, changed);
+        }
         AbilityEffectResolutionDto::Damage {
             effect_index,
             resolution: damage.into(),
@@ -634,7 +650,10 @@ impl Game {
                 resolution: damage.into(),
             };
         }
-        let damage = scale_damage_outcome(damage, self.player_incoming_damage_percent());
+        let damage = scale_damage_outcome(
+            damage,
+            self.player_spell_damage_percent(damage_type, damage.applied),
+        );
         let damage = self.apply_evasion_to_monster_ability_damage(ability_id, damage);
         let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
         let damage = application.damage;

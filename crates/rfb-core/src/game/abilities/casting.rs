@@ -37,7 +37,16 @@ impl Game {
         &self,
         ability_id: &str,
     ) -> Option<&'static str> {
-        match self.content.ability(ability_id)?.effect {
+        let ability = self.content.ability(ability_id)?;
+        if super::mindcraft::is_mindcraft_spell(ability) {
+            if self.player_has_anti_magic() {
+                return Some("anti-magic");
+            }
+            if self.player_has_status_kind(STATUS_BERSERK) {
+                return Some("berserk");
+            }
+        }
+        match ability.effect {
             AbilityEffectDefinition::BeginFasting if self.fasting => Some("already-fasting"),
             AbilityEffectDefinition::ClearMind if self.pet_upkeep().controlled_pets > 0 => {
                 Some("pets-require-attention")
@@ -157,6 +166,7 @@ impl Game {
                 ability
             }
         };
+        self.apply_mindcraft_variant(&mut ability);
         Self::apply_player_level_scaling(&mut ability, self.progress.level);
         if uses_casting_profile_offense && let Some(profile) = casting_profile.as_ref() {
             Self::apply_casting_profile_effect_scaling(profile, &mut ability, self.progress.level);
@@ -267,11 +277,8 @@ impl Game {
                 let activation = class_activation
                     .as_ref()
                     .expect("class ability source requires an activation");
-                (
-                    activation.resource_cost,
-                    activation.resource_cost,
-                    activation.resource_id.clone(),
-                )
+                let (base, effective) = self.class_ability_resource_cost(activation);
+                (base, effective, activation.resource_id.clone())
             }
             AbilitySourceDto::Learned => {
                 let player = Self::player_ability_parameters(&ability);
@@ -416,6 +423,15 @@ impl Game {
         };
         if !succeeded {
             events.push(DomainEvent::AbilityCastFailed { resolution });
+            if super::mindcraft::is_mindcraft_spell(&ability) {
+                self.resolve_mindcraft_failure(
+                    &ability,
+                    failure_percent,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
             return Ok(());
         }
         events.push(DomainEvent::AbilityCastSucceeded {

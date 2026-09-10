@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.241";
+pub const PROTOCOL_VERSION: &str = "1.242";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 12;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 12;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 13;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -995,6 +995,8 @@ pub enum AbilityControlOutcomeDto {
     Resisted,
     Controlled,
     AlreadyControlled,
+    Friendly,
+    Affected,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -1118,6 +1120,8 @@ pub enum AbilityEffectSpecDto {
         damage_bonus: u16,
         damage_type: DamageTypeDto,
         beam_chance_percent: u8,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        ball_when_not_beam: bool,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         final_damage_spell_power_bonus: Option<i32>,
     },
@@ -1501,6 +1505,31 @@ pub enum AbilityEffectSpecDto {
     },
     ClearMind {
         amount: u32,
+    },
+    Precognition {
+        detect_invisible: bool,
+        detect_traps_and_doors: bool,
+        detect_objects_and_stairs: bool,
+        maps_area: bool,
+        illuminates_floor: bool,
+        telepathy_minimum_ticks: u16,
+        telepathy_maximum_ticks: u16,
+    },
+    Psychometry,
+    MindArmor {
+        minimum_duration_ticks: u32,
+        maximum_duration_ticks: u32,
+        armor_class: u16,
+        resistances: Vec<ResistanceDto>,
+    },
+    Adrenaline {
+        minimum_duration_ticks: u32,
+        maximum_duration_ticks: u32,
+        healing_if_not_already_hasted_and_heroic: u16,
+    },
+    Domination {
+        power: u16,
+        mass: bool,
     },
     AlterReality,
     AnimateDead {
@@ -2331,6 +2360,9 @@ pub enum DamageTypeDto {
     Meteor,
     Rocket,
     Telekinesis,
+    PsiDrain,
+    PsiStorm,
+    PsySpear,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -2870,6 +2902,14 @@ pub enum AbilityRecallActionDto {
     rename_all_fields = "camelCase"
 )]
 pub enum AbilityEffectResolutionDto {
+    MindcraftBacklash {
+        effect_index: u8,
+        roll: u8,
+    },
+    ExtraEnergy {
+        effect_index: u8,
+        amount: u16,
+    },
     RandomChoice {
         effect_index: u8,
         roll: i32,
@@ -5328,6 +5368,7 @@ pub struct ActorSaveDto {
     pub eldritch_horror_triggered: bool,
     pub anger: u8,
     pub friendly: bool,
+    pub no_pet: bool,
     #[serde(default)]
     pub casting_cooldown_remaining: u16,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -6507,6 +6548,7 @@ mod tests {
         current["entities"][0]["experience"] = serde_json::json!(0);
         current["entities"][0]["anger"] = serde_json::json!(0);
         current["entities"][0]["friendly"] = serde_json::json!(false);
+        current["entities"][0]["noPet"] = serde_json::json!(false);
         current["entities"][0]["minorSlow"] = serde_json::json!(0);
         current["items"][0]["permanentDestructionImmunities"] = serde_json::json!([]);
         current["inventory"][0]["permanentDestructionImmunities"] = serde_json::json!([]);

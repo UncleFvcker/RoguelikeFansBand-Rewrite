@@ -1,0 +1,79 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.palantir-of-westernesse",
+  "nameKey": "item-demo-palantir-of-westernesse-name",
+  "descriptionKey": "item-demo-palantir-of-westernesse-description",
+  "glyph": "*",
+  "generationLevel": 60,
+  "weightTenthsPound": 10,
+  "maxStack": 1,
+  "baseValue": 60000,
+  "equipmentSlot": "light",
+  "tags": [
+    "artifact",
+    "equipment",
+    "light-source"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 15,
+    "baseItemKindId": "demo.item.crystal-ball",
+    "instant": true,
+    "rarityOneIn": 50
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "FIXED_ACT",
+      "FULL_NAME",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INSTA_ART",
+      "TELEPATHY",
+      "WIS"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "modifiers": {
+    "wisdom": 3,
+    "charisma": 3
+  },
+  "passives": [
+    "telepathy"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.list-unique-monsters",
+        "nameKey": "item-activation-demo-list-unique-monsters-name",
+        "effectProgramId": "demo.effect.list-unique-monsters",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "deviceCheckDifficulty": 60,
+        "rfbValue": 12000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        }
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 2000
+    }
+  }
+}

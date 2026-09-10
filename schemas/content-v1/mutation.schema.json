@@ -45,7 +45,10 @@
         "curse",
         "meteor",
         "rocket",
-        "telekinesis"
+        "telekinesis",
+        "psi-drain",
+        "psi-storm",
+        "psy-spear"
       ],
       "type": "string"
     },
@@ -1161,6 +1164,15 @@
           "$ref": "#/$defs/ActorResistanceLevel"
         },
         "psi": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "psi-drain": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "psi-storm": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "psy-spear": {
           "$ref": "#/$defs/ActorResistanceLevel"
         },
         "rock": {

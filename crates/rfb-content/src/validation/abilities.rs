@@ -183,7 +183,7 @@ pub(super) fn validate_abilities(
                     (((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides))
                         || (*damage_dice == 0 && *damage_sides == 0 && *damage_bonus > 0))
                         && *damage_bonus <= 10_000
-                        && (1..=16).contains(radius)
+                        && *radius <= 16
                         && target_category.as_ref().is_none_or(|category| {
                             !category.is_empty()
                                 && category.len() <= 64
@@ -924,7 +924,13 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::RestoreVitality { life_force, .. } => {
                     (1..=1_000).contains(life_force)
                 }
-                AbilityEffectDefinition::AlterReality | AbilityEffectDefinition::ClearMind => true,
+                AbilityEffectDefinition::AlterReality
+                | AbilityEffectDefinition::ClearMind
+                | AbilityEffectDefinition::Precognition
+                | AbilityEffectDefinition::Psychometry
+                | AbilityEffectDefinition::MindArmor
+                | AbilityEffectDefinition::Adrenaline => true,
+                AbilityEffectDefinition::Domination { power, .. } => (1..=10_000).contains(power),
                 AbilityEffectDefinition::AnimateDead {
                     actor_kind_id,
                     corpse_item_kind_id,
@@ -1281,6 +1287,14 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::DoomHand => projectile_target_rule,
             AbilityEffectDefinition::JumpDamage { .. } => self_target_rule,
             AbilityEffectDefinition::Control { .. } => projectile_target_rule,
+            AbilityEffectDefinition::Domination { mass, .. } => {
+                if *mass {
+                    self_target_rule
+                } else {
+                    projectile_target_rule
+                }
+            }
+            AbilityEffectDefinition::Psychometry => item_target_rule,
             AbilityEffectDefinition::Rodeo => projectile_target_rule && ability.target.range == 1,
             AbilityEffectDefinition::MeleeAdjacent
             | AbilityEffectDefinition::ProbeMonsters
@@ -1339,6 +1353,9 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::SleepingDust { .. }
             | AbilityEffectDefinition::RestoreVitality { .. }
             | AbilityEffectDefinition::ClearMind
+            | AbilityEffectDefinition::Precognition
+            | AbilityEffectDefinition::MindArmor
+            | AbilityEffectDefinition::Adrenaline
             | AbilityEffectDefinition::AlterReality
             | AbilityEffectDefinition::ReportMagic
             | AbilityEffectDefinition::Earthquake { .. }
