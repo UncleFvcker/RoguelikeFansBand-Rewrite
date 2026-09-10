@@ -50,6 +50,98 @@ impl AbilityProgress {
 }
 
 impl Game {
+    pub(super) fn item_has_glove_encumbrance(&self, item: &ItemInstance) -> bool {
+        if !self
+            .casting_profile()
+            .and_then(|profile| profile.encumbrance.as_ref())
+            .is_some_and(|encumbrance| encumbrance.glove_encumbrance)
+        {
+            return false;
+        }
+        let definition = self
+            .content
+            .item(&item.kind_id)
+            .expect("validated item kind");
+        if definition.equipment_slot.as_deref() != Some("gloves") {
+            return false;
+        }
+        // obj_flags + shared pval, before knowledge filtering. Flag presence
+        // matters: MAGIC_MASTERY exempts even a zero/negative pval glove.
+        let mut flags = BTreeSet::new();
+        let mut pval = 0;
+        if let Some(raw) = &definition.rfb_value {
+            flags.extend(raw.flags.iter().map(String::as_str));
+            pval = raw.pval;
+        }
+        if let Some(artifact) = &definition.artifact_generation {
+            let base = self
+                .content
+                .item(&artifact.base_item_kind_id)
+                .expect("validated artifact base");
+            if let Some(raw) = &base.rfb_value {
+                flags.extend(raw.flags.iter().map(String::as_str));
+            }
+        }
+        if definition
+            .status_immunities
+            .iter()
+            .any(|id| id == STATUS_PARALYSIS)
+        {
+            flags.insert("FREE_ACT");
+        }
+        for id in &item.affix_ids {
+            let affix = self.content.affix(id).expect("validated affix");
+            if let Some(ego) = &affix.rfb_ego {
+                flags.extend(ego.flags.iter().map(String::as_str));
+            }
+            if affix
+                .status_immunities
+                .iter()
+                .any(|id| id == STATUS_PARALYSIS)
+            {
+                flags.insert("FREE_ACT");
+            }
+        }
+        for properties in std::iter::once(&item.intrinsic_properties)
+            .chain(item.rolled_affixes.iter().map(|roll| &roll.properties))
+        {
+            flags.extend(properties.rfb_flags.iter().map(String::as_str));
+            if properties
+                .status_immunities
+                .iter()
+                .any(|id| id == STATUS_PARALYSIS)
+            {
+                flags.insert("FREE_ACT");
+            }
+            if let Some(raw) = &properties.rfb_pval {
+                flags.extend(raw.flags.iter().map(|flag| flag.source_flag()));
+                pval = raw.value;
+            }
+        }
+        !(flags.contains("FREE_ACT")
+            || flags.contains("MAGIC_MASTERY")
+            || flags.contains("DEX") && pval > 0)
+    }
+
+    pub(super) fn item_is_icky(&self, item: &ItemInstance, assume_identified: bool) -> bool {
+        // Current playable classes have no source known_icky_object callback.
+        (assume_identified
+            || self.item_identification(item) != ItemIdentificationDto::Unexamined
+            || self
+                .item_property_knowledge
+                .get(&item.id)
+                .is_some_and(|knowledge| {
+                    matches!(
+                        knowledge.feeling,
+                        Some(
+                            rfb_protocol::ItemFeelingDto::Average
+                                | rfb_protocol::ItemFeelingDto::Good
+                        )
+                    )
+                }))
+            && self.item_has_glove_encumbrance(item)
+    }
+
     pub(super) fn casting_spell_damage_bonus(&self) -> u16 {
         let level = self.progress.level;
         self.casting_profile()
@@ -557,7 +649,7 @@ impl Game {
                     Some("body" | "head" | "shield" | "cloak" | "gloves" | "boots") => {
                         weight =
                             weight.saturating_add(u32::from(self.item_instance_weight(instance)));
-                        cumbersome_gloves |= item.equipment_slot.as_deref() == Some("gloves");
+                        cumbersome_gloves |= self.item_has_glove_encumbrance(instance);
                     }
                     Some("weapon") => {
                         weight = weight.saturating_add(

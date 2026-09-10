@@ -1,6 +1,6 @@
 # 完整底材分配与 Acquirement 实施计划
 
-状态：B0、B1 已实现，B2–B6 待实施。承接 E8.7 提交 `5e28b2ab9`，本计划不表示完整生成契约已经通过。
+状态：B0–B4 已实现，B5–B6 待实施。承接 E8.7 提交 `5e28b2ab9`，本计划不表示完整生成契约已经通过。
 
 本次规划核对的 RFB 来源：`D:/codex/Frogcomposband/master` 的 `master` Git 对象
 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。实施时重新解析 `master`，记录实际提交；
@@ -201,6 +201,32 @@ Ego 仍复用既有空主题池回通用 Ego 池的规则，底材层保持无�
 至少一条真实怪物主题掉落链贯穿生成、拾取、使用/装备、保存恢复。
 
 ### B4：当前构筑的 Tailored 偏好与成品检查
+
+已实现。来源仍为 RFB `master` Git 对象 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`：
+`object2.c:2416–2575,2981–3007,3443–3696,3745–3756`、`obj_kind.c:97–160`、
+`autopick.c:848–865`、`equip.c::_accept/equip_can_wield_kind`、`xtra1.c:3297–3320`。
+
+无主题时 Tailored 用自己的谓词替换 Good/Great 的 hook2；存在主题时保持主题 hook1，
+由 Good/Great 的 hook2 叠加 Tailored。高阶领域书的 Tailored 候选上限是 found < 3，
+Good/Great 仍为 found < 2；`_needs_book` 独立使用第三册 < 3、第四册 < 2。
+职业优先 hook 命中便跳过普通类别抽样；落空后依次尝试领域书、High Mage 装置，最后才抽共享类别。
+优先弓排除竖琴，普通 Tailored 弓类别仍允许竖琴；Cavalry 优先 lance/heavy lance，
+普通近战候选继续接受已有 RIDING 标记的武器，不能只剩骑枪。
+
+完成物化后统一检查成品，覆盖普通 Ego、首饰/随机神器及两种固定神器生成分支。
+手套读取底材、Ego、实例属性的原版 flags 和最终共享 pval；FREE_ACT、MAGIC_MASTERY
+（包括零/负 pval）或 DEX 且 pval > 0 免除负担。实际法力消费者与 `object_is_icky` 共用该判断；
+Mogaminator 仍须普通鉴定或 Average/Good 感知后才检查，生成检查不写玩家知识。
+拒绝成品只移除草稿，保留已消耗 RNG；不分配实例 ID、不记 found，已有神器/名称登记语义不在本批改写。
+
+验证使用正式可创建构筑及 Tomte 出生种族：弓装备射击、骑枪装备/骑乘战斗、Death 书拾取计数/学习/施法、
+High Mage 装置使用均经过保存恢复。相同手套底材的 Protection、Wizard、Free Action Ego 验证成品拒绝/接受与实际法力；
+另覆盖偏好命中/落空、主题组合、书本阈值、零/负 pval 与拒绝后的 RNG。
+
+未开放条件保持具体前置：其他职业的 favorite/体重/专精与 known_icky_object 回调须等职业入口；
+Monster Ring 需身份/首饰消费者，源端不可达类别比较不新增行为；Vortex 需真实 ANY 身体模板及装备消费者，
+未来按通用槽语义区分可装备与 BOW 类别减权例外，不新增种族生成开关。
+本批未实现 B5 的 make_object/Acquirement 内外层重试，因此生成失败仍可能使奖励不足；桌面完整奖励验收留到 B6。
 
 落点：同一分配模块及现有装备/职业能力消费者。
 

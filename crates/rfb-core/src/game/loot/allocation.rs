@@ -194,6 +194,93 @@ fn book_weight(game: &Game, item: &ItemDefinition, weight: u32) -> u32 {
     (weight >> found.saturating_sub(limit).min(31)).max(1)
 }
 
+fn needs_book(game: &Game) -> bool {
+    let books = game.active_casting_book_ids();
+    game.content.item_definitions().any(|item| {
+        item.ability_book_id
+            .as_deref()
+            .is_some_and(|id| books.contains(&id))
+            && item.rfb_base_kind.is_some_and(|base| {
+                let limit = match base.sval {
+                    2 => 3,
+                    3 => 2,
+                    _ => return false,
+                };
+                game.item_knowledge
+                    .get(&item.id)
+                    .map_or(0, |state| state.found_count)
+                    < limit
+            })
+    })
+}
+
+fn tailored_candidate(game: &Game, item: &ItemDefinition) -> bool {
+    let base = item
+        .rfb_base_kind
+        .expect("source pool validates kind identities");
+    let class = game.build.as_ref().map(|build| build.class_id.as_str());
+    let can_equip = || {
+        item.equipment_slot.as_deref().is_some_and(|slot| {
+            game.body_slots
+                .iter()
+                .any(|body| crate::game::item_can_occupy_slot_type(slot, &body.slot_type))
+        })
+    };
+    match base.tval {
+        19 | 30 | 31 | 34..=38 | 40 | 45 => can_equip(),
+        32 | 33 => {
+            if game
+                .build
+                .as_ref()
+                .is_some_and(|build| build.race_id == "rfb-legacy.race.tomte")
+            {
+                (base.tval, base.sval) == (32, 1)
+            } else {
+                can_equip()
+            }
+        }
+        21..=23 => {
+            can_equip()
+                && class != Some("demo.class.archer")
+                && (class != Some("demo.class.cavalry") || item.riding_weapon_kind.is_some())
+        }
+        55 | 65 | 66 => class == Some("demo.class.high-mage"),
+        90..=95 | 97..=101 | 104..=109 => {
+            base.sval >= 2
+                && item
+                    .ability_book_id
+                    .as_deref()
+                    .is_some_and(|id| game.active_casting_book_ids().contains(&id))
+                && game
+                    .item_knowledge
+                    .get(&item.id)
+                    .map_or(0, |state| state.found_count)
+                    < 3
+        }
+        _ => false,
+    }
+}
+
+// Hook1 preference is chosen before the shared category draw. Theme selection
+// bypasses these draws; hook2 still applies tailored plus quality in that case.
+fn tailored_category(game: &mut Game) -> Option<Category> {
+    let class = game.build.as_ref().map(|build| build.class_id.as_str());
+    match class {
+        Some("demo.class.archer" | "demo.class.sniper") if game.rng.bounded(5) == 0 => {
+            return Some(Category::BowQuiver);
+        }
+        Some("demo.class.cavalry") if game.rng.bounded(7) == 0 => return Some(Category::Weapon),
+        _ => {}
+    }
+    if needs_book(game) && game.rng.bounded(10) == 0 {
+        Some(Category::Book)
+    } else if class == Some("demo.class.high-mage") && game.rng.bounded(7) == 0 {
+        Some(Category::Device)
+    } else {
+        None
+    }
+}
+
 /// One _choose_obj_kind/get_obj_num attempt. Empty categories fail normally;
 /// retry policy belongs to the calling generation/reward operation.
 pub(super) fn select_entry(
@@ -203,15 +290,16 @@ pub(super) fn select_entry(
     entries: &[LootEntryDefinition],
     theme: Option<RfbDropTheme>,
 ) -> Option<usize> {
+    let tailored = mode == ItemGenerationMode::TailoredGreat;
+    let preferred = (theme.is_none() && tailored)
+        .then(|| tailored_category(game))
+        .flatten();
     let category = theme.is_none().then(|| {
-        let weights = category_weights(game, mode);
-        CATEGORIES[game.roll_weighted_index(&weights)].0
+        preferred.unwrap_or_else(|| {
+            let weights = category_weights(game, mode);
+            CATEGORIES[game.roll_weighted_index(&weights)].0
+        })
     });
-    let tomte_headgear = mode == ItemGenerationMode::TailoredGreat
-        && game
-            .build
-            .as_ref()
-            .is_some_and(|build| build.race_id == "rfb-legacy.race.tomte");
     // get_obj_num_prep applies the hook before get_obj_num rolls its boost.
     let mut weights = entries
         .iter()
@@ -225,10 +313,11 @@ pub(super) fn select_entry(
                 .expect("source pool validates kind identities");
             if !category.is_none_or(|category| category.accepts(base.tval, base.sval))
                 || !theme.is_none_or(|theme| theme_candidate(&mut game.rng, theme, item))
-                || !quality_candidate(game, mode, item)
-                || (tomte_headgear
-                    && matches!(base.tval, 32 | 33)
-                    && (base.tval, base.sval) != (32, 1))
+                || (preferred == Some(Category::BowQuiver) && (base.tval != 19 || base.sval == 70))
+                || (preferred == Some(Category::Weapon)
+                    && !matches!((base.tval, base.sval), (22, 20 | 29)))
+                || (tailored && !tailored_candidate(game, item))
+                || ((!tailored || theme.is_some()) && !quality_candidate(game, mode, item))
             {
                 0
             } else {
@@ -363,6 +452,235 @@ mod tests {
                 item_id: "test.allocation".into(),
             },
         }
+    }
+
+    #[test]
+    fn tailored_uses_playable_class_equipment_realms_and_birth_race() {
+        for build in [
+            "warrior",
+            "archer",
+            "sniper",
+            "cavalry",
+            "high-mage-death",
+            "paladin-death",
+        ] {
+            let game = Game::new_with_build(421, &format!("demo.build.{build}")).unwrap();
+            let accepts = |id| {
+                tailored_candidate(
+                    &game,
+                    game.content
+                        .item(&format!("demo.item.{id}"))
+                        .unwrap_or_else(|| panic!("missing test item: {id}")),
+                )
+            };
+            for id in [
+                "ring",
+                "amulet",
+                "iron-helm",
+                "leather-gloves",
+                "short-bow",
+                "harp",
+            ] {
+                assert!(accepts(id), "{build}: {id}");
+            }
+            for id in [
+                "arrow",
+                "mattock",
+                "wooden-torch",
+                "acquirement-scroll",
+                "renewal-tonic",
+                "black-prayers",
+            ] {
+                assert!(!accepts(id), "{build}: {id}");
+            }
+            assert_eq!(accepts("dagger"), !matches!(build, "archer" | "cavalry"));
+            assert_eq!(accepts("lance"), build != "archer");
+            assert_eq!(accepts("magic-missile-wand"), build == "high-mage-death");
+            assert_eq!(
+                accepts("black-channels"),
+                matches!(build, "high-mage-death" | "paladin-death")
+            );
+            assert!(!accepts("pattern-sorcery"), "wrong realm");
+
+            let mut tomte = Game::new_with_build_race_and_name(
+                421,
+                &format!("demo.build.{build}"),
+                "rfb-legacy.race.tomte",
+                "Tomte",
+            )
+            .unwrap();
+            assert!(tailored_candidate(
+                &tomte,
+                tomte.content.item("demo.item.knit-cap").unwrap()
+            ));
+            assert!(!tailored_candidate(
+                &tomte,
+                tomte.content.item("demo.item.iron-helm").unwrap()
+            ));
+            // Occupying a slot never makes its kind ineligible; removing the
+            // actual slot does. Use the same compatibility as equip_item.
+            tomte.body_slots.retain(|slot| slot.slot_type != "launcher");
+            assert!(!tailored_candidate(
+                &tomte,
+                tomte.content.item("demo.item.short-bow").unwrap()
+            ));
+        }
+    }
+
+    #[test]
+    fn tailored_preference_draws_follow_class_then_book_then_device() {
+        use crate::rng::RfbRng;
+        for (build, odds, category) in [
+            ("archer", 5, Category::BowQuiver),
+            ("sniper", 5, Category::BowQuiver),
+            ("cavalry", 7, Category::Weapon),
+        ] {
+            let mut game = Game::new_with_build(422, &format!("demo.build.{build}")).unwrap();
+            let mut seen = std::collections::BTreeSet::new();
+            for seed in 0..32 {
+                game.rng = RfbRng::seeded(seed);
+                let mut expected = game.rng.clone();
+                let preferred = expected.bounded(odds) == 0;
+                assert_eq!(tailored_category(&mut game), preferred.then_some(category));
+                assert_eq!(game.rng, expected);
+                seen.insert(preferred);
+            }
+            assert_eq!(seen.len(), 2);
+        }
+        for build in ["high-mage-death", "paladin-death"] {
+            let mut game = Game::new_with_build(423, &format!("demo.build.{build}")).unwrap();
+            let mut seen = [false; 3];
+            for seed in 0..128 {
+                game.rng = RfbRng::seeded(seed);
+                let mut expected = game.rng.clone();
+                let category = if expected.bounded(10) == 0 {
+                    seen[0] = true;
+                    Some(Category::Book)
+                } else if build == "high-mage-death" && expected.bounded(7) == 0 {
+                    seen[1] = true;
+                    Some(Category::Device)
+                } else {
+                    seen[2] = true;
+                    None
+                };
+                assert_eq!(tailored_category(&mut game), category);
+                assert_eq!(game.rng, expected);
+            }
+            assert!(seen[0] && seen[2]);
+            assert_eq!(seen[1], build == "high-mage-death");
+            for (third, fourth, needed) in [(2, 2, true), (3, 1, true), (3, 2, false)] {
+                game.item_knowledge
+                    .entry("demo.item.black-channels".into())
+                    .or_default()
+                    .found_count = third;
+                game.item_knowledge
+                    .entry("demo.item.necronomicon".into())
+                    .or_default()
+                    .found_count = fourth;
+                assert_eq!(needs_book(&game), needed);
+            }
+            let book = game.content.item("demo.item.necronomicon").unwrap();
+            assert!(
+                tailored_candidate(&game, book),
+                "found 2 still passes tailored's <3"
+            );
+            assert!(!quality_candidate(&game, ItemGenerationMode::Great, book));
+            game.rng = RfbRng::seeded(0);
+            let mut expected = game.rng.clone();
+            let category = if build == "high-mage-death" && expected.bounded(7) == 0 {
+                Some(Category::Device)
+            } else {
+                None
+            };
+            assert_eq!(tailored_category(&mut game), category);
+            assert_eq!(
+                game.rng, expected,
+                "no book draw when both volumes are satisfied"
+            );
+        }
+    }
+
+    #[test]
+    fn tailored_preferred_bows_and_lances_do_not_narrow_the_fallback_category() {
+        for (build, odds, preferred, other) in [
+            ("archer", 5, "short-bow", "harp"),
+            ("sniper", 5, "short-bow", "harp"),
+            ("cavalry", 7, "lance", "broad-sword"),
+        ] {
+            let mut game = Game::new_with_build(431, &format!("demo.build.{build}")).unwrap();
+            let rows = [preferred, other].map(|id| LootEntryDefinition {
+                item_kind_id: format!("demo.item.{id}"),
+                weight: 100,
+                min_depth: 0,
+                max_depth: u16::MAX,
+                quantity: 1,
+            });
+            let mut saw_preference = false;
+            let mut saw_other = false;
+            for seed in 0..256 {
+                let favored = crate::rng::RfbRng::seeded(seed).bounded(odds) == 0;
+                game.rng = crate::rng::RfbRng::seeded(seed);
+                let selected = select_entry(
+                    &mut game,
+                    &context(0),
+                    ItemGenerationMode::TailoredGreat,
+                    &rows,
+                    None,
+                );
+                if favored {
+                    assert_eq!(selected, Some(0), "{build} preference excludes {other}");
+                    saw_preference = true;
+                } else {
+                    saw_other |= selected == Some(1);
+                }
+            }
+            assert!(saw_preference && saw_other, "{build}");
+        }
+    }
+
+    #[test]
+    fn tailored_hook_replaces_quality_but_theme_keeps_the_quality_intersection() {
+        let mut game = Game::new_with_build(424, "demo.build.high-mage-death").unwrap();
+        game.item_knowledge
+            .entry("demo.item.necronomicon".into())
+            .or_default()
+            .found_count = 2;
+        let rows = [LootEntryDefinition {
+            item_kind_id: "demo.item.necronomicon".into(),
+            weight: 100,
+            min_depth: 0,
+            max_depth: u16::MAX,
+            quantity: 1,
+        }];
+        let seed = (0..100)
+            .find(|seed| crate::rng::RfbRng::seeded(*seed).bounded(10) == 0)
+            .unwrap();
+        game.rng = crate::rng::RfbRng::seeded(seed);
+        assert_eq!(
+            select_entry(
+                &mut game,
+                &context(0),
+                ItemGenerationMode::TailoredGreat,
+                &rows,
+                None
+            ),
+            Some(0)
+        );
+        game.rng = crate::rng::RfbRng::seeded(seed);
+        assert_eq!(
+            select_entry(
+                &mut game,
+                &context(0),
+                ItemGenerationMode::TailoredGreat,
+                &rows,
+                Some(RfbDropTheme::Mage)
+            ),
+            None
+        );
+        assert_eq!(
+            game.rng.draw_counter, 1,
+            "theme skips all preference and category draws"
+        );
     }
 
     #[test]

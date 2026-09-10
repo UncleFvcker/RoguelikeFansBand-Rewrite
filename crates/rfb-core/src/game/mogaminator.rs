@@ -1016,14 +1016,7 @@ impl Game {
                         })
                     })
             }
-            MogaminatorPredicate::Icky => slot.is_some_and(|slot| {
-                class.is_some_and(|class| {
-                    class
-                        .icky_equipment_slots
-                        .iter()
-                        .any(|candidate| candidate == slot)
-                })
-            }),
+            MogaminatorPredicate::Icky => self.item_is_icky(item, false),
             MogaminatorPredicate::Unreadable => book.is_some_and(|book| {
                 class.is_none_or(|class| {
                     class.casting_profile.is_none()

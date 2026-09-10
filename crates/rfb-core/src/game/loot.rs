@@ -1104,6 +1104,18 @@ impl Game {
             }
             generated.push(draft);
         }
+        if mode == ItemGenerationMode::TailoredGreat {
+            generated.retain(|draft| {
+                // Inspect the completed properties without committing IDs,
+                // knowledge or found counts. Rejection never rewinds RNG.
+                !self.item_is_icky(
+                    &draft
+                        .clone()
+                        .into_item_instance(String::new(), ItemLocation::Inventory),
+                    true,
+                )
+            });
+        }
         generated
     }
 
