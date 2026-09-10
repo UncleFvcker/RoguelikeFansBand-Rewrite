@@ -115,6 +115,7 @@ mod chaos_patron;
 mod damage;
 mod death;
 mod ego;
+mod random_artifact;
 pub(crate) use ego::{device_capacity, device_difficulty};
 mod environment_combat;
 mod floor;
@@ -705,6 +706,11 @@ pub(crate) fn item_device_generation<'a>(
                 content
                     .affix_definitions()
                     .filter_map(|affix| affix.device_generation.as_ref()),
+            )
+            .chain(
+                content
+                    .random_artifact_generation()
+                    .map(|data| &data.device_generation),
             )
             .find(|generation| {
                 generation
@@ -3587,6 +3593,7 @@ impl Game {
                 ItemUseEffectDefinition::AbilityEffect { .. }
                     | ItemUseEffectDefinition::IdentifyItem { .. }
                     | ItemUseEffectDefinition::EnchantItem { .. }
+                    | ItemUseEffectDefinition::EnchantEquipment
                     | ItemUseEffectDefinition::CraftItem { .. }
                     | ItemUseEffectDefinition::RechargeFromDevice { .. }
                     | ItemUseEffectDefinition::RandomTeleport { .. }

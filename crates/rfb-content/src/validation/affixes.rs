@@ -118,7 +118,7 @@ pub(super) fn validate_affixes(
     Ok(AffixValidationOutputs { affix_ids })
 }
 
-fn valid_affix_device_generation(generation: &ItemDeviceGenerationDefinition) -> bool {
+pub(super) fn valid_affix_device_generation(generation: &ItemDeviceGenerationDefinition) -> bool {
     if generation.activations.is_empty() || generation.activations.len() > 256 {
         return false;
     }

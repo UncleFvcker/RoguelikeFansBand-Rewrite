@@ -168,8 +168,8 @@ pub(super) fn validate_abilities(
                     damage_sides,
                     damage_bonus,
                 } => {
-                    (1..=100).contains(damage_dice)
-                        && (1..=10_000).contains(damage_sides)
+                    (((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides))
+                        || (*damage_dice == 0 && *damage_sides == 0 && *damage_bonus > 0))
                         && *damage_bonus <= 10_000
                 }
                 AbilityEffectDefinition::AreaDamage {
@@ -237,8 +237,8 @@ pub(super) fn validate_abilities(
                     maximum_range,
                     ..
                 } => {
-                    (1..=100).contains(damage_dice)
-                        && (1..=10_000).contains(damage_sides)
+                    (((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides))
+                        || (*damage_dice == 0 && *damage_sides == 0 && *damage_bonus > 0))
                         && *damage_bonus <= 10_000
                         && maximum_range.is_none_or(|range| (1..=64).contains(&range))
                 }
@@ -610,7 +610,7 @@ pub(super) fn validate_abilities(
                                 || byte.is_ascii_digit()
                                 || matches!(byte, b'-' | b'_')
                         })
-                        && actor_tag_values.contains(category)
+                        && (category == "any-monster" || actor_tag_values.contains(category))
                         && match (upgraded_category, upgrade_at_level) {
                             (None, None) => true,
                             (Some(category), Some(level)) => {
@@ -869,8 +869,8 @@ pub(super) fn validate_abilities(
                     repeat,
                     ..
                 } => {
-                    (1..=100).contains(damage_dice)
-                        && (1..=10_000).contains(damage_sides)
+                    (((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides))
+                        || (*damage_dice == 0 && *damage_sides == 0 && *damage_bonus > 0))
                         && *damage_bonus <= 10_000
                         && !target_category.is_empty()
                         && target_category.len() <= 64
@@ -1381,6 +1381,7 @@ pub(super) fn validate_abilities(
                                 | AbilityEffectDefinition::VisibleApplyStatus { .. }
                                 | AbilityEffectDefinition::AreaDamage { .. }
                                 | AbilityEffectDefinition::CallSunlight { .. }
+                                | AbilityEffectDefinition::LightArea { .. }
                                 | AbilityEffectDefinition::AggravateMonsters
                                 | AbilityEffectDefinition::Detect { .. }
                                 | AbilityEffectDefinition::CreateAdjacentTerrain { .. }

@@ -175,7 +175,7 @@ pub(in crate::game) fn value_object(
 }
 
 impl ValueObject {
-    fn properties(&mut self, properties: &AffixPropertyBundleDefinition) {
+    pub(in crate::game) fn properties(&mut self, properties: &AffixPropertyBundleDefinition) {
         self.flags.extend(properties.rfb_flags.iter().cloned());
         if let Some(pval) = &properties.rfb_pval {
             self.pval = i32::from(pval.value);
@@ -267,7 +267,7 @@ impl ValueObject {
     }
 }
 
-fn passive_flag(passive: EquipmentPassive) -> &'static str {
+pub(in crate::game) fn passive_flag(passive: EquipmentPassive) -> &'static str {
     use EquipmentPassive::*;
     match passive {
         Regeneration => "REGEN",

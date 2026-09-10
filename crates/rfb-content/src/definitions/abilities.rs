@@ -1423,6 +1423,33 @@ pub struct AbilityDefinition {
     pub tags: Vec<String>,
 }
 
+impl AbilityDefinition {
+    /// The same transient ability is used for item execution and content validation.
+    pub fn item_activation(
+        id: String,
+        target: AbilityTargetDefinition,
+        effect: AbilityEffectDefinition,
+        affects_ground_items: bool,
+    ) -> Self {
+        Self {
+            schema: crate::ABILITY_SCHEMA.to_owned(),
+            format_version: crate::CONTENT_FORMAT_VERSION,
+            id,
+            name_key: "device-activation-rfb-ego-name".to_owned(),
+            description_key: "device-activation-rfb-ego-description".to_owned(),
+            target,
+            effect,
+            affects_ground_items,
+            level_scaling: Vec::new(),
+            status_power_attribute: None,
+            spell_power_fields: Vec::new(),
+            spell_power_bonus: 0,
+            player: None,
+            tags: vec!["item-activation".to_owned()],
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

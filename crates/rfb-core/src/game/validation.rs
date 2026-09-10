@@ -177,7 +177,7 @@ pub(super) fn item_creation_state_is_valid(
     });
     player_made_state_is_valid
         && item.artifact_name.as_ref().is_none_or(|name| {
-            !name.trim().is_empty()
+            (name.is_empty() || !name.trim().is_empty())
                 && name.len() < 1024
                 && !name.chars().any(char::is_control)
                 && item.quantity == 1

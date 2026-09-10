@@ -286,10 +286,10 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         resource_ids,
         ability_resources,
         ability_ids,
-        ability_corpse_item_ids,
-        ability_created_item_ids,
-        ability_plain_created_items,
-        ability_race_ids,
+        mut ability_corpse_item_ids,
+        mut ability_created_item_ids,
+        mut ability_plain_created_items,
+        mut ability_race_ids,
         ability_books_by_id,
         ability_book_ids,
     } = validate_abilities(
@@ -309,6 +309,47 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         },
         &mut all_ids,
     )?;
+
+    let mut activation_abilities = Vec::new();
+    for data in &content.random_artifact_generation {
+        for profile in &data.device_generation.activations {
+            if let ItemUseEffectDefinition::AbilityEffect {
+                effect,
+                affects_ground_items,
+            } = &profile.effect
+            {
+                activation_abilities.push(AbilityDefinition::item_activation(
+                    format!("rfb.ability.{}", profile.id),
+                    profile.target.clone(),
+                    (**effect).clone(),
+                    *affects_ground_items,
+                ));
+            }
+        }
+    }
+    if !activation_abilities.is_empty() {
+        let embedded = validate_abilities(
+            AbilityDefinitions {
+                resources: &mut content.resources.clone(),
+                abilities: &mut activation_abilities,
+                ability_books: &mut [],
+            },
+            AbilityValidationRefs {
+                actor_tag_values: &actor_tag_values,
+                item_tag_values: &item_tag_values,
+                terrain_tags: &terrain_tags,
+                actor_roles: &actor_roles,
+                affix_ids: &affix_ids,
+                terrain_ids: &terrain_ids,
+                actor_monster_casting: Vec::new(),
+            },
+            &mut BTreeSet::new(),
+        )?;
+        ability_corpse_item_ids.extend(embedded.ability_corpse_item_ids);
+        ability_created_item_ids.extend(embedded.ability_created_item_ids);
+        ability_plain_created_items.extend(embedded.ability_plain_created_items);
+        ability_race_ids.extend(embedded.ability_race_ids);
+    }
 
     let item_limits = validate_items(
         &mut content.items,
@@ -331,6 +372,88 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         },
         &mut all_ids,
     )?;
+
+    if content.random_artifact_generation.len() > 1 {
+        return Err(ContentError::InvalidArtifactGeneration(
+            "multiple random artifact pools".to_owned(),
+        ));
+    }
+    for data in &content.random_artifact_generation {
+        require_schema(&data.schema, RANDOM_ARTIFACT_SCHEMA, &data.id)?;
+        require_format_version(data.format_version, &data.id)?;
+        validate_definition_id(&data.id, "random-artifact")?;
+        insert_definition_id(&mut all_ids, &data.id)?;
+        let tables = [
+            "lite_drk",
+            "lite_cursed",
+            "lite_low",
+            "lite_med",
+            "lite_high",
+            "ring_cursed",
+            "ring_low",
+            "ring_med",
+            "ring_high",
+            "amu_cursed",
+            "amu_low",
+            "amu_med",
+            "amu_high",
+            "ranged",
+            "a_cursed",
+            "a_med",
+            "a_high",
+            "aa_med",
+            "ab_med",
+            "ac_med",
+            "ag_med",
+            "ah_med",
+            "as_med",
+            "w_types",
+            "w_sword",
+            "w_hafted",
+            "w_pole",
+            "w_cursed",
+            "w_med",
+            "w_high",
+        ];
+        let loot_ids = content
+            .loot_tables
+            .iter()
+            .map(|table| table.id.clone())
+            .collect();
+        if data.source_commit.len() != 40
+            || !data.source_commit.bytes().all(|b| b.is_ascii_hexdigit())
+            || data.name_tables.len() != tables.len()
+            || !tables.iter().all(|name| {
+                data.name_tables
+                    .get(&format!("{name}.txt"))
+                    .is_some_and(|table| {
+                        !table.is_empty()
+                            && table.len() <= 500_000
+                            && !table.contains('\0')
+                            && table
+                                .lines()
+                                .any(|line| line.trim_start_matches('\u{feff}').starts_with("N:"))
+                    })
+            })
+            || data.activation_biases.len() != data.device_generation.activations.len()
+            || data.activation_biases.iter().any(|mask| *mask >= 1 << 22)
+            || !affixes::valid_affix_device_generation(&data.device_generation)
+            || !data.device_generation.activations.iter().all(|profile| {
+                profile.rfb_value.is_some()
+                    && profile.effect_program_id.is_none()
+                    && valid_item_effect(
+                        &profile.effect,
+                        &terrain_tags,
+                        &actor_tag_values,
+                        &item_tag_values,
+                        &resource_ids,
+                        &loot_ids,
+                    )
+            })
+        {
+            return Err(ContentError::InvalidArtifactGeneration(data.id.clone()));
+        }
+    }
 
     let build_ids = validate_characters(
         CharacterDefinitions {

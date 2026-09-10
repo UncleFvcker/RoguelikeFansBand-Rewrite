@@ -5,6 +5,7 @@ use super::loot::{ItemGenerationMode, LootContext, LootSource};
 use super::projectile_geometry::{has_line_of_effect, rfb_distance};
 use super::visibility::{VISIBILITY_RADIUS, has_line_of_sight};
 use super::{abilities::AbilityTargetPlan, *};
+mod artifact_activations;
 
 const WAYBREAD_INTOLERANCE_MUTATION_ID: &str = "rfb.mutation.waybread-into";
 const SKELETON_RACE_ID: &str = "rfb-legacy.race.skeleton";
@@ -2949,6 +2950,38 @@ impl Game {
                     }
                 }
             }
+            (ItemUseEffectDefinition::Starlight { damage_dice }, ItemUsePlan::SelfTarget) => {
+                self.resolve_item_starlight(
+                    &kind_id,
+                    damage_dice,
+                    device_power_bonus,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (ItemUseEffectDefinition::ListUniques, ItemUsePlan::SelfTarget) => {
+                self.resolve_item_listing(&kind_id, true, events)
+            }
+            (ItemUseEffectDefinition::ListArtifacts, ItemUsePlan::SelfTarget) => {
+                self.resolve_item_listing(&kind_id, false, events)
+            }
+            (
+                effect @ (ItemUseEffectDefinition::SummonOctopus
+                | ItemUseEffectDefinition::SummonKraken),
+                ItemUsePlan::SelfTarget,
+            ) => {
+                self.resolve_item_sea_summon(
+                    kind_id,
+                    profile_id,
+                    matches!(effect, ItemUseEffectDefinition::SummonKraken),
+                    events,
+                    changed,
+                );
+            }
+            (ItemUseEffectDefinition::EnchantEquipment, ItemUsePlan::Item { item_id }) => {
+                self.resolve_equipment_enchantment(&kind_id, &item_id, events);
+            }
             (ItemUseEffectDefinition::Starburst { damage }, ItemUsePlan::SelfTarget) => {
                 if !self.item_status_resisted(ActorDamageType::Blindness, STATUS_BLINDNESS)
                     && !self.item_status_resisted(ActorDamageType::Light, "")
@@ -3450,22 +3483,12 @@ impl Game {
                     return Some(ItemUsePlan::CancelledActivation);
                 }
                 let selection = target.cloned().unwrap_or(TargetSelection::SelfTarget);
-                let ability = AbilityDefinition {
-                    schema: rfb_content::ABILITY_SCHEMA.to_owned(),
-                    format_version: rfb_content::CONTENT_FORMAT_VERSION,
-                    id: format!("rfb.item-activation.{source_item_id}"),
-                    name_key: "device-activation-rfb-ego-name".to_owned(),
-                    description_key: "device-activation-rfb-ego-description".to_owned(),
-                    target: target_definition,
-                    effect: (**effect).clone(),
-                    affects_ground_items: *affects_ground_items,
-                    level_scaling: Vec::new(),
-                    status_power_attribute: None,
-                    spell_power_fields: Vec::new(),
-                    spell_power_bonus: 0,
-                    player: None,
-                    tags: vec!["item-activation".to_owned()],
-                };
+                let ability = AbilityDefinition::item_activation(
+                    format!("rfb.item-activation.{source_item_id}"),
+                    target_definition,
+                    (**effect).clone(),
+                    *affects_ground_items,
+                );
                 let target_plan = self.ability_target_plan(&ability, &selection)?;
                 Some(ItemUsePlan::AbilityEffect {
                     ability: Box::new(ability),
@@ -3530,6 +3553,11 @@ impl Game {
             | ItemUseEffectDefinition::SelfKnowledge
             | ItemUseEffectDefinition::RefillQuiver
             | ItemUseEffectDefinition::StarBall
+            | ItemUseEffectDefinition::Starlight { .. }
+            | ItemUseEffectDefinition::ListUniques
+            | ItemUseEffectDefinition::ListArtifacts
+            | ItemUseEffectDefinition::SummonOctopus
+            | ItemUseEffectDefinition::SummonKraken
             | ItemUseEffectDefinition::Escape
             | ItemUseEffectDefinition::Starburst { .. }
             | ItemUseEffectDefinition::ShowRumour { .. }
@@ -3729,6 +3757,20 @@ impl Game {
                 self.item_is_valid_enchant_target(source_item_id, target_item_id, effect)
                     .then(|| ItemUsePlan::Item {
                         item_id: target_item_id.clone(),
+                    })
+            }
+            ItemUseEffectDefinition::EnchantEquipment => {
+                let TargetSelection::Item { item_id } = target? else {
+                    return None;
+                };
+                self.item_mutation_target(source_item_id, item_id)
+                    .filter(|item| !self.item_resists_enchantment(item))
+                    .and_then(|item| self.content.item(&item.kind_id)?.rfb_base_kind)
+                    .filter(|base| {
+                        matches!(base.tval, 16..=23 | 30..=38) && (base.tval, base.sval) != (23, 32)
+                    })
+                    .map(|_| ItemUsePlan::Item {
+                        item_id: item_id.clone(),
                     })
             }
             ItemUseEffectDefinition::RandomTeleport { maximum_distance } => {
@@ -5380,6 +5422,7 @@ impl Game {
                 duration_dice,
                 duration_sides,
                 duration_bonus,
+                blessed,
             } => {
                 let duration = self.roll_damage(*duration_dice, *duration_sides as u16) as u32
                     + *duration_bonus;
@@ -5411,7 +5454,25 @@ impl Game {
                 if speed {
                     self.mark_item_aware(source_kind_id);
                 }
-                speed || heroism
+                let blessing = if *blessed {
+                    let existing = self
+                        .player
+                        .statuses
+                        .iter()
+                        .find(|status| status.kind_id == "rfb.status.blessed")
+                        .map_or(0, |status| status.remaining_ticks);
+                    self.resolve_item_blessing(
+                        source_kind_id,
+                        0,
+                        0,
+                        duration.saturating_sub(existing),
+                        events,
+                    );
+                    existing < duration
+                } else {
+                    false
+                };
+                speed || heroism || blessing
             }
             ItemUseEffectDefinition::ApplyHeroism {
                 duration_dice,
@@ -5728,6 +5789,12 @@ impl Game {
             | ItemUseEffectDefinition::SetFloorGlow { .. }
             | ItemUseEffectDefinition::RefillQuiver
             | ItemUseEffectDefinition::StarBall
+            | ItemUseEffectDefinition::Starlight { .. }
+            | ItemUseEffectDefinition::ListUniques
+            | ItemUseEffectDefinition::ListArtifacts
+            | ItemUseEffectDefinition::EnchantEquipment
+            | ItemUseEffectDefinition::SummonOctopus
+            | ItemUseEffectDefinition::SummonKraken
             | ItemUseEffectDefinition::Escape
             | ItemUseEffectDefinition::Starburst { .. }
             | ItemUseEffectDefinition::AreaDestruction { .. }

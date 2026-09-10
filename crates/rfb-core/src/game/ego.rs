@@ -2,7 +2,7 @@
 
 use std::collections::BTreeSet;
 
-mod armor;
+pub(super) mod armor;
 pub(super) mod curses;
 mod jewelry;
 pub(super) use jewelry::roll as roll_jewelry;
@@ -1288,7 +1288,7 @@ fn roll_biased_activation_index(
         .map(|(index, _)| index)
 }
 
-fn materialize_rfb_activation(
+pub(super) fn materialize_rfb_activation(
     profile: &ItemDeviceActivationDefinition,
 ) -> (ItemActivationDto, ItemChargesDto) {
     let power = u16::try_from(profile.device_check_difficulty)
@@ -2265,7 +2265,10 @@ fn add_one_sustain(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinit
     });
 }
 
-fn add_one_high_resistance(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinition) {
+pub(super) fn add_one_high_resistance(
+    rng: &mut RfbRng,
+    properties: &mut AffixPropertyBundleDefinition,
+) {
     match rng.bounded(12) {
         0 => add_resistance(properties, ActorDamageType::Poison),
         1 => add_resistance(properties, ActorDamageType::Light),
@@ -2330,16 +2333,25 @@ fn add_one_low_esp(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinit
     properties.passives.insert(weak_esp(rng.bounded(9)));
 }
 
-fn add_esp_strong(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinition) {
-    properties.passives.insert(match rng.bounded(4) {
+pub(super) fn add_esp_strong(
+    rng: &mut RfbRng,
+    properties: &mut AffixPropertyBundleDefinition,
+) -> bool {
+    let choice = rng.bounded(4);
+    properties.passives.insert(match choice {
         0 => EquipmentPassive::EspEvil,
         1 => EquipmentPassive::Telepathy,
         2 => EquipmentPassive::EspLiving,
         _ => EquipmentPassive::EspNonliving,
     });
+    choice == 3
 }
 
-fn add_esp_weak(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinition, extra: bool) {
+pub(super) fn add_esp_weak(
+    rng: &mut RfbRng,
+    properties: &mut AffixPropertyBundleDefinition,
+    extra: bool,
+) {
     let count = if extra {
         let maximum = randint1(rng, 6);
         3_u16.saturating_add(randint1(rng, maximum))
@@ -2406,7 +2418,7 @@ fn add_resistance(properties: &mut AffixPropertyBundleDefinition, damage_type: A
         .or_insert(ActorResistanceLevel::Resistant);
 }
 
-fn rfb_resistance_element(element: ActorDamageType) -> &'static str {
+pub(super) fn rfb_resistance_element(element: ActorDamageType) -> &'static str {
     match element {
         ActorDamageType::Acid => "ACID",
         ActorDamageType::Electricity => "ELEC",

@@ -52,7 +52,7 @@
           "effect": {
             "effects": [
               {
-                "category": "all",
+                "category": "map",
                 "persistent": true,
                 "radius": 30,
                 "subject": "terrain",
@@ -98,7 +98,7 @@
         "deviceCheckDifficulty": 20,
         "effect": {
           "effect": {
-            "category": "all",
+            "category": "map",
             "persistent": true,
             "radius": 18,
             "subject": "terrain",

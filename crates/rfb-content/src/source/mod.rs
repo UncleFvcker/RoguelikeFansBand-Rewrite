@@ -36,7 +36,8 @@ pub(crate) use items::SourceItemUseActionDefinition;
 const MAX_SOURCE_FILE_LENGTH: usize = 2 * 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
 const MAX_SOURCE_FILES: usize = 32_768;
-pub(crate) const SUPPORTED_ROOTS: [&str; 27] = [
+pub(crate) const SUPPORTED_ROOTS: [&str; 28] = [
+    "randomArtifacts",
     "abilities",
     "abilityBooks",
     "abilityPrograms",
@@ -95,6 +96,11 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         .collect::<Result<Vec<_>, _>>()?;
     let mut affixes = load_root(root, "affixes", &roots, &mut budget)?;
     resolve_affix_effect_programs(&mut affixes, &effect_programs)?;
+    let mut random_artifact_generation: Vec<crate::RandomArtifactGenerationDefinition> =
+        load_root(root, "randomArtifacts", &roots, &mut budget)?;
+    for generation in &mut random_artifact_generation {
+        resolve_device_effect_programs(&mut generation.device_generation, &effect_programs)?;
+    }
     let ability_programs =
         compile_ability_program_catalog(load_root(root, "abilityPrograms", &roots, &mut budget)?)?;
     let player_ability_bindings = compile_player_ability_binding_catalog(load_root(
@@ -120,6 +126,7 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         actors: load_root(root, "actors", &roots, &mut budget)?,
         affixes,
         items,
+        random_artifact_generation,
         resources: load_root(root, "resources", &roots, &mut budget)?,
         abilities,
         ability_books: load_root(root, "abilityBooks", &roots, &mut budget)?,
@@ -153,16 +160,24 @@ fn resolve_affix_effect_programs(
         let Some(generation) = &mut affix.device_generation else {
             continue;
         };
-        for activation in &mut generation.activations {
-            let Some(program_id) = activation.effect_program_id.take() else {
-                continue;
-            };
-            let (effect, input) = resolve_source_item_effect(&activation.id, program_id, programs)?;
-            if !effect_program_input_matches_device_target(input, &activation.target, &effect) {
-                return Err(ContentError::InvalidItemUseAction(activation.id.clone()));
-            }
-            activation.effect = effect;
+        resolve_device_effect_programs(generation, programs)?;
+    }
+    Ok(())
+}
+
+fn resolve_device_effect_programs(
+    generation: &mut crate::ItemDeviceGenerationDefinition,
+    programs: &std::collections::BTreeMap<String, ResolvedEffectProgram>,
+) -> Result<(), ContentError> {
+    for activation in &mut generation.activations {
+        let Some(program_id) = activation.effect_program_id.take() else {
+            continue;
+        };
+        let (effect, input) = resolve_source_item_effect(&activation.id, program_id, programs)?;
+        if !effect_program_input_matches_device_target(input, &activation.target, &effect) {
+            return Err(ContentError::InvalidItemUseAction(activation.id.clone()));
         }
+        activation.effect = effect;
     }
     Ok(())
 }

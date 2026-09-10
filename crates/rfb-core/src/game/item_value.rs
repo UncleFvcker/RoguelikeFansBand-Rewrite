@@ -741,13 +741,7 @@ impl ValueObject {
                     price = price * 5 / 4;
                 }
             }
-            let energy = match self.sval {
-                2 => 7150,
-                12 => 8888,
-                23 => 12000,
-                24 => 13333,
-                _ => 10000,
-            };
+            let energy = bow_energy(self.sval);
             price += 150 * self.to_d;
             if self.to_d > 10 {
                 price += (self.to_d - 10).pow(2) * 15 * 10000 / energy;
@@ -778,6 +772,16 @@ fn sum_cost(terms: &[i32]) -> i32 {
     terms.iter().copied().fold(0, i32::wrapping_add)
 }
 
+pub(super) fn bow_energy(sval: u16) -> i32 {
+    match sval {
+        2 => 7150,
+        12 => 8888,
+        23 => 12000,
+        24 => 13333,
+        _ => 10000,
+    }
+}
+
 fn c_i32(value: f64) -> i32 {
     // RFB's unsigned flag scores overflow signed conversion for pval -1/-2.
     // C leaves this undefined; match the x86-64 GCC reference's CVTTSD2SI
@@ -789,7 +793,7 @@ fn c_i32(value: f64) -> i32 {
     }
 }
 
-fn interpolate(x: i32, points: &[(i32, i32)]) -> i32 {
+pub(super) fn interpolate(x: i32, points: &[(i32, i32)]) -> i32 {
     if x < points[0].0 {
         return points[0].1;
     }

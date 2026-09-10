@@ -1130,7 +1130,11 @@ pub(super) fn random_activation(
     })
 }
 
-pub(super) fn apply_pval(properties: &mut AffixPropertyBundleDefinition, flag: Pval, value: i32) {
+pub(in crate::game) fn apply_pval(
+    properties: &mut AffixPropertyBundleDefinition,
+    flag: Pval,
+    value: i32,
+) {
     use Pval::*;
     remember_rfb_pval(properties, [flag], value);
     match flag {
@@ -1644,6 +1648,7 @@ mod tests {
     fn heroic_speed_refreshes_both_timers_from_one_roll() {
         let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
         let effect = rfb_content::ItemUseEffectDefinition::ApplyHeroicSpeed {
+            blessed: false,
             duration_dice: 0,
             duration_sides: 0,
             duration_bonus: 30,

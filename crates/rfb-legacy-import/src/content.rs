@@ -8,7 +8,9 @@
 
 mod armor_ego_audit;
 mod noncraft_egos;
+mod random_artifacts;
 pub use noncraft_egos::sync_demo_noncraft_egos;
+pub use random_artifacts::sync_demo_random_artifacts;
 mod mutation_audit;
 
 pub use armor_ego_audit::sync_demo_armor_ego_identities;
@@ -5175,7 +5177,14 @@ fn device_item_target() -> serde_json::Value {
     })
 }
 
-fn device_ability_effect(effect: serde_json::Value) -> serde_json::Value {
+fn device_ability_effect(mut effect: serde_json::Value) -> serde_json::Value {
+    if effect["type"] == "sequence"
+        && effect["effects"]
+            .as_array()
+            .is_some_and(|effects| effects.len() == 1)
+    {
+        effect = effect["effects"][0].take();
+    }
     serde_json::json!({ "type": "ability-effect", "effect": effect })
 }
 
@@ -5257,6 +5266,11 @@ fn legacy_device_item_effect(
         "BOLT_DARK" => Some(("dark", 5 + level / 8, 8, 0)),
         "BOLT_NETHER" => Some(("nether", 10 + level / 6, 8, 0)),
         "BOLT_CHAOS" => Some(("chaos", 7 + level / 6, 8, 0)),
+        "BOLT_CONF" => Some(("confusion", 5 + level / 8, 8, 0)),
+        "BOLT_NEXUS" => Some(("nexus", 7 + level / 6, 8, 0)),
+        "BOLT_DISEN" => Some(("disenchant", 7 + level / 6, 8, 0)),
+        "BOLT_TIME" => Some(("time", 7 + level / 6, 8, 0)),
+        "METEOR" => Some(("meteor", 15 + level / 5, 13, 0)),
         "BOLT_WATER" => Some(("water", 1, device_power_curve(400, level, 0), 20)),
         "BOLT_MANA" => Some(("mana", 1, device_power_curve(500, level, 0), 50)),
         "BOLT_ICE" => Some(("ice", 1, device_power_curve(400, level, 0), 30)),
@@ -5277,6 +5291,8 @@ fn legacy_device_item_effect(
         "BEAM_FIRE" => Some(("fire", 0, 0, 5 + device_power_curve(280, level, 0))),
         "BEAM_COLD" => Some(("cold", 0, 0, 5 + device_power_curve(260, level, 0))),
         "BEAM_CHAOS" => Some(("chaos", 7 + level / 6, 8, 0)),
+        "BEAM_GRAVITY" => Some(("gravity", 9 + level / 8, 8, 0)),
+        "BEAM_DISINTEGRATE" => Some(("disintegrate", 9 + level / 8, 8, 0)),
         _ => None,
     };
     if let Some((damage_type, dice, sides, bonus)) = beam {
@@ -5296,6 +5312,12 @@ fn legacy_device_item_effect(
         "BALL_DARK" => Some(("dark", 100 + 7 * level / 2, 4)),
         "BALL_NETHER" => Some(("nether", 125 + device_power_curve(250, level, 30), 3)),
         "BALL_CHAOS" => Some(("chaos", 150 + device_power_curve(350, level, 70), 5)),
+        // devices.c names this confusion, but the actual cast uses GF_NETHER.
+        "BALL_CONF" => Some(("nether", 30 + level, 3)),
+        "BALL_NEXUS" => Some(("nexus", 100 + device_power_curve(200, level, 40), 3)),
+        "BALL_DISEN" => Some(("disenchant", 90 + device_power_curve(250, level, 40), 3)),
+        "BALL_TIME" => Some(("time", 50 + level, 3)),
+        "BALL_DISINTEGRATE" => Some(("disintegrate", 150 + device_power_curve(200, level, 50), 2)),
         "BALL_WATER" => Some(("water", 150 + device_power_curve(200, level, 50), 4)),
         "BALL_MANA" => Some(("mana", 150 + device_power_curve(300, level, 60), 2)),
         _ => None,
@@ -5317,18 +5339,124 @@ fn legacy_device_item_effect(
         "BREATHE_DARK" => Some(("dark", 50 + level * 2)),
         "BREATHE_NETHER" => Some(("nether", 100 + level * 3)),
         "BREATHE_CHAOS" => Some(("chaos", 75 + level * 2)),
+        "BREATHE_CONF" => Some(("confusion", 50 + level * 2)),
+        "BREATHE_NEXUS" => Some(("nexus", 50 + level * 2)),
+        "BREATHE_DISEN" => Some(("disenchant", 50 + level * 2)),
+        "BREATHE_INERTIA" => Some(("inertia", 50 + level * 2)),
+        "BREATHE_TIME" => Some(("time", 50 + level * 2)),
+        // The source "all elements" breath is a single GF_MISSILE projection.
+        "BREATHE_ELEMENTS" => Some(("physical", 100 + level * 2)),
         "BREATHE_WATER" => Some(("water", 41 + level * 7 / 4)),
         _ => None,
     };
     if let Some((damage_type, damage)) = breath {
         return Some((
             device_damage_effect("cone-damage", damage_type, 0, 0, damage, 2),
-            projectile,
+            serde_json::json!({"modes":["direction"],"range":18,"requiresLineOfEffect":true}),
             true,
         ));
     }
 
     let result = match candidate.token.as_str() {
+        "DISPEL_MONSTERS" | "PESTICIDE" => (
+            device_ability_effect(
+                serde_json::json!({"type":"visible-damage", "damageDice":0, "damageSides":0,
+                "damageBonus":if candidate.token == "PESTICIDE" {4} else {50 + device_power_curve(200, level, 50)},
+                "damageType":"physical"}),
+            ),
+            self_target,
+            false,
+        ),
+        "DETECT_GOLD" => (
+            device_ability_effect(serde_json::json!({"type":"sequence","effects":[
+                {"type":"detect","subject":"terrain","category":"treasure","radius":30,"persistent":true,"throughWalls":true},
+                {"type":"detect","subject":"gold","category":"gold","radius":30,"persistent":false,"throughWalls":true}
+            ]})),
+            self_target,
+            false,
+        ),
+        "DETECT_INVISIBLE" => (
+            device_ability_effect(
+                serde_json::json!({"type":"detect","subject":"actor","category":"invisible","radius":30,"persistent":false,"throughWalls":true}),
+            ),
+            self_target,
+            false,
+        ),
+        "DETECT_DOOR_STAIRS" => (
+            device_ability_effect(serde_json::json!({"type":"sequence","effects":[
+                {"type":"detect","subject":"terrain","category":"door","radius":30,"persistent":true,"throughWalls":true},
+                {"type":"detect","subject":"terrain","category":"passage","radius":30,"persistent":true,"throughWalls":true}
+            ]})),
+            self_target,
+            false,
+        ),
+        "SLEEP_MONSTER" | "SLOW_MONSTER" | "CONFUSE_MONSTER" | "SCARE_MONSTER" => {
+            let (status, power) = match candidate.token.as_str() {
+                "SLEEP_MONSTER" => ("rfb.status.sleep", 10 + level),
+                "SLOW_MONSTER" => ("rfb.status.slow", 10.max(level * 2 - 6)),
+                "CONFUSE_MONSTER" => (
+                    "rfb.status.confusion",
+                    105.min(25 + device_power_curve(75, level + 75, 80)),
+                ),
+                _ => ("rfb.status.fear", 10 + level),
+            };
+            (
+                device_ability_effect(
+                    serde_json::json!({"type":"apply-status","statusKindId":status,
+                "intensity":1,"durationTicks":50,"stacking":"replace","power":power}),
+                ),
+                projectile,
+                false,
+            )
+        }
+        "SPEED_HERO_BLESS" => (
+            serde_json::json!({"type":"apply-heroic-speed","durationDice":1,"durationSides":15,"durationBonus":15,"blessed":true}),
+            self_target,
+            false,
+        ),
+        "LIST_UNIQUES" => (
+            serde_json::json!({"type":"list-uniques"}),
+            self_target,
+            false,
+        ),
+        "LIST_ARTIFACTS" => (
+            serde_json::json!({"type":"list-artifacts"}),
+            self_target,
+            false,
+        ),
+        "DESTROY_TRAP" => (
+            serde_json::json!({"type":"destroy-adjacent-traps-and-doors"}),
+            self_target,
+            false,
+        ),
+        "ENCHANTMENT" => (
+            serde_json::json!({"type":"enchant-equipment"}),
+            item_target,
+            false,
+        ),
+        "STARLITE" => (
+            serde_json::json!({"type":"starlight","damageDice":6 + level / 10}),
+            self_target,
+            false,
+        ),
+        "SUMMON_OCTOPUS" => (
+            serde_json::json!({"type":"summon-octopus"}),
+            self_target,
+            false,
+        ),
+        "SUMMON_KRAKEN" => (
+            serde_json::json!({"type":"summon-kraken"}),
+            self_target,
+            false,
+        ),
+        "SUMMON_DAWN" => (
+            serde_json::json!({"type":"summon-category","selector":{"type":"category","category":"dawn"},
+            "maximumLevelSource":"dungeon-depth","countDice":1,"countSides":1,"countBonus":0,
+            "groupChancePercent":100,"groupCountDice":3,"groupCountSides":3,"groupCountBonus":0,
+            "radius":2,"durationTurns":0}),
+            self_target,
+            false,
+        ),
         "AGGRAVATE" => (
             device_ability_effect(serde_json::json!({"type": "aggravate-monsters"})),
             self_target,
@@ -5373,7 +5501,7 @@ fn legacy_device_item_effect(
                 "CHARM_ANIMAL" => "animal",
                 "CHARM_DEMON" => "demon",
                 "CHARM_UNDEAD" => "undead",
-                _ => "monster",
+                _ => "any-monster",
             };
             (
                 device_ability_effect(
@@ -5467,14 +5595,14 @@ fn legacy_device_item_effect(
         ),
         "DESTRUCTION" => (
             device_ability_effect(
-                serde_json::json!({"type": "area-destruction", "minimumRadius": 13, "maximumRadius": 17, "floorTerrainId": "demo.terrain.floor", "wallTerrainId": "demo.terrain.granite-wall", "quartzTerrainId": "demo.terrain.quartz-vein", "magmaTerrainId": "demo.terrain.magma-vein"}),
+                serde_json::json!({"type": "area-destruction", "minimumRadius": 13, "maximumRadius": 17, "floorTerrainId": "demo.terrain.floor", "wallTerrainId": "demo.terrain.wall", "quartzTerrainId": "demo.terrain.quartz-vein", "magmaTerrainId": "demo.terrain.magma-vein"}),
             ),
             self_target,
-            true,
+            false,
         ),
         "DETECT_EVIL" => (
             device_ability_effect(
-                serde_json::json!({"type": "detect", "subject": "actor", "category": "evil", "radius": 18, "persistent": true, "throughWalls": true}),
+                serde_json::json!({"type": "detect", "subject": "actor", "category": "evil", "radius": 18, "persistent": false, "throughWalls": true}),
             ),
             self_target,
             false,
@@ -5521,7 +5649,7 @@ fn legacy_device_item_effect(
         ),
         "ENLIGHTENMENT" => (
             device_ability_effect(
-                serde_json::json!({"type": "detect", "subject": "terrain", "category": "all", "radius": 18, "persistent": true, "throughWalls": true}),
+                serde_json::json!({"type": "detect", "subject": "terrain", "category": "map", "radius": 18, "persistent": true, "throughWalls": true}),
             ),
             self_target,
             false,
@@ -5763,7 +5891,7 @@ fn legacy_device_item_effect(
             device_ability_effect(
                 serde_json::json!({"type": "terrain-beam", "operation": "stone-to-mud"}),
             ),
-            projectile,
+            serde_json::json!({"modes": ["direction"], "range": 18, "requiresLineOfEffect": true}),
             false,
         ),
         "SUMMON_ANGEL" | "SUMMON_ANTS" | "SUMMON_CYBERDEMON" | "SUMMON_DEMON" | "SUMMON_DRAGON"
@@ -5779,13 +5907,13 @@ fn legacy_device_item_effect(
                     "SUMMON_ELEMENTAL" => ("elemental", 67, 100, 1),
                     "SUMMON_HOUNDS" => ("hound", 25, 100, 3),
                     "SUMMON_HYDRAS" => ("hydra", 33, 100, 3),
-                    "SUMMON_MONSTERS" => ("monster", 10, 100, 3),
+                    "SUMMON_MONSTERS" => ("any-monster", 10, 100, 3),
                     "SUMMON_PHANTASMAL" => ("phantom", 0, 0, 1),
                     _ => ("undead", 67, 100, 1),
                 };
             (
                 device_ability_effect(
-                    serde_json::json!({"type": "summon-category", "category": category, "maximumLevel": level, "countDice": 1, "countSides": count_sides, "hostileChancePercent": hostile_chance, "hostileGroupChancePercent": hostile_group, "groupCountDice": 1, "groupCountSides": 3, "groupCountBonus": 1, "allowUniqueHostile": true, "radius": 2, "durationTurns": 0}),
+                    serde_json::json!({"type": "summon-category", "category": category, "maximumLevel": level, "countDice": 1, "countSides": count_sides, "hostileChancePercent": hostile_chance, "hostileGroupChancePercent": hostile_group, "groupCountDice": if hostile_group > 0 {1} else {0}, "groupCountSides": if hostile_group > 0 {3} else {0}, "groupCountBonus": if hostile_group > 0 {1} else {0}, "allowUniqueHostile": true, "radius": 2, "durationTurns": 0}),
                 ),
                 self_target,
                 false,
@@ -10939,6 +11067,12 @@ fn demo_monster_json(
     }
     if entry.index == 816 {
         tags.insert("cyber".to_owned());
+    }
+    if entry.index == 693 {
+        tags.insert("dawn".to_owned());
+    }
+    if matches!(entry.index, 152 | 385) {
+        tags.insert("phantom".to_owned());
     }
     if entry.flags.iter().any(|flag| flag == "KAGE") {
         tags.insert("shadower-appearance".to_owned());

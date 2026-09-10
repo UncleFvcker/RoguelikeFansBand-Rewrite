@@ -10,7 +10,7 @@
 | 协议 | 1.240 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 117 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 12 / 12 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.401.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.402.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v318，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 6 个 Class、13 个 Build、57 个 Race、32 本能力书、1,840 个 ability 文件、370 个 item、1,402 个 actor、168 个 affix、152 个 mutation。世界定义含 25 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、62 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
@@ -44,7 +44,7 @@ Ent、Spectre 的新游戏入口已开放。种族主线还接入原始经验值
 
 法术道具分支已合入护甲、非 Craft Ego、共享加权工艺、真实装备估值、负向装备/诅咒消费者、龙系底材生成、背包与箭袋容量，以及随机神器实例身份和消费者。168 个 affix 定义不等于全部均可自然获取：保留原版零稀有度及专用入口约束。
 
-随机神器可在实例上保存名称、骰数、重量、特性、诅咒和激活，供鉴定、装备、估值、保护和保存恢复使用；**完整随机神器生成器、名字抽样和自然调度尚未接入**，首饰价值重试仍有后续工作。八领域的入口范围保持上表状态。来源及当批证据见 `934a83392` 和[随机神器身份契约](../design/contract-v316-random-artifact-identity.md)。
+随机神器可在实例上保存名称、骰数、重量、特性、诅咒和激活，供鉴定、装备、估值、保护和保存恢复使用。E8.5b 已实现内部生成工厂、职业/主题 bias、原版名字抽样、195 项激活池及价值筛选（最多 1001 个独立候选），覆盖合法非弹药底材；名称表由调用方共享，拒绝候选保留名字登记但不分配物品 ID。**自然随机神器调度尚未开放，留在 E8.5c**；首饰完整价值重试仍有后续工作。生成验收要求规则相同和本项目内确定性，不要求与原版同种子产物相同。无权威中文的名字保留原字符串并记录 unresolved。八领域入口范围保持上表状态。实现范围见[共享生成计划](../design/ego-shared-generation-plan.md)，实例表示见[随机神器身份契约](../design/contract-v316-random-artifact-identity.md)。
 
 集成保留物品感知与实例神器鉴定边界、托姆特实例头饰重量、冬贝利逐武器伤害/攻次和准确来源显示。种族永久状态与新增物品字段共同进入当前保存和状态哈希，版本统一收口；内容 hash 本身不参与状态哈希。
 

@@ -1,6 +1,6 @@
 # E8 六项共享生成契约实施计划
 
-日期：2026-09-10。状态：E8.1–E8.4、E8.5a 已实现，验证记录见 [contract-v312](contract-v312-real-equipment-value.md)、[contract-v313](contract-v313-negative-equipment.md)、[contract-v314](contract-v314-dragon-base-equipment.md)、[contract-v315](contract-v315-bag-containers.md)、[contract-v316](contract-v316-random-artifact-identity.md)；下一项为 E8.5b。自然随机神器与负向随机神器生成仍未开放。
+日期：2026-09-10。状态：E8.1–E8.4、E8.5a–b 已实现，早期验证记录见 [contract-v312](contract-v312-real-equipment-value.md)、[contract-v313](contract-v313-negative-equipment.md)、[contract-v314](contract-v314-dragon-base-equipment.md)、[contract-v315](contract-v315-bag-containers.md)、[contract-v316](contract-v316-random-artifact-identity.md)；下一项为 E8.5c。内部工厂可生成正/负向随机神器，自然调度仍未开放。
 
 工作树：`D:/codex/RoguelikeFansBand-Rewrite-realms-items`，分支：`codex/realms-items`。
 代码基线：`1c9e62a2e`。缺口来自 [E8 集成审计](ego-integration-audit.md)。
@@ -23,7 +23,7 @@ Craft 领域四册/32 法术、怪物主题的完整基础物品分配表仍是�
 | E8.3 | 龙牙及五类龙系底材的基础生成 | E8.1 的 power/模式上下文 | 4 | 小到中 |
 | E8.4 | 三种背包的实例容量及 Ego 消费者 | 当前容器系统；使用 E8.1 上下文 | 5 | 中 |
 | E8.5a（已实现） | 随机神器实例身份、属性表示及消费者 | E8.1、E8.2 | 2 | 中 |
-| E8.5b | 真实 `create_artifact`、命名与估值筛选 | E8.5a；E8.3 的底材处理 | 2 | 大 |
+| E8.5b（已实现） | 真实 `create_artifact`、命名与估值筛选 | E8.5a；E8.3 的底材处理 | 2 | 大 |
 | E8.5c | 各非弹药类型的随机神器调度 | E8.5b | 2；3 的前置 | 中 |
 | E8.6 | 首饰价值上下限和完整重试 | E8.1、E8.2、E8.5c | 3 | 中 |
 | E8.7 | 职业/种族专属分支逐项接入 | 对应构筑真实可玩，及其用到的前述批次 | 6 | 按构筑拆分 |
@@ -140,7 +140,9 @@ UI 显示真实已知容量和权威 Ego 名，不恢复“完全鉴定”“无
 
 验收：准备一个真实实例，通过上述消费者和保存恢复核对；这一批是内部表示交付，尚不启用自然随机神器分支。
 
-### E8.5b：完整生成器与价值筛选
+### E8.5b：完整生成器与价值筛选（已实现）
+
+来源：RFB `master` 提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。工厂在 `game/random_artifact/`；正式包 `randomArtifacts/source.json` 收录 30 个原版命名文件、195 项非零稀有度激活及 bias。规则测试覆盖槽位、特殊底材、职业/主题、重试与命名顺序，并通过真实激活、投掷和保存消费者验证。调用方拥有连续生成共用的名字表，自然调度及其持久化接线属于 E8.5c。
 
 新增 `game/random_artifact.rs` 承载有实际调用关系的 `artifact.c:2122 create_artifact` 移植，
 继续复用已有抽样、装备属性和激活执行能力，不建设插件式生成框架。
@@ -156,7 +158,7 @@ UI 显示真实已知容量和权威 Ego 名，不恢复“完全鉴定”“无
   除最终物品外，原版确有的状态副作用另行逐项核对，不一概回滚 RNG。
 
 验收：各合法非弹药槽位、特殊底材、正/负 power、已有可玩职业/主题 bias，
-候选拒绝、softmax 短路、1000 次耗尽后的第 1001 次、命名和诅咒的先后及 RNG 终态。
+候选拒绝、softmax 短路、1000 次耗尽后的第 1001 次、命名和诅咒的先后，以及本项目内固定种子连续性。
 重复生成的统计仅辅助排查，不能替代分支及数值验收；弹药继续使用它自己的源码分支。
 
 ### E8.5c：接回真实调度
@@ -205,9 +207,9 @@ Craft 不新增随机神器抽样、光源特殊入口、随机神器保存后�
 ## 9. 验证、版本与完成判定
 
 每批先运行所改模块的核心测试、相关内容/导入器验证和格式检查；协议或前端变化时补 bindings、schema、
-TypeScript 与对应 UI 测试。为阈值/抽样分支保留来自源码的独立参考向量，记录输入、结果、抽样顺序和 RNG 终态。
-若 C/Rust 使用不同底层 RNG，按相同原始随机输入核对映射和消耗，并另验 Rust 固定种子连续性；
-不能仅凭相同整数 seed 宣称跨实现随机序列等价。
+TypeScript 与对应 UI 测试。按 2026-09-10 的用户决定，后续生成验收核对源码规则、阈值、抽样条件与分支顺序，
+并验证 Rust 固定种子连续性；不要求同种子产物或 RNG 终态与 C 实现相同，也不要求跨实现逐次随机输入对齐。
+历史批次已保存的参考向量仍保留；确定性数值（如估值和阈值）继续用独立来源核对。
 
 - 重试测试用最小测试内输入控制覆盖拒绝/接受边界，不为测试添加生产调试开关或通用模拟框架。
 - 复用现有保存恢复路径。新增持久字段时同步 save/protocol/state-hash 输入和生成物；

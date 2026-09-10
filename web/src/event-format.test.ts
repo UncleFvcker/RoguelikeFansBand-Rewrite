@@ -23,6 +23,15 @@ const formatter = createPresentationFormatter(localization, () => state, {
   itemCurseSeverityName: () => "?",
 });
 
+test("artifact listing displays the generated name or the localized fixed kind", () => {
+  for (const [locale, dagger] of [["en-US", "Dagger"], ["zh-CN", "匕首"]]) {
+    localization.setLocale(locale);
+    const event = { kind: "item.listed", messageKey: "item-list-entry", args: { target: "demo.item.dagger" } };
+    assert.equal(formatter.formatEvent(event), dagger);
+    assert.equal(formatter.formatEvent({ ...event, args: { ...event.args, name: "'验收'" } }), "'验收'");
+  }
+});
+
 test("life force exhaustion, permanent race change, recovery and death use localized events", () => {
   const event = (messageKey, args = {}) => ({ kind: "test", messageKey, args });
   for (const [locale, expected] of [

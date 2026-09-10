@@ -49,6 +49,19 @@ impl Game {
         else {
             unreachable!("light-line executor requires a light-line effect");
         };
+        let damage = self.roll_damage(damage_dice, damage_sides).max(0);
+        self.resolve_weak_light_line(&ability.id, path, damage, events, changed, removed_entities)
+    }
+
+    pub(in crate::game) fn resolve_weak_light_line(
+        &mut self,
+        source_id: &str,
+        path: Vec<Position>,
+        base_raw_damage: i32,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
         let (trace, _) = self.trace_projectile_path_with_actor_policy(path.clone(), false);
         let affected_positions = trace.traversed.clone();
         for position in &affected_positions {
@@ -57,7 +70,6 @@ impl Game {
                 changed.insert(*position);
             }
         }
-        let base_raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
         let targets = self
             .beam_damage_targets(&affected_positions)
             .into_iter()
@@ -70,7 +82,7 @@ impl Game {
             })
             .collect::<Vec<_>>();
         events.push(DomainEvent::AbilityBeamDamage {
-            ability_id: ability.id.clone(),
+            ability_id: source_id.to_owned(),
             resolution: AbilityBeamDamageResolutionDto {
                 base_raw_damage,
                 damage_type: DamageType::Light.into(),
@@ -89,7 +101,7 @@ impl Game {
             };
             self.resolve_weak_light_damage_to_entity(
                 index,
-                &ability.id,
+                source_id,
                 base_raw_damage,
                 trace.clone(),
                 events,

@@ -21,6 +21,11 @@ use super::{
 
 pub fn generated_schema_documents() -> Result<Vec<(&'static str, String)>, serde_json::Error> {
     Ok(vec![
+        schema_document(
+            "random-artifact.schema.json",
+            super::RANDOM_ARTIFACT_SCHEMA,
+            schema_for!(super::RandomArtifactGenerationDefinition),
+        )?,
         schema_document("pack.schema.json", PACK_SCHEMA, schema_for!(PackManifest))?,
         schema_document(
             "terrain.schema.json",
