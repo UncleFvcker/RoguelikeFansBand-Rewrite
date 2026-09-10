@@ -10,6 +10,235 @@ const SHALLOW: &str = "demo.terrain.surface-water-shallow";
 
 const ZEUS: &str = "demo.actor.zeus-king-of-the-olympians";
 
+fn ol4_defeat_guardian(game: &mut Game, id: &str) -> GameUpdate {
+    // Keep production combat/death/loot, but shorten the encounter to one hit.
+    // Select a reproducible successful hit (and Zeus's probabilistic artifact).
+    game.entities.retain(|a| a.id == id);
+    game.items
+        .retain(|i| !matches!(&i.location, ItemLocation::CarriedBy { actor_id } if actor_id != id));
+    let position = (1..game.height - 1)
+        .find_map(|y| {
+            (1..game.width - 2)
+                .map(|x| Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                })
+                .find(|p| game.is_walkable(*p) && game.is_walkable(Position { x: p.x + 1, y: p.y }))
+        })
+        .unwrap();
+    game.player.position = position;
+    let actor = game.entities.first_mut().unwrap();
+    actor.position = Position {
+        x: position.x + 1,
+        y: position.y,
+    };
+    actor.hp = 1;
+    actor.energy_need = 100_000;
+    actor.nice = true;
+    let base = game.clone();
+    for seed in 0..256 {
+        let mut attempt = base.clone();
+        attempt.rng = RfbRng::seeded(seed);
+        let update = super::support::dispatch_next(
+            &mut attempt,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+        );
+        if attempt.entities.iter().all(|a| a.id != id)
+            && (id != "demo.guardian.mount-olympus.1"
+                || attempt.items.iter().any(|i| i.kind_id == "demo.item.zeus"))
+        {
+            *game = attempt;
+            return update;
+        }
+    }
+    panic!("guardian melee/drop did not resolve: {id}");
+}
+
+#[test]
+fn mount_olympus_formal_eleven_floor_round_trip_uses_rewards_and_preserves_conquest() {
+    use super::support::*;
+    let mut game = (0..32)
+        .map(|seed| Game::new_with_build(seed, "demo.build.warrior").unwrap())
+        .find(|g| g.active_pantheons & 2 != 0)
+        .unwrap();
+    choose_human_talent_if_pending(&mut game);
+    let other_dungeons = game.dungeon_states.clone();
+    dispatch_next(
+        &mut game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    // Travel preparation skips the overland journey; entry and stairs are real commands.
+    let world_position = Position { x: 5, y: 9 };
+    game.wilderness_position = Some(world_position);
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    place_player_on_terrain(&mut game, "demo.terrain.mount-olympus-entrance");
+    let departure = game.player.position;
+    let guardian = game
+        .entities
+        .iter()
+        .find(|a| a.id == "demo.guardian.mount-olympus-entrance.1")
+        .unwrap();
+    assert_eq!(guardian.kind_id, "demo.actor.sky-drake");
+    assert_eq!(
+        guardian.position,
+        Position {
+            x: departure.x - 1,
+            y: departure.y - 1
+        }
+    );
+    let killed = ol4_defeat_guardian(&mut game, "demo.guardian.mount-olympus-entrance.1");
+    assert_eq!(killed.campaign.conquered_dungeons, 0);
+    assert!(game.dungeon_states["demo.dungeon.mount-olympus"].entrance_guardian_defeated);
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    place_player_on_terrain(&mut game, "demo.terrain.mount-olympus-entrance");
+    for depth in 80..=90 {
+        let entered = dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(
+            entered.floor_id,
+            format!("demo.floor.mount-olympus-depth-{depth}")
+        );
+        assert_eq!((game.width, game.height), (96, 33));
+        assert!(game.terrain.iter().all(|id| !matches!(
+            id.as_str(),
+            "demo.terrain.shaft-up"
+                | "demo.terrain.shaft-down"
+                | "demo.terrain.door-secret"
+                | "demo.terrain.door-closed"
+        )));
+        assert_eq!(
+            game.entities
+                .iter()
+                .filter(|a| a.id == "demo.guardian.mount-olympus.1")
+                .count(),
+            usize::from(depth == 90)
+        );
+        if depth < 90 {
+            assert!(game.entities.iter().all(|a| a.kind_id != ZEUS));
+            clear_monsters(&mut game);
+            place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+        }
+    }
+    assert!(
+        game.terrain
+            .iter()
+            .all(|id| id != "demo.terrain.stairs-down")
+    );
+    game.items
+        .retain(|i| !matches!(i.location, ItemLocation::Ground(_)));
+    let conquered = ol4_defeat_guardian(&mut game, "demo.guardian.mount-olympus.1");
+    assert_eq!(conquered.campaign.conquered_dungeons, 1);
+    assert!(game.dungeon_states["demo.dungeon.mount-olympus"].guardian_defeated);
+    choose_human_talent_if_pending(&mut game);
+    let rewards = game
+        .items
+        .iter()
+        .filter(|i| matches!(i.location, ItemLocation::Ground(_)))
+        .collect::<Vec<_>>();
+    assert!(rewards.iter().any(|i| !matches!(
+        i.kind_id.as_str(),
+        "demo.item.zeus" | "demo.item.acquirement-scroll"
+    )));
+    let scroll = rewards
+        .iter()
+        .find(|i| i.kind_id == "demo.item.acquirement-scroll")
+        .unwrap()
+        .id
+        .clone();
+    let artifact = rewards
+        .iter()
+        .find(|i| i.kind_id == "demo.item.zeus")
+        .unwrap()
+        .id
+        .clone();
+    for id in [&scroll, &artifact] {
+        let ItemLocation::Ground(position) =
+            game.items.iter().find(|i| &i.id == id).unwrap().location
+        else {
+            unreachable!()
+        };
+        game.player.position = position;
+        game.pick_up_item_at_player(Some(id)).unwrap();
+        assert_eq!(
+            game.items.iter().find(|i| &i.id == id).unwrap().location,
+            ItemLocation::Inventory
+        );
+    }
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: scroll.clone(),
+            target: None,
+        },
+    );
+    assert!(!game.items.iter().any(|i| i.id == scroll));
+    assert!(
+        game.items
+            .iter()
+            .any(|i| i.origin_kind == Some(rfb_protocol::ItemOriginKindDto::Acquire))
+    );
+    assert!(game.equip_inventory_item(&artifact, None).is_some());
+    game.refresh_player_resource_maxima();
+    ol3_activate(
+        &mut game,
+        &artifact,
+        Some(&TargetSelection::Direction {
+            direction: Direction::East,
+        }),
+    );
+    let consumed = game.to_save();
+    let mut game = Game::from_save(consumed).unwrap();
+    assert!(game.generated_artifact_ids.contains("demo.item.zeus"));
+    for depth in (80..90).rev() {
+        clear_monsters(&mut game);
+        place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+        let returned = dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(
+            returned.floor_id,
+            format!("demo.floor.mount-olympus-depth-{depth}")
+        );
+    }
+    clear_monsters(&mut game);
+    place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(game.wilderness_position, Some(world_position));
+    assert_eq!(game.player.position, departure);
+    assert!(
+        game.entities
+            .iter()
+            .all(|a| a.id != "demo.guardian.mount-olympus-entrance.1")
+    );
+    clear_monsters(&mut game);
+    game.start_recall(0);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.current_floor_id, "demo.floor.mount-olympus-depth-90");
+    assert!(game.entities.iter().all(|a| a.kind_id != ZEUS));
+    assert!(game.items.iter().all(|i| i.id != scroll));
+    let state = game.state_hash();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), state);
+    clear_monsters(&mut game);
+    clear_monsters(&mut restored);
+    for current in [&mut game, &mut restored] {
+        current.start_recall(0);
+        dispatch_next(current, GameCommand::Wait);
+        assert_eq!(current.wilderness_position, Some(world_position));
+        assert_eq!(current.player.position, departure);
+    }
+    assert_eq!(game.state_hash(), restored.state_hash());
+    for (id, state) in other_dungeons {
+        if id != "demo.dungeon.mount-olympus" {
+            assert_eq!(game.dungeon_states[&id], state, "{id}");
+        }
+    }
+}
+
 fn ol3_game() -> Game {
     let mut game = (0..32)
         .map(|seed| {
@@ -23,9 +252,14 @@ fn ol3_game() -> Game {
         })
         .find(|g| g.active_pantheons & 2 != 0)
         .unwrap();
-    game.transition_floor("demo.floor.rlyeh-depth-90".into(), None, None, false)
-        .unwrap()
-        .unwrap();
+    game.transition_floor(
+        "demo.floor.mount-olympus-depth-85".into(),
+        None,
+        None,
+        false,
+    )
+    .unwrap()
+    .unwrap();
     game.entities.clear();
     game.items.clear();
     game.terrain.fill("demo.terrain.floor".into());
@@ -251,15 +485,20 @@ fn mount_olympus_dead_zeus_outside_does_not_grant_conquest_or_respawn() {
             .iter()
             .any(|e| e.kind == "dungeon.guardian-defeated")
     );
-    assert!(!game.dungeon_states["demo.dungeon.rlyeh"].guardian_defeated);
+    assert!(!game.dungeon_states["demo.dungeon.mount-olympus"].guardian_defeated);
     game.transition_floor(surface, None, None, false)
         .unwrap()
         .unwrap();
-    game.transition_floor("demo.floor.rlyeh-depth-96".into(), None, None, false)
-        .unwrap()
-        .unwrap();
+    game.transition_floor(
+        "demo.floor.mount-olympus-depth-90".into(),
+        None,
+        None,
+        false,
+    )
+    .unwrap()
+    .unwrap();
     assert!(game.entities.iter().all(|a| a.kind_id != ZEUS));
-    assert!(!game.dungeon_states["demo.dungeon.rlyeh"].guardian_defeated);
+    assert!(!game.dungeon_states["demo.dungeon.mount-olympus"].guardian_defeated);
 }
 
 #[test]
@@ -280,7 +519,7 @@ fn mount_olympus_early_zeus_conquest_survives_save_and_reward_scroll_is_usable()
             .iter()
             .any(|e| e.kind == "dungeon.guardian-defeated")
     );
-    assert!(game.dungeon_states["demo.dungeon.rlyeh"].guardian_defeated);
+    assert!(game.dungeon_states["demo.dungeon.mount-olympus"].guardian_defeated);
     assert!(!game.unique_actor_kind_is_available(ZEUS));
     super::support::choose_human_talent_if_pending(&mut game);
     let scroll = game
@@ -309,7 +548,12 @@ fn mount_olympus_early_zeus_conquest_survives_save_and_reward_scroll_is_usable()
     assert_eq!(restored.state_hash(), game.state_hash());
     let mut restored = restored;
     restored
-        .transition_floor("demo.floor.rlyeh-depth-96".into(), None, None, false)
+        .transition_floor(
+            "demo.floor.mount-olympus-depth-90".into(),
+            None,
+            None,
+            false,
+        )
         .unwrap()
         .unwrap();
     assert!(restored.entities.iter().all(|a| a.kind_id != ZEUS));
@@ -613,91 +857,6 @@ fn catalog() -> Arc<ContentCatalog> {
             let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
                 .join("../../packs/rfb-demo-original");
             let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
-            let world = &mut artifact.content.worlds[0];
-            // Stage Olympus on an existing valid chain; the formal entrance and
-            // eleven-floor chain remain OL4 work.
-            let dungeon = world
-                .dungeons
-                .iter_mut()
-                .find(|d| d.id == "demo.dungeon.rlyeh")
-                .unwrap();
-            dungeon.legacy_index = Some(22);
-            dungeon.pantheon = Some(1);
-            dungeon.guardian_actor_kind_id = Some(ZEUS.into());
-            let guardian = world
-                .procedural_floors
-                .iter_mut()
-                .find(|f| f.id == "demo.floor.rlyeh-depth-96")
-                .unwrap()
-                .guardian
-                .as_mut()
-                .unwrap();
-            guardian.actor_kind_id = "demo.actor.zeus-king-of-the-olympians".into();
-            guardian.reward_artifact_item_kind_id = None;
-            guardian.reward_loot_table_id =
-                Some("demo.loot-table.mount-olympus-final-reward".into());
-            for depth in [80, 85, 90] {
-                let floor = world
-                    .procedural_floors
-                    .iter_mut()
-                    .find(|f| f.id == format!("demo.floor.rlyeh-depth-{depth}"))
-                    .unwrap();
-                floor.width = 96;
-                floor.height = 33;
-                floor.terrain_feature_table_id = None;
-                floor.generation_budget = Some(
-                    serde_json::from_value(serde_json::json!({
-                    "actorSlots": 20, "lootPlacements": 8,
-                    "roomPlacements": 6, "roomAreaTiles": 1100,
-                            "cavernAreaTiles": 600, "riverAreaTiles": 240
-                        }))
-                    .unwrap(),
-                );
-                floor.layout = Some(
-                    serde_json::from_value(serde_json::json!({
-                        "wallMix": [{"terrainId": PERMANENT, "percent": 40}],
-                        "rooms": {"placement": "free", "minWidth": 8, "maxWidth": 20,
-                            "minHeight": 7, "maxHeight": 13,
-                            "shapes": [{"shape": "cavern", "weight": 1000},
-                                       {"shape": "rectangle", "weight": 450}]},
-                        "cavern": {"terrainId": "demo.terrain.floor", "rfbDepthChance": true},
-                        "river": {"deepTerrainId": DEEP, "shallowTerrainId": SHALLOW,
-                                  "chanceOneIn": 7, "rfbDepthChance": true},
-                        "stairs": {"up": {"minimum": 1, "maximum": 2},
-                                   "down": {"minimum": 4, "maximum": 5}},
-                        "placeDoors": false
-                    }))
-                    .unwrap(),
-                );
-                floor.loot_allocation = Some(
-                    serde_json::from_value(serde_json::json!({
-                        "referenceAreaTiles": 13068,
-                        "roomObjects": {"mean": 8, "standardDeviation": 3},
-                        "anywhereObjects": {"mean": 2, "standardDeviation": 3}
-                    }))
-                    .unwrap(),
-                );
-                floor.gold_allocation = Some(
-                    serde_json::from_value(serde_json::json!({
-                        "referenceAreaTiles": 13068, "piles": {"mean": 2, "standardDeviation": 3}
-                    }))
-                    .unwrap(),
-                );
-            }
-            let policy = artifact
-                .content
-                .encounter_tables
-                .iter_mut()
-                .find(|t| t.id == "demo.encounter-table.rlyeh")
-                .unwrap()
-                .global_allocation
-                .as_mut()
-                .unwrap();
-            policy.preferred_tags = ["giant", "olympian", "olympian2"]
-                .map(str::to_owned)
-                .to_vec();
-            policy.special_div = 8;
-            policy.ambient_chance_one_in = 160;
             let mut food = artifact
                 .content
                 .loot_tables
@@ -727,7 +886,7 @@ fn game_and_floor(depth: u16) -> (Game, rfb_content::ProceduralFloorDefinition) 
         .unwrap()
         .procedural_floors
         .iter()
-        .find(|f| f.id == format!("demo.floor.rlyeh-depth-{depth}"))
+        .find(|f| f.id == format!("demo.floor.mount-olympus-depth-{depth}"))
         .unwrap()
         .clone();
     (game, floor)
@@ -742,24 +901,7 @@ fn mount_olympus_representative_floors_keep_routes_spawns_and_normal_ecology() {
     let mut gold = 0;
     let mut low_level = false;
     for depth in [80, 85, 90] {
-        let (base, mut definition) = game_and_floor(depth);
-        // Exercise the terminal guardian geometry without opening its entrance.
-        if depth == 90 {
-            definition.final_floor = true;
-            definition.next_floor_id = None;
-            definition.down_stair_terrain_id = None;
-            definition
-                .layout
-                .as_mut()
-                .unwrap()
-                .stairs
-                .as_mut()
-                .unwrap()
-                .down = None;
-            definition.guardian = Some(serde_json::from_value(serde_json::json!({
-                "instanceId": "test.olympus.guardian", "actorKindId": "demo.actor.zeus-king-of-the-olympians"
-            })).unwrap());
-        }
+        let (base, definition) = game_and_floor(depth);
         for seed in 0..16 {
             let mut game = base.clone();
             game.rng = RfbRng::seeded(seed);
@@ -825,7 +967,7 @@ fn mount_olympus_representative_floors_keep_routes_spawns_and_normal_ecology() {
                 );
                 let kind = game.content.actor(&actor.kind_id).unwrap();
                 assert!(actor_can_cross_terrain(kind, at(actor.position)));
-                if actor.id == "test.olympus.guardian" {
+                if actor.id == "demo.guardian.mount-olympus.1" {
                     assert!(reached.contains_key(&actor.position));
                 } else {
                     assert!(game.pantheon_allows_allocation(&definition.id, kind));
@@ -837,7 +979,7 @@ fn mount_olympus_representative_floors_keep_routes_spawns_and_normal_ecology() {
                 floor
                     .entities
                     .iter()
-                    .filter(|a| a.id == "test.olympus.guardian")
+                    .filter(|a| a.id == "demo.guardian.mount-olympus.1")
                     .count(),
                 usize::from(depth == 90)
             );
@@ -966,7 +1108,7 @@ fn mount_olympus_preferences_keep_source_rarity_and_divisor_eight() {
     let (mut game, definition) = game_and_floor(80);
     let policy = game
         .content
-        .encounter_table("demo.encounter-table.rlyeh")
+        .encounter_table("demo.encounter-table.mount-olympus")
         .unwrap()
         .global_allocation
         .clone()

@@ -9295,3 +9295,7 @@ item-activation-demo-demeter-name = 德墨忒尔之焰
 item-demo-aphrodite-name = 阿佛洛狄忒的护身符
 item-demo-aphrodite-description = 传说中的“不和的金苹果”，由厄里斯（Eris）创造，以报复她没有被邀请参加珀琉斯和忒提斯的婚礼。这颗苹果上刻着“献给最美丽的女神”，雅典娜、赫拉和阿佛洛狄忒都声称它属于自己。当特洛伊王子把苹果交给了阿佛洛狄忒时，他得到了特洛伊的海伦，这也引发了特洛伊战争。
 item-activation-demo-aphrodite-name = 召唤怪物
+
+floor-demo-mount-olympus-depth-name = 奥林匹斯山 { $depth } 层
+terrain-demo-mount-olympus-entrance-name = 奥林匹斯山的入口
+terrain-demo-mount-olympus-entrance-description = 奥林匹斯山的入口

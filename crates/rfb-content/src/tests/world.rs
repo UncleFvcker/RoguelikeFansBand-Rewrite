@@ -11020,6 +11020,10 @@ fn town_entrances_and_shared_facilities_match_source() {
                     town_id: "demo.town.telmora".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 5, y: 9 },
+                    dungeon_id: "demo.dungeon.mount-olympus".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 5, y: 48 },
                     dungeon_id: "demo.dungeon.labyrinth".to_owned(),
                 },

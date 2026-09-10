@@ -3,8 +3,8 @@ use super::support::*;
 use super::*;
 use std::sync::OnceLock;
 
-const DUNGEON: &str = "demo.dungeon.rlyeh";
-const FLOOR: &str = "demo.floor.rlyeh-depth-80";
+const DUNGEON: &str = "demo.dungeon.mount-olympus";
+const FLOOR: &str = "demo.floor.mount-olympus-depth-80";
 const OTHER_FLOOR: &str = "demo.floor.castle-depth-40";
 const ZEUS: &str = "demo.actor.zeus-king-of-the-olympians";
 
@@ -14,15 +14,7 @@ fn catalog() -> Arc<ContentCatalog> {
         .get_or_init(|| {
             let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
                 .join("../../packs/rfb-demo-original");
-            let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
-            // Exercise the association using an existing complete dungeon; OL1
-            // deliberately does not open the Mount Olympus floor chain.
-            artifact.content.worlds[0]
-                .dungeons
-                .iter_mut()
-                .find(|d| d.id == DUNGEON)
-                .unwrap()
-                .pantheon = Some(1);
+            let artifact = rfb_content::compile_pack_dir(&root).unwrap();
             Arc::new(ContentCatalog::from_artifact(
                 rfb_content::encode_content(artifact.content).unwrap(),
             ))
@@ -91,7 +83,7 @@ fn pantheons_control_world_entry_and_entrance_guardian() {
     for active in [false, true] {
         let mut game = game_with_olympians(active);
         choose_human_talent_if_pending(&mut game);
-        let position = Position { x: 40, y: 3 };
+        let position = Position { x: 5, y: 9 };
         assert_eq!(
             game.wilderness_cell_dto(position)
                 .locations
@@ -111,13 +103,13 @@ fn pantheons_control_world_entry_and_entrance_guardian() {
         assert_eq!(
             game.terrain
                 .iter()
-                .any(|id| id == "demo.terrain.rlyeh-entrance"),
+                .any(|id| id == "demo.terrain.mount-olympus-entrance"),
             active
         );
         assert_eq!(
             game.entities
                 .iter()
-                .any(|a| a.id == "demo.guardian.rlyeh-entrance.1"),
+                .any(|a| a.id == "demo.guardian.mount-olympus-entrance.1"),
             active
         );
         if !active {
@@ -161,7 +153,7 @@ fn pantheons_primary_secondary_and_dungeon_lock_have_distinct_meanings() {
         assert!(!game.pantheon_allows_allocation(floor, game.content.actor(ZEUS).unwrap()));
     }
     let mut locked = hypnos;
-    locked.allocation.as_mut().unwrap().legacy_dungeon_indices = vec![13];
+    locked.allocation.as_mut().unwrap().legacy_dungeon_indices = vec![22];
     assert!(game.actor_is_pantheon_suppressed(&locked));
     // An active primary membership takes precedence over the dungeon lock
     // when computing suppression (dungeon.c: flag_mask_keep).
@@ -175,7 +167,7 @@ fn pantheons_random_allocation_and_category_summons_share_qualification() {
     game.active_pantheons = 2 | 8;
     let mut policy = game
         .content
-        .encounter_table("demo.encounter-table.rlyeh")
+        .encounter_table("demo.encounter-table.mount-olympus")
         .unwrap()
         .global_allocation
         .clone()

@@ -9291,3 +9291,7 @@ item-activation-demo-demeter-name = Demeter activation
 item-demo-aphrodite-name = Amulet of Aphrodite
 item-demo-aphrodite-description = Amulet of Aphrodite
 item-activation-demo-aphrodite-name = Aphrodite activation
+
+floor-demo-mount-olympus-depth-name = Mount Olympus Depth { $depth }
+terrain-demo-mount-olympus-entrance-name = Mount Olympus Entrance
+terrain-demo-mount-olympus-entrance-description = The entrance to Mount Olympus.
