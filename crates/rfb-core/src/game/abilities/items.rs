@@ -626,6 +626,12 @@ impl Game {
             unreachable!("item creation executor requires a create-item effect");
         };
         let draft = GeneratedItemDraft {
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
+            permanent_destruction_immunities: Default::default(),
             damage_dice_override: None,
             kind_id: item_kind_id.clone(),
             quantity: *quantity,

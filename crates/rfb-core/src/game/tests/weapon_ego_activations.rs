@@ -45,7 +45,8 @@ fn mattock_natural_disruption_activation_round_trips() {
             themed: false,
         },
     };
-    game.rng = RfbRng::seeded(63);
+    // This seed reaches Disruption after the natural artifact gate.
+    game.rng = RfbRng::seeded(136);
     let mut drops = game
         .generate_loot_instances(&context, ItemLocation::Inventory)
         .unwrap();

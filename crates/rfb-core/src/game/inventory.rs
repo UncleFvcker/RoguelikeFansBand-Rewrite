@@ -978,6 +978,12 @@ impl Game {
         if quantity > 0 {
             let id = self.allocate_item_instance_id()?;
             let item = super::loot::GeneratedItemDraft {
+                artifact_name: None,
+                intrinsic_melee_damage_dice: None,
+                intrinsic_weight_tenths_pound: None,
+                intrinsic_weapon_traits: Default::default(),
+                intrinsic_curse_effects: Default::default(),
+                permanent_destruction_immunities: Default::default(),
                 damage_dice_override: None,
                 kind_id: kind_id.to_owned(),
                 quantity,

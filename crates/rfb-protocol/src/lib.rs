@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.240";
-pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 12;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 12;
+pub const PROTOCOL_VERSION: &str = "1.241";
+pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 13;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 13;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -5879,6 +5879,7 @@ pub struct SavePayloadV1 {
     pub dungeon_states: Vec<DungeonStateSaveDto>,
     pub defeated_limited_actor_counts: Vec<DefeatedActorCountSaveDto>,
     pub generated_artifact_ids: Vec<String>,
+    pub random_artifact_names: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub town_states: Vec<TownStateSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -6498,6 +6499,7 @@ mod tests {
             "pre-v190 actor saves without nice must be rejected"
         );
         let mut current = serde_json::to_value(&legacy).expect("fixture should serialize");
+        current["randomArtifactNames"] = serde_json::json!([]);
         current["entities"][0]["nice"] = serde_json::json!(false);
         current["entities"][0]["experience"] = serde_json::json!(0);
         current["entities"][0]["anger"] = serde_json::json!(0);

@@ -373,6 +373,16 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         &mut all_ids,
     )?;
 
+    if content.random_artifact_generation.is_empty()
+        && content
+            .loot_tables
+            .iter()
+            .any(|table| table.rfb_ego_policy.is_some())
+    {
+        return Err(ContentError::InvalidArtifactGeneration(
+            "RFB loot requires random artifact generation data".to_owned(),
+        ));
+    }
     if content.random_artifact_generation.len() > 1 {
         return Err(ContentError::InvalidArtifactGeneration(
             "multiple random artifact pools".to_owned(),

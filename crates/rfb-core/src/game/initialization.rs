@@ -595,6 +595,7 @@ impl Game {
             dungeon_states,
             defeated_limited_actor_counts: BTreeMap::new(),
             generated_artifact_ids,
+            random_artifact_names: BTreeSet::new(),
             town_states,
             shop_states,
             home_states,

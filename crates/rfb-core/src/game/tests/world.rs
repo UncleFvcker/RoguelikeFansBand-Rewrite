@@ -2457,6 +2457,11 @@ fn p89f_man_cave_conquest_lotharang_activation_and_replacement_are_one_shot() {
         10
     );
     let max_hp = conquered.player_derived_stats().max_hp.value;
+    // Isolate activation healing from bleeding incurred on the guardian approach.
+    conquered
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_BLEEDING);
     conquered.player.hp = (max_hp - 30).max(1);
     let hp_before = conquered.player.hp;
     conquered.world_tick = 0;

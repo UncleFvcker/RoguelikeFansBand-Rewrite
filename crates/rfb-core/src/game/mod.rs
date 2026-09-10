@@ -232,7 +232,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 117;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 118;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -867,6 +867,7 @@ pub struct Game {
     dungeon_states: BTreeMap<String, DungeonState>,
     defeated_limited_actor_counts: BTreeMap<String, u16>,
     generated_artifact_ids: BTreeSet<String>,
+    random_artifact_names: BTreeSet<String>,
     town_states: BTreeMap<String, TownState>,
     shop_states: BTreeMap<String, ShopState>,
     home_states: BTreeMap<String, HomeState>,

@@ -346,7 +346,8 @@ fn special_no_fixed_artifact_skips_only_dragon_armor_power_suppression() {
                 assert_eq!(suffix, "dragon-fang");
             } else {
                 assert_eq!(draft.quality, ItemQualityDto::Exceptional);
-                assert!(!draft.affix_ids.is_empty());
+                assert!(draft.artifact_name.is_some());
+                assert!(draft.affix_ids.is_empty());
                 preserved += 1;
             }
         }
@@ -385,6 +386,7 @@ fn crafting_preserves_dragon_base_properties_without_any_base_generation_draws()
         game.debug_add_generated_inventory_item("test.craft", "demo.item.crafting-scroll", 80)
             .unwrap();
         game.rng = RfbRng::seeded(83);
+        let names_before = game.random_artifact_names.clone();
         let mut without_properties = game.clone();
         without_properties.items[0].intrinsic_properties = Default::default();
         let command = GameCommand::UseItem {
@@ -407,6 +409,8 @@ fn crafting_preserves_dragon_base_properties_without_any_base_generation_draws()
             "Craft must not roll dragon_resist or the suppression gate: {kind}"
         );
         assert_eq!(game.items[0].intrinsic_properties, properties);
+        assert_eq!(game.random_artifact_names, names_before);
+        assert!(game.items[0].artifact_name.is_none());
         assert_eq!(
             game.items[0].affix_ids,
             without_properties.items[0].affix_ids

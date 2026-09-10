@@ -6,9 +6,21 @@ mod construction;
 mod materialization;
 mod names;
 mod powers;
+pub(super) mod scheduling;
 #[cfg(test)]
 mod tests;
+pub(super) use materialization::materialize;
 pub(super) use materialization::resistance_elements;
+
+pub(super) fn names_are_valid(names: &BTreeSet<String>) -> bool {
+    names.len() <= names::QUARK_CAPACITY
+        && (names.is_empty() || names.contains(""))
+        && names.iter().all(|name| {
+            (name.is_empty() || !name.trim().is_empty())
+                && name.len() < 1024
+                && !name.chars().any(char::is_control)
+        })
+}
 
 use super::item_value::ValueObject;
 use crate::rng::{RfbRng, rfb_m_bonus};
@@ -339,6 +351,25 @@ fn score(object: &ValueObject, base: Option<&BTreeSet<String>>) -> i32 {
     let mut effective = object.clone();
     effective.flags = effective_flags(object, base);
     super::item_value::object_value(effective).expect("supported artifact slot")
+}
+
+fn trim(rng: &mut RfbRng, start: i32, high: i32, very_high: i32, level: i32) -> i32 {
+    let high = high.min(very_high);
+    if start <= high {
+        return start;
+    }
+    let mut reduction = 0;
+    for _ in 0..(very_high - high).min(start - high) {
+        if rng.bounded(2) == 0 || rng.bounded((100 + level) as u64) < 80 {
+            reduction += 1;
+        }
+    }
+    for _ in 0..start - reduction - very_high {
+        if rng.bounded(4) != 0 || rng.bounded((100 + level) as u64) < 120 {
+            reduction += 1;
+        }
+    }
+    start - reduction
 }
 
 impl Generator<'_, '_> {

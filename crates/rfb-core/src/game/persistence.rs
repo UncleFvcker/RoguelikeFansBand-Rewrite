@@ -667,6 +667,7 @@ struct StateHashPayloadV98<'a> {
     dungeon_states: Vec<DungeonStateSaveDto>,
     defeated_limited_actor_counts: Vec<DefeatedActorCountSaveRef<'a>>,
     generated_artifact_ids: Vec<&'a str>,
+    random_artifact_names: Vec<&'a str>,
     town_states: Vec<TownStateSaveDto>,
     shop_states: Vec<ShopStateSaveDto>,
     home_states: Vec<HomeStateSaveDto>,
@@ -1411,6 +1412,14 @@ impl Game {
                 "generated artifact state is invalid",
             ));
         }
+        let name_count = payload.random_artifact_names.len();
+        let random_artifact_names: BTreeSet<_> =
+            payload.random_artifact_names.into_iter().collect();
+        if random_artifact_names.len() != name_count
+            || !super::random_artifact::names_are_valid(&random_artifact_names)
+        {
+            return Err(CoreError::InvalidSave("random artifact names are invalid"));
+        }
         let mut game = Self {
             content,
             world_id: payload.world_id,
@@ -1462,6 +1471,7 @@ impl Game {
             dungeon_states,
             defeated_limited_actor_counts,
             generated_artifact_ids,
+            random_artifact_names,
             town_states,
             shop_states,
             home_states,
@@ -1563,6 +1573,7 @@ impl Game {
                 })
                 .collect(),
             generated_artifact_ids: self.generated_artifact_ids.iter().cloned().collect(),
+            random_artifact_names: self.random_artifact_names.iter().cloned().collect(),
             town_states: self
                 .town_states
                 .iter()
@@ -1642,6 +1653,11 @@ impl Game {
                     actor_kind_id,
                     count: *count,
                 })
+                .collect(),
+            random_artifact_names: self
+                .random_artifact_names
+                .iter()
+                .map(String::as_str)
                 .collect(),
             generated_artifact_ids: self
                 .generated_artifact_ids

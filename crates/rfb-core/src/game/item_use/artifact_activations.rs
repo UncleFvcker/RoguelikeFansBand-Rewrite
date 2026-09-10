@@ -286,6 +286,38 @@ mod tests {
     use super::*;
 
     #[test]
+    fn random_artifact_scheduling_never_adds_draws_to_craft() {
+        for kind in ["demo.item.long-sword", "demo.item.robe"] {
+            let mut game = Game::new_with_build(85, "demo.build.warrior").unwrap();
+            game.items.clear();
+            game.progress.level = 40;
+            crate::game::tests::support::give_inventory_item(&mut game, "test.craft-target", kind);
+            game.rng = RfbRng::seeded(85);
+            let mut expected_rng = game.rng.clone();
+            let names_before = game.random_artifact_names.clone();
+            let expected = crate::game::ego::roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                ItemEnchantmentsDto::default(),
+                &mut expected_rng,
+                game.content.item(kind).unwrap(),
+                game.content.affix_definitions(),
+                40,
+                Some(&game.items[0].intrinsic_properties),
+            )
+            .unwrap();
+            game.resolve_item_crafting(
+                "demo.item.crafting-scroll",
+                "test.craft-target",
+                &mut Vec::new(),
+            )
+            .unwrap();
+            assert_eq!(game.rng, expected_rng);
+            assert_eq!(game.items[0].affix_ids, expected.affix_ids);
+            assert!(game.items[0].artifact_name.is_none());
+            assert_eq!(game.random_artifact_names, names_before);
+        }
+    }
+
+    #[test]
     fn random_artifact_kraken_water_flow_occurs_even_when_zero_are_summoned() {
         let mut game = Game::new_with_build(85, "demo.build.warrior").unwrap();
         game.entities.clear();

@@ -6,7 +6,6 @@ use rfb_protocol::{ItemQualityDto, MeleeDamageDiceDto, WeaponTraitDto};
 
 /// E8.5b's item factory. The caller supplies the name table shared by consecutive
 /// generations and commits only the returned instance; IDs are never allocated here.
-#[allow(dead_code)] // Natural drop scheduling is E8.5c.
 #[allow(clippy::too_many_arguments)] // Mirrors the caller's existing generation state.
 pub(in crate::game) fn materialize(
     content: &ContentCatalog,

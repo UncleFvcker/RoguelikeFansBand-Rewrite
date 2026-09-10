@@ -11,7 +11,7 @@ use rfb_protocol::{
 
 use super::ego::{
     EgoMaterialization, materialize_ego_with_rng, materialize_rfb_harp_intrinsic_with_rng,
-    merge_affix_properties, roll_and_materialize_rfb_ego_from_affixes_with_rng,
+    merge_affix_properties, roll_and_materialize_rfb_ego_after_artifact_check,
 };
 use super::mutations::LuckBias;
 use super::{Game, initial_item_curse, item_quality_dto};
@@ -76,6 +76,14 @@ impl From<rfb_content::ItemQuality> for ItemGenerationMode {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct GeneratedItemDraft {
+    pub(super) artifact_name: Option<String>,
+    pub(super) intrinsic_melee_damage_dice: Option<rfb_protocol::MeleeDamageDiceDto>,
+    pub(super) intrinsic_weight_tenths_pound: Option<u16>,
+    pub(super) intrinsic_weapon_traits: std::collections::BTreeSet<rfb_protocol::WeaponTraitDto>,
+    pub(super) intrinsic_curse_effects:
+        std::collections::BTreeSet<rfb_protocol::ItemCurseEffectDto>,
+    pub(super) permanent_destruction_immunities:
+        std::collections::BTreeSet<rfb_content::ItemDestructionElement>,
     pub(super) kind_id: String,
     pub(super) quantity: u32,
     pub(super) origin_kind: Option<ItemOriginKindDto>,
@@ -95,11 +103,11 @@ impl GeneratedItemDraft {
     pub(super) fn into_item_instance(self, id: String, location: ItemLocation) -> ItemInstance {
         ItemInstance {
             previously_worn: false,
-            artifact_name: None,
-            intrinsic_melee_damage_dice: None,
-            intrinsic_weight_tenths_pound: None,
-            intrinsic_weapon_traits: Default::default(),
-            intrinsic_curse_effects: Default::default(),
+            artifact_name: self.artifact_name,
+            intrinsic_melee_damage_dice: self.intrinsic_melee_damage_dice,
+            intrinsic_weight_tenths_pound: self.intrinsic_weight_tenths_pound,
+            intrinsic_weapon_traits: self.intrinsic_weapon_traits,
+            intrinsic_curse_effects: self.intrinsic_curse_effects,
             id,
             kind_id: self.kind_id,
             quantity: self.quantity,
@@ -114,13 +122,39 @@ impl GeneratedItemDraft {
             intrinsic_properties: self.intrinsic_properties,
             enchantments: self.enchantments,
             curse: self.curse,
-            permanent_destruction_immunities: Default::default(),
+            permanent_destruction_immunities: self.permanent_destruction_immunities,
             activation: self.activation,
             charges: self.charges,
             fuel: self.fuel,
             device_recovery_progress: 0,
             captured_actor: None,
             location,
+        }
+    }
+}
+
+impl From<ItemInstance> for GeneratedItemDraft {
+    fn from(item: ItemInstance) -> Self {
+        Self {
+            artifact_name: item.artifact_name,
+            intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+            intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+            intrinsic_weapon_traits: item.intrinsic_weapon_traits,
+            intrinsic_curse_effects: item.intrinsic_curse_effects,
+            permanent_destruction_immunities: item.permanent_destruction_immunities,
+            kind_id: item.kind_id,
+            quantity: item.quantity,
+            origin_kind: item.origin_kind,
+            quality: item.quality,
+            affix_ids: item.affix_ids,
+            rolled_affixes: item.rolled_affixes,
+            intrinsic_properties: item.intrinsic_properties,
+            enchantments: item.enchantments,
+            damage_dice_override: item.damage_dice_override,
+            curse: item.curse,
+            activation: item.activation,
+            charges: item.charges,
+            fuel: item.fuel,
         }
     }
 }
@@ -576,6 +610,12 @@ impl Game {
         let mut generated = Vec::with_capacity(usize::from(roll_count));
         for _ in 0..roll_count {
             if (rfb_generation || matches!(mode, ItemGenerationMode::Artifact { .. }))
+                && !matches!(
+                    mode,
+                    ItemGenerationMode::Artifact {
+                        no_fixed_artifact: true
+                    }
+                )
                 && let Some(kind_id) = self.roll_instant_fixed_artifact_kind_id(
                     context,
                     if mode.minimum_power() == 0 { 1_000 } else { 10 },
@@ -745,6 +785,30 @@ impl Game {
                     &properties,
                 );
             }
+            if rfb_generation
+                && let Some(item) = self.content.item(&entry.item_kind_id).filter(|item| {
+                    item.rfb_base_kind
+                        .is_some_and(|base| base.tval == 35 && base.sval == 2)
+                })
+            {
+                let intrinsic_properties =
+                    base_intrinsic_properties.get_or_insert_with(Default::default);
+                let pval = 1 + self.rng.bounded(4) as i32;
+                super::ego::remember_rfb_pval(
+                    intrinsic_properties,
+                    [
+                        rfb_content::RfbPvalFlagDefinition::Stealth,
+                        rfb_content::RfbPvalFlagDefinition::Search,
+                    ],
+                    pval,
+                );
+                intrinsic_properties.equipment_bonuses.stealth_skill +=
+                    pval - item.equipment_bonuses.stealth_skill;
+                intrinsic_properties.equipment_bonuses.search_skill +=
+                    5 * pval - item.equipment_bonuses.search_skill;
+                intrinsic_properties.equipment_bonuses.perception_skill +=
+                    5 * pval - item.equipment_bonuses.perception_skill;
+            }
             let rfb_armor = table.rfb_ego_policy
                 == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
                 && self
@@ -786,6 +850,62 @@ impl Game {
             let rfb_jewelry = jewelry
                 && table.rfb_ego_policy
                     == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger);
+            let special_robe = rfb_armor
+                && power.abs() >= 2
+                && super::ego::roll_special_robe(
+                    &mut self.rng,
+                    self.content.item(&entry.item_kind_id).unwrap(),
+                    generation_depth,
+                );
+            if rfb_generation
+                && !special_robe
+                && (!rfb_weapon || allow_weapon_ego)
+                && let Some((value_level, adjusted)) = base_kind.and_then(|base| {
+                    super::random_artifact::scheduling::select(
+                        &mut self.rng,
+                        base,
+                        i32::from(generation_depth),
+                        power,
+                        mode,
+                    )
+                })
+            {
+                let draft = GeneratedItemDraft {
+                    artifact_name: None,
+                    intrinsic_melee_damage_dice: None,
+                    intrinsic_weight_tenths_pound: None,
+                    intrinsic_weapon_traits: Default::default(),
+                    intrinsic_curse_effects: Default::default(),
+                    permanent_destruction_immunities: Default::default(),
+                    kind_id: entry.item_kind_id.clone(),
+                    quantity: 1,
+                    origin_kind: match context.source {
+                        LootSource::Rubble { .. } => Some(ItemOriginKindDto::Rubble),
+                        _ => None,
+                    },
+                    quality: power_quality(power),
+                    affix_ids: Vec::new(),
+                    rolled_affixes: Vec::new(),
+                    intrinsic_properties: base_intrinsic_properties.unwrap_or_default(),
+                    enchantments: ItemEnchantmentsDto {
+                        to_armor: armor_enchantment,
+                        ..weapon_enchantment
+                    },
+                    damage_dice_override: None,
+                    curse: initial_item_curse(&self.content, &entry.item_kind_id),
+                    activation: None,
+                    charges: None,
+                    fuel,
+                };
+                generated.push(self.materialize_random_artifact_draft(
+                    draft,
+                    context,
+                    value_level,
+                    power,
+                    adjusted,
+                ));
+                continue;
+            }
             let rfb_materialization = if rfb_jewelry && power != 0 {
                 self.content.item(&entry.item_kind_id).and_then(|item| {
                     super::ego::roll_jewelry(
@@ -816,13 +936,14 @@ impl Game {
                     && power_allows_natural_affix(table.quality_policy, power))
                 .then(|| {
                     self.content.item(&entry.item_kind_id).and_then(|item| {
-                        roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                        roll_and_materialize_rfb_ego_after_artifact_check(
                             weapon_enchantment,
                             &mut self.rng,
                             item,
                             self.content.affix_definitions(),
                             generation_depth,
                             base_intrinsic_properties.as_ref(),
+                            special_robe,
                         )
                     })
                 })
@@ -884,28 +1005,6 @@ impl Game {
                 ..
             } = materialization;
             let mut intrinsic_properties = base_intrinsic_properties.unwrap_or_default();
-            if rolled_affixes.is_empty()
-                && let Some(item) = self.content.item(&entry.item_kind_id).filter(|item| {
-                    item.rfb_base_kind
-                        .is_some_and(|base| base.tval == 35 && base.sval == 2)
-                })
-            {
-                let pval = 1 + self.rng.bounded(4) as i32;
-                super::ego::remember_rfb_pval(
-                    &mut intrinsic_properties,
-                    [
-                        rfb_content::RfbPvalFlagDefinition::Stealth,
-                        rfb_content::RfbPvalFlagDefinition::Search,
-                    ],
-                    pval,
-                );
-                intrinsic_properties.equipment_bonuses.stealth_skill +=
-                    pval - item.equipment_bonuses.stealth_skill;
-                intrinsic_properties.equipment_bonuses.search_skill +=
-                    5 * pval - item.equipment_bonuses.search_skill;
-                intrinsic_properties.equipment_bonuses.perception_skill +=
-                    5 * pval - item.equipment_bonuses.perception_skill;
-            }
             if let Some(properties) = ego_intrinsic_properties {
                 merge_affix_properties(&mut intrinsic_properties, &properties);
             }
@@ -919,6 +1018,12 @@ impl Game {
                 },
             );
             let mut draft = GeneratedItemDraft {
+                artifact_name: None,
+                intrinsic_melee_damage_dice: None,
+                intrinsic_weight_tenths_pound: None,
+                intrinsic_weapon_traits: Default::default(),
+                intrinsic_curse_effects: Default::default(),
+                permanent_destruction_immunities: Default::default(),
                 kind_id: kind_id_override.unwrap_or_else(|| entry.item_kind_id.clone()),
                 quantity: entry.quantity,
                 origin_kind: match &context.source {
@@ -1077,6 +1182,12 @@ impl Game {
             2,
         );
         GeneratedItemDraft {
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
+            permanent_destruction_immunities: Default::default(),
             damage_dice_override: None,
             quantity: 1,
             origin_kind: match &context.source {

@@ -38,7 +38,7 @@
         "pendingAttributeIncreases": 0
       },
       "revision": 1,
-      "stateHash": "d59c780b54e659cf1b8e84dc42aca6d7da216f134c381b11908f964fa97b0ada",
+      "stateHash": "f50770dee7c92fe67146882ec8b9d7eca525ba6a8ea960ea6ff22c2217e47f22",
       "turn": 1
     },
     "events": [
@@ -54,6 +54,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "d59c780b54e659cf1b8e84dc42aca6d7da216f134c381b11908f964fa97b0ada"
+    "saveRoundTripStateHash": "f50770dee7c92fe67146882ec8b9d7eca525ba6a8ea960ea6ff22c2217e47f22"
   }
 }

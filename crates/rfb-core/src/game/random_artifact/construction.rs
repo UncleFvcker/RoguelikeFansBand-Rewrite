@@ -88,7 +88,7 @@ impl Generator<'_, '_> {
             self.object.to_a += self.roll(5) + self.bonus(5, level) + self.bonus(10, level);
             let max = if self.body() { 25 } else { 20 };
             if self.object.to_a > max - 5 {
-                self.object.to_a = self.trim(self.object.to_a, max - 5, max, level);
+                self.object.to_a = super::trim(self.rng, self.object.to_a, max - 5, max, level);
             }
         } else if self.weapon() {
             let h = self.roll(5) + self.bonus(5, level) + self.bonus(10, level);
@@ -96,11 +96,11 @@ impl Generator<'_, '_> {
             self.object.to_h += h;
             self.object.to_d += d;
             if self.object.to_h > 22 {
-                self.object.to_h = self.trim(self.object.to_h, 20, 25, level);
+                self.object.to_h = super::trim(self.rng, self.object.to_h, 20, 25, level);
             }
             // The source passes to_h to the second trim as well.
             if self.object.to_d > 20 {
-                self.object.to_d = self.trim(self.object.to_h, 20, 25, level);
+                self.object.to_d = super::trim(self.rng, self.object.to_h, 20, 25, level);
             }
             if self.has("WIS") && self.object.pval > 0 {
                 self.add("BLESSED");
@@ -180,25 +180,6 @@ impl Generator<'_, '_> {
                 self.remove(flag);
             }
         }
-    }
-
-    fn trim(&mut self, start: i32, high: i32, very_high: i32, level: i32) -> i32 {
-        let high = high.min(very_high);
-        if start <= high {
-            return start;
-        }
-        let mut reduction = 0;
-        for _ in 0..(very_high - high).min(start - high) {
-            if self.one(2) || self.zero(100 + level) < 80 {
-                reduction += 1;
-            }
-        }
-        for _ in 0..start - reduction - very_high {
-            if !self.one(4) || self.zero(100 + level) < 120 {
-                reduction += 1;
-            }
-        }
-        start - reduction
     }
 
     pub(super) fn sanitize(&mut self) {

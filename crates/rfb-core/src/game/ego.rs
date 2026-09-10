@@ -1376,6 +1376,35 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
     generation_level: u16,
     intrinsic_properties: Option<&AffixPropertyBundleDefinition>,
 ) -> Option<EgoMaterialization> {
+    let special_robe = roll_special_robe(rng, item, generation_level);
+    roll_and_materialize_rfb_ego_after_artifact_check(
+        weapon_enchantments,
+        rng,
+        item,
+        affixes,
+        generation_level,
+        intrinsic_properties,
+        special_robe,
+    )
+}
+
+pub(super) fn roll_special_robe(rng: &mut RfbRng, item: &ItemDefinition, level: u16) -> bool {
+    item.rfb_base_kind
+        .is_some_and(|base| (base.tval, base.sval) == (36, 2))
+        && level >= 30
+        && one_in(rng, 7)
+}
+
+/// Natural generation has already selected the robe branch before its artifact check.
+pub(super) fn roll_and_materialize_rfb_ego_after_artifact_check<'a>(
+    weapon_enchantments: ItemEnchantmentsDto,
+    rng: &mut RfbRng,
+    item: &ItemDefinition,
+    affixes: impl Iterator<Item = &'a AffixDefinition> + Clone,
+    generation_level: u16,
+    intrinsic_properties: Option<&AffixPropertyBundleDefinition>,
+    special_robe: bool,
+) -> Option<EgoMaterialization> {
     let base_kind = item.rfb_base_kind?;
     let allowed_type = if matches!(base_kind.tval, TV_SHOT | TV_ARROW | TV_BOLT) {
         RfbEgoTypeDefinition::Ammo
@@ -1406,7 +1435,7 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
     } else if base_kind.tval == 38 {
         RfbEgoTypeDefinition::DragonArmor
     } else if matches!(base_kind.tval, 36 | 37) {
-        if base_kind.tval == 36 && base_kind.sval == 2 && generation_level >= 30 && one_in(rng, 7) {
+        if special_robe {
             RfbEgoTypeDefinition::Robe
         } else {
             RfbEgoTypeDefinition::BodyArmor
@@ -3577,7 +3606,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(crate::STATE_HASH_SCHEMA_VERSION, 117);
+        assert_eq!(crate::STATE_HASH_SCHEMA_VERSION, 118);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,

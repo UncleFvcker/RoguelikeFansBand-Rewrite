@@ -2712,7 +2712,8 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     );
     let generated_count = multiple.items.len() - (before_count - 1);
     assert!((2..=3).contains(&generated_count));
-    assert_eq!(multiple.rng_draw_counter(), draws_before + 57);
+    // The artifact gate now precedes Ego selection, changing this seed's choices.
+    assert_eq!(multiple.rng_draw_counter(), draws_before + 52);
 }
 
 #[test]

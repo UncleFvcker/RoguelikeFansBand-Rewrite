@@ -335,6 +335,12 @@ pub(super) fn finalize_materialization(
     result: &mut EgoMaterialization,
 ) {
     let mut item = GeneratedItemDraft {
+        artifact_name: None,
+        intrinsic_melee_damage_dice: None,
+        intrinsic_weight_tenths_pound: None,
+        intrinsic_weapon_traits: Default::default(),
+        intrinsic_curse_effects: Default::default(),
+        permanent_destruction_immunities: Default::default(),
         kind_id: kind.to_owned(),
         quantity: 1,
         origin_kind: None,
