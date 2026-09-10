@@ -2946,6 +2946,13 @@
       "tval": 23
     },
     {
+      "itemId": "demo.item.poison-needle",
+      "status": "source-type-verified",
+      "sourceIndex": 75,
+      "sval": 32,
+      "tval": 23
+    },
+    {
       "itemId": "demo.item.rune-sword",
       "status": "source-type-verified",
       "sourceIndex": 77,

@@ -145,37 +145,45 @@ fn death_weapon_branding_rejects_nonplain_or_unavailable_weapons_without_rng() {
             .item(&item.kind_id)
             .is_some_and(|definition| definition.ability_book_id.is_some())
     });
-    give_inventory_item(&mut game, "test.brand-target", "demo.item.dagger");
-    game.items
-        .iter_mut()
-        .find(|item| item.id == "test.brand-target")
-        .expect("branding target")
-        .affix_ids
-        .push("rfb-legacy.affix.slaying".to_owned());
-    let mana_before = game.resources["demo.resource.mana"].current;
-    let draws_before = game.rng_draw_counter();
-    let mut events = Vec::new();
+    for (kind, ego) in [
+        ("demo.item.dagger", true),
+        ("demo.item.poison-needle", false),
+    ] {
+        game.items.retain(|item| item.id != "test.brand-target");
+        give_inventory_item(&mut game, "test.brand-target", kind);
+        if ego {
+            game.items
+                .iter_mut()
+                .find(|item| item.id == "test.brand-target")
+                .expect("branding target")
+                .affix_ids
+                .push("rfb-legacy.affix.slaying".to_owned());
+        }
+        let mana_before = game.resources["demo.resource.mana"].current;
+        let draws_before = game.rng_draw_counter();
+        let mut events = Vec::new();
 
-    game.resolve_player_ability(
-        "demo.ability.death-vampiric-branding",
-        TargetSelection::Item {
-            item_id: "test.brand-target".to_owned(),
-        },
-        &mut events,
-        &mut BTreeSet::new(),
-        &mut Vec::new(),
-    )
-    .expect("invalid branding target should be rejected cleanly");
+        game.resolve_player_ability(
+            "demo.ability.death-vampiric-branding",
+            TargetSelection::Item {
+                item_id: "test.brand-target".to_owned(),
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("invalid branding target should be rejected cleanly");
 
-    assert_eq!(game.resources["demo.resource.mana"].current, mana_before);
-    assert_eq!(game.rng_draw_counter(), draws_before);
-    assert!(
-        matches!(
-            events.as_slice(),
-            [DomainEvent::AbilityTargetUnavailable { .. }]
-        ),
-        "{events:#?}"
-    );
+        assert_eq!(game.resources["demo.resource.mana"].current, mana_before);
+        assert_eq!(game.rng_draw_counter(), draws_before);
+        assert!(
+            matches!(
+                events.as_slice(),
+                [DomainEvent::AbilityTargetUnavailable { .. }]
+            ),
+            "{events:#?}"
+        );
+    }
 }
 
 fn formal_hobbit_high_mage(seed: u64, level: u16) -> Game {

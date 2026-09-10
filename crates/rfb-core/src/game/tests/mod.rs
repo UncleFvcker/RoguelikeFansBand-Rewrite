@@ -51,6 +51,7 @@ mod mutations;
 mod paladin;
 mod persistence;
 mod pet_upkeep;
+mod poison_needle;
 mod prayer_study;
 mod progression;
 mod race_attribute_sustains;

@@ -1942,18 +1942,22 @@ impl Game {
                 } else {
                     profile.melee_skill.clone()
                 };
-                if !perfect_strike
-                    && (melee_skill.value <= 0
-                        || !self
-                            .resolve_player_hit_check(CheckContext {
-                                kind: CheckKind::MeleeHit,
-                                actor_id: self.player.id.clone(),
-                                target_id: Some(self.entities[index].id.clone()),
-                                ability: melee_skill,
-                                difficulty: target.armor_class.clone(),
-                            })
-                            .succeeded())
-                {
+                let hit = if profile.poison_needle {
+                    weapon_count == 1 || self.rng.bounded(weapon_count as u64) == 0
+                } else {
+                    perfect_strike
+                        || (melee_skill.value > 0
+                            && self
+                                .resolve_player_hit_check(CheckContext {
+                                    kind: CheckKind::MeleeHit,
+                                    actor_id: self.player.id.clone(),
+                                    target_id: Some(self.entities[index].id.clone()),
+                                    ability: melee_skill,
+                                    difficulty: target.armor_class.clone(),
+                                })
+                                .succeeded())
+                };
+                if !hit {
                     events.push(profile.miss_event(&target_kind));
                     self.check_human_dexterity_sprain(
                         if profile.source_item_id.is_some() {
@@ -2007,7 +2011,10 @@ impl Game {
                 let mut base_damage = weapon_damage
                     .saturating_mul(damage_multiplier)
                     .saturating_div(10);
-                if !order && let Some(weight) = profile.critical_weight_tenths_pound {
+                if !profile.poison_needle
+                    && !order
+                    && let Some(weight) = profile.critical_weight_tenths_pound
+                {
                     base_damage = base_damage
                         .saturating_mul(self.roll_player_melee_critical_multiplier(
                             weight,
@@ -2050,14 +2057,16 @@ impl Game {
                 if wild && let Some(source_item_id) = profile.source_item_id.as_deref() {
                     self.resolve_wild_weapon_strike(source_item_id, events);
                 }
-                self.check_human_dexterity_sprain(
-                    if profile.source_item_id.is_some() {
-                        500
-                    } else {
-                        300
-                    },
-                    events,
-                );
+                if !profile.poison_needle {
+                    self.check_human_dexterity_sprain(
+                        if profile.source_item_id.is_some() {
+                            500
+                        } else {
+                            300
+                        },
+                        events,
+                    );
+                }
                 let rolled_damage = if duelist_attack {
                     rolled_damage
                 } else {
@@ -2095,6 +2104,42 @@ impl Game {
                 } else {
                     (damage, damage.applied)
                 };
+                let (damage, drain_damage) = if profile.poison_needle {
+                    // cmd1.c: the vital-point roll follows mon_damage_mod and
+                    // class/race scaling, replacing even invulnerability and
+                    // Metal Babble's damage reduction. Uniques still consume
+                    // both nested rolls; MON_HAGURE2 is the source exception.
+                    let bound = u64::from(definition.level / 7);
+                    let inner = if bound <= 1 {
+                        1
+                    } else {
+                        self.rng.bounded(bound) + 1
+                    };
+                    let vital = self.rng.bounded(inner + 5) == 0
+                        && (!definition.tags.iter().any(|tag| tag == "unique")
+                            || definition.id == "demo.actor.metal-babble-unique")
+                        && !definition.tags.iter().any(|tag| tag == "unique2");
+                    let amount = if vital {
+                        self.entities[index].hp.saturating_add(1)
+                    } else {
+                        1
+                    };
+                    (
+                        resolve_damage(
+                            DamagePacket::new(amount, DamageType::Physical),
+                            ResistanceLevel::Normal,
+                        ),
+                        ordinary_drain
+                            .saturating_add(profile.to_damage)
+                            .max(0)
+                            .min(self.entities[index].hp),
+                    )
+                } else {
+                    (damage, drain_damage)
+                };
+                if profile.poison_needle {
+                    self.check_human_dexterity_sprain(500, events);
+                }
                 let application = plan_damage_application(
                     &self.entities[index],
                     damage,
@@ -2162,6 +2207,7 @@ impl Game {
                     break 'profiles;
                 }
                 if vampiric_weapon
+                    && (!profile.poison_needle || !application.fatal)
                     && vampiric_drain_remaining > 0
                     && drain_damage > 5
                     && actor_matches_category(&definition, "living")

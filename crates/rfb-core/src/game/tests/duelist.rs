@@ -272,24 +272,13 @@ fn armor_threshold_and_equipment_restrictions_clear_without_restoring_challenges
         assert_eq!(game.duelist_target_id, None);
     }
 
-    // Poison Needle is not a formal item yet; exercise its source-kind boundary
-    // without adding its unrelated weapon rules or allocation to this batch.
-    let mut content = rfb_content::decode_content(BUILT_IN_CONTENT_BYTES)
-        .unwrap()
-        .content;
-    let kind = content
-        .items
-        .iter_mut()
-        .find(|item| item.id == "demo.item.rapier")
-        .unwrap()
-        .rfb_base_kind
-        .as_mut()
+    let ItemLocation::Equipped { slot_id } = game.equipped_melee_weapons()[0].location.clone()
+    else {
+        panic!()
+    };
+    give_inventory_item(&mut game, "test.needle", "demo.item.poison-needle");
+    game.equip_inventory_item("test.needle", Some(&slot_id))
         .unwrap();
-    kind.source_index = 75;
-    kind.sval = 32;
-    game.content = Arc::new(ContentCatalog::from_artifact(
-        rfb_content::encode_content(content).unwrap(),
-    ));
     assert_eq!(
         game.duelist_equipment_error(),
         Some("duelist-poison-needle")

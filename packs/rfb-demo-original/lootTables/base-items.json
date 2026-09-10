@@ -1626,6 +1626,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.poison-needle",
+      "maxDepth": 65535,
+      "minDepth": 30,
+      "quantity": 1,
+      "weight": 16
+    },
+    {
       "itemKindId": "demo.item.rune-sword",
       "maxDepth": 65535,
       "minDepth": 30,

@@ -9214,6 +9214,8 @@ item-demo-duelist-name = of the Duelist
 item-demo-duelist-description = A source rapier from the Duelist Old Castle rewards.
 
 item-demo-quickthorn-name = 'Quickthorn'
+item-demo-poison-needle-name = Poison Needle
+item-demo-poison-needle-description = Attempts to kill a monster instantly. Strikes once per round; accuracy depends on the number of wielded weapons. Otherwise deals 1 damage.
 item-demo-sam-name = Hard Leather Cap of Sam
 item-demo-sam-description = The cap of Frodo's brave and faithful companion.
 item-demo-merry-name = Cloak of Merry

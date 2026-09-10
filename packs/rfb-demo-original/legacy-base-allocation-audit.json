@@ -1,6 +1,6 @@
 {
   "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits",
-  "allocationRowCount": 368,
+  "allocationRowCount": 369,
   "explicitItems": [
     {
       "itemId": "demo.item.arkenstone-of-thrain",
@@ -1382,12 +1382,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.poison-needle",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 75,
       "sourceName": "Poison Needle",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 32,
       "tval": 23
     },

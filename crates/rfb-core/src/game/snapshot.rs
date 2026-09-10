@@ -138,11 +138,7 @@ impl Game {
             base_defense: definition.defense,
             melee_skill: stats.melee_skill.value,
             armor_class: stats.armor_class.value,
-            melee_damage: DamageDiceDto {
-                dice: melee_profile.damage_dice,
-                sides: melee_profile.damage_sides,
-                damage_type: melee_profile.damage_type.into(),
-            },
+            melee_damage: melee_profile_dto.damage,
             melee_profile: melee_profile_dto,
             projectile_profile: self
                 .player_projectile_profile()

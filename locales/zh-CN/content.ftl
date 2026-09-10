@@ -9218,6 +9218,8 @@ item-demo-duelist-name = 决斗者的
 item-demo-duelist-description = 原版旧城堡决斗者奖励细剑。
 
 item-demo-quickthorn-name = 『快刺』
+item-demo-poison-needle-name = 毒针
+item-demo-poison-needle-description = 它会尝试瞬间杀死一只怪物。每轮只刺击一次，命中率取决于所持武器数量；未击中致命部位时伤害为 1。
 item-demo-sam-name = 山姆的硬皮帽
 item-demo-sam-description = 山姆是佛罗多勇敢而值得信赖的同伴。
 item-demo-merry-name = 梅里的披风

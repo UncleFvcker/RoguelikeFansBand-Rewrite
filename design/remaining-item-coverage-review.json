@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "sourceRef": "master",
   "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
-  "reviewedAt": "2026-09-10",
-  "codeBaseline": "044c3487b",
-  "scope": "Current curated inventory after the first I3 ordinary fixed-artifact family on 044c3487b. Groups supply batch/gap/acquisition/consumer for each remaining row; source flags and references identify implementation work, not proof that every source branch is implemented. Gameplay evidence is recorded per completed group; this file enables no content.",
+  "reviewedAt": "2026-09-11",
+  "codeBaseline": "696aea620",
+  "scope": "Current curated inventory after the first I4 Poison Needle family on 696aea620. Groups supply batch/gap/acquisition/consumer for each remaining row; source flags and references identify implementation work, not proof that every source branch is implemented. Gameplay evidence is recorded per completed group; this file enables no content.",
   "nameSources": {
     "kinds": "src/kind_name_zh.inc",
     "artifacts": "src/artifact_name_zh.inc",
@@ -16,13 +16,13 @@
   "summary": {
     "sourceKindRecords": 545,
     "validSourceKinds": 544,
-    "mappedCanonicalKinds": 347,
-    "remainingValidKinds": 197,
+    "mappedCanonicalKinds": 348,
+    "remainingValidKinds": 196,
     "excludedPlaceholderKinds": 1,
-    "importerMechanicsReady": 49,
+    "importerMechanicsReady": 48,
     "importerBlocked": 148,
-    "formalItems": 388,
-    "baseAllocationRows": 368,
+    "formalItems": 389,
+    "baseAllocationRows": 369,
     "fixedArtifactRecords": 392,
     "formalFixedArtifacts": 19,
     "missingFixedArtifacts": 373,
@@ -59,6 +59,16 @@
     "status": "completed",
     "evidence": "game::tests::items::ordinary_heavy_armor_allocation_reaches_equipment_and_save: controlled depth 35 and repeated ordinary generation from the unchanged formal pool, all six bases picked up/identified/equipped, existing AC/hit/weight consumers, save restore and next generated instances/RNG. Not natural leveling or desktop acceptance."
   },
+  "firstI4Group": {
+    "sourceIndex": 75,
+    "formalItemId": "demo.item.poison-needle",
+    "status": "completed-core-entry",
+    "sourceParameters": "k_info N:75 / (23,32); W:0:0:5:2000; A:30/6; P:0:1d1:0:0:0; four elemental IGNORE flags and SHOW_MODS. Display name 毒针 follows kind_name_zh.inc.",
+    "sourceConsumers": "src/xtra1.c one blow; src/cmd1.c weapon-count hit and nested vital roll after damage reduction, unique/unique2 and MON_HAGURE2 exception, ordinary vampiric drain; src/combat.c/obj_info.c preview; src/object2.c no weapon magic; src/object3.c fixed 2500 value; src/duelist.c talent rejection; lib/edit/s_info.txt current class proficiency.",
+    "acquisition": "Formal ordinary base-items allocation at depth 30, source rarity 6; existing Ego, enchantment, branding and artifact-scroll exclusions retained.",
+    "evidence": "game::tests::poison_needle: controlled full-pool generation, pickup/identify/equip, crafting rejection, restored combat and next generation/RNG; single/dual weapons, extra blows, Tonberry, Berserker and Duelist; unique/unique2/Metal Babble, invulnerability, ordinary vampiric drain and no healing on vital kills. Existing Duelist and Death branding tests use the actual formal item. Source C value case is 2500.",
+    "limits": "Core acceptance with controlled level/generation/combat preconditions; no natural leveling or desktop acceptance. Death Scythe and other I4 families remain open. No saved state or protocol type added."
+  },
   "reviewGroups": {
     "ordinary-weapon": {
       "batch": "I1",
@@ -94,11 +104,11 @@
     },
     "poison-needle": {
       "batch": "I4",
-      "classification": "missing-mechanism",
-      "gap": "缺毒针特殊命中/致死及攻击限制；优先核对已开放决斗者的武器/攻次交叉，普通伤害骰定义不足。",
-      "acquisition": "源 A 行；完成专属消费者后接入。",
-      "consumer": "crates/rfb-core/src/game/player_combat.rs",
-      "sourceConsumer": "src/cmd1.c:2249; src/object2.c:3353"
+      "classification": "implemented-entry",
+      "gap": "毒针正式生成、特殊命中/致死、攻次、现有职业熟练度及决斗者天赋限制已接入；核心证据见 firstI4Group，专属桌面验收未执行。",
+      "acquisition": "按源 A:30/6 进入正式普通底材池。",
+      "consumer": "crates/rfb-core/src/game/player_combat.rs; crates/rfb-core/src/game/player_stats.rs; crates/rfb-core/src/game/loot.rs",
+      "sourceConsumer": "src/cmd1.c; src/xtra1.c; src/combat.c; src/object2.c; src/duelist.c"
     },
     "death-scythe": {
       "batch": "I4",
@@ -352,7 +362,6 @@
   },
   "remainingKinds": [
     {"sourceIndex": 0, "sourceName": "something", "sourceNameZh": "某物", "reviewGroup": "placeholder", "hasNaturalAllocationRows": false, "sourceFlags": [], "sourceActivation": null, "importerBlockers": []},
-    {"sourceIndex": 75, "sourceName": "Poison Needle", "sourceNameZh": "& 根~毒针", "reviewGroup": "poison-needle", "hasNaturalAllocationRows": true, "sourceFlags": ["SHOW_MODS", "IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"], "sourceActivation": null, "importerBlockers": []},
     {"sourceIndex": 93, "sourceName": "Naginata", "sourceNameZh": "& 把~薙刀", "reviewGroup": "ordinary-weapon", "hasNaturalAllocationRows": true, "sourceFlags": ["SHOW_MODS", "TOWN"], "sourceActivation": null, "importerBlockers": []},
     {"sourceIndex": 98, "sourceName": "Lajatang", "sourceNameZh": "& 把~月牙铲", "reviewGroup": "ordinary-weapon", "hasNaturalAllocationRows": true, "sourceFlags": ["SHOW_MODS", "TOWN"], "sourceActivation": null, "importerBlockers": []},
     {"sourceIndex": 100, "sourceName": "Guisarme", "sourceNameZh": "& 把~钩镰枪", "reviewGroup": "ordinary-weapon", "hasNaturalAllocationRows": true, "sourceFlags": ["SHOW_MODS", "TOWN"], "sourceActivation": null, "importerBlockers": []},

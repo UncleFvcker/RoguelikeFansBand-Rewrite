@@ -1,0 +1,54 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 2000,
+  "descriptionKey": "item-demo-poison-needle-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "glyph": "|",
+  "id": "demo.item.poison-needle",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 1,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "mogaminatorRare": true,
+  "nameKey": "item-demo-poison-needle-name",
+  "resistsEnchantment": true,
+  "rfbBaseKind": {
+    "sourceIndex": 75,
+    "sval": 32,
+    "tval": 23
+  },
+  "rfbValue": {
+    "flags": [
+      "SHOW_MODS",
+      "IGNORE_ACID",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IGNORE_COLD"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "unbrandable",
+    "weapon"
+  ],
+  "weightTenthsPound": 5
+}

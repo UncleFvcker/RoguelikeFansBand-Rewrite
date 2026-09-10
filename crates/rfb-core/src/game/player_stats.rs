@@ -173,6 +173,7 @@ fn apply_player_life_force(stat: DerivedStat, life_force: i32) -> DerivedStat {
 
 #[derive(Clone)]
 pub(in crate::game) struct ResolvedAttackProfile {
+    pub(in crate::game) poison_needle: bool,
     pub(in crate::game) attacks: u16,
     pub(in crate::game) extra_attack_chance_percent: u8,
     pub(in crate::game) attack_sources: Vec<rfb_protocol::CharacterStatSourceDto>,
@@ -438,11 +439,23 @@ impl ResolvedAttackProfile {
     pub(in crate::game) fn to_dto(&self) -> AttackProfileDto {
         AttackProfileDto {
             attacks: self.attacks,
-            to_hit: self.to_hit,
-            to_damage: self.to_damage,
+            to_hit: if self.poison_needle { 0 } else { self.to_hit },
+            to_damage: if self.poison_needle {
+                0
+            } else {
+                self.to_damage
+            },
             damage: DamageDiceDto {
-                dice: self.damage_dice,
-                sides: self.damage_sides,
+                dice: if self.poison_needle {
+                    1
+                } else {
+                    self.damage_dice
+                },
+                sides: if self.poison_needle {
+                    1
+                } else {
+                    self.damage_sides
+                },
                 damage_type: self.damage_type.into(),
             },
             source_item_id: self.source_item_id.clone(),
@@ -2290,7 +2303,22 @@ impl Game {
                 amount: -penalty,
             });
         }
+        let poison_needle = source_kind_id
+            .as_deref()
+            .and_then(|id| self.content.item(id))
+            .and_then(|item| item.rfb_base_kind)
+            .is_some_and(|kind| (kind.tval, kind.sval) == (23, 32));
+        if poison_needle {
+            // xtra1.c and cmd1.c: one blow, including after extra blows and
+            // Tonberry's penalty; cmd1.c ignores every ordinary damage bonus.
+            attack_sources.push(rfb_protocol::CharacterStatSourceDto {
+                source_id: source_item_id.clone().unwrap(),
+                amount: 100 - blows,
+            });
+            blows = 100;
+        }
         ResolvedAttackProfile {
+            poison_needle,
             attacks: u16::try_from(blows / 100).expect("derived melee attack count must fit u16"),
             extra_attack_chance_percent: u8::try_from(blows % 100)
                 .expect("fractional melee blows must fit u8"),
@@ -2361,6 +2389,7 @@ impl Game {
                         total.saturating_add(contribution.amount)
                     });
                 ResolvedAttackProfile {
+                    poison_needle: false,
                     attacks: 1,
                     extra_attack_chance_percent: 0,
                     attack_sources: Vec::new(),
@@ -2489,6 +2518,7 @@ impl Game {
                        damage_sides: u16,
                        weight_tenths_pound: u16| {
             ResolvedAttackProfile {
+                poison_needle: false,
                 attacks: blows / 100,
                 extra_attack_chance_percent: u8::try_from(blows % 100)
                     .expect("fractional Draconian blows must fit u8"),
