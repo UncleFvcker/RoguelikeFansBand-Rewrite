@@ -21,15 +21,18 @@
     "abilities": [
       {
         "abilityId": "demo.ability.mind-fog",
-        "weight": 2
+        "weight": 2,
+        "innate": false
       },
       {
         "abilityId": "demo.ability.gloom-veil",
-        "weight": 1
+        "weight": 1,
+        "innate": false
       },
       {
         "abilityId": "demo.ability.numbing-grasp",
-        "weight": 1
+        "weight": 1,
+        "innate": false
       }
     ]
   },

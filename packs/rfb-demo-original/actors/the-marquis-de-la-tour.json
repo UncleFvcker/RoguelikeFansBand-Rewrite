@@ -61,7 +61,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-6d10",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.heal-120",
@@ -97,6 +98,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "kin-glyph-112",
     "legacy-import",
     "orc-cave",

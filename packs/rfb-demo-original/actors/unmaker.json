@@ -132,7 +132,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-chaos-17-600-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 20
@@ -168,6 +169,8 @@
     "rfb.status.fear"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "cold-blooded",
     "kin-glyph-69",
     "legacy-import",

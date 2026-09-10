@@ -128,7 +128,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-dark-17-400-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.ball-dark-10d10-370",
@@ -136,7 +137,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-nether-14-550-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.hand-of-doom",
@@ -187,6 +189,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "cold-blooded",
     "demon",
     "eldritch-horror",

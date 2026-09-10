@@ -112,7 +112,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-6d8",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.drag",
@@ -163,6 +164,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "camelot",
     "camelot-knight",
     "good",

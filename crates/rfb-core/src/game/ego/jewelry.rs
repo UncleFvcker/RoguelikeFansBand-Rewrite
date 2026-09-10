@@ -1530,9 +1530,28 @@ mod tests {
 
     #[test]
     fn jewelry_sacred_activations_execute_holiness_star_ball_and_starburst() {
-        for token in ["holiness", "star-ball", "starburst"] {
+        for (token, star_ball_terrain) in [
+            ("holiness", None),
+            ("star-ball", Some("demo.terrain.surface-water-deep")),
+            ("star-ball", Some("demo.terrain.permanent-wall")),
+            ("starburst", None),
+        ] {
             let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
             game.entities.clear();
+            if let Some(terrain) = star_ball_terrain {
+                game.items
+                    .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
+                let origin = game.player.position;
+                for y in origin.y - 4..=origin.y + 4 {
+                    for x in origin.x - 4..=origin.x + 4 {
+                        let position = rfb_protocol::Position { x, y };
+                        if position != origin {
+                            let index = game.index(position).unwrap();
+                            game.terrain[index] = terrain.to_owned();
+                        }
+                    }
+                }
+            }
             game.debug_add_generated_inventory_item("test.amulet", "demo.item.amulet", 70)
                 .unwrap();
             let affix = game
@@ -1566,6 +1585,7 @@ mod tests {
             game.player.hp = 1;
             let mut events = Vec::new();
             let mut changed = BTreeSet::new();
+            let draws = game.rng_draw_counter();
             for _ in 0..100 {
                 game.use_inventory_item(
                     "test.amulet",
@@ -1600,11 +1620,18 @@ mod tests {
                         matches!(event, crate::event::DomainEvent::AbilityAreaDamage { .. })
                     })
                     .count();
-                assert!(
-                    blasts >= if token == "star-ball" { 5 } else { 1 },
-                    "{token}: {blasts}"
-                );
-                assert!(!changed.is_empty());
+                if star_ball_terrain == Some("demo.terrain.permanent-wall") {
+                    assert_eq!(
+                        blasts, 0,
+                        "no ball may target the player or a blocking wall"
+                    );
+                } else {
+                    assert!(
+                        blasts >= if token == "star-ball" { 5 } else { 1 },
+                        "{token}: {blasts}"
+                    );
+                    assert!(!changed.is_empty());
+                }
             }
             if token == "starburst" {
                 assert!(
@@ -1613,6 +1640,11 @@ mod tests {
                         .iter()
                         .any(|status| status.kind_id == crate::effect::STATUS_BLINDNESS)
                 );
+            }
+            if star_ball_terrain == Some("demo.terrain.surface-water-deep") {
+                // Every nearby non-self cell is projectable water: no ball should exhaust
+                // 1,000 attempts searching for a walkable target before firing.
+                assert!(game.rng_draw_counter() - draws < 1000);
             }
         }
     }

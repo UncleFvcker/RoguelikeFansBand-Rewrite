@@ -55,7 +55,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.shriek",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.mind-blast-7d7",
@@ -76,6 +77,8 @@
   "role": "monster",
   "speed": 105,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "cold-blooded",
     "good",

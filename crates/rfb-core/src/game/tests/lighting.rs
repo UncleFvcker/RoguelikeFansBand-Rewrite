@@ -12,6 +12,410 @@ const TORCH_KIND_ID: &str = "demo.item.wooden-torch";
 const LANTERN_KIND_ID: &str = "demo.item.brass-lantern";
 const OIL_KIND_ID: &str = "demo.item.flask-of-oil";
 
+fn dark_cave_game() -> Game {
+    static CONTENT: std::sync::OnceLock<Arc<ContentCatalog>> = std::sync::OnceLock::new();
+    let content = CONTENT.get_or_init(|| {
+        let root =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+        let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
+        artifact.content.worlds[0]
+            .dungeons
+            .iter_mut()
+            .find(|d| d.id == "demo.dungeon.warrens")
+            .unwrap()
+            .darkness = true;
+        Arc::new(ContentCatalog::from_artifact(
+            rfb_content::encode_content(artifact.content).unwrap(),
+        ))
+    });
+    let mut game =
+        Game::from_content_with_build(42, content.clone(), DEFAULT_WORLD_ID, RFB_WARRIOR_BUILD_ID)
+            .unwrap();
+    descend_one_floor(&mut game);
+    assert!(game.dungeon_has_darkness());
+    game
+}
+
+fn dark_cave_room() -> Game {
+    let mut game = dark_cave_game();
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.gold_piles.clear();
+    game.player.position = Position { x: 10, y: 10 };
+    for y in 8..=12 {
+        for x in 8..=20 {
+            replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+        }
+    }
+    game
+}
+
+#[test]
+fn dark_cave_generated_glow_light_cap_and_return_survive_save() {
+    let mut game = dark_cave_game();
+    assert!(game.glow.iter().all(|glow| !glow));
+    clear_monsters(&mut game);
+    give_inventory_item(&mut game, "test.lantern", LANTERN_KIND_ID);
+    dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: "test.lantern".to_owned(),
+            slot_id: None,
+        },
+    );
+    assert_eq!(game.player_light_radius(), Some(1));
+    let position = game.player.position;
+    assert!(!game.set_floor_glow_at(position, true));
+    let hash = game.state_hash();
+    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(restored.state_hash(), hash);
+    assert_eq!(restored.player_light_radius(), Some(1));
+    assert!(restored.glow.iter().all(|glow| !glow));
+    clear_monsters(&mut restored);
+    place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
+    restored.traverse_stairs(false).unwrap().unwrap();
+    assert!(!restored.dungeon_has_darkness());
+    assert_eq!(restored.player_light_radius(), Some(2));
+    descend_one_floor(&mut restored);
+    assert!(restored.dungeon_has_darkness());
+    assert_eq!(restored.player_light_radius(), Some(1));
+    assert!(restored.glow.iter().all(|glow| !glow));
+}
+
+#[test]
+fn dark_cave_caps_positive_monster_light_preserves_negative_light_and_night_vision() {
+    let mut game = dark_cave_room();
+    let source = Position { x: 12, y: 10 };
+    let positive = game
+        .content
+        .actor_definitions()
+        .find(|a| a.light.is_some_and(|l| !l.darkness && l.radius >= 2))
+        .unwrap()
+        .id
+        .clone();
+    game.push_generated_actor("test.light".to_owned(), &positive, source);
+    game.entities[0].statuses.clear();
+    assert!(game.position_is_lit(Position { x: 13, y: 10 }));
+    assert!(!game.position_is_lit(Position { x: 14, y: 10 }));
+    game.entities.clear();
+    let negative = game
+        .content
+        .actor_definitions()
+        .find(|a| a.light.is_some_and(|l| l.darkness && l.radius >= 2))
+        .unwrap()
+        .id
+        .clone();
+    game.push_generated_actor("test.dark".to_owned(), &negative, source);
+    game.entities[0].statuses.clear();
+    let edge = Position { x: 14, y: 10 };
+    let edge_index = game.index(edge).unwrap();
+    game.glow[edge_index] = true;
+    assert!(!game.position_is_lit(edge));
+    game.entities[0].position = Position { x: 16, y: 10 };
+    assert!(
+        game.position_is_lit(edge),
+        "distant monster darkness is not processed"
+    );
+    give_inventory_item(&mut game, "test.night-vision", "demo.item.cloak");
+    let cloak = game
+        .items
+        .iter_mut()
+        .find(|i| i.id == "test.night-vision")
+        .unwrap();
+    cloak.location = ItemLocation::Equipped {
+        slot_id: "cloak".to_owned(),
+    };
+    cloak
+        .intrinsic_properties
+        .passives
+        .insert(rfb_content::EquipmentPassive::NightVision);
+    assert!(
+        !game.position_is_lit(edge),
+        "night vision retains distant monster sources"
+    );
+}
+
+#[test]
+fn dark_cave_visual_sight_limits_infra_but_not_esp_or_night_vision() {
+    let mut game = dark_cave_room();
+    let near = Position { x: 14, y: 10 };
+    let far = Position { x: 15, y: 10 };
+    game.push_generated_actor("test.near".to_owned(), "demo.actor.newt", near);
+    game.push_generated_actor("test.far".to_owned(), "demo.actor.newt", far);
+    give_inventory_item(&mut game, "test.senses", "demo.item.cloak");
+    let cloak = game
+        .items
+        .iter_mut()
+        .find(|i| i.id == "test.senses")
+        .unwrap();
+    cloak.location = ItemLocation::Equipped {
+        slot_id: "cloak".to_owned(),
+    };
+    cloak.intrinsic_properties.equipment_bonuses.infravision = 8;
+    assert!(game.entity_is_visually_visible_to_player(&game.entities[0]));
+    assert!(!game.entity_is_visually_visible_to_player(&game.entities[1]));
+    assert!(!game.is_visible(far), "infravision does not reveal terrain");
+    game.player.statuses.push(
+        crate::game::monster_combat::melee_status("rfb.status.telepathy", 20, "test.senses").status,
+    );
+    assert!(game.entity_is_visible_by_telepathy(&game.entities[1]));
+    assert!(game.entity_is_fuzzy_to_player(&game.entities[1]));
+    game.items[0]
+        .intrinsic_properties
+        .passives
+        .insert(rfb_content::EquipmentPassive::NightVision);
+    assert!(game.entity_is_visually_visible_to_player(&game.entities[1]));
+    assert!(game.is_visible(far));
+    assert!(!game.position_is_lit(far));
+    game.player.statuses.push(
+        crate::game::monster_combat::melee_status("rfb.status.blindness", 20, "test.senses").status,
+    );
+    assert!(!game.entity_is_visually_visible_to_player(&game.entities[1]));
+    assert!(game.entity_is_visible_by_telepathy(&game.entities[1]));
+}
+
+#[test]
+fn dark_cave_detection_is_reduced_once_for_abilities_scrolls_and_mapping() {
+    let mut game = dark_cave_room();
+    for (id, x) in [("test.near", 12), ("test.far", 13)] {
+        game.push_generated_actor(id.to_owned(), "demo.actor.newt", Position { x, y: 10 });
+        game.entities.last_mut().unwrap().energy_need = 10000;
+    }
+    let mut ability = game
+        .content
+        .ability("demo.ability.arcane-light-area")
+        .unwrap()
+        .clone();
+    ability.effect = AbilityEffectDefinition::Detect {
+        subject: rfb_content::AbilityDetectSubjectDefinition::Actor,
+        category: "normal-monster".to_owned(),
+        radius: 8,
+        persistent: false,
+        through_walls: true,
+    };
+    let mut events = Vec::new();
+    game.resolve_player_detection_effect(&ability, &mut events, &mut BTreeSet::new());
+    let DomainEvent::AbilityDetected { resolution, .. } = &events[0] else {
+        panic!("detection event")
+    };
+    assert_eq!(resolution.radius, 2);
+    assert_eq!(resolution.detected_entity_ids, ["test.near"]);
+    give_inventory_item(&mut game, "test.detect", "demo.item.detect-monsters-scroll");
+    give_inventory_item(&mut game, "test.lantern", LANTERN_KIND_ID);
+    set_inventory_light_equipped(&mut game, "test.lantern");
+    let before = game.world_tick;
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.detect".to_owned(),
+            target: Some(TargetSelection::SelfTarget),
+        },
+    );
+    let detection = update
+        .events
+        .iter()
+        .find_map(|e| match &e.outcome {
+            Some(GameEventOutcomeDto::AbilityDetect { resolution }) => Some(resolution),
+            _ => None,
+        })
+        .unwrap();
+    assert_eq!(detection.radius, 2);
+    assert_eq!(detection.detected_entity_ids, ["test.near"]);
+    assert!(!game.items.iter().any(|i| i.id == "test.detect"));
+    assert!(game.world_tick > before);
+    game.explored.fill(false);
+    let mapped = game.detect_terrain_positions("map", 8, true, true);
+    assert!(mapped.contains(&Position { x: 12, y: 10 }));
+    assert!(!mapped.contains(&Position { x: 13, y: 10 }));
+    assert!(!game.glow.iter().any(|g| *g));
+    assert_eq!(game.dungeon_detection_radius(2), 0);
+    for (id, x) in [("test.near-item", 12), ("test.far-item", 13)] {
+        give_inventory_item(&mut game, id, "demo.item.dagger");
+        game.items.iter_mut().find(|i| i.id == id).unwrap().location =
+            ItemLocation::Ground(Position { x, y: 10 });
+        game.gold_piles.push(crate::state::GoldPile {
+            id: format!("{id}.gold"),
+            position: Position { x, y: 10 },
+            amount: 10,
+            appearance: rfb_protocol::GoldAppearanceDto::Gold,
+            discovered: false,
+        });
+    }
+    assert_eq!(
+        game.detect_item_positions("item", 8, true).1,
+        ["test.near-item"]
+    );
+    assert_eq!(
+        game.detect_gold_positions(8, true).1,
+        ["test.near-item.gold"]
+    );
+    game.explored.fill(false);
+    assert_eq!(
+        game.detect_terrain_positions("map", 2, false, true),
+        [game.player.position]
+    );
+}
+
+#[test]
+fn dark_cave_successful_book_cast_spends_mana_and_a_turn_even_when_light_is_absorbed() {
+    let mut game = Game::from_content_with_build(
+        42,
+        dark_cave_game().content,
+        DEFAULT_WORLD_ID,
+        "demo.build.high-mage-arcane",
+    )
+    .unwrap();
+    game.progress.level = 10;
+    game.progress.max_level = 10;
+    game.progress.experience = game.experience_required_for_level(10);
+    game.progress.maximum_experience = game.progress.experience;
+    game.ability_learning_order
+        .push("demo.ability.arcane-light-area".to_owned());
+    game.refresh_player_resource_maxima();
+    let mana = game.resources.get_mut("demo.resource.mana").unwrap();
+    mana.current = mana.maximum;
+    game.debug_ability_casts_succeed = true;
+    choose_human_talent_if_pending(&mut game);
+    descend_one_floor(&mut game);
+    clear_monsters(&mut game);
+    give_inventory_item(&mut game, "test.lantern", LANTERN_KIND_ID);
+    set_inventory_light_equipped(&mut game, "test.lantern");
+    let before = game.world_tick;
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::CastAbility {
+            ability_id: "demo.ability.arcane-light-area".to_owned(),
+            target: TargetSelection::SelfTarget,
+        },
+    );
+    let cast = update
+        .events
+        .iter()
+        .find_map(|event| match &event.outcome {
+            Some(GameEventOutcomeDto::AbilityCast { resolution }) => Some(resolution),
+            _ => None,
+        })
+        .unwrap();
+    assert!(cast.succeeded);
+    assert!(cast.resource_paid > 0);
+    assert!(game.world_tick > before);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "dungeon.darkness-absorbed-light")
+    );
+    assert!(game.glow.iter().all(|glow| !glow));
+}
+
+#[test]
+fn dark_cave_blocks_area_projection_but_retains_daylight_backlash_and_light_ray_damage() {
+    let mut game = dark_cave_room();
+    let target = Position { x: 11, y: 10 };
+    game.push_generated_actor("test.target".to_owned(), "demo.actor.newt", target);
+    game.entities[0].hp = 100;
+    game.entities[0].max_hp = 100;
+    game.entities[0]
+        .resistances
+        .set(DamageType::Light, ResistanceLevel::Vulnerable);
+    let mut ability = game
+        .content
+        .ability("demo.ability.nature-daylight")
+        .unwrap()
+        .clone();
+    ability.effect = AbilityEffectDefinition::LightArea {
+        damage_dice: 2,
+        damage_sides: 2,
+        radius: 2,
+        sunlight_burn_damage_dice: 2,
+        sunlight_burn_damage_sides: 2,
+    };
+    game.player
+        .statuses
+        .push(race_form_status("demo.race.vampire-lord"));
+    let hp = game.player.hp;
+    let mut events = Vec::new();
+    game.resolve_player_ability_effect(
+        ability.clone(),
+        AbilityTargetPlan::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .unwrap();
+    assert_eq!(game.entities[0].hp, 100);
+    assert!((2..=4).contains(&(hp - game.player.hp)));
+    assert!(
+        events
+            .iter()
+            .any(|e| matches!(e, DomainEvent::DungeonDarknessAbsorbedLight))
+    );
+    assert!(
+        !events
+            .iter()
+            .any(|e| matches!(e, DomainEvent::AbilityAreaDamage { .. }))
+    );
+    assert!(game.glow.iter().all(|g| !g));
+    ability.effect = AbilityEffectDefinition::LightLine {
+        damage_dice: 2,
+        damage_sides: 2,
+    };
+    game.resolve_player_ability_effect(
+        ability,
+        AbilityTargetPlan::Projectile {
+            path: vec![target],
+            stop_at_actor: false,
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .unwrap();
+    assert!(game.entities[0].hp < 100);
+    assert!(game.glow.iter().all(|g| !g));
+}
+
+#[test]
+fn dark_cave_full_revelation_keeps_knowledge_without_glow_and_light_scroll_spends_turn() {
+    let mut game = dark_cave_room();
+    let ability = game
+        .content
+        .ability("demo.ability.nature-call-sunlight")
+        .unwrap()
+        .clone();
+    let mut events = Vec::new();
+    game.resolve_player_ability_effect(
+        ability,
+        AbilityTargetPlan::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .unwrap();
+    assert!(game.explored.iter().all(|e| *e));
+    assert!(game.glow.iter().all(|g| !g));
+    give_inventory_item(&mut game, "test.lantern", LANTERN_KIND_ID);
+    set_inventory_light_equipped(&mut game, "test.lantern");
+    give_inventory_item(&mut game, "test.light", "demo.item.light-scroll");
+    let before = game.world_tick;
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.light".to_owned(),
+            target: Some(TargetSelection::SelfTarget),
+        },
+    );
+    assert!(!game.items.iter().any(|i| i.id == "test.light"));
+    assert!(game.world_tick > before);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|e| e.kind == "dungeon.darkness-absorbed-light")
+    );
+    assert!(game.glow.iter().all(|g| !g));
+}
+
 fn intrinsic_see_invisible_game(seed: u64) -> Game {
     Game::new_with_build_race_and_name(
         seed,

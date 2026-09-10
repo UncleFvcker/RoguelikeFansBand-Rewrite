@@ -157,6 +157,7 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "attack-spell",
     "animal",
     "hydra",
     "kin-glyph-77",

@@ -125,6 +125,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "attack-spell",
     "empty-mind",
     "evil",
     "kin-glyph-110",

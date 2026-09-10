@@ -307,14 +307,9 @@ pub(super) fn validate_tables(
             allocation.preferred_movement_modes.sort_unstable();
             allocation.preferred_habitats.sort_unstable();
             allocation.preferred_damage_immunities.sort_unstable();
+            allocation.preferred_damage_resistances.sort_unstable();
             let mut glyphs = BTreeSet::new();
             if !table.entries.is_empty()
-                || (allocation.special_div != 64
-                    && allocation.preferred_glyphs.is_empty()
-                    && allocation.preferred_tags.is_empty()
-                    && allocation.preferred_movement_modes.is_empty()
-                    && allocation.preferred_habitats.is_empty()
-                    && allocation.preferred_damage_immunities.is_empty())
                 || allocation.preferred_glyphs.len() > 64
                 || allocation.preferred_tags.len() > 64
                 || allocation.special_div > 64
@@ -337,6 +332,10 @@ pub(super) fn validate_tables(
                     .any(|pair| pair[0] == pair[1])
                 || allocation
                     .preferred_damage_immunities
+                    .windows(2)
+                    .any(|pair| pair[0] == pair[1])
+                || allocation
+                    .preferred_damage_resistances
                     .windows(2)
                     .any(|pair| pair[0] == pair[1])
             {
@@ -640,7 +639,10 @@ pub(super) fn validate_tables(
             if !section_ids.insert(spawn.id.clone())
                 || spawn.position.x >= vault.width
                 || spawn.position.y >= vault.height
-                || terrain_walkability.get(terrain_id) != Some(&true)
+                || !terrain
+                    .iter()
+                    .find(|tile| tile.id == *terrain_id)
+                    .is_some_and(TerrainDefinition::allows_items)
                 || !occupied_positions.insert(spawn.position)
             {
                 return Err(ContentError::InvalidVault(vault.id.clone()));

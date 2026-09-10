@@ -124,11 +124,13 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-dark-17-400-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-nether-14-550-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.ball-nether-10d10-226",
@@ -192,6 +194,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "aura-fear",
     "hindu",
     "kin-glyph-80",

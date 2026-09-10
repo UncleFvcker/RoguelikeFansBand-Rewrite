@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.disaster-area-entrance",
+  "nameKey": "terrain-demo-disaster-area-entrance-name",
+  "descriptionKey": "terrain-demo-disaster-area-entrance-description",
+  "glyph": ">",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": [
+    "stairs-down",
+    "passage"
+  ]
+}

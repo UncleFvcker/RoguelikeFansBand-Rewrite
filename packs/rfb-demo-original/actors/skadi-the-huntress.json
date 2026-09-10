@@ -135,7 +135,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-cold-20-900-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.bolt-ice-6d8-72",
@@ -143,11 +144,13 @@
       },
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-12d12",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-1d1-215",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.blink",
@@ -185,6 +188,8 @@
     "rfb.status.confusion"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "giant",
     "kin-glyph-80",
     "legacy-import",

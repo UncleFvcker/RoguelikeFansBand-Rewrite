@@ -155,6 +155,7 @@
   "role": "monster",
   "speed": 128,
   "tags": [
+    "attack-spell",
     "anambar-quest",
     "cold-blooded",
     "evil",

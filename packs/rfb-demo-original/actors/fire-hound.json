@@ -81,7 +81,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-fire-20-900-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 5
@@ -100,6 +101,8 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "hound",
     "kin-glyph-90",

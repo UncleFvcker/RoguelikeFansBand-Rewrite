@@ -167,15 +167,18 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-fire-20-900-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-light-17-400-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-electricity-20-900-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.bolt-plasma-8d7-119",
@@ -212,6 +215,8 @@
     "rfb.status.stun"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "hindu",
     "kin-glyph-69",
     "legacy-import",

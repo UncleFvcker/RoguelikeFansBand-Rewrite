@@ -468,6 +468,9 @@ pub enum CastingFailureFormula {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ClassAbilityDefinition {
     pub ability_id: String,
+    /// Source command-m techniques subject to the dungeon NO_MAGIC gate.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub blocked_by_dungeon_anti_magic: bool,
     pub minimum_level: u16,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ui_group_name_key: Option<String>,

@@ -90,6 +90,9 @@
     "DungeonDefinition": {
       "additionalProperties": false,
       "properties": {
+        "darkness": {
+          "type": "boolean"
+        },
         "entranceGuardian": {
           "anyOf": [
             {
@@ -109,7 +112,10 @@
           "type": "array"
         },
         "guardianActorKindId": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "id": {
           "type": "string"
@@ -130,6 +136,12 @@
             "null"
           ]
         },
+        "noMagic": {
+          "type": "boolean"
+        },
+        "noMelee": {
+          "type": "boolean"
+        },
         "rootFloorId": {
           "type": "string"
         },
@@ -147,8 +159,7 @@
       },
       "required": [
         "id",
-        "rootFloorId",
-        "guardianActorKindId"
+        "rootFloorId"
       ],
       "type": "object"
     },
@@ -1366,6 +1377,12 @@
           ],
           "default": null
         },
+        "floorMix": {
+          "items": {
+            "$ref": "#/$defs/ProceduralTerrainMixDefinition"
+          },
+          "type": "array"
+        },
         "lake": {
           "anyOf": [
             {
@@ -1444,6 +1461,12 @@
           "default": [],
           "items": {
             "$ref": "#/$defs/ProceduralStreamerCandidateDefinition"
+          },
+          "type": "array"
+        },
+        "wallMix": {
+          "items": {
+            "$ref": "#/$defs/ProceduralTerrainMixDefinition"
           },
           "type": "array"
         }
@@ -1817,6 +1840,26 @@
         "hiddenTerrainId",
         "knownOneIn",
         "hiddenOneIn"
+      ],
+      "type": "object"
+    },
+    "ProceduralTerrainMixDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "percent": {
+          "description": "Percentage of replaceable base material; the remainder keeps the base.",
+          "format": "uint8",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "terrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "terrainId",
+        "percent"
       ],
       "type": "object"
     },
@@ -2400,6 +2443,9 @@
     },
     "id": {
       "type": "string"
+    },
+    "inheritWildernessTerrain": {
+      "type": "boolean"
     },
     "initialFloorId": {
       "type": "string"

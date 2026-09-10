@@ -135,7 +135,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-1d1-119",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.heal-120",
@@ -173,6 +174,8 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "evil",
     "giant",
     "kin-glyph-80",

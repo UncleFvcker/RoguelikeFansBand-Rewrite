@@ -637,6 +637,7 @@ pub(crate) enum DomainEvent {
         current: u16,
         maximum: u16,
     },
+    DungeonDarknessAbsorbedLight,
     LightExtinguished {
         target_item_id: String,
         target_kind_id: String,
@@ -811,6 +812,7 @@ pub(crate) enum DomainEvent {
         severity: ItemCurseSeverityDto,
     },
     MoveBlocked,
+    PlayerMeleeBlocked,
     WildernessAmbushed,
     WildernessInterestingDiscovery,
     WildernessTerrainDamaged {
@@ -820,6 +822,15 @@ pub(crate) enum DomainEvent {
     PlayerWallDamaged {
         crushing: bool,
         damage: DamageOutcome,
+    },
+    PlayerWasteDamaged {
+        terrain_id: String,
+        flying: bool,
+        damage: DamageOutcome,
+    },
+    ArmorCorroded {
+        target_kind_id: String,
+        protected: bool,
     },
     PlayerLightDamaged {
         source_kind_id: Option<String>,
@@ -2958,6 +2969,10 @@ impl DomainEvent {
                     ("maximum", maximum.to_string()),
                 ],
             ),
+            Self::DungeonDarknessAbsorbedLight => dto_without_args(
+                "dungeon.darkness-absorbed-light",
+                "dungeon-darkness-absorbed-light",
+            ),
             Self::LightExtinguished {
                 target_item_id,
                 target_kind_id,
@@ -3611,6 +3626,9 @@ impl DomainEvent {
                 ],
             ),
             Self::MoveBlocked => dto_without_args("move.blocked", "game-move-blocked"),
+            Self::PlayerMeleeBlocked => {
+                dto_without_args("player.melee-blocked", "player-melee-blocked")
+            }
             Self::WildernessAmbushed => {
                 dto_without_args("wilderness.ambushed", "wilderness-ambushed")
             }
@@ -3652,6 +3670,38 @@ impl DomainEvent {
                 "player-light-death",
                 [],
                 GameEventOutcomeDto::Death {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::ArmorCorroded {
+                target_kind_id,
+                protected,
+            } => dto(
+                "item.armor-corroded",
+                if protected {
+                    "item-armor-acid-unaffected"
+                } else {
+                    "item-armor-acid-damaged"
+                },
+                [("target", target_kind_id)],
+            ),
+            Self::PlayerWasteDamaged {
+                terrain_id,
+                flying,
+                damage,
+            } => dto_with_outcome(
+                "player.waste-damaged",
+                if flying {
+                    if damage.raw > 0 {
+                        "player-waste-gas-burn"
+                    } else {
+                        "player-waste-gas-poison"
+                    }
+                } else {
+                    "player-waste-burn"
+                },
+                [("terrain", terrain_id)],
+                GameEventOutcomeDto::Damage {
                     resolution: damage.into(),
                 },
             ),

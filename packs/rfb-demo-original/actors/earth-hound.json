@@ -90,7 +90,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-shards-17-500-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 5
@@ -109,6 +110,8 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "hound",
     "kin-glyph-90",

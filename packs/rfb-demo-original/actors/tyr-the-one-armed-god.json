@@ -118,11 +118,13 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-sound-17-450-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.ball-shards-1d1-414",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.drag",
@@ -186,6 +188,8 @@
     "rfb.status.fear"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "good",
     "kin-glyph-80",
     "legacy-import",

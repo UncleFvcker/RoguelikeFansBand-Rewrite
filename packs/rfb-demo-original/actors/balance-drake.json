@@ -85,19 +85,23 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-sound-17-450-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-shards-17-500-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-disenchant-17-500-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-chaos-17-600-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.slow",
@@ -140,6 +144,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "dragon",
     "kin-glyph-100",
     "legacy-import",

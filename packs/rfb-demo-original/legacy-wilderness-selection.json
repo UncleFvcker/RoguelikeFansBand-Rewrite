@@ -96,6 +96,31 @@
       "sourceIndex": 20,
       "sourceName": "Crystal castle",
       "id": "demo.dungeon.crystal-castle"
+    },
+    {
+      "sourceIndex": 13,
+      "sourceName": "R'lyeh",
+      "id": "demo.dungeon.rlyeh"
+    },
+    {
+      "sourceIndex": 16,
+      "sourceName": "Anti-magic cave",
+      "id": "demo.dungeon.anti-magic-cave"
+    },
+    {
+      "sourceIndex": 17,
+      "sourceName": "Anti-melee cave",
+      "id": "demo.dungeon.anti-melee-cave"
+    },
+    {
+      "sourceIndex": 19,
+      "sourceName": "Dark cave",
+      "id": "demo.dungeon.dark-cave"
+    },
+    {
+      "sourceIndex": 37,
+      "sourceName": "Disaster area",
+      "id": "demo.dungeon.disaster-area"
     }
   ],
   "townPlans": [
@@ -436,6 +461,222 @@
           "services": [
             { "actionIndex": 0, "name": "请求任务", "minimumCost": 0, "maximumCost": 0, "command": "q", "actionId": 6, "restriction": 0 }
           ]
+        }
+      ]
+    },
+    {
+      "sourceIndex": 1,
+      "sourceName": "前哨站",
+      "id": "demo.town.outpost",
+      "position": {
+        "x": 28,
+        "y": 52
+      },
+      "sourceFile": "lib/edit/t_outp.txt",
+      "standardFacilities": [
+        {
+          "symbol": "0",
+          "sourceTag": "SHROOMERY"
+        },
+        {
+          "symbol": "1",
+          "sourceTag": "GENERAL_STORE"
+        },
+        {
+          "symbol": "2",
+          "sourceTag": "ARMOURY"
+        },
+        {
+          "symbol": "3",
+          "sourceTag": "WEAPON_SMITHS"
+        },
+        {
+          "symbol": "4",
+          "sourceTag": "TEMPLE"
+        },
+        {
+          "symbol": "5",
+          "sourceTag": "ALCHEMY_SHOP"
+        },
+        {
+          "symbol": "6",
+          "sourceTag": "MAGIC_SHOP"
+        },
+        {
+          "symbol": "7",
+          "sourceTag": "BLACK_MARKET"
+        },
+        {
+          "symbol": "8",
+          "sourceTag": "HOME"
+        },
+        {
+          "symbol": "9",
+          "sourceTag": "BOOKSTORE"
+        }
+      ],
+      "specialFacilities": [
+        { "symbol": "M", "sourceIndex": 95, "sourceTag": "MUSEUM", "sourceName": "博物馆" }
+      ],
+      "buildings": [
+        {
+          "buildingIndex": 0,
+          "services": [
+            {
+              "actionIndex": 0,
+              "name": "住宿一晚",
+              "minimumCost": 20,
+              "maximumCost": 20,
+              "command": "r",
+              "actionId": 17,
+              "restriction": 0
+            },
+            {
+              "actionIndex": 1,
+              "name": "购买食物和饮料",
+              "minimumCost": 1,
+              "maximumCost": 1,
+              "command": "f",
+              "actionId": 18,
+              "restriction": 1
+            },
+            {
+              "actionIndex": 2,
+              "name": "打听传闻",
+              "minimumCost": 5,
+              "maximumCost": 5,
+              "command": "u",
+              "actionId": 19,
+              "restriction": 0
+            },
+            {
+              "actionIndex": 3,
+              "name": "请求任务",
+              "minimumCost": 0,
+              "maximumCost": 0,
+              "command": "q",
+              "actionId": 6,
+              "restriction": 0
+            },
+            {
+              "actionIndex": 4,
+              "name": "传送到其他城镇",
+              "minimumCost": 500,
+              "maximumCost": 500,
+              "command": "m",
+              "actionId": 42,
+              "restriction": 0
+            },
+            {
+              "actionIndex": 5,
+              "name": "询问你的声望",
+              "minimumCost": 1,
+              "maximumCost": 1,
+              "command": "a",
+              "actionId": 55,
+              "restriction": 0
+            }
+          ],
+          "memberships": [
+            {
+              "sourceTag": "R",
+              "identity": "*",
+              "role": "Member"
+            }
+          ],
+          "name": "白马旅店",
+          "ownerName": "好人奥蒂克",
+          "ownerRace": "人类"
+        },
+        {
+          "buildingIndex": 1,
+          "services": [
+            {
+              "actionIndex": 0,
+              "name": "请求任务",
+              "minimumCost": 0,
+              "maximumCost": 0,
+              "command": "q",
+              "actionId": 6,
+              "restriction": 0
+            },
+            {
+              "actionIndex": 1,
+              "name": "鉴定单件物品",
+              "minimumCost": 50,
+              "maximumCost": 50,
+              "command": "i",
+              "actionId": 44,
+              "restriction": 0
+            },
+            {
+              "actionIndex": 2,
+              "name": "合法改名",
+              "minimumCost": 10,
+              "maximumCost": 10,
+              "command": "c",
+              "actionId": 57,
+              "restriction": 0
+            }
+          ],
+          "memberships": [],
+          "name": "伯爵",
+          "ownerName": "乌尔德里克二世",
+          "ownerRace": "人类"
+        },
+        {
+          "buildingIndex": 13,
+          "services": [
+            {
+              "actionIndex": 0,
+              "name": "今日通缉",
+              "minimumCost": 0,
+              "maximumCost": 0,
+              "command": "a",
+              "actionId": 38,
+              "restriction": 0
+            },
+            {
+              "actionIndex": 1,
+              "name": "通缉独特怪名单",
+              "minimumCost": 0,
+              "maximumCost": 0,
+              "command": "b",
+              "actionId": 39,
+              "restriction": 0
+            },
+            {
+              "actionIndex": 2,
+              "name": "特殊目标",
+              "minimumCost": 0,
+              "maximumCost": 0,
+              "command": "s",
+              "actionId": 37,
+              "restriction": 0
+            },
+            {
+              "actionIndex": 3,
+              "name": "领取赏金",
+              "minimumCost": 0,
+              "maximumCost": 0,
+              "command": "c",
+              "actionId": 40,
+              "restriction": 0
+            },
+            {
+              "actionIndex": 4,
+              "name": "悬赏任务",
+              "minimumCost": 0,
+              "maximumCost": 0,
+              "command": "m",
+              "actionId": 65,
+              "restriction": 0
+            }
+          ],
+          "memberships": [],
+          "name": "赏金事务所",
+          "ownerName": "驯兽师阿拉克",
+          "ownerRace": "矮人"
         }
       ]
     }
@@ -1652,6 +1893,308 @@
         "level": 80
       },
       "finalObject": { "tval": 70, "sval": 52 }
+    },
+    {
+      "sourceIndex": 13,
+      "sourceName": "R'lyeh",
+      "id": "demo.dungeon.rlyeh",
+      "position": {
+        "x": 40,
+        "y": 3
+      },
+      "minimumDepth": 80,
+      "maximumDepth": 96,
+      "monsterDivisor": 16,
+      "generationFlags": [
+        "ARENA",
+        "WATER_RIVER",
+        "LAKE_WATER"
+      ],
+      "monsterPreferences": [
+        "DEMON",
+        "ELDRITCH_HORROR"
+      ],
+      "floorTerrainDistribution": [
+        {
+          "sourceTag": "FLOOR",
+          "percent": 50
+        },
+        {
+          "sourceTag": "SHALLOW_WATER",
+          "percent": 30
+        },
+        {
+          "sourceTag": "DEEP_WATER",
+          "percent": 20
+        }
+      ],
+      "tunnelPercent": 100,
+      "initialGuardian": {
+        "sourceIndex": 812,
+        "sourceName": "Warp demon",
+        "chineseName": "跃迁恶魔",
+        "level": 76
+      },
+      "guardian": {
+        "sourceIndex": 857,
+        "sourceName": "Great Cthulhu",
+        "chineseName": "伟大之克苏鲁",
+        "level": 96
+      },
+      "finalArtifactSourceIndex": 129
+    },
+    {
+      "sourceIndex": 16,
+      "sourceName": "Anti-magic cave",
+      "id": "demo.dungeon.anti-magic-cave",
+      "position": {
+        "x": 84,
+        "y": 6
+      },
+      "minimumDepth": 40,
+      "maximumDepth": 50,
+      "monsterDivisor": 0,
+      "generationFlags": [
+        "CAVERN",
+        "WATER_RIVER",
+        "LAVA_RIVER",
+        "ARENA",
+        "DESTROY",
+        "LAKE_WATER",
+        "LAKE_LAVA",
+        "LAKE_RUBBLE",
+        "LAKE_TREE",
+        "NO_MAGIC"
+      ],
+      "monsterPreferences": [],
+      "floorTerrainDistribution": [
+        {
+          "sourceTag": "FLOOR",
+          "percent": 100
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        }
+      ],
+      "tunnelPercent": 50,
+      "initialGuardian": {
+        "sourceIndex": 672,
+        "sourceName": "Juggernaut of Khorne",
+        "chineseName": "恐虐钢牛",
+        "level": 43
+      },
+      "substituteSourceIndex": 17
+    },
+    {
+      "sourceIndex": 17,
+      "sourceName": "Anti-melee cave",
+      "id": "demo.dungeon.anti-melee-cave",
+      "position": {
+        "x": 47,
+        "y": 45
+      },
+      "minimumDepth": 40,
+      "maximumDepth": 50,
+      "monsterDivisor": 0,
+      "generationFlags": [
+        "CAVERN",
+        "WATER_RIVER",
+        "LAVA_RIVER",
+        "ARENA",
+        "DESTROY",
+        "LAKE_WATER",
+        "LAKE_LAVA",
+        "LAKE_RUBBLE",
+        "LAKE_TREE",
+        "NO_MELEE",
+        "GLASS_ROOM"
+      ],
+      "monsterPreferences": [],
+      "floorTerrainDistribution": [
+        {
+          "sourceTag": "FLOOR",
+          "percent": 100
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        }
+      ],
+      "tunnelPercent": 50,
+      "initialGuardian": {
+        "sourceIndex": 896,
+        "sourceName": "Bazooker",
+        "chineseName": "火箭筒兵",
+        "level": 35
+      }
+    },
+    {
+      "sourceIndex": 19,
+      "sourceName": "Dark cave",
+      "id": "demo.dungeon.dark-cave",
+      "position": {
+        "x": 57,
+        "y": 12
+      },
+      "minimumDepth": 55,
+      "maximumDepth": 72,
+      "monsterDivisor": 64,
+      "generationFlags": [
+        "CAVERN",
+        "WATER_RIVER",
+        "LAVA_RIVER",
+        "ARENA",
+        "DESTROY",
+        "GLASS_ROOM",
+        "LAKE_WATER",
+        "LAKE_LAVA",
+        "LAKE_RUBBLE",
+        "LAKE_TREE",
+        "DARKNESS"
+      ],
+      "monsterPreferences": [],
+      "floorTerrainDistribution": [
+        {
+          "sourceTag": "FLOOR",
+          "percent": 100
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        }
+      ],
+      "tunnelPercent": 50,
+      "wallTerrain": {
+        "distribution": [
+          {
+            "sourceTag": "GRANITE",
+            "percent": 100
+          },
+          {
+            "sourceTag": "GRANITE",
+            "percent": 0
+          },
+          {
+            "sourceTag": "GRANITE",
+            "percent": 0
+          }
+        ],
+        "outer": "GRANITE",
+        "inner": "GRANITE",
+        "streamers": [
+          "MAGMA_VEIN",
+          "QUARTZ_VEIN"
+        ]
+      },
+      "initialGuardian": {
+        "sourceIndex": 774,
+        "sourceName": "Shadowlord",
+        "chineseName": "暗影领主",
+        "level": 62
+      },
+      "guardian": {
+        "sourceIndex": 803,
+        "sourceName": "Null the Living Void",
+        "chineseName": "活体虚空“零”",
+        "level": 72
+      },
+      "finalObject": {
+        "tval": 90,
+        "sval": 3
+      },
+      "substituteSourceIndex": 37
+    },
+    {
+      "sourceIndex": 37,
+      "sourceName": "Disaster area",
+      "id": "demo.dungeon.disaster-area",
+      "position": {
+        "x": 55,
+        "y": 9
+      },
+      "minimumDepth": 60,
+      "maximumDepth": 80,
+      "monsterDivisor": 0,
+      "generationFlags": [
+        "CAVE",
+        "CAVERN",
+        "NUKE_RIVER",
+        "LAKE_NUKE",
+        "LAKE_WATER",
+        "DESTROY",
+        "BIG",
+        "ALL_SHAFTS"
+      ],
+      "monsterPreferences": [
+        "RES_POIS",
+        "IM_POIS"
+      ],
+      "floorTerrainDistribution": [
+        {
+          "sourceTag": "FLOOR",
+          "percent": 76
+        },
+        {
+          "sourceTag": "SHALLOW_WASTE",
+          "percent": 21
+        },
+        {
+          "sourceTag": "DEEP_WASTE",
+          "percent": 3
+        }
+      ],
+      "tunnelPercent": 5,
+      "wallTerrain": {
+        "distribution": [
+          {
+            "sourceTag": "GRANITE",
+            "percent": 80
+          },
+          {
+            "sourceTag": "MOUNTAIN_WALL",
+            "percent": 18
+          },
+          {
+            "sourceTag": "QUARTZ_VEIN",
+            "percent": 2
+          }
+        ],
+        "outer": "GRANITE",
+        "inner": "GRANITE",
+        "streamers": [
+          "NONE",
+          "NONE"
+        ]
+      },
+      "initialGuardian": {
+        "sourceIndex": 1336,
+        "sourceName": "Atomic elemental",
+        "chineseName": "原子元素",
+        "level": 49
+      },
+      "guardian": {
+        "sourceIndex": 832,
+        "sourceName": "Godzilla",
+        "chineseName": "哥斯拉",
+        "level": 84
+      },
+      "finalObject": {
+        "tval": 90,
+        "sval": 3
+      }
     }
   ]
 }

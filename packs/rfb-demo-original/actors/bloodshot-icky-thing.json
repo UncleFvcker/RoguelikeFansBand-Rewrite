@@ -82,6 +82,7 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "attack-spell",
     "empty-mind",
     "icky-thing",
     "kin-glyph-105",

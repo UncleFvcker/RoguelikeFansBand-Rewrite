@@ -809,7 +809,7 @@ impl Game {
                     break;
                 }
             }
-            if !self.is_walkable(position) {
+            if !self.projectile_can_cross(position) {
                 break;
             }
             landing = position;
@@ -1595,11 +1595,22 @@ impl Game {
                 trace,
             });
         }
-        thrown.location = ItemLocation::Ground(landing);
-        let thrown_id = thrown.id.clone();
-        self.items.push(thrown);
-        changed.insert(landing);
-        self.force_open_capture_ball(&thrown_id, landing, true, events, changed);
+        if let Some(position) =
+            self.ground_drop_position(landing, thrown.is_artifact(&self.content))
+        {
+            thrown.location = ItemLocation::Ground(position);
+            let thrown_id = thrown.id.clone();
+            self.items.push(thrown);
+            changed.insert(position);
+            self.force_open_capture_ball(&thrown_id, position, true, events, changed);
+        } else {
+            self.item_property_knowledge.remove(&thrown.id);
+            events.push(DomainEvent::ItemDestroyed {
+                target_kind_id: thrown.kind_id,
+                quantity: thrown.quantity,
+                rule_line: None,
+            });
+        }
         self.apply_easy_tiring_fatigue(STANDARD_ACTION_COST);
         Ok(())
     }
@@ -1792,6 +1803,17 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<PlayerMeleeOutcome, CoreError> {
+        // py_attack rejects without refunding the action's energy. Do this before
+        // proficiency, attack rolls, contact effects, or retaliation.
+        if self.dungeon_blocks_melee() {
+            events.push(DomainEvent::PlayerMeleeBlocked);
+            return Ok(PlayerMeleeOutcome {
+                attacks_used: 0,
+                attacks_available: 1,
+                killed: false,
+                energy_cost_on_kill: None,
+            });
+        }
         let definition = self
             .actor_runtime_definition(&self.entities[index])
             .expect("monster actor definition must remain available")
@@ -2502,6 +2524,9 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
+        if self.dungeon_blocks_melee() {
+            return Ok(());
+        }
         let source_entity_id = self.entities[source_index].id.clone();
         let source_kind_id = self.entities[source_index].kind_id.clone();
         let definition = self

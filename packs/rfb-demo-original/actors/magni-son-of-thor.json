@@ -105,7 +105,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-1d1-233",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.ball-electricity-1d468-32",
@@ -163,6 +164,8 @@
     "rfb.status.stun"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "aura-revenge",
     "kin-glyph-80",
     "legacy-import",

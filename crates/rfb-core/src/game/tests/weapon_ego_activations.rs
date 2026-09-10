@@ -205,6 +205,12 @@ fn riding_charge_game(seed: u64) -> Game {
         recovery: None,
     });
     artifact.content.affixes.push(affix);
+    artifact.content.worlds[0]
+        .dungeons
+        .iter_mut()
+        .find(|d| d.id == "demo.dungeon.castle")
+        .unwrap()
+        .no_melee = true;
     let content = Arc::new(ContentCatalog::from_artifact(
         rfb_content::encode_content(artifact.content)
             .expect("riding-charge test content should remain valid"),
@@ -464,6 +470,59 @@ fn riding_charge_moves_mount_attacks_and_uses_profile_recovery() {
         events
             .iter()
             .any(|event| matches!(event, DomainEvent::DeviceEnergyRecovered { amount: 1, .. }))
+    );
+}
+
+#[test]
+fn dungeon_anti_melee_riding_charge_moves_and_spends_charge_without_attacking() {
+    let mut game = riding_charge_game(0xE3_6002);
+    game.current_floor_id = "demo.floor.castle-depth-40".to_owned();
+    let target = place_charge_target(&mut game);
+    let target_hp = game.entities[0].hp;
+    game.push_generated_actor(
+        "test.mount".to_owned(),
+        "demo.actor.horse",
+        game.player.position,
+    );
+    game.entities[1].controller_id = Some(game.player.id.clone());
+    game.riding_actor_id = Some("test.mount".to_owned());
+    let mut events = Vec::new();
+    game.use_inventory_item(
+        ITEM_ID,
+        Some(&TargetSelection::Direction {
+            direction: Direction::East,
+        }),
+        None,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .unwrap();
+    let destination = Position {
+        x: target.x - 1,
+        y: target.y,
+    };
+    assert_eq!(game.player.position, destination, "{events:?}");
+    assert_eq!(game.entities[1].position, destination);
+    assert_eq!(game.entities[0].hp, target_hp);
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::PlayerMeleeBlocked))
+    );
+    assert!(!events.iter().any(|event| matches!(
+        event,
+        DomainEvent::PlayerMeleeHit { .. } | DomainEvent::PlayerMeleeMissed { .. }
+    )));
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == ITEM_ID)
+            .unwrap()
+            .charges
+            .unwrap()
+            .current,
+        0
     );
 }
 

@@ -571,9 +571,10 @@ struct DemoWildernessDungeonPlan {
     #[serde(default)]
     floor_terrain_distribution: Vec<DemoDungeonFloorTerrainPlan>,
     tunnel_percent: Option<u16>,
+    wall_terrain: Option<DemoDungeonWallTerrainPlan>,
     #[serde(default)]
     initial_guardian: Option<DemoDungeonGuardianPlan>,
-    guardian: DemoDungeonGuardianPlan,
+    guardian: Option<DemoDungeonGuardianPlan>,
     final_object: Option<DemoDungeonObjectPlan>,
     final_artifact_source_index: Option<u32>,
     final_ego_source_index: Option<u32>,
@@ -585,6 +586,15 @@ struct DemoWildernessDungeonPlan {
 struct DemoDungeonFloorTerrainPlan {
     source_tag: String,
     percent: u16,
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoDungeonWallTerrainPlan {
+    distribution: Vec<DemoDungeonFloorTerrainPlan>,
+    outer: String,
+    inner: String,
+    streamers: [String; 2],
 }
 
 #[derive(Debug, Deserialize)]
@@ -630,6 +640,7 @@ struct LegacyDungeonRecord {
     monster_preferences: Vec<String>,
     floor_terrain_distribution: Vec<DemoDungeonFloorTerrainPlan>,
     tunnel_percent: Option<u16>,
+    wall_terrain: Option<DemoDungeonWallTerrainPlan>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1828,6 +1839,53 @@ fn parse_dungeon_records(
                 "L.tunnelPercent",
                 fields.get(6).copied(),
             )?);
+        } else if let Some(value) = line.strip_prefix("A:") {
+            let index = current.ok_or_else(|| {
+                content_parse_error(
+                    D_INFO_SOURCE,
+                    line_number,
+                    "A",
+                    value,
+                    "wall terrain appears before a dungeon record",
+                )
+            })?;
+            let fields = parse_fields(D_INFO_SOURCE, line_number, "A", value, 10)?;
+            let record = records
+                .get_mut(&index)
+                .expect("current dungeon record must exist");
+            if record.wall_terrain.is_some() {
+                return Err(content_parse_error(
+                    D_INFO_SOURCE,
+                    line_number,
+                    "A",
+                    value,
+                    "duplicate dungeon wall terrain",
+                ));
+            }
+            let mut distribution = Vec::new();
+            for offset in [0, 2, 4] {
+                distribution.push(DemoDungeonFloorTerrainPlan {
+                    source_tag: required_field(
+                        D_INFO_SOURCE,
+                        line_number,
+                        "A.sourceTag",
+                        fields.get(offset).copied(),
+                    )?
+                    .to_owned(),
+                    percent: parse_number(
+                        D_INFO_SOURCE,
+                        line_number,
+                        "A.percent",
+                        fields.get(offset + 1).copied(),
+                    )?,
+                });
+            }
+            record.wall_terrain = Some(DemoDungeonWallTerrainPlan {
+                distribution,
+                outer: fields[6].to_owned(),
+                inner: fields[7].to_owned(),
+                streamers: [fields[8].to_owned(), fields[9].to_owned()],
+            });
         } else if let Some(value) = line.strip_prefix("F:") {
             let index = current.ok_or_else(|| {
                 content_parse_error(
@@ -6091,7 +6149,7 @@ fn artifact_json(
     if let Some(activation) = entry.activation.as_ref().filter(|activation| {
         matches!(
             activation.token.as_str(),
-            "BEAM_COLD" | "TELEKINESIS" | "RESTORE_MANA" | "LIST_UNIQUES"
+            "BEAM_COLD" | "TELEKINESIS" | "RESTORE_MANA" | "LIST_UNIQUES" | "STAR_BALL"
         )
     }) {
         let (activation_id, name_key, target, effect) = if activation.token == "TELEKINESIS" {
@@ -6114,6 +6172,13 @@ fn artifact_json(
                 "item-activation-demo-list-unique-monsters-name",
                 device_self_target(),
                 serde_json::json!({"type": "list-unique-monsters"}),
+            )
+        } else if activation.token == "STAR_BALL" {
+            (
+                "rfb-legacy.item-activation.star-ball",
+                "item-activation-demo-razorback-star-ball-name",
+                serde_json::json!({"modes": ["self"], "range": 0, "requiresLineOfEffect": false}),
+                serde_json::json!({"type": "star-ball"}),
             )
         } else {
             (
@@ -6144,6 +6209,10 @@ fn artifact_json(
                 "effect": effect
             }]
         });
+        if activation.token == "STAR_BALL" {
+            // devices.c EFFECT_STAR_BALL: value = 50 * default damage (150).
+            value["deviceGeneration"]["activations"][0]["rfbValue"] = serde_json::json!(7_500);
+        }
     } else if entry.has_activation {
         *report
             .item_behavior_gaps
@@ -10083,7 +10152,8 @@ const MONSTER_CONTACT_AURA_FLAGS: [(&str, &str); 3] = [
 fn monster_flag_is_mapped(flag: &str) -> bool {
     if matches!(
         flag,
-        "RES_ALL"
+        "STUPID"
+            | "RES_ALL"
             | "RES_TELE"
             | "NO_CONF"
             | "NO_FEAR"
@@ -10257,6 +10327,21 @@ fn monster_json(
     // Legacy type flags become category tags so summon filters can select
     // by monster class; the shared legacy-import tag doubles as "any".
     let mut tags = vec!["legacy-import".to_owned()];
+    // Allocation sees all source spells, including possessor-only BERSERK.
+    if entry
+        .spells
+        .iter()
+        .any(|spell| source_monster_spell_class(spell).is_some_and(|(innate, _)| innate))
+    {
+        tags.push("innate-spell".to_owned());
+    }
+    if entry
+        .spells
+        .iter()
+        .any(|spell| source_monster_spell_class(spell).is_some_and(|(_, attack)| attack))
+    {
+        tags.push("attack-spell".to_owned());
+    }
     if let Some(glyph) = entry.glyph {
         tags.push(format!("kin-glyph-{}", u32::from(glyph)));
     }
@@ -10284,6 +10369,7 @@ fn monster_json(
         tags.push("cyber".to_owned());
     }
     for (flag, tag) in [
+        ("STUPID", "stupid"),
         ("ANIMAL", "animal"),
         ("AUSSIE", "aussie"),
         ("EVIL", "evil"),
@@ -10829,6 +10915,7 @@ fn demo_monster_json(
 
     let mut frequency_percent = None;
     let mut ability_ids = Vec::new();
+    let mut innate_abilities = BTreeSet::new();
     let level = entry.level.unwrap_or(1).max(1);
     let breath_radius = if level >= 50 || entry.glyph == Some('D') {
         3
@@ -10857,6 +10944,11 @@ fn demo_monster_json(
             continue;
         }
         let base_token = spell.split('(').next().unwrap_or(spell);
+        let (innate, _) = source_monster_spell_class(spell).ok_or_else(|| {
+            LegacyImportError::InvalidDemoMonsterSelection(format!(
+                "unclassified source monster spell {spell}"
+            ))
+        })?;
         if POSSESSOR_ONLY_SPELLS.contains(&base_token) {
             continue;
         }
@@ -10885,6 +10977,9 @@ fn demo_monster_json(
                 selection.id
             )));
         };
+        if innate {
+            innate_abilities.insert(ability_id.clone());
+        }
         if !ability_ids.contains(&ability_id) {
             ability_ids.push(ability_id);
         }
@@ -10900,7 +10995,11 @@ fn demo_monster_json(
             "frequencyPercent": frequency_percent.unwrap_or(10),
             "abilities": ability_ids
                 .iter()
-                .map(|ability_id| serde_json::json!({ "abilityId": ability_id, "weight": 1 }))
+                .map(|ability_id| {
+                    let mut candidate = serde_json::json!({ "abilityId": ability_id, "weight": 1 });
+                    if innate_abilities.contains(ability_id) { candidate["innate"] = true.into(); }
+                    candidate
+                })
                 .collect::<Vec<_>>(),
         });
         if entry.flags.iter().any(|flag| flag == "SMART") {
@@ -11060,6 +11159,15 @@ fn demo_monster_json(
     }
 
     let mut tags = selection.tags.iter().cloned().collect::<BTreeSet<_>>();
+    tags.extend(
+        value["tags"]
+            .as_array()
+            .expect("monster tags are an array")
+            .iter()
+            .filter_map(serde_json::Value::as_str)
+            .filter(|tag| matches!(*tag, "innate-spell" | "attack-spell" | "stupid"))
+            .map(str::to_owned),
+    );
     tags.insert("legacy-import".to_owned());
     if let Some(glyph) = entry.glyph {
         tags.insert(format!("kin-glyph-{}", u32::from(glyph)));
@@ -11476,6 +11584,34 @@ fn demo_traps_ability() -> serde_json::Value {
 /// Spells parsed from r_info that the legacy engine restricts to the
 /// possessor/mimic player: monsters never cast them, so they are recorded as
 /// not-applicable instead of unmapped gaps.
+// RFB master monspell.c: MSF_INNATE and mon_race_has_attack_spell.
+// None is an unknown token, never an implicit magical classification.
+fn source_monster_spell_class(spell: &str) -> Option<(bool, bool)> {
+    let token = spell.split('(').next()?;
+    if token.starts_with("BR_") {
+        return Some((true, true));
+    }
+    if token.starts_with("BA_") || token.starts_with("BO_") {
+        return Some((false, true));
+    }
+    if token.starts_with("S_") || token.starts_with("JMP_") {
+        return Some((false, false));
+    }
+    match token {
+        "ROCKET" | "THROW" | "CHICKEN" | "SHOOT" => Some((true, true)),
+        "SHRIEK" | "BERSERK" => Some((true, false)),
+        "MANA_STORM" | "BRAIN_SMASH" | "DRAIN_MANA" | "MIND_BLAST" | "PULVERISE" | "GAZE"
+        | "MISSILE" | "PSY_SPEAR" | "HELL_LANCE" | "HOLY_LANCE" | "CAUSE_1" | "CAUSE_2"
+        | "CAUSE_3" | "CAUSE_4" | "HAND_DOOM" => Some((false, true)),
+        "AMNESIA" | "ANIM_DEAD" | "BLIND" | "CONFUSE" | "DARKNESS" | "PARALYZE" | "SCARE"
+        | "SLOW" | "TELE_LEVEL" | "TELE_TO" | "TRAPS" | "WORLD" | "NO_AIR" | "ANTI_MAGIC"
+        | "DISPEL_MAGIC" | "POLYMORPH" | "HASTE" | "INVULN" | "TELE_OTHER" | "TELE_SELF"
+        | "BLINK" | "BLINK_OTHER" | "HEAL" | "SPECIAL" | "BIRD_DROP" => Some((false, false)),
+        token if POSSESSOR_ONLY_SPELLS.contains(&token) => Some((false, false)),
+        _ => None,
+    }
+}
+
 const POSSESSOR_ONLY_SPELLS: [&str; 11] = [
     "DETECT_TRAPS",
     "DETECT_EVIL",
@@ -12860,6 +12996,7 @@ fn convert_content_from(
         let caster_kind_id = format!("rfb-legacy.actor.{id}");
         let mut frequency_percent: Option<u32> = None;
         let mut mapped_ability_ids: Vec<String> = Vec::new();
+        let mut innate_abilities = BTreeSet::new();
         let mut has_unmapped_spell = false;
         // Legacy breaths widen with stature: level 50+ casters and dragon
         // glyphs use the larger cone.
@@ -12882,6 +13019,11 @@ fn convert_content_from(
                 continue;
             }
             let base_token = spell.split('(').next().unwrap_or(spell);
+            let Some((innate, _)) = source_monster_spell_class(spell) else {
+                has_unmapped_spell = true;
+                *report.unmapped_spells.entry(spell.clone()).or_default() += 1;
+                continue;
+            };
             if POSSESSOR_ONLY_SPELLS.contains(&base_token) {
                 *report
                     .not_applicable_spells
@@ -12896,6 +13038,9 @@ fn convert_content_from(
                 &caster_kind_id,
                 &mut shared_abilities,
             ) {
+                if innate {
+                    innate_abilities.insert(ability_id.clone());
+                }
                 if !mapped_ability_ids.contains(&ability_id) {
                     mapped_ability_ids.push(ability_id);
                 }
@@ -12924,7 +13069,11 @@ fn convert_content_from(
                 "frequencyPercent": frequency_percent.unwrap_or(10),
                 "abilities": mapped_ability_ids
                     .iter()
-                    .map(|ability_id| serde_json::json!({ "abilityId": ability_id, "weight": 1 }))
+                    .map(|ability_id| {
+                    let mut candidate = serde_json::json!({ "abilityId": ability_id, "weight": 1 });
+                    if innate_abilities.contains(ability_id) { candidate["innate"] = true.into(); }
+                    candidate
+                })
                     .collect::<Vec<_>>(),
             })
         });
@@ -14310,7 +14459,12 @@ fn invalid_wilderness_selection(message: impl Into<String>) -> LegacyImportError
 }
 
 fn selected_town_source_file(text: &str, source_index: u32) -> Option<&str> {
-    let selector = format!("?:[EQU $TOWN {source_index}]");
+    // The normal-wilderness Outpost shares index 1 with two lite-town modes.
+    let selector = if source_index == 1 {
+        "?:[AND [EQU $TOWN 1] [EQU $WILDERNESS NORMAL] [LEQ $SPEED 1] ]".to_owned()
+    } else {
+        format!("?:[EQU $TOWN {source_index}]")
+    };
     let mut selected = false;
     for line in text.lines().map(str::trim) {
         if line.starts_with("?:") {
@@ -15110,14 +15264,23 @@ fn validate_demo_wilderness_plans(
         if (!dungeon.floor_terrain_distribution.is_empty()
             && dungeon.floor_terrain_distribution != record.floor_terrain_distribution)
             || (dungeon.tunnel_percent.is_some() && dungeon.tunnel_percent != record.tunnel_percent)
+            || (dungeon.wall_terrain.is_some() && dungeon.wall_terrain != record.wall_terrain)
         {
             return Err(invalid_wilderness_selection(format!(
-                "planned dungeon {} floor terrain drifted",
+                "planned dungeon {} terrain drifted",
                 dungeon.id
             )));
         }
         if (dungeon.final_object.is_some() && dungeon.final_artifact_source_index.is_some())
-            || dungeon_flag_number(record, "FINAL_GUARDIAN_") != Some(dungeon.guardian.source_index)
+            || (dungeon.guardian.is_none()
+                && (dungeon.final_object.is_some()
+                    || dungeon.final_artifact_source_index.is_some()
+                    || dungeon.final_ego_source_index.is_some()))
+            || dungeon_flag_number(record, "FINAL_GUARDIAN_")
+                != dungeon
+                    .guardian
+                    .as_ref()
+                    .map(|guardian| guardian.source_index)
             || dungeon_final_object(record) != dungeon.final_object
             || dungeon_flag_number(record, "FINAL_ARTIFACT_") != dungeon.final_artifact_source_index
             || dungeon_flag_number(record, "FINAL_EGO_") != dungeon.final_ego_source_index
@@ -15128,26 +15291,28 @@ fn validate_demo_wilderness_plans(
                 dungeon.id
             )));
         }
-        let guardian = monsters
-            .iter()
-            .find(|monster| monster.index == dungeon.guardian.source_index)
-            .ok_or_else(|| {
-                invalid_wilderness_selection(format!(
-                    "planned guardian index {} is absent",
-                    dungeon.guardian.source_index
-                ))
-            })?;
-        let guardian_chinese_name = chinese_monster_names
-            .get(dungeon.guardian.source_index as usize)
-            .and_then(Option::as_deref);
-        if guardian.name != dungeon.guardian.source_name
-            || guardian.level != Some(dungeon.guardian.level)
-            || guardian_chinese_name != Some(&dungeon.guardian.chinese_name)
-        {
-            return Err(invalid_wilderness_selection(format!(
-                "planned dungeon {} guardian identity drifted",
-                dungeon.id
-            )));
+        if let Some(planned_guardian) = &dungeon.guardian {
+            let guardian = monsters
+                .iter()
+                .find(|monster| monster.index == planned_guardian.source_index)
+                .ok_or_else(|| {
+                    invalid_wilderness_selection(format!(
+                        "planned guardian index {} is absent",
+                        planned_guardian.source_index
+                    ))
+                })?;
+            let guardian_chinese_name = chinese_monster_names
+                .get(planned_guardian.source_index as usize)
+                .and_then(Option::as_deref);
+            if guardian.name != planned_guardian.source_name
+                || guardian.level != Some(planned_guardian.level)
+                || guardian_chinese_name != Some(&planned_guardian.chinese_name)
+            {
+                return Err(invalid_wilderness_selection(format!(
+                    "planned dungeon {} guardian identity drifted",
+                    dungeon.id
+                )));
+            }
         }
         if let Some(initial_guardian) = &dungeon.initial_guardian {
             if dungeon_flag_number(record, "INITIAL_GUARDIAN_")
@@ -19052,6 +19217,38 @@ mod tests {
     use super::*;
 
     #[test]
+    fn dungeon_wall_terrain_parses_full_a_record_and_rejects_malformed_input() {
+        let line = "A:GRANITE:80:MOUNTAIN_WALL:18:QUARTZ_VEIN:2:GRANITE:GRANITE:NONE:NONE";
+        let text = format!("N:37:Disaster area\n{line}\n");
+        let records = parse_dungeon_records(&text).unwrap();
+        let wall = records[&37].wall_terrain.as_ref().unwrap();
+        assert_eq!(
+            wall.distribution
+                .iter()
+                .map(|entry| (entry.source_tag.as_str(), entry.percent))
+                .collect::<Vec<_>>(),
+            [("GRANITE", 80), ("MOUNTAIN_WALL", 18), ("QUARTZ_VEIN", 2)]
+        );
+        assert_eq!(
+            (&wall.outer, &wall.inner),
+            (&"GRANITE".to_owned(), &"GRANITE".to_owned())
+        );
+        assert_eq!(wall.streamers, ["NONE", "NONE"]);
+        assert!(parse_dungeon_records(line).is_err());
+        assert!(parse_dungeon_records(&format!("{text}{line}\n")).is_err());
+        assert!(parse_dungeon_records("N:37:Disaster area\nA:GRANITE:80\n").is_err());
+        assert!(parse_dungeon_records(&text.replace(":80:", ":bad:")).is_err());
+    }
+
+    #[test]
+    fn outpost_source_selection_uses_normal_wilderness_instead_of_lite_variants() {
+        let text = "?:[AND [EQU $TOWN 1] [EQU $SPEED 2] ]\n%:t_ulite.txt\n?:[AND [EQU $TOWN 1] [EQU $WILDERNESS NONE] [LEQ $SPEED 1] ]\n%:t_lite.txt\n?:[AND [EQU $TOWN 1] [EQU $WILDERNESS NORMAL] [LEQ $SPEED 1] ]\n%:t_outp.txt\n?:[EQU $TOWN 2]\n%:t_telmo.txt\n";
+        assert_eq!(selected_town_source_file(text, 1), Some("t_outp.txt"));
+        assert_eq!(selected_town_source_file(text, 2), Some("t_telmo.txt"));
+        assert_eq!(selected_town_source_file(text, 3), None);
+    }
+
+    #[test]
     fn monster_w_line_retains_evolution_fields() {
         let actors = parse_r_info("N:956:Horse\nG:q:w\nW:5:1:20:25:70:957\n")
             .expect("synthetic Horse should parse");
@@ -19403,10 +19600,10 @@ mod tests {
             plan.monster_preferences,
             ["CAN_SWIM", "WILD_SHORE", "AQUATIC"]
         );
-        assert_eq!(plan.guardian.source_index, 431);
-        assert_eq!(plan.guardian.source_name, "Grendel");
-        assert_eq!(plan.guardian.chinese_name, "格伦戴尔");
-        assert_eq!(plan.guardian.level, 27);
+        assert_eq!(plan.guardian.as_ref().unwrap().source_index, 431);
+        assert_eq!(plan.guardian.as_ref().unwrap().source_name, "Grendel");
+        assert_eq!(plan.guardian.as_ref().unwrap().chinese_name, "格伦戴尔");
+        assert_eq!(plan.guardian.as_ref().unwrap().level, 27);
         assert_eq!(
             plan.final_object,
             Some(DemoDungeonObjectPlan { tval: 75, sval: 68 })
@@ -19483,10 +19680,13 @@ mod tests {
             ]
         );
         assert_eq!(plan.tunnel_percent, Some(8));
-        assert_eq!(plan.guardian.source_index, 909);
-        assert_eq!(plan.guardian.source_name, "The Icky Queen");
-        assert_eq!(plan.guardian.chinese_name, "黏糊恶心女王");
-        assert_eq!(plan.guardian.level, 20);
+        assert_eq!(plan.guardian.as_ref().unwrap().source_index, 909);
+        assert_eq!(
+            plan.guardian.as_ref().unwrap().source_name,
+            "The Icky Queen"
+        );
+        assert_eq!(plan.guardian.as_ref().unwrap().chinese_name, "黏糊恶心女王");
+        assert_eq!(plan.guardian.as_ref().unwrap().level, 20);
         assert_eq!(
             plan.final_object,
             Some(DemoDungeonObjectPlan { tval: 46, sval: 0 })
@@ -19521,13 +19721,16 @@ mod tests {
         assert_eq!(hideout.generation_flags, ["COFFEE"]);
         assert_eq!(hideout.monster_preferences, ["R_CHAR_p", "THIEF"]);
         assert_eq!(hideout.tunnel_percent, Some(8));
-        assert_eq!(hideout.guardian.source_index, 1030);
+        assert_eq!(hideout.guardian.as_ref().unwrap().source_index, 1030);
         assert_eq!(
-            hideout.guardian.source_name,
+            hideout.guardian.as_ref().unwrap().source_name,
             "Meng Huo, the King of Southerings"
         );
-        assert_eq!(hideout.guardian.chinese_name, "南蛮王孟获");
-        assert_eq!(hideout.guardian.level, 18);
+        assert_eq!(
+            hideout.guardian.as_ref().unwrap().chinese_name,
+            "南蛮王孟获"
+        );
+        assert_eq!(hideout.guardian.as_ref().unwrap().level, 18);
         assert_eq!(
             hideout.final_object,
             Some(DemoDungeonObjectPlan { tval: 40, sval: 0 })
@@ -19544,10 +19747,16 @@ mod tests {
         assert_eq!(man_cave.generation_flags, ["COFFEE"]);
         assert_eq!(man_cave.monster_preferences, ["R_CHAR_p", "THIEF"]);
         assert_eq!(man_cave.tunnel_percent, Some(8));
-        assert_eq!(man_cave.guardian.source_index, 1275);
-        assert_eq!(man_cave.guardian.source_name, "Untamo the Cruel");
-        assert_eq!(man_cave.guardian.chinese_name, "残酷者温塔莫");
-        assert_eq!(man_cave.guardian.level, 23);
+        assert_eq!(man_cave.guardian.as_ref().unwrap().source_index, 1275);
+        assert_eq!(
+            man_cave.guardian.as_ref().unwrap().source_name,
+            "Untamo the Cruel"
+        );
+        assert_eq!(
+            man_cave.guardian.as_ref().unwrap().chinese_name,
+            "残酷者温塔莫"
+        );
+        assert_eq!(man_cave.guardian.as_ref().unwrap().level, 23);
         assert_eq!(man_cave.final_object, None);
         assert_eq!(man_cave.final_artifact_source_index, Some(104));
         assert_eq!(man_cave.final_ego_source_index, None);
@@ -19616,13 +19825,16 @@ mod tests {
             ]
         );
         assert_eq!(troll_cave.tunnel_percent, Some(14));
-        assert_eq!(troll_cave.guardian.source_index, 1304);
+        assert_eq!(troll_cave.guardian.as_ref().unwrap().source_index, 1304);
         assert_eq!(
-            troll_cave.guardian.source_name,
+            troll_cave.guardian.as_ref().unwrap().source_name,
             "Spulga, the Troll Priestess"
         );
-        assert_eq!(troll_cave.guardian.chinese_name, "巨魔女祭司斯普尔加");
-        assert_eq!(troll_cave.guardian.level, 40);
+        assert_eq!(
+            troll_cave.guardian.as_ref().unwrap().chinese_name,
+            "巨魔女祭司斯普尔加"
+        );
+        assert_eq!(troll_cave.guardian.as_ref().unwrap().level, 40);
         assert_eq!(
             troll_cave.final_object,
             Some(DemoDungeonObjectPlan { tval: 37, sval: 13 })
@@ -19697,10 +19909,13 @@ mod tests {
         assert_eq!(entrance_guardian.source_name, "Jubjub bird");
         assert_eq!(entrance_guardian.chinese_name, "加布加布鸟");
         assert_eq!(entrance_guardian.level, 40);
-        assert_eq!(eyrie.guardian.source_index, 468);
-        assert_eq!(eyrie.guardian.source_name, "Thorondor");
-        assert_eq!(eyrie.guardian.chinese_name, "巨鹰之王索隆多");
-        assert_eq!(eyrie.guardian.level, 55);
+        assert_eq!(eyrie.guardian.as_ref().unwrap().source_index, 468);
+        assert_eq!(eyrie.guardian.as_ref().unwrap().source_name, "Thorondor");
+        assert_eq!(
+            eyrie.guardian.as_ref().unwrap().chinese_name,
+            "巨鹰之王索隆多"
+        );
+        assert_eq!(eyrie.guardian.as_ref().unwrap().level, 55);
         assert_eq!(
             eyrie.final_object,
             Some(DemoDungeonObjectPlan { tval: 75, sval: 63 })
@@ -19747,13 +19962,16 @@ mod tests {
             ]
         );
         assert_eq!(labyrinth.tunnel_percent, Some(100));
-        assert_eq!(labyrinth.guardian.source_index, 1034);
+        assert_eq!(labyrinth.guardian.as_ref().unwrap().source_index, 1034);
         assert_eq!(
-            labyrinth.guardian.source_name,
+            labyrinth.guardian.as_ref().unwrap().source_name,
             "The Minotaur of the Labyrinth"
         );
-        assert_eq!(labyrinth.guardian.chinese_name, "迷宫牛头怪");
-        assert_eq!(labyrinth.guardian.level, 35);
+        assert_eq!(
+            labyrinth.guardian.as_ref().unwrap().chinese_name,
+            "迷宫牛头怪"
+        );
+        assert_eq!(labyrinth.guardian.as_ref().unwrap().level, 35);
         assert_eq!(
             labyrinth.final_object,
             Some(DemoDungeonObjectPlan { tval: 66, sval: 0 })
@@ -19818,10 +20036,16 @@ mod tests {
             ]
         );
         assert_eq!(lonely_mountain.tunnel_percent, Some(0));
-        assert_eq!(lonely_mountain.guardian.source_index, 697);
-        assert_eq!(lonely_mountain.guardian.source_name, "Smaug the Golden");
-        assert_eq!(lonely_mountain.guardian.chinese_name, "黄金史矛革");
-        assert_eq!(lonely_mountain.guardian.level, 45);
+        assert_eq!(lonely_mountain.guardian.as_ref().unwrap().source_index, 697);
+        assert_eq!(
+            lonely_mountain.guardian.as_ref().unwrap().source_name,
+            "Smaug the Golden"
+        );
+        assert_eq!(
+            lonely_mountain.guardian.as_ref().unwrap().chinese_name,
+            "黄金史矛革"
+        );
+        assert_eq!(lonely_mountain.guardian.as_ref().unwrap().level, 45);
         assert_eq!(lonely_mountain.final_object, None);
         assert_eq!(lonely_mountain.final_artifact_source_index, Some(329));
         assert_eq!(lonely_mountain.final_ego_source_index, None);
@@ -19891,13 +20115,16 @@ mod tests {
         assert_eq!(entrance_guardian.source_name, "Ancient multi-hued dragon");
         assert_eq!(entrance_guardian.chinese_name, "上古多彩龙");
         assert_eq!(entrance_guardian.level, 43);
-        assert_eq!(dragon_lair.guardian.source_index, 795);
+        assert_eq!(dragon_lair.guardian.as_ref().unwrap().source_index, 795);
         assert_eq!(
-            dragon_lair.guardian.source_name,
+            dragon_lair.guardian.as_ref().unwrap().source_name,
             "Tiamat, Celestial Dragon of Evil"
         );
-        assert_eq!(dragon_lair.guardian.chinese_name, "邪恶天龙提亚马特");
-        assert_eq!(dragon_lair.guardian.level, 70);
+        assert_eq!(
+            dragon_lair.guardian.as_ref().unwrap().chinese_name,
+            "邪恶天龙提亚马特"
+        );
+        assert_eq!(dragon_lair.guardian.as_ref().unwrap().level, 70);
         assert_eq!(
             dragon_lair.final_object,
             Some(DemoDungeonObjectPlan { tval: 38, sval: 6 })
@@ -19955,10 +20182,13 @@ mod tests {
         assert_eq!(entrance_guardian.source_name, "Anti-paladin");
         assert_eq!(entrance_guardian.chinese_name, "反圣武士");
         assert_eq!(entrance_guardian.level, 33);
-        assert_eq!(castle.guardian.source_index, 882);
-        assert_eq!(castle.guardian.source_name, "Layzark, the Emperor");
-        assert_eq!(castle.guardian.chinese_name, "皇帝雷扎克");
-        assert_eq!(castle.guardian.level, 65);
+        assert_eq!(castle.guardian.as_ref().unwrap().source_index, 882);
+        assert_eq!(
+            castle.guardian.as_ref().unwrap().source_name,
+            "Layzark, the Emperor"
+        );
+        assert_eq!(castle.guardian.as_ref().unwrap().chinese_name, "皇帝雷扎克");
+        assert_eq!(castle.guardian.as_ref().unwrap().level, 65);
         assert_eq!(castle.final_object, None);
         assert_eq!(castle.final_artifact_source_index, None);
         assert_eq!(castle.final_ego_source_index, None);
@@ -20025,10 +20255,13 @@ mod tests {
             [("SNOW_FLOOR", 45), ("SLUSH", 30), ("ICE_FLOOR", 25)]
         );
         for plan in [giants_hall, snow_castle] {
-            assert_eq!(plan.guardian.source_index, 683);
-            assert_eq!(plan.guardian.source_name, "Utgard-Loke");
-            assert_eq!(plan.guardian.chinese_name, "乌特加德-洛基");
-            assert_eq!(plan.guardian.level, 44);
+            assert_eq!(plan.guardian.as_ref().unwrap().source_index, 683);
+            assert_eq!(plan.guardian.as_ref().unwrap().source_name, "Utgard-Loke");
+            assert_eq!(
+                plan.guardian.as_ref().unwrap().chinese_name,
+                "乌特加德-洛基"
+            );
+            assert_eq!(plan.guardian.as_ref().unwrap().level, 44);
             assert_eq!(plan.final_artifact_source_index, Some(185));
         }
     }
@@ -20086,10 +20319,10 @@ mod tests {
         );
         assert_eq!(
             (
-                graveyard.guardian.source_index,
-                graveyard.guardian.source_name.as_str(),
-                graveyard.guardian.chinese_name.as_str(),
-                graveyard.guardian.level,
+                graveyard.guardian.as_ref().unwrap().source_index,
+                graveyard.guardian.as_ref().unwrap().source_name.as_str(),
+                graveyard.guardian.as_ref().unwrap().chinese_name.as_str(),
+                graveyard.guardian.as_ref().unwrap().level,
             ),
             (804, "Vecna, the Emperor Lich", "巫妖之王维克那", 72)
         );
@@ -20159,10 +20392,10 @@ mod tests {
             ),
         ] {
             assert_eq!(dungeon.tunnel_percent, Some(15));
-            assert_eq!(dungeon.guardian.source_index, guardian.0);
-            assert_eq!(dungeon.guardian.source_name, guardian.1);
-            assert_eq!(dungeon.guardian.chinese_name, guardian.2);
-            assert_eq!(dungeon.guardian.level, 40);
+            assert_eq!(dungeon.guardian.as_ref().unwrap().source_index, guardian.0);
+            assert_eq!(dungeon.guardian.as_ref().unwrap().source_name, guardian.1);
+            assert_eq!(dungeon.guardian.as_ref().unwrap().chinese_name, guardian.2);
+            assert_eq!(dungeon.guardian.as_ref().unwrap().level, 40);
             assert_eq!(
                 dungeon.final_object,
                 Some(DemoDungeonObjectPlan { tval: 90, sval: 2 })
@@ -20252,10 +20485,16 @@ mod tests {
         assert_eq!(entrance_guardian.source_name, "Elder storm giant");
         assert_eq!(entrance_guardian.chinese_name, "远古风暴巨人");
         assert_eq!(entrance_guardian.level, 56);
-        assert_eq!(mine.guardian.source_index, 1250);
-        assert_eq!(mine.guardian.source_name, "Polyphemus, the Blind Cyclops");
-        assert_eq!(mine.guardian.chinese_name, "瞎眼独眼巨人波吕斐摩斯");
-        assert_eq!(mine.guardian.level, 80);
+        assert_eq!(mine.guardian.as_ref().unwrap().source_index, 1250);
+        assert_eq!(
+            mine.guardian.as_ref().unwrap().source_name,
+            "Polyphemus, the Blind Cyclops"
+        );
+        assert_eq!(
+            mine.guardian.as_ref().unwrap().chinese_name,
+            "瞎眼独眼巨人波吕斐摩斯"
+        );
+        assert_eq!(mine.guardian.as_ref().unwrap().level, 80);
         assert_eq!(
             mine.final_object,
             Some(DemoDungeonObjectPlan { tval: 75, sval: 38 })
@@ -20316,10 +20555,16 @@ mod tests {
         assert_eq!(entrance_guardian.source_name, "Black wraith");
         assert_eq!(entrance_guardian.chinese_name, "黑幽灵");
         assert_eq!(entrance_guardian.level, 38);
-        assert_eq!(battlefield.guardian.source_index, 738);
-        assert_eq!(battlefield.guardian.source_name, "Khamul the Easterling");
-        assert_eq!(battlefield.guardian.chinese_name, "东方人克哈穆尔");
-        assert_eq!(battlefield.guardian.level, 53);
+        assert_eq!(battlefield.guardian.as_ref().unwrap().source_index, 738);
+        assert_eq!(
+            battlefield.guardian.as_ref().unwrap().source_name,
+            "Khamul the Easterling"
+        );
+        assert_eq!(
+            battlefield.guardian.as_ref().unwrap().chinese_name,
+            "东方人克哈穆尔"
+        );
+        assert_eq!(battlefield.guardian.as_ref().unwrap().level, 53);
         assert_eq!(
             battlefield.final_object,
             Some(DemoDungeonObjectPlan { tval: 23, sval: 34 })
@@ -20390,10 +20635,10 @@ mod tests {
         assert_entrance_guardian(numenor);
         assert_eq!(
             (
-                numenor.guardian.source_index,
-                numenor.guardian.source_name.as_str(),
-                numenor.guardian.chinese_name.as_str(),
-                numenor.guardian.level,
+                numenor.guardian.as_ref().unwrap().source_index,
+                numenor.guardian.as_ref().unwrap().source_name.as_str(),
+                numenor.guardian.as_ref().unwrap().chinese_name.as_str(),
+                numenor.guardian.as_ref().unwrap().level,
             ),
             (
                 854,
@@ -20422,10 +20667,10 @@ mod tests {
         assert_entrance_guardian(atlantis);
         assert_eq!(
             (
-                atlantis.guardian.source_index,
-                atlantis.guardian.source_name.as_str(),
-                atlantis.guardian.chinese_name.as_str(),
-                atlantis.guardian.level,
+                atlantis.guardian.as_ref().unwrap().source_index,
+                atlantis.guardian.as_ref().unwrap().source_name.as_str(),
+                atlantis.guardian.as_ref().unwrap().chinese_name.as_str(),
+                atlantis.guardian.as_ref().unwrap().level,
             ),
             (
                 1254,
@@ -20922,7 +21167,7 @@ mod tests {
                 source_id: None,
                 id: "quantum-dot".to_owned(),
                 tags: vec!["orc-cave".to_owned()],
-                omitted_flags: vec!["STUPID".to_owned()],
+                omitted_flags: Vec::new(),
                 omitted_spells: Vec::new(),
             },
             &mut BTreeMap::new(),
@@ -21203,9 +21448,37 @@ mod tests {
     }
 
     #[test]
+    fn source_innate_classification_keeps_possessor_allocation_separate_from_casting() {
+        let entries = parse_r_info(
+            "N:154:Yeti\nG:Y:w\nI:110:1d3:8:4:20:10\nW:12:1:50:40:0:0\nB:HIT:HURT(1d1)\nS:BERSERK\n",
+        ).unwrap();
+        let selection = DemoMonsterSelectionEntry {
+            source_index: 154,
+            source_id: None,
+            id: "yeti".to_owned(),
+            tags: Vec::new(),
+            omitted_flags: Vec::new(),
+            omitted_spells: Vec::new(),
+        };
+        let actor = demo_monster_json(&entries[0], &selection, &mut BTreeMap::new()).unwrap();
+        assert!(
+            actor["tags"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|tag| tag == "innate-spell")
+        );
+        assert!(actor.get("monsterCasting").is_none());
+        // Source GAZE belongs to MST_BOLT but does not set MSF_INNATE.
+        assert_eq!(source_monster_spell_class("GAZE"), Some((false, true)));
+        assert_eq!(source_monster_spell_class("ROCKET"), Some((true, true)));
+        assert_eq!(source_monster_spell_class("SHRIEK"), Some((true, false)));
+    }
+
+    #[test]
     fn demo_monster_import_requires_exact_unsupported_spell_omissions() {
         let monsters = parse_r_info(
-            "N:1:test old castle caster\nG:p:D\nI:110:1d3:8:4:20:10\nW:40:1:50:40:0:0\nB:HIT:HURT(1d1)\nS:1_IN_5 | TEST_UNSUPPORTED\n",
+            "N:1:test old castle caster\nG:p:D\nI:110:1d3:8:4:20:10\nW:40:1:50:40:0:0\nB:HIT:HURT(1d1)\nS:1_IN_5 | BR_TEST_UNSUPPORTED\n",
         )
         .expect("synthetic caster should parse");
         let selection = DemoMonsterSelectionEntry {
@@ -21214,11 +21487,17 @@ mod tests {
             id: "test-old-castle-caster".to_owned(),
             tags: vec!["old-castle".to_owned()],
             omitted_flags: Vec::new(),
-            omitted_spells: vec!["TEST_UNSUPPORTED".to_owned()],
+            omitted_spells: vec!["BR_TEST_UNSUPPORTED".to_owned()],
         };
         let actor = demo_monster_json(&monsters[0], &selection, &mut BTreeMap::new())
             .expect("declared unsupported spell should be omitted");
         assert!(actor.get("monsterCasting").is_none());
+        let mut unclassified = monsters[0].clone();
+        unclassified.spells = vec!["TEST_UNCLASSIFIED".to_owned()];
+        assert!(
+            matches!(demo_monster_json(&unclassified, &selection, &mut BTreeMap::new()),
+            Err(LegacyImportError::InvalidDemoMonsterSelection(message)) if message.contains("unclassified"))
+        );
 
         let mut supported = monsters[0].clone();
         supported.spells = vec!["SCARE".to_owned()];
@@ -28586,6 +28865,61 @@ E:BREATHE_ONE_MULTIHUED:40:70:250
     }
 
     #[test]
+    fn razorback_imports_source_properties_and_star_ball() {
+        // RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, a_info.txt N:129.
+        let mut entries = parse_a_info("N:129:'Razorback'\nI:38:6:0\nW:90:9:500:400000\nP:40:2d4:-4:0:25\nF:RES_FIRE | RES_COLD | RES_POIS | RES_LITE | RES_DARK | RES_ACID |\nF:LITE | SEE_INVIS | AGGRAVATE | FREE_ACT | IM_ELEC |\nE:STAR_BALL:30:1000\n").unwrap();
+        // init1.c adds these flags to every fixed artifact before reading F lines.
+        entries[0].flags.extend(
+            ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"].map(str::to_owned),
+        );
+        entries[0].flags.sort();
+        let mut report = ContentImportReport::default();
+        let mut item = artifact_json(
+            &entries[0],
+            "razorback",
+            Some("demo.item.multi-hued-dragon-scale-mail"),
+            &LauncherAmmoIndex::default(),
+            &mut report,
+        );
+        // Formal package identity and artifact destruction protection follow existing artifacts.
+        item["id"] = serde_json::json!("demo.item.razorback");
+        item["nameKey"] = serde_json::json!("item-demo-razorback-name");
+        item["descriptionKey"] = serde_json::json!("item-demo-razorback-description");
+        item["glyph"] = serde_json::json!("[");
+        item["tags"] = serde_json::json!(["activatable", "artifact", "armor", "equipment"]);
+        item["resistsMonsterDestruction"] = serde_json::json!(true);
+        item["deviceGeneration"]["activations"][0]["id"] =
+            serde_json::json!("demo.item-activation.razorback-star-ball");
+        let activation = item["deviceGeneration"]["activations"][0]
+            .as_object_mut()
+            .unwrap();
+        let program = effect_program_from_inline(
+            "demo.effect.razorback-star-ball",
+            activation.remove("effect").unwrap(),
+        )
+        .unwrap();
+        activation.insert(
+            "effectProgramId".to_owned(),
+            serde_json::json!("demo.effect.razorback-star-ball"),
+        );
+        let formal_program: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../packs/rfb-demo-original/effectPrograms/razorback-star-ball.json"
+        ))
+        .unwrap();
+        assert_eq!(program, formal_program);
+        let formal: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../packs/rfb-demo-original/items/razorback.json"
+        ))
+        .unwrap();
+        assert_eq!(item, formal);
+        assert!(
+            !report
+                .item_behavior_gaps
+                .contains_key("artifact-activation")
+        );
+    }
+
+    #[test]
     fn dr_jones_whip_imports_telekinesis_without_an_activation_gap() {
         // RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, a_info.txt N:162.
         let entries = parse_a_info("N:162:of Dr. Jones\nI:21:2:1\nW:8:5:30:18000\nP:0:1d7:16:13:0\nF:INT | WIS | LEVITATION | SHOW_MODS | SEE_INVIS\nE:TELEKINESIS:25:30\nE:你伸展开了你的鞭子。\n").unwrap();
@@ -29232,10 +29566,13 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         );
         assert_eq!(cave.tunnel_percent, Some(50));
         assert!(cave.initial_guardian.is_none());
-        assert_eq!(cave.guardian.source_index, 1041);
-        assert_eq!(cave.guardian.source_name, "Chameleon Lord");
-        assert_eq!(cave.guardian.chinese_name, "变色龙领主");
-        assert_eq!(cave.guardian.level, 45);
+        assert_eq!(cave.guardian.as_ref().unwrap().source_index, 1041);
+        assert_eq!(
+            cave.guardian.as_ref().unwrap().source_name,
+            "Chameleon Lord"
+        );
+        assert_eq!(cave.guardian.as_ref().unwrap().chinese_name, "变色龙领主");
+        assert_eq!(cave.guardian.as_ref().unwrap().level, 45);
         assert_eq!(
             cave.final_object,
             Some(DemoDungeonObjectPlan { tval: 75, sval: 66 })
@@ -29295,10 +29632,13 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         assert_eq!((entrance.source_index, entrance.level), (940, 49));
         assert_eq!(entrance.chinese_name, "次级炎魔");
         assert_eq!(
-            (volcano.guardian.source_index, volcano.guardian.level),
+            (
+                volcano.guardian.as_ref().unwrap().source_index,
+                volcano.guardian.as_ref().unwrap().level
+            ),
             (972, 60)
         );
-        assert_eq!(volcano.guardian.chinese_name, "红龙晨星");
+        assert_eq!(volcano.guardian.as_ref().unwrap().chinese_name, "红龙晨星");
         assert_eq!(
             volcano.final_object,
             Some(DemoDungeonObjectPlan { tval: 55, sval: 0 })
@@ -29818,11 +30158,17 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         assert_eq!(entrance.source_name, "Drolem");
         assert_eq!(entrance.chinese_name, "龙魔像");
         assert_eq!(
-            (arena.guardian.source_index, arena.guardian.level),
+            (
+                arena.guardian.as_ref().unwrap().source_index,
+                arena.guardian.as_ref().unwrap().level
+            ),
             (1110, 80)
         );
-        assert_eq!(arena.guardian.source_name, "Metal Babble");
-        assert_eq!(arena.guardian.chinese_name, "散失金属史莱姆");
+        assert_eq!(arena.guardian.as_ref().unwrap().source_name, "Metal Babble");
+        assert_eq!(
+            arena.guardian.as_ref().unwrap().chinese_name,
+            "散失金属史莱姆"
+        );
         assert_eq!(
             arena.final_object,
             Some(DemoDungeonObjectPlan { tval: 70, sval: 52 })
@@ -29918,10 +30264,13 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         assert_eq!((entrance.source_index, entrance.level), (676, 43));
         assert_eq!(entrance.chinese_name, "虚灵龙");
         assert_eq!(
-            (castle.guardian.source_index, castle.guardian.level),
+            (
+                castle.guardian.as_ref().unwrap().source_index,
+                castle.guardian.as_ref().unwrap().level
+            ),
             (1167, 60)
         );
-        assert_eq!(castle.guardian.chinese_name, "钻石巨龙");
+        assert_eq!(castle.guardian.as_ref().unwrap().chinese_name, "钻石巨龙");
         assert_eq!(
             castle.final_object,
             Some(DemoDungeonObjectPlan { tval: 23, sval: 31 })

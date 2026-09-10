@@ -36,5 +36,5 @@
   },
   "allocation": { "legacyIndex": 22, "rarity": 1, "maxDepth": 10 },
   "movement": { "neverMoves": true },
-  "tags": ["anomaly", "warrens"]
+  "tags": ["stupid", "anomaly", "warrens"]
 }

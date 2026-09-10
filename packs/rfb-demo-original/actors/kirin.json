@@ -106,7 +106,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.shriek",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.dispel",
@@ -163,6 +164,7 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "innate-spell",
     "good",
     "kin-glyph-113",
     "legacy-import",

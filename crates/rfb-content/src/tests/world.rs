@@ -3,6 +3,382 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn disaster_area_shaft_graph_rejects_disconnected_parity_and_invalid_boundaries() {
+    let content = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for case in ["parity", "surface", "depth", "reciprocal"] {
+        let mut invalid = content.clone();
+        let floors = &mut invalid.worlds[0].procedural_floors;
+        match case {
+            "parity" => {
+                let mut guardian = floors
+                    .iter()
+                    .find(|f| f.id == "demo.floor.disaster-area-depth-80")
+                    .unwrap()
+                    .guardian
+                    .clone()
+                    .unwrap();
+                guardian.instance_id = "test.guardian.isolated-odd-branch".to_owned();
+                for depth in [79, 80] {
+                    let floor = floors
+                        .iter_mut()
+                        .find(|f| f.id == format!("demo.floor.disaster-area-depth-{depth}"))
+                        .unwrap();
+                    floor
+                        .connections
+                        .retain(|c| c.kind != FloorConnectionKind::Stairs);
+                    if depth == 79 {
+                        floor.final_floor = true;
+                        floor.next_floor_id = None;
+                        floor.down_stair_terrain_id = None;
+                        floor.guardian = Some(guardian.clone());
+                    }
+                }
+            }
+            "surface" => {
+                let connection = &mut floors
+                    .iter_mut()
+                    .find(|f| f.id == "demo.floor.disaster-area-depth-63")
+                    .unwrap()
+                    .connections[0];
+                connection.target_floor_id = "demo.floor.surface".to_owned();
+                connection.target_connection_id = None;
+            }
+            "depth" => {
+                let connection = floors
+                    .iter_mut()
+                    .find(|f| f.id == "demo.floor.disaster-area-depth-60")
+                    .unwrap()
+                    .connections
+                    .iter_mut()
+                    .find(|c| c.terrain_id == "demo.terrain.stairs-up")
+                    .unwrap();
+                // Only minimumDepth + 1 may have a surface shaft.
+                connection.kind = FloorConnectionKind::Shaft;
+                connection.terrain_id = "demo.terrain.shaft-up".to_owned();
+                connection.target_floor_id = "demo.floor.surface".to_owned();
+                connection.target_connection_id = None;
+            }
+            _ => {
+                let connection = floors
+                    .iter_mut()
+                    .find(|f| f.id == "demo.floor.disaster-area-depth-78")
+                    .unwrap()
+                    .connections
+                    .iter_mut()
+                    .find(|c| c.terrain_id == "demo.terrain.shaft-down")
+                    .unwrap();
+                connection.target_connection_id =
+                    Some("demo.connection.disaster-area-depth-80-stairs-up".to_owned());
+            }
+        }
+        assert!(validate_and_normalize(&mut invalid).is_err(), "{case}");
+    }
+}
+
+#[test]
+fn disaster_area_terrain_mix_validates_percentages_materials_and_references() {
+    let mut content = compile_pack_dir(&original_pack_path()).unwrap().content;
+    let floor_id = "demo.floor.warrens-depth-1";
+    let layout = content.worlds[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|f| f.id == floor_id)
+        .unwrap()
+        .layout
+        .as_mut()
+        .unwrap();
+    layout.floor_mix = vec![
+        ProceduralTerrainMixDefinition {
+            terrain_id: "demo.terrain.shallow-waste".to_owned(),
+            percent: 21,
+        },
+        ProceduralTerrainMixDefinition {
+            terrain_id: "demo.terrain.deep-waste".to_owned(),
+            percent: 3,
+        },
+    ];
+    layout.wall_mix = vec![
+        ProceduralTerrainMixDefinition {
+            terrain_id: "demo.terrain.mountain-wall".to_owned(),
+            percent: 18,
+        },
+        ProceduralTerrainMixDefinition {
+            terrain_id: "demo.terrain.quartz-vein".to_owned(),
+            percent: 2,
+        },
+    ];
+    validate_and_normalize(&mut content).unwrap();
+    for (id, percent) in [
+        ("demo.terrain.shallow-waste", 0),
+        ("demo.terrain.shallow-waste", 98),
+        ("demo.terrain.deep-waste", 21),
+        ("demo.terrain.floor", 21),
+        ("demo.terrain.mountain-wall", 21),
+        ("demo.terrain.missing", 21),
+    ] {
+        let mut invalid = content.clone();
+        let floor = invalid.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|f| f.id == floor_id)
+            .unwrap();
+        floor.layout.as_mut().unwrap().floor_mix[0] = ProceduralTerrainMixDefinition {
+            terrain_id: id.to_owned(),
+            percent,
+        };
+        assert!(
+            validate_and_normalize(&mut invalid).is_err(),
+            "{id}: {percent}"
+        );
+    }
+    let layout = content.worlds[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|f| f.id == floor_id)
+        .unwrap()
+        .layout
+        .as_mut()
+        .unwrap();
+    layout.wall_mix[0].terrain_id = "demo.terrain.shallow-waste".to_owned();
+    assert!(matches!(
+        validate_and_normalize(&mut content),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+}
+
+#[test]
+fn anti_caves_bind_source_positions_rules_guardians_and_terminal_floors() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let world = &artifact.content.worlds[0];
+    for (slug, index, guardian) in [
+        ("anti-magic-cave", 16, "juggernaut-of-khorne"),
+        ("anti-melee-cave", 17, "bazooker"),
+    ] {
+        let id = format!("demo.dungeon.{slug}");
+        let dungeon = world.dungeons.iter().find(|d| d.id == id).unwrap();
+        assert_eq!(dungeon.legacy_index, Some(index));
+        assert_eq!(dungeon.no_magic, index == 16);
+        assert_eq!(dungeon.no_melee, index == 17);
+        assert!(dungeon.guardian_actor_kind_id.is_none());
+        assert_eq!(
+            dungeon.entrance_guardian.as_ref().unwrap().actor_kind_id,
+            format!("demo.actor.{guardian}")
+        );
+        assert_eq!(
+            dungeon
+                .substitution
+                .as_ref()
+                .map(|s| s.alternate_dungeon_id.as_str()),
+            if index == 16 {
+                Some("demo.dungeon.anti-melee-cave")
+            } else {
+                None
+            }
+        );
+        let floors = world
+            .procedural_floors
+            .iter()
+            .filter(|f| f.dungeon_id.as_deref() == Some(&id))
+            .collect::<Vec<_>>();
+        assert_eq!(floors.len(), 11);
+        for floor in floors {
+            assert!((40..=50).contains(&floor.depth));
+            assert_eq!((floor.width, floor.height), (66, 22));
+            assert_eq!(floor.final_floor, floor.depth == 50);
+            assert!(floor.guardian.is_none());
+            assert_eq!(
+                floor.next_floor_id,
+                (floor.depth < 50).then(|| format!("demo.floor.{slug}-depth-{}", floor.depth + 1))
+            );
+            let layout = floor.layout.as_ref().unwrap();
+            if matches!(floor.depth, 46 | 48) {
+                assert!(layout.river.is_none());
+            } else {
+                let river = layout.river.as_ref().unwrap();
+                assert_eq!(river.chance_one_in, Some(7));
+                let alternative = river.alternative.as_ref().unwrap();
+                assert_eq!(
+                    (alternative.chance_numerator, alternative.chance_denominator),
+                    (floor.depth + 1, 256)
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn guardianless_dungeon_keeps_terminal_and_guardian_binding_validation() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let mut content = artifact.content.clone();
+    let world = &mut content.worlds[0];
+    let dungeon = world
+        .dungeons
+        .iter_mut()
+        .find(|d| d.id == "demo.dungeon.rlyeh")
+        .unwrap();
+    dungeon.guardian_actor_kind_id = None;
+    world.procedural_floors.retain(|floor| {
+        floor.dungeon_id.as_deref() != Some("demo.dungeon.rlyeh") || floor.depth <= 81
+    });
+    let terminal = world
+        .procedural_floors
+        .iter_mut()
+        .find(|f| f.id == "demo.floor.rlyeh-depth-81")
+        .unwrap();
+    terminal.final_floor = true;
+    terminal.next_floor_id = None;
+    terminal.down_stair_terrain_id = None;
+    terminal
+        .layout
+        .as_mut()
+        .unwrap()
+        .stairs
+        .as_mut()
+        .unwrap()
+        .down = None;
+    validate_and_normalize(&mut content).unwrap();
+
+    let mut missing_terminal = content.clone();
+    missing_terminal.worlds[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|f| f.id == "demo.floor.rlyeh-depth-81")
+        .unwrap()
+        .final_floor = false;
+    assert!(matches!(
+        validate_and_normalize(&mut missing_terminal),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    // A guardian carrying a reward cannot be smuggled into a guardianless dungeon.
+    let guardian = artifact.content.worlds[0]
+        .procedural_floors
+        .iter()
+        .find(|f| f.id == "demo.floor.rlyeh-depth-96")
+        .unwrap()
+        .guardian
+        .clone();
+    let mut undeclared = content.clone();
+    undeclared.worlds[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|f| f.id == "demo.floor.rlyeh-depth-81")
+        .unwrap()
+        .guardian = guardian;
+    assert!(matches!(
+        validate_and_normalize(&mut undeclared),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+
+    content.worlds[0]
+        .dungeons
+        .iter_mut()
+        .find(|d| d.id == "demo.dungeon.rlyeh")
+        .unwrap()
+        .guardian_actor_kind_id = Some("demo.actor.great-cthulhu".to_owned());
+    assert!(matches!(
+        validate_and_normalize(&mut content),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+    let mut mismatched = artifact.content;
+    mismatched.worlds[0]
+        .dungeons
+        .iter_mut()
+        .find(|d| d.id == "demo.dungeon.rlyeh")
+        .unwrap()
+        .guardian_actor_kind_id = Some("demo.actor.bazooker".to_owned());
+    assert!(matches!(
+        validate_and_normalize(&mut mismatched),
+        Err(ContentError::InvalidProceduralFloor(_))
+    ));
+}
+
+#[test]
+fn outpost_task_entry_states_preserve_source_material_and_return_cells() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let content = &artifact.content;
+    let world = &content.worlds[0];
+    // master a0d92b6378: t_outp.txt default L: rules; Taken replaces these cells.
+    for (name, x, y, material) in [
+        ("thieves-hideout", 125, 28, "permanent-wall"),
+        ("outpost-sewer", 83, 30, "floor"),
+        ("outpost-haunted-house", 124, 43, "permanent-wall"),
+        ("outpost-royal-crypt", 120, 16, "permanent-wall"),
+        ("trouble-at-home", 121, 36, "permanent-wall"),
+        ("crows-nest", 181, 59, "surface-grass"),
+        ("old-man-willow", 176, 19, "surface-grass"),
+        ("vapor-quest", 127, 41, "permanent-wall"),
+        ("old-castle", 31, 6, "surface-grass"),
+    ] {
+        let base = content
+            .terrain
+            .iter()
+            .find(|t| t.id == format!("demo.terrain.{material}"))
+            .unwrap();
+        let entry_id = format!("demo.terrain.{name}-entry-available");
+        let entry = world
+            .terrain_overrides
+            .iter()
+            .find(|entry| entry.terrain_id == entry_id)
+            .unwrap();
+        assert_eq!(entry.positions, [ContentPosition { x, y }]);
+        for state in ["available", "completed", "failed", "abandoned"] {
+            let terrain = content
+                .terrain
+                .iter()
+                .find(|t| t.id == format!("demo.terrain.{name}-entry-{state}"))
+                .unwrap();
+            assert_eq!(terrain.glyph, base.glyph, "{name} {state}");
+            assert!(
+                terrain
+                    .tags
+                    .iter()
+                    .any(|tag| tag == &format!("task-entry-{state}"))
+            );
+            if state == "available" {
+                assert_eq!(
+                    (terrain.walkable, terrain.blocks_sight),
+                    (base.walkable, base.blocks_sight)
+                );
+                assert_eq!(terrain.digging, base.digging);
+                assert!(!terrain.allows_wall_passage);
+            } else {
+                // Existing task completion returns the player to the departure cell.
+                assert!(terrain.walkable);
+            }
+        }
+    }
+    let unused = world
+        .terrain_overrides
+        .iter()
+        .find(|entry| entry.positions.contains(&ContentPosition { x: 167, y: 60 }))
+        .unwrap();
+    assert_eq!(unused.terrain_id, "demo.terrain.dirt");
+}
+
+#[test]
+fn inherited_birth_town_requires_explicit_spawn_floor_and_guardian_references() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let mut content = artifact.content.clone();
+    content.worlds[0].player.position = ContentPosition { x: 0, y: 0 };
+    assert!(matches!(
+        validate_and_normalize(&mut content),
+        Err(ContentError::SpawnOnBlockedTerrain(_))
+    ));
+    let mut content = artifact.content.clone();
+    content.worlds[0]
+        .dungeons
+        .iter_mut()
+        .find_map(|dungeon| dungeon.entrance_guardian.as_mut())
+        .unwrap()
+        .actor_kind_id = "missing.guardian".to_owned();
+    assert!(validate_and_normalize(&mut content).is_err());
+    let mut content = artifact.content.clone();
+    content.worlds[0].wilderness = None;
+    assert!(validate_and_normalize(&mut content).is_err());
+}
+
+#[test]
 fn angwil_inherits_forest_and_preserves_unopened_entrances() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let floor = artifact.content.worlds[0]
@@ -1353,7 +1729,24 @@ fn global_monster_allocation_accepts_known_actor_tags() {
         .expect("Warrens global allocation policy");
     allocation.preferred_glyphs.clear();
     allocation.preferred_tags = vec!["animal".to_owned()];
+    allocation.preferred_damage_resistances = vec![ActorDamageType::Poison];
     validate_and_normalize(&mut content).expect("known actor tag should be accepted");
+
+    let mut duplicate = content.clone();
+    duplicate
+        .encounter_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.encounter-table.warrens")
+        .unwrap()
+        .global_allocation
+        .as_mut()
+        .unwrap()
+        .preferred_damage_resistances
+        .push(ActorDamageType::Poison);
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate),
+        Err(ContentError::InvalidEncounterTable(_))
+    ));
 
     let allocation = content
         .encounter_tables
@@ -4787,7 +5180,7 @@ fn room_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(3));
         assert_eq!(dungeon.root_floor_id, "demo.floor.orc-cave-depth-15");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.othrod-lord-of-the-orcs"
         );
         assert!(
@@ -4899,7 +5292,7 @@ fn room_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(2));
         assert_eq!(dungeon.root_floor_id, "demo.floor.camelot-depth-20");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.arthur-pendragon"
         );
         assert!(
@@ -5033,7 +5426,7 @@ fn room_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(12));
         assert_eq!(dungeon.root_floor_id, "demo.floor.castle-depth-40");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.layzark-the-emperor"
         );
         let entrance_guardian = dungeon
@@ -5217,7 +5610,7 @@ fn room_dungeon_bindings_match_source() {
             .expect("Graveyard should exist");
         assert_eq!(dungeon.legacy_index, Some(6));
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.vecna-the-emperor-lich"
         );
         let entrance = dungeon
@@ -5347,7 +5740,10 @@ fn aquatic_dungeon_bindings_match_source() {
             .expect("Tidal Cave should be active");
         assert_eq!(dungeon.legacy_index, Some(33));
         assert_eq!(dungeon.root_floor_id, "demo.floor.tidal-cave-depth-15");
-        assert_eq!(dungeon.guardian_actor_kind_id, "demo.actor.grendel");
+        assert_eq!(
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
+            "demo.actor.grendel"
+        );
 
         let mut floors = world
             .procedural_floors
@@ -5577,11 +5973,11 @@ fn aquatic_dungeon_bindings_match_source() {
         );
         assert!(atlantis.substitution.is_none());
         assert_eq!(
-            numenor.guardian_actor_kind_id,
+            numenor.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.jormungand-the-midgard-serpent"
         );
         assert_eq!(
-            atlantis.guardian_actor_kind_id,
+            atlantis.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.kundry-queen-of-the-lost-haven"
         );
         let numenor_entrance = numenor
@@ -5855,7 +6251,7 @@ fn special_layout_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(4));
         assert_eq!(dungeon.root_floor_id, "demo.floor.labyrinth-depth-20");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.the-minotaur-of-the-labyrinth"
         );
         assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
@@ -5968,7 +6364,7 @@ fn special_layout_dungeon_bindings_match_source() {
             .find(|table| table.id == "demo.encounter-table.labyrinth")
             .and_then(|table| table.global_allocation.as_mut())
             .expect("Labyrinth policy should exist")
-            .special_div = 16;
+            .special_div = 65;
         assert!(matches!(
             validate_and_normalize(&mut invalid),
             Err(ContentError::InvalidEncounterTable(id)) if id == "demo.encounter-table.labyrinth"
@@ -6000,7 +6396,7 @@ fn special_layout_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(15));
         assert_eq!(dungeon.root_floor_id, "demo.floor.mine-depth-75");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.polyphemus-the-blind-cyclops"
         );
         let entrance_guardian = dungeon
@@ -6163,7 +6559,7 @@ fn special_layout_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(32));
         assert_eq!(dungeon.root_floor_id, "demo.floor.battlefield-depth-30");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.khamul-the-easterling"
         );
         let entrance_guardian = dungeon
@@ -6313,7 +6709,10 @@ fn special_layout_dungeon_bindings_match_source() {
             .expect("Chameleon cave should exist");
         assert_eq!(dungeon.legacy_index, Some(18));
         assert_eq!(dungeon.root_floor_id, "demo.floor.chameleon-cave-depth-30");
-        assert_eq!(dungeon.guardian_actor_kind_id, "demo.actor.chameleon-lord");
+        assert_eq!(
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
+            "demo.actor.chameleon-lord"
+        );
 
         let mut floors = world
             .procedural_floors
@@ -6466,7 +6865,7 @@ fn special_layout_dungeon_bindings_match_source() {
             .expect("Crystal Castle should exist");
         assert_eq!(dungeon.legacy_index, Some(20));
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.the-diamond-dragon"
         );
         assert_eq!(
@@ -6568,7 +6967,7 @@ fn lava_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(23));
         assert_eq!(dungeon.root_floor_id, "demo.floor.lonely-mountain-depth-30");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.smaug-the-golden"
         );
         assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
@@ -6804,7 +7203,7 @@ fn lava_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(5));
         assert_eq!(dungeon.root_floor_id, "demo.floor.dragon-lair-depth-60");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.tiamat-celestial-dragon-of-evil"
         );
         let entrance_guardian = dungeon
@@ -6984,7 +7383,7 @@ fn lava_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(8));
         assert_eq!(dungeon.root_floor_id, "demo.floor.volcano-depth-50");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.shooting-star-the-red-dragon"
         );
         let entrance = dungeon
@@ -7102,7 +7501,7 @@ fn substitute_dungeon_bindings_match_source() {
         assert_eq!(dungeon.legacy_index, Some(31));
         assert_eq!(dungeon.root_floor_id, "demo.floor.hideout-depth-8");
         assert_eq!(
-            dungeon.guardian_actor_kind_id,
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.meng-huo-the-king-of-southerings"
         );
         assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
@@ -7285,7 +7684,7 @@ fn substitute_dungeon_bindings_match_source() {
         assert_eq!(man_cave.legacy_index, Some(40));
         assert_eq!(man_cave.root_floor_id, "demo.floor.man-cave-depth-8");
         assert_eq!(
-            man_cave.guardian_actor_kind_id,
+            man_cave.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.untamo-the-cruel"
         );
 
@@ -7740,7 +8139,10 @@ fn swamp_and_cavern_dungeon_bindings_match_source() {
             .expect("Icky Cave content should exist");
         assert_eq!(dungeon.legacy_index, Some(21));
         assert_eq!(dungeon.root_floor_id, "demo.floor.icky-cave-depth-10");
-        assert_eq!(dungeon.guardian_actor_kind_id, "demo.actor.the-icky-queen");
+        assert_eq!(
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
+            "demo.actor.the-icky-queen"
+        );
         let mut floors = world
             .procedural_floors
             .iter()
@@ -7940,7 +8342,7 @@ fn swamp_and_cavern_dungeon_bindings_match_source() {
         assert_eq!(troll_cave.legacy_index, Some(36));
         assert_eq!(troll_cave.root_floor_id, "demo.floor.troll-cave-depth-18");
         assert_eq!(
-            troll_cave.guardian_actor_kind_id,
+            troll_cave.guardian_actor_kind_id.as_deref().unwrap(),
             "demo.actor.spulga-the-troll-priestess"
         );
 
@@ -8100,7 +8502,10 @@ fn swamp_and_cavern_dungeon_bindings_match_source() {
             .expect("Eyrie should exist");
         assert_eq!(dungeon.legacy_index, Some(14));
         assert_eq!(dungeon.root_floor_id, "demo.floor.eyrie-depth-40");
-        assert_eq!(dungeon.guardian_actor_kind_id, "demo.actor.thorondor");
+        assert_eq!(
+            dungeon.guardian_actor_kind_id.as_deref().unwrap(),
+            "demo.actor.thorondor"
+        );
         let entrance_guardian = dungeon
             .entrance_guardian
             .as_ref()
@@ -10352,7 +10757,7 @@ fn town_entrances_and_shared_facilities_match_source() {
                 },
                 WildernessLocationDefinition::Town {
                     position: ContentPosition { x: 28, y: 52 },
-                    map_origin: ContentPosition { x: 51, y: 17 },
+                    map_origin: ContentPosition { x: 0, y: 0 },
                     town_id: "demo.town.outpost".to_owned(),
                 },
                 WildernessLocationDefinition::Town {
@@ -10419,8 +10824,16 @@ fn town_entrances_and_shared_facilities_match_source() {
                     dungeon_id: "demo.dungeon.crystal-castle".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 40, y: 3 },
+                    dungeon_id: "demo.dungeon.rlyeh".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 42, y: 58 },
                     dungeon_id: "demo.dungeon.lonely-mountain".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 47, y: 45 },
+                    dungeon_id: "demo.dungeon.anti-melee-cave".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 47, y: 53 },
@@ -10429,6 +10842,14 @@ fn town_entrances_and_shared_facilities_match_source() {
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 49, y: 23 },
                     dungeon_id: "demo.dungeon.mine".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 55, y: 9 },
+                    dungeon_id: "demo.dungeon.disaster-area".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 57, y: 12 },
+                    dungeon_id: "demo.dungeon.dark-cave".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 63, y: 44 },
@@ -10457,6 +10878,10 @@ fn town_entrances_and_shared_facilities_match_source() {
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 76, y: 46 },
                     dungeon_id: "demo.dungeon.eyrie".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 84, y: 6 },
+                    dungeon_id: "demo.dungeon.anti-magic-cave".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 85, y: 19 },
@@ -10501,39 +10926,39 @@ fn town_entrances_and_shared_facilities_match_source() {
         let entrances = [
             (
                 "demo.terrain.general-store-entrance",
-                ContentPosition { x: 32, y: 13 },
+                ContentPosition { x: 70, y: 39 },
             ),
             (
                 "demo.terrain.temple-entrance",
-                ContentPosition { x: 45, y: 19 },
+                ContentPosition { x: 70, y: 29 },
             ),
             (
                 "demo.terrain.alchemist-entrance",
-                ContentPosition { x: 53, y: 13 },
+                ContentPosition { x: 74, y: 43 },
             ),
             (
                 "demo.terrain.magic-shop-entrance",
-                ContentPosition { x: 57, y: 13 },
+                ContentPosition { x: 84, y: 43 },
             ),
             (
                 "demo.terrain.bookstore-entrance",
-                ContentPosition { x: 55, y: 13 },
+                ContentPosition { x: 89, y: 44 },
             ),
             (
                 "demo.terrain.armoury-entrance",
-                ContentPosition { x: 30, y: 19 },
+                ContentPosition { x: 115, y: 28 },
             ),
             (
                 "demo.terrain.weaponsmith-entrance",
-                ContentPosition { x: 34, y: 19 },
+                ContentPosition { x: 126, y: 31 },
             ),
             (
                 "demo.terrain.black-market-entrance",
-                ContentPosition { x: 55, y: 19 },
+                ContentPosition { x: 115, y: 43 },
             ),
             (
                 "demo.terrain.shroomery-entrance",
-                ContentPosition { x: 61, y: 19 },
+                ContentPosition { x: 78, y: 26 },
             ),
         ];
         for (terrain_id, entrance) in entrances {
@@ -10541,14 +10966,8 @@ fn town_entrances_and_shared_facilities_match_source() {
                 terrain.terrain_id == terrain_id && terrain.positions == [entrance]
             }));
         }
-
-        let fortifications = world
-            .terrain_overrides
-            .iter()
-            .find(|terrain| terrain.terrain_id == "demo.terrain.outpost-fortification")
-            .expect("fixture should contain town fortifications");
-        assert_eq!((world.width, world.height), (96, 32));
-        assert_eq!(world.border_terrain_id, "demo.terrain.surface-grass");
+        assert_eq!((world.width, world.height), (198, 65));
+        assert!(world.inherit_wilderness_terrain);
         assert!(
             world
                 .procedural_floors
@@ -10556,47 +10975,37 @@ fn town_entrances_and_shared_facilities_match_source() {
                 .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.warrens"))
                 .all(|floor| (floor.width, floor.height) == (66, 22))
         );
-        let expected_fortifications = (22..=66)
-            .flat_map(|x| [ContentPosition { x, y: 6 }, ContentPosition { x, y: 25 }])
-            .chain(
-                (7..=24).flat_map(|y| [ContentPosition { x: 22, y }, ContentPosition { x: 66, y }]),
-            )
-            .filter(|position| position.y != 16)
-            .collect::<BTreeSet<_>>();
-        assert_eq!(
-            fortifications
-                .positions
-                .iter()
-                .copied()
-                .collect::<BTreeSet<_>>(),
-            expected_fortifications,
-            "the Outpost should have one continuous perimeter interrupted only by its gates"
-        );
-        let gates = world
+        let tiles = world
             .terrain_overrides
             .iter()
-            .find(|terrain| terrain.terrain_id == "demo.terrain.outpost-gate")
-            .expect("fixture should contain town gates");
+            .flat_map(|entry| {
+                entry
+                    .positions
+                    .iter()
+                    .map(|p| ((p.x, p.y), entry.terrain_id.as_str()))
+            })
+            .collect::<BTreeMap<_, _>>();
+        assert_eq!(tiles.len(), 4383);
         assert_eq!(
-            gates.positions,
-            [
-                ContentPosition { x: 22, y: 16 },
-                ContentPosition { x: 66, y: 16 }
-            ]
+            tiles
+                .values()
+                .filter(|id| **id == "demo.terrain.permanent-wall")
+                .count(),
+            855
         );
-        assert!(entrances.iter().all(|(_, position)| {
-            position.x > 22 && position.x < 66 && position.y > 6 && position.y < 25
-        }));
-        let warrens_entrance = world
-            .terrain_overrides
-            .iter()
-            .find(|terrain| terrain.terrain_id == "demo.terrain.stairs-down")
-            .expect("fixture should contain the Warrens entrance");
         assert_eq!(
-            warrens_entrance.positions,
-            [ContentPosition { x: 74, y: 16 }]
+            tiles
+                .values()
+                .filter(|id| **id == "demo.terrain.dark-pit")
+                .count(),
+            7
         );
-        assert!(warrens_entrance.positions[0].x > 66);
+        assert_eq!(tiles[&(150, 31)], "demo.terrain.stairs-down");
+        assert_eq!(tiles[&(97, 46)], "demo.terrain.museum-entrance");
+        assert_eq!(world.player.position, ContentPosition { x: 99, y: 33 });
+        for x in [99, 100, 101] {
+            assert_eq!(tiles[&(x, 33)], "demo.terrain.floor");
+        }
 
         let mut wrong_entrance = artifact.content.clone();
         wrong_entrance
@@ -10663,7 +11072,7 @@ fn town_entrances_and_shared_facilities_match_source() {
             .expect("Outpost should place the public Hideout entrance");
         assert_eq!(
             hideout_entrance.positions,
-            [ContentPosition { x: 93, y: 29 }]
+            [ContentPosition { x: 188, y: 58 }]
         );
         assert_eq!(
             world
@@ -10672,7 +11081,7 @@ fn town_entrances_and_shared_facilities_match_source() {
                 .find(|terrain| terrain.terrain_id == "demo.terrain.stairs-down")
                 .expect("Warrens entrance should remain available")
                 .positions,
-            [ContentPosition { x: 74, y: 16 }]
+            [ContentPosition { x: 150, y: 31 }]
         );
         let task_floor = world
             .procedural_floors
@@ -11635,6 +12044,31 @@ fn inline_floor_items_reject_duplicate_or_blocked_placements() {
         validate_and_normalize(&mut blocked_position),
         Err(ContentError::InvalidProceduralFloor(_))
     ));
+
+    for (terrain_id, allowed) in [
+        ("demo.terrain.shallow-waste", true),
+        ("demo.terrain.deep-waste", false),
+    ] {
+        let mut waste = artifact.content.clone();
+        let map = trouble_inline(&mut waste);
+        let position = map.item_spawns[0].position;
+        for tile in &mut map.terrain_overrides {
+            tile.positions.retain(|at| *at != position);
+        }
+        map.terrain_overrides
+            .retain(|tile| !tile.positions.is_empty());
+        map.terrain_overrides.push(InlineTerrainOverrideDefinition {
+            terrain_id: terrain_id.to_owned(),
+            positions: vec![position],
+            chance_percent: 100,
+            otherwise_terrain_id: None,
+        });
+        assert_eq!(
+            validate_and_normalize(&mut waste).is_ok(),
+            allowed,
+            "walkability alone must not authorize an item spawn on {terrain_id}"
+        );
+    }
 }
 
 #[test]
@@ -13435,7 +13869,7 @@ fn anambar_service_roles_and_rewards_match_source() {
         let anambar = facility("demo.town-facility.anambar-police-station");
         assert_eq!(outpost.category, TownFacilityCategory::QuestGiver);
         assert_eq!(anambar.category, TownFacilityCategory::QuestGiver);
-        assert_eq!(outpost.entrance_position, ContentPosition { x: 57, y: 19 });
+        assert_eq!(outpost.entrance_position, ContentPosition { x: 84, y: 26 });
         assert_eq!(anambar.entrance_position, ContentPosition { x: 12, y: 9 });
         assert_eq!(
             outpost.entrance_terrain_id,
@@ -13468,7 +13902,7 @@ fn anambar_service_roles_and_rewards_match_source() {
             override_.terrain_id == "demo.terrain.bounty-office-entrance"
                 && override_
                     .positions
-                    .contains(&ContentPosition { x: 57, y: 19 })
+                    .contains(&ContentPosition { x: 84, y: 26 })
         }));
         let anambar_floor = world
             .procedural_floors

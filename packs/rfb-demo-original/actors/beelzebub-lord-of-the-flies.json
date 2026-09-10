@@ -106,15 +106,18 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-dark-17-400-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-confusion-17-400-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-inertia-17-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.summon-demon-l90-1d3-1",
@@ -145,6 +148,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "demon",
     "evil",
     "kin-glyph-73",

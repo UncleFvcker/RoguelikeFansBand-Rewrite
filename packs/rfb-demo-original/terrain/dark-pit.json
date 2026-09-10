@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.dark-pit",
+  "nameKey": "terrain-demo-dark-pit-name",
+  "descriptionKey": "terrain-demo-dark-pit-description",
+  "glyph": "#",
+  "walkable": false,
+  "blocksSight": false,
+  "allowsProjectilePassage": true,
+  "movementModes": ["fly"],
+  "tags": ["outdoor", "pit", "surface"]
+}

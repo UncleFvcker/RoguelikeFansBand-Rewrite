@@ -104,6 +104,7 @@ fn sniper_game(seed: u64) -> Game {
             });
             class.abilities = vec![
                 ClassAbilityDefinition {
+                    blocked_by_dungeon_anti_magic: true,
                     ability_id: CONCENTRATE_ABILITY_ID.to_owned(),
                     minimum_level: 1,
                     ui_group_name_key: None,
@@ -116,6 +117,7 @@ fn sniper_game(seed: u64) -> Game {
                     minimum_failure_percent: 0,
                 },
                 ClassAbilityDefinition {
+                    blocked_by_dungeon_anti_magic: true,
                     ability_id: TECHNIQUE_ABILITY_ID.to_owned(),
                     minimum_level: 1,
                     ui_group_name_key: None,
@@ -128,6 +130,7 @@ fn sniper_game(seed: u64) -> Game {
                     minimum_failure_percent: 95,
                 },
                 ClassAbilityDefinition {
+                    blocked_by_dungeon_anti_magic: true,
                     ability_id: SHINING_SHOT_ABILITY_ID.to_owned(),
                     minimum_level: 1,
                     ui_group_name_key: None,
@@ -140,6 +143,7 @@ fn sniper_game(seed: u64) -> Game {
                     minimum_failure_percent: 0,
                 },
                 ClassAbilityDefinition {
+                    blocked_by_dungeon_anti_magic: false,
                     ability_id: PROBE_ABILITY_ID.to_owned(),
                     minimum_level: 15,
                     ui_group_name_key: None,

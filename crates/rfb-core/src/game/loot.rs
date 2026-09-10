@@ -396,6 +396,12 @@ impl Game {
             guardian_reward
         {
             let artifact_reward = reward_artifact_kind_id.is_some();
+            // Both the fixed reward and its generated artifact replacement
+            // retain artifact protection against loss on water.
+            let Some(reward_position) = self.ground_drop_position(actor.position, artifact_reward)
+            else {
+                return Ok((generated, gold));
+            };
             let context = reward_table_id.map(|table_id| LootContext {
                 table_id,
                 floor_id: floor_id.clone(),
@@ -429,7 +435,7 @@ impl Game {
                     .expect("validated realm-book reward must retain a fallback table");
                 let draft = self.fixed_item_draft(context, kind_id);
                 generated.push(
-                    self.commit_generated_item_draft(draft, ItemLocation::Ground(actor.position))?,
+                    self.commit_generated_item_draft(draft, ItemLocation::Ground(reward_position))?,
                 );
             } else if let Some(kind_id) = reward_artifact_kind_id
                 && !self.generated_artifact_ids.contains(&kind_id)
@@ -439,7 +445,7 @@ impl Game {
                     .expect("validated artifact guardian reward must retain a fallback table");
                 let draft = self.fixed_item_draft(context, kind_id);
                 generated.push(
-                    self.commit_generated_item_draft(draft, ItemLocation::Ground(actor.position))?,
+                    self.commit_generated_item_draft(draft, ItemLocation::Ground(reward_position))?,
                 );
             } else if let Some(context) = context {
                 let mode = if artifact_reward {
@@ -451,7 +457,7 @@ impl Game {
                 };
                 generated.extend(self.generate_loot_instances_internal(
                     &context,
-                    ItemLocation::Ground(actor.position),
+                    ItemLocation::Ground(reward_position),
                     true,
                     None,
                     mode,

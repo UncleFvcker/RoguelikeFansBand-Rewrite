@@ -9,13 +9,13 @@
     "world": "demo.world.middle-earth",
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
-      "x": 77,
-      "y": 30
+      "x": 98,
+      "y": 23
     },
     "terrainOverrides": [
       {
         "position": {
-          "x": 114,
+          "x": 125,
           "y": 28
         },
         "terrainId": "demo.terrain.thieves-hideout-entry-completed"
@@ -59,7 +59,7 @@
       },
       "lastCommandSeq": 1,
       "revision": 1,
-      "stateHash": "27a16c6213fa27113af3e3ff578cc58d4bef6200fac6c913b6f53ab2cccd97b7",
+      "stateHash": "26e15e8afaabaf5e3baedd784ae06c9d29b245f5eabd2c292d43bbec2c5e6be6",
       "tasks": {
         "demo.task.pest-control": {
           "current": 8,

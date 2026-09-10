@@ -1239,6 +1239,10 @@
         "abilityId": {
           "type": "string"
         },
+        "innate": {
+          "description": "RFB monspell MSF_INNATE, independent of damage type.",
+          "type": "boolean"
+        },
         "weight": {
           "format": "uint32",
           "minimum": 0,

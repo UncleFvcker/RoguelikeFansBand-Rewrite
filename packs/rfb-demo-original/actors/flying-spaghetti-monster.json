@@ -92,11 +92,13 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-nexus-33-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-confusion-17-400-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.summon-legacy-import-l70-1d3-1",
@@ -130,6 +132,8 @@
     "rfb.status.stun"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "good",
     "kin-glyph-44",
     "legacy-import",

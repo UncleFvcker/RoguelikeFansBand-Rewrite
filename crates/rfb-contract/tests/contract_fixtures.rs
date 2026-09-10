@@ -217,7 +217,7 @@ fn buy_first_from_shop_resolves_projected_stock_without_movement() {
         json!({
             "world": "demo.world.middle-earth",
             "debugClearEntities": true,
-            "playerPosition": { "x": 83, "y": 30 },
+            "playerPosition": { "x": 70, "y": 39 },
             "playerGold": 1000000
         }),
         json!([{
@@ -233,7 +233,7 @@ fn buy_first_from_shop_resolves_projected_stock_without_movement() {
 
     assert_eq!(
         observed.final_state.player_position,
-        Position { x: 83, y: 30 }
+        Position { x: 70, y: 39 }
     );
     assert_eq!(observed.events.len(), 1);
     assert_eq!(observed.events[0].kind, "shop.purchase");

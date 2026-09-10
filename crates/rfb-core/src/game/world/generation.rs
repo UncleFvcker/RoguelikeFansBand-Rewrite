@@ -490,7 +490,7 @@ fn generated_region_open_positions(
         .filter(|position| {
             content
                 .terrain(&terrain[generated_terrain_index(width, *position)])
-                .is_some_and(|definition| definition.walkable)
+                .is_some_and(|terrain| terrain.walkable && terrain.allows_items())
         })
         .collect()
 }
@@ -1190,21 +1190,29 @@ impl Game {
         let height = definition.height;
         let mut terrain =
             vec![definition.wall_terrain_id.clone(); usize::from(width) * usize::from(height)];
+        let mixed_layout = definition
+            .layout
+            .as_ref()
+            .filter(|layout| !layout.floor_mix.is_empty() || !layout.wall_mix.is_empty());
         let cavern_origin = definition.layout.as_ref().and_then(|layout| {
             layout.cavern.as_ref().map(|cavern| {
                 self.generate_connected_cavern(definition, &cavern.terrain_id, &mut terrain)
             })
         });
-        let lake_origin = definition.layout.as_ref().and_then(|layout| {
-            layout.lake.as_ref().map(|lake| {
-                self.generate_connected_lake(
-                    definition,
-                    &lake.deep_terrain_id,
-                    &lake.shallow_terrain_id,
-                    &mut terrain,
-                )
-            })
-        });
+        let lake_origin = definition
+            .layout
+            .as_ref()
+            .filter(|_| mixed_layout.is_none())
+            .and_then(|layout| {
+                layout.lake.as_ref().map(|lake| {
+                    self.generate_connected_lake(
+                        definition,
+                        &lake.deep_terrain_id,
+                        &lake.shallow_terrain_id,
+                        &mut terrain,
+                    )
+                })
+            });
         let maze_walkable = if maze_only {
             let maze = definition
                 .layout
@@ -1330,6 +1338,37 @@ impl Game {
                 .expect("legacy vault placement requires a remote room")
                 .y,
         });
+        // Mixed L/A materials are budgeted after the complete room network.
+        // Later hydrology may replace bulk walls, while carved paths and room
+        // walls keep the same protection as the ordinary room reconstruction.
+        let mixed_protected = if mixed_layout.is_some() {
+            self.connect_generated_rooms(&mut terrain, width, &rooms, &generated_floor_terrain_id);
+            if let Some(origin) = cavern_origin {
+                carve_generated_corridor(
+                    &mut terrain,
+                    width,
+                    first_center,
+                    origin,
+                    &generated_floor_terrain_id,
+                );
+            }
+            self.mix_generated_terrain(
+                definition,
+                &rooms,
+                &generated_floor_terrain_id,
+                &mut terrain,
+            )
+        } else {
+            Vec::new()
+        };
+        if let Some(lake) = mixed_layout.and_then(|layout| layout.lake.as_ref()) {
+            self.generate_connected_lake(
+                definition,
+                &lake.deep_terrain_id,
+                &lake.shallow_terrain_id,
+                &mut terrain,
+            );
+        }
         if let Some(destroyed) = definition
             .layout
             .as_ref()
@@ -1375,10 +1414,14 @@ impl Game {
                 &mut terrain,
             );
         }
-        if definition
-            .layout
-            .as_ref()
-            .is_some_and(|layout| layout.destroyed.is_some() || layout.river.is_some())
+        for (index, terrain_id) in mixed_protected {
+            terrain[index] = terrain_id;
+        }
+        if mixed_layout.is_none()
+            && definition
+                .layout
+                .as_ref()
+                .is_some_and(|layout| layout.destroyed.is_some() || layout.river.is_some())
         {
             for room in &rooms {
                 let room_index = rooms
@@ -1394,20 +1437,10 @@ impl Game {
                 carve_generated_room(&mut terrain, width, room, room_terrain_id);
             }
         }
-        if cave_room_layout {
-            self.carve_cave_room_network(&mut terrain, width, &rooms, &generated_floor_terrain_id);
-        } else {
-            for connected_rooms in rooms.windows(2) {
-                carve_generated_corridor(
-                    &mut terrain,
-                    width,
-                    connected_rooms[0].center(),
-                    connected_rooms[1].center(),
-                    &generated_floor_terrain_id,
-                );
-            }
+        if mixed_layout.is_none() {
+            self.connect_generated_rooms(&mut terrain, width, &rooms, &generated_floor_terrain_id);
         }
-        if let Some(cavern_origin) = cavern_origin {
+        if let Some(cavern_origin) = cavern_origin.filter(|_| mixed_layout.is_none()) {
             carve_generated_corridor(
                 &mut terrain,
                 width,
@@ -1982,6 +2015,7 @@ impl Game {
                         .cloned()
                         .expect("generated actor terrain must remain available");
                     let Some(kind_id) = self.select_original_allocated_monster(
+                        &definition.id,
                         policy,
                         definition.depth,
                         definition.depth,
@@ -1994,6 +2028,7 @@ impl Game {
                     };
                     occupied.insert(position);
                     let members = self.plan_original_group(
+                        &definition.id,
                         policy,
                         &kind_id,
                         position,
@@ -2288,6 +2323,7 @@ impl Game {
                 && actor_definition.allocation.is_some()
             {
                 let members = self.plan_original_group(
+                    &definition.id,
                     &policy,
                     &guardian.actor_kind_id,
                     position,
@@ -2780,11 +2816,14 @@ impl Game {
                 }
             }
         }
+        let room_glow = !self
+            .floor_dungeon(&definition.id)
+            .is_some_and(|dungeon| dungeon.darkness);
         for position in rooms.iter().flat_map(generated_room_cells) {
             let index = usize::try_from(position.y).expect("generated room y must fit usize")
                 * usize::from(width)
                 + usize::try_from(position.x).expect("generated room x must fit usize");
-            glow[index] = true;
+            glow[index] = room_glow;
         }
         Ok(FloorState {
             id: definition.id.clone(),
@@ -2840,6 +2879,29 @@ impl Game {
         let mut occupied = reserved.clone();
         occupied.insert(primary_up);
         occupied.extend(primary_down);
+        {
+            let walkable = terrain
+                .iter()
+                .enumerate()
+                .filter_map(|(index, id)| {
+                    self.content
+                        .terrain(id)
+                        .is_some_and(|terrain| {
+                            terrain.walkable || terrain.open_to_terrain_id.is_some()
+                        })
+                        .then_some(Position {
+                            x: (index % usize::from(definition.width)) as i32,
+                            y: (index / usize::from(definition.width)) as i32,
+                        })
+                })
+                .collect::<BTreeSet<_>>();
+            let reachable = maze_floor_distances(&walkable, primary_up);
+            occupied.extend(
+                walkable
+                    .into_iter()
+                    .filter(|position| !reachable.contains_key(position)),
+            );
+        }
         let mut placed = BTreeSet::new();
         self.place_additional_stair_terrain(
             definition,
@@ -2940,6 +3002,115 @@ impl Game {
             occupied.insert(selected);
             placed.insert(selected);
         }
+    }
+
+    fn connect_generated_rooms(
+        &mut self,
+        terrain: &mut [String],
+        width: u16,
+        rooms: &[GeneratedRoom],
+        floor_terrain_id: &str,
+    ) {
+        if rooms
+            .iter()
+            .any(|room| room.shape == ProceduralRoomShape::Cavern)
+        {
+            self.carve_cave_room_network(terrain, width, rooms, floor_terrain_id);
+        } else {
+            for pair in rooms.windows(2) {
+                carve_generated_corridor(
+                    terrain,
+                    width,
+                    pair[0].center(),
+                    pair[1].center(),
+                    floor_terrain_id,
+                );
+            }
+        }
+    }
+
+    fn mix_generated_terrain(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        rooms: &[GeneratedRoom],
+        floor_terrain_id: &str,
+        terrain: &mut [String],
+    ) -> Vec<(usize, String)> {
+        let layout = definition.layout.as_ref().expect("mixed layout");
+        let room_cells = rooms
+            .iter()
+            .flat_map(generated_room_cells)
+            .collect::<BTreeSet<_>>();
+        let room_walls = room_cells
+            .iter()
+            .flat_map(|position| {
+                (-1..=1).flat_map(move |dy| {
+                    (-1..=1).map(move |dx| Position {
+                        x: position.x + dx,
+                        y: position.y + dy,
+                    })
+                })
+            })
+            .filter(|position| !room_cells.contains(position))
+            .collect::<BTreeSet<_>>();
+        // Keep every room anchor and the classic fixed placements around it.
+        let anchors = rooms
+            .iter()
+            .flat_map(|room| {
+                let center = room.center();
+                (-1..=1).flat_map(move |dy| {
+                    (-1..=1).map(move |dx| Position {
+                        x: center.x + dx,
+                        y: center.y + dy,
+                    })
+                })
+            })
+            .collect::<BTreeSet<_>>();
+        let protected = terrain
+            .iter()
+            .enumerate()
+            .filter_map(|(index, id)| {
+                let position = Position {
+                    x: (index % usize::from(definition.width)) as i32,
+                    y: (index / usize::from(definition.width)) as i32,
+                };
+                (room_walls.contains(&position)
+                    || self
+                        .content
+                        .terrain(id)
+                        .is_some_and(|terrain| terrain.walkable))
+                .then_some(index)
+            })
+            .collect::<Vec<_>>();
+        for (mix, base, wall) in [
+            (&layout.floor_mix, floor_terrain_id, false),
+            (&layout.wall_mix, definition.wall_terrain_id.as_str(), true),
+        ] {
+            if mix.is_empty() {
+                continue;
+            }
+            let mut candidates = (1..i32::from(definition.height) - 1)
+                .flat_map(|y| (1..i32::from(definition.width) - 1).map(move |x| Position { x, y }))
+                .filter(|position| {
+                    terrain[generated_terrain_index(definition.width, *position)] == base
+                        && !anchors.contains(position)
+                        && (!wall || !room_walls.contains(position))
+                })
+                .collect::<Vec<_>>();
+            let total = candidates.len();
+            for entry in mix {
+                // Round each replacement budget down; all residue stays base.
+                for _ in 0..total * usize::from(entry.percent) / 100 {
+                    let index = self.rng.bounded(candidates.len() as u64) as usize;
+                    let position = candidates.swap_remove(index);
+                    set_generated_terrain(terrain, definition.width, position, &entry.terrain_id);
+                }
+            }
+        }
+        protected
+            .into_iter()
+            .map(|index| (index, terrain[index].clone()))
+            .collect()
     }
 
     fn carve_cave_room_network(
@@ -4262,7 +4433,7 @@ impl Game {
         rooms: &[GeneratedRoom],
         room_id: &str,
         occupied: &BTreeSet<Position>,
-        walkable_terrain: Option<(&[String], u16)>,
+        item_terrain: Option<(&[String], u16)>,
     ) -> Position {
         let room = rooms
             .iter()
@@ -4273,10 +4444,10 @@ impl Game {
             .filter(|position| {
                 room.contains(*position)
                     && !occupied.contains(position)
-                    && walkable_terrain.is_none_or(|(terrain, width)| {
+                    && item_terrain.is_none_or(|(terrain, width)| {
                         self.content
                             .terrain(&terrain[generated_terrain_index(width, *position)])
-                            .is_some_and(|terrain| terrain.walkable)
+                            .is_some_and(|terrain| terrain.walkable && terrain.allows_items())
                     })
             })
             .collect::<Vec<_>>();
@@ -4342,7 +4513,7 @@ impl Game {
                             && !occupied.contains(&position)
                             && content
                                 .terrain(&terrain[generated_terrain_index(width, position)])
-                                .is_some_and(|terrain| terrain.walkable))
+                                .is_some_and(|terrain| terrain.walkable && terrain.allows_items()))
                         .then_some((room.id.clone(), position))
                     })
                 })
@@ -4374,7 +4545,7 @@ impl Game {
                 (self
                     .content
                     .terrain(terrain_id)
-                    .is_some_and(|terrain| terrain.walkable)
+                    .is_some_and(|terrain| terrain.walkable && terrain.allows_items())
                     && !occupied.contains(&position))
                 .then_some(position)
             })

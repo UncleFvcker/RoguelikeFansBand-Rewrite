@@ -946,10 +946,7 @@ impl Game {
                         || !self.index(*position).is_some_and(|index| {
                             self.content
                                 .terrain(&self.terrain[index])
-                                .is_some_and(|terrain| {
-                                    terrain.walkable
-                                        || terrain.tags.iter().any(|tag| tag == "item-drop")
-                                })
+                                .is_some_and(rfb_content::TerrainDefinition::allows_items)
                         })
                         || item.quantity > definition.max_stack
                     {
@@ -1083,7 +1080,7 @@ impl Game {
             if !instance_ids.insert(pile.id.clone())
                 || generated_gold_serial(&pile.id).is_none()
                 || pile.amount == 0
-                || !self.is_walkable(pile.position)
+                || !self.terrain_allows_items(pile.position)
             {
                 return Err(CoreError::InvalidSave("gold pile state is invalid"));
             }
@@ -1196,21 +1193,7 @@ impl Game {
                     && item_creation_state_is_valid(item, definition);
                 let location_is_valid = match &item.location {
                     ItemLocation::Ground(position) => {
-                        floor_position_is_walkable(floor, *position, &self.content)
-                            || (position.x >= 0
-                                && position.y >= 0
-                                && position.x < i32::from(floor.width)
-                                && position.y < i32::from(floor.height)
-                                && self
-                                    .content
-                                    .terrain(
-                                        &floor.terrain[position.y as usize
-                                            * usize::from(floor.width)
-                                            + position.x as usize],
-                                    )
-                                    .is_some_and(|terrain| {
-                                        terrain.tags.iter().any(|tag| tag == "item-drop")
-                                    }))
+                        floor_position_allows_items(floor, *position, &self.content)
                     }
                     ItemLocation::CarriedBy { actor_id } => floor_monster_ids.contains(actor_id),
                     ItemLocation::Inventory
@@ -1231,7 +1214,7 @@ impl Game {
                 if !instance_ids.insert(pile.id.clone())
                     || generated_gold_serial(&pile.id).is_none()
                     || pile.amount == 0
-                    || !floor_position_is_walkable(floor, pile.position, &self.content)
+                    || !floor_position_allows_items(floor, pile.position, &self.content)
                 {
                     return Err(CoreError::InvalidSave(
                         "stored floor gold pile state is invalid",
@@ -1411,6 +1394,9 @@ impl Game {
                     "dungeon entrance guardian state is invalid",
                 ));
             }
+            if dungeon.guardian_actor_kind_id.is_none() && state.guardian_defeated {
+                return Err(CoreError::InvalidSave("dungeon guardian state is invalid"));
+            }
             match (&state.retained_instance_id, state.retained_at_turn) {
                 (None, None) => {}
                 (Some(instance_id), Some(retained_at_turn)) => {
@@ -1472,11 +1458,10 @@ impl Game {
             for final_floor in world.procedural_floors.iter().filter(|floor| {
                 floor.dungeon_id.as_deref() == Some(dungeon_id.as_str()) && floor.final_floor
             }) {
-                let guardian_id = &final_floor
-                    .guardian
-                    .as_ref()
-                    .expect("validated final floor must retain a guardian")
-                    .instance_id;
+                let Some(guardian) = &final_floor.guardian else {
+                    continue;
+                };
+                let guardian_id = &guardian.instance_id;
                 let guardian_present = if self.current_floor_id == final_floor.id {
                     Some(self.entities.iter().any(|actor| &actor.id == guardian_id))
                 } else {

@@ -67,11 +67,13 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-nuke-17-600-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-poison-17-600-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 9
@@ -92,6 +94,9 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "stupid",
+    "attack-spell",
+    "innate-spell",
     "empty-mind",
     "kin-glyph-44",
     "legacy-import",

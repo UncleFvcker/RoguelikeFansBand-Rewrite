@@ -97,11 +97,13 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-fire-20-900-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-acid-20-900-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 8
@@ -127,6 +129,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "dragon",
     "kin-glyph-68",
     "legacy-import",

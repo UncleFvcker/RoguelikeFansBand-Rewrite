@@ -90,6 +90,7 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "attack-spell",
     "cold-blooded",
     "evil",
     "invisible",

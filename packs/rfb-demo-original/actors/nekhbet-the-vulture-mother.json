@@ -123,7 +123,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-force-33-200-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.scare",
@@ -135,7 +136,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-gravity-33-200-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.blind",
@@ -199,6 +201,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "cold-blooded",
     "egyptian",

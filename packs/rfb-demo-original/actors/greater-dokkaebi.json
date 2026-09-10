@@ -219,7 +219,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.shriek",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 50,
@@ -250,6 +251,8 @@
     "rfb.status.stun"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "aura-fear",
     "kin-glyph-104",
     "legacy-import",

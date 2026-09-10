@@ -140,15 +140,18 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-hell-fire-17-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-fire-20-900-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-nether-14-550-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.ball-nether-10d10-240",
@@ -193,6 +196,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "aura-fear",
     "demon",
     "evil",

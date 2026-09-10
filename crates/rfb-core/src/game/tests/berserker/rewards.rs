@@ -76,6 +76,9 @@ fn all_eight_class_rewards_are_claimed_as_real_items_with_materialized_egos() {
         }
         let mut expected_rng = game.rng.clone();
         let expected = crate::game::tasks::reward_item(
+            game.progress
+                .active_mutation_ids
+                .contains("rfb.mutation.bad-luck"),
             &game.content,
             Some("demo.class.berserker"),
             reward,
@@ -132,37 +135,57 @@ fn high_books_reward_quantity_max_experience_and_realm_only_after_valid_destruct
         clear_monsters(&mut game);
         virtues(&mut game);
         game.progress.maximum_experience = 8000;
-        give_inventory_item(&mut game, "test.book", "demo.item.book-of-the-unicorn");
-        game.items.last_mut().unwrap().quantity = 3;
-        game.items.last_mut().unwrap().inscription = Some("!k".to_owned());
+        for id in ["test.book", "test.book.second", "test.book.remaining"] {
+            give_inventory_item(&mut game, id, "demo.item.book-of-the-unicorn");
+        }
+        game.items
+            .iter_mut()
+            .find(|item| item.id == "test.book")
+            .unwrap()
+            .inscription = Some("!k".to_owned());
         dispatch_next(
             &mut game,
             GameCommand::DestroyItem {
                 item_id: "test.book".to_owned(),
-                quantity: 2,
+                quantity: 1,
             },
         );
         assert_eq!(game.progress.experience, 0);
         assert_eq!(game.virtue_current(VirtueKindDto::Vitality), 0);
-        game.items.last_mut().unwrap().inscription = None;
-        dispatch_next(
-            &mut game,
-            GameCommand::DestroyItem {
-                item_id: "test.book".to_owned(),
-                quantity: 2,
-            },
-        );
-        assert_eq!(game.progress.experience, 200, "{build}");
         assert_eq!(
+            game.item_knowledge
+                .get("demo.item.book-of-the-unicorn")
+                .map_or(0, |state| state.found_count),
+            0
+        );
+        game.items
+            .iter_mut()
+            .find(|item| item.id == "test.book")
+            .unwrap()
+            .inscription = None;
+        // Physical books are single instances in the discovery model.
+        for id in ["test.book", "test.book.second"] {
+            dispatch_next(
+                &mut game,
+                GameCommand::DestroyItem {
+                    item_id: id.to_owned(),
+                    quantity: 1,
+                },
+            );
+            crate::game::tests::support::choose_human_talent_if_pending(&mut game);
+        }
+        assert_eq!(game.progress.experience, 200, "{build}");
+        assert!(
             game.items
                 .iter()
-                .find(|item| item.id == "test.book")
-                .unwrap()
-                .quantity,
-            1
+                .any(|item| item.id == "test.book.remaining" && item.quantity == 1)
         );
-        assert_eq!(game.virtue_current(VirtueKindDto::Vitality), -1);
-        assert_eq!(game.virtue_current(VirtueKindDto::Unlife), 1);
+        assert_eq!(
+            game.item_knowledge["demo.item.book-of-the-unicorn"].found_count,
+            2
+        );
+        assert_eq!(game.virtue_current(VirtueKindDto::Vitality), -2);
+        assert_eq!(game.virtue_current(VirtueKindDto::Unlife), 2);
     }
     let mut game = berserker(1);
     virtues(&mut game);

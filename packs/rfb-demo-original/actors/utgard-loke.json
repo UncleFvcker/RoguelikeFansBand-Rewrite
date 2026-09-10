@@ -140,11 +140,13 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-cold-20-900-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-1d1-131",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.heal-132",
@@ -176,6 +178,8 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "clear-head",
     "evil",
     "giant",

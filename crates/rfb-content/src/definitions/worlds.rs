@@ -23,6 +23,8 @@ pub struct TerrainDefinition {
     pub glyph: String,
     pub walkable: bool,
     pub blocks_sight: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub allows_projectile_passage: bool,
     #[serde(default)]
     pub allows_wall_passage: bool,
     #[serde(default)]
@@ -57,6 +59,14 @@ pub struct TerrainDefinition {
     #[serde(default)]
     pub movement_modes: Vec<ActorMovementMode>,
     pub tags: Vec<String>,
+}
+
+impl TerrainDefinition {
+    /// Ground items require DROP, independently of whether a traveler can walk here.
+    pub fn allows_items(&self) -> bool {
+        (self.walkable || self.tags.iter().any(|tag| tag == "item-drop"))
+            && !self.tags.iter().any(|tag| tag == "no-item-drop")
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -163,6 +173,8 @@ pub struct WorldDefinition {
     pub height: u16,
     pub fill_terrain_id: String,
     pub border_terrain_id: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub inherit_wilderness_terrain: bool,
     pub terrain_overrides: Vec<TerrainOverride>,
     pub player: ActorSpawn,
     #[serde(default)]
@@ -270,10 +282,17 @@ pub struct CampaignDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DungeonDefinition {
     pub id: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub darkness: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub no_magic: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub no_melee: bool,
     #[serde(default)]
     pub legacy_index: Option<u16>,
     pub root_floor_id: String,
-    pub guardian_actor_kind_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub guardian_actor_kind_id: Option<String>,
     #[serde(default)]
     pub substitution: Option<DungeonSubstitutionDefinition>,
     #[serde(default)]
@@ -830,6 +849,10 @@ pub enum ProceduralRoomPlacement {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ProceduralLayoutDefinition {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub floor_mix: Vec<ProceduralTerrainMixDefinition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub wall_mix: Vec<ProceduralTerrainMixDefinition>,
     #[serde(default)]
     pub mode: ProceduralLayoutMode,
     #[serde(default)]
@@ -856,6 +879,16 @@ pub struct ProceduralLayoutDefinition {
 
 const fn default_place_doors() -> bool {
     true
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralTerrainMixDefinition {
+    pub terrain_id: String,
+    /// Percentage of replaceable base material; the remainder keeps the base.
+    #[cfg_attr(feature = "schemas", schemars(range(min = 1, max = 100)))]
+    pub percent: u8,
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

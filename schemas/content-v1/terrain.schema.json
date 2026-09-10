@@ -155,6 +155,9 @@
     "$schema": {
       "type": "string"
     },
+    "allowsProjectilePassage": {
+      "type": "boolean"
+    },
     "allowsWallPassage": {
       "default": false,
       "type": "boolean"

@@ -85,6 +85,7 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "attack-spell",
     "animal",
     "bird",
     "kin-glyph-66",

@@ -126,19 +126,23 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-chaos-17-600-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-disenchant-17-500-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-mana-33-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-disintegrate-17-150-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 20
@@ -165,6 +169,9 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "stupid",
+    "attack-spell",
+    "innate-spell",
     "demon",
     "eldritch-horror",
     "empty-mind",

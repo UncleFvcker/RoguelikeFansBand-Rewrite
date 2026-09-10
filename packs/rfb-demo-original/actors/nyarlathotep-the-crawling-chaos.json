@@ -169,7 +169,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-nexus-33-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.ball-mana-10d10-422",
@@ -262,6 +263,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "aura-fear",
     "demon",
     "eldritch-horror",

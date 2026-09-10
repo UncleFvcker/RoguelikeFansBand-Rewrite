@@ -162,15 +162,18 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-nexus-33-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-nether-14-550-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-disenchant-17-500-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.summon-dragon-l77-1d3",
@@ -186,7 +189,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.shriek",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 20
@@ -214,6 +218,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "dragon",
     "evil",
     "invisible",

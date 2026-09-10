@@ -63,7 +63,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-plasma-17-250-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 16
@@ -88,6 +89,8 @@
     "rfb.status.stun"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "empty-mind",
     "kin-glyph-118",
     "legacy-import",

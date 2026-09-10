@@ -75,7 +75,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-nether-14-550-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 5
@@ -104,6 +105,8 @@
     "rfb.status.stun"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "dragon",
     "evil",
     "kin-glyph-68",

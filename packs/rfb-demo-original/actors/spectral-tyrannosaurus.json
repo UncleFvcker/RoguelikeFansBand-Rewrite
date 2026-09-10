@@ -112,15 +112,18 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-nexus-33-250-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-poison-17-600-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-nether-14-550-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.paralyze",
@@ -150,6 +153,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "evil",
     "haunted-house",

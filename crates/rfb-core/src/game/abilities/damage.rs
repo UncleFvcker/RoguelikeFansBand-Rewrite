@@ -1061,7 +1061,9 @@ impl Game {
                 .unwrap_or_else(|| path.clone());
             let raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
             let impact = self.trace_projectile_path(path.clone()).0.impact;
-            if let Some(index) = self.index(impact) {
+            if !self.dungeon_has_darkness()
+                && let Some(index) = self.index(impact)
+            {
                 self.glow[index] = true;
                 changed.insert(impact);
             }
@@ -1223,7 +1225,7 @@ impl Game {
             };
             if path
                 .iter()
-                .all(|position| self.index(*position).is_some() && self.is_walkable(*position))
+                .all(|position| self.projectile_can_cross(*position))
             {
                 reflected_path = Some(path);
                 break;
@@ -1256,7 +1258,7 @@ impl Game {
         let mut hit_actor_index = None;
         for position in path {
             impact = position;
-            if self.index(position).is_none() || !self.is_walkable(position) {
+            if !self.projectile_can_cross(position) {
                 break;
             }
             landing = position;

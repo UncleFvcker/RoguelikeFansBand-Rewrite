@@ -20,11 +20,13 @@
     "abilities": [
       {
         "abilityId": "demo.ability.woe-curse",
-        "weight": 1
+        "weight": 1,
+        "innate": false
       }
     ]
   },
   "tags": [
+    "attack-spell",
     "humanoid",
     "kin-glyph-112"
   ]

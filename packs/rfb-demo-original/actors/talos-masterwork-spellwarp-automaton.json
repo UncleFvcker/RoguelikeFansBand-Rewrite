@@ -76,15 +76,18 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-mana-33-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-disintegrate-17-150-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-chaos-17-600-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.dispel",
@@ -134,6 +137,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "cold-blooded",
     "empty-mind",
     "kin-glyph-103",

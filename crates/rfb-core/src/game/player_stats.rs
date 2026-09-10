@@ -1548,8 +1548,8 @@ impl Game {
         );
         let multiplier = (200 + i32::from(mighty) * 100) * (100 + STRENGTH_DAMAGE[index]) / 100;
         let limit = 10 + 2 * (multiplier - 100) / 100;
-        let range = (i32::from(DRACONIAN_STRENGTH_BLOW[index]) + 20) * limit
-            / i32::from(weight.max(10) / 2);
+        let range =
+            (i32::from(RFB_STRENGTH_BLOW[index]) + 20) * limit / i32::from(weight.max(10) / 2);
         (range.min(limit).clamp(5, 18) as u16, multiplier)
     }
 

@@ -91,7 +91,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-3d8",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.kin-orc-warlord",
@@ -114,6 +115,8 @@
   "role": "monster",
   "speed": 113,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "evil",
     "kin-glyph-111",
     "legacy-import",

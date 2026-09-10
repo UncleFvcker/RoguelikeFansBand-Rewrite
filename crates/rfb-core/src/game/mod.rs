@@ -227,7 +227,7 @@ use terrain::{DoorBashOutcome, DoorOpenOutcome, TerrainDigOutcome, TrapDisarmOut
 use world::generation::GeneratedRoom;
 #[cfg(test)]
 use world::geometry::generated_terrain_is_connected;
-use world::geometry::{floor_actor_position_is_enterable, floor_position_is_walkable};
+use world::geometry::{floor_actor_position_is_enterable, floor_position_allows_items};
 
 pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
@@ -1252,7 +1252,9 @@ impl Game {
         let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
         let mut turn_advance = 1_u32;
         let mut player_moved = false;
-        if advances_world {
+        let defer_ability_cooldowns = matches!(&action, GameAction::CastAbility { ability_id, .. }
+            if self.dungeon_blocks_vampirism(ability_id));
+        if advances_world && !defer_ability_cooldowns {
             self.decrement_ability_cooldowns(1);
         }
         if (advances_world || matches!(&action, GameAction::Rest { turns } if *turns > 0))
@@ -1620,12 +1622,12 @@ impl Game {
                 }),
             },
             GameAction::Drop { item_ids } => {
-                if let Some((stacks, quantity)) = self.drop_inventory_items(&item_ids) {
-                    changed.insert(self.player.position);
+                if let Some((stacks, quantity, position)) = self.drop_inventory_items(&item_ids) {
+                    changed.insert(position);
                     for item_id in &item_ids {
                         self.force_open_capture_ball(
                             item_id,
-                            self.player.position,
+                            position,
                             true,
                             &mut events,
                             &mut changed,
@@ -1637,13 +1639,13 @@ impl Game {
                 }
             }
             GameAction::DropQuantity { item_id, quantity } => {
-                if let Some((stacks, dropped_quantity)) =
+                if let Some((stacks, dropped_quantity, position)) =
                     self.drop_inventory_quantity(&item_id, quantity)?
                 {
-                    changed.insert(self.player.position);
+                    changed.insert(position);
                     self.force_open_capture_ball(
                         &item_id,
-                        self.player.position,
+                        position,
                         true,
                         &mut events,
                         &mut changed,
@@ -1709,6 +1711,14 @@ impl Game {
                     &mut changed,
                     &mut removed_entities,
                 )?;
+                if defer_ability_cooldowns {
+                    if events.iter().any(|event| matches!(event,
+                        DomainEvent::AbilityCastUnavailable { reason, .. } if reason == "anti-melee")) {
+                        advances_world = false;
+                    } else if advances_world {
+                        self.decrement_ability_cooldowns(1);
+                    }
+                }
                 if let Some(branch_roll) = abilities::nature_wrath_direction_roll(&events) {
                     let cast_resolution = events.iter().find_map(|event| match event {
                         DomainEvent::AbilityCastSucceeded { resolution }
@@ -2805,6 +2815,7 @@ impl Game {
         excluded_category: Option<&str>,
         maximum_level: u16,
         allow_unique: bool,
+        player_summon: bool,
     ) -> Vec<String> {
         let current_task_id = self.current_floor_task_id();
         self.content
@@ -2821,6 +2832,11 @@ impl Game {
                         .is_none_or(|category| !actor_matches_category(definition, category))
                     && !definition.tags.iter().any(|tag| tag == "guardian")
                     && actor_answers_summons(definition)
+                    && self.dungeon_allows_monster(
+                        &self.current_floor_id,
+                        definition,
+                        player_summon,
+                    )
                     && definition.allocation.as_ref().is_none_or(|allocation| {
                         monster_ecology::actor_allocation_matches_task(allocation, current_task_id)
                     })
@@ -3073,6 +3089,7 @@ impl Game {
         persistent: bool,
         through_walls: bool,
     ) -> Vec<Position> {
+        let radius = self.dungeon_detection_radius(radius);
         let origin = self.player.position;
         let radius_distance = u32::from(radius);
         let radius_offset = i32::from(radius);
@@ -3136,6 +3153,7 @@ impl Game {
     }
 
     fn detect_actor_positions(&self, category: &str, radius: u8) -> (Vec<Position>, Vec<String>) {
+        let radius = self.dungeon_detection_radius(radius);
         let origin = self.player.position;
         let distance = |position| {
             if category == "mind" {
@@ -3187,6 +3205,7 @@ impl Game {
         radius: u8,
         through_walls: bool,
     ) -> (Vec<Position>, Vec<String>) {
+        let radius = self.dungeon_detection_radius(radius);
         let origin = self.player.position;
         let mut candidates = self
             .items
@@ -3251,6 +3270,7 @@ impl Game {
         radius: u8,
         through_walls: bool,
     ) -> (Vec<Position>, Vec<String>) {
+        let radius = self.dungeon_detection_radius(radius);
         let origin = self.player.position;
         let mut candidates = self
             .gold_piles
@@ -3426,7 +3446,10 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
-        let broken = hit_body && self.rng.bounded(100) < u64::from(break_chance_percent);
+        let drop_position =
+            self.ground_drop_position(landing, ammunition.is_artifact(&self.content));
+        let broken = (hit_body && self.rng.bounded(100) < u64::from(break_chance_percent))
+            || drop_position.is_none();
         if broken {
             self.item_property_knowledge.remove(&ammunition.id);
             events.push(DomainEvent::ProjectileAmmoBroken {
@@ -3434,6 +3457,7 @@ impl Game {
             });
             return;
         }
+        let landing = drop_position.expect("unbroken ammunition has a valid drop position");
         ammunition.location = ItemLocation::Ground(landing);
         let ammo_kind_id = ammunition.kind_id.clone();
         self.items.push(ammunition);
@@ -3653,6 +3677,9 @@ impl Game {
     }
 
     fn player_fear_blocks_melee(&mut self, target_index: usize) -> bool {
+        if self.dungeon_blocks_melee() {
+            return false;
+        }
         let Some(fear) = self
             .player
             .statuses
@@ -3759,7 +3786,9 @@ impl Game {
         let Some(primary_target) = self.monster_hostile_targets(index).into_iter().next() else {
             return Ok(());
         };
-        if self.monster_can_use_ranged_melee(index, &primary_target) {
+        if self.monster_attempts_melee(index)
+            && self.monster_can_use_ranged_melee(index, &primary_target)
+        {
             self.resolve_monster_melee_target(
                 index,
                 &primary_target,
@@ -3835,7 +3864,9 @@ impl Game {
             .pack
             .as_ref()
             .map_or(MonsterPackBehaviorDto::Seek, |pack| pack.behavior);
-        if adjacent(self.entities[index].position, primary_target.position()) {
+        if self.monster_attempts_melee(index)
+            && adjacent(self.entities[index].position, primary_target.position())
+        {
             if behavior == MonsterPackBehaviorDto::Surround {
                 surround_reservations.insert(self.entities[index].position);
             }
@@ -3939,10 +3970,12 @@ impl Game {
             .is_some_and(|definition| definition.movement.never_moves);
         let targets = self.player_summon_hostile_targets(index);
         let adjacent_target = targets.iter().find(|entity_id| {
-            self.entities
-                .iter()
-                .find(|entity| entity.id == **entity_id)
-                .is_some_and(|target| adjacent(self.entities[index].position, target.position))
+            self.monster_attempts_melee(index)
+                && self
+                    .entities
+                    .iter()
+                    .find(|entity| entity.id == **entity_id)
+                    .is_some_and(|target| adjacent(self.entities[index].position, target.position))
         });
         if never_moves {
             if let Some(target_id) = adjacent_target {
@@ -3993,7 +4026,9 @@ impl Game {
                     .find(|entity| entity.id == *target_id)
                     .expect("collected summon target must remain available")
                     .position;
-                if adjacent(self.entities[index].position, target_position) {
+                if self.monster_attempts_melee(index)
+                    && adjacent(self.entities[index].position, target_position)
+                {
                     self.resolve_player_summon_melee(
                         index,
                         target_id,
@@ -4067,6 +4102,9 @@ impl Game {
             .position(|entity| entity.hp > 0 && entity.position == next_position)
         {
             if self.actor_can_kill_body_blocker(index, target_index) {
+                if !self.monster_attempts_melee(index) {
+                    return Ok(ActorStepOutcome::Blocked);
+                }
                 let target = MonsterHostileTarget::Summon {
                     entity_id: self.entities[target_index].id.clone(),
                     kind_id: self.entities[target_index].kind_id.clone(),

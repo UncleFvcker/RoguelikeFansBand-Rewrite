@@ -70,7 +70,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-4d6",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 50
@@ -85,6 +86,8 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "kin-glyph-104",
     "legacy-import",

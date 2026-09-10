@@ -99,11 +99,13 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-dark-17-400-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-nether-14-550-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.scare",
@@ -166,6 +168,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "demon",
     "evil",
     "kin-glyph-66",

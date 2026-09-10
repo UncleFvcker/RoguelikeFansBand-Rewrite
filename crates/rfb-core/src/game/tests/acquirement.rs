@@ -411,6 +411,16 @@ fn acquirement_keeps_partial_success_when_the_only_instant_artifact_is_used_up()
         })
         .unwrap();
     game.rng = RfbRng::seeded(seed);
+    // Isolate the only instant artifact; newly imported artifacts must not
+    // add unrelated rarity draws to the exhaustion reference.
+    game.generated_artifact_ids.extend(
+        game.content
+            .item_definitions()
+            .filter(|item| {
+                item.artifact_generation.is_some() && item.id != "demo.item.arkenstone-of-thrain"
+            })
+            .map(|item| item.id.clone()),
+    );
     let serial = game.next_item_instance_serial;
     let mut reference = game.clone();
     reference.rng.bounded(2);

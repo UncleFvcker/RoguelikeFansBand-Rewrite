@@ -119,11 +119,13 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-chaos-10-600-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.shriek",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 15
@@ -153,6 +155,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "evil",
     "kin-glyph-72",

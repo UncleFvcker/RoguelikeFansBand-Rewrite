@@ -25,7 +25,8 @@
     "abilities": [
       {
         "abilityId": "demo.ability.slag-call",
-        "weight": 1
+        "weight": 1,
+        "innate": false
       }
     ]
   },

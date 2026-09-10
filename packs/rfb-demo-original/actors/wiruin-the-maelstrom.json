@@ -77,11 +77,13 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-cold-20-900-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-sound-17-450-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.kin-wiruin-the-maelstrom",
@@ -111,6 +113,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "empty-mind",
     "kin-glyph-118",
     "legacy-import",

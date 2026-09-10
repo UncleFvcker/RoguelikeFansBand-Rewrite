@@ -9,6 +9,36 @@ use rfb_content::{
 };
 
 const ORIGINAL_NASTY_MON_ONE_IN: u64 = 40;
+
+pub(super) fn actor_matches_allocation_terrain(
+    actor: &ActorDefinition,
+    terrain: &rfb_content::TerrainDefinition,
+) -> bool {
+    if !terrain.tags.iter().any(|tag| tag == "acid") {
+        return actor_can_cross_terrain(actor, terrain);
+    }
+    let flies = actor.movement.modes.contains(&ActorMovementMode::Fly);
+    // monster1.c's nukage hook admits poison-immune candidates. The subsequent
+    // place_monster_one check may still reject them; do not reroll that failure.
+    (!terrain.tags.iter().any(|tag| tag == "deep")
+        || flies
+        || actor.movement.modes.contains(&ActorMovementMode::Swim))
+        && (flies
+            || actor.resistances.get(&ActorDamageType::Poison)
+                == Some(&ActorResistanceLevel::Immune)
+            || [ActorDamageType::Acid, ActorDamageType::Poison]
+                .iter()
+                .all(|damage| {
+                    matches!(
+                        actor.resistances.get(damage),
+                        Some(
+                            ActorResistanceLevel::Resistant
+                                | ActorResistanceLevel::Strong
+                                | ActorResistanceLevel::Immune
+                        )
+                    )
+                }))
+}
 const ORIGINAL_GROUP_MAX: u16 = 32;
 const ORIGINAL_ESCORT_ATTEMPTS: u16 = 32;
 const ORIGINAL_MAX_REPRODUCERS: usize = 100;
@@ -1083,7 +1113,7 @@ impl Game {
         self.content.world(&self.world_id).is_some_and(|world| {
             world.dungeons.iter().any(|dungeon| {
                 self.dungeon_is_active(&dungeon.id)
-                    && dungeon.guardian_actor_kind_id == actor_kind_id
+                    && dungeon.guardian_actor_kind_id.as_deref() == Some(actor_kind_id)
             })
         })
     }
@@ -1184,6 +1214,7 @@ impl Game {
             preferred_movement_modes: Vec::new(),
             preferred_habitats: Vec::new(),
             preferred_damage_immunities: Vec::new(),
+            preferred_damage_resistances: Vec::new(),
             special_div: 64,
             ambient_chance_one_in: 1,
         };
@@ -1238,6 +1269,7 @@ impl Game {
             };
             occupied.insert(position);
             let mut members = self.plan_original_group(
+                &self.current_floor_id.clone(),
                 &group_policy,
                 &kind_id,
                 position,
@@ -1440,6 +1472,16 @@ impl Game {
             .as_ref()
             .expect("allocation candidate must retain metadata");
         let base = 100 / allocation.rarity;
+        // RFB's default MODE_NONE accepts every race when no preferences are set.
+        if policy.preferred_glyphs.is_empty()
+            && policy.preferred_tags.is_empty()
+            && policy.preferred_movement_modes.is_empty()
+            && policy.preferred_habitats.is_empty()
+            && policy.preferred_damage_immunities.is_empty()
+            && policy.preferred_damage_resistances.is_empty()
+        {
+            return base;
+        }
         if policy
             .preferred_glyphs
             .iter()
@@ -1463,6 +1505,19 @@ impl Game {
                     definition.resistances.get(damage_type)
                         == Some(&rfb_content::ActorResistanceLevel::Immune)
                 })
+            || policy
+                .preferred_damage_resistances
+                .iter()
+                .any(|damage_type| {
+                    matches!(
+                        definition.resistances.get(damage_type),
+                        Some(
+                            rfb_content::ActorResistanceLevel::Resistant
+                                | rfb_content::ActorResistanceLevel::Strong
+                                | rfb_content::ActorResistanceLevel::Immune
+                        )
+                    )
+                })
         {
             return base;
         }
@@ -1481,6 +1536,7 @@ impl Game {
     #[allow(clippy::too_many_arguments)]
     pub(super) fn select_original_allocated_monster(
         &mut self,
+        floor_id: &str,
         policy: &GlobalMonsterAllocationDefinition,
         base_level: u16,
         floor_depth: u16,
@@ -1489,19 +1545,9 @@ impl Game {
         escort_leader_kind_id: Option<&str>,
         required_terrain: Option<&rfb_content::TerrainDefinition>,
     ) -> Option<String> {
-        let current_legacy_dungeon_index = self.content.world(&self.world_id).and_then(|world| {
-            let dungeon_id = world
-                .procedural_floors
-                .iter()
-                .find(|floor| floor.id == self.current_floor_id)?
-                .dungeon_id
-                .as_deref()?;
-            world
-                .dungeons
-                .iter()
-                .find(|dungeon| dungeon.id == dungeon_id)?
-                .legacy_index
-        });
+        let current_legacy_dungeon_index = self
+            .floor_dungeon(floor_id)
+            .and_then(|dungeon| dungeon.legacy_index);
         let unique_count = target_floor_kind_ids
             .iter()
             .filter(|kind_id| self.content.actor(kind_id).is_some_and(actor_is_unique))
@@ -1524,6 +1570,7 @@ impl Game {
                     return false;
                 };
                 if definition.role != ActorRole::Monster
+                    || !self.dungeon_allows_monster(floor_id, definition, false)
                     || allocation.wild_only
                     || self.actor_kind_is_dungeon_guardian(&definition.id)
                     || definition.level > u32::from(selection_level)
@@ -1545,7 +1592,7 @@ impl Game {
                     return false;
                 }
                 if required_terrain
-                    .is_some_and(|terrain| !actor_can_cross_terrain(definition, terrain))
+                    .is_some_and(|terrain| !actor_matches_allocation_terrain(definition, terrain))
                 {
                     return false;
                 }
@@ -1576,7 +1623,14 @@ impl Game {
                 .allocation
                 .as_ref()
                 .expect("filtered allocation candidate must retain metadata");
-            let mut weight = self.original_dungeon_weight(&definition, policy);
+            // restrict_monster_to_dungeon accepts associated races before MODE_OR.
+            let mut weight = if current_legacy_dungeon_index
+                .is_some_and(|index| allocation.legacy_dungeon_indices.contains(&index))
+            {
+                100 / allocation.rarity
+            } else {
+                self.original_dungeon_weight(&definition, policy)
+            };
             if weight > 0
                 && allocation.max_depth != 999
                 && u32::from(selection_level) > definition.level.saturating_add(9)
@@ -1605,7 +1659,13 @@ impl Game {
         let mut roll = self.rng.bounded(total);
         for candidate in candidates {
             if roll < u64::from(candidate.weight) {
-                return Some(candidate.kind_id);
+                let actor = self
+                    .content
+                    .actor(&candidate.kind_id)
+                    .expect("allocated actor must exist");
+                return required_terrain
+                    .is_none_or(|terrain| actor_can_cross_terrain(actor, terrain))
+                    .then_some(candidate.kind_id);
             }
             roll -= u64::from(candidate.weight);
         }
@@ -1695,6 +1755,7 @@ impl Game {
     #[allow(clippy::too_many_arguments)]
     pub(super) fn plan_original_group(
         &mut self,
+        floor_id: &str,
         policy: &GlobalMonsterAllocationDefinition,
         leader_kind_id: &str,
         leader_position: Position,
@@ -1774,6 +1835,7 @@ impl Game {
                 // every escort position before drawing a candidate.
                 self.monster_division_remainders.clear();
                 let Some(kind_id) = self.select_original_allocated_monster(
+                    floor_id,
                     policy,
                     u16::try_from(leader.level).unwrap_or(u16::MAX),
                     depth,
@@ -1945,6 +2007,9 @@ impl Game {
                 .into_iter()
                 .find(|target| target.position() == position)
             {
+                if !self.monster_attempts_melee(index) {
+                    continue;
+                }
                 self.resolve_monster_melee_target(
                     index,
                     &target,
@@ -2042,6 +2107,7 @@ impl Game {
         };
         let current_task_id = self.current_floor_task_id().map(str::to_owned);
         let Some(kind_id) = self.select_original_allocated_monster(
+            &self.current_floor_id.clone(),
             policy,
             depth,
             depth,
@@ -2061,6 +2127,7 @@ impl Game {
         occupied.insert(leader_position);
         let terrain = self.terrain.clone();
         let members = self.plan_original_group(
+            &self.current_floor_id.clone(),
             policy,
             &kind_id,
             leader_position,

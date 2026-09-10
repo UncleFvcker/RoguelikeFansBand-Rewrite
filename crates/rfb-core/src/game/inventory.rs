@@ -1419,12 +1419,131 @@ impl Game {
         destination_ids
     }
 
-    pub(super) fn drop_inventory_items(&mut self, item_ids: &[String]) -> Option<(usize, u64)> {
-        let plan = plan_batch_drop(&self.items, item_ids)?;
-        for index in &plan.item_indices {
-            self.items[*index].location = ItemLocation::Ground(self.player.position);
+    pub(super) fn terrain_allows_items(&self, position: Position) -> bool {
+        self.index(position)
+            .and_then(|index| self.content.terrain(&self.terrain[index]))
+            .is_some_and(rfb_content::TerrainDefinition::allows_items)
+    }
+
+    pub(super) fn relocate_ground_item(&self, mut item: ItemInstance) -> Option<ItemInstance> {
+        let ItemLocation::Ground(origin) = item.location else {
+            unreachable!("ground drop must retain its origin");
+        };
+        item.location = ItemLocation::Ground(
+            self.ground_drop_position(origin, item.is_artifact(&self.content))?,
+        );
+        Some(item)
+    }
+
+    pub(super) fn corrode_player_armor(&mut self, events: &mut Vec<DomainEvent>) -> bool {
+        let mut candidates =
+            self.items
+                .iter()
+                .enumerate()
+                .filter(|(_, item)| {
+                    matches!(item.location, ItemLocation::Equipped { .. })
+                        && self.content.item(&item.kind_id).is_some_and(|definition| {
+                            definition.tags.iter().any(|tag| tag == "armor")
+                        })
+                })
+                .map(|(index, _)| index)
+                .collect::<Vec<_>>();
+        candidates.sort_by(|left, right| self.items[*left].id.cmp(&self.items[*right].id));
+        if candidates.is_empty() {
+            return false;
         }
-        Some((plan.item_indices.len(), plan.quantity))
+        let index = candidates[self.rng.bounded(candidates.len() as u64) as usize];
+        let item = &self.items[index];
+        let armor = self.item_base_modifiers(&item.kind_id).defense
+            + i32::from(item.enchantments.to_armor)
+            + item.intrinsic_properties.modifiers.defense
+            + item
+                .affix_ids
+                .iter()
+                .map(|id| {
+                    self.content
+                        .affix(id)
+                        .expect("validated affix")
+                        .modifiers
+                        .defense
+                })
+                .sum::<i32>()
+            + item
+                .rolled_affixes
+                .iter()
+                .map(|rolled| rolled.properties.modifiers.defense)
+                .sum::<i32>();
+        if armor <= 0 {
+            return false;
+        }
+        let protected =
+            self.item_has_elemental_destruction_immunity(item, ItemDestructionElement::Acid);
+        let target_kind_id = item.kind_id.clone();
+        if !protected {
+            self.items[index].enchantments.to_armor -= 1;
+        }
+        events.push(DomainEvent::ArmorCorroded {
+            target_kind_id,
+            protected,
+        });
+        true
+    }
+
+    // Keep ordinary drops in place. Non-floor impact grids (such as pits) need
+    // a nearby floor, within the original drop_near search radius.
+    pub(super) fn ground_drop_position(
+        &self,
+        origin: Position,
+        artifact: bool,
+    ) -> Option<Position> {
+        if self.terrain_allows_items(origin) {
+            return Some(origin);
+        }
+        let nearby = (-3..=3)
+            .flat_map(|dy| (-3..=3).map(move |dx| (dx, dy)))
+            .filter(|(dx, dy)| dx * dx + dy * dy <= 10)
+            .map(|(dx, dy)| Position {
+                x: origin.x + dx,
+                y: origin.y + dy,
+            })
+            .filter(|position| {
+                self.terrain_allows_items(*position)
+                    && super::projectile_geometry::has_line_of_effect(self, origin, *position)
+            })
+            .min_by_key(|position| {
+                let dx = position.x - origin.x;
+                let dy = position.y - origin.y;
+                dx * dx + dy * dy
+            });
+        if nearby.is_some() || !artifact {
+            return nearby;
+        }
+        // RFB drop_near preserves artifacts by searching beyond the local radius.
+        // Choose the nearest legal grid deterministically instead of random bouncing.
+        (0..i32::from(self.height))
+            .flat_map(|y| (0..i32::from(self.width)).map(move |x| Position { x, y }))
+            .filter(|position| self.terrain_allows_items(*position))
+            .min_by_key(|position| {
+                let dx = i64::from(position.x) - i64::from(origin.x);
+                let dy = i64::from(position.y) - i64::from(origin.y);
+                dx * dx + dy * dy
+            })
+    }
+
+    pub(super) fn drop_inventory_items(
+        &mut self,
+        item_ids: &[String],
+    ) -> Option<(usize, u64, Position)> {
+        let plan = plan_batch_drop(&self.items, item_ids)?;
+        let artifact = plan
+            .item_indices
+            .iter()
+            .all(|index| self.items[*index].is_artifact(&self.content));
+        let position = self.ground_drop_position(self.player.position, artifact)?;
+        for index in &plan.item_indices {
+            self.items[*index].location = ItemLocation::Ground(position);
+        }
+        Some((plan.item_indices.len(), plan.quantity, position))
     }
 
     pub(super) fn appraise_inventory_item(
@@ -2113,12 +2232,18 @@ impl Game {
         &mut self,
         item_id: &str,
         quantity: u32,
-    ) -> Result<Option<(usize, u64)>, CoreError> {
+    ) -> Result<Option<(usize, u64, Position)>, CoreError> {
         let Some(plan) = plan_drop_quantity(&self.items, item_id, quantity) else {
             return Ok(None);
         };
+        let Some(position) = self.ground_drop_position(
+            self.player.position,
+            self.items[plan.item_index].is_artifact(&self.content),
+        ) else {
+            return Ok(None);
+        };
         if !plan.split_stack {
-            self.items[plan.item_index].location = ItemLocation::Ground(self.player.position);
+            self.items[plan.item_index].location = ItemLocation::Ground(position);
         } else {
             let id = self.allocate_item_instance_id()?;
             let mut split = self.items[plan.item_index].clone();
@@ -2126,13 +2251,13 @@ impl Game {
             self.items[plan.item_index].quantity -= plan.quantity;
             split.id = id.clone();
             split.quantity = plan.quantity;
-            split.location = ItemLocation::Ground(self.player.position);
+            split.location = ItemLocation::Ground(position);
             self.items.push(split);
             if let Some(knowledge) = knowledge {
                 self.item_property_knowledge.insert(id, knowledge);
             }
         }
-        Ok(Some((1, u64::from(plan.quantity))))
+        Ok(Some((1, u64::from(plan.quantity), position)))
     }
 
     pub(super) fn player_can_force_remove_curse(&self, severity: ItemCurseSeverityDto) -> bool {

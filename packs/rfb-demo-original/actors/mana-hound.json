@@ -95,7 +95,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-mana-33-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 8
@@ -114,6 +115,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "hound",
     "kin-glyph-90",

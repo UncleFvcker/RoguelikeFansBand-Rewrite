@@ -105,7 +105,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-20d1",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.jump-confusion-l32",
@@ -137,6 +138,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "evil",
     "human",
     "invisible",

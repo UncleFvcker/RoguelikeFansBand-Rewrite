@@ -61,7 +61,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-fire-20-900-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 20
@@ -82,6 +83,9 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "stupid",
+    "attack-spell",
+    "innate-spell",
     "empty-mind",
     "kin-glyph-35",
     "legacy-import",

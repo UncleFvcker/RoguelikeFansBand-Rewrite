@@ -224,6 +224,7 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
     "evil",
     "kin-glyph-101",
     "legacy-import",

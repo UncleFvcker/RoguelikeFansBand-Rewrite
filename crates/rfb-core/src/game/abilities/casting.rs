@@ -33,10 +33,31 @@ pub(in crate::game) fn nature_wrath_direction_roll(events: &[DomainEvent]) -> Op
 }
 
 impl Game {
+    pub(in crate::game) fn dungeon_blocks_player_ability(&self, ability_id: &str) -> bool {
+        self.dungeon_blocks_magic()
+            && self.mutation_activation_for_ability(ability_id).is_none()
+            && self.race_ability_activation(ability_id).is_none()
+            && self.class_ability_activation(ability_id).map_or_else(
+                || self.casting_profile().is_some(),
+                |activation| activation.blocked_by_dungeon_anti_magic,
+            )
+    }
+
+    pub(in crate::game) fn dungeon_blocks_vampirism(&self, ability_id: &str) -> bool {
+        self.dungeon_blocks_melee()
+            && matches!(
+                ability_id,
+                "rfb.ability.race.vampirism" | "rfb.ability.mutation.vampirism"
+            )
+    }
+
     pub(in crate::game) fn ability_state_unavailable_reason(
         &self,
         ability_id: &str,
     ) -> Option<&'static str> {
+        if self.dungeon_blocks_player_ability(ability_id) {
+            return Some("anti-magic");
+        }
         let ability = self.content.ability(ability_id)?;
         if super::mindcraft::is_mindcraft_spell(ability) {
             if self.player_has_anti_magic() {
@@ -125,6 +146,13 @@ impl Game {
                 .tags
                 .iter()
                 .any(|tag| tag == "uses-casting-profile-offense");
+        if self.dungeon_blocks_player_ability(ability_id) {
+            events.push(DomainEvent::AbilityCastUnavailable {
+                ability_id: ability_id.to_owned(),
+                reason: "anti-magic".to_owned(),
+            });
+            return Ok(None);
+        }
         let innate_power = matches!(source, AbilitySourceDto::Mutation | AbilitySourceDto::Race);
         let innate_activation = match source {
             AbilitySourceDto::Mutation => mutation_activation.as_ref(),
@@ -236,12 +264,15 @@ impl Game {
         // Validate the target before charging resources/HP or drawing the
         // failure/damage RNG. The command remains a normal scheduled action,
         // but an impossible target cannot consume resources or proficiency.
-        let Some(mut target_plan) = self.ability_target_plan(&ability, &target) else {
+        // Blocked vampirism reaches its source failure check without needing a target.
+        let vampirism_blocked = self.dungeon_blocks_vampirism(ability_id);
+        let target_plan = self.ability_target_plan(&ability, &target);
+        if target_plan.is_none() && !vampirism_blocked {
             events.push(DomainEvent::AbilityTargetUnavailable {
                 ability_id: ability.id,
             });
             return Ok(None);
-        };
+        }
 
         let mutation_progress = AbilityProgress {
             proficiency: 0,
@@ -367,6 +398,18 @@ impl Game {
             });
             return Ok(None);
         }
+        let percentile_roll =
+            u8::try_from(self.rng.bounded(100)).expect("percentile ability roll must fit u8");
+        let succeeded = percentile_roll >= failure_percent;
+        // spells.c::do_cmd_power rolls failure before SPELL_CAST. Vampirism's
+        // NO_MELEE cancellation then refunds time and cost; a failed power still pays.
+        if succeeded && vampirism_blocked {
+            events.push(DomainEvent::AbilityCastUnavailable {
+                ability_id: ability_id.to_owned(),
+                reason: "anti-melee".to_owned(),
+            });
+            return Ok(None);
+        }
         if resource_paid > 0 {
             let id = resource_id
                 .as_ref()
@@ -389,9 +432,6 @@ impl Game {
             self.sniper_concentration = 0;
         }
         let resource_after = resource_before.saturating_sub(resource_paid);
-        let percentile_roll =
-            u8::try_from(self.rng.bounded(100)).expect("percentile ability roll must fit u8");
-        let succeeded = percentile_roll >= failure_percent;
         let progress_after = if source != AbilitySourceDto::Learned {
             mutation_progress
         } else {
@@ -441,6 +481,8 @@ impl Game {
         if source == AbilitySourceDto::Class {
             resolution.hp_paid = 0;
         }
+        let mut target_plan =
+            target_plan.expect("successful non-cancelled cast retains its target plan");
         events.push(DomainEvent::AbilityCastSucceeded {
             resolution: resolution.clone(),
         });

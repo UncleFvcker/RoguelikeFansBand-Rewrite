@@ -162,6 +162,7 @@
     "rfb.status.confusion"
   ],
   "tags": [
+    "attack-spell",
     "human",
     "kin-glyph-112",
     "legacy-import",

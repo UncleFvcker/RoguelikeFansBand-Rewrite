@@ -326,22 +326,7 @@ impl Game {
         };
         let width = world.width;
         let height = world.height;
-        let mut terrain =
-            vec![world.fill_terrain_id.clone(); usize::from(width) * usize::from(height)];
-        for y in 0..height {
-            for x in 0..width {
-                if x == 0 || y == 0 || x == width - 1 || y == height - 1 {
-                    terrain[usize::from(y) * usize::from(width) + usize::from(x)] =
-                        world.border_terrain_id.clone();
-                }
-            }
-        }
-        for terrain_override in &world.terrain_overrides {
-            for position in &terrain_override.positions {
-                terrain[usize::from(position.y) * usize::from(width) + usize::from(position.x)] =
-                    terrain_override.terrain_id.clone();
-            }
-        }
+        let terrain = wilderness::initial_world_terrain(&content, world, seed);
         let player_kind_id = build
             .as_ref()
             .and_then(|identity| content.build(&identity.build_id))

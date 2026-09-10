@@ -111,11 +111,13 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-time-33-150-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-disintegrate-17-150-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.summon-kin-glyph-110-l80-1d3-1",
@@ -151,6 +153,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "cold-blooded",
     "kin-glyph-110",
     "legacy-import",

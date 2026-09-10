@@ -78,7 +78,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-dark-17-400-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 25
@@ -108,6 +109,8 @@
   "role": "monster",
   "speed": 125,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "evil",
     "kin-glyph-82",

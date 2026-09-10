@@ -98,7 +98,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-sound-17-450-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 10
@@ -118,6 +119,8 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "human",
     "kin-glyph-112",
     "legacy-import",

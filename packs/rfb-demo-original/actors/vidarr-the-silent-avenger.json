@@ -104,11 +104,13 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-force-33-200-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-disintegrate-17-150-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.brain-smash-12d12",
@@ -120,7 +122,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-gravity-33-200-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.psy-spear-1d174-150",
@@ -174,6 +177,8 @@
     "rfb.status.fear"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "kin-glyph-80",
     "legacy-import",
     "no-quest",

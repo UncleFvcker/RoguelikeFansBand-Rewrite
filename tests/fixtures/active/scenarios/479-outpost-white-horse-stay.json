@@ -10,8 +10,8 @@
     "debugClearEntities": true,
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
-      "x": 114,
-      "y": 30
+      "x": 124,
+      "y": 35
     },
     "playerGold": 28
   },
@@ -31,7 +31,7 @@
       "playerNutrition": 9999,
       "playerStatuses": [],
       "revision": 1,
-      "stateHash": "09641b6e4a6b4be909dd2b064e29e96d6777120d49ba452e6799afa9b9b960b6",
+      "stateHash": "2d7c1c397dc27b222b2b7dafd42259ed652a1be3fe1bdf8bfb5c9e9f86790de3",
       "turn": 1,
       "worldTick": 50000
     },

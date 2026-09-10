@@ -152,6 +152,7 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "attack-spell",
     "evil",
     "icky",
     "kin-glyph-105",

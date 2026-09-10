@@ -54,7 +54,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-cold-20-900-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 16
@@ -78,6 +79,8 @@
     "rfb.status.stun"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "cold-blooded",
     "empty-mind",
     "kin-glyph-118",

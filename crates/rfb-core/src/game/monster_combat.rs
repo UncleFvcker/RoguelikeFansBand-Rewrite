@@ -403,24 +403,35 @@ impl Game {
                         .iter()
                         .any(|tag| inscription.contains(tag))
                 });
-                unequipped.push(item_index);
+                unequipped.push(item.id.clone());
             }
         }
         self.body_slots = next_slots;
-        unequipped.sort_by(|left, right| self.items[*left].id.cmp(&self.items[*right].id));
+        unequipped.sort();
         while !self.inventory_fits(&self.items) {
-            let item_index = unequipped.pop().or_else(|| {
-                self.items
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, item)| item.location == ItemLocation::Inventory)
-                    .max_by(|(_, left), (_, right)| left.id.cmp(&right.id))
-                    .map(|(index, _)| index)
-            });
+            let item_index = unequipped
+                .pop()
+                .and_then(|id| self.items.iter().position(|item| item.id == id))
+                .or_else(|| {
+                    self.items
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, item)| item.location == ItemLocation::Inventory)
+                        .max_by(|(_, left), (_, right)| left.id.cmp(&right.id))
+                        .map(|(index, _)| index)
+                });
             let Some(item_index) = item_index else {
                 break;
             };
-            self.items[item_index].location = ItemLocation::Ground(self.player.position);
+            if let Some(position) = self.ground_drop_position(
+                self.player.position,
+                self.items[item_index].is_artifact(&self.content),
+            ) {
+                self.items[item_index].location = ItemLocation::Ground(position);
+            } else {
+                let item = self.items.remove(item_index);
+                self.item_property_knowledge.remove(&item.id);
+            }
         }
         // Overflow precedes automatic re-equipping in the original.
         let mut inventory_indices = self
@@ -774,6 +785,10 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
+        // GAZE also reaches make_attack_normal / mon_attack_mon through GF_ATTACK.
+        if self.dungeon_blocks_melee() {
+            return Ok(());
+        }
         if target.is_player() {
             if adjacent(self.entities[source_index].position, target.position())
                 && let Some(broken) = self.try_monster_break_warding_glyph(
@@ -1561,6 +1576,9 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<bool, CoreError> {
+        if self.dungeon_blocks_melee() {
+            return Ok(false);
+        }
         let source_entity_id = self.entities[index].id.clone();
         let kind_id = self.entities[index].kind_id.clone();
         let nice = self.entities[index].nice;

@@ -160,11 +160,13 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-fire-20-900-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-mana-33-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.invulnerability-self",
@@ -176,7 +178,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-plasma-17-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.summon-angel-l73-1d3-1",
@@ -221,6 +224,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "angel",
     "good",
     "kin-glyph-65",

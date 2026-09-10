@@ -568,6 +568,8 @@ impl Game {
                     Some("concentration-too-low")
                 } else if let Some(reason) = self.ability_state_unavailable_reason(&ability_id) {
                     Some(reason)
+                } else if self.dungeon_blocks_vampirism(&ability_id) {
+                    Some("anti-melee")
                 } else if !hit_points_available {
                     Some("insufficient-hit-points")
                 } else if !resource_available {

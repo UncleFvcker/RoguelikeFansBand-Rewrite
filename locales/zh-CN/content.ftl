@@ -1502,6 +1502,10 @@ terrain-demo-surface-woodland-description = 前哨周围树木稀疏的林地。
 terrain-demo-surface-swamp-name = 沼泽
 terrain-demo-surface-swamp-description = 潮湿泥地与浅水交错的荒野沼泽。
 terrain-demo-surface-waste-name = 泥土
+terrain-demo-shallow-waste-name = 毒酸液
+terrain-demo-shallow-waste-description = 可涉足的有毒酸液，持续灼伤并使接触者中毒。
+terrain-demo-deep-waste-name = 有毒废料
+terrain-demo-deep-waste-description = 深积的有毒废料，无法承放物品，升腾的毒气也会影响飞行者。
 terrain-demo-surface-waste-description = 缺少植被、暴露在风中的荒野泥地。
 terrain-demo-surface-lava-shallow-name = 浅岩浆
 terrain-demo-surface-lava-shallow-description = 薄薄岩浆流覆盖着炽热地表。
@@ -3728,8 +3732,8 @@ task-demo-royal-crypt-name = 皇家地下室 (前哨镇)
 task-demo-royal-crypt-description = 在皇家地下室消灭五只大巫妖。
 terrain-demo-outpost-sewer-entry-name = 下水道入口
 terrain-demo-outpost-sewer-entry-description = 一条通道通往前哨镇的下水道。
-terrain-demo-outpost-sewer-entry-available-name = 开放的下水道入口
-terrain-demo-outpost-sewer-entry-available-description = 伯爵已经为下水道任务打开了通道。
+terrain-demo-outpost-sewer-entry-available-name = 未开放的下水道入口
+terrain-demo-outpost-sewer-entry-available-description = 地板下的通道尚未开放，需先向伯爵接取任务。
 terrain-demo-outpost-sewer-entry-completed-name = 封闭的下水道入口
 terrain-demo-outpost-sewer-entry-completed-description = 清理完成的下水道已被封闭。
 terrain-demo-outpost-sewer-entry-failed-name = 上锁的下水道入口
@@ -3738,8 +3742,8 @@ terrain-demo-outpost-sewer-entry-abandoned-name = 被放弃的下水道入口
 terrain-demo-outpost-sewer-entry-abandoned-description = 你已经放弃下水道任务。
 terrain-demo-outpost-haunted-house-entry-name = 鬼屋入口
 terrain-demo-outpost-haunted-house-entry-description = 一扇阴冷的门通往鬼屋。
-terrain-demo-outpost-haunted-house-entry-available-name = 开放的鬼屋入口
-terrain-demo-outpost-haunted-house-entry-available-description = 伯爵已经开放鬼屋，等待你前去清理。
+terrain-demo-outpost-haunted-house-entry-available-name = 未开放的鬼屋入口
+terrain-demo-outpost-haunted-house-entry-available-description = 石墙封住了鬼屋入口，需先向伯爵接取任务。
 terrain-demo-outpost-haunted-house-entry-completed-name = 寂静的鬼屋入口
 terrain-demo-outpost-haunted-house-entry-completed-description = 胜利之后，鬼屋恢复了寂静。
 terrain-demo-outpost-haunted-house-entry-failed-name = 上锁的鬼屋入口
@@ -3748,8 +3752,8 @@ terrain-demo-outpost-haunted-house-entry-abandoned-name = 被放弃的鬼屋入�
 terrain-demo-outpost-haunted-house-entry-abandoned-description = 你已经放弃鬼屋任务。
 terrain-demo-outpost-royal-crypt-entry-name = 皇家地下室入口
 terrain-demo-outpost-royal-crypt-entry-description = 古老阶梯向下通往皇家地下室。
-terrain-demo-outpost-royal-crypt-entry-available-name = 开放的皇家地下室入口
-terrain-demo-outpost-royal-crypt-entry-available-description = 伯爵已经打开皇家地下室。
+terrain-demo-outpost-royal-crypt-entry-available-name = 未开放的皇家地下室入口
+terrain-demo-outpost-royal-crypt-entry-available-description = 石墙封住了皇家地下室入口，需先向伯爵接取任务。
 terrain-demo-outpost-royal-crypt-entry-completed-name = 封闭的皇家地下室入口
 terrain-demo-outpost-royal-crypt-entry-completed-description = 皇家地下室再次被封闭。
 terrain-demo-outpost-royal-crypt-entry-failed-name = 上锁的皇家地下室入口
@@ -9145,3 +9149,32 @@ device-activation-e5-scare-monster-name = 恐吓单一怪物
 device-activation-e5-polymorph-name = 变形
 device-activation-e5-starlite-name = 星光
 # /Random artifact activations
+
+terrain-demo-dark-pit-name = 黑坑
+terrain-demo-dark-pit-description = 深不见底的黑坑，可以飞越，视线与投射物能够通过。
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, a_info 129; Chinese name unresolved.
+item-demo-razorback-name = 'Razorback'
+item-demo-razorback-description = 一套巨大的重型龙鳞盔甲，深深地渗透着多种色彩。它随着愤怒的能量而悸动，当你穿上它时，你能感受到未被驯服的闪电那原始的元素力量。
+item-activation-demo-razorback-star-ball-name = 星之球
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, d_info 13.
+floor-demo-rlyeh-depth-name = 拉莱耶 { $depth } 层
+terrain-demo-rlyeh-entrance-name = 拉莱耶入口
+terrain-demo-rlyeh-entrance-description = 通向拉莱耶的道路
+
+floor-demo-anti-magic-cave-depth-name = 反魔洞穴 { $depth } 层
+terrain-demo-anti-magic-cave-entrance-name = 反魔洞穴入口
+terrain-demo-anti-magic-cave-entrance-description = 通向充满反魔云雾的洞穴的入口
+
+floor-demo-anti-melee-cave-depth-name = 反近战洞穴 { $depth } 层
+terrain-demo-anti-melee-cave-entrance-name = 反近战洞穴入口
+terrain-demo-anti-melee-cave-entrance-description = 通向充满限制魔法场的洞穴的入口
+
+floor-demo-dark-cave-depth-name = 黑暗洞穴 { $depth } 层
+terrain-demo-dark-cave-entrance-name = 黑暗洞穴入口
+terrain-demo-dark-cave-entrance-description = 通向充满魔法黑暗的洞穴的黑色入口
+
+floor-demo-disaster-area-depth-name = 灾难区 { $depth } 层
+terrain-demo-disaster-area-entrance-name = 灾难区入口
+terrain-demo-disaster-area-entrance-description = 通向灾难区的钢铁大门

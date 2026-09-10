@@ -70,7 +70,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.shriek",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.summon-legacy-import-l52-1d3-1",
@@ -107,6 +108,7 @@
     "rfb.status.stun"
   ],
   "tags": [
+    "innate-spell",
     "evil",
     "invisible",
     "kin-glyph-46",

@@ -847,25 +847,55 @@ impl Game {
             }
         }
 
+        let drop_position = self.ground_drop_position(removed.position, false);
         for CarriedDrop {
             item_id,
             kind_id,
             quantity,
         } in carried
         {
-            let item = self
+            let item_index = self
                 .items
-                .iter_mut()
-                .find(|item| item.id == item_id)
+                .iter()
+                .position(|item| item.id == item_id)
                 .expect("carried item collected from authoritative item set");
-            item.location = ItemLocation::Ground(removed.position);
+            let position = self.ground_drop_position(
+                removed.position,
+                self.items[item_index].is_artifact(&self.content),
+            );
+            let Some(position) = position else {
+                self.items.remove(item_index);
+                self.item_property_knowledge.remove(&item_id);
+                events.push(DomainEvent::ItemDestroyed {
+                    target_kind_id: kind_id,
+                    quantity,
+                    rule_line: None,
+                });
+                continue;
+            };
+            self.items[item_index].location = ItemLocation::Ground(position);
+            changed.insert(position);
             events.push(DomainEvent::LootDropped {
                 source_kind_id: removed.kind_id.clone(),
                 target_kind_id: kind_id,
                 quantity,
             });
         }
-        for item in generated_loot {
+        for mut item in generated_loot {
+            let ItemLocation::Ground(origin) = item.location else {
+                unreachable!("death loot must be generated on the ground");
+            };
+            let position = self.ground_drop_position(origin, item.is_artifact(&self.content));
+            let Some(position) = position else {
+                events.push(DomainEvent::ItemDestroyed {
+                    target_kind_id: item.kind_id,
+                    quantity: item.quantity,
+                    rule_line: None,
+                });
+                continue;
+            };
+            item.location = ItemLocation::Ground(position);
+            changed.insert(position);
             events.push(DomainEvent::LootDropped {
                 source_kind_id: removed.kind_id.clone(),
                 target_kind_id: item.kind_id.clone(),
@@ -873,18 +903,23 @@ impl Game {
             });
             self.items.push(item);
         }
-        for gold in generated_gold {
+        for mut gold in generated_gold {
+            let Some(position) = drop_position else {
+                continue;
+            };
+            gold.position = position;
             events.push(DomainEvent::GoldDropped {
                 source_kind_id: removed.kind_id.clone(),
                 amount: gold.amount,
             });
             self.gold_piles.push(gold);
         }
-        if let Some(corpse) = corpse {
+        if let (Some(mut corpse), Some(position)) = (corpse, drop_position) {
+            corpse.location = ItemLocation::Ground(position);
             self.items.push(corpse);
         }
-        if has_drops {
-            changed.insert(removed.position);
+        if has_drops && let Some(position) = drop_position {
+            changed.insert(position);
         }
         Ok(())
     }

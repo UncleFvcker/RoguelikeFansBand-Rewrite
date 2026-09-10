@@ -136,11 +136,13 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-acid-20-900-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-storm-13-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.heal-600",
@@ -193,6 +195,8 @@
     "rfb.status.fear"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "kin-glyph-80",
     "legacy-import",
     "no-quest",

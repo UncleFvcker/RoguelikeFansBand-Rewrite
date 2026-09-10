@@ -125,11 +125,13 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-poison-17-600-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-fire-20-900-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.scare",
@@ -162,6 +164,8 @@
   "role": "monster",
   "speed": 125,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "evil",
     "hydra",

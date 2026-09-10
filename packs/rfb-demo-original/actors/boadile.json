@@ -85,6 +85,7 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "stupid",
     "animal",
     "animal-ranger",
     "cold-blooded",

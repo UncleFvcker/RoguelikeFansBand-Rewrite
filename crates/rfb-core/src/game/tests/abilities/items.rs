@@ -452,6 +452,7 @@ fn mutation_eat_magic_and_weigh_magic_use_existing_device_and_status_state() {
     assert_eq!(capped_failure.innate_power_failure_percent(&activation), 11);
 
     let mut eater = active_source_mutation_game(53, "eat-magic", 17);
+    super::super::dungeon_anti_magic::enter_context(&mut eater);
     give_inventory_item(
         &mut eater,
         "test.item.magic-food",

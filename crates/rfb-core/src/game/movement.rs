@@ -40,6 +40,24 @@ pub(super) fn actor_can_cross_terrain_with_wall_passage(
             || (flies
                 && (terrain.walkable || terrain.movement_modes.contains(&ActorMovementMode::Fly)));
     }
+    if terrain.tags.iter().any(|tag| tag == "acid") {
+        use rfb_content::{ActorDamageType, ActorResistanceLevel};
+        return flies
+            || ([ActorDamageType::Acid, ActorDamageType::Poison]
+                .iter()
+                .all(|damage| {
+                    matches!(
+                        actor.resistances.get(damage),
+                        Some(
+                            ActorResistanceLevel::Resistant
+                                | ActorResistanceLevel::Strong
+                                | ActorResistanceLevel::Immune
+                        )
+                    )
+                })
+                && (!terrain.tags.iter().any(|tag| tag == "deep")
+                    || actor.movement.modes.contains(&ActorMovementMode::Swim)));
+    }
     terrain.walkable
         || actor.movement.modes.iter().any(|mode| {
             *mode != ActorMovementMode::PassWall && terrain.movement_modes.contains(mode)
@@ -602,6 +620,7 @@ impl Game {
             return false;
         };
         source_definition.moves_weaker_bodies
+            && !self.actor_can_kill_body_blocker(source_index, target_index)
             && !source_definition.movement.never_moves
             && target.hp > 0
             && !self.monsters_are_enemies(source_index, target_index)
@@ -624,6 +643,19 @@ impl Game {
                 actor_can_cross_terrain(actor, terrain)
                     || actor_can_interact_with_terrain(actor, terrain)
             })
+    }
+
+    pub(super) fn monster_attempts_melee(&self, index: usize) -> bool {
+        // melee2.c: intelligent monsters try another step in NO_MELEE;
+        // STUPID or confused monsters waste their action on the blocked blow.
+        !self.dungeon_blocks_melee()
+            || self.entities[index]
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_CONFUSION)
+            || self
+                .actor_runtime_definition(&self.entities[index])
+                .is_some_and(|actor| actor.tags.iter().any(|tag| tag == "stupid"))
     }
 
     pub(super) fn monster_hostile_target_can_enter_position(
@@ -1027,15 +1059,16 @@ impl Game {
             .floor_regions
             .iter()
             .find(|region| region.cells.contains(&start));
+        let attempts_melee = self.monster_attempts_melee(index);
+        let can_pass_body = |other| {
+            (attempts_melee && self.actor_can_kill_body_blocker(index, other))
+                || self.actor_can_move_body_blocker(index, other)
+        };
         let occupied_now = self
             .entities
             .iter()
             .enumerate()
-            .filter(|(entity_index, _)| {
-                *entity_index != index
-                    && !self.actor_can_kill_body_blocker(index, *entity_index)
-                    && !self.actor_can_move_body_blocker(index, *entity_index)
-            })
+            .filter(|(entity_index, _)| *entity_index != index && !can_pass_body(*entity_index))
             .map(|(_, entity)| entity.position)
             .collect::<BTreeSet<_>>();
         let moving_pack_id = self.entities[index]
@@ -1048,8 +1081,7 @@ impl Game {
                 .enumerate()
                 .filter(|(entity_index, entity)| {
                     *entity_index != index
-                        && !self.actor_can_kill_body_blocker(index, *entity_index)
-                        && !self.actor_can_move_body_blocker(index, *entity_index)
+                        && !can_pass_body(*entity_index)
                         && !entity.pack.as_ref().is_some_and(|pack| {
                             moving_pack_id.is_some_and(|moving| moving == pack.id)
                         })

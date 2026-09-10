@@ -433,6 +433,8 @@ fn random_artifact_current_classes_and_themes_select_eligible_biases_and_activat
     }
     for (class, bias) in [
         ("warrior", Bias::Warrior),
+        ("berserker", Bias::Warrior),
+        ("mindcrafter", Bias::Priestly),
         ("archer", Bias::Warrior),
         ("cavalry", Bias::Warrior),
         ("high-mage", Bias::Mage),

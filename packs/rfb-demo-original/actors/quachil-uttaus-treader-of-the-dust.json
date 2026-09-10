@@ -94,7 +94,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-time-33-150-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.slow",
@@ -122,6 +123,8 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "demon",
     "eldritch-horror",
     "evil",

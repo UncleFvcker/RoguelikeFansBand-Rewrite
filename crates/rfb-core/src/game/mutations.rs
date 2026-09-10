@@ -625,7 +625,8 @@ impl Game {
     ) -> bool {
         let friendly = self.rng.bounded(friendly_one_in) == 0;
         let depth = self.floor_depth(&self.current_floor_id).max(1);
-        let candidates = self.summon_category_candidate_kind_ids(category, None, depth, !friendly);
+        let candidates =
+            self.summon_category_candidate_kind_ids(category, None, depth, !friendly, friendly);
         if candidates.is_empty() {
             return false;
         }
@@ -757,12 +758,20 @@ impl Game {
         }
         let choice = usize::try_from(self.rng.bounded(candidates.len() as u64))
             .expect("bounded equipment candidate index must fit usize");
-        let item = &mut self.items[candidates[choice]];
-        let kind_id = item.kind_id.clone();
-        item.location = ItemLocation::Ground(self.player.position);
+        let index = candidates[choice];
+        let kind_id = self.items[index].kind_id.clone();
+        if let Some(position) = self.ground_drop_position(
+            self.player.position,
+            self.items[index].is_artifact(&self.content),
+        ) {
+            self.items[index].location = ItemLocation::Ground(position);
+            changed.insert(position);
+        } else {
+            let item = self.items.remove(index);
+            self.item_property_knowledge.remove(&item.id);
+        }
         self.clamp_player_hp_to_effective_max();
         self.refresh_player_resource_maxima();
-        changed.insert(self.player.position);
         Some(kind_id)
     }
 

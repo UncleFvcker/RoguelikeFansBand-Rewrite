@@ -10,8 +10,8 @@
     "debugClearEntities": true,
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
-      "x": 112,
-      "y": 36
+      "x": 78,
+      "y": 26
     },
     "playerGold": 1000000
   },
@@ -36,8 +36,8 @@
       "lastCommandSeq": 1,
       "playerGold": 999838,
       "playerPosition": {
-        "x": 112,
-        "y": 36
+        "x": 78,
+        "y": 26
       },
       "revision": 1,
       "shops": {
@@ -46,7 +46,7 @@
           "visited": true
         }
       },
-      "stateHash": "9639ee7f8830e8e32860fe359195e3777fad060991227ae66cda0c4e866a9ad2",
+      "stateHash": "f3dbb56515ddfce849581520f85df91273c8e0ca0fe1c22aae0850d63f487363",
       "turn": 1
     },
     "events": [

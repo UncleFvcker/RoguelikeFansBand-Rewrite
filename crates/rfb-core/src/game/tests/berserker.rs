@@ -406,6 +406,7 @@ fn class_hp_cost_is_paid_after_healing_and_failure_can_leave_zero_hp() {
     artifact.content.abilities.push(ability.clone());
     let activation = rfb_content::ClassAbilityDefinition {
         ability_id: ability.id.clone(),
+        blocked_by_dungeon_anti_magic: false,
         minimum_level: 1,
         ui_group_name_key: None,
         governing_attribute: Some(rfb_content::TechniqueAttribute::Strength),

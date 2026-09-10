@@ -34,7 +34,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-fire-20-900-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.bolt-mana-1d126-50",
@@ -42,11 +43,13 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-cold-20-900-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-poison-17-600-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.bolt-water-10d10-36",
@@ -58,7 +61,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-nether-14-550-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 50
@@ -89,6 +93,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "cold-blooded",
     "empty-mind",
     "evil",

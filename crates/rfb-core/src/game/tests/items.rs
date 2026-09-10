@@ -13,6 +13,273 @@ fn artifact_loot_context(depth: u16) -> LootContext {
     }
 }
 
+fn razorback_game() -> (Game, String) {
+    let mut game = Game::new_with_build(129, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    game.items
+        .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
+    game.gold_piles.clear();
+    let context = artifact_loot_context(90);
+    game.rng = RfbRng::seeded(
+        (0..1_000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(9) == 0)
+            .unwrap(),
+    );
+    let kind = game
+        .roll_fixed_artifact_kind_id(
+            &context,
+            Some("demo.item.multi-hued-dragon-scale-mail"),
+            false,
+        )
+        .unwrap();
+    assert_eq!(kind, "demo.item.razorback");
+    let draft = game.fixed_item_draft(&context, kind);
+    let item = game
+        .commit_generated_item_draft(draft, ItemLocation::Inventory)
+        .unwrap();
+    assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+    assert_eq!(item.activation.as_ref().unwrap().power, 30);
+    let id = item.id.clone();
+    game.items.push(item);
+    game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    (game, id)
+}
+
+#[test]
+fn razorback_equipment_and_unique_identity_survive_save() {
+    let (mut game, id) = razorback_game();
+    for item in &mut game.items {
+        if matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "body") {
+            item.location = ItemLocation::Inventory;
+        }
+    }
+    let before = game.equipment_modifiers();
+    let bonuses = game.player_equipment_bonuses();
+    let see_invisible = game.player_see_invisible_sources();
+    assert!(!game.player_aggravates_monsters());
+    assert!(game.equip_inventory_item(&id, None).is_some());
+    assert_eq!(game.equipment_modifiers().defense, before.defense + 65);
+    assert_eq!(
+        game.player_equipment_bonuses().melee_skill,
+        bonuses.melee_skill - 4
+    );
+    assert_eq!(
+        game.player_equipment_bonuses().light_radius,
+        bonuses.light_radius + 1
+    );
+    assert_eq!(game.player_see_invisible_sources(), see_invisible + 1);
+    assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
+    assert!(game.player_aggravates_monsters());
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Electricity),
+        ResistanceLevel::Immune
+    );
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert!(
+        restored
+            .generated_artifact_ids
+            .contains("demo.item.razorback")
+    );
+    assert!(
+        restored
+            .roll_fixed_artifact_kind_id(
+                &artifact_loot_context(90),
+                Some("demo.item.multi-hued-dragon-scale-mail"),
+                false
+            )
+            .is_none()
+    );
+    restored
+        .items
+        .iter_mut()
+        .find(|item| item.id == id)
+        .unwrap()
+        .location = ItemLocation::Inventory;
+    assert_eq!(restored.equipment_modifiers().defense, before.defense);
+    assert!(!restored.player_aggravates_monsters());
+    assert_ne!(
+        restored
+            .effective_player_resistances()
+            .level(DamageType::Electricity),
+        ResistanceLevel::Immune
+    );
+}
+
+#[test]
+fn artifact_inventory_drop_finds_distant_land_without_relaxing_ordinary_drops() {
+    let (mut game, artifact_id) = razorback_game();
+    game.player.position = Position { x: 99, y: 33 };
+    for y in 29..=37 {
+        for x in 95..=103 {
+            replace_terrain(
+                &mut game,
+                Position { x, y },
+                "demo.terrain.surface-water-deep",
+            );
+        }
+    }
+    give_inventory_item(&mut game, "test.ordinary-drop", "demo.item.iron-shot");
+    assert!(
+        game.drop_inventory_items(&[artifact_id.clone(), "test.ordinary-drop".to_owned()])
+            .is_none()
+    );
+    assert!(
+        game.drop_inventory_quantity("test.ordinary-drop", 1)
+            .unwrap()
+            .is_none()
+    );
+    let (_, _, landing) = game
+        .drop_inventory_quantity(&artifact_id, 1)
+        .unwrap()
+        .unwrap();
+    assert!(game.is_walkable(landing));
+    assert!(
+        game.items
+            .iter()
+            .any(|item| item.id == artifact_id && item.location == ItemLocation::Ground(landing))
+    );
+    assert!(game.items.iter().any(|item| item.id == "test.ordinary-drop" && item.location == ItemLocation::Inventory));
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn razorback_star_ball_and_full_10000_tick_cooldown_survive_save() {
+    let (mut game, id) = razorback_game();
+    assert!(game.equip_inventory_item(&id, None).is_some());
+    game.player.position = Position { x: 99, y: 33 };
+    for y in 29..=37 {
+        for x in 95..=103 {
+            replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+        }
+    }
+    game.world_tick = 9_997;
+    game.rng = RfbRng::seeded(
+        (0..1_000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+            .unwrap(),
+    );
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: id.clone(),
+            target: Some(TargetSelection::SelfTarget),
+        },
+    );
+    let blasts = update
+        .events
+        .iter()
+        .filter_map(|event| match &event.outcome {
+            Some(GameEventOutcomeDto::AbilityAreaDamage { resolution }) => Some(resolution),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert!((5..=15).contains(&blasts.len()));
+    assert!(blasts.iter().all(|blast| blast.radius == 3
+        && blast.damage_type == DamageTypeDto::Electricity
+        && blast.base_raw_damage == 150));
+    assert_eq!(game.world_tick, 10_007);
+    let mut events = Vec::new();
+    for tick in 10_008..=14_997 {
+        game.world_tick = tick;
+        game.process_inventory_device_recovery(&mut events);
+    }
+    let item = game.items.iter().find(|item| item.id == id).unwrap();
+    assert_eq!(
+        (item.charges.unwrap().current, item.device_recovery_progress),
+        (0, 5_000)
+    );
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    for tick in 14_998..=19_996 {
+        restored.world_tick = tick;
+        restored.process_inventory_device_recovery(&mut events);
+    }
+    let item = restored.items.iter().find(|item| item.id == id).unwrap();
+    assert_eq!(
+        (item.charges.unwrap().current, item.device_recovery_progress),
+        (0, 9_999)
+    );
+    restored.world_tick = 19_997;
+    restored.process_inventory_device_recovery(&mut events);
+    let item = restored.items.iter().find(|item| item.id == id).unwrap();
+    assert_eq!(
+        (item.charges.unwrap().current, item.device_recovery_progress),
+        (1, 0)
+    );
+}
+
+#[test]
+fn razorback_guardian_reward_shares_natural_generation_uniqueness() {
+    let pack =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack).unwrap();
+    let world = artifact
+        .content
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == DEFAULT_WORLD_ID)
+        .unwrap();
+    // Exercise the shared reward consumer without opening the Rlyeh dungeon in R2.
+    let floor = world
+        .procedural_floors
+        .iter_mut()
+        .find(|floor| {
+            floor.guardian.as_ref().is_some_and(|guardian| {
+                guardian.reward_artifact_item_kind_id.as_deref() == Some("demo.item.lotharang")
+            })
+        })
+        .unwrap();
+    let floor_id = floor.id.clone();
+    let guardian = floor.guardian.as_mut().unwrap();
+    guardian.reward_artifact_item_kind_id = Some("demo.item.razorback".to_owned());
+    let guardian = guardian.clone();
+    let content = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content).unwrap(),
+    ));
+    let (mut game, _) = razorback_game();
+    game.content = content;
+    game.current_floor_id = floor_id;
+    let mut actor = game.player.clone();
+    actor.id = guardian.instance_id;
+    actor.kind_id = guardian.actor_kind_id;
+    let (replacement, _) = game.generate_death_loot(&actor).unwrap();
+    assert!(
+        replacement
+            .iter()
+            .all(|item| item.kind_id != "demo.item.razorback")
+    );
+    // The shared Artifact mode now materializes the replacement artifact.
+    assert!(
+        replacement
+            .last()
+            .is_some_and(|item| item.is_artifact(&game.content))
+    );
+    game.generated_artifact_ids.remove("demo.item.razorback");
+    game.items
+        .retain(|item| item.kind_id != "demo.item.razorback");
+    let (reward, _) = game.generate_death_loot(&actor).unwrap();
+    assert_eq!(
+        reward
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.razorback")
+            .count(),
+        1
+    );
+    assert!(game.generated_artifact_ids.contains("demo.item.razorback"));
+    assert!(
+        game.roll_fixed_artifact_kind_id(
+            &artifact_loot_context(90),
+            Some("demo.item.multi-hued-dragon-scale-mail"),
+            false
+        )
+        .is_none()
+    );
+}
+
 fn dr_jones_game() -> (Game, String) {
     let mut game = Game::new_with_build(162, "demo.build.warrior").unwrap();
     clear_monsters(&mut game);
@@ -181,6 +448,9 @@ fn dr_jones_fetch_and_full_300_tick_cooldown_survive_save() {
 fn p90b_olog_hai_affix_materializes_and_runs_existing_berserk_activation() {
     let mut game =
         Game::new_with_build(90, "demo.build.warrior").expect("Olog-hai reward game should create");
+    let original_content = game.content.clone();
+    let original_floor_id = game.current_floor_id.clone();
+    super::dungeon_anti_magic::enter_context(&mut game);
     clear_monsters(&mut game);
     let mut rewards = game
         .generate_loot_instances(
@@ -273,6 +543,11 @@ fn p90b_olog_hai_affix_materializes_and_runs_existing_berserk_activation() {
         0
     );
 
+    // The activation above runs in NO_MAGIC; keep the existing independent
+    // save/recharge fixture on its original floor and content catalog.
+    clear_monsters(&mut game);
+    game.content = original_content;
+    game.current_floor_id = original_floor_id;
     let hash = game.state_hash();
     let mut restored = Game::from_save(game.to_save()).expect("Olog-hai reward should restore");
     assert_eq!(restored.state_hash(), hash);
@@ -1713,6 +1988,7 @@ fn visible_actor_scrolls_consume_empty_results_without_rng_or_awareness() {
         ),
     ] {
         let mut game = skill_check_game(seed, "demo.build.warrior");
+        super::dungeon_anti_magic::enter_context(&mut game);
         give_inventory_item(&mut game, item_id, kind_id);
         game.rng = RfbRng::seeded(seed);
         let mut events = Vec::new();
@@ -3879,6 +4155,7 @@ fn p107e_frost_ball_and_confusing_light_reuse_area_and_status_resolvers() {
     const FROST_ITEM_ID: &str = "test.item.frost-ball-wand.1";
     let mut frost =
         Game::new_with_build(207, "demo.build.warrior").expect("Frost Ball test should create");
+    super::dungeon_anti_magic::enter_context(&mut frost);
     clear_monsters(&mut frost);
     frost.terrain.fill("demo.terrain.floor".to_owned());
     frost.player.position = Position { x: 10, y: 10 };

@@ -141,7 +141,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-fire-20-900-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 12
@@ -170,6 +171,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "dragon",
     "evil",
     "kin-glyph-68",

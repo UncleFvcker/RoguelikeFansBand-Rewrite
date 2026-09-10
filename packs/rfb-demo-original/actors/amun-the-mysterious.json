@@ -162,15 +162,18 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-fire-20-900-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-plasma-17-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-storm-13-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.summon-egyptian-l97-1d2",
@@ -178,11 +181,13 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-force-33-200-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-gravity-33-200-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.brain-smash-12d12",
@@ -194,7 +199,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-light-17-400-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.ball-light-10d10-438",
@@ -202,15 +208,18 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-confusion-17-400-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-inertia-17-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-nexus-33-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.curse-10d15",
@@ -222,7 +231,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-nuke-17-600-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.haste-self",
@@ -264,6 +274,8 @@
     "rfb.status.fear"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "egyptian",
     "invisible",
     "kin-glyph-113",

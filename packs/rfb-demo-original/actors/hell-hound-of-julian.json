@@ -107,7 +107,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-hell-fire-17-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 20
@@ -126,6 +127,8 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "evil",
     "hound",

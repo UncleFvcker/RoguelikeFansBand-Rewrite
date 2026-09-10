@@ -4,9 +4,8 @@
   "id": "demo.terrain.old-castle-entry-available",
   "nameKey": "terrain-demo-old-castle-entry-available-name",
   "descriptionKey": "terrain-demo-old-castle-entry-available-description",
-  "glyph": "▓",
-  "walkable": false,
-  "blocksSight": true,
-  "allowsWallPassage": true,
-  "tags": ["building", "outdoor", "surface", "task-entry-available"]
+  "glyph": "\"",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["outdoor", "surface", "task-entry-available", "grass"]
 }

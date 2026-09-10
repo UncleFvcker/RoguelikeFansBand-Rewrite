@@ -4,7 +4,7 @@
   "id": "demo.terrain.crows-nest-entry-completed",
   "nameKey": "terrain-demo-crows-nest-entry-completed-name",
   "descriptionKey": "terrain-demo-crows-nest-entry-completed-description",
-  "glyph": ",",
+  "glyph": "\"",
   "walkable": true,
   "blocksSight": false,
   "tags": ["grass", "outdoor", "surface", "task-entry-completed"]

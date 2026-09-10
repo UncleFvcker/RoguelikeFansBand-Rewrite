@@ -251,6 +251,9 @@ impl Game {
         let item = self
             .commit_generated_item_draft(draft, ItemLocation::Ground(position))
             .expect("validated rubble loot must remain generatable");
+        let Some(item) = self.relocate_ground_item(item) else {
+            return false;
+        };
         self.items.push(item);
         true
     }

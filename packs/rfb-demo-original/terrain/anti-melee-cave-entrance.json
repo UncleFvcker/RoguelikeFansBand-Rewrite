@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.anti-melee-cave-entrance",
+  "nameKey": "terrain-demo-anti-melee-cave-entrance-name",
+  "descriptionKey": "terrain-demo-anti-melee-cave-entrance-description",
+  "glyph": ">",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": [
+    "stairs-down",
+    "passage"
+  ]
+}

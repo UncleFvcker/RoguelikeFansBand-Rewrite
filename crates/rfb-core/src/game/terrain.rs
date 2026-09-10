@@ -287,6 +287,43 @@ impl Game {
         self.terrain[index] = target_id.to_owned();
         self.revealed_terrain.remove(&position);
         changed.insert(position);
+        if !target_definition.allows_items() {
+            let mut index = 0;
+            while index < self.items.len() {
+                if self.items[index].location != ItemLocation::Ground(position) {
+                    index += 1;
+                    continue;
+                }
+                if let Some(destination) = self
+                    .ground_drop_position(position, self.items[index].is_artifact(&self.content))
+                {
+                    self.items[index].location = ItemLocation::Ground(destination);
+                    changed.insert(destination);
+                    index += 1;
+                } else {
+                    let item = self.items.remove(index);
+                    self.item_property_knowledge.remove(&item.id);
+                    events.push(DomainEvent::ItemDestroyed {
+                        target_kind_id: item.kind_id,
+                        quantity: item.quantity,
+                        rule_line: None,
+                    });
+                }
+            }
+            let destination = self.ground_drop_position(position, false);
+            self.gold_piles.retain_mut(|pile| {
+                if pile.position != position {
+                    return true;
+                }
+                if let Some(destination) = destination {
+                    pile.position = destination;
+                    changed.insert(destination);
+                    true
+                } else {
+                    false
+                }
+            });
+        }
         self.resolve_terrain_change_rewards(
             &source_definition,
             &target_definition,

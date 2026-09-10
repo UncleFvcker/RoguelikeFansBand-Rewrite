@@ -15,6 +15,29 @@ use crate::{
 pub(super) const VISIBILITY_RADIUS: i32 = 8;
 
 impl Game {
+    pub(super) fn player_has_night_vision(&self) -> bool {
+        self.player_equipment_passives()
+            .contains(&EquipmentPassive::NightVision)
+    }
+
+    pub(super) fn player_monster_sight_radius(&self) -> i32 {
+        // monster2.c:update_mon halves monster sight, not terrain FOV or ESP.
+        // Keep the existing eight-cell FOV scale used by this engine.
+        if self.dungeon_has_darkness() && !self.player_has_night_vision() {
+            VISIBILITY_RADIUS / 2
+        } else {
+            VISIBILITY_RADIUS
+        }
+    }
+
+    pub(super) fn dungeon_detection_radius(&self, radius: u8) -> u8 {
+        if self.dungeon_has_darkness() {
+            radius / 3
+        } else {
+            radius
+        }
+    }
+
     pub(super) fn reveal_current_visibility(&mut self) {
         for y in 0..self.height {
             for x in 0..self.width {
@@ -99,9 +122,7 @@ impl Game {
         }
         has_line_of_sight(self, self.player.position, position)
             && (self.floor_has_environment_light()
-                || self
-                    .player_equipment_passives()
-                    .contains(&EquipmentPassive::NightVision)
+                || self.player_has_night_vision()
                 || position == self.player.position
                 || self.position_is_lit(position))
     }
@@ -117,7 +138,10 @@ impl Game {
     }
 
     pub(super) fn entity_is_visually_visible_to_player(&self, entity: &Actor) -> bool {
-        (self.is_visible(entity.position) || self.entity_is_visible_by_infravision(entity))
+        let sight = self.player_monster_sight_radius();
+        (!self.dungeon_has_darkness()
+            || squared_distance(self.player.position, entity.position) <= sight * sight)
+            && (self.is_visible(entity.position) || self.entity_is_visible_by_infravision(entity))
             && (!self.actor_is_invisible(entity) || entity.visible_invisible)
     }
 
@@ -207,7 +231,12 @@ impl Game {
             })
             .collect::<Vec<_>>();
         for (index, id, position, level, was_visible) in candidates {
-            if !self.is_visible(position) || sources == 0 {
+            let sight = self.player_monster_sight_radius();
+            if !self.is_visible(position)
+                || sources == 0
+                || (self.dungeon_has_darkness()
+                    && squared_distance(self.player.position, position) > sight * sight)
+            {
                 self.entities[index].visible_invisible = false;
                 continue;
             }

@@ -983,7 +983,12 @@ fn palantir_lists_hidden_uniques_without_revealing_their_positions_and_old_castl
         (1, "demo.item.palantir-of-westernesse"),
     ] {
         let mut game = mindcrafter(1);
-        game.player.position = Position { x: 114, y: 30 };
+        game.player.position = position_from_content(
+            game.content
+                .town_facility("demo.town-facility.outpost-white-horse")
+                .unwrap()
+                .entrance_position,
+        );
         game.task_states.insert(
             "demo.task.old-castle".to_owned(),
             TaskState {

@@ -148,15 +148,26 @@ impl Game {
             if self.player_is_dead() {
                 break;
             }
+            let waste_exposure = local_floor_active
+                .then(|| self.process_player_waste_damage(events))
+                .flatten();
+            if self.player_is_dead() {
+                break;
+            }
             self.process_status_tick(events, changed, removed_entities, local_floor_active)?;
             if self.player_is_dead() {
                 break;
+            }
+            // Source poison damage precedes FF_ACID. Newly accumulated poison starts
+            // on the next status tick, rather than becoming a second immediate hit.
+            if let Some((source, poison)) = &waste_exposure {
+                self.apply_player_melee_status(STATUS_POISON, *poison, source);
             }
             self.process_hunger(events);
             if self.player_is_dead() {
                 break;
             }
-            if !wall_blocks_regeneration && !light_blocks_regeneration {
+            if !wall_blocks_regeneration && !light_blocks_regeneration && waste_exposure.is_none() {
                 self.process_natural_hp_regeneration(resting);
                 self.process_equipment_regeneration(events);
             }
@@ -397,6 +408,101 @@ impl Game {
             });
         }
         true
+    }
+
+    pub(super) fn process_player_waste_damage(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+    ) -> Option<(String, i32)> {
+        // One source process_world interval maps to the existing ten core world ticks.
+        // Like wall damage, this runs before the final tick of Invulnerability expires.
+        if !self
+            .world_tick
+            .is_multiple_of(NATURAL_HP_REGENERATION_INTERVAL_TICKS)
+            || self.map_scale != MapScaleDto::Local
+            || self.player_has_status_kind(STATUS_INVULNERABILITY)
+        {
+            return None;
+        }
+        let terrain = self
+            .content
+            .terrain(
+                &self.terrain[self
+                    .index(self.player.position)
+                    .expect("player position must remain in bounds")],
+            )
+            .expect("player terrain must exist");
+        if !terrain.tags.iter().any(|tag| tag == "acid") || self.rng.bounded(3) == 0 {
+            return None;
+        }
+        let deep = terrain.tags.iter().any(|tag| tag == "deep");
+        let terrain_id = terrain.id.clone();
+        let flying = if self.riding_actor_id.is_some() {
+            self.active_traveler_definition()
+                .movement
+                .modes
+                .contains(&rfb_content::ActorMovementMode::Fly)
+        } else {
+            self.player_levitates()
+        };
+        let base = if deep {
+            1400 + self.rng.bounded(800) as i32
+        } else if !flying {
+            700 + self.rng.bounded(400) as i32
+        } else {
+            0
+        };
+        let base = if flying {
+            base / if deep { 15 } else { 10 }
+        } else {
+            base
+        };
+        // Poison starts from the pre-acid-resistance amount, as in dungeon.c FF_ACID.
+        let resisted = |amount, damage_type| {
+            self.resist_player_damage(resolve_damage(
+                DamagePacket::new(amount, damage_type),
+                self.effective_player_resistances().level(damage_type),
+            ))
+            .applied
+        };
+        let acid = resisted(base, DamageType::Acid);
+        let poison = resisted(base * 6 / 5, DamageType::Poison);
+        if acid == 0 && poison == 0 {
+            return None;
+        }
+        // Both rounding draws occur even if one component is zero.
+        let mut acid = acid / 100 + i32::from(self.rng.bounded(100) < (acid % 100) as u64);
+        let poison = poison / 100 + i32::from(self.rng.bounded(100) < (poison % 100) as u64);
+        if acid > 0 && self.rng.bounded(16) == 0 && self.corrode_player_armor(events) {
+            acid = (acid + 1) / 2;
+        }
+        if acid > 0 || poison > 0 {
+            // Resistance has already been applied. Use the shared final damage boundary.
+            let damage = resolve_damage(
+                DamagePacket::new(acid, DamageType::Acid),
+                ResistanceLevel::Normal,
+            );
+            let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+            events.push(DomainEvent::PlayerWasteDamaged {
+                terrain_id: terrain_id.clone(),
+                flying,
+                damage: application.damage,
+            });
+            if application.fatal {
+                events.push(DomainEvent::PlayerDied {
+                    source_kind_id: terrain_id.clone(),
+                    method_id: None,
+                    damage: application.damage,
+                });
+            }
+        }
+        if self.rng.bounded(32) == 0
+            && self.rng.bounded(55) as i32 >= self.player_resistance_percent(DamageType::Poison)
+        {
+            self.resolve_monster_attribute_drain(AttributeKind::Constitution);
+        }
+        // Source suppresses HP recovery even when both fractional amounts round down.
+        Some((terrain_id, poison))
     }
 
     pub(super) fn process_natural_hp_regeneration(&mut self, resting: bool) {

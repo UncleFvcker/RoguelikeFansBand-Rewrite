@@ -20,17 +20,20 @@
     "abilities": [
       {
         "abilityId": "demo.ability.cinder-bolt",
-        "weight": 2
+        "weight": 2,
+        "innate": false
       },
       {
         "abilityId": "demo.ability.cinder-burst",
-        "weight": 1
+        "weight": 1,
+        "innate": false
       },
       {
         "abilityId": "demo.ability.cinder-fan",
-        "weight": 1
+        "weight": 1,
+        "innate": false
       }
     ]
   },
-  "tags": ["humanoid", "kin-glyph-112"]
+  "tags": ["attack-spell", "humanoid", "kin-glyph-112"]
 }

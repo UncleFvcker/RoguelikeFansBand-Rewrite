@@ -65,7 +65,9 @@ impl Game {
         let (trace, _) = self.trace_projectile_path_with_actor_policy(path.clone(), false);
         let affected_positions = trace.traversed.clone();
         for position in &affected_positions {
-            if let Some(index) = self.index(*position) {
+            if !self.dungeon_has_darkness()
+                && let Some(index) = self.index(*position)
+            {
                 self.glow[index] = true;
                 changed.insert(*position);
             }
@@ -129,70 +131,76 @@ impl Game {
         else {
             unreachable!("light-area executor requires a light-area effect");
         };
-        let (trace, _) = self.trace_projectile_path_with_actor_policy(Vec::new(), false);
-        let center = self.player.position;
-        let (affected_positions, targets) = self.area_damage_targets(center, radius, None);
-        let targets = targets
-            .into_iter()
-            .filter(|(entity_id, _)| {
-                self.entities.iter().any(|entity| {
-                    entity.id == *entity_id
-                        && entity.resistances.level(DamageType::Light)
-                            == ResistanceLevel::Vulnerable
-                })
-            })
-            .collect::<Vec<_>>();
+        // The caller rolls damage before spells2.c:lite_area can reject projection.
         let base_raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
-        let base_raw_damage = i32::try_from(spell_powered_ability_value(
-            ability,
-            0,
-            AbilitySpellPowerField::FinalDamage,
-            u64::try_from(base_raw_damage).expect("light damage must be non-negative"),
-        ))
-        .expect("spell-powered light damage must fit i32");
+        if self.dungeon_has_darkness() {
+            events.push(DomainEvent::DungeonDarknessAbsorbedLight);
+        } else {
+            let (trace, _) = self.trace_projectile_path_with_actor_policy(Vec::new(), false);
+            let center = self.player.position;
+            let (affected_positions, targets) = self.area_damage_targets(center, radius, None);
+            let targets = targets
+                .into_iter()
+                .filter(|(entity_id, _)| {
+                    self.entities.iter().any(|entity| {
+                        entity.id == *entity_id
+                            && entity.resistances.level(DamageType::Light)
+                                == ResistanceLevel::Vulnerable
+                    })
+                })
+                .collect::<Vec<_>>();
+            let base_raw_damage = i32::try_from(spell_powered_ability_value(
+                ability,
+                0,
+                AbilitySpellPowerField::FinalDamage,
+                u64::try_from(base_raw_damage).expect("light damage must be non-negative"),
+            ))
+            .expect("spell-powered light damage must fit i32");
 
-        let mut glow_positions = affected_positions.iter().copied().collect::<BTreeSet<_>>();
-        glow_positions.extend(self.connected_glow_positions(center));
-        for position in glow_positions {
-            let Some(index) = self.index(position) else {
-                continue;
-            };
-            if !self.glow[index] {
-                self.glow[index] = true;
-                changed.insert(position);
+            let mut glow_positions = affected_positions.iter().copied().collect::<BTreeSet<_>>();
+            glow_positions.extend(self.connected_glow_positions(center));
+            for position in glow_positions {
+                let Some(index) = self.index(position) else {
+                    continue;
+                };
+                if !self.glow[index] {
+                    self.glow[index] = true;
+                    changed.insert(position);
+                }
+            }
+
+            events.push(DomainEvent::AbilityAreaDamage {
+                ability_id: ability.id.clone(),
+                resolution: AbilityAreaDamageResolutionDto {
+                    center,
+                    radius,
+                    base_raw_damage,
+                    damage_type: DamageType::Light.into(),
+                    affected_positions,
+                    target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
+                },
+                trace: trace.clone(),
+            });
+            for (entity_id, distance) in targets {
+                let Some(index) = self
+                    .entities
+                    .iter()
+                    .position(|entity| entity.id == entity_id && entity.hp > 0)
+                else {
+                    continue;
+                };
+                self.resolve_weak_light_damage_to_entity(
+                    index,
+                    &ability.id,
+                    rfb_area_damage(base_raw_damage, distance),
+                    trace.clone(),
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
             }
         }
-
-        events.push(DomainEvent::AbilityAreaDamage {
-            ability_id: ability.id.clone(),
-            resolution: AbilityAreaDamageResolutionDto {
-                center,
-                radius,
-                base_raw_damage,
-                damage_type: DamageType::Light.into(),
-                affected_positions,
-                target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
-            },
-            trace: trace.clone(),
-        });
-        for (entity_id, distance) in targets {
-            let Some(index) = self
-                .entities
-                .iter()
-                .position(|entity| entity.id == entity_id && entity.hp > 0)
-            else {
-                continue;
-            };
-            self.resolve_weak_light_damage_to_entity(
-                index,
-                &ability.id,
-                rfb_area_damage(base_raw_damage, distance),
-                trace.clone(),
-                events,
-                changed,
-                removed_entities,
-            )?;
-        }
+        // Nature Daylight's vampire backlash is outside lite_area in do-spell.c.
         if sunlight_burn_damage_dice > 0 && self.player_fails_sunlight_save() {
             let raw_damage = self
                 .roll_damage(sunlight_burn_damage_dice, sunlight_burn_damage_sides)
@@ -1240,6 +1248,7 @@ impl Game {
         changed: &mut BTreeSet<Position>,
     ) {
         let mut mapped_positions = Vec::with_capacity(self.terrain.len());
+        let illuminate = !self.dungeon_has_darkness();
         for y in 0..self.height {
             for x in 0..self.width {
                 let position = Position {
@@ -1247,11 +1256,13 @@ impl Game {
                     y: i32::from(y),
                 };
                 let index = self.index(position).expect("floor position must be valid");
-                if !self.explored[index] || !self.glow[index] {
+                if !self.explored[index] || (illuminate && !self.glow[index]) {
                     changed.insert(position);
                 }
                 self.explored[index] = true;
-                self.glow[index] = true;
+                if illuminate {
+                    self.glow[index] = true;
+                }
                 mapped_positions.push(position);
             }
         }
@@ -1500,7 +1511,7 @@ impl Game {
             resolution: AbilityDetectResolutionDto {
                 subject: ability_detect_subject_dto(*subject),
                 category: category.clone(),
-                radius: *radius,
+                radius: self.dungeon_detection_radius(*radius),
                 persistent: *persistent,
                 through_walls: *through_walls,
                 detected_positions,

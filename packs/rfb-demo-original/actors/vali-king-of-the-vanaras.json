@@ -155,7 +155,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-1d1-227",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.summon-vanara-l76-1d3-1",
@@ -192,6 +193,8 @@
     "rfb.status.confusion"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "kin-glyph-89",
     "legacy-import",

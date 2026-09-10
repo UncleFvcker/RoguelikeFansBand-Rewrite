@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-outpost-black-market-description",
   "townId": "demo.town.outpost",
   "category": "black-market",
-  "entrancePosition": { "x": 55, "y": 19 },
+  "entrancePosition": {"x": 115, "y": 43},
   "entranceTerrainId": "demo.terrain.black-market-entrance",
   "owner": {
     "id": "demo.shop-owner.outpost-topi",

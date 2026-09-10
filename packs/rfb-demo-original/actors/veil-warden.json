@@ -23,23 +23,28 @@
     "abilities": [
       {
         "abilityId": "demo.ability.veil-banish",
-        "weight": 1
+        "weight": 1,
+        "innate": false
       },
       {
         "abilityId": "demo.ability.veil-drain",
-        "weight": 1
+        "weight": 1,
+        "innate": false
       },
       {
         "abilityId": "demo.ability.veil-amnesia",
-        "weight": 1
+        "weight": 1,
+        "innate": false
       },
       {
         "abilityId": "demo.ability.veil-dispel",
-        "weight": 1
+        "weight": 1,
+        "innate": false
       }
     ]
   },
   "tags": [
+    "attack-spell",
     "aberration"
   ]
 }

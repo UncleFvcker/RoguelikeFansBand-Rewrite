@@ -129,6 +129,7 @@
   "role": "monster",
   "speed": 125,
   "tags": [
+    "innate-spell",
     "evil",
     "giant",
     "kin-glyph-79",

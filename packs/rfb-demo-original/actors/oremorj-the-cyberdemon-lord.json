@@ -103,7 +103,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.ball-shards-1d1-599",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.summon-cyber-l89-1d3",
@@ -120,6 +121,8 @@
   "role": "monster",
   "speed": 130,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "clear-head",
     "demon",
     "evil",

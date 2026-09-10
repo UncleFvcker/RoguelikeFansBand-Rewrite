@@ -685,7 +685,13 @@ impl Game {
         let candidate_kind_ids = if category == "player-kin" {
             Vec::new()
         } else {
-            self.summon_category_candidate_kind_ids(category, None, maximum_level, *allow_unique)
+            self.summon_category_candidate_kind_ids(
+                category,
+                None,
+                maximum_level,
+                *allow_unique,
+                true,
+            )
         };
         let normal_maximum =
             usize::from(*count_dice) * usize::from(*count_sides) + usize::from(*count_bonus);
@@ -1245,6 +1251,9 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
+        if glow && self.dungeon_has_darkness() {
+            events.push(DomainEvent::DungeonDarknessAbsorbedLight);
+        }
         let mut positions = if radius == u8::MAX {
             (0..self.height)
                 .flat_map(|y| {
@@ -1649,7 +1658,7 @@ impl Game {
         let resolution = AbilityDetectResolutionDto {
             subject: ability_detect_subject_dto(subject),
             category,
-            radius,
+            radius: self.dungeon_detection_radius(radius),
             persistent,
             through_walls,
             detected_positions,
@@ -2825,10 +2834,10 @@ impl Game {
         if definition.tags.iter().any(|tag| tag == "potion") {
             self.apply_potion_nutrition(&definition, events);
         }
-        if skeleton_food_falls_through {
-            self.drop_inventory_quantity(item_id, 1)?
-                .expect("used Skeleton food must remain droppable");
-            changed.insert(self.player.position);
+        if skeleton_food_falls_through
+            && let Some((_, _, position)) = self.drop_inventory_quantity(item_id, 1)?
+        {
+            changed.insert(position);
         }
         if let Some(shatter) = skeleton_potion_shatter {
             self.resolve_ground_item_shatter_effect(
@@ -2966,20 +2975,20 @@ impl Game {
                 let count = device_power_value(count as u64, device_power_bonus);
                 let damage = device_power_value(150, device_power_bonus) as i32;
                 for _ in 0..count {
-                    let mut target = self.player.position;
-                    for _ in 0..1000 {
-                        target = Position {
+                    let target = (0..1000).find_map(|_| {
+                        let target = Position {
                             x: self.player.position.x + self.rng.bounded(9) as i32 - 4,
                             y: self.player.position.y + self.rng.bounded(9) as i32 - 4,
                         };
-                        if super::projectile_geometry::rfb_distance(self.player.position, target)
+                        (super::projectile_geometry::rfb_distance(self.player.position, target)
                             <= 4
                             && target != self.player.position
-                            && self.is_walkable(target)
-                        {
-                            break;
-                        }
-                    }
+                            && self.projectile_can_cross(target))
+                        .then_some(target)
+                    });
+                    let Some(target) = target else {
+                        continue;
+                    };
                     if let Some(path) = super::projectile_geometry::projectile_path_through_target(
                         self.player.position,
                         target,

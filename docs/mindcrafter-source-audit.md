@@ -19,7 +19,7 @@
 | `load.c:1639` | 清旧存档的 `add_spells`；本批新开发存档不实现此兼容分支。 |
 | `mspells1.c:308` → `monspell.c:3850` | `anti_magic_check()` 的 30 用于智能怪物反魔法法术选择权重，已有反魔法/禁咒状态时权重为 0；不是玩家 30% 反魔法抗性。现有怪物 AI 未见等价职业权重，后续在实际反魔法调用者接入。 |
 | `object1.c:340` | 装备 `ART_STONE_OF_MIND=328` 时，心灵术士同时获得 EASY_SPELL 与 DEC_MANA；普通装备旗标仍受 caster options 限制，不能一律生效。 |
-| `artifact.c:2282` | 随机神器职业偏好为 `BIAS_PRIESTLY`、`warrior_bias=20`。审计主线未具备此完整生成消费者，列为限制；不把另一工作树的未提交实现当作主线能力。 |
+| `artifact.c:2282` | 随机神器职业偏好为 `BIAS_PRIESTLY`、`warrior_bias=20`。本次三线集成已接入共享随机神器消费者，并在既有职业偏好测试中覆盖。 |
 | `races_a.c:1199` | 龙人职业生命乘数 100；本项目龙人默认分支已是 100，不另加一次职业修正。 |
 | `virtue.c:272` | 出生美德 Harmony、Enlightenment、Patience，进入现有美德出生合并。 |
 | `spoilers.c:1259`；`util.c:3743` | 静态导出分类“心灵”、旧菜单“心灵感应/特殊”；本项目创角采用实际 `_class_groups` 的“心智”，不新建两套分类。 |

@@ -601,12 +601,14 @@ impl Game {
                     excluded_upgrade_category,
                     maximum_level,
                     false,
+                    true,
                 );
                 let hostile_candidate_kind_ids = self.summon_category_candidate_kind_ids(
                     selected_category,
                     excluded_upgrade_category,
                     maximum_level,
                     allow_unique_hostile,
+                    true,
                 );
                 let normal_maximum = (usize::from(count_dice) * usize::from(count_sides)
                     + usize::from(count_bonus))
@@ -672,7 +674,7 @@ impl Game {
                     .unwrap_or(u16::MAX)
                     .saturating_add(self.progress.level.saturating_mul(2) / 3);
                 let candidate_kind_ids = self
-                    .summon_category_candidate_kind_ids("demon", None, maximum_level, false)
+                    .summon_category_candidate_kind_ids("demon", None, maximum_level, false, true)
                     .into_iter()
                     .filter(|kind_id| {
                         self.content

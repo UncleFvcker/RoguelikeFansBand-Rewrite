@@ -86,7 +86,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-cold-20-900-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.bolt-cold-6d8-9",
@@ -106,6 +107,8 @@
   "role": "monster",
   "speed": 110,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "kin-glyph-112",
     "legacy-import",
     "nonliving",

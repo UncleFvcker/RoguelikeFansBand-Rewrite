@@ -954,7 +954,7 @@ fn external_task_service_projects_sparse_available_state_and_accepts_at_entrance
             .is_empty()
     );
 
-    game.player.position = Position { x: 77, y: 30 };
+    game.player.position = Position { x: 98, y: 23 };
     let before_draws = game.rng_draw_counter();
     let snapshot = game.snapshot();
     let service = snapshot
@@ -1005,7 +1005,7 @@ fn external_task_service_projects_sparse_available_state_and_accepts_at_entrance
 #[test]
 fn p107_task_substitutions_are_correlated_persisted_and_hide_losing_variants() {
     let projected_ids = |game: &mut Game| {
-        game.player.position = Position { x: 77, y: 30 };
+        game.player.position = Position { x: 98, y: 23 };
         game.snapshot()
             .task_services
             .iter()
@@ -1066,7 +1066,7 @@ fn p107_task_substitutions_are_correlated_persisted_and_hide_losing_variants() {
 #[test]
 fn p107_failed_prerequisites_unlock_and_optional_status_descriptions_project() {
     let mut game = p107_task_service_game(10);
-    game.player.position = Position { x: 77, y: 30 };
+    game.player.position = Position { x: 98, y: 23 };
     let root_id = if game
         .task_states
         .contains_key("demo.task.test-warrens-depth")
@@ -1132,7 +1132,7 @@ fn p107_failed_prerequisites_unlock_and_optional_status_descriptions_project() {
 #[test]
 fn p107j_rewardless_service_task_waits_for_conclusion_without_creating_an_item() {
     let mut game = p107_task_service_game(10);
-    game.player.position = Position { x: 77, y: 30 };
+    game.player.position = Position { x: 98, y: 23 };
     let root_id = if game
         .task_states
         .contains_key("demo.task.test-warrens-depth")
@@ -1303,7 +1303,7 @@ fn p110_thalos_projects_five_correlated_tasks_from_each_quest_line() {
 fn external_task_prerequisite_stays_locked_without_materializing_state() {
     let mut game = task_service_game(42);
     let task_id = "demo.task.test-prerequisite";
-    game.player.position = Position { x: 77, y: 30 };
+    game.player.position = Position { x: 98, y: 23 };
     let before_draws = game.rng_draw_counter();
     assert_eq!(
         game.snapshot()
@@ -1340,7 +1340,7 @@ fn external_task_prerequisite_stays_locked_without_materializing_state() {
 fn accepted_external_task_binds_while_inside_its_dungeon_depth() {
     let mut game = task_service_game(42);
     let task_id = "demo.task.test-warrens-depth";
-    game.player.position = Position { x: 77, y: 30 };
+    game.player.position = Position { x: 98, y: 23 };
     dispatch_next(
         &mut game,
         GameCommand::AcceptTask {
@@ -1385,7 +1385,7 @@ fn external_task_service_rejects_unavailable_commands_without_rng_or_state_chang
     assert!(!game.task_states.contains_key(task_id));
     assert_eq!(game.rng_draw_counter(), before_draws);
 
-    game.player.position = Position { x: 77, y: 30 };
+    game.player.position = Position { x: 98, y: 23 };
     let claim = dispatch_next(
         &mut game,
         GameCommand::ClaimTaskReward {
@@ -1411,7 +1411,7 @@ fn task_rewards_use_one_weighted_default_choice_and_class_affix_overrides() {
     for seed in 0..32 {
         let mut game = template.clone();
         game.rng = RfbRng::seeded(seed);
-        game.player.position = Position { x: 77, y: 30 };
+        game.player.position = Position { x: 98, y: 23 };
         game.task_states.insert(
             "demo.task.test-warrens-depth".to_owned(),
             TaskState {
@@ -1438,7 +1438,7 @@ fn task_rewards_use_one_weighted_default_choice_and_class_affix_overrides() {
     assert!(saw_food && saw_water);
 
     let mut game = template;
-    game.player.position = Position { x: 77, y: 30 };
+    game.player.position = Position { x: 98, y: 23 };
     game.task_states.insert(
         "demo.task.test-prerequisite".to_owned(),
         TaskState {
@@ -1472,12 +1472,12 @@ fn task_rewards_use_one_weighted_default_choice_and_class_affix_overrides() {
 fn accepting_thieves_hideout_at_the_count_opens_its_count_district_entry() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
-    let entry = Position { x: 81, y: 26 };
+    let entry = Position { x: 125, y: 28 };
     assert_eq!(
         game.terrain_at(entry),
         "demo.terrain.thieves-hideout-entry-available"
     );
-    game.player.position = Position { x: 77, y: 30 };
+    game.player.position = Position { x: 98, y: 23 };
     let before_draws = game.rng_draw_counter();
     dispatch_next(
         &mut game,
@@ -1499,12 +1499,12 @@ fn accepting_thieves_hideout_at_the_count_opens_its_count_district_entry() {
 fn trouble_at_home_runs_from_white_horse_targets_only_mercenaries_and_rewards_warrior() {
     let mut game =
         Game::new_with_build(142, "demo.build.warrior").expect("Warrens journey should create");
-    let entry = Position { x: 114, y: 28 };
+    let entry = Position { x: 121, y: 36 };
     assert_eq!(
         game.terrain_at(entry),
         "demo.terrain.trouble-at-home-entry-available"
     );
-    game.player.position = Position { x: 114, y: 30 };
+    game.player.position = Position { x: 124, y: 35 };
     let service = game
         .snapshot()
         .task_services
@@ -1603,7 +1603,7 @@ fn trouble_at_home_runs_from_white_horse_targets_only_mercenaries_and_rewards_wa
         game.terrain_at(entry),
         "demo.terrain.trouble-at-home-entry-completed"
     );
-    game.player.position = Position { x: 114, y: 30 };
+    game.player.position = Position { x: 124, y: 35 };
     let before_draws = game.rng_draw_counter();
     dispatch_next(
         &mut game,
@@ -1629,12 +1629,12 @@ fn crows_nest_unlocks_after_trouble_at_home_clears_all_birds_and_rewards_a_staff
     let mut game =
         Game::new_with_build(143, "demo.build.warrior").expect("Warrens journey should create");
     let task_id = "demo.task.crows-nest";
-    let entry = Position { x: 123, y: 40 };
+    let entry = Position { x: 181, y: 59 };
     assert_eq!(
         game.terrain_at(entry),
         "demo.terrain.crows-nest-entry-available"
     );
-    game.player.position = Position { x: 114, y: 30 };
+    game.player.position = Position { x: 124, y: 35 };
     assert_eq!(
         game.accept_task("demo.town-facility.outpost-white-horse", task_id),
         Err("task-locked")
@@ -1679,7 +1679,7 @@ fn crows_nest_unlocks_after_trouble_at_home_clears_all_birds_and_rewards_a_staff
         game.terrain_at(entry),
         "demo.terrain.crows-nest-entry-completed"
     );
-    game.player.position = Position { x: 114, y: 30 };
+    game.player.position = Position { x: 124, y: 35 };
     dispatch_next(
         &mut game,
         GameCommand::ClaimTaskReward {
@@ -1718,12 +1718,12 @@ fn old_man_willow_unlocks_after_crows_nest_and_rewards_an_elemental_ring() {
     let mut game =
         Game::new_with_build(149, "demo.build.warrior").expect("Warrens journey should create");
     let task_id = "demo.task.old-man-willow";
-    let entry = Position { x: 120, y: 28 };
+    let entry = Position { x: 176, y: 19 };
     assert_eq!(
         game.terrain_at(entry),
         "demo.terrain.old-man-willow-entry-available"
     );
-    game.player.position = Position { x: 114, y: 30 };
+    game.player.position = Position { x: 124, y: 35 };
     assert_eq!(
         game.accept_task("demo.town-facility.outpost-white-horse", task_id),
         Err("task-locked")
@@ -1784,7 +1784,7 @@ fn old_man_willow_unlocks_after_crows_nest_and_rewards_an_elemental_ring() {
         game.terrain_at(entry),
         "demo.terrain.old-man-willow-entry-completed"
     );
-    game.player.position = Position { x: 114, y: 30 };
+    game.player.position = Position { x: 124, y: 35 };
     let before_draws = game.rng_draw_counter();
     dispatch_next(
         &mut game,
@@ -1824,12 +1824,12 @@ fn vapor_quest_unlocks_after_old_man_willow_clears_the_cellar_and_rewards_detect
     let mut game =
         Game::new_with_build(150, "demo.build.warrior").expect("Warrens journey should create");
     let task_id = "demo.task.vapor-quest";
-    let entry = Position { x: 113, y: 30 };
+    let entry = Position { x: 127, y: 41 };
     assert_eq!(
         game.terrain_at(entry),
         "demo.terrain.vapor-quest-entry-available"
     );
-    game.player.position = Position { x: 114, y: 30 };
+    game.player.position = Position { x: 124, y: 35 };
     assert_eq!(
         game.accept_task("demo.town-facility.outpost-white-horse", task_id),
         Err("task-locked")
@@ -1881,7 +1881,7 @@ fn vapor_quest_unlocks_after_old_man_willow_clears_the_cellar_and_rewards_detect
         game.terrain_at(entry),
         "demo.terrain.vapor-quest-entry-completed"
     );
-    game.player.position = Position { x: 114, y: 30 };
+    game.player.position = Position { x: 124, y: 35 };
     dispatch_next(
         &mut game,
         GameCommand::ClaimTaskReward {
@@ -1920,12 +1920,12 @@ fn old_castle_unlocks_after_vapor_quest_and_rewards_the_warrior_artifact_pool() 
     let mut game =
         Game::new_with_build(271, "demo.build.warrior").expect("Warrens journey should create");
     let task_id = "demo.task.old-castle";
-    let entry = Position { x: 116, y: 30 };
+    let entry = Position { x: 31, y: 6 };
     assert_eq!(
         game.terrain_at(entry),
         "demo.terrain.old-castle-entry-available"
     );
-    game.player.position = Position { x: 114, y: 30 };
+    game.player.position = Position { x: 124, y: 35 };
     assert_eq!(
         game.accept_task("demo.town-facility.outpost-white-horse", task_id),
         Err("task-locked")
@@ -1952,9 +1952,16 @@ fn old_castle_unlocks_after_vapor_quest_and_rewards_the_warrior_artifact_pool() 
     assert_eq!(game.task_states[task_id].status, TaskStatusKindDto::Taken);
     assert_eq!(game.terrain_at(entry), "demo.terrain.old-castle-entry");
 
+    game.player.position = Position { x: 66, y: 33 };
+    game.scroll_wilderness_for_player_entry(Position { x: 65, y: 33 }, &mut Vec::new())
+        .unwrap();
+    let entry = Position { x: 97, y: 6 };
+    assert_eq!(game.wilderness_view_offset, Position { x: -1, y: 0 });
+    assert_eq!(game.terrain_at(entry), "demo.terrain.old-castle-entry");
     game.player.position = entry;
     dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(game.current_floor_id, "demo.floor.old-castle");
+    game = Game::from_save(game.to_save()).unwrap();
     assert!(game.entities.len() >= 75);
     game.entities.clear();
     dispatch_next(&mut game, GameCommand::Wait);
@@ -1965,7 +1972,21 @@ fn old_castle_unlocks_after_vapor_quest_and_rewards_the_warrior_artifact_pool() 
 
     game.player.position = Position { x: 31, y: 1 };
     dispatch_next(&mut game, GameCommand::TraverseStairs);
-    game.player.position = Position { x: 114, y: 30 };
+    assert_eq!(game.player.position, entry);
+    assert_eq!(game.wilderness_view_offset, Position { x: -1, y: 0 });
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.old-castle-entry-completed"
+    );
+    game.player.position = Position { x: 131, y: 33 };
+    game.scroll_wilderness_for_player_entry(Position { x: 132, y: 33 }, &mut Vec::new())
+        .unwrap();
+    assert_eq!(game.wilderness_view_offset, Position::default());
+    assert_eq!(
+        game.terrain_at(Position { x: 31, y: 6 }),
+        "demo.terrain.old-castle-entry-completed"
+    );
+    game.player.position = Position { x: 124, y: 35 };
     dispatch_next(
         &mut game,
         GameCommand::ClaimTaskReward {
@@ -1995,7 +2016,7 @@ fn old_castle_unlocks_after_vapor_quest_and_rewards_the_warrior_artifact_pool() 
 fn old_castle_reward_is_forced_even_when_the_artifact_was_generated_before_claim() {
     let mut game =
         Game::new_with_build(271, "demo.build.warrior").expect("Warrens journey should create");
-    game.player.position = Position { x: 114, y: 30 };
+    game.player.position = Position { x: 124, y: 35 };
     game.task_states.insert(
         "demo.task.old-castle".to_owned(),
         TaskState {
@@ -2029,7 +2050,7 @@ fn old_castle_reward_is_forced_even_when_the_artifact_was_generated_before_claim
 #[test]
 fn thieves_hideout_departure_closes_the_entry_and_keeps_reward_and_failure_distinct() {
     let mut base = Game::new_with_build(43, "demo.build.warrior").expect("task character");
-    base.player.position = Position { x: 77, y: 30 };
+    base.player.position = Position { x: 98, y: 23 };
     dispatch_next(
         &mut base,
         GameCommand::AcceptTask {
@@ -2037,7 +2058,7 @@ fn thieves_hideout_departure_closes_the_entry_and_keeps_reward_and_failure_disti
             task_id: "demo.task.thieves-hideout".to_owned(),
         },
     );
-    base.player.position = Position { x: 81, y: 26 };
+    base.player.position = Position { x: 125, y: 28 };
     dispatch_next(&mut base, GameCommand::TraverseStairs);
     assert_eq!(base.current_floor_id, "demo.floor.thieves-hideout");
     for (cleared, expected_status, entry_terrain) in [
@@ -2079,7 +2100,7 @@ fn thieves_hideout_departure_closes_the_entry_and_keeps_reward_and_failure_disti
             "cleared={cleared}"
         );
         assert_eq!(
-            game.terrain_at(Position { x: 81, y: 26 }),
+            game.terrain_at(Position { x: 125, y: 28 }),
             entry_terrain,
             "cleared={cleared}"
         );
@@ -2104,7 +2125,7 @@ fn thieves_hideout_departure_closes_the_entry_and_keeps_reward_and_failure_disti
 #[test]
 fn count_task_rewards_complete_only_on_claim_with_the_expected_inventory_item() {
     let mut base = Game::new_with_build(45, "demo.build.warrior").expect("task reward character");
-    base.player.position = Position { x: 77, y: 30 };
+    base.player.position = Position { x: 98, y: 23 };
     for (task_id, required, kind_id) in [
         ("demo.task.thieves-hideout", 1, "demo.item.broad-sword"),
         ("demo.task.pest-control", 8, "demo.item.fur-cloak"),
@@ -2192,7 +2213,7 @@ fn generate_pest_control_floor(game: &mut Game) -> FloorState {
 fn pest_control_unlocks_only_after_the_thieves_reward_is_claimed() {
     let mut game =
         Game::new_with_build(50, "demo.build.warrior").expect("Warrens journey should create");
-    game.player.position = Position { x: 77, y: 30 };
+    game.player.position = Position { x: 98, y: 23 };
     let task_id = "demo.task.pest-control";
     assert_eq!(
         game.snapshot()
@@ -2238,7 +2259,7 @@ fn pest_control_unlocks_only_after_the_thieves_reward_is_claimed() {
 fn count_accepts_pest_control_without_advancing_rng() {
     let mut game =
         Game::new_with_build(51, "demo.build.warrior").expect("Warrens journey should create");
-    game.player.position = Position { x: 77, y: 30 };
+    game.player.position = Position { x: 98, y: 23 };
     game.task_states.insert(
         "demo.task.thieves-hideout".to_owned(),
         TaskState {
@@ -2402,7 +2423,7 @@ fn leaving_pest_control_incomplete_fails_and_discards_the_blocked_floor() {
 fn count_follow_up_tasks_unlock_in_the_original_order() {
     let mut game =
         Game::new_with_build(56, "demo.build.warrior").expect("Warrens journey should create");
-    game.player.position = Position { x: 77, y: 30 };
+    game.player.position = Position { x: 98, y: 23 };
     let completed = |required| TaskState {
         status: TaskStatusKindDto::Completed,
         stage_index: 0,
@@ -2454,7 +2475,7 @@ fn count_follow_up_tasks_unlock_in_the_original_order() {
 fn royal_crypt_places_five_archliches_on_its_level_seventy_fixed_floor() {
     let mut game =
         Game::new_with_build(57, "demo.build.warrior").expect("Warrens journey should create");
-    game.player.position = Position { x: 77, y: 30 };
+    game.player.position = Position { x: 98, y: 23 };
     game.task_states.insert(
         "demo.task.haunted-house".to_owned(),
         TaskState {
@@ -2473,7 +2494,7 @@ fn royal_crypt_places_five_archliches_on_its_level_seventy_fixed_floor() {
             task_id: "demo.task.royal-crypt".to_owned(),
         },
     );
-    game.player.position = Position { x: 79, y: 26 };
+    game.player.position = Position { x: 120, y: 16 };
     dispatch_next(&mut game, GameCommand::TraverseStairs);
 
     assert_eq!(game.current_floor_id, "demo.floor.outpost-royal-crypt");

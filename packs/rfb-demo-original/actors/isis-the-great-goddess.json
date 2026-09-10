@@ -122,7 +122,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-disenchant-17-500-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.bolt-mana-1d308-50",
@@ -130,7 +131,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.breath-inertia-17-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.animate-dead",
@@ -189,6 +191,8 @@
     "rfb.status.fear"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "egyptian",
     "kin-glyph-112",
     "legacy-import",

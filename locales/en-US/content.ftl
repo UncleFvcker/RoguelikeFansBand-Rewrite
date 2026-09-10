@@ -1498,6 +1498,10 @@ terrain-demo-surface-woodland-description = Sparse woodland surrounding the outp
 terrain-demo-surface-swamp-name = swamp
 terrain-demo-surface-swamp-description = Wet earth and shallow water mingle across the wilderness.
 terrain-demo-surface-waste-name = dirt
+terrain-demo-shallow-waste-name = shallow toxic waste
+terrain-demo-shallow-waste-description = Toxic acid that can be waded through, burning and poisoning those exposed.
+terrain-demo-deep-waste-name = deep toxic waste
+terrain-demo-deep-waste-description = Deep toxic waste cannot hold items. Its rising fumes also affect flying travelers.
 terrain-demo-surface-waste-description = Bare wilderness earth lies exposed to the wind.
 terrain-demo-surface-lava-shallow-name = shallow lava
 terrain-demo-surface-lava-shallow-description = A thin lava flow covers the searing ground.
@@ -3724,8 +3728,8 @@ task-demo-royal-crypt-name = Royal Crypt (Outpost)
 task-demo-royal-crypt-description = Destroy five Archliches in the royal crypt.
 terrain-demo-outpost-sewer-entry-name = sewer entrance
 terrain-demo-outpost-sewer-entry-description = A passage descends into Outpost's sewer.
-terrain-demo-outpost-sewer-entry-available-name = open sewer entrance
-terrain-demo-outpost-sewer-entry-available-description = The Count has opened this passage for the sewer task.
+terrain-demo-outpost-sewer-entry-available-name = Unopened sewer entrance
+terrain-demo-outpost-sewer-entry-available-description = The passage beneath this floor opens after accepting the task from the Count.
 terrain-demo-outpost-sewer-entry-completed-name = sealed sewer entrance
 terrain-demo-outpost-sewer-entry-completed-description = The cleared sewer has been sealed.
 terrain-demo-outpost-sewer-entry-failed-name = barred sewer entrance
@@ -3734,8 +3738,8 @@ terrain-demo-outpost-sewer-entry-abandoned-name = abandoned sewer entrance
 terrain-demo-outpost-sewer-entry-abandoned-description = You abandoned the sewer task.
 terrain-demo-outpost-haunted-house-entry-name = haunted-house entrance
 terrain-demo-outpost-haunted-house-entry-description = A cold doorway leads into the haunted house.
-terrain-demo-outpost-haunted-house-entry-available-name = open haunted-house entrance
-terrain-demo-outpost-haunted-house-entry-available-description = The Count has opened the haunted house for cleansing.
+terrain-demo-outpost-haunted-house-entry-available-name = Unopened haunted-house entrance
+terrain-demo-outpost-haunted-house-entry-available-description = Stone seals the haunted house until you accept the task from the Count.
 terrain-demo-outpost-haunted-house-entry-completed-name = quiet haunted-house entrance
 terrain-demo-outpost-haunted-house-entry-completed-description = The house is quiet after your victory.
 terrain-demo-outpost-haunted-house-entry-failed-name = barred haunted-house entrance
@@ -3744,8 +3748,8 @@ terrain-demo-outpost-haunted-house-entry-abandoned-name = abandoned haunted-hous
 terrain-demo-outpost-haunted-house-entry-abandoned-description = You abandoned the haunted-house task.
 terrain-demo-outpost-royal-crypt-entry-name = royal-crypt entrance
 terrain-demo-outpost-royal-crypt-entry-description = Ancient stairs descend into the royal crypt.
-terrain-demo-outpost-royal-crypt-entry-available-name = open royal-crypt entrance
-terrain-demo-outpost-royal-crypt-entry-available-description = The Count has opened the royal crypt.
+terrain-demo-outpost-royal-crypt-entry-available-name = Unopened royal-crypt entrance
+terrain-demo-outpost-royal-crypt-entry-available-description = Stone seals the royal crypt until you accept the task from the Count.
 terrain-demo-outpost-royal-crypt-entry-completed-name = sealed royal-crypt entrance
 terrain-demo-outpost-royal-crypt-entry-completed-description = The royal crypt has been sealed again.
 terrain-demo-outpost-royal-crypt-entry-failed-name = barred royal-crypt entrance
@@ -9141,3 +9145,32 @@ device-activation-e5-scare-monster-name = scare monster
 device-activation-e5-polymorph-name = polymorph
 device-activation-e5-starlite-name = starlite
 # /Random artifact activations
+
+terrain-demo-dark-pit-name = Dark Pit
+terrain-demo-dark-pit-description = A dark pit that can be flown over. Sight and projectiles pass through it.
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, a_info 129; Chinese name unresolved.
+item-demo-razorback-name = 'Razorback'
+item-demo-razorback-description = A massive suit of multicolored dragon scale mail, pulsing with untamed lightning.
+item-activation-demo-razorback-star-ball-name = Star Ball
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, d_info 13.
+floor-demo-rlyeh-depth-name = R'lyeh Depth { $depth }
+terrain-demo-rlyeh-entrance-name = R'lyeh Entrance
+terrain-demo-rlyeh-entrance-description = The road to R'lyeh.
+
+floor-demo-anti-magic-cave-depth-name = Anti-magic cave depth { $depth }
+terrain-demo-anti-magic-cave-entrance-name = Anti-magic cave entrance
+terrain-demo-anti-magic-cave-entrance-description = An entrance to Anti-magic cave.
+
+floor-demo-anti-melee-cave-depth-name = Anti-melee cave depth { $depth }
+terrain-demo-anti-melee-cave-entrance-name = Anti-melee cave entrance
+terrain-demo-anti-melee-cave-entrance-description = An entrance to Anti-melee cave.
+
+floor-demo-dark-cave-depth-name = Dark cave depth { $depth }
+terrain-demo-dark-cave-entrance-name = Dark cave entrance
+terrain-demo-dark-cave-entrance-description = An entrance to Dark cave.
+
+floor-demo-disaster-area-depth-name = Disaster area depth { $depth }
+terrain-demo-disaster-area-entrance-name = Disaster area entrance
+terrain-demo-disaster-area-entrance-description = An entrance to Disaster area.

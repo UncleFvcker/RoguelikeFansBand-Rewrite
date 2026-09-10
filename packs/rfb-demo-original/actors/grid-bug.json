@@ -31,5 +31,5 @@
     "randomMovementPercent": 25
   },
   "movement": { "modes": ["fly"] },
-  "tags": ["animal", "insect", "warrens"]
+  "tags": ["stupid", "animal", "insect", "warrens"]
 }

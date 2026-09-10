@@ -72,7 +72,8 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-acid-20-900-r2",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 5
@@ -92,6 +93,8 @@
   "role": "monster",
   "speed": 100,
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "empty-mind",
     "kin-glyph-119",

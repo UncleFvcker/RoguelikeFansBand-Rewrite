@@ -125,11 +125,13 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-electricity-20-900-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-storm-13-250-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.summon-legacy-import-l82-1d3",
@@ -196,6 +198,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "egyptian",
     "good",
     "kin-glyph-113",

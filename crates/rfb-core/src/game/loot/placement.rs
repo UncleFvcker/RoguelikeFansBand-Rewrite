@@ -10,7 +10,7 @@ impl Game {
                 .content
                 .terrain(&self.terrain[index])
                 .expect("validated terrain");
-            (terrain.walkable || terrain.tags.iter().any(|tag| tag == "item-drop"))
+            terrain.allows_items()
                 && !terrain.tags.iter().any(|tag| {
                     matches!(
                         tag.as_str(),

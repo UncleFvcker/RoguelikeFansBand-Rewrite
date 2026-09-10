@@ -221,6 +221,7 @@ impl Game {
                         .modes
                         .contains(&ActorMovementMode::Aquatic)
                     && actor_answers_summons(definition)
+                    && self.dungeon_allows_monster(&self.current_floor_id, definition, false)
                     && !(in_wilderness
                         && definition.tags.iter().any(|tag| tag == "evil")
                         && !definition.tags.iter().any(|tag| tag == "good"))
@@ -3400,6 +3401,7 @@ impl Game {
                         && (category == "guardian"
                             || !definition.tags.iter().any(|tag| tag == "guardian"))
                         && actor_answers_summons(definition)
+                        && self.dungeon_allows_monster(&self.current_floor_id, definition, false)
                         && definition.allocation.as_ref().is_none_or(|allocation| {
                             monster_ecology::actor_allocation_matches_task(
                                 allocation,
@@ -4157,7 +4159,7 @@ impl Game {
         let mut landing = origin;
         let mut traversed = Vec::new();
         for position in path {
-            if self.index(position).is_none() || !self.is_walkable(position) {
+            if !self.projectile_can_cross(position) {
                 impact = position;
                 break;
             }

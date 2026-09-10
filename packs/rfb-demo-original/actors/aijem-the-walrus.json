@@ -139,11 +139,13 @@
       },
       {
         "abilityId": "rfb-legacy.ability.ball-shards-1d1-499",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.chicken-1d1-199",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.traps",
@@ -194,6 +196,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "kin-glyph-113",
     "legacy-import",

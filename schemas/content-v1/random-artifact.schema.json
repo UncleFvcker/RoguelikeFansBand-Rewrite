@@ -328,6 +328,9 @@
         {
           "additionalProperties": false,
           "properties": {
+            "ballWhenNotBeam": {
+              "type": "boolean"
+            },
             "beamChanceModifier": {
               "default": 0,
               "format": "int8",
@@ -2417,6 +2420,15 @@
                 "psi": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
+                "psi-drain": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "psi-storm": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "psy-spear": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
                 "rock": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
@@ -2735,6 +2747,95 @@
           "required": [
             "type",
             "lifeForce"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "clear-mind",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "precognition",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "psychometry",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "mind-armor",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "adrenaline",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "mass": {
+              "default": false,
+              "type": "boolean"
+            },
+            "power": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "domination",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "power"
           ],
           "type": "object"
         },
@@ -3354,6 +3455,32 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "charge-through",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "smash-trap",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "probe-monsters",
               "type": "string"
             }
@@ -3688,7 +3815,10 @@
         "curse",
         "meteor",
         "rocket",
-        "telekinesis"
+        "telekinesis",
+        "psi-drain",
+        "psi-storm",
+        "psy-spear"
       ],
       "type": "string"
     },
@@ -5011,6 +5141,15 @@
                 "psi": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
+                "psi-drain": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "psi-storm": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "psy-spear": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
                 "rock": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
@@ -5838,6 +5977,32 @@
           "properties": {
             "type": {
               "const": "self-knowledge",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "list-unique-monsters",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "recharge-carried-devices",
               "type": "string"
             }
           },

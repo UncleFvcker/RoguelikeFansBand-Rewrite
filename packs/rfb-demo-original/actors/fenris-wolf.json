@@ -107,15 +107,18 @@
     "abilities": [
       {
         "abilityId": "rfb-legacy.ability.breath-dark-17-400-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-poison-17-600-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.breath-cold-20-900-r3",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       }
     ],
     "frequencyPercent": 10
@@ -139,6 +142,8 @@
     "rfb.status.confusion"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "animal",
     "evil",
     "hound",

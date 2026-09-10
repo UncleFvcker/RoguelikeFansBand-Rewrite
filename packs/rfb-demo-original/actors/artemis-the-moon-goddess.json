@@ -53,7 +53,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.bolt-physical-12d12",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.heal-258",
@@ -91,6 +92,8 @@
     "rfb.status.sleep"
   ],
   "tags": [
+    "attack-spell",
+    "innate-spell",
     "aura-fear",
     "kin-glyph-80",
     "legacy-import",

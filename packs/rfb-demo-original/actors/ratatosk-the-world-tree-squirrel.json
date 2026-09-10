@@ -109,7 +109,8 @@
       },
       {
         "abilityId": "rfb-legacy.ability.shriek",
-        "weight": 1
+        "weight": 1,
+        "innate": true
       },
       {
         "abilityId": "rfb-legacy.ability.summon-legacy-import-l37-1d3-1",
@@ -139,6 +140,7 @@
     "rfb.status.confusion"
   ],
   "tags": [
+    "innate-spell",
     "animal",
     "evil",
     "kin-glyph-114",

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.shallow-waste",
+  "nameKey": "terrain-demo-shallow-waste-name",
+  "descriptionKey": "terrain-demo-shallow-waste-description",
+  "glyph": "~",
+  "walkable": true,
+  "blocksSight": false,
+  "movementModes": ["fly"],
+  "tags": ["acid", "shallow", "item-drop"]
+}

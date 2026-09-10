@@ -4,8 +4,8 @@
   "id": "demo.terrain.trouble-at-home-entry-completed",
   "nameKey": "terrain-demo-trouble-at-home-entry-completed-name",
   "descriptionKey": "terrain-demo-trouble-at-home-entry-completed-description",
-  "glyph": "·",
+  "glyph": "#",
   "walkable": true,
   "blocksSight": false,
-  "tags": ["building", "outdoor", "surface", "task-entry-completed"]
+  "tags": ["building", "outdoor", "surface", "task-entry-completed", "stone"]
 }
