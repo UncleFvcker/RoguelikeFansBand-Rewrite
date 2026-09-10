@@ -3,6 +3,37 @@
 use super::{support::*, *};
 use crate::game::loot::GeneratedItemDraft;
 
+#[test]
+#[ignore = "prepares scrolls, not generated rewards, for standalone B6 desktop acceptance"]
+fn export_acquirement_desktop_save() {
+    // Start from the desktop's actual new-game export so its museum binding,
+    // identity and RNG remain intact. Only prepare consumables and clear actors.
+    let input = std::env::var("B6_DESKTOP_INPUT").expect("path to the new-game desktop export");
+    let (header, payload) = rfb_save::decode(&std::fs::read(input).unwrap()).unwrap();
+    assert!(header.museum_binding.is_some());
+    let mut game = Game::from_save(payload).unwrap();
+    let rng = game.rng.clone();
+    clear_monsters(&mut game);
+    give_inventory_item(&mut game, "b6.acquirement", "demo.item.acquirement-scroll");
+    give_inventory_item(&mut game, "b6.identify", "demo.item.revelation-scroll");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "b6.identify")
+        .unwrap()
+        .quantity = 3;
+    assert_eq!(game.rng, rng);
+    let game = Game::from_save(game.to_save()).unwrap();
+    let bytes = rfb_save::encode(&header, &game.to_save()).unwrap();
+    let (_, payload) = rfb_save::decode(&bytes).unwrap();
+    assert_eq!(
+        Game::from_save(payload).unwrap().state_hash(),
+        game.state_hash()
+    );
+    let directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../test-results");
+    std::fs::create_dir_all(&directory).unwrap();
+    std::fs::write(directory.join("b6-acquirement.rfbsave"), bytes).unwrap();
+}
+
 fn context(game: &Game) -> LootContext {
     LootContext {
         table_id: "test.loot-table.acquirement".into(),

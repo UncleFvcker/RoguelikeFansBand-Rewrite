@@ -1,4 +1,5 @@
 {
+  "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits",
   "allocationRowCount": 361,
   "explicitItems": [
     {
@@ -10202,9 +10203,7 @@
   ],
   "nameFormatSource": "src/flavor.c::object_desc (aware, no flavor; consumable suffixes)",
   "nameSource": "src/kind_name_zh.inc",
-  "remainingRules": [
-    "B6 integration acceptance"
-  ],
+  "remainingRules": [],
   "schemaVersion": 1,
   "source": "lib/edit/k_info.txt",
   "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",

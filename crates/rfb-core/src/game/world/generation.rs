@@ -4917,6 +4917,15 @@ mod tests {
         let pack_root =
             std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
         let mut artifact = rfb_content::compile_pack_dir(&pack_root).unwrap();
+        // No formal actor currently uses a carried table. Exercise its real
+        // floor-generation/death path without claiming a natural content entry.
+        artifact
+            .content
+            .actors
+            .iter_mut()
+            .find(|actor| actor.id == "demo.actor.small-kobold")
+            .unwrap()
+            .carried_loot_table_id = Some("demo.loot-table.base-items".into());
         artifact.content.vaults.push(VaultDefinition {
             schema: rfb_content::VAULT_SCHEMA.to_owned(),
             format_version: 1,
@@ -4964,12 +4973,101 @@ mod tests {
         definition.layout = None;
         definition.generation_budget = None;
         definition.vault_id = Some("test.vault.fetch".to_owned());
-        let floor = game.generate_procedural_floor(&definition, None).unwrap();
+        definition.loot_table_id = None;
+        definition.loot_spawns.clear();
+        definition.guaranteed_items.clear();
+        game.dungeon_states
+            .get_mut("demo.dungeon.warrens")
+            .unwrap()
+            .next_instance_ordinal = 1;
+        let floor = (0..64)
+            .find_map(|seed| {
+                game.rng = RfbRng::seeded(seed);
+                let floor = game
+                    .generate_procedural_floor(
+                        &definition,
+                        Some("demo.dungeon.warrens.instance.1".into()),
+                    )
+                    .unwrap();
+                (floor
+                    .items
+                    .iter()
+                    .any(|item| matches!(item.location, ItemLocation::CarriedBy { .. }))
+                    && floor
+                        .items
+                        .iter()
+                        .any(|item| matches!(item.location, ItemLocation::Ground(_))))
+                .then_some(floor)
+            })
+            .expect("both ordinary callers must reach the shared pool");
         assert_eq!(floor.vault_cells.iter().filter(|cell| **cell).count(), 6);
         let restored =
             crate::save::floor_from_save(crate::save::floor_to_save(&floor), &game.content)
                 .unwrap();
         assert_eq!(restored.vault_cells, floor.vault_cells);
+        for item in &floor.items {
+            assert_eq!(
+                restored.items.iter().find(|saved| saved.id == item.id),
+                Some(item)
+            );
+        }
+        let carried = floor
+            .items
+            .iter()
+            .find(|item| matches!(item.location, ItemLocation::CarriedBy { .. }))
+            .unwrap()
+            .clone();
+        let vault_item = floor
+            .items
+            .iter()
+            .find(|item| matches!(item.location, ItemLocation::Ground(_)))
+            .unwrap()
+            .clone();
+        let ItemLocation::CarriedBy { actor_id } = &carried.location else {
+            unreachable!()
+        };
+        game.activate_floor(floor, Vec::new());
+        let index = game
+            .entities
+            .iter()
+            .position(|actor| &actor.id == actor_id)
+            .unwrap();
+        let position = game.entities[index].position;
+        game.resolve_actor_death(
+            index,
+            DomainEvent::Waited,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|item| item.id == carried.id)
+                .unwrap()
+                .location,
+            ItemLocation::Ground(position)
+        );
+        for id in [&carried.id, &vault_item.id] {
+            let item = game.items.iter().find(|item| &item.id == id).unwrap();
+            let ItemLocation::Ground(position) = item.location else {
+                unreachable!()
+            };
+            game.player.position = position;
+            game.pick_up_item_at_player(Some(id)).unwrap();
+            assert_eq!(
+                game.items
+                    .iter()
+                    .find(|item| &item.id == id)
+                    .unwrap()
+                    .location,
+                ItemLocation::Inventory
+            );
+        }
+        game.reveal_current_visibility();
+        let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
     }
 
     #[test]

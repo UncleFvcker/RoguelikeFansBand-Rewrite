@@ -222,10 +222,10 @@ Bad Luck 在每次固定神器尝试前单独降低参考层级，并在 Tomte �
 真实 Warrior 接收 Mage/Dwarf 主题装备后装备与保存恢复，真实 Tomte 获得 Bad Luck 后比较帽子生成、速度消费者和恢复；
 空主题池及参考层级/RNG 顺序另做函数级验证。没有把伪造 Mauler/Bard/Monster Ring 身份的测试当成入口验收。
 
-**E8.7 尚不等于全部当前入口完成源端对齐。** 按 [E8.1 入口范围](contract-v312-real-equipment-value.md)，
-完整底材分配仍是独立缺口：Acquirement 的 Archer/Sniper 弓、Cavalry 骑乘武器、High Mage 装置/领域书偏好，
-装备兼容/最爱武器筛选、发现书本计数、失败重试及完整主题底材池尚待闭合；不能归入“职业未开放”。
-具体依赖、B0–B6 实施批次与验收见[完整底材分配与 Acquirement 计划](base-allocation-acquirement-plan.md)。
+E8.7 留下的当前可玩底材分配缺口已由 B0–B6 完成：Acquirement 的 Archer/Sniper 弓、Cavalry 骑乘武器、
+High Mage 装置/领域书偏好，装备兼容/最爱武器筛选、发现书本计数、失败重试及当前导入池的主题底材分配，
+均已通过规则、消费者和保存验收。入口矩阵、standalone Acquirement 及对象表示限制见
+[完整底材分配与 Acquirement 计划](base-allocation-acquirement-plan.md#b6接入验收审计与交付)。
 其余待开放条件包括 Berserker、Sexy/Aphrodite、神器卷轴职业 bias/德行、Inspired Smithing 重铸、
 Draconian Metamorphosis 和固定神器身份分支。正式包已有 Dr Jones 鞭的普通行为，Archaeologist 奖励分支未开放；
 其他九件身份敏感固定神器和固定神器竖琴尚未导入。Monster Ring 的类别加权条件还比较了分配表未使用的
@@ -257,4 +257,5 @@ TypeScript 与对应 UI 测试。按 2026-09-10 的用户决定，后续生成�
 前五项及全部已开放构筑通过后，可标记“当前可玩范围共享生成契约完成”；
 尚未开放构筑对应契约继续列明依赖，不能把全范围 `runtimeParityComplete` 提前改成 `true`。
 
-下一步处理上文明确列出的完整底材分配缺口；未开放身份随真实职业/种族入口接入。E8.8 的桌面里程碑另行验收。
+下一步为 E8.8 其余桌面里程碑；B6 已完成的 Acquirement 桌面流程无需重复。未开放身份随真实职业/种族入口接入，
+未导入 source kind 与 B1 书本/普通堆叠表示限制继续单列，不计作全源生成对齐。

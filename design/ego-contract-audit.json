@@ -21,7 +21,8 @@
     "demo.loot-table.priest",
     "demo.loot-table.rogue",
     "demo.loot-table.samurai",
-    "demo.loot-table.warrior"
+    "demo.loot-table.warrior",
+    "demo.loot-table.warrior-shoot"
   ],
   "buildApplicability": {
     "entrySource": "web/src/session-shell.ts PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
@@ -97,11 +98,11 @@
         "start": 80,
         "end": 295,
         "status": "implemented",
-        "entry": "all playable builds; 12 formal monster themes",
+        "entry": "all playable builds; 13 formal monster themes",
         "change": "filter ring/amulet/armor Ego candidates before weighting; empty themed pool uses unfiltered source pool",
         "consumer": "ego.rs; loot.rs; ego/jewelry.rs; equipment/activation/save",
         "tests": "game::ego::applicability::; game::ego::jewelry::generation_tests::",
-        "prerequisite": "Full themed base allocation remains a separate contract"
+        "prerequisite": null
       },
       {
         "id": "bad-luck-randart",
@@ -181,7 +182,7 @@
         "start": 2172,
         "end": 2210,
         "status": "implemented",
-        "entry": "12 formal monster themes",
+        "entry": "13 formal monster themes",
         "change": "set initial random artifact bias from drop theme",
         "consumer": "random_artifact.rs; random_artifact/scheduling.rs",
         "tests": "game::random_artifact::",
@@ -360,60 +361,60 @@
         "file": "src/object2.c",
         "start": 2415,
         "end": 2428,
-        "status": "pending-base-allocation",
-        "entry": "Acquirement on open builds",
-        "change": "Archer rejects melee; other builds use source favorite weapon predicate",
-        "consumer": "loot.rs tailored base selection",
-        "tests": null,
-        "prerequisite": "complete tailored allocation contract, not a fake identity switch"
+        "status": "implemented-current-builds",
+        "entry": "Acquirement on six open classes",
+        "change": "Archer rejects melee; Sniper retains it; Cavalry uses source riding weapon flags",
+        "consumer": "loot/allocation.rs; mounted combat and projectile consumers",
+        "tests": "game::loot::allocation::tests::tailored_uses_playable_class_equipment_realms_and_birth_race; game::tests::items::b4_tailored_launchers_equip_shoot_and_restore_for_archer_and_sniper; game::tests::items::b4_tailored_lance_keeps_riding_bonus_in_actual_mounted_combat",
+        "prerequisite": "unavailable classes require real entry and favorite-weapon consumer"
       },
       {
         "id": "tailored-device-class",
         "file": "src/object2.c",
         "start": 2429,
         "end": 2453,
-        "status": "pending-base-allocation",
-        "entry": "High Mage open; other listed device classes unavailable",
-        "change": "device class selection; Monster pseudo class path",
-        "consumer": "device candidate pool and actual item use",
-        "tests": null,
-        "prerequisite": "full base allocator and book/device pool; exact pseudo-class source semantics"
+        "status": "implemented-current-builds",
+        "entry": "High Mage open; other source device classes unavailable",
+        "change": "High Mage device preference and eligible source device kinds",
+        "consumer": "loot/allocation.rs; device generation and item use",
+        "tests": "game::tests::items::b4_tailored_high_mage_device_is_usable_and_restores_its_charges",
+        "prerequisite": "other device classes and Monster pseudo class await real entries"
       },
       {
         "id": "tailored-compatible-kinds",
         "file": "src/object2.c",
         "start": 2455,
         "end": 2570,
-        "status": "partial-base-allocation",
-        "entry": "Tomte knit-cap preference implemented; general Acquirement is open",
-        "change": "equipment slots/favorite weapons; light armor, shield, monster jewelry and book found-count predicates",
-        "consumer": "loot.rs; inventory.rs; class/race consumers",
-        "tests": "existing Tomte tailored tests; no full source allocator acceptance",
-        "prerequisite": "source-compatible allocation, found-book counters and remaining class predicates"
+        "status": "implemented-current-builds",
+        "entry": "six open classes; real body slots; birth Tomte knit cap",
+        "change": "slot/favorite/book filters; full materialized glove flags and pval reject caster encumbrance",
+        "consumer": "loot/allocation.rs; mod.rs slot helper; player_abilities.rs; inventory.rs",
+        "tests": "game::loot::allocation::tests::; game::tests::items::tomte_tailored_acquirement_filters_headgear_by_birth_race_only; game::tests::items::b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
+        "prerequisite": "unavailable identities/body forms remain separate; physical books retain the B1 one-instance representation"
       },
       {
         "id": "great-book-count",
         "file": "src/object2.c",
         "start": 2634,
         "end": 2645,
-        "status": "pending-base-allocation",
-        "entry": "source good/great book selection",
-        "change": "Rage Mage count limit 8, others 2",
-        "consumer": "kind_is_great",
-        "tests": null,
-        "prerequisite": "found-book counters; Rage Mage separately unavailable"
+        "status": "implemented-current-builds",
+        "entry": "source Great book selection",
+        "change": "current classes reject advanced books after two discoveries",
+        "consumer": "loot/allocation.rs; item_knowledge.rs",
+        "tests": "game::loot::allocation::tests::good_and_great_distinguish_damaged_bases_ammo_consumables_and_books; game::tests::book_discovery::",
+        "prerequisite": "Rage Mage limit 8 awaits real class; book stacking outside B1 representation"
       },
       {
         "id": "good-book-count",
         "file": "src/object2.c",
         "start": 2740,
         "end": 2750,
-        "status": "pending-base-allocation",
-        "entry": "source good/great book selection",
-        "change": "Rage Mage count limit 8, others 2",
-        "consumer": "kind_is_good",
-        "tests": null,
-        "prerequisite": "found-book counters; Rage Mage separately unavailable"
+        "status": "implemented-current-builds",
+        "entry": "source Good book selection",
+        "change": "current classes reject advanced books after two discoveries",
+        "consumer": "loot/allocation.rs; item_knowledge.rs",
+        "tests": "game::loot::allocation::tests::good_and_great_distinguish_damaged_bases_ammo_consumables_and_books; game::tests::book_discovery::",
+        "prerequisite": "Rage Mage limit 8 awaits real class; book stacking outside B1 representation"
       },
       {
         "id": "ring-allocation-weight",
@@ -432,48 +433,48 @@
         "file": "src/object2.c",
         "start": 3076,
         "end": 3082,
-        "status": "pending-base-allocation",
-        "entry": "body slot templates; future Vortex indirectly participates",
-        "change": "halve category weight when equip_has_slot_type is false",
-        "consumer": "source kind allocator and equipment template",
-        "tests": null,
-        "prerequisite": "full base allocator; Vortex ANY slots must use exact helper semantics"
+        "status": "implemented-current-builds",
+        "entry": "real body slot templates",
+        "change": "halve category weight when equip_has_slot_type is false; ANY excludes bow for this helper",
+        "consumer": "loot/allocation.rs; mod.rs item_can_occupy_slot_type",
+        "tests": "game::loot::allocation::tests::category_weights_use_great_precedence_and_body_slots_not_equipped_items",
+        "prerequisite": "Vortex real evolving body/innate consumers remain unavailable"
       },
       {
         "id": "needs-book",
         "file": "src/object2.c",
         "start": 3441,
         "end": 3493,
-        "status": "pending-base-allocation",
-        "entry": "High Mage/Paladin realms open; other listed classes unavailable",
-        "change": "realm/book-found counters decide whether to favor books",
-        "consumer": "tailored allocation",
-        "tests": null,
-        "prerequisite": "source found counters; do not substitute current inventory quantity"
+        "status": "implemented-current-builds",
+        "entry": "High Mage/Paladin realms",
+        "change": "realm and persistent discoveries decide book preference independently of inventory quantity",
+        "consumer": "loot/allocation.rs; item_knowledge.rs; study/cast",
+        "tests": "game::loot::allocation::tests::tailored_preference_draws_follow_class_then_book_then_device; game::tests::items::b4_tailored_death_books_are_counted_studied_cast_and_restored; game::tests::book_discovery::; game::tests::town::book_discovery_shop_groups_and_repurchase_do_not_count_as_found",
+        "prerequisite": "other source classes require real realm/study entries"
       },
       {
         "id": "base-theme",
         "file": "src/object2.c",
         "start": 3500,
         "end": 3558,
-        "status": "partial-base-allocation",
-        "entry": "12 formal enum themes referencing one source pool",
-        "change": "theme takes precedence over tailored; source predicates choose full base pools",
-        "consumer": "formal lootTables; loot/allocation.rs; loot.rs",
-        "tests": "shared static candidate domains and theme Ego integration",
-        "prerequisite": "full scheduler and stochastic theme acceptance; WARRIOR_SHOOT/JUNK caller mapping pending"
+        "status": "implemented-current-pool",
+        "entry": "13 formal enum themes share source base pool; WARRIOR_SHOOT mapped; JUNK has a predicate but no source caller or formal table",
+        "change": "theme hook precedes tailored while quality intersection and later tailored checks remain; stochastic predicates precede allocation",
+        "consumer": "formal lootTables; loot/allocation.rs; monster death -> pickup/equipment/save",
+        "tests": "game::loot::allocation::tests::; game::tests::tasks::warrior_shoot_monster_death_keeps_theme_through_pickup_equipment_and_save; game::ego::applicability::",
+        "prerequisite": "unimported source kinds remain listed in packs/rfb-demo-original/legacy-base-allocation-audit.json"
       },
       {
         "id": "tailored-class-hooks",
         "file": "src/object2.c",
         "start": 3559,
         "end": 3665,
-        "status": "pending-base-allocation",
-        "entry": "Archer/Sniper/Cavalry/High Mage open; other identities unavailable",
-        "change": "bows 1/5; lances 1/7; books/devices; monster body hooks and Draconian Metamorphosis",
-        "consumer": "Acquirement -> loot.rs -> item use/equip",
-        "tests": null,
-        "prerequisite": "complete source allocator/retry and book counters; Metamorphosis has no grant/shape entry"
+        "status": "implemented-current-builds",
+        "entry": "Archer/Sniper/Cavalry/High Mage and other open classes",
+        "change": "bows 1/5; lances 1/7; ordered books/devices preference; source fallback category width",
+        "consumer": "Acquirement -> loot/allocation.rs -> loot.rs -> item use/equip/save",
+        "tests": "game::loot::allocation::tests::; game::tests::items::b4_tailored_launchers_equip_shoot_and_restore_for_archer_and_sniper; game::tests::items::b4_tailored_death_books_are_counted_studied_cast_and_restored; game::tests::acquirement::",
+        "prerequisite": "unavailable classes, Monster body hooks and Draconian Metamorphosis need real entries"
       },
       {
         "id": "karrot-replacement",
@@ -1503,6 +1504,41 @@
   },
   "randomArtifactContract": "E8.5: natural scheduler, complete fresh candidate/value retry, curses, name/RNG state and save",
   "jewelryRetryContract": "E8.6: strict level/mode limits; full Ego/randart candidate; unconditional fresh attempt 1001",
+  "baseAllocationContract": {
+    "scope": "B0-B6: six playable classes and the imported canonical pool; no claim of all source kinds or unavailable identities",
+    "plan": "design/base-allocation-acquirement-plan.md",
+    "rules": "source category weights, good/great/tailored hooks, ordered stochastic theme preparation, OOD and max-depth selection, completed-item rejection; make_object 1/100/1000 and Acquirement outer 1000 with interleaved drop_near",
+    "bookDiscovery": "persistent per-kind found_count and per-instance book_counted; pickup/identification/player destruction count once; shops and repurchases do not count; save/hash validated",
+    "entryAcceptance": [
+      {
+        "entry": "ordinary room and anywhere floor allocation",
+        "tests": "game::tests::generation::ordinary_room_and_anywhere_allocations_reach_pickup_and_save"
+      },
+      {
+        "entry": "vault and monster-carried initialization/death release",
+        "tests": "game::world::generation::tests::generated_vault_cells_survive_floor_serialization",
+        "limitation": "minimal vault/carried test configuration; no formal actor currently has carriedLootTableId"
+      },
+      {
+        "entry": "themed monster death, pickup and equipment",
+        "tests": "game::tests::tasks::warrior_shoot_monster_death_keeps_theme_through_pickup_equipment_and_save; game::ego::applicability::"
+      },
+      {
+        "entry": "Acquirement use, count/origin/knowledge/ID, failures and save",
+        "tests": "game::tests::acquirement::; game::tests::items::p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws"
+      },
+      {
+        "entry": "Tailored real weapon, riding, book study/cast and device consumers",
+        "tests": "game::tests::items::b4_tailored_"
+      },
+      {
+        "entry": "explicit base, Craft and configured fixed reward keep their entry contracts",
+        "tests": "game::tests::tasks::forced_base_ammunition_damage_dice_survive_generation_and_save; game::tests::items::e6_crafting_uses_shared_weighted_materialization_at_player_level; game::tests::tasks::old_castle_reward_is_forced_even_when_the_artifact_was_generated_before_claim"
+      }
+    ],
+    "sourceCoverage": "packs/rfb-demo-original/legacy-base-allocation-audit.json",
+    "representationLimits": "B1 physical books remain quantity-one instances; no complete source ordinary obj_make_pile distribution or obj_can_combine origin/notes/cost model"
+  },
   "unresolvedSharedGenerationContracts": [
     {
       "scope": "unavailable identities and entries",
@@ -1510,9 +1546,9 @@
       "source": "src/ego.c; src/object2.c; src/artifact.c"
     },
     {
-      "scope": "source base allocation",
-      "contract": "B0 provides canonical source allocation rows, all current candidate identities and shared static theme domains; full category/good/great/tailored allocation, stochastic theme acceptance, favorite weapon/slot filters, book found counters and Acquirement failure retries remain pending",
-      "source": "src/object2.c:2416-3678; :4471"
+      "scope": "source kind coverage and object representation",
+      "contract": "B0-B6 close allocation/retry/consumer acceptance for current playable builds and the imported pool. Unimported canonical kinds remain in legacy-base-allocation-audit.json; physical books retain B1 quantity-one instances; source ordinary pile distributions and full obj_can_combine origin/inscription/discount semantics are not claimed",
+      "source": "lib/edit/k_info.txt; src/object2.c; src/obj.c"
     },
     {
       "scope": "identity-sensitive fixed artifacts",

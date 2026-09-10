@@ -51,7 +51,7 @@ node scripts/audit-egos.mjs D:/codex/Frogcomposband/master
 
 ## 当前共享契约状态
 
-前文及后文的版本、测试数和桌面记录属于最初的 v311 审计。后续 E8.1–E8.6 已接入真实估值、负向装备、龙系基础、背包、非弹药随机神器和首饰完整价值重试；这些旧缺口不再列为待实现。当前证据及适用范围见[共享生成计划](ego-shared-generation-plan.md)和[生成矩阵](ego-contract-audit.json)。
+前文及后文的版本、测试数和桌面记录属于最初的 v311 审计。后续 E8.1–E8.6 已接入真实估值、负向装备、龙系基础、背包、非弹药随机神器和首饰完整价值重试；B0–B6 又完成当前可玩构筑/导入基础池的类别与主题分配、发现计数、Tailored、Acquirement 重试及 standalone 获取装备保存验收。这些旧缺口不再列为待实现；源内容覆盖和未开放身份继续单列。当前证据及适用范围见[共享生成计划](ego-shared-generation-plan.md)、[B6 验收](base-allocation-acquirement-plan.md#b6接入验收审计与交付)和[生成矩阵](ego-contract-audit.json)。
 
 E8.7 补齐主题 Ego 筛选、Bad Luck 固定神器参考层级和帽子 pval 限制，并从实际新游戏入口枚举构筑适用性。Vortex 已核实为演化装备模板、正向 BLOWS/天生攻击消费者和类别分配的间接输入，没有以身份直接判断的生成分支。
 

@@ -1,6 +1,7 @@
 # 完整底材分配与 Acquirement 实施计划
 
-状态：B0–B5 已实现，B6 待实施。承接 E8.7 提交 `5e28b2ab9`，本计划不表示完整生成契约已经通过。
+状态：B0–B6 已完成当前可玩构筑与已导入基础池的分配验收。承接 E8.7 提交 `5e28b2ab9`；
+源内容全覆盖、未开放身份与 E8.8 其他桌面项目不包含在本结论中。
 
 本次规划核对的 RFB 来源：`D:/codex/Frogcomposband/master` 的 `master` Git 对象
 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。实施时重新解析 `master`，记录实际提交；
@@ -20,7 +21,7 @@
 指定 kind/affix 的出生、地图和固定任务奖励保持各自显式入口；Craft 不重新抽底材。
 程序式 QUEST 奖励、神器卷轴和未开放身份不新增恒假开关，待真实入口具备后接入。
 
-## 已确认的差距
+## B0 开始前确认的差距（历史基线）
 
 | 层次 | 当前实现 | 必须实现的变化 |
 | --- | --- | --- |
@@ -287,7 +288,7 @@ Acquirement 每次只抽一次 1 或 2–3 的目标数量，外层最多调用 
 定向测试覆盖首轮成功、空类别后成功、各内部上限、外层耗尽及部分成功、两层嵌套、固定/随机
 神器成品拒绝与保存、落地消失不补发、堆叠/金币堆上限/布帘/神器远处搜索及 ID 耗尽。
 耗尽场景使用只有一次瞬时神器门控抽样的最小不可分配池，避免百万次昂贵 Ego/随机神器构造。
-完整入口矩阵、审计收尾及 standalone 桌面验收继续由 B6 完成。
+完整入口矩阵、审计收尾及 standalone 桌面验收见 B6 验收记录。
 
 落点：`loot.rs` 的单次 draft / 完整生成边界、`item_use.rs::resolve_item_acquirement`。
 
@@ -319,6 +320,33 @@ Acquirement 每次只抽一次 1 或 2–3 的目标数量，外层最多调用 
 4. 末批运行受影响的核心全量测试，并以 standalone Tauri 做代表性 Acquirement 端到端验收：
    真实新游戏、使用卷轴、拾取、装备或书本/装置使用、保存恢复。概率和重试由核心测试证明，
    桌面准备存档不冒充自然概率验收。可与既定 E8.8 桌面里程碑合并执行一次。
+
+验收记录（2026-09-10，来源仍为上述 `a0d92b6378`）：
+
+- 房间和任意位置各走一次正式基础池生成，实际拾取并保存恢复；vault 最小配置同时覆盖格子保存、
+  怪物携带生成、死亡释放、拾取和保存。正式包当前没有 vault 或配置出生携带表的怪物，
+  这两条是生产调用链的测试配置验收，不能记成正式内容入口已开放。
+- 复用 B1–B5 的主题死亡、书本计数、Tailored 装备/骑乘/学习施法/装置、指定底材、Craft 和固定奖励测试。
+  [机器审计](ego-contract-audit.json) 记录各入口的测试索引；审计命令不冒充测试执行。
+- 核心全量 `cargo test -p rfb-core --lib -- --test-threads=4`：1177 通过、3 个显式 ignored；
+  active `verify-all`：26 通过，无预期刷新。core/importer Clippy、格式、内容 source/lock 验证与
+  `audit-egos.mjs` 均通过（160 Ego、146 装备底材、41 个未直接映射 flag 的消费者审查）。
+  本批只有测试、审计和文档变化，无内容规则或持久格式变化，不升级 pack/save/hash/protocol，不生成 Schema/绑定。
+- standalone Tauri 使用 `npm run build:standalone:debug` 构建，实际新建种子 503 的人类战士 `B6 Desktop`。
+  从桌面导出该新角色，用 ignored `export_acquirement_desktop_save` 补给卷轴并清除怪物；保留原馆藏绑定、身份和 RNG，
+  不预造奖励。使用 `B6_DESKTOP_INPUT` 指向新游戏导出档，输出 `test-results/b6-acquirement.rfbsave`。
+  UI 使用 Acquirement 后回合 1 生成未知戒指，回合 2 拾取，回合 3 装备发现“(元素的)”词条，防御 15→25。
+  详情显示防御 +10、酸蚀抵抗及卓越品质。新建原生存档后卸下（回合 4、防御 15），载入恢复回合 3、戒指和防御 25，
+  已消耗卷轴未恢复。截图、UI 文本与存档保存在本地 `test-results/b6-*`。
+- Windows Computer Use 截图接口报 `SetIsBorderRequired ... 0x80004002` 且点击缺少窗口几何信息；
+  此次通过临时 Tauri 配置启用本机 WebView 调试端口，操作真实页面控件与 Rust 后端完成上述流程。
+  没有使用 WebDriver mock、直接调用生成函数或把准备档当作自然概率证据；这不是人工试玩。
+
+当前范围的类别/层级分配、主题、发现计数、Tailored、重试、落地和消费者验收闭合。
+未导入 source kind 继续列在[覆盖报告](../packs/rfb-demo-original/legacy-base-allocation-audit.json)；
+未开放身份继续列在机器矩阵。B1 书本仍为单实例数量 1；普通物品的源 `obj_make_pile` 数量分布及完整
+`obj_can_combine` 来源/题铭/折扣语义不在当前对象表示的对齐结论中。全范围 `runtimeParityComplete` 保持 `false`。
+E8.8 的其余负向装备、随机神器、龙系基础和背包桌面项目仍按共享生成计划单独验收。
 
 ## 版本与完成标准
 

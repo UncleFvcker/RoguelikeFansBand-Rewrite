@@ -259,7 +259,8 @@ pub fn sync_demo_base_allocation(source: &Path, pack: &Path) -> Result<usize, Le
         "source": K_INFO_SOURCE, "nameSource": K_NAME_ZH_SOURCE,
         "nameFormatSource": "src/flavor.c::object_desc (aware, no flavor; consumable suffixes)", "allocationRowCount": count,
         "unresolvedChineseNames": unresolved_names, "kinds": coverage, "explicitItems": explicit_items,
-        "remainingRules": ["B6 integration acceptance"]});
+        "remainingRules": [],
+        "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits"});
     writes.push((
         pack.join("legacy-base-allocation-audit.json"),
         serde_json::to_string_pretty(&report)? + "\n",
