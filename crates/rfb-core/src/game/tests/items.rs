@@ -2963,8 +2963,14 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
     let content = Arc::new(ContentCatalog::from_artifact(
         rfb_content::encode_content(source).unwrap(),
     ));
-    for ego in ["protection", "wizard-gloves", "free-action"] {
-        let mut game = Game::new_with_build(425, "demo.build.high-mage-death").unwrap();
+    for (build, ego) in [
+        ("high-mage-death", "protection"),
+        ("high-mage-death", "wizard-gloves"),
+        ("high-mage-death", "free-action"),
+        ("berserker", "protection"),
+        ("mindcrafter", "protection"),
+    ] {
+        let mut game = Game::new_with_build(425, &format!("demo.build.{build}")).unwrap();
         game.content = content.clone();
         clear_monsters(&mut game);
         choose_human_talent_if_pending(&mut game);
@@ -2973,7 +2979,10 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
         game.refresh_character_skills();
         choose_human_talent_if_pending(&mut game);
         game.refresh_player_resource_maxima();
-        let baseline_mana = game.resources["demo.resource.mana"].maximum;
+        let baseline_mana = game.resources.get("demo.resource.mana").map(|r| r.maximum);
+        assert_eq!(baseline_mana.is_some(), build != "berserker");
+        let baseline_armor = game.player_derived_stats().armor_class.value;
+        let encumbers = build == "high-mage-death" && ego == "protection";
         let context = LootContext {
             table_id: format!("test.loot-table.tailored-{ego}"),
             floor_id: game.current_floor_id.clone(),
@@ -2991,7 +3000,7 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
         let knowledge_before = game.item_knowledge.clone();
         let tailored =
             game.generate_loot_draft_attempt(&context, ItemGenerationMode::TailoredGreat);
-        assert_eq!(tailored.is_some(), ego != "protection");
+        assert_eq!(tailored.is_some(), !encumbers);
         if let Some(tailored) = tailored {
             assert_eq!(tailored, great);
         }
@@ -3010,26 +3019,44 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
             .unwrap();
         let id = item.id.clone();
         assert!(!game.item_is_icky(&item, false));
-        assert_eq!(game.item_is_icky(&item, true), ego == "protection");
+        assert_eq!(game.item_is_icky(&item, true), encumbers);
         game.items.push(item);
         game.pick_up_item_at_player(Some(&id)).unwrap();
         game.equip_inventory_item(&id, Some("hands")).unwrap();
         game.refresh_player_resource_maxima();
-        let mana = game.resources["demo.resource.mana"].maximum;
-        if ego == "protection" {
-            assert_eq!(mana, baseline_mana * 3 / 4);
+        let mana = game.resources.get("demo.resource.mana").map(|r| r.maximum);
+        if encumbers {
+            assert_eq!(mana, baseline_mana.map(|m| m * 3 / 4));
         } else {
             assert!(mana >= baseline_mana);
+        }
+        if ego == "protection" {
+            assert!(game.player_derived_stats().armor_class.value > baseline_armor);
         }
         game.identify_item_instance(&id, ItemIdentificationRequest::new(false));
         assert_eq!(
             game.item_is_icky(game.items.iter().find(|item| item.id == id).unwrap(), false),
-            ego == "protection"
+            encumbers
         );
         game.reveal_current_visibility();
-        let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored =
+            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
-        assert_eq!(restored.resources["demo.resource.mana"].maximum, mana);
+        assert_eq!(
+            restored
+                .resources
+                .get("demo.resource.mana")
+                .map(|r| r.maximum),
+            mana
+        );
+        if build != "high-mage-death" {
+            let actual = game.generate_one_loot_draft(&context, ItemGenerationMode::TailoredGreat);
+            let replay =
+                restored.generate_one_loot_draft(&context, ItemGenerationMode::TailoredGreat);
+            assert!(actual.is_some());
+            assert_eq!(actual, replay);
+            assert_eq!(game.rng, restored.rng);
+        }
     }
 }
 

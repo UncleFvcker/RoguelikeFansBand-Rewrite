@@ -288,7 +288,7 @@ pub(in crate::game) fn dispatch_next(game: &mut Game, command_value: GameCommand
     .expect("test command should execute")
 }
 
-pub(super) fn choose_human_talent_if_pending(game: &mut Game) {
+pub(in crate::game) fn choose_human_talent_if_pending(game: &mut Game) {
     let Some(pending) = game.snapshot().player.pending_race_mutation_choice else {
         return;
     };

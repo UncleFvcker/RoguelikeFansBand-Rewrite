@@ -458,6 +458,8 @@ mod tests {
     fn tailored_uses_playable_class_equipment_realms_and_birth_race() {
         for build in [
             "warrior",
+            "berserker",
+            "mindcrafter",
             "archer",
             "sniper",
             "cavalry",
@@ -530,6 +532,16 @@ mod tests {
     #[test]
     fn tailored_preference_draws_follow_class_then_book_then_device() {
         use crate::rng::RfbRng;
+        for build in ["warrior", "berserker", "mindcrafter"] {
+            let mut game = Game::new_with_build(422, &format!("demo.build.{build}")).unwrap();
+            let before = game.rng.clone();
+            assert!(!needs_book(&game));
+            assert_eq!(tailored_category(&mut game), None);
+            assert_eq!(
+                game.rng, before,
+                "{build}: no class/book/device preference draw"
+            );
+        }
         for (build, odds, category) in [
             ("archer", 5, Category::BowQuiver),
             ("sniper", 5, Category::BowQuiver),
