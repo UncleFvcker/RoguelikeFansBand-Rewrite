@@ -1844,14 +1844,17 @@ impl Game {
                 target,
                 target_glyph,
             } => {
-                self.use_inventory_item(
+                if !self.use_inventory_item(
                     &item_id,
                     target.as_ref(),
                     target_glyph.as_deref(),
                     &mut events,
                     &mut changed,
                     &mut removed_entities,
-                )?;
+                )? {
+                    advances_world = false;
+                    action_cost = 0;
+                }
             }
             GameAction::RefuelLight {
                 target_item_id,
@@ -3495,6 +3498,9 @@ impl Game {
         }) else {
             return false;
         };
+        if item.is_artifact_mushroom(&self.content) {
+            return item.device_recovery_progress > 0;
+        }
         let cost = item
             .activation
             .as_ref()
@@ -3626,6 +3632,7 @@ impl Game {
                     | ItemUseEffectDefinition::EnchantItem { .. }
                     | ItemUseEffectDefinition::EnchantEquipment
                     | ItemUseEffectDefinition::CraftItem { .. }
+                    | ItemUseEffectDefinition::CreateArtifact
                     | ItemUseEffectDefinition::RechargeFromDevice { .. }
                     | ItemUseEffectDefinition::RandomTeleport { .. }
                     | ItemUseEffectDefinition::TeleportLevel
@@ -3654,7 +3661,9 @@ impl Game {
             TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
             TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
             TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
-            TargetSelection::CraftingItem { .. } => return None,
+            TargetSelection::CraftingItem { .. } | TargetSelection::ArtifactCreationItem { .. } => {
+                return None;
+            }
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
         };
         target_definition

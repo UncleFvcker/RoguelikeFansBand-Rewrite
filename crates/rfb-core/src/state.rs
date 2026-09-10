@@ -14,6 +14,7 @@ use crate::resistance::{DamageType, ResistanceLevel};
 use crate::{effect::StatusInstance, resistance::ResistanceProfile};
 
 pub(crate) const BASE_ACTOR_POWER_PER_MILLE: u16 = 1_000;
+pub(crate) const ARTIFACT_MUSHROOM_COOLDOWN_TICKS: u16 = 990;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Actor {
@@ -113,13 +114,20 @@ pub(crate) struct ItemInstance {
     pub(crate) activation: Option<ItemActivationDto>,
     pub(crate) charges: Option<ItemChargesDto>,
     pub(crate) fuel: Option<ItemFuelDto>,
-    // Elapsed ticks for single-charge cooldowns; fractional per-mille energy otherwise.
+    // Elapsed device recovery ticks/fractional energy; remaining cooldown for artifact mushrooms.
     pub(crate) device_recovery_progress: u16,
     pub(crate) captured_actor: Option<CapturedActor>,
     pub(crate) location: ItemLocation,
 }
 
 impl ItemInstance {
+    pub(crate) fn is_artifact_mushroom(&self, content: &rfb_content::ContentCatalog) -> bool {
+        self.artifact_name.is_some()
+            && content
+                .item(&self.kind_id)
+                .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "mushroom"))
+    }
+
     pub(crate) fn is_artifact(&self, content: &rfb_content::ContentCatalog) -> bool {
         self.artifact_name.is_some()
             || content.item(&self.kind_id).is_some_and(|definition| {

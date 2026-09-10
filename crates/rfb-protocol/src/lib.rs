@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.246";
+pub const PROTOCOL_VERSION: &str = "1.247";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 15;
 
@@ -823,6 +823,12 @@ pub enum TargetSelection {
     CraftingItem {
         item_id: String,
         quantity: u32,
+    },
+    ArtifactCreationItem {
+        item_id: String,
+        quantity: u32,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        name: Option<String>,
     },
     Town {
         town_id: String,
@@ -3967,6 +3973,7 @@ pub enum ItemQualityDto {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ItemOriginKindDto {
+    ArtifactCreation,
     Acquire,
     PlayerMade,
     Rubble,
@@ -4146,6 +4153,8 @@ pub struct InventoryItemDto {
     pub requires_recharge_targets: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub requires_crafting_target: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub artifact_creation_targets: Option<Vec<String>>,
     #[serde(default)]
     pub can_receive_recharge: bool,
     #[serde(default)]
@@ -6476,6 +6485,7 @@ mod tests {
                 requires_target_glyph: false,
                 requires_recharge_targets: false,
                 requires_crafting_target: false,
+                artifact_creation_targets: None,
                 can_receive_recharge: false,
                 can_supply_recharge: false,
                 quantity: 1,

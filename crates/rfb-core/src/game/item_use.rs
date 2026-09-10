@@ -6,6 +6,7 @@ use super::projectile_geometry::{has_line_of_effect, rfb_distance};
 use super::visibility::{VISIBILITY_RADIUS, has_line_of_sight};
 use super::{abilities::AbilityTargetPlan, *};
 mod artifact_activations;
+mod artifact_creation;
 
 const WAYBREAD_INTOLERANCE_MUTATION_ID: &str = "rfb.mutation.waybread-into";
 const SKELETON_RACE_ID: &str = "rfb-legacy.race.skeleton";
@@ -62,6 +63,10 @@ pub(super) enum ItemUsePlan {
     },
     Item {
         item_id: String,
+    },
+    ArtifactCreation {
+        item_id: String,
+        name: Option<String>,
     },
     RandomTeleport {
         candidates: Vec<Position>,
@@ -2640,6 +2645,7 @@ impl Game {
         .then_some(STANDARD_ACTION_COST)
     }
 
+    /// Returns whether the attempt keeps its action time; artifact failures refund it.
     pub(super) fn use_inventory_item(
         &mut self,
         item_id: &str,
@@ -2648,28 +2654,34 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
+    ) -> Result<bool, CoreError> {
         let Some((index, definition)) = self.inventory_item_use_context(item_id)? else {
             events.push(DomainEvent::ItemUseUnavailable);
-            return Ok(());
+            return Ok(true);
         };
         let kind_id = self.items[index].kind_id.clone();
+        if self.items[index].is_artifact_mushroom(&self.content)
+            && self.items[index].device_recovery_progress > 0
+        {
+            events.push(DomainEvent::ItemUseUnavailable);
+            return Ok(false);
+        }
         if self
             .berserker_item_use_rejection_cost(&self.items[index])
             .is_some()
         {
             events.push(DomainEvent::ItemUseUnavailable);
-            return Ok(());
+            return Ok(true);
         }
         if definition.capture_ball {
             self.use_capture_ball(index, target, events, changed, removed_entities);
-            return Ok(());
+            return Ok(true);
         }
         if self.mount_item_target_is_valid(item_id, target).is_some()
             && let Some(mount_use) = definition.mount_use.clone()
         {
             self.use_inventory_mount_item(index, &kind_id, &mount_use, target, events, changed);
-            return Ok(());
+            return Ok(true);
         }
         let activation = self.items[index].activation.clone();
         let (profile_id, difficulty, cost, effect, plan) =
@@ -2696,7 +2708,7 @@ impl Game {
                     target_glyph,
                 ) else {
                     events.push(DomainEvent::ItemUseUnavailable);
-                    return Ok(());
+                    return Ok(true);
                 };
                 (
                     Some(activation.profile_id.clone()),
@@ -2710,7 +2722,7 @@ impl Game {
                     self.item_use_plan(item_id, &action.effect, None, target, target_glyph)
                 else {
                     events.push(DomainEvent::ItemUseUnavailable);
-                    return Ok(());
+                    return Ok(true);
                 };
                 (
                     None,
@@ -2721,7 +2733,7 @@ impl Game {
                 )
             } else {
                 events.push(DomainEvent::ItemUseUnavailable);
-                return Ok(());
+                return Ok(true);
             };
         if cost.is_some_and(|cost| {
             self.items[index]
@@ -2729,7 +2741,7 @@ impl Game {
                 .is_none_or(|state| state.current < cost)
         }) {
             events.push(DomainEvent::ItemUseUnavailable);
-            return Ok(());
+            return Ok(true);
         }
 
         let player_is_skeleton = self.player_is_skeleton();
@@ -2785,7 +2797,7 @@ impl Game {
                 resolution: check.to_dto(skill_id),
             });
             if !succeeded {
-                return Ok(());
+                return Ok(true);
             }
         }
 
@@ -2798,9 +2810,23 @@ impl Game {
         // RFB checks an equipment activation before asking for its direction.
         // Cancelling that attempt keeps the spent turn/check, but not the cooldown.
         if matches!(plan, ItemUsePlan::CancelledActivation) {
-            return Ok(());
+            return Ok(true);
         }
-        if let Some(cost) = cost {
+        if let ItemUsePlan::ArtifactCreation { item_id, name } = &plan
+            && !self.resolve_artifact_creation(
+                &kind_id,
+                item_id,
+                name.as_deref(),
+                events,
+                changed,
+            )?
+        {
+            return Ok(false);
+        }
+        if self.items[index].is_artifact_mushroom(&self.content) {
+            self.items[index].device_recovery_progress =
+                crate::state::ARTIFACT_MUSHROOM_COOLDOWN_TICKS;
+        } else if let Some(cost) = cost {
             self.items[index]
                 .charges
                 .as_mut()
@@ -2816,6 +2842,9 @@ impl Game {
             .map(|_| self.effective_player_device_power_bonus())
             .unwrap_or(0)
             + item_device_power_bonus;
+        if matches!(plan, ItemUsePlan::ArtifactCreation { .. }) {
+            return Ok(true);
+        }
         self.resolve_inventory_item_effect(
             SettledItemUse {
                 kind_id,
@@ -2850,7 +2879,7 @@ impl Game {
                 removed_entities,
             );
         }
-        Ok(())
+        Ok(true)
     }
 
     fn boost_item_ability_effect(&mut self, effect: &mut AbilityEffectDefinition, bonus: i32) {
@@ -3790,6 +3819,9 @@ impl Game {
                 .then(|| ItemUsePlan::Item {
                     item_id: target_item_id.clone(),
                 })
+            }
+            ItemUseEffectDefinition::CreateArtifact => {
+                self.artifact_creation_plan(source_item_id, target?)
             }
             effect @ ItemUseEffectDefinition::EnchantItem { .. } => {
                 let TargetSelection::Item {
@@ -5966,6 +5998,7 @@ impl Game {
             | ItemUseEffectDefinition::IdentifyItem { .. }
             | ItemUseEffectDefinition::Acquirement { .. }
             | ItemUseEffectDefinition::MundanifyItem
+            | ItemUseEffectDefinition::CreateArtifact
             | ItemUseEffectDefinition::CraftItem { .. }
             | ItemUseEffectDefinition::ShowRumour { .. }
             | ItemUseEffectDefinition::EnchantItem { .. }

@@ -1769,9 +1769,9 @@ impl Game {
                         launcher_to_damage,
                         damage_multiplier_percent: multiplier,
                         damage_dice: ammunition
-                            .and_then(|item| item.damage_dice_override)
+                            .and_then(|item| item.melee_damage_dice().map(|dice| dice.dice).or(item.damage_dice_override))
                             .unwrap_or(ammo_profile.damage_dice),
-                        damage_sides: ammo_profile.damage_sides,
+                        damage_sides: ammunition.and_then(|item| item.melee_damage_dice()).map_or(ammo_profile.damage_sides, |dice| dice.sides),
                         damage_type: DamageType::from(ammo_profile.damage_type),
                         ammunition_slays,
                         ammunition_brands,

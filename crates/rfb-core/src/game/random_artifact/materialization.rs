@@ -4,6 +4,37 @@ use crate::state::ItemInstance;
 use rfb_content::*;
 use rfb_protocol::{ItemQualityDto, MeleeDamageDiceDto, WeaponTraitDto};
 
+pub(in crate::game) fn materialize_scroll(
+    content: &ContentCatalog,
+    rng: &mut RfbRng,
+    original: &ItemInstance,
+    creation: Creation<'_>,
+    quarks: &mut BTreeSet<String>,
+) -> Option<(ItemInstance, bool)> {
+    let definition = content.item(&original.kind_id)?;
+    let data = content.random_artifact_generation()?;
+    let mut object = crate::game::item_value::instance::value_object(content, original)?;
+    object.flags.retain(|flag| valid_rfb_runtime_flag(flag));
+    let raw = definition.rfb_value.as_ref()?;
+    let roll = create_artifact(
+        rng,
+        data,
+        object,
+        Creation {
+            scroll: true,
+            good: true,
+            base_flags: Some(&raw.flags),
+            ..creation
+        },
+        quarks,
+        original.curse,
+        original.intrinsic_properties.rfb_heavy_curse,
+        i32::from(definition.weight_tenths_pound),
+    )?;
+    let succeeded = roll.value != 0;
+    Some((apply_roll(definition, original, roll), succeeded))
+}
+
 /// E8.5b's item factory. The caller supplies the name table shared by consecutive
 /// generations and commits only the returned instance; IDs are never allocated here.
 #[allow(clippy::too_many_arguments)] // Mirrors the caller's existing generation state.
@@ -76,14 +107,15 @@ pub(super) fn apply_roll(
     result.curse = roll.curse;
     result.intrinsic_weight_tenths_pound =
         Some(object.weight.try_into().expect("source artifact weight"));
-    result.intrinsic_melee_damage_dice =
-        definition
-            .melee_profile
-            .as_ref()
-            .map(|_| MeleeDamageDiceDto {
-                dice: object.dd.try_into().expect("source artifact dice"),
-                sides: object.ds.try_into().expect("source artifact sides"),
-            });
+    result.intrinsic_melee_damage_dice = (definition.melee_profile.is_some()
+        || definition.ammunition_profile.is_some())
+    .then(|| MeleeDamageDiceDto {
+        dice: object.dd.try_into().expect("source artifact dice"),
+        sides: object.ds.try_into().expect("source artifact sides"),
+    });
+    if definition.ammunition_profile.is_some() {
+        result.damage_dice_override = None;
+    }
     let (base_h, base_d) = definition
         .melee_profile
         .as_ref()

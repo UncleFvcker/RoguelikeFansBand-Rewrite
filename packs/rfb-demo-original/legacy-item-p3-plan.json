@@ -182,9 +182,9 @@
         },
         {
           "id": "artifact-creation",
-          "primaryBlockers": ["random-artifact-identity"],
+          "primaryBlockers": [],
           "items": [
-            { "sourceIndex": 364, "sourceName": "Artifact Creation:engsno argsan", "sourceId": "artifact-creation-engsno-argsan" }
+            { "sourceIndex": 364, "sourceName": "Artifact Creation:engsno argsan", "sourceId": "artifact-creation-engsno-argsan", "completedRequirements": ["behavior", "authoritative-zh-name", "source-identity", "flavor", "acquisition"] }
           ]
         },
         {

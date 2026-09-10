@@ -795,6 +795,15 @@ test("P3.5 item generation mutation and rumour events localize", () => {
   );
 });
 
+test("artifact creation reports success, failure and destroyed stack quantities", () => {
+  const event = { kind: "item.artifact-creation", messageKey: "item-artifact-creation",
+    args: { target: "demo.item.arrow", succeeded: "true", destroyedQuantity: "3" } };
+  assert.equal(formatter.formatEvent(event), "Turned Arrow into an artifact. Destroyed the other 3 items in the stack.");
+  event.args.succeeded = "false";
+  event.args.destroyedQuantity = "0";
+  assert.equal(formatter.formatEvent(event), "Artifact creation failed for Arrow. The scroll and turn are retained.");
+});
+
 test("damage event formatting preserves typed resistance outcomes", () => {
   const event = {
     kind: "combat.hit",

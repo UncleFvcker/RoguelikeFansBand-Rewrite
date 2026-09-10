@@ -6,7 +6,7 @@ use std::collections::BTreeSet;
 /// quark 0 is null; quark 1 is the empty emergency string.
 pub(super) const QUARK_CAPACITY: usize = 2047;
 
-pub(super) fn intern(quarks: &mut BTreeSet<String>, name: String) -> String {
+pub(in crate::game) fn intern(quarks: &mut BTreeSet<String>, name: String) -> String {
     if quarks.contains(&name) {
         return name;
     }

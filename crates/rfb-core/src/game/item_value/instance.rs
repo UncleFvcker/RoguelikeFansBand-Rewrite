@@ -65,8 +65,16 @@ pub(in crate::game) fn value_object(
         object.to_d += profile.to_damage;
     } else if let Some(profile) = &definition.ammunition_profile {
         let base = base.ammunition_profile.as_ref()?;
-        object.dd = i32::from(item.damage_dice_override.unwrap_or(profile.damage_dice));
-        object.ds = i32::from(profile.damage_sides);
+        object.dd = i32::from(
+            item.melee_damage_dice()
+                .map(|dice| dice.dice)
+                .or(item.damage_dice_override)
+                .unwrap_or(profile.damage_dice),
+        );
+        object.ds = i32::from(
+            item.melee_damage_dice()
+                .map_or(profile.damage_sides, |dice| dice.sides),
+        );
         object.base_dd = i32::from(base.damage_dice);
         object.base_ds = i32::from(base.damage_sides);
         object.to_h += profile.to_hit;

@@ -91,6 +91,7 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::SelfKnowledge
         | ItemUseEffectDefinition::TriggerTsuyoshiCrash
         | ItemUseEffectDefinition::MundanifyItem
+        | ItemUseEffectDefinition::CreateArtifact
         | ItemUseEffectDefinition::RefillQuiver
         | ItemUseEffectDefinition::StarBall
         | ItemUseEffectDefinition::ListUniques
@@ -566,6 +567,7 @@ fn item_effect_is_self_targeted(effect: &ItemUseEffectDefinition) -> bool {
         | ItemUseEffectDefinition::EnchantItem { .. }
         | ItemUseEffectDefinition::EnchantEquipment
         | ItemUseEffectDefinition::MundanifyItem
+        | ItemUseEffectDefinition::CreateArtifact
         | ItemUseEffectDefinition::CraftItem { .. } => false,
         ItemUseEffectDefinition::Sequence { effects } => {
             effects.iter().all(item_effect_is_self_targeted)
@@ -752,6 +754,7 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::EnchantItem { .. }
                     | ItemUseEffectDefinition::EnchantEquipment
                     | ItemUseEffectDefinition::MundanifyItem
+                    | ItemUseEffectDefinition::CreateArtifact
                     | ItemUseEffectDefinition::CraftItem { .. } => {
                         target.modes.as_slice() == [AbilityTargetModeDefinition::Item]
                             && target.range == 0
@@ -1063,6 +1066,7 @@ pub(super) fn validate_items(
                     ItemUseEffectDefinition::IdentifyItem { .. }
                         | ItemUseEffectDefinition::EnchantItem { .. }
                         | ItemUseEffectDefinition::MundanifyItem
+                        | ItemUseEffectDefinition::CreateArtifact
                         | ItemUseEffectDefinition::CraftItem { .. }
                 ));
             let valid_charges = action.charges.is_none_or(|charges| {

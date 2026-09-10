@@ -344,7 +344,7 @@ fn random_artifact_special_bases_keep_their_constraints_and_base_flags() {
             &mut rng,
             data,
             ValueObject {
-                tval: 17,
+                tval: 15,
                 ..dagger()
             },
             Creation::default(),

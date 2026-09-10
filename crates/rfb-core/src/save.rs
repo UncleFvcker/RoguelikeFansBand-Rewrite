@@ -373,6 +373,7 @@ pub(crate) fn item_from_dto(
         item.charges,
         fuel,
         item.device_recovery_progress,
+        item.artifact_name.is_some() && definition.tags.iter().any(|tag| tag == "mushroom"),
         item.enchantments,
         saved_device_ego(content, &item.affix_ids, &item.rolled_affixes),
     )?;
@@ -444,6 +445,7 @@ pub(crate) fn inventory_item_from_dto(
         item.charges,
         fuel,
         item.device_recovery_progress,
+        item.artifact_name.is_some() && definition.tags.iter().any(|tag| tag == "mushroom"),
         item.enchantments,
         saved_device_ego(content, &item.affix_ids, &item.rolled_affixes),
     )?;
@@ -520,6 +522,7 @@ pub(crate) fn equipment_item_from_dto(
         item.charges,
         fuel,
         item.device_recovery_progress,
+        item.artifact_name.is_some() && definition.tags.iter().any(|tag| tag == "mushroom"),
         item.enchantments,
         saved_device_ego(content, &item.affix_ids, &item.rolled_affixes),
     )?;
@@ -593,6 +596,7 @@ pub(crate) fn carried_item_from_dto(
         item.charges,
         fuel,
         item.device_recovery_progress,
+        item.artifact_name.is_some() && definition.tags.iter().any(|tag| tag == "mushroom"),
         item.enchantments,
         saved_device_ego(content, &item.affix_ids, &item.rolled_affixes),
     )?;
@@ -711,6 +715,7 @@ fn validate_item_runtime_state(
     charges: Option<ItemChargesDto>,
     fuel: Option<ItemFuelDto>,
     device_recovery_progress: u16,
+    artifact_mushroom: bool,
     enchantments: ItemEnchantmentsDto,
     device_ego: Option<(u32, u16)>,
 ) -> Result<(), CoreError> {
@@ -794,30 +799,36 @@ fn validate_item_runtime_state(
             _ => false,
         }
     };
-    let valid_recovery_progress = match (
-        device_generation.and_then(|generation| {
-            activation
-                .and_then(|activation| {
-                    generation
-                        .activations
-                        .iter()
-                        .find(|profile| profile.id == activation.profile_id)
-                })
-                .and_then(|profile| profile.recovery)
-                .or(generation.recovery)
-        }),
-        charges,
-    ) {
-        (Some(recovery), Some(charges)) => {
-            let limit = if charges.maximum == 1 && recovery.energy_per_mille == 1_000 {
-                recovery.interval_ticks
-            } else {
-                1_000
-            };
-            device_recovery_progress < limit
-                && (charges.current < charges.maximum || device_recovery_progress == 0)
+    let valid_recovery_progress = if artifact_mushroom {
+        device_recovery_progress <= crate::state::ARTIFACT_MUSHROOM_COOLDOWN_TICKS
+            && activation.is_none()
+            && charges.is_none()
+    } else {
+        match (
+            device_generation.and_then(|generation| {
+                activation
+                    .and_then(|activation| {
+                        generation
+                            .activations
+                            .iter()
+                            .find(|profile| profile.id == activation.profile_id)
+                    })
+                    .and_then(|profile| profile.recovery)
+                    .or(generation.recovery)
+            }),
+            charges,
+        ) {
+            (Some(recovery), Some(charges)) => {
+                let limit = if charges.maximum == 1 && recovery.energy_per_mille == 1_000 {
+                    recovery.interval_ticks
+                } else {
+                    1_000
+                };
+                device_recovery_progress < limit
+                    && (charges.current < charges.maximum || device_recovery_progress == 0)
+            }
+            _ => device_recovery_progress == 0,
         }
-        _ => device_recovery_progress == 0,
     };
     if !item_enchantments_are_valid(definition, &enchantments) {
         return Err(CoreError::InvalidSave("item enchantment state is invalid"));
@@ -847,6 +858,7 @@ fn validate_item_creation_state(
 ) -> Result<(), CoreError> {
     let ammunition = definition.tags.iter().any(|tag| tag == "ammunition");
     let origin_is_valid = match origin_kind {
+        Some(ItemOriginKindDto::ArtifactCreation) => matches!(discount_percent, 0 | 99),
         None => discount_percent == 0,
         Some(ItemOriginKindDto::PlayerMade) => {
             discount_percent == 99

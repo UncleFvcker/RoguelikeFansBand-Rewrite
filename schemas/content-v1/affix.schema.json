@@ -6493,6 +6493,19 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "create-artifact",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "refill-quiver",
               "type": "string"
             }

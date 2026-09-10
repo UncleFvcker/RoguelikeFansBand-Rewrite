@@ -7,13 +7,13 @@
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.246 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| 协议 | 1.247 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 120 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 15 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.408.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.409.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v321，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 8 个 Class、15 个 Build、57 个 Race、32 本能力书、1,861 个 ability 文件、376 个 item、1,404 个 actor、168 个 affix、152 个 mutation。世界定义含 30 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 8 个 Class、15 个 Build、57 个 Race、32 本能力书、1,861 个 ability 文件、377 个 item、1,404 个 actor、168 个 affix、152 个 mutation。世界定义含 30 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
 权威内容统计工具是 `rfb-contentc inspect-source`。本次集成已运行内容编译；静态统计不替代行为验收。
 
@@ -60,7 +60,7 @@ Ent、Spectre 的新游戏入口已开放。种族主线还接入原始经验值
 
 法术道具分支已合入护甲、非 Craft Ego、共享加权工艺、真实装备估值、负向装备/诅咒消费者、龙系底材生成、背包与箭袋容量，以及随机神器实例身份和消费者。168 个 affix 定义不等于全部均可自然获取：保留原版零稀有度及专用入口约束。
 
-随机神器已接入武器/挖掘工具、远程/竖琴、护甲、首饰和费艾诺光源的自然调度，保留原版底材例外、概率与强制模式，Craft 不参与抽样。实例保存名称、骰数、重量、特性、诅咒和激活；内部工厂含职业/主题 bias、原版命名、195 项激活池及最多 1001 个独立候选的价值筛选。成功和被拒绝候选的名字登记进入存档，恢复后继续生成保持一致。首饰自然入口另按原版等级/模式阈值筛选完整候选，1000 次拒绝后直接采用新生成的第 1001 个结果；每轮都包含 Ego/随机神器分支及诅咒，显式配置物化保持原入口。生成验收要求规则相同和本项目内确定性，不要求与原版同种子产物相同。无权威中文的名字保留原字符串并记录 unresolved。共享生成已按实际构筑审计职业/种族、变异、人格和主题条件，补齐主题 Ego 筛选、Bad Luck 固定神器参考层级及帽子速度限制。Vortex 分类为装备模板/消费者和间接类别分配；B0–B6 已完成当前可玩构筑与导入基础池的底材分配、Acquirement 偏好/书本计数和保存验收；未开放身份不计入可玩验收。基础分配已统一为 327 个 source kind、361 行；13 个正式主题引用同一池并以枚举执行源谓词。逐行来源及未导入条目见[基础分配覆盖](../packs/rfb-demo-original/legacy-base-allocation-audit.json)，范围、证据和源对象表示限制见[分配计划](../design/base-allocation-acquirement-plan.md)。八领域入口范围保持上表状态。实现范围见[共享生成计划](../design/ego-shared-generation-plan.md)，实例表示见[随机神器身份契约](../design/contract-v316-random-artifact-identity.md)。
+随机神器已接入武器/挖掘工具、远程/竖琴、护甲、首饰和费艾诺光源的自然调度，保留原版底材例外、概率与强制模式，Craft 不参与抽样。实例保存名称、骰数、重量、特性、诅咒和激活；内部工厂含职业/主题 bias、原版命名、195 项激活池及最多 1001 个独立候选的价值筛选。成功和被拒绝候选的名字登记进入存档，恢复后继续生成保持一致。首饰自然入口另按原版等级/模式阈值筛选完整候选，1000 次拒绝后直接采用新生成的第 1001 个结果；每轮都包含 Ego/随机神器分支及诅咒，显式配置物化保持原入口。生成验收要求规则相同和本项目内确定性，不要求与原版同种子产物相同。无权威中文的名字保留原字符串并记录 unresolved。共享生成已按实际构筑审计职业/种族、变异、人格和主题条件，补齐主题 Ego 筛选、Bad Luck 固定神器参考层级及帽子速度限制。Vortex 分类为装备模板/消费者和间接类别分配；B0–B6 已完成当前可玩构筑与导入基础池的底材分配、Acquirement 偏好/书本计数和保存验收；未开放身份不计入可玩验收。基础分配已统一为 328 个 source kind、362 行；13 个正式主题引用同一池并以枚举执行源谓词。逐行来源及未导入条目见[基础分配覆盖](../packs/rfb-demo-original/legacy-base-allocation-audit.json)，范围、证据和源对象表示限制见[分配计划](../design/base-allocation-acquirement-plan.md)。八领域入口范围保持上表状态。实现范围见[共享生成计划](../design/ego-shared-generation-plan.md)，实例表示见[随机神器身份契约](../design/contract-v316-random-artifact-identity.md)。
 
 书本已在现有物品知识中累计发现数，实例保留防重复标记；出生、拾取、鉴定、销毁、交易、存储及保存恢复按原版统计事件区分。购买与出售只标记，不增加 found；累计数不随库存减少，也不经博物馆转给其他角色。普通分配权重衰减与 Good/Great 高阶书条件已读取累计数，来源映射见[分配计划 B1](../design/base-allocation-acquirement-plan.md#b1发现计数与保存完整性)。
 
@@ -76,7 +76,7 @@ B2 已接入 17 类共享类别权重、身体槽位减半、Good 分配层级 +
 
 ## 城镇与共享存储
 
-[竞技场地牢 AR1–AR2](../design/arena-dungeon-plan-20260910.md) 已完成生成与生态能力，正式入口仍未开放。`arena-rooms` / `circle` 支持半径 3–7 的圆形房间、永久墙中的通道及按深度选择的通道与照明；每个成功房间中心分配单怪，玩家／楼梯／最终守卫避开中心。普通与环境分配遵守 `MIN(50, depth-5)`，召唤保留独立资格；本地牢不生成伴随队伍、第二批初始怪物或普通地面物品／金币，保留陷阱、环境刷怪与死亡掉落。守卫的法术免疫、近战／箭矢减伤、高防御、低生命和移动约束已有实际消费者与测试。以 96×33、6 房间配置验证，沿用既有预算、通道与单门适配，不宣称复刻原版尺寸、门数量或 RNG 序列。AR2 核心 1301 项通过、3 项既有忽略，强化后的占位与守卫移动断言定向通过；内容 world 61 项、26 条 active 契约、相关 Clippy、格式与 source/lock 验证通过。正式包、Schema、协议与存档格式未改，fixture 未刷新；创造神器卷轴和 31 层正式接入留给 AR3–AR4，无本批可玩构建或人工试玩。
+[竞技场地牢 AR1–AR3](../design/arena-dungeon-plan-20260910.md) 已完成生成与生态能力，正式入口仍未开放。`arena-rooms` / `circle` 支持半径 3–7 的圆形房间、永久墙中的通道及按深度选择的通道与照明；每个成功房间中心分配单怪，玩家／楼梯／最终守卫避开中心。普通与环境分配遵守 `MIN(50, depth-5)`，召唤保留独立资格；本地牢不生成伴随队伍、第二批初始怪物或普通地面物品／金币，保留陷阱、环境刷怪与死亡掉落。守卫的法术免疫、近战／箭矢减伤、高防御、低生命和移动约束已有实际消费者与测试。以 96×33、6 房间配置验证，沿用既有预算、通道与单门适配，不宣称复刻原版尺寸、门数量或 RNG 序列。AR2 核心 1301 项通过、3 项既有忽略，强化后的占位与守卫移动断言定向通过；内容 world 61 项、26 条 active 契约、相关 Clippy、格式与 source/lock 验证通过。AR3 已加入正式创造神器卷轴与自然分配，Rust 提供合法目标，前端支持堆叠确认／命名；单次工厂原位改造武器、防具、弹药、首饰及合法光源，Snotling 蘑菇保留效果并按 99 回合冷却复用。取消／失败消耗、零价值造物、装备与弹药保存恢复已有专项证据；相关核心／内容／前端、生成物、Clippy、source/lock 与 26 条 active 契约通过。内容包和协议已更新，State Hash Schema、存档版本与 fixture 未改。Android 装备经验未实现，31 层正式入口与奖励接入留给 AR4；无本批可玩构建或人工试玩。
 
 [反魔洞穴／反近战洞穴 A1–A5](../design/anti-caves-dungeon-plan-20260910.md) 已完成规则、内容、入口与聚焦自动验收。原版 16/17 替代组各 40–50 层；新角色按种子只开放 (84,6)/(47,45) 中所选地点的真实入口和守卫，无最终首领或固定征服奖励。`noMagic`/`noMelee` 保留各入口的回合、资源与召唤语义，生态分别筛选天生/攻击法术资格，空偏好 `specialDiv=0` 可走全局分配。A5 的 105 项核心检查、最终两项守卫落点复核、正式内容绑定、来源审计、26 条契约、Schema、Clippy 和格式检查通过；生成覆盖每座 9 个代表场景，两种替代结果的全层往返、保存/召回及守卫状态已验证。该方向验收时包/lock 为 1.401.8；代表层与河流概率适配详见计划。没有本批可玩构建或人工试玩。
 

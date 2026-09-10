@@ -470,7 +470,8 @@ impl Game {
             TargetSelection::SelfTarget
             | TargetSelection::Item { .. }
             | TargetSelection::Town { .. }
-            | TargetSelection::CraftingItem { .. } => None,
+            | TargetSelection::CraftingItem { .. }
+            | TargetSelection::ArtifactCreationItem { .. } => None,
         }
     }
 }

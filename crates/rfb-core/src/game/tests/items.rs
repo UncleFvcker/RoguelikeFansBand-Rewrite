@@ -3514,6 +3514,355 @@ fn e6_crafting_keeps_ammunition_stack_identifies_ego_and_cancels_invalid_targets
     assert_eq!(update.events[0].kind, "item.use-unavailable");
 }
 
+fn artifact_creation_command(quantity: u32, name: Option<&str>) -> GameCommand {
+    GameCommand::UseItem {
+        item_id: "test.artifact-scroll".into(),
+        target: Some(TargetSelection::ArtifactCreationItem {
+            item_id: "test.artifact-target".into(),
+            quantity,
+            name: name.map(str::to_owned),
+        }),
+    }
+}
+
+#[test]
+fn artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name() {
+    for equipped in [false, true] {
+        let mut game = Game::new(637);
+        choose_human_talent_if_pending(&mut game);
+        clear_monsters(&mut game);
+        game.items.clear();
+        give_inventory_item(
+            &mut game,
+            "test.artifact-scroll",
+            "demo.item.artifact-creation-scroll",
+        );
+        give_inventory_item(&mut game, "test.artifact-target", "demo.item.dagger");
+        if equipped {
+            game.equip_inventory_item("test.artifact-target", None)
+                .unwrap();
+        }
+        let location = game.items[1].location.clone();
+        game.items[1].enchantments.to_damage = 5;
+        game.items[1]
+            .intrinsic_properties
+            .rfb_flags
+            .insert("RES_FIRE".into());
+        let serial = game.next_item_instance_serial;
+        let tick = game.world_tick;
+        assert!(
+            game.snapshot()
+                .inventory
+                .iter()
+                .find(|item| item.id == "test.artifact-scroll")
+                .unwrap()
+                .artifact_creation_targets
+                .as_ref()
+                .unwrap()
+                .contains(&"test.artifact-target".to_owned())
+        );
+        let update = dispatch_next(&mut game, artifact_creation_command(1, Some("圆月")));
+        let target = game
+            .items
+            .iter()
+            .find(|item| item.id == "test.artifact-target")
+            .unwrap();
+        assert_eq!(target.location, location);
+        assert_eq!(target.kind_id, "demo.item.dagger");
+        assert_eq!(target.artifact_name.as_deref(), Some("'圆月'"));
+        assert_eq!(
+            target.origin_kind,
+            Some(ItemOriginKindDto::ArtifactCreation)
+        );
+        assert!(target.intrinsic_properties.rfb_flags.contains("RES_FIRE"));
+        assert!(target.enchantments.to_damage >= 5);
+        assert_eq!(
+            game.item_identification(target),
+            ItemIdentificationDto::Identified
+        );
+        assert_eq!(game.next_item_instance_serial, serial);
+        assert!(game.world_tick > tick);
+        assert!(
+            !game
+                .items
+                .iter()
+                .any(|item| item.id == "test.artifact-scroll")
+        );
+        assert!(update.events.iter().any(
+            |event| event.kind == "item.artifact-creation" && event.args["succeeded"] == "true"
+        ));
+        let saved_target = target.clone();
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(
+            restored
+                .items
+                .iter()
+                .find(|item| item.id == saved_target.id),
+            Some(&saved_target)
+        );
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.random_artifact_names, game.random_artifact_names);
+        let a = dispatch_next(&mut game, GameCommand::Wait);
+        let b = dispatch_next(&mut restored, GameCommand::Wait);
+        assert_eq!(a.events, b.events);
+        assert_eq!(game.state_hash(), restored.state_hash());
+    }
+}
+
+#[test]
+fn artifact_scroll_destroys_extra_ground_ammunition_and_uses_generated_dice_for_shooting() {
+    let mut game = Game::new(4);
+    choose_human_talent_if_pending(&mut game);
+    let definition = game
+        .content
+        .world(DEFAULT_WORLD_ID)
+        .unwrap()
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.castle-depth-55")
+        .unwrap()
+        .clone();
+    let floor = game
+        .generate_procedural_floor(&definition, Some("demo.dungeon.castle.instance.1".into()))
+        .unwrap();
+    game.dungeon_states
+        .get_mut("demo.dungeon.castle")
+        .unwrap()
+        .next_instance_ordinal = 1;
+    game.activate_floor(floor, Vec::new());
+    clear_monsters(&mut game);
+    game.items.clear();
+    give_inventory_item(
+        &mut game,
+        "test.artifact-scroll",
+        "demo.item.artifact-creation-scroll",
+    );
+    give_inventory_item(&mut game, "test.artifact-target", "demo.item.arrow");
+    game.items[1].quantity = 4;
+    game.items[1].location = ItemLocation::Ground(game.player.position);
+    game.rng = RfbRng::seeded(4);
+    let serial = game.next_item_instance_serial;
+    let update = dispatch_next(&mut game, artifact_creation_command(4, None));
+    let target = game
+        .items
+        .iter()
+        .find(|item| item.id == "test.artifact-target")
+        .unwrap();
+    let dice = target.intrinsic_melee_damage_dice.unwrap();
+    assert!(dice.dice > 1 || dice.sides > 4);
+    assert_eq!(target.quantity, 1);
+    assert!(target.activation.is_none());
+    assert_eq!(target.location, ItemLocation::Ground(game.player.position));
+    assert_eq!(game.next_item_instance_serial, serial);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.artifact-creation"
+                && event.args["destroyedQuantity"] == "3")
+    );
+    game.pick_up_item_at_player(Some("test.artifact-target"))
+        .unwrap();
+    give_inventory_item(&mut game, "test.artifact-bow", "demo.item.short-bow");
+    game.equip_inventory_item("test.artifact-bow", None)
+        .unwrap();
+    let profile = game.player_projectile_profile().unwrap();
+    assert_eq!(
+        (profile.damage_dice, profile.damage_sides),
+        (dice.dice, dice.sides)
+    );
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(
+        restored.player_projectile_profile().unwrap().damage_sides,
+        dice.sides
+    );
+    assert_eq!(game.state_hash(), restored.state_hash());
+    let shot = dispatch_next(
+        &mut game,
+        GameCommand::Fire {
+            direction: Direction::East,
+        },
+    );
+    let replay = dispatch_next(
+        &mut restored,
+        GameCommand::Fire {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(shot.events, replay.events);
+    assert_eq!(game.state_hash(), restored.state_hash());
+}
+
+#[test]
+fn artifact_scroll_zero_value_failure_keeps_generated_item_rng_and_scroll_without_time() {
+    let mut game = Game::new(640);
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    give_inventory_item(
+        &mut game,
+        "test.artifact-scroll",
+        "demo.item.artifact-creation-scroll",
+    );
+    give_inventory_item(&mut game, "test.artifact-target", "demo.item.dagger");
+    game.items[1].enchantments = ItemEnchantmentsDto {
+        to_hit: -255,
+        to_damage: -255,
+        to_armor: -255,
+    };
+    let draws = game.rng_draw_counter();
+    let tick = game.world_tick;
+    let update = dispatch_next(&mut game, artifact_creation_command(1, Some("零")));
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.artifact-creation"
+                && event.args["succeeded"] == "false")
+    );
+    assert_eq!(game.world_tick, tick);
+    assert!(game.rng_draw_counter() > draws);
+    assert_eq!(game.items[0].id, "test.artifact-scroll");
+    assert_eq!(game.items[1].artifact_name.as_deref(), Some("'零'"));
+    assert_eq!(game.items[1].origin_kind, None);
+    assert_eq!(
+        game.item_identification(&game.items[1]),
+        ItemIdentificationDto::Identified
+    );
+    assert_eq!(
+        game.state_hash(),
+        Game::from_save(game.to_save()).unwrap().state_hash()
+    );
+}
+
+#[test]
+fn artifact_scroll_rejects_stale_known_or_illegal_targets_without_mutation() {
+    let mut base = Game::new(638);
+    choose_human_talent_if_pending(&mut base);
+    clear_monsters(&mut base);
+    base.items.clear();
+    give_inventory_item(
+        &mut base,
+        "test.artifact-scroll",
+        "demo.item.artifact-creation-scroll",
+    );
+    give_inventory_item(&mut base, "test.artifact-target", "demo.item.dagger");
+    for case in 0..9 {
+        let mut game = base.clone();
+        let mut command = artifact_creation_command(1, None);
+        match case {
+            0 => {
+                command = GameCommand::UseItem {
+                    item_id: "test.artifact-scroll".into(),
+                    target: None,
+                }
+            }
+            1 => command = artifact_creation_command(2, None),
+            2 => game.items[1].artifact_name = Some("'Known artifact'".into()),
+            3 => game.items[1].affix_ids = vec!["demo.affix.frost-hunter".into()],
+            4 => game.items[1].kind_id = "demo.item.poison-needle".into(),
+            5 => {
+                game.items[1].location = ItemLocation::Ground(Position {
+                    x: game.player.position.x + 1,
+                    y: game.player.position.y,
+                })
+            }
+            6 => command = artifact_creation_command(1, Some(&"长".repeat(27))),
+            7 => command = artifact_creation_command(1, Some("bad\nname")),
+            _ => game.items[1].kind_id = "demo.item.cure-poison-mushroom".into(),
+        }
+        game.identify_item_instance("test.artifact-target", ItemIdentificationRequest::new(true));
+        let items = game.items.clone();
+        let rng = game.rng.clone();
+        let tick = game.world_tick;
+        let update = dispatch_next(&mut game, command);
+        assert_eq!(game.items, items, "case {case}");
+        assert_eq!(game.rng, rng);
+        assert_eq!(game.world_tick, tick);
+        assert_eq!(update.events[0].kind, "item.use-unavailable");
+    }
+    for no_remove in [false, true] {
+        let mut game = base.clone();
+        if no_remove {
+            game.items[1]
+                .intrinsic_properties
+                .rfb_flags
+                .insert("NO_REMOVE".into());
+        } else {
+            game.items[1].affix_ids = vec!["demo.affix.frost-hunter".into()];
+        }
+        let items = game.items.clone();
+        let rng = game.rng.clone();
+        let tick = game.world_tick;
+        let update = dispatch_next(&mut game, artifact_creation_command(1, None));
+        assert_eq!(game.items, items);
+        assert_eq!(game.rng, rng);
+        assert_eq!(game.world_tick, tick);
+        assert_eq!(
+            game.item_knowledge_dto("demo.item.artifact-creation-scroll"),
+            ItemKnowledgeDto::Aware
+        );
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.kind == "item.artifact-creation"
+                    && event.args["succeeded"] == "false")
+        );
+    }
+}
+
+#[test]
+fn artifact_scroll_snotling_mushroom_is_reusable_and_restores_its_cooldown() {
+    let mut game = snotling_game(639);
+    clear_monsters(&mut game);
+    game.items.clear();
+    give_inventory_item(
+        &mut game,
+        "test.artifact-scroll",
+        "demo.item.artifact-creation-scroll",
+    );
+    give_inventory_item(
+        &mut game,
+        "test.artifact-target",
+        "demo.item.cure-poison-mushroom",
+    );
+    game.items[1].quantity = 2;
+    dispatch_next(&mut game, artifact_creation_command(2, None));
+    assert_eq!(game.items[0].artifact_name.as_deref(), Some("(永恒蘑菇)"));
+    assert_eq!(game.items[0].quantity, 1);
+    let eat = GameCommand::UseItem {
+        item_id: "test.artifact-target".into(),
+        target: None,
+    };
+    dispatch_next(&mut game, eat.clone());
+    assert_eq!(game.items[0].quantity, 1);
+    assert!(
+        (1..crate::state::ARTIFACT_MUSHROOM_COOLDOWN_TICKS)
+            .contains(&game.items[0].device_recovery_progress)
+    );
+    assert!(!game.snapshot().inventory[0].usable);
+    assert!(game.player_has_status_kind(STATUS_HASTE));
+    let tick = game.world_tick;
+    let update = dispatch_next(&mut game, eat.clone());
+    assert_eq!(update.events[0].kind, "item.use-unavailable");
+    assert_eq!(game.world_tick, tick);
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(game.state_hash(), restored.state_hash());
+    let remaining = game.items[0].device_recovery_progress;
+    for _ in 0..remaining {
+        game.process_inventory_device_recovery(&mut Vec::new());
+        restored.process_inventory_device_recovery(&mut Vec::new());
+    }
+    assert_eq!(game.items[0].device_recovery_progress, 0);
+    assert!(game.snapshot().inventory[0].usable);
+    let a = dispatch_next(&mut game, eat.clone());
+    let b = dispatch_next(&mut restored, eat);
+    assert_eq!(a.events, b.events);
+    assert_eq!(game.state_hash(), restored.state_hash());
+    assert_eq!(game.items[0].quantity, 1);
+}
+
 #[test]
 fn e6_crafting_stack_needs_no_new_instance_allocation() {
     let mut game = Game::new(524);

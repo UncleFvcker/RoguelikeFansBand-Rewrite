@@ -1238,6 +1238,8 @@ action-bounty-claim-mission = 领取悬赏奖励
 status-life-force = 生命力
 status-life-force-detail = 生命力：{ $lifeForce } / 1000
 inventory-crafting-confirm = 对整叠 { $quantity } 支弹药使用工艺有 { $chance }% 的失败几率，失败仍会消耗本次使用。继续吗？
+inventory-artifact-creation-confirm = 创造神器只保留一件目标物品，其余 { $quantity } 件将被销毁。继续吗？
+inventory-artifact-creation-name = 神器名称（最多 79 字节；留空或取消使用随机名称；蘑菇名称固定）：
 
 action-inn-food = 购买食物和饮料（{ $cost } 金币）
 inn-food-completed = { $food } 花费 { $cost } 金币，剩余 { $balance }。

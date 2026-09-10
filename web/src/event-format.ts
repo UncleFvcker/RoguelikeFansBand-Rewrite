@@ -1440,6 +1440,14 @@ export function createPresentationFormatter(
         return localization.format("message-item-use-crafting-failed", {
           target: visibleItemNameForKind(event.args.target),
         });
+      case "item-artifact-creation": {
+        const outcome = localization.format(event.args.succeeded === "true"
+          ? "message-item-artifact-creation-success" : "message-item-artifact-creation-failed", {
+          target: visibleItemNameForKind(event.args.target),
+        });
+        const destroyed = Number(event.args.destroyedQuantity ?? 0);
+        return destroyed > 0 ? `${outcome} ${localization.format("message-item-artifact-creation-stack", { quantity: destroyed })}` : outcome;
+      }
       case "item-use-crafting":
         return localization.format("message-item-use-crafting", {
           source: visibleItemName(event.args.nameKey, event.args.source),
