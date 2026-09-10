@@ -163,6 +163,30 @@ Good/Great 已使用各自的源候选谓词；普通书本权重读取 B1 的�
 
 ### B3：完整主题谓词
 
+已实现。来源为 RFB `master` Git 对象 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`：
+`object2.c:3084–3426,3496–3555`、`xtra2.c:616–687`、`ego.c:81–307`、`artifact.c:2172–2213`。
+Warrior/WarriorShoot 的首饰接受逐分配行抽 1/3；零权重和当前深度之外的行仍先执行 hook。
+Paladin/PaladinEvil 先直接接受首饰，不误走 Warrior 的概率分支。主题失败先短路，再检查质量。
+
+| 源主题 | 当前调用映射 |
+| --- | --- |
+| `DROP_WARRIOR_SHOOT` | 源怪物 219、244、285、313、954、1075、1190、1326 均已导入。对应 knight-archer、black-orc、orc-captain、uruk、orcish-artillery、dailai-dongzhu-captain-of-southerings、orc-warlord、bush-ranger；从误用 Archer 改为独立 `demo.loot-table.warrior-shoot`，正式主题表由 12 增至 13 |
+| `DROP_JUNK` | 此 ref 只有枚举、解析字符串和谓词，无 `r_info` 使用者，也无其他赋值调用者；保留完整谓词及测试，不新增没有调用者的正式表 |
+
+死亡掉落先抽主题，再判金币/物品。实际选中的表是整次生成的主题来源，首饰 power-zero 提升、
+Ego 和随机神器 bias 均沿用该主题；移除 `LootSource` 中另存的 themed 布尔值。
+Ego 仍复用既有空主题池回通用 Ego 池的规则，底材层保持无候选即失败。
+
+主题与 Tailored 同时存在时，主题占 hook1，Great/Good 保留在 hook2，并由其继续应用 `_drop_tailored`。
+当前已实现的 Tomte 头饰约束不会随主题优先被清除；测试证明 Mage + Tailored 不回退生成针织帽。
+源码物化后的 `object_is_icky(..., true)` 也不受主题优先豁免，完整候选与成品检查仍按 B4 接续。
+`get_monster_drop` 抽中主题后跳过添加 AM_TAILORED 的分支；当前 Acquirement 使用基础池，
+因此这两条真实入口不产生主题与 Tailored 的组合，不为了测试新增玩家开关。
+
+真实 Orc warlord 死亡链已验证主题铁盔经过 Ego、地面掉落、拾取、装备、保存恢复及继续行动；
+首饰随机接受/Paladin 例外、所有主题代表的允许与禁止项、质量交集与空池另有定向覆盖。
+奖励内外层重试仍是 B5，本批未补数量或刷新无差异的回放预期。
+
 落点：同一底材分配模块、正式主题定义、怪物掉落调用点。
 
 1. 将 12 个现有正式主题接到单一基础池上的源谓词；同时查清 WARRIOR_SHOOT、JUNK 的源调用者、

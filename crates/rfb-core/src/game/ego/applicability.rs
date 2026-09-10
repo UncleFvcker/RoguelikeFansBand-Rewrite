@@ -13,7 +13,6 @@ fn context(game: &Game, table: &str) -> LootContext {
         depth: 80,
         source: LootSource::MonsterDeath {
             actor_id: "test.theme".into(),
-            themed: true,
         },
     }
 }
@@ -23,6 +22,7 @@ fn themed_ego_selection_filters_before_weighting_and_empty_pool_falls_back() {
     let game = Game::new_with_build(87, "demo.build.warrior").unwrap();
     let content = &game.content;
     for (theme, category, index) in [
+        ("warrior-shoot", RfbEgoTypeDefinition::Ring, 206),
         ("archer", RfbEgoTypeDefinition::Ring, 207),
         ("mage", RfbEgoTypeDefinition::Gloves, 138),
         ("dwarf", RfbEgoTypeDefinition::Helmet, 118),

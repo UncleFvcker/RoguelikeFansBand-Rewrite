@@ -20,7 +20,7 @@
     "itemTableId": "demo.loot-table.base-items",
     "kind": "items-and-gold",
     "themeChancePercent": 50,
-    "themeTableId": "demo.loot-table.archer"
+    "themeTableId": "demo.loot-table.warrior-shoot"
   },
   "defense": 4,
   "descriptionKey": "actor-demo-knight-archer-description",

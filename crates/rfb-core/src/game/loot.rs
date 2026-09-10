@@ -179,7 +179,7 @@ impl From<ItemInstance> for GeneratedItemDraft {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum LootSource {
     MonsterCarried { actor_id: String },
-    MonsterDeath { actor_id: String, themed: bool },
+    MonsterDeath { actor_id: String },
     FloorRoom { room_id: String, spawn_id: String },
     Vault { vault_id: String, spawn_id: String },
     ItemUse { item_id: String },
@@ -294,6 +294,9 @@ impl Game {
                 }
             };
             for _ in 0..count {
+                // get_monster_drop chooses the theme before deciding gold/item.
+                let use_theme = drop.theme_table_id.is_some()
+                    && self.rng.bounded(100) < u64::from(drop.theme_chance_percent);
                 let drops_gold = match drop.kind {
                     MonsterDropKindDefinition::Gold => true,
                     MonsterDropKindDefinition::Items => false,
@@ -307,8 +310,6 @@ impl Game {
                     )?);
                     continue;
                 }
-                let use_theme = drop.theme_table_id.is_some()
-                    && self.rng.bounded(100) < u64::from(drop.theme_chance_percent);
                 let table_id = if use_theme {
                     drop.theme_table_id
                         .as_ref()
@@ -325,7 +326,6 @@ impl Game {
                         depth: u16::try_from(object_level).expect("bounded monster object level"),
                         source: LootSource::MonsterDeath {
                             actor_id: actor.id.clone(),
-                            themed: use_theme,
                         },
                     },
                     ItemLocation::Ground(actor.position),
@@ -343,7 +343,6 @@ impl Game {
                 depth,
                 source: LootSource::MonsterDeath {
                     actor_id: actor.id.clone(),
-                    themed: false,
                 },
             };
             if let Some(gold_chance) = actor_definition.gold_drop_chance_percent {
@@ -391,7 +390,6 @@ impl Game {
                 depth,
                 source: LootSource::MonsterDeath {
                     actor_id: actor.id.clone(),
-                    themed: false,
                 },
             });
             let first_realm_book_kind_id = first_realm_book_rank.and_then(|rank| {
@@ -769,14 +767,7 @@ impl Game {
                             || item.tags.iter().any(|tag| tag == "device")))
             });
             let mut power = if supports_quality { rolled_power } else { 0 };
-            if rfb_generation
-                && jewelry
-                && power == 0
-                && matches!(
-                    context.source,
-                    LootSource::MonsterDeath { themed: true, .. }
-                )
-            {
+            if rfb_generation && jewelry && power == 0 && theme.is_some() {
                 power = 1;
             }
             let rfb_light = table.rfb_ego_policy

@@ -224,7 +224,7 @@ pub(super) fn select_entry(
                 .rfb_base_kind
                 .expect("source pool validates kind identities");
             if !category.is_none_or(|category| category.accepts(base.tval, base.sval))
-                || !theme.is_none_or(|theme| theme_candidate(theme, item))
+                || !theme.is_none_or(|theme| theme_candidate(&mut game.rng, theme, item))
                 || !quality_candidate(game, mode, item)
                 || (tomte_headgear
                     && matches!(base.tval, 32 | 33)
@@ -270,22 +270,27 @@ pub(super) fn select_entry(
         .then(|| game.roll_weighted_index(&weights))
 }
 
-/// Static candidate domain of object2.c::_kind_theme_* at RFB master a0d92b6378.
-/// Warrior's random jewelry acceptance belongs to the allocation scheduler (B3).
-pub(super) fn theme_candidate(theme: RfbDropTheme, item: &ItemDefinition) -> bool {
+/// object2.c::_kind_theme_* at RFB master a0d92b6378. The hook runs once
+/// per allocation row, including zero-weight and currently out-of-depth rows.
+fn theme_candidate(
+    rng: &mut crate::rng::RfbRng,
+    theme: RfbDropTheme,
+    item: &ItemDefinition,
+) -> bool {
     let base = item
         .rfb_base_kind
         .expect("source pool validates kind identities");
     let (tval, sval) = (base.tval, base.sval);
-    let warrior = || {
-        matches!(tval, 22 | 30..=32 | 34 | 37 | 38 | 40 | 45)
+    let mut warrior = || {
+        matches!(tval, 22 | 30..=32 | 34 | 37 | 38)
             || (tval == 23 && (11..32).contains(&sval))
             || (tval == 75 && matches!(sval, 32 | 33))
+            || (matches!(tval, 40 | 45) && rng.bounded(3) == 0)
     };
     match theme {
         RfbDropTheme::Warrior => warrior(),
         RfbDropTheme::WarriorShoot => {
-            warrior() || tval == 18 || (tval == 19 && matches!(sval, 23 | 24))
+            tval == 18 || (tval == 19 && matches!(sval, 23 | 24)) || warrior()
         }
         RfbDropTheme::Archer => matches!(tval, 17 | 19 | 45 | 46),
         RfbDropTheme::Mage => {
@@ -303,15 +308,15 @@ pub(super) fn theme_candidate(theme: RfbDropTheme, item: &ItemDefinition) -> boo
             matches!(tval, 21 | 40 | 94 | 98) || (tval == 70 && matches!(sval, 44 | 45))
         }
         RfbDropTheme::Paladin => {
-            warrior()
-                || matches!(tval, 90 | 99)
+            matches!(tval, 40 | 45 | 90 | 99)
                 || (tval == 75 && matches!(sval, 34..=39))
                 || (tval == 70 && matches!(sval, 33..=35 | 37 | 50))
+                || warrior()
         }
         RfbDropTheme::PaladinEvil => {
-            warrior()
-                || matches!(tval, 94 | 98)
+            matches!(tval, 40 | 45 | 94 | 98)
                 || (tval == 70 && matches!(sval, 41 | 44 | 45 | 50))
+                || warrior()
         }
         RfbDropTheme::Samurai => {
             matches!(tval, 45 | 106) || matches!((tval, sval), (23, 13 | 20) | (37, 14))
@@ -706,7 +711,8 @@ mod tests {
     #[test]
     fn themes_read_source_identity_including_previously_missing_domains() {
         let content = crate::game::load_built_in_content().unwrap();
-        let accepts = |theme, id| theme_candidate(theme, content.item(id).unwrap());
+        let mut rng = crate::rng::RfbRng::seeded(417);
+        let mut accepts = |theme, id| theme_candidate(&mut rng, theme, content.item(id).unwrap());
         assert!(accepts(RfbDropTheme::Archer, "demo.item.harp"));
         assert!(accepts(RfbDropTheme::Mage, "demo.item.magic-missile-wand"));
         assert!(accepts(RfbDropTheme::Mage, "demo.item.beginners-handbook"));
@@ -720,9 +726,160 @@ mod tests {
         let mut sword = content.item("demo.item.dagger").unwrap().clone();
         sword.id = "test.item.unrelated-name".into();
         sword.weight_tenths_pound = 49;
-        assert!(theme_candidate(RfbDropTheme::Rogue, &sword));
+        assert!(theme_candidate(&mut rng, RfbDropTheme::Rogue, &sword));
         sword.weight_tenths_pound = 50;
-        assert!(!theme_candidate(RfbDropTheme::Rogue, &sword));
+        assert!(!theme_candidate(&mut rng, RfbDropTheme::Rogue, &sword));
+    }
+
+    #[test]
+    fn theme_representatives_preserve_source_exceptions_and_forbidden_kinds() {
+        use RfbDropTheme::*;
+        let content = crate::game::load_built_in_content().unwrap();
+        let mut rng = crate::rng::RfbRng::seeded(418);
+        for (theme, allowed, forbidden) in [
+            (Warrior, "sabre", "dagger"),
+            (WarriorShoot, "light-crossbow", "arrow"),
+            (Archer, "harp", "bolt"),
+            (Mage, "pointy-hat", "iron-helm"),
+            (Priest, "renewal-tonic", "valor-tonic"),
+            (PriestEvil, "black-prayers", "ring"),
+            (Paladin, "wrath-of-god", "black-prayers"),
+            (
+                PaladinEvil,
+                "glyph-severance-scroll",
+                "book-of-common-prayer",
+            ),
+            (Samurai, "katana", "dagger"),
+            (Ninja, "dagger", "sabre"),
+            (Rogue, "dagger", "sabre"),
+            (Hobbit, "poison-mushroom", "iron-shot"),
+            (Dwarf, "mattock", "dagger"),
+            (Junk, "wooden-torch", "iron-helm"),
+        ] {
+            for (id, expected) in [(allowed, true), (forbidden, false)] {
+                let item = content.item(&format!("demo.item.{id}")).unwrap();
+                assert_eq!(
+                    theme_candidate(&mut rng, theme, item),
+                    expected,
+                    "{theme:?}: {id}"
+                );
+            }
+        }
+        assert_eq!(rng.draw_counter, 0, "only warrior jewelry hooks draw RNG");
+    }
+
+    #[test]
+    fn warrior_jewelry_rolls_per_row_before_depth_and_zero_weight_filtering() {
+        let mut game = Game::new(419);
+        let rows = [(0, 0), (100, 99), (100, 0)].map(|(weight, min_depth)| LootEntryDefinition {
+            item_kind_id: "demo.item.ring".into(),
+            weight,
+            min_depth,
+            max_depth: u16::MAX,
+            quantity: 1,
+        });
+        let mut seen = std::collections::BTreeSet::new();
+        for theme in [RfbDropTheme::Warrior, RfbDropTheme::WarriorShoot] {
+            for seed in 0..32 {
+                game.rng = crate::rng::RfbRng::seeded(seed);
+                let mut expected = game.rng.clone();
+                expected.bounded(3); // Zero weight does not skip hook preparation.
+                expected.bounded(3); // Neither does a deeper allocation row.
+                let accepted = expected.bounded(3) == 0;
+                if accepted {
+                    expected.bounded(100);
+                }
+                assert_eq!(
+                    select_entry(
+                        &mut game,
+                        &context(0),
+                        ItemGenerationMode::Ordinary,
+                        &rows,
+                        Some(theme)
+                    ),
+                    accepted.then_some(2)
+                );
+                assert_eq!(game.rng, expected);
+                seen.insert(accepted);
+            }
+        }
+        assert_eq!(seen, [false, true].into());
+        for theme in [RfbDropTheme::Paladin, RfbDropTheme::PaladinEvil] {
+            game.rng = crate::rng::RfbRng::seeded(419);
+            let mut expected = game.rng.clone();
+            expected.bounded(100);
+            assert_eq!(
+                select_entry(
+                    &mut game,
+                    &context(0),
+                    ItemGenerationMode::Ordinary,
+                    &rows,
+                    Some(theme)
+                ),
+                Some(2)
+            );
+            assert_eq!(
+                game.rng, expected,
+                "paladin accepts jewelry before calling warrior"
+            );
+        }
+    }
+
+    #[test]
+    fn theme_skips_category_but_preserves_tailored_headgear_and_quality_constraints() {
+        let mut game = Game::new_with_build_race_and_name(
+            420,
+            "demo.build.warrior",
+            "rfb-legacy.race.tomte",
+            "Tomte",
+        )
+        .unwrap();
+        let rows = ["demo.item.knit-cap", "demo.item.pointy-hat"].map(|id| LootEntryDefinition {
+            item_kind_id: id.into(),
+            weight: 100,
+            min_depth: 0,
+            max_depth: u16::MAX,
+            quantity: 1,
+        });
+        let seed = (0..100)
+            .find(|seed| crate::rng::RfbRng::seeded(*seed).bounded(8) != 0)
+            .unwrap();
+        game.rng = crate::rng::RfbRng::seeded(seed);
+        assert_eq!(
+            select_entry(
+                &mut game,
+                &context(0),
+                ItemGenerationMode::Great,
+                &rows,
+                Some(RfbDropTheme::Mage)
+            ),
+            Some(1)
+        );
+        assert_eq!(game.rng.draw_counter, 2); // Boost gate, then kind; no category.
+        game.rng = crate::rng::RfbRng::seeded(seed);
+        assert_eq!(
+            select_entry(
+                &mut game,
+                &context(0),
+                ItemGenerationMode::TailoredGreat,
+                &rows,
+                Some(RfbDropTheme::Mage)
+            ),
+            None
+        );
+        assert_eq!(game.rng.draw_counter, 1); // No fallback to the unthemed knit cap.
+        let mut damaged = game.content.item("demo.item.sabre").unwrap().clone();
+        damaged.melee_profile.as_mut().unwrap().to_hit = -1;
+        assert!(theme_candidate(
+            &mut game.rng,
+            RfbDropTheme::Warrior,
+            &damaged
+        ));
+        assert!(!quality_candidate(
+            &game,
+            ItemGenerationMode::Great,
+            &damaged
+        ));
     }
 
     #[test]
@@ -763,7 +920,6 @@ mod tests {
             depth: 9,
             source: LootSource::MonsterDeath {
                 actor_id: "test.actor.drop".into(),
-                themed: true,
             },
         };
         assert_eq!(context.drop_theme(&game.content), "hobbit");

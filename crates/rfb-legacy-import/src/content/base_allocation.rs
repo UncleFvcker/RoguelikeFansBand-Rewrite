@@ -231,6 +231,7 @@ pub fn sync_demo_base_allocation(source: &Path, pack: &Path) -> Result<usize, Le
     writes.push((base_path, serde_json::to_string_pretty(&base)? + "\n"));
     for name in [
         "warrior",
+        "warrior-shoot",
         "archer",
         "mage",
         "priest",
@@ -258,7 +259,7 @@ pub fn sync_demo_base_allocation(source: &Path, pack: &Path) -> Result<usize, Le
         "source": K_INFO_SOURCE, "nameSource": K_NAME_ZH_SOURCE,
         "nameFormatSource": "src/flavor.c::object_desc (aware, no flavor; consumable suffixes)", "allocationRowCount": count,
         "unresolvedChineseNames": unresolved_names, "kinds": coverage, "explicitItems": explicit_items,
-        "remainingRules": ["B1 book found counters", "B2 category/get_obj_num scheduler and good/great predicates", "B3 stochastic theme acceptance and source caller mapping", "B4-B6 tailored preferences, retry scheduling and acceptance"]});
+        "remainingRules": ["B4-B6 tailored preferences, retry scheduling and acceptance"]});
     writes.push((
         pack.join("legacy-base-allocation-audit.json"),
         serde_json::to_string_pretty(&report)? + "\n",

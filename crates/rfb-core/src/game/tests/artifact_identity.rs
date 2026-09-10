@@ -570,7 +570,6 @@ fn artifact_identity_natural_generation_preserves_existing_artifacts() {
                 depth: 80,
                 source: LootSource::MonsterDeath {
                     actor_id: "test.source".to_owned(),
-                    themed: false,
                 },
             };
             let generated = trial

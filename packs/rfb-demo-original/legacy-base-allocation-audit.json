@@ -10203,9 +10203,6 @@
   "nameFormatSource": "src/flavor.c::object_desc (aware, no flavor; consumable suffixes)",
   "nameSource": "src/kind_name_zh.inc",
   "remainingRules": [
-    "B1 book found counters",
-    "B2 category/get_obj_num scheduler and good/great predicates",
-    "B3 stochastic theme acceptance and source caller mapping",
     "B4-B6 tailored preferences, retry scheduling and acceptance"
   ],
   "schemaVersion": 1,

@@ -47,7 +47,6 @@ fn mattock_forced_base_disruption_activation_round_trips() {
         depth: 50,
         source: LootSource::MonsterDeath {
             actor_id: "test.loot-source".to_owned(),
-            themed: false,
         },
     };
     // This seed reaches Disruption after the natural artifact gate.

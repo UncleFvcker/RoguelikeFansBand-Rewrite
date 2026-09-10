@@ -54,6 +54,7 @@ const LEGACY_DROP_TABLE_ID: &str = "rfb-legacy.loot-table.monster-drops";
 const LEGACY_WARRIOR_DROP_TABLE_ID: &str = "rfb-legacy.loot-table.monster-drops-warrior";
 const DEMO_DROP_TABLE_ID: &str = "demo.loot-table.base-items";
 const DEMO_WARRIOR_DROP_TABLE_ID: &str = "demo.loot-table.warrior";
+const DEMO_WARRIOR_SHOOT_DROP_TABLE_ID: &str = "demo.loot-table.warrior-shoot";
 const DEMO_ARCHER_DROP_TABLE_ID: &str = "demo.loot-table.archer";
 const DEMO_MAGE_DROP_TABLE_ID: &str = "demo.loot-table.mage";
 const DEMO_PRIEST_DROP_TABLE_ID: &str = "demo.loot-table.priest";
@@ -71,7 +72,7 @@ const DEMO_SKELETON_ITEM_ID: &str = "demo.item.skeleton-remains";
 fn demo_drop_theme_table_id(theme: &str) -> Option<&'static str> {
     match theme {
         "DROP_WARRIOR" => Some(DEMO_WARRIOR_DROP_TABLE_ID),
-        "DROP_WARRIOR_SHOOT" => Some(DEMO_ARCHER_DROP_TABLE_ID),
+        "DROP_WARRIOR_SHOOT" => Some(DEMO_WARRIOR_SHOOT_DROP_TABLE_ID),
         "DROP_ARCHER" => Some(DEMO_ARCHER_DROP_TABLE_ID),
         "DROP_MAGE" => Some(DEMO_MAGE_DROP_TABLE_ID),
         "DROP_PRIEST" => Some(DEMO_PRIEST_DROP_TABLE_ID),
@@ -20708,7 +20709,10 @@ mod tests {
             actor["allocation"]["legacyDungeonIndices"],
             serde_json::json!([31])
         );
-        assert_eq!(actor["deathDrop"]["themeTableId"], "demo.loot-table.archer");
+        assert_eq!(
+            actor["deathDrop"]["themeTableId"],
+            "demo.loot-table.warrior-shoot"
+        );
         assert_eq!(
             demo_drop_theme_table_id("DROP_DWARF"),
             Some("demo.loot-table.dwarf")

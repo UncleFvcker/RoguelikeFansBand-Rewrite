@@ -19,7 +19,6 @@ fn context(game: &Game) -> LootContext {
         depth: 80,
         source: LootSource::MonsterDeath {
             actor_id: "test.drop".into(),
-            themed: false,
         },
     }
 }
@@ -53,7 +52,8 @@ fn random_artifact_bad_luck_keeps_creation_depth_separate_from_value_level() {
     game.progress
         .active_mutation_ids
         .insert("rfb.mutation.bad-luck".into());
-    let context = context(&game);
+    let mut context = context(&game);
+    context.table_id = "demo.loot-table.warrior-shoot".into();
     let draft = game.fixed_item_draft(&context, "demo.item.dagger".into());
     let original = draft
         .clone()
@@ -67,6 +67,7 @@ fn random_artifact_bad_luck_keeps_creation_depth_separate_from_value_level() {
         Creation {
             level: 80,
             class_id: "demo.class.warrior",
+            theme: "warrior-shoot",
             ..Default::default()
         },
         &mut expected_names,

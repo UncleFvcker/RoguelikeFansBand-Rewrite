@@ -1400,7 +1400,7 @@ fn early_monster_profiles_keep_existing_traits() {
             .expect("Knight archer should retain its themed drop");
         assert_eq!(
             archer_drop.theme_table_id.as_deref(),
-            Some("demo.loot-table.archer")
+            Some("demo.loot-table.warrior-shoot")
         );
         assert_eq!(archer_drop.theme_chance_percent, 50);
         assert_eq!(
@@ -1563,7 +1563,7 @@ fn early_monster_profiles_keep_existing_traits() {
                 .death_drop
                 .as_ref()
                 .and_then(|drop| drop.theme_table_id.as_deref()),
-            Some("demo.loot-table.archer")
+            Some("demo.loot-table.warrior-shoot")
         );
         assert_eq!(
             actor("demo.actor.ogre")
@@ -12440,6 +12440,10 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
 
     for (table_id, theme) in [
         ("demo.loot-table.warrior", crate::RfbDropTheme::Warrior),
+        (
+            "demo.loot-table.warrior-shoot",
+            crate::RfbDropTheme::WarriorShoot,
+        ),
         ("demo.loot-table.archer", crate::RfbDropTheme::Archer),
         ("demo.loot-table.mage", crate::RfbDropTheme::Mage),
         ("demo.loot-table.priest", crate::RfbDropTheme::Priest),

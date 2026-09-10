@@ -2636,7 +2636,6 @@ fn tomte_tailored_acquirement_filters_headgear_by_birth_race_only() {
             depth: 20,
             source: LootSource::MonsterDeath {
                 actor_id: "test.drop".to_owned(),
-                themed: false,
             },
         };
         let mut ordinary = BTreeSet::new();

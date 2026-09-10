@@ -411,7 +411,6 @@ fn forced_base_ammunition_damage_dice_survive_generation_and_save() {
         depth: 80,
         source: LootSource::MonsterDeath {
             actor_id: "test.ammo-dice".into(),
-            themed: false,
         },
     };
     game.rng = RfbRng::seeded(41);
@@ -445,8 +444,7 @@ fn monster_object_level_and_theme_reach_real_jewelry_generation() {
         .unwrap()
         .clone();
     table.id = "test.loot-table.forced-jewelry".into();
-    // This test fixes the base kind and exercises materialization.
-    table.kind_selection = None;
+    // Keep an actual source theme while isolating jewelry's object level.
     table
         .entries
         .retain(|entry| entry.item_kind_id == "demo.item.ring");
@@ -455,6 +453,14 @@ fn monster_object_level_and_theme_reach_real_jewelry_generation() {
         good_cap_percent: 0,
         great_cap_percent: 0,
     });
+    let mut pool = table.clone();
+    pool.id = "test.loot-table.jewelry-base".into();
+    table.entries.clear();
+    table.kind_selection = Some(rfb_content::LootKindSelectionDefinition::RfbTheme {
+        pool_id: pool.id.clone(),
+        theme: rfb_content::RfbDropTheme::Mage,
+    });
+    artifact.content.loot_tables.push(pool);
     let actor = artifact
         .content
         .actors
@@ -494,7 +500,6 @@ fn monster_object_level_and_theme_reach_real_jewelry_generation() {
         depth: 80, // _mon_drop_lvl(1, 80), independently from the floor depth.
         source: LootSource::MonsterDeath {
             actor_id: actor.id.clone(),
-            themed: true,
         },
     };
     let expected_items = expected
@@ -519,6 +524,67 @@ fn monster_object_level_and_theme_reach_real_jewelry_generation() {
 }
 
 #[test]
+fn warrior_shoot_monster_death_keeps_theme_through_pickup_equipment_and_save() {
+    let mut game = Game::new_with_build(421, RFB_WARRIOR_BUILD_ID).unwrap();
+    clear_monsters(&mut game);
+    let actor_kind = "demo.actor.orc-warlord";
+    let drop = game
+        .content
+        .actor(actor_kind)
+        .unwrap()
+        .death_drop
+        .as_ref()
+        .unwrap();
+    assert_eq!(
+        drop.theme_table_id.as_deref(),
+        Some("demo.loot-table.warrior-shoot")
+    );
+    let actor = game.generated_actor("test.themed-orc".into(), actor_kind, game.player.position);
+    game.entities.push(actor);
+    let initial_ids = game
+        .items
+        .iter()
+        .map(|item| item.id.clone())
+        .collect::<BTreeSet<_>>();
+    game.rng = RfbRng::seeded(30);
+    let mut probe = game.rng.clone();
+    // Source DROP_90, then theme, then the gold/item choice.
+    assert!(probe.bounded(100) < 90);
+    assert!(probe.bounded(100) < 50);
+    assert!(probe.bounded(100) >= 20);
+    let mut events = Vec::new();
+    game.resolve_actor_death(
+        0,
+        DomainEvent::Waited,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .unwrap();
+    let item = game
+        .items
+        .iter()
+        .find(|item| !initial_ids.contains(&item.id) && !item.affix_ids.is_empty())
+        .unwrap()
+        .clone();
+    // Archer's former merged mapping cannot produce this helmet.
+    assert_eq!(item.kind_id, "demo.item.iron-helm");
+    assert_eq!(item.affix_ids, ["rfb-legacy.affix.seeing"]);
+    assert!(events.iter().any(|event| matches!(event, DomainEvent::LootDropped { source_kind_id, target_kind_id, .. } if source_kind_id == actor_kind && target_kind_id == &item.kind_id)));
+    assert_eq!(item.location, ItemLocation::Ground(game.player.position));
+    game.pick_up_item_at_player(Some(&item.id)).unwrap();
+    assert!(game.equip_inventory_item(&item.id, None).is_some());
+    game.refresh_player_resource_maxima();
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.rng, game.rng);
+    dispatch_next(&mut game, GameCommand::Wait);
+    dispatch_next(&mut restored, GameCommand::Wait);
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
 fn base_item_natural_egos_cover_all_equipment_types() {
     let base =
         Game::new_with_build(67, RFB_WARRIOR_BUILD_ID).expect("Orc Cave loot test should create");
@@ -528,7 +594,6 @@ fn base_item_natural_egos_cover_all_equipment_types() {
         depth: 30,
         source: LootSource::MonsterDeath {
             actor_id: "test.orc-cave.loot-source".to_owned(),
-            themed: false,
         },
     };
     let mut seen = BTreeSet::new();
@@ -673,7 +738,6 @@ fn shared_base_and_warrior_loot_use_depth_instead_of_dungeon_identity() {
                 depth,
                 source: LootSource::MonsterDeath {
                     actor_id: "test.shared-loot.actor".to_owned(),
-                    themed: false,
                 },
             },
             ItemLocation::Ground(game.player.position),
@@ -820,15 +884,14 @@ fn warrens_monster_drops_follow_original_probability_and_remains_profiles() {
                 depth: 0,
                 source: LootSource::MonsterDeath {
                     actor_id: "test.small-kobold.surface".to_owned(),
-                    themed: false,
                 },
             },
             ItemLocation::Ground(surface.player.position),
         )
         .expect("an out-of-depth loot table should resolve without candidates");
     assert!(outside_depth.is_empty());
-    // The instant-artifact gate precedes even an empty source pool.
-    assert_eq!(surface.rng_draw_counter(), draws_before + 1);
+    // Instant-artifact gate, then both ring/amulet hook rolls, even at depth zero.
+    assert_eq!(surface.rng_draw_counter(), draws_before + 3);
 }
 
 #[test]
