@@ -5,6 +5,101 @@ use crate::game::initialization::dungeon_substitution_uses_alternate;
 use crate::game::lighting::{DUNGEON_AMBIENT_LIGHT, SURFACE_AMBIENT_LIGHT};
 
 #[test]
+fn rlyeh_representative_generation_keeps_water_stairs_and_legal_spawns() {
+    let base = Game::new_with_build(214, "demo.build.warrior").unwrap();
+    // Root seeds without/with a river, then ARENA, lake, and final guardian.
+    for (depth, seed) in [(80, 0), (80, 1), (85, 0), (90, 0), (96, 0)] {
+        let mut game = base.clone();
+        let definition = game
+            .content
+            .world(DEFAULT_WORLD_ID)
+            .unwrap()
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == format!("demo.floor.rlyeh-depth-{depth}"))
+            .unwrap()
+            .clone();
+        game.rng = RfbRng::seeded(seed);
+        let floor = game.generate_procedural_floor(&definition, None).unwrap();
+        let terrain_at = |position: Position| {
+            assert!((0..i32::from(floor.width)).contains(&position.x));
+            assert!((0..i32::from(floor.height)).contains(&position.y));
+            game.content
+                .terrain(
+                    &floor.terrain
+                        [position.y as usize * usize::from(floor.width) + position.x as usize],
+                )
+                .unwrap()
+        };
+        assert!(terrain_at(floor.player_position).walkable);
+        let mut occupied = BTreeSet::from([floor.player_position]);
+        for actor in &floor.entities {
+            assert!(
+                occupied.insert(actor.position),
+                "duplicate actor/player position"
+            );
+            assert!(super::super::movement::actor_can_cross_terrain(
+                game.content.actor(&actor.kind_id).unwrap(),
+                terrain_at(actor.position)
+            ));
+        }
+        for item in &floor.items {
+            if let ItemLocation::Ground(position) = item.location {
+                assert!(terrain_at(position).walkable);
+            }
+        }
+        assert!(
+            floor
+                .gold_piles
+                .iter()
+                .all(|gold| terrain_at(gold.position).walkable)
+        );
+        let count = |id: &str| {
+            floor
+                .terrain
+                .iter()
+                .filter(|terrain| terrain.as_str() == id)
+                .count()
+        };
+        assert!((1..=2).contains(&count("demo.terrain.stairs-up")));
+        if depth == 96 {
+            assert_eq!(count("demo.terrain.stairs-down"), 0);
+        } else {
+            assert!((4..=5).contains(&count("demo.terrain.stairs-down")));
+        }
+        assert!(count("demo.terrain.surface-water-shallow") > 0);
+        assert!(count("demo.terrain.surface-water-deep") > 0);
+        if depth == 80 {
+            let water = count("demo.terrain.surface-water-shallow")
+                + count("demo.terrain.surface-water-deep");
+            assert_eq!(water > 400, seed == 1, "seed {seed}: {water} water tiles");
+        }
+        assert_eq!(
+            floor
+                .entities
+                .iter()
+                .filter(|actor| actor.id == "demo.guardian.rlyeh.1"
+                    && actor.kind_id == "demo.actor.great-cthulhu")
+                .count(),
+            usize::from(depth == 96)
+        );
+        if depth == 85 {
+            assert!(
+                floor
+                    .terrain
+                    .iter()
+                    .filter(|id| id.as_str() != "demo.terrain.wall")
+                    .count()
+                    > 900
+            );
+        }
+        if depth == 90 {
+            assert!(count("demo.terrain.surface-water-deep") >= 120);
+        }
+    }
+}
+
+#[test]
 fn rlyeh_full_chain_water_reward_and_surface_return_survive_save() {
     let mut game = Game::new_with_build(213, "demo.build.warrior").unwrap();
     choose_human_talent_if_pending(&mut game);
