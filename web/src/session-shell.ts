@@ -12,19 +12,9 @@ import {
 } from "./native-save-storage.ts";
 import { nativeSaveErrorKey } from "./save-panel.ts";
 import type { GameSnapshot } from "./protocol.ts";
-import { RaceMenu, type PlaytestRaceId } from "./character-creation.ts";
-export { PLAYTEST_RACE_IDS, type PlaytestRaceId } from "./character-creation.ts";
+import { CreationMenu, type PlaytestRaceId, type PlaytestBuildId } from "./character-creation.ts";
+export { PLAYTEST_RACE_IDS, type PlaytestRaceId, PLAYTEST_BUILD_IDS, type PlaytestBuildId } from "./character-creation.ts";
 
-export const PLAYTEST_BUILD_IDS = [
-  "demo.build.warrior",
-  "demo.build.high-mage-death",
-  "demo.build.archer",
-  "demo.build.paladin-death",
-  "demo.build.cavalry",
-  "demo.build.sniper",
-] as const;
-
-export type PlaytestBuildId = (typeof PLAYTEST_BUILD_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";
 type CreationPage = "overview" | "race" | "career";
 
@@ -58,13 +48,8 @@ interface SessionShellDom {
   readonly loadGameButton: HTMLButtonElement;
   readonly settingsButton: HTMLButtonElement;
   readonly exitButton: HTMLButtonElement;
-  readonly warriorBuild: HTMLInputElement;
-  readonly highMageDeathBuild: HTMLInputElement;
-  readonly archerBuild: HTMLInputElement;
-  readonly paladinDeathBuild: HTMLInputElement;
-  readonly cavalryBuild: HTMLInputElement;
-  readonly sniperBuild: HTMLInputElement;
   readonly racePanel: HTMLElement;
+  readonly careerPanel: HTMLElement;
   readonly characterNameInput: HTMLInputElement;
   readonly seedInput: HTMLInputElement;
   readonly randomizeSeedButton: HTMLButtonElement;
@@ -84,7 +69,8 @@ interface SessionShellDom {
 
 export class SessionShell {
   readonly #dom: SessionShellDom;
-  readonly #raceMenu: RaceMenu;
+  readonly #raceMenu: CreationMenu;
+  readonly #careerMenu: CreationMenu;
   readonly #storage: SessionStorage;
   readonly #localization: Localization;
   readonly #onStart: (request: NewSessionRequest) => Promise<GameSnapshot>;
@@ -133,7 +119,11 @@ export class SessionShell {
     this.#randomSeed = options.randomSeed ?? randomSessionSeed;
     this.#confirm = options.confirm ?? ((message) => window.confirm(message));
     this.#logError = options.logError ?? console.error;
-    this.#raceMenu = new RaceMenu(this.#dom.racePanel, this.#localization, () => {
+    this.#raceMenu = new CreationMenu("race", this.#dom.racePanel, this.#localization, () => {
+      this.#renderCreationSummary();
+      this.#updateControls();
+    }, () => this.#showCreationPage("overview", true));
+    this.#careerMenu = new CreationMenu("career", this.#dom.careerPanel, this.#localization, () => {
       this.#renderCreationSummary();
       this.#updateControls();
     }, () => this.#showCreationPage("overview", true));
@@ -153,6 +143,7 @@ export class SessionShell {
     this.#dom.newGameView.addEventListener("input", this.#renderCreationSummary);
     this.#dom.newGameView.addEventListener("change", this.#renderCreationSummary);
     this.#raceMenu.install();
+    this.#careerMenu.install();
     this.#dom.randomizeSeedButton.addEventListener("click", this.#randomizeSeed);
     this.#dom.newGameBackButton.addEventListener("click", this.#backToTitle);
     this.#dom.loadRefreshButton.addEventListener("click", this.#refreshSaves);
@@ -176,6 +167,7 @@ export class SessionShell {
     this.#dom.newGameView.removeEventListener("input", this.#renderCreationSummary);
     this.#dom.newGameView.removeEventListener("change", this.#renderCreationSummary);
     this.#raceMenu.dispose();
+    this.#careerMenu.dispose();
     this.#dom.randomizeSeedButton.removeEventListener("click", this.#randomizeSeed);
     this.#dom.newGameBackButton.removeEventListener("click", this.#backToTitle);
     this.#dom.loadRefreshButton.removeEventListener("click", this.#refreshSaves);
@@ -203,6 +195,7 @@ export class SessionShell {
     this.#renderReadyStatus();
     this.#renderRunMetadata();
     this.#raceMenu.localize();
+    this.#careerMenu.localize();
     this.#renderCreationSummary();
     this.#updateControls();
   }
@@ -240,6 +233,7 @@ export class SessionShell {
 
   #showCreationPage(page: CreationPage, focus = false): void {
     this.#raceMenu.reset();
+    this.#careerMenu.reset();
     this.#creationPage = page;
     for (const panel of this.#dom.newGameView.querySelectorAll<HTMLElement>("[data-creation-panel]")) {
       panel.hidden = panel.dataset.creationPanel !== page;
@@ -273,15 +267,14 @@ export class SessionShell {
     } else if (event.key === "Escape" && !event.target.closest("input, select, textarea")) {
       event.preventDefault();
       if (this.#creationPage === "race") this.#raceMenu.back();
-      else if (this.#creationPage !== "overview") this.#showCreationPage("overview", true);
+      else if (this.#creationPage === "career") this.#careerMenu.back();
       else this.#backToTitle();
     }
   };
 
   readonly #renderCreationSummary = (): void => {
     const raceName = this.#raceMenu.selectedName;
-    const build = this.#dom.newGameView.querySelector<HTMLInputElement>('input[name="session-build"]:checked');
-    const careerName = build?.closest("label")?.querySelector("strong")?.textContent ?? "";
+    const careerName = this.#careerMenu.selectedName;
     this.#dom.overviewRace.textContent = raceName;
     this.#dom.overviewCareer.textContent = careerName;
     this.#dom.creationSummary.textContent = this.#localization.format("session-creation-summary", {
@@ -328,7 +321,7 @@ export class SessionShell {
   readonly #startNewGame = (event: SubmitEvent): void => {
     event.preventDefault();
     if (this.#busy) return;
-    if (this.#raceMenu.pending) return;
+    if (this.#raceMenu.pending || this.#careerMenu.pending) return;
     const seed = canonicalSessionSeed(this.#dom.seedInput.value);
     if (!seed) {
       this.#dom.error.textContent = this.#localization.format("session-seed-invalid");
@@ -336,14 +329,8 @@ export class SessionShell {
       this.#dom.seedInput.focus();
       return;
     }
-    const buildId = this.#selectedBuild();
-    if (!buildId) {
-      this.#dom.error.textContent = this.#localization.format("session-build-invalid");
-      this.#showCreationPage("career");
-      this.#dom.warriorBuild.focus();
-      return;
-    }
-    const raceId = this.#raceMenu.raceId;
+    const buildId = this.#careerMenu.selectedId as PlaytestBuildId;
+    const raceId = this.#raceMenu.selectedId as PlaytestRaceId;
     const playerName = canonicalCharacterName(this.#dom.characterNameInput.value);
     if (!playerName) {
       this.#dom.error.textContent = this.#localization.format("session-character-name-invalid");
@@ -379,6 +366,7 @@ export class SessionShell {
   };
 
   async #start(request: NewSessionRequest): Promise<void> {
+    this.#clearError();
     this.#setBusy(true, "session-status-starting");
     try {
       const snapshot = await this.#onStart(request);
@@ -452,18 +440,6 @@ export class SessionShell {
     }
   }
 
-  #selectedBuild(): PlaytestBuildId | undefined {
-    return [
-      this.#dom.warriorBuild,
-      this.#dom.highMageDeathBuild,
-      this.#dom.archerBuild,
-      this.#dom.paladinDeathBuild,
-      this.#dom.cavalryBuild,
-      this.#dom.sniperBuild,
-    ]
-      .find((input) => input.checked)?.value as PlaytestBuildId | undefined;
-  }
-
   #showView(view: SessionView): void {
     this.#view = view;
     this.#dom.root.dataset.view = view;
@@ -494,6 +470,7 @@ export class SessionShell {
 
   #updateControls(): void {
     this.#raceMenu.setBusy(this.#busy);
+    this.#careerMenu.setBusy(this.#busy);
     const validSave = this.#saves.some((summary) => summary.status !== "corrupt");
     this.#dom.continueButton.disabled = this.#busy || !validSave;
     for (const control of this.#dom.root.querySelectorAll<
@@ -502,7 +479,7 @@ export class SessionShell {
       if (control === this.#dom.continueButton) continue;
       control.disabled = this.#busy;
     }
-    this.#dom.startGameButton.disabled = this.#busy || this.#raceMenu.pending;
+    this.#dom.startGameButton.disabled = this.#busy || this.#raceMenu.pending || this.#careerMenu.pending;
     for (const button of this.#dom.loadList.querySelectorAll<HTMLButtonElement>("button")) {
       const row = button.closest<HTMLElement>(".native-save-item");
       const summary = this.#saves.find((save) => save.slotId === row?.dataset.slotId);
@@ -653,13 +630,8 @@ export function createSessionShellDom(document: DocumentLookup): SessionShellDom
     loadGameButton: element<HTMLButtonElement>(document, "session-load-game"),
     settingsButton: element<HTMLButtonElement>(document, "session-settings"),
     exitButton: element<HTMLButtonElement>(document, "session-exit"),
-    warriorBuild: element<HTMLInputElement>(document, "session-build-warrior"),
-    highMageDeathBuild: element<HTMLInputElement>(document, "session-build-high-mage-death"),
-    archerBuild: element<HTMLInputElement>(document, "session-build-archer"),
-    paladinDeathBuild: element<HTMLInputElement>(document, "session-build-paladin-death"),
-    cavalryBuild: element<HTMLInputElement>(document, "session-build-cavalry"),
-    sniperBuild: element<HTMLInputElement>(document, "session-build-sniper"),
     racePanel: element<HTMLElement>(document, "session-page-race"),
+    careerPanel: element<HTMLElement>(document, "session-page-career"),
     characterNameInput: element<HTMLInputElement>(document, "session-character-name"),
     seedInput: element<HTMLInputElement>(document, "session-seed"),
     randomizeSeedButton: element<HTMLButtonElement>(document, "session-randomize-seed"),

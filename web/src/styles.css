@@ -131,65 +131,6 @@ button:disabled,
   gap: 1rem;
 }
 
-.session-builds {
-  display: grid;
-  gap: 0.65rem;
-  margin: 0;
-  border: 0;
-  padding: 0;
-}
-
-.session-builds legend {
-  margin-bottom: 0.55rem;
-  color: #7890a7;
-  font-size: 0.8rem;
-}
-
-.session-build-card {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.2rem 0.75rem;
-  border: 1px solid rgb(103 137 168 / 28%);
-  border-radius: 10px;
-  padding: 0.8rem 0.9rem;
-  color: #9fb5ca;
-  background: rgb(12 20 28 / 82%);
-  cursor: pointer;
-}
-
-.session-build-card:has(input:checked) {
-  border-color: #62a9d2;
-  background: rgb(24 48 68 / 82%);
-  box-shadow: 0 0 0 1px rgb(98 169 210 / 18%);
-}
-
-.session-build-card.recommended:has(input:checked) {
-  border-color: #5fbd98;
-}
-
-.session-build-card input {
-  grid-row: 1 / span 3;
-  margin-top: 0.2rem;
-}
-
-.session-build-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  color: #e2edf8;
-}
-
-.session-build-heading > span,
-.session-build-card small {
-  color: #79d4b1;
-  font-size: 0.7rem;
-}
-
-.session-build-card small {
-  color: #768b9f;
-}
-
 .session-seed {
   display: grid;
   gap: 0.45rem;
@@ -3217,23 +3158,23 @@ kbd {
 #session-creation-tabs > button:focus-visible { outline-offset: -3px; }
 .session-creation-body { display: grid; min-height: 0; min-width: 0; overflow: hidden; }
 [data-creation-panel] { min-height: 0; min-width: 0; overflow: auto; padding: 1em; }
-#session-page-race { display: grid; grid-template-rows: auto auto minmax(0, 1fr); padding: 0; overflow: hidden; }
-.session-race-path { grid-row: 1; display: flex; align-items: center; justify-content: space-between; gap: 0.5em; padding: 0.5em 0.8em; border-bottom: 1px solid var(--ui-line); }
-#session-race-path { margin: 0; color: var(--ui-muted); overflow-wrap: anywhere; }
-#session-race-back { flex: none; }
-#session-race-pending { grid-row: 2; margin: 0; padding: 0.35em 0.8em; color: var(--ui-accent-strong); font-size: var(--player-font-note); }
-.session-race-workspace { grid-row: 3; display: grid; grid-template-columns: minmax(0, 20fr) minmax(0, 30fr) minmax(0, 50fr); min-height: 0; min-width: 0; }
-#session-race-groups, #session-race-options { display: flex; flex-direction: column; gap: 0.15em; overflow: auto; min-width: 0; padding: 0.5em; border-right: 1px solid var(--ui-line); }
-#session-new-game-view :is(#session-race-groups, #session-race-options) > button { flex: none; text-align: left; border: 1px solid transparent; border-radius: 0; color: var(--ui-text); background: transparent; overflow-wrap: anywhere; }
-#session-new-game-view :is(#session-race-groups, #session-race-options) > button[aria-pressed="true"] { border-color: var(--ui-accent); color: var(--ui-accent-strong); background: var(--ui-surface-raised); }
-#session-new-game-view :is(#session-race-groups, #session-race-options) > button:hover { background: var(--ui-surface-raised); }
-#session-race-options > button { display: flex; align-items: center; justify-content: space-between; gap: 0.4em; }
-.session-race-parent::after { content: "›"; }
-#session-race-details { min-width: 0; min-height: 0; overflow: auto; padding: 0.8em 1em; line-height: 1.65; }
-.session-race-viewing { margin: 0; color: var(--ui-muted); font-size: var(--player-font-note); }
-#session-race-detail-title { margin: 0.2em 0 0.7em; color: var(--ui-accent-strong); font-size: var(--player-font-title); font-weight: 500; }
-#session-race-description { margin: 0; }
-#session-race-notes { padding-left: 1.2em; }
+.session-menu { display: grid; grid-template-rows: auto auto minmax(0, 1fr); padding: 0; overflow: hidden; }
+.session-menu-navigation { grid-row: 1; display: flex; align-items: center; justify-content: space-between; gap: 0.5em; padding: 0.5em 0.8em; border-bottom: 1px solid var(--ui-line); }
+.session-menu-path { margin: 0; color: var(--ui-muted); overflow-wrap: anywhere; }
+.session-menu-back { flex: none; }
+.session-menu-pending { grid-row: 2; margin: 0; padding: 0.35em 0.8em; color: var(--ui-accent-strong); font-size: var(--player-font-note); }
+.session-menu-workspace { grid-row: 3; display: grid; grid-template-columns: minmax(0, 20fr) minmax(0, 30fr) minmax(0, 50fr); min-height: 0; min-width: 0; }
+.session-menu-groups, .session-menu-options { display: flex; flex-direction: column; gap: 0.15em; overflow: auto; min-width: 0; padding: 0.5em; border-right: 1px solid var(--ui-line); }
+#session-new-game-view :is(.session-menu-groups, .session-menu-options) > button { flex: none; text-align: left; border: 1px solid transparent; border-radius: 0; color: var(--ui-text); background: transparent; overflow-wrap: anywhere; }
+#session-new-game-view :is(.session-menu-groups, .session-menu-options) > button[aria-pressed="true"] { border-color: var(--ui-accent); color: var(--ui-accent-strong); background: var(--ui-surface-raised); }
+#session-new-game-view :is(.session-menu-groups, .session-menu-options) > button:hover { background: var(--ui-surface-raised); }
+.session-menu-options > button { display: flex; align-items: center; justify-content: space-between; gap: 0.4em; }
+.session-menu-parent::after { content: "›"; }
+.session-menu-details { min-width: 0; min-height: 0; overflow: auto; padding: 0.8em 1em; line-height: 1.65; }
+.session-menu-viewing { margin: 0; color: var(--ui-muted); font-size: var(--player-font-note); }
+.session-menu-detail-title { margin: 0.2em 0 0.7em; color: var(--ui-accent-strong); font-size: var(--player-font-title); font-weight: 500; }
+.session-menu-description { margin: 0; }
+.session-menu-notes { padding-left: 1.2em; }
 #session-page-overview { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-content: start; gap: 1.5em; }
 .session-creation-identity, .session-creation-world { min-width: 0; }
 .session-creation-world h3 { margin: 0 0 0.75em; color: var(--ui-accent); font-size: var(--player-font-title); font-weight: 500; }
@@ -3250,25 +3191,18 @@ kbd {
 #session-new-game-view .session-seed { margin: 0; gap: 0.45em; }
 #session-new-game-view .session-seed :is(input, select) { min-width: 0; width: 100%; padding: 0.5em; border: 1px solid var(--ui-line); color: var(--ui-text); background: var(--ui-surface); }
 #session-new-game-view .session-seed-controls { grid-template-columns: minmax(0, 1fr) auto; }
-#session-new-game-view .session-seed :is(small, span),
-#session-new-game-view .session-builds legend { color: var(--ui-muted); }
+#session-new-game-view .session-seed :is(small, span) { color: var(--ui-muted); }
 #session-new-game-view .session-seed small { font-size: var(--player-font-note); }
-#session-new-game-view .session-builds { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65em; min-width: 0; }
-#session-new-game-view .session-builds legend { font-size: inherit; }
-#session-new-game-view .session-build-card { min-width: 0; border-color: var(--ui-line); border-radius: 0; color: var(--ui-text); background: var(--ui-surface); padding: 0.75em; }
-#session-new-game-view .session-build-card:has(input:checked) { border-color: var(--ui-accent); background: var(--ui-surface-raised); box-shadow: none; }
-#session-new-game-view .session-build-heading > span { color: var(--ui-accent); font-size: var(--player-font-note); }
 #session-new-game-view .attribute-source-guide { font-size: inherit; }
 .session-shell[data-view="new-game"] .session-feedback { padding: 0.25em 0.9em; min-height: 1.8em; max-height: 5em; overflow: auto; background: var(--ui-surface); font-size: var(--player-font-note); }
 .session-shell[data-view="new-game"] .session-feedback > p { margin: 0; font-size: inherit; overflow-wrap: anywhere; }
 .session-shell[data-view="new-game"] .session-feedback > p:empty { display: none; }
 
 @media (max-width: 900px) {
-  .session-race-workspace { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); grid-template-rows: auto minmax(0, 1fr); }
-  #session-race-groups { grid-column: 1 / -1; flex-direction: row; border-right: 0; border-bottom: 1px solid var(--ui-line); }
-  #session-race-groups > button { white-space: nowrap; }
+  .session-menu-workspace { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); grid-template-rows: auto minmax(0, 1fr); }
+  .session-menu-groups { grid-column: 1 / -1; flex-direction: row; border-right: 0; border-bottom: 1px solid var(--ui-line); }
+  .session-menu-groups > button { white-space: nowrap; }
   #session-page-overview { grid-template-columns: minmax(0, 1fr); }
-  #session-new-game-view .session-builds { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 640px) {

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 // RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, src/py_birth.c:
-// b_race_groups order and membership, restricted to the existing creation entries.
+// b_race_groups and _class_groups order and membership, restricted to the existing creation entries.
 
 import type { Localization } from "./localization.ts";
 
-interface RaceLeaf {
+interface CreationLeaf {
   readonly id: string;
   readonly nameKey: string;
   readonly descriptionKey: string;
@@ -20,26 +20,51 @@ export const DRACONIAN_RACES = (["red", "white", "blue", "black", "green", "bron
   (color) => ({ ...race(`draconian-${color}`), descriptionKey: "race-legacy-draconian-description" }),
 );
 const DRACONIAN = { id: "draconian", nameKey: "session-race-group-draconian", descriptionKey: "race-legacy-draconian-description", notes: [], children: DRACONIAN_RACES } as const;
-type RaceOption = RaceLeaf | typeof DRACONIAN;
-interface RaceGroup { readonly id: string; readonly races: readonly RaceOption[] }
+interface CreationBranch extends CreationLeaf { readonly children: readonly CreationLeaf[] }
+type CreationOption = CreationLeaf | CreationBranch;
+interface CreationGroup { readonly id: string; readonly options: readonly CreationOption[] }
 
 export const RACE_GROUPS = [
-  { id: "human", races: [race("amberite"), race("barbarian"), race("dunadan"), HUMAN] },
-  { id: "elf", races: [race("dark-elf"), race("high-elf"), race("tomte", ["trait-tomte-headgear-rule"]), race("wood-elf")] },
-  { id: "small", races: [race("dwarf"), race("gnome"), race("hobbit"), race("nibelung")] },
-  { id: "fairy", races: [race("shadow-fairy"), race("sprite")] },
-  { id: "celestial", races: [race("archon"), race("imp")] },
-  { id: "giant", races: [race("cyclops"), race("half-giant"), race("half-orc"), race("half-titan"), race("half-troll"), race("kobold"), race("ogre"), race("snotling")] },
-  { id: "undead", races: [race("einheri"), race("skeleton"), race("spectre", ["basics", "defenses", "senses", "passage", "density", "diet", "power", "birth"].map(rule => `trait-spectre-rule-${rule}`)), race("zombie")] },
-  { id: "other", races: [race("beastman"), race("boit"), DRACONIAN, race("ent", ["basics", "growth", "digging", "fire", "diet", "forest", "power", "birth"].map(rule => `trait-ent-rule-${rule}`)), race("golem"), race("klackon"), race("kutar"), race("mindflayer"), race("tonberry", ["basics", "speed", "damage", "attacks", "confusion", "birth"].map(rule => `trait-tonberry-rule-${rule}`)), race("yeek")] },
-] as const satisfies readonly RaceGroup[];
+  { id: "human", options: [race("amberite"), race("barbarian"), race("dunadan"), HUMAN] },
+  { id: "elf", options: [race("dark-elf"), race("high-elf"), race("tomte", ["trait-tomte-headgear-rule"]), race("wood-elf")] },
+  { id: "small", options: [race("dwarf"), race("gnome"), race("hobbit"), race("nibelung")] },
+  { id: "fairy", options: [race("shadow-fairy"), race("sprite")] },
+  { id: "celestial", options: [race("archon"), race("imp")] },
+  { id: "giant", options: [race("cyclops"), race("half-giant"), race("half-orc"), race("half-titan"), race("half-troll"), race("kobold"), race("ogre"), race("snotling")] },
+  { id: "undead", options: [race("einheri"), race("skeleton"), race("spectre", ["basics", "defenses", "senses", "passage", "density", "diet", "power", "birth"].map(rule => `trait-spectre-rule-${rule}`)), race("zombie")] },
+  { id: "other", options: [race("beastman"), race("boit"), DRACONIAN, race("ent", ["basics", "growth", "digging", "fire", "diet", "forest", "power", "birth"].map(rule => `trait-ent-rule-${rule}`)), race("golem"), race("klackon"), race("kutar"), race("mindflayer"), race("tonberry", ["basics", "speed", "damage", "attacks", "confusion", "birth"].map(rule => `trait-tonberry-rule-${rule}`)), race("yeek")] },
+] as const satisfies readonly CreationGroup[];
 
-type GroupEntry = (typeof RACE_GROUPS)[number]["races"][number];
+type GroupEntry = (typeof RACE_GROUPS)[number]["options"][number];
 export type PlaytestRaceId = Exclude<GroupEntry, { children: unknown }>["id"] | (typeof DRACONIAN_RACES)[number]["id"];
-export const CREATION_RACES = RACE_GROUPS.flatMap(group => group.races.flatMap<RaceLeaf>(entry => "children" in entry ? entry.children : [entry]));
+export const CREATION_RACES = RACE_GROUPS.flatMap(group => group.options.flatMap<CreationLeaf>(entry => "children" in entry ? entry.children : [entry]));
 export const PLAYTEST_RACE_IDS = CREATION_RACES.map(race => race.id as PlaytestRaceId);
 
-export class RaceMenu {
+function career<const S extends string>(slug: S) {
+  return { id: `demo.build.${slug}` as const, nameKey: `class-demo-${slug}-name`, descriptionKey: `class-demo-${slug}-description`, notes: [] };
+}
+
+function deathCaster<const S extends string>(slug: S) {
+  return { ...career(slug), id: slug, children: [{
+    id: `demo.build.${slug}-death` as const, nameKey: "session-career-death-name",
+    descriptionKey: `build-demo-${slug}-death-description`, notes: ["session-career-available-realms"],
+  }] };
+}
+
+export const CAREER_GROUPS = [
+  { id: "melee", options: [career("warrior")] },
+  { id: "archery", options: [career("archer"), career("sniper")] },
+  { id: "magic", options: [deathCaster("high-mage")] },
+  { id: "hybrid", options: [deathCaster("paladin")] },
+  { id: "riding", options: [career("cavalry")] },
+] as const satisfies readonly CreationGroup[];
+type CareerEntry = (typeof CAREER_GROUPS)[number]["options"][number];
+export type PlaytestBuildId = Exclude<CareerEntry, { children: unknown }>["id"] | Extract<CareerEntry, { children: unknown }>["children"][number]["id"];
+export const CREATION_BUILDS = CAREER_GROUPS.flatMap(group => group.options.flatMap<CreationLeaf>(entry => "children" in entry ? entry.children : [entry]));
+export const PLAYTEST_BUILD_IDS = CREATION_BUILDS.map(build => build.id as PlaytestBuildId);
+
+// Both creation pages have categories, options and one optional child level.
+export class CreationMenu {
   readonly #root: HTMLElement;
   readonly #groups: HTMLElement;
   readonly #options: HTMLElement;
@@ -52,29 +77,36 @@ export class RaceMenu {
   readonly #localization: Localization;
   readonly #onChange: () => void;
   readonly #onBack: () => void;
-  #selected: RaceLeaf = HUMAN;
-  #group: RaceGroup = RACE_GROUPS[0];
-  #subraces = false;
+  readonly #kind: "race" | "career";
+  readonly #catalog: readonly CreationGroup[];
+  #selected: CreationLeaf;
+  #group: CreationGroup;
+  #branch: CreationBranch | undefined;
   #pending = false;
-  #viewed: RaceOption = HUMAN;
+  #viewed: CreationOption;
   #busy = false;
 
-  constructor(root: HTMLElement, localization: Localization, onChange: () => void, onBack: () => void) {
+  constructor(kind: "race" | "career", root: HTMLElement, localization: Localization, onChange: () => void, onBack: () => void) {
+    this.#kind = kind;
+    this.#catalog = kind === "race" ? RACE_GROUPS : CAREER_GROUPS;
+    this.#selected = kind === "race" ? HUMAN : CAREER_GROUPS[0].options[0];
+    this.#group = this.#catalog[0]!;
+    this.#viewed = this.#selected;
     this.#root = root;
     this.#localization = localization;
     this.#onChange = onChange;
     this.#onBack = onBack;
-    this.#groups = root.querySelector<HTMLElement>("#session-race-groups")!;
-    this.#options = root.querySelector<HTMLElement>("#session-race-options")!;
-    this.#path = root.querySelector<HTMLElement>("#session-race-path")!;
-    this.#backButton = root.querySelector<HTMLButtonElement>("#session-race-back")!;
-    this.#pendingNote = root.querySelector<HTMLElement>("#session-race-pending")!;
-    this.#title = root.querySelector<HTMLElement>("#session-race-detail-title")!;
-    this.#description = root.querySelector<HTMLElement>("#session-race-description")!;
-    this.#notes = root.querySelector<HTMLElement>("#session-race-notes")!;
+    this.#groups = root.querySelector<HTMLElement>(`#session-${this.#kind}-groups`)!;
+    this.#options = root.querySelector<HTMLElement>(`#session-${this.#kind}-options`)!;
+    this.#path = root.querySelector<HTMLElement>(`#session-${this.#kind}-path`)!;
+    this.#backButton = root.querySelector<HTMLButtonElement>(`#session-${this.#kind}-back`)!;
+    this.#pendingNote = root.querySelector<HTMLElement>(`#session-${this.#kind}-pending`)!;
+    this.#title = root.querySelector<HTMLElement>(`#session-${this.#kind}-detail-title`)!;
+    this.#description = root.querySelector<HTMLElement>(`#session-${this.#kind}-description`)!;
+    this.#notes = root.querySelector<HTMLElement>(`#session-${this.#kind}-notes`)!;
   }
 
-  get raceId(): PlaytestRaceId { return this.#selected.id as PlaytestRaceId; }
+  get selectedId(): string { return this.#selected.id; }
   get pending(): boolean { return this.#pending; }
   get selectedName(): string { return this.#name(this.#selected); }
 
@@ -96,8 +128,8 @@ export class RaceMenu {
 
   // Entering or leaving the page cancels a draft branch, never the confirmed leaf.
   reset(): void {
-    this.#subraces = DRACONIAN_RACES.some(race => race.id === this.#selected.id);
-    this.#group = RACE_GROUPS.find(group => group.races.some(race => race.id === this.#selected.id || ("children" in race && this.#subraces)))!;
+    this.#group = this.#catalog.find(group => group.options.some(entry => entry.id === this.#selected.id || ("children" in entry && entry.children.some(leaf => leaf.id === this.#selected.id))))!;
+    this.#branch = this.#parent(this.#selected.id);
     this.#pending = false;
     this.#viewed = this.#selected;
     this.localize();
@@ -105,32 +137,32 @@ export class RaceMenu {
 
   localize(): void {
     const active = this.#root.ownerDocument.activeElement as HTMLElement | null;
-    const focusedId = active?.dataset.raceId;
-    const focusedGroup = active?.dataset.raceGroup;
-    this.#groups.replaceChildren(...RACE_GROUPS.map(group => {
-      const button = this.#button(this.#localization.format(`session-race-category-${group.id}`));
-      button.dataset.raceGroup = group.id;
+    const focusedId = active?.dataset[this.#kind + "Id"];
+    const focusedGroup = active?.dataset[this.#kind + "Group"];
+    this.#groups.replaceChildren(...this.#catalog.map(group => {
+      const button = this.#button(this.#localization.format(`session-${this.#kind}-category-${group.id}`));
+      button.dataset[this.#kind + "Group"] = group.id;
       button.setAttribute("aria-pressed", String(group.id === this.#group.id));
       button.tabIndex = group.id === this.#group.id ? 0 : -1;
       return button;
     }));
     this.#options.replaceChildren(...this.#entries.map(entry => {
       const button = this.#button(this.#localization.format(entry.nameKey));
-      button.dataset.raceId = entry.id;
+      button.dataset[this.#kind + "Id"] = entry.id;
       button.tabIndex = entry.id === this.#viewed.id ? 0 : -1;
-      button.setAttribute("aria-describedby", "session-race-description");
+      button.setAttribute("aria-describedby", `session-${this.#kind}-description`);
       if ("children" in entry) {
-        button.setAttribute("aria-label", this.#localization.format("session-race-open-subraces", { name: this.#localization.format(entry.nameKey) }));
-        button.classList.add("session-race-parent");
+        button.setAttribute("aria-label", this.#localization.format(`session-${this.#kind}-open-children`, { name: this.#localization.format(entry.nameKey) }));
+        button.classList.add("session-menu-parent");
       } else button.setAttribute("aria-pressed", String(entry.id === this.#selected.id));
       return button;
     }));
-    this.#path.textContent = [this.#localization.format("session-race-label"), this.#localization.format(`session-race-category-${this.#group.id}`), ...(this.#subraces ? [this.#localization.format(DRACONIAN.nameKey)] : [])].join(" › ");
-    this.#backButton.textContent = this.#localization.format(this.#subraces ? "session-race-back" : "session-race-back-overview");
+    this.#path.textContent = [this.#localization.format(`session-${this.#kind}-label`), this.#localization.format(`session-${this.#kind}-category-${this.#group.id}`), ...(this.#branch ? [this.#localization.format(this.#branch.nameKey)] : [])].join(" › ");
+    this.#backButton.textContent = this.#localization.format(this.#branch ? "session-menu-back" : "session-menu-back-overview");
     this.#pendingNote.hidden = !this.#pending;
     this.#preview(this.#viewed);
     if (focusedId) this.#optionButton(focusedId)?.focus();
-    if (focusedGroup) this.#groups.querySelector<HTMLButtonElement>(`[data-race-group="${focusedGroup}"]`)?.focus();
+    if (focusedGroup) this.#groups.querySelector<HTMLButtonElement>(`[data-${this.#kind}-group="${focusedGroup}"]`)?.focus();
   }
 
   #button(label: string): HTMLButtonElement {
@@ -141,15 +173,20 @@ export class RaceMenu {
     return button;
   }
 
-  get #entries(): readonly RaceOption[] { return this.#subraces ? DRACONIAN_RACES : this.#group.races; }
-  #optionButton(id: string): HTMLButtonElement | null { return this.#options.querySelector(`[data-race-id="${id}"]`); }
+  get #entries(): readonly CreationOption[] { return this.#branch ? this.#branch.children : this.#group.options; }
+  #optionButton(id: string): HTMLButtonElement | null { return this.#options.querySelector(`[data-${this.#kind}-id="${id}"]`); }
 
-  #name(race: RaceOption): string {
-    const name = this.#localization.format(race.nameKey);
-    return DRACONIAN_RACES.some(leaf => leaf.id === race.id) ? `${this.#localization.format(DRACONIAN.nameKey)} · ${name}` : name;
+  #parent(id: string): CreationBranch | undefined {
+    return this.#catalog.flatMap(group => group.options).find((entry): entry is CreationBranch => "children" in entry && entry.children.some(leaf => leaf.id === id));
   }
 
-  #preview(entry: RaceOption): void {
+  #name(race: CreationOption): string {
+    const name = this.#localization.format(race.nameKey);
+    const parent = this.#parent(race.id);
+    return parent ? `${this.#localization.format(parent.nameKey)} · ${name}` : name;
+  }
+
+  #preview(entry: CreationOption): void {
     this.#viewed = entry;
     this.#title.textContent = this.#name(entry);
     this.#description.textContent = this.#localization.format(entry.descriptionKey);
@@ -159,7 +196,7 @@ export class RaceMenu {
       return item;
     }));
     this.#notes.hidden = entry.notes.length === 0;
-    this.#root.querySelector<HTMLElement>("#session-race-details")!.scrollTop = 0;
+    this.#root.querySelector<HTMLElement>(`#session-${this.#kind}-details`)!.scrollTop = 0;
   }
 
   readonly #click = (event: MouseEvent): void => {
@@ -167,28 +204,28 @@ export class RaceMenu {
     const button = event.target.closest<HTMLButtonElement>("button");
     if (!button) return;
     if (button === this.#backButton) { this.back(); return; }
-    const group = RACE_GROUPS.find(group => group.id === button.dataset.raceGroup);
+    const group = this.#catalog.find(group => group.id === button.dataset[this.#kind + "Group"]);
     if (group) {
       this.#group = group;
-      this.#subraces = false;
+      this.#branch = undefined;
       this.#pending = false;
-      this.#viewed = group.races.find(race => race.id === this.#selected.id) ?? group.races[0];
+      this.#viewed = group.options.find(entry => entry.id === this.#selected.id) ?? group.options[0]!;
       this.localize();
       this.#optionButton(this.#viewed.id)!.focus();
     } else {
-      const entry = this.#entries.find(entry => entry.id === button.dataset.raceId);
+      const entry = this.#entries.find(entry => entry.id === button.dataset[this.#kind + "Id"]);
       if (!entry) return;
       if ("children" in entry) {
-        this.#subraces = true;
+        this.#branch = entry;
         this.#pending = true;
-        this.#viewed = DRACONIAN_RACES.find(race => race.id === this.#selected.id) ?? DRACONIAN_RACES[0]!;
+        this.#viewed = entry.children.find(leaf => leaf.id === this.#selected.id) ?? entry.children[0]!;
         this.localize();
         this.#optionButton(this.#viewed.id)!.focus();
       } else {
         this.#selected = entry;
         this.#pending = false;
         this.#pendingNote.hidden = true;
-        for (const option of this.#options.querySelectorAll<HTMLButtonElement>("[aria-pressed]")) option.setAttribute("aria-pressed", String(option.dataset.raceId === entry.id));
+        for (const option of this.#options.querySelectorAll<HTMLButtonElement>("[aria-pressed]")) option.setAttribute("aria-pressed", String(option.dataset[this.#kind + "Id"] === entry.id));
         this.#preview(entry);
       }
     }
@@ -196,27 +233,28 @@ export class RaceMenu {
   };
 
   back(): void {
-    if (!this.#subraces) { this.#onBack(); return; }
-    this.#subraces = false;
+    if (!this.#branch) { this.#onBack(); return; }
+    const parent = this.#branch;
+    this.#branch = undefined;
     this.#pending = false;
-    this.#viewed = DRACONIAN;
+    this.#viewed = parent;
     this.localize();
-    this.#optionButton(DRACONIAN.id)!.focus();
+    this.#optionButton(parent.id)!.focus();
     this.#onChange();
   }
 
   readonly #focus = (event: FocusEvent): void => {
     if (this.#busy || !(event.target instanceof HTMLButtonElement)) return;
-    if (event.target.dataset.raceId || event.target.dataset.raceGroup) {
+    if (event.target.dataset[this.#kind + "Id"] || event.target.dataset[this.#kind + "Group"]) {
       for (const button of event.target.parentElement!.querySelectorAll<HTMLButtonElement>("button")) button.tabIndex = button === event.target ? 0 : -1;
     }
-    const entry = this.#entries.find(entry => entry.id === (event.target as HTMLElement).dataset.raceId);
+    const entry = this.#entries.find(entry => entry.id === (event.target as HTMLElement).dataset[this.#kind + "Id"]);
     if (entry) this.#preview(entry);
   };
 
   readonly #hover = (event: PointerEvent): void => {
     if (this.#busy || !(event.target instanceof Element)) return;
-    const id = event.target.closest<HTMLElement>("[data-race-id]")?.dataset.raceId;
+    const id = event.target.closest<HTMLElement>(`[data-${this.#kind}-id]`)?.dataset[this.#kind + "Id"];
     const entry = this.#entries.find(entry => entry.id === id);
     if (entry && entry.id !== this.#viewed.id) this.#preview(entry);
   };
@@ -227,7 +265,7 @@ export class RaceMenu {
       event.preventDefault(); event.stopPropagation(); this.back(); return;
     }
     if (!(event.target instanceof HTMLButtonElement) || !["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
-    if (!event.target.dataset.raceId && !event.target.dataset.raceGroup) return;
+    if (!event.target.dataset[this.#kind + "Id"] && !event.target.dataset[this.#kind + "Group"]) return;
     event.preventDefault(); event.stopPropagation();
     const buttons = [...event.target.parentElement!.querySelectorAll<HTMLButtonElement>("button")];
     const index = buttons.indexOf(event.target);

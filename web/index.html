@@ -36,69 +36,37 @@
             <button id="session-tab-career" type="button" role="tab" data-creation-page="career" aria-controls="session-page-career" aria-selected="false" tabindex="-1" data-l10n-id="session-career-label"></button>
           </nav>
           <div class="session-creation-body">
-          <section id="session-page-career" data-creation-panel="career" role="tabpanel" aria-labelledby="session-tab-career" tabindex="0" hidden>
-          <fieldset class="session-builds">
-            <legend data-l10n-id="session-career-label"></legend>
-            <label class="session-build-card recommended">
-              <input id="session-build-warrior" type="radio" name="session-build" value="demo.build.warrior" checked />
-              <span class="session-build-heading">
-                <strong data-l10n-id="build-demo-warrior-name"></strong>
-              </span>
-              <span data-l10n-id="build-demo-warrior-description"></span>
-            </label>
-            <label class="session-build-card recommended">
-              <input id="session-build-high-mage-death" type="radio" name="session-build" value="demo.build.high-mage-death" />
-              <span class="session-build-heading">
-                <strong data-l10n-id="build-demo-high-mage-death-name"></strong>
-                <span data-l10n-id="session-career-death-realm"></span>
-              </span>
-              <span data-l10n-id="build-demo-high-mage-death-description"></span>
-            </label>
-            <label class="session-build-card recommended">
-              <input id="session-build-archer" type="radio" name="session-build" value="demo.build.archer" />
-              <span class="session-build-heading">
-                <strong data-l10n-id="build-demo-archer-name"></strong>
-              </span>
-              <span data-l10n-id="build-demo-archer-description"></span>
-            </label>
-            <label class="session-build-card recommended">
-              <input id="session-build-paladin-death" type="radio" name="session-build" value="demo.build.paladin-death" />
-              <span class="session-build-heading">
-                <strong data-l10n-id="build-demo-paladin-death-name"></strong>
-                <span data-l10n-id="session-career-death-realm"></span>
-              </span>
-              <span data-l10n-id="build-demo-paladin-death-description"></span>
-            </label>
-            <label class="session-build-card recommended">
-              <input id="session-build-cavalry" type="radio" name="session-build" value="demo.build.cavalry" />
-              <span class="session-build-heading">
-                <strong data-l10n-id="build-demo-cavalry-name"></strong>
-              </span>
-              <span data-l10n-id="build-demo-cavalry-description"></span>
-            </label>
-            <label class="session-build-card recommended">
-              <input id="session-build-sniper" type="radio" name="session-build" value="demo.build.sniper" />
-              <span class="session-build-heading">
-                <strong data-l10n-id="build-demo-sniper-name"></strong>
-              </span>
-              <span data-l10n-id="build-demo-sniper-description"></span>
-            </label>
-          </fieldset>
-          </section>
-          <section id="session-page-race" data-creation-panel="race" role="tabpanel" aria-labelledby="session-tab-race" tabindex="0" hidden>
-            <div class="session-race-path">
-              <p id="session-race-path" aria-live="polite"></p>
-              <button id="session-race-back" type="button"></button>
+          <section id="session-page-career" class="session-menu" data-creation-panel="career" role="tabpanel" aria-labelledby="session-tab-career" tabindex="0" hidden>
+            <div class="session-menu-navigation">
+              <p id="session-career-path" class="session-menu-path" aria-live="polite"></p>
+              <button id="session-career-back" class="session-menu-back" type="button"></button>
             </div>
-            <p id="session-race-pending" role="status" data-l10n-id="session-race-pending" hidden></p>
-            <div class="session-race-workspace">
-              <nav id="session-race-groups" data-l10n-aria-label="session-race-categories"></nav>
-              <div id="session-race-options" role="group" data-l10n-aria-label="session-race-options"></div>
-              <section id="session-race-details" aria-labelledby="session-race-detail-title" tabindex="0">
-                <p class="session-race-viewing" data-l10n-id="session-race-viewing"></p>
-                <h3 id="session-race-detail-title"></h3>
-                <p id="session-race-description"></p>
-                <ul id="session-race-notes" class="race-effects-list" hidden></ul>
+            <p id="session-career-pending" class="session-menu-pending" role="status" data-l10n-id="session-career-pending" hidden></p>
+            <div class="session-menu-workspace">
+              <nav id="session-career-groups" class="session-menu-groups" data-l10n-aria-label="session-career-categories"></nav>
+              <div id="session-career-options" class="session-menu-options" role="group" data-l10n-aria-label="session-career-options"></div>
+              <section id="session-career-details" class="session-menu-details" aria-labelledby="session-career-detail-title" tabindex="0">
+                <p class="session-menu-viewing" data-l10n-id="session-career-viewing"></p>
+                <h3 id="session-career-detail-title" class="session-menu-detail-title"></h3>
+                <p id="session-career-description" class="session-menu-description"></p>
+                <ul id="session-career-notes" class="session-menu-notes race-effects-list" hidden></ul>
+              </section>
+            </div>
+          </section>
+          <section id="session-page-race" class="session-menu" data-creation-panel="race" role="tabpanel" aria-labelledby="session-tab-race" tabindex="0" hidden>
+            <div class="session-menu-navigation">
+              <p id="session-race-path" class="session-menu-path" aria-live="polite"></p>
+              <button id="session-race-back" class="session-menu-back" type="button"></button>
+            </div>
+            <p id="session-race-pending" class="session-menu-pending" role="status" data-l10n-id="session-race-pending" hidden></p>
+            <div class="session-menu-workspace">
+              <nav id="session-race-groups" class="session-menu-groups" data-l10n-aria-label="session-race-categories"></nav>
+              <div id="session-race-options" class="session-menu-options" role="group" data-l10n-aria-label="session-race-options"></div>
+              <section id="session-race-details" class="session-menu-details" aria-labelledby="session-race-detail-title" tabindex="0">
+                <p class="session-menu-viewing" data-l10n-id="session-race-viewing"></p>
+                <h3 id="session-race-detail-title" class="session-menu-detail-title"></h3>
+                <p id="session-race-description" class="session-menu-description"></p>
+                <ul id="session-race-notes" class="session-menu-notes race-effects-list" hidden></ul>
               </section>
             </div>
           </section>

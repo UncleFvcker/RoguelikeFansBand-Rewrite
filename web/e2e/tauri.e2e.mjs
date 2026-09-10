@@ -9,7 +9,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { runRendererProfile } from "./render-profile.e2e.mjs";
 import { runEgoScenario } from "./ego.e2e.mjs";
-import { runCharacterCreationScenario, selectCreationRace } from "./character-creation.e2e.mjs";
+import { runCharacterCreationScenario, selectCreationRace, selectCreationBuild } from "./character-creation.e2e.mjs";
 
 const webDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryDirectory = path.resolve(webDirectory, "..");
@@ -163,12 +163,13 @@ async function runScenario(driver) {
       window.__acceptanceErrors = [];
       window.addEventListener("error", event => window.__acceptanceErrors.push(event.message));
       document.querySelector("#session-new-game").click();
-      const build = document.querySelector(arguments[0]); build.checked = true;
-      build.dispatchEvent(new Event("change", { bubbles: true }));
+
       const seed = document.querySelector("#session-seed"); seed.value = arguments[1];
       seed.dispatchEvent(new Event("input", { bubbles: true }));
-      document.querySelector("#session-start-game").click(); return true;
+      return true;
     `, [build, seed]);
+    await selectCreationBuild(driver, build);
+    await click(driver, "#session-start-game");
     await driver.waitFor(`return document.documentElement.dataset.appMode === "playing" && document.querySelector("#connection-status")?.classList.contains("ready")`, "new game", 60_000);
   }
   async function state() {
@@ -217,7 +218,7 @@ async function runScenario(driver) {
     report.checks.push({ check: "save-restore-and-continue", hash: saved.hash });
   }
 
-  await start("#session-build-warrior", "42");
+  await start("demo.build.warrior", "42");
   const identity = await driver.execute(`return {
     build: document.querySelector("#app").dataset.sessionBuildId,
     seed: document.querySelector("#app").dataset.sessionSeed,
@@ -303,7 +304,7 @@ async function runScenario(driver) {
 
   await driver.execute(`setTimeout(() => location.reload(), 250); return true;`);
   await driver.waitFor(`return document.documentElement.dataset.appMode === "title"`, "mage title", 60_000);
-  await start("#session-build-high-mage-death", "7");
+  await start("demo.build.high-mage-death", "7");
   await click(driver, "#player-ui-ability-open");
   await driver.waitFor(`return document.querySelector("#player-page-dialog")?.open && document.querySelectorAll(".ability-row").length > 0`, "mage spellbook");
   const spell = await driver.execute(`const row = [...document.querySelectorAll(".ability-row")].find(row => !row.querySelector(".ability-actions button")?.disabled); if (!row) throw new Error("No learnable spell"); const name = row.querySelector(".ability-name").textContent; row.querySelector(".ability-actions button").click(); return name;`);
@@ -351,12 +352,11 @@ async function runRaceScenario(driver, raceId) {
   await mkdir(artifactDirectory, { recursive: true });
   for (const build of builds) {
     await click(driver, "#session-new-game");
+    await selectCreationBuild(driver, "demo.build." + build);
     await selectCreationRace(driver, "rfb-legacy.race." + raceId);
     const description = await driver.execute(`
       window.__raceErrors = [];
       window.addEventListener("error", event => window.__raceErrors.push(event.message));
-      const build = document.querySelector("#session-build-" + arguments[0]); build.checked = true;
-      build.dispatchEvent(new Event("change", { bubbles: true }));
       document.querySelector("#session-seed").value = "83";
       document.querySelector("#session-character-name").value = arguments[2] + "验收";
       const note = document.querySelector("#session-race-details");
@@ -578,12 +578,11 @@ async function runLifeForceScenario(driver) {
     ["archer", "demo.race.rfb-human", "吸血鬼"],
   ]) {
     await click(driver, "#session-new-game");
+    await selectCreationBuild(driver, "demo.build." + build);
     await selectCreationRace(driver, raceId);
     await driver.execute(`
       window.__lifeForceErrors = [];
       window.addEventListener("error", event => window.__lifeForceErrors.push(event.message));
-      const build = document.querySelector("#session-build-" + arguments[0]); build.checked = true;
-      build.dispatchEvent(new Event("change", { bubbles: true }));
       document.querySelector("#session-seed").value = "83";
       document.querySelector("#session-character-name").value = "生命力验收";
       document.querySelector("#session-start-game").click(); return true;

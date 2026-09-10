@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { CREATION_RACES, DRACONIAN_RACES, RACE_GROUPS } from "./character-creation.ts";
+import { CREATION_RACES, DRACONIAN_RACES, RACE_GROUPS, CAREER_GROUPS, CREATION_BUILDS } from "./character-creation.ts";
 import test from "node:test";
 
 test("the main window explicitly permits the close command used by both exit buttons", () => {
@@ -29,14 +29,14 @@ test("character names are trimmed and bounded", () => {
 });
 
 test("new character creation exposes all formal class slices", () => {
-  assert.deepEqual(PLAYTEST_BUILD_IDS, [
+  assert.deepEqual([...PLAYTEST_BUILD_IDS].sort(), [
     "demo.build.warrior",
     "demo.build.high-mage-death",
     "demo.build.archer",
     "demo.build.paladin-death",
     "demo.build.cavalry",
     "demo.build.sniper",
-  ]);
+  ].sort());
   assert.equal(PLAYTEST_BUILD_IDS.some((id) => id.startsWith("rfb-legacy.")), false);
 });
 
@@ -48,7 +48,7 @@ test("the race menu exposes exactly the races accepted by core creation", () => 
   assert.equal(PLAYTEST_RACE_IDS.length, 46);
   assert.equal(new Set(PLAYTEST_RACE_IDS).size, 46);
   assert.equal(RACE_GROUPS.length, 8);
-  assert.ok(RACE_GROUPS.every(group => group.races.length > 0));
+  assert.ok(RACE_GROUPS.every(group => group.options.length > 0));
   for (const entry of CREATION_RACES) {
     const source = formal.find(race => race.id === entry.id);
     assert.equal(entry.nameKey, source.nameKey);
@@ -57,7 +57,7 @@ test("the race menu exposes exactly the races accepted by core creation", () => 
 });
 
 test("all nine Draconian subraces are leaves of the same parent", () => {
-  const parent = RACE_GROUPS.flatMap(group => group.races).find(entry => "children" in entry);
+  const parent = RACE_GROUPS.flatMap(group => group.options).find(entry => "children" in entry);
   assert.equal(parent.id, "draconian");
   assert.deepEqual(parent.children, DRACONIAN_RACES);
   assert.deepEqual(DRACONIAN_RACES.map(race => race.id), [
@@ -70,10 +70,11 @@ test("every race description and migrated special note is localized", () => {
   for (const locale of ["en-US", "zh-CN"]) {
     const text = ["content", "ui"].map(file => readFileSync(new URL(`../../locales/${locale}/${file}.ftl`, import.meta.url), "utf8")).join("\n");
     const keys = new Set([...text.matchAll(/^([a-z][a-z0-9-]*) =/gm)].map(match => match[1]));
-    for (const race of CREATION_RACES) {
+    for (const race of [...CREATION_RACES, ...CAREER_GROUPS.flatMap(group => group.options), ...CREATION_BUILDS]) {
       for (const key of [race.nameKey, race.descriptionKey, ...race.notes]) assert.ok(keys.has(key), `${locale}: ${key}`);
     }
     for (const group of RACE_GROUPS) assert.ok(keys.has(`session-race-category-${group.id}`));
+    for (const group of CAREER_GROUPS) assert.ok(keys.has(`session-career-category-${group.id}`));
   }
 });
 
@@ -109,4 +110,25 @@ test("random session seeds combine two entropy words without truncation", () => 
   };
 
   assert.equal(randomSessionSeed(source), "1311768467463790320");
+});
+
+test("career leaves retain the existing class and realm mapping", () => {
+  assert.equal(CAREER_GROUPS.length, 5);
+  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 6);
+  for (const entry of CAREER_GROUPS.flatMap(group => group.options)) {
+    const leaves = "children" in entry ? entry.children : [entry];
+    for (const leaf of leaves) {
+      const slug = leaf.id.slice("demo.build.".length);
+      const build = JSON.parse(readFileSync(new URL(`../../packs/rfb-demo-original/builds/${slug}.json`, import.meta.url), "utf8"));
+      const cls = JSON.parse(readFileSync(new URL(`../../packs/rfb-demo-original/classes/${build.classId.slice("demo.class.".length)}.json`, import.meta.url), "utf8"));
+      assert.equal(entry.nameKey, cls.nameKey);
+      assert.equal(entry.descriptionKey, cls.descriptionKey);
+      if ("children" in entry) {
+        assert.equal(leaves.length, 1);
+        assert.equal(build.firstRealmId, "death");
+        assert.equal(leaf.descriptionKey, build.descriptionKey);
+        assert.ok(!PLAYTEST_BUILD_IDS.includes(entry.id));
+      } else assert.equal(build.firstRealmId, undefined);
+    }
+  }
 });
