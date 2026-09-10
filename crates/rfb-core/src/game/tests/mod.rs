@@ -18,6 +18,7 @@ use super::*;
 mod abilities;
 mod acquirement;
 mod archer;
+mod arena;
 mod artifact_identity;
 mod attribute_sources;
 mod berserker;

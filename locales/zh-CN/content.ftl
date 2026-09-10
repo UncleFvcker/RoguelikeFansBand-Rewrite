@@ -9175,6 +9175,9 @@ terrain-demo-anti-melee-cave-entrance-name = 反近战洞穴入口
 terrain-demo-anti-melee-cave-entrance-description = 通向充满限制魔法场的洞穴的入口
 
 floor-demo-dark-cave-depth-name = 黑暗洞穴 { $depth } 层
+floor-demo-arena-depth-name = 竞技场 { $depth } 层
+terrain-demo-arena-entrance-name = 竞技场入口
+terrain-demo-arena-entrance-description = 竞技场的入口
 terrain-demo-dark-cave-entrance-name = 黑暗洞穴入口
 terrain-demo-dark-cave-entrance-description = 通向充满魔法黑暗的洞穴的黑色入口
 

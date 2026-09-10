@@ -3,6 +3,119 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn arena_dungeon_formal_entry_chain_guardians_and_reward_match_source() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let world = &artifact.content.worlds[0];
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|d| d.id == "demo.dungeon.arena")
+        .unwrap();
+    assert_eq!(dungeon.legacy_index, Some(25));
+    assert!(dungeon.substitution.is_none());
+    assert_eq!(dungeon.root_floor_id, "demo.floor.arena-depth-50");
+    assert_eq!(
+        dungeon.entrance_guardian.as_ref().unwrap().actor_kind_id,
+        "demo.actor.drolem"
+    );
+    assert_eq!(
+        dungeon.guardian_actor_kind_id.as_deref(),
+        Some("demo.actor.metal-babble-unique")
+    );
+    let floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some(&dungeon.id))
+        .collect::<Vec<_>>();
+    assert_eq!(floors.len(), 31);
+    assert_eq!(
+        floors.iter().map(|f| f.depth).collect::<BTreeSet<_>>(),
+        (50..=80).collect()
+    );
+    for floor in floors {
+        assert_eq!(
+            floor.return_floor_id,
+            if floor.depth == 50 {
+                "demo.floor.surface".into()
+            } else {
+                format!("demo.floor.arena-depth-{}", floor.depth - 1)
+            }
+        );
+        assert_eq!(
+            floor.next_floor_id,
+            (floor.depth < 80).then(|| format!("demo.floor.arena-depth-{}", floor.depth + 1))
+        );
+        assert_eq!(floor.final_floor, floor.depth == 80);
+        assert_eq!(floor.down_stair_terrain_id.is_some(), floor.depth < 80);
+        assert_eq!(floor.entry_terrain_id.is_some(), floor.depth == 50);
+        assert_eq!(floor.guardian.is_some(), floor.depth == 80);
+        assert_eq!((floor.width, floor.height), (96, 33));
+        assert_eq!(floor.wall_terrain_id, "demo.terrain.permanent-wall");
+        assert_eq!(floor.floor_terrain_id, "demo.terrain.floor");
+        assert_eq!(
+            floor.encounter_table_id.as_deref(),
+            Some("demo.encounter-table.arena")
+        );
+        let layout = floor.layout.as_ref().unwrap();
+        assert_eq!(layout.mode, ProceduralLayoutMode::ArenaRooms);
+        assert_eq!(
+            layout.rooms.as_ref().unwrap().shapes[0].shape,
+            ProceduralRoomShape::Circle
+        );
+        assert!(layout.streamers.is_empty() && floor.vault_id.is_none());
+        let budget = floor.generation_budget.as_ref().unwrap();
+        assert_eq!(budget.actor_slots, if floor.depth == 80 { 7 } else { 6 });
+        assert_eq!(budget.loot_placements, 0);
+        if let Some(guardian) = &floor.guardian {
+            let reward = artifact
+                .content
+                .loot_tables
+                .iter()
+                .find(|t| Some(&t.id) == guardian.reward_loot_table_id.as_ref())
+                .unwrap();
+            assert_eq!(reward.rolls, 1);
+            assert_eq!(reward.entries.len(), 1);
+            assert_eq!(
+                reward.entries[0].item_kind_id,
+                "demo.item.artifact-creation-scroll"
+            );
+            assert_eq!(reward.entries[0].quantity, 1);
+        }
+    }
+    let policy = artifact
+        .content
+        .encounter_tables
+        .iter()
+        .find(|t| t.id == "demo.encounter-table.arena")
+        .unwrap()
+        .global_allocation
+        .as_ref()
+        .unwrap();
+    assert_eq!(policy.special_div, 0);
+    assert!(policy.preferred_glyphs.is_empty() && policy.preferred_tags.is_empty());
+    assert_eq!(policy.ambient_chance_one_in, 160);
+    let source: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(original_pack_path().join("legacy-wilderness-selection.json")).unwrap(),
+    )
+    .unwrap();
+    let plan = source["dungeonPlans"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|d| d["sourceIndex"] == 25)
+        .unwrap();
+    assert_eq!(plan["position"], serde_json::json!({"x":67,"y":7}));
+    assert_eq!(plan["tunnelPercent"], 8);
+    assert_eq!(
+        plan["wallTerrain"],
+        serde_json::json!({
+            "distribution":[{"sourceTag":"PERMANENT","percent":100},{"sourceTag":"MOUNTAIN_WALL","percent":0},{"sourceTag":"GRANITE","percent":0}],
+            "outer":"PERMANENT","inner":"GRANITE","streamers":["NONE","NONE"]
+        })
+    );
+}
+
+#[test]
 fn arena_dungeon_geometry_validates_circle_bounds_and_excludes_other_layouts() {
     let mut content = compile_pack_dir(&original_pack_path()).unwrap().content;
     let floor_id = "demo.floor.warrens-depth-1";
@@ -10948,6 +11061,10 @@ fn town_entrances_and_shared_facilities_match_source() {
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 65, y: 54 },
                     dungeon_id: "demo.dungeon.plains-of-oz".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 67, y: 7 },
+                    dungeon_id: "demo.dungeon.arena".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 74, y: 28 },

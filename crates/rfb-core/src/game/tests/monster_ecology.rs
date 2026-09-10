@@ -13,7 +13,7 @@ use rfb_content::{
 use super::support::*;
 use super::*;
 
-fn arena_ecology_game(depth: u16) -> Game {
+fn arena_ecology_game(depth: u16) -> (Game, String) {
     let geometry = super::generation::arena_geometry_definition(&Game::new(1));
     let root =
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
@@ -75,25 +75,23 @@ fn arena_ecology_game(depth: u16) -> Game {
     let content = Arc::new(ContentCatalog::from_artifact(
         rfb_content::encode_content(artifact.content).unwrap(),
     ));
-    Game::from_content(1, content, DEFAULT_WORLD_ID).unwrap()
+    (
+        Game::from_content(1, content, DEFAULT_WORLD_ID).unwrap(),
+        id,
+    )
 }
 
 #[test]
 fn arena_dungeon_allocates_one_center_monster_per_room_without_floor_loot() {
     for (depth, minimum) in [(50, 45), (55, 50), (80, 50)] {
-        let template = arena_ecology_game(depth);
+        let (template, floor_id) = arena_ecology_game(depth);
         let mut definition = template
             .content
             .world(DEFAULT_WORLD_ID)
             .unwrap()
             .procedural_floors
             .iter()
-            .find(|floor| {
-                floor
-                    .layout
-                    .as_ref()
-                    .is_some_and(|layout| layout.mode == ProceduralLayoutMode::ArenaRooms)
-            })
+            .find(|floor| floor.id == floor_id)
             .unwrap()
             .clone();
         if depth == 80 {
@@ -189,19 +187,14 @@ fn arena_dungeon_allocates_one_center_monster_per_room_without_floor_loot() {
 
 #[test]
 fn arena_dungeon_keeps_ambient_allocation_and_low_level_summons_without_companions() {
-    let mut game = arena_ecology_game(55);
+    let (mut game, floor_id) = arena_ecology_game(55);
     let definition = game
         .content
         .world(DEFAULT_WORLD_ID)
         .unwrap()
         .procedural_floors
         .iter()
-        .find(|floor| {
-            floor
-                .layout
-                .as_ref()
-                .is_some_and(|layout| layout.mode == ProceduralLayoutMode::ArenaRooms)
-        })
+        .find(|floor| floor.id == floor_id)
         .unwrap()
         .clone();
     let floor = game.generate_procedural_floor(&definition, None).unwrap();

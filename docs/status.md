@@ -10,8 +10,8 @@
 | 协议 | 1.247 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 120 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 15 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.409.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
-| 契约政策 | contract-v321，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
+| 内容包 | 1.410.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 契约政策 | contract-v322，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 8 个 Class、15 个 Build、57 个 Race、32 本能力书、1,861 个 ability 文件、377 个 item、1,404 个 actor、168 个 affix、152 个 mutation。世界定义含 30 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、63 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
@@ -76,7 +76,9 @@ B2 已接入 17 类共享类别权重、身体槽位减半、Good 分配层级 +
 
 ## 城镇与共享存储
 
-[竞技场地牢 AR1–AR3](../design/arena-dungeon-plan-20260910.md) 已完成生成与生态能力，正式入口仍未开放。`arena-rooms` / `circle` 支持半径 3–7 的圆形房间、永久墙中的通道及按深度选择的通道与照明；每个成功房间中心分配单怪，玩家／楼梯／最终守卫避开中心。普通与环境分配遵守 `MIN(50, depth-5)`，召唤保留独立资格；本地牢不生成伴随队伍、第二批初始怪物或普通地面物品／金币，保留陷阱、环境刷怪与死亡掉落。守卫的法术免疫、近战／箭矢减伤、高防御、低生命和移动约束已有实际消费者与测试。以 96×33、6 房间配置验证，沿用既有预算、通道与单门适配，不宣称复刻原版尺寸、门数量或 RNG 序列。AR2 核心 1301 项通过、3 项既有忽略，强化后的占位与守卫移动断言定向通过；内容 world 61 项、26 条 active 契约、相关 Clippy、格式与 source/lock 验证通过。AR3 已加入正式创造神器卷轴与自然分配，Rust 提供合法目标，前端支持堆叠确认／命名；单次工厂原位改造武器、防具、弹药、首饰及合法光源，Snotling 蘑菇保留效果并按 99 回合冷却复用。取消／失败消耗、零价值造物、装备与弹药保存恢复已有专项证据；相关核心／内容／前端、生成物、Clippy、source/lock 与 26 条 active 契约通过。内容包和协议已更新，State Hash Schema、存档版本与 fixture 未改。Android 装备经验未实现，31 层正式入口与奖励接入留给 AR4；无本批可玩构建或人工试玩。
+[竞技场地牢 AR1–AR4](../design/arena-dungeon-plan-20260910.md) 已开放 (67,7) 真实入口、50–80 共 31 层、龙魔像入口守卫与末层唯一种散失金属史莱姆；正式世界现有 31 个地牢条目。`arena-rooms` / `circle` 支持半径 3–7 的圆形房间、永久墙通道与按深度选择的照明；每房中心单怪，普通／环境分配下限为 `MIN(50, depth-5)`，召唤独立处理。本地牢保留陷阱、运行期刷怪和死亡掉落，不生成伴随队伍、第二批初始怪物或普通地面物品／金币。地图采用 96×33、六房间预算与既有通道／单门适配，不宣称复刻原版尺寸或 RNG 序列。创造神器卷轴已进入正式自然分配与最终守卫奖励，Rust 投影合法目标，UI 支持堆叠确认／命名，单次工厂原位改造已有合法物品；Snotling 蘑菇保留效果并按 99 回合冷却复用，Android 装备经验仍未实现。
+
+AR4 核心自动流程从地表入口出发，覆盖全 31 层往返、两场实际攻击指令战斗、独立奖励掉落、拾取／使用卷轴、同一装备实例持久化、召回及重入不重复发奖。测试明确授予等级与强化装备、保护状态，每轮补血和移动至守卫邻格，保留守卫源属性与 AI；转层隔离普通怪物和临时状态，不表示自然练级或人工通关。该流程与 114 项生成／生态／世界回归、62 项内容 world、5 项本地化、相关 Clippy、格式、source/lock 和 26 条 active 契约通过。新增地牢初始化状态使 26 条契约的哈希变化，逐项核对后仅刷新哈希，其他断言未改；baseline 为 `contract-v322`，哈希格式／协议／存档格式不变。AR5 聚焦验收待执行，本批无可玩构建或人工试玩。
 
 [反魔洞穴／反近战洞穴 A1–A5](../design/anti-caves-dungeon-plan-20260910.md) 已完成规则、内容、入口与聚焦自动验收。原版 16/17 替代组各 40–50 层；新角色按种子只开放 (84,6)/(47,45) 中所选地点的真实入口和守卫，无最终首领或固定征服奖励。`noMagic`/`noMelee` 保留各入口的回合、资源与召唤语义，生态分别筛选天生/攻击法术资格，空偏好 `specialDiv=0` 可走全局分配。A5 的 105 项核心检查、最终两项守卫落点复核、正式内容绑定、来源审计、26 条契约、Schema、Clippy 和格式检查通过；生成覆盖每座 9 个代表场景，两种替代结果的全层往返、保存/召回及守卫状态已验证。该方向验收时包/lock 为 1.401.8；代表层与河流概率适配详见计划。没有本批可玩构建或人工试玩。
 

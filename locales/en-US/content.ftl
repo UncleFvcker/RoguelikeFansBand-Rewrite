@@ -9171,6 +9171,9 @@ terrain-demo-anti-melee-cave-entrance-name = Anti-melee cave entrance
 terrain-demo-anti-melee-cave-entrance-description = An entrance to Anti-melee cave.
 
 floor-demo-dark-cave-depth-name = Dark cave depth { $depth }
+floor-demo-arena-depth-name = Arena depth { $depth }
+terrain-demo-arena-entrance-name = Arena entrance
+terrain-demo-arena-entrance-description = An entrance to the Arena.
 terrain-demo-dark-cave-entrance-name = Dark cave entrance
 terrain-demo-dark-cave-entrance-description = An entrance to Dark cave.
 

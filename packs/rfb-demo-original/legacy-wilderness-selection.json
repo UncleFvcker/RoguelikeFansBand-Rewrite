@@ -121,6 +121,11 @@
       "sourceIndex": 37,
       "sourceName": "Disaster area",
       "id": "demo.dungeon.disaster-area"
+    },
+    {
+      "sourceIndex": 25,
+      "sourceName": "Arena",
+      "id": "demo.dungeon.arena"
     }
   ],
   "townPlans": [
@@ -1880,6 +1885,16 @@
         { "sourceTag": "FLOOR", "percent": 0 }
       ],
       "tunnelPercent": 8,
+      "wallTerrain": {
+        "distribution": [
+          { "sourceTag": "PERMANENT", "percent": 100 },
+          { "sourceTag": "MOUNTAIN_WALL", "percent": 0 },
+          { "sourceTag": "GRANITE", "percent": 0 }
+        ],
+        "outer": "PERMANENT",
+        "inner": "GRANITE",
+        "streamers": ["NONE", "NONE"]
+      },
       "initialGuardian": {
         "sourceIndex": 691,
         "sourceName": "Drolem",
