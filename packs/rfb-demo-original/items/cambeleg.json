@@ -1,0 +1,59 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "id": "demo.item.cambeleg",
+  "nameKey": "item-demo-cambeleg-name",
+  "descriptionKey": "item-demo-cambeleg-description",
+  "glyph": "]",
+  "generationLevel": 40,
+  "weightTenthsPound": 5,
+  "baseValue": 36000,
+  "equipmentSlot": "gloves",
+  "artifactGeneration": {
+    "sourceIndex": 52,
+    "baseItemKindId": "demo.item.set-of-studded-leather-gloves",
+    "instant": false,
+    "rarityOneIn": 10
+  },
+  "modifiers": {
+    "strength": 3,
+    "constitution": 3,
+    "defense": 16
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 8,
+    "meleeDamage": 8
+  },
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SHOW_MODS",
+      "STR"
+    ],
+    "pval": 3,
+    "toArmor": 15
+  }
+}

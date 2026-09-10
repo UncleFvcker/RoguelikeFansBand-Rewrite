@@ -198,10 +198,144 @@ fn hobbit_fixed_artifacts_generate_equip_and_preserve_uniqueness_after_save() {
                 .generated_artifact_ids
                 .contains(&format!("demo.item.{kind}"))
         );
-        assert!(
-            restored
-                .roll_fixed_artifact_kind_id(&context, Some(&format!("demo.item.{base}")), false)
-                .is_none()
+        assert_ne!(
+            restored.roll_fixed_artifact_kind_id(
+                &context,
+                Some(&format!("demo.item.{base}")),
+                false
+            ),
+            Some(format!("demo.item.{kind}"))
+        );
+    }
+}
+
+#[test]
+fn fixed_armor_pair_generates_equips_and_preserves_consumers_after_save() {
+    let mut game = Game::new_with_build(417, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    game.items.clear();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-40".into(),
+        depth: 40,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.ordinary-drop".into(),
+        },
+    };
+    let mut remaining = BTreeSet::from(["demo.item.thorongil", "demo.item.cambeleg"]);
+    // Controlled depth and repeated production drops, retaining the complete
+    // ordinary pool, quality, rarity and uniqueness rules.
+    for _ in 0..50_000 {
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            if !remaining.remove(item.kind_id.as_str()) {
+                continue;
+            }
+            assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+            assert!(item.activation.is_none() && item.curse.is_none());
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+            assert!(game.item_property_knowledge[&id].identified);
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "artifacts never generated: {remaining:?}"
+    );
+    assert_eq!(game.carried_weight_tenths_pound(), 15);
+    for (kind, defense) in [("thorongil", 11), ("cambeleg", 16)] {
+        let id = game
+            .items
+            .iter()
+            .find(|item| item.kind_id == format!("demo.item.{kind}"))
+            .unwrap()
+            .id
+            .clone();
+        let before = game.player_derived_stats();
+        let modifiers = game.equipment_modifiers();
+        let bonuses = game.player_equipment_bonuses();
+        let see_invisible = game.player_see_invisible_sources();
+        game.equip_inventory_item(&id, None).unwrap();
+        let after = game.player_derived_stats();
+        assert_eq!(
+            after.armor_class.value,
+            before.armor_class.value + defense * 10
+        );
+        assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
+        if kind == "thorongil" {
+            assert_eq!(game.player_see_invisible_sources(), see_invisible + 1);
+            for element in [DamageType::Electricity, DamageType::Fire, DamageType::Cold] {
+                assert_eq!(
+                    game.effective_player_resistances().level(element),
+                    ResistanceLevel::Resistant
+                );
+            }
+        } else {
+            assert_eq!(game.equipment_modifiers().strength, modifiers.strength + 3);
+            assert_eq!(
+                game.equipment_modifiers().constitution,
+                modifiers.constitution + 3
+            );
+            assert_eq!(
+                game.player_equipment_bonuses().melee_skill,
+                bonuses.melee_skill + 8
+            );
+            assert_eq!(
+                game.player_equipment_bonuses().melee_damage,
+                bonuses.melee_damage + 8
+            );
+            assert!(after.melee_skill.value >= before.melee_skill.value + 8);
+            assert!(after.melee_damage_bonus.value >= before.melee_damage_bonus.value + 8);
+        }
+    }
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    let expected = game.player_derived_stats();
+    let actual = restored.player_derived_stats();
+    assert_eq!(actual.armor_class, expected.armor_class);
+    assert_eq!(actual.melee_skill, expected.melee_skill);
+    assert_eq!(actual.melee_damage_bonus, expected.melee_damage_bonus);
+    assert_eq!(
+        restored.player_see_invisible_sources(),
+        game.player_see_invisible_sources()
+    );
+    assert!(
+        restored
+            .player_status_immunities()
+            .contains(STATUS_PARALYSIS)
+    );
+    let next = game
+        .generate_loot_instances(&context, ItemLocation::Inventory)
+        .unwrap();
+    assert_eq!(
+        restored
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap(),
+        next
+    );
+    assert_eq!(restored.rng, game.rng);
+    for (kind, base) in [
+        ("thorongil", "cloak"),
+        ("cambeleg", "set-of-studded-leather-gloves"),
+    ] {
+        let kind = format!("demo.item.{kind}");
+        assert!(restored.generated_artifact_ids.contains(&kind));
+        assert_ne!(
+            restored.roll_fixed_artifact_kind_id(
+                &context,
+                Some(&format!("demo.item.{base}")),
+                false
+            ),
+            Some(kind)
         );
     }
 }

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "id": "demo.item.thorongil",
+  "nameKey": "item-demo-thorongil-name",
+  "descriptionKey": "item-demo-thorongil-description",
+  "glyph": "(",
+  "generationLevel": 20,
+  "weightTenthsPound": 10,
+  "baseValue": 13000,
+  "equipmentSlot": "cloak",
+  "artifactGeneration": {
+    "sourceIndex": 47,
+    "baseItemKindId": "demo.item.cloak",
+    "instant": false,
+    "rarityOneIn": 20
+  },
+  "modifiers": {
+    "defense": 11
+  },
+  "passives": [
+    "see-invisible"
+  ],
+  "resistances": {
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant"
+  },
+  "rfbValue": {
+    "flags": [
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_COLD",
+      "RES_ELEC",
+      "RES_FIRE",
+      "SEE_INVIS"
+    ],
+    "pval": 0,
+    "toArmor": 10
+  }
+}
