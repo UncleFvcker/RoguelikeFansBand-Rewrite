@@ -1,8 +1,8 @@
 # 法师来源与消费者审计
 
-初审日期：2026-09-10，对应[法师计划](mage-class-plan.md)第一步，代码基线 `a09a334df`。以下源→实现差异表记录初审基线；2026-09-11 完成的第二步见文末当前进度，**普通创角入口尚未开放**。工作树既存 `release/` 保留。
+初审日期：2026-09-10，对应[法师计划](mage-class-plan.md)第一步，代码基线 `a09a334df`。以下源→实现差异表记录初审基线；2026-09-11 完成的第二、三步见文末当前进度，**普通创角入口尚未开放**。工作树既存 `release/` 保留。
 
-RFB 来源为 `D:/codex/Frogcomposband/master` 的 `master` Git 对象，实际提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`，第二步复核未变。以下源路径和行号均指此提交，通过 `git show` / `git grep` 读取；实现路径指本项目。初审内容 1.412.0，第二步内容 1.413.0；协议 1.249、State Hash Schema 122、save header/payload 14/17 未变。
+RFB 来源为 `D:/codex/Frogcomposband/master` 的 `master` Git 对象，实际提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`，第二、三步复核未变。以下源路径和行号均指此提交，通过 `git show` / `git grep` 读取；实现路径指本项目。初审内容 1.412.0，第二步升至 1.413.0，第三步不改内容；新增学习支出使协议升至 1.250、State Hash Schema 123、save header/payload 为 14/18。
 
 ## 范围和审计方法
 
@@ -161,15 +161,18 @@ Build 保留出生身份，主领域不变；当前副领域与必要历史由 R
 
 ## 当前进度与验证
 
-第二步已在初审后的 `d733ca439` 基础上完成。正式定义见 [Mage Class](../packs/rfb-demo-original/classes/mage.json)、[技能](../packs/rfb-demo-original/skillSets/mage.json)、[玩家 actor](../packs/rfb-demo-original/actors/mage-player.json)、[职业能力](../packs/rfb-demo-original/abilities/mage-eat-magic.json)及 [Build 目录](../packs/rfb-demo-original/builds/)。56 个有序组合各携带双方第一本书，共用职业定义；未添加创角目录项。
+前三步已完成，第三步基线为 `693ef9a02`。正式定义见 [Mage Class](../packs/rfb-demo-original/classes/mage.json)、[技能](../packs/rfb-demo-original/skillSets/mage.json)、[玩家 actor](../packs/rfb-demo-original/actors/mage-player.json)、[职业能力](../packs/rfb-demo-original/abilities/mage-eat-magic.json)及 [Build 目录](../packs/rfb-demo-original/builds/)。56 个有序组合各携带双方第一本书，共用职业定义；未添加创角目录项。
 
-- 复用 importer 的 `parse_m_info`，按现有 book rank/书内次序导入 Mage 的 256 项等级、基础费用、失败率和首用经验；逐项对照解析结果通过。新增 `RfbDualRealm` 基础容量和可选首用经验覆盖，复用当前学习、施法和保存状态。重复研习支出、主副熟练度和动态改换状态仍未完成，不把基础容量视作第三步完成。
+- 复用 importer 的 `parse_m_info`，按 book rank/书内次序导入 256 项 Mage 等级、基础费用、失败率和首用经验；逐项对照解析结果通过。`firstSuccessExperience` 已存 `sexp × minimumLevel` 的最终值，运行时不再乘等级；死亡 Wraithform 的 250×47 和 Nature's Wrath 的 150×40 有实际首用奖励覆盖。
 - 源属性/技能、武器熟练度（含双节棍 0/0）、400/100/20 攻击参数、MP/再生/负重、周期感知、美德与龙人变形等级已接入。保持公共出生属性和 HP progression 适配；没有复刻源点购或 HP 掷点曲线。
-- `life-warding-true` 在主 Life 的等级为 46，副 Life 调整为 99；`death-vampirism-true` 的附加费用在公共有效参数路径处理，Mage 为 85、High-Mage 为 80，再进入既有减耗。死亡熵球与恶魔 `hellish-flame` 的已有等级缩放经完整 ability→program 装配验证，纠正上表说明的初审误判，没有重写法术效果。glyph 数量限制、减耗舍入和 Death 失败反噬仍按第三步处理。
+- `life-warding-true` 在主 Life 的等级为 46，副 Life 调整为 99；`death-vampirism-true` 的附加费用在公共有效参数路径处理，Mage 为 85、High-Mage 为 80，再进入减耗。死亡熵球与恶魔 `hellish-flame` 复用已有等级缩放。公共减耗现按源合并整数除法；非主 Life 的 warding glyph 限额为 11，主 Life 豁免，保留既有爆炸符文限额。
 - 吞噬魔法复用现有装置执行器，目标要求真实装置、activation、有 SP 且在背包/脚下。odds=0 已按源必败，不掷内部成功骰；仍有外层职业失败骰及失败后的毁坏判定。Mage 和 High-Mage 的最低失败率为 11。既有 High-Mage/突变成功测试原先使用必败难度，现改为合法成功难度并明确选择成功 RNG；没有放宽断言。
+- 共享学习预算使用独立 `spentSpellLearning`，首次学习与重复研习各付一次；首次顺序不重复，主领域上限 1600、副领域 1400。等级/INT 下降时从当前容量及已花预算重算遗忘，恢复时保留原顺序、进度和计数；Mage 不提供手动遗忘退款。研习按职业 `spell_book` 增 Knowledge，成功施法美德按实际领域；副领域 +5、阵营、美德、stun 和熟练度修正在源顺序内计算失败率。
+- [book_magic.rs](../crates/rfb-core/src/game/abilities/book_magic.rs)在实际效果后判断练习：非攻击按三倍插值，攻击要求有效影响可移动敌方；城镇、空打、友方、不移动目标和免疫不刷伤害练习。地牢读实际深度，荒野读当前危险等级；环境上限与主副硬上限分别生效。成功但无用的攻击仍登记 worked/首用奖励，失败不成长。Death 反噬使用书的正式 rank 与书内 index，不能依赖被加载器排序过的书 ID 列表；复用精神冲击、直接失血及经验损失路径并保留 RNG 顺序。
+- 学习支出为必需保存字段，非 Mage 必须为 0；恢复时校验支出、首次顺序、遗忘结果、全部进度和动态上限。Nature's Wrath 待方向状态保持未支付/未 worked，取消不成长；保存后确认方向与原存档继续完全一致，拒绝伪造待定进度和付款。保持上文公共目标校验、HP/MP 成长等适配，没有新增旧开发存档兼容。
 
-核心证据集中于 [mage.rs](../crates/rfb-core/src/game/tests/mage.rs)的 11 项行为测试：全部出生组合、源参数与必要种族交叉、显式经验升级 1–50 级、双方真实学习施放和首用 XP、攻击/超重、感知、吞噬外层/内部失败与实际 SP 消耗、以及保存后相同行动继续。种族覆盖人类、托姆特、冬贝利、幽灵和红色龙人；不表示所有种族组合的桌面验收。领域资格边界复用 [内容校验测试](../crates/rfb-content/src/tests/validation.rs)，拒绝缺失、重复、未知及本轮不支持领域，且校验首用经验上限。
+核心证据为 [mage.rs](../crates/rfb-core/src/game/tests/mage.rs)及 [learning.rs](../crates/rfb-core/src/game/tests/mage/learning.rs)的 28 项行为测试：全部出生组合、显式经验升级 1–50 级、吞噬装置、两个领域真实学习施放、100 次共享预算耗尽、重复研习插值、遗忘恢复、城镇/荒野/地牢练习、无效攻击、两侧上限、首用/失败 RNG、glyph、公共减耗及保存继续。种族覆盖人类、托姆特、冬贝利、幽灵和红色龙人；不表示所有种族组合的桌面验收。领域资格边界继续复用 [内容校验测试](../crates/rfb-content/src/tests/validation.rs)。
 
-实际检查：Mage 11 项；High-Mage 84、Mindcrafter 32、能力物品 11、能力伤害 27、Paladin 2、随机祈祷学习 3 项均通过；内容校验/编译往返/目录相关检查与本地化 39 项通过。`rfb-core` / `rfb-content` all-targets Clippy、内容 Schema、内容锁与格式检查通过；完整 26 条 active 契约通过，未刷新 fixture。生成适用性只读检查仍为现有 9 个普通入口，未提前登记 56 个 Mage 可用记录。
+第三步实际检查：Mage 28、High-Mage 84、Paladin 2、随机祈祷 3、能力执行 117、Mindcrafter 32、怪物生态 38、成长 64、保存 9、美德 6，以及符文物品和状态哈希既有用例各 1，共 385 项核心测试通过。协议 7、保存容器 2 项通过；`rfb-core` / `rfb-protocol` / `rfb-save` all-targets Clippy、绑定检查、前端 typecheck 和相关 11 项会话/保存/本地化测试通过。新增持久字段进入哈希，初始保存回环先 observe，再刷新 26 条 active 契约；diff 只有 stateHash/saveRoundTripStateHash，全部 verify 通过。内容未变化，不重编内容 Schema 或升级包/lock。
 
-第三至七步仍待完成：重复研习和完整熟练度/失败规则、改换与新状态、生成/任务/公会关联、正式界面与桌面交付。本批没有运行前端、Tauri 或 Android 验收，也没有发布新的可玩程序。
+第四至七步仍待完成：改换副领域及历史、生成/任务/公会关联、正式界面与桌面交付。本批没有 Tauri 或 Android 验收，也没有发布新的可玩程序；56 个 Mage 仍未进入普通创角或可用生成审计集合。

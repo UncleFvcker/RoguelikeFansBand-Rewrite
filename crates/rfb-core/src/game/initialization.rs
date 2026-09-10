@@ -577,6 +577,7 @@ impl Game {
             resources: BTreeMap::new(),
             last_visual_cells: None,
             bonus_spell_learning_capacity: 0,
+            spent_spell_learning: 0,
             learned_abilities: BTreeSet::new(),
             ability_learning_order: Vec::new(),
             ability_progress: BTreeMap::new(),

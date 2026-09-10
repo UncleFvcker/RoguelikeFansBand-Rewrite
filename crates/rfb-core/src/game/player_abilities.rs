@@ -268,7 +268,26 @@ impl Game {
         {
             player.minimum_level = 99;
         }
+        if self.player_is_mage() {
+            player.proficiency.cap = if self.ability_is_secondary_realm(&ability.id) {
+                SPELL_EXP_EXPERT
+            } else {
+                SPELL_EXP_MASTER
+            };
+        }
         effective
+    }
+
+    pub(super) fn ability_is_secondary_realm(&self, ability_id: &str) -> bool {
+        self.active_casting_realm_profiles()
+            .get(1)
+            .is_some_and(|realm| {
+                realm.ability_book_ids.iter().any(|id| {
+                    self.content
+                        .ability_book(id)
+                        .is_some_and(|book| book.ability_ids.iter().any(|id| id == ability_id))
+                })
+            })
     }
 
     pub(super) fn apply_player_level_scaling(ability: &mut AbilityDefinition, level: u16) {
@@ -586,10 +605,28 @@ impl Game {
                 i32::from(player.base_failure_percent)
                     .saturating_sub(level_adjustment)
                     .saturating_sub(attribute_adjustment)
+                    .saturating_add(if self.player_is_mage() {
+                        5 * i32::from(self.ability_is_secondary_realm(&ability.id))
+                            + self.mage_spell_alignment_modifier(&ability.id)
+                    } else {
+                        0
+                    })
                     .saturating_add(modifier_percent)
                     .saturating_add(i32::try_from(resource_penalty).unwrap_or(i32::MAX))
                     .saturating_sub(4 * easy_spell)
-                    .clamp(i32::from(minimum_failure_percent), 95)
+                    .max(i32::from(minimum_failure_percent))
+                    .saturating_add(if self.player_is_mage() {
+                        self.player
+                            .statuses
+                            .iter()
+                            .filter(|status| status.kind_id == STATUS_STUN)
+                            .map(|status| i32::from(status.intensity).min(100) / 2)
+                            .max()
+                            .unwrap_or(0)
+                    } else {
+                        0
+                    })
+                    .min(95)
                     .saturating_sub(proficiency_adjustment)
                     .saturating_sub(easy_spell)
                     .max(0)
@@ -927,11 +964,11 @@ impl Game {
             return Err("unknown-ability");
         };
         let ability = self.effective_casting_ability(&profile, ability);
-        if self
+        let studied = self
             .ability_learning_order
             .iter()
-            .any(|id| id == ability_id)
-        {
+            .any(|id| id == ability_id);
+        if studied && !self.player_is_mage() {
             return Err("already-learned");
         }
         if self.progress.level < Self::player_ability_parameters(&ability).minimum_level {
@@ -940,7 +977,7 @@ impl Game {
         if !self.profile_supports_ability(&profile, ability_id) {
             return Err("ability-not-supported");
         }
-        if self.learned_abilities.len() >= usize::from(self.ability_learning_capacity(&profile)) {
+        if self.ability_learning_remaining(&profile) == 0 {
             return Err("learning-capacity-full");
         }
         let Some(book_id) = self.study_book_id(book_item_id) else {
@@ -954,8 +991,36 @@ impl Game {
         {
             return Err("book-mismatch");
         }
-        self.learned_abilities.insert(ability_id.to_owned());
-        self.ability_learning_order.push(ability_id.to_owned());
+        if studied {
+            if !self.learned_abilities.contains(ability_id) {
+                return Err("ability-forgotten");
+            }
+            let progress = self
+                .ability_progress
+                .get_mut(ability_id)
+                .expect("supported spell has progress");
+            let old = progress.proficiency;
+            if old >= progress.proficiency_cap {
+                return Err("proficiency-at-cap");
+            }
+            progress.proficiency = if old >= SPELL_EXP_EXPERT {
+                SPELL_EXP_MASTER
+            } else if old >= SPELL_EXP_SKILLED {
+                (old + 200).min(progress.proficiency_cap)
+            } else if old >= SPELL_EXP_BEGINNER {
+                SPELL_EXP_SKILLED + (old - SPELL_EXP_BEGINNER) * 2 / 3
+            } else {
+                SPELL_EXP_BEGINNER + old / 3
+            };
+        } else {
+            self.learned_abilities.insert(ability_id.to_owned());
+            self.ability_learning_order.push(ability_id.to_owned());
+        }
+        if self.player_is_mage() {
+            self.spent_spell_learning += 1;
+            // cmd5.c uses the class spell_book (Mage: sorcery), not the studied realm.
+            self.add_virtue(VirtueKindDto::Knowledge, 1);
+        }
         Ok(())
     }
 
@@ -1033,6 +1098,9 @@ impl Game {
     }
 
     pub(super) fn forget_player_ability(&mut self, ability_id: &str) -> Result<(), &'static str> {
+        if self.player_is_mage() {
+            return Err("manual-forgetting-unavailable");
+        }
         let Some(profile) = self.casting_profile().cloned() else {
             return Err("no-casting-profile");
         };
@@ -1062,7 +1130,13 @@ impl Game {
                     Self::player_ability_parameters(&ability).minimum_level <= self.progress.level
                 })
             })
-            .take(usize::from(self.ability_learning_capacity(profile)))
+            .take(if self.player_is_mage() {
+                (u32::from(self.ability_learning_capacity(profile))
+                    + self.ability_learning_order.len() as u32)
+                    .saturating_sub(self.spent_spell_learning) as usize
+            } else {
+                usize::from(self.ability_learning_capacity(profile))
+            })
             .cloned()
             .collect()
     }
@@ -1073,7 +1147,35 @@ impl Game {
 
     pub(super) fn player_spell_memory_is_valid(&self) -> bool {
         let unique = self.ability_learning_order.iter().collect::<BTreeSet<_>>();
-        unique.len() == self.ability_learning_order.len()
+        let spending_valid = if self.player_is_mage() {
+            let maximum_studies: u32 = self
+                .ability_learning_order
+                .iter()
+                .filter_map(|id| self.ability_progress.get(id))
+                .map(|progress| {
+                    1 + u32::from(progress.proficiency >= SPELL_EXP_BEGINNER)
+                        + u32::from(progress.proficiency >= SPELL_EXP_SKILLED)
+                        + u32::from(progress.proficiency >= SPELL_EXP_EXPERT)
+                        + u32::from(progress.proficiency >= SPELL_EXP_MASTER)
+                })
+                .sum();
+            let historical_capacity = (3 * u32::from(self.progress.max_level)).min(100)
+                + u32::from(self.bonus_spell_learning_capacity);
+            self.spent_spell_learning >= self.ability_learning_order.len() as u32
+                && self.spent_spell_learning <= maximum_studies
+                && self.spent_spell_learning
+                    <= historical_capacity + self.ability_learning_order.len() as u32
+                && self.ability_progress.iter().all(|(id, progress)| {
+                    self.ability_learning_order.contains(id)
+                        || (progress.proficiency == 0
+                            && progress.cast_count == 0
+                            && progress.fail_count == 0)
+                })
+        } else {
+            self.spent_spell_learning == 0
+        };
+        spending_valid
+            && unique.len() == self.ability_learning_order.len()
             && self.ability_learning_order.iter().all(|id| {
                 self.casting_profile().is_some_and(|profile| {
                     self.profile_supports_ability(profile, id)
@@ -1085,6 +1187,17 @@ impl Game {
                 })
             })
             && self.learned_abilities == self.remembered_player_abilities()
+    }
+
+    pub(super) fn ability_learning_remaining(&self, profile: &CastingProfileDefinition) -> u16 {
+        let capacity = u32::from(self.ability_learning_capacity(profile));
+        let remaining = if self.player_is_mage() {
+            let forgotten = self.ability_learning_order.len() - self.learned_abilities.len();
+            (capacity + forgotten as u32).saturating_sub(self.spent_spell_learning)
+        } else {
+            capacity.saturating_sub(self.learned_abilities.len() as u32)
+        };
+        u16::try_from(remaining).expect("remaining study budget fits its capacity")
     }
 
     pub(super) fn ability_learning_capacity(&self, profile: &CastingProfileDefinition) -> u16 {
@@ -1179,6 +1292,7 @@ impl Game {
 
     pub(super) fn initialize_player_ability_state(&mut self) {
         self.resources.clear();
+        self.spent_spell_learning = 0;
         self.learned_abilities.clear();
         self.ability_learning_order.clear();
         self.ability_progress.clear();
@@ -1194,7 +1308,11 @@ impl Game {
             if !self.ability_progress.contains_key(&ability_id)
                 && let Some(ability) = self.content.ability(&ability_id)
             {
-                let player = Self::player_ability_parameters(ability);
+                let ability = self.effective_casting_ability(
+                    self.casting_profile().expect("book caster"),
+                    ability,
+                );
+                let player = Self::player_ability_parameters(&ability);
                 self.ability_progress.insert(
                     ability_id,
                     AbilityProgress::new(player.proficiency.initial, player.proficiency.cap),
@@ -1208,6 +1326,7 @@ impl Game {
         saved_resources: Vec<ResourcePoolSaveDto>,
         saved_learned_ability_ids: Vec<String>,
         saved_ability_learning_order: Vec<String>,
+        saved_spent_spell_learning: u32,
         saved_ability_progress: Vec<AbilityProgressSaveDto>,
     ) -> Result<(), CoreError> {
         self.initialize_player_ability_state();
@@ -1255,9 +1374,7 @@ impl Game {
             }
         }
         self.ability_learning_order = saved_ability_learning_order;
-        if !self.player_spell_memory_is_valid() {
-            return Err(CoreError::InvalidSave("player spell memory is invalid"));
-        }
+        self.spent_spell_learning = saved_spent_spell_learning;
         let mut seen_progress = BTreeSet::new();
         for saved in saved_ability_progress {
             if !seen_progress.insert(saved.id.clone()) {
@@ -1279,6 +1396,11 @@ impl Game {
             progress.cast_count = saved.cast_count;
             progress.fail_count = saved.fail_count;
             progress.cooldown_remaining = saved.cooldown_remaining;
+        }
+        if !self.player_spell_memory_is_valid()
+            || (self.player_is_mage() && seen_progress.len() != self.ability_progress.len())
+        {
+            return Err(CoreError::InvalidSave("player spell memory is invalid"));
         }
         Ok(())
     }
@@ -1374,16 +1496,16 @@ impl Game {
         let numerator = u64::from(player.resource_cost)
             .saturating_mul(factor)
             .saturating_add(SPELL_MANA_CONST.saturating_sub(1));
-        let cost = u32::try_from((numerator / SPELL_MANA_CONST).max(1))
-            .expect("validated ability mana cost must fit u32");
-        if self
+        let reduction = if self
             .player_equipment_passives()
             .contains(&EquipmentPassive::ReducedManaCost)
         {
-            (cost * 3 / 4).max(1)
+            3
         } else {
-            cost
-        }
+            4
+        };
+        u32::try_from((numerator * reduction / (SPELL_MANA_CONST * 4)).max(1))
+            .expect("validated ability mana cost must fit u32")
     }
 
     pub(super) fn ability_cooldown_turns(&self, ability_id: &str) -> u16 {
@@ -1461,6 +1583,7 @@ impl Game {
         succeeded: bool,
     ) -> AbilityProgress {
         let player = Self::player_ability_parameters(ability).clone();
+        let mage = self.player_is_mage();
         let progress = self
             .ability_progress
             .entry(ability.id.clone())
@@ -1471,13 +1594,21 @@ impl Game {
             progress.cast_count = progress.cast_count.saturating_add(1);
             progress.proficiency = progress
                 .proficiency
-                .saturating_add(player.proficiency.success_gain)
+                .saturating_add(if mage {
+                    0
+                } else {
+                    player.proficiency.success_gain
+                })
                 .min(progress.proficiency_cap);
         } else {
             progress.fail_count = progress.fail_count.saturating_add(1);
             progress.proficiency = progress
                 .proficiency
-                .saturating_add(player.proficiency.failure_gain)
+                .saturating_add(if mage {
+                    0
+                } else {
+                    player.proficiency.failure_gain
+                })
                 .min(progress.proficiency_cap);
         }
         if succeeded && let Some(cooldown) = player.cooldown.as_ref() {

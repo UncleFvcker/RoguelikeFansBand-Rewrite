@@ -186,6 +186,10 @@ pub(crate) enum DomainEvent {
     AbilityCastFailed {
         resolution: AbilityCastResolutionDto,
     },
+    SpellSanityBlasted {
+        ability_id: String,
+        outcome: &'static str,
+    },
     AbilityCastSucceeded {
         resolution: AbilityCastResolutionDto,
     },
@@ -2384,6 +2388,14 @@ impl DomainEvent {
                     ("power", power.to_string()),
                     ("outcome", outcome.to_string()),
                 ],
+            ),
+            Self::SpellSanityBlasted {
+                ability_id,
+                outcome,
+            } => dto(
+                "ability.sanity-blast",
+                "ability-sanity-blast",
+                [("target", ability_id), ("outcome", outcome.to_owned())],
             ),
             Self::MonsterDraggedTarget {
                 source_kind_id,

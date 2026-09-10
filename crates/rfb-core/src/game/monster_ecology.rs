@@ -510,9 +510,41 @@ impl Game {
             return;
         }
         self.entities[index].eldritch_horror_triggered = true;
-        let outcome = if !self.eldritch_saving_throw(power) {
-            self.apply_eldritch_confusion(&source_kind_id);
-            self.apply_eldritch_hallucination(&source_kind_id, true);
+        let outcome = self.resolve_sanity_blast(power, &source_kind_id, events, changed);
+        events.push(DomainEvent::EldritchHorror {
+            source_entity_id,
+            source_kind_id,
+            power: u16::try_from(power).unwrap_or(u16::MAX),
+            outcome,
+        });
+    }
+
+    pub(super) fn resolve_necromantic_sanity_blast(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> &'static str {
+        if self
+            .player_status_immunities()
+            .contains(ELDRITCH_HORROR_IMMUNITY)
+        {
+            return "unaffected";
+        }
+        // monster2.c::sanity_blast(NULL, TRUE) skips the sight/repeat/race saves.
+        self.resolve_sanity_blast(100, source_kind_id, events, changed)
+    }
+
+    fn resolve_sanity_blast(
+        &mut self,
+        power: i32,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> &'static str {
+        if !self.eldritch_saving_throw(power) {
+            self.apply_eldritch_confusion(source_kind_id);
+            self.apply_eldritch_hallucination(source_kind_id, true);
             "mind-blast"
         } else if !self.eldritch_saving_throw(power) {
             for attribute in [
@@ -524,7 +556,7 @@ impl Game {
             }
             "attribute-drain"
         } else if !self.eldritch_saving_throw(power) {
-            self.apply_eldritch_brain_smash(&source_kind_id);
+            self.apply_eldritch_brain_smash(source_kind_id);
             "brain-smash"
         } else if !self.eldritch_saving_throw(power) {
             self.clear_current_floor_memory(changed);
@@ -533,13 +565,7 @@ impl Game {
             "resisted"
         } else {
             self.resolve_eldritch_permanent_insanity(events)
-        };
-        events.push(DomainEvent::EldritchHorror {
-            source_entity_id,
-            source_kind_id,
-            power: u16::try_from(power).unwrap_or(u16::MAX),
-            outcome,
-        });
+        }
     }
 
     pub(super) fn roll_chameleon_form(

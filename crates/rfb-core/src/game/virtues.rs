@@ -238,6 +238,112 @@ pub(super) fn validate_virtues(virtues: &[VirtueDto]) -> bool {
 }
 
 impl Game {
+    pub(super) fn apply_mage_spell_cast_virtues(
+        &mut self,
+        ability_id: &str,
+        cost: u32,
+        fail: u8,
+        first: bool,
+    ) {
+        use VirtueKindDto::*;
+        let realm = self
+            .book_spell_realm(ability_id)
+            .expect("active book spell");
+        let changes: &[(VirtueKindDto, i16)] = match realm {
+            "life" => &[
+                (Temperance, 1),
+                (Compassion, 1),
+                (Vitality, 1),
+                (Diligence, 1),
+            ],
+            "death" => &[(Unlife, 1), (Justice, -1), (Faith, -1), (Vitality, -1)],
+            "daemon" => &[(Justice, -1), (Faith, -1), (Honour, -1), (Temperance, -1)],
+            "crusade" => &[(Faith, 1), (Justice, 1), (Sacrifice, 1), (Honour, 1)],
+            "nature" => &[(Nature, 1), (Harmony, 1)],
+            _ => &[],
+        };
+        if first {
+            if changes.is_empty() {
+                self.add_virtue(Knowledge, 1);
+            } else {
+                for &(kind, amount) in changes {
+                    self.add_virtue(kind, amount);
+                }
+            }
+        }
+        for &(kind, amount) in changes {
+            if self.rng.bounded(100 + u64::from(self.progress.level)) + 1 < u64::from(cost) {
+                self.add_virtue(kind, amount);
+            }
+        }
+        if self.rng.bounded(100) + 1 < u64::from(fail) {
+            self.add_virtue(Chance, 1);
+        }
+    }
+
+    pub(super) fn apply_book_spell_failure_virtues(&mut self, realm: &str, fail: u8) {
+        use VirtueKindDto::*;
+        let (kind, amount) = match realm {
+            "life" => (Vitality, -1),
+            "death" => (Unlife, -1),
+            "nature" => (Nature, -1),
+            "daemon" => (Justice, 1),
+            "crusade" => (Justice, -1),
+            _ => (Knowledge, -1),
+        };
+        if self.rng.bounded(100) + 1 < u64::from(fail) {
+            self.add_virtue(kind, amount);
+        }
+        if self.rng.bounded(100) + 1 >= u64::from(fail) {
+            self.add_virtue(Chance, -1);
+        }
+    }
+
+    pub(super) fn mage_spell_alignment_modifier(&self, ability_id: &str) -> i32 {
+        use VirtueKindDto::*;
+        let mut alignment: i32 = self
+            .entities
+            .iter()
+            .filter(|actor| self.actor_is_player_aligned(actor))
+            .filter_map(|actor| self.actor_runtime_definition(actor))
+            .map(|kind| {
+                kind.level as i32
+                    * (i32::from(kind.tags.iter().any(|tag| tag == "good"))
+                        - i32::from(kind.tags.iter().any(|tag| tag == "evil")))
+            })
+            .sum();
+        for virtue in &self.virtues {
+            alignment += i32::from(virtue.value)
+                * match virtue.kind {
+                    Justice => 2,
+                    Chance | Nature | Harmony => 0,
+                    Unlife => -1,
+                    _ => 1,
+                };
+        }
+        for virtue in self
+            .virtues
+            .iter()
+            .filter(|virtue| matches!(virtue.kind, Nature | Harmony))
+        {
+            alignment = if alignment > 0 {
+                (alignment - i32::from(virtue.value) / 2).max(0)
+            } else if alignment < 0 {
+                (alignment + i32::from(virtue.value) / 2).min(0)
+            } else {
+                0
+            };
+        }
+        match self.book_spell_realm(ability_id) {
+            Some("nature") if alignment.abs() > 50 => (1 + (alignment.abs() - 51) * 4 / 150).min(5),
+            Some("life" | "crusade") if alignment < -20 => (1 + (-alignment - 21) * 4 / 130).min(5),
+            Some("life" | "crusade") if alignment > 150 => -1,
+            Some("death" | "daemon") if alignment > 20 => (1 + (alignment - 21) * 4 / 130).min(5),
+            Some("death" | "daemon") if alignment < -150 => -1,
+            _ => 0,
+        }
+    }
+
     pub(super) fn apply_invulnerability_opening_virtues(&mut self) {
         self.add_virtue(VirtueKindDto::Unlife, -2);
         self.add_virtue(VirtueKindDto::Honour, -2);

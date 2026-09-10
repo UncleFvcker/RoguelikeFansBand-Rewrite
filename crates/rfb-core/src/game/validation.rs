@@ -1591,6 +1591,35 @@ impl Game {
                 }
                 None => self.learned_abilities.is_empty(),
             };
+            if self.player_is_mage()
+                && self
+                    .pending_ability_direction
+                    .as_ref()
+                    .is_some_and(|pending| {
+                        let cast = &pending.cast_resolution;
+                        self.ability_progress
+                            .get(&pending.ability_id)
+                            .is_none_or(|progress| {
+                                cast.proficiency_before != progress.proficiency
+                                    || cast.proficiency_after != progress.proficiency
+                                    || cast.cast_count != progress.cast_count.saturating_add(1)
+                                    || cast.fail_count != progress.fail_count
+                                    || cast.resource_id.as_deref() != Some("demo.resource.mana")
+                                    || cast.hp_paid != 0
+                                    || cast.resource_paid != cast.resource_cost
+                                    || cast.resource_before.checked_sub(cast.resource_paid)
+                                        != Some(cast.resource_after)
+                                    || self
+                                        .resources
+                                        .get("demo.resource.mana")
+                                        .is_none_or(|pool| pool.current != cast.resource_before)
+                            })
+                    })
+            {
+                return Err(CoreError::InvalidSave(
+                    "pending mage spell progress is invalid",
+                ));
+            }
             if !self.player_spell_memory_is_valid()
                 || !pools_valid
                 || !learned_valid
@@ -1602,8 +1631,12 @@ impl Game {
                     != expected_ability_ids
                 || self.ability_progress.iter().any(|(ability_id, progress)| {
                     self.content.ability(ability_id).is_none_or(|ability| {
+                        let ability = self.effective_casting_ability(
+                            casting_profile.as_ref().expect("caster"),
+                            ability,
+                        );
                         progress.proficiency_cap
-                            != Self::player_ability_parameters(ability).proficiency.cap
+                            != Self::player_ability_parameters(&ability).proficiency.cap
                             || progress.proficiency > progress.proficiency_cap
                             || progress.cooldown_remaining > self.ability_cooldown_turns(ability_id)
                     })
@@ -1612,6 +1645,7 @@ impl Game {
                 return Err(CoreError::InvalidSave("player ability state is invalid"));
             }
         } else if !self.resources.is_empty()
+            || self.spent_spell_learning != 0
             || !self.learned_abilities.is_empty()
             || !self.ability_learning_order.is_empty()
             || !self.ability_progress.is_empty()

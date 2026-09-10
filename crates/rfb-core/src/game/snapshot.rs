@@ -273,7 +273,7 @@ impl Game {
         Some(AbilityLearningDto {
             learned_count,
             capacity,
-            remaining_slots: capacity.saturating_sub(learned_count),
+            remaining_slots: self.ability_learning_remaining(profile),
             study_mode: match profile.study_mode {
                 CastingStudyMode::Chosen => AbilityStudyModeDto::Chosen,
                 CastingStudyMode::DivineRandom => AbilityStudyModeDto::DivineRandom,
@@ -692,14 +692,19 @@ impl Game {
                     learned,
                     book_item_id: book_item_id.clone(),
                     can_study: source == AbilitySourceDto::Learned
-                        && !learned
+                        && (!self.ability_learning_order.contains(&ability_id)
+                            || (self.player_is_mage()
+                                && learned
+                                && progress.proficiency < progress.proficiency_cap))
                         && level_available
                         && book_item_id.is_some()
                         && study_available
                         && self
                             .player_ability_learning_dto()
                             .is_some_and(|learning| learning.remaining_slots > 0),
-                    can_forget: source == AbilitySourceDto::Learned && learned,
+                    can_forget: source == AbilitySourceDto::Learned
+                        && learned
+                        && !self.player_is_mage(),
                     can_cast: unavailable_reason.is_none(),
                     unavailable_reason: unavailable_reason.map(str::to_owned),
                 })

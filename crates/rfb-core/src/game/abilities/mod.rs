@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 mod berserker;
+mod book_magic;
 mod casting;
 mod compound;
 mod control;

@@ -212,6 +212,16 @@ message-monster-melee-amnesia = { $source } tears { $count } remembered places f
 message-monster-time-ravaged = { $source } turns time against { $count } of your attributes.
 message-monster-blinked-target = { $source } blinks { $target } to a nearby spot!
 message-monster-teleported = { $source } tears open a rift and vanishes into the distance.
+message-ability-sanity-blast =
+    { $outcome ->
+        [mind-blast] { $target } failed and blasted your mind.
+        [attribute-drain] { $target } failed and weakened your intelligence, wisdom, and charisma.
+        [brain-smash] { $target } failed and shattered your thoughts.
+        [amnesia] { $target } failed and erased your memory of this place.
+        [permanent-insanity] { $target } failed and left permanent madness in your mind.
+        [fleeting-insanity] { $target } failed and briefly drove you mad.
+       *[unaffected] { $target } failed, but its backlash did not harm your mind.
+    }
 message-monster-eldritch-horror =
     { $outcome ->
         [hallucinating] Through your hallucinations, { $source }'s face becomes even more absurd.

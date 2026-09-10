@@ -233,7 +233,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 122;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 123;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -853,6 +853,7 @@ pub struct Game {
     resources: BTreeMap<String, ResourcePool>,
     last_visual_cells: Option<Vec<CellVisualDto>>,
     bonus_spell_learning_capacity: u16,
+    spent_spell_learning: u32,
     learned_abilities: BTreeSet<String>,
     ability_learning_order: Vec<String>,
     ability_progress: BTreeMap<String, AbilityProgress>,
@@ -1287,13 +1288,23 @@ impl Game {
                 ..
             }
         );
+        let deferred_spell_study = self.player_is_mage()
+            && matches!(
+                &action,
+                GameAction::StudyAbility { .. } | GameAction::ForgetAbility { .. }
+            );
         let defer_ability_cooldowns = matches!(&action, GameAction::CastAbility { ability_id, .. }
             if self.dungeon_blocks_vampirism(ability_id));
-        if advances_world && !defer_ability_cooldowns && !deferred_item_turn {
+        if advances_world
+            && !defer_ability_cooldowns
+            && !deferred_item_turn
+            && !deferred_spell_study
+        {
             self.decrement_ability_cooldowns(1);
         }
         if (advances_world || matches!(&action, GameAction::Rest { turns } if *turns > 0))
             && !deferred_item_turn
+            && !deferred_spell_study
             && !matches!(
                 &action,
                 GameAction::CastAbility { .. }
@@ -1954,6 +1965,10 @@ impl Game {
                 self.use_recharging_item(&item_id, &source_item_id, &target_item_id, &mut events);
             }
             GameAction::ForgetAbility { ability_id } => {
+                if deferred_spell_study {
+                    advances_world = false;
+                    turn_advance = 0;
+                }
                 match self.forget_player_ability(&ability_id) {
                     Ok(()) => events.push(DomainEvent::AbilityForgotten { ability_id }),
                     Err(reason) => events.push(DomainEvent::AbilityForgetUnavailable {
@@ -1966,11 +1981,23 @@ impl Game {
                 book_item_id,
                 ability_id,
             } => match self.study_player_ability(&book_item_id, &ability_id) {
-                Ok(()) => events.push(DomainEvent::AbilityStudied { ability_id }),
-                Err(reason) => events.push(DomainEvent::AbilityStudyUnavailable {
-                    target_id: ability_id,
-                    reason: reason.to_owned(),
-                }),
+                Ok(()) => {
+                    if deferred_spell_study {
+                        self.decrement_ability_cooldowns(1);
+                        self.sniper_concentration = 0;
+                    }
+                    events.push(DomainEvent::AbilityStudied { ability_id });
+                }
+                Err(reason) => {
+                    if deferred_spell_study {
+                        advances_world = false;
+                        turn_advance = 0;
+                    }
+                    events.push(DomainEvent::AbilityStudyUnavailable {
+                        target_id: ability_id,
+                        reason: reason.to_owned(),
+                    });
+                }
             },
             GameAction::StudyPrayer { book_item_id } => {
                 let target_id = self

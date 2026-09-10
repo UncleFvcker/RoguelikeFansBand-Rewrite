@@ -278,7 +278,20 @@ impl Game {
         // Blocked vampirism reaches its source failure check without needing a target.
         let vampirism_blocked = self.dungeon_blocks_vampirism(ability_id);
         let target_plan = self.ability_target_plan(&ability, &target);
-        if target_plan.is_none() && !vampirism_blocked {
+        let unavailable_mage_glyph = self.player_is_mage()
+            && ability.effect.ordered_effects().iter().any(|effect| {
+                if let AbilityEffectDefinition::CreateCurrentTerrain {
+                    source_terrain_ids,
+                    target_terrain_id,
+                } = effect
+                {
+                    self.current_terrain_creation_replacement(source_terrain_ids, target_terrain_id)
+                        .is_none()
+                } else {
+                    false
+                }
+            });
+        if (target_plan.is_none() || unavailable_mage_glyph) && !vampirism_blocked {
             events.push(DomainEvent::AbilityTargetUnavailable {
                 ability_id: ability.id,
             });
@@ -443,6 +456,7 @@ impl Game {
             self.sniper_concentration = 0;
         }
         let resource_after = resource_before.saturating_sub(resource_paid);
+        let mage_spell = source == AbilitySourceDto::Learned && self.player_is_mage();
         let progress_after = if source != AbilitySourceDto::Learned {
             mutation_progress
         } else {
@@ -486,6 +500,9 @@ impl Game {
                     removed_entities,
                 )?;
             }
+            if mage_spell {
+                self.resolve_mage_spell_failure(&ability, failure_percent, events, changed);
+            }
             return Ok(None);
         }
         let cast_event_index = events.len();
@@ -518,6 +535,7 @@ impl Game {
             None
         };
 
+        let practice = mage_spell.then(|| (ability.clone(), self.spell_practice_targets()));
         let result = self.resolve_player_ability_effect(
             ability,
             target_plan,
@@ -548,6 +566,23 @@ impl Game {
             ability_id == NATURE_WRATH_ABILITY_ID && nature_wrath_direction_roll(events).is_some();
         if result.is_ok() && !direction_pending && first_success_experience > 0 {
             self.apply_player_experience(u64::from(first_success_experience), events);
+        }
+        if result.is_ok()
+            && !direction_pending
+            && let Some((ability, targets)) = practice
+        {
+            self.apply_mage_spell_cast_virtues(
+                &ability.id,
+                resource_cost,
+                failure_percent,
+                progress_before.cast_count == 0,
+            );
+            let progress = self.grow_mage_spell(&ability, &targets, &events[cast_event_index..]);
+            if let DomainEvent::AbilityCastSucceeded { resolution } = &mut events[cast_event_index]
+            {
+                resolution.proficiency_after = progress.proficiency;
+                resolution.proficiency_rank = Self::ability_proficiency_rank(progress.proficiency);
+            }
         }
         result
     }
@@ -707,6 +742,8 @@ impl Game {
         progress.fail_count = resolution.fail_count;
         progress.cooldown_remaining = resolution.cooldown_after;
         self.sniper_concentration = 0;
+        let cast_event_index = events.len();
+        let practice_targets = self.player_is_mage().then(|| self.spell_practice_targets());
         events.push(DomainEvent::AbilityCastSucceeded {
             resolution: resolution.clone(),
         });
@@ -736,6 +773,20 @@ impl Game {
             let experience = Self::player_ability_parameters(&ability).first_success_experience;
             if experience > 0 {
                 self.apply_player_experience(u64::from(experience), events);
+            }
+        }
+        if let Some(targets) = practice_targets {
+            self.apply_mage_spell_cast_virtues(
+                &ability.id,
+                resolution.resource_cost,
+                resolution.failure_percent,
+                resolution.cast_count == 1,
+            );
+            let progress = self.grow_mage_spell(&ability, &targets, &events[cast_event_index..]);
+            if let DomainEvent::AbilityCastSucceeded { resolution } = &mut events[cast_event_index]
+            {
+                resolution.proficiency_after = progress.proficiency;
+                resolution.proficiency_rank = Self::ability_proficiency_rank(progress.proficiency);
             }
         }
         Ok(())

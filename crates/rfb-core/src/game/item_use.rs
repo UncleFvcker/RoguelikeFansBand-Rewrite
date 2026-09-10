@@ -1136,7 +1136,15 @@ impl Game {
         if self
             .content
             .terrain(target_terrain_id)
-            .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "explosive-rune"))
+            .is_some_and(|terrain| {
+                terrain.tags.iter().any(|tag| {
+                    tag == "explosive-rune"
+                        || (tag == "warding-glyph"
+                            && self.character_definitions().is_none_or(|(build, _, _, _)| {
+                                build.first_realm_id.as_deref() != Some("life")
+                            }))
+                })
+            })
             && self
                 .terrain
                 .iter()

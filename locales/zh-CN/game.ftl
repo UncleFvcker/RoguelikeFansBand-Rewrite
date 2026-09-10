@@ -212,6 +212,16 @@ message-monster-melee-amnesia = { $source }从你的记忆中抹去了{ $count }
 message-monster-time-ravaged = { $source }让时间侵蚀了你的{ $count }项属性。
 message-monster-blinked-target = { $source }把{ $target }闪现到了近处的新位置！
 message-monster-teleported = { $source }撕开裂隙消失在远处。
+message-ability-sanity-blast =
+    { $outcome ->
+        [mind-blast] { $target }施放失败，冲击了你的心智。
+        [attribute-drain] { $target }施放失败，削弱了你的智力、感知和魅力。
+        [brain-smash] { $target }施放失败，粉碎了你的思绪。
+        [amnesia] { $target }施放失败，抹去了你对这里的记忆。
+        [permanent-insanity] { $target }施放失败，在你心中留下了永久的疯狂。
+        [fleeting-insanity] { $target }施放失败，让你短暂地觉得自己疯了。
+       *[unaffected] { $target }施放失败，但你的心智未受反噬影响。
+    }
 message-monster-eldritch-horror =
     { $outcome ->
         [hallucinating] 在幻觉中，{ $source }的面容变得更加荒诞。

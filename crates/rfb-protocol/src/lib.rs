@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.249";
+pub const PROTOCOL_VERSION: &str = "1.250";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 17;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 18;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -5405,6 +5405,7 @@ pub struct PlayerSaveDto {
     pub resources: Vec<ResourcePoolSaveDto>,
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub bonus_spell_learning_capacity: u16,
+    pub spent_spell_learning: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub learned_ability_ids: Vec<String>,
     pub ability_learning_order: Vec<String>,
@@ -6763,6 +6764,7 @@ mod tests {
             current[collection][0]["previouslyWorn"] = serde_json::json!(false);
         }
         current["player"]["abilityLearningOrder"] = serde_json::json!([]);
+        current["player"]["spentSpellLearning"] = serde_json::json!(0);
         current["player"]["activeMutationIds"] = serde_json::json!([]);
         current["player"]["lockedMutationIds"] = serde_json::json!([]);
         current["player"]["minorSlowEnergy"] = serde_json::json!(0);
@@ -6789,6 +6791,14 @@ mod tests {
             "development saves without the authoritative view offset must be rejected"
         );
         let encoded = to_msgpack(&current).expect("current payload should encode");
+        let mut missing_learning_spend = current.clone();
+        missing_learning_spend["player"]
+            .as_object_mut()
+            .unwrap()
+            .remove("spentSpellLearning");
+        assert!(
+            from_msgpack::<SavePayloadV1>(&to_msgpack(&missing_learning_spend).unwrap()).is_err()
+        );
         let decoded: SavePayloadV1 =
             from_msgpack(&encoded).expect("current actor state should decode");
 
@@ -6853,6 +6863,7 @@ mod tests {
             build: None,
             resources: Vec::new(),
             bonus_spell_learning_capacity: 0,
+            spent_spell_learning: 0,
             learned_ability_ids: Vec::new(),
             ability_learning_order: Vec::new(),
             ability_progress: Vec::new(),

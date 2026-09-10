@@ -4,6 +4,8 @@ use super::support::{
 };
 use super::*;
 
+mod learning;
+
 const BUILD: &str = "demo.build.mage-death-sorcery";
 const MANA: &str = "demo.resource.mana";
 const EAT_MAGIC: &str = "demo.ability.mage-eat-magic";
