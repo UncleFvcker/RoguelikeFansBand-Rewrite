@@ -1490,11 +1490,7 @@ pub(super) fn validate_world(
                     (Some(cavern), Some(cavern_area_tiles)) => {
                         require_reference(terrain_ids, &cavern.terrain_id, &procedural.id)?;
                         if terrain_walkability.get(&cavern.terrain_id) != Some(&true)
-                            || cavern.terrain_id == procedural.floor_terrain_id
                             || cavern.terrain_id == procedural.wall_terrain_id
-                            || eligible_theme_entries
-                                .iter()
-                                .any(|entry| entry.floor_terrain_id == cavern.terrain_id)
                             || !(16..=interior_area).contains(&cavern_area_tiles)
                         {
                             return Err(ContentError::InvalidProceduralFloor(
@@ -2403,8 +2399,20 @@ pub(super) fn validate_world(
                 });
             }
             if connection.target_floor_id == world.initial_floor_id {
+                let surface_shaft = matches!(connection.kind, FloorConnectionKind::Shaft)
+                    && world
+                        .dungeons
+                        .iter()
+                        .find(|dungeon| Some(&dungeon.id) == procedural.dungeon_id.as_ref())
+                        .and_then(|dungeon| {
+                            world
+                                .procedural_floors
+                                .iter()
+                                .find(|floor| floor.id == dungeon.root_floor_id)
+                        })
+                        .is_some_and(|root| root.depth.checked_add(1) == Some(procedural.depth));
                 if connection.target_connection_id.is_some()
-                    || !matches!(connection.kind, FloorConnectionKind::Stairs)
+                    || !(matches!(connection.kind, FloorConnectionKind::Stairs) || surface_shaft)
                     || !terrain_tags
                         .get(&connection.terrain_id)
                         .is_some_and(|tags| tags.contains("stairs-up"))
@@ -2907,32 +2915,13 @@ pub(super) fn validate_world(
         let mut children_by_floor = BTreeMap::<&str, Vec<&str>>::new();
         let mut final_count = 0usize;
         for floor in &members {
-            let mut parents = if floor.connections.is_empty() {
-                member_ids
-                    .contains(floor.return_floor_id.as_str())
-                    .then_some(floor.return_floor_id.as_str())
-                    .into_iter()
-                    .collect::<Vec<_>>()
-            } else {
-                floor
-                    .connections
+            // returnFloorId keeps the logical depth chain; explicit connections
+            // determine the actual route, which need not visit that parent.
+            if floor.id != root.id
+                && members
                     .iter()
-                    .filter_map(|connection| {
-                        if !matches!(connection.kind, FloorConnectionKind::Stairs) {
-                            return None;
-                        }
-                        let target = members
-                            .iter()
-                            .find(|candidate| candidate.id == connection.target_floor_id)?;
-                        (target.depth < floor.depth).then_some(target.id.as_str())
-                    })
-                    .collect::<Vec<_>>()
-            };
-            parents.sort_unstable();
-            parents.dedup();
-            if (floor.id == root.id && !parents.is_empty())
-                || (floor.id != root.id
-                    && (parents.len() != 1 || floor.return_floor_id != parents[0]))
+                    .find(|parent| parent.id == floor.return_floor_id)
+                    .is_none_or(|parent| parent.depth >= floor.depth)
             {
                 return Err(ContentError::InvalidProceduralFloor(floor.id.clone()));
             }
@@ -2948,9 +2937,6 @@ pub(super) fn validate_world(
                     .connections
                     .iter()
                     .filter_map(|connection| {
-                        if !matches!(connection.kind, FloorConnectionKind::Stairs) {
-                            return None;
-                        }
                         let target = members
                             .iter()
                             .find(|candidate| candidate.id == connection.target_floor_id)?;
@@ -2980,6 +2966,16 @@ pub(super) fn validate_world(
                     return Err(ContentError::InvalidProceduralFloor(floor.id.clone()));
                 }
             }
+            // Explicit stairs and shafts form a traversable graph. A branch can
+            // be reached by ascending from the bottom (ALL_SHAFTS parity paths).
+            if !floor.connections.is_empty() {
+                children = floor
+                    .connections
+                    .iter()
+                    .map(|connection| connection.target_floor_id.as_str())
+                    .filter(|id| member_ids.contains(id))
+                    .collect();
+            }
             children_by_floor.insert(floor.id.as_str(), children);
         }
         if dungeon.guardian_actor_kind_id.is_some() && final_count == 0 {
@@ -2990,7 +2986,7 @@ pub(super) fn validate_world(
         let mut seen = BTreeSet::new();
         while let Some(floor_id) = pending.pop() {
             if !seen.insert(floor_id) {
-                return Err(ContentError::InvalidProceduralFloor(floor_id.to_owned()));
+                continue;
             }
             pending.extend(
                 children_by_floor

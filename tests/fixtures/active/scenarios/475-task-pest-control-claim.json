@@ -59,7 +59,7 @@
       },
       "lastCommandSeq": 1,
       "revision": 1,
-      "stateHash": "a930d5fa7169e7a431243e7d62ac8dc0ef90de177953d5dac8adb3fb0570be01",
+      "stateHash": "785726ec20a7c8b64346eef5f9a889c5fe01674994134dae8d567da8a05a1fc3",
       "tasks": {
         "demo.task.pest-control": {
           "current": 8,

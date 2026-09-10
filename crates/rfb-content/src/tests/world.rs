@@ -3,6 +3,79 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn disaster_area_shaft_graph_rejects_disconnected_parity_and_invalid_boundaries() {
+    let content = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for case in ["parity", "surface", "depth", "reciprocal"] {
+        let mut invalid = content.clone();
+        let floors = &mut invalid.worlds[0].procedural_floors;
+        match case {
+            "parity" => {
+                let mut guardian = floors
+                    .iter()
+                    .find(|f| f.id == "demo.floor.disaster-area-depth-80")
+                    .unwrap()
+                    .guardian
+                    .clone()
+                    .unwrap();
+                guardian.instance_id = "test.guardian.isolated-odd-branch".to_owned();
+                for depth in [79, 80] {
+                    let floor = floors
+                        .iter_mut()
+                        .find(|f| f.id == format!("demo.floor.disaster-area-depth-{depth}"))
+                        .unwrap();
+                    floor
+                        .connections
+                        .retain(|c| c.kind != FloorConnectionKind::Stairs);
+                    if depth == 79 {
+                        floor.final_floor = true;
+                        floor.next_floor_id = None;
+                        floor.down_stair_terrain_id = None;
+                        floor.guardian = Some(guardian.clone());
+                    }
+                }
+            }
+            "surface" => {
+                let connection = &mut floors
+                    .iter_mut()
+                    .find(|f| f.id == "demo.floor.disaster-area-depth-63")
+                    .unwrap()
+                    .connections[0];
+                connection.target_floor_id = "demo.floor.surface".to_owned();
+                connection.target_connection_id = None;
+            }
+            "depth" => {
+                let connection = floors
+                    .iter_mut()
+                    .find(|f| f.id == "demo.floor.disaster-area-depth-60")
+                    .unwrap()
+                    .connections
+                    .iter_mut()
+                    .find(|c| c.terrain_id == "demo.terrain.stairs-up")
+                    .unwrap();
+                // Only minimumDepth + 1 may have a surface shaft.
+                connection.kind = FloorConnectionKind::Shaft;
+                connection.terrain_id = "demo.terrain.shaft-up".to_owned();
+                connection.target_floor_id = "demo.floor.surface".to_owned();
+                connection.target_connection_id = None;
+            }
+            _ => {
+                let connection = floors
+                    .iter_mut()
+                    .find(|f| f.id == "demo.floor.disaster-area-depth-78")
+                    .unwrap()
+                    .connections
+                    .iter_mut()
+                    .find(|c| c.terrain_id == "demo.terrain.shaft-down")
+                    .unwrap();
+                connection.target_connection_id =
+                    Some("demo.connection.disaster-area-depth-80-stairs-up".to_owned());
+            }
+        }
+        assert!(validate_and_normalize(&mut invalid).is_err(), "{case}");
+    }
+}
+
+#[test]
 fn disaster_area_terrain_mix_validates_percentages_materials_and_references() {
     let mut content = compile_pack_dir(&original_pack_path()).unwrap().content;
     let floor_id = "demo.floor.warrens-depth-1";
@@ -10762,6 +10835,14 @@ fn town_entrances_and_shared_facilities_match_source() {
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 49, y: 23 },
                     dungeon_id: "demo.dungeon.mine".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 55, y: 9 },
+                    dungeon_id: "demo.dungeon.disaster-area".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 57, y: 12 },
+                    dungeon_id: "demo.dungeon.dark-cave".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 63, y: 44 },

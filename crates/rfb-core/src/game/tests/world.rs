@@ -655,6 +655,11 @@ fn rlyeh_full_chain_water_reward_and_surface_return_survive_save() {
             .all(|id| id != "demo.terrain.stairs-down")
     );
     // A swimming guardian can die in open water beyond the ordinary drop radius.
+    // The fixture floods this area directly; discard unrelated floor loot
+    // before replacing its supporting terrain.
+    game.items
+        .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
+    game.gold_piles.clear();
     game.player.hp = game.effective_player_max_hp();
     let death_position = Position { x: 33, y: 11 };
     let original_terrain = game.terrain.clone();
@@ -1653,7 +1658,7 @@ fn p89_defeat_guardian(game: &mut Game, guardian_id: &str) -> (GameUpdate, Posit
     defeat_guardian_with_status(game, guardian_id, STATUS_POISON)
 }
 
-fn defeat_guardian_with_status(
+pub(super) fn defeat_guardian_with_status(
     game: &mut Game,
     guardian_id: &str,
     status_kind_id: &str,
@@ -5920,16 +5925,15 @@ fn p103e_volcano_generates_lava_guardians_and_fixed_staff_reward() {
     assert!(generated_rubble);
 
     let final_floor = definitions.last().expect("depth 60 should exist");
-    let generated = game
-        .generate_procedural_floor(final_floor, None)
-        .expect("Volcano final floor should generate");
-    let guardian = generated
+    game.transition_floor(final_floor.id.clone(), None, None, false)
+        .unwrap()
+        .unwrap();
+    let guardian = game
         .entities
         .iter()
         .find(|actor| actor.id == "demo.guardian.volcano.1")
         .cloned()
         .expect("Shooting Star should guard depth 60");
-    game.current_floor_id = final_floor.id.clone();
     let (items, _) = game
         .generate_death_loot(&guardian)
         .expect("Shooting Star reward should generate");

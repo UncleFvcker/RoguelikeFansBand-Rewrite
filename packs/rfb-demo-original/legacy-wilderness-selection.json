@@ -111,6 +111,16 @@
       "sourceIndex": 17,
       "sourceName": "Anti-melee cave",
       "id": "demo.dungeon.anti-melee-cave"
+    },
+    {
+      "sourceIndex": 19,
+      "sourceName": "Dark cave",
+      "id": "demo.dungeon.dark-cave"
+    },
+    {
+      "sourceIndex": 37,
+      "sourceName": "Disaster area",
+      "id": "demo.dungeon.disaster-area"
     }
   ],
   "townPlans": [
@@ -2025,6 +2035,165 @@
         "sourceName": "Bazooker",
         "chineseName": "火箭筒兵",
         "level": 35
+      }
+    },
+    {
+      "sourceIndex": 19,
+      "sourceName": "Dark cave",
+      "id": "demo.dungeon.dark-cave",
+      "position": {
+        "x": 57,
+        "y": 12
+      },
+      "minimumDepth": 55,
+      "maximumDepth": 72,
+      "monsterDivisor": 64,
+      "generationFlags": [
+        "CAVERN",
+        "WATER_RIVER",
+        "LAVA_RIVER",
+        "ARENA",
+        "DESTROY",
+        "GLASS_ROOM",
+        "LAKE_WATER",
+        "LAKE_LAVA",
+        "LAKE_RUBBLE",
+        "LAKE_TREE",
+        "DARKNESS"
+      ],
+      "monsterPreferences": [],
+      "floorTerrainDistribution": [
+        {
+          "sourceTag": "FLOOR",
+          "percent": 100
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        }
+      ],
+      "tunnelPercent": 50,
+      "wallTerrain": {
+        "distribution": [
+          {
+            "sourceTag": "GRANITE",
+            "percent": 100
+          },
+          {
+            "sourceTag": "GRANITE",
+            "percent": 0
+          },
+          {
+            "sourceTag": "GRANITE",
+            "percent": 0
+          }
+        ],
+        "outer": "GRANITE",
+        "inner": "GRANITE",
+        "streamers": [
+          "MAGMA_VEIN",
+          "QUARTZ_VEIN"
+        ]
+      },
+      "initialGuardian": {
+        "sourceIndex": 774,
+        "sourceName": "Shadowlord",
+        "chineseName": "暗影领主",
+        "level": 62
+      },
+      "guardian": {
+        "sourceIndex": 803,
+        "sourceName": "Null the Living Void",
+        "chineseName": "活体虚空“零”",
+        "level": 72
+      },
+      "finalObject": {
+        "tval": 90,
+        "sval": 3
+      },
+      "substituteSourceIndex": 37
+    },
+    {
+      "sourceIndex": 37,
+      "sourceName": "Disaster area",
+      "id": "demo.dungeon.disaster-area",
+      "position": {
+        "x": 55,
+        "y": 9
+      },
+      "minimumDepth": 60,
+      "maximumDepth": 80,
+      "monsterDivisor": 0,
+      "generationFlags": [
+        "CAVE",
+        "CAVERN",
+        "NUKE_RIVER",
+        "LAKE_NUKE",
+        "LAKE_WATER",
+        "DESTROY",
+        "BIG",
+        "ALL_SHAFTS"
+      ],
+      "monsterPreferences": [
+        "RES_POIS",
+        "IM_POIS"
+      ],
+      "floorTerrainDistribution": [
+        {
+          "sourceTag": "FLOOR",
+          "percent": 76
+        },
+        {
+          "sourceTag": "SHALLOW_WASTE",
+          "percent": 21
+        },
+        {
+          "sourceTag": "DEEP_WASTE",
+          "percent": 3
+        }
+      ],
+      "tunnelPercent": 5,
+      "wallTerrain": {
+        "distribution": [
+          {
+            "sourceTag": "GRANITE",
+            "percent": 80
+          },
+          {
+            "sourceTag": "MOUNTAIN_WALL",
+            "percent": 18
+          },
+          {
+            "sourceTag": "QUARTZ_VEIN",
+            "percent": 2
+          }
+        ],
+        "outer": "GRANITE",
+        "inner": "GRANITE",
+        "streamers": [
+          "NONE",
+          "NONE"
+        ]
+      },
+      "initialGuardian": {
+        "sourceIndex": 1336,
+        "sourceName": "Atomic elemental",
+        "chineseName": "原子元素",
+        "level": 49
+      },
+      "guardian": {
+        "sourceIndex": 832,
+        "sourceName": "Godzilla",
+        "chineseName": "哥斯拉",
+        "level": 84
+      },
+      "finalObject": {
+        "tval": 90,
+        "sval": 3
       }
     }
   ]

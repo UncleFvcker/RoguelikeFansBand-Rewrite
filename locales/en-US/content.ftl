@@ -9036,3 +9036,11 @@ terrain-demo-anti-magic-cave-entrance-description = An entrance to Anti-magic ca
 floor-demo-anti-melee-cave-depth-name = Anti-melee cave depth { $depth }
 terrain-demo-anti-melee-cave-entrance-name = Anti-melee cave entrance
 terrain-demo-anti-melee-cave-entrance-description = An entrance to Anti-melee cave.
+
+floor-demo-dark-cave-depth-name = Dark cave depth { $depth }
+terrain-demo-dark-cave-entrance-name = Dark cave entrance
+terrain-demo-dark-cave-entrance-description = An entrance to Dark cave.
+
+floor-demo-disaster-area-depth-name = Disaster area depth { $depth }
+terrain-demo-disaster-area-entrance-name = Disaster area entrance
+terrain-demo-disaster-area-entrance-description = An entrance to Disaster area.

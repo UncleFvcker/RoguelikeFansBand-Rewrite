@@ -9040,3 +9040,11 @@ terrain-demo-anti-magic-cave-entrance-description = 通向充满反魔云雾的�
 floor-demo-anti-melee-cave-depth-name = 反近战洞穴 { $depth } 层
 terrain-demo-anti-melee-cave-entrance-name = 反近战洞穴入口
 terrain-demo-anti-melee-cave-entrance-description = 通向充满限制魔法场的洞穴的入口
+
+floor-demo-dark-cave-depth-name = 黑暗洞穴 { $depth } 层
+terrain-demo-dark-cave-entrance-name = 黑暗洞穴入口
+terrain-demo-dark-cave-entrance-description = 通向充满魔法黑暗的洞穴的黑色入口
+
+floor-demo-disaster-area-depth-name = 灾难区 { $depth } 层
+terrain-demo-disaster-area-entrance-name = 灾难区入口
+terrain-demo-disaster-area-entrance-description = 通向灾难区的钢铁大门

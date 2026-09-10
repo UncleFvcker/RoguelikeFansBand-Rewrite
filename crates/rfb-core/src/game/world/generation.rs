@@ -2873,10 +2873,6 @@ impl Game {
         let mut occupied = reserved.clone();
         occupied.insert(primary_up);
         occupied.extend(primary_down);
-        if definition
-            .layout
-            .as_ref()
-            .is_some_and(|layout| !layout.floor_mix.is_empty() || !layout.wall_mix.is_empty())
         {
             let walkable = terrain
                 .iter()

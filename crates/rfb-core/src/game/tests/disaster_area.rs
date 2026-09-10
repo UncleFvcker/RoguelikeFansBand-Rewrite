@@ -13,6 +13,290 @@ const DEEP: &str = "demo.terrain.deep-waste";
 const MOUNTAIN: &str = "demo.terrain.mountain-wall";
 const QUARTZ: &str = "demo.terrain.quartz-vein";
 
+#[test]
+fn dark_cave_disaster_area_real_entries_all_depths_rewards_and_return() {
+    for (seed, slug, other, root, bottom, position, other_position) in [
+        (
+            1,
+            "dark-cave",
+            "disaster-area",
+            55,
+            72,
+            Position { x: 57, y: 12 },
+            Position { x: 55, y: 9 },
+        ),
+        (
+            949,
+            "disaster-area",
+            "dark-cave",
+            60,
+            80,
+            Position { x: 55, y: 9 },
+            Position { x: 57, y: 12 },
+        ),
+    ] {
+        for (build, book) in [
+            (
+                "demo.build.high-mage-sorcery",
+                "demo.item.grimoire-of-power",
+            ),
+            (RFB_WARRIOR_BUILD_ID, "demo.item.blessings-of-the-grail"),
+        ] {
+            let mut game = Game::new_with_build(seed, build).unwrap();
+            choose_human_talent_if_pending(&mut game);
+            game.apply_player_experience(game.experience_required_for_level(50), &mut Vec::new());
+            choose_human_talent_if_pending(&mut game);
+            // This is a traversal/reward test, independent of level-80 combat balance.
+            game.apply_player_melee_status(STATUS_INVULNERABILITY, 10_000, "test.traversal");
+            let dungeon = format!("demo.dungeon.{slug}");
+            let suppressed = format!("demo.dungeon.{other}");
+            let floor_id = |depth| format!("demo.floor.{slug}-depth-{depth}");
+            let entrance_guardian = format!("demo.guardian.{slug}-entrance.1");
+            let boss = format!("demo.guardian.{slug}.1");
+            assert!(game.dungeon_is_active(&dungeon));
+            assert!(!game.dungeon_is_active(&suppressed));
+            assert!(
+                game.wilderness_cell_dto(other_position)
+                    .locations
+                    .iter()
+                    .all(|l| l.id != suppressed)
+            );
+            dispatch_next(
+                &mut game,
+                GameCommand::EnterWorldMap {
+                    leave_pets: false,
+                    cancel_recall: false,
+                },
+            );
+            game.wilderness_position = Some(other_position);
+            dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+            assert!(
+                game.terrain
+                    .iter()
+                    .all(|id| id != &format!("demo.terrain.{other}-entrance"))
+            );
+            assert!(
+                game.entities
+                    .iter()
+                    .all(|a| a.id != format!("demo.guardian.{other}-entrance.1"))
+            );
+            let suppressed_floor = format!(
+                "demo.floor.{other}-depth-{}",
+                if root == 55 { 60 } else { 55 }
+            );
+            assert!(
+                game.transition_floor(suppressed_floor.clone(), None, None, false)
+                    .unwrap()
+                    .is_none()
+            );
+            clear_monsters(&mut game);
+            dispatch_next(
+                &mut game,
+                GameCommand::EnterWorldMap {
+                    leave_pets: false,
+                    cancel_recall: false,
+                },
+            );
+            game.wilderness_position = Some(position);
+            dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+            place_player_on_terrain(&mut game, &format!("demo.terrain.{slug}-entrance"));
+            let departure = game.player.position;
+            let guard = game
+                .entities
+                .iter()
+                .find(|a| a.id == entrance_guardian)
+                .unwrap();
+            assert!(
+                guard.position.x.abs_diff(departure.x) <= 1
+                    && guard.position.y.abs_diff(departure.y) <= 1
+            );
+            assert_ne!(guard.position, departure);
+            assert!(actor_can_cross_terrain(
+                game.content.actor(&guard.kind_id).unwrap(),
+                game.content
+                    .terrain(game.terrain_at(guard.position))
+                    .unwrap()
+            ));
+            super::world::defeat_guardian_with_status(
+                &mut game,
+                &entrance_guardian,
+                STATUS_BLEEDING,
+            );
+            choose_human_talent_if_pending(&mut game);
+            assert!(game.dungeon_states[&dungeon].entrance_guardian_defeated);
+            clear_monsters(&mut game);
+            game.traverse_stairs(false).unwrap().unwrap();
+            assert_eq!(game.current_floor_id, floor_id(root));
+            place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+            game.traverse_stairs(false).unwrap().unwrap();
+            assert_eq!(game.player.position, departure);
+            game.traverse_stairs(false).unwrap().unwrap();
+            assert_eq!(game.current_floor_id, floor_id(root));
+            let mut visited = BTreeSet::new();
+            let step = if root == 60 { 2 } else { 1 };
+            for depth in (root..=bottom).step_by(step) {
+                assert_eq!(game.current_floor_id, floor_id(depth));
+                assert_eq!(game.dungeon_has_darkness(), root == 55);
+                visited.insert(depth);
+                if depth == bottom {
+                    break;
+                }
+                clear_monsters(&mut game);
+                place_player_on_terrain(
+                    &mut game,
+                    if step == 2 {
+                        "demo.terrain.shaft-down"
+                    } else {
+                        "demo.terrain.stairs-down"
+                    },
+                );
+                let departure_connection = game
+                    .floor_connections
+                    .iter()
+                    .find(|c| c.position == game.player.position)
+                    .map(|c| c.id.clone());
+                game.traverse_stairs(false).unwrap().unwrap();
+                if let Some(id) = departure_connection {
+                    let arrival = game
+                        .floor_connections
+                        .iter()
+                        .find(|c| c.position == game.player.position)
+                        .unwrap();
+                    assert_eq!(
+                        arrival.target_floor_id.as_deref(),
+                        Some(floor_id(depth).as_str())
+                    );
+                    assert_eq!(arrival.target_connection_id.as_deref(), Some(id.as_str()));
+                }
+            }
+            assert!(
+                game.terrain
+                    .iter()
+                    .all(|id| id != "demo.terrain.stairs-down" && id != "demo.terrain.shaft-down")
+            );
+            assert_eq!(game.entities.iter().filter(|a| a.id == boss).count(), 1);
+            super::world::defeat_guardian_with_status(&mut game, &boss, STATUS_BLEEDING);
+            choose_human_talent_if_pending(&mut game);
+            assert!(game.dungeon_states[&dungeon].guardian_defeated);
+            assert_eq!(game.snapshot().campaign.conquered_dungeons, 1);
+            let reward = game.items.iter_mut().find(|i| i.kind_id == book).unwrap();
+            reward.location = ItemLocation::Inventory;
+            assert_eq!(game.items.iter().filter(|i| i.kind_id == book).count(), 1);
+            clear_monsters(&mut game);
+            let hash = game.state_hash();
+            game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+            assert_eq!(game.state_hash(), hash);
+            // The terminal one-level stair joins parity branches. Ascending the
+            // odd branch reaches every remaining floor and its near-root exit.
+            let depths: Vec<_> = if root == 60 {
+                (61..80).step_by(2).rev().collect()
+            } else {
+                (55..72).rev().collect()
+            };
+            for depth in depths {
+                place_player_on_terrain(
+                    &mut game,
+                    if root == 60 && depth != 79 {
+                        "demo.terrain.shaft-up"
+                    } else {
+                        "demo.terrain.stairs-up"
+                    },
+                );
+                game.traverse_stairs(false).unwrap().unwrap();
+                assert_eq!(game.current_floor_id, floor_id(depth));
+                visited.insert(depth);
+                clear_monsters(&mut game);
+            }
+            assert_eq!(visited, (root..=bottom).collect());
+            place_player_on_terrain(
+                &mut game,
+                if root == 60 {
+                    "demo.terrain.shaft-up"
+                } else {
+                    "demo.terrain.stairs-up"
+                },
+            );
+            game.traverse_stairs(false).unwrap().unwrap();
+            assert_eq!(game.wilderness_position, Some(position));
+            assert_eq!(game.player.position, departure);
+            assert!(!game.dungeon_has_darkness());
+            let mut invalid = game.to_save();
+            let recall = invalid.player.recall.as_mut().unwrap();
+            recall.dungeon_id = suppressed;
+            recall.floor_id = suppressed_floor;
+            assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+            game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+            game.start_recall(0);
+            dispatch_next(&mut game, GameCommand::Wait);
+            assert_eq!(game.current_floor_id, floor_id(bottom));
+            assert!(game.entities.iter().all(|a| a.id != boss));
+            assert_eq!(game.items.iter().filter(|i| i.kind_id == book).count(), 1);
+            clear_monsters(&mut game);
+            game.start_recall(0);
+            dispatch_next(&mut game, GameCommand::Wait);
+            assert_eq!(game.player.position, departure);
+            assert!(game.entities.iter().all(|a| a.id != entrance_guardian));
+        }
+    }
+}
+
+#[test]
+fn dark_cave_disaster_area_formal_generation_keeps_stairs_spawns_and_materials_legal() {
+    let game = Game::new(949);
+    let world = game.content.world(DEFAULT_WORLD_ID).unwrap();
+    for definition in world.procedural_floors.iter().filter(|f| {
+        f.id.starts_with("demo.floor.dark-cave-depth-")
+            || f.id.starts_with("demo.floor.disaster-area-depth-")
+    }) {
+        for seed in [0, 1, 7] {
+            let mut generator = game.clone();
+            generator.rng = RfbRng::seeded(seed);
+            let floor = generator
+                .generate_procedural_floor(definition, None)
+                .unwrap();
+            assert_stairs_connected(&floor, &game.content);
+            if let Some(lake) = definition.layout.as_ref().unwrap().lake.as_ref() {
+                assert!(
+                    floor.terrain.contains(&lake.deep_terrain_id),
+                    "{} deep lake",
+                    definition.id
+                );
+                assert!(
+                    floor.terrain.contains(&lake.shallow_terrain_id),
+                    "{} shallow lake",
+                    definition.id
+                );
+            }
+            for item in &floor.items {
+                if let ItemLocation::Ground(position) = item.location {
+                    assert!(
+                        game.content
+                            .terrain(&floor.terrain[generated_terrain_index(floor.width, position)])
+                            .unwrap()
+                            .allows_items()
+                    );
+                }
+            }
+            for actor in &floor.entities {
+                assert!(actor_can_cross_terrain(
+                    game.content.actor(&actor.kind_id).unwrap(),
+                    game.content
+                        .terrain(
+                            &floor.terrain[generated_terrain_index(floor.width, actor.position)]
+                        )
+                        .unwrap()
+                ));
+            }
+            if definition.id.contains("disaster-area") {
+                assert!(floor.terrain.iter().any(|id| id == SHALLOW));
+                assert!(floor.terrain.iter().any(|id| id == DEEP));
+                assert!(floor.terrain.iter().any(|id| id == MOUNTAIN));
+                assert!(floor.terrain.iter().any(|id| id == QUARTZ));
+            }
+        }
+    }
+}
+
 fn assert_stairs_connected(floor: &FloorState, content: &ContentCatalog) {
     let positions = floor
         .terrain
@@ -286,11 +570,6 @@ fn guardian_content(kind: &str) -> Arc<ContentCatalog> {
         .iter_mut()
         .find(|d| d.id == "demo.dungeon.warrens")
         .unwrap();
-    dungeon.legacy_index = Some(if kind == "demo.actor.godzilla" {
-        37
-    } else {
-        19
-    });
     dungeon.guardian_actor_kind_id = Some(kind.to_owned());
     let floor = world
         .procedural_floors
@@ -318,13 +597,7 @@ fn guardian_content(kind: &str) -> Arc<ContentCatalog> {
 
 #[test]
 fn disaster_area_allocation_accepts_real_poison_resistance_and_immunity() {
-    let mut game = Game::from_content_with_build(
-        42,
-        guardian_content("demo.actor.godzilla"),
-        DEFAULT_WORLD_ID,
-        RFB_WARRIOR_BUILD_ID,
-    )
-    .unwrap();
+    let mut game = Game::new_with_build(949, RFB_WARRIOR_BUILD_ID).unwrap();
     let policy = game
         .content
         .encounter_table("demo.encounter-table.disaster-area")
@@ -332,7 +605,7 @@ fn disaster_area_allocation_accepts_real_poison_resistance_and_immunity() {
         .global_allocation
         .clone()
         .unwrap();
-    let floor_id = "demo.floor.warrens-depth-9";
+    let floor_id = "demo.floor.disaster-area-depth-60";
     let mut seen = Vec::new();
     for _ in 0..256 {
         let kind = game

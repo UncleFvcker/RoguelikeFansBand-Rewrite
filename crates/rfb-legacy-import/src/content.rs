@@ -566,6 +566,7 @@ struct DemoWildernessDungeonPlan {
     #[serde(default)]
     floor_terrain_distribution: Vec<DemoDungeonFloorTerrainPlan>,
     tunnel_percent: Option<u16>,
+    wall_terrain: Option<DemoDungeonWallTerrainPlan>,
     #[serde(default)]
     initial_guardian: Option<DemoDungeonGuardianPlan>,
     guardian: Option<DemoDungeonGuardianPlan>,
@@ -580,6 +581,15 @@ struct DemoWildernessDungeonPlan {
 struct DemoDungeonFloorTerrainPlan {
     source_tag: String,
     percent: u16,
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoDungeonWallTerrainPlan {
+    distribution: Vec<DemoDungeonFloorTerrainPlan>,
+    outer: String,
+    inner: String,
+    streamers: [String; 2],
 }
 
 #[derive(Debug, Deserialize)]
@@ -625,6 +635,7 @@ struct LegacyDungeonRecord {
     monster_preferences: Vec<String>,
     floor_terrain_distribution: Vec<DemoDungeonFloorTerrainPlan>,
     tunnel_percent: Option<u16>,
+    wall_terrain: Option<DemoDungeonWallTerrainPlan>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1823,6 +1834,53 @@ fn parse_dungeon_records(
                 "L.tunnelPercent",
                 fields.get(6).copied(),
             )?);
+        } else if let Some(value) = line.strip_prefix("A:") {
+            let index = current.ok_or_else(|| {
+                content_parse_error(
+                    D_INFO_SOURCE,
+                    line_number,
+                    "A",
+                    value,
+                    "wall terrain appears before a dungeon record",
+                )
+            })?;
+            let fields = parse_fields(D_INFO_SOURCE, line_number, "A", value, 10)?;
+            let record = records
+                .get_mut(&index)
+                .expect("current dungeon record must exist");
+            if record.wall_terrain.is_some() {
+                return Err(content_parse_error(
+                    D_INFO_SOURCE,
+                    line_number,
+                    "A",
+                    value,
+                    "duplicate dungeon wall terrain",
+                ));
+            }
+            let mut distribution = Vec::new();
+            for offset in [0, 2, 4] {
+                distribution.push(DemoDungeonFloorTerrainPlan {
+                    source_tag: required_field(
+                        D_INFO_SOURCE,
+                        line_number,
+                        "A.sourceTag",
+                        fields.get(offset).copied(),
+                    )?
+                    .to_owned(),
+                    percent: parse_number(
+                        D_INFO_SOURCE,
+                        line_number,
+                        "A.percent",
+                        fields.get(offset + 1).copied(),
+                    )?,
+                });
+            }
+            record.wall_terrain = Some(DemoDungeonWallTerrainPlan {
+                distribution,
+                outer: fields[6].to_owned(),
+                inner: fields[7].to_owned(),
+                streamers: [fields[8].to_owned(), fields[9].to_owned()],
+            });
         } else if let Some(value) = line.strip_prefix("F:") {
             let index = current.ok_or_else(|| {
                 content_parse_error(
@@ -15051,9 +15109,10 @@ fn validate_demo_wilderness_plans(
         if (!dungeon.floor_terrain_distribution.is_empty()
             && dungeon.floor_terrain_distribution != record.floor_terrain_distribution)
             || (dungeon.tunnel_percent.is_some() && dungeon.tunnel_percent != record.tunnel_percent)
+            || (dungeon.wall_terrain.is_some() && dungeon.wall_terrain != record.wall_terrain)
         {
             return Err(invalid_wilderness_selection(format!(
-                "planned dungeon {} floor terrain drifted",
+                "planned dungeon {} terrain drifted",
                 dungeon.id
             )));
         }
@@ -18999,6 +19058,30 @@ pub fn sync_demo_item_destruction(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn dungeon_wall_terrain_parses_full_a_record_and_rejects_malformed_input() {
+        let line = "A:GRANITE:80:MOUNTAIN_WALL:18:QUARTZ_VEIN:2:GRANITE:GRANITE:NONE:NONE";
+        let text = format!("N:37:Disaster area\n{line}\n");
+        let records = parse_dungeon_records(&text).unwrap();
+        let wall = records[&37].wall_terrain.as_ref().unwrap();
+        assert_eq!(
+            wall.distribution
+                .iter()
+                .map(|entry| (entry.source_tag.as_str(), entry.percent))
+                .collect::<Vec<_>>(),
+            [("GRANITE", 80), ("MOUNTAIN_WALL", 18), ("QUARTZ_VEIN", 2)]
+        );
+        assert_eq!(
+            (&wall.outer, &wall.inner),
+            (&"GRANITE".to_owned(), &"GRANITE".to_owned())
+        );
+        assert_eq!(wall.streamers, ["NONE", "NONE"]);
+        assert!(parse_dungeon_records(line).is_err());
+        assert!(parse_dungeon_records(&format!("{text}{line}\n")).is_err());
+        assert!(parse_dungeon_records("N:37:Disaster area\nA:GRANITE:80\n").is_err());
+        assert!(parse_dungeon_records(&text.replace(":80:", ":bad:")).is_err());
+    }
 
     #[test]
     fn outpost_source_selection_uses_normal_wilderness_instead_of_lite_variants() {

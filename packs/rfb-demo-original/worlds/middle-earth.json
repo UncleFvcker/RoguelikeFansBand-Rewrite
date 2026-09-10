@@ -452,6 +452,22 @@
           "y": 45
         },
         "dungeonId": "demo.dungeon.anti-melee-cave"
+      },
+      {
+        "kind": "dungeon",
+        "position": {
+          "x": 57,
+          "y": 12
+        },
+        "dungeonId": "demo.dungeon.dark-cave"
+      },
+      {
+        "kind": "dungeon",
+        "position": {
+          "x": 55,
+          "y": 9
+        },
+        "dungeonId": "demo.dungeon.disaster-area"
       }
     ],
     "rows": [
@@ -1459,6 +1475,38 @@
         }
       },
       "noMelee": true
+    },
+    {
+      "id": "demo.dungeon.dark-cave",
+      "legacyIndex": 19,
+      "rootFloorId": "demo.floor.dark-cave-depth-55",
+      "guardianActorKindId": "demo.actor.null-the-living-void",
+      "entranceGuardian": {
+        "instanceId": "demo.guardian.dark-cave-entrance.1",
+        "actorKindId": "demo.actor.shadowlord",
+        "position": {
+          "x": 99,
+          "y": 34
+        }
+      },
+      "darkness": true,
+      "substitution": {
+        "alternateDungeonId": "demo.dungeon.disaster-area"
+      }
+    },
+    {
+      "id": "demo.dungeon.disaster-area",
+      "legacyIndex": 37,
+      "rootFloorId": "demo.floor.disaster-area-depth-60",
+      "guardianActorKindId": "demo.actor.godzilla",
+      "entranceGuardian": {
+        "instanceId": "demo.guardian.disaster-area-entrance.1",
+        "actorKindId": "demo.actor.atomic-elemental",
+        "position": {
+          "x": 100,
+          "y": 32
+        }
+      }
     }
   ],
   "campaign": {
@@ -25418,6 +25466,3386 @@
       "actorSpawns": [],
       "lootSpawns": [],
       "finalFloor": true
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-55",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 56,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "entryTerrainId": "demo.terrain.dark-cave-entrance",
+      "nextFloorId": "demo.floor.dark-cave-depth-56",
+      "depth": 55,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-56",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-55",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 57,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.dark-cave-depth-57",
+      "depth": 56,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-57",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-56",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 58,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.dark-cave-depth-58",
+      "depth": 57,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-58",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-57",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 9
+            },
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 59,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.dark-cave-depth-59",
+      "depth": 58,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-59",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-58",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 60,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.dark-cave-depth-60",
+      "depth": 59,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-60",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-59",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 61,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.dark-cave-depth-61",
+      "depth": 60,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-61",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-60",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 2,
+        "roomAreaTiles": 1200,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "partitioned",
+          "minWidth": 28,
+          "maxWidth": 32,
+          "minHeight": 17,
+          "maxHeight": 19,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 62,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.dark-cave-depth-62",
+      "depth": 61,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-62",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-61",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 63,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.dark-cave-depth-63",
+      "depth": 62,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-63",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-62",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 64,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.dark-cave-depth-64",
+      "depth": 63,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-64",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-63",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32,
+        "lakeAreaTiles": 360,
+        "lakeDeepAreaTiles": 120
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "lake": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow"
+        }
+      },
+      "nextFloorId": "demo.floor.dark-cave-depth-65",
+      "depth": 64,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-65",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-64",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 66,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.dark-cave-depth-66",
+      "depth": 65,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-66",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-65",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32,
+        "lakeAreaTiles": 360,
+        "lakeDeepAreaTiles": 120
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "lake": {
+          "deepTerrainId": "demo.terrain.rubble",
+          "shallowTerrainId": "demo.terrain.dirt"
+        }
+      },
+      "nextFloorId": "demo.floor.dark-cave-depth-67",
+      "depth": 66,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-67",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-66",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 68,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.dark-cave-depth-68",
+      "depth": 67,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-68",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-67",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32,
+        "lakeAreaTiles": 360,
+        "lakeDeepAreaTiles": 120
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "lake": {
+          "deepTerrainId": "demo.terrain.surface-tree",
+          "shallowTerrainId": "demo.terrain.surface-grass"
+        }
+      },
+      "nextFloorId": "demo.floor.dark-cave-depth-69",
+      "depth": 68,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-69",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-68",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 70,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.dark-cave-depth-70",
+      "depth": 69,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-70",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-69",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32,
+        "destructionCenters": 1,
+        "destroyedAreaTiles": 96
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 71,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "destroyed": {
+          "terrainId": "demo.terrain.rubble"
+        }
+      },
+      "nextFloorId": "demo.floor.dark-cave-depth-71",
+      "depth": 70,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-71",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-70",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 72,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          },
+          "down": {
+            "minimum": 4,
+            "maximum": 5
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.dark-cave-depth-72",
+      "depth": 71,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.dark-cave-depth-72",
+      "nameKey": "floor-demo-dark-cave-depth-name",
+      "returnFloorId": "demo.floor.dark-cave-depth-71",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.dark-cave",
+      "encounterTableId": "demo.encounter-table.dark-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "rectangle",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow",
+          "chanceOneIn": 7,
+          "alternative": {
+            "deepTerrainId": "demo.terrain.surface-lava-deep",
+            "shallowTerrainId": "demo.terrain.surface-lava-shallow",
+            "chanceNumerator": 73,
+            "chanceDenominator": 256
+          }
+        },
+        "stairs": {
+          "up": {
+            "minimum": 1,
+            "maximum": 2
+          }
+        },
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ]
+      },
+      "depth": 72,
+      "width": 66,
+      "height": 22,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "finalFloor": true,
+      "guardian": {
+        "instanceId": "demo.guardian.dark-cave.1",
+        "actorKindId": "demo.actor.null-the-living-void",
+        "rewardLootTableId": "demo.loot-table.first-realm-fourth-book-fallback",
+        "rewardFirstRealmBookRank": 4
+      }
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-60",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ]
+      },
+      "entryTerrainId": "demo.terrain.disaster-area-entrance",
+      "nextFloorId": "demo.floor.disaster-area-depth-61",
+      "depth": 60,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "entryConnectionId": "demo.connection.disaster-area-depth-60-stairs-up",
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-60-stairs-up",
+          "kind": "stairs",
+          "terrainId": "demo.terrain.stairs-up",
+          "targetFloorId": "demo.floor.surface"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-60-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-62",
+          "targetConnectionId": "demo.connection.disaster-area-depth-62-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-61",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-60",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-62",
+      "depth": 61,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-61-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.surface"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-61-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-63",
+          "targetConnectionId": "demo.connection.disaster-area-depth-63-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-62",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-61",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-63",
+      "depth": 62,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-62-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-60",
+          "targetConnectionId": "demo.connection.disaster-area-depth-60-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-62-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-64",
+          "targetConnectionId": "demo.connection.disaster-area-depth-64-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-63",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-62",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "cavernAreaTiles": 800
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ],
+        "cavern": {
+          "terrainId": "demo.terrain.floor"
+        }
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-64",
+      "depth": 63,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-63-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-61",
+          "targetConnectionId": "demo.connection.disaster-area-depth-61-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-63-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-65",
+          "targetConnectionId": "demo.connection.disaster-area-depth-65-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-64",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-63",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-65",
+      "depth": 64,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-64-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-62",
+          "targetConnectionId": "demo.connection.disaster-area-depth-62-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-64-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-66",
+          "targetConnectionId": "demo.connection.disaster-area-depth-66-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-65",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-64",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-66",
+      "depth": 65,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-65-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-63",
+          "targetConnectionId": "demo.connection.disaster-area-depth-63-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-65-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-67",
+          "targetConnectionId": "demo.connection.disaster-area-depth-67-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-66",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-65",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "lakeAreaTiles": 360,
+        "lakeDeepAreaTiles": 120
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ],
+        "lake": {
+          "deepTerrainId": "demo.terrain.surface-water-deep",
+          "shallowTerrainId": "demo.terrain.surface-water-shallow"
+        }
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-67",
+      "depth": 66,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-66-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-64",
+          "targetConnectionId": "demo.connection.disaster-area-depth-64-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-66-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-68",
+          "targetConnectionId": "demo.connection.disaster-area-depth-68-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-67",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-66",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-68",
+      "depth": 67,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-67-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-65",
+          "targetConnectionId": "demo.connection.disaster-area-depth-65-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-67-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-69",
+          "targetConnectionId": "demo.connection.disaster-area-depth-69-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-68",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-67",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-69",
+      "depth": 68,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-68-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-66",
+          "targetConnectionId": "demo.connection.disaster-area-depth-66-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-68-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-70",
+          "targetConnectionId": "demo.connection.disaster-area-depth-70-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-69",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-68",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "lakeAreaTiles": 360,
+        "lakeDeepAreaTiles": 120
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ],
+        "lake": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste"
+        }
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-70",
+      "depth": 69,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-69-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-67",
+          "targetConnectionId": "demo.connection.disaster-area-depth-67-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-69-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-71",
+          "targetConnectionId": "demo.connection.disaster-area-depth-71-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-70",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-69",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-71",
+      "depth": 70,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-70-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-68",
+          "targetConnectionId": "demo.connection.disaster-area-depth-68-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-70-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-72",
+          "targetConnectionId": "demo.connection.disaster-area-depth-72-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-71",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-70",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-72",
+      "depth": 71,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-71-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-69",
+          "targetConnectionId": "demo.connection.disaster-area-depth-69-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-71-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-73",
+          "targetConnectionId": "demo.connection.disaster-area-depth-73-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-72",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-71",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "cavernAreaTiles": 800
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ],
+        "cavern": {
+          "terrainId": "demo.terrain.floor"
+        }
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-73",
+      "depth": 72,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-72-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-70",
+          "targetConnectionId": "demo.connection.disaster-area-depth-70-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-72-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-74",
+          "targetConnectionId": "demo.connection.disaster-area-depth-74-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-73",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-72",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-74",
+      "depth": 73,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-73-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-71",
+          "targetConnectionId": "demo.connection.disaster-area-depth-71-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-73-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-75",
+          "targetConnectionId": "demo.connection.disaster-area-depth-75-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-74",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-73",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-75",
+      "depth": 74,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-74-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-72",
+          "targetConnectionId": "demo.connection.disaster-area-depth-72-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-74-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-76",
+          "targetConnectionId": "demo.connection.disaster-area-depth-76-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-75",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-74",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-76",
+      "depth": 75,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-75-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-73",
+          "targetConnectionId": "demo.connection.disaster-area-depth-73-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-75-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-77",
+          "targetConnectionId": "demo.connection.disaster-area-depth-77-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-76",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-75",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "lakeAreaTiles": 360,
+        "lakeDeepAreaTiles": 120
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ],
+        "lake": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste"
+        }
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-77",
+      "depth": 76,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-76-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-74",
+          "targetConnectionId": "demo.connection.disaster-area-depth-74-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-76-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-78",
+          "targetConnectionId": "demo.connection.disaster-area-depth-78-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-77",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-76",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-78",
+      "depth": 77,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-77-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-75",
+          "targetConnectionId": "demo.connection.disaster-area-depth-75-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-77-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-79",
+          "targetConnectionId": "demo.connection.disaster-area-depth-79-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-78",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-77",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160,
+        "destructionCenters": 1,
+        "destroyedAreaTiles": 96
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ],
+        "destroyed": {
+          "terrainId": "demo.terrain.rubble"
+        }
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-79",
+      "depth": 78,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-78-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-76",
+          "targetConnectionId": "demo.connection.disaster-area-depth-76-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-78-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-80",
+          "targetConnectionId": "demo.connection.disaster-area-depth-80-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-79",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-78",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ]
+      },
+      "nextFloorId": "demo.floor.disaster-area-depth-80",
+      "depth": 79,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-79-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-77",
+          "targetConnectionId": "demo.connection.disaster-area-depth-77-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-79-stairs-down",
+          "kind": "stairs",
+          "terrainId": "demo.terrain.stairs-down",
+          "targetFloorId": "demo.floor.disaster-area-depth-80",
+          "targetConnectionId": "demo.connection.disaster-area-depth-80-stairs-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.disaster-area-depth-80",
+      "nameKey": "floor-demo-disaster-area-depth-name",
+      "returnFloorId": "demo.floor.disaster-area-depth-79",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.disaster-area",
+      "encounterTableId": "demo.encounter-table.disaster-area",
+      "lootTableId": "demo.loot-table.base-items",
+      "generationBudget": {
+        "actorSlots": 12,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 800,
+        "riverAreaTiles": 160
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 11,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1
+            }
+          ]
+        },
+        "river": {
+          "deepTerrainId": "demo.terrain.deep-waste",
+          "shallowTerrainId": "demo.terrain.shallow-waste",
+          "chanceOneIn": 7
+        },
+        "placeDoors": false,
+        "floorMix": [
+          {
+            "terrainId": "demo.terrain.shallow-waste",
+            "percent": 21
+          },
+          {
+            "terrainId": "demo.terrain.deep-waste",
+            "percent": 3
+          }
+        ],
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.mountain-wall",
+            "percent": 18
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 2
+          }
+        ]
+      },
+      "depth": 80,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "connections": [
+        {
+          "id": "demo.connection.disaster-area-depth-80-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-78",
+          "targetConnectionId": "demo.connection.disaster-area-depth-78-shaft-down"
+        },
+        {
+          "id": "demo.connection.disaster-area-depth-80-stairs-up",
+          "kind": "stairs",
+          "terrainId": "demo.terrain.stairs-up",
+          "targetFloorId": "demo.floor.disaster-area-depth-79",
+          "targetConnectionId": "demo.connection.disaster-area-depth-79-stairs-down"
+        }
+      ],
+      "finalFloor": true,
+      "guardian": {
+        "instanceId": "demo.guardian.disaster-area.1",
+        "actorKindId": "demo.actor.godzilla",
+        "rewardLootTableId": "demo.loot-table.first-realm-fourth-book-fallback",
+        "rewardFirstRealmBookRank": 4
+      }
     }
   ]
 }
