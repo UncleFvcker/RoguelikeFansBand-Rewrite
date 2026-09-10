@@ -3,11 +3,18 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
+import { checkApplicability, loadApplicability } from "./generation-applicability.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceRoot = process.argv[2];
-assert.ok(sourceRoot, "usage: node scripts/audit-egos.mjs <authoritative RFB repository>");
+if (sourceRoot === "--check-applicability") {
+  const reviewed = await checkApplicability(root);
+  console.log(`Applicability check passed: ${reviewed.reviews.length} creation builds; ${reviewed.gaps.length} documented evidence gaps. Read-only; gameplay tests were not run.`);
+  process.exit(0);
+}
+assert.ok(sourceRoot, "usage: node scripts/audit-egos.mjs <authoritative RFB repository> | --check-applicability");
+const reviewed = await loadApplicability(root);
 const source = JSON.parse(execFileSync("cargo", ["run", "-q", "-p", "rfb-legacy-import", "--", "audit-egos", sourceRoot], { cwd: root, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 }));
 const pack = path.join(root, "packs/rfb-demo-original");
 async function definitions(folder) {
@@ -96,17 +103,8 @@ const equipmentBases = [...new Set(pool.entries.map(entry => entry.itemKindId))]
 });
 // Reviewed against this master object, never against the source working tree.
 // A changed source requires a new review rather than silently reusing line ranges.
-const applicability = JSON.parse(await readFile(path.join(root, "design/generation-build-applicability.json"), "utf8"));
-assert.equal(source.sourceCommit, applicability.sourceCommit, "re-review generation condition applicability for the new source commit");
-const { PLAYTEST_BUILD_IDS, PLAYTEST_RACE_IDS } = await import(pathToFileURL(path.join(root, "web/src/character-creation.ts")));
-const builds = await definitions("builds");
-const playableClasses = [...new Set(PLAYTEST_BUILD_IDS.map(id => {
-  const build = builds.find(build => build.id === id);
-  assert.ok(build, `missing playable build ${id}`);
-  return build.classId;
-}))].sort();
-assert.deepEqual(applicability.builds.map(build => build.buildId).sort(), [...PLAYTEST_BUILD_IDS].sort(), "creation builds require source applicability review");
-const conditionScopes = applicability.conditionScopes;
+assert.equal(source.sourceCommit, reviewed.sourceCommit, "re-review generation condition applicability for the new source commit");
+const conditionScopes = reviewed.conditionScopes;
 const conditionPattern = /p_ptr->(?:pclass|prace|psubrace|personality|realm1|realm2|good_luck)|\b(?:CLASS_|RACE_|MUT_|PERS_|DEMIGOD_|GIANT_|WARLOCK_|DISCIPLE_|DEVICEMASTER_)|obj_drop_theme|virtue_|(?:prace|personality|demigod|giant|warlock|disciple|devicemaster)_is_|personality_includes_|player_is_|equip_has_slot_type|equip_can_wield_kind/;
 const sourceConditions = [];
 for (const file of ["src/ego.c", "src/object2.c", "src/artifact.c"]) {
@@ -121,14 +119,12 @@ for (const file of ["src/ego.c", "src/object2.c", "src/artifact.c"]) {
 const specialArtifactIndices = [41, 78, 144, 145, 146, 162, 190, 212, 320, 322];
 assert.deepEqual(items.filter(item => specialArtifactIndices.includes(item.artifactGeneration?.sourceIndex)).map(item => item.artifactGeneration.sourceIndex), [162], "new identity-sensitive artifact requires applicability implementation/review");
 assert.equal(items.filter(item => item.artifactGeneration && item.rfbBaseKind?.tval === 19 && item.rfbBaseKind.sval === 70).length, 0, "new fixed harp requires Bard/non-Bard review");
-for (const unavailable of ["mauler", "bard"]) assert.ok(!playableClasses.some(id => id.endsWith(`.${unavailable}`)), `review newly playable ${unavailable}`);
-for (const unavailable of ["mon-ring", "mon-vortex"]) assert.ok(!PLAYTEST_RACE_IDS.some(id => id.endsWith(`.${unavailable}`)), `review newly playable ${unavailable}`);
 const report = {
   sourceRef: "master", sourceCommit: source.sourceCommit,
   identityContractsVerified: entries.length, craftSelectableCount: 121,
   runtimeRoundTripTest: "game::ego::contracts::all_160_source_egos_have_an_effect_and_save_stable_instances",
   runtimeParityComplete: false,
-  currentPlayableSharedGenerationComplete: applicability.gaps.length === 0,
+  currentPlayableSharedGenerationComplete: reviewed.reviews.every(build => build.complete),
   desktopAcceptance: {
     milestone: "E8.8",
     runner: "node web/e2e/tauri.e2e.mjs --ego",
@@ -143,15 +139,9 @@ const report = {
   bagContract: "contract-v315-bag-containers: three source bases, 972 independent C cases, final capacity, non-ammunition slot allocation, all four ego consumers and save",
   naturalTablesUsingSharedPolicy: naturalTables.map(table => table.id).sort(),
   buildApplicability: {
-    entrySource: applicability.entrySource,
-    reviewInput: "design/generation-build-applicability.json",
-    playableBuilds: PLAYTEST_BUILD_IDS, playableRaces: PLAYTEST_RACE_IDS, playableClasses,
+    ...reviewed,
     acceptanceRule: "new-game identity must be real; forged identity branch tests are not playable acceptance; listed test paths are references, not results of this audit command",
-    reviews: applicability.builds,
-    sharedReviews: applicability.sharedReviews,
-    deferred: applicability.deferred,
-    gaps: applicability.gaps,
-    conditionScopes, sourceConditions,
+    sourceConditions,
     vortex: { status: "equipment-template-and-consumer; indirect-base-allocation", entry: "unavailable", directNamedGenerationCondition: false, evidence: ["src/r_vortex.c:764-810 mon_vortex_get_race uses mon_get_equip_template and pseudo_class_idx Warrior", "lib/edit/b_info.txt:980-1010,1101-1115 Vortex3..8 ANY slots", "src/monster.c:13 current_r_idx -> r_info body_idx -> b_info template", "src/equip.c:372 ANY satisfies every slot type except BOW; src/object2.c:3078 therefore halves bow/quiver and ammo category weights for Vortex", "src/equip.c:1622 positive OF_BLOWS is halved for Vortex"], prerequisite: "real evolving body template, innate attack/positive-blows consumer and exact source allocator; no invented direct generator flag", tests: null },
   },
   randomArtifactContract: "E8.5: natural scheduler, complete fresh candidate/value retry, curses, name/RNG state and save",

@@ -42,6 +42,8 @@
   "buildApplicability": {
     "entrySource": "web/src/character-creation.ts CREATION_BUILDS / PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
     "reviewInput": "design/generation-build-applicability.json",
+    "sourceRef": "master",
+    "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
     "playableBuilds": [
       "demo.build.warrior",
       "demo.build.berserker",
@@ -110,7 +112,56 @@
       "demo.class.sniper",
       "demo.class.warrior"
     ],
-    "acceptanceRule": "new-game identity must be real; forged identity branch tests are not playable acceptance; listed test paths are references, not results of this audit command",
+    "resolvedBuilds": [
+      {
+        "buildId": "demo.build.warrior",
+        "classId": "demo.class.warrior",
+        "firstRealmId": null,
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.berserker",
+        "classId": "demo.class.berserker",
+        "firstRealmId": null,
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.archer",
+        "classId": "demo.class.archer",
+        "firstRealmId": null,
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.sniper",
+        "classId": "demo.class.sniper",
+        "firstRealmId": null,
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.high-mage-death",
+        "classId": "demo.class.high-mage",
+        "firstRealmId": "death",
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.paladin-death",
+        "classId": "demo.class.paladin",
+        "firstRealmId": "death",
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.cavalry",
+        "classId": "demo.class.cavalry",
+        "firstRealmId": null,
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.mindcrafter",
+        "classId": "demo.class.mindcrafter",
+        "firstRealmId": null,
+        "secondRealmId": null
+      }
+    ],
     "reviews": [
       {
         "buildId": "demo.build.warrior",
@@ -144,7 +195,8 @@
             ]
           }
         ],
-        "gapIds": []
+        "gapIds": [],
+        "complete": true
       },
       {
         "buildId": "demo.build.berserker",
@@ -189,7 +241,8 @@
         "gapIds": [
           "new-build-generation-round-trip",
           "berserker-randart-warning-no-tele"
-        ]
+        ],
+        "complete": false
       },
       {
         "buildId": "demo.build.archer",
@@ -223,7 +276,8 @@
             ]
           }
         ],
-        "gapIds": []
+        "gapIds": [],
+        "complete": true
       },
       {
         "buildId": "demo.build.sniper",
@@ -257,7 +311,8 @@
             ]
           }
         ],
-        "gapIds": []
+        "gapIds": [],
+        "complete": true
       },
       {
         "buildId": "demo.build.high-mage-death",
@@ -293,7 +348,8 @@
             ]
           }
         ],
-        "gapIds": []
+        "gapIds": [],
+        "complete": true
       },
       {
         "buildId": "demo.build.paladin-death",
@@ -327,7 +383,8 @@
             ]
           }
         ],
-        "gapIds": []
+        "gapIds": [],
+        "complete": true
       },
       {
         "buildId": "demo.build.cavalry",
@@ -361,7 +418,8 @@
             ]
           }
         ],
-        "gapIds": []
+        "gapIds": [],
+        "complete": true
       },
       {
         "buildId": "demo.build.mindcrafter",
@@ -406,7 +464,8 @@
         ],
         "gapIds": [
           "new-build-generation-round-trip"
-        ]
+        ],
+        "complete": false
       }
     ],
     "sharedReviews": [
@@ -639,7 +698,10 @@
         "change": "activation chance 1/2 instead of 1/5",
         "consumer": "jewelry activation generation and actual activation use",
         "tests": null,
-        "prerequisite": "real Monster Ring race, equipment/absorption and activation consumers"
+        "prerequisite": "real Monster Ring race, equipment/absorption and activation consumers",
+        "unavailableRaceIds": [
+          "rfb-legacy.race.mon-ring"
+        ]
       },
       {
         "id": "mauler-weight",
@@ -651,7 +713,10 @@
         "change": "recompute melee weapon weight after dice improvement",
         "consumer": "Ego/random artifact instance weight, burden and melee",
         "tests": null,
-        "prerequisite": "real Mauler class and heavy-weapon combat; same-input Ego/randart equip/save acceptance"
+        "prerequisite": "real Mauler class and heavy-weapon combat; same-input Ego/randart equip/save acceptance",
+        "unavailableClassIds": [
+          "demo.class.mauler"
+        ]
       },
       {
         "id": "bad-luck-tomte-hat",
@@ -687,7 +752,10 @@
         "change": "harp slot value percentage 50 instead of 40",
         "consumer": "random artifact value acceptance and harp abilities",
         "tests": null,
-        "prerequisite": "real Bard class, harp use and same-input value comparison"
+        "prerequisite": "real Bard class, harp use and same-input value comparison",
+        "unavailableClassIds": [
+          "demo.class.bard"
+        ]
       },
       {
         "id": "artifact-theme-bias",
@@ -771,7 +839,10 @@
         "change": "gold setters notify Politician",
         "consumer": "politician_check_au",
         "tests": null,
-        "prerequisite": "real Politician gold consumer"
+        "prerequisite": "real Politician gold consumer",
+        "unavailableClassIds": [
+          "demo.class.politician"
+        ]
       },
       {
         "id": "bad-luck-fixed-special",
@@ -862,7 +933,7 @@
         "file": "src/object2.c",
         "start": 2374,
         "end": 2384,
-        "status": "deferred-unavailable-build",
+        "status": "deferred-unavailable-personality-or-demigod",
         "entry": "Sexy personality / Aphrodite demigod unavailable",
         "change": "bikini adds +3 to all six attributes",
         "consumer": "base properties and equipped attributes",
@@ -951,7 +1022,10 @@
         "change": "halve category weight when equip_has_slot_type is false; ANY excludes bow for this helper",
         "consumer": "loot/allocation.rs; mod.rs item_can_occupy_slot_type",
         "tests": "game::loot::allocation::tests::category_weights_use_great_precedence_and_body_slots_not_equipped_items",
-        "prerequisite": "Vortex real evolving body/innate consumers remain unavailable"
+        "prerequisite": "Vortex real evolving body/innate consumers remain unavailable",
+        "unavailableRaceIds": [
+          "rfb-legacy.race.mon-vortex"
+        ]
       },
       {
         "id": "needs-book",
@@ -999,7 +1073,10 @@
         "change": "replace generated artifact via disciple hook",
         "consumer": "karrot_replace_art",
         "tests": null,
-        "prerequisite": "real Disciple and artifact replacement consumer"
+        "prerequisite": "real Disciple and artifact replacement consumer",
+        "unavailableClassIds": [
+          "demo.class.disciple"
+        ]
       },
       {
         "id": "theme-reset",
@@ -1035,9 +1112,14 @@
         "change": "realm-dependent book awareness",
         "consumer": "object awareness/knowledge",
         "tests": null,
-        "prerequisite": "real classes and book knowledge consumer"
+        "prerequisite": "real classes and book knowledge consumer",
+        "unavailableClassIds": [
+          "demo.class.sorcerer",
+          "demo.class.red-mage"
+        ]
       }
     ],
+    "acceptanceRule": "new-game identity must be real; forged identity branch tests are not playable acceptance; listed test paths are references, not results of this audit command",
     "sourceConditions": [
       {
         "source": "src/ego.c:83",

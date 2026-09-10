@@ -1,7 +1,7 @@
 # 新职业的物品生成接入计划
 
-状态：第一批已完成，第二至四批待实施。规划及首批核对日期：2026-09-10；代码基线：`b66a317a6`，工作分支：`codex/realms-items`。
-首批仅整理来源/实现依据及生成报告，没有修改游戏规则或 CI，也没有补跑或宣称缺失的行为测试通过。
+状态：第一、二批已完成，第三、四批待实施。核对日期：2026-09-10；初始代码基线：`b66a317a6`，工作分支：`codex/realms-items`。
+已整理来源/实现依据，并接入只读审计与 CI 配置；没有修改游戏规则，也没有补跑或宣称缺失的游戏行为测试通过。
 
 ## 目标与范围
 
@@ -18,7 +18,7 @@
 ## 已确认的起点
 
 - [创角目录](../web/src/character-creation.ts)已有八个 Build；`PLAYTEST_BUILD_IDS` 从目录派生，`session-shell.ts` 仅重新导出。继续以这里的入口为准，不增加第二份允许列表。
-- [Ego 审计脚本](../scripts/audit-egos.mjs)现读取[审计输入](../design/generation-build-applicability.json)，替代旧六职业名单及“狂战士未开放”判断。[生成矩阵](../design/ego-contract-audit.json)包含八构筑结论及未完成证据，尚未接入第二批 CI 检查。
+- [Ego 审计脚本](../scripts/audit-egos.mjs)读取[审计输入](../design/generation-build-applicability.json)，替代旧六职业名单及“狂战士未开放”判断。[生成矩阵](../design/ego-contract-audit.json)包含八构筑结论及未完成证据；现有 Node 24 前端 CI job 已加入只读检查和工具回归测试。
 - 狂战士随机神器分支、心灵术士 bias 代码和部分测试已经存在。必须先追踪调用入口，再判断证据缺口，不能按旧 deferred 标签重写实现。
 - 现有随机神器职业 bias 测试含 `scroll: true`，而神器卷轴玩家入口尚未开放。自然生成、主题生成和卷轴创建的结论须分别记录。
 - B0–B6、E8.8 的通用规则和六职业证据可复用；最新合并没有重跑 standalone。当前协议、内容和测试快照以[状态页](status.md)为准。
@@ -88,6 +88,23 @@
 无需复制八职业静态快照来凑测试数量。
 
 **验收：**本地与 CI 使用同一检查；缺失第九个 Build 时能失败并定位，补足真实审计记录后才通过；检查不产生文件改动。
+
+第二批已完成：[检查模块](../scripts/generation-applicability.mjs)供完整来源审计和只读 CLI 共用，
+[8 项 Node 回归测试](../scripts/generation-applicability.test.mjs)覆盖新增职业/同职业新领域、定义与引用缺失、理由/证据缺项、身份开放矛盾、缺口与完成标记冲突，以及报告过期。
+报告额外投影正式 Class/领域和逐构筑 `complete`，整体完成状态由当前缺口推导；人工维护的输入不复制运行时职业配置。
+`deferred-unavailable-build` 条件必须写明 `unavailableClassIds` 或 `unavailableRaceIds`；其他条件也可用这两个字段声明需重新核对的身份依赖。
+检查依据这些字段判断是否与入口冲突，不解析自然语言理由。当前可达范围的 `deferred` 必须带依赖和双向关联的 gap；未开放卷轴等共同依赖继续单列。
+
+仓库根目录复现（Node 24）：
+
+```sh
+node scripts/audit-egos.mjs --check-applicability
+node --test scripts/generation-applicability.test.mjs
+```
+
+审计输入变更后，使用 `node scripts/audit-egos.mjs <原版 Git 仓库>` 完整核对并重生成报告；只读模式不会替你修复过期报告。
+本地 Node 24.19.0 已按 CI 的 `web` 工作目录执行上述检查和 8 项测试，全部通过；真实 CLI 清空 PATH 后仍成功，输入/报告字节未变。
+完整来源审计再次通过（160 Ego、146 装备底材、41 类未映射标志）。本批更新了 CI 配置，未运行远程 GitHub job，也未执行游戏或桌面验收；两个已有行为证据缺口留待第三批。
 
 ## 第三批：补缺失的行为回归与实际消费者证据
 

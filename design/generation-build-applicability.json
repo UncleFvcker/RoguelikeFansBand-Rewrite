@@ -186,7 +186,8 @@
       "change": "activation chance 1/2 instead of 1/5",
       "consumer": "jewelry activation generation and actual activation use",
       "tests": null,
-      "prerequisite": "real Monster Ring race, equipment/absorption and activation consumers"
+      "prerequisite": "real Monster Ring race, equipment/absorption and activation consumers",
+      "unavailableRaceIds": ["rfb-legacy.race.mon-ring"]
     },
     {
       "id": "mauler-weight",
@@ -198,7 +199,8 @@
       "change": "recompute melee weapon weight after dice improvement",
       "consumer": "Ego/random artifact instance weight, burden and melee",
       "tests": null,
-      "prerequisite": "real Mauler class and heavy-weapon combat; same-input Ego/randart equip/save acceptance"
+      "prerequisite": "real Mauler class and heavy-weapon combat; same-input Ego/randart equip/save acceptance",
+      "unavailableClassIds": ["demo.class.mauler"]
     },
     {
       "id": "bad-luck-tomte-hat",
@@ -234,7 +236,8 @@
       "change": "harp slot value percentage 50 instead of 40",
       "consumer": "random artifact value acceptance and harp abilities",
       "tests": null,
-      "prerequisite": "real Bard class, harp use and same-input value comparison"
+      "prerequisite": "real Bard class, harp use and same-input value comparison",
+      "unavailableClassIds": ["demo.class.bard"]
     },
     {
       "id": "artifact-theme-bias",
@@ -318,7 +321,8 @@
       "change": "gold setters notify Politician",
       "consumer": "politician_check_au",
       "tests": null,
-      "prerequisite": "real Politician gold consumer"
+      "prerequisite": "real Politician gold consumer",
+      "unavailableClassIds": ["demo.class.politician"]
     },
     {
       "id": "bad-luck-fixed-special",
@@ -409,7 +413,7 @@
       "file": "src/object2.c",
       "start": 2374,
       "end": 2384,
-      "status": "deferred-unavailable-build",
+      "status": "deferred-unavailable-personality-or-demigod",
       "entry": "Sexy personality / Aphrodite demigod unavailable",
       "change": "bikini adds +3 to all six attributes",
       "consumer": "base properties and equipped attributes",
@@ -498,7 +502,8 @@
       "change": "halve category weight when equip_has_slot_type is false; ANY excludes bow for this helper",
       "consumer": "loot/allocation.rs; mod.rs item_can_occupy_slot_type",
       "tests": "game::loot::allocation::tests::category_weights_use_great_precedence_and_body_slots_not_equipped_items",
-      "prerequisite": "Vortex real evolving body/innate consumers remain unavailable"
+      "prerequisite": "Vortex real evolving body/innate consumers remain unavailable",
+      "unavailableRaceIds": ["rfb-legacy.race.mon-vortex"]
     },
     {
       "id": "needs-book",
@@ -546,7 +551,8 @@
       "change": "replace generated artifact via disciple hook",
       "consumer": "karrot_replace_art",
       "tests": null,
-      "prerequisite": "real Disciple and artifact replacement consumer"
+      "prerequisite": "real Disciple and artifact replacement consumer",
+      "unavailableClassIds": ["demo.class.disciple"]
     },
     {
       "id": "theme-reset",
@@ -582,7 +588,8 @@
       "change": "realm-dependent book awareness",
       "consumer": "object awareness/knowledge",
       "tests": null,
-      "prerequisite": "real classes and book knowledge consumer"
+      "prerequisite": "real classes and book knowledge consumer",
+      "unavailableClassIds": ["demo.class.sorcerer","demo.class.red-mage"]
     }
   ],
   "deferred": [
