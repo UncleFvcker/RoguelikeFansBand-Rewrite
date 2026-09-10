@@ -450,12 +450,11 @@ impl Game {
                 .content
                 .terrain(&self.terrain[index])
                 .expect("validated terrain");
-            (terrain.walkable || terrain.tags.iter().any(|tag| tag == "item-drop"))
+            terrain.allows_items()
                 && !terrain.tags.iter().any(|tag| {
                     matches!(
                         tag.as_str(),
-                        "no-item-drop"
-                            | "warding-glyph"
+                        "warding-glyph"
                             | "explosive-rune"
                             | "door"
                             | "stairs-up"
@@ -642,7 +641,14 @@ impl Game {
         };
         let mut item =
             draft.into_item_instance(String::new(), ItemLocation::Ground(self.player.position));
-        let position = self.created_item_drop_position(&item);
+        let Some(position) = self.created_item_drop_position(&item) else {
+            events.push(DomainEvent::ItemDestroyed {
+                target_kind_id: item.kind_id,
+                quantity: item.quantity,
+                rule_line: None,
+            });
+            return Ok(());
+        };
         item.location = ItemLocation::Ground(position);
         let maximum_stack = self
             .content
@@ -698,7 +704,7 @@ impl Game {
         Ok(())
     }
 
-    fn created_item_drop_position(&mut self, item: &ItemInstance) -> Position {
+    fn created_item_drop_position(&mut self, item: &ItemInstance) -> Option<Position> {
         let origin = self.player.position;
         let maximum_stack = self
             .content
@@ -717,7 +723,9 @@ impl Game {
                     x: origin.x + dx,
                     y: origin.y + dy,
                 };
-                if !self.is_walkable(position) || !has_line_of_effect(self, origin, position) {
+                if !self.terrain_allows_items(position)
+                    || !has_line_of_effect(self, origin, position)
+                {
                     continue;
                 }
                 let (pile_count, combines) = self
@@ -757,8 +765,7 @@ impl Game {
                 }
             }
         }
-        best.expect("the player's walkable grid must accept a created item")
-            .1
+        best.map(|(_, position)| position)
     }
 
     pub(super) fn resolve_player_create_ammunition_effect(

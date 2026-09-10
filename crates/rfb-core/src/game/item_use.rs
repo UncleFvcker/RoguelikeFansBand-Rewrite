@@ -2001,6 +2001,15 @@ impl Game {
             Some(u16::from(count)),
             ItemGenerationMode::TailoredGreat,
         )?;
+        let generated = generated
+            .into_iter()
+            .filter_map(|item| self.relocate_ground_item(item))
+            .collect::<Vec<_>>();
+        for item in &generated {
+            if let ItemLocation::Ground(position) = item.location {
+                changed.insert(position);
+            }
+        }
         let generated_item_ids = generated.iter().map(|item| item.id.clone()).collect();
         let generated_kind_ids = generated.iter().map(|item| item.kind_id.clone()).collect();
         self.items.extend(generated);

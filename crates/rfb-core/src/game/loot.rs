@@ -336,9 +336,10 @@ impl Game {
             let artifact_reward = reward_artifact_kind_id.is_some();
             // The current replacement is high-quality base equipment, but keeps
             // the original replacement artifact's protection against loss on water.
-            let reward_position = self
-                .ground_drop_position(actor.position, artifact_reward)
-                .unwrap_or(actor.position);
+            let Some(reward_position) = self.ground_drop_position(actor.position, artifact_reward)
+            else {
+                return Ok((generated, gold));
+            };
             let context = reward_table_id.map(|table_id| LootContext {
                 table_id,
                 floor_id: floor_id.clone(),

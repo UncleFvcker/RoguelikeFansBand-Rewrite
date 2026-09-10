@@ -1301,6 +1301,76 @@ impl Game {
         destination_ids
     }
 
+    pub(super) fn terrain_allows_items(&self, position: Position) -> bool {
+        self.index(position)
+            .and_then(|index| self.content.terrain(&self.terrain[index]))
+            .is_some_and(rfb_content::TerrainDefinition::allows_items)
+    }
+
+    pub(super) fn relocate_ground_item(&self, mut item: ItemInstance) -> Option<ItemInstance> {
+        let ItemLocation::Ground(origin) = item.location else {
+            unreachable!("ground drop must retain its origin");
+        };
+        item.location = ItemLocation::Ground(
+            self.ground_drop_position(origin, item.is_artifact(&self.content))?,
+        );
+        Some(item)
+    }
+
+    pub(super) fn corrode_player_armor(&mut self, events: &mut Vec<DomainEvent>) -> bool {
+        let mut candidates =
+            self.items
+                .iter()
+                .enumerate()
+                .filter(|(_, item)| {
+                    matches!(item.location, ItemLocation::Equipped { .. })
+                        && self.content.item(&item.kind_id).is_some_and(|definition| {
+                            definition.tags.iter().any(|tag| tag == "armor")
+                        })
+                })
+                .map(|(index, _)| index)
+                .collect::<Vec<_>>();
+        candidates.sort_by(|left, right| self.items[*left].id.cmp(&self.items[*right].id));
+        if candidates.is_empty() {
+            return false;
+        }
+        let index = candidates[self.rng.bounded(candidates.len() as u64) as usize];
+        let item = &self.items[index];
+        let armor = self.item_base_modifiers(&item.kind_id).defense
+            + i32::from(item.enchantments.to_armor)
+            + item.intrinsic_properties.modifiers.defense
+            + item
+                .affix_ids
+                .iter()
+                .map(|id| {
+                    self.content
+                        .affix(id)
+                        .expect("validated affix")
+                        .modifiers
+                        .defense
+                })
+                .sum::<i32>()
+            + item
+                .rolled_affixes
+                .iter()
+                .map(|rolled| rolled.properties.modifiers.defense)
+                .sum::<i32>();
+        if armor <= 0 {
+            return false;
+        }
+        let protected =
+            self.item_has_elemental_destruction_immunity(item, ItemDestructionElement::Acid);
+        let target_kind_id = item.kind_id.clone();
+        if !protected {
+            self.items[index].enchantments.to_armor -= 1;
+        }
+        events.push(DomainEvent::ArmorCorroded {
+            target_kind_id,
+            protected,
+        });
+        true
+    }
+
     // Keep ordinary drops in place. Non-floor impact grids (such as pits) need
     // a nearby floor, within the original drop_near search radius.
     pub(super) fn ground_drop_position(
@@ -1308,7 +1378,7 @@ impl Game {
         origin: Position,
         artifact: bool,
     ) -> Option<Position> {
-        if self.is_walkable(origin) {
+        if self.terrain_allows_items(origin) {
             return Some(origin);
         }
         let nearby = (-3..=3)
@@ -1319,7 +1389,7 @@ impl Game {
                 y: origin.y + dy,
             })
             .filter(|position| {
-                self.is_walkable(*position)
+                self.terrain_allows_items(*position)
                     && super::projectile_geometry::has_line_of_effect(self, origin, *position)
             })
             .min_by_key(|position| {
@@ -1334,7 +1404,7 @@ impl Game {
         // Choose the nearest legal grid deterministically instead of random bouncing.
         (0..i32::from(self.height))
             .flat_map(|y| (0..i32::from(self.width)).map(move |x| Position { x, y }))
-            .filter(|position| self.is_walkable(*position))
+            .filter(|position| self.terrain_allows_items(*position))
             .min_by_key(|position| {
                 let dx = i64::from(position.x) - i64::from(origin.x);
                 let dy = i64::from(position.y) - i64::from(origin.y);

@@ -591,7 +591,10 @@ pub(super) fn validate_tables(
             if !section_ids.insert(spawn.id.clone())
                 || spawn.position.x >= vault.width
                 || spawn.position.y >= vault.height
-                || terrain_walkability.get(terrain_id) != Some(&true)
+                || !terrain
+                    .iter()
+                    .find(|tile| tile.id == *terrain_id)
+                    .is_some_and(TerrainDefinition::allows_items)
                 || !occupied_positions.insert(spawn.position)
             {
                 return Err(ContentError::InvalidVault(vault.id.clone()));

@@ -11862,6 +11862,31 @@ fn inline_floor_items_reject_duplicate_or_blocked_placements() {
         validate_and_normalize(&mut blocked_position),
         Err(ContentError::InvalidProceduralFloor(_))
     ));
+
+    for (terrain_id, allowed) in [
+        ("demo.terrain.shallow-waste", true),
+        ("demo.terrain.deep-waste", false),
+    ] {
+        let mut waste = artifact.content.clone();
+        let map = trouble_inline(&mut waste);
+        let position = map.item_spawns[0].position;
+        for tile in &mut map.terrain_overrides {
+            tile.positions.retain(|at| *at != position);
+        }
+        map.terrain_overrides
+            .retain(|tile| !tile.positions.is_empty());
+        map.terrain_overrides.push(InlineTerrainOverrideDefinition {
+            terrain_id: terrain_id.to_owned(),
+            positions: vec![position],
+            chance_percent: 100,
+            otherwise_terrain_id: None,
+        });
+        assert_eq!(
+            validate_and_normalize(&mut waste).is_ok(),
+            allowed,
+            "walkability alone must not authorize an item spawn on {terrain_id}"
+        );
+    }
 }
 
 #[test]

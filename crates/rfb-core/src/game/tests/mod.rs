@@ -59,6 +59,7 @@ mod trait_details;
 mod vampire;
 mod virtue_state;
 mod wall_passage;
+mod waste;
 mod weapon_ego_activations;
 mod weapon_proficiency;
 mod weapon_traits;

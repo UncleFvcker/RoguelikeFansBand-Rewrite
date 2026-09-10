@@ -9,6 +9,36 @@ use rfb_content::{
 };
 
 const ORIGINAL_NASTY_MON_ONE_IN: u64 = 40;
+
+pub(super) fn actor_matches_allocation_terrain(
+    actor: &ActorDefinition,
+    terrain: &rfb_content::TerrainDefinition,
+) -> bool {
+    if !terrain.tags.iter().any(|tag| tag == "acid") {
+        return actor_can_cross_terrain(actor, terrain);
+    }
+    let flies = actor.movement.modes.contains(&ActorMovementMode::Fly);
+    // monster1.c's nukage hook admits poison-immune candidates. The subsequent
+    // place_monster_one check may still reject them; do not reroll that failure.
+    (!terrain.tags.iter().any(|tag| tag == "deep")
+        || flies
+        || actor.movement.modes.contains(&ActorMovementMode::Swim))
+        && (flies
+            || actor.resistances.get(&ActorDamageType::Poison)
+                == Some(&ActorResistanceLevel::Immune)
+            || [ActorDamageType::Acid, ActorDamageType::Poison]
+                .iter()
+                .all(|damage| {
+                    matches!(
+                        actor.resistances.get(damage),
+                        Some(
+                            ActorResistanceLevel::Resistant
+                                | ActorResistanceLevel::Strong
+                                | ActorResistanceLevel::Immune
+                        )
+                    )
+                }))
+}
 const ORIGINAL_GROUP_MAX: u16 = 32;
 const ORIGINAL_ESCORT_ATTEMPTS: u16 = 32;
 const ORIGINAL_MAX_REPRODUCERS: usize = 100;
@@ -1547,7 +1577,7 @@ impl Game {
                     return false;
                 }
                 if required_terrain
-                    .is_some_and(|terrain| !actor_can_cross_terrain(definition, terrain))
+                    .is_some_and(|terrain| !actor_matches_allocation_terrain(definition, terrain))
                 {
                     return false;
                 }
@@ -1607,7 +1637,13 @@ impl Game {
         let mut roll = self.rng.bounded(total);
         for candidate in candidates {
             if roll < u64::from(candidate.weight) {
-                return Some(candidate.kind_id);
+                let actor = self
+                    .content
+                    .actor(&candidate.kind_id)
+                    .expect("allocated actor must exist");
+                return required_terrain
+                    .is_none_or(|terrain| actor_can_cross_terrain(actor, terrain))
+                    .then_some(candidate.kind_id);
             }
             roll -= u64::from(candidate.weight);
         }

@@ -726,8 +726,14 @@ impl Game {
             Some(count),
             quality.into(),
         )?;
-        self.items.extend(generated);
-        changed.insert(self.player.position);
+        for item in generated {
+            if let Some(item) = self.relocate_ground_item(item) {
+                if let ItemLocation::Ground(position) = item.location {
+                    changed.insert(position);
+                }
+                self.items.push(item);
+            }
+        }
         Ok(())
     }
 
@@ -772,7 +778,7 @@ impl Game {
             std::slice::from_ref(&affix_id),
             1,
         );
-        self.items.push(ItemInstance {
+        let item = ItemInstance {
             previously_worn: false,
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
@@ -808,8 +814,13 @@ impl Game {
             device_recovery_progress: 0,
             captured_actor: None,
             location: ItemLocation::Ground(self.player.position),
-        });
-        changed.insert(self.player.position);
+        };
+        if let Some(item) = self.relocate_ground_item(item) {
+            if let ItemLocation::Ground(position) = item.location {
+                changed.insert(position);
+            }
+            self.items.push(item);
+        }
         Ok(())
     }
 }

@@ -61,6 +61,14 @@ pub struct TerrainDefinition {
     pub tags: Vec<String>,
 }
 
+impl TerrainDefinition {
+    /// Ground items require DROP, independently of whether a traveler can walk here.
+    pub fn allows_items(&self) -> bool {
+        (self.walkable || self.tags.iter().any(|tag| tag == "item-drop"))
+            && !self.tags.iter().any(|tag| tag == "no-item-drop")
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

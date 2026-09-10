@@ -225,7 +225,7 @@ use terrain::{DoorBashOutcome, DoorOpenOutcome, TerrainDigOutcome, TrapDisarmOut
 use world::generation::GeneratedRoom;
 #[cfg(test)]
 use world::geometry::generated_terrain_is_connected;
-use world::geometry::{floor_actor_position_is_enterable, floor_position_is_walkable};
+use world::geometry::{floor_actor_position_is_enterable, floor_position_allows_items};
 
 pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;

@@ -30,6 +30,23 @@ fn actor_can_cross_terrain(actor: &ActorDefinition, terrain: &TerrainDefinition)
             || (flies
                 && (terrain.walkable || terrain.movement_modes.contains(&ActorMovementMode::Fly)));
     }
+    if terrain.tags.iter().any(|tag| tag == "acid") {
+        return flies
+            || ([ActorDamageType::Acid, ActorDamageType::Poison]
+                .iter()
+                .all(|damage| {
+                    matches!(
+                        actor.resistances.get(damage),
+                        Some(
+                            ActorResistanceLevel::Resistant
+                                | ActorResistanceLevel::Strong
+                                | ActorResistanceLevel::Immune
+                        )
+                    )
+                })
+                && (!terrain.tags.iter().any(|tag| tag == "deep")
+                    || actor.movement.modes.contains(&ActorMovementMode::Swim)));
+    }
     terrain.walkable
         || actor
             .movement
@@ -571,6 +588,10 @@ pub(super) fn validate_world(
         town_facilities,
         shops,
     } = refs;
+    let terrain_item_drop = terrain
+        .iter()
+        .map(|tile| (tile.id.clone(), tile.allows_items()))
+        .collect::<BTreeMap<_, _>>();
     if world.width < 3 || world.height < 3 || world.width > 512 || world.height > 512 {
         return Err(ContentError::InvalidWorldDimensions(world.id.clone()));
     }
@@ -1466,7 +1487,8 @@ pub(super) fn validate_world(
                                 .get(deep_terrain_id)
                                 .is_some_and(|tags| tags.contains("rubble"));
                         if deep_terrain_id == shallow_terrain_id
-                            || terrain_walkability.get(deep_terrain_id) != Some(&false)
+                            || (terrain_walkability.get(deep_terrain_id) != Some(&false)
+                                && terrain_item_drop.get(deep_terrain_id) != Some(&false))
                             || terrain_walkability.get(shallow_terrain_id) != Some(&true)
                             || (!rubble_floor_boundary
                                 && [deep_terrain_id, shallow_terrain_id]
@@ -2113,7 +2135,7 @@ pub(super) fn validate_world(
                     )?;
                     if !procedural_actor_ids.insert(spawn.instance_id.clone())
                         || !occupied.insert(spawn.position)
-                        || !terrain_walkability
+                        || !terrain_item_drop
                             .get(terrain_at(spawn.position))
                             .copied()
                             .unwrap_or(false)
@@ -2162,7 +2184,7 @@ pub(super) fn validate_world(
                 )?;
                 if !inline_loot_ids.insert(spawn.id.clone())
                     || !occupied.insert(spawn.position)
-                    || !terrain_walkability
+                    || !terrain_item_drop
                         .get(terrain_at(spawn.position))
                         .copied()
                         .unwrap_or(false)
@@ -3314,7 +3336,7 @@ pub(super) fn validate_world(
         }
     }
     for item in &world.items {
-        require_walkable_spawn(world, item.position, &override_terrain, terrain_walkability)?;
+        require_walkable_spawn(world, item.position, &override_terrain, &terrain_item_drop)?;
     }
     Ok(())
 }

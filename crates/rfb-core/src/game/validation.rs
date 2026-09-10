@@ -929,10 +929,7 @@ impl Game {
                         || !self.index(*position).is_some_and(|index| {
                             self.content
                                 .terrain(&self.terrain[index])
-                                .is_some_and(|terrain| {
-                                    terrain.walkable
-                                        || terrain.tags.iter().any(|tag| tag == "item-drop")
-                                })
+                                .is_some_and(rfb_content::TerrainDefinition::allows_items)
                         })
                         || item.quantity > definition.max_stack
                     {
@@ -1066,7 +1063,7 @@ impl Game {
             if !instance_ids.insert(pile.id.clone())
                 || generated_gold_serial(&pile.id).is_none()
                 || pile.amount == 0
-                || !self.is_walkable(pile.position)
+                || !self.terrain_allows_items(pile.position)
             {
                 return Err(CoreError::InvalidSave("gold pile state is invalid"));
             }
@@ -1179,21 +1176,7 @@ impl Game {
                     && item_creation_state_is_valid(item, definition);
                 let location_is_valid = match &item.location {
                     ItemLocation::Ground(position) => {
-                        floor_position_is_walkable(floor, *position, &self.content)
-                            || (position.x >= 0
-                                && position.y >= 0
-                                && position.x < i32::from(floor.width)
-                                && position.y < i32::from(floor.height)
-                                && self
-                                    .content
-                                    .terrain(
-                                        &floor.terrain[position.y as usize
-                                            * usize::from(floor.width)
-                                            + position.x as usize],
-                                    )
-                                    .is_some_and(|terrain| {
-                                        terrain.tags.iter().any(|tag| tag == "item-drop")
-                                    }))
+                        floor_position_allows_items(floor, *position, &self.content)
                     }
                     ItemLocation::CarriedBy { actor_id } => floor_monster_ids.contains(actor_id),
                     ItemLocation::Inventory
@@ -1214,7 +1197,7 @@ impl Game {
                 if !instance_ids.insert(pile.id.clone())
                     || generated_gold_serial(&pile.id).is_none()
                     || pile.amount == 0
-                    || !floor_position_is_walkable(floor, pile.position, &self.content)
+                    || !floor_position_allows_items(floor, pile.position, &self.content)
                 {
                     return Err(CoreError::InvalidSave(
                         "stored floor gold pile state is invalid",

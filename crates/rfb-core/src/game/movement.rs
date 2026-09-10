@@ -33,6 +33,24 @@ pub(super) fn actor_can_cross_terrain_with_wall_passage(
             || (flies
                 && (terrain.walkable || terrain.movement_modes.contains(&ActorMovementMode::Fly)));
     }
+    if terrain.tags.iter().any(|tag| tag == "acid") {
+        use rfb_content::{ActorDamageType, ActorResistanceLevel};
+        return flies
+            || ([ActorDamageType::Acid, ActorDamageType::Poison]
+                .iter()
+                .all(|damage| {
+                    matches!(
+                        actor.resistances.get(damage),
+                        Some(
+                            ActorResistanceLevel::Resistant
+                                | ActorResistanceLevel::Strong
+                                | ActorResistanceLevel::Immune
+                        )
+                    )
+                })
+                && (!terrain.tags.iter().any(|tag| tag == "deep")
+                    || actor.movement.modes.contains(&ActorMovementMode::Swim)));
+    }
     terrain.walkable
         || actor.movement.modes.iter().any(|mode| {
             *mode != ActorMovementMode::PassWall && terrain.movement_modes.contains(mode)

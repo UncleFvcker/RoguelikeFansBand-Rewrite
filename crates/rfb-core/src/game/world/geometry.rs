@@ -295,7 +295,7 @@ pub(in crate::game) fn generated_terrain_index(width: u16, position: Position) -
     position.y as usize * usize::from(width) + position.x as usize
 }
 
-pub(in crate::game) fn floor_position_is_walkable(
+pub(in crate::game) fn floor_position_allows_items(
     floor: &FloorState,
     position: Position,
     content: &ContentCatalog,
@@ -312,7 +312,7 @@ pub(in crate::game) fn floor_position_is_walkable(
         .terrain
         .get(index)
         .and_then(|terrain_id| content.terrain(terrain_id))
-        .is_some_and(|terrain| terrain.walkable)
+        .is_some_and(rfb_content::TerrainDefinition::allows_items)
 }
 
 pub(in crate::game) fn floor_actor_position_is_enterable(

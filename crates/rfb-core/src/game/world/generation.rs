@@ -490,7 +490,7 @@ fn generated_region_open_positions(
         .filter(|position| {
             content
                 .terrain(&terrain[generated_terrain_index(width, *position)])
-                .is_some_and(|definition| definition.walkable)
+                .is_some_and(|terrain| terrain.walkable && terrain.allows_items())
         })
         .collect()
 }
@@ -4262,7 +4262,7 @@ impl Game {
         rooms: &[GeneratedRoom],
         room_id: &str,
         occupied: &BTreeSet<Position>,
-        walkable_terrain: Option<(&[String], u16)>,
+        item_terrain: Option<(&[String], u16)>,
     ) -> Position {
         let room = rooms
             .iter()
@@ -4273,10 +4273,10 @@ impl Game {
             .filter(|position| {
                 room.contains(*position)
                     && !occupied.contains(position)
-                    && walkable_terrain.is_none_or(|(terrain, width)| {
+                    && item_terrain.is_none_or(|(terrain, width)| {
                         self.content
                             .terrain(&terrain[generated_terrain_index(width, *position)])
-                            .is_some_and(|terrain| terrain.walkable)
+                            .is_some_and(|terrain| terrain.walkable && terrain.allows_items())
                     })
             })
             .collect::<Vec<_>>();
@@ -4342,7 +4342,7 @@ impl Game {
                             && !occupied.contains(&position)
                             && content
                                 .terrain(&terrain[generated_terrain_index(width, position)])
-                                .is_some_and(|terrain| terrain.walkable))
+                                .is_some_and(|terrain| terrain.walkable && terrain.allows_items()))
                         .then_some((room.id.clone(), position))
                     })
                 })
@@ -4374,7 +4374,7 @@ impl Game {
                 (self
                     .content
                     .terrain(terrain_id)
-                    .is_some_and(|terrain| terrain.walkable)
+                    .is_some_and(|terrain| terrain.walkable && terrain.allows_items())
                     && !occupied.contains(&position))
                 .then_some(position)
             })
