@@ -19507,6 +19507,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -19623,6 +19624,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -19738,6 +19740,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -19860,6 +19863,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -19982,6 +19986,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -20104,6 +20109,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -20226,6 +20232,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -20348,6 +20355,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -20470,6 +20478,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -20592,6 +20601,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -20713,6 +20723,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,

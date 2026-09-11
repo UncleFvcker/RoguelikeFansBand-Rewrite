@@ -10,7 +10,7 @@
 | 协议 | 1.253 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 125 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 20 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.423.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.424.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v325，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 10 个 Class、73 个 Build、57 个 Race、36 本能力书、1,902 个 ability 文件、424 个 item、1,406 个 actor、169 个 affix、152 个 mutation。世界定义含 32 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、64 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
@@ -110,6 +110,8 @@ B2 已接入 17 类共享类别权重、身体槽位减半、Good 分配层级 +
 [I2 首组](remaining-item-coverage-plan.md#i2装置效果与普通消耗品)已将 rod 四条、staff 八条侦测/鉴定配置接入同一 canonical 底材的自然生成，保留源动态参数、模式/等级筛选、实例知识、费用及恢复。121 条源表行中，22 条有配置对应（含改编别名），13 条绑定 canonical 底材，其中本次 12 条使用源式生成参数；其余行不计作完成。核心与内容库回归、取消目标的界面测试/typecheck、内容 Schema/lock、Clippy 和八构筑适用性检查通过。26 条 active 契约经观察后刷新并通过：固定装置初始化改变了保存状态和 RNG，影响随机落点、伤害、潜力及生成 ID；采矿场景改用成功分支种子，保留金币/矿石/熟练度及存档断言。State Hash Schema 与保存/协议格式不变。没有本批桌面试玩；疯狂卷轴与液态洛格鲁斯仍未开放，具体依赖已记入计划。
 
 ## 城镇与共享存储
+
+[金字塔土丘 PM2](../design/pyramidal-mound-dungeon-plan-20260911.md) 已完成代表层生成、埃及神系生态与竖井边界专项，使用独立测试目录，尚未开放正式入口。64／78／92 各三个种子验证混合墙、矿脉、普通门、陷阱、战利品、全图连通和合法怪物落点，末层保留源 97 级阿蒙；65 向上回地表、91→92 普通楼梯及 92 无向下出口已有连接／转层检查。主次神系、普通与环境分配、实际随机召唤和固定家族召唤分别保留既有资格语义。该批修复洞穴房间忽略 `placeDoors` 的问题，并按源 NO_DOORS 显式补齐鹰巢 11 层配置；其余内容数量不变。110 项相关核心检查、内容绑定、26 条未刷新契约及 Clippy／格式／内容锁检查通过。测试准备与源地图适配见计划。
 
 [奥林匹斯计划 OL1–OL5](../design/mount-olympus-dungeon-plan-20260910.md) 已完成：新角色按原版默认从四个神系随机保留两个，激活结果进入保存与状态哈希；主／次神系标记用于普通、环境及随机召唤资格，未激活地牢的入口与守卫受到抑制。固定家族召唤保留独立的唯一额度规则，并修复其合法来源保存恢复。OL2 补齐洞窟／水河的源深度触发与水河永久墙保护；测试中的 96×33 代表层覆盖混合填充墙、无门、连通、普通战利品和神系生态。OL3 新增十二神祇专属神器及三种底材，接通 20%（Bad Luck 15%）独立掉落、装备／激活／冷却保存；沿用仙馔密酒身份并补齐食用数值。提前击杀守卫、域外唯一死亡、独立征服卷轴及实际使用均有核心证据。具体适配及验证范围见计划。OL4 已开放 (5,9) 入口和 80–90 共 11 层；未激活奥林匹斯神系的角色不获得入口资格。正式层链的守卫击杀、奖励拾取／使用、逐层返回、召回和保存继续均有核心测试；原先借用拉莱耶的专项已迁入正式内容。新增地牢记录使 26 条契约的状态哈希变化，核对仅哈希差异后刷新并复验通过。OL5 在 `ca8e843ba` 核对来源、内容与行为证据，正式内容锁重新校验通过；仅更新交付记录，复用前批仍有效的专项及契约结果。**当前证据使用明确的测试前置，不代表自然练级、桌面试玩或可玩构建。未完整移植的地图规则、未开放半神父母身份的 100% 神器掉落分支及未表达的克隆／曾为宠物分支见计划中的交付边界。**
 
