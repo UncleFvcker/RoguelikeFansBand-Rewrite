@@ -1,0 +1,92 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "sourceIndex": 147,
+    "baseItemKindId": "demo.item.levitation-stone",
+    "instant": true,
+    "rarityOneIn": 60
+  },
+  "baseValue": 60000,
+  "descriptionKey": "item-demo-laputa-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 60,
+        "id": "demo.item-activation.laputa",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-ball-mana-name",
+        "rfbValue": 15000,
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 1,
+        "effectProgramId": "demo.effect.laputa"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 2500
+    }
+  },
+  "equipmentBonuses": {
+    "lightRadius": 3
+  },
+  "equipmentSlot": "light",
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "glyph": "*",
+  "id": "demo.item.laputa",
+  "maxStack": 1,
+  "nameKey": "item-demo-laputa-name",
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INSTA_ART",
+      "INT",
+      "LEVITATION",
+      "SPEED"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "tags": [
+    "artifact",
+    "equipment",
+    "light-source"
+  ],
+  "weightTenthsPound": 10,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "intelligence": 2,
+    "charisma": 2,
+    "speed": 2
+  },
+  "passives": [
+    "levitation",
+    "hold-life"
+  ]
+}

@@ -939,6 +939,29 @@ impl Game {
     }
 
     fn armor_combat_enchantments(&self, item: &ItemInstance, ranged: bool) -> (i32, i32) {
+        // master:equip.c also grants the Stone of War's non-weapon hit/damage
+        // bonuses to archery. Melee already receives its equipment bonuses.
+        if let Some(kind) = self.content.item(&item.kind_id)
+            && kind
+                .artifact_generation
+                .as_ref()
+                .is_some_and(|artifact| artifact.source_index == 291)
+        {
+            return (
+                i32::from(item.enchantments.to_hit)
+                    + if ranged {
+                        kind.equipment_bonuses.melee_skill
+                    } else {
+                        0
+                    },
+                i32::from(item.enchantments.to_damage)
+                    + if ranged {
+                        kind.equipment_bonuses.melee_damage
+                    } else {
+                        0
+                    },
+            );
+        }
         // master:equip.c excludes Terror Mask from shooter bonuses, including
         // enchantments applied after generation. Its static bonuses are melee-only.
         if self

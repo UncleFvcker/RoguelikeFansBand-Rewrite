@@ -613,6 +613,317 @@ fn a1_instant_lights_generate_activate_and_resume_after_save() {
 }
 
 #[test]
+fn a7_instant_lights_activate_with_source_parameters_and_resume_after_save() {
+    fn use_light(game: &mut Game, id: &str, target: Option<&TargetSelection>) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.use_inventory_item(
+            id,
+            target,
+            None,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        events
+    }
+    let success_seed = (0..1000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+        .unwrap();
+    let failure_seed = (0..1000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(100) == 99)
+        .unwrap();
+
+    for (slug, base, cooldown, power) in [
+        ("laputa", "levitation-stone", 2500, 60),
+        ("stone-of-war", "stone-621", 1000, 8),
+    ] {
+        let mut game = Game::new_with_build(447, "demo.build.warrior").unwrap();
+        choose_human_talent_if_pending(&mut game);
+        descend_one_floor(&mut game);
+        clear_monsters(&mut game);
+        game.items.clear();
+        game.player.position = Position { x: 10, y: 10 };
+        for y in 7..=15 {
+            for x in 7..=18 {
+                replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+            }
+        }
+        let context = artifact_loot_context(60);
+        game.glow.fill(true);
+        let kind = format!("demo.item.{slug}");
+        let base = format!("demo.item.{base}");
+        assert!(
+            game.roll_fixed_artifact_kind_id(&context, Some(&base), false)
+                .is_none()
+        );
+        let selected = (0..5000).find_map(|seed| {
+            game.rng = RfbRng::seeded(seed);
+            game.roll_fixed_artifact_kind_id(&context, Some(&base), true)
+        });
+        assert_eq!(selected.as_ref(), Some(&kind));
+        let draft = game.fixed_item_draft(&context, selected.unwrap());
+        let light = game
+            .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        let id = light.id.clone();
+        assert!(light.fuel.is_none());
+        assert_eq!(light.activation.as_ref().unwrap().power, power);
+        assert_eq!(
+            light.activation.as_ref().unwrap().device_check_difficulty,
+            i32::from(power)
+        );
+        game.items.push(light);
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        assert!(
+            !game
+                .item_property_knowledge
+                .get(&id)
+                .is_some_and(|k| k.appraised)
+        );
+        game.reveal_current_visibility();
+        let restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.rng, game.rng);
+        game = restored;
+        give_inventory_item(&mut game, "test.a7-bow", "demo.item.short-bow");
+        game.equip_inventory_item("test.a7-bow", None).unwrap();
+        let before = game.player_derived_stats();
+        let before_modifiers = game.equipment_modifiers();
+        let before_shot = game.player_projectile_profile().unwrap();
+        game.equip_inventory_item(&id, None).unwrap();
+        assert_eq!(game.player_light_radius(), Some(3));
+        if slug == "laputa" {
+            let after = game.equipment_modifiers();
+            assert_eq!(after.intelligence - before_modifiers.intelligence, 2);
+            assert_eq!(after.charisma - before_modifiers.charisma, 2);
+            assert_eq!(after.speed - before_modifiers.speed, 2);
+            assert!(game.player_levitates());
+            assert_eq!(game.player_hold_life_sources(), 1);
+        } else {
+            let after = game.player_derived_stats();
+            assert_eq!(after.melee_skill.value - before.melee_skill.value, 6);
+            assert_eq!(
+                after.melee_damage_bonus.value - before.melee_damage_bonus.value,
+                6
+            );
+            let after_shot = game.player_projectile_profile().unwrap();
+            assert_eq!(after_shot.to_hit - before_shot.to_hit, 6);
+            assert_eq!(
+                after_shot.launcher_to_damage - before_shot.launcher_to_damage,
+                6
+            );
+            assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
+        }
+        let center = Position { x: 14, y: 10 };
+        let target = if slug == "laputa" {
+            TargetSelection::Position { position: center }
+        } else {
+            TargetSelection::SelfTarget
+        };
+        game.world_tick = 0;
+        game.reveal_current_visibility();
+        // Malformed target modes are rejected before any device check.
+        let invalid = if slug == "laputa" {
+            TargetSelection::SelfTarget
+        } else {
+            TargetSelection::Direction {
+                direction: Direction::East,
+            }
+        };
+        let hash = game.state_hash();
+        let rng = game.rng.clone();
+        use_light(&mut game, &id, Some(&invalid));
+        assert_eq!(game.state_hash(), hash);
+        assert_eq!(game.rng, rng);
+        let mut failed = game.clone();
+        failed.rng = RfbRng::seeded(failure_seed);
+        let events = use_light(&mut failed, &id, Some(&target));
+        assert!(events.iter().any(|event| matches!(
+            event,
+            DomainEvent::DeviceSkillChecked {
+                succeeded: false,
+                ..
+            }
+        )));
+        assert_eq!(failed.items[0].charges.unwrap().current, 1);
+        assert_eq!(failed.items[0].device_recovery_progress, 0);
+        assert!(
+            failed
+                .player
+                .statuses
+                .iter()
+                .all(|status| status.kind_id != STATUS_BERSERK)
+        );
+        if slug == "laputa" {
+            let mut cancelled = game.clone();
+            cancelled.rng = RfbRng::seeded(success_seed);
+            let rng = cancelled.rng.clone();
+            let update = dispatch_next(
+                &mut cancelled,
+                GameCommand::UseItem {
+                    item_id: id.clone(),
+                    target: None,
+                },
+            );
+            assert_eq!(cancelled.world_tick, 10);
+            assert_ne!(cancelled.rng, rng);
+            assert_eq!(cancelled.items[0].charges.unwrap().current, 1);
+            assert_eq!(cancelled.items[0].device_recovery_progress, 0);
+            assert!(update.events.iter().all(|event| !matches!(
+                event.outcome,
+                Some(GameEventOutcomeDto::AbilityAreaDamage { .. })
+            )));
+            for (actor_id, position) in [
+                ("test.a7-center", center),
+                ("test.a7-near", Position { x: 14, y: 11 }),
+                ("test.a7-edge", Position { x: 14, y: 12 }),
+                ("test.a7-outside", Position { x: 14, y: 13 }),
+                ("test.a7-blocked", Position { x: 16, y: 10 }),
+            ] {
+                game.push_generated_actor(
+                    actor_id.into(),
+                    "demo.actor.ancient-multi-hued-dragon",
+                    position,
+                );
+            }
+            replace_terrain(&mut game, Position { x: 15, y: 10 }, "demo.terrain.wall");
+            game.reveal_current_visibility();
+            // All three supported target selections reach the same real blast.
+            for selection in [
+                target.clone(),
+                TargetSelection::Direction {
+                    direction: Direction::East,
+                },
+                TargetSelection::Entity {
+                    entity_id: "test.a7-center".into(),
+                },
+            ] {
+                let mut shot = game.clone();
+                shot.rng = RfbRng::seeded(success_seed);
+                let events = use_light(&mut shot, &id, Some(&selection));
+                let blast = events
+                    .iter()
+                    .find_map(|event| match event {
+                        DomainEvent::AbilityAreaDamage { resolution, .. } => Some(resolution),
+                        _ => None,
+                    })
+                    .unwrap();
+                assert_eq!(
+                    (
+                        blast.center,
+                        blast.radius,
+                        blast.base_raw_damage,
+                        blast.damage_type
+                    ),
+                    (center, 2, 300, DamageTypeDto::Mana)
+                );
+                for (actor_id, damage) in [
+                    ("test.a7-center", 300),
+                    ("test.a7-near", 150),
+                    ("test.a7-edge", 100),
+                    ("test.a7-outside", 0),
+                    ("test.a7-blocked", 0),
+                ] {
+                    let hp = game
+                        .entities
+                        .iter()
+                        .find(|actor| actor.id == actor_id)
+                        .unwrap()
+                        .hp;
+                    assert_eq!(
+                        shot.entities
+                            .iter()
+                            .find(|actor| actor.id == actor_id)
+                            .unwrap()
+                            .hp,
+                        hp - damage
+                    );
+                }
+            }
+            clear_monsters(&mut game);
+        }
+        let max_hp = game.player_derived_stats().max_hp.value;
+        game.player.hp = (max_hp - 20).max(1);
+        let hp = game.player.hp;
+        game.rng = RfbRng::seeded(success_seed);
+        use_light(&mut game, &id, Some(&target));
+        assert_eq!(game.items[0].charges.unwrap().current, 0);
+        if slug == "stone-of-war" {
+            assert_eq!(
+                game.player.hp,
+                (hp + 30).min(game.player_derived_stats().max_hp.value)
+            );
+            let berserk = game
+                .player
+                .statuses
+                .iter()
+                .find(|status| status.kind_id == STATUS_BERSERK)
+                .unwrap();
+            assert!((260..=500).contains(&berserk.remaining_ticks));
+            assert!(game.player_status_immunities().contains(STATUS_FEAR));
+        }
+        let rng = game.rng.clone();
+        use_light(&mut game, &id, Some(&target));
+        assert_eq!(game.rng, rng);
+        let middle = cooldown / 2;
+        for tick in 1..=middle {
+            game.world_tick = tick;
+            game.process_equipped_light_fuel(&mut Vec::new());
+            game.process_inventory_device_recovery(&mut Vec::new());
+        }
+        game.reveal_current_visibility();
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.rng, game.rng);
+        assert_eq!(restored.player.statuses, game.player.statuses);
+        assert!(restored.items[0].fuel.is_none());
+        assert_eq!(
+            u32::from(restored.items[0].device_recovery_progress),
+            middle
+        );
+        assert!(restored.generated_artifact_ids.contains(&kind));
+        assert!(
+            restored
+                .roll_fixed_artifact_kind_id(&context, Some(&base), true)
+                .is_none()
+        );
+        for tick in middle + 1..cooldown {
+            restored.world_tick = tick;
+            restored.process_inventory_device_recovery(&mut Vec::new());
+        }
+        assert_eq!(restored.items[0].charges.unwrap().current, 0);
+        assert_eq!(
+            u32::from(restored.items[0].device_recovery_progress),
+            cooldown - 1
+        );
+        restored.world_tick = cooldown;
+        restored.process_inventory_device_recovery(&mut Vec::new());
+        assert_eq!(restored.items[0].charges.unwrap().current, 1);
+        assert_eq!(restored.items[0].device_recovery_progress, 0);
+        restored.reveal_current_visibility();
+        restored.rng = RfbRng::seeded(success_seed);
+        let mut continued = Game::from_save(restored.to_save()).unwrap();
+        assert_eq!(
+            use_light(&mut restored, &id, Some(&target)),
+            use_light(&mut continued, &id, Some(&target))
+        );
+        assert_eq!(restored.items[0].charges.unwrap().current, 0);
+        assert_eq!(continued.state_hash(), restored.state_hash());
+        assert_eq!(continued.rng, restored.rng);
+        assert_eq!(
+            continued
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+        );
+        assert_eq!(continued.rng, restored.rng);
+    }
+}
+
+#[test]
 fn a2_armor_generation_equipment_consumers_and_uniqueness_survive_save() {
     for (slug, base, defense) in [
         ("thengel", "metal-cap", 15),

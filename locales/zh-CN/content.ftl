@@ -9612,3 +9612,15 @@ item-demo-azaghal-description = 在尼南斯·阿农迪亚德（Nirnaeth）战�
 
 item-demo-aule-name = 奥力之巨锤
 item-demo-aule-description = 奥力的神奇锤子，他是古代睿智矮人领主的创造者。它带有没有任何巨蛇或恶魔能抵挡的毁灭魔法，并唤起山脉的力量来抵御元素的喧嚣。
+
+item-demo-levitation-stone-name = 悬浮石
+item-demo-levitation-stone-description = 悬浮石
+
+item-demo-stone-621-name = 石头
+item-demo-stone-621-description = 石头
+
+item-demo-laputa-name = 拉普达的悬浮石
+item-demo-laputa-description = 拉普达的悬浮石
+
+item-demo-stone-of-war-name = 战争之石
+item-demo-stone-of-war-description = 战争之石

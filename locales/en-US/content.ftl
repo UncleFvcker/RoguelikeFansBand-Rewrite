@@ -9608,3 +9608,15 @@ item-demo-azaghal-description = Main Gauche of Azaghal
 
 item-demo-aule-name = Great Hammer of Aule
 item-demo-aule-description = Great Hammer of Aule
+
+item-demo-levitation-stone-name = Levitation Stone
+item-demo-levitation-stone-description = Levitation Stone
+
+item-demo-stone-621-name = Stone
+item-demo-stone-621-description = Stone
+
+item-demo-laputa-name = Levitation Stone of Laputa
+item-demo-laputa-description = Levitation Stone of Laputa
+
+item-demo-stone-of-war-name = Stone of War
+item-demo-stone-of-war-description = Stone of War
