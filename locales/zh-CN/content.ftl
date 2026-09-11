@@ -9546,3 +9546,6 @@ terrain-demo-mount-olympus-entrance-description = 奥林匹斯山的入口
 
 item-demo-terror-mask-name = 『恐惧面具』铁盔
 item-demo-terror-mask-description = 散发威压的古老面具。
+
+item-demo-amun-name = 阿蒙的匕首
+item-demo-amun-description = 一把古老而平衡感极佳的钢制剑刃，金色的剑柄上有着美丽的装饰，曾由永生者阿蒙持有。尽管年代久远，这把匕首依然闪亮且锋利如剃刀。

@@ -9542,3 +9542,6 @@ terrain-demo-mount-olympus-entrance-description = The entrance to Mount Olympus.
 
 item-demo-terror-mask-name = The Iron Helm 'Terror Mask'
 item-demo-terror-mask-description = An ancient mask radiating terror.
+
+item-demo-amun-name = Dagger of Amun
+item-demo-amun-description = An ancient steel dagger once carried by Amun, with a golden hilt and a razor-sharp blade.

@@ -8,6 +8,16 @@ Materials adapted from RoguelikeFansBand, FrogComposband and Angband retain thei
 
 Third-party notices will be appended here as dependencies and assets are introduced.
 
+The Amun dagger definition and Chinese text in
+packs/rfb-demo-original/items/amun.json and locales/zh-CN/content.ftl adapt
+lib/edit/a_info.txt record 350, src/artifact_name_zh.inc and the dagger base
+name in src/kind_name_zh.inc at RoguelikeFansBand master commit
+a0d92b6378d148c5262cc236b8fa6ed2ca06a54c. Its activation parameters follow
+src/devices.c::EFFECT_TELEPATHY. Source mappings and the PM1 acceptance scope
+are recorded in design/pyramidal-mound-dungeon-plan-20260911.md. These materials
+retain their upstream terms and the notice in LICENSES/RFB-UPSTREAM-NOTICE.txt;
+the project's default content license does not replace them.
+
 The Mindcrafter class rules, Chinese names and descriptions, psychic effects,
 and associated artifact/quest adaptations were checked against RoguelikeFansBand
 master commit a0d92b6378d148c5262cc236b8fa6ed2ca06a54c. Sources and retained

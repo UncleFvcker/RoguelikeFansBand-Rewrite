@@ -1,0 +1,70 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.amun",
+  "nameKey": "item-demo-amun-name",
+  "descriptionKey": "item-demo-amun-description",
+  "glyph": "|",
+  "generationLevel": 60,
+  "weightTenthsPound": 12,
+  "maxStack": 1,
+  "baseValue": 100000,
+  "equipmentSlot": "weapon",
+  "tags": ["activatable", "artifact", "equipment", "rfb-compatibility", "weapon"],
+  "artifactGeneration": {
+    "sourceIndex": 350,
+    "baseItemKindId": "demo.item.dagger",
+    "instant": false,
+    "rarityOneIn": 120
+  },
+  "weaponProficiencyBaseItemId": "demo.item.dagger",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 5,
+    "toHit": 24,
+    "toDamage": 17
+  },
+  "modifiers": {"intelligence": 5, "speed": 5},
+  "equipmentBonuses": {"stealthSkill": 5, "searchSkill": 25, "perceptionSkill": 25},
+  "brands": ["fire", "poison"],
+  "slays": {"troll": "slay"},
+  "vorpal": true,
+  "passives": ["blessed", "see-invisible"],
+  "resistances": {
+    "fire": "immune",
+    "poison": "resistant",
+    "light": "resistant",
+    "electricity": "resistant",
+    "sound": "resistant"
+  },
+  "statusImmunities": ["rfb.status.paralysis"],
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "rfbValue": {
+    "flags": [
+      "BLESSED", "BRAND_FIRE", "BRAND_POIS", "FREE_ACT", "HIDE_TYPE",
+      "IGNORE_ACID", "IGNORE_COLD", "IGNORE_ELEC", "IGNORE_FIRE", "IM_FIRE",
+      "INT", "RES_ELEC", "RES_LITE", "RES_POIS", "RES_SOUND", "SEARCH",
+      "SEE_INVIS", "SHOW_MODS", "SLAY_TROLL", "SPEED", "STEALTH", "TOWN", "VORPAL"
+    ],
+    "pval": 5,
+    "toArmor": 0
+  },
+  "deviceGeneration": {
+    "activations": [{
+      "id": "demo.item-activation.amun",
+      "nameKey": "device-activation-e5-telepathy-name",
+      "target": {"modes": ["self"], "range": 0, "requiresLineOfEffect": false},
+      "charges": {"minimum": 1, "maximum": 1, "cost": 1},
+      "effectProgramId": "demo.effect.amun",
+      "deviceCheckDifficulty": 60,
+      "weight": 1,
+      "minDepth": 1,
+      "maxDepth": 100,
+      "rfbValue": 3500
+    }],
+    "recovery": {"intervalTicks": 1000, "energyPerMille": 1000}
+  }
+}

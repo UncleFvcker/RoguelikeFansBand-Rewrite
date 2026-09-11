@@ -3087,6 +3087,41 @@ impl Game {
         let mut noticed = false;
         match (effect, plan) {
             (
+                ItemUseEffectDefinition::ApplyStatus {
+                    status_kind_id,
+                    duration_dice,
+                    duration_sides,
+                    duration_bonus,
+                    stacking,
+                    resistance_type,
+                    granted_resistances,
+                    granted_modifiers,
+                    granted_equipment_bonuses,
+                    incoming_damage_percent,
+                },
+                ItemUsePlan::SelfTarget,
+            ) if profile_id.is_some() => {
+                // Device status durations use source turns. Boost the rolled
+                // duration before the shared item-status tick conversion.
+                let turns =
+                    self.roll_damage(duration_dice, duration_sides as u16) as u32 + duration_bonus;
+                let duration = device_power_value(u64::from(turns), device_power_bonus) as u32;
+                noticed = self.resolve_item_status(
+                    &kind_id,
+                    &status_kind_id,
+                    0,
+                    0,
+                    duration,
+                    stacking,
+                    resistance_type,
+                    &granted_resistances,
+                    &granted_modifiers,
+                    &granted_equipment_bonuses,
+                    incoming_damage_percent,
+                    events,
+                );
+            }
+            (
                 ItemUseEffectDefinition::ApplyBerserkStrength {
                     duration_dice,
                     duration_sides,
