@@ -9636,3 +9636,9 @@ item-demo-nimthanc-name = Dagger 'Nimthanc'
 item-demo-nimthanc-description = Dagger 'Nimthanc'
 item-demo-dethanc-name = Dagger 'Dethanc'
 item-demo-dethanc-description = Dagger 'Dethanc'
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: ordinary branches of a_info 145/322.
+item-demo-xiaolong-name = Nunchaku of Xiaolong
+item-demo-xiaolong-description = Nunchaku of Xiaolong
+item-demo-dragonlance-name = Heavy Lance 'Dragonlance'
+item-demo-dragonlance-description = Heavy Lance 'Dragonlance'

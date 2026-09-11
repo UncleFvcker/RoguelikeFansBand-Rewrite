@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1000000,
+  "descriptionKey": "item-demo-dragonlance-description",
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "glyph": "/",
+  "id": "demo.item.dragonlance",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 6,
+    "damageSides": 10,
+    "toHit": 2,
+    "toDamage": 17
+  },
+  "nameKey": "item-demo-dragonlance-name",
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "CHR",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "KILL_DRAGON",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_POIS",
+      "RIDING",
+      "STR"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "ridingWeaponKind": "lance",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "blessed-weapon"
+  ],
+  "weightTenthsPound": 500,
+  "artifactGeneration": {
+    "sourceIndex": 322,
+    "baseItemKindId": "demo.item.heavy-lance",
+    "instant": false,
+    "rarityOneIn": 40
+  },
+  "weaponProficiencyBaseItemId": "demo.item.heavy-lance",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "modifiers": {
+    "strength": 4,
+    "charisma": 4
+  },
+  "slays": {
+    "dragon": "kill"
+  },
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant",
+    "poison": "resistant"
+  }
+}

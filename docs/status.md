@@ -10,12 +10,12 @@
 | 协议 | 1.253 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 125 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 20 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 最后已验证 1.422.0；A1–A8 源增量待 A10 统一更新版本／lock | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json)、[本轮约定](artifact-import-plan.md) |
+| 内容包 | 最后已验证 1.422.0；A1–A9 源增量待 A10 统一更新版本／lock | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json)、[本轮约定](artifact-import-plan.md) |
 | 契约政策 | contract-v325，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 10 个 Class、73 个 Build、57 个 Race、36 本能力书、1,902 个 ability 文件、462 个 item、1,406 个 actor、169 个 affix、152 个 mutation。世界定义含 32 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、64 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。A1 两件光源与专用底材、A2 六件护具、A3 八件武器、A4 四件高等抗性装备、A5 五件抗性或能力武器、A6 奥力之巨锤、A7 两件光源与底材及 A8 七件激活装备已补定义，固定神器定义为 80/392；按用户要求，A1–A10 期间不编译，新增测试及运行性验证集中到 A10 结束后执行。
+正式源目录含 10 个 Class、73 个 Build、57 个 Race、36 本能力书、1,902 个 ability 文件、464 个 item、1,406 个 actor、169 个 affix、152 个 mutation。世界定义含 32 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、64 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。A1 两件光源与专用底材、A2 六件护具、A3 八件武器、A4 四件高等抗性装备、A5 五件抗性或能力武器、A6 奥力之巨锤、A7 两件光源与底材、A8 七件激活装备及 A9 两件身份神器的普通分支已补定义，固定神器定义为 82/392；按用户要求，A1–A10 期间不编译，新增测试及运行性验证集中到 A10 结束后执行。
 
-权威内容统计工具是 `rfb-contentc inspect-source`。上次集成已运行内容编译；A1–A8 增量只有静态统计，当前 lock 不包含新增源内容，不能作为本批编译或行为证据。
+权威内容统计工具是 `rfb-contentc inspect-source`。上次集成已运行内容编译；A1–A9 增量只有静态统计，当前 lock 不包含新增源内容，不能作为本批编译或行为证据。
 
 法师已完成[七步计划](mage-class-plan.md)：现有八领域的 56 个有序 Build、双书出生、256 项职业参数与首用经验、MP/负重/再生、感知、美德、种族交叉及 25 级吞噬魔法；共享学习支出、重复研习、主副熟练度、练习、遗忘恢复和失败规则已接入。真实背包/脚下书本可请求改换副领域，确认清理旧副领域而保留已付支出，取消后续选法术不回滚；当前领域、历史及待确认状态进入保存。学习、Mogaminator、书本分配和公会服务使用当前领域。已接装置偏好、卷轴 bias、三件旧城堡神器及重复替代、普通盗贼奖励和两塔资格。普通创角已开放“魔法 → 法师 → 第一领域 → 第二领域”；书本页显示当前领域、历史、遗忘和主副熟练度，支持重复研习及改换确认。56 个组合的五类正式生成记录和报告已同步，该批全部 65 个开放 Build 的审计检查通过；本次连同高阶法师工艺共 66 个开放 Build 已核对。其余四个源领域另列后续范围。详情与公共适配边界见[来源审计](mage-source-audit.md)。
 

@@ -9640,3 +9640,9 @@ item-demo-nimthanc-name = 匕首『尼姆桑克』
 item-demo-nimthanc-description = 一把冰霜匕首，具有完美的平衡性，适合进行致命的投掷。
 item-demo-dethanc-name = 匕首『德桑克』
 item-demo-dethanc-description = 一把被火花覆盖的匕首，具有完美的平衡性，适合进行致命的投掷。
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: ordinary branches of a_info 145/322.
+item-demo-xiaolong-name = 小龙的双截棍
+item-demo-xiaolong-description = 小龙的双截棍
+item-demo-dragonlance-name = 重型骑枪『龙枪』
+item-demo-dragonlance-description = 重型骑枪『龙枪』

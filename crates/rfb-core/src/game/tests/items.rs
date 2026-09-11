@@ -1410,6 +1410,255 @@ fn a8_thrown_daggers_use_their_own_brands_and_keep_random_properties_after_picku
 }
 
 #[test]
+fn a9_ordinary_identity_artifacts_generate_fight_and_preserve_their_scope_after_save() {
+    fn strike(game: &mut Game) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.resolve_player_melee(0, false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+            .unwrap();
+        events
+    }
+    for (slug, base, build, dice, sides, hit, damage, weight) in [
+        ("xiaolong", "nunchaku", "warrior", 4, 4, 20, 10, 30),
+        ("dragonlance", "heavy-lance", "cavalry", 6, 10, 2, 17, 500),
+    ] {
+        let mut game = Game::new_with_build(451, &format!("demo.build.{build}")).unwrap();
+        choose_human_talent_if_pending(&mut game);
+        descend_one_floor(&mut game);
+        clear_monsters(&mut game);
+        game.items.clear();
+        game.player.position = Position { x: 10, y: 10 };
+        let adjacent = Position { x: 11, y: 10 };
+        replace_terrain(&mut game, Position { x: 10, y: 10 }, "demo.terrain.floor");
+        replace_terrain(&mut game, adjacent, "demo.terrain.floor");
+        game.glow.fill(true);
+        let context = artifact_loot_context(60);
+        let kind = format!("demo.item.{slug}");
+        let base = format!("demo.item.{base}");
+        let selected = (0..5000)
+            .find_map(|seed| {
+                game.rng = RfbRng::seeded(seed);
+                game.roll_fixed_artifact_kind_id(&context, Some(&base), false)
+                    .filter(|id| id == &kind)
+            })
+            .expect("ordinary class must generate the artifact through its real rarity gate");
+        let draft = game.fixed_item_draft(&context, selected);
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+        assert!(item.activation.is_none() && item.charges.is_none() && item.curse.is_none());
+        assert_eq!(game.item_instance_weight(&item), weight);
+        let id = item.id.clone();
+        game.items.push(item);
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        assert!(
+            !game
+                .item_property_knowledge
+                .get(&id)
+                .is_some_and(|k| k.appraised)
+        );
+        game.reveal_current_visibility();
+        let restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.rng, game.rng);
+        game = restored;
+        game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        game.equip_inventory_item(&id, Some("right-hand")).unwrap();
+        let item_profile = game.item_melee_profile(&game.items[0]).unwrap();
+        assert_eq!(
+            (
+                item_profile.damage.dice,
+                item_profile.damage.sides,
+                item_profile.to_hit,
+                item_profile.to_damage
+            ),
+            (dice, sides, hit, damage)
+        );
+        assert_eq!(
+            game.content
+                .item(&kind)
+                .unwrap()
+                .weapon_proficiency_base_item_id
+                .as_deref(),
+            Some(base.as_str())
+        );
+        if slug == "xiaolong" {
+            // Monk-only BLOWS is added by source artifact.c at generation time;
+            // the ordinary warrior receives neither it nor extra-attack state.
+            assert!(!game.item_has_rfb_flag(&game.items[0], "BLOWS"));
+            let bonuses = game.player_equipment_bonuses();
+            assert_eq!(
+                (bonuses.melee_attacks, bonuses.melee_attacks_delta_percent),
+                (0, 0)
+            );
+            assert_eq!(bonuses.stealth_skill, 3);
+            let modifiers = game.equipment_modifiers();
+            assert_eq!((modifiers.speed, modifiers.defense), (3, 10));
+            for attribute in [
+                AttributeKind::Strength,
+                AttributeKind::Dexterity,
+                AttributeKind::Constitution,
+            ] {
+                assert!(game.player_sustains_attribute(attribute));
+            }
+            assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
+            assert_eq!(
+                game.effective_player_resistances().level(DamageType::Fire),
+                ResistanceLevel::Resistant
+            );
+            game.player.hp = 1;
+            game.world_tick = 0;
+            let update = dispatch_next(&mut game, GameCommand::Wait);
+            assert!(
+                update
+                    .events
+                    .iter()
+                    .any(|event| event.message_key == "equipment-regenerated")
+            );
+            assert!(game.player.hp > 1);
+        } else {
+            // Dragon-pact-only additions must not leak to an ordinary Cavalry.
+            for flag in ["SLAY_EVIL", "SLAY_DEMON", "SLAY_UNDEAD"] {
+                assert!(!game.item_has_rfb_flag(&game.items[0], flag));
+            }
+            let modifiers = game.equipment_modifiers();
+            assert_eq!((modifiers.strength, modifiers.charisma), (4, 4));
+            for element in [
+                DamageType::Acid,
+                DamageType::Electricity,
+                DamageType::Fire,
+                DamageType::Cold,
+                DamageType::Poison,
+            ] {
+                assert_eq!(
+                    game.effective_player_resistances().level(element),
+                    ResistanceLevel::Resistant
+                );
+            }
+            assert!(game.item_has_weapon_trait(&game.items[0], WeaponTraitDto::Blessed));
+            let mut cursed = game.clone();
+            let seed = (0..10_000)
+                .find(|seed| {
+                    RfbRng::seeded(*seed).bounded(888) + 1 > 100
+                        && RfbRng::seeded(*seed).bounded(100) >= 50
+                })
+                .unwrap();
+            cursed.rng = RfbRng::seeded(seed);
+            let mut expected = cursed.rng.clone();
+            expected.bounded(888);
+            assert!(
+                cursed
+                    .curse_equipped_item(CurseEquippedItemRequest::new(
+                        EquippedItemCurseTarget::Weapon
+                    ))
+                    .resisted
+            );
+            assert_eq!(cursed.rng, expected);
+            assert!(cursed.items[0].curse.is_none());
+        }
+        game.push_generated_actor(
+            "test.a9-target".into(),
+            "demo.actor.baby-blue-dragon",
+            adjacent,
+        );
+        game.entities[0].hp = 10_000;
+        game.entities[0].max_hp = 10_000;
+        let on_foot = game.player_melee_profile(&game.player_derived_stats());
+        assert_eq!((on_foot.damage_dice, on_foot.damage_sides), (dice, sides));
+        if slug == "dragonlance" {
+            game.push_generated_actor(
+                "test.a9-mount".into(),
+                "demo.actor.horse",
+                game.player.position,
+            );
+            game.entities[1].controller_id = Some(game.player.id.clone());
+            game.riding_actor_id = Some("test.a9-mount".into());
+            let mounted = game.player_melee_profile(&game.player_derived_stats());
+            assert_eq!(mounted.to_hit, on_foot.to_hit + 15);
+            assert_eq!((mounted.damage_dice, mounted.damage_sides), (8, 10));
+        }
+        let profile = game.player_melee_profile(&game.player_derived_stats());
+        assert_eq!(profile.source_item_id.as_deref(), Some(id.as_str()));
+        assert_eq!(
+            game.player_melee_damage_multiplier(
+                &profile,
+                &game.entities[0],
+                game.content.actor("demo.actor.baby-blue-dragon").unwrap()
+            ),
+            if slug == "xiaolong" { 28 } else { 56 }
+        );
+        // Non-dragon targets distinguish the ordinary branch from the missing
+        // pact slays; fire immunity isolates Xiaolong's brand from its slays.
+        let mut ordinary = game.clone();
+        clear_monsters(&mut ordinary);
+        ordinary.riding_actor_id = None;
+        ordinary.push_generated_actor("test.a9-ordinary".into(), "demo.actor.goblin", adjacent);
+        ordinary.entities[0].hp = 10_000;
+        ordinary.entities[0].max_hp = 10_000;
+        let ordinary_profile = ordinary.player_melee_profile(&ordinary.player_derived_stats());
+        assert_eq!(
+            ordinary.player_melee_damage_multiplier(
+                &ordinary_profile,
+                &ordinary.entities[0],
+                ordinary.content.actor("demo.actor.goblin").unwrap()
+            ),
+            if slug == "xiaolong" { 24 } else { 10 }
+        );
+        if slug == "xiaolong" {
+            let seed = (0..1000)
+                .find(|seed| {
+                    let mut trial = ordinary.clone();
+                    trial.rng = RfbRng::seeded(*seed);
+                    strike(&mut trial);
+                    trial.entities[0].hp < 10_000
+                })
+                .unwrap();
+            let mut damages = Vec::new();
+            for resistance in [ResistanceLevel::Normal, ResistanceLevel::Immune] {
+                let mut trial = ordinary.clone();
+                trial.entities[0]
+                    .resistances
+                    .set(DamageType::Fire, resistance);
+                trial.rng = RfbRng::seeded(seed);
+                strike(&mut trial);
+                damages.push(10_000 - trial.entities[0].hp);
+            }
+            assert!(damages[0] > damages[1] && damages[1] > 0);
+        }
+        let seed = (0..1000)
+            .find(|seed| {
+                let mut trial = game.clone();
+                trial.rng = RfbRng::seeded(*seed);
+                strike(&mut trial);
+                trial.entities[0].hp < 10_000
+            })
+            .unwrap();
+        game.rng = RfbRng::seeded(seed);
+        game.reveal_current_visibility();
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.riding_actor_id, game.riding_actor_id);
+        assert_eq!(strike(&mut restored), strike(&mut game));
+        assert!(restored.entities[0].hp < 10_000);
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.rng, game.rng);
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            game.generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+        );
+        assert_eq!(restored.rng, game.rng);
+        assert!(restored.generated_artifact_ids.contains(&kind));
+        assert_ne!(
+            restored.roll_fixed_artifact_kind_id(&context, Some(&base), false),
+            Some(kind)
+        );
+    }
+}
+
+#[test]
 fn a2_armor_generation_equipment_consumers_and_uniqueness_survive_save() {
     for (slug, base, defense) in [
         ("thengel", "metal-cap", 15),

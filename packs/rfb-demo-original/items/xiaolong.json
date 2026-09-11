@@ -1,0 +1,89 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 100000,
+  "descriptionKey": "item-demo-xiaolong-description",
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 45,
+  "glyph": "\\",
+  "id": "demo.item.xiaolong",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 4,
+    "toHit": 20,
+    "toDamage": 10
+  },
+  "nameKey": "item-demo-xiaolong-name",
+  "rfbValue": {
+    "flags": [
+      "BRAND_FIRE",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "REGEN",
+      "RES_FIRE",
+      "SHOW_MODS",
+      "SLAY_ANIMAL",
+      "SLAY_DRAGON",
+      "SPEED",
+      "STEALTH",
+      "SUST_CON",
+      "SUST_DEX",
+      "SUST_STR"
+    ],
+    "pval": 3,
+    "toArmor": 10
+  },
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "weightTenthsPound": 30,
+  "artifactGeneration": {
+    "sourceIndex": 145,
+    "baseItemKindId": "demo.item.nunchaku",
+    "instant": false,
+    "rarityOneIn": 14
+  },
+  "weaponProficiencyBaseItemId": "demo.item.nunchaku",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "modifiers": {
+    "defense": 10,
+    "speed": 3
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 3
+  },
+  "passives": [
+    "sustain-strength",
+    "sustain-dexterity",
+    "sustain-constitution",
+    "regeneration"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "brands": [
+    "fire"
+  ],
+  "slays": {
+    "animal": "slay",
+    "dragon": "slay"
+  },
+  "resistances": {
+    "fire": "resistant"
+  }
+}
