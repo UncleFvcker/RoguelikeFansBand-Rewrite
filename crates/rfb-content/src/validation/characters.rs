@@ -504,7 +504,8 @@ pub(super) fn validate_characters(
                 .saturating_add(
                     u64::from(profile.learning_capacity_per_attribute_index).saturating_mul(100),
                 );
-            if profile.minimum_failure_percent > 95
+            if !(1..=50).contains(&profile.first_spell_level)
+                || profile.minimum_failure_percent > 95
                 || profile.beam_chance_level_divisor == 0
                 || profile.beam_chance_level_multiplier > 4
                 || !(-100..=100).contains(&profile.beam_chance_bonus)
@@ -559,7 +560,11 @@ pub(super) fn validate_characters(
                     || realm.ability_overrides.iter().any(|override_| {
                         !overrides.insert(override_.ability_id.clone())
                             || !(1..=100).contains(&override_.minimum_level)
-                            || !(1..=1_000_000).contains(&override_.resource_cost)
+                            || override_.resource_cost > 1_000_000
+                            || (override_.resource_cost == 0
+                                && !(override_.minimum_level == 99
+                                    && override_.base_failure_percent == 0
+                                    && override_.first_success_experience == Some(0)))
                             || override_.base_failure_percent > 95
                             || override_
                                 .first_success_experience
@@ -637,7 +642,6 @@ pub(super) fn validate_characters(
                                 ability.effect,
                                 crate::AbilityEffectDefinition::Concentrate
                                     | crate::AbilityEffectDefinition::SniperShot { .. }
-                                    | crate::AbilityEffectDefinition::ProbeMonsters
                             ) && class.sniping_profile.is_none())
                     })
                 || (activation.minimum_concentration != 0 && class.sniping_profile.is_none())
@@ -759,6 +763,8 @@ pub(super) fn validate_characters(
         if build.first_realm_id.as_deref().is_some_and(str::is_empty)
             || build.second_realm_id.as_deref().is_some_and(str::is_empty)
             || build.first_realm_id.is_some() && build.first_realm_id == build.second_realm_id
+            || (class.id == "demo.class.ranger"
+                && build.first_realm_id.as_deref() != Some("nature"))
         {
             return Err(ContentError::InvalidCharacterBuild(build.id.clone()));
         }

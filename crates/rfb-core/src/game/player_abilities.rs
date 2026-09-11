@@ -647,6 +647,9 @@ impl Game {
     }
 
     fn casting_resource_maximum(&self, profile: &CastingProfileDefinition) -> u32 {
+        if self.progress.level < profile.first_spell_level {
+            return 0;
+        }
         let attribute = Self::casting_attribute_kind(profile.casting_attribute);
         let attribute_index = self
             .effective_player_attributes()
@@ -663,9 +666,11 @@ impl Game {
                 ),
             ),
             CastingCapacityFormula::RfbMana => {
-                let mut value = u32::from(RFB_MAGIC_MANA[usize::from(attribute_index)])
-                    .saturating_mul(u32::from(self.progress.level).saturating_add(3))
-                    / 4;
+                let mut value =
+                    u32::from(RFB_MAGIC_MANA[usize::from(attribute_index)]).saturating_mul(
+                        u32::from(self.progress.level - profile.first_spell_level + 1)
+                            .saturating_add(3),
+                    ) / 4;
                 if value > 0 {
                     value = value.saturating_add(1);
                 }
@@ -1256,7 +1261,11 @@ impl Game {
                         .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP),
                 );
                 let capacity = u32::from(RFB_MAGIC_STUDY[index])
-                    .saturating_mul(u32::from(self.progress.level))
+                    .saturating_mul(u32::from(
+                        self.progress
+                            .level
+                            .saturating_sub(profile.first_spell_level - 1),
+                    ))
                     .saturating_div(2);
                 if profile.learning_formula == CastingLearningFormula::RfbSingleRealm {
                     capacity.saturating_add(1) / 2

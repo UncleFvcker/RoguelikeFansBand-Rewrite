@@ -72,7 +72,7 @@ pub(super) fn initial_virtues(
                 VirtueKindDto::Enchantment,
                 VirtueKindDto::Knowledge,
             ]),
-            "demo.class.archer" => {
+            "demo.class.archer" | "demo.class.ranger" => {
                 kinds.extend([VirtueKindDto::Nature, VirtueKindDto::Temperance]);
             }
             "demo.class.warrior" => {

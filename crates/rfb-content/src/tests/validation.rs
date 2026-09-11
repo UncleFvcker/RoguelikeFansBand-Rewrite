@@ -3,6 +3,72 @@ use std::collections::BTreeMap;
 use super::*;
 
 #[test]
+fn ranger_requires_nature_and_a_distinct_supported_second_realm() {
+    let original = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for (first, second) in [
+        (None, Some("death")),
+        (Some("nature"), None),
+        (Some("death"), Some("nature")),
+        (Some("nature"), Some("nature")),
+        (Some("nature"), Some("craft")),
+        (Some("nature"), Some("chaos")),
+    ] {
+        let mut invalid = original.clone();
+        let build = invalid
+            .builds
+            .iter_mut()
+            .find(|build| build.id == "demo.build.ranger-nature-death")
+            .unwrap();
+        build.first_realm_id = first.map(str::to_owned);
+        build.second_realm_id = second.map(str::to_owned);
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidCharacterBuild(_))
+        ));
+    }
+}
+
+#[test]
+fn casting_start_is_bounded_and_zero_cost_requires_unavailable_source_sentinel() {
+    let original = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for level in [0, 51] {
+        let mut invalid = original.clone();
+        invalid
+            .classes
+            .iter_mut()
+            .find(|class| class.id == "demo.class.ranger")
+            .unwrap()
+            .casting_profile
+            .as_mut()
+            .unwrap()
+            .first_spell_level = level;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidCastingProfile(_))
+        ));
+    }
+    let mut invalid = original;
+    let spell = &mut invalid
+        .classes
+        .iter_mut()
+        .find(|class| class.id == "demo.class.ranger")
+        .unwrap()
+        .casting_profile
+        .as_mut()
+        .unwrap()
+        .realm_profiles[0]
+        .ability_overrides[0];
+    spell.minimum_level = 3;
+    spell.resource_cost = 0;
+    spell.base_failure_percent = 0;
+    spell.first_success_experience = Some(0);
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidCastingProfile(_))
+    ));
+}
+
+#[test]
 fn mage_requires_two_distinct_supported_realms_and_bounded_spell_experience() {
     let original = compile_pack_dir(&original_pack_path()).unwrap().content;
     for (first, second) in [

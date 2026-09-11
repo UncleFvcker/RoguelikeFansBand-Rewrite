@@ -9542,3 +9542,16 @@ terrain-demo-mount-olympus-entrance-description = The entrance to Mount Olympus.
 
 item-demo-terror-mask-name = The Iron Helm 'Terror Mask'
 item-demo-terror-mask-description = An ancient mask radiating terror.
+
+class-demo-ranger-name = Ranger
+class-demo-ranger-description = Rangers combine archery and close combat with Nature magic and a secondary realm. Their spells use Wisdom and are learned randomly from books starting at level 3.
+actor-demo-ranger-player-name = Ranger
+actor-demo-ranger-player-description = A ranger carrying a bow, arrows and books from two realms.
+build-demo-ranger-nature-sorcery-name = Ranger: Nature / Sorcery
+build-demo-ranger-nature-sorcery-description = A ranger with Nature as the primary realm and Sorcery as the secondary realm.
+build-demo-ranger-nature-death-name = Ranger: Nature / Death
+build-demo-ranger-nature-death-description = A ranger with Nature as the primary realm and Death as the secondary realm.
+build-demo-ranger-nature-arcane-name = Ranger: Nature / Arcane
+build-demo-ranger-nature-arcane-description = A ranger with Nature as the primary realm and Arcane as the secondary realm.
+build-demo-ranger-nature-daemon-name = Ranger: Nature / Daemon
+build-demo-ranger-nature-daemon-description = A ranger with Nature as the primary realm and Daemon as the secondary realm.

@@ -30,6 +30,13 @@ limits are recorded in docs/mage-source-audit.md. These upstream materials
 retain their original terms as described above and in
 LICENSES/RFB-UPSTREAM-NOTICE.txt.
 
+The Ranger class rules, Chinese name and description, birth equipment,
+spell parameters, growth and item sensing were checked against
+RoguelikeFansBand master commit a0d92b6378d148c5262cc236b8fa6ed2ca06a54c.
+Source mappings and retained adaptation limits are recorded in
+docs/ranger-source-audit.md. These upstream materials retain their original
+terms as described above and in LICENSES/RFB-UPSTREAM-NOTICE.txt.
+
 The random artifact rules in crates/rfb-core/src/game/random_artifact/ and
 random_artifact.rs adapt src/artifact.c and src/ego.c at legacy commit
 a0d92b6378d148c5262cc236b8fa6ed2ca06a54c. The name tables embedded in

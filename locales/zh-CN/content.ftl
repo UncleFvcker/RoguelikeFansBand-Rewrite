@@ -9546,3 +9546,20 @@ terrain-demo-mount-olympus-entrance-description = 奥林匹斯山的入口
 
 item-demo-terror-mask-name = 『恐惧面具』铁盔
 item-demo-terror-mask-description = 散发威压的古老面具。
+
+class-demo-ranger-name = 游侠
+class-demo-ranger-description = 游侠是来自平原或树林经验丰富的流浪者，他们与自然世界息息相关。游侠几乎没有弱点；像魔法师一样，他们精通魔法装置，但在使用弓箭和近战武器方面也相当不错。他们在荒野中的时光磨练了他们的潜行、搜索和察觉能力，他们与自然精灵的联盟甚至赋予了他们良好的豁免判定。
+
+    所有的游侠都接受过自然魔法的训练，所有的自然法术他们都可以使用；他们学习这些法术的速度甚至几乎和魔法师一样快。他们还可以选择一个次系领域（咒术、混沌、死亡、王牌、奥秘和恶魔）；但在这些领域他们学习得很慢，并且可能会发现自己无法学习某些最高级别的法术。另一个缺点是，像牧师类职业一样，游侠缺乏选择自己法术的能力；他们会学习反复无常的自然之神选择教给他们的任何东西。
+
+    游侠拥有一项职业能力——“探查怪物”，这允许他们评估遇到的怪物的优点和弱点。游侠的魔法力量取决于感知(Wisdom)。
+actor-demo-ranger-player-name = 游侠
+actor-demo-ranger-player-description = 携带弓箭和两个领域法术书的游侠。
+build-demo-ranger-nature-sorcery-name = 游侠：自然／咒术
+build-demo-ranger-nature-sorcery-description = 自然为主领域、咒术为第二领域的游侠。
+build-demo-ranger-nature-death-name = 游侠：自然／死亡
+build-demo-ranger-nature-death-description = 自然为主领域、死亡为第二领域的游侠。
+build-demo-ranger-nature-arcane-name = 游侠：自然／奥秘
+build-demo-ranger-nature-arcane-description = 自然为主领域、奥秘为第二领域的游侠。
+build-demo-ranger-nature-daemon-name = 游侠：自然／恶魔
+build-demo-ranger-nature-daemon-description = 自然为主领域、恶魔为第二领域的游侠。

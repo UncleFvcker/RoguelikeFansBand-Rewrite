@@ -906,6 +906,19 @@ impl Game {
         for rolled in &item.rolled_affixes {
             passives.extend(&rolled.properties.passives);
         }
+        // object1.c::_object_gives_esdm: Ranger lacks CASTER_ALLOW_DEC_MANA.
+        // Namake Bow is an explicit fixed-artifact exception for DEC_MANA.
+        if self.player_is_ranger() {
+            passives.remove(&EquipmentPassive::EasySpell);
+            let namake_bow = self
+                .content
+                .item(&item.kind_id)
+                .and_then(|kind| kind.artifact_generation.as_ref())
+                .is_some_and(|artifact| artifact.source_index == 182);
+            if !namake_bow {
+                passives.remove(&EquipmentPassive::ReducedManaCost);
+            }
+        }
         passives
     }
 
@@ -1221,6 +1234,12 @@ impl Game {
         self.build
             .as_ref()
             .is_some_and(|build| build.class_id == "demo.class.mage")
+    }
+
+    pub(super) fn player_is_ranger(&self) -> bool {
+        self.build
+            .as_ref()
+            .is_some_and(|build| build.class_id == "demo.class.ranger")
     }
 
     pub(super) fn player_is_berserker(&self) -> bool {
@@ -2281,7 +2300,8 @@ impl Game {
         if (self.player_is_mindcrafter()
             || self.player_is_berserker()
             || self.player_is_duelist()
-            || self.player_is_mage())
+            || self.player_is_mage()
+            || self.player_is_ranger())
             && let Some(weapon) = self
                 .items
                 .iter()
@@ -2297,6 +2317,12 @@ impl Game {
                 (
                     "demo.class.duelist",
                     self.class_base_blows(weapon, 100, 70, 40),
+                    0,
+                )
+            } else if self.player_is_ranger() {
+                (
+                    "demo.class.ranger",
+                    self.class_base_blows(weapon, 500, 70, 40),
                     0,
                 )
             } else if self.player_is_mage() {

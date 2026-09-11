@@ -59,6 +59,7 @@ mod poison_needle;
 mod prayer_study;
 mod progression;
 mod race_attribute_sustains;
+mod ranger;
 mod riding;
 mod riding_bond;
 mod snapshots;

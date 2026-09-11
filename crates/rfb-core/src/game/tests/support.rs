@@ -19,6 +19,7 @@ pub(super) fn enable_test_caster(content: &mut rfb_content::CompiledContentV1) {
     class.casting_profile = Some(rfb_content::CastingProfileDefinition {
         resource_id: "demo.resource.mana".to_owned(),
         casting_attribute: rfb_content::CastingAttribute::Intelligence,
+        first_spell_level: 1,
         capacity_formula: rfb_content::CastingCapacityFormula::Linear,
         base_capacity: 4,
         capacity_per_level: 2,

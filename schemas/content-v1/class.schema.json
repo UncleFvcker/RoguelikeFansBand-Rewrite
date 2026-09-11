@@ -308,6 +308,14 @@
           "$ref": "#/$defs/CastingFailureFormula",
           "default": "linear"
         },
+        "firstSpellLevel": {
+          "default": 1,
+          "description": "First effective level for mana and book-learning growth (RFB spell_first).",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
         "learningCapacityCap": {
           "format": "uint16",
           "maximum": 65535,

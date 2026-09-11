@@ -238,7 +238,7 @@ impl Game {
     }
 
     pub(super) fn process_class_item_sensing(&mut self) {
-        if !(self.player_is_mindcrafter() || self.player_is_mage())
+        if !(self.player_is_mindcrafter() || self.player_is_mage() || self.player_is_ranger())
             || self.player_has_status_kind(STATUS_CONFUSION)
             || !self.world_tick.is_multiple_of(10)
         {
@@ -254,6 +254,8 @@ impl Game {
         // 1-in-3 gate until items carry an actual container identity.
         let frequencies = if self.player_is_mage() {
             [(false, 20_000_u32), (true, 9_000)]
+        } else if self.player_is_ranger() {
+            [(false, 80_000_u32), (true, 80_000)]
         } else {
             [(false, 80_000_u32), (true, 20_000)]
         };
@@ -304,7 +306,8 @@ impl Game {
                 if in_pack && self.rng.bounded(3) != 0 {
                     continue;
                 }
-                let strong = second
+                let strong = self.player_is_ranger()
+                    || second
                     || knowledge >= 100
                     || (self.player_has_mutation("rfb.mutation.good-luck")
                         && self.rng.bounded(13) == 0);

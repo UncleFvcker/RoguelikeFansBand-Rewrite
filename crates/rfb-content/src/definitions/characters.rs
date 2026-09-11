@@ -539,6 +539,9 @@ pub struct CastingEncumbranceDefinition {
 pub struct CastingProfileDefinition {
     pub resource_id: String,
     pub casting_attribute: CastingAttribute,
+    /// First effective level for mana and book-learning growth (RFB spell_first).
+    #[serde(default = "default_first_spell_level")]
+    pub first_spell_level: u16,
     #[serde(default)]
     pub capacity_formula: CastingCapacityFormula,
     pub base_capacity: u32,
@@ -577,6 +580,10 @@ pub struct CastingProfileDefinition {
 }
 
 const fn default_beam_chance_level_divisor() -> u8 {
+    1
+}
+
+const fn default_first_spell_level() -> u16 {
     1
 }
 
