@@ -558,6 +558,88 @@ fn terror_mask_generation_uses_current_build_and_preserves_identity_after_save()
             assert!(!restored.player_has_equipped_curse_effect(ItemCurseEffectDto::TyCurse));
             assert!(!restored.player_has_equipped_aggravation());
         }
+        if build == "mage-life-arcane" {
+            // Keep the generated, cursed mask; only level/book availability is controlled.
+            restored.apply_player_experience(
+                restored.experience_required_for_level(20),
+                &mut Vec::new(),
+            );
+            give_inventory_item(
+                &mut restored,
+                "test.arcane-book",
+                "demo.item.cantrips-for-beginners",
+            );
+            let spell = "demo.ability.arcane-detect-monsters";
+            restored
+                .study_player_ability("test.arcane-book", spell)
+                .unwrap();
+            let mana = "demo.resource.mana";
+            let masked_maximum = restored.resources[mana].maximum;
+            restored.resources.get_mut(mana).unwrap().current = masked_maximum;
+            let mut caster = Game::from_save(restored.to_save()).unwrap();
+            assert_eq!(caster.state_hash(), restored.state_hash());
+            let before = caster.state_hash();
+            let mut events = Vec::new();
+            caster
+                .resolve_player_ability(
+                    spell,
+                    TargetSelection::SelfTarget,
+                    &mut events,
+                    &mut BTreeSet::new(),
+                    &mut Vec::new(),
+                )
+                .unwrap();
+            assert!(matches!(events.as_slice(),
+                [DomainEvent::AbilityCastUnavailable { reason, .. }] if reason == "anti-magic"
+            ));
+            assert_eq!(
+                caster.state_hash(),
+                before,
+                "rejection spends no mana or RNG"
+            );
+            assert!(
+                caster
+                    .snapshot()
+                    .player
+                    .abilities
+                    .iter()
+                    .any(|ability| { ability.id == spell && !ability.can_cast })
+            );
+            caster.remove_equipped_curses(RemoveEquippedCursesRequest::new(true));
+            assert!(caster.player_has_anti_magic());
+            assert!(caster.player_has_equipped_aggravation());
+            assert!(caster.unequip_slot(&slot).is_some());
+            caster.refresh_player_resource_maxima();
+            assert!(!caster.player_has_anti_magic());
+            assert!(!caster.player_has_equipped_aggravation());
+            assert!(caster.resources[mana].maximum > masked_maximum);
+            assert_eq!(caster.resources[mana].current, masked_maximum);
+            assert!(
+                caster
+                    .snapshot()
+                    .player
+                    .abilities
+                    .iter()
+                    .any(|ability| { ability.id == spell && ability.can_cast })
+            );
+            caster.debug_ability_casts_succeed = true;
+            events.clear();
+            caster
+                .resolve_player_ability(
+                    spell,
+                    TargetSelection::SelfTarget,
+                    &mut events,
+                    &mut BTreeSet::new(),
+                    &mut Vec::new(),
+                )
+                .unwrap();
+            assert!(
+                events
+                    .iter()
+                    .any(|event| matches!(event, DomainEvent::AbilityDetected { .. }))
+            );
+            assert!(caster.resources[mana].current < masked_maximum);
+        }
     }
 }
 
