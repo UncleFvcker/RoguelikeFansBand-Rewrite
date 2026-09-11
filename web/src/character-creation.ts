@@ -20,7 +20,10 @@ export const DRACONIAN_RACES = (["red", "white", "blue", "black", "green", "bron
   (color) => ({ ...race(`draconian-${color}`), descriptionKey: "race-legacy-draconian-description" }),
 );
 const DRACONIAN = { id: "draconian", nameKey: "session-race-group-draconian", descriptionKey: "race-legacy-draconian-description", notes: [], children: DRACONIAN_RACES } as const;
-interface CreationBranch extends CreationLeaf { readonly children: readonly CreationLeaf[] }
+interface CreationBranch extends CreationLeaf {
+  readonly children: readonly CreationOption[];
+  readonly childLabelKey?: string;
+}
 type CreationOption = CreationLeaf | CreationBranch;
 interface CreationGroup { readonly id: string; readonly options: readonly CreationOption[] }
 
@@ -51,20 +54,49 @@ function deathCaster<const S extends string>(slug: S) {
   }] };
 }
 
+export const MAGE_REALMS = ["life", "sorcery", "nature", "death", "arcane", "daemon", "crusade", "armageddon"] as const;
+const MAGE = {
+  ...career("mage"), id: "mage", childLabelKey: "session-first-realm-label",
+  notes: ["session-mage-realms-help"],
+  children: MAGE_REALMS.map(first => ({
+    id: `mage-${first}` as const, nameKey: `realm-${first}-name`,
+    descriptionKey: "session-mage-first-realm-help", notes: [], childLabelKey: "session-second-realm-label",
+    children: MAGE_REALMS.filter(second => second !== first).map(second => ({
+      id: `demo.build.mage-${first}-${second}` as const, nameKey: `realm-${second}-name`,
+      descriptionKey: `build-demo-mage-${first}-${second}-description`, notes: ["session-mage-second-realm-help"],
+    })),
+  })),
+} as const;
+
 export const CAREER_GROUPS = [
   { id: "melee", options: [career("warrior"), career("berserker"), { ...career("duelist"), notes: ["duelist-auto-challenge-help", "session-duelist-tonberry-unavailable"] }] },
   { id: "archery", options: [career("archer"), career("sniper")] },
-  { id: "magic", options: [deathCaster("high-mage")] },
+  { id: "magic", options: [MAGE, deathCaster("high-mage")] },
   { id: "hybrid", options: [deathCaster("paladin")] },
   { id: "riding", options: [career("cavalry")] },
   { id: "mind", options: [career("mindcrafter")] },
 ] as const satisfies readonly CreationGroup[];
 type CareerEntry = (typeof CAREER_GROUPS)[number]["options"][number];
-export type PlaytestBuildId = Exclude<CareerEntry, { children: unknown }>["id"] | Extract<CareerEntry, { children: unknown }>["children"][number]["id"];
-export const CREATION_BUILDS = CAREER_GROUPS.flatMap(group => group.options.flatMap<CreationLeaf>(entry => "children" in entry ? entry.children : [entry]));
+type LeafId<T> = T extends { children: readonly (infer Child)[] } ? LeafId<Child> : T extends { id: infer Id extends string } ? Id : never;
+export type PlaytestBuildId = LeafId<CareerEntry>;
+export function creationLeaves(entries: readonly CreationOption[]): CreationLeaf[] {
+  return entries.flatMap(entry => "children" in entry ? creationLeaves(entry.children) : [entry]);
+}
+export const CREATION_BUILDS = creationLeaves(CAREER_GROUPS.flatMap<CreationOption>(group => group.options));
 export const PLAYTEST_BUILD_IDS = CREATION_BUILDS.map(build => build.id as PlaytestBuildId);
 
-// Both creation pages have categories, options and one optional child level.
+function creationPath(entries: readonly CreationOption[], id: string): CreationOption[] {
+  for (const entry of entries) {
+    if (entry.id === id) return [entry];
+    if ("children" in entry) {
+      const path = creationPath(entry.children, id);
+      if (path.length) return [entry, ...path];
+    }
+  }
+  return [];
+}
+
+// Race variants and class realms use the same nested choice menu.
 export class CreationMenu {
   readonly #root: HTMLElement;
   readonly #groups: HTMLElement;
@@ -83,7 +115,7 @@ export class CreationMenu {
   readonly #narrow: MediaQueryList;
   #selected: CreationLeaf;
   #group: CreationGroup;
-  #branch: CreationBranch | undefined;
+  #branches: CreationBranch[] = [];
   #pending = false;
   #viewed: CreationOption;
   #busy = false;
@@ -112,7 +144,11 @@ export class CreationMenu {
 
   get selectedId(): string { return this.#selected.id; }
   get pending(): boolean { return this.#pending; }
-  get selectedName(): string { return this.#name(this.#selected); }
+  get selectedName(): string {
+    return this.#pending
+      ? `${this.#name(this.#branches.at(-1)!)} · ${this.#localization.format("session-selection-pending")}`
+      : this.#name(this.#selected);
+  }
 
   install(): void {
     this.#narrow.addEventListener("change", this.#resize);
@@ -135,8 +171,8 @@ export class CreationMenu {
   // Entering or leaving the page cancels a draft branch, never the confirmed leaf.
   reset(): void {
     this.#showMenuView("options");
-    this.#group = this.#catalog.find(group => group.options.some(entry => entry.id === this.#selected.id || ("children" in entry && entry.children.some(leaf => leaf.id === this.#selected.id))))!;
-    this.#branch = this.#parent(this.#selected.id);
+    this.#group = this.#catalog.find(group => creationPath(group.options, this.#selected.id).length)!;
+    this.#branches = creationPath(this.#group.options, this.#selected.id).slice(0, -1) as CreationBranch[];
     this.#pending = false;
     this.#viewed = this.#selected;
     this.localize();
@@ -164,7 +200,7 @@ export class CreationMenu {
       } else button.setAttribute("aria-pressed", String(entry.id === this.#selected.id));
       return button;
     }));
-    this.#path.textContent = [this.#localization.format(`session-${this.#kind}-label`), this.#localization.format(`session-${this.#kind}-category-${this.#group.id}`), ...(this.#branch ? [this.#localization.format(this.#branch.nameKey)] : [])].join(" › ");
+    this.#path.textContent = [this.#localization.format(`session-${this.#kind}-label`), this.#localization.format(`session-${this.#kind}-category-${this.#group.id}`), ...this.#branches.flatMap(branch => [this.#localization.format(branch.nameKey), ...(branch.childLabelKey ? [this.#localization.format(branch.childLabelKey)] : [])])].join(" › ");
     this.#renderBackButton();
     this.#pendingNote.hidden = !this.#pending;
     this.#preview(this.#viewed);
@@ -180,17 +216,12 @@ export class CreationMenu {
     return button;
   }
 
-  get #entries(): readonly CreationOption[] { return this.#branch ? this.#branch.children : this.#group.options; }
+  get #entries(): readonly CreationOption[] { return this.#branches.at(-1)?.children ?? this.#group.options; }
   #optionButton(id: string): HTMLButtonElement | null { return this.#options.querySelector(`[data-${this.#kind}-id="${id}"]`); }
 
-  #parent(id: string): CreationBranch | undefined {
-    return this.#catalog.flatMap(group => group.options).find((entry): entry is CreationBranch => "children" in entry && entry.children.some(leaf => leaf.id === id));
-  }
-
-  #name(race: CreationOption): string {
-    const name = this.#localization.format(race.nameKey);
-    const parent = this.#parent(race.id);
-    return parent ? `${this.#localization.format(parent.nameKey)} · ${name}` : name;
+  #name(entry: CreationOption): string {
+    return creationPath(this.#catalog.flatMap(group => group.options), entry.id)
+      .map(option => this.#localization.format(option.nameKey)).join(" · ");
   }
 
   #preview(entry: CreationOption): void {
@@ -217,7 +248,7 @@ export class CreationMenu {
     if (group) {
       this.#showMenuView("options");
       this.#group = group;
-      this.#branch = undefined;
+      this.#branches = [];
       this.#pending = false;
       this.#viewed = group.options.find(entry => entry.id === this.#selected.id) ?? group.options[0]!;
       this.localize();
@@ -226,7 +257,7 @@ export class CreationMenu {
       const entry = this.#entries.find(entry => entry.id === button.dataset[this.#kind + "Id"]);
       if (!entry) return;
       if ("children" in entry) {
-        this.#branch = entry;
+        this.#branches.push(entry);
         this.#pending = true;
         this.#viewed = entry.children.find(leaf => leaf.id === this.#selected.id) ?? entry.children[0]!;
         this.localize();
@@ -243,15 +274,15 @@ export class CreationMenu {
   };
 
   back(): void {
+    if (this.#busy) return;
     if (this.#narrow.matches && this.#root.dataset.menuView === "details") {
       this.#showMenuView("options");
       this.#optionButton(this.#viewed.id)!.focus();
       return;
     }
-    if (!this.#branch) { this.#onBack(); return; }
-    const parent = this.#branch;
-    this.#branch = undefined;
-    this.#pending = false;
+    const parent = this.#branches.pop();
+    if (!parent) { this.#onBack(); return; }
+    this.#pending = this.#branches.length > 0;
     this.#viewed = parent;
     this.localize();
     this.#optionButton(parent.id)!.focus();
@@ -300,7 +331,7 @@ export class CreationMenu {
   }
 
   #renderBackButton(): void {
-    const childView = this.#branch || (this.#narrow.matches && this.#root.dataset.menuView === "details");
+    const childView = this.#branches.length > 0 || (this.#narrow.matches && this.#root.dataset.menuView === "details");
     this.#backButton.textContent = this.#localization.format(childView ? "session-menu-back" : "session-menu-back-overview");
   }
 

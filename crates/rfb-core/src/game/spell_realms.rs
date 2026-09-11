@@ -3,6 +3,56 @@ use super::*;
 use rfb_protocol::{RealmChangeBookDto, SpellRealmsDto};
 
 impl Game {
+    /// UI fixture: a quiet, lit map, level 20 (or an actual level drain), and a Life book.
+    #[doc(hidden)]
+    pub fn debug_prepare_mage_e2e(&mut self, drained: bool) -> Result<(), CoreError> {
+        self.entities.clear();
+        self.items
+            .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
+        self.glow.fill(true);
+        if drained {
+            self.apply_player_experience_drain(
+                self.progress.experience,
+                "e2e.mage-drain",
+                &mut Vec::new(),
+            );
+        } else {
+            let experience = self
+                .experience_required_for_level(20)
+                .saturating_sub(self.progress.experience);
+            self.apply_player_experience(experience, &mut Vec::new());
+        }
+        if !self
+            .items
+            .iter()
+            .any(|item| item.id == "e2e.mage-life-book")
+        {
+            let kind = self
+                .content
+                .item_definitions()
+                .find(|item| {
+                    item.ability_book_id
+                        .as_deref()
+                        .and_then(|id| self.content.ability_book(id))
+                        .is_some_and(|book| {
+                            book.realm_id.as_deref() == Some("life") && book.rank == Some(1)
+                        })
+                })
+                .expect("formal Life book")
+                .id
+                .clone();
+            self.debug_add_generated_inventory_item("e2e.mage-life-book", &kind, 1)?;
+        }
+        self.refresh_player_resource_maxima();
+        self.refresh_player_ability_state();
+        self.player.hp = self.effective_player_max_hp();
+        for pool in self.resources.values_mut() {
+            pool.current = pool.maximum;
+        }
+        self.reveal_current_visibility();
+        Ok(())
+    }
+
     pub(super) fn current_second_realm_id(&self) -> Option<&str> {
         if self.player_is_mage() {
             self.mage_realms

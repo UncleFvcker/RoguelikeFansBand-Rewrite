@@ -244,6 +244,7 @@ export class SessionShell {
       tab.tabIndex = selected ? 0 : -1;
       if (selected && focus) tab.focus();
     }
+    this.#renderCreationSummary();
     this.#updateControls();
   }
 

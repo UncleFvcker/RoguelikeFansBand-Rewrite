@@ -79,6 +79,7 @@ export interface AppDom {
   readonly mutationList: HTMLUListElement;
   readonly resourceList: HTMLUListElement;
   readonly abilityList: HTMLUListElement;
+  readonly abilityActionsLock: HTMLFieldSetElement;
   readonly resourceRest: HTMLButtonElement;
   readonly nearbyCurrent: HTMLElement;
   readonly nearbyList: HTMLUListElement;
@@ -222,6 +223,7 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     mutationList: element<HTMLUListElement>(document, "mutation-list"),
     resourceList: element<HTMLUListElement>(document, "resource-list"),
     abilityList: element<HTMLUListElement>(document, "ability-list"),
+    abilityActionsLock: element<HTMLFieldSetElement>(document, "ability-actions-lock"),
     resourceRest: element<HTMLButtonElement>(document, "resource-rest"),
     nearbyCurrent: element<HTMLElement>(document, "nearby-current"),
     nearbyList: element<HTMLUListElement>(document, "nearby-list"),

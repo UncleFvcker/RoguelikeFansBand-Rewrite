@@ -28,6 +28,7 @@ import type { NewSessionRequest } from "./core-transport";
 import { InputController } from "./input-controller";
 import { GameSession } from "./game-session";
 import { DuelistPanel } from "./duelist-panel";
+import { SpellRealmsPanel } from "./spell-realms-panel";
 import {
   SettingsPanel,
   inputPresetMessageKey,
@@ -211,17 +212,21 @@ const gameSession = new GameSession({
     for (const event of update.events) addGameEvent(event);
     journeyResult.renderUpdate(update);
   },
-  refreshBusyControls: () => {
-    inventoryPanel.updateActions();
-    shopPanel.updateActions();
-    homePanel.updateActions();
-    taskServicePanel.updateActions();
-    inputController.render();
-    duelistPanel.render();
-  },
+  refreshBusyControls,
   showError,
 });
 dispatch = (command: GameCommand) => gameSession.dispatch(command);
+
+function refreshBusyControls(): void {
+  inventoryPanel.updateActions();
+  shopPanel.updateActions();
+  homePanel.updateActions();
+  taskServicePanel.updateActions();
+  inputController.render();
+  duelistPanel.render();
+  spellRealmsPanel.render();
+  statusPanel.updateAbilityActions();
+}
 
 function promptMogaminatorQuery(mogaminator: MogaminatorDto): void {
   const pending = mogaminator.pendingQuery;
@@ -295,6 +300,10 @@ const duelistPanel = new DuelistPanel({
   },
   beforePrompt: () => playerUiLayout.closePage(),
 });
+const spellRealmsPanel = new SpellRealmsPanel({
+  document, state: appState, localization, dispatch,
+  afterPrompt: () => playerUiLayout.open("ability"),
+});
 const statusPanel = new StatusPanel({
   dom: appDom,
   state: appState,
@@ -311,6 +320,7 @@ const statusPanel = new StatusPanel({
   reconcileTargeting: (state) => {
     inputController.reconcileStatus(state);
     duelistPanel.render();
+    spellRealmsPanel.render();
   },
   renderTargeting: () => inputController.render(),
   refreshInventoryActions: () => inventoryPanel.updateActions(),
@@ -339,10 +349,10 @@ const homePanel = new HomePanel({
   refreshMuseum: async () => {
     if (appState.busy) return;
     appState.busy = true;
-    homePanel.updateActions();
+    refreshBusyControls();
     try { applyLoadedSnapshot(await core.refreshMuseum()); }
     catch (error) { showError(error); }
-    finally { appState.busy = false; homePanel.updateActions(); }
+    finally { appState.busy = false; refreshBusyControls(); }
   },
   beforeOpen: () => {
     playerUiLayout.closePage();
@@ -373,7 +383,7 @@ const nativeSavePanel = new NativeSavePanel({
   isGameBusy: () => appState.busy,
   setGameBusy: (value) => {
     appState.busy = value;
-    inventoryPanel.updateActions();
+    refreshBusyControls();
   },
   applySnapshot: applyLoadedSnapshot,
   announce: addLocalizedMessage,
@@ -585,12 +595,17 @@ async function exportReplay(): Promise<void> {
 async function importSave(): Promise<void> {
   const file = loadInput.files?.[0];
   loadInput.value = "";
-  if (!file) return;
+  if (!file || appState.busy) return;
+  appState.busy = true;
+  refreshBusyControls();
   try {
     const result = await core.load(new Uint8Array(await file.arrayBuffer()));
+    appState.busy = false;
     applyLoadedSnapshot(result.snapshot);
     addLocalizedMessage(result.museumRecovered ? "message-museum-character-recovered" : "message-save-loaded", undefined, "system");
   } catch (error) {
+    appState.busy = false;
+    refreshBusyControls();
     showError(error);
   }
 }

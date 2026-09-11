@@ -397,7 +397,16 @@
             <div class="panel-heading">
               <span id="ability-title" data-l10n-id="panel-ability-title"></span>
             </div>
-            <ul id="ability-list" class="ability-list" aria-live="polite"></ul>
+            <div id="spell-realms" hidden>
+              <p id="spell-realms-value" tabindex="-1"></p>
+              <p id="spell-realms-history"></p>
+              <p data-l10n-id="ability-mage-study-help"></p>
+              <p data-l10n-id="realm-change-available-help"></p>
+              <div id="realm-change-books"></div>
+            </div>
+            <fieldset id="ability-actions-lock">
+              <ul id="ability-list" class="ability-list" aria-live="polite"></ul>
+            </fieldset>
           </section>
 
           <section id="summon-command-panel" class="status-panel summon-command-panel" aria-labelledby="summon-command-title">
@@ -894,6 +903,14 @@
       <div class="duelist-actions">
         <button id="duelist-choice-accept" type="button"></button>
         <button id="duelist-choice-decline" type="button"></button>
+      </div>
+    </dialog>
+    <dialog id="realm-change-dialog" class="realm-change-dialog" aria-labelledby="realm-change-title" aria-describedby="realm-change-description">
+      <h2 id="realm-change-title"></h2>
+      <p id="realm-change-description"></p>
+      <div class="realm-change-actions">
+        <button id="realm-change-decline" type="button" data-l10n-id="realm-change-decline"></button>
+        <button id="realm-change-accept" type="button" data-l10n-id="realm-change-accept"></button>
       </div>
     </dialog>
   </body>

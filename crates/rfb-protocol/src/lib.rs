@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.251";
+pub const PROTOCOL_VERSION: &str = "1.252";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 19;
 
@@ -1865,6 +1865,8 @@ pub struct AbilityDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub book_name_key: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub book_realm_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub book_rank: Option<u8>,
     pub minimum_level: u16,
     pub source: AbilitySourceDto,
@@ -1916,6 +1918,8 @@ pub struct AbilityDto {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub town_targets: Vec<AbilityTownTargetDto>,
     pub learned: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub forgotten: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub book_item_id: Option<String>,
     pub can_study: bool,

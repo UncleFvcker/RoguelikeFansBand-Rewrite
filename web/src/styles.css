@@ -4615,11 +4615,17 @@ kbd {
 .hud-location-row { color: var(--ui-muted); }
 .duelist-status { padding: 0.35em 0.5em; border-bottom: 1px solid var(--ui-line-soft); overflow-wrap: anywhere; }
 .duelist-status p { margin: 0 0 0.3em; color: var(--ui-accent-strong); }
-.duelist-actions { display: flex; flex-wrap: wrap; gap: 0.4em; }
-.duelist-actions button { font: inherit; min-height: 2em; padding: 0.2em 0.5em; white-space: normal; }
-.duelist-choice-dialog { box-sizing: border-box; width: min(32em, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; padding: 1em; background: var(--ui-surface); color: var(--ui-text); border: 1px solid var(--ui-accent); font-size: var(--player-font-body); overflow-wrap: anywhere; }
-.duelist-choice-dialog h2 { margin-top: 0; font-size: 1.2em; }
+.duelist-actions, .realm-change-actions, #realm-change-books { display: flex; flex-wrap: wrap; gap: 0.4em; }
+.duelist-actions button, .realm-change-actions button, #realm-change-books button { font: inherit; min-height: 2em; padding: 0.2em 0.5em; white-space: normal; }
+.duelist-choice-dialog, .realm-change-dialog { box-sizing: border-box; width: min(32em, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; padding: 1em; background: var(--ui-surface); color: var(--ui-text); border: 1px solid var(--ui-accent); font-size: var(--player-font-body); overflow-wrap: anywhere; }
+.duelist-choice-dialog h2, .realm-change-dialog h2 { margin-top: 0; font-size: 1.2em; }
 .duelist-choice-dialog select { box-sizing: border-box; width: 100%; margin-bottom: 1em; padding: 0.4em; font: inherit; }
+#ability-actions-lock { min-width: 0; padding: 0; margin: 0; border: 0; }
+#spell-realms { padding-bottom: 0.75em; margin-bottom: 0.75em; border-bottom: 1px solid var(--ui-line); font-size: var(--player-font-note); line-height: 1.5; overflow-wrap: anywhere; }
+#spell-realms p { margin: 0 0 0.5em; }
+#spell-realms-value { color: var(--ui-accent-strong); font-size: var(--player-font-body); }
+.ability-realm-badge { color: var(--ui-muted); font-size: var(--player-font-note); }
+.realm-change-dialog p { line-height: 1.65; }
 .hud-experience {
   display: block;
   appearance: none;

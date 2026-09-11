@@ -14,6 +14,7 @@ import { runCreationLayoutScenario } from "./character-creation-layout.e2e.mjs";
 import { runMindcrafterUiScenario } from "./mindcrafter.e2e.mjs";
 import { runBerserkerUiScenario } from "./berserker.e2e.mjs";
 import { runDuelistUiScenario } from "./duelist.e2e.mjs";
+import { runMageUiScenario } from "./mage.e2e.mjs";
 
 const webDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryDirectory = path.resolve(webDirectory, "..");
@@ -72,7 +73,7 @@ async function main() {
     await rm(diagnosticDirectory, { recursive: true, force: true });
     await rm(desktopLogPath, { force: true });
     const port = await reservePort();
-    const creationLayout = process.argv.includes("--character-creation") || process.argv.includes("--creation-layout") || process.argv.includes("--mindcrafter") || process.argv.includes("--berserker") || process.argv.includes("--duelist-ui");
+    const creationLayout = process.argv.includes("--character-creation") || process.argv.includes("--creation-layout") || process.argv.includes("--mindcrafter") || process.argv.includes("--berserker") || process.argv.includes("--duelist-ui") || process.argv.includes("--mage-ui");
     const debugProfile = path.join(repositoryDirectory, "target", "e2e", "creation-webview");
     child = spawn(executable, [], {
       cwd: repositoryDirectory,
@@ -113,6 +114,8 @@ async function main() {
       await runBerserkerUiScenario(client, artifactDirectory, debugProfile);
     } else if (process.argv.includes("--duelist-ui")) {
       await runDuelistUiScenario(client, path.join(artifactDirectory, "duelist-ui"), debugProfile);
+    } else if (process.argv.includes("--mage-ui")) {
+      await runMageUiScenario(client, path.join(artifactDirectory, "mage-ui"), debugProfile);
     } else if (lifeForceOnly) {
       await runLifeForceScenario(client);
     } else if (tomteOnly || tonberryOnly || entOnly || spectreOnly) {
@@ -774,7 +777,10 @@ async function requestUrl(baseUrl, method, route, body) {
     headers: body === undefined ? undefined : { "content-type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  const payload = await response.json();
+  const responseText = await response.text();
+  let payload;
+  try { payload = JSON.parse(responseText); }
+  catch { throw new Error(`${method} ${route}: HTTP ${response.status}: ${responseText}`); }
   if (!response.ok) {
     throw new Error(`${method} ${route}: ${payload.value?.error}: ${payload.value?.message}`);
   }

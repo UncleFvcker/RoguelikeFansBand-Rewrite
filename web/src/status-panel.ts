@@ -90,6 +90,7 @@ type StatusDom = CharacterOverviewDom & Pick<
   | "mutationList"
   | "resourceList"
   | "abilityList"
+  | "abilityActionsLock"
   | "resourceRest"
   | "nearbyCurrent"
   | "nearbyList"
@@ -889,6 +890,7 @@ export class StatusPanel {
   readonly #refreshInventoryActions: () => void;
   #worldId: string | undefined;
   #installed = false;
+  #abilityFocus: { id: string; action?: string } | undefined;
 
   constructor(options: {
     dom: StatusDom;
@@ -1249,9 +1251,11 @@ export class StatusPanel {
     concentration: SniperConcentrationDto | null | undefined,
   ): void {
     const document = this.#dom.abilityList.ownerDocument;
+    this.#rememberAbilityFocus();
     this.#dom.resourceList.replaceChildren();
     this.#dom.abilityList.replaceChildren();
-    const presentation = abilityPresentation(abilities, playerLevel);
+    const realms = learning?.realms;
+    const presentation = abilityPresentation(abilities, playerLevel, realms ? [realms.firstRealmId, realms.secondRealmId] : []);
     this.#dom.resourceRest.disabled =
       this.#state.busy ||
       this.#state.playerDead ||
@@ -1351,6 +1355,16 @@ export class StatusPanel {
         const label = document.createElement("span");
         label.textContent = this.#localization.format(entry.nameKey as MessageKey);
         heading.append(label);
+        const role = entry.realmId === realms?.firstRealmId ? "primary"
+          : entry.realmId === realms?.secondRealmId ? "secondary" : undefined;
+        if (realms && role && entry.realmId) {
+          const badge = document.createElement("span");
+          badge.className = "ability-realm-badge";
+          badge.textContent = this.#localization.format(`ability-realm-${role}`, {
+            realm: this.#localization.format(`realm-${entry.realmId}-name`),
+          });
+          heading.append(badge);
+        }
         const bookItemId = entry.bookItemId;
         if (studyMode === "divine-random" && bookItemId) {
           const study = this.#abilityAction("action-ability-study-prayer", () =>
@@ -1366,6 +1380,28 @@ export class StatusPanel {
         this.#dom.abilityList.append(heading);
       } else {
         this.#dom.abilityList.append(this.#abilityRow(entry.ability, studyMode));
+      }
+    }
+    this.updateAbilityActions();
+  }
+
+  #rememberAbilityFocus(): void {
+    const active = this.#dom.abilityList.ownerDocument.activeElement as HTMLElement | null;
+    if (!active || !this.#dom.abilityList.contains(active)) return;
+    const id = active.closest<HTMLElement>("[data-ability-id]")?.dataset.abilityId;
+    if (id) this.#abilityFocus = { id, action: active.dataset.abilityAction };
+  }
+
+  updateAbilityActions(): void {
+    if (this.#state.busy) this.#rememberAbilityFocus();
+    this.#dom.abilityActionsLock.disabled = this.#state.busy || this.#state.commandBlocked || this.#state.worldMap;
+    if (!this.#state.busy && this.#abilityFocus) {
+      const { id, action } = this.#abilityFocus;
+      this.#abilityFocus = undefined;
+      if (this.#dom.abilityList.checkVisibility()) {
+        const row = this.#dom.abilityList.querySelector<HTMLElement>(`[data-ability-id="${id}"]`);
+        const control = action ? row?.querySelector<HTMLButtonElement>(`[data-ability-action="${action}"]`) : undefined;
+        (control && !control.matches(":disabled") ? control : row)?.focus({ preventScroll: true });
       }
     }
   }
@@ -1485,6 +1521,7 @@ export class StatusPanel {
     const row = document.createElement("li");
     row.className = "ability-row";
     row.dataset.abilityId = ability.id;
+    row.tabIndex = -1;
     const details = document.createElement("div");
     details.className = "ability-details";
     const name = document.createElement("span");
@@ -1536,7 +1573,8 @@ export class StatusPanel {
     this.#appendAbilityDetails(details, ability);
     const actions = document.createElement("div");
     actions.className = "ability-actions";
-    const study = this.#abilityAction("action-ability-study", () => {
+    const restudy = ability.learned && this.#state.status?.player.abilityLearning?.realms != null;
+    const study = this.#abilityAction(restudy ? "action-ability-restudy" : "action-ability-study", () => {
       if (!ability.bookItemId) return;
       void this.#dispatch({
         type: "study-ability",
@@ -1544,17 +1582,12 @@ export class StatusPanel {
         abilityId: ability.id,
       });
     });
-    study.disabled =
-      this.#state.busy ||
-      this.#state.playerDead ||
-      this.#state.worldMap ||
-      !ability.canStudy ||
-      !ability.bookItemId;
+    study.dataset.abilityAction = "study";
+    study.disabled = !ability.canStudy || !ability.bookItemId;
     const forget = this.#abilityAction("action-ability-forget", () =>
       void this.#dispatch({ type: "forget-ability", abilityId: ability.id }),
     );
-    forget.disabled =
-      this.#state.busy || this.#state.playerDead || this.#state.worldMap || !ability.canForget;
+    forget.disabled = !ability.canForget;
     let townTarget: HTMLSelectElement | undefined;
     if (ability.targetSpec.modes.includes("town")) {
       townTarget = document.createElement("select");
@@ -1576,14 +1609,11 @@ export class StatusPanel {
     );
     cast.classList.add("ability-cast-action");
     cast.disabled =
-      this.#state.busy ||
-      this.#state.commandBlocked ||
-      this.#state.worldMap ||
       !ability.canCast ||
       (ability.targetSpec.modes.includes("town") && (ability.townTargets?.length ?? 0) === 0);
     if (ability.source === "learned") {
       if (studyMode === "chosen") actions.append(study);
-      actions.append(forget);
+      if (!this.#state.status?.player.abilityLearning?.realms) actions.append(forget);
     }
     actions.append(cast);
     row.append(details, actions);
@@ -1656,6 +1686,7 @@ export class StatusPanel {
     const button = this.#dom.abilityList.ownerDocument.createElement("button");
     button.type = "button";
     button.textContent = this.#localization.format(key);
+    button.dataset.abilityAction = key;
     button.addEventListener("click", action);
     return button;
   }
@@ -1709,11 +1740,13 @@ export function mutationRatingMessageKey(rating: PlayerMutationDto["rating"]): M
 }
 
 export function abilityStatusMessageKey(
-  ability: Pick<AbilityDto, "source" | "learned">,
+  ability: Pick<AbilityDto, "source" | "learned" | "forgotten" | "canStudy">,
 ): MessageKey {
   if (ability.source === "mutation") return "ability-status-mutation";
   if (ability.source === "class") return "ability-status-class";
   if (ability.source === "race") return "ability-status-innate";
+  if (ability.forgotten) return "ability-status-forgotten";
+  if (ability.canStudy) return ability.learned ? "ability-status-restudy" : "ability-status-study-available";
   return ability.learned ? "ability-status-learned" : "ability-status-unlearned";
 }
 
@@ -1732,6 +1765,7 @@ export type AbilityPresentationEntry =
   | {
       type: "heading";
       nameKey: string;
+      realmId?: string;
       bookItemId?: string;
       canStudy: boolean;
     }
@@ -1740,12 +1774,14 @@ export type AbilityPresentationEntry =
 export function abilityPresentation(
   abilities: readonly AbilityDto[],
   playerLevel: number,
+  realmIds: readonly string[] = [],
 ): AbilityPresentationEntry[] {
   const ordered = [...abilities]
     .filter((ability) => !ability.uiGroupNameKey || ability.minimumLevel <= playerLevel)
     .sort(
       (left, right) =>
         (left.uiGroupNameKey ?? "").localeCompare(right.uiGroupNameKey ?? "") ||
+        realmIds.indexOf(left.bookRealmId ?? "") - realmIds.indexOf(right.bookRealmId ?? "") ||
         (left.bookRank ?? Number.MAX_SAFE_INTEGER) -
           (right.bookRank ?? Number.MAX_SAFE_INTEGER) ||
         (left.bookNameKey ?? "").localeCompare(right.bookNameKey ?? "") ||
@@ -1769,6 +1805,7 @@ export function abilityPresentation(
       entries.push({
         type: "heading",
         nameKey: heading,
+        realmId: ability.bookRealmId ?? undefined,
         bookItemId: studyByHeading.get(heading)?.bookItemId,
         canStudy: studyByHeading.get(heading)?.canStudy ?? false,
       });

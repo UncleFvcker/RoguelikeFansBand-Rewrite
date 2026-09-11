@@ -339,6 +339,28 @@ impl AppState {
         Ok(session.recorder.game().snapshot())
     }
 
+    #[cfg(feature = "webdriver")]
+    fn prepare_mage_e2e(&self, drained: bool) -> Result<GameSnapshot, String> {
+        let mut session = self.lock_session()?;
+        let session = session.as_mut().ok_or("game session is not initialized")?;
+        if session
+            .recorder
+            .game()
+            .snapshot()
+            .player
+            .build
+            .as_ref()
+            .is_none_or(|build| build.class_id != "demo.class.mage")
+        {
+            return Err("Mage E2E requires the current Mage class".to_owned());
+        }
+        let mut game = session.recorder.game().clone();
+        game.debug_prepare_mage_e2e(drained)
+            .map_err(|error| error.to_string())?;
+        session.recorder = ReplayRecorder::new(game);
+        Ok(session.recorder.game().snapshot())
+    }
+
     fn lock_session(&self) -> Result<std::sync::MutexGuard<'_, Option<GameSession>>, String> {
         self.session
             .lock()
@@ -589,6 +611,22 @@ fn prepare_duelist_e2e(
 }
 
 #[tauri::command]
+fn prepare_mage_e2e(
+    state: tauri::State<'_, AppState>,
+    drained: bool,
+) -> Result<GameSnapshot, String> {
+    #[cfg(feature = "webdriver")]
+    {
+        state.prepare_mage_e2e(drained)
+    }
+    #[cfg(not(feature = "webdriver"))]
+    {
+        let _ = (state, drained);
+        Err("Mage E2E fixture is unavailable".to_owned())
+    }
+}
+
+#[tauri::command]
 fn inspect_game_e2e(state: tauri::State<'_, AppState>) -> Result<GameSnapshot, String> {
     #[cfg(feature = "webdriver")]
     {
@@ -822,6 +860,7 @@ pub fn run() {
             prepare_mindcrafter_e2e,
             prepare_berserker_e2e,
             prepare_duelist_e2e,
+            prepare_mage_e2e,
             inspect_game_e2e,
             save_game,
             load_game,

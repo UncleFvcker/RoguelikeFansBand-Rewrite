@@ -251,7 +251,7 @@ export async function runCreationLayoutScenario(driver, artifactDirectory, debug
     assert.equal(await focusIs('[data-race-id="rfb-legacy.race.draconian-red"]'), true);
     await tabTo("#session-tab-race"); await keyboard.key("ArrowRight");
     await tabTo('[data-career-group="melee"]'); await arrowTo('[data-career-group="magic"]');
-    await keyboard.key("Enter"); await keyboard.key("Enter");
+    await keyboard.key("Enter"); await arrowTo('[data-career-id="high-mage"]'); await keyboard.key("Enter");
     await keyboard.key("Escape"); assert.equal(await focusIs('[data-career-id="high-mage"]'), true);
     await keyboard.key("Enter"); await keyboard.key("Enter");
     assert.equal(await driver.execute('return document.documentElement.dataset.appMode'), "new-game", "realm Enter must not start the game");

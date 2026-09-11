@@ -595,6 +595,7 @@ impl Game {
                     description_key: effective_ability.description_key.clone(),
                     ui_group_name_key,
                     book_name_key: book.map(|book| book.name_key.clone()),
+                    book_realm_id: book.and_then(|book| book.realm_id.clone()),
                     book_rank: book.and_then(|book| book.rank),
                     minimum_level,
                     source,
@@ -691,6 +692,9 @@ impl Game {
                         .then(|| self.teleport_town_targets())
                         .unwrap_or_default(),
                     learned,
+                    forgotten: source == AbilitySourceDto::Learned
+                        && !learned
+                        && self.ability_learning_order.contains(&ability_id),
                     book_item_id: book_item_id.clone(),
                     can_study: source == AbilitySourceDto::Learned
                         && (!self.ability_learning_order.contains(&ability_id)

@@ -188,9 +188,21 @@ test("spellbook headings expose one divine study action", () => {
   assert.deepEqual(entries[0], {
     type: "heading",
     nameKey: book,
+    realmId: undefined,
     bookItemId: "item.prayers",
     canStudy: true,
   });
+});
+
+test("Mage books keep primary and secondary ordering and show authoritative learning states", () => {
+  const ability = (realm, rank) => ({ id: `${realm}-${rank}`, minimumLevel: 1, source: "learned", bookRealmId: realm, bookRank: rank, bookNameKey: `${realm}-book-${rank}` });
+  const entries = abilityPresentation([ability("life", 1), ability("death", 2), ability("death", 1)], 1, ["death", "life"]);
+  assert.deepEqual(entries.filter(entry => entry.type === "heading").map(entry => [entry.realmId, entry.nameKey]), [
+    ["death", "death-book-1"], ["death", "death-book-2"], ["life", "life-book-1"],
+  ]);
+  assert.equal(abilityStatusMessageKey({ source: "learned", learned: false, forgotten: true, canStudy: false }), "ability-status-forgotten");
+  assert.equal(abilityStatusMessageKey({ source: "learned", learned: false, forgotten: false, canStudy: true }), "ability-status-study-available");
+  assert.equal(abilityStatusMessageKey({ source: "learned", learned: true, forgotten: false, canStudy: true }), "ability-status-restudy");
 });
 
 test("mutation presentation exposes ratings and the shared ability source", () => {

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import assert from "node:assert/strict";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { RACE_GROUPS, PLAYTEST_RACE_IDS, CAREER_GROUPS, PLAYTEST_BUILD_IDS } from "../src/character-creation.ts";
+import { RACE_GROUPS, PLAYTEST_RACE_IDS, CAREER_GROUPS, CREATION_BUILDS, PLAYTEST_BUILD_IDS } from "../src/character-creation.ts";
+import { Localization } from "../src/localization.ts";
 
 export async function selectCreationRace(driver, raceId) {
   const group = RACE_GROUPS.find(group => group.options.some(entry => entry.id === raceId || ("children" in entry && entry.children.some(child => child.id === raceId))));
@@ -20,22 +21,32 @@ export async function selectCreationRace(driver, raceId) {
 }
 
 export async function selectCreationBuild(driver, buildId) {
-  const group = CAREER_GROUPS.find(group => group.options.some(entry => entry.id === buildId || ("children" in entry && entry.children.some(child => child.id === buildId))));
+  function pathTo(entries) {
+    for (const entry of entries) {
+      if (entry.id === buildId) return [entry.id];
+      const children = "children" in entry ? pathTo(entry.children) : [];
+      if (children.length) return [entry.id, ...children];
+    }
+    return [];
+  }
+  const group = CAREER_GROUPS.find(group => pathTo(group.options).length);
   assert.ok(group, `Creation build missing: ${buildId}`);
-  const parent = group.options.find(entry => "children" in entry && entry.children.some(child => child.id === buildId));
   await driver.execute(`
     document.querySelector("#session-tab-career").click();
     document.querySelector('[data-career-group="' + arguments[0] + '"]').click();
-    if (arguments[2]) document.querySelector('[data-career-id="' + arguments[2] + '"]').click();
+    for (const parent of arguments[2]) document.querySelector('[data-career-id="' + parent + '"]').click();
     const button = document.querySelector('[data-career-id="' + arguments[1] + '"]');
     if (!button || !button.checkVisibility()) throw new Error("Career option is not visible");
     button.focus(); button.click();
     return true;
-  `, [group.id, buildId, parent?.id]);
+  `, [group.id, buildId, pathTo(group.options).slice(0, -1)]);
 }
 
 export async function runCharacterCreationScenario(driver, artifactDirectory) {
   await mkdir(artifactDirectory, { recursive: true });
+  const localization = new Localization("zh-CN", { "en-US": [], "zh-CN": await Promise.all(
+    ["ui", "content", "game"].map(file => readFile(new URL(`../../locales/zh-CN/${file}.ftl`, import.meta.url), "utf8")),
+  ) });
   await driver.waitFor(`return document.documentElement.dataset.appMode === "title" && !document.querySelector("#session-new-game").disabled`, "ready title", 60_000);
   const rect = await driver.command("GET", "/window/rect");
   const viewport = await driver.execute("return { width: innerWidth, height: innerHeight }");
@@ -186,7 +197,9 @@ export async function runCharacterCreationScenario(driver, artifactDirectory) {
     assert.equal(selected.selectedCount, 1);
     assert.equal(selected.pending, false);
     assert.ok(selected.summary.includes(selected.title));
-    assert.ok(selected.description.length > 15 && !selected.description.startsWith("["));
+    const descriptionKey = CREATION_BUILDS.find(entry => entry.id === build).descriptionKey;
+    assert.equal(selected.description, localization.format(descriptionKey));
+    assert.ok(selected.description.length > 0 && !selected.description.startsWith("["));
     visitedBuilds.push(build);
   }
   await selectCreationBuild(driver, "demo.build.warrior");

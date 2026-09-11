@@ -412,6 +412,12 @@
           "maximum": 255,
           "minimum": 0
         },
+        "bookRealmId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "canCast": {
           "type": "boolean"
         },
@@ -488,6 +494,9 @@
           "format": "uint8",
           "maximum": 255,
           "minimum": 0
+        },
+        "forgotten": {
+          "type": "boolean"
         },
         "governingAttribute": {
           "anyOf": [

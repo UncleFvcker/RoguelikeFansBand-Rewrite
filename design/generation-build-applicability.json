@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "sourceRef": "master",
   "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
-  "reviewedAt": "2026-09-10",
-  "codeBaseline": "080005368 + ea723f342 + bd94fe086",
+  "reviewedAt": "2026-09-11",
+  "codeBaseline": "257f99ab2 (Mage steps 1–5); Mage creation and UI step 6",
   "entrySource": "web/src/character-creation.ts CREATION_BUILDS / PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
-  "scope": "Source and behavior applicability review of nine real creation builds, five areas each, within the imported canonical pool. Current reachable generation evidence is covered by the referenced tests; unavailable identities/content and object representation limits remain separate. This input and the audit CLI do not execute gameplay tests.",
+  "scope": "Source and behavior applicability review of 65 real creation builds (nine existing and 56 ordered Mage realm pairs), five areas each, within the imported canonical pool. Shared behavioral evidence covers class and current-realm differences; enumerating entries does not claim 65 complete playthroughs. Unavailable identities/content and object representation limits remain separate. This input and the audit CLI do not execute gameplay tests.",
   "recordSemantics": {
     "implemented": "Reachable implementation exists; gapIds still block acceptance completion.",
     "no-special-difference": "Source and indirect consumers reviewed; shared path applies without an additional class generation branch.",
@@ -28,7 +28,7 @@
         "base-harp-bard"
       ],
       "entry": "Natural floor/monster allocation and existing Acquirement service; ordinary modes retain non-tailored kinds.",
-      "reason": "All nine default builds resolve to the human standard body; race selection supplies real body slots and Tomte birth-headgear rules. Source object_is_favorite defaults to all melee weapons for Warrior, Berserker, Sniper, High Mage, Paladin and Mindcrafter; Archer and Cavalry have explicit filters. Source device-class membership is independent of ability to use devices. Completed-item rejection follows caster glove encumbrance, not general usability. Duelist uses source base weapon proficiency caps above Beginner for melee favorites; tailored body armor has the fixed 200 weight limit and shields are excluded. The ordinary pool remains unchanged.",
+      "reason": "All 65 default builds resolve to the human standard body; race selection supplies real body slots and Tomte birth-headgear rules. Source object_is_favorite defaults to all melee weapons for Warrior, Berserker, Sniper, High Mage, Mage, Paladin and Mindcrafter; Archer and Cavalry have explicit filters. Source device-class membership is independent of ability to use devices. Completed-item rejection follows caster glove encumbrance, not general usability. Duelist uses source base weapon proficiency caps above Beginner for melee favorites; tailored body armor has the fixed 200 weight limit and shields are excluded. The ordinary pool remains unchanged. Mage and High Mage are the current device classes. Mage's current secondary realm, not its birth Build, participates in book eligibility and needs-book; changing realms preserves discovery history.",
       "sourceEvidence": [
         "src/obj_kind.c:97-162 object_is_favorite",
         "src/autopick.c:848-868 object_is_icky",
@@ -43,16 +43,19 @@
         "crates/rfb-core/src/game/player_abilities.rs#item_is_icky",
         "crates/rfb-core/src/game/item_knowledge.rs",
         "packs/rfb-demo-original/races/rfb-human.json",
-        "crates/rfb-core/src/game/abilities/duelist.rs#duelist_favorite_weapon"
+        "crates/rfb-core/src/game/abilities/duelist.rs#duelist_favorite_weapon",
+        "crates/rfb-core/src/game/spell_realms.rs"
       ],
       "tests": [
         "crates/rfb-core/src/game/loot/allocation.rs#tailored_uses_playable_class_equipment_realms_and_birth_race",
         "crates/rfb-core/src/game/loot/allocation.rs#tailored_preference_draws_follow_class_then_book_then_device",
         "crates/rfb-core/src/game/tests/book_discovery.rs",
         "crates/rfb-core/src/game/loot/allocation.rs#duelist_tailored_armor_uses_fixed_twenty_pound_limit_and_excludes_shields",
-        "crates/rfb-core/src/game/tests/items.rs#tailored_duelist_weapon_equips_and_preserves_continued_generation_after_save"
+        "crates/rfb-core/src/game/tests/items.rs#tailored_duelist_weapon_equips_and_preserves_continued_generation_after_save",
+        "crates/rfb-core/src/game/loot/allocation.rs#mage_tailored_draws_book_before_device_and_skips_satisfied_book_draw",
+        "crates/rfb-core/src/game/loot/allocation.rs#mage_realm_change_updates_book_need_and_actual_allocation_without_resetting_discovery"
       ],
-      "limits": "The real-build allocation loop covers the prior eight builds and added Duelist and the existing Tomte/body-slot intersection. Good/Great advanced-book limits and Tailored found<3 remain distinct; book instances retain B1 quantity-one representation."
+      "limits": "Real class/body representatives share the source allocation loop; all 56 Mage ordered births have formal/core/UI mapping evidence. Good/Great advanced-book limits and Tailored found<3 remain distinct; book instances retain B1 quantity-one representation. No 56-fold duplicate generation walkthrough is claimed."
     },
     {
       "id": "ego-negative",
@@ -81,7 +84,7 @@
         "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_negative_power_reaches_a_cursed_equippable_instance",
         "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng"
       ],
-      "limits": "Shared Ego/E8.8 evidence is reused. Both new builds now exercise generated protection gloves and natural negative random artifacts through equipment, curse handling, save and continued generation."
+      "limits": "Shared Ego/E8.8 evidence is reused. Mage protection, wizard and free-action gloves exercise real caster encumbrance; Mage natural negative random artifacts preserve curse handling, equipment and continued generation after save. No extra Mage-specific Ego weight branch exists."
     },
     {
       "id": "random-artifact",
@@ -94,7 +97,7 @@
         "bad-luck-randart"
       ],
       "entry": "Natural/themed scheduler passes real class and theme with scroll=false; the Arena reward and ordinary pool now expose the artifact creation scroll to classes that can read scrolls.",
-      "reason": "Theme supplies initial bias. Without a theme there is no class initial bias in natural mode. Only scroll mode with no prior bias and the 1/4 gate applies class bias; later Warrior conversion depends on mode. Non-Bard harp value and shared value/curse retries apply. Berserker alone changes random_misc case 31 among current classes.",
+      "reason": "Theme supplies initial bias. Without a theme there is no class initial bias in natural mode. Only scroll mode with no prior bias and the 1/4 gate applies class bias; later Warrior conversion depends on mode. Non-Bard harp value and shared value/curse retries apply. Berserker alone changes random_misc case 31 among current classes. Mage and High Mage use Mage scroll bias with the source 20% Warrior conversion.",
       "implementation": [
         "crates/rfb-core/src/game/random_artifact.rs#initial_bias",
         "crates/rfb-core/src/game/random_artifact/scheduling.rs#materialize_random_artifact_draft",
@@ -112,7 +115,7 @@
         "crates/rfb-core/src/game/tests/items.rs#artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name",
         "crates/rfb-core/src/game/tests/arena.rs"
       ],
-      "limits": "Factory tests cover source probability boundaries; actual commands cover all eight scroll-capable creation builds, selected equipment, saved names and continued actions. Berserker scroll rejection remains a class consumer rule. Arena reward pickup/use is core acceptance; this integration does not claim a new desktop run."
+      "limits": "Factory tests cover source probability boundaries, including Mage 19/20 conversion and natural/theme separation. Actual scroll commands cover prior class representatives and Mage, selected equipment, saved names, virtues and continued actions. Berserker scroll rejection remains a class consumer rule. Realm pairs share this class-only branch; entry enumeration is separate from desktop acceptance."
     },
     {
       "id": "fixed-artifact-reward",
@@ -125,18 +128,31 @@
         "good-luck-fixed-retry"
       ],
       "entry": "Imported fixed artifacts and explicitly configured class reward pools.",
-      "reason": "Of ten source identity-sensitive artifacts, only Dr Jones (162) is imported and uses its ordinary non-Archaeologist branch. Terror Mask is absent even though Warrior/Cavalry/Berserker qualify in source. Meditation Stone class bonuses and other imported rewards are actual use/reward behavior; they do not add a class branch to fixed-artifact construction.",
+      "reason": "Of ten source identity-sensitive artifacts, only Dr Jones (162) is imported and uses its ordinary non-Archaeologist branch. Terror Mask is absent even though Warrior/Cavalry/Berserker qualify in source. Meditation Stone class bonuses and other imported rewards are actual use/reward behavior; they do not add a class branch to fixed-artifact construction. Mage/High-Mage Old Castle rewards now preselect Gandalf/Saruman/Indra at 1:1:8 using the durable selection seed and replace a previously generated fixed artifact through the existing named random-artifact path. Ordinary Mage thieves reward is a long sword. These three artifacts are not the ten identity-specific construction exceptions.",
       "implementation": [
         "crates/rfb-core/src/game/loot.rs",
         "crates/rfb-core/src/game/tasks.rs",
         "crates/rfb-core/src/game/player_stats.rs",
-        "packs/rfb-demo-original/worlds"
+        "packs/rfb-demo-original/worlds",
+        "crates/rfb-core/src/game/ego.rs#materialize_ego_with_rng",
+        "packs/rfb-demo-original/items/gandalf.json",
+        "packs/rfb-demo-original/items/saruman.json",
+        "packs/rfb-demo-original/items/indra.json"
       ],
       "tests": [
         "crates/rfb-core/src/game/tests/tasks.rs#old_castle_reward_is_forced_even_when_the_artifact_was_generated_before_claim",
-        "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_is_not_sampled_after_either_fixed_artifact_success"
+        "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_is_not_sampled_after_either_fixed_artifact_success",
+        "crates/rfb-core/src/game/tests/mage/generation.rs#mage_task_rewards_keep_birth_selection_and_replace_previously_generated_artifacts",
+        "crates/rfb-core/src/game/tests/mage/generation.rs#fixed_mage_artifacts_generate_extra_power_equip_and_resume_activation_cooldowns",
+        "crates/rfb-legacy-import/src/content.rs#mage_reward_artifacts_preserve_source_parameters_and_activations"
       ],
-      "limits": "Absent identity-sensitive artifacts and fixed harps remain deferred; explicit rewards must keep their forced-item contract."
+      "limits": "Absent identity-sensitive artifacts and fixed harps remain deferred. Existing forced rewards retain their contract; Duelist/Mage/High-Mage Old Castle explicitly use unique fixed selection and named replacement. Reward tests prepare task completion and do not claim natural Old Castle completion.",
+      "sourceEvidence": [
+        "lib/edit/q_old_castle.txt:343-349 Mage and High-Mage",
+        "lib/edit/q_thieves.txt ordinary versus SPEED=2 reward",
+        "lib/edit/a_info.txt N:33, N:120, N:249",
+        "lib/edit/artifact_name_zh.inc"
+      ]
     },
     {
       "id": "use-save",
@@ -146,22 +162,28 @@
         "theme-reset"
       ],
       "entry": "Equip/use/reject generated instances, identify/sense, combat or attributes, native save/load and continued actions.",
-      "reason": "Generation eligibility and item usability remain separate. Real new-build generated equipment/device/activation consumers preserve costs, charges, curses and properties across save/load; subsequent generation compares instances/drafts, RNG and random-artifact names.",
+      "reason": "Generation eligibility and item usability remain separate. Real new-build generated equipment/device/activation consumers preserve costs, charges, curses and properties across save/load; subsequent generation compares instances/drafts, RNG and random-artifact names. Mage staff mana brand, spell capacity, extra power, actual activations/cooldowns and the two class towers use the shared consumers. Changed secondary realms alter actual guild services immediately.",
       "implementation": [
         "crates/rfb-core/src/game/inventory.rs",
         "crates/rfb-core/src/game/item_use.rs",
         "crates/rfb-core/src/game/player_stats.rs",
         "crates/rfb-core/src/game/player_abilities.rs",
-        "crates/rfb-core/src/game/persistence.rs"
+        "crates/rfb-core/src/game/persistence.rs",
+        "crates/rfb-core/src/game/town.rs",
+        "crates/rfb-core/src/game/spell_realms.rs"
       ],
       "tests": [
         "crates/rfb-core/src/game/tests/items.rs",
         "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_save_preserves_rejected_names_and_continued_generation",
         "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#real_berserker_generated_flags_and_activation_rejection_survive_save_and_continue",
         "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#real_build_generated_devices_keep_use_costs_charges_and_continued_rng",
-        "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_negative_power_reaches_a_cursed_equippable_instance"
+        "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_negative_power_reaches_a_cursed_equippable_instance",
+        "crates/rfb-core/src/game/tests/mage/generation.rs",
+        "crates/rfb-core/src/game/tests/weapon_traits.rs#mage_fixed_staff_mana_brand_uses_real_equipment_and_only_pays_on_hits",
+        "crates/rfb-core/src/game/tests/town.rs#morivant_identification_uses_the_projected_membership_price",
+        "crates/rfb-core/src/game/tests/mage/realm_change.rs#guild_membership_and_prices_follow_current_realms_without_changing_primary_or_birth_virtues"
       ],
-      "limits": "B0-B6/E8.8 evidence is reused for the prior six-build scope. New-build integration is core acceptance with documented fixed-base/mode fixtures; no new desktop acceptance or full-source parity is claimed."
+      "limits": "Reuse existing item/activation/save evidence and the Mage step-5 real class consumers. Tests explicitly prepare levels, positions, books or rewards where needed. Step-6 UI acceptance covers creation and spellbook interactions; natural acquisition, progression and the playable desktop release remain step 7."
     }
   ],
   "conditionScopes": [
@@ -277,7 +299,7 @@
       "end": 2325,
       "status": "implemented-current-builds",
       "entry": "demo.item.artifact-creation-scroll; ordinary allocation and Arena final reward",
-      "change": "class/subclass bias on the scroll branch; ordinary natural generation does not run it",
+      "change": "class/subclass bias on the scroll branch; ordinary natural generation does not run it; Mage shares High Mage bias and the 20% Warrior conversion",
       "consumer": "crates/rfb-core/src/game/item_use/artifact_creation.rs; random_artifact/materialization.rs; virtues.rs",
       "tests": "crates/rfb-core/src/game/tests/items.rs#artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name; crates/rfb-core/src/game/tests/arena.rs; crates/rfb-core/src/game/random_artifact/tests.rs",
       "prerequisite": null
@@ -447,7 +469,7 @@
       "start": 2415,
       "end": 2428,
       "status": "implemented-current-builds",
-      "entry": "Acquirement on nine open builds",
+      "entry": "Acquirement on 65 open builds",
       "change": "Archer rejects melee; Sniper retains it; Cavalry uses source riding weapon flags; Duelist uses base weapon proficiency maximum >4000",
       "consumer": "loot/allocation.rs; mounted combat and projectile consumers; abilities/duelist.rs duelist_favorite_weapon",
       "tests": "game::loot::allocation::tests::tailored_uses_playable_class_equipment_realms_and_birth_race; game::tests::items::b4_tailored_launchers_equip_shoot_and_restore_for_archer_and_sniper; game::tests::items::b4_tailored_lance_keeps_riding_bonus_in_actual_mounted_combat",
@@ -459,10 +481,10 @@
       "start": 2429,
       "end": 2453,
       "status": "implemented-current-builds",
-      "entry": "High Mage open; other source device classes unavailable",
-      "change": "High Mage device preference and eligible source device kinds",
+      "entry": "Mage and High Mage open; other source device classes unavailable",
+      "change": "Mage and High Mage device preference and eligible source device kinds; needs-book 1/10 precedes device 1/7",
       "consumer": "loot/allocation.rs; device generation and item use",
-      "tests": "game::tests::items::b4_tailored_high_mage_device_is_usable_and_restores_its_charges",
+      "tests": "game::tests::items::b4_tailored_high_mage_device_is_usable_and_restores_its_charges; game::loot::allocation::tests::mage_tailored_draws_book_before_device_and_skips_satisfied_book_draw; game::random_artifact::scheduling::tests::real_build_generated_devices_keep_use_costs_charges_and_continued_rng",
       "prerequisite": "other device classes and Monster pseudo class await real entries"
     },
     {
@@ -471,7 +493,7 @@
       "start": 2455,
       "end": 2570,
       "status": "implemented-current-builds",
-      "entry": "nine open builds; real body slots; birth Tomte knit cap",
+      "entry": "65 open builds; real body slots; birth Tomte knit cap",
       "change": "slot/favorite/book filters; full materialized glove flags and pval reject caster encumbrance; Duelist excludes shields and body armor heavier than 200",
       "consumer": "loot/allocation.rs; mod.rs slot helper; player_abilities.rs; inventory.rs",
       "tests": "game::loot::allocation::tests::; game::tests::items::tomte_tailored_acquirement_filters_headgear_by_birth_race_only; game::tests::items::b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
@@ -534,10 +556,10 @@
       "start": 3441,
       "end": 3493,
       "status": "implemented-current-builds",
-      "entry": "High Mage/Paladin realms",
-      "change": "realm and persistent discoveries decide book preference independently of inventory quantity",
+      "entry": "High Mage/Paladin realms and Mage current first/second realms",
+      "change": "realm and persistent discoveries decide book preference independently of inventory quantity; changing the second realm changes eligible books without resetting discoveries",
       "consumer": "loot/allocation.rs; item_knowledge.rs; study/cast",
-      "tests": "game::loot::allocation::tests::tailored_preference_draws_follow_class_then_book_then_device; game::tests::items::b4_tailored_death_books_are_counted_studied_cast_and_restored; game::tests::book_discovery::; game::tests::town::book_discovery_shop_groups_and_repurchase_do_not_count_as_found",
+      "tests": "game::loot::allocation::tests::tailored_preference_draws_follow_class_then_book_then_device; game::tests::items::b4_tailored_death_books_are_counted_studied_cast_and_restored; game::tests::book_discovery::; game::tests::town::book_discovery_shop_groups_and_repurchase_do_not_count_as_found; game::loot::allocation::tests::mage_realm_change_updates_book_need_and_actual_allocation_without_resetting_discovery",
       "prerequisite": "other source classes require real realm/study entries"
     },
     {
@@ -558,7 +580,7 @@
       "start": 3559,
       "end": 3665,
       "status": "implemented-current-builds",
-      "entry": "Archer/Sniper/Cavalry/High Mage and other open classes",
+      "entry": "Archer/Sniper/Cavalry/High Mage/Mage and other open classes",
       "change": "bows 1/5; lances 1/7; ordered books/devices preference; source fallback category width",
       "consumer": "Acquirement -> loot/allocation.rs -> loot.rs -> item use/equip/save",
       "tests": "game::loot::allocation::tests::; game::tests::items::b4_tailored_launchers_equip_shoot_and_restore_for_archer_and_sniper; game::tests::items::b4_tailored_death_books_are_counted_studied_cast_and_restored; game::tests::acquirement::",
@@ -803,7 +825,7 @@
         {
           "review": "base-allocation-tailored",
           "status": "implemented",
-          "reason": "Death realm selects only its advanced books with persistent discovery limits. Ordered book preference 1/10 precedes device preference 1/7; completed gloves use full flags/pval to reject caster encumbrance. High Mage is the sole current tailored device class."
+          "reason": "Death realm selects only its advanced books with persistent discovery limits. Ordered book preference 1/10 precedes device preference 1/7; completed gloves use full flags/pval to reject caster encumbrance. Mage and High Mage are current tailored device classes."
         },
         {
           "review": "ego-negative",
@@ -817,8 +839,8 @@
         },
         {
           "review": "fixed-artifact-reward",
-          "status": "no-special-difference",
-          "reason": "No reachable identity-specific construction branch in the imported fixed artifacts; ordinary construction and configured reward paths apply."
+          "status": "implemented",
+          "reason": "The Mage/High-Mage source Old Castle pool preselects Gandalf/Saruman/Indra at 1:1:8; natural generation uniqueness and named replacement after a prior generation are covered by the shared Mage reward evidence. No additional identity-specific fixed construction branch applies."
         },
         {
           "review": "use-save",
@@ -1000,6 +1022,1742 @@
           ]
         }
       ]
+    },
+    {
+      "buildId": "demo.build.mage-life-sorcery",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with life/sorcery; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-life-nature",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with life/nature; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-life-death",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with life/death; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-life-arcane",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with life/arcane; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-life-daemon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with life/daemon; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-life-crusade",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with life/crusade; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-life-armageddon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with life/armageddon; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-sorcery-life",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with sorcery/life; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-sorcery-nature",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with sorcery/nature; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-sorcery-death",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with sorcery/death; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-sorcery-arcane",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with sorcery/arcane; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-sorcery-daemon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with sorcery/daemon; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-sorcery-crusade",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with sorcery/crusade; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-sorcery-armageddon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with sorcery/armageddon; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-nature-life",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with nature/life; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-nature-sorcery",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with nature/sorcery; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-nature-death",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with nature/death; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-nature-arcane",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with nature/arcane; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-nature-daemon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with nature/daemon; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-nature-crusade",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with nature/crusade; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-nature-armageddon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with nature/armageddon; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-death-life",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with death/life; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-death-sorcery",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with death/sorcery; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-death-nature",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with death/nature; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-death-arcane",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with death/arcane; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-death-daemon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with death/daemon; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-death-crusade",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with death/crusade; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-death-armageddon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with death/armageddon; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-arcane-life",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with arcane/life; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-arcane-sorcery",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with arcane/sorcery; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-arcane-nature",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with arcane/nature; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-arcane-death",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with arcane/death; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-arcane-daemon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with arcane/daemon; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-arcane-crusade",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with arcane/crusade; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-arcane-armageddon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with arcane/armageddon; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-daemon-life",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with daemon/life; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-daemon-sorcery",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with daemon/sorcery; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-daemon-nature",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with daemon/nature; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-daemon-death",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with daemon/death; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-daemon-arcane",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with daemon/arcane; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-daemon-crusade",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with daemon/crusade; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-daemon-armageddon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with daemon/armageddon; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-crusade-life",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with crusade/life; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-crusade-sorcery",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with crusade/sorcery; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-crusade-nature",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with crusade/nature; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-crusade-death",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with crusade/death; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-crusade-arcane",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with crusade/arcane; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-crusade-daemon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with crusade/daemon; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-crusade-armageddon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with crusade/armageddon; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-armageddon-life",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with armageddon/life; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-armageddon-sorcery",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with armageddon/sorcery; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-armageddon-nature",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with armageddon/nature; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-armageddon-death",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with armageddon/death; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-armageddon-arcane",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with armageddon/arcane; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-armageddon-daemon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with armageddon/daemon; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-armageddon-crusade",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with armageddon/crusade; the current secondary realm remains authoritative after replacement. Shared Mage needs-book/device draw order, caster gloves, body slots and persistent book discovery evidence apply (mage-source-audit G1)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
     }
   ]
 }

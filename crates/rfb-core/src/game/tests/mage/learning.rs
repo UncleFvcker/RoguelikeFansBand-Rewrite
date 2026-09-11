@@ -254,12 +254,29 @@ fn level_and_attribute_loss_forget_latest_spells_without_refunding_repeat_studie
     assert_eq!(game.spent_spell_learning, spent);
     assert_eq!(game.ability_learning_order, order);
     assert_eq!(game.ability_progress, progress);
+    let projected = game.snapshot().player.abilities;
+    for id in &order {
+        let ability = projected.iter().find(|ability| &ability.id == id).unwrap();
+        assert!(ability.forgotten);
+        assert!(!ability.learned && !ability.can_study);
+        assert_eq!(
+            ability.book_realm_id.as_deref(),
+            Some(if id == DETECT { "sorcery" } else { "death" })
+        );
+    }
     let mut restored = Game::from_save(game.to_save()).unwrap();
     for game in [&mut game, &mut restored] {
         game.progress.attributes.intelligence = game.progress.maximum_attributes.intelligence;
         game.apply_player_experience(game.experience_required_for_level(30), &mut Vec::new());
         game.refresh_player_ability_state();
         assert_eq!(game.learned_abilities, order.iter().cloned().collect());
+        assert!(
+            game.snapshot()
+                .player
+                .abilities
+                .iter()
+                .all(|ability| !ability.forgotten)
+        );
         assert_eq!(game.ability_progress, progress);
         assert_eq!(game.spent_spell_learning, spent);
         refill(game);
