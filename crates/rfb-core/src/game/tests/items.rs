@@ -14,6 +14,124 @@ fn artifact_loot_context(depth: u16) -> LootContext {
 }
 
 #[test]
+fn a10_hell_beast_natural_entry_drops_zero_rarity_artifact_once_after_save() {
+    const BEAST: &str = "demo.actor.greater-hell-beast";
+    const SHIRT: &str = "demo.item.legendary-lost-treasure";
+    // Seed 54 reaches GHB through the unmodified formal entrance/floor/ecology.
+    // Combat is shortened below; this is not a natural leveling test.
+    let mut game = Game::new_with_build(54, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.warrens-depth-1");
+    let context = artifact_loot_context(100);
+    let rng = game.rng.clone();
+    assert_eq!(
+        game.roll_fixed_artifact_kind_id(&context, Some("demo.item.t-shirt"), false),
+        None
+    );
+    assert_eq!(
+        game.rng, rng,
+        "QUESTITEM must be excluded before the zero rarity gate"
+    );
+    let mut beast = game
+        .entities
+        .iter()
+        .find(|a| a.kind_id == BEAST)
+        .unwrap()
+        .clone();
+    game.entities.retain(|a| a.id == beast.id);
+    game.items.clear();
+    let position = (1..game.height - 1)
+        .find_map(|y| {
+            (1..game.width - 2)
+                .map(|x| Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                })
+                .find(|p| game.is_walkable(*p) && game.is_walkable(Position { x: p.x + 1, y: p.y }))
+        })
+        .unwrap();
+    game.player.position = position;
+    beast.position = Position {
+        x: position.x + 1,
+        y: position.y,
+    };
+    beast.hp = 1;
+    beast.energy_need = STANDARD_ACTION_COST;
+    beast.nice = true;
+    game.entities[0] = beast.clone();
+    game.reveal_current_visibility();
+    game = Game::from_save(game.to_save()).unwrap();
+    let prepared = game.clone();
+    game = (0..256)
+        .find_map(|seed| {
+            let mut attempt = prepared.clone();
+            attempt.rng = RfbRng::seeded(seed);
+            dispatch_next(
+                &mut attempt,
+                GameCommand::Move {
+                    direction: Direction::East,
+                },
+            );
+            attempt
+                .items
+                .iter()
+                .any(|item| item.kind_id == SHIRT)
+                .then_some(attempt)
+        })
+        .expect("actual melee death must drop the named reward");
+    assert_eq!(game.actor_kind_available_instance_count(BEAST), 0);
+    let reward = game
+        .items
+        .iter()
+        .find(|item| item.kind_id == SHIRT)
+        .unwrap()
+        .clone();
+    assert!(game.generated_artifact_ids.contains(SHIRT));
+    let ItemLocation::Ground(position) = reward.location else {
+        panic!("reward must drop on the floor")
+    };
+    game.player.position = position;
+    game.pick_up_item_at_player(Some(&reward.id)).unwrap();
+    assert!(
+        !game
+            .item_property_knowledge
+            .get(&reward.id)
+            .is_some_and(|knowledge| knowledge.identified)
+    );
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    restored.identify_item_instance(&reward.id, ItemIdentificationRequest::new(true));
+    let before = restored.player_derived_stats().armor_class.value;
+    restored
+        .equip_inventory_item(&reward.id, Some("body"))
+        .unwrap();
+    assert_eq!(
+        restored.player_derived_stats().armor_class.value - before,
+        10
+    );
+    restored.reveal_current_visibility();
+    let mut resumed = Game::from_save(restored.to_save()).unwrap();
+    assert_eq!(resumed.state_hash(), restored.state_hash());
+    assert_eq!(resumed.actor_kind_available_instance_count(BEAST), 0);
+    // Source xtra2.c skips an already-generated reward; it does not replace it.
+    // Exercise the duplicate guard directly because this unique cannot respawn.
+    assert!(resumed.generate_death_loot(&beast).unwrap().0.is_empty());
+    assert!(restored.generate_death_loot(&beast).unwrap().0.is_empty());
+    assert_eq!(resumed.rng, restored.rng);
+    assert_eq!(
+        resumed
+            .items
+            .iter()
+            .filter(|item| item.kind_id == SHIRT)
+            .count(),
+        1
+    );
+}
+
+#[test]
 fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
     let mut game = Game::new_with_build(409, "demo.build.warrior").unwrap();
     clear_monsters(&mut game);
@@ -533,19 +651,36 @@ fn a1_instant_lights_generate_activate_and_resume_after_save() {
                 .unwrap()
         );
         assert_eq!(game.rng, rng);
+        clear_monsters(&mut game);
+        game.items
+            .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
         let middle = cooldown / 2;
         for tick in 1..=middle {
             game.world_tick = tick;
             game.process_equipped_light_fuel(&mut Vec::new());
             game.process_inventory_device_recovery(&mut Vec::new());
         }
-        assert!(game.items[0].fuel.is_none());
+        assert!(
+            game.items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .fuel
+                .is_none()
+        );
         game.reveal_current_visibility();
         let mut restored = Game::from_save(game.to_save()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
         assert_eq!(
-            u32::from(restored.items[0].device_recovery_progress),
+            u32::from(
+                restored
+                    .items
+                    .iter()
+                    .find(|item| item.id == id)
+                    .unwrap()
+                    .device_recovery_progress
+            ),
             middle
         );
         assert_eq!(restored.probed_actor_kind_ids, game.probed_actor_kind_ids);
@@ -568,15 +703,50 @@ fn a1_instant_lights_generate_activate_and_resume_after_save() {
             restored.world_tick = tick;
             restored.process_inventory_device_recovery(&mut Vec::new());
         }
-        assert_eq!(restored.items[0].charges.unwrap().current, 0);
         assert_eq!(
-            u32::from(restored.items[0].device_recovery_progress),
+            restored
+                .items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .charges
+                .unwrap()
+                .current,
+            0
+        );
+        assert_eq!(
+            u32::from(
+                restored
+                    .items
+                    .iter()
+                    .find(|item| item.id == id)
+                    .unwrap()
+                    .device_recovery_progress
+            ),
             cooldown - 1
         );
         restored.world_tick = cooldown;
         restored.process_inventory_device_recovery(&mut Vec::new());
-        assert_eq!(restored.items[0].charges.unwrap().current, 1);
-        assert_eq!(restored.items[0].device_recovery_progress, 0);
+        assert_eq!(
+            restored
+                .items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .charges
+                .unwrap()
+                .current,
+            1
+        );
+        assert_eq!(
+            restored
+                .items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .device_recovery_progress,
+            0
+        );
         restored.reveal_current_visibility();
         let mut continued = Game::from_save(restored.to_save()).unwrap();
         assert_eq!(activate(&mut restored, &id), activate(&mut continued, &id));
@@ -592,7 +762,13 @@ fn a1_instant_lights_generate_activate_and_resume_after_save() {
         );
         assert_eq!(continued.rng, restored.rng);
         if slug == "stone-of-lore" {
-            let slot = match &restored.items[0].location {
+            let slot = match &restored
+                .items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .location
+            {
                 ItemLocation::Equipped { slot_id } => slot_id.clone(),
                 _ => panic!("stone must remain equipped"),
             };
@@ -631,7 +807,7 @@ fn a7_instant_lights_activate_with_source_parameters_and_resume_after_save() {
         .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
         .unwrap();
     let failure_seed = (0..1000)
-        .find(|seed| RfbRng::seeded(*seed).bounded(100) == 99)
+        .find(|seed| (5..10).contains(&RfbRng::seeded(*seed).bounded(100)))
         .unwrap();
 
     for (slug, base, cooldown, power) in [
@@ -746,8 +922,26 @@ fn a7_instant_lights_activate_with_source_parameters_and_resume_after_save() {
                 ..
             }
         )));
-        assert_eq!(failed.items[0].charges.unwrap().current, 1);
-        assert_eq!(failed.items[0].device_recovery_progress, 0);
+        assert_eq!(
+            failed
+                .items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .charges
+                .unwrap()
+                .current,
+            1
+        );
+        assert_eq!(
+            failed
+                .items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .device_recovery_progress,
+            0
+        );
         assert!(
             failed
                 .player
@@ -759,6 +953,8 @@ fn a7_instant_lights_activate_with_source_parameters_and_resume_after_save() {
             let mut cancelled = game.clone();
             cancelled.rng = RfbRng::seeded(success_seed);
             let rng = cancelled.rng.clone();
+            let mut waiting = cancelled.clone();
+            dispatch_next(&mut waiting, GameCommand::Wait);
             let update = dispatch_next(
                 &mut cancelled,
                 GameCommand::UseItem {
@@ -766,10 +962,28 @@ fn a7_instant_lights_activate_with_source_parameters_and_resume_after_save() {
                     target: None,
                 },
             );
-            assert_eq!(cancelled.world_tick, 10);
+            assert_eq!(cancelled.world_tick, waiting.world_tick);
             assert_ne!(cancelled.rng, rng);
-            assert_eq!(cancelled.items[0].charges.unwrap().current, 1);
-            assert_eq!(cancelled.items[0].device_recovery_progress, 0);
+            assert_eq!(
+                cancelled
+                    .items
+                    .iter()
+                    .find(|item| item.id == id)
+                    .unwrap()
+                    .charges
+                    .unwrap()
+                    .current,
+                1
+            );
+            assert_eq!(
+                cancelled
+                    .items
+                    .iter()
+                    .find(|item| item.id == id)
+                    .unwrap()
+                    .device_recovery_progress,
+                0
+            );
             assert!(update.events.iter().all(|event| !matches!(
                 event.outcome,
                 Some(GameEventOutcomeDto::AbilityAreaDamage { .. })
@@ -848,7 +1062,16 @@ fn a7_instant_lights_activate_with_source_parameters_and_resume_after_save() {
         let hp = game.player.hp;
         game.rng = RfbRng::seeded(success_seed);
         use_light(&mut game, &id, Some(&target));
-        assert_eq!(game.items[0].charges.unwrap().current, 0);
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .charges
+                .unwrap()
+                .current,
+            0
+        );
         if slug == "stone-of-war" {
             assert_eq!(
                 game.player.hp,
@@ -866,6 +1089,9 @@ fn a7_instant_lights_activate_with_source_parameters_and_resume_after_save() {
         let rng = game.rng.clone();
         use_light(&mut game, &id, Some(&target));
         assert_eq!(game.rng, rng);
+        clear_monsters(&mut game);
+        game.items
+            .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
         let middle = cooldown / 2;
         for tick in 1..=middle {
             game.world_tick = tick;
@@ -877,9 +1103,24 @@ fn a7_instant_lights_activate_with_source_parameters_and_resume_after_save() {
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
         assert_eq!(restored.player.statuses, game.player.statuses);
-        assert!(restored.items[0].fuel.is_none());
+        assert!(
+            restored
+                .items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .fuel
+                .is_none()
+        );
         assert_eq!(
-            u32::from(restored.items[0].device_recovery_progress),
+            u32::from(
+                restored
+                    .items
+                    .iter()
+                    .find(|item| item.id == id)
+                    .unwrap()
+                    .device_recovery_progress
+            ),
             middle
         );
         assert!(restored.generated_artifact_ids.contains(&kind));
@@ -892,15 +1133,50 @@ fn a7_instant_lights_activate_with_source_parameters_and_resume_after_save() {
             restored.world_tick = tick;
             restored.process_inventory_device_recovery(&mut Vec::new());
         }
-        assert_eq!(restored.items[0].charges.unwrap().current, 0);
         assert_eq!(
-            u32::from(restored.items[0].device_recovery_progress),
+            restored
+                .items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .charges
+                .unwrap()
+                .current,
+            0
+        );
+        assert_eq!(
+            u32::from(
+                restored
+                    .items
+                    .iter()
+                    .find(|item| item.id == id)
+                    .unwrap()
+                    .device_recovery_progress
+            ),
             cooldown - 1
         );
         restored.world_tick = cooldown;
         restored.process_inventory_device_recovery(&mut Vec::new());
-        assert_eq!(restored.items[0].charges.unwrap().current, 1);
-        assert_eq!(restored.items[0].device_recovery_progress, 0);
+        assert_eq!(
+            restored
+                .items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .charges
+                .unwrap()
+                .current,
+            1
+        );
+        assert_eq!(
+            restored
+                .items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .device_recovery_progress,
+            0
+        );
         restored.reveal_current_visibility();
         restored.rng = RfbRng::seeded(success_seed);
         let mut continued = Game::from_save(restored.to_save()).unwrap();
@@ -908,7 +1184,17 @@ fn a7_instant_lights_activate_with_source_parameters_and_resume_after_save() {
             use_light(&mut restored, &id, Some(&target)),
             use_light(&mut continued, &id, Some(&target))
         );
-        assert_eq!(restored.items[0].charges.unwrap().current, 0);
+        assert_eq!(
+            restored
+                .items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .charges
+                .unwrap()
+                .current,
+            0
+        );
         assert_eq!(continued.state_hash(), restored.state_hash());
         assert_eq!(continued.rng, restored.rng);
         assert_eq!(
@@ -944,7 +1230,7 @@ fn a8_artifacts_generate_activate_and_resume_source_cooldowns_after_save() {
         .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
         .unwrap();
     let failure = (0..1000)
-        .find(|seed| RfbRng::seeded(*seed).bounded(100) == 99)
+        .find(|seed| (5..10).contains(&RfbRng::seeded(*seed).bounded(100)))
         .unwrap();
     for (slug, base, cooldown, power, dice, sides, bonus, element, beam) in [
         (
@@ -1133,8 +1419,9 @@ fn a8_artifacts_generate_activate_and_resume_source_cooldowns_after_save() {
         ] {
             let mut attempt = game.clone();
             attempt.rng = RfbRng::seeded(seed);
-            let mut expected_rng = attempt.rng.clone();
-            expected_rng.bounded(100);
+            let mut waiting = attempt.clone();
+            waiting.rng.bounded(100);
+            dispatch_next(&mut waiting, GameCommand::Wait);
             dispatch_next(
                 &mut attempt,
                 GameCommand::UseItem {
@@ -1142,8 +1429,8 @@ fn a8_artifacts_generate_activate_and_resume_source_cooldowns_after_save() {
                     target,
                 },
             );
-            assert_eq!(attempt.world_tick, 10);
-            assert_eq!(attempt.rng, expected_rng);
+            assert_eq!(attempt.world_tick, waiting.world_tick);
+            assert_eq!(attempt.rng, waiting.rng, "{slug} seed {seed}");
             assert_eq!(attempt.items[0].charges.unwrap().current, 1);
             assert_eq!(attempt.items[0].device_recovery_progress, 0);
         }
@@ -1166,7 +1453,7 @@ fn a8_artifacts_generate_activate_and_resume_source_cooldowns_after_save() {
         if slug == "pauraegen" {
             assert!(events.iter().any(|event| matches!(event, DomainEvent::AbilityAreaDamage { resolution, .. } if resolution.radius == 2 && resolution.base_raw_damage == 40 && resolution.damage_type == DamageTypeDto::Electricity)));
             assert_eq!(game.entities[0].hp, 9960);
-            assert_eq!(game.entities[1].hp, 9987);
+            assert_eq!(game.entities[1].hp, 9986); // (40 + distance 2) / 3
         } else {
             let hits = events
                 .iter()
@@ -1277,9 +1564,16 @@ fn a8_gauntlet_brands_reach_both_weapons_but_not_ammunition() {
             ),
             (2, 2)
         );
-        game.push_generated_actor("test.a8-target".into(), "demo.actor.sheep", target);
-        game.entities[0].hp = 10_000;
-        game.entities[0].max_hp = 10_000;
+        game.push_generated_actor(
+            "test.a8-target".into(),
+            "demo.actor.greater-hell-beast",
+            target,
+        );
+        game.entities[0].hp = 1500;
+        game.entities[0].max_hp = 1500;
+        game.entities[0]
+            .resistances
+            .set(element, ResistanceLevel::Normal);
         let profiles = game.player_melee_profiles(&game.player_derived_stats());
         assert_eq!(profiles.len(), 2);
         for profile in &profiles {
@@ -1287,7 +1581,7 @@ fn a8_gauntlet_brands_reach_both_weapons_but_not_ammunition() {
                 game.player_melee_damage_multiplier(
                     profile,
                     &game.entities[0],
-                    game.content.actor("demo.actor.sheep").unwrap()
+                    game.content.actor("demo.actor.greater-hell-beast").unwrap()
                 ),
                 24
             );
@@ -1296,7 +1590,7 @@ fn a8_gauntlet_brands_reach_both_weapons_but_not_ammunition() {
             game.player_projectile_damage_multiplier(
                 &after,
                 &game.entities[0],
-                game.content.actor("demo.actor.sheep").unwrap()
+                game.content.actor("demo.actor.greater-hell-beast").unwrap()
             ),
             10
         );
@@ -1305,7 +1599,7 @@ fn a8_gauntlet_brands_reach_both_weapons_but_not_ammunition() {
                 let mut trial = game.clone();
                 trial.rng = RfbRng::seeded(*seed);
                 strike(&mut trial);
-                trial.entities[0].hp < 10_000
+                trial.entities[0].hp < 1500
             })
             .unwrap();
         let mut damage = Vec::new();
@@ -1318,7 +1612,7 @@ fn a8_gauntlet_brands_reach_both_weapons_but_not_ammunition() {
             assert_eq!(strike(&mut restored), strike(&mut trial));
             assert_eq!(restored.state_hash(), trial.state_hash());
             assert_eq!(restored.rng, trial.rng);
-            damage.push(10_000 - trial.entities[0].hp);
+            damage.push(1500 - trial.entities[0].hp);
         }
         assert!(damage[0] > damage[1] && damage[1] > 0);
     }
@@ -1372,9 +1666,13 @@ fn a8_thrown_daggers_use_their_own_brands_and_keep_random_properties_after_picku
         give_inventory_item(&mut game, "test.a8-gloves", &glove_kind);
         game.register_generated_artifact(&glove_kind);
         game.equip_inventory_item("test.a8-gloves", None).unwrap();
-        game.push_generated_actor("test.a8-target".into(), "demo.actor.sheep", target);
-        game.entities[0].hp = 10_000;
-        game.entities[0].max_hp = 10_000;
+        game.push_generated_actor(
+            "test.a8-target".into(),
+            "demo.actor.greater-hell-beast",
+            target,
+        );
+        game.entities[0].hp = 1500;
+        game.entities[0].max_hp = 1500;
         for (resistance, multiplier) in
             [(ResistanceLevel::Normal, 24), (ResistanceLevel::Immune, 10)]
         {
@@ -1396,6 +1694,8 @@ fn a8_thrown_daggers_use_their_own_brands_and_keep_random_properties_after_picku
             let ItemLocation::Ground(position) = thrown.location else {
                 panic!("thrown artifact must land")
             };
+            // Step onto the dropped dagger only after vacating the living target.
+            restored.entities[0].position = restored.player.position;
             restored.player.position = position;
             restored.pick_up_item_at_player(Some(&id)).unwrap();
             restored.reveal_current_visibility();
@@ -1413,8 +1713,19 @@ fn a8_thrown_daggers_use_their_own_brands_and_keep_random_properties_after_picku
 fn a9_ordinary_identity_artifacts_generate_fight_and_preserve_their_scope_after_save() {
     fn strike(game: &mut Game) -> Vec<DomainEvent> {
         let mut events = Vec::new();
-        game.resolve_player_melee(0, false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        let target = game
+            .entities
+            .iter()
+            .position(|actor| actor.id != "test.a9-mount")
             .unwrap();
+        game.resolve_player_melee(
+            target,
+            false,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
         events
     }
     for (slug, base, build, dice, sides, hit, damage, weight) in [
@@ -1507,7 +1818,7 @@ fn a9_ordinary_identity_artifacts_generate_fight_and_preserve_their_scope_after_
                 ResistanceLevel::Resistant
             );
             game.player.hp = 1;
-            game.world_tick = 0;
+            game.world_tick = 9;
             let update = dispatch_next(&mut game, GameCommand::Wait);
             assert!(
                 update
@@ -1633,13 +1944,25 @@ fn a9_ordinary_identity_artifacts_generate_fight_and_preserve_their_scope_after_
                 trial.entities[0].hp < 10_000
             })
             .unwrap();
+        // Restore the target's source HP bounds before exercising saved combat.
+        game.entities[0].max_hp = game
+            .content
+            .actor(&game.entities[0].kind_id)
+            .unwrap()
+            .max_hp;
+        game.entities[0].hp = 1;
         game.rng = RfbRng::seeded(seed);
         game.reveal_current_visibility();
         let mut restored = Game::from_save(game.to_save()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.riding_actor_id, game.riding_actor_id);
         assert_eq!(strike(&mut restored), strike(&mut game));
-        assert!(restored.entities[0].hp < 10_000);
+        assert!(
+            restored
+                .entities
+                .iter()
+                .all(|actor| actor.id != "test.a9-target")
+        );
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
         assert_eq!(
@@ -1836,8 +2159,19 @@ fn a2_armor_generation_equipment_consumers_and_uniqueness_survive_save() {
 fn a3_weapons_generate_fight_and_preserve_equipment_and_uniqueness_after_save() {
     fn strike(game: &mut Game) -> Vec<DomainEvent> {
         let mut events = Vec::new();
-        game.resolve_player_melee(0, false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        let target = game
+            .entities
+            .iter()
+            .position(|actor| actor.id != "test.a3-mount")
             .unwrap();
+        game.resolve_player_melee(
+            target,
+            false,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
         events
     }
 
@@ -2074,12 +2408,24 @@ fn a3_weapons_generate_fight_and_preserve_equipment_and_uniqueness_after_save() 
                 trial.entities[0].hp < 10_000
             })
             .expect("seed range must include a real weapon hit");
+        // Restore the target's source HP bounds before exercising saved combat.
+        game.entities[0].max_hp = game
+            .content
+            .actor(&game.entities[0].kind_id)
+            .unwrap()
+            .max_hp;
+        game.entities[0].hp = 1;
         game.rng = RfbRng::seeded(seed);
         game.reveal_current_visibility();
         let mut restored = Game::from_save(game.to_save()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(strike(&mut restored), strike(&mut game));
-        assert!(restored.entities[0].hp < 10_000);
+        assert!(
+            restored
+                .entities
+                .iter()
+                .all(|actor| actor.id != "test.a3-target")
+        );
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
         assert!(restored.generated_artifact_ids.contains(&kind));
@@ -4330,6 +4676,13 @@ fn a6_aule_generates_with_both_extras_and_replays_combat_after_save() {
             trial.entities[0].hp < 10_000
         })
         .expect("controlled seed range includes a real Aule hit");
+    // Restore the target's source HP bounds before exercising saved combat.
+    game.entities[0].max_hp = game
+        .content
+        .actor(&game.entities[0].kind_id)
+        .unwrap()
+        .max_hp;
+    game.entities[0].hp = 1;
     game.rng = RfbRng::seeded(seed);
     game.reveal_current_visibility();
     let mut restored = Game::from_save(game.to_save()).unwrap();
@@ -4337,7 +4690,12 @@ fn a6_aule_generates_with_both_extras_and_replays_combat_after_save() {
     assert_eq!(restored.items[0].intrinsic_properties, intrinsic);
     assert_eq!(restored.items[0].rolled_affixes, rolled);
     assert_eq!(strike(&mut restored), strike(&mut game));
-    assert!(restored.entities[0].hp < 10_000);
+    assert!(
+        restored
+            .entities
+            .iter()
+            .all(|actor| actor.id != "test.aule-target")
+    );
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);
     assert!(restored.generated_artifact_ids.contains("demo.item.aule"));
@@ -4643,13 +5001,25 @@ fn a5_weapons_generate_fight_and_keep_random_properties_after_save() {
                 trial.entities[0].hp < 10_000
             })
             .expect("controlled seed range includes a real weapon hit");
+        // Restore the target's source HP bounds before exercising saved combat.
+        game.entities[0].max_hp = game
+            .content
+            .actor(&game.entities[0].kind_id)
+            .unwrap()
+            .max_hp;
+        game.entities[0].hp = 1;
         game.rng = RfbRng::seeded(seed);
         game.reveal_current_visibility();
         let mut restored = Game::from_save(game.to_save()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.items[0].rolled_affixes, rolled);
         assert_eq!(strike(&mut restored), strike(&mut game));
-        assert!(restored.entities[0].hp < 10_000);
+        assert!(
+            restored
+                .entities
+                .iter()
+                .all(|actor| actor.id != "test.a5-target")
+        );
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
         assert!(restored.generated_artifact_ids.contains(&kind));
@@ -6855,7 +7225,11 @@ fn tomte_tailored_acquirement_filters_headgear_by_birth_race_only() {
         for seed in 0..256 {
             base.rng = RfbRng::seeded(seed);
             if let Some(draft) = base.generate_one_loot_draft(&context, ItemGenerationMode::Great) {
-                ordinary.insert(draft.kind_id);
+                let item = base.content.item(&draft.kind_id).unwrap();
+                ordinary.insert(item.artifact_generation.as_ref().map_or_else(
+                    || item.id.clone(),
+                    |artifact| artifact.base_item_kind_id.clone(),
+                ));
             }
         }
         assert_eq!(

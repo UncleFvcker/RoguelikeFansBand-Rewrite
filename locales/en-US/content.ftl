@@ -9642,3 +9642,9 @@ item-demo-xiaolong-name = Nunchaku of Xiaolong
 item-demo-xiaolong-description = Nunchaku of Xiaolong
 item-demo-dragonlance-name = Heavy Lance 'Dragonlance'
 item-demo-dragonlance-description = Heavy Lance 'Dragonlance'
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: kind 245 / artifact 192.
+item-demo-t-shirt-name = T-shirt
+item-demo-t-shirt-description = T-shirt
+item-demo-legendary-lost-treasure-name = T-shirt 'I killed the GHB and all I got was this lousy T-shirt!'
+item-demo-legendary-lost-treasure-description = T-shirt 'I killed the GHB and all I got was this lousy T-shirt!'

@@ -43,8 +43,11 @@ def records(source, *, artifact=False):
             result[index]["allocation"] = line[2:].split(":")
         elif line.startswith("F:"):
             result[index]["flags"].extend(flag for token in line[2:].split("|") if (flag := token.strip()))
-        elif re.match(r"^E:[A-Z_]+:\d+:\d+", line):
+        elif re.match(r"^E:[A-Z_]+:\d+(?::|$)", line):
             result[index]["effect"] = line[2:].split(":")
+            if len(result[index]["effect"]) == 2:
+                # init1.c permits omitted timeout, e.g. Poseidon's EARTHQUAKE:10.
+                result[index]["effect"].append("0")
     return result
 
 

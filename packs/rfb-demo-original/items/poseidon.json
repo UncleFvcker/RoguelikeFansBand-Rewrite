@@ -55,12 +55,9 @@
       "RES_ACID",
       "RES_FIRE",
       "RES_SOUND",
-      "RIDING",
-      "SHOW_MODS",
       "SLAY_EVIL",
       "SPEED",
-      "STR",
-      "TOWN"
+      "STR"
     ],
     "pval": 3,
     "toArmor": 0

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.t-shirt",
+  "nameKey": "item-demo-t-shirt-name",
+  "descriptionKey": "item-demo-t-shirt-description",
+  "glyph": "~",
+  "generationLevel": 1,
+  "weightTenthsPound": 10,
+  "maxStack": 1,
+  "baseValue": 1,
+  "equipmentSlot": "body",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "rfbBaseKind": {
+    "sourceIndex": 245,
+    "tval": 36,
+    "sval": 0
+  },
+  "modifiers": {
+    "defense": 1
+  },
+  "rfbValue": {
+    "flags": [],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "mogaminatorRare": false
+}

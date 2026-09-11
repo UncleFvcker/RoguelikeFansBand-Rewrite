@@ -933,7 +933,11 @@ pub(super) fn validate_items(
                 return Err(ContentError::InvalidArtifactGeneration(item.id.clone()));
             };
             if generation.source_index == 0
-                || generation.rarity_one_in == 0
+                || (generation.rarity_one_in == 0
+                    && item
+                        .rfb_value
+                        .as_ref()
+                        .is_none_or(|value| !value.flags.contains("QUESTITEM")))
                 || !artifact_source_indices.insert(generation.source_index)
                 || !item.tags.iter().any(|tag| tag == "artifact")
                 || item.max_stack != 1

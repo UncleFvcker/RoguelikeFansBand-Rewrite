@@ -113,6 +113,10 @@
   },
   "role": "monster",
   "speed": 115,
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.legendary-lost-treasure",
+    "chancePercent": 100
+  },
   "tags": [
     "demon",
     "evil",

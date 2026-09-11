@@ -1146,13 +1146,17 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.broad-spear",
                 "demo.item.broad-sword",
                 "demo.item.diamond-edge",
+                "demo.item.dragonlance",
+                "demo.item.eorlingas",
                 "demo.item.falchion",
                 "demo.item.fauchard",
                 "demo.item.flail",
                 "demo.item.glaive",
+                "demo.item.glamdring",
                 "demo.item.heavy-lance",
                 "demo.item.lance",
                 "demo.item.long-sword",
+                "demo.item.orcrist",
                 "demo.item.pain",
                 "demo.item.poseidon",
                 "demo.item.quickthorn",
@@ -1168,7 +1172,13 @@ fn equipment_and_ego_identities_match_source() {
             .map(|id| {
                 (
                     id,
-                    if matches!(id, "demo.item.heavy-lance" | "demo.item.lance") {
+                    if matches!(
+                        id,
+                        "demo.item.heavy-lance"
+                            | "demo.item.lance"
+                            | "demo.item.dragonlance"
+                            | "demo.item.eorlingas"
+                    ) {
                         RidingWeaponKindDefinition::Lance
                     } else {
                         RidingWeaponKindDefinition::Compatible
@@ -1182,8 +1192,8 @@ fn equipment_and_ego_identities_match_source() {
         invalid
             .items
             .iter_mut()
-            .find(|item| item.id == "demo.item.lance")
-            .expect("Lance should exist")
+            .find(|item| item.id == "demo.item.fauchard")
+            .expect("Fauchard has no fixed-artifact dependents in this riding-profile fixture")
             .melee_profile = None;
         assert!(matches!(
             validate_and_normalize(&mut invalid),
@@ -1314,6 +1324,12 @@ fn fixed_artifact_generation_matches_rfb_records_and_rejects_invalid_content() {
         ),
         ("demo.item.pain", 94, "demo.item.glaive", 25),
         ("demo.item.slayer", 123, "demo.item.executioners-sword", 60),
+        (
+            "demo.item.legendary-lost-treasure",
+            192,
+            "demo.item.t-shirt",
+            0,
+        ),
     ] {
         let generation = artifact
             .content
@@ -1337,6 +1353,22 @@ fn fixed_artifact_generation_matches_rfb_records_and_rejects_invalid_content() {
             .artifact_generation
             .is_none()
     );
+
+    let mut invalid = artifact.content.clone();
+    invalid
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.legendary-lost-treasure")
+        .unwrap()
+        .rfb_value
+        .as_mut()
+        .unwrap()
+        .flags
+        .remove("QUESTITEM");
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidArtifactGeneration(_))
+    ));
 
     let mut invalid = artifact.content.clone();
     invalid

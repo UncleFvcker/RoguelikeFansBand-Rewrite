@@ -9646,3 +9646,9 @@ item-demo-xiaolong-name = 小龙的双截棍
 item-demo-xiaolong-description = 小龙的双截棍
 item-demo-dragonlance-name = 重型骑枪『龙枪』
 item-demo-dragonlance-description = 重型骑枪『龙枪』
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: kind 245 / artifact 192.
+item-demo-t-shirt-name = T恤
+item-demo-t-shirt-description = T恤
+item-demo-legendary-lost-treasure-name = T恤『我干掉了地狱看门犬，结果只得到了这件破T恤！』
+item-demo-legendary-lost-treasure-description = T恤『我干掉了地狱看门犬，结果只得到了这件破T恤！』

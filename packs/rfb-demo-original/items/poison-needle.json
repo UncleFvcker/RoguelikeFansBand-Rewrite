@@ -35,11 +35,11 @@
   },
   "rfbValue": {
     "flags": [
-      "SHOW_MODS",
       "IGNORE_ACID",
+      "IGNORE_COLD",
       "IGNORE_ELEC",
       "IGNORE_FIRE",
-      "IGNORE_COLD"
+      "SHOW_MODS"
     ],
     "pval": 0,
     "toArmor": 0

@@ -741,16 +741,38 @@ fn nightcap_reduces_carried_light_preserves_glow_and_senses_only_undead_after_sa
     let mut restored = Game::from_save(game.to_save()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.player_light_radius(), Some(1));
-    assert!(restored.entity_is_visible_by_telepathy(&restored.entities[0]));
+    assert!(
+        restored.entity_is_visible_by_telepathy(
+            restored
+                .entities
+                .iter()
+                .find(|actor| actor.id == "test.undead")
+                .unwrap()
+        )
+    );
     restored.remove_equipped_curses(RemoveEquippedCursesRequest::new(true));
     assert_eq!(restored.player_light_radius(), Some(1));
-    let head = match &restored.items[1].location {
+    let head = match &restored
+        .items
+        .iter()
+        .find(|item| item.id == "test.nightcap")
+        .unwrap()
+        .location
+    {
         ItemLocation::Equipped { slot_id } => slot_id.clone(),
         _ => panic!("nightcap must remain equipped"),
     };
     restored.unequip_slot(&head).unwrap();
     assert_eq!(restored.player_light_radius(), Some(2));
-    assert!(!restored.entity_is_visible_by_telepathy(&restored.entities[0]));
+    assert!(
+        !restored.entity_is_visible_by_telepathy(
+            restored
+                .entities
+                .iter()
+                .find(|actor| actor.id == "test.undead")
+                .unwrap()
+        )
+    );
     give_inventory_item(&mut restored, "test.four-winds", "demo.item.four-winds");
     restored.register_generated_artifact("demo.item.four-winds");
     restored
