@@ -1,0 +1,110 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "sourceIndex": 41,
+    "baseItemKindId": "demo.item.iron-helm",
+    "instant": false,
+    "rarityOneIn": 7
+  },
+  "baseValue": 200000,
+  "descriptionKey": "item-demo-terror-mask-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "id": "demo.item-activation.terror-mask-scare",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-scare-monsters-name",
+        "rfbValue": 600,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1,
+        "effectProgramId": "demo.effect.terror-mask-scare"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1000
+    }
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 18,
+    "meleeDamage": 18
+  },
+  "equipmentSlot": "head",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "]",
+  "id": "demo.item.terror-mask",
+  "maxStack": 1,
+  "nameKey": "item-demo-terror-mask-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "poison": "resistant",
+    "disenchant": "resistant",
+    "fear": "resistant"
+  },
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "DEC_INT",
+      "DEC_WIS",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "NO_MAGIC",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_DISEN",
+      "RES_FEAR",
+      "RES_POIS",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "TELEPORT"
+    ],
+    "pval": 3,
+    "toArmor": 10
+  },
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "weightTenthsPound": 75,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 15,
+    "intelligence": -3,
+    "wisdom": -3,
+    "charisma": 3
+  },
+  "passives": [
+    "anti-magic",
+    "see-invisible"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ]
+}

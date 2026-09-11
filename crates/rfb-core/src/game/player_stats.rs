@@ -939,6 +939,23 @@ impl Game {
     }
 
     fn armor_combat_enchantments(&self, item: &ItemInstance, ranged: bool) -> (i32, i32) {
+        // master:equip.c excludes Terror Mask from shooter bonuses, including
+        // enchantments applied after generation. Its static bonuses are melee-only.
+        if self
+            .content
+            .item(&item.kind_id)
+            .and_then(|kind| kind.artifact_generation.as_ref())
+            .is_some_and(|artifact| artifact.source_index == 41)
+        {
+            return if ranged {
+                (0, 0)
+            } else {
+                (
+                    i32::from(item.enchantments.to_hit),
+                    i32::from(item.enchantments.to_damage),
+                )
+            };
+        }
         let Some(index) = self.armor_ego_index(item) else {
             return (0, 0);
         };

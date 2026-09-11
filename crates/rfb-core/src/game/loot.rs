@@ -1320,7 +1320,7 @@ impl Game {
             context.depth,
             2,
         );
-        GeneratedItemDraft {
+        let mut draft = GeneratedItemDraft {
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,
@@ -1343,7 +1343,44 @@ impl Game {
             charges,
             fuel: initial_item_fuel(&self.content, &kind_id),
             kind_id,
+        };
+        // master:artifact.c::random_artifact_resistance, ART_TERROR. These
+        // properties belong to the generated instance, not its later wearer.
+        if self
+            .content
+            .item(&draft.kind_id)
+            .and_then(|item| item.artifact_generation.as_ref())
+            .is_some_and(|artifact| artifact.source_index == 41)
+        {
+            if self.build.as_ref().is_some_and(|build| {
+                matches!(
+                    build.class_id.as_str(),
+                    "demo.class.warrior" | "demo.class.cavalry" | "demo.class.berserker"
+                )
+            }) {
+                super::ego::add_one_ability(&mut self.rng, &mut draft.intrinsic_properties);
+                let extra = vec!["rfb-legacy.affix.artifact-extra-high-resistance".to_owned()];
+                draft
+                    .rolled_affixes
+                    .extend(super::ego::roll_affix_properties_with_rng(
+                        &self.content,
+                        &mut self.rng,
+                        &extra,
+                        |_| context.depth,
+                    ));
+                draft.affix_ids.extend(extra);
+            } else {
+                draft
+                    .intrinsic_properties
+                    .rfb_flags
+                    .extend(["AGGRAVATE".into(), "TY_CURSE".into()]);
+                draft.curse = Some(ItemCurseSeverityDto::Heavy);
+                draft
+                    .intrinsic_curse_effects
+                    .insert(super::ego::curses::get_curse(&mut self.rng, 2, 32));
+            }
         }
+        draft
     }
 
     pub(super) fn commit_generated_item_draft(

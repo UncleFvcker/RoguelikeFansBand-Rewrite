@@ -9415,3 +9415,6 @@ item-activation-demo-aphrodite-name = 召唤怪物
 floor-demo-mount-olympus-depth-name = 奥林匹斯山 { $depth } 层
 terrain-demo-mount-olympus-entrance-name = 奥林匹斯山的入口
 terrain-demo-mount-olympus-entrance-description = 奥林匹斯山的入口
+
+item-demo-terror-mask-name = 『恐惧面具』铁盔
+item-demo-terror-mask-description = 散发威压的古老面具。

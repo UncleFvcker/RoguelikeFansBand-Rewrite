@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.terror-mask-scare",
+  "input": "self",
+  "steps": [
+    {
+      "effect": {
+        "durationTicks": 3,
+        "intensity": 1,
+        "power": 60,
+        "stacking": "replace",
+        "statusKindId": "rfb.status.fear",
+        "type": "visible-apply-status"
+      },
+      "type": "ability-effect"
+    }
+  ]
+}

@@ -3,7 +3,7 @@
   "sourceRef": "master",
   "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
   "reviewedAt": "2026-09-11",
-  "codeBaseline": "9d3222610 + I5 Craft",
+  "codeBaseline": "e4099e149 + I3 Terror Mask",
   "entrySource": "web/src/character-creation.ts CREATION_BUILDS / PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
   "scope": "Source and behavior applicability review of ten real creation builds, five areas each, within the imported canonical pool. Current reachable generation evidence is covered by the referenced tests; unavailable identities/content and object representation limits remain separate. This input and the audit CLI do not execute gameplay tests.",
   "recordSemantics": {
@@ -125,7 +125,7 @@
         "good-luck-fixed-retry"
       ],
       "entry": "Imported fixed artifacts and explicitly configured class reward pools.",
-      "reason": "Of ten source identity-sensitive artifacts, only Dr Jones (162) is imported and uses its ordinary non-Archaeologist branch. Terror Mask is absent even though Warrior/Cavalry/Berserker qualify in source. Meditation Stone class bonuses and other imported rewards are actual use/reward behavior; they do not add a class branch to fixed-artifact construction.",
+      "reason": "Terror Mask (41) is generated in the ordinary iron-helm pool for every current build. Warrior/Cavalry/Berserker receive one ability then one high resistance; all other current classes receive intrinsic AGGRAVATE/TY_CURSE, a heavy curse and get_curse(2). These are saved generation properties. Dr Jones (162) retains its ordinary non-Archaeologist branch. Configured rewards keep their existing entry contracts.",
       "implementation": [
         "crates/rfb-core/src/game/loot.rs",
         "crates/rfb-core/src/game/tasks.rs",
@@ -134,9 +134,12 @@
       ],
       "tests": [
         "crates/rfb-core/src/game/tests/tasks.rs#old_castle_reward_is_forced_even_when_the_artifact_was_generated_before_claim",
-        "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_is_not_sampled_after_either_fixed_artifact_success"
+        "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_is_not_sampled_after_either_fixed_artifact_success",
+        "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save",
+        "crates/rfb-core/src/game/tests/items.rs#terror_mask_duplicate_power_and_resistance_do_not_reroll",
+        "crates/rfb-core/src/game/tests/items.rs#terror_mask_melee_only_bonuses_and_fear_activation_restore"
       ],
-      "limits": "Absent identity-sensitive artifacts and fixed harps remain deferred; explicit rewards must keep their forced-item contract."
+      "limits": "Other eight identity-sensitive artifacts, fixed harps, Mauler and monster Hydra/Troll/Jelly favorable branches remain deferred until their actual identities/content are available. No new location reward is enabled."
     },
     {
       "id": "use-save",
@@ -299,12 +302,12 @@
       "file": "src/artifact.c",
       "start": 3254,
       "end": 3406,
-      "status": "deferred-unavailable-build-or-content",
-      "entry": "Dr Jones whip exists with ordinary behavior; Archaeologist unavailable; other nine identity-specific artifacts absent",
+      "status": "implemented-current-content",
+      "entry": "Terror Mask ordinary source level 50/rarity 7; all ten current creation builds. Dr Jones ordinary branch remains available.",
       "change": "Gothmog, Twilight, Stormbringer, Destroyer, Terror Mask, Stone Mask, Muramasa, Dr Jones, Xiaolong, Dragonlance branches",
       "consumer": "fixed artifact construction, curses/dice/pval/slays/abilities",
-      "tests": null,
-      "prerequisite": "import each source artifact and implement both ordinary and applicable identity branches; Warrior/Cavalry/Berserker entries do not make absent Terror Mask reachable"
+      "tests": "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save; crates/rfb-core/src/game/tests/items.rs#terror_mask_duplicate_power_and_resistance_do_not_reroll; crates/rfb-core/src/game/tests/items.rs#terror_mask_melee_only_bonuses_and_fear_activation_restore",
+      "prerequisite": "Eight other artifacts, Archaeologist-specific Dr Jones and Mauler/monster Hydra/Troll/Jelly Terror Mask branches remain unavailable; import each identity/content with its actual consumer and entry."
     },
     {
       "id": "inspired-smithing",
@@ -665,8 +668,11 @@
         },
         {
           "review": "fixed-artifact-reward",
-          "status": "no-special-difference",
-          "reason": "No reachable identity-specific construction branch in the imported fixed artifacts; ordinary construction and configured reward paths apply."
+          "status": "implemented",
+          "reason": "Terror Mask receives one random ability then one high resistance, without forced curses. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save"
+          ]
         },
         {
           "review": "use-save",
@@ -708,9 +714,10 @@
         {
           "review": "fixed-artifact-reward",
           "status": "implemented",
-          "reason": "No imported identity-specific construction branch; eight configured class rewards already materialize real items and Egos. Missing Terror Mask remains deferred.",
+          "reason": "Existing eight class rewards still materialize real items and Egos. Terror Mask receives one random ability then one high resistance, without forced curses. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
           "tests": [
-            "crates/rfb-core/src/game/tests/berserker/rewards.rs#all_eight_class_rewards_are_claimed_as_real_items_with_materialized_egos"
+            "crates/rfb-core/src/game/tests/berserker/rewards.rs#all_eight_class_rewards_are_claimed_as_real_items_with_materialized_egos",
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save"
           ]
         },
         {
@@ -749,8 +756,11 @@
         },
         {
           "review": "fixed-artifact-reward",
-          "status": "no-special-difference",
-          "reason": "No reachable identity-specific construction branch in the imported fixed artifacts; ordinary construction and configured reward paths apply."
+          "status": "implemented",
+          "reason": "Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save"
+          ]
         },
         {
           "review": "use-save",
@@ -783,8 +793,11 @@
         },
         {
           "review": "fixed-artifact-reward",
-          "status": "no-special-difference",
-          "reason": "No reachable identity-specific construction branch in the imported fixed artifacts; ordinary construction and configured reward paths apply."
+          "status": "implemented",
+          "reason": "Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save"
+          ]
         },
         {
           "review": "use-save",
@@ -817,8 +830,11 @@
         },
         {
           "review": "fixed-artifact-reward",
-          "status": "no-special-difference",
-          "reason": "No reachable identity-specific construction branch in the imported fixed artifacts; ordinary construction and configured reward paths apply."
+          "status": "implemented",
+          "reason": "Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save"
+          ]
         },
         {
           "review": "use-save",
@@ -853,8 +869,11 @@
         },
         {
           "review": "fixed-artifact-reward",
-          "status": "no-special-difference",
-          "reason": "No reachable identity-specific construction branch in the imported fixed artifacts; ordinary construction and configured reward paths apply."
+          "status": "implemented",
+          "reason": "Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save"
+          ]
         },
         {
           "review": "use-save",
@@ -890,8 +909,11 @@
         },
         {
           "review": "fixed-artifact-reward",
-          "status": "no-special-difference",
-          "reason": "No reachable identity-specific construction branch in the imported fixed artifacts; ordinary construction and configured reward paths apply."
+          "status": "implemented",
+          "reason": "Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save"
+          ]
         },
         {
           "review": "use-save",
@@ -924,8 +946,11 @@
         },
         {
           "review": "fixed-artifact-reward",
-          "status": "no-special-difference",
-          "reason": "No reachable identity-specific construction branch in the imported fixed artifacts; ordinary construction and configured reward paths apply."
+          "status": "implemented",
+          "reason": "Terror Mask receives one random ability then one high resistance, without forced curses. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save"
+          ]
         },
         {
           "review": "use-save",
@@ -967,10 +992,11 @@
         {
           "review": "fixed-artifact-reward",
           "status": "implemented",
-          "reason": "Imported Meditation Stone has exclusive casting bonuses in the equipment consumer; Palantir activation and Old Castle reward pool already have real-build tests. No extra identity-specific fixed construction branch.",
+          "reason": "Imported Meditation Stone has exclusive casting bonuses in the equipment consumer; Palantir activation and Old Castle reward pool already have real-build tests. Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
           "tests": [
             "crates/rfb-core/src/game/tests/mindcrafter/spells.rs#meditation_stone_has_exclusive_casting_bonuses_and_its_activation_recharges_devices",
-            "crates/rfb-core/src/game/tests/mindcrafter/spells.rs#palantir_lists_hidden_uniques_without_revealing_their_positions_and_old_castle_uses_its_pool"
+            "crates/rfb-core/src/game/tests/mindcrafter/spells.rs#palantir_lists_hidden_uniques_without_revealing_their_positions_and_old_castle_uses_its_pool",
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save"
           ]
         },
         {
@@ -1022,9 +1048,10 @@
         {
           "review": "fixed-artifact-reward",
           "status": "implemented",
-          "reason": "Thieves reward is a rapier; Old Castle selects Duelist/Quickthorn with the source 1:4 weights. Already generated artifacts produce a named rapier replacement; activation and positive blows use Duelist consumers.",
+          "reason": "Thieves reward is a rapier; Old Castle selects Duelist/Quickthorn with the source 1:4 weights. Already generated artifacts produce a named rapier replacement; activation and positive blows use Duelist consumers. Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
           "tests": [
-            "crates/rfb-core/src/game/tests/duelist/rewards.rs"
+            "crates/rfb-core/src/game/tests/duelist/rewards.rs",
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save"
           ]
         },
         {

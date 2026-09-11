@@ -373,6 +373,349 @@ fn galadriel_instant_generation_lighting_activation_and_cooldown_survive_save() 
 }
 
 #[test]
+fn terror_mask_generation_uses_current_build_and_preserves_identity_after_save() {
+    use rfb_protocol::ItemCurseEffectDto;
+    for (build, favored) in [
+        ("warrior", true),
+        ("cavalry", true),
+        ("berserker", true),
+        ("duelist", false),
+        ("archer", false),
+        ("sniper", false),
+        ("high-mage-death", false),
+        ("high-mage-craft", false),
+        ("paladin-death", false),
+        ("mindcrafter", false),
+    ] {
+        let mut game = Game::new_with_build(422, &format!("demo.build.{build}")).unwrap();
+        choose_human_talent_if_pending(&mut game);
+        clear_monsters(&mut game);
+        game.items.clear();
+        let context = LootContext {
+            table_id: "demo.loot-table.base-items".into(),
+            floor_id: "test.floor.depth-50".into(),
+            depth: 50,
+            source: LootSource::MonsterDeath {
+                actor_id: "test.ordinary-drop".into(),
+            },
+        };
+        // Controlled depth, complete ordinary pool: profession never excludes the mask.
+        let mut found = None;
+        for _ in 0..50_000 {
+            for item in game
+                .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+                .unwrap()
+            {
+                if item.kind_id == "demo.item.terror-mask" {
+                    found = Some(item);
+                }
+            }
+            if found.is_some() {
+                break;
+            }
+        }
+        let item = found.unwrap_or_else(|| panic!("mask never generated for {build}"));
+        assert_eq!(item.affix_ids.len(), usize::from(favored));
+        assert_eq!(item.rolled_affixes.len(), usize::from(favored));
+        assert_eq!(
+            item.curse,
+            (!favored).then_some(ItemCurseSeverityDto::Heavy)
+        );
+        assert_eq!(item.intrinsic_curse_effects.len(), usize::from(!favored));
+        assert_eq!(game.item_has_rfb_flag(&item, "TY_CURSE"), !favored);
+        assert_eq!(game.item_has_rfb_flag(&item, "AGGRAVATE"), !favored);
+        let id = item.id.clone();
+        game.items.push(item);
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        assert!(game.visible_item_resistances(&game.items[0]).is_empty());
+        game.reveal_current_visibility();
+        let unknown = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(unknown.state_hash(), game.state_hash());
+        let rolled = game.items[0].clone();
+        let rng = game.rng.clone();
+        game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        assert_eq!(game.rng, rng);
+        game.equip_inventory_item(&id, None).unwrap();
+        game.refresh_player_resource_maxima();
+        assert_eq!(
+            game.items[0].intrinsic_properties,
+            rolled.intrinsic_properties
+        );
+        assert!(game.player_has_anti_magic());
+        assert_eq!(game.player_has_equipped_aggravation(), !favored);
+        assert!(game.player_has_equipped_curse_effect(ItemCurseEffectDto::Teleport));
+        assert_eq!(
+            game.player_has_equipped_curse_effect(ItemCurseEffectDto::TyCurse),
+            !favored
+        );
+        if build == "berserker" {
+            let before = game.items[0].clone();
+            let rng = game.rng.clone();
+            assert_eq!(
+                game.inventory_item_dto(&before)
+                    .use_unavailable_reason
+                    .as_deref(),
+                Some("berserker")
+            );
+            game.use_inventory_item(
+                &id,
+                Some(&TargetSelection::SelfTarget),
+                None,
+                &mut Vec::new(),
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
+            assert_eq!(game.items[0], before);
+            assert_eq!(game.rng, rng);
+        }
+        assert_eq!(game.equipment_modifiers().intelligence, -3);
+        assert_eq!(game.equipment_modifiers().wisdom, -3);
+        assert_eq!(game.equipment_modifiers().charisma, 3);
+        assert_eq!(game.player_equipment_bonuses().melee_skill, 18);
+        assert_eq!(game.player_equipment_bonuses().melee_damage, 18);
+        // Duelist AC also changes with the mask's INT penalty; inspect the
+        // actual item contribution separately from that class calculation.
+        assert_eq!(
+            game.player_derived_stats()
+                .armor_class
+                .contributions
+                .iter()
+                .filter(|entry| entry.source_id == id)
+                .map(|entry| entry.amount)
+                .sum::<i32>(),
+            150
+        );
+        for element in [
+            DamageType::Acid,
+            DamageType::Cold,
+            DamageType::Poison,
+            DamageType::Disenchant,
+        ] {
+            assert_eq!(
+                game.effective_player_resistances().level(element),
+                ResistanceLevel::Resistant
+            );
+        }
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.items[0], game.items[0]);
+        assert!(
+            restored
+                .generated_artifact_ids
+                .contains("demo.item.terror-mask")
+        );
+        let next = game
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap();
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            next
+        );
+        assert_eq!(restored.rng, game.rng);
+        assert!(
+            restored
+                .roll_fixed_artifact_kind_id(&context, Some("demo.item.iron-helm"), false)
+                .is_none()
+        );
+        let slot = match &restored.items[0].location {
+            ItemLocation::Equipped { slot_id } => slot_id.clone(),
+            _ => unreachable!(),
+        };
+        assert_eq!(restored.unequip_slot(&slot).is_some(), favored);
+        if build == "archer" {
+            // The actual cursed instance reaches the periodic TY_CURSE consumer.
+            // Select its rare mana-blast boundary; ordinary curse scheduling stays intact.
+            let mut doomed = restored.clone();
+            let seed = (1..100_000)
+                .find(|seed| {
+                    let mut rng = RfbRng::seeded(*seed);
+                    rng.bounded(200) == 0 && matches!(rng.bounded(34) + 1, 30 | 31)
+                })
+                .unwrap();
+            doomed.rng = RfbRng::seeded(seed);
+            doomed.player.hp = 1;
+            doomed.world_tick = 10;
+            doomed
+                .process_equipped_curse_effects(
+                    &mut Vec::new(),
+                    &mut BTreeSet::new(),
+                    &mut Vec::new(),
+                )
+                .unwrap();
+            assert!(doomed.player_is_dead());
+            restored.remove_equipped_curses(RemoveEquippedCursesRequest::new(false));
+            assert_eq!(restored.items[0].curse, Some(ItemCurseSeverityDto::Heavy));
+            restored.remove_equipped_curses(RemoveEquippedCursesRequest::new(true));
+            assert!(restored.items[0].curse.is_none());
+            // Dispel the detachable curse, not the artifact's intrinsic bad flags.
+            assert!(restored.player_has_equipped_curse_effect(ItemCurseEffectDto::TyCurse));
+            assert!(restored.player_has_equipped_aggravation());
+            assert!(restored.unequip_slot(&slot).is_some());
+            assert!(!restored.player_has_equipped_curse_effect(ItemCurseEffectDto::TyCurse));
+            assert!(!restored.player_has_equipped_aggravation());
+        }
+    }
+}
+
+#[test]
+fn terror_mask_duplicate_power_and_resistance_do_not_reroll() {
+    let mut game = Game::new_with_build(422, "demo.build.warrior").unwrap();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: game.current_floor_id.clone(),
+        depth: 50,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.drop".into(),
+        },
+    };
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            for _ in 0..3 {
+                rng.bounded(1);
+            } // Existing activation/profile initialization.
+            rng.bounded(10) == 6 && rng.bounded(12) == 0
+        })
+        .unwrap();
+    game.rng = RfbRng::seeded(seed);
+    let mut expected = game.rng.clone();
+    for _ in 0..3 {
+        expected.bounded(1);
+    }
+    expected.bounded(10);
+    expected.bounded(12);
+    let draft = game.fixed_item_draft(&context, "demo.item.terror-mask".into());
+    assert_eq!(game.rng, expected);
+    assert_eq!(
+        draft.intrinsic_properties.status_immunities,
+        ["rfb.status.paralysis"]
+    );
+    assert_eq!(draft.rolled_affixes[0].properties.resistances.len(), 1);
+    assert_eq!(
+        draft.rolled_affixes[0].properties.resistances[&ActorDamageType::Poison],
+        rfb_content::ActorResistanceLevel::Resistant
+    );
+    assert!(draft.curse.is_none());
+}
+
+#[test]
+fn terror_mask_melee_only_bonuses_and_fear_activation_restore() {
+    let mut game = Game::new_with_build(423, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    descend_one_floor(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.player.position = Position { x: 10, y: 10 };
+    for y in 9..=11 {
+        for x in 9..=12 {
+            replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+        }
+    }
+    game.glow.fill(true);
+    give_inventory_item(&mut game, "test.bow", "demo.item.short-bow");
+    game.equip_inventory_item("test.bow", None).unwrap();
+    let before = game.player_projectile_profile().unwrap();
+    let melee_before = game.player_derived_stats();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: game.current_floor_id.clone(),
+        depth: 50,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.drop".into(),
+        },
+    };
+    // Focused equipment/activation check; natural generation is covered above.
+    let draft = game.fixed_item_draft(&context, "demo.item.terror-mask".into());
+    let mut item = game
+        .commit_generated_item_draft(draft, ItemLocation::Inventory)
+        .unwrap();
+    item.enchantments.to_hit = 1;
+    item.enchantments.to_damage = 2;
+    let id = item.id.clone();
+    game.items.push(item);
+    game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    game.equip_inventory_item(&id, None).unwrap();
+    let after = game.player_projectile_profile().unwrap();
+    assert_eq!(
+        (after.to_hit, after.launcher_to_damage),
+        (before.to_hit, before.launcher_to_damage)
+    );
+    assert_eq!(
+        game.player_derived_stats().melee_skill.value - melee_before.melee_skill.value,
+        19
+    );
+    assert_eq!(
+        game.player_derived_stats().melee_damage_bonus.value
+            - melee_before.melee_damage_bonus.value,
+        20
+    );
+    game.push_generated_actor(
+        "test.mask-target".into(),
+        "demo.actor.goblin",
+        Position { x: 11, y: 10 },
+    );
+    game.reveal_current_visibility();
+    let mut events = Vec::new();
+    game.world_tick = 0;
+    for _ in 0..100 {
+        game.use_inventory_item(
+            &id,
+            Some(&TargetSelection::SelfTarget),
+            None,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        if game.items[1].charges.unwrap().current == 0 {
+            break;
+        }
+    }
+    assert_eq!(game.items[1].charges.unwrap().current, 0);
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == "rfb.status.fear")
+    );
+    let rng = game.rng.clone();
+    assert!(
+        !game
+            .use_inventory_item(
+                &id,
+                Some(&TargetSelection::SelfTarget),
+                None,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new()
+            )
+            .unwrap()
+    );
+    assert_eq!(game.rng, rng);
+    for tick in 1..=500 {
+        game.world_tick = tick;
+        game.process_inventory_device_recovery(&mut events);
+    }
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    for tick in 501..1000 {
+        restored.world_tick = tick;
+        restored.process_inventory_device_recovery(&mut events);
+    }
+    let item = restored.items.iter().find(|item| item.id == id).unwrap();
+    assert_eq!(item.charges.unwrap().current, 0);
+    assert_eq!(item.device_recovery_progress, 999);
+    restored.world_tick = 1000;
+    restored.process_inventory_device_recovery(&mut events);
+    let item = restored.items.iter().find(|item| item.id == id).unwrap();
+    assert_eq!(item.charges.unwrap().current, 1);
+    assert_eq!(item.device_recovery_progress, 0);
+}
+
+#[test]
 fn fixed_high_resistance_uses_one_source_roll_without_retrying_duplicates() {
     let original = Game::new_with_build(419, "demo.build.warrior").unwrap();
     let context = artifact_loot_context(40);

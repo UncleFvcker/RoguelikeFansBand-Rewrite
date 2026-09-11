@@ -9411,3 +9411,6 @@ item-activation-demo-aphrodite-name = Aphrodite activation
 floor-demo-mount-olympus-depth-name = Mount Olympus Depth { $depth }
 terrain-demo-mount-olympus-entrance-name = Mount Olympus Entrance
 terrain-demo-mount-olympus-entrance-description = The entrance to Mount Olympus.
+
+item-demo-terror-mask-name = The Iron Helm 'Terror Mask'
+item-demo-terror-mask-description = An ancient mask radiating terror.
