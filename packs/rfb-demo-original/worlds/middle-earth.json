@@ -481,6 +481,14 @@
           "y": 9
         },
         "dungeonId": "demo.dungeon.mount-olympus"
+      },
+      {
+        "kind": "dungeon",
+        "position": {
+          "x": 77,
+          "y": 37
+        },
+        "dungeonId": "demo.dungeon.pyramidal-mound"
       }
     ],
     "rows": [
@@ -1544,6 +1552,21 @@
         "position": {
           "x": 98,
           "y": 32
+        }
+      }
+    },
+    {
+      "id": "demo.dungeon.pyramidal-mound",
+      "legacyIndex": 34,
+      "pantheon": 2,
+      "rootFloorId": "demo.floor.pyramidal-mound-depth-64",
+      "guardianActorKindId": "demo.actor.amun-the-mysterious",
+      "entranceGuardian": {
+        "instanceId": "demo.guardian.pyramidal-mound-entrance.1",
+        "actorKindId": "demo.actor.mummy-king",
+        "position": {
+          "x": 98,
+          "y": 34
         }
       }
     }
@@ -19508,6 +19531,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -19624,6 +19648,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -19739,6 +19764,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -19861,6 +19887,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -19983,6 +20010,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -20105,6 +20133,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -20227,6 +20256,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -20349,6 +20379,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -20471,6 +20502,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -20593,6 +20625,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -20714,6 +20747,7 @@
         "riverAreaTiles": 160
       },
       "layout": {
+        "placeDoors": false,
         "rooms": {
           "placement": "free",
           "minWidth": 8,
@@ -31610,6 +31644,3257 @@
         "actorKindId": "demo.actor.zeus-king-of-the-olympians",
         "rewardLootTableId": "demo.loot-table.mount-olympus-final-reward"
       }
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-64",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 64,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "entryTerrainId": "demo.terrain.pyramidal-mound-entrance",
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-65",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "entryConnectionId": "demo.connection.pyramidal-mound-64-stairs-up",
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-64-stairs-up",
+          "kind": "stairs",
+          "terrainId": "demo.terrain.stairs-up",
+          "targetFloorId": "demo.floor.surface"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-64-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-66",
+          "targetConnectionId": "demo.connection.pyramidal-mound-66-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-65",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-64",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 65,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-66",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-65-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.surface"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-65-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-67",
+          "targetConnectionId": "demo.connection.pyramidal-mound-67-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-66",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-65",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 66,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-67",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-66-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-64",
+          "targetConnectionId": "demo.connection.pyramidal-mound-64-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-66-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-68",
+          "targetConnectionId": "demo.connection.pyramidal-mound-68-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-67",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-66",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 67,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-68",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-67-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-65",
+          "targetConnectionId": "demo.connection.pyramidal-mound-65-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-67-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-69",
+          "targetConnectionId": "demo.connection.pyramidal-mound-69-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-68",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-67",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 68,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-69",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-68-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-66",
+          "targetConnectionId": "demo.connection.pyramidal-mound-66-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-68-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-70",
+          "targetConnectionId": "demo.connection.pyramidal-mound-70-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-69",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-68",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 69,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-70",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-69-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-67",
+          "targetConnectionId": "demo.connection.pyramidal-mound-67-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-69-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-71",
+          "targetConnectionId": "demo.connection.pyramidal-mound-71-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-70",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-69",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 70,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-71",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-70-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-68",
+          "targetConnectionId": "demo.connection.pyramidal-mound-68-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-70-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-72",
+          "targetConnectionId": "demo.connection.pyramidal-mound-72-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-71",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-70",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 71,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-72",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-71-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-69",
+          "targetConnectionId": "demo.connection.pyramidal-mound-69-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-71-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-73",
+          "targetConnectionId": "demo.connection.pyramidal-mound-73-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-72",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-71",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 72,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-73",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-72-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-70",
+          "targetConnectionId": "demo.connection.pyramidal-mound-70-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-72-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-74",
+          "targetConnectionId": "demo.connection.pyramidal-mound-74-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-73",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-72",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 73,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-74",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-73-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-71",
+          "targetConnectionId": "demo.connection.pyramidal-mound-71-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-73-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-75",
+          "targetConnectionId": "demo.connection.pyramidal-mound-75-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-74",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-73",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 74,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-75",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-74-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-72",
+          "targetConnectionId": "demo.connection.pyramidal-mound-72-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-74-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-76",
+          "targetConnectionId": "demo.connection.pyramidal-mound-76-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-75",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-74",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 75,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-76",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-75-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-73",
+          "targetConnectionId": "demo.connection.pyramidal-mound-73-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-75-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-77",
+          "targetConnectionId": "demo.connection.pyramidal-mound-77-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-76",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-75",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 76,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-77",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-76-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-74",
+          "targetConnectionId": "demo.connection.pyramidal-mound-74-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-76-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-78",
+          "targetConnectionId": "demo.connection.pyramidal-mound-78-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-77",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-76",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 77,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-78",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-77-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-75",
+          "targetConnectionId": "demo.connection.pyramidal-mound-75-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-77-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-79",
+          "targetConnectionId": "demo.connection.pyramidal-mound-79-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-78",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-77",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 78,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-79",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-78-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-76",
+          "targetConnectionId": "demo.connection.pyramidal-mound-76-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-78-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-80",
+          "targetConnectionId": "demo.connection.pyramidal-mound-80-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-79",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-78",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 79,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-80",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-79-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-77",
+          "targetConnectionId": "demo.connection.pyramidal-mound-77-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-79-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-81",
+          "targetConnectionId": "demo.connection.pyramidal-mound-81-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-80",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-79",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 80,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-81",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-80-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-78",
+          "targetConnectionId": "demo.connection.pyramidal-mound-78-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-80-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-82",
+          "targetConnectionId": "demo.connection.pyramidal-mound-82-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-81",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-80",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 81,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-82",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-81-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-79",
+          "targetConnectionId": "demo.connection.pyramidal-mound-79-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-81-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-83",
+          "targetConnectionId": "demo.connection.pyramidal-mound-83-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-82",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-81",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 82,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-83",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-82-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-80",
+          "targetConnectionId": "demo.connection.pyramidal-mound-80-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-82-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-84",
+          "targetConnectionId": "demo.connection.pyramidal-mound-84-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-83",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-82",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 83,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-84",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-83-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-81",
+          "targetConnectionId": "demo.connection.pyramidal-mound-81-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-83-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-85",
+          "targetConnectionId": "demo.connection.pyramidal-mound-85-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-84",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-83",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 84,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-85",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-84-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-82",
+          "targetConnectionId": "demo.connection.pyramidal-mound-82-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-84-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-86",
+          "targetConnectionId": "demo.connection.pyramidal-mound-86-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-85",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-84",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 85,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-86",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-85-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-83",
+          "targetConnectionId": "demo.connection.pyramidal-mound-83-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-85-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-87",
+          "targetConnectionId": "demo.connection.pyramidal-mound-87-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-86",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-85",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 86,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-87",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-86-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-84",
+          "targetConnectionId": "demo.connection.pyramidal-mound-84-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-86-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-88",
+          "targetConnectionId": "demo.connection.pyramidal-mound-88-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-87",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-86",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 87,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-88",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-87-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-85",
+          "targetConnectionId": "demo.connection.pyramidal-mound-85-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-87-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-89",
+          "targetConnectionId": "demo.connection.pyramidal-mound-89-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-88",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-87",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 88,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-89",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-88-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-86",
+          "targetConnectionId": "demo.connection.pyramidal-mound-86-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-88-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-90",
+          "targetConnectionId": "demo.connection.pyramidal-mound-90-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-89",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-88",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 89,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-90",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-89-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-87",
+          "targetConnectionId": "demo.connection.pyramidal-mound-87-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-89-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-91",
+          "targetConnectionId": "demo.connection.pyramidal-mound-91-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-90",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-89",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 90,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-91",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-90-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-88",
+          "targetConnectionId": "demo.connection.pyramidal-mound-88-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-90-shaft-down",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-92",
+          "targetConnectionId": "demo.connection.pyramidal-mound-92-shaft-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-91",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-90",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 91,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "nextFloorId": "demo.floor.pyramidal-mound-depth-92",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "finalFloor": false,
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-91-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-89",
+          "targetConnectionId": "demo.connection.pyramidal-mound-89-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-91-stairs-down",
+          "kind": "stairs",
+          "terrainId": "demo.terrain.stairs-down",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-92",
+          "targetConnectionId": "demo.connection.pyramidal-mound-92-stairs-up"
+        }
+      ]
+    },
+    {
+      "id": "demo.floor.pyramidal-mound-depth-92",
+      "nameKey": "floor-demo-pyramidal-mound-depth-name",
+      "returnFloorId": "demo.floor.pyramidal-mound-depth-91",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.pyramidal-mound",
+      "encounterTableId": "demo.encounter-table.pyramidal-mound",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": {
+        "referenceAreaTiles": 13068,
+        "roomObjects": {
+          "mean": 8,
+          "standardDeviation": 3
+        },
+        "anywhereObjects": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "goldAllocation": {
+        "referenceAreaTiles": 13068,
+        "piles": {
+          "mean": 2,
+          "standardDeviation": 3
+        }
+      },
+      "generationBudget": {
+        "actorSlots": 20,
+        "lootPlacements": 8,
+        "roomPlacements": 6,
+        "roomAreaTiles": 1100,
+        "streamerPlacements": 2,
+        "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free",
+          "minWidth": 8,
+          "maxWidth": 20,
+          "minHeight": 7,
+          "maxHeight": 13,
+          "shapes": [
+            {
+              "shape": "cavern",
+              "weight": 1000
+            },
+            {
+              "shape": "rectangle",
+              "weight": 450
+            }
+          ]
+        },
+        "wallMix": [
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "percent": 5
+          }
+        ],
+        "streamers": [
+          {
+            "terrainId": "demo.terrain.magma-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.magma-treasure",
+              "hiddenTerrainId": "demo.terrain.magma-hidden-treasure",
+              "knownOneIn": 60,
+              "hiddenOneIn": 20
+            }
+          },
+          {
+            "terrainId": "demo.terrain.quartz-vein",
+            "weight": 1,
+            "treasure": {
+              "knownTerrainId": "demo.terrain.quartz-treasure",
+              "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure",
+              "knownOneIn": 30,
+              "hiddenOneIn": 10
+            }
+          }
+        ],
+        "placeDoors": true
+      },
+      "depth": 92,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": [],
+      "finalFloor": true,
+      "guardian": {
+        "instanceId": "demo.guardian.pyramidal-mound.1",
+        "actorKindId": "demo.actor.amun-the-mysterious",
+        "rewardLootTableId": "demo.loot-table.pyramidal-mound-final-reward"
+      },
+      "connections": [
+        {
+          "id": "demo.connection.pyramidal-mound-92-shaft-up",
+          "kind": "shaft",
+          "terrainId": "demo.terrain.shaft-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-90",
+          "targetConnectionId": "demo.connection.pyramidal-mound-90-shaft-down"
+        },
+        {
+          "id": "demo.connection.pyramidal-mound-92-stairs-up",
+          "kind": "stairs",
+          "terrainId": "demo.terrain.stairs-up",
+          "targetFloorId": "demo.floor.pyramidal-mound-depth-91",
+          "targetConnectionId": "demo.connection.pyramidal-mound-91-stairs-down"
+        }
+      ]
     }
   ]
 }

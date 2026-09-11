@@ -712,3 +712,4 @@ duelist-follow-teleport-failure = 你在追随 { $target } 的传送时迷失了
 
 message-ability-item-magic-success = { $ability }完成了物品处理。
 message-ability-item-magic-failed = { $ability }未能改变物品。
+message-monster-phoenix-reborn = 凤凰浴火重生！

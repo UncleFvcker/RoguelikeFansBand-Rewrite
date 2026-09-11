@@ -2384,7 +2384,7 @@ impl Game {
         );
         commit_damage_application(&mut self.entities[target_index], &application);
         if application.fatal {
-            self.resolve_actor_death(
+            return self.resolve_actor_death(
                 target_index,
                 DomainEvent::MutationAuraSlew {
                     target_kind_id,
@@ -2393,8 +2393,7 @@ impl Game {
                 events,
                 changed,
                 removed_entities,
-            )?;
-            return Ok(true);
+            );
         }
         events.push(DomainEvent::MutationAuraHit {
             target_kind_id,

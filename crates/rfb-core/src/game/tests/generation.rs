@@ -267,6 +267,8 @@ fn ordinary_room_and_anywhere_allocations_reach_pickup_and_save() {
         .clone();
     definition.vault_id = None;
     definition.guaranteed_items.clear();
+    // Keep this loot fixture's geometry stable; cave doors have separate coverage.
+    definition.layout.as_mut().unwrap().place_doors = false;
     let area = u32::from(definition.width) * u32::from(definition.height);
     // One placement from each caller, retaining the formal shared pool.
     definition.loot_allocation = Some(rfb_content::ProceduralLootAllocationDefinition {

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.amun",
+  "input": "self",
+  "steps": [{
+    "type": "apply-status",
+    "statusKindId": "rfb.status.telepathy",
+    "durationBonus": 25,
+    "durationDice": 1,
+    "durationSides": 30,
+    "stacking": "keep-strongest"
+  }]
+}

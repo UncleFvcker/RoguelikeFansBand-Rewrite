@@ -73,8 +73,7 @@ impl Game {
             damage,
         };
         if application.fatal {
-            self.resolve_actor_death(index, event, events, changed, removed_entities)?;
-            Ok(false)
+            Ok(!self.resolve_actor_death(index, event, events, changed, removed_entities)?)
         } else {
             self.wake_entity_after_damage(index, damage.applied, events);
             events.push(event);

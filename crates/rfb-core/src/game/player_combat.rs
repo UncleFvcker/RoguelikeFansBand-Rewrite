@@ -1125,7 +1125,7 @@ impl Game {
             self.resolve_monster_fear_aura(index, "hurt", true, events);
         }
         if application.fatal {
-            self.resolve_actor_death(
+            let fatal = self.resolve_actor_death(
                 index,
                 DomainEvent::ProjectileSlew {
                     target_kind_id,
@@ -1137,7 +1137,7 @@ impl Game {
                 removed_entities,
             )?;
             return Ok(ProjectileCollisionOutcome {
-                fatal: true,
+                fatal,
                 ..ProjectileCollisionOutcome::default()
             });
         }
@@ -1210,8 +1210,8 @@ impl Game {
             });
             self.wake_entity_after_damage(index, damage.applied, events);
             if application.fatal {
-                original_target_fatal |= self.entities[index].position == center;
-                self.resolve_actor_death(
+                let at_center = self.entities[index].position == center;
+                let died = self.resolve_actor_death(
                     index,
                     DomainEvent::ProjectileSlew {
                         target_kind_id: definition.id,
@@ -1222,6 +1222,7 @@ impl Game {
                     changed,
                     removed_entities,
                 )?;
+                original_target_fatal |= at_center && died;
             } else {
                 self.anger_monster_from_projectile_damage(index, damage.applied);
                 self.resolve_monster_fear_aura(index, "hurt", true, events);
@@ -2205,8 +2206,7 @@ impl Game {
                     && self.resolve_monster_contact_auras(index, &definition, events, changed);
                 if contact_aura_fatal || revenge_stop {
                     if application.fatal {
-                        killed = true;
-                        self.resolve_actor_death(
+                        killed = self.resolve_actor_death(
                             index,
                             profile.slew_event(&target_kind, damage),
                             events,
@@ -2244,7 +2244,17 @@ impl Game {
                     });
                 }
                 if application.fatal {
-                    killed = true;
+                    killed = self.resolve_actor_death(
+                        index,
+                        profile.slew_event(&target_kind, damage),
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                    if !killed {
+                        touched_surviving_target = true;
+                        continue;
+                    }
                     if self.player_is_berserker() && profile.source_item_id.is_some() && !revenge {
                         let fraction = if allow_criticals { 100 } else { 120 } / weapon_count;
                         energy_cost_on_kill = Some(
@@ -2256,13 +2266,6 @@ impl Game {
                             self.player.energy_need -= STANDARD_ACTION_COST / 5;
                         }
                     }
-                    self.resolve_actor_death(
-                        index,
-                        profile.slew_event(&target_kind, damage),
-                        events,
-                        changed,
-                        removed_entities,
-                    )?;
                     if duelist_attack {
                         self.begin_duelist_endless_challenge();
                     }
@@ -3074,6 +3077,87 @@ mod tests {
         projectile_raw_damage, roll_sniper_needle_vital_hit, sniper_explosion_radius,
         sniper_shot_damage_multiplier,
     };
+
+    #[test]
+    fn phoenix_projectile_rebirth_precedes_fatality_rewards_and_unique_accounting() {
+        use super::*;
+        let mut base = Game::new(17);
+        base.entities.clear();
+        base.items.clear();
+        let position = Position {
+            x: base.player.position.x + 1,
+            y: base.player.position.y,
+        };
+        base.push_generated_actor("test.phoenix".into(), "demo.actor.the-phoenix", position);
+        base.entities[0].hp = 1;
+        base.entities[0]
+            .statuses
+            .push(super::super::monster_combat::melee_status(STATUS_SLOW, 20, "test.slow").status);
+        for roll in 0..3 {
+            let mut game = base.clone();
+            let seed = (0..100)
+                .find(|s| RfbRng::seeded(*s).bounded(3) == roll)
+                .unwrap();
+            game.rng = RfbRng::seeded(seed);
+            let mut events = Vec::new();
+            let mut removed = Vec::new();
+            let result = game
+                .commit_player_projectile_damage(
+                    0,
+                    "demo.actor.the-phoenix".into(),
+                    "test.phoenix".into(),
+                    resolve_damage(
+                        DamagePacket::new(10, DamageType::Physical),
+                        ResistanceLevel::Normal,
+                    ),
+                    ProjectileTrace {
+                        origin: game.player.position,
+                        impact: position,
+                        landing: position,
+                        traversed: vec![position],
+                    },
+                    ProjectileMode::Normal,
+                    &[],
+                    &mut events,
+                    &mut BTreeSet::new(),
+                    &mut removed,
+                )
+                .unwrap();
+            assert_eq!(result.fatal, roll != 0);
+            assert_eq!(
+                events
+                    .iter()
+                    .any(|e| matches!(e, DomainEvent::PhoenixReborn { .. })),
+                roll == 0
+            );
+            if roll == 0 {
+                assert_eq!(game.entities[0].hp, game.entities[0].max_hp);
+                assert_eq!(game.entities[0].statuses, base.entities[0].statuses);
+                assert_eq!(game.progress.experience, base.progress.experience);
+                assert_eq!(game.items, base.items);
+                assert!(removed.is_empty());
+                assert!(
+                    !events
+                        .iter()
+                        .any(|e| matches!(e, DomainEvent::ProjectileSlew { .. }))
+                );
+                let restored = Game::from_save(game.to_save()).unwrap();
+                assert_eq!(restored.state_hash(), game.state_hash());
+            } else {
+                assert!(game.entities.is_empty());
+                assert!(game.progress.experience > base.progress.experience);
+                assert!(!game.items.is_empty());
+                assert_eq!(removed, vec!["test.phoenix"]);
+            }
+            assert_eq!(
+                game.defeated_limited_actor_counts
+                    .get("demo.actor.the-phoenix")
+                    .copied()
+                    .unwrap_or(0),
+                u16::from(roll != 0)
+            );
+        }
+    }
 
     #[test]
     fn arena_dungeon_guardian_resists_spells_and_weapon_damage_but_drops_loot_when_slain() {

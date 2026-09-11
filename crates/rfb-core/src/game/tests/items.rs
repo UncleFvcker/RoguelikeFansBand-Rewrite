@@ -2457,6 +2457,7 @@ fn terror_mask_generation_uses_current_build_and_preserves_identity_after_save()
         ("high-mage-death", false),
         ("high-mage-craft", false),
         ("mage-life-arcane", false),
+        ("ranger-nature-sorcery", false),
         ("paladin-death", false),
         ("mindcrafter", false),
     ] {

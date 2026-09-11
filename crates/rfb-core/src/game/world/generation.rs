@@ -1511,7 +1511,7 @@ impl Game {
                     &mut terrain,
                 )
             });
-        let door_position = if arena_rooms {
+        let door_position = if arena_rooms || cave_room_layout {
             definition
                 .layout
                 .as_ref()
@@ -1548,8 +1548,7 @@ impl Game {
                 .layout
                 .as_ref()
                 .is_none_or(|layout| layout.place_doors)
-                && !maze_only
-                && !cave_room_layout)
+                && !maze_only)
                 .then_some(Position {
                     x: (first_center.x + second_center.x) / 2,
                     y: first_center.y,

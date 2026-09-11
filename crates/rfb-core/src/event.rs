@@ -1414,6 +1414,9 @@ pub(crate) enum DomainEvent {
     EntityAwakened {
         target_kind_id: String,
     },
+    PhoenixReborn {
+        target_kind_id: String,
+    },
     PlayerMeleeHit {
         target_kind_id: String,
         damage: DamageOutcome,
@@ -5481,6 +5484,11 @@ impl DomainEvent {
             Self::EntityAwakened { target_kind_id } => dto(
                 "status.entity-awakened",
                 "status-entity-awakened",
+                [("target", target_kind_id)],
+            ),
+            Self::PhoenixReborn { target_kind_id } => dto(
+                "monster.reborn",
+                "monster-phoenix-reborn",
                 [("target", target_kind_id)],
             ),
             Self::PlayerMeleeHit {

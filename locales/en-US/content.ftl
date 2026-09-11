@@ -9578,6 +9578,9 @@ item-activation-demo-aphrodite-name = Aphrodite activation
 floor-demo-mount-olympus-depth-name = Mount Olympus Depth { $depth }
 terrain-demo-mount-olympus-entrance-name = Mount Olympus Entrance
 terrain-demo-mount-olympus-entrance-description = The entrance to Mount Olympus.
+floor-demo-pyramidal-mound-depth-name = Pyramidal Mound Depth { $depth }
+terrain-demo-pyramidal-mound-entrance-name = Pyramidal Mound Entrance
+terrain-demo-pyramidal-mound-entrance-description = Dark stairs descend into the pyramidal mound.
 
 item-demo-terror-mask-name = The Iron Helm 'Terror Mask'
 item-demo-terror-mask-description = An ancient mask radiating terror.
@@ -9663,3 +9666,5 @@ item-demo-t-shirt-name = T-shirt
 item-demo-t-shirt-description = T-shirt
 item-demo-legendary-lost-treasure-name = T-shirt 'I killed the GHB and all I got was this lousy T-shirt!'
 item-demo-legendary-lost-treasure-description = T-shirt 'I killed the GHB and all I got was this lousy T-shirt!'
+item-demo-amun-name = Dagger of Amun
+item-demo-amun-description = An ancient steel dagger once carried by Amun, with a golden hilt and a razor-sharp blade.

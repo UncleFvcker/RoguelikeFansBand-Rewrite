@@ -586,7 +586,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
+    ) -> Result<bool, CoreError> {
         self.resolve_actor_death_with_credit(
             index,
             death_event,
@@ -654,7 +654,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
+    ) -> Result<bool, CoreError> {
         self.resolve_actor_death_with_credit(
             index,
             death_event,
@@ -674,7 +674,21 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
+    ) -> Result<bool, CoreError> {
+        // mon_take_hit: revival happens before death events, rewards and unique
+        // bookkeeping. ART_SILVER_HAMMER (335) is not an available item yet.
+        if credit_player
+            && self.entities[index].kind_id == "demo.actor.the-phoenix"
+            && self.rng.bounded(3) == 0
+        {
+            let actor = &mut self.entities[index];
+            actor.hp = actor.max_hp;
+            changed.insert(actor.position);
+            events.push(DomainEvent::PhoenixReborn {
+                target_kind_id: actor.kind_id.clone(),
+            });
+            return Ok(false);
+        }
         let dying_actor = self.entities[index].clone();
         if self.riding_actor_id.as_deref() == Some(dying_actor.id.as_str()) {
             self.riding_actor_id = None;
@@ -912,6 +926,6 @@ impl Game {
         if has_drops && let Some(position) = drop_position {
             changed.insert(position);
         }
-        Ok(())
+        Ok(true)
     }
 }
