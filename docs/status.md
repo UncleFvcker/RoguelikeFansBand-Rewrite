@@ -10,14 +10,14 @@
 | 协议 | 1.253 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 125 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 20 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.423.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.424.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v325，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 11 个 Class、77 个 Build、57 个 Race、36 本能力书、1,903 个 ability 文件、423 个 item、1,407 个 actor、169 个 affix、152 个 mutation。世界定义含 32 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、64 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
 权威内容统计工具是 `rfb-contentc inspect-source`。本次集成已运行内容编译；静态统计不替代行为验收。
 
-游侠已完成[七步接入计划](ranger-class-plan.md)前两步：正式包定义自然主领域＋咒术/死亡/奥秘/恶魔四个 Build、160项职业法术参数及15级探测能力引用；出生装备/双书、WIS与3级MP/容量起点、80基础容量、成长/熟练度、负重/手套、美德和两路强感知已实现。新游戏与经验成长专项、受影响职业回归及保存往返通过；[来源审计](ranger-source-audit.md)区分实际完成与保留适配。普通创角仍为66个入口，游侠尚未开放；随机双领域/共享支出/改换保存、射击/树林/探测MP→HP、生成关联、UI与桌面验收待后续步骤。工艺不属于原版游侠候选，混沌/王牌留给后续领域批次。
+游侠已完成[七步接入计划](ranger-class-plan.md)前三步：自然主领域＋咒术/死亡/奥秘/恶魔四个 Build、160项参数、出生/成长、3级MP与80基础学习容量已接入；随机学习共享支出、1600/1400主副练习、遗忘恢复、失败/美德、副领域改换与保存续演已实现。编译器现保留源书内顺序，用于随机学习和死亡反噬。四组合双方书本实际学习/施法、取消/无候选/预算耗尽、保存完整性与后续RNG已验证；[来源审计](ranger-source-audit.md)区分实际完成与保留适配。普通创角仍为66个入口，游侠尚未开放；射击/树林/探测MP→HP、生成关联、UI与桌面验收待后续步骤。工艺不属于原版游侠候选，混沌/王牌留给后续领域批次。
 
 法师已完成[七步计划](mage-class-plan.md)：现有八领域的 56 个有序 Build、双书出生、256 项职业参数与首用经验、MP/负重/再生、感知、美德、种族交叉及 25 级吞噬魔法；共享学习支出、重复研习、主副熟练度、练习、遗忘恢复和失败规则已接入。真实背包/脚下书本可请求改换副领域，确认清理旧副领域而保留已付支出，取消后续选法术不回滚；当前领域、历史及待确认状态进入保存。学习、Mogaminator、书本分配和公会服务使用当前领域。已接装置偏好、卷轴 bias、三件旧城堡神器及重复替代、普通盗贼奖励和两塔资格。普通创角已开放“魔法 → 法师 → 第一领域 → 第二领域”；书本页显示当前领域、历史、遗忘和主副熟练度，支持重复研习及改换确认。56 个组合的五类正式生成记录和报告已同步，该批全部 65 个开放 Build 的审计检查通过；本次连同高阶法师工艺共 66 个开放 Build 已核对。其余四个源领域另列后续范围。详情与公共适配边界见[来源审计](mage-source-audit.md)。
 

@@ -456,7 +456,8 @@ impl Game {
             self.sniper_concentration = 0;
         }
         let resource_after = resource_before.saturating_sub(resource_paid);
-        let mage_spell = source == AbilitySourceDto::Learned && self.player_is_mage();
+        let book_spell =
+            source == AbilitySourceDto::Learned && self.player_uses_dual_realm_learning();
         let progress_after = if source != AbilitySourceDto::Learned {
             mutation_progress
         } else {
@@ -500,8 +501,8 @@ impl Game {
                     removed_entities,
                 )?;
             }
-            if mage_spell {
-                self.resolve_mage_spell_failure(&ability, failure_percent, events, changed);
+            if book_spell {
+                self.resolve_book_spell_failure(&ability, failure_percent, events, changed);
             }
             return Ok(None);
         }
@@ -535,7 +536,7 @@ impl Game {
             None
         };
 
-        let practice = mage_spell.then(|| (ability.clone(), self.spell_practice_targets()));
+        let practice = book_spell.then(|| (ability.clone(), self.spell_practice_targets()));
         let result = self.resolve_player_ability_effect(
             ability,
             target_plan,
@@ -571,13 +572,13 @@ impl Game {
             && !direction_pending
             && let Some((ability, targets)) = practice
         {
-            self.apply_mage_spell_cast_virtues(
+            self.apply_book_spell_cast_virtues(
                 &ability.id,
                 resource_cost,
                 failure_percent,
                 progress_before.cast_count == 0,
             );
-            let progress = self.grow_mage_spell(&ability, &targets, &events[cast_event_index..]);
+            let progress = self.grow_book_spell(&ability, &targets, &events[cast_event_index..]);
             if let DomainEvent::AbilityCastSucceeded { resolution } = &mut events[cast_event_index]
             {
                 resolution.proficiency_after = progress.proficiency;
@@ -743,7 +744,9 @@ impl Game {
         progress.cooldown_remaining = resolution.cooldown_after;
         self.sniper_concentration = 0;
         let cast_event_index = events.len();
-        let practice_targets = self.player_is_mage().then(|| self.spell_practice_targets());
+        let practice_targets = self
+            .player_uses_dual_realm_learning()
+            .then(|| self.spell_practice_targets());
         events.push(DomainEvent::AbilityCastSucceeded {
             resolution: resolution.clone(),
         });
@@ -776,13 +779,13 @@ impl Game {
             }
         }
         if let Some(targets) = practice_targets {
-            self.apply_mage_spell_cast_virtues(
+            self.apply_book_spell_cast_virtues(
                 &ability.id,
                 resolution.resource_cost,
                 resolution.failure_percent,
                 resolution.cast_count == 1,
             );
-            let progress = self.grow_mage_spell(&ability, &targets, &events[cast_event_index..]);
+            let progress = self.grow_book_spell(&ability, &targets, &events[cast_event_index..]);
             if let DomainEvent::AbilityCastSucceeded { resolution } = &mut events[cast_event_index]
             {
                 resolution.proficiency_after = progress.proficiency;

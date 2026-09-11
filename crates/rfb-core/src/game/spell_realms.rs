@@ -75,7 +75,7 @@ impl Game {
     }
 
     pub(super) fn current_second_realm_id(&self) -> Option<&str> {
-        if self.player_is_mage() {
+        if self.player_uses_dual_realm_learning() {
             self.mage_realms
                 .as_ref()
                 .map(|realms| realms.second_realm_id.as_str())
@@ -94,7 +94,7 @@ impl Game {
 
     pub(super) fn realm_change_book(&self, item_id: &str) -> Result<RealmChangeBookDto, CoreError> {
         let unavailable = CoreError::RealmChangeUnavailable;
-        if !self.player_is_mage() {
+        if !self.player_uses_dual_realm_learning() {
             return Err(unavailable("class-unavailable"));
         }
         if self.map_scale != MapScaleDto::Local {
@@ -103,7 +103,7 @@ impl Game {
         if let Some(reason) = self.ability_study_unavailable_reason() {
             return Err(unavailable(reason));
         }
-        let profile = self.casting_profile().expect("Mage caster");
+        let profile = self.casting_profile().expect("dual-realm caster");
         if self.ability_learning_remaining(profile) == 0 {
             return Err(unavailable("learning-capacity-full"));
         }
@@ -161,7 +161,7 @@ impl Game {
         confirm: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
-    ) -> Result<(), CoreError> {
+    ) -> Result<bool, CoreError> {
         let book_id = self
             .pending_realm_change_book()
             .ok_or(CoreError::RealmChangeUnavailable("no-pending-change"))?
@@ -169,9 +169,9 @@ impl Game {
         if !confirm {
             self.mage_realms
                 .as_mut()
-                .expect("pending Mage")
+                .expect("pending realm change")
                 .pending_change_book_item_id = None;
-            return Ok(());
+            return Ok(false);
         }
         let choice = self.realm_change_book(&book_id)?;
         let old_abilities: BTreeSet<_> = self.active_casting_realm_profiles()[1]
@@ -188,7 +188,7 @@ impl Game {
             .collect();
         self.ability_learning_order
             .retain(|id| !old_abilities.contains(id));
-        let realms = self.mage_realms.as_mut().expect("pending Mage");
+        let realms = self.mage_realms.as_mut().expect("pending realm change");
         if !realms.previous_realm_ids.contains(&realms.second_realm_id) {
             realms
                 .previous_realm_ids
@@ -200,14 +200,14 @@ impl Game {
         // Refresh drops old secondary progress and starts the new books at zero.
         // Paid study and primary progress survive, including after cancelling spell selection.
         self.refresh_player_ability_state();
-        let resolutions = self.apply_mogaminator_to_items(vec![book_id], false, false)?;
+        let resolutions = self.apply_mogaminator_to_items(vec![book_id.clone()], false, false)?;
         self.record_mogaminator_resolutions(resolutions, events, changed);
-        Ok(())
+        Ok(self.player_is_ranger() && self.resolve_prayer_study(&book_id, events))
     }
 
-    pub(super) fn validate_mage_realms(&self) -> Result<(), CoreError> {
-        let invalid = CoreError::InvalidSave("Mage realms are invalid");
-        if !self.player_is_mage() {
+    pub(super) fn validate_spell_realms(&self) -> Result<(), CoreError> {
+        let invalid = CoreError::InvalidSave("spell realms are invalid");
+        if !self.player_uses_dual_realm_learning() {
             return if self.mage_realms.is_none() {
                 Ok(())
             } else {
@@ -217,8 +217,8 @@ impl Game {
         let Some(realms) = &self.mage_realms else {
             return Err(invalid);
         };
-        let (build, _, class, _) = self.character_definitions().expect("Mage build");
-        let profile = class.casting_profile.as_ref().expect("Mage caster");
+        let (build, _, class, _) = self.character_definitions().expect("dual-realm build");
+        let profile = class.casting_profile.as_ref().expect("dual-realm caster");
         let supported = |id: &str| {
             Some(id) != build.first_realm_id.as_deref()
                 && profile

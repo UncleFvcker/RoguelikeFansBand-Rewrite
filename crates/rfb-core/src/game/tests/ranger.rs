@@ -2,6 +2,9 @@
 use super::support::{choose_human_talent_if_pending, clear_monsters, give_inventory_item};
 use super::*;
 
+mod learning;
+mod realm_change;
+
 const BUILD: &str = "demo.build.ranger-nature-death";
 const MANA: &str = "demo.resource.mana";
 

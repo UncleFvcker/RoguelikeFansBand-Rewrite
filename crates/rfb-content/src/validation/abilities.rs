@@ -1812,7 +1812,7 @@ pub(super) fn validate_abilities(
         {
             return Err(ContentError::InvalidAbilityBook(book.id.clone()));
         }
-        book.ability_ids.sort();
+        // Book order carries source spell slots for random study and failure effects.
         let mut members = BTreeSet::new();
         if book.ability_ids.is_empty()
             || book.ability_ids.len() > 64

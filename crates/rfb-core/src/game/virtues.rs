@@ -238,7 +238,7 @@ pub(super) fn validate_virtues(virtues: &[VirtueDto]) -> bool {
 }
 
 impl Game {
-    pub(super) fn apply_mage_spell_cast_virtues(
+    pub(super) fn apply_book_spell_cast_virtues(
         &mut self,
         ability_id: &str,
         cost: u32,
@@ -299,7 +299,7 @@ impl Game {
         }
     }
 
-    pub(super) fn mage_spell_alignment_modifier(&self, ability_id: &str) -> i32 {
+    pub(super) fn book_spell_alignment_modifier(&self, ability_id: &str) -> i32 {
         use VirtueKindDto::*;
         let mut alignment: i32 = self
             .entities

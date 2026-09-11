@@ -880,6 +880,6 @@ fn study_virtue_uses_class_book_while_alignment_uses_the_active_realm() {
         .find(|v| v.kind == VirtueKindDto::Unlife)
         .unwrap();
     unlife.value = -21;
-    assert_eq!(game.mage_spell_alignment_modifier(UNLIFE), 1);
-    assert_eq!(game.mage_spell_alignment_modifier(DETECT), 0);
+    assert_eq!(game.book_spell_alignment_modifier(UNLIFE), 1);
+    assert_eq!(game.book_spell_alignment_modifier(DETECT), 0);
 }

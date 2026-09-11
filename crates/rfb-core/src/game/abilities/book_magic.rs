@@ -81,7 +81,7 @@ impl Game {
             .collect()
     }
 
-    pub(super) fn grow_mage_spell(
+    pub(super) fn grow_book_spell(
         &mut self,
         ability: &AbilityDefinition,
         targets: &BTreeMap<String, i32>,
@@ -188,7 +188,7 @@ impl Game {
         *progress
     }
 
-    pub(super) fn resolve_mage_spell_failure(
+    pub(super) fn resolve_book_spell_failure(
         &mut self,
         ability: &AbilityDefinition,
         failure: u8,

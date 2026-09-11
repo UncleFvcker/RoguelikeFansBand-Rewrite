@@ -268,7 +268,7 @@ impl Game {
         {
             player.minimum_level = 99;
         }
-        if self.player_is_mage() {
+        if self.player_uses_dual_realm_learning() {
             player.proficiency.cap = if self.ability_is_secondary_realm(&ability.id) {
                 SPELL_EXP_EXPERT
             } else {
@@ -605,9 +605,10 @@ impl Game {
                 i32::from(player.base_failure_percent)
                     .saturating_sub(level_adjustment)
                     .saturating_sub(attribute_adjustment)
-                    .saturating_add(if self.player_is_mage() {
-                        5 * i32::from(self.ability_is_secondary_realm(&ability.id))
-                            + self.mage_spell_alignment_modifier(&ability.id)
+                    .saturating_add(if self.player_uses_dual_realm_learning() {
+                        5 * i32::from(
+                            self.player_is_mage() && self.ability_is_secondary_realm(&ability.id),
+                        ) + self.book_spell_alignment_modifier(&ability.id)
                     } else {
                         0
                     })
@@ -615,7 +616,7 @@ impl Game {
                     .saturating_add(i32::try_from(resource_penalty).unwrap_or(i32::MAX))
                     .saturating_sub(4 * easy_spell)
                     .max(i32::from(minimum_failure_percent))
-                    .saturating_add(if self.player_is_mage() {
+                    .saturating_add(if self.player_uses_dual_realm_learning() {
                         self.player
                             .statuses
                             .iter()
@@ -1056,7 +1057,7 @@ impl Game {
         if let Some(reason) = self.ability_study_unavailable_reason() {
             return Err(reason);
         }
-        if self.learned_abilities.len() >= usize::from(self.ability_learning_capacity(&profile)) {
+        if self.ability_learning_remaining(&profile) == 0 {
             return Err("learning-capacity-full");
         }
         let Some(book_id) = self.study_book_id(book_item_id).map(str::to_owned) else {
@@ -1089,7 +1090,37 @@ impl Game {
         let ability_id = gift.ok_or("no-learnable-abilities")?;
         self.learned_abilities.insert(ability_id.clone());
         self.ability_learning_order.push(ability_id.clone());
+        if self.player_uses_dual_realm_learning() {
+            self.spent_spell_learning += 1;
+            // cmd5.c uses the class spell_book (Ranger: LIFE), not the realm.
+            self.add_virtue(VirtueKindDto::Faith, 1);
+        }
         Ok(ability_id)
+    }
+
+    pub(super) fn resolve_prayer_study(
+        &mut self,
+        book_item_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        match self.study_random_player_ability(book_item_id) {
+            Ok(ability_id) => {
+                events.push(DomainEvent::AbilityStudied { ability_id });
+                true
+            }
+            Err(reason) => {
+                let target_id = self
+                    .items
+                    .iter()
+                    .find(|item| item.id == book_item_id)
+                    .map_or_else(|| book_item_id.to_owned(), |item| item.kind_id.clone());
+                events.push(DomainEvent::AbilityStudyUnavailable {
+                    target_id,
+                    reason: reason.to_owned(),
+                });
+                false
+            }
+        }
     }
 
     pub(super) fn ability_study_unavailable_reason(&self) -> Option<&'static str> {
@@ -1117,7 +1148,7 @@ impl Game {
     }
 
     pub(super) fn forget_player_ability(&mut self, ability_id: &str) -> Result<(), &'static str> {
-        if self.player_is_mage() {
+        if self.player_uses_dual_realm_learning() {
             return Err("manual-forgetting-unavailable");
         }
         let Some(profile) = self.casting_profile().cloned() else {
@@ -1149,7 +1180,7 @@ impl Game {
                     Self::player_ability_parameters(&ability).minimum_level <= self.progress.level
                 })
             })
-            .take(if self.player_is_mage() {
+            .take(if self.player_uses_dual_realm_learning() {
                 (u32::from(self.ability_learning_capacity(profile))
                     + self.ability_learning_order.len() as u32)
                     .saturating_sub(self.spent_spell_learning) as usize
@@ -1166,7 +1197,7 @@ impl Game {
 
     pub(super) fn player_spell_memory_is_valid(&self) -> bool {
         let unique = self.ability_learning_order.iter().collect::<BTreeSet<_>>();
-        let spending_valid = if self.player_is_mage() {
+        let spending_valid = if self.player_uses_dual_realm_learning() {
             let maximum_studies: u32 = self
                 .ability_learning_order
                 .iter()
@@ -1178,8 +1209,11 @@ impl Game {
                         + u32::from(progress.proficiency >= SPELL_EXP_MASTER)
                 })
                 .sum();
-            let historical_capacity = (3 * u32::from(self.progress.max_level)).min(100)
-                + u32::from(self.bonus_spell_learning_capacity);
+            let historical_capacity = if self.player_is_ranger() {
+                (3 * u32::from(self.progress.max_level.saturating_sub(2))).min(80)
+            } else {
+                (3 * u32::from(self.progress.max_level)).min(100)
+            } + u32::from(self.bonus_spell_learning_capacity);
             let has_replaced_realm = self
                 .mage_realms
                 .as_ref()
@@ -1187,7 +1221,12 @@ impl Game {
             // Replaced realm entries no longer bound cumulative spending. The source
             // counter survives replacement; at most 64 forgotten slots can augment capacity.
             self.spent_spell_learning >= self.ability_learning_order.len() as u32
-                && (has_replaced_realm || self.spent_spell_learning <= maximum_studies)
+                && (has_replaced_realm
+                    || if self.player_is_ranger() {
+                        self.spent_spell_learning == self.ability_learning_order.len() as u32
+                    } else {
+                        self.spent_spell_learning <= maximum_studies
+                    })
                 && self.spent_spell_learning
                     <= historical_capacity
                         + if has_replaced_realm {
@@ -1221,7 +1260,7 @@ impl Game {
 
     pub(super) fn ability_learning_remaining(&self, profile: &CastingProfileDefinition) -> u16 {
         let capacity = u32::from(self.ability_learning_capacity(profile));
-        let remaining = if self.player_is_mage() {
+        let remaining = if self.player_uses_dual_realm_learning() {
             let forgotten = self.ability_learning_order.len() - self.learned_abilities.len();
             (capacity + forgotten as u32).saturating_sub(self.spent_spell_learning)
         } else {
@@ -1432,7 +1471,8 @@ impl Game {
             progress.cooldown_remaining = saved.cooldown_remaining;
         }
         if !self.player_spell_memory_is_valid()
-            || (self.player_is_mage() && seen_progress.len() != self.ability_progress.len())
+            || (self.player_uses_dual_realm_learning()
+                && seen_progress.len() != self.ability_progress.len())
         {
             return Err(CoreError::InvalidSave("player spell memory is invalid"));
         }
@@ -1617,7 +1657,7 @@ impl Game {
         succeeded: bool,
     ) -> AbilityProgress {
         let player = Self::player_ability_parameters(ability).clone();
-        let mage = self.player_is_mage();
+        let book_practice = self.player_uses_dual_realm_learning();
         let progress = self
             .ability_progress
             .entry(ability.id.clone())
@@ -1628,7 +1668,7 @@ impl Game {
             progress.cast_count = progress.cast_count.saturating_add(1);
             progress.proficiency = progress
                 .proficiency
-                .saturating_add(if mage {
+                .saturating_add(if book_practice {
                     0
                 } else {
                     player.proficiency.success_gain
@@ -1638,7 +1678,7 @@ impl Game {
             progress.fail_count = progress.fail_count.saturating_add(1);
             progress.proficiency = progress
                 .proficiency
-                .saturating_add(if mage {
+                .saturating_add(if book_practice {
                     0
                 } else {
                     player.proficiency.failure_gain

@@ -1522,7 +1522,7 @@ impl Game {
             debug_item_curses_resisted: false,
             monster_division_remainders: BTreeMap::new(),
         };
-        game.validate_mage_realms()?;
+        game.validate_spell_realms()?;
         game.restore_player_ability_state(
             saved_resources,
             saved_learned_ability_ids,

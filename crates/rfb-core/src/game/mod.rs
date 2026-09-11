@@ -856,6 +856,7 @@ pub struct Game {
     last_visual_cells: Option<Vec<CellVisualDto>>,
     bonus_spell_learning_capacity: u16,
     spent_spell_learning: u32,
+    // Shared by Mage and Ranger; retain the existing save DTO/field spelling.
     mage_realms: Option<rfb_protocol::MageRealmsSaveDto>,
     learned_abilities: BTreeSet<String>,
     ability_learning_order: Vec<String>,
@@ -1312,10 +1313,12 @@ impl Game {
                 ..
             }
         );
-        let deferred_spell_study = self.player_is_mage()
+        let deferred_spell_study = self.player_uses_dual_realm_learning()
             && matches!(
                 &action,
-                GameAction::StudyAbility { .. } | GameAction::ForgetAbility { .. }
+                GameAction::StudyAbility { .. }
+                    | GameAction::StudyPrayer { .. }
+                    | GameAction::ForgetAbility { .. }
             );
         let defer_ability_cooldowns = matches!(&action, GameAction::CastAbility { ability_id, .. }
             if self.dungeon_blocks_vampirism(ability_id));
@@ -1991,13 +1994,19 @@ impl Game {
             GameAction::BeginRealmChange { book_item_id } => {
                 self.mage_realms
                     .as_mut()
-                    .expect("validated Mage")
+                    .expect("validated dual-realm caster")
                     .pending_change_book_item_id = Some(book_item_id);
                 turn_advance = 0;
             }
             GameAction::ResolveRealmChange { confirm } => {
-                self.resolve_realm_change(confirm, &mut events, &mut changed)?;
-                turn_advance = 0;
+                let studied = self.resolve_realm_change(confirm, &mut events, &mut changed)?;
+                advances_world = studied;
+                turn_advance = u32::from(studied);
+                if studied {
+                    action_cost = STANDARD_ACTION_COST;
+                    self.decrement_ability_cooldowns(1);
+                    self.sniper_concentration = 0;
+                }
             }
             GameAction::ForgetAbility { ability_id } => {
                 if deferred_spell_study {
@@ -2035,17 +2044,14 @@ impl Game {
                 }
             },
             GameAction::StudyPrayer { book_item_id } => {
-                let target_id = self
-                    .items
-                    .iter()
-                    .find(|item| item.id == book_item_id)
-                    .map_or_else(|| book_item_id.clone(), |item| item.kind_id.clone());
-                match self.study_random_player_ability(&book_item_id) {
-                    Ok(ability_id) => events.push(DomainEvent::AbilityStudied { ability_id }),
-                    Err(reason) => events.push(DomainEvent::AbilityStudyUnavailable {
-                        target_id,
-                        reason: reason.to_owned(),
-                    }),
+                let studied = self.resolve_prayer_study(&book_item_id, &mut events);
+                if deferred_spell_study {
+                    advances_world = studied;
+                    turn_advance = u32::from(studied);
+                    if studied {
+                        self.decrement_ability_cooldowns(1);
+                        self.sniper_concentration = 0;
+                    }
                 }
             }
             GameAction::Retire => {

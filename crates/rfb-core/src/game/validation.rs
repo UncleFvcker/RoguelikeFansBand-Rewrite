@@ -497,7 +497,7 @@ pub(super) fn revealed_terrain_is_valid(
 
 impl Game {
     pub(super) fn validate_loaded_state(&self) -> Result<(), CoreError> {
-        self.validate_mage_realms()?;
+        self.validate_spell_realms()?;
         if !self.duelist_challenge_is_valid() {
             return Err(CoreError::InvalidSave("duelist challenge is invalid"));
         }
@@ -1625,7 +1625,7 @@ impl Game {
                 }
                 None => self.learned_abilities.is_empty(),
             };
-            if self.player_is_mage()
+            if self.player_uses_dual_realm_learning()
                 && self
                     .pending_ability_direction
                     .as_ref()
@@ -1651,7 +1651,7 @@ impl Game {
                     })
             {
                 return Err(CoreError::InvalidSave(
-                    "pending mage spell progress is invalid",
+                    "pending book spell progress is invalid",
                 ));
             }
             if self.pending_realm_change_book().is_some_and(|id| {

@@ -1242,6 +1242,10 @@ impl Game {
             .is_some_and(|build| build.class_id == "demo.class.ranger")
     }
 
+    pub(super) fn player_uses_dual_realm_learning(&self) -> bool {
+        self.player_is_mage() || self.player_is_ranger()
+    }
+
     pub(super) fn player_is_berserker(&self) -> bool {
         self.build
             .as_ref()

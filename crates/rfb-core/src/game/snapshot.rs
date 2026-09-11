@@ -707,7 +707,7 @@ impl Game {
                             .is_some_and(|learning| learning.remaining_slots > 0),
                     can_forget: source == AbilitySourceDto::Learned
                         && learned
-                        && !self.player_is_mage(),
+                        && !self.player_uses_dual_realm_learning(),
                     can_cast: unavailable_reason.is_none(),
                     unavailable_reason: unavailable_reason.map(str::to_owned),
                 })

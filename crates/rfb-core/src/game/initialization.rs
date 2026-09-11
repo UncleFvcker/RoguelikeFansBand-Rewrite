@@ -660,15 +660,15 @@ impl Game {
             monster_division_remainders: BTreeMap::new(),
         };
         game.initialize_birth_race_mutations();
-        if game.player_is_mage() {
+        if game.player_uses_dual_realm_learning() {
             game.mage_realms = Some(rfb_protocol::MageRealmsSaveDto {
                 second_realm_id: game
                     .character_definitions()
-                    .expect("Mage build")
+                    .expect("dual-realm build")
                     .0
                     .second_realm_id
                     .clone()
-                    .expect("Mage secondary realm"),
+                    .expect("dual-realm secondary realm"),
                 previous_realm_ids: Vec::new(),
                 pending_change_book_item_id: None,
             });
