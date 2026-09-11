@@ -3,6 +3,7 @@ use super::support::{choose_human_talent_if_pending, clear_monsters, give_invent
 use super::*;
 
 mod combat;
+mod generation;
 mod learning;
 mod realm_change;
 

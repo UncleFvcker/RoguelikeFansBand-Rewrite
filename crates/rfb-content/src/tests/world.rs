@@ -12181,7 +12181,22 @@ fn fixed_wilderness_task_geometry_and_rewards_match_source() {
             task.reward.as_ref().unwrap().entries[0].item_kind_id,
             "demo.item.crisdurian"
         );
-        assert_eq!(task.reward.as_ref().unwrap().class_overrides.len(), 6);
+        assert_eq!(task.reward.as_ref().unwrap().class_overrides.len(), 7);
+        // q_old_castle: Ranger uses RANDOM27 mod 5 (1:4).
+        assert_eq!(
+            task.reward
+                .as_ref()
+                .unwrap()
+                .class_overrides
+                .iter()
+                .find(|entry| entry.class_id == "demo.class.ranger")
+                .unwrap()
+                .entries
+                .iter()
+                .map(|entry| (entry.item_kind_id.as_str(), entry.weight))
+                .collect::<BTreeMap<_, _>>(),
+            BTreeMap::from([("demo.item.belthronding", 1), ("demo.item.yoichi", 4)])
+        );
         // q_old_castle: Mage and High-Mage share RANDOM27 mod 10 (1:1:8).
         for class in ["demo.class.mage", "demo.class.high-mage"] {
             assert_eq!(

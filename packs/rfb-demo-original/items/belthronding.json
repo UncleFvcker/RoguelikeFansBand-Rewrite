@@ -1,0 +1,73 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.belthronding",
+  "nameKey": "item-demo-belthronding-name",
+  "descriptionKey": "item-demo-belthronding-description",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.long-bow",
+    "instant": false,
+    "rarityOneIn": 20,
+    "sourceIndex": 124
+  },
+  "baseValue": 60000,
+  "generationLevel": 70,
+  "glyph": "}",
+  "maxStack": 1,
+  "equipmentSlot": "launcher",
+  "weightTenthsPound": 40,
+  "modifiers": {
+    "dexterity": 4
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 4,
+    "baseShotDeltaPercent": 60
+  },
+  "projectileProfile": {
+    "ammunitionType": "arrow",
+    "damageMultiplierPercent": 300,
+    "range": 16,
+    "shotEnergy": 10000,
+    "toDamage": 33,
+    "toHit": 20
+  },
+  "weaponProficiencyBaseItemId": "demo.item.long-bow",
+  "resistances": {
+    "disenchant": "resistant"
+  },
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_DISEN",
+      "SHOW_MODS",
+      "STEALTH",
+      "TOWN",
+      "XTRA_SHOTS"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "tags": [
+    "artifact",
+    "equipment",
+    "launcher",
+    "rfb-compatibility"
+  ]
+}

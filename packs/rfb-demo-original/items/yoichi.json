@@ -1,0 +1,68 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.yoichi",
+  "nameKey": "item-demo-yoichi-name",
+  "descriptionKey": "item-demo-long-bow-description",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.long-bow",
+    "instant": false,
+    "rarityOneIn": 30,
+    "sourceIndex": 148
+  },
+  "baseValue": 30000,
+  "generationLevel": 50,
+  "glyph": "}",
+  "maxStack": 1,
+  "equipmentSlot": "launcher",
+  "weightTenthsPound": 40,
+  "modifiers": {
+    "dexterity": 4
+  },
+  "equipmentBonuses": {},
+  "projectileProfile": {
+    "ammunitionType": "arrow",
+    "damageMultiplierPercent": 400,
+    "range": 18,
+    "shotEnergy": 10000,
+    "toDamage": 23,
+    "toHit": 40
+  },
+  "weaponProficiencyBaseItemId": "demo.item.long-bow",
+  "passives": [
+    "see-invisible"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "TOWN"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "tags": [
+    "artifact",
+    "equipment",
+    "launcher",
+    "rfb-compatibility"
+  ]
+}

@@ -111,7 +111,7 @@
 | `artifact.c:2256` 无外部主题的创造神器卷轴，进入 1/4 职业 bias 后 Ranger=(Ranger,30)；后续 Warrior 分支遵循源 RNG | [random_artifact.rs](../crates/rfb-core/src/game/random_artifact.rs)已有 Sniper 对应分支，增加 Ranger 身份即可。自然/显式主题生成不能一律强制此职业 bias；卷轴、主题与自然分别审计 |
 | `q_old_castle.txt:215–219` RANDOM27%5 为 0→Belthronding，其余→Yoichi | [middle-earth.json](../packs/rfb-demo-original/worlds/middle-earth.json)缺 Ranger 1:4 奖励；[tasks.rs](../crates/rfb-core/src/game/tasks.rs)持久奖励选择/重复神器替代当前限 Duelist/Mage/High-Mage，必须接入 Ranger。保留已有任务选择 seed 适配，领取失败/途中动作不重抽 |
 | `q_thieves.txt` 默认 long sword，Ranger 没有职业覆盖，快速 Mage 魔杖分支不适用 | 当前默认 broad-sword，仅 Mage 等特定覆盖 long-sword；普通游侠应增加源 long-sword 奖励，复用现有物品。尚未开放怪物种族的奖励覆盖不扩入本轮 |
-| 六个正式城镇的源 B:11 Ranger Owner | 现有六份 archer-guild ownerClassIds 仅 Archer/Sniper；加入 Ranger，复用强化弹药和弓服务/定价，不按副领域改变这一职业资格 |
+| 源城镇 B:11 Ranger Owner | 六座正式城镇当前只有五个已开放弓手公会：Anambar、Angwil、Morivant、Telmora、Thalos；Outpost 没有该设施。五处均加入 Ranger，复用强化弹药和弓服务/定价，不按副领域改变职业资格；本步不新增 Outpost 设施 |
 | Thalos B:8、Angwil B:8 Ranger Member | 对应 `thalos-sorcery-tower`、`angwil-mage-tower`，两者已有设施但缺 memberClassIds。Member 不是 Owner；源鉴定 200/1000，Ranger 使用非 Owner 价格。不要误连到 Angwil 内殿或 Morivant 咒术塔 |
 | Morivant 咒术塔及其他按领域设施 | 当前 ownerRealmIds 由主领域和 current_second_realm_id 匹配。副 Sorcery 时满足资格，改换后立即改变，不能固定按出生组合；`town.rs` 已有匹配实现，需验证新职业当前领域接线 |
 
@@ -122,7 +122,7 @@
 | a_info 124 `'Belthronding'` | `『贝尔斯隆丁』` | pval 4；等级70/稀有20/重量40/价值60000；AC0/倍率x3.00/命中20/伤害33/防御0 | DEX、STEALTH、HIDE_TYPE、RES_DISEN、XTRA_SHOTS、SHOW_MODS；pval 同时驱动 DEX/潜行和 60 额外射速，保留两行源描述 |
 | a_info 148 `of Yoichi` | `与一的` | pval 4；等级50/稀有30/重量40/价值30000；AC0/倍率x4.00/命中40/伤害23/防御0 | DEX、HIDE_TYPE、SEE_INVIS、SHOW_MODS；倍率与附魔进入真实发射器路径，无额外射速、无激活 |
 
-中文来自同一 ref 的 `localization/lib_edit_text_to_translate.tsv:420,489`（EDIT_00419/EDIT_00488）。`lib_edit_text_to_translate_unique.tsv` 对应行为空，不能拿空表覆盖已有中文；采用非空中文表逐字值，不自行另译。当前未发现两件正式 item，拟用 `demo.item.belthronding` / `demo.item.yoichi`，实际写入前再检查占用与其他方向导入，固定神器自然分配/唯一性/重复替代同时接入。
+中文来自同一 ref 的 `localization/lib_edit_text_to_translate.tsv:420,489`（EDIT_00419/EDIT_00488）。`lib_edit_text_to_translate_unique.tsv` 对应行为空，不能拿空表覆盖已有中文；采用非空中文表逐字值，不自行另译。第五步以 `demo.item.belthronding` / `demo.item.yoichi` 导入，固定神器自然分配/唯一性/重复替代同时接入；Yoichi 没有源 D 描述，沿用正式长弓描述。
 
 每个拟开放 Build 的五类审计记录分别包含基础分配/Tailored、Ego/负向生成、随机神器、固定神器/奖励、使用/保存；共同条件和既有行为证据复用，Ranger 实际缺口补齐后方可登记。第五步准备记录，第六步与普通入口同时纳入 [generation-build-applicability.json](../design/generation-build-applicability.json)，按[内容开发](content-development.md#职业与领域-build-的生成接入)生成报告和只读检查；本步不预填 completed。
 
@@ -141,7 +141,7 @@
 1. 第二步：四 Build 真正新游戏出生、双书与随机箭数、320 W/3 S 映射、1/2/3 级 MP/容量、WIS/负重/手套、职业美德及周期强感知；160 参数、15 个不可学条目、beam 和两项等级伤害。新类型才生成 Schema，内容变更更新包与 lock。
 2. 第三步：同 seed 随机抽取/无候选不抽 RNG、不重复学习、成功 Faith/支出、改换后预算不退款、1600/1400 练习边界、无副领域 +5、遗忘/恢复、失败反噬；确认后无候选仍保留领域、历史换回和保存后相同后续动作。覆盖直接受影响 Mage/Paladin 路径，不机械扩张所有职业。
 3. 第四步：发射器装备技能加成和实际行动能量、非箭100基值后仍加装备射速、重弓/Tomte边界、树林通行/雪地/骑乘、15级探测的实际 WIS 失败率、MP/HP支付、无目标/失败和知识保存。
-4. 第五/六步：四个真实 Build 的生成与当前领域消费者、1:4旧城堡选择/两件固定弓使用和重复替代、普通盗贼奖励、六公会Owner/两塔Member；正式入口、书本随机学习/改换UI、完整来源审计生成检查及本地化/可访问性证据。
+4. 第五/六步：四个真实 Build 的生成与当前领域消费者、1:4旧城堡选择/两件固定弓使用和重复替代、普通盗贼奖励、五个已开放公会Owner/两塔Member；正式入口、书本随机学习/改换UI、完整来源审计生成检查及本地化/可访问性证据。
 5. 第七步：新存档弓箭→3级双方学习施法→15级探测→改换与保存继续；明确所有经验、地图和物品准备。Tauri standalone 的 WebDriver 行为验收与优化 EXE 原生烟测分别记录，交付源码/程序/许可/校验值；不宣称自然高等级练级、通关或 Android 完成。
 
 本步验证为：源提交与当前基线核对、320 W/3 S 分组、五领域160项参数比对及书内ID顺序验证、源调用链与消费者静态审计、文档链接/格式检查。未运行游戏测试、内容生成或桌面构建，因为本步未改变运行时行为。
@@ -179,3 +179,30 @@
 [combat.rs](../crates/rfb-core/src/game/tests/ranger/combat.rs)覆盖1/25/50级短弓、投石索、轻重弩的实际发射能量，命中/破损消费者和射击后保存续演；额外射速、重弓、普通重甲、Tomte头具、骑乘与竖琴；树林实际移动/坐骑保存及非法位置拒绝；14/15级探测资格、WIS而非INT失败率、MP充足/不足/零、总量不足和恰好耗尽、失败/无目标、隔墙/模糊/幻觉/伪装、怪物知识及保存后相同动作/RNG。游侠32项和直接受影响的弓箭手/狙击手、骑乘、树种族/雪地、种族与变异支付、攻击投影等92项回归通过；格式、Clippy与当前契约结果随提交记录。
 
 本步仅规则与测试/文档变化，内容包、lock、协议、保存格式和State Hash Schema不变。没有导入两件奖励弓；它们的实物额外射速/倍率验收属于第五步。普通创角、完整UI与Tauri standalone仍分别留在第六、七步，本步不宣称桌面已可玩验收。
+
+## 11. 第五步实现与五类记录准备
+
+实际来源仍为 `master` 的 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`，本批重新核对 `obj_kind.c`、`object2.c`、`artifact.c`、两件 `a_info` 记录及中文表、旧城堡/盗贼任务和城镇 B:11/B:8。两件固定弓、职业奖励和设施关联进入正式内容包 1.425.0，NOTICE 保留来源；没有新增类型、保存状态或 State Hash Schema。
+
+基础分配只把 Ranger 加入已有近战 favorite 过滤，保留书本需求的 1/10 抽取；没有 Archer/Sniper 的 1/5 弓抽取和 Mage 的装置偏好。当前主副领域及高阶书发现数共同决定需求，改换后旧领域书不再满足 Tailored 条件，历史发现数不清零。Ego、负向属性与自然/主题随机神器复用公共流程；只有无外部主题的创造神器卷轴在 1/4 职业分支中使用 Ranger bias 和30%的 Warrior 转换。
+
+长弓『贝尔斯隆丁』与与一的长弓保留源属性、长弓熟练度、自然固定池和唯一性登记。旧城堡按已有持久任务 seed 适配选择 1:4；中途 RNG 操作、失败领取及读档均不重抽，已生成过的固定弓替换为命名随机神器长弓，满背包失败不修改状态。盗贼奖励采用源普通长剑。弓手公会当前五处均为 Owner，Anambar/Angwil 弹药基价22，其余三处20，实际价格仍应用公共城镇价格；强化弓按现有计算费用。Thalos/Angwil 两塔仅为 Member，普通全包鉴定用非Owner基价1000，完成 appraised，不冒充完全鉴定。Morivant 咒术塔仍按当前领域，离开 Sorcery 后失去 Owner，旧低价实际被拒。
+
+以下是第六步登记的五类共同证据与判定，适用范围是当前正式内容和已完成规则；深度80生成、奖励可领取状态等均为显式测试准备，不表示自然通关。完整函数名见对应测试文件。
+
+| 正式 area ID | 登记判定与依据 | 实现/行为证据 |
+| --- | --- | --- |
+| `base-allocation-tailored` | implemented：favorite、书本/当前领域及种族槽位；无弓/装置额外偏好 | [allocation.rs](../crates/rfb-core/src/game/loot/allocation.rs) 的 `tailored_uses_playable_class_equipment_realms_and_birth_race` 与 `ranger_tailored_books_follow_current_realms_without_bow_or_device_preference_draws` |
+| `ego-negative` | no-special-difference：没有 Ranger 专用 Ego 分支，现有槽位/手套、诅咒和装备资格继续生效 | [ego/applicability.rs](../crates/rfb-core/src/game/ego/applicability.rs) 的主题生成/装备/读档测试已扩至四组合；[scheduling/tests.rs](../crates/rfb-core/src/game/random_artifact/scheduling/tests.rs) 的自然 -2 诅咒神器生成、装备、卸下拒绝与继续生成 |
+| `random-artifact` | implemented：自然与显式主题保持公共偏向，卷轴增加 Ranger/30 | [random_artifact.rs](../crates/rfb-core/src/game/random_artifact.rs)、[tests.rs](../crates/rfb-core/src/game/random_artifact/tests.rs) 的源抽取边界；[scheduling/tests.rs](../crates/rfb-core/src/game/random_artifact/scheduling/tests.rs) 的自然负向与无主题/显式Mage主题生成保存；[items.rs](../crates/rfb-core/src/game/tests/items.rs) 的实际神器卷轴使用涵盖四组合 |
+| `fixed-artifact-reward` | implemented：固定弓、1:4、持久选择、唯一性与重复替代、普通盗贼奖励 | [tasks.rs](../crates/rfb-core/src/game/tasks.rs)、正式两件 item；[ranger/generation.rs](../crates/rfb-core/src/game/tests/ranger/generation.rs) 的 `rewards_keep_birth_selection_replace_unique_bows_and_fail_atomically` 及固定弓实际生成/装备/发射 |
+| `use-save` | implemented：共享使用/拒绝、五公会两塔、当前领域铭刻/角色和保存续演 | [ranger/generation.rs](../crates/rfb-core/src/game/tests/ranger/generation.rs)、[ranger/combat.rs](../crates/rfb-core/src/game/tests/ranger/combat.rs)、上述 Ego/神器卷轴保存消费者 |
+
+| 拟登记 Build | 主领域 / 初始副领域 | 五类记录范围 |
+| --- | --- | --- |
+| `demo.build.ranger-nature-sorcery` | nature / sorcery | 上表五类；Morivant 咒术塔初始Owner，改换后即时重算 |
+| `demo.build.ranger-nature-death` | nature / death | 上表五类；需要双方高阶书，副领域可改换 |
+| `demo.build.ranger-nature-arcane` | nature / arcane | 上表五类；沿实际书本/发现数判定需求，副领域可改换 |
+| `demo.build.ranger-nature-daemon` | nature / daemon | 上表五类；需要双方高阶书，副领域可改换 |
+
+四组合的生成/奖励/服务检查均从真实 Build 新游戏开始，共用部分保留共同证据，不复制职业专属矩阵或另造生成器。上述记录在第六步与普通创角入口一同写入正式审计输入并运行完整来源审计；本步未修改可用 Build 集合、生成报告或 deferred-unavailable-build 身份规则。缺失混沌/王牌、尚未导入的 Namake Bow 和公共武术/树地形等边界仍按前文保留。本步不宣称 UI 或 Tauri standalone 验收完成。

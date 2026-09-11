@@ -4889,6 +4889,10 @@ fn artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name()
         "mindcrafter",
         "duelist",
         "mage-death-sorcery",
+        "ranger-nature-sorcery",
+        "ranger-nature-death",
+        "ranger-nature-arcane",
+        "ranger-nature-daemon",
     ]
     .into_iter()
     .flat_map(|build| [false, true].map(|equipped| (build, equipped)))

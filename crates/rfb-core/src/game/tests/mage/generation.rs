@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 use super::*;
-use crate::game::tests::town::enter_town_facility;
+use crate::game::tests::support::reward_ready;
 use rfb_protocol::WeaponTraitDto;
 
 fn same_save(game: &Game, restored: &Game) {
@@ -17,38 +17,6 @@ fn same_save(game: &Game, restored: &Game) {
         differences.is_empty(),
         "save fields differ: {differences:?}"
     );
-}
-
-fn reward_ready(seed: u64, build: &str, task: &str) -> (Game, String, String, String) {
-    let mut game = Game::new_with_build(seed, build).unwrap();
-    clear_monsters(&mut game);
-    choose_human_talent_if_pending(&mut game);
-    let id = format!("demo.task.{task}");
-    let task = game
-        .content
-        .world(&game.world_id)
-        .unwrap()
-        .tasks
-        .iter()
-        .find(|task| task.id == id)
-        .unwrap()
-        .clone();
-    let facility = task.source_facility_id.unwrap();
-    enter_town_facility(&mut game, &facility);
-    game.mark_shop_visited_at_player().unwrap();
-    game.reveal_current_visibility();
-    game.task_states.insert(
-        id.clone(),
-        TaskState {
-            status: TaskStatusKindDto::RewardAvailable,
-            stage_index: 0,
-            current: 1,
-            required: 1,
-            active_floor_id: None,
-            retakes_used: 0,
-        },
-    );
-    (game, id, facility, task.reward.unwrap().item_instance_id)
 }
 
 #[test]

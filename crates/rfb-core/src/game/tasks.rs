@@ -898,7 +898,10 @@ impl Game {
         let fixed_castle_reward = self.build.as_ref().is_some_and(|build| {
             matches!(
                 build.class_id.as_str(),
-                "demo.class.duelist" | "demo.class.mage" | "demo.class.high-mage"
+                "demo.class.duelist"
+                    | "demo.class.mage"
+                    | "demo.class.high-mage"
+                    | "demo.class.ranger"
             )
         });
         if fixed_castle_reward

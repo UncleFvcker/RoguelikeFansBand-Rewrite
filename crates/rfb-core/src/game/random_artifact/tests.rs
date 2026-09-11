@@ -441,6 +441,7 @@ fn random_artifact_current_classes_and_themes_select_eligible_biases_and_activat
         ("high-mage", Bias::Mage),
         ("mage", Bias::Mage),
         ("sniper", Bias::Ranger),
+        ("ranger", Bias::Ranger),
         ("paladin", Bias::Priestly),
     ] {
         let class_id = format!("demo.class.{class}");
@@ -499,9 +500,10 @@ fn real_build_misc_warning_and_no_tele_follow_source_boundaries() {
 
 #[test]
 fn real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary() {
-    for (build, class_bias) in [
-        ("mindcrafter", Bias::Priestly),
-        ("mage-death-sorcery", Bias::Mage),
+    for (build, class_bias, warrior_chance) in [
+        ("mindcrafter", Bias::Priestly, 20),
+        ("mage-death-sorcery", Bias::Mage, 20),
+        ("ranger-nature-sorcery", Bias::Ranger, 30),
     ] {
         let game = Game::new_with_build(85, &format!("demo.build.{build}")).unwrap();
         let class_id = &game.build.as_ref().unwrap().class_id;
@@ -525,9 +527,9 @@ fn real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary() {
         }
         // Factory boundary evidence complements the actual artifact-scroll command tests.
         for (gate, roll, bias) in [
-            (0, 19, Bias::Warrior),
-            (0, 20, class_bias),
-            (1, 19, Bias::None),
+            (0, warrior_chance - 1, Bias::Warrior),
+            (0, warrior_chance, class_bias),
+            (1, warrior_chance - 1, Bias::None),
         ] {
             let seed = (0..100_000)
                 .find(|seed| {

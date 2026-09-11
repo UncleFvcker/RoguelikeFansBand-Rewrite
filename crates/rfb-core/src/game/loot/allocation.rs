@@ -245,7 +245,7 @@ fn tailored_candidate(game: &Game, item: &ItemDefinition) -> bool {
         }
         21..=23 => {
             can_equip()
-                && class != Some("demo.class.archer")
+                && !matches!(class, Some("demo.class.archer" | "demo.class.ranger"))
                 && (class != Some("demo.class.duelist") || game.duelist_favorite_weapon(item))
                 && (class != Some("demo.class.cavalry") || item.riding_weapon_kind.is_some())
         }
@@ -501,6 +501,7 @@ mod tests {
             "cavalry",
             "high-mage-death",
             "mage-death-nature",
+            "ranger-nature-death",
             "paladin-death",
         ] {
             let game = Game::new_with_build(421, &format!("demo.build.{build}")).unwrap();
@@ -532,8 +533,14 @@ mod tests {
             ] {
                 assert!(!accepts(id), "{build}: {id}");
             }
-            assert_eq!(accepts("dagger"), !matches!(build, "archer" | "cavalry"));
-            assert_eq!(accepts("lance"), !matches!(build, "archer" | "duelist"));
+            assert_eq!(
+                accepts("dagger"),
+                !matches!(build, "archer" | "cavalry" | "ranger-nature-death")
+            );
+            assert_eq!(
+                accepts("lance"),
+                !matches!(build, "archer" | "duelist" | "ranger-nature-death")
+            );
             assert_eq!(
                 accepts("magic-missile-wand"),
                 matches!(build, "high-mage-death" | "mage-death-nature")
@@ -542,7 +549,10 @@ mod tests {
                 accepts("black-channels"),
                 matches!(
                     build,
-                    "high-mage-death" | "mage-death-nature" | "paladin-death"
+                    "high-mage-death"
+                        | "mage-death-nature"
+                        | "paladin-death"
+                        | "ranger-nature-death"
                 )
             );
             assert!(!accepts("pattern-sorcery"), "wrong realm");
@@ -650,6 +660,93 @@ mod tests {
         }
         assert_eq!(game.rng, restored.rng);
         assert_eq!(game.state_hash(), restored.state_hash());
+    }
+
+    #[test]
+    fn ranger_tailored_books_follow_current_realms_without_bow_or_device_preference_draws() {
+        use crate::game::tests::support::{
+            choose_human_talent_if_pending, dispatch_next, give_inventory_item,
+        };
+        use rfb_protocol::GameCommand;
+        for realm in ["sorcery", "death", "arcane", "daemon"] {
+            let mut game =
+                Game::new_with_build(925, &format!("demo.build.ranger-nature-{realm}")).unwrap();
+            let book_kind = |game: &Game, realm: &str, rank| {
+                game.content
+                    .item_definitions()
+                    .find(|item| {
+                        item.ability_book_id
+                            .as_deref()
+                            .and_then(|id| game.content.ability_book(id))
+                            .is_some_and(|book| {
+                                book.realm_id.as_deref() == Some(realm) && book.rank == Some(rank)
+                            })
+                    })
+                    .unwrap()
+                    .id
+                    .clone()
+            };
+            for needs in [true, false] {
+                for current in ["nature", realm] {
+                    for rank in [3, 4] {
+                        let id = book_kind(&game, current, rank);
+                        game.item_knowledge.entry(id).or_default().found_count =
+                            if needs { 0 } else { 3 };
+                    }
+                }
+                assert_eq!(needs_book(&game), needs);
+                for seed in 0..32 {
+                    game.rng = crate::rng::RfbRng::seeded(seed);
+                    let mut expected = game.rng.clone();
+                    let category = (needs && expected.bounded(10) == 0).then_some(Category::Book);
+                    assert_eq!(tailored_category(&mut game), category);
+                    assert_eq!(game.rng, expected, "no bow or device preference draws");
+                }
+            }
+            let old = book_kind(&game, realm, 4);
+            let next = if realm == "death" { "sorcery" } else { "death" };
+            let new = book_kind(&game, next, 4);
+            let first = book_kind(&game, next, 1);
+            let found = game.item_knowledge.clone();
+            game.entities.clear();
+            game.apply_player_experience(game.experience_required_for_level(3), &mut Vec::new());
+            choose_human_talent_if_pending(&mut game);
+            give_inventory_item(&mut game, "test.new-realm", &first);
+            dispatch_next(
+                &mut game,
+                GameCommand::BeginRealmChange {
+                    book_item_id: "test.new-realm".to_owned(),
+                },
+            );
+            dispatch_next(&mut game, GameCommand::ResolveRealmChange { confirm: true });
+            assert_eq!(game.current_second_realm_id(), Some(next));
+            assert!(needs_book(&game));
+            for (id, knowledge) in found {
+                assert_eq!(game.item_knowledge[&id].found_count, knowledge.found_count);
+            }
+            let rows = [old, new].map(|item_kind_id| LootEntryDefinition {
+                item_kind_id,
+                weight: 100,
+                min_depth: 0,
+                max_depth: u16::MAX,
+                quantity: 1,
+            });
+            let mut restored = Game::from_save(game.to_save()).unwrap();
+            for game in [&mut game, &mut restored] {
+                assert_eq!(
+                    select_entry(
+                        game,
+                        &context(80),
+                        ItemGenerationMode::TailoredGreat,
+                        &rows,
+                        Some(RfbDropTheme::Mage)
+                    ),
+                    Some(1)
+                );
+            }
+            assert_eq!(game.rng, restored.rng);
+            assert_eq!(game.state_hash(), restored.state_hash());
+        }
     }
 
     #[test]

@@ -7,7 +7,7 @@
   "townId": "demo.town.thalos",
   "category": "service",
   "ownerNameKey": "town-facility-demo-thalos-archer-guild-owner-name",
-  "ownerClassIds": ["demo.class.archer", "demo.class.sniper"],
+  "ownerClassIds": ["demo.class.archer", "demo.class.sniper", "demo.class.ranger"],
   "serviceActions": [
     { "kind": "enchant-ammunition", "ownerCost": 20, "otherCost": 40 },
     { "kind": "enchant-bow", "ownerCost": 0, "otherCost": 0 }

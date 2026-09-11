@@ -976,8 +976,8 @@ fn item_shape_validation_uses_current_rfb_content() {
     invalid
         .items
         .iter_mut()
-        .find(|item| item.id == "demo.item.long-bow")
-        .expect("long bow should exist")
+        .find(|item| item.id == "demo.item.light-crossbow")
+        .expect("launcher without fixed-artifact dependents should exist")
         .equipment_slot = Some("weapon".to_owned());
     assert!(matches!(
         validate_and_normalize(&mut invalid),

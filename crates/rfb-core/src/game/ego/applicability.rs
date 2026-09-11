@@ -70,62 +70,78 @@ fn themed_ego_selection_filters_before_weighting_and_empty_pool_falls_back() {
 
 #[test]
 fn real_warrior_gets_mage_and_dwarf_themed_equipment_then_equips_and_restores() {
-    let mut game = Game::new_with_build(87, "demo.build.warrior").unwrap();
+    for build in [
+        "warrior",
+        "ranger-nature-sorcery",
+        "ranger-nature-death",
+        "ranger-nature-arcane",
+        "ranger-nature-daemon",
+    ] {
+        let mut game = Game::new_with_build(87, &format!("demo.build.{build}")).unwrap();
 
-    let mut seen = BTreeSet::new();
-    for attempt in 0..200 {
-        let context = context(&game, if attempt % 2 == 0 { "mage" } else { "dwarf" });
-        let Some(draft) = game.generate_one_loot_draft(&context, ItemGenerationMode::Great) else {
-            continue;
-        };
-        let Some(base) = game.content.item(&draft.kind_id).unwrap().rfb_base_kind else {
-            continue;
-        };
-        let Some(id) = draft.affix_ids.first() else {
-            continue;
-        };
-        let index = game
-            .content
-            .affix(id)
-            .unwrap()
-            .rfb_ego
-            .as_ref()
-            .unwrap()
-            .source_index;
-        match base.tval {
-            30 => assert_eq!(index, 147),
-            32 if context.drop_theme(&game.content) == "dwarf" => assert_eq!(index, 118),
-            34 => assert_eq!(index, 60),
+        let mut seen = BTreeSet::new();
+        for attempt in 0..200 {
+            let context = context(&game, if attempt % 2 == 0 { "mage" } else { "dwarf" });
+            let Some(draft) = game.generate_one_loot_draft(&context, ItemGenerationMode::Great)
+            else {
+                continue;
+            };
+            let Some(base) = game.content.item(&draft.kind_id).unwrap().rfb_base_kind else {
+                continue;
+            };
+            let Some(id) = draft.affix_ids.first() else {
+                continue;
+            };
+            let index = game
+                .content
+                .affix(id)
+                .unwrap()
+                .rfb_ego
+                .as_ref()
+                .unwrap()
+                .source_index;
+            match base.tval {
+                30 => assert_eq!(index, 147),
+                32 if context.drop_theme(&game.content) == "dwarf" => assert_eq!(index, 118),
+                34 => assert_eq!(index, 60),
 
-            45 => assert!(matches!(index, 200 | 201 | 205 | 208 | 209)),
-            _ => continue,
+                45 => assert!(matches!(index, 200 | 201 | 205 | 208 | 209)),
+                _ => continue,
+            }
+            if seen.insert(base.tval) {
+                let item = game
+                    .commit_generated_item_draft(draft, ItemLocation::Inventory)
+                    .unwrap();
+                let id = item.id.clone();
+                game.items.push(item);
+                assert!(game.equip_inventory_item(&id, None).is_some());
+            }
+            if seen.len() == 4 {
+                break;
+            }
         }
-        if seen.insert(base.tval) {
-            let item = game
-                .commit_generated_item_draft(draft, ItemLocation::Inventory)
-                .unwrap();
-            let id = item.id.clone();
-            game.items.push(item);
-            assert!(game.equip_inventory_item(&id, None).is_some());
+        assert_eq!(seen, BTreeSet::from([30, 32, 34, 45]));
+        game.refresh_player_resource_maxima();
+        let restored = Game::from_save(game.to_save()).unwrap();
+        for item in &game.items {
+            assert_eq!(
+                restored.items.iter().find(|saved| saved.id == item.id),
+                Some(item)
+            );
         }
-        if seen.len() == 4 {
-            break;
-        }
-    }
-    assert_eq!(seen, BTreeSet::from([30, 32, 34, 45]));
-    game.refresh_player_resource_maxima();
-    let restored = Game::from_save(game.to_save()).unwrap();
-    for item in &game.items {
         assert_eq!(
-            restored.items.iter().find(|saved| saved.id == item.id),
-            Some(item)
+            restored.player_derived_stats().speed.value,
+            game.player_derived_stats().speed.value
         );
+        assert_eq!(restored.rng, game.rng);
+        let mut restored = restored;
+        let context = context(&game, "mage");
+        assert_eq!(
+            game.generate_one_loot_draft(&context, ItemGenerationMode::Great),
+            restored.generate_one_loot_draft(&context, ItemGenerationMode::Great)
+        );
+        assert_eq!(game.rng, restored.rng);
     }
-    assert_eq!(
-        restored.player_derived_stats().speed.value,
-        game.player_derived_stats().speed.value
-    );
-    assert_eq!(restored.rng, game.rng);
 }
 
 #[test]

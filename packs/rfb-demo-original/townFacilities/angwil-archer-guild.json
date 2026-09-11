@@ -26,6 +26,7 @@
   ],
   "ownerClassIds": [
     "demo.class.archer",
-    "demo.class.sniper"
+    "demo.class.sniper",
+    "demo.class.ranger"
   ]
 }

@@ -305,6 +305,10 @@ fn random_artifact_save_preserves_rejected_names_and_continued_generation() {
         "mindcrafter",
         "duelist",
         "mage-death-sorcery",
+        "ranger-nature-sorcery",
+        "ranger-nature-death",
+        "ranger-nature-arcane",
+        "ranger-nature-daemon",
     ] {
         let mut game = Game::new_with_build(85, &format!("demo.build.{build}")).unwrap();
         game.items.clear();
@@ -338,6 +342,8 @@ fn random_artifact_save_preserves_rejected_names_and_continued_generation() {
         );
         let mut restored = Game::from_save(game.to_save()).unwrap();
         assert_eq!(game.state_hash(), restored.state_hash());
+        let mut context = context;
+        context.table_id = "demo.loot-table.mage".into();
         for _ in 0..6 {
             let actual = game
                 .generate_loot_instances_internal(
@@ -384,7 +390,16 @@ fn random_artifact_save_preserves_rejected_names_and_continued_generation() {
 #[test]
 fn random_artifact_negative_power_reaches_a_cursed_equippable_instance() {
     let artifact = source();
-    for build in ["warrior", "berserker", "mindcrafter", "mage-death-sorcery"] {
+    for build in [
+        "warrior",
+        "berserker",
+        "mindcrafter",
+        "mage-death-sorcery",
+        "ranger-nature-sorcery",
+        "ranger-nature-death",
+        "ranger-nature-arcane",
+        "ranger-nature-daemon",
+    ] {
         let mut game = Game::new_with_build(85, &format!("demo.build.{build}")).unwrap();
         game.items.clear();
         game.entities.clear();
