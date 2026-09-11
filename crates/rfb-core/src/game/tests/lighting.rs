@@ -690,6 +690,80 @@ fn equipped_light_spends_one_fuel_per_ten_ticks_and_reports_extinction() {
 }
 
 #[test]
+fn nightcap_reduces_carried_light_preserves_glow_and_senses_only_undead_after_save() {
+    let mut game = Game::new_with_build(425, RFB_WARRIOR_BUILD_ID).unwrap();
+    choose_human_talent_if_pending(&mut game);
+    descend_one_floor(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.player.position = Position { x: 10, y: 10 };
+    for y in 8..=12 {
+        for x in 8..=14 {
+            replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+        }
+    }
+    game.glow.fill(false);
+    let adjacent = Position { x: 11, y: 10 };
+    let edge = Position { x: 12, y: 10 };
+    give_inventory_item(&mut game, "test.lantern", LANTERN_KIND_ID);
+    game.equip_inventory_item("test.lantern", None).unwrap();
+    assert_eq!(game.player_light_radius(), Some(2));
+    assert!(game.is_visible(edge));
+    // Generation is covered in A2's item test; this fixture isolates consumers.
+    give_inventory_item(&mut game, "test.nightcap", "demo.item.nightcap");
+    game.register_generated_artifact("demo.item.nightcap");
+    game.equip_inventory_item("test.nightcap", None).unwrap();
+    assert_eq!(game.player_light_radius(), Some(1));
+    assert!(game.is_visible(adjacent));
+    assert!(!game.is_visible(edge));
+    let edge_index = game.index(edge).unwrap();
+    game.glow[edge_index] = true;
+    assert!(
+        game.is_visible(edge),
+        "darkness equipment does not erase permanent glow"
+    );
+    game.glow[edge_index] = false;
+    replace_terrain(&mut game, edge, "demo.terrain.wall");
+    game.push_generated_actor(
+        "test.undead".into(),
+        "demo.actor.skeleton-human",
+        Position { x: 13, y: 10 },
+    );
+    game.push_generated_actor(
+        "test.living".into(),
+        "demo.actor.sheep",
+        Position { x: 14, y: 10 },
+    );
+    assert!(game.entity_is_visible_by_telepathy(&game.entities[0]));
+    assert!(game.entity_is_fuzzy_to_player(&game.entities[0]));
+    assert!(!game.entity_is_visible_to_player(&game.entities[1]));
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.player_light_radius(), Some(1));
+    assert!(restored.entity_is_visible_by_telepathy(&restored.entities[0]));
+    restored.remove_equipped_curses(RemoveEquippedCursesRequest::new(true));
+    assert_eq!(restored.player_light_radius(), Some(1));
+    let head = match &restored.items[1].location {
+        ItemLocation::Equipped { slot_id } => slot_id.clone(),
+        _ => panic!("nightcap must remain equipped"),
+    };
+    restored.unequip_slot(&head).unwrap();
+    assert_eq!(restored.player_light_radius(), Some(2));
+    assert!(!restored.entity_is_visible_by_telepathy(&restored.entities[0]));
+    give_inventory_item(&mut restored, "test.four-winds", "demo.item.four-winds");
+    restored.register_generated_artifact("demo.item.four-winds");
+    restored
+        .equip_inventory_item("test.four-winds", None)
+        .unwrap();
+    assert_eq!(
+        restored.player_light_radius(),
+        Some(2),
+        "same base does not imply darkness"
+    );
+}
+
+#[test]
 fn surface_is_ambient_lit_and_dungeon_visibility_follows_equipped_light_radius() {
     let mut game =
         Game::new_with_build(42, RFB_WARRIOR_BUILD_ID).expect("Warrens Warrior should create");

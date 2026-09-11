@@ -1,0 +1,59 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.perseus",
+  "nameKey": "item-demo-perseus-name",
+  "descriptionKey": "item-demo-perseus-description",
+  "glyph": ")",
+  "generationLevel": 30,
+  "weightTenthsPound": 65,
+  "maxStack": 1,
+  "baseValue": 45000,
+  "equipmentSlot": "shield",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 197,
+    "baseItemKindId": "demo.item.small-metal-shield",
+    "instant": false,
+    "rarityOneIn": 10
+  },
+  "modifiers": {
+    "defense": 20,
+    "strength": 2
+  },
+  "passives": [
+    "reflects-bolts",
+    "sustain-strength"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "REFLECT",
+      "RES_ACID",
+      "RES_COLD",
+      "STR",
+      "SUST_STR"
+    ],
+    "pval": 2,
+    "toArmor": 15
+  }
+}

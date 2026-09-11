@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.fell-rider",
+  "nameKey": "item-demo-fell-rider-name",
+  "descriptionKey": "item-demo-fell-rider-description",
+  "glyph": "]",
+  "generationLevel": 10,
+  "weightTenthsPound": 15,
+  "maxStack": 1,
+  "baseValue": 10000,
+  "equipmentSlot": "head",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 346,
+    "baseItemKindId": "demo.item.hard-leather-cap",
+    "instant": false,
+    "rarityOneIn": 6
+  },
+  "modifiers": {
+    "defense": 0,
+    "wisdom": 3,
+    "charisma": -3
+  },
+  "passives": [
+    "sustain-intelligence"
+  ],
+  "resistances": {
+    "fire": "resistant",
+    "light": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "DEC_CHR",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_FIRE",
+      "RES_LITE",
+      "SUST_INT",
+      "WIS"
+    ],
+    "pval": 3,
+    "toArmor": -2
+  }
+}

@@ -613,6 +613,180 @@ fn a1_instant_lights_generate_activate_and_resume_after_save() {
 }
 
 #[test]
+fn a2_armor_generation_equipment_consumers_and_uniqueness_survive_save() {
+    for (slug, base, defense) in [
+        ("thengel", "metal-cap", 15),
+        ("perseus", "small-metal-shield", 20),
+        ("bard", "soft-leather-boots", 20),
+        ("fell-rider", "hard-leather-cap", 0),
+        ("nightcap", "knit-cap", 7),
+        ("four-winds", "knit-cap", 13),
+    ] {
+        let mut game = Game::new_with_build(424, "demo.build.mage-life-arcane").unwrap();
+        choose_human_talent_if_pending(&mut game);
+        clear_monsters(&mut game);
+        game.items.clear();
+        // Controlled level gives Thengel a measurable INT-based mana baseline;
+        // its WIS/CHR bonuses do not themselves change this Mage's maximum.
+        game.apply_player_experience(game.experience_required_for_level(30), &mut Vec::new());
+        game.refresh_player_resource_maxima();
+        let mana_before = game.resources["demo.resource.mana"].maximum;
+        let context = artifact_loot_context(30);
+        let kind = format!("demo.item.{slug}");
+        let base = format!("demo.item.{base}");
+        // Keep source-ordered candidates and real rarity draws, controlling only
+        // the base/depth. Complete ordinary-pool entry has existing shared tests.
+        let selected = (0..5000)
+            .find_map(|seed| {
+                game.rng = RfbRng::seeded(seed);
+                game.roll_fixed_artifact_kind_id(&context, Some(&base), false)
+                    .filter(|id| id == &kind)
+            })
+            .expect("each A2 armor must occur in its ordinary fixed-artifact candidate pool");
+        let draft = game.fixed_item_draft(&context, selected);
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+        assert_eq!(item.intrinsic_properties, Default::default());
+        assert!(item.activation.is_none() && item.charges.is_none());
+        assert!(
+            item.curse.is_none(),
+            "negative AC/CHR and darkness are not removable curses"
+        );
+        let id = item.id.clone();
+        game.items.push(item);
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        assert!(
+            !game
+                .item_property_knowledge
+                .get(&id)
+                .is_some_and(|k| k.appraised)
+        );
+        game.reveal_current_visibility();
+        let restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.rng, game.rng);
+        game = restored;
+        game.equip_inventory_item(&id, None).unwrap();
+        game.refresh_player_resource_maxima();
+        let modifiers = game.equipment_modifiers();
+        assert_eq!(modifiers.defense, defense);
+        match slug {
+            "thengel" => {
+                assert_eq!((modifiers.wisdom, modifiers.charisma), (3, 3));
+                assert!(mana_before > 0);
+                assert_eq!(
+                    game.resources["demo.resource.mana"].maximum,
+                    mana_before * 115 / 100
+                );
+            }
+            "perseus" => {
+                assert_eq!(modifiers.strength, 2);
+                assert!(game.player_reflects_bolts());
+                let before = game.progress.attributes.strength;
+                let rng = game.rng.clone();
+                game.resolve_monster_attribute_drain(AttributeKind::Strength);
+                assert_eq!(game.progress.attributes.strength, before);
+                assert_eq!(game.rng, rng);
+            }
+            "bard" => {
+                assert_eq!((modifiers.dexterity, modifiers.charisma), (4, 4));
+                assert_eq!(game.player_equipment_bonuses().stealth_skill, 4);
+                assert!(
+                    game.player_status_immunities()
+                        .contains("rfb.status.paralysis")
+                );
+                assert_eq!(
+                    game.effective_player_resistances()
+                        .level(DamageType::Poison),
+                    ResistanceLevel::Resistant
+                );
+            }
+            "fell-rider" => {
+                assert_eq!((modifiers.wisdom, modifiers.charisma), (3, -3));
+                let before = game.progress.attributes.intelligence;
+                let rng = game.rng.clone();
+                game.resolve_monster_attribute_drain(AttributeKind::Intelligence);
+                assert_eq!(game.progress.attributes.intelligence, before);
+                assert_eq!(game.rng, rng);
+                assert_eq!(
+                    game.effective_player_resistances().level(DamageType::Light),
+                    ResistanceLevel::Resistant
+                );
+            }
+            "nightcap" => {
+                assert_eq!(game.player_equipment_bonuses().stealth_skill, 3);
+                assert_eq!(game.player_equipment_bonuses().light_radius, -1);
+                assert_eq!(game.player_hold_life_sources(), 1);
+                assert_eq!(
+                    game.effective_player_resistances().level(DamageType::Fear),
+                    ResistanceLevel::Resistant
+                );
+            }
+            "four-winds" => {
+                for element in [
+                    DamageType::Acid,
+                    DamageType::Electricity,
+                    DamageType::Fire,
+                    DamageType::Cold,
+                ] {
+                    assert_eq!(
+                        game.effective_player_resistances().level(element),
+                        ResistanceLevel::Resistant
+                    );
+                }
+            }
+            _ => unreachable!(),
+        }
+        game.reveal_current_visibility();
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(
+            restored.player_derived_stats().armor_class,
+            game.player_derived_stats().armor_class
+        );
+        assert_eq!(
+            restored.player_derived_stats().stealth_skill,
+            game.player_derived_stats().stealth_skill
+        );
+        assert_eq!(
+            restored.resources["demo.resource.mana"].maximum,
+            game.resources["demo.resource.mana"].maximum
+        );
+        assert!(restored.generated_artifact_ids.contains(&kind));
+        assert_ne!(
+            restored.roll_fixed_artifact_kind_id(&context, Some(&base), false),
+            Some(kind)
+        );
+        let mut continued = Game::from_save(restored.to_save()).unwrap();
+        assert_eq!(
+            continued
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+        );
+        assert_eq!(continued.rng, restored.rng);
+        let slot = match &restored.items[0].location {
+            ItemLocation::Equipped { slot_id } => slot_id.clone(),
+            _ => panic!("generated armor must remain equipped"),
+        };
+        restored.unequip_slot(&slot).unwrap();
+        restored.refresh_player_resource_maxima();
+        assert_eq!(restored.equipment_modifiers(), Default::default());
+        if slug == "thengel" {
+            assert_eq!(
+                restored.resources["demo.resource.mana"].maximum,
+                mana_before
+            );
+        }
+        assert!(!restored.player_reflects_bolts());
+    }
+}
+
+#[test]
 fn terror_mask_generation_uses_current_build_and_preserves_identity_after_save() {
     use rfb_protocol::ItemCurseEffectDto;
     for (build, favored) in [
