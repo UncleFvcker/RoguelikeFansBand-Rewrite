@@ -272,10 +272,10 @@ pub(super) fn materialize_ego_with_rng(
         }
     }
     debug_assert!(affix_ids.windows(2).all(|pair| pair[0] != pair[1]));
-    let rolled_affixes = roll_affix_properties_with_rng(content, rng, &affix_ids, roll_depth);
+    let mut rolled_affixes = roll_affix_properties_with_rng(content, rng, &affix_ids, roll_depth);
     let (activation, charges) =
         initial_item_runtime_state(content, rng, kind_id, &affix_ids, activation_depth);
-    let extra_power = content
+    let mut extra_power = content
         .item(kind_id)
         .filter(|item| {
             item.artifact_generation.is_some()
@@ -289,6 +289,26 @@ pub(super) fn materialize_ego_with_rng(
             add_one_ability(rng, &mut properties);
             properties
         });
+    if content.item(kind_id).is_some_and(|item| {
+        item.artifact_generation.is_some()
+            && item
+                .rfb_value
+                .as_ref()
+                .is_some_and(|value| value.flags.contains("LITE"))
+    }) {
+        // Source one_ability adds a flag, so an existing LITE never becomes +2.
+        // Keep the rolled flag as instance state for identification and saving.
+        for properties in rolled_affixes
+            .iter_mut()
+            .map(|rolled| &mut rolled.properties)
+            .chain(extra_power.iter_mut())
+        {
+            if properties.equipment_bonuses.light_radius == 1 {
+                properties.rfb_flags.insert("LITE".to_owned());
+                properties.equipment_bonuses.light_radius = 0;
+            }
+        }
+    }
     EgoMaterialization::new(
         affix_ids,
         rolled_affixes,

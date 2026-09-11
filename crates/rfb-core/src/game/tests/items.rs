@@ -2996,6 +2996,319 @@ fn p99e_paurnimmen_cold_beam_hits_each_actor_before_the_wall() {
 }
 
 #[test]
+fn a5_res_or_power_weighted_boundaries_keep_one_draw_and_duplicate_flags() {
+    let original = Game::new_with_build(427, "demo.build.warrior").unwrap();
+    let context = artifact_loot_context(35);
+    let affix = original
+        .content
+        .affix("rfb-legacy.affix.artifact-extra-res-or-power")
+        .unwrap();
+    let candidates = &affix.roll_groups[0].candidates;
+    // Existing content coverage checks 12*15 + 8*18 + 9*4 = 360. This is
+    // distribution-equivalent to the source branches, not source RNG parity.
+    for slug in [
+        "maedhros",
+        "glamdring",
+        "orcrist",
+        "gurthang",
+        "azaghal",
+        "soulsword",
+    ] {
+        let kind = format!("demo.item.{slug}");
+        let mut start = 0;
+        for candidate in candidates {
+            let end = start + u64::from(candidate.weight);
+            for raw in [start, end - 1] {
+                let mut game = original.clone();
+                game.items.clear();
+                let seed = (0..10_000)
+                    .find(|seed| RfbRng::seeded(*seed).bounded(360) == raw)
+                    .unwrap();
+                game.rng = RfbRng::seeded(seed);
+                let mut expected_rng = game.rng.clone();
+                expected_rng.bounded(360);
+                let draft = game.fixed_item_draft(&context, kind.clone());
+                assert_eq!(game.rng, expected_rng);
+                assert_eq!(draft.rolled_affixes.len(), 1);
+                let definition = game.content.item(&kind).unwrap();
+                let mut expected = candidate.properties.clone();
+                let light = definition
+                    .equipment_bonuses
+                    .light_radius
+                    .max(expected.equipment_bonuses.light_radius);
+                if definition.equipment_bonuses.light_radius == 1
+                    && expected.equipment_bonuses.light_radius == 1
+                {
+                    expected.equipment_bonuses.light_radius = 0;
+                    expected.rfb_flags.insert("LITE".into());
+                }
+                assert_eq!(draft.rolled_affixes[0].properties, expected);
+                let item = game
+                    .commit_generated_item_draft(draft, ItemLocation::Inventory)
+                    .unwrap();
+                let id = item.id.clone();
+                game.items.push(item);
+                game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+                game.equip_inventory_item(&id, Some("right-hand")).unwrap();
+                assert_eq!(
+                    game.item_equipment_bonuses(&game.items[0]).light_radius,
+                    light
+                );
+                assert_eq!(
+                    game.visible_item_equipment_bonuses(&game.items[0])
+                        .light_radius,
+                    light
+                );
+                for &element in expected.resistances.keys() {
+                    assert_eq!(
+                        game.effective_player_resistances().level(element.into()),
+                        ResistanceLevel::Resistant
+                    );
+                    assert_eq!(
+                        game.visible_item_resistances(&game.items[0])
+                            .iter()
+                            .filter(
+                                |r| r.damage_type == DamageTypeDto::from(DamageType::from(element))
+                            )
+                            .count(),
+                        1
+                    );
+                }
+                assert_eq!(game.rng, expected_rng);
+            }
+            start = end;
+        }
+        assert_eq!(start, 360);
+    }
+}
+
+#[test]
+fn a5_weapons_generate_fight_and_keep_random_properties_after_save() {
+    fn strike(game: &mut Game) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.resolve_player_melee(0, false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+            .unwrap();
+        events
+    }
+    for (slug, base, raw, target_kind, multiplier) in [
+        ("maedhros", "main-gauche", 336, "stone-troll", 28),
+        ("glamdring", "broad-sword", 198, "snaga", 56),
+        ("orcrist", "broad-sword", 198, "snaga", 56),
+        ("gurthang", "two-handed-sword", 288, "baby-blue-dragon", 56),
+        ("azaghal", "main-gauche", 0, "baby-blue-dragon", 56),
+    ] {
+        let mut game = Game::new_with_build(428, "demo.build.warrior").unwrap();
+        choose_human_talent_if_pending(&mut game);
+        descend_one_floor(&mut game);
+        clear_monsters(&mut game);
+        game.items.clear();
+        game.player.position = Position { x: 10, y: 10 };
+        let adjacent = Position { x: 11, y: 10 };
+        replace_terrain(&mut game, Position { x: 10, y: 10 }, "demo.terrain.floor");
+        replace_terrain(&mut game, adjacent, "demo.terrain.floor");
+        game.glow.fill(true);
+        let context = artifact_loot_context(35);
+        let kind = format!("demo.item.{slug}");
+        let base = format!("demo.item.{base}");
+        let selected = (0..5000)
+            .find_map(|seed| {
+                game.rng = RfbRng::seeded(seed);
+                game.roll_fixed_artifact_kind_id(&context, Some(&base), false)
+                    .filter(|id| id == &kind)
+            })
+            .expect("A5 ordinary candidate pool must include each weapon at controlled base/depth");
+        // Control the extra roll to cover duplicate ESP, LITE, FREE_ACT and a
+        // resistance. Selection above still uses real source rarity draws.
+        game.rng = RfbRng::seeded(
+            (0..10_000)
+                .find(|seed| RfbRng::seeded(*seed).bounded(360) == raw)
+                .unwrap(),
+        );
+        let draft = game.fixed_item_draft(&context, selected);
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        assert!(item.activation.is_none() && item.curse.is_none());
+        let rolled = item.rolled_affixes.clone();
+        let id = item.id.clone();
+        game.items.push(item);
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        assert!(
+            !game
+                .item_property_knowledge
+                .get(&id)
+                .is_some_and(|k| k.appraised)
+        );
+        assert!(game.known_item_properties(&game.items[0]).is_empty());
+        game.reveal_current_visibility();
+        let restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.items[0].rolled_affixes, rolled);
+        game = restored;
+        let rng = game.rng.clone();
+        game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        assert_eq!(game.rng, rng);
+        assert!(
+            game.item_property_knowledge[&id]
+                .known_affix_ids
+                .contains(&rolled[0].affix_id)
+        );
+        game.equip_inventory_item(&id, Some("right-hand")).unwrap();
+        match slug {
+            "maedhros" => {
+                let modifiers = game.equipment_modifiers();
+                assert_eq!(
+                    (modifiers.intelligence, modifiers.dexterity, modifiers.speed),
+                    (3, 3, 3)
+                );
+                assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
+                assert_eq!(game.player_see_invisible_sources(), 1);
+            }
+            "glamdring" | "orcrist" => {
+                assert_eq!(game.player_light_radius(), Some(1));
+                assert_eq!(
+                    game.visible_item_equipment_bonuses(&game.items[0])
+                        .light_radius,
+                    1
+                );
+                assert!(rolled[0].properties.rfb_flags.contains("LITE"));
+                assert!(game.player_slow_digestion());
+                if slug == "glamdring" {
+                    assert_eq!(game.player_equipment_bonuses().search_skill, 15);
+                    assert_eq!(game.player_equipment_bonuses().perception_skill, 15);
+                    assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
+                } else {
+                    assert_eq!(game.player_equipment_bonuses().stealth_skill, 3);
+                }
+            }
+            "gurthang" => {
+                assert_eq!(game.equipment_modifiers().strength, 2);
+                assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
+                assert!(game.player_slow_digestion());
+                assert!(
+                    game.player_equipment_passives()
+                        .contains(&EquipmentPassive::Regeneration)
+                );
+            }
+            "azaghal" => {
+                assert_eq!(
+                    game.effective_player_resistances().level(DamageType::Fire),
+                    ResistanceLevel::Immune
+                );
+                assert_eq!(
+                    game.effective_player_resistances()
+                        .level(DamageType::Poison),
+                    ResistanceLevel::Resistant
+                );
+                let hp = game.player.hp;
+                game.resolve_monster_damage_to_player(
+                    "test.fire",
+                    "demo.actor.small-kobold",
+                    "test.fire-bolt",
+                    0,
+                    30,
+                    30,
+                    DamageType::Fire,
+                    &mut Vec::new(),
+                );
+                assert_eq!(game.player.hp, hp);
+            }
+            _ => unreachable!(),
+        }
+        game.push_generated_actor(
+            "test.a5-target".into(),
+            &format!("demo.actor.{target_kind}"),
+            adjacent,
+        );
+        game.entities[0].hp = 10_000;
+        game.entities[0].max_hp = 10_000;
+        if slug != "gurthang" {
+            assert!(game.entity_is_visible_by_telepathy(&game.entities[0]));
+        }
+        let profile = game.player_melee_profile(&game.player_derived_stats());
+        assert_eq!(profile.source_item_id.as_deref(), Some(id.as_str()));
+        assert_eq!(
+            game.player_melee_damage_multiplier(
+                &profile,
+                &game.entities[0],
+                game.content.actor(&game.entities[0].kind_id).unwrap()
+            ),
+            multiplier
+        );
+        if matches!(slug, "glamdring" | "orcrist") {
+            // A neutral target isolates the brand from the stronger orc kill.
+            let mut elemental = game.clone();
+            clear_monsters(&mut elemental);
+            elemental.push_generated_actor("test.brand".into(), "demo.actor.sheep", adjacent);
+            elemental.entities[0].hp = 10_000;
+            elemental.entities[0].max_hp = 10_000;
+            let element = if slug == "glamdring" {
+                DamageType::Fire
+            } else {
+                DamageType::Cold
+            };
+            let seed = (0..100)
+                .find(|seed| {
+                    let mut trial = elemental.clone();
+                    trial.rng = RfbRng::seeded(*seed);
+                    strike(&mut trial);
+                    trial.entities[0].hp < 10_000
+                })
+                .unwrap();
+            let mut hits = Vec::new();
+            for (resistance, expected) in
+                [(ResistanceLevel::Normal, 24), (ResistanceLevel::Immune, 10)]
+            {
+                let mut trial = elemental.clone();
+                trial.entities[0].resistances.set(element, resistance);
+                trial.rng = RfbRng::seeded(seed);
+                assert_eq!(
+                    trial.player_melee_damage_multiplier(
+                        &profile,
+                        &trial.entities[0],
+                        trial.content.actor("demo.actor.sheep").unwrap()
+                    ),
+                    expected
+                );
+                strike(&mut trial);
+                hits.push(10_000 - trial.entities[0].hp);
+            }
+            assert!(hits[0] > hits[1] && hits[1] > 0);
+        }
+        let seed = (0..100)
+            .find(|seed| {
+                let mut trial = game.clone();
+                trial.rng = RfbRng::seeded(*seed);
+                strike(&mut trial);
+                trial.entities[0].hp < 10_000
+            })
+            .expect("controlled seed range includes a real weapon hit");
+        game.rng = RfbRng::seeded(seed);
+        game.reveal_current_visibility();
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.items[0].rolled_affixes, rolled);
+        assert_eq!(strike(&mut restored), strike(&mut game));
+        assert!(restored.entities[0].hp < 10_000);
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.rng, game.rng);
+        assert!(restored.generated_artifact_ids.contains(&kind));
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            game.generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+        );
+        assert_eq!(restored.rng, game.rng);
+        assert_ne!(
+            restored.roll_fixed_artifact_kind_id(&context, Some(&base), false),
+            Some(kind)
+        );
+    }
+}
+
+#[test]
 fn p100e_soulsword_rolls_and_persists_one_extra_power_and_increases_life() {
     let mut game =
         Game::new_with_build(100, "demo.build.warrior").expect("Soulsword game should create");

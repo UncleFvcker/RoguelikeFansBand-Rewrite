@@ -9594,3 +9594,18 @@ item-demo-anarion-description = 埃兰迪尔之子阿纳瑞安的伟大金属包
 
 item-demo-thror-name = 索尔之秘银铁头靴
 item-demo-thror-description = 坚固的皮革与钢铁制成的鞋子，如穿戴它们的饱经风霜的流亡矮人国王一样坚忍。由于是矮人制造的，穿上这双靴子的人将在群山中如履平地。
+
+item-demo-maedhros-name = 迈兹洛斯的左手短剑
+item-demo-maedhros-description = 一把带有大护手的短刺剑，由高大的迈兹洛斯佩戴，他是费诺的长子。在安格班（Thangorodrim）的地牢中失去右手后，他用左手挥舞这把剑。
+
+item-demo-glamdring-name = 『敌击剑』阔剑
+item-demo-glamdring-description = 这把燃烧着耀眼光芒的利刃，从那些胆敢靠近隐藏的贡多林而被击杀的半兽人口中，获得了“敌击剑（Foe-Hammer）”的绰号。
+
+item-demo-orcrist-name = 『兽咬剑』阔剑
+item-demo-orcrist-description = 这把闪烁着冷光的利刃，被那些深知其威力的半兽人简单地称为“咬剑（Biter）”。
+
+item-demo-gurthang-name = 『古桑格』双手剑
+item-demo-gurthang-description = 这把曾被强大的图林所挥舞的巨剑，是一把伟大的屠龙武器，曾沐浴过格劳龙的鲜血：但要小心，它最终也会饮下那些挥舞它之人的鲜血。
+
+item-demo-azaghal-name = 阿扎格哈尔的左手短剑
+item-demo-azaghal-description = 在尼南斯·阿农迪亚德（Nirnaeth）战役中，矮人们挡住了格劳龙的猛攻，他们的领主阿扎格哈尔在被踩在脚下之前，将这把短刀刺入了恶龙的腹部。龙之父的黑色鲜血现在成为所有靠近它的龙类的警告。

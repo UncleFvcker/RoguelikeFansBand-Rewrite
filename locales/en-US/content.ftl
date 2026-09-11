@@ -9590,3 +9590,18 @@ item-demo-anarion-description = Large Metal Shield of Anarion
 
 item-demo-thror-name = Pair of Mithril Shod Boots of Thror
 item-demo-thror-description = Pair of Mithril Shod Boots of Thror
+
+item-demo-maedhros-name = Main Gauche of Maedhros
+item-demo-maedhros-description = Main Gauche of Maedhros
+
+item-demo-glamdring-name = Broad Sword 'Glamdring'
+item-demo-glamdring-description = Broad Sword 'Glamdring'
+
+item-demo-orcrist-name = Broad Sword 'Orcrist'
+item-demo-orcrist-description = Broad Sword 'Orcrist'
+
+item-demo-gurthang-name = Two-Handed Sword 'Gurthang'
+item-demo-gurthang-description = Two-Handed Sword 'Gurthang'
+
+item-demo-azaghal-name = Main Gauche of Azaghal
+item-demo-azaghal-description = Main Gauche of Azaghal

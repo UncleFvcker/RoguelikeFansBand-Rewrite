@@ -1,0 +1,105 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.glamdring",
+  "nameKey": "item-demo-glamdring-name",
+  "descriptionKey": "item-demo-glamdring-description",
+  "glyph": "|",
+  "generationLevel": 30,
+  "weightTenthsPound": 150,
+  "maxStack": 1,
+  "baseValue": 40000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 73,
+    "baseItemKindId": "demo.item.broad-sword",
+    "instant": false,
+    "rarityOneIn": 20,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-res-or-power"
+    ]
+  },
+  "weaponProficiencyBaseItemId": "demo.item.broad-sword",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 10,
+    "toDamage": 15,
+    "damageDice": 2,
+    "damageSides": 6
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "BRAND_FIRE",
+      "ESP_DEMON",
+      "ESP_GIANT",
+      "ESP_ORC",
+      "ESP_TROLL",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "KILL_ORC",
+      "LITE",
+      "RES_DARK",
+      "RES_FIRE",
+      "RES_LITE",
+      "RIDING",
+      "SEARCH",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_DEMON",
+      "SLAY_EVIL",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "SLOW_DIGEST",
+      "XTRA_RES_OR_POWER"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "equipmentBonuses": {
+    "searchSkill": 15,
+    "perceptionSkill": 15,
+    "lightRadius": 1
+  },
+  "passives": [
+    "see-invisible",
+    "slow-digestion",
+    "esp-orc",
+    "esp-troll",
+    "esp-giant",
+    "esp-demon"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "brands": [
+    "fire"
+  ],
+  "slays": {
+    "evil": "slay",
+    "orc": "kill",
+    "troll": "slay",
+    "demon": "slay"
+  },
+  "resistances": {
+    "fire": "resistant",
+    "light": "resistant",
+    "dark": "resistant"
+  },
+  "ridingWeaponKind": "compatible"
+}

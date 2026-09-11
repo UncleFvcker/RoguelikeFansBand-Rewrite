@@ -1,0 +1,84 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.maedhros",
+  "nameKey": "item-demo-maedhros-name",
+  "descriptionKey": "item-demo-maedhros-description",
+  "glyph": "|",
+  "generationLevel": 25,
+  "weightTenthsPound": 30,
+  "maxStack": 1,
+  "baseValue": 62500,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 64,
+    "baseItemKindId": "demo.item.main-gauche",
+    "instant": false,
+    "rarityOneIn": 30,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-res-or-power"
+    ]
+  },
+  "weaponProficiencyBaseItemId": "demo.item.main-gauche",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 12,
+    "toDamage": 15,
+    "damageDice": 2,
+    "damageSides": 6
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "ESP_GIANT",
+      "ESP_ORC",
+      "ESP_TROLL",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_GIANT",
+      "SLAY_TROLL",
+      "SPEED",
+      "XTRA_RES_OR_POWER"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "modifiers": {
+    "intelligence": 3,
+    "dexterity": 3,
+    "speed": 3
+  },
+  "passives": [
+    "see-invisible",
+    "esp-orc",
+    "esp-troll",
+    "esp-giant"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "troll": "slay",
+    "giant": "slay"
+  }
+}
