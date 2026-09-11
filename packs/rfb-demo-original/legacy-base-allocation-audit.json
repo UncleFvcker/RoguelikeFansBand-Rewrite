@@ -153,6 +153,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.galadriel",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.gondricam",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -8944,12 +8950,12 @@
     {
       "allocations": [],
       "hasNaturalAllocationRows": false,
-      "itemId": null,
+      "itemId": "demo.item.phial",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "INSTA_ART base; explicit artifact creation only",
       "sourceIndex": 605,
       "sourceName": "Phial",
-      "status": "not-imported",
+      "status": "explicit-only",
       "sval": 4,
       "tval": 39
     },

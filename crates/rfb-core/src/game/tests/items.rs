@@ -210,6 +210,169 @@ fn hobbit_fixed_artifacts_generate_equip_and_preserve_uniqueness_after_save() {
 }
 
 #[test]
+fn galadriel_instant_generation_lighting_activation_and_cooldown_survive_save() {
+    let mut game = Game::new_with_build(421, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    descend_one_floor(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.player.position = Position { x: 10, y: 10 };
+    for y in 7..=13 {
+        for x in 7..=13 {
+            replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+        }
+    }
+    game.glow.fill(false);
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-30".into(),
+        depth: 30,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.ordinary-drop".into(),
+        },
+    };
+    assert!(
+        game.roll_fixed_artifact_kind_id(&context, Some("demo.item.phial"), false)
+            .is_none()
+    );
+    // Controlled depth; keep the ordinary pool and its real 1/1000 instant gate.
+    let mut found = None;
+    for _ in 0..50_000 {
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            assert_ne!(item.kind_id, "demo.item.phial");
+            if item.kind_id == "demo.item.galadriel" {
+                found = Some(item);
+            }
+        }
+        if found.is_some() {
+            break;
+        }
+    }
+    let item = found.expect("Galadriel must occur through ordinary instant generation");
+    assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+    assert!(item.fuel.is_none());
+    let id = item.id.clone();
+    game.items.push(item);
+    game.pick_up_item_at_player(Some(&id)).unwrap();
+    game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    game.equip_inventory_item(&id, None).unwrap();
+    assert_eq!(game.player_light_radius(), Some(3));
+    assert_eq!(game.player_equipment_bonuses().search_skill, 25);
+    assert_eq!(game.player_equipment_bonuses().perception_skill, 25);
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Dark),
+        ResistanceLevel::Resistant
+    );
+    let mut events = Vec::new();
+    game.world_tick = 10;
+    game.process_equipped_light_fuel(&mut events);
+    assert!(game.items[0].fuel.is_none());
+    assert_eq!(game.player_light_radius(), Some(3));
+    let target = Position { x: 11, y: 10 };
+    game.push_generated_actor("test.phial-target".into(), "demo.actor.goblin", target);
+    let target_hp = game.entities[0].hp;
+    game.world_tick = 0;
+    for _ in 0..100 {
+        game.use_inventory_item(
+            &id,
+            Some(&TargetSelection::SelfTarget),
+            None,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        if game.items[0].charges.unwrap().current == 0 {
+            break;
+        }
+    }
+    assert_eq!(game.items[0].charges.unwrap().current, 0);
+    assert_eq!(game.items[0].device_recovery_progress, 0);
+    assert!(
+        game.entities
+            .iter()
+            .find(|actor| actor.id == "test.phial-target")
+            .is_none_or(|actor| actor.hp < target_hp),
+        "illumination must damage a light-vulnerable target"
+    );
+    assert!(game.glow[game.index(game.player.position).unwrap()]);
+    assert!(game.glow[game.index(target).unwrap()]);
+    let rng = game.rng.clone();
+    assert!(
+        !game
+            .use_inventory_item(
+                &id,
+                Some(&TargetSelection::SelfTarget),
+                None,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new()
+            )
+            .unwrap()
+    );
+    assert_eq!(game.rng, rng);
+    for tick in 1..=75 {
+        game.world_tick = tick;
+        game.process_inventory_device_recovery(&mut events);
+    }
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.player_light_radius(), Some(3));
+    assert_eq!(restored.items[0].device_recovery_progress, 75);
+    assert!(
+        restored
+            .generated_artifact_ids
+            .contains("demo.item.galadriel")
+    );
+    assert!(
+        restored
+            .roll_fixed_artifact_kind_id(&context, Some("demo.item.phial"), true)
+            .is_none()
+    );
+    for tick in 76..150 {
+        restored.world_tick = tick;
+        restored.process_inventory_device_recovery(&mut events);
+    }
+    assert_eq!(restored.items[0].charges.unwrap().current, 0);
+    assert_eq!(restored.items[0].device_recovery_progress, 149);
+    restored.world_tick = 150;
+    restored.process_inventory_device_recovery(&mut events);
+    assert_eq!(restored.items[0].charges.unwrap().current, 1);
+    assert_eq!(restored.items[0].device_recovery_progress, 0);
+    let mut continued = Game::from_save(restored.to_save()).unwrap();
+    let next = restored
+        .generate_loot_instances(&context, ItemLocation::Inventory)
+        .unwrap();
+    assert_eq!(
+        continued
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap(),
+        next
+    );
+    assert_eq!(continued.rng, restored.rng);
+    for _ in 0..100 {
+        continued
+            .use_inventory_item(
+                &id,
+                Some(&TargetSelection::SelfTarget),
+                None,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
+        if continued.items[0].charges.unwrap().current == 0 {
+            break;
+        }
+    }
+    assert_eq!(continued.items[0].charges.unwrap().current, 0);
+}
+
+#[test]
 fn fixed_high_resistance_uses_one_source_roll_without_retrying_duplicates() {
     let original = Game::new_with_build(419, "demo.build.warrior").unwrap();
     let context = artifact_loot_context(40);
