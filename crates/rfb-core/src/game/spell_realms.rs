@@ -4,11 +4,13 @@ use rfb_protocol::{RealmChangeBookDto, SpellRealmsDto};
 
 impl Game {
     /// Desktop fixtures: level 1 adds only a wand; other levels prepare a quiet map.
-    /// Level 0 drains XP, 20 exercises learning, and 25 unlocks Eat Magic.
+    /// Level 0 drains XP; the other levels exercise learning and class power boundaries.
     #[doc(hidden)]
-    pub fn debug_prepare_mage_e2e(&mut self, level: u16) -> Result<(), CoreError> {
-        if !matches!(level, 0 | 1 | 20 | 25) {
-            return Err(CoreError::InvalidSave("unsupported Mage E2E level"));
+    pub fn debug_prepare_spell_learning_e2e(&mut self, level: u16) -> Result<(), CoreError> {
+        if !matches!(level, 0 | 1 | 2 | 3 | 15 | 20 | 25) {
+            return Err(CoreError::InvalidSave(
+                "unsupported spell learning E2E level",
+            ));
         }
         if level == 1 {
             self.debug_add_generated_inventory_item(
@@ -35,11 +37,23 @@ impl Game {
                 .saturating_sub(self.progress.experience);
             self.apply_player_experience(experience, &mut Vec::new());
         }
-        if !self
-            .items
-            .iter()
-            .any(|item| item.id == "e2e.mage-life-book")
-        {
+        let ranger = self
+            .build
+            .as_ref()
+            .is_some_and(|build| build.class_id == "demo.class.ranger");
+        let (book_id, change_realm) = if ranger {
+            (
+                "e2e.ranger-change-book",
+                if self.current_second_realm_id() == Some("death") {
+                    "sorcery"
+                } else {
+                    "death"
+                },
+            )
+        } else {
+            ("e2e.mage-life-book", "life")
+        };
+        if !self.items.iter().any(|item| item.id == book_id) {
             let kind = self
                 .content
                 .item_definitions()
@@ -48,13 +62,13 @@ impl Game {
                         .as_deref()
                         .and_then(|id| self.content.ability_book(id))
                         .is_some_and(|book| {
-                            book.realm_id.as_deref() == Some("life") && book.rank == Some(1)
+                            book.realm_id.as_deref() == Some(change_realm) && book.rank == Some(1)
                         })
                 })
-                .expect("formal Life book")
+                .expect("formal realm change book")
                 .id
                 .clone();
-            self.debug_add_generated_inventory_item("e2e.mage-life-book", &kind, 1)?;
+            self.debug_add_generated_inventory_item(book_id, &kind, 1)?;
         }
         if level == 25 {
             self.debug_add_generated_inventory_item(

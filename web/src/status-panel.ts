@@ -1347,9 +1347,18 @@ export class StatusPanel {
         capacity: learning.capacity,
         remaining: learning.remainingSlots,
       });
+      row.classList.add("ability-learning-summary");
       this.#dom.resourceList.append(row);
+      this.#dom.abilityList.append(row.cloneNode(true));
     }
     const studyMode = learning?.studyMode ?? "chosen";
+    const firstBookLevel = Math.min(...abilities.filter(ability => ability.bookNameKey).map(ability => ability.minimumLevel));
+    if (learning && Number.isFinite(firstBookLevel) && playerLevel < firstBookLevel) {
+      const help = document.createElement("li");
+      help.className = "resource-row ability-learning-start";
+      help.textContent = this.#localization.format("ability-learning-start", { level: firstBookLevel });
+      this.#dom.abilityList.append(help);
+    }
     for (const entry of presentation) {
       if (entry.type === "heading") {
         const heading = document.createElement("li");
@@ -1369,9 +1378,12 @@ export class StatusPanel {
         }
         const bookItemId = entry.bookItemId;
         if (studyMode === "divine-random" && bookItemId) {
-          const study = this.#abilityAction("action-ability-study-prayer", () =>
+          heading.dataset.bookItemId = bookItemId;
+          heading.tabIndex = -1;
+          const study = this.#abilityAction(realms ? "action-ability-study-random" : "action-ability-study-prayer", () =>
             void this.#dispatch({ type: "study-prayer", bookItemId }),
           );
+          study.dataset.abilityAction = "study-prayer";
           study.disabled =
             this.#state.busy ||
             this.#state.playerDead ||
@@ -1392,6 +1404,10 @@ export class StatusPanel {
     if (!active || !this.#dom.abilityList.contains(active)) return;
     const id = active.closest<HTMLElement>("[data-ability-id]")?.dataset.abilityId;
     if (id) this.#abilityFocus = { id, action: active.dataset.abilityAction };
+    else {
+      const bookId = active.closest<HTMLElement>("[data-book-item-id]")?.dataset.bookItemId;
+      if (bookId) this.#abilityFocus = { id: bookId, action: "study-prayer" };
+    }
   }
 
   updateAbilityActions(): void {
@@ -1401,7 +1417,7 @@ export class StatusPanel {
       const { id, action } = this.#abilityFocus;
       this.#abilityFocus = undefined;
       if (this.#dom.abilityList.checkVisibility()) {
-        const row = this.#dom.abilityList.querySelector<HTMLElement>(`[data-ability-id="${id}"]`);
+        const row = this.#dom.abilityList.querySelector<HTMLElement>(`[data-${action === "study-prayer" ? "book-item" : "ability"}-id="${id}"]`);
         const control = action ? row?.querySelector<HTMLButtonElement>(`[data-ability-action="${action}"]`) : undefined;
         (control && !control.matches(":disabled") ? control : row)?.focus({ preventScroll: true });
       }
@@ -1672,7 +1688,6 @@ export class StatusPanel {
     }
     if (ability.detect != null) {
       append(ability.detect.category === "mind" ? "ability-detect-mind-summary" : "ability-detect-summary", {
-        category: ability.detect.category,
         radius: ability.detect.radius,
         persistence: this.#localization.format(
           ability.detect.persistent

@@ -101,7 +101,7 @@ export async function runMageUiScenario(driver, directory, profile, playthrough 
     return current;
   }
   async function prepare(level) {
-    const prepared = await invoke("prepare_mage_e2e", { level });
+    const prepared = await invoke("prepare_spell_learning_e2e", { level });
     await load(await save(), prepared.stateHash);
     await chooseTalent();
     await abilitiesPage();
@@ -357,7 +357,7 @@ export async function runMageUiScenario(driver, directory, profile, playthrough 
       assert.equal(await driver.execute('return document.querySelector("#session-start-game").disabled'), false);
       await selectCreationRace(driver, "demo.race.rfb-human");
       await selectCreationBuild(driver, "demo.build.high-mage-death");
-      assert.equal(await driver.execute('return document.querySelector("#session-career-options").children.length'), 1);
+      assert.equal(await driver.execute('return document.querySelector("#session-career-options").children.length'), 2);
       for (const [width, height, zoom] of [[1280,720,1], [390,844,1], [640,360,2]]) {
         await viewport(width, height, zoom);
         await click('[data-career-group="magic"]'); await click('[data-career-id="mage"]');
@@ -393,6 +393,7 @@ export async function runMageUiScenario(driver, directory, profile, playthrough 
       }
       current = await prepare(20);
       assert.equal(current.player.progress.level, 20);
+      assert.equal(await text("#spell-realms-study-help"), localization.format("ability-mage-study-help"));
       const primary = current.player.abilities.find(a => a.bookRealmId === "death" && a.canStudy && a.minimumLevel === 1).id;
       const secondary = current.player.abilities.find(a => a.bookRealmId === "sorcery" && a.canStudy && a.minimumLevel === 1).id;
       current = await study(primary); current = await study(secondary, " ");

@@ -55,6 +55,15 @@ function deathCaster<const S extends string>(slug: S) {
 }
 
 export const MAGE_REALMS = ["life", "sorcery", "nature", "death", "arcane", "daemon", "crusade", "armageddon"] as const;
+export const RANGER_SECOND_REALMS = ["sorcery", "death", "arcane", "daemon"] as const;
+const RANGER = {
+  ...career("ranger"), id: "ranger", childLabelKey: "session-second-realm-label",
+  notes: ["session-ranger-realms-help"],
+  children: RANGER_SECOND_REALMS.map(second => ({
+    id: `demo.build.ranger-nature-${second}` as const, nameKey: `realm-${second}-name`,
+    descriptionKey: `build-demo-ranger-nature-${second}-description`, notes: ["session-ranger-realms-help"],
+  })),
+} as const;
 const MAGE = {
   ...career("mage"), id: "mage", childLabelKey: "session-first-realm-label",
   notes: ["session-mage-realms-help"],
@@ -70,7 +79,7 @@ const MAGE = {
 
 export const CAREER_GROUPS = [
   { id: "melee", options: [career("warrior"), career("berserker"), { ...career("duelist"), notes: ["duelist-auto-challenge-help", "session-duelist-tonberry-unavailable"] }] },
-  { id: "archery", options: [career("archer"), career("sniper")] },
+  { id: "archery", options: [career("archer"), career("sniper"), RANGER] },
   { id: "magic", options: [MAGE, { ...deathCaster("high-mage"), children: [
     { id: "demo.build.high-mage-death", nameKey: "session-career-death-name", descriptionKey: "build-demo-high-mage-death-description", notes: ["session-high-mage-available-realms"] },
     { id: "demo.build.high-mage-craft", nameKey: "session-career-craft-name", descriptionKey: "build-demo-high-mage-craft-description", notes: ["session-high-mage-available-realms"] },

@@ -12,6 +12,7 @@ export class SpellRealmsPanel {
   readonly #root: HTMLElement;
   readonly #value: HTMLElement;
   readonly #history: HTMLElement;
+  readonly #studyHelp: HTMLElement;
   readonly #books: HTMLElement;
   readonly #dialog: HTMLDialogElement;
   readonly #title: HTMLElement;
@@ -34,6 +35,7 @@ export class SpellRealmsPanel {
     this.#root = element("spell-realms");
     this.#value = element("spell-realms-value");
     this.#history = element("spell-realms-history");
+    this.#studyHelp = element("spell-realms-study-help");
     this.#books = element("realm-change-books");
     this.#dialog = element("realm-change-dialog");
     this.#title = element("realm-change-title");
@@ -51,6 +53,8 @@ export class SpellRealmsPanel {
     const format = this.#localization.format.bind(this.#localization);
     const name = (id: string) => format(`realm-${id}-name`);
     if (realms) {
+      this.#studyHelp.textContent = format(this.#state.status?.player.abilityLearning?.studyMode === "divine-random"
+        ? "ability-random-study-help" : "ability-mage-study-help");
       this.#value.textContent = format("ability-realms-value", { first: name(realms.firstRealmId), second: name(realms.secondRealmId) });
       this.#history.hidden = realms.previousRealmIds.length === 0;
       this.#history.textContent = format("ability-realms-history", { realms: realms.previousRealmIds.map(name).join(" / ") });
@@ -81,7 +85,8 @@ export class SpellRealmsPanel {
       return;
     }
     this.#title.textContent = format("realm-change-title", { realm: name(prompt.realmId) });
-    this.#description.textContent = format("realm-change-description", {
+    this.#description.textContent = format(this.#state.status?.player.abilityLearning?.studyMode === "divine-random"
+      ? "realm-change-random-description" : "realm-change-description", {
       old: name(realms.secondRealmId), first: name(realms.firstRealmId), next: name(prompt.realmId),
     });
     this.#accept.disabled = this.#decline.disabled = this.#state.busy;

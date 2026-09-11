@@ -3,9 +3,9 @@
   "sourceRef": "master",
   "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
   "reviewedAt": "2026-09-11",
-  "codeBaseline": "7eac7dd23 + b6ba6466d + 2eded9e9c",
+  "codeBaseline": "8d045dfb2 + Ranger creation/UI entry",
   "entrySource": "web/src/character-creation.ts CREATION_BUILDS / PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
-  "scope": "Source and behavior applicability review of 66 real creation builds (ten non-Mage and 56 ordered Mage realm pairs), five areas each, within the imported canonical pool. Shared behavioral evidence covers class and current-realm differences; enumerating entries does not claim 66 complete playthroughs. Unavailable identities/content and object representation limits remain separate. This input and the audit CLI do not execute gameplay tests.",
+  "scope": "Source and behavior applicability review of 70 real creation builds (ten previous non-Mage builds, 56 ordered Mage pairs and four Nature-first Ranger builds), five areas each, within the imported canonical pool. Shared evidence covers class and current-realm differences; this is not 70 playthroughs. Unavailable identities/content remain separate. The audit CLI does not execute gameplay tests.",
   "recordSemantics": {
     "implemented": "Reachable implementation exists; gapIds still block acceptance completion.",
     "no-special-difference": "Source and indirect consumers reviewed; shared path applies without an additional class generation branch.",
@@ -28,14 +28,15 @@
         "base-harp-bard"
       ],
       "entry": "Natural floor/monster allocation and existing Acquirement service; ordinary modes retain non-tailored kinds.",
-      "reason": "All 66 default builds resolve to the human standard body; race selection supplies real body slots and Tomte birth-headgear rules. Source object_is_favorite defaults to all melee weapons for Warrior, Berserker, Sniper, High Mage, Mage, Paladin and Mindcrafter; Archer and Cavalry have explicit filters. Source device-class membership is independent of ability to use devices. Completed-item rejection follows caster glove encumbrance, not general usability. Duelist uses source base weapon proficiency caps above Beginner for melee favorites; tailored body armor has the fixed 200 weight limit and shields are excluded. The ordinary pool remains unchanged. Mage and High Mage are the current device classes. Mage's current secondary realm, not its birth Build, participates in book eligibility and needs-book; changing realms preserves discovery history.",
+      "reason": "All 70 default builds resolve to the human standard body; race selection supplies real body slots and Tomte birth-headgear rules. Source object_is_favorite defaults to all melee weapons for Warrior, Berserker, Sniper, High Mage, Mage, Paladin and Mindcrafter; Archer and Cavalry have explicit filters. Source device-class membership is independent of ability to use devices. Completed-item rejection follows caster glove encumbrance, not general usability. Duelist uses source base weapon proficiency caps above Beginner for melee favorites; tailored body armor has the fixed 200 weight limit and shields are excluded. The ordinary pool remains unchanged. Mage and High Mage are the current device classes. Mage's current secondary realm, not its birth Build, participates in book eligibility and needs-book; changing realms preserves discovery history. Ranger excludes ordinary melee favorites without an Archer/Sniper 1/5 bow draw or device preference. Current primary/secondary books and found counts drive the shared 1/10 needs-book branch; changes preserve discovery counts.",
       "sourceEvidence": [
         "src/obj_kind.c:97-162 object_is_favorite",
         "src/autopick.c:848-868 object_is_icky",
         "src/object2.c:3747-3752 completed tailored rejection",
         "src/equip.c:372 slot compatibility",
         "src/mindcrafter.c:629-644 caster info without glove flag",
-        "src/berserker.c:161-172 HP caster without glove flag"
+        "src/berserker.c:161-172 HP caster without glove flag",
+        "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
       ],
       "implementation": [
         "crates/rfb-core/src/game/loot/allocation.rs",
@@ -53,7 +54,8 @@
         "crates/rfb-core/src/game/loot/allocation.rs#duelist_tailored_armor_uses_fixed_twenty_pound_limit_and_excludes_shields",
         "crates/rfb-core/src/game/tests/items.rs#tailored_duelist_weapon_equips_and_preserves_continued_generation_after_save",
         "crates/rfb-core/src/game/loot/allocation.rs#mage_tailored_draws_book_before_device_and_skips_satisfied_book_draw",
-        "crates/rfb-core/src/game/loot/allocation.rs#mage_realm_change_updates_book_need_and_actual_allocation_without_resetting_discovery"
+        "crates/rfb-core/src/game/loot/allocation.rs#mage_realm_change_updates_book_need_and_actual_allocation_without_resetting_discovery",
+        "crates/rfb-core/src/game/loot/allocation.rs#ranger_tailored_books_follow_current_realms_without_bow_or_device_preference_draws"
       ],
       "limits": "Real class/body representatives share the source allocation loop; all 56 Mage ordered births have formal/core/UI mapping evidence. Good/Great advanced-book limits and Tailored found<3 remain distinct; book instances retain B1 quantity-one representation. No 56-fold duplicate generation walkthrough is claimed."
     },
@@ -69,7 +71,7 @@
         "theme-reset"
       ],
       "entry": "Shared natural/Ego materialization, existing configured rewards and the opened High Mage Craft consumer.",
-      "reason": "No current-class-specific Ego materializer appears in reviewed source: weight adjustment belongs to unavailable Mauler. Existing luck mutations, Chance virtue, themes, race/body properties and curse consumers still apply and can differ by real character state; no-special-difference means no additional class branch, not identical output.",
+      "reason": "No current-class-specific Ego materializer appears in reviewed source: weight adjustment belongs to unavailable Mauler. Existing luck mutations, Chance virtue, themes, race/body properties and curse consumers still apply and can differ by real character state; no-special-difference means no additional class branch, not identical output. Ranger has no additional source Ego weight/materializer branch. Caster gloves, body slots, themes and curses use shared paths; four real builds generate, equip, reject cursed removal and continue generation after loading.",
       "implementation": [
         "crates/rfb-core/src/game/ego.rs",
         "crates/rfb-core/src/game/ego/armor.rs",
@@ -82,9 +84,13 @@
         "crates/rfb-core/src/game/ego/contracts.rs#all_160_source_egos_have_an_effect_and_save_stable_instances",
         "crates/rfb-core/src/game/ego/applicability.rs",
         "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_negative_power_reaches_a_cursed_equippable_instance",
-        "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng"
+        "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
+        "crates/rfb-core/src/game/ego/applicability.rs#real_warrior_gets_mage_and_dwarf_themed_equipment_then_equips_and_restores"
       ],
-      "limits": "Shared Ego/E8.8 evidence is reused. Mage protection, wizard and free-action gloves exercise real caster encumbrance; Mage natural negative random artifacts preserve curse handling, equipment and continued generation after save. No extra Mage-specific Ego weight branch exists."
+      "limits": "Shared Ego/E8.8 evidence is reused. Mage protection, wizard and free-action gloves exercise real caster encumbrance; Mage natural negative random artifacts preserve curse handling, equipment and continued generation after save. No extra Mage-specific Ego weight branch exists.",
+      "sourceEvidence": [
+        "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
+      ]
     },
     {
       "id": "random-artifact",
@@ -97,7 +103,7 @@
         "bad-luck-randart"
       ],
       "entry": "Natural/themed scheduler passes real class and theme with scroll=false; the Arena reward and ordinary pool now expose the artifact creation scroll to classes that can read scrolls.",
-      "reason": "Theme supplies initial bias. Without a theme there is no class initial bias in natural mode. Only scroll mode with no prior bias and the 1/4 gate applies class bias; later Warrior conversion depends on mode. Non-Bard harp value and shared value/curse retries apply. Berserker alone changes random_misc case 31 among current classes. Mage and High Mage use Mage scroll bias with the source 20% Warrior conversion.",
+      "reason": "Theme supplies initial bias. Without a theme there is no class initial bias in natural mode. Only scroll mode with no prior bias and the 1/4 gate applies class bias; later Warrior conversion depends on mode. Non-Bard harp value and shared value/curse retries apply. Berserker alone changes random_misc case 31 among current classes. Mage and High Mage use Mage scroll bias with the source 20% Warrior conversion. Ranger bias and 30% Warrior conversion apply only to the no-theme artifact scroll branch after the 1/4 gate. Natural and explicit-theme generation retain shared biases, names and saved RNG. All four builds exercise real scroll commands and generation continuation.",
       "implementation": [
         "crates/rfb-core/src/game/random_artifact.rs#initial_bias",
         "crates/rfb-core/src/game/random_artifact/scheduling.rs#materialize_random_artifact_draft",
@@ -115,7 +121,10 @@
         "crates/rfb-core/src/game/tests/items.rs#artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name",
         "crates/rfb-core/src/game/tests/arena.rs"
       ],
-      "limits": "Factory tests cover source probability boundaries, including Mage 19/20 conversion and natural/theme separation. Actual scroll commands cover prior class representatives and Mage, selected equipment, saved names, virtues and continued actions. Berserker scroll rejection remains a class consumer rule. Realm pairs share this class-only branch; entry enumeration is separate from desktop acceptance."
+      "limits": "Factory tests cover source probability boundaries, including Mage 19/20 conversion and natural/theme separation. Actual scroll commands cover prior class representatives and Mage, selected equipment, saved names, virtues and continued actions. Berserker scroll rejection remains a class consumer rule. Realm pairs share this class-only branch; entry enumeration is separate from desktop acceptance.",
+      "sourceEvidence": [
+        "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
+      ]
     },
     {
       "id": "fixed-artifact-reward",
@@ -128,7 +137,7 @@
         "good-luck-fixed-retry"
       ],
       "entry": "Imported fixed artifacts and explicitly configured class reward pools.",
-      "reason": "Terror Mask (41) is generated in the ordinary iron-helm pool for every current build. Warrior/Cavalry/Berserker receive one ability then one high resistance; all other current classes receive intrinsic AGGRAVATE/TY_CURSE, a heavy curse and get_curse(2). These are saved generation properties. Dr Jones (162) retains its ordinary non-Archaeologist branch. Configured rewards keep their existing entry contracts. Mage/High-Mage Old Castle rewards now preselect Gandalf/Saruman/Indra at 1:1:8 using the durable selection seed and replace a previously generated fixed artifact through the existing named random-artifact path. Ordinary Mage thieves reward is a long sword. These three artifacts are not the ten identity-specific construction exceptions.",
+      "reason": "Terror Mask (41) is generated in the ordinary iron-helm pool for every current build. Warrior/Cavalry/Berserker receive one ability then one high resistance; all other current classes receive intrinsic AGGRAVATE/TY_CURSE, a heavy curse and get_curse(2). These are saved generation properties. Dr Jones (162) retains its ordinary non-Archaeologist branch. Configured rewards keep their existing entry contracts. Mage/High-Mage Old Castle rewards now preselect Gandalf/Saruman/Indra at 1:1:8 using the durable selection seed and replace a previously generated fixed artifact through the existing named random-artifact path. Ordinary Mage thieves reward is a long sword. These three artifacts are not the ten identity-specific construction exceptions. Belthronding/Yoichi naturally allocate and keep source launcher properties and uniqueness. Old Castle selects 1:4 through the durable birth seed; duplicates become named random-artifact long bows and failed claims are atomic. Ordinary thieves reward is a long sword.",
       "implementation": [
         "crates/rfb-core/src/game/loot.rs",
         "crates/rfb-core/src/game/tasks.rs",
@@ -147,14 +156,17 @@
         "crates/rfb-legacy-import/src/content.rs#mage_reward_artifacts_preserve_source_parameters_and_activations",
         "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save",
         "crates/rfb-core/src/game/tests/items.rs#terror_mask_duplicate_power_and_resistance_do_not_reroll",
-        "crates/rfb-core/src/game/tests/items.rs#terror_mask_melee_only_bonuses_and_fear_activation_restore"
+        "crates/rfb-core/src/game/tests/items.rs#terror_mask_melee_only_bonuses_and_fear_activation_restore",
+        "crates/rfb-core/src/game/tests/ranger/generation.rs#rewards_keep_birth_selection_replace_unique_bows_and_fail_atomically",
+        "crates/rfb-core/src/game/tests/ranger/generation.rs#fixed_bows_generate_equip_fire_and_keep_uniqueness_after_loading"
       ],
       "limits": "Other eight identity-sensitive artifacts, fixed harps, Mauler and monster Hydra/Troll/Jelly favorable branches remain deferred until their actual identities/content are available. No new location reward is enabled. Reward tests prepare task completion and do not claim natural Old Castle completion.",
       "sourceEvidence": [
         "lib/edit/q_old_castle.txt:343-349 Mage and High-Mage",
         "lib/edit/q_thieves.txt ordinary versus SPEED=2 reward",
         "lib/edit/a_info.txt N:33, N:120, N:249",
-        "lib/edit/artifact_name_zh.inc"
+        "lib/edit/artifact_name_zh.inc",
+        "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
       ]
     },
     {
@@ -165,7 +177,7 @@
         "theme-reset"
       ],
       "entry": "Equip/use/reject generated instances, identify/sense, combat or attributes, native save/load and continued actions.",
-      "reason": "Generation eligibility and item usability remain separate. Real new-build generated equipment/device/activation consumers preserve costs, charges, curses and properties across save/load; subsequent generation compares instances/drafts, RNG and random-artifact names. Mage staff mana brand, spell capacity, extra power, actual activations/cooldowns and the two class towers use the shared consumers. Changed secondary realms alter actual guild services immediately.",
+      "reason": "Generation eligibility and item usability remain separate. Real new-build generated equipment/device/activation consumers preserve costs, charges, curses and properties across save/load; subsequent generation compares instances/drafts, RNG and random-artifact names. Mage staff mana brand, spell capacity, extra power, actual activations/cooldowns and the two class towers use the shared consumers. Changed secondary realms alter actual guild services immediately. Five archer guilds grant class Owner; Thalos/Angwil towers grant Member at non-Owner prices. Current realms update book allocation, Mogaminator inscriptions and Morivant Sorcery Tower roles. Real fixed-bow firing, generated equipment/scroll use and saved continuation share existing consumers.",
       "implementation": [
         "crates/rfb-core/src/game/inventory.rs",
         "crates/rfb-core/src/game/item_use.rs",
@@ -184,9 +196,15 @@
         "crates/rfb-core/src/game/tests/mage/generation.rs",
         "crates/rfb-core/src/game/tests/weapon_traits.rs#mage_fixed_staff_mana_brand_uses_real_equipment_and_only_pays_on_hits",
         "crates/rfb-core/src/game/tests/town.rs#morivant_identification_uses_the_projected_membership_price",
-        "crates/rfb-core/src/game/tests/mage/realm_change.rs#guild_membership_and_prices_follow_current_realms_without_changing_primary_or_birth_virtues"
+        "crates/rfb-core/src/game/tests/mage/realm_change.rs#guild_membership_and_prices_follow_current_realms_without_changing_primary_or_birth_virtues",
+        "crates/rfb-core/src/game/tests/ranger/generation.rs#guild_enchantments_and_tower_identification_use_ranger_roles_and_saved_continuation",
+        "crates/rfb-core/src/game/tests/ranger/generation.rs#changing_realm_updates_autopick_and_realm_guild_but_keeps_class_membership",
+        "web/e2e/ranger.e2e.mjs#runRangerUiScenario"
       ],
-      "limits": "Reuse existing item/activation/save evidence and the Mage step-5 real class consumers. Tests explicitly prepare levels, positions, books or rewards where needed. Step-6 UI acceptance covers creation and spellbook interactions; natural acquisition, progression and the playable desktop release remain step 7."
+      "limits": "Reuse existing item/activation/save evidence and the Mage step-5 real class consumers. Tests explicitly prepare levels, positions, books or rewards where needed. Step-6 UI acceptance covers creation and spellbook interactions; natural acquisition, progression and the playable desktop release remain step 7.",
+      "sourceEvidence": [
+        "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
+      ]
     }
   ],
   "conditionScopes": [
@@ -472,7 +490,7 @@
       "start": 2415,
       "end": 2428,
       "status": "implemented-current-builds",
-      "entry": "Acquirement on 65 open builds",
+      "entry": "Acquirement on 70 open builds",
       "change": "Archer rejects melee; Sniper retains it; Cavalry uses source riding weapon flags; Duelist uses base weapon proficiency maximum >4000",
       "consumer": "loot/allocation.rs; mounted combat and projectile consumers; abilities/duelist.rs duelist_favorite_weapon",
       "tests": "game::loot::allocation::tests::tailored_uses_playable_class_equipment_realms_and_birth_race; game::tests::items::b4_tailored_launchers_equip_shoot_and_restore_for_archer_and_sniper; game::tests::items::b4_tailored_lance_keeps_riding_bonus_in_actual_mounted_combat",
@@ -496,7 +514,7 @@
       "start": 2455,
       "end": 2570,
       "status": "implemented-current-builds",
-      "entry": "65 open builds; real body slots; birth Tomte knit cap",
+      "entry": "70 open builds; real body slots; birth Tomte knit cap",
       "change": "slot/favorite/book filters; full materialized glove flags and pval reject caster encumbrance; Duelist excludes shields and body armor heavier than 200",
       "consumer": "loot/allocation.rs; mod.rs slot helper; player_abilities.rs; inventory.rs",
       "tests": "game::loot::allocation::tests::; game::tests::items::tomte_tailored_acquirement_filters_headgear_by_birth_race_only; game::tests::items::b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
@@ -559,7 +577,7 @@
       "start": 3441,
       "end": 3493,
       "status": "implemented-current-builds",
-      "entry": "High Mage/Paladin realms and Mage current first/second realms",
+      "entry": "High Mage/Paladin realms and Mage/Ranger current first/second realms",
       "change": "realm and persistent discoveries decide book preference independently of inventory quantity; changing the second realm changes eligible books without resetting discoveries",
       "consumer": "loot/allocation.rs; item_knowledge.rs; study/cast",
       "tests": "game::loot::allocation::tests::tailored_preference_draws_follow_class_then_book_then_device; game::tests::items::b4_tailored_death_books_are_counted_studied_cast_and_restored; game::tests::book_discovery::; game::tests::town::book_discovery_shop_groups_and_repurchase_do_not_count_as_found; game::loot::allocation::tests::mage_realm_change_updates_book_need_and_actual_allocation_without_resetting_discovery",
@@ -583,7 +601,7 @@
       "start": 3559,
       "end": 3665,
       "status": "implemented-current-builds",
-      "entry": "Archer/Sniper/Cavalry/High Mage/Mage and other open classes",
+      "entry": "All open classes; Ranger has the current-realms book draw without an extra bow/device preference",
       "change": "bows 1/5; lances 1/7; ordered books/devices preference; source fallback category width",
       "consumer": "Acquirement -> loot/allocation.rs -> loot.rs -> item use/equip/save",
       "tests": "game::loot::allocation::tests::; game::tests::items::b4_tailored_launchers_equip_shoot_and_restore_for_archer_and_sniper; game::tests::items::b4_tailored_death_books_are_counted_studied_cast_and_restored; game::tests::acquirement::",
@@ -2819,6 +2837,130 @@
           "review": "use-save",
           "status": "implemented",
           "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.ranger-nature-sorcery",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with nature/sorcery; current secondary realm remains authoritative. Ranger excludes ordinary melee favorites without an Archer/Sniper 1/5 bow draw or device preference. Current primary/secondary books and found counts drive the shared 1/10 needs-book branch; changes preserve discovery counts. (ranger-source-audit section 11)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with nature/sorcery; current secondary realm remains authoritative. Ranger has no additional source Ego weight/materializer branch. Caster gloves, body slots, themes and curses use shared paths; four real builds generate, equip, reject cursed removal and continue generation after loading. (ranger-source-audit section 11)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with nature/sorcery; current secondary realm remains authoritative. Ranger bias and 30% Warrior conversion apply only to the no-theme artifact scroll branch after the 1/4 gate. Natural and explicit-theme generation retain shared biases, names and saved RNG. All four builds exercise real scroll commands and generation continuation. (ranger-source-audit section 11)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with nature/sorcery; current secondary realm remains authoritative. Belthronding/Yoichi naturally allocate and keep source launcher properties and uniqueness. Old Castle selects 1:4 through the durable birth seed; duplicates become named random-artifact long bows and failed claims are atomic. Ordinary thieves reward is a long sword. (ranger-source-audit section 11)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with nature/sorcery; current secondary realm remains authoritative. Five archer guilds grant class Owner; Thalos/Angwil towers grant Member at non-Owner prices. Current realms update book allocation, Mogaminator inscriptions and Morivant Sorcery Tower roles. Real fixed-bow firing, generated equipment/scroll use and saved continuation share existing consumers. (ranger-source-audit section 11)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.ranger-nature-death",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with nature/death; current secondary realm remains authoritative. Ranger excludes ordinary melee favorites without an Archer/Sniper 1/5 bow draw or device preference. Current primary/secondary books and found counts drive the shared 1/10 needs-book branch; changes preserve discovery counts. (ranger-source-audit section 11)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with nature/death; current secondary realm remains authoritative. Ranger has no additional source Ego weight/materializer branch. Caster gloves, body slots, themes and curses use shared paths; four real builds generate, equip, reject cursed removal and continue generation after loading. (ranger-source-audit section 11)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with nature/death; current secondary realm remains authoritative. Ranger bias and 30% Warrior conversion apply only to the no-theme artifact scroll branch after the 1/4 gate. Natural and explicit-theme generation retain shared biases, names and saved RNG. All four builds exercise real scroll commands and generation continuation. (ranger-source-audit section 11)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with nature/death; current secondary realm remains authoritative. Belthronding/Yoichi naturally allocate and keep source launcher properties and uniqueness. Old Castle selects 1:4 through the durable birth seed; duplicates become named random-artifact long bows and failed claims are atomic. Ordinary thieves reward is a long sword. (ranger-source-audit section 11)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with nature/death; current secondary realm remains authoritative. Five archer guilds grant class Owner; Thalos/Angwil towers grant Member at non-Owner prices. Current realms update book allocation, Mogaminator inscriptions and Morivant Sorcery Tower roles. Real fixed-bow firing, generated equipment/scroll use and saved continuation share existing consumers. (ranger-source-audit section 11)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.ranger-nature-arcane",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with nature/arcane; current secondary realm remains authoritative. Ranger excludes ordinary melee favorites without an Archer/Sniper 1/5 bow draw or device preference. Current primary/secondary books and found counts drive the shared 1/10 needs-book branch; changes preserve discovery counts. (ranger-source-audit section 11)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with nature/arcane; current secondary realm remains authoritative. Ranger has no additional source Ego weight/materializer branch. Caster gloves, body slots, themes and curses use shared paths; four real builds generate, equip, reject cursed removal and continue generation after loading. (ranger-source-audit section 11)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with nature/arcane; current secondary realm remains authoritative. Ranger bias and 30% Warrior conversion apply only to the no-theme artifact scroll branch after the 1/4 gate. Natural and explicit-theme generation retain shared biases, names and saved RNG. All four builds exercise real scroll commands and generation continuation. (ranger-source-audit section 11)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with nature/arcane; current secondary realm remains authoritative. Belthronding/Yoichi naturally allocate and keep source launcher properties and uniqueness. Old Castle selects 1:4 through the durable birth seed; duplicates become named random-artifact long bows and failed claims are atomic. Ordinary thieves reward is a long sword. (ranger-source-audit section 11)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with nature/arcane; current secondary realm remains authoritative. Five archer guilds grant class Owner; Thalos/Angwil towers grant Member at non-Owner prices. Current realms update book allocation, Mogaminator inscriptions and Morivant Sorcery Tower roles. Real fixed-bow firing, generated equipment/scroll use and saved continuation share existing consumers. (ranger-source-audit section 11)."
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.ranger-nature-daemon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with nature/daemon; current secondary realm remains authoritative. Ranger excludes ordinary melee favorites without an Archer/Sniper 1/5 bow draw or device preference. Current primary/secondary books and found counts drive the shared 1/10 needs-book branch; changes preserve discovery counts. (ranger-source-audit section 11)."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with nature/daemon; current secondary realm remains authoritative. Ranger has no additional source Ego weight/materializer branch. Caster gloves, body slots, themes and curses use shared paths; four real builds generate, equip, reject cursed removal and continue generation after loading. (ranger-source-audit section 11)."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with nature/daemon; current secondary realm remains authoritative. Ranger bias and 30% Warrior conversion apply only to the no-theme artifact scroll branch after the 1/4 gate. Natural and explicit-theme generation retain shared biases, names and saved RNG. All four builds exercise real scroll commands and generation continuation. (ranger-source-audit section 11)."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with nature/daemon; current secondary realm remains authoritative. Belthronding/Yoichi naturally allocate and keep source launcher properties and uniqueness. Old Castle selects 1:4 through the durable birth seed; duplicates become named random-artifact long bows and failed claims are atomic. Ordinary thieves reward is a long sword. (ranger-source-audit section 11)."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with nature/daemon; current secondary realm remains authoritative. Five archer guilds grant class Owner; Thalos/Angwil towers grant Member at non-Owner prices. Current realms update book allocation, Mogaminator inscriptions and Morivant Sorcery Tower roles. Real fixed-bow firing, generated equipment/scroll use and saved continuation share existing consumers. (ranger-source-audit section 11)."
         }
       ],
       "gapIds": []

@@ -362,7 +362,7 @@ impl AppState {
     }
 
     #[cfg(feature = "webdriver")]
-    fn prepare_mage_e2e(&self, level: u16) -> Result<GameSnapshot, String> {
+    fn prepare_spell_learning_e2e(&self, level: u16) -> Result<GameSnapshot, String> {
         let mut session = self.lock_session()?;
         let session = session.as_mut().ok_or("game session is not initialized")?;
         if session
@@ -372,12 +372,17 @@ impl AppState {
             .player
             .build
             .as_ref()
-            .is_none_or(|build| build.class_id != "demo.class.mage")
+            .is_none_or(|build| {
+                !matches!(
+                    build.class_id.as_str(),
+                    "demo.class.mage" | "demo.class.ranger"
+                )
+            })
         {
-            return Err("Mage E2E requires the current Mage class".to_owned());
+            return Err("Spell learning E2E requires Mage or Ranger".to_owned());
         }
         let mut game = session.recorder.game().clone();
-        game.debug_prepare_mage_e2e(level)
+        game.debug_prepare_spell_learning_e2e(level)
             .map_err(|error| error.to_string())?;
         session.recorder = ReplayRecorder::new(game);
         Ok(session.recorder.game().snapshot())
@@ -646,15 +651,18 @@ fn prepare_duelist_e2e(
 }
 
 #[tauri::command]
-fn prepare_mage_e2e(state: tauri::State<'_, AppState>, level: u16) -> Result<GameSnapshot, String> {
+fn prepare_spell_learning_e2e(
+    state: tauri::State<'_, AppState>,
+    level: u16,
+) -> Result<GameSnapshot, String> {
     #[cfg(feature = "webdriver")]
     {
-        state.prepare_mage_e2e(level)
+        state.prepare_spell_learning_e2e(level)
     }
     #[cfg(not(feature = "webdriver"))]
     {
         let _ = (state, level);
-        Err("Mage E2E fixture is unavailable".to_owned())
+        Err("Spell learning E2E fixture is unavailable".to_owned())
     }
 }
 
@@ -893,7 +901,7 @@ pub fn run() {
             prepare_craft_e2e,
             prepare_berserker_e2e,
             prepare_duelist_e2e,
-            prepare_mage_e2e,
+            prepare_spell_learning_e2e,
             inspect_game_e2e,
             save_game,
             load_game,

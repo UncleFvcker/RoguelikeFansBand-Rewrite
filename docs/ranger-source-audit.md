@@ -1,6 +1,6 @@
 # 游侠来源与消费者审计
 
-审计日期：2026-09-11，初次审计对应[游侠计划](ranger-class-plan.md)第一步、基线 `6f9b22c1a6649833bf2ff975878efb8cedb235d3`；第二步在 `1d351f319`、第三步在 `86759d7ce`、第四步在 `2d8d80a28` 上实现，范围见末三节。当前已完成 Class/四 Build、出生/成长、双领域随机学习/改换保存及射击/树林/探测，普通入口与桌面验收未开放。内容包 1.424.0；协议 1.253、State Hash Schema 125、save header/payload 14/20 不变。
+审计日期：2026-09-11，初次审计对应[游侠计划](ranger-class-plan.md)第一步、基线 `6f9b22c1a6649833bf2ff975878efb8cedb235d3`。当前前六步已完成：Class/四 Build、出生/成长、双领域随机学习/改换保存、射击/树林/探测、生成/奖励/公会及正式创角/UI；实施与适配边界见第8—12节。内容包1.425.0、协议1.253、State Hash Schema125、save header/payload14/20；本轮未改变保存格式。第七步实战闭环与优化桌面交付仍待完成。
 
 唯一 RFB 来源为 `D:/codex/Frogcomposband/master` 的 `master` Git 对象，实际提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。以下源文件及行号均指此提交，使用 `git show` / `git grep` 读取，未读取源仓库当前检出文件。当前项目路径则指上述实现基线。
 
@@ -205,4 +205,16 @@
 | `demo.build.ranger-nature-arcane` | nature / arcane | 上表五类；沿实际书本/发现数判定需求，副领域可改换 |
 | `demo.build.ranger-nature-daemon` | nature / daemon | 上表五类；需要双方高阶书，副领域可改换 |
 
-四组合的生成/奖励/服务检查均从真实 Build 新游戏开始，共用部分保留共同证据，不复制职业专属矩阵或另造生成器。上述记录在第六步与普通创角入口一同写入正式审计输入并运行完整来源审计；本步未修改可用 Build 集合、生成报告或 deferred-unavailable-build 身份规则。缺失混沌/王牌、尚未导入的 Namake Bow 和公共武术/树地形等边界仍按前文保留。本步不宣称 UI 或 Tauri standalone 验收完成。
+四组合的生成/奖励/服务检查均从真实 Build 新游戏开始，共用部分保留共同证据，不复制职业专属矩阵或另造生成器。第五步只准备记录，第六步已与普通创角入口一同写入正式审计输入并运行完整来源审计；没有改变 deferred-unavailable-build 身份规则。缺失混沌/王牌、尚未导入的 Namake Bow 和公共武术/树地形等边界仍按前文保留。
+
+## 12. 第六步 UI 与正式入口
+
+[character-creation.ts](../web/src/character-creation.ts)的共享嵌套菜单新增游侠四个第二领域选项，第一领域固定自然；描述和种族限制仍沿正式内容与现有入口校验。未选择第二领域时阻止开始，返回/切换页取消未确认草稿，已确认职业与种族继续沿现有规则重验。
+
+[status-panel.ts](../web/src/status-panel.ts)按已有 divine-random 投影提供每本书一个“随机学习”按钮；命令继续使用共享 study-prayer，不在前端抽法术。低等级说明取自实际书本法术的最低等级；学习容量、熟练度、遗忘、探测资格和费用均消费核心投影。随机学习后按书本实例恢复按钮焦点，无候选时落在可聚焦书名。双领域说明与确认后果按学习模式区分，游侠不再显示法师可重复研习的说明；确认立即尝试随机学习，无候选时改换仍生效。
+
+四个 Build 的20项记录已纳入正式[审计输入](../design/generation-build-applicability.json)，沿第11节共同证据运行完整来源审计并生成[报告](../design/ego-contract-audit.json)。当前70个正式入口的只读检查通过；没有手改生成报告、关闭不可用身份约束或宣称所有源功能等价。
+
+Tauri standalone WebDriver 专项位于 [ranger.e2e.mjs](../web/e2e/ranger.e2e.mjs)，复现：在 `web` 执行 `npm run e2e:build`，再执行 `node e2e/tauri.e2e.mjs --ranger-ui`。中英文各从正式UI创建四组合人类1级角色；随后明确授予2/3/15级经验、安静照明场地和第三领域书，用真实经验损失/恢复检查遗忘。验证随机学习结果与主副1600/1400上限、低等级说明、探测资格、草稿/种族/职业切换、原生键盘焦点、创建/学习/确认忙碌锁、Esc取消、待确认保存和确认立即学习、已改换存档的原生导入。390px与200%布局和截图保留在 `test-results/ranger-ui/`。测试准备沿原Mage入口共享为 `prepare_spell_learning_e2e`，只在webdriver构建可用；普通构建拒绝调用。
+
+本步只开放并验收UI，不声明自然练级、探测/双方施法的完整桌面实战、优化EXE交付或Android完成；这些仍由第七步闭环处理。内容包、协议、保存格式和状态哈希版本均不变，没有刷新fixture；具体检查结果随提交记录。
