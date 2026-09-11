@@ -1,0 +1,69 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.arvedui",
+  "nameKey": "item-demo-arvedui-name",
+  "descriptionKey": "item-demo-arvedui-description",
+  "glyph": "[",
+  "generationLevel": 40,
+  "weightTenthsPound": 220,
+  "maxStack": 1,
+  "baseValue": 32000,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 24,
+    "baseItemKindId": "demo.item.chain-mail",
+    "instant": false,
+    "rarityOneIn": 3,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "modifiers": {
+    "defense": 29,
+    "strength": 2,
+    "charisma": 2
+  },
+  "resistances": {
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant",
+    "shards": "resistant",
+    "nexus": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_COLD",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_NEXUS",
+      "RES_SHARDS",
+      "STR",
+      "XTRA_H_RES"
+    ],
+    "pval": 2,
+    "toArmor": 15
+  },
+  "equipmentBonuses": {
+    "meleeSkill": -2
+  }
+}

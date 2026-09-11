@@ -933,6 +933,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.handbook-for-pupils",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.dark-incantations",
       "maxDepth": 30,
       "minDepth": 10,
@@ -1472,6 +1479,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.grade-holders-book",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.immortal-rituals",
       "maxDepth": 50,
       "minDepth": 20,
@@ -1624,6 +1638,13 @@
       "minDepth": 30,
       "quantity": 1,
       "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.poison-needle",
+      "maxDepth": 65535,
+      "minDepth": 30,
+      "quantity": 1,
+      "weight": 16
     },
     {
       "itemKindId": "demo.item.rune-sword",
@@ -1934,11 +1955,25 @@
       "weight": 50
     },
     {
+      "itemKindId": "demo.item.jewel-encrusted-crown",
+      "maxDepth": 65535,
+      "minDepth": 40,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.pointy-hat",
       "maxDepth": 65535,
       "minDepth": 40,
       "quantity": 1,
       "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.black-clothes",
+      "maxDepth": 65535,
+      "minDepth": 40,
+      "quantity": 1,
+      "weight": 25
     },
     {
       "itemKindId": "demo.item.masterwork-armor-scroll",
@@ -2053,6 +2088,13 @@
       "weight": 25
     },
     {
+      "itemKindId": "demo.item.great-hammer",
+      "maxDepth": 65535,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
       "itemKindId": "demo.item.metal-lamellar-armour",
       "maxDepth": 65535,
       "minDepth": 45,
@@ -2096,6 +2138,13 @@
     },
     {
       "itemKindId": "demo.item.black-channels",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.note-of-acting-master",
       "maxDepth": 90,
       "minDepth": 45,
       "quantity": 1,
@@ -2481,6 +2530,13 @@
     },
     {
       "itemKindId": "demo.item.necronomicon",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.spiritual-enlightenment",
       "maxDepth": 65535,
       "minDepth": 80,
       "quantity": 1,

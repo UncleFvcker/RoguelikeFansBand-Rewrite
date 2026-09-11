@@ -142,6 +142,15 @@
         "noMelee": {
           "type": "boolean"
         },
+        "pantheon": {
+          "format": "uint8",
+          "maximum": 4,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "rootFloorId": {
           "type": "string"
         },
@@ -647,6 +656,10 @@
     "ProceduralCavernDefinition": {
       "additionalProperties": false,
       "properties": {
+        "rfbDepthChance": {
+          "description": "RFB CAVERN: depth > 20 and randint1(1000) < depth, without lake/destruction.",
+          "type": "boolean"
+        },
         "terrainId": {
           "type": "string"
         }
@@ -1681,6 +1694,10 @@
         },
         "deepTerrainId": {
           "type": "string"
+        },
+        "rfbDepthChance": {
+          "description": "RFB water river gates after chanceOneIn: randint1(depth) > 5,\nthen randint0(MAX_DEPTH * 2) > depth (MAX_DEPTH = 128).",
+          "type": "boolean"
         },
         "shallowTerrainId": {
           "type": "string"

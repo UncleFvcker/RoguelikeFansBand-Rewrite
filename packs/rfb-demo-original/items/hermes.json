@@ -1,0 +1,105 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.soft-leather-boots",
+    "instant": false,
+    "rarityOneIn": 127,
+    "sourceIndex": 261
+  },
+  "baseValue": 555555,
+  "descriptionKey": "item-demo-hermes-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentBonuses": {
+    "stealthSkill": 7
+  },
+  "equipmentSlot": "boots",
+  "formatVersion": 1,
+  "generationLevel": 90,
+  "glyph": "]",
+  "id": "demo.item.hermes",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 9,
+    "dexterity": 7,
+    "speed": 7
+  },
+  "nameKey": "item-demo-hermes-name",
+  "passives": [
+    "levitation"
+  ],
+  "resistances": {
+    "chaos": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION",
+      "PERMA_CURSE",
+      "QUESTITEM",
+      "RES_CHAOS",
+      "SPEED",
+      "STEALTH",
+      "TOWN"
+    ],
+    "pval": 7,
+    "toArmor": 7
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "activatable",
+    "armor",
+    "artifact",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 20,
+  "initialCurse": "permanent",
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.hermes",
+        "nameKey": "item-activation-demo-hermes-name",
+        "target": {
+          "modes": [
+            "position"
+          ],
+          "range": 35,
+          "requiresLineOfEffect": false
+        },
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "effectProgramId": "demo.effect.hermes",
+        "deviceCheckDifficulty": 50,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "rfbValue": 15000
+      }
+    ],
+    "recovery": {
+      "intervalTicks": 1000,
+      "energyPerMille": 1000
+    }
+  }
+}

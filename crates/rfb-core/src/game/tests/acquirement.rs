@@ -492,13 +492,22 @@ fn rejected_fixed_artifact_retains_generation_registration_without_identity_or_k
         instant: true,
         affix_ids: Vec::new(),
     });
+    let generated_artifact_ids = source
+        .items
+        .iter()
+        .filter(|item| {
+            item.artifact_generation
+                .as_ref()
+                .is_some_and(|artifact| artifact.instant)
+        })
+        .map(|item| item.id.clone())
+        .collect();
     source.items.push(glove);
     let mut game = Game::new_with_build(503, "demo.build.high-mage-death").unwrap();
     game.content = Arc::new(ContentCatalog::from_artifact(
         rfb_content::encode_content(source).unwrap(),
     ));
-    game.generated_artifact_ids
-        .insert("demo.item.arkenstone-of-thrain".into());
+    game.generated_artifact_ids = generated_artifact_ids;
     let mut context = context(&game);
     context.table_id = "demo.loot-table.base-items".into();
     context.floor_id = "test.floor".into();

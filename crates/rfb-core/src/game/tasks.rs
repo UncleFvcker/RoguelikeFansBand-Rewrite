@@ -999,7 +999,7 @@ impl Game {
         stack_indices.sort_by(|left, right| self.items[*left].id.cmp(&self.items[*right].id));
         for index in stack_indices {
             let transferred = remaining.min(definition.max_stack - self.items[index].quantity);
-            self.items[index].quantity += transferred;
+            super::inventory::merge_item_stack(&mut self.items[index], &reward, transferred);
             remaining -= transferred;
             if remaining == 0 {
                 break;

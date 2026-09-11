@@ -26,6 +26,7 @@ pub enum AbilityProgramInputDefinition {
     SelfTarget,
     CastTarget,
     Item,
+    Element,
     Town,
 }
 
@@ -272,6 +273,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::TurnUndead { .. }
                     | AbilityEffectDefinition::SustainAttributes { .. }
                     | AbilityEffectDefinition::CureMutation
+                    | AbilityEffectDefinition::LivingTrump
                     | AbilityEffectDefinition::MeleeAdjacent
                     | AbilityEffectDefinition::DuelistCharge
                     | AbilityEffectDefinition::DuelistAcrobaticCharge
@@ -368,6 +370,10 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::SummonGreaterDemon { .. }
                     | AbilityEffectDefinition::BrandWeapon { .. }
                     | AbilityEffectDefinition::ProtectFromCorrosion
+                    | AbilityEffectDefinition::CraftEnchant { .. }
+                    | AbilityEffectDefinition::CraftItem
+                    | AbilityEffectDefinition::PolishShield
+                    | AbilityEffectDefinition::Mundanity
                     | AbilityEffectDefinition::TransmuteItemToGold { .. }
                     | AbilityEffectDefinition::DrainItemMagic { .. }
                     | AbilityEffectDefinition::RechargeFromPlayer { .. }
@@ -379,6 +385,11 @@ fn ability_program_input_accepts_step(
                 } if !source_item_tags.is_empty()
             )
         }
+        AbilityProgramInputDefinition::Element => matches!(
+            effect,
+            AbilityEffectDefinition::ElementalBrand
+                | AbilityEffectDefinition::ElementalImmunity { .. }
+        ),
         AbilityProgramInputDefinition::Town => {
             matches!(effect, AbilityEffectDefinition::TeleportTown)
         }
@@ -416,7 +427,7 @@ fn ability_program_step_is_composable(
                 | AbilityEffectDefinition::RemoveStatus { .. }
         ),
         AbilityProgramInputDefinition::Item => false,
-        AbilityProgramInputDefinition::Town => false,
+        AbilityProgramInputDefinition::Town | AbilityProgramInputDefinition::Element => false,
     }
 }
 
@@ -466,6 +477,11 @@ fn ability_program_input_matches_target(
         }
         AbilityProgramInputDefinition::Item => {
             target.modes.as_slice() == [AbilityTargetModeDefinition::Item]
+                && target.range == 0
+                && !target.requires_line_of_effect
+        }
+        AbilityProgramInputDefinition::Element => {
+            target.modes.as_slice() == [AbilityTargetModeDefinition::Element]
                 && target.range == 0
                 && !target.requires_line_of_effect
         }

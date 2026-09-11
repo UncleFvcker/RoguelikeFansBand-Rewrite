@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.rohirrim",
+  "nameKey": "item-demo-rohirrim-name",
+  "descriptionKey": "item-demo-rohirrim-description",
+  "glyph": "[",
+  "generationLevel": 35,
+  "weightTenthsPound": 200,
+  "maxStack": 1,
+  "baseValue": 30000,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 21,
+    "baseItemKindId": "demo.item.metal-brigandine-armour",
+    "instant": false,
+    "rarityOneIn": 3,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "modifiers": {
+    "defense": 34,
+    "strength": 2,
+    "dexterity": 2
+  },
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "cold": "resistant",
+    "confusion": "resistant",
+    "sound": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_CONF",
+      "RES_ELEC",
+      "RES_SOUND",
+      "STR",
+      "XTRA_H_RES"
+    ],
+    "pval": 2,
+    "toArmor": 15
+  }
+}

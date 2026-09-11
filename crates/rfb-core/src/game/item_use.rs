@@ -1931,34 +1931,91 @@ impl Game {
         })
     }
 
-    fn item_is_valid_mundanity_target(&self, source_item_id: &str, target_item_id: &str) -> bool {
-        let Some(item) = self.item_mutation_target(source_item_id, target_item_id) else {
-            return false;
-        };
-        let eligible = self.content.item(&item.kind_id).is_some_and(|definition| {
-            !definition.tags.iter().any(|tag| tag == "artifact")
-                && (item.artifact_name.is_some()
-                    || item.quality != ItemQualityDto::Ordinary
-                    || !item.affix_ids.is_empty()
-                    || !item.enchantments.is_empty()
-                    || item.curse.is_some())
-        });
-        if !eligible {
-            return false;
-        }
-        let mut projected = self.items.clone();
-        let target = projected
-            .iter_mut()
-            .find(|item| item.id == target_item_id)
-            .unwrap();
-        Self::clear_random_artifact_state(target);
-        projected.retain(|item| item.id != source_item_id || item.quantity > 1);
-        self.inventory_fits(&projected)
+    pub(super) fn mundanity_loses_resistances(&self, item: &ItemInstance) -> bool {
+        self.content.item(&item.kind_id).is_some_and(|definition| {
+            definition.rfb_base_kind.is_some_and(|base| {
+                matches!(
+                    (base.tval, base.sval),
+                    (32, 8) | (35, 7) | (34, 6) | (31, 6) | (30, 4)
+                )
+            })
+        })
     }
 
-    fn item_is_valid_crafting_target(&self, source_item_id: &str, target_item_id: &str) -> bool {
+    pub(super) fn mundanity_item_targets(
+        &self,
+        source_item_id: Option<&str>,
+    ) -> Vec<rfb_protocol::AbilityItemTargetDto> {
+        self.items
+            .iter()
+            .filter_map(|item| {
+                let target = TargetSelection::MundanityItem {
+                    item_id: item.id.clone(),
+                    quantity: item.quantity,
+                    confirm_resistance_loss: true,
+                };
+                self.mundanity_target(source_item_id, &target)
+                    .map(|item_id| rfb_protocol::AbilityItemTargetDto {
+                        item_id,
+                        target,
+                        confirmation_key: self
+                            .mundanity_loses_resistances(item)
+                            .then(|| "item-mundanity-resistance-confirm".to_owned()),
+                    })
+            })
+            .collect()
+    }
+
+    pub(super) fn mundanity_target(
+        &self,
+        source_item_id: Option<&str>,
+        selection: &TargetSelection,
+    ) -> Option<String> {
+        let (id, quantity, confirmed) = match selection {
+            TargetSelection::Item { item_id } => (item_id, None, false),
+            TargetSelection::MundanityItem {
+                item_id,
+                quantity,
+                confirm_resistance_loss,
+            } => (item_id, Some(*quantity), *confirm_resistance_loss),
+            _ => return None,
+        };
+        let item = self.items.iter().find(|item| {
+            item.id == *id
+                && Some(item.id.as_str()) != source_item_id
+                && item.quantity > 0
+                && (matches!(
+                    item.location,
+                    ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                ) || item.location == ItemLocation::Ground(self.player.position))
+        })?;
+        let definition = self.content.item(&item.kind_id)?;
+        if definition.tags.iter().any(|tag| tag == "artifact")
+            && definition.artifact_generation.is_none()
+        {
+            return None;
+        }
+        if quantity.is_some_and(|quantity| quantity != item.quantity)
+            || (self.mundanity_loses_resistances(item) && !confirmed)
+            || (item.discount_percent == 99
+                && !item.affix_ids.is_empty()
+                && item.curse != Some(ItemCurseSeverityDto::Permanent))
+        {
+            return None;
+        }
+        let mut projected = self.items.clone();
+        *projected.iter_mut().find(|item| item.id == *id)? = self.mundane_item(item);
+        projected.retain(|item| Some(item.id.as_str()) != source_item_id || item.quantity > 1);
+        self.inventory_fits(&projected).then(|| id.clone())
+    }
+
+    pub(super) fn item_is_valid_crafting_target(
+        &self,
+        source_item_id: Option<&str>,
+        target_item_id: &str,
+    ) -> bool {
         let Some(item) = self.items.iter().find(|item| {
-            item.id == target_item_id && item.id != source_item_id && item.quantity > 0
+            item.id == target_item_id && Some(item.id.as_str()) != source_item_id && item.quantity > 0
                 && (matches!(item.location, ItemLocation::Inventory | ItemLocation::Equipped { .. })
                     || matches!(item.location, ItemLocation::Ground(position) if position == self.player.position))
         }) else {
@@ -1978,26 +2035,6 @@ impl Game {
                 })
                 && !item.is_artifact(&self.content)
         })
-    }
-
-    fn split_item_for_mutation(
-        &mut self,
-        target_item_id: &str,
-    ) -> Result<(usize, bool), CoreError> {
-        let index = self
-            .items
-            .iter()
-            .position(|item| item.id == target_item_id)
-            .expect("preflighted mutation target must remain available");
-        if self.items[index].quantity == 1 {
-            return Ok((index, false));
-        }
-        let mut split = self.items[index].clone();
-        split.id = self.allocate_item_instance_id()?;
-        split.quantity = 1;
-        self.items[index].quantity -= 1;
-        self.items.push(split);
-        Ok((self.items.len() - 1, true))
     }
 
     fn resolve_item_acquirement(
@@ -2069,48 +2106,83 @@ impl Game {
         target_item_id: &str,
         events: &mut Vec<DomainEvent>,
     ) -> Result<(), CoreError> {
-        let (index, split) = self.split_item_for_mutation(target_item_id)?;
-        let target_item_id = self.items[index].id.clone();
-        let target_kind_id = self.items[index].kind_id.clone();
-        self.items[index].quality = ItemQualityDto::Ordinary;
-        self.items[index].affix_ids.clear();
-        self.items[index].rolled_affixes.clear();
-        Self::clear_random_artifact_state(&mut self.items[index]);
-        self.items[index].enchantments = ItemEnchantmentsDto::default();
-        self.items[index].curse = None;
-        self.item_property_knowledge.insert(
-            target_item_id.clone(),
-            ItemPropertyKnowledgeState {
-                discovered: true,
-                appraised: true,
-                identified: true,
-                feeling: None,
-                known_affix_ids: BTreeSet::new(),
-            },
-        );
+        self.mundanify_item(target_item_id);
+        let target_kind_id = self
+            .items
+            .iter()
+            .find(|item| item.id == target_item_id)
+            .unwrap()
+            .kind_id
+            .clone();
         self.mark_item_aware(source_kind_id);
         events.push(DomainEvent::ItemMundanified {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
-            target_item_id,
+            target_item_id: target_item_id.to_owned(),
             target_kind_id,
-            split,
+            split: false,
         });
         Ok(())
     }
 
-    fn clear_random_artifact_state(item: &mut ItemInstance) {
-        if item.artifact_name.take().is_some() {
-            item.intrinsic_properties = Default::default();
-            item.intrinsic_melee_damage_dice = None;
-            item.intrinsic_weight_tenths_pound = None;
-            item.intrinsic_weapon_traits.clear();
-            item.intrinsic_curse_effects.clear();
-            item.permanent_destruction_immunities.clear();
-            item.activation = None;
-            item.charges = None;
-            item.device_recovery_progress = 0;
+    fn mundane_item(&self, item: &ItemInstance) -> ItemInstance {
+        let definition = self.content.item(&item.kind_id).unwrap();
+        if item.intrinsic_properties.rfb_flags.contains("NO_REMOVE")
+            || definition
+                .rfb_value
+                .as_ref()
+                .is_some_and(|value| value.flags.contains("NO_REMOVE"))
+        {
+            return item.clone();
         }
+        let kind_id = definition
+            .artifact_generation
+            .as_ref()
+            .map_or(&item.kind_id, |artifact| &artifact.base_item_kind_id)
+            .clone();
+        ItemInstance {
+            id: item.id.clone(),
+            kind_id: kind_id.clone(),
+            quantity: item.quantity,
+            inscription: item.inscription.clone(),
+            location: item.location.clone(),
+            book_counted: item.book_counted,
+            origin_kind: Some(ItemOriginKindDto::Mundanity),
+            origin_actor_kind_id: None,
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
+            previously_worn: false,
+            damage_dice_override: None,
+            discount_percent: 0,
+            quality: ItemQualityDto::Ordinary,
+            affix_ids: Vec::new(),
+            rolled_affixes: Vec::new(),
+            intrinsic_properties: Default::default(),
+            enchantments: Default::default(),
+            curse: super::initial_item_curse(&self.content, &kind_id),
+            permanent_destruction_immunities: Default::default(),
+            activation: None,
+            charges: None,
+            fuel: crate::save::initial_item_fuel(&self.content, &kind_id),
+            device_recovery_progress: 0,
+            captured_actor: None,
+        }
+    }
+
+    pub(super) fn mundanify_item(&mut self, item_id: &str) -> bool {
+        let index = self
+            .items
+            .iter()
+            .position(|item| item.id == item_id)
+            .unwrap();
+        let mundane = self.mundane_item(&self.items[index]);
+        let changed = mundane != self.items[index];
+        self.items[index] = mundane;
+        self.identify_item_instance(item_id, ItemIdentificationRequest::new(false));
+        changed
     }
 
     fn resolve_item_crafting(
@@ -2119,6 +2191,34 @@ impl Game {
         target_item_id: &str,
         events: &mut Vec<DomainEvent>,
     ) -> Result<(), CoreError> {
+        let affix_id = self.craft_item(target_item_id);
+        self.mark_item_aware(source_kind_id);
+        let target_kind_id = self
+            .items
+            .iter()
+            .find(|item| item.id == target_item_id)
+            .expect("crafting target remains present")
+            .kind_id
+            .clone();
+        if let Some(affix_id) = affix_id {
+            events.push(DomainEvent::ItemCrafted {
+                source_kind_id: source_kind_id.to_owned(),
+                display_name_key: self.item_display_name_key(source_kind_id),
+                target_item_id: target_item_id.to_owned(),
+                target_kind_id,
+                affix_id,
+                split: false,
+            });
+        } else {
+            events.push(DomainEvent::ItemCraftingFailed {
+                target_item_id: target_item_id.to_owned(),
+                target_kind_id,
+            });
+        }
+        Ok(())
+    }
+
+    pub(super) fn craft_item(&mut self, target_item_id: &str) -> Option<String> {
         let index = self
             .items
             .iter()
@@ -2165,29 +2265,16 @@ impl Game {
                     })
                     .then_some((affix_id, crafted))
             });
-        self.mark_item_aware(source_kind_id);
         let Some((affix_id, crafted)) = materialization else {
             if self.rng.bounded(3) == 0 {
                 self.add_virtue(VirtueKindDto::Enchantment, -1);
             }
-            events.push(DomainEvent::ItemCraftingFailed {
-                target_item_id: target_item_id.to_owned(),
-                target_kind_id,
-            });
-            return Ok(());
+            return None;
         };
         self.items[index] = crafted;
         self.identify_item_instance(target_item_id, ItemIdentificationRequest::new(true));
         self.add_virtue(VirtueKindDto::Enchantment, 1);
-        events.push(DomainEvent::ItemCrafted {
-            source_kind_id: source_kind_id.to_owned(),
-            display_name_key: self.item_display_name_key(source_kind_id),
-            target_item_id: target_item_id.to_owned(),
-            target_kind_id: self.items[index].kind_id.clone(),
-            affix_id,
-            split: false,
-        });
-        Ok(())
+        Some(affix_id)
     }
 
     pub(super) fn resolve_item_enchantment(
@@ -2385,6 +2472,10 @@ impl Game {
         let mut noticed = false;
         for effect in effects {
             match effect {
+                ItemUseEffectDefinition::Heal { amount } => {
+                    let amount = device_power_value(u64::from(amount), device_power_bonus) as i32;
+                    noticed |= self.resolve_item_healing(source_kind_id, amount, events);
+                }
                 effect @ ItemUseEffectDefinition::Detect { .. } => {
                     noticed |= self.resolve_item_detection(
                         source_kind_id.to_owned(),
@@ -2970,6 +3061,7 @@ impl Game {
             AbilityEffectDefinition::VisibleApplyStatus {
                 power: Some(power), ..
             }
+            | AbilityEffectDefinition::RechargeFromPlayer { power }
             | AbilityEffectDefinition::Control { power, .. }
             | AbilityEffectDefinition::TeleportAway { power, .. } => {
                 *power = device_power_value(u64::from(*power), bonus) as u16;
@@ -2994,6 +3086,90 @@ impl Game {
         } = settled;
         let mut noticed = false;
         match (effect, plan) {
+            (
+                ItemUseEffectDefinition::ApplyBerserkStrength {
+                    duration_dice,
+                    duration_sides,
+                    duration_bonus,
+                },
+                ItemUsePlan::SelfTarget,
+            ) if profile_id.is_some() => {
+                let turns =
+                    self.roll_damage(duration_dice, duration_sides as u16) as u32 + duration_bonus;
+                let ticks = (device_power_value(u64::from(turns), device_power_bonus) as u32) * 10;
+                let before = self
+                    .player
+                    .statuses
+                    .iter()
+                    .find(|s| s.kind_id == STATUS_BERSERK)
+                    .map_or(0, |s| s.remaining_ticks);
+                self.resolve_item_berserk_strength(
+                    &kind_id,
+                    0,
+                    0,
+                    ticks.saturating_sub(before),
+                    events,
+                );
+            }
+            (ItemUseEffectDefinition::CreateArrows, ItemUsePlan::SelfTarget) => {
+                let ability = AbilityDefinition::item_activation(
+                    kind_id.clone(),
+                    AbilityTargetDefinition {
+                        modes: vec![AbilityTargetModeDefinition::SelfTarget],
+                        range: 0,
+                        requires_line_of_effect: false,
+                    },
+                    AbilityEffectDefinition::CreateAmmunition {
+                        item_kind_ids: vec![
+                            "demo.item.arrow".into(),
+                            "demo.item.sheaf-arrow".into(),
+                        ],
+                        quantity_minimum: 5,
+                        quantity_maximum: 10,
+                        source_item_tags: Vec::new(),
+                        source_terrain_tags: Vec::new(),
+                    },
+                    false,
+                );
+                self.resolve_player_create_ammunition_effect(
+                    &ability, None, None, events, changed,
+                )?;
+                self.mark_item_aware(&kind_id);
+            }
+            (ItemUseEffectDefinition::SummonMonsters, ItemUsePlan::SelfTarget) => {
+                self.resolve_item_monster_summon(&kind_id, profile_id.as_deref(), events, changed);
+            }
+            (
+                ItemUseEffectDefinition::Hermes,
+                ItemUsePlan::AbilityEffect {
+                    ability,
+                    target_plan,
+                },
+            ) => {
+                let duration = self.roll_damage(1, 75) + 75;
+                let duration = device_power_value(duration as u64, device_power_bonus) as u32;
+                self.resolve_item_status(
+                    &kind_id,
+                    STATUS_HASTE,
+                    0,
+                    0,
+                    duration,
+                    AbilityStatusStackingDefinition::KeepStrongest,
+                    None,
+                    &BTreeMap::new(),
+                    &StatModifiers::default(),
+                    &EquipmentBonuses::default(),
+                    100,
+                    events,
+                );
+                self.resolve_player_ability_effect(
+                    *ability,
+                    target_plan,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
             (ItemUseEffectDefinition::RefillQuiver, ItemUsePlan::SelfTarget) => {
                 self.refill_quiver(&kind_id, profile_id.as_deref(), events)?;
             }
@@ -3607,6 +3783,19 @@ impl Game {
         }
         let self_target = target.is_none_or(|target| matches!(target, TargetSelection::SelfTarget));
         match effect {
+            ItemUseEffectDefinition::Hermes => {
+                let range = self.hermes_range();
+                self.item_use_plan(
+                    source_item_id,
+                    &ItemUseEffectDefinition::AbilityEffect {
+                        effect: Box::new(AbilityEffectDefinition::DimensionDoor { range }),
+                        affects_ground_items: false,
+                    },
+                    target_definition,
+                    target,
+                    None,
+                )
+            }
             ItemUseEffectDefinition::AbilityEffect {
                 effect,
                 affects_ground_items,
@@ -3688,6 +3877,8 @@ impl Game {
             | ItemUseEffectDefinition::RechargeCarriedDevices
             | ItemUseEffectDefinition::ListUniqueMonsters
             | ItemUseEffectDefinition::SelfKnowledge
+            | ItemUseEffectDefinition::CreateArrows
+            | ItemUseEffectDefinition::SummonMonsters
             | ItemUseEffectDefinition::RefillQuiver
             | ItemUseEffectDefinition::StarBall
             | ItemUseEffectDefinition::Starlight { .. }
@@ -3846,18 +4037,9 @@ impl Game {
                         item_id: target_item_id.clone(),
                     })
             }
-            ItemUseEffectDefinition::MundanifyItem => {
-                let TargetSelection::Item {
-                    item_id: target_item_id,
-                } = target?
-                else {
-                    return None;
-                };
-                self.item_is_valid_mundanity_target(source_item_id, target_item_id)
-                    .then(|| ItemUsePlan::Item {
-                        item_id: target_item_id.clone(),
-                    })
-            }
+            ItemUseEffectDefinition::MundanifyItem => self
+                .mundanity_target(Some(source_item_id), target?)
+                .map(|item_id| ItemUsePlan::Item { item_id }),
             ItemUseEffectDefinition::CraftItem { .. } => {
                 let (target_item_id, confirmed_quantity) = match target? {
                     TargetSelection::Item { item_id } => (item_id, None),
@@ -3867,7 +4049,7 @@ impl Game {
                     _ => return None,
                 };
                 let item = self.items.iter().find(|item| item.id == *target_item_id)?;
-                (self.item_is_valid_crafting_target(source_item_id, target_item_id)
+                (self.item_is_valid_crafting_target(Some(source_item_id), target_item_id)
                     && confirmed_quantity.is_none_or(|quantity| quantity == item.quantity)
                     && (item.quantity <= 30 || confirmed_quantity == Some(item.quantity)))
                 .then(|| ItemUsePlan::Item {
@@ -3895,7 +4077,18 @@ impl Game {
                 };
                 self.item_mutation_target(source_item_id, item_id)
                     .filter(|item| !self.item_resists_enchantment(item))
-                    .and_then(|item| self.content.item(&item.kind_id)?.rfb_base_kind)
+                    .filter(|item| item.kind_id != "demo.item.hephaestus")
+                    .and_then(|item| {
+                        let definition = self.content.item(&item.kind_id)?;
+                        match &definition.artifact_generation {
+                            Some(artifact) => {
+                                self.content
+                                    .item(&artifact.base_item_kind_id)?
+                                    .rfb_base_kind
+                            }
+                            None => definition.rfb_base_kind,
+                        }
+                    })
                     .filter(|base| {
                         matches!(base.tval, 16..=23 | 30..=38) && (base.tval, base.sval) != (23, 32)
                     })
@@ -4033,7 +4226,7 @@ impl Game {
                     .position(|status| status.kind_id == STATUS_POISON)
                 {
                     let before = self.player.statuses[index].remaining_ticks;
-                    let reduction = (before / 5).max(100);
+                    let reduction = (before / 5).max(1_000);
                     let after = before.saturating_sub(reduction);
                     if after == 0 {
                         self.player.statuses.remove(index);
@@ -4045,6 +4238,11 @@ impl Game {
                 self.apply_player_healing(healing);
                 self.restore_all_player_attributes();
                 self.restore_player_experience_and_life_force(0, events);
+                if self.player_food_nutrition_divisor() > 1 {
+                    self.resolve_item_nutrition_increase(source_kind_id, 7_500, events);
+                } else {
+                    self.resolve_item_satisfy_hunger(source_kind_id, true, events);
+                }
                 self.mark_item_aware(source_kind_id);
                 events.push(DomainEvent::ItemRestorationResolved {
                     source_kind_id: source_kind_id.to_owned(),
@@ -6018,7 +6216,8 @@ impl Game {
             ItemUseEffectDefinition::SelfKnowledge => {
                 self.resolve_item_self_knowledge(source_kind_id, events)
             }
-            ItemUseEffectDefinition::AbilityEffect { .. }
+            ItemUseEffectDefinition::Hermes
+            | ItemUseEffectDefinition::AbilityEffect { .. }
             | ItemUseEffectDefinition::Damage { .. }
             | ItemUseEffectDefinition::AreaDamage { .. }
             | ItemUseEffectDefinition::BeamDamage { .. }
@@ -6033,6 +6232,8 @@ impl Game {
             | ItemUseEffectDefinition::CreateAdjacentTerrain { .. }
             | ItemUseEffectDefinition::CreateCurrentTerrain { .. }
             | ItemUseEffectDefinition::SetFloorGlow { .. }
+            | ItemUseEffectDefinition::CreateArrows
+            | ItemUseEffectDefinition::SummonMonsters
             | ItemUseEffectDefinition::RefillQuiver
             | ItemUseEffectDefinition::StarBall
             | ItemUseEffectDefinition::Starlight { .. }

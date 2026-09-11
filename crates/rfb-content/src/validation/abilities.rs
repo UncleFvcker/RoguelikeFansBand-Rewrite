@@ -1051,6 +1051,23 @@ pub(super) fn validate_abilities(
                     validate_id(affix_id).is_ok()
                 }
                 AbilityEffectDefinition::ProtectFromCorrosion => true,
+                AbilityEffectDefinition::CraftEnchant {
+                    maximum,
+                    increment,
+                    level_divisor,
+                } => {
+                    (1..=99).contains(maximum)
+                        && (1..=99).contains(increment)
+                        && *level_divisor <= 50
+                }
+                AbilityEffectDefinition::ElementalImmunity { duration_base } => {
+                    (1..=10_000).contains(duration_base)
+                }
+                AbilityEffectDefinition::CraftItem
+                | AbilityEffectDefinition::PolishShield
+                | AbilityEffectDefinition::Mundanity
+                | AbilityEffectDefinition::ElementalBrand
+                | AbilityEffectDefinition::LivingTrump => true,
                 AbilityEffectDefinition::RandomChoice { .. } => false,
                 AbilityEffectDefinition::SniperShot { .. }
                 | AbilityEffectDefinition::MeleeAdjacent
@@ -1220,6 +1237,12 @@ pub(super) fn validate_abilities(
             && ability.target.range == 0
             && !ability.target.requires_line_of_effect;
         let valid_target = match &ability.effect {
+            AbilityEffectDefinition::ElementalBrand
+            | AbilityEffectDefinition::ElementalImmunity { .. } => {
+                ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Element]
+                    && ability.target.range == 0
+                    && !ability.target.requires_line_of_effect
+            }
             AbilityEffectDefinition::Damage { .. }
             | AbilityEffectDefinition::Malediction { .. }
             | AbilityEffectDefinition::BeamDamage { .. }
@@ -1300,6 +1323,10 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::IdentifyOrMassIdentify { .. }
             | AbilityEffectDefinition::BrandWeapon { .. }
             | AbilityEffectDefinition::ProtectFromCorrosion
+            | AbilityEffectDefinition::CraftEnchant { .. }
+            | AbilityEffectDefinition::CraftItem
+            | AbilityEffectDefinition::PolishShield
+            | AbilityEffectDefinition::Mundanity
             | AbilityEffectDefinition::TransmuteItemToGold { .. }
             | AbilityEffectDefinition::DrainItemMagic { .. }
             | AbilityEffectDefinition::RechargeFromPlayer { .. } => item_target_rule,
@@ -1392,6 +1419,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::PolymorphSelf
             | AbilityEffectDefinition::CreateStair { .. }
             | AbilityEffectDefinition::SelfKnowledge
+            | AbilityEffectDefinition::LivingTrump
             | AbilityEffectDefinition::NoOp { .. } => self_target_rule,
             AbilityEffectDefinition::Detect { .. } => {
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]

@@ -1,0 +1,142 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.great-hammer",
+    "instant": false,
+    "rarityOneIn": 127,
+    "sourceIndex": 264
+  },
+  "baseValue": 555555,
+  "brands": [
+    "acid",
+    "cold",
+    "electricity",
+    "fire"
+  ],
+  "descriptionKey": "item-demo-hephaestus-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 90,
+  "glyph": "\\",
+  "id": "demo.item.hephaestus",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 5,
+    "damageSides": 7,
+    "toDamage": 0,
+    "toHit": 0,
+    "damageType": "physical"
+  },
+  "modifiers": {
+    "charisma": 1,
+    "constitution": 1,
+    "dexterity": 1,
+    "intelligence": 1,
+    "speed": 1,
+    "strength": 1,
+    "wisdom": 1
+  },
+  "nameKey": "item-demo-hephaestus-name",
+  "passives": [
+    "vampiric"
+  ],
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "BRAND_ACID",
+      "BRAND_COLD",
+      "BRAND_ELEC",
+      "BRAND_FIRE",
+      "BRAND_VAMP",
+      "CHR",
+      "CON",
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "KILL_DEMON",
+      "KILL_DRAGON",
+      "KILL_EVIL",
+      "KILL_UNDEAD",
+      "PERMA_CURSE",
+      "QUESTITEM",
+      "SHOW_MODS",
+      "SLAY_ANIMAL",
+      "SLAY_GIANT",
+      "SLAY_HUMAN",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "SPEED",
+      "STR",
+      "TOWN",
+      "WIS"
+    ],
+    "pval": 1,
+    "toArmor": 0
+  },
+  "slays": {
+    "animal": "slay",
+    "demon": "kill",
+    "dragon": "kill",
+    "evil": "kill",
+    "giant": "slay",
+    "human": "slay",
+    "orc": "slay",
+    "troll": "slay",
+    "undead": "kill"
+  },
+  "tags": [
+    "activatable",
+    "artifact",
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "weightTenthsPound": 300,
+  "initialCurse": "permanent",
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentBonuses": {},
+  "weaponProficiencyBaseItemId": "demo.item.great-hammer",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.hephaestus",
+        "nameKey": "item-activation-demo-hephaestus-name",
+        "target": {
+          "modes": [
+            "item"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "effectProgramId": "demo.effect.hephaestus",
+        "deviceCheckDifficulty": 50,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "rfbValue": 5000
+      }
+    ],
+    "recovery": {
+      "intervalTicks": 2000,
+      "energyPerMille": 1000
+    }
+  }
+}

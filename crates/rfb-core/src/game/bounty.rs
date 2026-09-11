@@ -593,7 +593,7 @@ impl Game {
                 && item.quantity < definition.max_stack
                 && item_instances_stack_compatible(&self.content, item, &reward)
         }) {
-            existing.quantity += 1;
+            super::inventory::merge_item_stack(existing, &reward, 1);
         } else {
             self.items.push(reward);
         }

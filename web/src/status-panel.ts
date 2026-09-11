@@ -883,6 +883,7 @@ export class StatusPanel {
   readonly #selectItemTarget: (
     excludedItemId: string | undefined,
     onSelect: (itemId: string) => Promise<void>,
+    allowedItemIds?: readonly string[],
   ) => void;
   readonly #startAbilityTargeting: (ability: AbilityDto) => void;
   readonly #reconcileTargeting: (state: GameSnapshot | GameUpdate) => void;
@@ -902,6 +903,7 @@ export class StatusPanel {
     selectItemTarget: (
       excludedItemId: string | undefined,
       onSelect: (itemId: string) => Promise<void>,
+    allowedItemIds?: readonly string[],
     ) => void;
     startAbilityTargeting: (ability: AbilityDto) => void;
     reconcileTargeting: (state: GameSnapshot | GameUpdate) => void;
@@ -1604,13 +1606,28 @@ export class StatusPanel {
       }
       actions.append(townTarget);
     }
+    let elementTarget: HTMLSelectElement | undefined;
+    if (ability.targetSpec.modes.includes("element")) {
+      elementTarget = document.createElement("select");
+      elementTarget.className = "ability-element-target";
+      elementTarget.setAttribute("aria-label", this.#localization.format("ability-element-target"));
+      for (const element of ability.elementTargets ?? []) {
+        const option = document.createElement("option");
+        option.value = element;
+        option.textContent = this.#localization.format(`damage-type-${element}-name` as MessageKey);
+        elementTarget.append(option);
+      }
+      actions.append(elementTarget);
+    }
     const cast = this.#abilityAction("action-ability-cast", () =>
-      this.#castAbility(ability, townTarget?.value),
+      this.#castAbility(ability, townTarget?.value, elementTarget?.value),
     );
     cast.classList.add("ability-cast-action");
     cast.disabled =
       !ability.canCast ||
-      (ability.targetSpec.modes.includes("town") && (ability.townTargets?.length ?? 0) === 0);
+      (ability.targetSpec.modes.includes("town") && (ability.townTargets?.length ?? 0) === 0) ||
+      (ability.targetSpec.modes.includes("element") && (ability.elementTargets?.length ?? 0) === 0) ||
+      ability.itemTargets?.length === 0;
     if (ability.source === "learned") {
       if (studyMode === "chosen") actions.append(study);
       if (!this.#state.status?.player.abilityLearning?.realms) actions.append(forget);
@@ -1691,10 +1708,25 @@ export class StatusPanel {
     return button;
   }
 
-  #castAbility(ability: AbilityDto, townId?: string): void {
+  #castAbility(ability: AbilityDto, townId?: string, elementId?: string): void {
     const confirmationKey = abilityConfirmationMessageKey(ability.id);
     const view = this.#dom.abilityList.ownerDocument.defaultView;
     if (confirmationKey && view && !view.confirm(this.#localization.format(confirmationKey))) {
+      return;
+    }
+    if (ability.targetSpec.modes.includes("element")) {
+      const element = ability.elementTargets?.find(element => element === elementId);
+      if (!element) return;
+      void this.#dispatch({ type: "cast-ability", abilityId: ability.id, target: { type: "element", element } });
+      return;
+    }
+    if (ability.itemTargets) {
+      this.#selectItemTarget(undefined, async (itemId) => {
+        const option = ability.itemTargets?.find(option => option.itemId === itemId);
+        if (!option) return;
+        if (option.confirmationKey && !view?.confirm(this.#localization.format(option.confirmationKey as MessageKey))) return;
+        await this.#dispatch({ type: "cast-ability", abilityId: ability.id, target: option.target });
+      }, ability.itemTargets.map(option => option.itemId));
       return;
     }
     if (ability.targetSpec.modes.includes("town")) {

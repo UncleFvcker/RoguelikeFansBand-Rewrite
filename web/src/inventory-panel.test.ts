@@ -454,6 +454,33 @@ test("crafting confirms risky whole stacks and cancelling dispatches nothing", (
   assert.equal(commands[1].target.quantity, 30);
 });
 
+test("Mundanity uses core targets and cancels resistance loss without a command", (t) => {
+  const { panel, dom, state, commands, document } = createInventoryFixture(t);
+  const target = { type: "mundanity-item", itemId: "dragon", quantity: 1, confirmResistanceLoss: true };
+  const source = item("scroll", { usable: true, mundanityTargets: [
+    { itemId: "dragon", target, confirmationKey: "item-mundanity-resistance-confirm" },
+  ] });
+  let accepted = false;
+  const prompts = [];
+  document.defaultView = { confirm: message => { prompts.push(message); return accepted; } };
+  const choose = () => {
+    panel.render([source, item("dragon"), item("ineligible")], []);
+    state.selectedInventoryIds.add("scroll");
+    dom.inventoryUse.dispatchEvent(new Event("click"));
+    const form = document.body.children[0].children[0];
+    const select = form.children[1].children[1];
+    assert.deepEqual(select.children.map(option => option.value), ["dragon"]);
+    select.value = "dragon";
+    form.dispatchEvent(new Event("submit", { cancelable: true }));
+  };
+  choose();
+  assert.equal(commands.length, 0);
+  assert.match(prompts[0], /item-mundanity-resistance-confirm/);
+  accepted = true;
+  choose();
+  assert.deepEqual(commands, [{ type: "use-item", itemId: "scroll", target }]);
+});
+
 test("artifact creation uses core candidates, confirms stack loss, and distinguishes target and name cancellation", (t) => {
   const { panel, dom, state, commands, document } = createInventoryFixture(t);
   const source = item("scroll", { usable: true, artifactCreationTargets: ["target"] });

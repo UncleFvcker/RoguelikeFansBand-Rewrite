@@ -213,7 +213,8 @@
     "legacy-import",
     "orc-cave",
     "resist-teleport",
-    "undead"
+    "undead",
+    "egyptian2"
   ],
   "terrainInteraction": {
     "picksUpItems": true

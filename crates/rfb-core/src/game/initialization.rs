@@ -60,6 +60,7 @@ pub(super) fn dungeon_substitution_uses_alternate(
 fn initial_dungeon_states(
     world: &rfb_content::WorldDefinition,
     seed: u64,
+    active_pantheons: u8,
 ) -> BTreeMap<String, DungeonState> {
     let mut states = base_dungeon_states(world);
     for primary in &world.dungeons {
@@ -80,6 +81,17 @@ fn initial_dungeon_states(
             .get_mut(suppressed_id)
             .expect("substituted dungeon state must remain available")
             .suppressed = true;
+    }
+    for dungeon in &world.dungeons {
+        if dungeon
+            .pantheon
+            .is_some_and(|id| active_pantheons & (1 << id) == 0)
+        {
+            states
+                .get_mut(&dungeon.id)
+                .expect("dungeon state exists")
+                .suppressed = true;
+        }
     }
     states
 }
@@ -358,6 +370,13 @@ impl Game {
         let gold = gold::starting_gold(build.as_ref(), &mut rng);
         let starting_food_supply = hunger::starting_food_supply(build.as_ref(), &mut rng);
         let starting_torches = lighting::starting_torch_supply(build.as_ref(), &mut rng);
+        // dungeon.c: _suppress_extra_pantheons, default two of four. Current
+        // playable races have neither a demigod parent nor a pantheon race boss.
+        let mut active_pantheons = 0x1e_u8;
+        while active_pantheons.count_ones() > 2 {
+            active_pantheons &= !(1 << (rng.bounded(4) + 1));
+        }
+        let dungeon_states = initial_dungeon_states(world, seed, active_pantheons);
         let mut progress = CharacterProgress::new(seed, player_definition.max_hp);
         if let Some(identity) = build.as_ref() {
             let (definition, _, class, _) = build_definitions(&content, identity)?;
@@ -392,6 +411,9 @@ impl Game {
             })
             .collect::<Result<Vec<_>, CoreError>>()?;
         for dungeon in world.dungeons.iter().filter(|_| world.wilderness.is_none()) {
+            if dungeon_states[&dungeon.id].suppressed {
+                continue;
+            }
             let Some(guardian) = &dungeon.entrance_guardian else {
                 continue;
             };
@@ -526,7 +548,6 @@ impl Game {
             .as_ref()
             .map(|wilderness| position_from_content(wilderness.start_position));
         let task_states = initial_task_states(world, seed);
-        let dungeon_states = initial_dungeon_states(world, seed);
         let (town_states, shop_states) = town::initial_town_and_shop_states(
             world,
             &content,
@@ -595,6 +616,7 @@ impl Game {
             casino: None,
             bounty_state: bounty::BountyState::default(),
             command_actor_deaths: Vec::new(),
+            active_pantheons,
             dungeon_states,
             defeated_limited_actor_counts: BTreeMap::new(),
             generated_artifact_ids,

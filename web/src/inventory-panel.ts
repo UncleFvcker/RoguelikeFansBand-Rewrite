@@ -275,13 +275,14 @@ export class InventoryPanel {
     excludedItemId: string | undefined,
     onSelect: (itemId: string) => Promise<void>,
     onCancel?: () => Promise<void>,
+    allowedItemIds?: readonly string[],
   ): void {
     const candidates = itemTargetCandidates(
       this.#state,
       excludedItemId,
       (displayNameKey, kindId, artifactName) => this.#formatter.visibleItemName(displayNameKey, kindId, artifactName),
     );
-    this.#selectItemTargetFrom(candidates, onSelect, onCancel);
+    this.#selectItemTargetFrom(candidates.filter(candidate => !allowedItemIds || allowedItemIds.includes(candidate.id)), onSelect, onCancel);
   }
 
   readonly #handleUse = (): void => {
@@ -835,6 +836,16 @@ export class InventoryPanel {
     if (selected.length !== 1 || !selected[0]?.usable) return;
     const item = selected[0];
     if (item.requiresRechargeTargets) return;
+    if (item.mundanityTargets) {
+      this.selectItemTarget(item.id, async (itemId) => {
+        const option = item.mundanityTargets?.find(option => option.itemId === itemId);
+        if (!option) return;
+        if (option.confirmationKey && !this.#dom.inventoryList.ownerDocument.defaultView?.confirm(
+          this.#localization.format(option.confirmationKey as MessageKey))) return;
+        await this.#dispatch({ type: "use-item", itemId: item.id, target: option.target });
+      }, undefined, item.mundanityTargets.map(option => option.itemId));
+      return;
+    }
     if (item.artifactCreationTargets) {
       const candidates = itemTargetCandidates(this.#state, item.id,
         (key, kind, name) => this.#formatter.visibleItemName(key, kind, name))

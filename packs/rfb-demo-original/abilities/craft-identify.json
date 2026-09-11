@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.craft-identify",
+  "nameKey": "ability-demo-craft-identify-name",
+  "descriptionKey": "ability-demo-craft-identify-description",
+  "abilityProgramId": "demo.ability-program.craft-identify",
+  "target": {
+    "modes": [
+      "item"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "craft",
+    "spell"
+  ]
+}

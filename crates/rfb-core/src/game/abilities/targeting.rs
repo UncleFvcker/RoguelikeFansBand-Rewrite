@@ -16,6 +16,9 @@ pub(in crate::game) enum AbilityTargetPlan {
         target_entity_id: String,
     },
     SelfTarget,
+    Element {
+        element: rfb_protocol::DamageTypeDto,
+    },
     Step {
         direction: Direction,
     },
@@ -114,6 +117,21 @@ impl Game {
         target: &TargetSelection,
     ) -> Option<AbilityTargetPlan> {
         match ability.effect {
+            AbilityEffectDefinition::ElementalBrand
+            | AbilityEffectDefinition::ElementalImmunity { .. } => {
+                let TargetSelection::Element { element } = target else {
+                    return None;
+                };
+                self.ability_element_targets(ability)
+                    .contains(element)
+                    .then_some(AbilityTargetPlan::Element { element: *element })
+            }
+            AbilityEffectDefinition::CraftEnchant { .. }
+            | AbilityEffectDefinition::CraftItem
+            | AbilityEffectDefinition::PolishShield
+            | AbilityEffectDefinition::Mundanity => self
+                .craft_ability_item_target(ability, target)
+                .map(|item_id| AbilityTargetPlan::Item { item_id }),
             AbilityEffectDefinition::DuelistChallenge => self
                 .duelist_challenge_target(target)
                 .filter(|_| self.player_is_duelist())
@@ -549,6 +567,7 @@ impl Game {
                 .map(|action| AbilityTargetPlan::Recall { action })
             }
             AbilityEffectDefinition::MeleeAdjacent
+            | AbilityEffectDefinition::LivingTrump
             | AbilityEffectDefinition::ResistElements { .. }
             | AbilityEffectDefinition::ReportMagic
             | AbilityEffectDefinition::AreaDestruction { .. }

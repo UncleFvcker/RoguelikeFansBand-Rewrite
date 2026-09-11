@@ -477,6 +477,9 @@ pub struct ActorDefinition {
     pub gold_drop_chance_percent: Option<u8>,
     #[serde(default)]
     pub death_drop: Option<MonsterDropDefinition>,
+    /// Independent named-artifact death roll, before ordinary treasure.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub special_artifact_drop: Option<MonsterArtifactDropDefinition>,
     #[serde(default)]
     pub carried_loot_table_id: Option<String>,
     #[serde(default)]
@@ -515,6 +518,14 @@ pub struct ActorDefinition {
     #[serde(default)]
     pub door_interaction: ActorDoorInteractionDefinition,
     pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MonsterArtifactDropDefinition {
+    pub item_kind_id: String,
+    pub chance_percent: u8,
 }
 
 impl ActorDefinition {

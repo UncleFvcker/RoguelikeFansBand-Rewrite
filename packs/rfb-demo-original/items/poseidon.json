@@ -1,0 +1,116 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.trident",
+    "instant": false,
+    "rarityOneIn": 127,
+    "sourceIndex": 257
+  },
+  "baseValue": 555555,
+  "brands": [
+    "acid"
+  ],
+  "descriptionKey": "item-demo-poseidon-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 90,
+  "glyph": "/",
+  "id": "demo.item.poseidon",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 20,
+    "damageSides": 1,
+    "toDamage": 30,
+    "toHit": 30,
+    "damageType": "physical"
+  },
+  "modifiers": {
+    "dexterity": 3,
+    "speed": 3,
+    "strength": 3
+  },
+  "nameKey": "item-demo-poseidon-name",
+  "resistances": {
+    "acid": "resistant",
+    "fire": "resistant",
+    "sound": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "BRAND_ACID",
+      "BRAND_ORDER",
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "PERMA_CURSE",
+      "QUESTITEM",
+      "RES_ACID",
+      "RES_FIRE",
+      "RES_SOUND",
+      "RIDING",
+      "SHOW_MODS",
+      "SLAY_EVIL",
+      "SPEED",
+      "STR",
+      "TOWN"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "slays": {
+    "evil": "slay"
+  },
+  "tags": [
+    "activatable",
+    "artifact",
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "weightTenthsPound": 70,
+  "initialCurse": "permanent",
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentBonuses": {},
+  "weaponProficiencyBaseItemId": "demo.item.trident",
+  "ridingWeaponKind": "compatible",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.poseidon",
+        "nameKey": "item-activation-demo-poseidon-name",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 0
+        },
+        "effectProgramId": "demo.effect.poseidon",
+        "deviceCheckDifficulty": 10,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "rfbValue": 1000
+      }
+    ]
+  }
+}

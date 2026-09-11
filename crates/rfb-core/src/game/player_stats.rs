@@ -173,6 +173,7 @@ fn apply_player_life_force(stat: DerivedStat, life_force: i32) -> DerivedStat {
 
 #[derive(Clone)]
 pub(in crate::game) struct ResolvedAttackProfile {
+    pub(in crate::game) poison_needle: bool,
     pub(in crate::game) attacks: u16,
     pub(in crate::game) extra_attack_chance_percent: u8,
     pub(in crate::game) attack_sources: Vec<rfb_protocol::CharacterStatSourceDto>,
@@ -438,11 +439,23 @@ impl ResolvedAttackProfile {
     pub(in crate::game) fn to_dto(&self) -> AttackProfileDto {
         AttackProfileDto {
             attacks: self.attacks,
-            to_hit: self.to_hit,
-            to_damage: self.to_damage,
+            to_hit: if self.poison_needle { 0 } else { self.to_hit },
+            to_damage: if self.poison_needle {
+                0
+            } else {
+                self.to_damage
+            },
             damage: DamageDiceDto {
-                dice: self.damage_dice,
-                sides: self.damage_sides,
+                dice: if self.poison_needle {
+                    1
+                } else {
+                    self.damage_dice
+                },
+                sides: if self.poison_needle {
+                    1
+                } else {
+                    self.damage_sides
+                },
                 damage_type: self.damage_type.into(),
             },
             source_item_id: self.source_item_id.clone(),
@@ -689,6 +702,7 @@ impl Game {
             race.reflects_bolts_minimum_level
                 .is_some_and(|minimum_level| self.progress.level >= minimum_level)
         }) || self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
+            || self.player_has_status_kind(STATUS_MAGIC_ARMOR)
             || self.items.iter().any(|item| {
             matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
                 && self
@@ -925,6 +939,23 @@ impl Game {
     }
 
     fn armor_combat_enchantments(&self, item: &ItemInstance, ranged: bool) -> (i32, i32) {
+        // master:equip.c excludes Terror Mask from shooter bonuses, including
+        // enchantments applied after generation. Its static bonuses are melee-only.
+        if self
+            .content
+            .item(&item.kind_id)
+            .and_then(|kind| kind.artifact_generation.as_ref())
+            .is_some_and(|artifact| artifact.source_index == 41)
+        {
+            return if ranged {
+                (0, 0)
+            } else {
+                (
+                    i32::from(item.enchantments.to_hit),
+                    i32::from(item.enchantments.to_damage),
+                )
+            };
+        }
         let Some(index) = self.armor_ego_index(item) else {
             return (0, 0);
         };
@@ -1109,6 +1140,7 @@ impl Game {
                 .character_definitions()
                 .is_some_and(|(_, race, _, _)| race.levitation)
             || self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
+            || self.player_has_status_kind(STATUS_MAGIC_ARMOR)
             || self.player_has_status_kind(STATUS_DEMON_LORD_TRANSFORMATION)
             || self
                 .player_equipment_passives()
@@ -1382,6 +1414,8 @@ impl Game {
                     .is_some_and(|value| value.flags.contains("BRAND_MANA"))
             }))
             || item.intrinsic_weapon_traits.contains(&trait_)
+            || (trait_ == WeaponTraitDto::Order && self.item_has_rfb_flag(item, "BRAND_ORDER"))
+            || (trait_ == WeaponTraitDto::Blessed && self.item_has_rfb_flag(item, "BLESSED"))
             || item
                 .rolled_affixes
                 .iter()
@@ -2133,7 +2167,12 @@ impl Game {
             to_hit += class_hit + 12 + extra_hit;
             to_damage += i32::from(self.progress.level / 6) * multiplier;
         }
-        let mut mastery = 0;
+        let mut mastery =
+            if source_item_id.is_some() && self.player_has_status_kind(STATUS_WEAPON_MASTERY) {
+                i32::from(self.progress.level / 23)
+            } else {
+                0
+            };
         for item in &self.items {
             let ItemLocation::Equipped { slot_id } = &item.location else {
                 continue;
@@ -2316,7 +2355,22 @@ impl Game {
                 amount: -penalty,
             });
         }
+        let poison_needle = source_kind_id
+            .as_deref()
+            .and_then(|id| self.content.item(id))
+            .and_then(|item| item.rfb_base_kind)
+            .is_some_and(|kind| (kind.tval, kind.sval) == (23, 32));
+        if poison_needle {
+            // xtra1.c and cmd1.c: one blow, including after extra blows and
+            // Tonberry's penalty; cmd1.c ignores every ordinary damage bonus.
+            attack_sources.push(rfb_protocol::CharacterStatSourceDto {
+                source_id: source_item_id.clone().unwrap(),
+                amount: 100 - blows,
+            });
+            blows = 100;
+        }
         ResolvedAttackProfile {
+            poison_needle,
             attacks: u16::try_from(blows / 100).expect("derived melee attack count must fit u16"),
             extra_attack_chance_percent: u8::try_from(blows % 100)
                 .expect("fractional melee blows must fit u8"),
@@ -2387,6 +2441,7 @@ impl Game {
                         total.saturating_add(contribution.amount)
                     });
                 ResolvedAttackProfile {
+                    poison_needle: false,
                     attacks: 1,
                     extra_attack_chance_percent: 0,
                     attack_sources: Vec::new(),
@@ -2515,6 +2570,7 @@ impl Game {
                        damage_sides: u16,
                        weight_tenths_pound: u16| {
             ResolvedAttackProfile {
+                poison_needle: false,
                 attacks: blows / 100,
                 extra_attack_chance_percent: u8::try_from(blows % 100)
                     .expect("fractional Draconian blows must fit u8"),
@@ -3332,7 +3388,13 @@ impl Game {
             if include_equipment && self.player_is_berserker() && status.kind_id == STATUS_BERSERK {
                 continue;
             }
-            let modifiers = status.granted_modifiers;
+            let mut modifiers = status.granted_modifiers;
+            if include_equipment
+                && status.kind_id == STATUS_MAGIC_ARMOR
+                && self.player_has_status_kind("rfb.status.stone-skin")
+            {
+                modifiers.defense = 0;
+            }
             for (kind, value) in [
                 (StatKind::MaxHp, modifiers.max_hp),
                 (StatKind::Attack, modifiers.attack),
@@ -3450,18 +3512,20 @@ impl Game {
             StatBounds::NON_NEGATIVE
         };
         let saving_throw_skill = pipeline.resolve(StatKind::SavingThrowSkill, skill_bounds);
-        let saving_throw_skill =
-            if include_equipment && self.player_has_status_kind(STATUS_MAGIC_RESISTANCE) {
-                let minimum = 95_i32.saturating_add(i32::from(self.progress.level));
-                saving_throw_skill.with_modifier(
-                    StatLayer::Status,
-                    STATUS_MAGIC_RESISTANCE,
-                    minimum.saturating_sub(saving_throw_skill.value).max(0),
-                    StatBounds::NON_NEGATIVE,
-                )
-            } else {
-                saving_throw_skill
-            };
+        let saving_throw_skill = if include_equipment
+            && (self.player_has_status_kind(STATUS_MAGIC_RESISTANCE)
+                || self.player_has_status_kind(STATUS_MAGIC_ARMOR))
+        {
+            let minimum = 95_i32.saturating_add(i32::from(self.progress.level));
+            saving_throw_skill.with_modifier(
+                StatLayer::Status,
+                STATUS_MAGIC_RESISTANCE,
+                minimum.saturating_sub(saving_throw_skill.value).max(0),
+                StatBounds::NON_NEGATIVE,
+            )
+        } else {
+            saving_throw_skill
+        };
         let saving_throw_skill = if let Some((status, value)) =
             actor.statuses.iter().find_map(|status| {
                 status

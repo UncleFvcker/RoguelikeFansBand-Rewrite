@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.galadriel-illumination",
+  "input": "self",
+  "steps": [
+    {
+      "effect": {
+        "damageDice": 2,
+        "damageSides": 15,
+        "radius": 3,
+        "type": "light-area"
+      },
+      "type": "ability-effect"
+    }
+  ]
+}

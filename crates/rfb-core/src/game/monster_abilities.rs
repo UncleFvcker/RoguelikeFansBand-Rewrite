@@ -11,7 +11,7 @@ const BANOR_RUPART_TRANSFORM_TAG: &str = "monster-banor-rupart-transform";
 const MONSTER_AIR_BREATH_TAG: &str = "monster-air-breath";
 const MONSTER_CHICKEN_TAG: &str = "monster-chicken";
 pub(super) const MONSTER_DEAD_UNIQUE_SUMMON_TAG: &str = "monster-dead-unique-summon";
-const MONSTER_FAMILY_SUMMON_TAG: &str = "monster-family-summon";
+pub(super) const MONSTER_FAMILY_SUMMON_TAG: &str = "monster-family-summon";
 const MONSTER_WATER_FLOW_TAG: &str = "monster-water-flow";
 const MONSTER_WATER_FLOW_TERRAIN_ID: &str = "demo.terrain.surface-water-deep";
 const MONSTER_WATER_FLOW_RADIUS: u8 = 8;
@@ -20,7 +20,9 @@ const MONSTER_FAMILY_SUMMON_DURATION_TURNS: u16 = 10_000;
 const MONSTER_DEAD_UNIQUE_DISINTEGRATION_RADIUS: u8 = 5;
 const STAR_BLADE_KIND_ID: &str = "demo.actor.star-blade";
 
-fn monster_family_summon_candidates(source_kind_id: &str) -> Option<&'static [&'static str]> {
+pub(super) fn monster_family_summon_candidates(
+    source_kind_id: &str,
+) -> Option<&'static [&'static str]> {
     Some(match source_kind_id {
         "demo.actor.athena-the-goddess-of-wisdom" => &[
             "demo.actor.zeus-king-of-the-olympians",
@@ -222,6 +224,7 @@ impl Game {
                         .contains(&ActorMovementMode::Aquatic)
                     && actor_answers_summons(definition)
                     && self.dungeon_allows_monster(&self.current_floor_id, definition, false)
+                    && !self.actor_is_pantheon_suppressed(definition)
                     && !(in_wilderness
                         && definition.tags.iter().any(|tag| tag == "evil")
                         && !definition.tags.iter().any(|tag| tag == "good"))
@@ -3422,7 +3425,10 @@ impl Game {
                         && (category != "unique"
                             || definition.level >= u32::from(maximum_level.saturating_sub(40)))
                         && definition.level <= u32::from(maximum_level)
-                        && definition.tags.iter().any(|tag| tag == category)
+                        && self.actor_matches_summon_category(definition, category)
+                        && self.pantheon_allows_location(&self.current_floor_id, definition)
+                        && (category == "guardian"
+                            || !self.actor_is_pantheon_suppressed(definition))
                         && (category == "guardian"
                             || !definition.tags.iter().any(|tag| tag == "guardian"))
                         && actor_answers_summons(definition)

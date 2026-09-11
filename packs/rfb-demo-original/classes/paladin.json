@@ -21,6 +21,7 @@
     "defaultInitial": 2000,
     "defaultMaximum": 6000,
     "overrides": {
+      "demo.item.poison-needle": { "initial": 2000, "maximum": 8000 },
       "demo.item.diamond-edge": { "initial": 4000, "maximum": 8000 },
       "demo.item.dragon-fang": { "initial": 4000, "maximum": 8000 },
       "demo.item.rune-sword": { "initial": 4000, "maximum": 8000 },

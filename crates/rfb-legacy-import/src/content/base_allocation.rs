@@ -293,20 +293,27 @@ mod tests {
             ));
             let book: Value = serde_json::from_slice(&fs::read(book_path).unwrap()).unwrap();
             let base = &item["rfbBaseKind"];
-            let source_book = player_ability_book_for_item(&LegacyItemEntry {
-                tval: base["tval"].as_u64().unwrap() as u16,
-                sval: base["sval"].as_u64().unwrap() as u16,
-                ..Default::default()
-            })
-            .unwrap_or_else(|| panic!("{} maps to an unimplemented source realm", item["id"]));
-            assert!(
-                source_book.starts_with(&format!(
-                    "rfb-legacy.ability-book.{}-",
-                    book["realmId"].as_str().unwrap()
-                )),
-                "{} source realm differs from its executable book",
-                item["id"]
-            );
+            // Craft is authored in the formal pack; the bulk legacy importer
+            // does not emit its executable books. Source TV_CRAFT_BOOK is 97.
+            if base["tval"] == 97 {
+                assert_eq!(book["realmId"], "craft");
+                assert!(base["sval"].as_u64().unwrap() < 4);
+            } else {
+                let source_book = player_ability_book_for_item(&LegacyItemEntry {
+                    tval: base["tval"].as_u64().unwrap() as u16,
+                    sval: base["sval"].as_u64().unwrap() as u16,
+                    ..Default::default()
+                })
+                .unwrap_or_else(|| panic!("{} maps to an unimplemented source realm", item["id"]));
+                assert!(
+                    source_book.starts_with(&format!(
+                        "rfb-legacy.ability-book.{}-",
+                        book["realmId"].as_str().unwrap()
+                    )),
+                    "{} source realm differs from its executable book",
+                    item["id"]
+                );
+            }
             assert_eq!(
                 base["sval"].as_u64().unwrap() + 1,
                 book["rank"].as_u64().unwrap(),

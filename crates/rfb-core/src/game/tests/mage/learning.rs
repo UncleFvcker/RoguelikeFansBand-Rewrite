@@ -442,47 +442,59 @@ fn attacks_train_only_against_mobile_hostiles_and_utility_projections_still_trai
         .unwrap()
         .id
         .clone();
-    for (kind, friendly, expected) in [
-        (None, false, 0),
-        (Some("demo.actor.small-kobold"), true, 0),
-        (Some(immobile.as_str()), false, 0),
-        (Some(immune.as_str()), false, 0),
-        (Some("demo.actor.small-kobold"), false, 128),
-    ] {
-        let mut game = base.clone();
-        if let Some(kind) = kind {
-            let mut actor = actor_from_runtime_spawn(
-                "test.practice.target",
-                kind,
-                Position { x: 5, y: 4 },
-                10_000,
-                100,
-                100,
-                true,
+    let mut saw_beam = false;
+    let mut saw_bolt = false;
+    for seed in 0..8 {
+        for (kind, friendly, expected) in [
+            (None, false, 0),
+            (Some("demo.actor.small-kobold"), true, 0),
+            (Some(immobile.as_str()), false, 0),
+            (Some(immune.as_str()), false, 0),
+            (Some("demo.actor.small-kobold"), false, 128),
+        ] {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(seed);
+            if let Some(kind) = kind {
+                let mut actor = actor_from_runtime_spawn(
+                    "test.practice.target",
+                    kind,
+                    Position { x: 5, y: 4 },
+                    10_000,
+                    100,
+                    100,
+                    true,
+                );
+                actor.friendly = friendly;
+                actor.resistances =
+                    definition_resistance_profile(game.content.actor(kind).unwrap());
+                game.entities.push(actor);
+            }
+            let events = cast(
+                &mut game,
+                bolt,
+                TargetSelection::Direction {
+                    direction: Direction::East,
+                },
             );
-            actor.friendly = friendly;
-            actor.resistances = definition_resistance_profile(game.content.actor(kind).unwrap());
-            game.entities.push(actor);
-        }
-        let events = cast(
-            &mut game,
-            bolt,
-            TargetSelection::Direction {
-                direction: Direction::East,
-            },
-        );
-        assert!(
-            events
+            let beam = events
                 .iter()
-                .any(|event| matches!(event, DomainEvent::AbilityCastSucceeded { .. })),
-            "{events:?}"
-        );
-        assert_eq!(
-            game.ability_progress[bolt].proficiency, expected,
-            "{kind:?} friendly={friendly}"
-        );
-        assert_eq!(game.ability_progress[bolt].cast_count, 1); // a useless attack still sets worked
+                .any(|event| matches!(event, DomainEvent::AbilityBeamDamage { .. }));
+            saw_beam |= beam;
+            saw_bolt |= !beam;
+            assert!(
+                events
+                    .iter()
+                    .any(|event| matches!(event, DomainEvent::AbilityCastSucceeded { .. })),
+                "{events:?}"
+            );
+            assert_eq!(
+                game.ability_progress[bolt].proficiency, expected,
+                "{kind:?} friendly={friendly}: {events:?}"
+            );
+            assert_eq!(game.ability_progress[bolt].cast_count, 1); // a useless attack still sets worked
+        }
     }
+    assert!(saw_beam && saw_bolt);
     let utility = "demo.ability.sorcery-light-area";
     learn(&mut base, utility);
     cast(&mut base, utility, TargetSelection::SelfTarget);

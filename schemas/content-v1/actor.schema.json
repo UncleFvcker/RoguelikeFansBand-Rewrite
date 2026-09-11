@@ -1255,6 +1255,25 @@
       ],
       "type": "object"
     },
+    "MonsterArtifactDropDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "chancePercent": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "itemKindId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "itemKindId",
+        "chancePercent"
+      ],
+      "type": "object"
+    },
     "MonsterCastingDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -1889,6 +1908,17 @@
       "default": 0,
       "format": "int32",
       "type": "integer"
+    },
+    "specialArtifactDrop": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MonsterArtifactDropDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Independent named-artifact death roll, before ordinary treasure."
     },
     "speed": {
       "default": 110,

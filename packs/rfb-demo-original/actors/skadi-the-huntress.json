@@ -195,7 +195,8 @@
     "legacy-import",
     "norse",
     "orc-cave",
-    "unique"
+    "unique",
+    "norse2"
   ],
   "terrainInteraction": {
     "picksUpItems": true

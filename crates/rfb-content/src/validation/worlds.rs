@@ -633,6 +633,9 @@ pub(super) fn validate_world(
     for dungeon in &mut world.dungeons {
         validate_definition_id(&dungeon.id, "dungeon")?;
         validate_definition_id(&dungeon.root_floor_id, "floor")?;
+        if dungeon.pantheon.is_some_and(|id| !(1..=4).contains(&id)) {
+            return Err(ContentError::InvalidProceduralFloor(dungeon.id.clone()));
+        }
         dungeon.entry_requirements.sort();
         if dungeon
             .entry_requirements
@@ -1662,6 +1665,16 @@ pub(super) fn validate_world(
                                 + 1,
                         );
                         if !(maximum_centerline_tiles..=interior_area).contains(&area_tiles)
+                            || (river.rfb_depth_chance
+                                && (procedural.depth == 0
+                                    || river.alternative.is_some()
+                                    || [&river.deep_terrain_id, &river.shallow_terrain_id]
+                                        .iter()
+                                        .any(|id| {
+                                            !terrain_tags
+                                                .get(id.as_str())
+                                                .is_some_and(|tags| tags.contains("water"))
+                                        })))
                             || river
                                 .chance_one_in
                                 .is_some_and(|chance| !(1..=10_000).contains(&chance))

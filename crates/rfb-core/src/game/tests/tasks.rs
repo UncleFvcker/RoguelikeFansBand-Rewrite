@@ -349,6 +349,11 @@ fn direct_warrens_death_drops(
     let mut game =
         Game::new_with_build(1, "demo.build.warrior").expect("Warrens journey should create");
     game.current_floor_id = "demo.floor.warrens-depth-1".to_owned();
+    // This helper isolates normal death drops from the separate conquest reward.
+    game.dungeon_states
+        .get_mut("demo.dungeon.warrens")
+        .unwrap()
+        .guardian_defeated = true;
     game.rng = RfbRng::seeded(seed);
     let existing_item_ids = game
         .items
@@ -799,6 +804,7 @@ fn shared_base_and_warrior_loot_use_depth_instead_of_dungeon_identity() {
 
 #[test]
 fn warrens_keeper_drop_count_is_one_d_two_and_items_only() {
+    let content = Game::new(0).content;
     let mut saw_one = false;
     let mut saw_two = false;
     for seed in 0..64 {
@@ -813,11 +819,25 @@ fn warrens_keeper_drop_count_is_one_d_two_and_items_only() {
             })
             .collect::<Vec<_>>();
         assert!(gold.is_empty());
-        assert!(matches!(equipment.len(), 1 | 2));
-        assert!(equipment.iter().all(|item| matches!(
-            item.quality,
-            ItemQualityDto::Fine | ItemQualityDto::Exceptional
-        )));
+        assert!(
+            matches!(equipment.len(), 1 | 2),
+            "seed={seed}: {equipment:?}"
+        );
+        assert!(
+            equipment
+                .iter()
+                .filter(|item| {
+                    let kind = content.item(&item.kind_id).unwrap();
+                    kind.equipment_slot.is_some()
+                        || kind.ammunition_profile.is_some()
+                        || kind.tags.iter().any(|tag| tag == "device")
+                })
+                .all(|item| matches!(
+                    item.quality,
+                    ItemQualityDto::Fine | ItemQualityDto::Exceptional
+                )),
+            "seed={seed}: {equipment:?}"
+        );
         saw_one |= equipment.len() == 1;
         saw_two |= equipment.len() == 2;
     }
@@ -1864,7 +1884,10 @@ fn vapor_quest_unlocks_after_old_man_willow_clears_the_cellar_and_rewards_detect
     assert_eq!(game.terrain_at(entry), "demo.terrain.vapor-quest-entry");
 
     game.player.position = entry;
-    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    // Inspect the initial cellar before monster turns can destroy its ground items.
+    game.transition_floor("demo.floor.vapor-quest".into(), None, None, false)
+        .unwrap()
+        .expect("accepted quest should admit the player");
     assert_eq!(game.current_floor_id, "demo.floor.vapor-quest");
     assert_eq!(game.entities.len(), 18);
     assert_eq!(

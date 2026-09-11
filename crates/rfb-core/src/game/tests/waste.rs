@@ -601,6 +601,7 @@ fn waste_generated_river_keeps_items_gold_and_monsters_on_legal_tiles() {
         .find(|floor| floor.id == "demo.floor.warrens-depth-1")
         .unwrap();
     floor.layout.as_mut().unwrap().river = Some(rfb_content::ProceduralRiverDefinition {
+        rfb_depth_chance: false,
         deep_terrain_id: DEEP.to_owned(),
         shallow_terrain_id: SHALLOW.to_owned(),
         chance_one_in: None,
@@ -690,9 +691,13 @@ fn waste_monster_carried_loot_and_guardian_rewards_use_legal_drop_search() {
         .iter()
         .find(|floor| {
             floor
-                .guardian
-                .as_ref()
-                .is_some_and(|guardian| guardian.reward_artifact_item_kind_id.is_some())
+                .dungeon_id
+                .as_deref()
+                .is_some_and(|id| game.dungeon_is_active(id))
+                && floor
+                    .guardian
+                    .as_ref()
+                    .is_some_and(|guardian| guardian.reward_artifact_item_kind_id.is_some())
         })
         .unwrap()
         .clone();

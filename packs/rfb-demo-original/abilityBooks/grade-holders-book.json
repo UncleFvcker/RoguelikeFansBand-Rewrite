@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.grade-holders-book",
+  "nameKey": "ability-book-demo-grade-holders-book-name",
+  "descriptionKey": "ability-book-demo-grade-holders-book-description",
+  "realmId": "craft",
+  "rank": 2,
+  "abilityIds": [
+    "demo.ability.craft-see-invisible",
+    "demo.ability.craft-remove-curse",
+    "demo.ability.craft-resist-poison",
+    "demo.ability.craft-berserk",
+    "demo.ability.craft-self-knowledge",
+    "demo.ability.craft-identify",
+    "demo.ability.craft-curing",
+    "demo.ability.craft-elemental-brand"
+  ],
+  "tags": [
+    "craft",
+    "spellbook"
+  ]
+}

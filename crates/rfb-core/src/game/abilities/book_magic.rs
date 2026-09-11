@@ -67,7 +67,7 @@ impl Game {
             .map(|realm| realm.realm_id.as_str())
     }
 
-    pub(super) fn spell_practice_targets(&self) -> BTreeMap<String, Position> {
+    pub(super) fn spell_practice_targets(&self) -> BTreeMap<String, i32> {
         self.entities
             .iter()
             .filter(|actor| {
@@ -77,14 +77,14 @@ impl Game {
                         .actor_runtime_definition(actor)
                         .is_some_and(|kind| !kind.movement.never_moves)
             })
-            .map(|actor| (actor.id.clone(), actor.position))
+            .map(|actor| (actor.id.clone(), actor.hp))
             .collect()
     }
 
     pub(super) fn grow_mage_spell(
         &mut self,
         ability: &AbilityDefinition,
-        targets: &BTreeMap<String, Position>,
+        targets: &BTreeMap<String, i32>,
         events: &[DomainEvent],
     ) -> AbilityProgress {
         let depth = if self.is_wilderness_floor() && self.current_town().is_none() {
@@ -102,14 +102,16 @@ impl Game {
         let useful = !attack
             || events.iter().any(|event| match event {
                 DomainEvent::AbilityHit {
-                    ability_id,
-                    damage,
-                    trace,
-                    ..
+                    ability_id, damage, ..
                 } => {
                     ability_id == &ability.id
                         && damage.applied > 0
-                        && targets.values().any(|pos| *pos == trace.impact)
+                        // Beams and blasts retain the projection trace, whose
+                        // impact need not be the position of each damaged actor.
+                        && targets.iter().any(|(id, hp)| {
+                            self.entities.iter().find(|actor| &actor.id == id)
+                                .is_none_or(|actor| actor.hp < *hp)
+                        })
                 }
                 DomainEvent::AbilityEffectsResolved {
                     ability_id,

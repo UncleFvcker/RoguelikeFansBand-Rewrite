@@ -282,6 +282,28 @@ impl AppState {
     }
 
     #[cfg(feature = "webdriver")]
+    fn prepare_craft_e2e(&self) -> Result<GameSnapshot, String> {
+        let mut session = self.lock_session()?;
+        let session = session.as_mut().ok_or("game session is not initialized")?;
+        if session
+            .recorder
+            .game()
+            .snapshot()
+            .player
+            .build
+            .as_ref()
+            .is_none_or(|build| build.build_id != "demo.build.high-mage-craft")
+        {
+            return Err("Craft E2E requires the Craft High Mage build".to_owned());
+        }
+        let mut game = session.recorder.game().clone();
+        game.debug_prepare_craft_e2e()
+            .map_err(|error| error.to_string())?;
+        session.recorder = ReplayRecorder::new(game);
+        Ok(session.recorder.game().snapshot())
+    }
+
+    #[cfg(feature = "webdriver")]
     fn prepare_berserker_e2e(
         &self,
         level: u16,
@@ -561,6 +583,19 @@ fn prepare_mindcrafter_e2e(
     {
         let _ = (state, level);
         Err("Mindcrafter E2E fixture is unavailable".to_owned())
+    }
+}
+
+#[tauri::command]
+fn prepare_craft_e2e(state: tauri::State<'_, AppState>) -> Result<GameSnapshot, String> {
+    #[cfg(feature = "webdriver")]
+    {
+        state.prepare_craft_e2e()
+    }
+    #[cfg(not(feature = "webdriver"))]
+    {
+        let _ = state;
+        Err("Craft E2E fixture is unavailable".to_owned())
     }
 }
 
@@ -855,6 +890,7 @@ pub fn run() {
             prepare_supply_e2e,
             prepare_life_force_e2e,
             prepare_mindcrafter_e2e,
+            prepare_craft_e2e,
             prepare_berserker_e2e,
             prepare_duelist_e2e,
             prepare_mage_e2e,

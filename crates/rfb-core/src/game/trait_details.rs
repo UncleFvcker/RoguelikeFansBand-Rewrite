@@ -175,6 +175,10 @@ impl Game {
                 entry.passives.push(equipment_passive_dto(passive));
             }
             let id = status.kind_id.as_str();
+            if id == STATUS_MAGIC_ARMOR {
+                entry.reflects_bolts = true;
+                entry.passives.push(P::Levitation);
+            }
             if id == STATUS_ULTIMATE_RESISTANCE {
                 entry.passives.extend([
                     P::SustainStrength,
@@ -593,8 +597,15 @@ impl Game {
                         .or(profile.source_mutation_id)
                         .unwrap_or_else(|| self.player.kind_id.clone()),
                     attack_name: profile.attack_name,
-                    damage_percent: self.player_melee_damage_percent(),
+                    damage_percent: if profile.poison_needle {
+                        100
+                    } else {
+                        self.player_melee_damage_percent()
+                    },
                     base_damage: complete.then(|| {
+                        if profile.poison_needle {
+                            return [1, 1];
+                        }
                         [
                             self.scale_player_melee_damage(
                                 minimum.saturating_add(profile.to_damage),

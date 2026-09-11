@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.craft-elemental-immunity",
+  "minimumLevel": 44,
+  "resourceCost": 65,
+  "baseFailurePercent": 70,
+  "resourceId": "demo.resource.mana",
+  "firstSuccessExperience": 11000
+}

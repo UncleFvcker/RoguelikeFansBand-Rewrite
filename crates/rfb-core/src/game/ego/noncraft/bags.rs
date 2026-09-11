@@ -331,6 +331,7 @@ fn bag_slots_exclude_ammunition_and_full_bags_still_accept_compatible_stacks() {
         game.items.last_mut().unwrap().inscription = Some(index.to_string());
     }
     add(&mut game, "test.blocked-ammo", "demo.item.arrow", 1);
+    game.items.last_mut().unwrap().inscription = Some("blocked".into());
     game.items.last_mut().unwrap().location = ItemLocation::Ground(game.player.position);
     let incoming = game.items.last().unwrap().clone();
     assert_eq!(game.inventory_used_slots(), 26);

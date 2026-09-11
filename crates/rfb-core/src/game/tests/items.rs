@@ -85,6 +85,1231 @@ fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
     panic!("ordinary heavy armor was not generated: {remaining:?}");
 }
 
+#[test]
+fn hobbit_fixed_artifacts_generate_equip_and_preserve_uniqueness_after_save() {
+    let mut game = Game::new_with_build(413, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    game.items.clear();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-20".into(),
+        depth: 20,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.ordinary-drop".into(),
+        },
+    };
+    let mut remaining = BTreeSet::from(["demo.item.sam", "demo.item.merry", "demo.item.pippin"]);
+    // Repeated drops at controlled depth; keep the formal base pool, quality
+    // rolls, rarity and uniqueness bookkeeping in the production path.
+    for _ in 0..50_000 {
+        let generated = game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        for item in generated {
+            if !remaining.remove(item.kind_id.as_str()) {
+                continue;
+            }
+            assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+            assert!(game.item_property_knowledge[&id].identified);
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "artifacts never generated: {remaining:?}"
+    );
+    assert_eq!(game.carried_weight_tenths_pound(), 30);
+    for (kind, defense) in [("sam", 9), ("merry", 8), ("pippin", 8)] {
+        let id = game
+            .items
+            .iter()
+            .find(|item| item.kind_id == format!("demo.item.{kind}"))
+            .unwrap()
+            .id
+            .clone();
+        let before = game.equipment_modifiers();
+        let bonuses = game.player_equipment_bonuses();
+        let stats = game.player_derived_stats();
+        game.equip_inventory_item(&id, None).unwrap();
+        let after = game.equipment_modifiers();
+        let equipped = game.player_derived_stats();
+        assert_eq!(after.strength, before.strength - 1);
+        assert_eq!(after.dexterity, before.dexterity + 1);
+        assert_eq!(equipped.speed.value, stats.speed.value + 1);
+        assert_eq!(after.defense, before.defense + defense);
+        assert_eq!(
+            game.player_equipment_bonuses().melee_skill,
+            bonuses.melee_skill + 1
+        );
+        assert_eq!(
+            game.player_equipment_bonuses().melee_damage,
+            bonuses.melee_damage + 1
+        );
+        if kind == "merry" {
+            assert_eq!(equipped.stealth_skill.value, stats.stealth_skill.value + 1);
+            assert_eq!(equipped.search_skill.value, stats.search_skill.value + 5);
+            assert_eq!(
+                equipped.perception_skill.value,
+                stats.perception_skill.value + 5
+            );
+            assert_eq!(
+                game.effective_player_resistances()
+                    .level(DamageType::Confusion),
+                ResistanceLevel::Resistant
+            );
+        }
+    }
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.rng, game.rng);
+    assert_eq!(
+        restored.player_derived_stats().armor_class,
+        game.player_derived_stats().armor_class
+    );
+    assert_eq!(
+        restored.player_derived_stats().search_skill,
+        game.player_derived_stats().search_skill
+    );
+    let next = game
+        .generate_loot_instances(&context, ItemLocation::Inventory)
+        .unwrap();
+    assert_eq!(
+        restored
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap(),
+        next
+    );
+    assert_eq!(restored.rng, game.rng);
+    for (kind, base) in [
+        ("sam", "hard-leather-cap"),
+        ("merry", "cloak"),
+        ("pippin", "leather-gloves"),
+    ] {
+        assert!(
+            restored
+                .generated_artifact_ids
+                .contains(&format!("demo.item.{kind}"))
+        );
+        assert_ne!(
+            restored.roll_fixed_artifact_kind_id(
+                &context,
+                Some(&format!("demo.item.{base}")),
+                false
+            ),
+            Some(format!("demo.item.{kind}"))
+        );
+    }
+}
+
+#[test]
+fn galadriel_instant_generation_lighting_activation_and_cooldown_survive_save() {
+    let mut game = Game::new_with_build(421, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    descend_one_floor(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.player.position = Position { x: 10, y: 10 };
+    for y in 7..=13 {
+        for x in 7..=13 {
+            replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+        }
+    }
+    game.glow.fill(false);
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-30".into(),
+        depth: 30,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.ordinary-drop".into(),
+        },
+    };
+    assert!(
+        game.roll_fixed_artifact_kind_id(&context, Some("demo.item.phial"), false)
+            .is_none()
+    );
+    // Controlled depth; keep the ordinary pool and its real 1/1000 instant gate.
+    let mut found = None;
+    for _ in 0..50_000 {
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            assert_ne!(item.kind_id, "demo.item.phial");
+            if item.kind_id == "demo.item.galadriel" {
+                found = Some(item);
+            }
+        }
+        if found.is_some() {
+            break;
+        }
+    }
+    let item = found.expect("Galadriel must occur through ordinary instant generation");
+    assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+    assert!(item.fuel.is_none());
+    let id = item.id.clone();
+    game.items.push(item);
+    game.pick_up_item_at_player(Some(&id)).unwrap();
+    game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    game.equip_inventory_item(&id, None).unwrap();
+    assert_eq!(game.player_light_radius(), Some(3));
+    assert_eq!(game.player_equipment_bonuses().search_skill, 25);
+    assert_eq!(game.player_equipment_bonuses().perception_skill, 25);
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Dark),
+        ResistanceLevel::Resistant
+    );
+    let mut events = Vec::new();
+    game.world_tick = 10;
+    game.process_equipped_light_fuel(&mut events);
+    assert!(game.items[0].fuel.is_none());
+    assert_eq!(game.player_light_radius(), Some(3));
+    let target = Position { x: 11, y: 10 };
+    game.push_generated_actor("test.phial-target".into(), "demo.actor.goblin", target);
+    let target_hp = game.entities[0].hp;
+    game.world_tick = 0;
+    for _ in 0..100 {
+        game.use_inventory_item(
+            &id,
+            Some(&TargetSelection::SelfTarget),
+            None,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        if game.items[0].charges.unwrap().current == 0 {
+            break;
+        }
+    }
+    assert_eq!(game.items[0].charges.unwrap().current, 0);
+    assert_eq!(game.items[0].device_recovery_progress, 0);
+    assert!(
+        game.entities
+            .iter()
+            .find(|actor| actor.id == "test.phial-target")
+            .is_none_or(|actor| actor.hp < target_hp),
+        "illumination must damage a light-vulnerable target"
+    );
+    assert!(game.glow[game.index(game.player.position).unwrap()]);
+    assert!(game.glow[game.index(target).unwrap()]);
+    let rng = game.rng.clone();
+    assert!(
+        !game
+            .use_inventory_item(
+                &id,
+                Some(&TargetSelection::SelfTarget),
+                None,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new()
+            )
+            .unwrap()
+    );
+    assert_eq!(game.rng, rng);
+    for tick in 1..=75 {
+        game.world_tick = tick;
+        game.process_inventory_device_recovery(&mut events);
+    }
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.player_light_radius(), Some(3));
+    assert_eq!(restored.items[0].device_recovery_progress, 75);
+    assert!(
+        restored
+            .generated_artifact_ids
+            .contains("demo.item.galadriel")
+    );
+    assert!(
+        restored
+            .roll_fixed_artifact_kind_id(&context, Some("demo.item.phial"), true)
+            .is_none()
+    );
+    for tick in 76..150 {
+        restored.world_tick = tick;
+        restored.process_inventory_device_recovery(&mut events);
+    }
+    assert_eq!(restored.items[0].charges.unwrap().current, 0);
+    assert_eq!(restored.items[0].device_recovery_progress, 149);
+    restored.world_tick = 150;
+    restored.process_inventory_device_recovery(&mut events);
+    assert_eq!(restored.items[0].charges.unwrap().current, 1);
+    assert_eq!(restored.items[0].device_recovery_progress, 0);
+    let mut continued = Game::from_save(restored.to_save()).unwrap();
+    let next = restored
+        .generate_loot_instances(&context, ItemLocation::Inventory)
+        .unwrap();
+    assert_eq!(
+        continued
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap(),
+        next
+    );
+    assert_eq!(continued.rng, restored.rng);
+    for _ in 0..100 {
+        continued
+            .use_inventory_item(
+                &id,
+                Some(&TargetSelection::SelfTarget),
+                None,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
+        if continued.items[0].charges.unwrap().current == 0 {
+            break;
+        }
+    }
+    assert_eq!(continued.items[0].charges.unwrap().current, 0);
+}
+
+#[test]
+fn terror_mask_generation_uses_current_build_and_preserves_identity_after_save() {
+    use rfb_protocol::ItemCurseEffectDto;
+    for (build, favored) in [
+        ("warrior", true),
+        ("cavalry", true),
+        ("berserker", true),
+        ("duelist", false),
+        ("archer", false),
+        ("sniper", false),
+        ("high-mage-death", false),
+        ("high-mage-craft", false),
+        ("mage-life-arcane", false),
+        ("paladin-death", false),
+        ("mindcrafter", false),
+    ] {
+        let mut game = Game::new_with_build(422, &format!("demo.build.{build}")).unwrap();
+        choose_human_talent_if_pending(&mut game);
+        clear_monsters(&mut game);
+        game.items.clear();
+        let context = LootContext {
+            table_id: "demo.loot-table.base-items".into(),
+            floor_id: "test.floor.depth-50".into(),
+            depth: 50,
+            source: LootSource::MonsterDeath {
+                actor_id: "test.ordinary-drop".into(),
+            },
+        };
+        // Controlled depth, complete ordinary pool: profession never excludes the mask.
+        let mut found = None;
+        for _ in 0..50_000 {
+            for item in game
+                .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+                .unwrap()
+            {
+                if item.kind_id == "demo.item.terror-mask" {
+                    found = Some(item);
+                }
+            }
+            if found.is_some() {
+                break;
+            }
+        }
+        let item = found.unwrap_or_else(|| panic!("mask never generated for {build}"));
+        assert_eq!(item.affix_ids.len(), usize::from(favored));
+        assert_eq!(item.rolled_affixes.len(), usize::from(favored));
+        assert_eq!(
+            item.curse,
+            (!favored).then_some(ItemCurseSeverityDto::Heavy)
+        );
+        assert_eq!(item.intrinsic_curse_effects.len(), usize::from(!favored));
+        assert_eq!(game.item_has_rfb_flag(&item, "TY_CURSE"), !favored);
+        assert_eq!(game.item_has_rfb_flag(&item, "AGGRAVATE"), !favored);
+        let id = item.id.clone();
+        game.items.push(item);
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        assert!(game.visible_item_resistances(&game.items[0]).is_empty());
+        game.reveal_current_visibility();
+        let unknown = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(unknown.state_hash(), game.state_hash());
+        let rolled = game.items[0].clone();
+        let rng = game.rng.clone();
+        game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        assert_eq!(game.rng, rng);
+        game.equip_inventory_item(&id, None).unwrap();
+        game.refresh_player_resource_maxima();
+        assert_eq!(
+            game.items[0].intrinsic_properties,
+            rolled.intrinsic_properties
+        );
+        assert!(game.player_has_anti_magic());
+        assert_eq!(game.player_has_equipped_aggravation(), !favored);
+        assert!(game.player_has_equipped_curse_effect(ItemCurseEffectDto::Teleport));
+        assert_eq!(
+            game.player_has_equipped_curse_effect(ItemCurseEffectDto::TyCurse),
+            !favored
+        );
+        if build == "berserker" {
+            let before = game.items[0].clone();
+            let rng = game.rng.clone();
+            assert_eq!(
+                game.inventory_item_dto(&before)
+                    .use_unavailable_reason
+                    .as_deref(),
+                Some("berserker")
+            );
+            game.use_inventory_item(
+                &id,
+                Some(&TargetSelection::SelfTarget),
+                None,
+                &mut Vec::new(),
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
+            assert_eq!(game.items[0], before);
+            assert_eq!(game.rng, rng);
+        }
+        assert_eq!(game.equipment_modifiers().intelligence, -3);
+        assert_eq!(game.equipment_modifiers().wisdom, -3);
+        assert_eq!(game.equipment_modifiers().charisma, 3);
+        assert_eq!(game.player_equipment_bonuses().melee_skill, 18);
+        assert_eq!(game.player_equipment_bonuses().melee_damage, 18);
+        // Duelist AC also changes with the mask's INT penalty; inspect the
+        // actual item contribution separately from that class calculation.
+        assert_eq!(
+            game.player_derived_stats()
+                .armor_class
+                .contributions
+                .iter()
+                .filter(|entry| entry.source_id == id)
+                .map(|entry| entry.amount)
+                .sum::<i32>(),
+            150
+        );
+        for element in [
+            DamageType::Acid,
+            DamageType::Cold,
+            DamageType::Poison,
+            DamageType::Disenchant,
+        ] {
+            assert_eq!(
+                game.effective_player_resistances().level(element),
+                ResistanceLevel::Resistant
+            );
+        }
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.items[0], game.items[0]);
+        assert!(
+            restored
+                .generated_artifact_ids
+                .contains("demo.item.terror-mask")
+        );
+        let next = game
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap();
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            next
+        );
+        assert_eq!(restored.rng, game.rng);
+        assert!(
+            restored
+                .roll_fixed_artifact_kind_id(&context, Some("demo.item.iron-helm"), false)
+                .is_none()
+        );
+        let slot = match &restored.items[0].location {
+            ItemLocation::Equipped { slot_id } => slot_id.clone(),
+            _ => unreachable!(),
+        };
+        assert_eq!(restored.unequip_slot(&slot).is_some(), favored);
+        if build == "archer" {
+            // The actual cursed instance reaches the periodic TY_CURSE consumer.
+            // Select its rare mana-blast boundary; ordinary curse scheduling stays intact.
+            let mut doomed = restored.clone();
+            let seed = (1..100_000)
+                .find(|seed| {
+                    let mut rng = RfbRng::seeded(*seed);
+                    rng.bounded(200) == 0 && matches!(rng.bounded(34) + 1, 30 | 31)
+                })
+                .unwrap();
+            doomed.rng = RfbRng::seeded(seed);
+            doomed.player.hp = 1;
+            doomed.world_tick = 10;
+            doomed
+                .process_equipped_curse_effects(
+                    &mut Vec::new(),
+                    &mut BTreeSet::new(),
+                    &mut Vec::new(),
+                )
+                .unwrap();
+            assert!(doomed.player_is_dead());
+            restored.remove_equipped_curses(RemoveEquippedCursesRequest::new(false));
+            assert_eq!(restored.items[0].curse, Some(ItemCurseSeverityDto::Heavy));
+            restored.remove_equipped_curses(RemoveEquippedCursesRequest::new(true));
+            assert!(restored.items[0].curse.is_none());
+            // Dispel the detachable curse, not the artifact's intrinsic bad flags.
+            assert!(restored.player_has_equipped_curse_effect(ItemCurseEffectDto::TyCurse));
+            assert!(restored.player_has_equipped_aggravation());
+            assert!(restored.unequip_slot(&slot).is_some());
+            assert!(!restored.player_has_equipped_curse_effect(ItemCurseEffectDto::TyCurse));
+            assert!(!restored.player_has_equipped_aggravation());
+        }
+    }
+}
+
+#[test]
+fn terror_mask_duplicate_power_and_resistance_do_not_reroll() {
+    let mut game = Game::new_with_build(422, "demo.build.warrior").unwrap();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: game.current_floor_id.clone(),
+        depth: 50,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.drop".into(),
+        },
+    };
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            for _ in 0..3 {
+                rng.bounded(1);
+            } // Existing activation/profile initialization.
+            rng.bounded(10) == 6 && rng.bounded(12) == 0
+        })
+        .unwrap();
+    game.rng = RfbRng::seeded(seed);
+    let mut expected = game.rng.clone();
+    for _ in 0..3 {
+        expected.bounded(1);
+    }
+    expected.bounded(10);
+    expected.bounded(12);
+    let draft = game.fixed_item_draft(&context, "demo.item.terror-mask".into());
+    assert_eq!(game.rng, expected);
+    assert_eq!(
+        draft.intrinsic_properties.status_immunities,
+        ["rfb.status.paralysis"]
+    );
+    assert_eq!(draft.rolled_affixes[0].properties.resistances.len(), 1);
+    assert_eq!(
+        draft.rolled_affixes[0].properties.resistances[&ActorDamageType::Poison],
+        rfb_content::ActorResistanceLevel::Resistant
+    );
+    assert!(draft.curse.is_none());
+}
+
+#[test]
+fn terror_mask_melee_only_bonuses_and_fear_activation_restore() {
+    let mut game = Game::new_with_build(423, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    descend_one_floor(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.player.position = Position { x: 10, y: 10 };
+    for y in 9..=11 {
+        for x in 9..=12 {
+            replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+        }
+    }
+    game.glow.fill(true);
+    give_inventory_item(&mut game, "test.bow", "demo.item.short-bow");
+    game.equip_inventory_item("test.bow", None).unwrap();
+    let before = game.player_projectile_profile().unwrap();
+    let melee_before = game.player_derived_stats();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: game.current_floor_id.clone(),
+        depth: 50,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.drop".into(),
+        },
+    };
+    // Focused equipment/activation check; natural generation is covered above.
+    let draft = game.fixed_item_draft(&context, "demo.item.terror-mask".into());
+    let mut item = game
+        .commit_generated_item_draft(draft, ItemLocation::Inventory)
+        .unwrap();
+    item.enchantments.to_hit = 1;
+    item.enchantments.to_damage = 2;
+    let id = item.id.clone();
+    game.items.push(item);
+    game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    game.equip_inventory_item(&id, None).unwrap();
+    let after = game.player_projectile_profile().unwrap();
+    assert_eq!(
+        (after.to_hit, after.launcher_to_damage),
+        (before.to_hit, before.launcher_to_damage)
+    );
+    assert_eq!(
+        game.player_derived_stats().melee_skill.value - melee_before.melee_skill.value,
+        19
+    );
+    assert_eq!(
+        game.player_derived_stats().melee_damage_bonus.value
+            - melee_before.melee_damage_bonus.value,
+        20
+    );
+    game.push_generated_actor(
+        "test.mask-target".into(),
+        "demo.actor.goblin",
+        Position { x: 11, y: 10 },
+    );
+    game.reveal_current_visibility();
+    let mut events = Vec::new();
+    game.world_tick = 0;
+    for _ in 0..100 {
+        game.use_inventory_item(
+            &id,
+            Some(&TargetSelection::SelfTarget),
+            None,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        if game.items[1].charges.unwrap().current == 0 {
+            break;
+        }
+    }
+    assert_eq!(game.items[1].charges.unwrap().current, 0);
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == "rfb.status.fear")
+    );
+    let rng = game.rng.clone();
+    assert!(
+        !game
+            .use_inventory_item(
+                &id,
+                Some(&TargetSelection::SelfTarget),
+                None,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new()
+            )
+            .unwrap()
+    );
+    assert_eq!(game.rng, rng);
+    for tick in 1..=500 {
+        game.world_tick = tick;
+        game.process_inventory_device_recovery(&mut events);
+    }
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    for tick in 501..1000 {
+        restored.world_tick = tick;
+        restored.process_inventory_device_recovery(&mut events);
+    }
+    let item = restored.items.iter().find(|item| item.id == id).unwrap();
+    assert_eq!(item.charges.unwrap().current, 0);
+    assert_eq!(item.device_recovery_progress, 999);
+    restored.world_tick = 1000;
+    restored.process_inventory_device_recovery(&mut events);
+    let item = restored.items.iter().find(|item| item.id == id).unwrap();
+    assert_eq!(item.charges.unwrap().current, 1);
+    assert_eq!(item.device_recovery_progress, 0);
+}
+
+#[test]
+fn fixed_high_resistance_uses_one_source_roll_without_retrying_duplicates() {
+    let original = Game::new_with_build(419, "demo.build.warrior").unwrap();
+    let context = artifact_loot_context(40);
+    // artifact.c::one_high_resistance: randint0(12), including existing flags.
+    let source_order = [
+        ActorDamageType::Poison,
+        ActorDamageType::Light,
+        ActorDamageType::Dark,
+        ActorDamageType::Shards,
+        ActorDamageType::Blindness,
+        ActorDamageType::Confusion,
+        ActorDamageType::Sound,
+        ActorDamageType::Nether,
+        ActorDamageType::Nexus,
+        ActorDamageType::Chaos,
+        ActorDamageType::Disenchant,
+        ActorDamageType::Fear,
+    ];
+    for (index, element) in source_order.into_iter().enumerate() {
+        let seed = (0..10_000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(12) == index as u64)
+            .unwrap();
+        let mut game = original.clone();
+        game.rng = RfbRng::seeded(seed);
+        let mut expected_rng = game.rng.clone();
+        expected_rng.bounded(12);
+        let draft = game.fixed_item_draft(&context, "demo.item.rohirrim".into());
+        assert_eq!(game.rng, expected_rng);
+        assert_eq!(draft.rolled_affixes.len(), 1);
+        let properties = &draft.rolled_affixes[0].properties;
+        assert_eq!(properties.resistances.len(), 1);
+        assert_eq!(
+            properties.resistances[&element],
+            rfb_content::ActorResistanceLevel::Resistant
+        );
+        if matches!(element, ActorDamageType::Confusion | ActorDamageType::Sound) {
+            // A duplicate remains the same flag: no reroll or stronger resistance.
+            game.items.clear();
+            let item = game
+                .commit_generated_item_draft(draft, ItemLocation::Inventory)
+                .unwrap();
+            let id = item.id.clone();
+            game.items.push(item);
+            game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+            game.equip_inventory_item(&id, None).unwrap();
+            let item = &game.items[0];
+            let visible = game.visible_item_resistances(item);
+            assert_eq!(
+                visible
+                    .iter()
+                    .filter(|resistance| resistance.damage_type
+                        == DamageTypeDto::from(DamageType::from(element)))
+                    .count(),
+                1
+            );
+            assert_eq!(
+                game.effective_player_resistances().level(element.into()),
+                ResistanceLevel::Resistant
+            );
+        }
+    }
+}
+
+#[test]
+fn fixed_high_resistance_armor_generates_reveals_equips_and_restores() {
+    let mut game = Game::new_with_build(420, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    game.items.clear();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-40".into(),
+        depth: 40,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.ordinary-drop".into(),
+        },
+    };
+    let mut remaining = BTreeSet::from([
+        "rohirrim",
+        "arvedui",
+        "hithlomir",
+        "thalkettoth",
+        "thranduil",
+    ]);
+    // Repeated controlled-depth drops retain the complete ordinary production pool.
+    for _ in 0..50_000 {
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            if !remaining.remove(item.kind_id.strip_prefix("demo.item.").unwrap()) {
+                continue;
+            }
+            assert_eq!(
+                item.affix_ids,
+                ["rfb-legacy.affix.artifact-extra-high-resistance"]
+            );
+            assert_eq!(item.rolled_affixes.len(), 1);
+            assert_eq!(item.rolled_affixes[0].properties.resistances.len(), 1);
+            assert!(item.activation.is_none() && item.curse.is_none());
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "artifacts never generated: {remaining:?}"
+    );
+    assert_eq!(game.carried_weight_tenths_pound(), 575);
+    game.reveal_current_visibility();
+    let unknown = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(unknown.state_hash(), game.state_hash());
+    for (kind, base, defense, hit) in [
+        ("rohirrim", "metal-brigandine-armour", 34, 0),
+        ("arvedui", "chain-mail", 29, -2),
+        ("hithlomir", "soft-leather-armour", 24, 0),
+        ("thalkettoth", "leather-scale-mail", 36, -1),
+        ("thranduil", "hard-leather-cap", 12, 0),
+    ] {
+        let mut equipped = unknown.clone();
+        let item = equipped
+            .items
+            .iter()
+            .find(|item| item.kind_id == format!("demo.item.{kind}"))
+            .unwrap();
+        let id = item.id.clone();
+        let rolled = item.rolled_affixes.clone();
+        assert!(equipped.visible_item_resistances(item).is_empty());
+        let rng = equipped.rng.clone();
+        equipped.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        assert_eq!(equipped.rng, rng);
+        let item = equipped.items.iter().find(|item| item.id == id).unwrap();
+        let (&element, _) = rolled[0].properties.resistances.iter().next().unwrap();
+        assert!(
+            equipped.item_property_knowledge[&id]
+                .known_affix_ids
+                .contains(&rolled[0].affix_id)
+        );
+        assert!(
+            equipped
+                .visible_item_resistances(item)
+                .iter()
+                .any(|resistance| resistance.damage_type
+                    == DamageTypeDto::from(DamageType::from(element)))
+        );
+        let before = equipped.player_derived_stats();
+        equipped.equip_inventory_item(&id, None).unwrap();
+        assert_eq!(
+            equipped.player_derived_stats().armor_class.value,
+            before.armor_class.value + defense * 10
+        );
+        assert_eq!(equipped.player_equipment_bonuses().melee_skill, hit);
+        assert_eq!(
+            equipped
+                .effective_player_resistances()
+                .level(element.into()),
+            ResistanceLevel::Resistant
+        );
+        match kind {
+            "rohirrim" => {
+                assert_eq!(equipped.equipment_modifiers().strength, 2);
+                assert_eq!(equipped.equipment_modifiers().dexterity, 2);
+            }
+            "arvedui" => {
+                assert_eq!(equipped.equipment_modifiers().strength, 2);
+                assert_eq!(equipped.equipment_modifiers().charisma, 2);
+            }
+            "hithlomir" => assert_eq!(equipped.player_equipment_bonuses().stealth_skill, 4),
+            "thalkettoth" => {
+                assert_eq!(equipped.equipment_modifiers().dexterity, 2);
+                assert_eq!(equipped.equipment_modifiers().speed, 2);
+            }
+            "thranduil" => {
+                assert_eq!(equipped.equipment_modifiers().intelligence, 2);
+                assert_eq!(equipped.equipment_modifiers().wisdom, 2);
+                assert!(
+                    equipped
+                        .player_equipment_passives()
+                        .contains(&EquipmentPassive::Telepathy)
+                );
+            }
+            _ => unreachable!(),
+        }
+        equipped.reveal_current_visibility();
+        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), equipped.state_hash());
+        assert_eq!(
+            restored
+                .items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .rolled_affixes,
+            rolled
+        );
+        assert!(
+            restored
+                .generated_artifact_ids
+                .contains(&format!("demo.item.{kind}"))
+        );
+        let next = equipped
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap();
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            next
+        );
+        assert_eq!(restored.rng, equipped.rng);
+        assert_ne!(
+            restored.roll_fixed_artifact_kind_id(
+                &context,
+                Some(&format!("demo.item.{base}")),
+                false
+            ),
+            Some(format!("demo.item.{kind}"))
+        );
+    }
+}
+
+#[test]
+fn fixed_weapon_pair_generates_and_preserves_combat_and_passives_after_save() {
+    let mut game = Game::new_with_build(418, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    game.items.clear();
+    let origin = game.player.position;
+    let adjacent = Position {
+        x: origin.x + 1,
+        y: origin.y,
+    };
+    replace_terrain(&mut game, origin, "demo.terrain.floor");
+    replace_terrain(&mut game, adjacent, "demo.terrain.floor");
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-30".into(),
+        depth: 30,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.ordinary-drop".into(),
+        },
+    };
+    let mut remaining = BTreeSet::from(["demo.item.gondricam", "demo.item.forasgil"]);
+    // Controlled depth and repeated production drops retain the full ordinary
+    // pool, quality, rarity and unique-artifact registration.
+    for _ in 0..50_000 {
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            if !remaining.remove(item.kind_id.as_str()) {
+                continue;
+            }
+            assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+            assert!(item.activation.is_none() && item.curse.is_none());
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+            assert!(game.item_property_knowledge[&id].identified);
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "artifacts never generated: {remaining:?}"
+    );
+    assert_eq!(game.carried_weight_tenths_pound(), 150);
+    for (kind, base, hit, damage, sides) in [
+        ("gondricam", "cutlass", 10, 11, 9),
+        ("forasgil", "rapier", 12, 19, 8),
+    ] {
+        let mut equipped = game.clone();
+        let id = equipped
+            .items
+            .iter()
+            .find(|item| item.kind_id == format!("demo.item.{kind}"))
+            .unwrap()
+            .id
+            .clone();
+        equipped
+            .equip_inventory_item(&id, Some("right-hand"))
+            .unwrap();
+        let profile = equipped.player_melee_profile(&equipped.player_derived_stats());
+        assert_eq!(profile.source_item_id.as_deref(), Some(id.as_str()));
+        assert_eq!((profile.damage_dice, profile.damage_sides), (1, sides));
+        assert_eq!(profile.to_hit, hit);
+        assert!(profile.to_damage >= damage);
+        if kind == "gondricam" {
+            assert_eq!(equipped.equipment_modifiers().dexterity, 3);
+            assert_eq!(equipped.player_equipment_bonuses().stealth_skill, 3);
+            assert!(equipped.player_levitates());
+            assert_eq!(equipped.player_see_invisible_sources(), 1);
+            for element in [
+                DamageType::Acid,
+                DamageType::Electricity,
+                DamageType::Fire,
+                DamageType::Cold,
+            ] {
+                assert_eq!(
+                    equipped.effective_player_resistances().level(element),
+                    ResistanceLevel::Resistant
+                );
+            }
+        } else {
+            assert_eq!(equipped.equipment_modifiers().speed, 1);
+            assert_eq!(equipped.player_equipment_bonuses().light_radius, 1);
+            for element in [DamageType::Cold, DamageType::Light] {
+                assert_eq!(
+                    equipped.effective_player_resistances().level(element),
+                    ResistanceLevel::Resistant
+                );
+            }
+        }
+        equipped.reveal_current_visibility();
+        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), equipped.state_hash());
+        assert_eq!(
+            restored
+                .player_melee_profile(&restored.player_derived_stats())
+                .to_damage,
+            profile.to_damage
+        );
+        assert!(
+            restored
+                .generated_artifact_ids
+                .contains(&format!("demo.item.{kind}"))
+        );
+        let next = equipped
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap();
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            next
+        );
+        assert_eq!(restored.rng, equipped.rng);
+        assert_ne!(
+            restored.roll_fixed_artifact_kind_id(
+                &context,
+                Some(&format!("demo.item.{base}")),
+                false
+            ),
+            Some(format!("demo.item.{kind}"))
+        );
+        if kind == "gondricam" {
+            // Exercise the existing flat equipment recovery, separately from
+            // natural percentage regeneration; do not claim source regen parity.
+            restored.player.hp = 1;
+            restored.world_tick = 0;
+            let update = dispatch_next(&mut restored, GameCommand::Wait);
+            assert!(
+                update
+                    .events
+                    .iter()
+                    .any(|event| event.message_key == "equipment-regenerated")
+            );
+            assert!(restored.player.hp > 1);
+            let pit = adjacent;
+            replace_terrain(&mut restored, pit, "demo.terrain.dark-pit");
+            let mut unarmed = restored.clone();
+            unarmed
+                .items
+                .iter_mut()
+                .find(|item| item.id == id)
+                .unwrap()
+                .location = ItemLocation::Inventory;
+            dispatch_next(
+                &mut unarmed,
+                GameCommand::Move {
+                    direction: Direction::East,
+                },
+            );
+            assert_eq!(unarmed.player.position, origin);
+            dispatch_next(
+                &mut restored,
+                GameCommand::Move {
+                    direction: Direction::East,
+                },
+            );
+            assert_eq!(restored.player.position, pit);
+            restored.player.position = origin;
+            replace_terrain(&mut restored, adjacent, "demo.terrain.floor");
+        }
+        {
+            let mut damages = Vec::new();
+            // Matching cold immunity suppresses only the brand. Animal slay
+            // remains active; a matching slay and brand do not multiply together.
+            let targets = if kind == "gondricam" {
+                vec![("goblin", ResistanceLevel::Immune, 10)]
+            } else {
+                vec![
+                    ("goblin", ResistanceLevel::Resistant, 24),
+                    ("goblin", ResistanceLevel::Immune, 10),
+                    ("sheep", ResistanceLevel::Immune, 24),
+                    ("sheep", ResistanceLevel::Resistant, 24),
+                ]
+            };
+            for (target_kind, cold, multiplier) in targets {
+                let mut combat = restored.clone();
+                combat.push_generated_actor(
+                    "test.weapon-target".into(),
+                    &format!("demo.actor.{target_kind}"),
+                    adjacent,
+                );
+                let target = &mut combat.entities[0];
+                target.hp = 10_000;
+                target.max_hp = 10_000;
+                target.resistances.set(DamageType::Cold, cold);
+                let profile = combat.player_melee_profile(&combat.player_derived_stats());
+                let target = &combat.entities[0];
+                assert_eq!(
+                    combat.player_melee_damage_multiplier(
+                        &profile,
+                        target,
+                        combat.content.actor(&target.kind_id).unwrap()
+                    ),
+                    multiplier
+                );
+                let actual = (0..100)
+                    .find_map(|seed| {
+                        let mut trial = combat.clone();
+                        trial.rng = RfbRng::seeded(seed);
+                        let mut events = Vec::new();
+                        trial
+                            .resolve_player_melee(
+                                0,
+                                false,
+                                &mut events,
+                                &mut BTreeSet::new(),
+                                &mut Vec::new(),
+                            )
+                            .unwrap();
+                        events
+                            .into_iter()
+                            .map(DomainEvent::into_dto)
+                            .find_map(|event| match event.outcome {
+                                Some(GameEventOutcomeDto::Damage { resolution }) => {
+                                    assert!(trial.entities[0].hp < 10_000);
+                                    Some(resolution.raw_damage)
+                                }
+                                _ => None,
+                            })
+                    })
+                    .expect("seed range includes a weapon hit");
+                damages.push(actual);
+            }
+            if kind == "forasgil" {
+                assert!(damages[0] > damages[1]);
+                assert_eq!(damages[2], damages[3]);
+            }
+        }
+    }
+}
+
+#[test]
+fn fixed_armor_pair_generates_equips_and_preserves_consumers_after_save() {
+    let mut game = Game::new_with_build(417, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    game.items.clear();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-40".into(),
+        depth: 40,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.ordinary-drop".into(),
+        },
+    };
+    let mut remaining = BTreeSet::from(["demo.item.thorongil", "demo.item.cambeleg"]);
+    // Controlled depth and repeated production drops, retaining the complete
+    // ordinary pool, quality, rarity and uniqueness rules.
+    for _ in 0..50_000 {
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            if !remaining.remove(item.kind_id.as_str()) {
+                continue;
+            }
+            assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+            assert!(item.activation.is_none() && item.curse.is_none());
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+            assert!(game.item_property_knowledge[&id].identified);
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "artifacts never generated: {remaining:?}"
+    );
+    assert_eq!(game.carried_weight_tenths_pound(), 15);
+    for (kind, defense) in [("thorongil", 11), ("cambeleg", 16)] {
+        let id = game
+            .items
+            .iter()
+            .find(|item| item.kind_id == format!("demo.item.{kind}"))
+            .unwrap()
+            .id
+            .clone();
+        let before = game.player_derived_stats();
+        let modifiers = game.equipment_modifiers();
+        let bonuses = game.player_equipment_bonuses();
+        let see_invisible = game.player_see_invisible_sources();
+        game.equip_inventory_item(&id, None).unwrap();
+        let after = game.player_derived_stats();
+        assert_eq!(
+            after.armor_class.value,
+            before.armor_class.value + defense * 10
+        );
+        assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
+        if kind == "thorongil" {
+            assert_eq!(game.player_see_invisible_sources(), see_invisible + 1);
+            for element in [DamageType::Electricity, DamageType::Fire, DamageType::Cold] {
+                assert_eq!(
+                    game.effective_player_resistances().level(element),
+                    ResistanceLevel::Resistant
+                );
+            }
+        } else {
+            assert_eq!(game.equipment_modifiers().strength, modifiers.strength + 3);
+            assert_eq!(
+                game.equipment_modifiers().constitution,
+                modifiers.constitution + 3
+            );
+            assert_eq!(
+                game.player_equipment_bonuses().melee_skill,
+                bonuses.melee_skill + 8
+            );
+            assert_eq!(
+                game.player_equipment_bonuses().melee_damage,
+                bonuses.melee_damage + 8
+            );
+            assert!(after.melee_skill.value >= before.melee_skill.value + 8);
+            assert!(after.melee_damage_bonus.value >= before.melee_damage_bonus.value + 8);
+        }
+    }
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    let expected = game.player_derived_stats();
+    let actual = restored.player_derived_stats();
+    assert_eq!(actual.armor_class, expected.armor_class);
+    assert_eq!(actual.melee_skill, expected.melee_skill);
+    assert_eq!(actual.melee_damage_bonus, expected.melee_damage_bonus);
+    assert_eq!(
+        restored.player_see_invisible_sources(),
+        game.player_see_invisible_sources()
+    );
+    assert!(
+        restored
+            .player_status_immunities()
+            .contains(STATUS_PARALYSIS)
+    );
+    let next = game
+        .generate_loot_instances(&context, ItemLocation::Inventory)
+        .unwrap();
+    assert_eq!(
+        restored
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap(),
+        next
+    );
+    assert_eq!(restored.rng, game.rng);
+    for (kind, base) in [
+        ("thorongil", "cloak"),
+        ("cambeleg", "set-of-studded-leather-gloves"),
+    ] {
+        let kind = format!("demo.item.{kind}");
+        assert!(restored.generated_artifact_ids.contains(&kind));
+        assert_ne!(
+            restored.roll_fixed_artifact_kind_id(
+                &context,
+                Some(&format!("demo.item.{base}")),
+                false
+            ),
+            Some(kind)
+        );
+    }
+}
+
 fn razorback_game() -> (Game, String) {
     let mut game = Game::new_with_build(129, "demo.build.warrior").unwrap();
     clear_monsters(&mut game);
@@ -306,6 +1531,7 @@ fn razorback_guardian_reward_shares_natural_generation_uniqueness() {
         })
         .unwrap();
     let floor_id = floor.id.clone();
+    let dungeon_id = floor.dungeon_id.clone().unwrap();
     let guardian = floor.guardian.as_mut().unwrap();
     guardian.reward_artifact_item_kind_id = Some("demo.item.razorback".to_owned());
     let guardian = guardian.clone();
@@ -315,6 +1541,7 @@ fn razorback_guardian_reward_shares_natural_generation_uniqueness() {
     let (mut game, _) = razorback_game();
     game.content = content;
     game.current_floor_id = floor_id;
+    game.dungeon_states.get_mut(&dungeon_id).unwrap().suppressed = false;
     let mut actor = game.player.clone();
     actor.id = guardian.instance_id;
     actor.kind_id = guardian.actor_kind_id;
@@ -604,7 +1831,7 @@ fn p90b_olog_hai_affix_materializes_and_runs_existing_berserk_activation() {
         .iter()
         .find(|status| status.kind_id == STATUS_BERSERK)
         .expect("Olog-hai activation should apply Berserk");
-    assert!((26..=50).contains(&berserk.remaining_ticks));
+    assert!((260..=500).contains(&berserk.remaining_ticks));
     assert_eq!(
         game.items
             .iter()
@@ -3411,6 +4638,8 @@ fn b4_tailored_high_mage_device_is_usable_and_restores_its_charges() {
 fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     let mut single = Game::new(503);
     clear_monsters(&mut single);
+    // Bound this fixture to item use, independently of birth RNG consumption.
+    single.rng = RfbRng::seeded(503);
     give_inventory_item(
         &mut single,
         "test.item.acquirement.1",
@@ -3439,8 +4668,9 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     assert_eq!(generated[0].location, ItemLocation::Ground(position));
     assert_eq!(generated[0].quality, ItemQualityDto::Exceptional);
     assert!(generated[0].id.starts_with("generated.item."));
-    // drop_near consumes the disabled-breakage roll and a tied-grid roll.
-    assert_eq!(single.rng_draw_counter(), draws_before + 34);
+    // Fixed action seed includes generation plus drop_near's disabled-breakage
+    // roll and tied-grid roll; it does not include character creation.
+    assert_eq!(single.rng_draw_counter(), draws_before + 641);
     assert!(update.events.iter().any(|event| {
         event.kind == "item.use-acquirement"
             && event.args.get("count").map(String::as_str) == Some("1")
@@ -3470,7 +4700,7 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
 }
 
 #[test]
-fn p3_5_mundanity_splits_one_unit_and_rejects_fixed_artifacts_atomically() {
+fn p3_5_mundanity_preserves_stack_identity_and_rejects_unmapped_demo_artifacts() {
     let mut game = Game::new(521);
     clear_monsters(&mut game);
     game.items.clear();
@@ -3499,29 +4729,29 @@ fn p3_5_mundanity_splits_one_unit_and_rejects_fixed_artifacts_atomically() {
             }),
         },
     );
-    let remainder = game
-        .items
-        .iter()
-        .find(|item| item.id == "test.item.mundane-target.1")
-        .expect("remainder should keep the selected stack id");
-    assert_eq!(remainder.quantity, 2);
-    assert_eq!(remainder.quality, ItemQualityDto::Exceptional);
     let mundane = game
         .items
         .iter()
-        .find(|item| item.kind_id == "demo.item.arrow" && item.id != "test.item.mundane-target.1")
-        .expect("one separated unit should become mundane");
-    assert_eq!(mundane.quantity, 1);
+        .find(|item| item.id == "test.item.mundane-target.1")
+        .unwrap();
+    assert_eq!(mundane.quantity, 3);
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.arrow")
+            .count(),
+        1
+    );
     assert_eq!(mundane.quality, ItemQualityDto::Ordinary);
     assert!(mundane.affix_ids.is_empty());
     assert!(mundane.enchantments.is_empty());
     assert_eq!(game.rng_draw_counter(), draws_before);
     assert!(update.events.iter().any(|event| {
         event.kind == "item.use-mundanity"
-            && event.args.get("split").map(String::as_str) == Some("true")
+            && event.args.get("split").map(String::as_str) == Some("false")
             && event.args.get("targetId") == Some(&mundane.id)
     }));
-    Game::from_save(game.to_save()).expect("split mundane ammunition should round-trip");
+    Game::from_save(game.to_save()).expect("mundane ammunition stack should round-trip");
 
     give_inventory_item(
         &mut game,

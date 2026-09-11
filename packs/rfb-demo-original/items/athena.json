@@ -1,0 +1,122 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.spear",
+    "instant": false,
+    "rarityOneIn": 127,
+    "sourceIndex": 259
+  },
+  "baseValue": 555555,
+  "descriptionKey": "item-demo-athena-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 90,
+  "glyph": "/",
+  "id": "demo.item.athena",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 8,
+    "toDamage": 15,
+    "toHit": 15,
+    "damageType": "physical"
+  },
+  "modifiers": {
+    "constitution": -4,
+    "defense": 15,
+    "dexterity": -4,
+    "intelligence": 4,
+    "spellPowerBonus": 4,
+    "strength": -4
+  },
+  "nameKey": "item-demo-athena-name",
+  "passives": [
+    "blessed",
+    "hold-life",
+    "reduced-mana-cost",
+    "sustain-intelligence",
+    "sustain-wisdom",
+    "telepathy"
+  ],
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "DEC_CON",
+      "DEC_DEX",
+      "DEC_MANA",
+      "DEC_STR",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "PERMA_CURSE",
+      "QUESTITEM",
+      "RIDING",
+      "SHOW_MODS",
+      "SPELL_POWER",
+      "SUST_INT",
+      "SUST_WIS",
+      "TELEPATHY",
+      "TOWN"
+    ],
+    "pval": 4,
+    "toArmor": 15
+  },
+  "tags": [
+    "activatable",
+    "artifact",
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "weightTenthsPound": 50,
+  "initialCurse": "permanent",
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentBonuses": {},
+  "weaponProficiencyBaseItemId": "demo.item.spear",
+  "ridingWeaponKind": "compatible",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.athena",
+        "nameKey": "item-activation-demo-athena-name",
+        "target": {
+          "modes": [
+            "item"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "effectProgramId": "demo.effect.athena",
+        "deviceCheckDifficulty": 80,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "rfbValue": 6000
+      }
+    ],
+    "recovery": {
+      "intervalTicks": 150,
+      "energyPerMille": 1000
+    }
+  }
+}

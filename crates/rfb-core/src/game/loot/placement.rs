@@ -186,7 +186,7 @@ impl Game {
             let transferred = item
                 .quantity
                 .min(maximum_stack - self.items[index].quantity);
-            self.items[index].quantity += transferred;
+            super::super::inventory::merge_item_stack(&mut self.items[index], &item, transferred);
             item.quantity -= transferred;
             ids.push(self.items[index].id.clone());
             if item.quantity == 0 {

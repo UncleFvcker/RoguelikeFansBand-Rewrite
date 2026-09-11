@@ -1,0 +1,114 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.affix.artifact-extra-high-resistance",
+  "nameKey": "affix-legacy-artifact-extra-high-resistance-name",
+  "descriptionKey": "affix-legacy-artifact-extra-high-resistance-description",
+  "preservesOrdinaryQuality": true,
+  "rollGroups": [
+    {
+      "rolls": 1,
+      "candidates": [
+        {
+          "weight": 1,
+          "properties": {
+            "resistances": {
+              "poison": "resistant"
+            }
+          }
+        },
+        {
+          "weight": 1,
+          "properties": {
+            "resistances": {
+              "light": "resistant"
+            }
+          }
+        },
+        {
+          "weight": 1,
+          "properties": {
+            "resistances": {
+              "dark": "resistant"
+            }
+          }
+        },
+        {
+          "weight": 1,
+          "properties": {
+            "resistances": {
+              "shards": "resistant"
+            }
+          }
+        },
+        {
+          "weight": 1,
+          "properties": {
+            "resistances": {
+              "blindness": "resistant"
+            }
+          }
+        },
+        {
+          "weight": 1,
+          "properties": {
+            "resistances": {
+              "confusion": "resistant"
+            }
+          }
+        },
+        {
+          "weight": 1,
+          "properties": {
+            "resistances": {
+              "sound": "resistant"
+            }
+          }
+        },
+        {
+          "weight": 1,
+          "properties": {
+            "resistances": {
+              "nether": "resistant"
+            }
+          }
+        },
+        {
+          "weight": 1,
+          "properties": {
+            "resistances": {
+              "nexus": "resistant"
+            }
+          }
+        },
+        {
+          "weight": 1,
+          "properties": {
+            "resistances": {
+              "chaos": "resistant"
+            }
+          }
+        },
+        {
+          "weight": 1,
+          "properties": {
+            "resistances": {
+              "disenchant": "resistant"
+            }
+          }
+        },
+        {
+          "weight": 1,
+          "properties": {
+            "resistances": {
+              "fear": "resistant"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tags": [
+    "armor"
+  ]
+}

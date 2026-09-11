@@ -24,15 +24,16 @@ use crate::{
         STATUS_CONFUSION, STATUS_DEMON_LORD_TRANSFORMATION, STATUS_FEAR, STATUS_FIRE_AURA,
         STATUS_GIANT_STRENGTH, STATUS_HALLUCINATION, STATUS_HASTE, STATUS_HOLD_LIFE,
         STATUS_HOLY_AURA, STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY, STATUS_LEVITATION,
-        STATUS_LIGHT_SPEED, STATUS_MAGIC_RESISTANCE, STATUS_NO_AIR, STATUS_PARALYSIS,
-        STATUS_PLAYER_POLYMORPH, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION,
-        STATUS_SEE_INVISIBLE, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN,
-        STATUS_SUSTAIN_CHARISMA, STATUS_SUSTAIN_CONSTITUTION, STATUS_SUSTAIN_DEXTERITY,
-        STATUS_SUSTAIN_INTELLIGENCE, STATUS_SUSTAIN_STRENGTH, STATUS_SUSTAIN_WISDOM,
-        STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE, STATUS_TRANSCENDENCE, STATUS_TSUYOSHI,
+        STATUS_LIGHT_SPEED, STATUS_MAGIC_ARMOR, STATUS_MAGIC_RESISTANCE, STATUS_MANA_BRAND,
+        STATUS_NO_AIR, STATUS_PARALYSIS, STATUS_PLAYER_POLYMORPH, STATUS_POISON,
+        STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION, STATUS_SEE_INVISIBLE, STATUS_SIGHT,
+        STATUS_SLEEP, STATUS_SLOW, STATUS_STUN, STATUS_SUSTAIN_CHARISMA,
+        STATUS_SUSTAIN_CONSTITUTION, STATUS_SUSTAIN_DEXTERITY, STATUS_SUSTAIN_INTELLIGENCE,
+        STATUS_SUSTAIN_STRENGTH, STATUS_SUSTAIN_WISDOM, STATUS_TELEPATHY,
+        STATUS_THERMAL_RESISTANCE, STATUS_TRANSCENDENCE, STATUS_TSUYOSHI,
         STATUS_ULTIMATE_RESISTANCE, STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE,
-        STATUS_WRAITHFORM, StatusApplication, StatusChange, StatusInstance, StatusStacking,
-        apply_effect, apply_status, resolve_damage,
+        STATUS_WEAPON_MASTERY, STATUS_WRAITHFORM, StatusApplication, StatusChange, StatusInstance,
+        StatusStacking, apply_effect, apply_status, resolve_damage,
     },
     error::CoreError,
     event::{
@@ -234,7 +235,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 124;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 125;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -872,6 +873,7 @@ pub struct Game {
     task_states: BTreeMap<String, TaskState>,
     bounty_state: bounty::BountyState,
     command_actor_deaths: Vec<ActorDeathRecord>,
+    active_pantheons: u8,
     dungeon_states: BTreeMap<String, DungeonState>,
     defeated_limited_actor_counts: BTreeMap<String, u16>,
     generated_artifact_ids: BTreeSet<String>,
@@ -3046,7 +3048,8 @@ impl Game {
                     .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
                 definition.role == ActorRole::Monster
                     && definition.level <= u32::from(maximum_level)
-                    && (category == "any-monster" || actor_matches_category(definition, category))
+                    && self.actor_matches_summon_category(definition, category)
+                    && self.pantheon_allows_allocation(&self.current_floor_id, definition)
                     && excluded_category
                         .is_none_or(|category| !actor_matches_category(definition, category))
                     && !definition.tags.iter().any(|tag| tag == "guardian")
@@ -3752,6 +3755,12 @@ impl Game {
                 item.id, item.kind_id
             ))
         })?;
+        if item.origin_kind == Some(ItemOriginKindDto::Mundanity)
+            && self.item_is_device(item)
+            && item.activation.is_none()
+        {
+            return Ok(None);
+        }
         if item.location != ItemLocation::Inventory
             && !(matches!(item.location, ItemLocation::Equipped { .. })
                 && (definition.capture_ball || item.activation.is_some()))
@@ -3848,6 +3857,7 @@ impl Game {
                     | ItemUseEffectDefinition::EnchantItem { .. }
                     | ItemUseEffectDefinition::EnchantEquipment
                     | ItemUseEffectDefinition::CraftItem { .. }
+                    | ItemUseEffectDefinition::MundanifyItem
                     | ItemUseEffectDefinition::CreateArtifact
                     | ItemUseEffectDefinition::RechargeFromDevice { .. }
                     | ItemUseEffectDefinition::RandomTeleport { .. }
@@ -3875,7 +3885,10 @@ impl Game {
             TargetSelection::Direction { .. } => AbilityTargetModeDefinition::Direction,
             TargetSelection::Position { .. } => AbilityTargetModeDefinition::Position,
             TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
-            TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
+            TargetSelection::Element { .. } => AbilityTargetModeDefinition::Element,
+            TargetSelection::MundanityItem { .. } | TargetSelection::Item { .. } => {
+                AbilityTargetModeDefinition::Item
+            }
             TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
             TargetSelection::CraftingItem { .. } | TargetSelection::ArtifactCreationItem { .. } => {
                 return None;

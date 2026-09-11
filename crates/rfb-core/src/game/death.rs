@@ -758,29 +758,18 @@ impl Game {
             position: removed.position,
             credit_player,
         });
-        let defeated_guardian = self
-            .content
-            .world(&self.world_id)
-            .and_then(|world| {
-                world
-                    .procedural_floors
-                    .iter()
-                    .find(|floor| floor.id == self.current_floor_id)
-            })
-            .and_then(|floor| {
-                floor.guardian.as_ref().and_then(|guardian| {
-                    (guardian.instance_id == removed.id).then(|| {
-                        (
-                            floor
-                                .dungeon_id
-                                .clone()
-                                .expect("guardian floor must have a dungeon ID"),
-                            floor.id.clone(),
-                            guardian.actor_kind_id.clone(),
-                        )
-                    })
-                })
-            });
+        let defeated_guardian =
+            self.dungeon_guardian_floor_for_actor(&removed.kind_id)
+                .map(|floor| {
+                    (
+                        floor
+                            .dungeon_id
+                            .clone()
+                            .expect("guardian floor must have a dungeon ID"),
+                        self.current_floor_id.clone(),
+                        removed.kind_id.clone(),
+                    )
+                });
         if let Some((dungeon_id, floor_id, target_kind_id)) = defeated_guardian
             && self.dungeon_is_active(&dungeon_id)
         {

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.note-of-acting-master",
+  "nameKey": "item-demo-note-of-acting-master-name",
+  "descriptionKey": "item-demo-note-of-acting-master-description",
+  "abilityBookId": "demo.ability-book.note-of-acting-master",
+  "rfbBaseKind": {
+    "sourceIndex": 530,
+    "tval": 97,
+    "sval": 2
+  },
+  "baseValue": 15000,
+  "generationLevel": 45,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "book",
+    "craft",
+    "spellbook"
+  ],
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.black-clothes",
+    "instant": false,
+    "rarityOneIn": 127,
+    "sourceIndex": 258
+  },
+  "baseValue": 555555,
+  "descriptionKey": "item-demo-hades-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentBonuses": {
+    "stealthSkill": 5
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 90,
+  "glyph": "(",
+  "id": "demo.item.hades",
+  "maxStack": 1,
+  "modifiers": {
+    "constitution": 5,
+    "defense": 42,
+    "speed": 5
+  },
+  "nameKey": "item-demo-hades-name",
+  "passives": [
+    "cold-aura",
+    "esp-demon",
+    "esp-evil",
+    "esp-undead",
+    "hold-life",
+    "see-invisible",
+    "slow-digestion",
+    "sustain-constitution"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "poison": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "AURA_COLD",
+      "CON",
+      "ESP_DEMON",
+      "ESP_EVIL",
+      "ESP_UNDEAD",
+      "FREE_ACT",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "PERMA_CURSE",
+      "PLURAL",
+      "QUESTITEM",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_DARK",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_NETHER",
+      "RES_NEXUS",
+      "RES_POIS",
+      "SEE_INVIS",
+      "SLOW_DIGEST",
+      "SPEED",
+      "STEALTH",
+      "SUST_CON"
+    ],
+    "pval": 5,
+    "toArmor": 38
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "activatable",
+    "armor",
+    "artifact",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 80,
+  "initialCurse": "permanent",
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.hades",
+        "nameKey": "item-activation-demo-hades-name",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "effectProgramId": "demo.effect.hades",
+        "deviceCheckDifficulty": 30,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "rfbValue": 6000
+      }
+    ],
+    "recovery": {
+      "intervalTicks": 50,
+      "energyPerMille": 1000
+    }
+  }
+}

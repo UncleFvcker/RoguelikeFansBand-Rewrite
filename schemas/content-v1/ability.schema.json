@@ -189,6 +189,7 @@
         "position",
         "entity",
         "item",
+        "element",
         "town",
         "self"
       ],

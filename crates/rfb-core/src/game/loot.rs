@@ -253,22 +253,14 @@ impl Game {
             .clone();
         let table_id = actor_definition.loot_table_id.clone();
         let guardian_reward = self
-            .content
-            .world(&self.world_id)
-            .and_then(|world| {
-                world
-                    .procedural_floors
-                    .iter()
-                    .find(|floor| floor.id == self.current_floor_id)
-            })
+            .dungeon_guardian_floor_for_actor(&actor.kind_id)
             .and_then(|floor| {
-                floor.guardian.as_ref().filter(|guardian| {
-                    guardian.instance_id == actor.id
-                        && !self.dungeon_states[floor
-                            .dungeon_id
-                            .as_deref()
-                            .expect("guardian floor must have a dungeon ID")]
-                        .guardian_defeated
+                floor.guardian.as_ref().filter(|_| {
+                    !self.dungeon_states[floor
+                        .dungeon_id
+                        .as_deref()
+                        .expect("guardian floor must have a dungeon ID")]
+                    .guardian_defeated
                 })
             })
             .map(|guardian| {
@@ -282,6 +274,36 @@ impl Game {
         let depth = self.floor_depth(&floor_id);
         let mut generated = Vec::new();
         let mut gold = Vec::new();
+        if let Some(drop) = &actor_definition.special_artifact_drop
+            && actor.controller_id.as_deref() != Some(self.player.id.as_str())
+        {
+            let mut chance = drop.chance_percent;
+            if chance < 100
+                && self
+                    .progress
+                    .active_mutation_ids
+                    .contains("rfb.mutation.bad-luck")
+            {
+                chance -= chance / 4;
+            }
+            // xtra2.c rolls even when the artifact has already been generated.
+            if self.rng.bounded(100) < u64::from(chance)
+                && !self.generated_artifact_ids.contains(&drop.item_kind_id)
+                && let Some(position) = self.ground_drop_position(actor.position, true)
+            {
+                let context = LootContext {
+                    table_id: "demo.loot-table.base-items".into(),
+                    floor_id: floor_id.clone(),
+                    depth,
+                    source: LootSource::MonsterDeath {
+                        actor_id: actor.id.clone(),
+                    },
+                };
+                let draft = self.fixed_item_draft(&context, drop.item_kind_id.clone());
+                generated
+                    .push(self.commit_generated_item_draft(draft, ItemLocation::Ground(position))?);
+            }
+        }
         if let Some(drop) = actor_definition.death_drop.clone() {
             let unique = actor_definition.tags.iter().any(|tag| tag == "unique");
             let mut count = u32::from(drop.base_rolls);
@@ -1203,6 +1225,14 @@ impl Game {
             .item_definitions()
             .filter_map(|item| {
                 let generation = item.artifact_generation.as_ref()?;
+                // QUESTITEM artifacts are obtained from named rewards/drops.
+                if item
+                    .rfb_value
+                    .as_ref()
+                    .is_some_and(|value| value.flags.contains("QUESTITEM"))
+                {
+                    return None;
+                }
                 Some((
                     generation.source_index,
                     item.id.clone(),
@@ -1290,7 +1320,7 @@ impl Game {
             context.depth,
             2,
         );
-        GeneratedItemDraft {
+        let mut draft = GeneratedItemDraft {
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,
@@ -1313,7 +1343,44 @@ impl Game {
             charges,
             fuel: initial_item_fuel(&self.content, &kind_id),
             kind_id,
+        };
+        // master:artifact.c::random_artifact_resistance, ART_TERROR. These
+        // properties belong to the generated instance, not its later wearer.
+        if self
+            .content
+            .item(&draft.kind_id)
+            .and_then(|item| item.artifact_generation.as_ref())
+            .is_some_and(|artifact| artifact.source_index == 41)
+        {
+            if self.build.as_ref().is_some_and(|build| {
+                matches!(
+                    build.class_id.as_str(),
+                    "demo.class.warrior" | "demo.class.cavalry" | "demo.class.berserker"
+                )
+            }) {
+                super::ego::add_one_ability(&mut self.rng, &mut draft.intrinsic_properties);
+                let extra = vec!["rfb-legacy.affix.artifact-extra-high-resistance".to_owned()];
+                draft
+                    .rolled_affixes
+                    .extend(super::ego::roll_affix_properties_with_rng(
+                        &self.content,
+                        &mut self.rng,
+                        &extra,
+                        |_| context.depth,
+                    ));
+                draft.affix_ids.extend(extra);
+            } else {
+                draft
+                    .intrinsic_properties
+                    .rfb_flags
+                    .extend(["AGGRAVATE".into(), "TY_CURSE".into()]);
+                draft.curse = Some(ItemCurseSeverityDto::Heavy);
+                draft
+                    .intrinsic_curse_effects
+                    .insert(super::ego::curses::get_curse(&mut self.rng, 2, 32));
+            }
         }
+        draft
     }
 
     pub(super) fn commit_generated_item_draft(

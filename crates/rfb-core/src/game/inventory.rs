@@ -955,11 +955,11 @@ pub(super) fn item_instances_stack_compatible(
         && left.intrinsic_curse_effects == right.intrinsic_curse_effects
         && left.permanent_destruction_immunities == right.permanent_destruction_immunities
         && left.previously_worn == right.previously_worn
-        && left.inscription == right.inscription
+        && (left.inscription.is_none()
+            || right.inscription.is_none()
+            || left.inscription == right.inscription)
         && left.origin_actor_kind_id == right.origin_actor_kind_id
-        && left.origin_kind == right.origin_kind
         && left.damage_dice_override == right.damage_dice_override
-        && left.discount_percent == right.discount_percent
         && left.quality == right.quality
         && left.affix_ids == right.affix_ids
         && left.rolled_affixes == right.rolled_affixes
@@ -971,6 +971,39 @@ pub(super) fn item_instances_stack_compatible(
         && left.fuel == right.fuel
         && left.device_recovery_progress == right.device_recovery_progress
         && left.captured_actor == right.captured_actor
+}
+
+// A projected group quotes one price and displays one inscription/source, but
+// retains separate instances. Do not blend their metadata without a transfer.
+pub(super) fn item_instances_group_compatible(
+    content: &ContentCatalog,
+    left: &ItemInstance,
+    right: &ItemInstance,
+) -> bool {
+    item_instances_stack_compatible(content, left, right)
+        && left.inscription == right.inscription
+        && left.origin_kind == right.origin_kind
+        && left.discount_percent == right.discount_percent
+}
+
+// RFB obj.c::obj_combine with the default stack_force_notes/costs options.
+// origin_actor_kind_id is corpse identity here, not discovery provenance.
+pub(super) fn merge_item_stack(
+    destination: &mut ItemInstance,
+    source: &ItemInstance,
+    quantity: u32,
+) {
+    if quantity == 0 {
+        return;
+    }
+    destination.quantity += quantity;
+    if destination.origin_kind != source.origin_kind {
+        destination.origin_kind = Some(rfb_protocol::ItemOriginKindDto::Mixed);
+    }
+    if destination.inscription.is_none() {
+        destination.inscription.clone_from(&source.inscription);
+    }
+    destination.discount_percent = destination.discount_percent.max(source.discount_percent);
 }
 
 impl Game {
@@ -1405,7 +1438,7 @@ impl Game {
             if transferred == 0 {
                 continue;
             }
-            self.items[stack_index].quantity += transferred;
+            merge_item_stack(&mut self.items[stack_index], &item, transferred);
             item.quantity -= transferred;
             destination_ids.push(self.items[stack_index].id.clone());
             if item.quantity == 0 {
@@ -2426,8 +2459,9 @@ impl Game {
                     &mut self.item_knowledge,
                     &mut self.items[plan.ground_index],
                 );
+                let source = self.items[plan.ground_index].clone();
                 for (stack_index, transferred) in plan.stack_transfers {
-                    self.items[stack_index].quantity += transferred;
+                    merge_item_stack(&mut self.items[stack_index], &source, transferred);
                 }
                 if plan.remaining == 0 {
                     let removed = self.items.remove(plan.ground_index);

@@ -99,6 +99,8 @@ fn arena_dungeon_formal_representative_floors_keep_passages_doors_and_working_tr
 
 fn clear_encounters(game: &mut Game) {
     clear_monsters(game);
+    // Isolate floor traversal from starvation during the prepared full chain.
+    game.nutrition = crate::game::hunger::NUTRITION_FULL;
     // Floor traversal is the subject here; discard incidental monster debuffs.
     game.player.statuses.retain(|status| {
         matches!(
@@ -361,7 +363,12 @@ fn arena_dungeon_real_entry_full_chain_combat_reward_scroll_and_return() {
     clear_encounters(&mut game);
     for depth in (50..80).rev() {
         place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
-        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert!(
+            !game.player_is_dead(),
+            "return depth={depth}: {:?}",
+            update.events
+        );
         assert_eq!(
             game.current_floor_id,
             format!("demo.floor.arena-depth-{depth}")

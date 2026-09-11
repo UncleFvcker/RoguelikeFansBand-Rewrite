@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/encounter-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.encounter-table.mount-olympus",
+  "rolls": 4,
+  "globalAllocation": {
+    "preferredGlyphs": [],
+    "preferredTags": [
+      "giant",
+      "olympian",
+      "olympian2"
+    ],
+    "specialDiv": 8,
+    "ambientChanceOneIn": 160
+  },
+  "entries": []
+}

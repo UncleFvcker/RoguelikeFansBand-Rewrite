@@ -71,7 +71,10 @@ const MAGE = {
 export const CAREER_GROUPS = [
   { id: "melee", options: [career("warrior"), career("berserker"), { ...career("duelist"), notes: ["duelist-auto-challenge-help", "session-duelist-tonberry-unavailable"] }] },
   { id: "archery", options: [career("archer"), career("sniper")] },
-  { id: "magic", options: [MAGE, deathCaster("high-mage")] },
+  { id: "magic", options: [MAGE, { ...deathCaster("high-mage"), children: [
+    { id: "demo.build.high-mage-death", nameKey: "session-career-death-name", descriptionKey: "build-demo-high-mage-death-description", notes: ["session-high-mage-available-realms"] },
+    { id: "demo.build.high-mage-craft", nameKey: "session-career-craft-name", descriptionKey: "build-demo-high-mage-craft-description", notes: ["session-high-mage-available-realms"] },
+  ] }] },
   { id: "hybrid", options: [deathCaster("paladin")] },
   { id: "riding", options: [career("cavalry")] },
   { id: "mind", options: [career("mindcrafter")] },

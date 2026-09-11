@@ -138,11 +138,7 @@ impl Game {
             base_defense: definition.defense,
             melee_skill: stats.melee_skill.value,
             armor_class: stats.armor_class.value,
-            melee_damage: DamageDiceDto {
-                dice: melee_profile.damage_dice,
-                sides: melee_profile.damage_sides,
-                damage_type: melee_profile.damage_type.into(),
-            },
+            melee_damage: melee_profile_dto.damage,
             melee_profile: melee_profile_dto,
             projectile_profile: self
                 .player_projectile_profile()
@@ -688,6 +684,8 @@ impl Game {
                         })
                         .collect(),
                     target_spec,
+                    element_targets: self.ability_element_targets(&effective_ability),
+                    item_targets: self.craft_ability_item_targets(&effective_ability),
                     town_targets: matches!(ability.effect, AbilityEffectDefinition::TeleportTown)
                         .then(|| self.teleport_town_targets())
                         .unwrap_or_default(),
@@ -974,6 +972,20 @@ impl Game {
         inventory
     }
 
+    fn item_activation_target_spec(
+        &self,
+        item: &ItemInstance,
+    ) -> Option<rfb_protocol::TargetSpecDto> {
+        let mut target = item.activation.as_ref()?.target_spec.clone();
+        if matches!(
+            self.inventory_item_use_effect(&item.id),
+            Some((ItemUseEffectDefinition::Hermes, _))
+        ) {
+            target.range = self.hermes_range();
+        }
+        Some(target)
+    }
+
     pub(super) fn inventory_item_dto(&self, item: &ItemInstance) -> InventoryItemDto {
         InventoryItemDto {
             bag_capacity: self.visible_item_bag_capacity(item),
@@ -1014,24 +1026,24 @@ impl Game {
                 .item_activation_is_known(item)
                 .then(|| item.activation.clone())
                 .flatten(),
-            use_target_spec: item
-                .activation
-                .as_ref()
-                .map(|activation| activation.target_spec.clone())
-                .or_else(|| {
-                    self.content
-                        .item(&item.kind_id)
-                        .and_then(|definition| definition.use_action.as_ref())
-                        .and_then(|action| match &action.effect {
-                            ItemUseEffectDefinition::IdentifyItem { .. }
-                            | ItemUseEffectDefinition::EnchantItem { .. }
-                            | ItemUseEffectDefinition::EnchantEquipment => Some(item_target_spec()),
-                            _ => None,
-                        })
-                }),
+            use_target_spec: self.item_activation_target_spec(item).or_else(|| {
+                self.content
+                    .item(&item.kind_id)
+                    .and_then(|definition| definition.use_action.as_ref())
+                    .and_then(|action| match &action.effect {
+                        ItemUseEffectDefinition::IdentifyItem { .. }
+                        | ItemUseEffectDefinition::EnchantItem { .. }
+                        | ItemUseEffectDefinition::EnchantEquipment => Some(item_target_spec()),
+                        _ => None,
+                    })
+            }),
             requires_crafting_target: self.inventory_item_use_effect(&item.id).is_some_and(
                 |(effect, _)| matches!(effect, ItemUseEffectDefinition::CraftItem { .. }),
             ),
+            mundanity_targets: self
+                .inventory_item_use_effect(&item.id)
+                .is_some_and(|(effect, _)| matches!(effect, ItemUseEffectDefinition::MundanifyItem))
+                .then(|| self.mundanity_item_targets(Some(&item.id))),
             artifact_creation_targets: self
                 .inventory_item_use_effect(&item.id)
                 .is_some_and(|(effect, _)| {
@@ -1114,10 +1126,8 @@ impl Game {
                         .item(&item.kind_id)
                         .is_some_and(|definition| definition.capture_ball),
                     captured_actor: self.captured_actor_dto(item),
-                    use_target_spec: item
-                        .activation
-                        .as_ref()
-                        .map(|activation| activation.target_spec.clone())
+                    use_target_spec: self
+                        .item_activation_target_spec(item)
                         .or_else(|| self.capture_ball_target_spec(item)),
                     usable: self.berserker_item_use_rejection_cost(item).is_none()
                         && item.activation.as_ref().is_some_and(|activation| {

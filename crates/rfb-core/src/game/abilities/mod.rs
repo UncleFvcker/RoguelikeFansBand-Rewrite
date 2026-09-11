@@ -38,6 +38,30 @@ impl Game {
     ) -> Result<Option<Position>, CoreError> {
         match (ability.effect.clone(), target_plan) {
             (
+                AbilityEffectDefinition::ElementalBrand
+                | AbilityEffectDefinition::ElementalImmunity { .. },
+                AbilityTargetPlan::Element { element },
+            ) => self.resolve_player_elemental_enchantment(&ability, element, events),
+            (AbilityEffectDefinition::LivingTrump, AbilityTargetPlan::SelfTarget) => {
+                let controlled =
+                    self.rng.bounded(7) == 0 || self.floor_depth(&self.current_floor_id) == 0;
+                self.gain_mutation(
+                    if controlled {
+                        "rfb.mutation.teleport"
+                    } else {
+                        "rfb.mutation.teleport-rnd"
+                    },
+                    events,
+                );
+            }
+            (
+                AbilityEffectDefinition::CraftEnchant { .. }
+                | AbilityEffectDefinition::CraftItem
+                | AbilityEffectDefinition::PolishShield
+                | AbilityEffectDefinition::Mundanity,
+                AbilityTargetPlan::Item { item_id },
+            ) => self.resolve_player_craft_item_effect(&ability, &item_id, events)?,
+            (
                 AbilityEffectDefinition::DuelistChallenge,
                 AbilityTargetPlan::DuelistChallenge { target_entity_id },
             ) => {

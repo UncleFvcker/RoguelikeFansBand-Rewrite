@@ -3,6 +3,138 @@ use super::support::*;
 use super::*;
 use rfb_protocol::ItemFeelingDto;
 
+#[test]
+fn i6_pickup_blends_metadata_through_partial_stacks_split_destroy_and_save() {
+    let mut game = Game::new(606);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.item_property_knowledge.clear();
+    give_inventory_item(&mut game, "test.carried", "demo.item.arrow");
+    give_inventory_item(&mut game, "test.incoming", "demo.item.arrow");
+    let maximum = game.content.item("demo.item.arrow").unwrap().max_stack;
+    game.items[0].quantity = maximum - 1;
+    game.items[1].quantity = 5;
+    game.items[1].location = ItemLocation::Ground(game.player.position);
+    game.items[1].origin_kind = Some(ItemOriginKindDto::PlayerMade);
+    game.items[1].discount_percent = 99;
+    game.items[1].inscription = Some("keep".into());
+    assert!(matches!(
+        game.pick_up_item_at_player(Some("test.incoming")).unwrap(),
+        PickUpOutcome::Picked { quantity: 5, .. }
+    ));
+    let merged = &game.items[0];
+    assert_eq!(merged.id, "test.carried");
+    assert_eq!(merged.quantity, maximum);
+    assert_eq!(merged.origin_kind, Some(ItemOriginKindDto::Mixed));
+    assert_eq!(merged.discount_percent, 99);
+    assert_eq!(merged.inscription.as_deref(), Some("keep"));
+    assert_eq!(game.items[1].id, "test.incoming");
+    assert_eq!(game.items[1].quantity, 4);
+    assert_eq!(
+        game.items[1].origin_kind,
+        Some(ItemOriginKindDto::PlayerMade)
+    );
+
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    for current in [&mut game, &mut restored] {
+        current
+            .drop_inventory_quantity("test.carried", 3)
+            .unwrap()
+            .unwrap();
+        let split = current
+            .items
+            .iter()
+            .find(|item| matches!(item.location, ItemLocation::Ground(_)))
+            .unwrap();
+        let split_id = split.id.clone();
+        assert_eq!(split.quantity, 3);
+        assert_eq!(split.origin_kind, Some(ItemOriginKindDto::Mixed));
+        assert_eq!(split.discount_percent, 99);
+        current.pick_up_item_at_player(Some(&split_id)).unwrap();
+        assert!(!current.items.iter().any(|item| item.id == split_id));
+        current.destroy_item("test.carried", 1).unwrap();
+    }
+    assert_eq!(game.items[0].quantity, maximum - 1);
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.rng, game.rng);
+    assert!(Game::from_save(game.to_save()).is_ok());
+    game.items[0].discount_percent = 50;
+    assert!(Game::from_save(game.to_save()).is_err());
+}
+
+#[test]
+fn i6_conflicting_inscriptions_and_corpse_identities_do_not_combine() {
+    let mut game = Game::new(606);
+    game.items.clear();
+    game.item_property_knowledge.clear();
+    give_inventory_item(&mut game, "test.carried", "demo.item.arrow");
+    give_inventory_item(&mut game, "test.incoming", "demo.item.arrow");
+    game.items[0].inscription = Some("fire".into());
+    game.items[1].inscription = Some("save".into());
+    game.items[1].origin_kind = Some(ItemOriginKindDto::Acquire);
+    game.items[1].location = ItemLocation::Ground(game.player.position);
+    game.pick_up_item_at_player(Some("test.incoming")).unwrap();
+    assert_eq!(game.items.len(), 2);
+    assert_eq!(game.items[0].quantity, 1);
+    assert_eq!(game.items[0].origin_kind, None);
+    assert_eq!(game.items[1].inscription.as_deref(), Some("save"));
+
+    let mut first = game.items[0].clone();
+    first.kind_id = "demo.item.corpse-remains".into();
+    first.origin_actor_kind_id = Some("demo.actor.goblin".into());
+    first.inscription = None;
+    let mut second = first.clone();
+    second.id = "test.corpse".into();
+    second.origin_actor_kind_id = Some("demo.actor.sheep".into());
+    assert!(!super::super::inventory::item_instances_stack_compatible(
+        &game.content,
+        &first,
+        &second
+    ));
+}
+
+#[test]
+fn i6_generated_piles_merge_metadata_without_allocating_another_id() {
+    let mut game = Game::new(606);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.item_property_knowledge.clear();
+    game.gold_piles.clear();
+    give_inventory_item(&mut game, "test.ground", "demo.item.arrow");
+    game.items[0].quantity = 2;
+    game.items[0].location = ItemLocation::Ground(game.player.position);
+    game.items[0].origin_kind = Some(ItemOriginKindDto::PlayerMade);
+    game.items[0].discount_percent = 99;
+    game.items[0].inscription = Some("keep".into());
+    let mut draft = super::super::loot::GeneratedItemDraft::from(game.items[0].clone());
+    draft.origin_kind = None;
+    draft.quantity = 3;
+    let serial = game.next_item_instance_serial;
+    let (position, ids) = game
+        .drop_generated_item_near(draft.clone(), game.player.position)
+        .unwrap()
+        .unwrap();
+    assert_eq!(position, game.player.position);
+    assert_eq!(ids, ["test.ground"]);
+    assert_eq!(game.next_item_instance_serial, serial);
+    assert_eq!(game.items.len(), 1);
+    assert_eq!(game.items[0].quantity, 5);
+    assert_eq!(game.items[0].origin_kind, Some(ItemOriginKindDto::Mixed));
+    assert_eq!(game.items[0].discount_percent, 99);
+    assert_eq!(game.items[0].inscription.as_deref(), Some("keep"));
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    for current in [&mut game, &mut restored] {
+        current
+            .drop_generated_item_near(draft.clone(), current.player.position)
+            .unwrap();
+    }
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.rng, game.rng);
+}
+
 fn tomte_sensing_game(level: u16) -> Game {
     let mut game = Game::new_with_build_race_and_name(
         424,

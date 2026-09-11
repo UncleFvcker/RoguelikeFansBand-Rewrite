@@ -15,6 +15,7 @@ import { runMindcrafterUiScenario } from "./mindcrafter.e2e.mjs";
 import { runBerserkerUiScenario } from "./berserker.e2e.mjs";
 import { runDuelistUiScenario } from "./duelist.e2e.mjs";
 import { runMageUiScenario } from "./mage.e2e.mjs";
+import { runCraftScenario } from "./craft.e2e.mjs";
 
 const webDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryDirectory = path.resolve(webDirectory, "..");
@@ -110,6 +111,8 @@ async function main() {
       await runCreationLayoutScenario(client, artifactDirectory, debugProfile);
     } else if (process.argv.includes("--mindcrafter")) {
       await runMindcrafterUiScenario(client, artifactDirectory, debugProfile);
+    } else if (process.argv.includes("--craft")) {
+      await runCraftScenario(client, path.join(artifactDirectory, "craft"));
     } else if (process.argv.includes("--berserker")) {
       await runBerserkerUiScenario(client, artifactDirectory, debugProfile);
     } else if (process.argv.includes("--duelist-ui")) {
@@ -781,8 +784,11 @@ async function requestUrl(baseUrl, method, route, body) {
   });
   const responseText = await response.text();
   let payload;
-  try { payload = JSON.parse(responseText); }
-  catch { throw new Error(`${method} ${route}: HTTP ${response.status}: ${responseText}`); }
+  try {
+    payload = JSON.parse(responseText);
+  } catch {
+    throw new Error(`${method} ${route}: HTTP ${response.status}: ${responseText}`);
+  }
   if (!response.ok) {
     throw new Error(`${method} ${route}: ${payload.value?.error}: ${payload.value?.message}`);
   }

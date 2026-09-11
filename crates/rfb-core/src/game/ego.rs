@@ -318,7 +318,7 @@ pub(crate) fn roll_rfb_ego_affix_id(
     .map(str::to_owned)
 }
 
-fn roll_affix_properties_with_rng(
+pub(super) fn roll_affix_properties_with_rng(
     content: &ContentCatalog,
     rng: &mut RfbRng,
     affix_ids: &[String],
@@ -2380,7 +2380,7 @@ fn add_one_resistance(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefi
     }
 }
 
-fn add_one_ability(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinition) {
+pub(super) fn add_one_ability(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinition) {
     match rng.bounded(10) {
         0 => {
             properties.passives.insert(EquipmentPassive::Levitation);
@@ -3705,7 +3705,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(crate::STATE_HASH_SCHEMA_VERSION, 124);
+        assert_eq!(crate::STATE_HASH_SCHEMA_VERSION, 125);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,

@@ -36,6 +36,266 @@ const DEATH_VAMPIRIC_BRANDING_ABILITY_ID: &str = "demo.ability.death-vampiric-br
 const CRUSADE_HOLY_BLADE_ABILITY_ID: &str = "demo.ability.crusade-holy-blade";
 
 impl Game {
+    #[doc(hidden)]
+    pub fn debug_prepare_craft_e2e(&mut self) -> Result<(), CoreError> {
+        self.entities.clear();
+        self.items
+            .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
+        let experience = self
+            .experience_required_for_level(50)
+            .saturating_sub(self.progress.experience);
+        self.apply_player_experience(experience, &mut Vec::new());
+        let intelligence = self.progress.attribute_potentials.intelligence.min(118);
+        self.progress.attributes.intelligence = intelligence;
+        self.progress.maximum_attributes.intelligence = intelligence;
+        self.refresh_player_resource_maxima();
+        for slug in [
+            "grade-holders-book",
+            "note-of-acting-master",
+            "spiritual-enlightenment",
+            "dagger",
+        ] {
+            self.debug_add_generated_inventory_item(
+                &format!("e2e.craft.{slug}"),
+                &format!("demo.item.{slug}"),
+                50,
+            )?;
+        }
+        for id in ["elemental-brand", "magic-armor", "enchantment", "mundanity"] {
+            let ability = format!("demo.ability.craft-{id}");
+            let book_id = self
+                .items
+                .iter()
+                .find(|item| {
+                    self.content
+                        .item(&item.kind_id)
+                        .and_then(|definition| definition.ability_book_id.as_ref())
+                        .and_then(|id| self.content.ability_book(id))
+                        .is_some_and(|book| book.ability_ids.contains(&ability))
+                })
+                .expect("Craft fixture retains its formal books")
+                .id
+                .clone();
+            self.study_player_ability(&book_id, &ability)
+                .expect("level 50 Craft fixture can study four spells");
+            self.ability_progress.get_mut(&ability).unwrap().proficiency =
+                crate::game::player_abilities::SPELL_EXP_MASTER;
+        }
+        self.identify_item_instance("e2e.craft.dagger", ItemIdentificationRequest::new(true));
+        for pool in self.resources.values_mut() {
+            pool.current = pool.maximum;
+        }
+        self.debug_set_ability_casts_succeed(true);
+        Ok(())
+    }
+
+    pub(in crate::game) fn craft_ability_item_targets(
+        &self,
+        ability: &AbilityDefinition,
+    ) -> Option<Vec<rfb_protocol::AbilityItemTargetDto>> {
+        use AbilityEffectDefinition as E;
+        if matches!(ability.effect, E::Mundanity) {
+            return Some(self.mundanity_item_targets(None));
+        }
+        if !matches!(
+            ability.effect,
+            E::CraftEnchant { .. } | E::CraftItem | E::PolishShield | E::Mundanity
+        ) {
+            return None;
+        }
+        Some(
+            self.items
+                .iter()
+                .filter_map(|item| {
+                    let (target, confirmation_key) = match ability.effect {
+                        E::CraftItem => (
+                            TargetSelection::CraftingItem {
+                                item_id: item.id.clone(),
+                                quantity: item.quantity,
+                            },
+                            (item.quantity > 30)
+                                .then(|| "item-crafting-quantity-confirm".to_owned()),
+                        ),
+                        _ => (
+                            TargetSelection::Item {
+                                item_id: item.id.clone(),
+                            },
+                            None,
+                        ),
+                    };
+                    self.craft_ability_item_target(ability, &target)
+                        .map(|item_id| rfb_protocol::AbilityItemTargetDto {
+                            item_id,
+                            target,
+                            confirmation_key,
+                        })
+                })
+                .collect(),
+        )
+    }
+
+    pub(in crate::game) fn craft_ability_item_target(
+        &self,
+        ability: &AbilityDefinition,
+        target: &TargetSelection,
+    ) -> Option<String> {
+        use AbilityEffectDefinition as E;
+        if matches!(ability.effect, E::Mundanity) {
+            return self.mundanity_target(None, target);
+        }
+        let (id, quantity) = match target {
+            TargetSelection::Item { item_id } => (item_id, None),
+            TargetSelection::CraftingItem { item_id, quantity }
+                if matches!(ability.effect, E::CraftItem) =>
+            {
+                (item_id, Some(*quantity))
+            }
+            _ => return None,
+        };
+        let item = self.items.iter().find(|item| {
+            item.id == *id
+                && item.quantity > 0
+                && (matches!(
+                    item.location,
+                    ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                ) || item.location == ItemLocation::Ground(self.player.position))
+        })?;
+        let definition = self.content.item(&item.kind_id)?;
+        let valid = match ability.effect {
+            E::CraftEnchant { .. } => {
+                definition.rfb_base_kind.is_some_and(|base| {
+                    matches!(base.tval, 16..=23 | 30..=38) && (base.tval, base.sval) != (23, 32)
+                }) && !self.item_resists_enchantment(item)
+            }
+            E::PolishShield => definition.rfb_base_kind.is_some_and(|base| base.tval == 34),
+            E::CraftItem => {
+                self.item_is_valid_crafting_target(None, id)
+                    && quantity.is_none_or(|q| q == item.quantity)
+                    && (item.quantity <= 30 || quantity == Some(item.quantity))
+            }
+            _ => false,
+        };
+        valid.then(|| id.clone())
+    }
+
+    pub(super) fn resolve_player_craft_item_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        item_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> Result<(), CoreError> {
+        let succeeded = match ability.effect {
+            AbilityEffectDefinition::CraftItem => self.craft_item(item_id).is_some(),
+            AbilityEffectDefinition::Mundanity => self.mundanify_item(item_id),
+            AbilityEffectDefinition::CraftEnchant {
+                maximum, increment, ..
+            } => self.craft_enchant_item(item_id, maximum, increment),
+            AbilityEffectDefinition::PolishShield => self.polish_shield(item_id),
+            _ => unreachable!("craft item executor requires an item magic effect"),
+        };
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::ItemMagic {
+                    effect_index: 0,
+                    item_id: item_id.to_owned(),
+                    succeeded,
+                }],
+            },
+            trace: None,
+        });
+        Ok(())
+    }
+
+    fn craft_enchant_item(&mut self, item_id: &str, maximum: u16, increment: u16) -> bool {
+        let index = self
+            .items
+            .iter()
+            .position(|item| item.id == item_id)
+            .unwrap();
+        let item = &self.items[index];
+        let weapon = self
+            .content
+            .item(&item.kind_id)
+            .unwrap()
+            .rfb_base_kind
+            .unwrap()
+            .tval
+            < 30;
+        let before = self.item_total_enchantments(item);
+        let change = |value: i16| (maximum as i16 - value).clamp(0, increment as i16);
+        let delta = ItemEnchantmentsDto {
+            to_hit: if weapon { change(before.to_hit) } else { 0 },
+            to_damage: if weapon { change(before.to_damage) } else { 0 },
+            to_armor: if weapon { 0 } else { change(before.to_armor) },
+        };
+        if delta.is_empty() {
+            if self.rng.bounded(3) == 0 && self.virtue_current(VirtueKindDto::Enchantment) < 100 {
+                self.add_virtue(VirtueKindDto::Enchantment, -1);
+            }
+            return false;
+        }
+        let plain = item.affix_ids.is_empty() && !item.is_artifact(&self.content);
+        let item = &mut self.items[index];
+        item.enchantments.to_hit += delta.to_hit;
+        item.enchantments.to_damage += delta.to_damage;
+        item.enchantments.to_armor += delta.to_armor;
+        for (before, delta) in [
+            (before.to_hit, delta.to_hit),
+            (before.to_damage, delta.to_damage),
+            (before.to_armor, delta.to_armor),
+        ] {
+            if delta > 0
+                && before + delta >= 0
+                && item.curse == Some(ItemCurseSeverityDto::Normal)
+                && self.rng.bounded(100) < 25
+            {
+                item.curse = None;
+            }
+        }
+        if plain {
+            item.discount_percent = 99;
+        }
+        self.add_virtue(VirtueKindDto::Enchantment, 1);
+        true
+    }
+
+    fn polish_shield(&mut self, item_id: &str) -> bool {
+        let index = self
+            .items
+            .iter()
+            .position(|item| item.id == item_id)
+            .unwrap();
+        let item = &self.items[index];
+        if item.is_artifact(&self.content)
+            || !item.affix_ids.is_empty()
+            || item.curse.is_some()
+            || self
+                .content
+                .item(&item.kind_id)
+                .unwrap()
+                .rfb_base_kind
+                .unwrap()
+                .sval
+                == 10
+        {
+            self.add_virtue(VirtueKindDto::Enchantment, -2);
+            return false;
+        }
+        let item = &mut self.items[index];
+        item.affix_ids
+            .push("rfb-legacy.affix.reflection".to_owned());
+        item.quality = ItemQualityDto::Exceptional;
+        item.discount_percent = 99;
+        item.origin_kind = Some(ItemOriginKindDto::PlayerMade);
+        let attempts = 4 + self.rng.bounded(3) as u16;
+        self.enchant_item_instance(item_id, ItemEnchantmentRequest::new(0, 0, attempts));
+        self.add_virtue(VirtueKindDto::Enchantment, 2);
+        true
+    }
+
     pub(super) fn resolve_player_remove_equipped_curses_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -651,7 +911,7 @@ impl Game {
         Ok(())
     }
 
-    pub(super) fn resolve_player_create_ammunition_effect(
+    pub(in crate::game) fn resolve_player_create_ammunition_effect(
         &mut self,
         ability: &AbilityDefinition,
         source_item_id: Option<String>,
@@ -716,6 +976,10 @@ impl Game {
             location: ItemLocation::Inventory,
         };
         self.apply_rfb_ammunition_magic(&mut item);
+        // Artemis creates the same enchanted ammunition without consuming material.
+        if source_item_id.is_none() && source_terrain.is_none() {
+            item.origin_kind = Some(ItemOriginKindDto::Acquire);
+        }
 
         if let Some(item_id) = source_item_id.as_deref() {
             self.destroy_item(item_id, 1)
@@ -933,12 +1197,23 @@ impl Game {
         let AbilityEffectDefinition::RechargeFromPlayer { power } = ability.effect else {
             unreachable!("recharge executor requires a player recharge effect");
         };
-        let resource_id = Self::player_ability_parameters(ability).resource_id.clone();
-        let available = self
-            .resources
-            .get(&resource_id)
-            .expect("validated recharge resource must remain available")
-            .current;
+        let item_activation = ability.tags.iter().any(|tag| tag == "item-activation");
+        let resource_id = if item_activation {
+            "demo.resource.mana"
+        } else {
+            &Self::player_ability_parameters(ability).resource_id
+        };
+        let available = if item_activation {
+            // Classes without MP can activate Athena, but cannot supply energy.
+            self.resources
+                .get(resource_id)
+                .map_or(0, |pool| pool.current)
+        } else {
+            self.resources
+                .get(resource_id)
+                .expect("validated recharge resource must remain available")
+                .current
+        };
         let missing = self
             .items
             .iter()
@@ -947,16 +1222,18 @@ impl Game {
             .map(|charges| charges.maximum.saturating_sub(charges.current))
             .expect("preflighted recharge target must retain charge capacity");
         let attempted = u32::from(power).min(available).min(missing);
-        self.resources
-            .get_mut(&resource_id)
-            .expect("validated recharge resource must remain available")
-            .current -= attempted;
+        if attempted > 0 {
+            self.resources
+                .get_mut(resource_id)
+                .expect("spent recharge resource must be present")
+                .current -= attempted;
+        }
         let outcome =
             self.recharge_inventory_item_from_player(item_id, attempted, u32::from(power));
         events.push(device_recharge_resolved_event(
             outcome,
             ability.id.clone(),
-            false,
+            item_activation,
             false,
         ));
     }

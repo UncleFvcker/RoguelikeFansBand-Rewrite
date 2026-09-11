@@ -1,0 +1,63 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.thalkettoth",
+  "nameKey": "item-demo-thalkettoth-name",
+  "descriptionKey": "item-demo-thalkettoth-description",
+  "glyph": "(",
+  "generationLevel": 30,
+  "weightTenthsPound": 60,
+  "maxStack": 1,
+  "baseValue": 25000,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 28,
+    "baseItemKindId": "demo.item.leather-scale-mail",
+    "instant": false,
+    "rarityOneIn": 3,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "modifiers": {
+    "defense": 36,
+    "dexterity": 2,
+    "speed": 2
+  },
+  "resistances": {
+    "acid": "resistant",
+    "shards": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_SHARDS",
+      "SPEED",
+      "XTRA_H_RES"
+    ],
+    "pval": 2,
+    "toArmor": 25
+  },
+  "equipmentBonuses": {
+    "meleeSkill": -1
+  }
+}

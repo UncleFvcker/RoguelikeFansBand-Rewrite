@@ -668,6 +668,7 @@ struct StateHashPayloadV98<'a> {
     item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
     task_states: Vec<TaskStateSaveDto>,
     bounty_state: rfb_protocol::BountyStateSaveDto,
+    active_pantheons: u8,
     dungeon_states: Vec<DungeonStateSaveDto>,
     defeated_limited_actor_counts: Vec<DefeatedActorCountSaveRef<'a>>,
     generated_artifact_ids: Vec<&'a str>,
@@ -1478,6 +1479,7 @@ impl Game {
             task_states,
             bounty_state,
             command_actor_deaths: Vec::new(),
+            active_pantheons: payload.active_pantheons,
             dungeon_states,
             defeated_limited_actor_counts,
             generated_artifact_ids,
@@ -1577,6 +1579,7 @@ impl Game {
             task_progress: Vec::new(),
             task_states: self.task_states_to_save(),
             bounty_state: self.bounty_state.to_save(),
+            active_pantheons: self.active_pantheons,
             dungeon_states: self.dungeon_states_to_save(),
             defeated_limited_actor_counts: self
                 .defeated_limited_actor_counts
@@ -1659,6 +1662,7 @@ impl Game {
             item_property_knowledge: self.item_property_knowledge_to_save(),
             task_states: self.task_states_to_save(),
             bounty_state: self.bounty_state.to_save(),
+            active_pantheons: self.active_pantheons,
             dungeon_states: self.dungeon_states_to_save(),
             defeated_limited_actor_counts: self
                 .defeated_limited_actor_counts

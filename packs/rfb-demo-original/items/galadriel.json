@@ -1,0 +1,83 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "sourceIndex": 1,
+    "baseItemKindId": "demo.item.phial",
+    "instant": true,
+    "rarityOneIn": 1
+  },
+  "baseValue": 10000,
+  "descriptionKey": "item-demo-galadriel-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 10,
+        "id": "demo.item-activation.galadriel-illumination",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-lite-area-name",
+        "rfbValue": 300,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1,
+        "effectProgramId": "demo.effect.galadriel-illumination"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 150
+    }
+  },
+  "equipmentBonuses": {
+    "lightRadius": 3,
+    "searchSkill": 25,
+    "perceptionSkill": 25
+  },
+  "equipmentSlot": "light",
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "glyph": "!",
+  "id": "demo.item.galadriel",
+  "maxStack": 1,
+  "nameKey": "item-demo-galadriel-name",
+  "resistances": {
+    "dark": "resistant"
+  },
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INSTA_ART",
+      "RES_DARK",
+      "SEARCH"
+    ],
+    "pval": 5,
+    "toArmor": 0
+  },
+  "tags": [
+    "artifact",
+    "equipment",
+    "light-source"
+  ],
+  "weightTenthsPound": 10,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ]
+}

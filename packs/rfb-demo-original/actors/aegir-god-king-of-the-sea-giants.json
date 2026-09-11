@@ -209,7 +209,8 @@
     "norse",
     "orc-cave",
     "resist-teleport",
-    "unique"
+    "unique",
+    "norse2"
   ],
   "terrainInteraction": {
     "picksUpItems": true

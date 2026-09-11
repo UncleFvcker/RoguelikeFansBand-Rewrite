@@ -29,8 +29,8 @@ use crate::{
 use super::{
     Game, RecallUseAction, initial_item_curse, initial_item_runtime_state,
     inventory::{
-        ItemEnchantmentRequest, ItemIdentificationRequest, item_instances_stack_compatible,
-        item_properties_match,
+        ItemEnchantmentRequest, ItemIdentificationRequest, item_instances_group_compatible,
+        item_instances_stack_compatible, item_properties_match,
     },
     normalize_player_name, wilderness,
 };
@@ -788,7 +788,7 @@ fn home_item_group(
         .inventory
         .iter()
         .filter(|item| {
-            (item.id == anchor.id || item_instances_stack_compatible(&game.content, item, &anchor))
+            (item.id == anchor.id || item_instances_group_compatible(&game.content, item, &anchor))
                 && item_properties_match(
                     game.item_property_knowledge.get(&item.id),
                     anchor_knowledge,
@@ -818,7 +818,7 @@ fn grouped_home_items<'a>(
     for item in sorted {
         let knowledge = game.item_property_knowledge.get(&item.id);
         if let Some((_, quantity)) = groups.iter_mut().find(|(anchor, _)| {
-            item_instances_stack_compatible(&game.content, anchor, item)
+            item_instances_group_compatible(&game.content, anchor, item)
                 && item_properties_match(game.item_property_knowledge.get(&anchor.id), knowledge)
         }) {
             *quantity = quantity.saturating_add(item.quantity);
@@ -840,7 +840,7 @@ fn grouped_inventory_for_home(game: &Game) -> Vec<(&ItemInstance, u32)> {
     for item in sorted {
         let knowledge = game.item_property_knowledge.get(&item.id);
         if let Some((_, quantity)) = groups.iter_mut().find(|(anchor, _)| {
-            item_instances_stack_compatible(&game.content, anchor, item)
+            item_instances_group_compatible(&game.content, anchor, item)
                 && item_properties_match(game.item_property_knowledge.get(&anchor.id), knowledge)
         }) {
             *quantity = quantity.saturating_add(item.quantity);
@@ -971,7 +971,7 @@ fn carry_home_withdrawal_item(game: &mut Game, mut item: ItemInstance) -> Vec<St
         if transferred == 0 {
             continue;
         }
-        game.items[stack_index].quantity += transferred;
+        super::inventory::merge_item_stack(&mut game.items[stack_index], &item, transferred);
         item.quantity -= transferred;
         destination_ids.push(game.items[stack_index].id.clone());
         if item.quantity == 0 {
@@ -1014,7 +1014,7 @@ fn shop_purchase_group(
         .inventory
         .iter()
         .filter(|item| {
-            item.id == anchor.id || item_instances_stack_compatible(&game.content, item, &anchor)
+            item.id == anchor.id || item_instances_group_compatible(&game.content, item, &anchor)
         })
         .collect::<Vec<_>>();
     items.sort_by(|left, right| left.id.cmp(&right.id));
@@ -1041,7 +1041,7 @@ fn inventory_sale_group(game: &Game, item_id: &str) -> Option<(ItemInstance, Vec
         .filter(|item| {
             item.location == ItemLocation::Inventory
                 && (item.id == anchor.id
-                    || item_instances_stack_compatible(&game.content, item, &anchor))
+                    || item_instances_group_compatible(&game.content, item, &anchor))
                 && item_properties_match(
                     game.item_property_knowledge.get(&item.id),
                     anchor_knowledge,
@@ -1087,7 +1087,7 @@ fn grouped_shop_items<'a>(
     for item in sorted {
         if let Some((_, quantity)) = groups
             .iter_mut()
-            .find(|(anchor, _)| item_instances_stack_compatible(content, anchor, item))
+            .find(|(anchor, _)| item_instances_group_compatible(content, anchor, item))
         {
             *quantity = quantity.saturating_add(item.quantity);
         } else {
@@ -1111,7 +1111,7 @@ fn grouped_inventory_items(game: &Game) -> Vec<(&ItemInstance, u32)> {
             let knowledge = game.item_property_knowledge.get(&item.id);
             if let Some((_, quantity)) = groups.iter_mut().find(|(anchor, _)| {
                 item_is_legal_for_shop(game, anchor)
-                    && item_instances_stack_compatible(&game.content, anchor, item)
+                    && item_instances_group_compatible(&game.content, anchor, item)
                     && item_properties_match(
                         game.item_property_knowledge.get(&anchor.id),
                         knowledge,
