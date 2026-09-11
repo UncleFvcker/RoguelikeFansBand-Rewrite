@@ -924,6 +924,492 @@ fn a7_instant_lights_activate_with_source_parameters_and_resume_after_save() {
 }
 
 #[test]
+fn a8_artifacts_generate_activate_and_resume_source_cooldowns_after_save() {
+    fn activate(game: &mut Game, id: &str) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.use_inventory_item(
+            id,
+            Some(&TargetSelection::Direction {
+                direction: Direction::East,
+            }),
+            None,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        events
+    }
+    let success = (0..1000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+        .unwrap();
+    let failure = (0..1000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(100) == 99)
+        .unwrap();
+    for (slug, base, cooldown, power, dice, sides, bonus, element, beam) in [
+        (
+            "cammithrim",
+            "leather-gloves",
+            20,
+            10,
+            4,
+            6,
+            0,
+            DamageType::Physical,
+            false,
+        ),
+        (
+            "paurhach",
+            "set-of-gauntlets",
+            120,
+            12,
+            0,
+            0,
+            35,
+            DamageType::Fire,
+            true,
+        ),
+        (
+            "pauraegen",
+            "set-of-gauntlets",
+            120,
+            12,
+            0,
+            0,
+            40,
+            DamageType::Electricity,
+            false,
+        ),
+        (
+            "paurnen",
+            "set-of-gauntlets",
+            120,
+            12,
+            8,
+            8,
+            0,
+            DamageType::Acid,
+            false,
+        ),
+        (
+            "narthanc",
+            "dagger",
+            120,
+            4,
+            6,
+            8,
+            0,
+            DamageType::Fire,
+            false,
+        ),
+        (
+            "nimthanc",
+            "dagger",
+            120,
+            3,
+            6,
+            8,
+            0,
+            DamageType::Cold,
+            false,
+        ),
+        (
+            "dethanc",
+            "dagger",
+            120,
+            5,
+            0,
+            0,
+            24,
+            DamageType::Electricity,
+            true,
+        ),
+    ] {
+        let mut game = Game::new_with_build(448, "demo.build.warrior").unwrap();
+        choose_human_talent_if_pending(&mut game);
+        descend_one_floor(&mut game);
+        clear_monsters(&mut game);
+        game.items.clear();
+        game.player.position = Position { x: 10, y: 10 };
+        for y in 7..=13 {
+            for x in 7..=18 {
+                replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+            }
+        }
+        game.glow.fill(true);
+        let context = artifact_loot_context(30);
+        let kind = format!("demo.item.{slug}");
+        let base = format!("demo.item.{base}");
+        // Select the requested kind through real rarity rolls, not the first
+        // result: the dagger and gauntlet bases have other artifact candidates.
+        assert!((0..10_000).any(|seed| {
+            game.rng = RfbRng::seeded(seed);
+            game.roll_fixed_artifact_kind_id(&context, Some(&base), false)
+                .as_ref()
+                == Some(&kind)
+        }));
+        let draft = game.fixed_item_draft(&context, kind.clone());
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        let id = item.id.clone();
+        assert_eq!(item.activation.as_ref().unwrap().power, power);
+        assert_eq!(
+            item.activation.as_ref().unwrap().device_check_difficulty,
+            i32::from(power)
+        );
+        assert_eq!(
+            item.rolled_affixes.len(),
+            usize::from(base == "demo.item.dagger")
+        );
+        let rolled = item.rolled_affixes.clone();
+        game.items.push(item);
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        assert!(
+            !game
+                .item_property_knowledge
+                .get(&id)
+                .is_some_and(|k| k.appraised)
+        );
+        game.reveal_current_visibility();
+        let restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.rng, game.rng);
+        game = restored;
+        game.equip_inventory_item(&id, None).unwrap();
+        assert_eq!(
+            game.player_equipment_bonuses().light_radius,
+            i32::from(matches!(slug, "cammithrim" | "narthanc" | "dethanc"))
+        );
+        if slug == "cammithrim" {
+            assert_eq!(game.equipment_modifiers().defense, 11);
+            assert!(game.player_sustains_attribute(AttributeKind::Constitution));
+            assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
+        } else if base == "demo.item.dagger" {
+            let profile = game.item_throw_profile(&game.items[0]).unwrap();
+            assert_eq!(
+                (
+                    profile.damage.dice,
+                    profile.damage.sides,
+                    profile.to_hit,
+                    profile.to_damage
+                ),
+                (2, 5, 8, 12)
+            );
+            assert_eq!(game.equipment_modifiers().speed, 1);
+            game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+            assert_eq!(
+                game.visible_item_throw_profile(&game.items[0]),
+                Some(profile)
+            );
+        } else {
+            assert_eq!(game.equipment_modifiers().defense, 9);
+        }
+        game.world_tick = 0;
+        // Explicit invalid modes cost nothing. Cancelled direction and failed
+        // checks spend a turn but retain the charge and do not start recovery.
+        game.reveal_current_visibility();
+        let hash = game.state_hash();
+        let rng = game.rng.clone();
+        game.use_inventory_item(
+            &id,
+            Some(&TargetSelection::SelfTarget),
+            None,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        assert_eq!(game.state_hash(), hash);
+        assert_eq!(game.rng, rng);
+        for (target, seed) in [
+            (None, success),
+            (
+                Some(TargetSelection::Direction {
+                    direction: Direction::East,
+                }),
+                failure,
+            ),
+        ] {
+            let mut attempt = game.clone();
+            attempt.rng = RfbRng::seeded(seed);
+            let mut expected_rng = attempt.rng.clone();
+            expected_rng.bounded(100);
+            dispatch_next(
+                &mut attempt,
+                GameCommand::UseItem {
+                    item_id: id.clone(),
+                    target,
+                },
+            );
+            assert_eq!(attempt.world_tick, 10);
+            assert_eq!(attempt.rng, expected_rng);
+            assert_eq!(attempt.items[0].charges.unwrap().current, 1);
+            assert_eq!(attempt.items[0].device_recovery_progress, 0);
+        }
+        for (id, x) in [
+            ("test.a8-near", 12),
+            ("test.a8-far", 14),
+            ("test.a8-blocked", 16),
+        ] {
+            game.push_generated_actor(id.into(), "demo.actor.sheep", Position { x, y: 10 });
+            let actor = game.entities.last_mut().unwrap();
+            actor.hp = 10_000;
+            actor.max_hp = 10_000;
+        }
+        replace_terrain(&mut game, Position { x: 15, y: 10 }, "demo.terrain.wall");
+        game.rng = RfbRng::seeded(success);
+        let mut expected = game.clone();
+        expected.rng.bounded(100);
+        let raw = expected.roll_damage(dice, sides) + bonus;
+        let events = activate(&mut game, &id);
+        if slug == "pauraegen" {
+            assert!(events.iter().any(|event| matches!(event, DomainEvent::AbilityAreaDamage { resolution, .. } if resolution.radius == 2 && resolution.base_raw_damage == 40 && resolution.damage_type == DamageTypeDto::Electricity)));
+            assert_eq!(game.entities[0].hp, 9960);
+            assert_eq!(game.entities[1].hp, 9987);
+        } else {
+            let hits = events
+                .iter()
+                .filter_map(|event| match event {
+                    DomainEvent::ItemActivationHit { damage, .. } => Some(damage),
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
+            assert_eq!(hits.len(), if beam { 2 } else { 1 });
+            assert!(
+                hits.iter()
+                    .all(|damage| damage.raw == raw && damage.damage_type == element)
+            );
+            assert_eq!(game.entities[1].hp < 10_000, beam);
+        }
+        assert_eq!(game.entities[2].hp, 10_000);
+        assert_eq!(game.items[0].charges.unwrap().current, 0);
+        let rng = game.rng.clone();
+        activate(&mut game, &id);
+        assert_eq!(game.rng, rng);
+        clear_monsters(&mut game);
+        for tick in 1..=cooldown / 2 {
+            game.world_tick = tick;
+            game.process_inventory_device_recovery(&mut Vec::new());
+        }
+        game.reveal_current_visibility();
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.items[0].rolled_affixes, rolled);
+        assert_eq!(
+            u32::from(restored.items[0].device_recovery_progress),
+            cooldown / 2
+        );
+        for tick in cooldown / 2 + 1..cooldown {
+            restored.world_tick = tick;
+            restored.process_inventory_device_recovery(&mut Vec::new());
+        }
+        assert_eq!(restored.items[0].charges.unwrap().current, 0);
+        restored.world_tick = cooldown;
+        restored.process_inventory_device_recovery(&mut Vec::new());
+        assert_eq!(restored.items[0].charges.unwrap().current, 1);
+        assert_eq!(restored.items[0].device_recovery_progress, 0);
+        restored.rng = RfbRng::seeded(success);
+        restored.reveal_current_visibility();
+        let mut continued = Game::from_save(restored.to_save()).unwrap();
+        assert_eq!(activate(&mut restored, &id), activate(&mut continued, &id));
+        assert_eq!(continued.items[0].charges.unwrap().current, 0);
+        assert_eq!(continued.state_hash(), restored.state_hash());
+        assert_eq!(continued.rng, restored.rng);
+        assert_eq!(
+            continued
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+        );
+        assert_eq!(continued.rng, restored.rng);
+        assert!(restored.generated_artifact_ids.contains(&kind));
+        assert_ne!(
+            restored.roll_fixed_artifact_kind_id(&context, Some(&base), false),
+            Some(kind)
+        );
+    }
+}
+
+#[test]
+fn a8_gauntlet_brands_reach_both_weapons_but_not_ammunition() {
+    fn strike(game: &mut Game) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.resolve_player_melee(0, false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+            .unwrap();
+        events
+    }
+    for (slug, element) in [
+        ("paurhach", DamageType::Fire),
+        ("pauraegen", DamageType::Electricity),
+        ("paurnen", DamageType::Acid),
+        ("set-of-gauntlets-paurnimmen", DamageType::Cold),
+    ] {
+        let mut game = Game::new_with_build(449, "demo.build.warrior").unwrap();
+        choose_human_talent_if_pending(&mut game);
+        clear_monsters(&mut game);
+        game.items.clear();
+        game.player.position = Position { x: 10, y: 10 };
+        replace_terrain(&mut game, Position { x: 10, y: 10 }, "demo.terrain.floor");
+        let target = Position { x: 11, y: 10 };
+        replace_terrain(&mut game, target, "demo.terrain.floor");
+        for (id, kind, slot) in [
+            ("test.a8-right", "dagger", "right-hand"),
+            ("test.a8-left", "dagger", "left-hand"),
+        ] {
+            give_inventory_item(&mut game, id, &format!("demo.item.{kind}"));
+            game.equip_inventory_item(id, Some(slot)).unwrap();
+        }
+        give_inventory_item(&mut game, "test.a8-bow", "demo.item.short-bow");
+        game.equip_inventory_item("test.a8-bow", None).unwrap();
+        let before = game.player_projectile_profile().unwrap();
+        let kind = format!("demo.item.{slug}");
+        give_inventory_item(&mut game, "test.a8-gloves", &kind);
+        game.register_generated_artifact(&kind);
+        game.equip_inventory_item("test.a8-gloves", None).unwrap();
+        let after = game.player_projectile_profile().unwrap();
+        assert_eq!(
+            (
+                after.to_hit - before.to_hit,
+                after.launcher_to_damage - before.launcher_to_damage
+            ),
+            (2, 2)
+        );
+        game.push_generated_actor("test.a8-target".into(), "demo.actor.sheep", target);
+        game.entities[0].hp = 10_000;
+        game.entities[0].max_hp = 10_000;
+        let profiles = game.player_melee_profiles(&game.player_derived_stats());
+        assert_eq!(profiles.len(), 2);
+        for profile in &profiles {
+            assert_eq!(
+                game.player_melee_damage_multiplier(
+                    profile,
+                    &game.entities[0],
+                    game.content.actor("demo.actor.sheep").unwrap()
+                ),
+                24
+            );
+        }
+        assert_eq!(
+            game.player_projectile_damage_multiplier(
+                &after,
+                &game.entities[0],
+                game.content.actor("demo.actor.sheep").unwrap()
+            ),
+            10
+        );
+        let seed = (0..1000)
+            .find(|seed| {
+                let mut trial = game.clone();
+                trial.rng = RfbRng::seeded(*seed);
+                strike(&mut trial);
+                trial.entities[0].hp < 10_000
+            })
+            .unwrap();
+        let mut damage = Vec::new();
+        for resistance in [ResistanceLevel::Normal, ResistanceLevel::Immune] {
+            let mut trial = game.clone();
+            trial.entities[0].resistances.set(element, resistance);
+            trial.rng = RfbRng::seeded(seed);
+            trial.reveal_current_visibility();
+            let mut restored = Game::from_save(trial.to_save()).unwrap();
+            assert_eq!(strike(&mut restored), strike(&mut trial));
+            assert_eq!(restored.state_hash(), trial.state_hash());
+            assert_eq!(restored.rng, trial.rng);
+            damage.push(10_000 - trial.entities[0].hp);
+        }
+        assert!(damage[0] > damage[1] && damage[1] > 0);
+    }
+}
+
+#[test]
+fn a8_thrown_daggers_use_their_own_brands_and_keep_random_properties_after_pickup() {
+    fn throw(game: &mut Game, id: &str) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.throw_inventory_item(
+            id,
+            Direction::East,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        events
+    }
+    let seed = (0..1000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+        .unwrap();
+    for (slug, element, glove) in [
+        ("narthanc", DamageType::Fire, "set-of-gauntlets-paurnimmen"),
+        ("nimthanc", DamageType::Cold, "paurhach"),
+        ("dethanc", DamageType::Electricity, "paurnen"),
+    ] {
+        let mut game = Game::new_with_build(450, "demo.build.warrior").unwrap();
+        choose_human_talent_if_pending(&mut game);
+        clear_monsters(&mut game);
+        game.items.clear();
+        game.player.position = Position { x: 10, y: 10 };
+        let target = Position { x: 11, y: 10 };
+        replace_terrain(&mut game, Position { x: 10, y: 10 }, "demo.terrain.floor");
+        replace_terrain(&mut game, target, "demo.terrain.floor");
+        let context = artifact_loot_context(30);
+        let kind = format!("demo.item.{slug}");
+        let draft = game.fixed_item_draft(&context, kind.clone());
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Inventory)
+            .unwrap();
+        let id = item.id.clone();
+        assert_eq!(item.rolled_affixes.len(), 1);
+        let rolled = item.rolled_affixes.clone();
+        game.items.push(item);
+        give_inventory_item(&mut game, "test.a8-ordinary", "demo.item.dagger");
+        let ordinary = game.item_throw_parameters(&game.items[1]);
+        let thrown = game.item_throw_parameters(&game.items[0]);
+        assert!(thrown.0 > ordinary.0 && thrown.1 > ordinary.1);
+        let glove_kind = format!("demo.item.{glove}");
+        give_inventory_item(&mut game, "test.a8-gloves", &glove_kind);
+        game.register_generated_artifact(&glove_kind);
+        game.equip_inventory_item("test.a8-gloves", None).unwrap();
+        game.push_generated_actor("test.a8-target".into(), "demo.actor.sheep", target);
+        game.entities[0].hp = 10_000;
+        game.entities[0].max_hp = 10_000;
+        for (resistance, multiplier) in
+            [(ResistanceLevel::Normal, 24), (ResistanceLevel::Immune, 10)]
+        {
+            let mut trial = game.clone();
+            trial.entities[0].resistances.set(element, resistance);
+            trial.rng = RfbRng::seeded(seed);
+            let mut expected = trial.clone();
+            expected.rng.bounded(100);
+            let raw = (expected.roll_damage(2, 5) * multiplier / 10 + 12) * thrown.1 / 100;
+            trial.reveal_current_visibility();
+            let mut restored = Game::from_save(trial.to_save()).unwrap();
+            let events = throw(&mut trial, &id);
+            assert_eq!(throw(&mut restored, &id), events);
+            assert!(events.iter().any(|event| matches!(event, DomainEvent::ItemThrowHit { damage, .. } if damage.raw == raw)));
+            assert_eq!(restored.state_hash(), trial.state_hash());
+            assert_eq!(restored.rng, trial.rng);
+            let thrown = restored.items.iter().find(|item| item.id == id).unwrap();
+            assert_eq!(thrown.rolled_affixes, rolled);
+            let ItemLocation::Ground(position) = thrown.location else {
+                panic!("thrown artifact must land")
+            };
+            restored.player.position = position;
+            restored.pick_up_item_at_player(Some(&id)).unwrap();
+            restored.reveal_current_visibility();
+            let recovered = Game::from_save(restored.to_save()).unwrap();
+            assert_eq!(recovered.state_hash(), restored.state_hash());
+            let item = recovered.items.iter().find(|item| item.id == id).unwrap();
+            assert_eq!(item.rolled_affixes, rolled);
+            assert_eq!(item.location, ItemLocation::Inventory);
+            assert!(recovered.generated_artifact_ids.contains(&kind));
+        }
+    }
+}
+
+#[test]
 fn a2_armor_generation_equipment_consumers_and_uniqueness_survive_save() {
     for (slug, base, defense) in [
         ("thengel", "metal-cap", 15),

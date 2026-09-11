@@ -1,0 +1,95 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "sourceIndex": 53,
+    "baseItemKindId": "demo.item.leather-gloves",
+    "instant": false,
+    "rarityOneIn": 3
+  },
+  "baseValue": 30000,
+  "descriptionKey": "item-demo-cammithrim-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.cammithrim",
+        "nameKey": "device-activation-e5-bolt-missile-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 10,
+        "rfbValue": 280,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.cammithrim"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 20
+    }
+  },
+  "equipmentSlot": "gloves",
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "glyph": "]",
+  "id": "demo.item.cammithrim",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 11
+  },
+  "nameKey": "item-demo-cammithrim-name",
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "RES_LITE",
+      "SUST_CON"
+    ],
+    "pval": 0,
+    "toArmor": 10
+  },
+  "tags": [
+    "activatable",
+    "artifact",
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 5,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "resistances": {
+    "light": "resistant"
+  },
+  "passives": [
+    "sustain-constitution"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "equipmentBonuses": {
+    "lightRadius": 1
+  }
+}

@@ -9624,3 +9624,19 @@ item-demo-laputa-description = 拉普达的悬浮石
 
 item-demo-stone-of-war-name = 战争之石
 item-demo-stone-of-war-description = 战争之石
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: a_info 53/54/56/57/66/67/68.
+item-demo-cammithrim-name = 皮手套『坎米斯林』
+item-demo-cammithrim-description = 这些手套闪耀着极其明亮的光芒，不仅能为主人照亮道路，还能以极高的频率发射魔法射线。
+item-demo-paurhach-name = 铁护手『保尔哈赫』
+item-demo-paurhach-description = 一副燃烧着的护手，甚至能烧伤你的对手。
+item-demo-pauraegen-name = 铁护手『保尔雷根』
+item-demo-pauraegen-description = 一副周围环绕着火花的手部护具，能够电击你的对手。
+item-demo-paurnen-name = 铁护手『保尔能』
+item-demo-paurnen-description = 一副极具腐蚀性的手部护具，能够溶解你的对手。
+item-demo-narthanc-name = 匕首『纳桑克』
+item-demo-narthanc-description = 一把燃烧的匕首，具有完美的平衡性，适合进行致命的投掷。
+item-demo-nimthanc-name = 匕首『尼姆桑克』
+item-demo-nimthanc-description = 一把冰霜匕首，具有完美的平衡性，适合进行致命的投掷。
+item-demo-dethanc-name = 匕首『德桑克』
+item-demo-dethanc-description = 一把被火花覆盖的匕首，具有完美的平衡性，适合进行致命的投掷。

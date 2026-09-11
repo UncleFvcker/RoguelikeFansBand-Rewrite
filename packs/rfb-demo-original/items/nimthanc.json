@@ -1,0 +1,100 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 11000,
+  "descriptionKey": "item-demo-nimthanc-description",
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 3,
+  "glyph": "|",
+  "id": "demo.item.nimthanc",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 5,
+    "toHit": 8,
+    "toDamage": 12
+  },
+  "nameKey": "item-demo-nimthanc-name",
+  "rfbValue": {
+    "flags": [
+      "BRAND_COLD",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_COLD",
+      "SHOW_MODS",
+      "SPEED",
+      "THROWING",
+      "XTRA_H_RES"
+    ],
+    "pval": 1,
+    "toArmor": 0
+  },
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "weightTenthsPound": 12,
+  "artifactGeneration": {
+    "sourceIndex": 67,
+    "baseItemKindId": "demo.item.dagger",
+    "instant": false,
+    "rarityOneIn": 5,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "weaponProficiencyBaseItemId": "demo.item.dagger",
+  "modifiers": {
+    "speed": 1
+  },
+  "brands": [
+    "cold"
+  ],
+  "resistances": {
+    "cold": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.nimthanc",
+        "nameKey": "device-activation-e5-bolt-cold-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 3,
+        "rfbValue": 675,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.nimthanc"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 120
+    }
+  }
+}

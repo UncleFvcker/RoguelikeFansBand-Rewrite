@@ -1552,8 +1552,14 @@ impl Game {
                     trace: trace.clone(),
                 });
             } else {
+                // py_throw.c applies only the thrown object's slays/brands to
+                // its dice, before flat damage and the throwing multiplier.
+                let item_multiplier =
+                    self.item_damage_multiplier(&thrown, &self.entities[index], &target_definition);
                 let raw_damage = self
                     .roll_damage(profile.damage_dice, profile.damage_sides)
+                    .saturating_mul(item_multiplier)
+                    .saturating_div(10)
                     .saturating_add(profile.to_damage)
                     .saturating_mul(damage_multiplier)
                     .saturating_div(100)

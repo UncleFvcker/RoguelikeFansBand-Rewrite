@@ -9620,3 +9620,19 @@ item-demo-laputa-description = Levitation Stone of Laputa
 
 item-demo-stone-of-war-name = Stone of War
 item-demo-stone-of-war-description = Stone of War
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: a_info 53/54/56/57/66/67/68.
+item-demo-cammithrim-name = Set of Leather Gloves 'Cammithrim'
+item-demo-cammithrim-description = Set of Leather Gloves 'Cammithrim'
+item-demo-paurhach-name = Set of Gauntlets 'Paurhach'
+item-demo-paurhach-description = Set of Gauntlets 'Paurhach'
+item-demo-pauraegen-name = Set of Gauntlets 'Pauraegen'
+item-demo-pauraegen-description = Set of Gauntlets 'Pauraegen'
+item-demo-paurnen-name = Set of Gauntlets 'Paurnen'
+item-demo-paurnen-description = Set of Gauntlets 'Paurnen'
+item-demo-narthanc-name = Dagger 'Narthanc'
+item-demo-narthanc-description = Dagger 'Narthanc'
+item-demo-nimthanc-name = Dagger 'Nimthanc'
+item-demo-nimthanc-description = Dagger 'Nimthanc'
+item-demo-dethanc-name = Dagger 'Dethanc'
+item-demo-dethanc-description = Dagger 'Dethanc'
