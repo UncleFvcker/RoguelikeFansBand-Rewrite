@@ -1,14 +1,14 @@
 # 金字塔土丘地牢接入计划
 
-状态：**PM1–PM4 已完成；PM5 待收口**。正式 (77,37) 入口及 64–92 层链已开放；神系资格、地图／竖井、守卫与奖励、返回及保存继续已有核心证据。自然练级通关、桌面试玩与可玩构建不在本批验收内。
+状态：**PM1–PM5 已完成**。正式 (77,37) 入口及 64–92 层链已开放；神系资格、地图／竖井、守卫与奖励、返回及保存继续已有核心证据。最终证据与适配边界见 PM5；自然练级通关、桌面试玩与可玩构建不在本批验收内。
 
 规划基线：`codex/dungeons-towns@2ca665941512b2dad7d812e93d18dbbfb27b597e`，已包含三方向集成及 OL1–OL5。当前版本与入口事实见[状态页](../docs/status.md)，实施时重新核对，不预留版本号。
 
 权威 RFB 来源：`D:/codex/Frogcomposband/master` 的 `master@a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。本次来源读取均通过 `git show`／`git grep`，未读取该仓库检出文件。后续批次记录实际来源提交；中文采用该 ref 的中文表或源字符串，没有权威名称的新增条目记为 unresolved。
 
-## 1. 推荐与取舍
+## 1. 选题与取舍
 
-**推荐下一座接入金字塔土丘（Pyramidal mound，34）。** 奥林匹斯已经提供可保存的神系资格和分配过滤，鹰巢／战场等已有 ALL_SHAFTS，洞穴房间、混合矿脉墙和矿脉生成也有消费者。本批主要依赖是阿蒙神器、奥西里斯额外药水掉落、PM1 核查补充的凤凰死亡分支，以及这些规则在正式地牢中的行为证据。
+**本轮接入金字塔土丘（Pyramidal mound，34）。** 奥林匹斯已经提供可保存的神系资格和分配过滤，鹰巢／战场等已有 ALL_SHAFTS，洞穴房间、混合矿脉墙和矿脉生成也有消费者。本批主要依赖是阿蒙神器、奥西里斯额外药水掉落、PM1 核查补充的凤凰死亡分支，以及这些规则在正式地牢中的行为证据。
 
 | 候选 | 来源与可复用部分 | 主要新增范围 |
 | --- | --- | --- |
@@ -137,11 +137,28 @@ PM4 从 `5dbda9fcd` 实施，实际来源仍为 `master@a0d92b6378d148c5262cc236
 验收通过：PM 专项 12 项、世界 72 项、奥林匹斯 14 项、神系 4 项，共 102 项核心检查；世界内容 64 项（既有完整入口位置清单补入金字塔土丘后复验）、本地化 39 项通过。逐项观察 26 条 active 契约，只有 26 处最终状态哈希、12 处保存回环哈希及 3 处错误状态哈希因新增地牢记账变化，其他事件、错误与状态断言不变；刷新后 26 条全部通过，政策为 **contract-v326**。内容锁确认 `cc683acdf3f63be1d7c5a5928b5f7e59a5ac3618618307488669112c05fc289b`；核心／内容 all-targets Clippy、格式、diff 与文档链接检查通过。没有新增内容、协议或保存类型，协议 1.253、State Hash Schema 125、保存 14／20／1 不变；没有前端、桌面、Android 或可玩构建验收。
 
 
-### PM5：聚焦验收与交付
+### PM5：聚焦验收与交付（已完成）
 
 - 汇总来源、地牢／层链、两守卫、阿蒙神器、奥西里斯药水及征服卷轴的可追溯证据；区分内容已定义、规则已实现、入口已开放和实际验收。
 - 按下面的实际影响范围检查，更新[状态页](../docs/status.md)与本计划的完成状态、地图／表现适配和剩余限制。
 - 默认交付代码与核心验收。用户另行要求可玩 EXE 时使用 Tauri standalone；不附带 Android、全量桌面 E2E 或自然练级通关承诺。
+
+PM5 从 `d18bf1630` 收口，再次通过 Git 对象复核来源仍为 `master@a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`，地牢 34、中文、阿蒙神器／奥西里斯药水及凤凰死亡分支未变化。来源登记沿用[荒野清单](../packs/rfb-demo-original/legacy-wilderness-selection.json)、[物品清单](remaining-item-coverage-review.json)和 [NOTICE](../NOTICE)。本批只补强一个既有测试并整理交付文档，没有新增运行规则或正式内容。
+
+| 范围 | 已定义、实现与开放 | 实际验收证据 |
+| --- | --- | --- |
+| 地牢与资格 | [正式世界](../packs/rfb-demo-original/worlds/middle-earth.json)登记 29 个深度、神系 2 与 (77,37)；[入口地形](../packs/rfb-demo-original/terrain/pyramidal-mound-entrance.json)由现有荒野流程消费 | PM 专项 `formal_entry_shaft_round_trip_uses_rewards_and_restores_recall` 与 `inactive_pantheon_hides_entry_and_guardian_and_rejects_transition`：真实入口／返回、直接转层拒绝、保存后资格与召回 |
+| 地图与生态 | [埃及生态表](../packs/rfb-demo-original/encounterTables/pyramidal-mound.json)接入既有地图、神系、稀有度和分配规则 | `representative_maps_keep_materials_routes_and_legal_spawns`、`shafts_stop_at_surface_and_final_floor`、`ecology_keeps_rarity_divisor_and_egyptian_qualification`：代表层多种子、奇偶边界、真实产物及随机召唤资格 |
+| 两名守卫 | 固定入口实例木乃伊王与末层阿蒙保留真实种类、源等级、战斗参数和唯一语义 | `guardians_melee_uses_true_identity_and_mummy_instance_accounting`：真实进攻／近战、外观不改变真实等级、普通木乃伊王死亡不记入口账，固定实例死亡才记账、同种仍合法，并验证保存恢复；阿蒙隐形感知及真实身份结算见提前击杀专项 |
+| 阿蒙神器 | [神器](../packs/rfb-demo-original/items/amun.json)、[激活](../packs/rfb-demo-original/effectPrograms/amun.json)与 actor 特殊掉落绑定正式生效 | `amun_uses_normal_artifact_rarity_and_unique_registration`、`amun_equips_senses_expires_and_recovers_across_save`：普通生成、拾取／装备收益、真实感知、冷却、到期与读档排重 |
+| 独立征服奖励 | [单张获得物品卷轴表](../packs/rfb-demo-original/lootTables/pyramidal-mound-final-reward.json)独立于阿蒙神器和普通死亡掉落 | `amun_early_melee_rewards_are_picked_up_used_and_saved_once`、`special_drops_keep_guarantee_exclusions_and_outside_death`：提前／域外死亡、Bad Luck、已生成神器、宠物、实际拾取使用、保存与征服去重 |
+| 奥西里斯与凤凰 | 共享死亡流程额外生成新生药水；玩家归属致死路径先判凤凰复生，再决定是否死亡结算 | `osiris_extra_potion_is_consumed_after_real_death_and_pickup`、`phoenix_rebirth_keeps_melee_and_status_targets_alive`，以及射击内部 `phoenix_projectile_rebirth_precedes_fatality_rewards_and_unique_accounting`：药水真实消费、复生／死亡两侧、经验／掉落／唯一额度及保存 |
+
+表内 PM 测试名省略共同前缀 `pyramidal_mound_`，位于[专项文件](../crates/rfb-core/src/game/tests/pyramidal_mound.rs)；射击专项位于 [player_combat.rs](../crates/rfb-core/src/game/player_combat.rs)。PM5 发现普通同种死亡的负向证据尚不显式，因此在既有守卫测试中先击杀一个普通木乃伊王，断言入口击杀标记和事件均未产生，再执行原固定实例击杀与保存检查；该项定向复验通过。核心 all-targets Clippy、格式、diff、两份更新文档的本地链接和 `verify-source` 检查通过。
+
+其余实现与内容未变，复用 PM4 已通过的 102 项核心、64 项世界内容、39 项本地化与 26 条 active 契约；共享死亡调用者继续采用 PM3 已记录的回归证据，本批未重跑这些检查。包仍为 **1.426.0**，contentHash 仍为 `cc683acdf3f63be1d7c5a5928b5f7e59a5ac3618618307488669112c05fc289b`，协议 1.253、State Hash Schema 125、保存 14／20／1、contract-v326 均不变，无需生成类型或刷新 fixture。
+
+最终边界：地图采用项目 96×33 和 20 个怪物槽位等预算，源最小怪物数 50、完整模板／CRYPT／vault／通道算法及原版 RNG 序列未复刻；SHAPECHANGER 使用既有外观适配。神器 335 的凤凰复生抑制、克隆、曾为宠物及源内部竞技场／战斗状态尚未表达；掉落来源已验证事件，没有完整持久来源分类。正式往返实际经过 15 个偶数深度，另测奇数连接边界；测试准备的 1 HP 目标、100000 HP 玩家、延迟行动、选定 RNG、直接坐标与遍历保护见 PM3／PM4，不能作为自然练级或满血守卫战的证据。交付范围为代码、正式内容及核心自动验收；本轮未执行桌面／Android 试玩或制作可玩 EXE。
 
 ## 5. 验证、协作与范围
 

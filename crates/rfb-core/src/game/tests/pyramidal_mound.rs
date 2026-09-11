@@ -781,6 +781,20 @@ fn pyramidal_mound_guardians_melee_uses_true_identity_and_mummy_instance_account
         .unwrap()
         .unwrap();
     clear_monsters(&mut game);
+    game.entities.push(battle_actor(
+        &game,
+        "demo.actor.mummy-king",
+        "test.pm.ordinary-mummy-king",
+    ));
+    let ordinary = defeat_in_melee(&mut game);
+    assert!(!game.dungeon_states[DUNGEON].entrance_guardian_defeated);
+    assert!(
+        !ordinary
+            .events
+            .iter()
+            .any(|e| e.kind == "dungeon.entrance-guardian-defeated")
+    );
+    choose_human_talent_if_pending(&mut game);
     let actor = battle_actor(
         &game,
         "demo.actor.mummy-king",
