@@ -458,14 +458,27 @@ impl Game {
                             class_activation.expect("class ability source requires an activation");
                         let (base_cost, effective_cost) =
                             self.class_ability_resource_cost(activation);
+                        let resource_paid =
+                            if Self::ability_cost_spills_into_hit_points(source, &ability_id) {
+                                effective_cost.min(
+                                    activation
+                                        .resource_id
+                                        .as_deref()
+                                        .and_then(|id| self.resources.get(id))
+                                        .map_or(0, |pool| pool.current),
+                                )
+                            } else {
+                                effective_cost
+                            };
                         (
                             activation.minimum_level,
                             activation.ui_group_name_key.clone(),
                             activation.resource_id.clone(),
                             base_cost,
-                            effective_cost,
+                            resource_paid,
                             activation.minimum_concentration,
-                            self.class_ability_hit_point_cost(activation),
+                            self.class_ability_hit_point_cost(activation) + effective_cost
+                                - resource_paid,
                             self.class_ability_failure_percent(activation),
                             AbilityProgress {
                                 proficiency: 0,

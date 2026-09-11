@@ -895,7 +895,12 @@ impl Game {
         terrain.tags.iter().any(|tag| tag == "tree")
             && (self.riding_actor_id.is_none()
                 || !self.active_traveler_has_mode(ActorMovementMode::Aquatic))
-            && self
+            && self.player_is_forest_adapted()
+    }
+
+    pub(super) fn player_is_forest_adapted(&self) -> bool {
+        self.player_is_ranger()
+            || self
                 .character_definitions()
                 .is_some_and(|(_, race, _, _)| race.tags.iter().any(|tag| tag == "forest-adapted"))
     }

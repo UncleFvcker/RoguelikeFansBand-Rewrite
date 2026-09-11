@@ -165,6 +165,7 @@ impl Game {
             return Ok(None);
         }
         let innate_power = matches!(source, AbilitySourceDto::Mutation | AbilitySourceDto::Race);
+        let resource_spills = Self::ability_cost_spills_into_hit_points(source, ability_id);
         let innate_activation = match source {
             AbilitySourceDto::Mutation => mutation_activation.as_ref(),
             AbilitySourceDto::Race => race_activation.as_ref(),
@@ -376,7 +377,7 @@ impl Game {
         } else {
             0
         };
-        if !innate_power
+        if !resource_spills
             && resource_cost > 0
             && resource_id
                 .as_deref()
@@ -388,17 +389,17 @@ impl Game {
             });
             return Ok(None);
         }
-        let resource_paid = if innate_power {
+        let resource_paid = if resource_spills {
             resource_before.min(resource_cost)
         } else {
             resource_cost
         };
-        let hp_paid = if innate_power {
+        let hp_paid = if resource_spills {
             resource_cost.saturating_sub(resource_paid)
         } else {
             class_hit_point_cost
         };
-        let affordable = if innate_power {
+        let affordable = if resource_spills {
             hp_paid <= u32::try_from(self.player.hp.max(0)).unwrap_or(0)
         } else {
             resource_before >= resource_cost

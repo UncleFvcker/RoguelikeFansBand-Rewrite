@@ -1749,13 +1749,16 @@ impl Game {
                     } else {
                         0
                     };
-                    let mut base_shot = if heavy_shoot {
+                    let mut base_shot = if heavy_shoot || self.player_tomte_headgear_excess_weight() > 0 {
                         100
                     } else {
                         ranged_skill.max(100)
                     };
                     let class = self.character_definitions().map(|(_, _, class, _)| class);
                     let sniping_profile = class.and_then(|class| class.sniping_profile.as_ref());
+                    if self.player_is_ranger() && profile.ammunition_type != AmmunitionTypeDefinition::Arrow {
+                        base_shot = 100;
+                    }
                     if let Some(sniping) = sniping_profile {
                         let excess = base_shot.saturating_sub(100);
                         base_shot = 100_i32.saturating_add(
@@ -1778,9 +1781,11 @@ impl Game {
                     {
                         base_shot = base_shot.min(cap);
                     }
-                    base_shot = base_shot
-                        .saturating_add(bonuses.base_shot_delta_percent)
-                        .max(1);
+                    // xtra1.c clears equipment XTRA_SHOTS for a heavy launcher.
+                    if !heavy_shoot {
+                        base_shot = base_shot.saturating_add(self.player_equipment_bonuses().base_shot_delta_percent);
+                    }
+                    base_shot = base_shot.max(1);
                     let energy_cost = (i32::from(profile.shot_energy) / base_shot).max(1);
                     let breakage_modifier = if heavy_shoot {
                         0
@@ -2818,6 +2823,11 @@ impl Game {
         let Some((_, race, class, personality)) = self.character_definitions() else {
             return;
         };
+        if self.player_is_ranger() && self.items.iter().any(|item| {
+            matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) == Some("launcher"))
+        }) {
+            add_nonzero_stat(pipeline, StatKind::RangedSkill, StatLayer::Class, &class.id, 20 + i32::from(self.progress.level));
+        }
         if self.player_is_duelist() {
             let x = i32::from(
                 self.effective_player_attributes()

@@ -179,10 +179,7 @@ impl Game {
                 && terrain
                     .movement_modes
                     .contains(&rfb_content::ActorMovementMode::Fly))
-            || (terrain.tags.iter().any(|tag| tag == "tree")
-                && self.character_definitions().is_some_and(|(_, race, _, _)| {
-                    race.tags.iter().any(|tag| tag == "forest-adapted")
-                }))
+            || (terrain.tags.iter().any(|tag| tag == "tree") && self.player_is_forest_adapted())
     }
 
     pub(super) fn player_can_cross_terrain(

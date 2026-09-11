@@ -924,7 +924,7 @@ impl Game {
                 return Err(CoreError::InvalidSave("riding state is invalid"));
             }
         }
-        for entity in &self.entities {
+        for (index, entity) in self.entities.iter().enumerate() {
             let is_mount = self.riding_actor_id.as_deref() == Some(entity.id.as_str());
             self.validate_actor(entity, ActorRole::Monster)?;
             if let Some(summon) = &entity.summon
@@ -933,7 +933,11 @@ impl Game {
                 return Err(CoreError::InvalidSave("summon state is invalid"));
             }
             if !instance_ids.insert(entity.id.clone())
-                || !self.actor_kind_can_enter_position(&entity.kind_id, entity.position)
+                || !(if is_mount {
+                    self.actor_can_enter_position(index, entity.position)
+                } else {
+                    self.actor_kind_can_enter_position(&entity.kind_id, entity.position)
+                })
                 || (!positions.insert(entity.position) && !is_mount)
             {
                 return Err(CoreError::InvalidSave("entity position is invalid"));

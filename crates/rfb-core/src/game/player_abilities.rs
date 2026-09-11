@@ -753,6 +753,15 @@ impl Game {
         }
     }
 
+    pub(super) fn ability_cost_spills_into_hit_points(
+        source: AbilitySourceDto,
+        ability_id: &str,
+    ) -> bool {
+        matches!(source, AbilitySourceDto::Mutation | AbilitySourceDto::Race)
+            || (source == AbilitySourceDto::Class
+                && ability_id == "demo.ability.ranger-probe-monsters")
+    }
+
     pub(super) fn innate_power_failure_percent(&self, activation: &InnatePowerDefinition) -> u8 {
         if self.progress.level < activation.minimum_level {
             return 100;
