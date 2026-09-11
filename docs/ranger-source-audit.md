@@ -1,0 +1,147 @@
+# 游侠来源与消费者审计
+
+审计日期：2026-09-11，对应[游侠计划](ranger-class-plan.md)第一步；实现基线 `6f9b22c1a6649833bf2ff975878efb8cedb235d3`。本步只完成来源核对与差异确认，没有新增 Class/Build、开放入口或验收游戏行为。内容包 1.422.0、协议 1.253、State Hash Schema 125、save header/payload 14/20 均未改变。
+
+唯一 RFB 来源为 `D:/codex/Frogcomposband/master` 的 `master` Git 对象，实际提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。以下源文件及行号均指此提交，使用 `git show` / `git grep` 读取，未读取源仓库当前检出文件。当前项目路径则指上述实现基线。
+
+## 范围与方法
+
+全读 `src/ranger.c`；解析 `lib/edit/m_info.txt N:4` 和 `lib/edit/s_info.txt N:4`，追踪显式 `CLASS_RANGER` 以及 caster flags、学习方式、主副领域、武器表索引和公共规则。核对当前出生/成长、施法/学习/保存、投射物/移动、物品效果/生成、任务、公会和 UI 消费者。
+
+原版 `tables.c:1714,1788` 固定主领域 Nature，副领域允许 Sorcery/Chaos/Death/Trump/Arcane/Daemon。本轮四个 Build 为 `demo.build.ranger-nature-{sorcery,death,arcane,daemon}`，对应自然＋咒术/死亡/奥秘/恶魔；混沌和王牌留给领域批次。Craft 即使已合入也不属于 Ranger 候选。未发现 Ranger 的职业专属种族禁配；保留现有正式种族资格及未开放怪物种族边界，不套用 Duelist 的冬贝利禁配或 Priest 善恶互斥。
+
+本次逐书核对五个领域共 20 本书、160 个稳定 ability ID；四本书拼接顺序与现有 Mage Class 的 32 项 override 顺序逐项一致，再对照源 T 记录。该核对证明身份/参数映射，不表示重新执行了 160 个公共效果测试。
+
+## 1. 职业、出生、成长与种族
+
+| 源规则 | 当前实现及差异 | 落地步骤 |
+| --- | --- | --- |
+| `ranger.c`：中文名“游侠”；STR/INT/WIS/DEX/CON/CHR 为 +2/0/+2/+1/+1/0；life 106、base HP 8、exp 140、pets 35 | 尚无 Ranger Class。现有 [Class 类型](../crates/rfb-content/src/definitions/characters.rs)、[成长](../crates/rfb-core/src/game/progression.rs)和宠物维持可表达这些修正 | 第二步 |
+| 基础 dis/dev/sav/stl/srh/fos/thn/thb 为 30/37/36/3/24/16/56/50，每十级成长 8/11/10/0/0/0/18/16；`combat.c:266` blows 为 500/70/40 | 复用 skill set 与现有近战参数；射击技能的额外 `20+L` 另在装备发射器时计算，不能重复写入基础技能 | 第二/四步 |
+| `ranger.c::_birth`：匕首、软皮甲、短弓、随机 20—40 支箭、双方各第一本书 | 已有 `demo.item.dagger`、`soft-leather-armour`、`short-bow`、`arrow` 与四个组合所需书；复用 Class startingItems 数量范围及 Build 书本。未自动学会法术；沿种族出生合并和装备槽规则 | 第二步 |
+| `s_info N:4` 为 320 个 W、3 个 S；`skills.c:1052` 默认起点 0 提升到 `min(2000, maximum)` | 见下方完整分组；不得复制 Archer 或 Sniper 的武器熟练度表 | 第二步 |
+| `virtue.c:240` 固有 Nature、Temperance，再由种族/出生领域补充 | [virtues.rs](../crates/rfb-core/src/game/virtues.rs)缺 Ranger 身份。改换副领域不重抽出生美德；主 Nature 与固定 Nature 美德按源去重 | 第二步 |
+| `ranger.c` 两类感知均 SLOW/STRONG；`dungeon.c:183–273` 两者频率基数均 80000，再经 WIS/Knowledge/等级调整 | [item_knowledge.rs](../crates/rfb-core/src/game/item_knowledge.rs)周期入口仅 Mindcrafter/Mage，且第一类默认弱感知。Ranger 需两类都强，沿既有回合入口、物品分类与背包抽样，不改成拾取即鉴定 | 第二步 |
+| `py_birth.c:2696` 建议属性 16/11/16/16/14/8；`xtra1.c::_calc_xtra_hp_aux` Ranger 落默认权重 1/1/1 | 保留当前公共出生属性及 HP progression，不新增源点购或完整额外 HP 曲线。职业修正必须导入；“成长到 50 级”仅指当前 progression 与源职业修正结合 | 第二/七步明确范围 |
+| `races_a.c` 龙人变形攻击 Ranger 无职业缩放，沿种族调整后的 100% | 当前默认 100% 可复用；不能随双领域公共化获得 Mage 的 80%。Tomte 头部重装与普通种族装备槽仍影响实际射击/负重 | 第二/四步 |
+
+武器表按 `TV_WEAPON_BEGIN=19` 加 W 的第一索引解释，0/1/2/3/4 的熟练度档位对应 0/4000/6000/7000/8000。普通出生后的完整分组为：
+
+- 发射器（tval 19）：短弓、长弓及 sval 63 为 4000→8000；投石索、轻弩、重弩为 2000→7000；其余表内槽位为 2000→8000。
+- 挖掘工具（20）、长柄（22）：全部 2000→6000。
+- 钝器（21）：默认 2000→6000；双节棍（sval 4）2000→4000、钓竿（40）0→0、sval 63 为 2000→8000。
+- 刃器（23）：默认 2000→6000；匕首（4）、短剑（10）、阔剑（16）4000→8000，Main Gauche（5）2000→7000，毒针（32）2000→8000。此处武器中文显示仍复用现有 item 名称，不按审计说明另命名。
+- Martial Arts、Dual Wielding、Riding 均为 0→6000。0 起点不表示禁止徒手、双持或骑乘；现有 Class 字段与公共成长消费可复用。尚未导入的表内武器槽位只留来源记录，不为填满矩阵导入无关物品。
+
+## 2. 法术表、MP、费用与失败
+
+`m_info N:4 I:LIFE:WIS:0x06:0:3:450`：LIFE 表示随机祈祷式学习，并不授予生命领域。`0x06` 为 `MAGIC_FAIL_5PERCENT | MAGIC_GAIN_EXP`；最低失败率和手套负重还须按 `ranger.c` 的 caster 信息落实。源五领域索引分别为 Sorcery=1、Nature=2、Death=4、Arcane=6、Daemon=8；7 是未开放给 Ranger 的 Craft，不能误读成 Daemon。
+
+| 领域 | 核对 T 记录 | 与 Mage 等级/费用/失败三元组不同 | 与 Mage 原始首用 XP 不同 | 等级 >50 的记录 |
+| --- | ---: | ---: | ---: | ---: |
+| 自然 nature | 32 | 31 | 30 | 0 |
+| 咒术 sorcery | 32 | 32 | 32 | 3 |
+| 死亡 death | 32 | 32 | 31 | 6 |
+| 奥秘 arcane | 32 | 32 | 32 | 1 |
+| 恶魔 daemon | 32 | 32 | 31 | 5 |
+| 合计 | 160 | 159 | 156 | 15 |
+
+首用 XP 比较为源 `minimumLevel × sexp` 与当前 Mage `firstSuccessExperience`，不是实际游戏中完成了首用奖励的计数。每个领域的本轮不可学习项按零起始源 index 如下：
+
+- Sorcery：28 `sorcery-device-mastery`、30 `sorcery-banish`、31 `sorcery-invulnerability`。
+- Death：15 `death-genocide`、23 `death-darkness-storm`、28 `death-restore-life`、29 `death-mass-genocide`、30 `death-hellfire`、31 `death-wraithform`。
+- Arcane：31 `arcane-clairvoyance`。
+- Daemon：23 `daemon-doom-hand`、28 `daemon-summon-greater-demon`、29 `daemon-hellfire`、30 `daemon-send-to-hell`、31 `daemon-polymorph-demonlord`。
+
+上述 ID 均省略公共前缀 `demo.ability.`。书仍可拥有/浏览这些条目，但不能学习或施放；不是从公共书中删除它们。
+
+| 源规则 | 当前消费者与实施要求 |
+| --- | --- |
+| WIS，3 级起点；`xtra1.c:3399–3434` 先在 L<3 把最大/当前 MP 置 0，再令有效等级 `L−2`；`calc_mana_aux:3361` 使用 `adj_mag_mana × (有效等级+3)/4`，非零加 1，再做种族修正 | [player_abilities.rs](../crates/rfb-core/src/game/player_abilities.rs)的 RfbMana 直接使用 `L+3`，CastingProfile 没有此施法起点。第二步需让 MP 和学习公式共用真实起点，不能只在 UI 隐藏 1—2 级法术。Ranger 从 3 级起分子为 `L+1` |
+| 负重 450/33/1000，手套无 FREE_ACT/MAGIC_MASTERY/正 DEX 时法力 75%；Ranger 无 CLASS_REGEN_MANA | 现有 encumbrance 可表达，资源恢复应为普通 100%，不能继承 Mage 的 200%。保留现有资源上限刷新/clamp 适配；核对换装、属性与负重实际 MP |
+| `object1.c:_object_gives_esdm` 普通 EASY_SPELL/DEC_MANA 依赖 `CASTER_ALLOW_DEC_MANA`，Ranger 没有；源还存在按固定神器身份的例外 | 当前失败/耗魔直接消费 EasySpell/ReducedManaCost 装备被动，未核对此资格。第二/五步需在实际被动消费及物品有效属性路径区分 Ranger，保留源明确神器例外；不能简单禁止装备或从普通生成池删掉物品 |
+| `do-spell.c:202` Ranger beam chance 为 `floor(L/2)` | 现有 beam multiplier/divisor 可表达 1/2；不是 Mage 的 L 或 High-Mage 的 L+10 |
+| `do-spell.c:3609,6041` 熵之法球/地狱之焰 Ranger 等级伤害为 `L+floor(L/4)`，基础 3d6，半径 L<30 为 2、否则 3 | 现有两个 ability 的等级缩放为 `floor(3L/2)`。使用 Ranger realm override 的 levelScaling 修正，两项均可达，不另复制 program；保留半径及其他效果 |
+| `lawyer.c` Death index 21 费用为 `base + clamp(base,50,100)`，封顶 250；与职业无关 | 当前 effective_casting_ability 已公共处理，复用。先导入 Ranger 基础费用，再做该调整，最后做熟练度费用，避免重复加算 |
+| `spells3.c:spell_chance` 副领域 +5 只限 Mage/Blood-Mage/Priest/Yellow-Mage；Ranger 不在内 | 第三步公共化学习/保存时必须保留独立的失败率条件。Ranger 仍受骑乘、装备/状态、美德、WIS 最低失败率、眩晕、95 封顶及熟练度减免的源顺序影响；最低 5 不是最终绝不低于 5，Expert/Master 减免在后 |
+| `mod_need_mana` 用当前主副熟练度做整数减耗；成功首用奖励及 `MAGIC_GAIN_EXP` 适用于 Ranger | 已有精确整数算式、首用字段和练习实现可复用。主副 cap、深度/难度练习、美德和 Death 失败反噬当前多处只在 `player_is_mage()` 分支生效，第三步须接 Ranger；不把“所有 Mage 专属规则”一起放开 |
+
+本轮 Nature/Sorcery/Arcane 没有发现需要复制效果程序的 Ranger 专属分支；沿现有公共程序及其验证。Chaos、Trump 和其他非法领域中的职业分支不进入本轮。
+
+## 3. 随机学习、熟练度、遗忘与改换
+
+**结论：游侠不能重复研习已学法术，但必须记录共享学习支出。** `cmd5.c:697` 调用 `spell_okay(spell,FALSE,TRUE,realm,FALSE)`，`spells3.c:3454` 对已学项返回 `!study_pray`，因此随机候选排除已学和已遗忘项，还检查等级与种族领域资格。源后面的重复研习分支对该学习方式不可达。80 上限仍有意义：改换副领域清除旧进度，却不退还其学习支出。
+
+| 行为 | 冻结后的源语义 | 当前差异 / 第三步工作 |
+| --- | --- | --- |
+| 共享容量 | `min(floor(adj_mag_study[WIS] × max(L−2,0)/2),80)`，再计 add_spells；额外 bonus 为 0。new_spells = allowed + add_spells + forgotten − learned_spells | 当前 RfbDualRealm 使用 L；DivineRandom 以 learned IDs 数量判满。复用 `spent_spell_learning` 与额外容量，但改为 Ranger 公式；不套单领域折半或 Mage 的 100 总上限 |
+| 抽取 | 只遍历所选书本，按源 index 顺序对合格项执行 `one_in_(k)` reservoir sampling；没有候选不抽 RNG | 现有 `study_random_player_ability` 已用相同抽样形态，可保留。补共享预算、源资格和 paid spending；不要改为一次随机索引或跨两领域抽取 |
+| 成功学习 | 追加一次学习顺序/支出，行动能量 100；按 `mp_ptr->spell_book` 增加 Faith，Ranger 此处不是 Nature | 当前 StudyPrayer 仅记学习事件，未接该美德变化。使用公共 virtue_add，缺少 Faith 槽位时不强行新增；无候选或前置拒绝不能多付回合/支出 |
+| 重复/遗忘 | 无手动重复研习入口，也无手动遗忘退款。等级/容量损失按逆学习顺序遗忘，恢复按原顺序；已遗忘项不被重新随机抽取 | 当前 DivineRandom 的学习顺序排除可复用；手动 forget 和保存预算校验目前仅对 Mage 收紧，需覆盖 Ranger 的源限制 |
+| 熟练度 | 主领域 Master=1600，副领域 Expert=1400；以成功施法练习提升。失败不按普通固定 gain 涨熟练度 | 当前 cap 和 grow_mage_spell/失败反噬入口限 Mage。复用难度、地牢/荒野层级、城镇不练习及无效攻击识别；不得用开放重复研习替代实际练习 |
+| 改换资格 | `cmd5.c:item_tester_learn_spell` 允许职业第二领域候选书，必须有可用学习机会、光照、非失明/混乱，书在背包或脚下 | 当前 [spell_realms.rs](../crates/rfb-core/src/game/spell_realms.rs)只允许 Mage。Ranger 第一领域固定 Nature，候选只能是本轮四项；不能拿所有 realmProfiles 自动作候选 |
+| 改换提交点 | 先选书、确认改换，清掉旧副领域 learned/worked/forgotten、熟练度及顺序，记录 old_realm；保留主领域与 paid spending；然后继续随机学习 | 拒绝确认无变化；确认后即使新书无可学项，改换仍成立，未成功学习不耗 100 能量。Ranger 没有 Mage 后续点选法术步骤。复用待确认书本状态并按随机流程继续，避免前端拼装规则 |
+| 换回旧领域 | 旧领域的原学习/熟练度/首用记录不恢复，重新学习另付次数 | 验证旧副领域进度清理、历史去重、主领域保存及首用经验按清理后的记录重算；不能按出生 Build 覆盖当前领域 |
+
+保存复用现有领域状态而不建另一套 Ranger 存档。当前状态命名为 `mage_realms` / `MageRealmsSaveDto`，相关身份限制散布在 `spell_realms.rs`、`player_abilities.rs`、[persistence.rs](../crates/rfb-core/src/game/persistence.rs)、[validation.rs](../crates/rfb-core/src/game/validation.rs)、[mod.rs](../crates/rfb-core/src/game/mod.rs)。实现时可将实际共用状态命名调整为双领域状态；以所需类型变化决定协议/保存/哈希版本，生成绑定，拒绝非法副领域、旧领域残留、无效顺序和支出，不能放宽保存完整性检查。
+
+当前领域的直接消费者包括 active_casting_realm_profiles/book IDs、学习和施法投影、[mogaminator.rs](../crates/rfb-core/src/game/mogaminator.rs)领域谓词、[loot/allocation.rs](../crates/rfb-core/src/game/loot/allocation.rs)书本需求/发现次数、[town.rs](../crates/rfb-core/src/game/town.rs)领域公会资格。主领域奖励和出生美德继续读取固定主领域；改换不清空全局发现次数、不重置商店库存。已有 shop 初始配置和书本获取路径沿用公共适配。
+
+## 4. 射击、树林与职业能力
+
+| 源规则 | 当前消费者与缺口 | 验证要求 |
+| --- | --- | --- |
+| `ranger.c:3–14` 有 TV_BOW 装备时 `thb += 20+L`；这是发射器类别，不限 Arrow | [player_stats.rs](../crates/rfb-core/src/game/player_stats.rs)缺此职业加成，必须进入派生 ranged skill，供命中、射速及破损共用，不能只加面板命中 | 未装备/短弓/投石索/弩、成长前后、重弓 |
+| `xtra1.c:5024` 公共基础射速提升后，Ranger 对非 TV_ARROW 设置 base_shot=100；`types.h:968` NUM_SHOTS=base_shot+xtra_shot | 现有解析支持公共技能射速、Sniper 折半、骑乘非箭上限和装备额外射速；新增 Ranger 的基值覆盖必须在装备额外射速前，不削掉 XTRA_SHOTS。源额外射速为 `15×pval` | 实际发射 energy，而非只查 base_shot；两件奖励弓要验证额外射速/倍率 |
+| `heavy_armor()` 对普通 Ranger 返回 false，但 Tomte 头部重装可为 true | 当前基础射速只查 heavy_shoot，未查 Tomte 这一源例外。不能自行对普通 Ranger 加“穿重甲就失去箭射速”的规则 | 普通重甲仍影响 MP；Tomte 头部超重另验射速，修公共条件时回归直接调用者 |
+| `cmd1.c:5179` Ranger 免树地形双倍能量，雪地修正仍独立；源普通角色可慢速穿树 | 当前 surface-tree 是 non-walkable/flyable，森林种族由 [movement.rs](../crates/rfb-core/src/game/movement.rs)及 [wilderness.rs](../crates/rfb-core/src/game/wilderness.rs)的 forest-adapted 判断放行，没有普通步行穿树的双倍能量路径。**保留现有地形公共适配**，本轮将 Ranger 接入通行并保持普通移动能量；不借本轮重写所有角色的树地形规则 | 未骑乘、相关坐骑、荒野/局部通行和雪地；明确不能穿任意墙。此适配不等于完整复刻原版普通职业慢速穿树 |
+| `ranger.c` 能力 15/WIS/20/90；`spells_m.c:886` SPELL_NAME 为“探测怪物”，default SPELL_FAIL_MIN=0、energy=100 | 职业介绍使用“探查怪物”，但实际能力名应逐字采用“探测怪物”。复用 `demo.ability-program.sniper-probe-monsters` 与现有本地化；不能照搬 Sniper 的 INT/80/固定 HP 配置 | 14/15 级资格、成功/失败/无目标，正确名称及 WIS 失败率 |
+| `spells.c:1449–1540 do_cmd_power` 以 HP+MP 判预算，优先扣 MP，不足部分扣 HP，失败也支付；与书本过度施法不同 | 当前 Class 能力要求全额资源，只有 Race/Mutation 走 innate spill。Ranger 探测必须接入现有先 MP 后 HP 的支付能力，并保留 Class 来源/能力 UI；不要把所有 Class 法术和技巧全局改为溢出支付 | MP≥20、MP<20但总量足够、总量不足、失败支付与保存；原生资源不足提示按真实 HP/MP 投影 |
+| `spells2.c:2288 → cmd3.c:MON_LIST_PROBING` 只处理可见、非模糊、可投射到且非幻觉中的怪物；揭露伪装并更新 lore；空列表也成功 | [abilities/terrain.rs](../crates/rfb-core/src/game/abilities/terrain.rs)现有探查程序已处理这些过滤、伪装和怪物知识，可复用 | 隔墙/模糊/幻觉/伪装、知识恢复，无目标不得退款 |
+
+`mspells1.c` 的源怪物施法 AI 将 Ranger 的施法倾向评分设为 20；本项目当前使用已有怪物能力决策与资源投影，没有复刻整套源职业概率评分。保留公共 AI 适配，不为本职业单独加第二套怪物决策系统。`r_poss.c` 的 Ranger 身体模板属于尚未开放的 Possessor 范围，不随普通游侠导入。
+
+## 5. 生成、固定神器、任务及公会
+
+| 源规则 / 消费者 | 当前差异与第五步工作 |
+| --- | --- |
+| `obj_kind.c:152` Ranger favorite 为发射器；`object2.c:_is_favorite_weapon` 用于 Tailored melee 候选 | allocation 当前只对 Archer 排除普通近战候选，Ranger 会误收。补 Ranger 的真实 favorite 资格；普通生成池、正常装备和使用近战武器不受此 Tailored 条件限制 |
+| `object2.c:3574` 1/5 强制弓分支只有 Archer/Sniper；`_is_device_class:2429` 不含 Ranger | **不**给 Ranger 增加 1/5 弓抽取或 1/7 装置偏好；书本 needs-book 的 1/10 路径和当前双方高阶书需求继续复用。会使用装置不等于源生成偏好职业 |
+| Ego/负向生成及完成品资格 | 沿现有 Ego/curse、种族槽位、手套及物品有效属性消费者；补 Ranger 条件的行为证据，不加一份职业专属生成允许列表 |
+| `artifact.c:2256` 无外部主题的创造神器卷轴，进入 1/4 职业 bias 后 Ranger=(Ranger,30)；后续 Warrior 分支遵循源 RNG | [random_artifact.rs](../crates/rfb-core/src/game/random_artifact.rs)已有 Sniper 对应分支，增加 Ranger 身份即可。自然/显式主题生成不能一律强制此职业 bias；卷轴、主题与自然分别审计 |
+| `q_old_castle.txt:215–219` RANDOM27%5 为 0→Belthronding，其余→Yoichi | [middle-earth.json](../packs/rfb-demo-original/worlds/middle-earth.json)缺 Ranger 1:4 奖励；[tasks.rs](../crates/rfb-core/src/game/tasks.rs)持久奖励选择/重复神器替代当前限 Duelist/Mage/High-Mage，必须接入 Ranger。保留已有任务选择 seed 适配，领取失败/途中动作不重抽 |
+| `q_thieves.txt` 默认 long sword，Ranger 没有职业覆盖，快速 Mage 魔杖分支不适用 | 当前默认 broad-sword，仅 Mage 等特定覆盖 long-sword；普通游侠应增加源 long-sword 奖励，复用现有物品。尚未开放怪物种族的奖励覆盖不扩入本轮 |
+| 六个正式城镇的源 B:11 Ranger Owner | 现有六份 archer-guild ownerClassIds 仅 Archer/Sniper；加入 Ranger，复用强化弹药和弓服务/定价，不按副领域改变这一职业资格 |
+| Thalos B:8、Angwil B:8 Ranger Member | 对应 `thalos-sorcery-tower`、`angwil-mage-tower`，两者已有设施但缺 memberClassIds。Member 不是 Owner；源鉴定 200/1000，Ranger 使用非 Owner 价格。不要误连到 Angwil 内殿或 Morivant 咒术塔 |
+| Morivant 咒术塔及其他按领域设施 | 当前 ownerRealmIds 由主领域和 current_second_realm_id 匹配。副 Sorcery 时满足资格，改换后立即改变，不能固定按出生组合；`town.rs` 已有匹配实现，需验证新职业当前领域接线 |
+
+两件必要固定神器的完整源记录如下，均为长弓（tval/sval=19/13），没有 E 激活记录，也未发现 `ART_BELTHRONDING` / `ART_YOICHI` 的额外运行时专属分支：
+
+| 源 ID | 权威中文后缀 | I/W/P | F 与导入要求 |
+| --- | --- | --- | --- |
+| a_info 124 `'Belthronding'` | `『贝尔斯隆丁』` | pval 4；等级70/稀有20/重量40/价值60000；AC0/倍率x3.00/命中20/伤害33/防御0 | DEX、STEALTH、HIDE_TYPE、RES_DISEN、XTRA_SHOTS、SHOW_MODS；pval 同时驱动 DEX/潜行和 60 额外射速，保留两行源描述 |
+| a_info 148 `of Yoichi` | `与一的` | pval 4；等级50/稀有30/重量40/价值30000；AC0/倍率x4.00/命中40/伤害23/防御0 | DEX、HIDE_TYPE、SEE_INVIS、SHOW_MODS；倍率与附魔进入真实发射器路径，无额外射速、无激活 |
+
+中文来自同一 ref 的 `localization/lib_edit_text_to_translate.tsv:420,489`（EDIT_00419/EDIT_00488）。`lib_edit_text_to_translate_unique.tsv` 对应行为空，不能拿空表覆盖已有中文；采用非空中文表逐字值，不自行另译。当前未发现两件正式 item，拟用 `demo.item.belthronding` / `demo.item.yoichi`，实际写入前再检查占用与其他方向导入，固定神器自然分配/唯一性/重复替代同时接入。
+
+每个拟开放 Build 的五类审计记录分别包含基础分配/Tailored、Ego/负向生成、随机神器、固定神器/奖励、使用/保存；共同条件和既有行为证据复用，Ranger 实际缺口补齐后方可登记。第五步准备记录，第六步与普通入口同时纳入 [generation-build-applicability.json](../design/generation-build-applicability.json)，按[内容开发](content-development.md#职业与领域-build-的生成接入)生成报告和只读检查；本步不预填 completed。
+
+## 6. 来源许可与保留的公共适配
+
+本步核对了 `ranger.c`、`a_info.txt` 对应记录、中文表、`src/angband.h` 和 `src/artifact.c` 的通知。源 angband.h 保留 James E. Wilson 的教育、研究及非营利复制/分发条件，项目已在 [RFB-UPSTREAM-NOTICE.txt](../LICENSES/RFB-UPSTREAM-NOTICE.txt)保存该通知；artifact.c 另列 James E. Wilson、Robert A. Koeneke，已在 [NOTICE](../NOTICE)保留。两件 a_info 记录及 Ranger 职业文件没有单独的重新许可声明；中文表同样没有提供独立重新许可依据。
+
+这些观察仅用于记录实际材料与保留通知，不表示默认 MPL-2.0/CC BY-SA 或其他旧批次结论自动覆盖新材料。第二/五步实际改编与导入时随来源记录维护 NOTICE；不擅自给源描述、名称或规则实现换许可证。本步只提交审计说明，没有复制整份上游内容文件。
+
+明确保留：当前出生属性与 HP progression、整数装置 SP、公共书本法术先校验目标/资源的命令约定、当前资源上限刷新方式、树地形 non-walkable/flyable 适配、Mogaminator 替代源 `.prf`、现有商店配置、任务选择 seed 和怪物 AI。它们应在最终交付说明中与源职业规则区分。
+
+**不作适配豁免的已发现缺口：** Ranger 职业/160 项参数、3 级 MP/学习起点、普通减耗/易施法资格、两项等级伤害、随机学习共享支出/美德、主副练习/失败/遗忘及改换保存、装备感知、射击/森林职业资格、探测能力 MP→HP 支付、Tailored favorite、卷轴 bias、两把奖励弓与任务/公会关联。
+
+## 7. 后续退出证据
+
+1. 第二步：四 Build 真正新游戏出生、双书与随机箭数、320 W/3 S 映射、1/2/3 级 MP/容量、WIS/负重/手套、职业美德及周期强感知；160 参数、15 个不可学条目、beam 和两项等级伤害。新类型才生成 Schema，内容变更更新包与 lock。
+2. 第三步：同 seed 随机抽取/无候选不抽 RNG、不重复学习、成功 Faith/支出、改换后预算不退款、1600/1400 练习边界、无副领域 +5、遗忘/恢复、失败反噬；确认后无候选仍保留领域、历史换回和保存后相同后续动作。覆盖直接受影响 Mage/Paladin 路径，不机械扩张所有职业。
+3. 第四步：发射器装备技能加成和实际行动能量、非箭100基值后仍加装备射速、重弓/Tomte边界、树林通行/雪地/骑乘、15级探测的实际 WIS 失败率、MP/HP支付、无目标/失败和知识保存。
+4. 第五/六步：四个真实 Build 的生成与当前领域消费者、1:4旧城堡选择/两件固定弓使用和重复替代、普通盗贼奖励、六公会Owner/两塔Member；正式入口、书本随机学习/改换UI、完整来源审计生成检查及本地化/可访问性证据。
+5. 第七步：新存档弓箭→3级双方学习施法→15级探测→改换与保存继续；明确所有经验、地图和物品准备。Tauri standalone 的 WebDriver 行为验收与优化 EXE 原生烟测分别记录，交付源码/程序/许可/校验值；不宣称自然高等级练级、通关或 Android 完成。
+
+本步验证为：源提交与当前基线核对、320 W/3 S 分组、五领域160项参数比对及书内ID顺序验证、源调用链与消费者静态审计、文档链接/格式检查。未运行游戏测试、内容生成或桌面构建，因为本步未改变运行时行为。
