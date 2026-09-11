@@ -8,6 +8,39 @@ mod generation;
 mod learning;
 mod realm_change;
 
+#[test]
+fn desktop_preparation_preserves_natural_birth_and_round_trips_a_real_dungeon() {
+    let mut game = Game::new_with_build(925, "demo.build.mage-arcane-sorcery").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    let born = game.snapshot();
+    game.debug_prepare_mage_e2e(1).unwrap();
+    let with_wand = game.snapshot();
+    assert_eq!(with_wand.player.progress, born.player.progress);
+    assert_eq!(with_wand.player.position, born.player.position);
+    assert_eq!(with_wand.player.hp, born.player.hp);
+    assert_eq!(with_wand.entities, born.entities);
+    assert_eq!(with_wand.cells, born.cells);
+    assert_eq!(with_wand.inventory.len(), born.inventory.len() + 1);
+    game.transition_floor("demo.floor.warrens-depth-1".to_owned(), None, None, false)
+        .unwrap();
+    game.debug_prepare_mage_e2e(25).unwrap();
+    choose_human_talent_if_pending(&mut game);
+    assert_eq!(game.progress.level, 25);
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .any(|ability| { ability.id == EAT_MAGIC && ability.can_cast })
+    );
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.rng, game.rng);
+    let before = game.state_hash();
+    assert!(game.debug_prepare_mage_e2e(51).is_err());
+    assert_eq!(game.state_hash(), before);
+}
+
 const BUILD: &str = "demo.build.mage-death-sorcery";
 const MANA: &str = "demo.resource.mana";
 const EAT_MAGIC: &str = "demo.ability.mage-eat-magic";

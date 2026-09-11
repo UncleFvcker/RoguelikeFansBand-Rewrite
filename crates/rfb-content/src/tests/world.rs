@@ -11306,7 +11306,7 @@ fn town_entrances_and_shared_facilities_match_source() {
             .expect("Thalos should exist");
         assert_eq!(town.floor_id, "demo.floor.thalos");
         assert_eq!(town.shop_ids.len(), 10);
-        assert_eq!(town.facility_ids.len(), 11);
+        assert_eq!(town.facility_ids.len(), 12);
         for id in [
             "demo.town-facility.thalos-home",
             "demo.town-facility.thalos-library",
@@ -11318,6 +11318,7 @@ fn town_entrances_and_shared_facilities_match_source() {
             "demo.town-facility.thalos-paladin-guild",
             "demo.town-facility.thalos-palace",
             "demo.town-facility.thalos-royal-academy",
+            "demo.town-facility.thalos-sorcery-tower",
         ] {
             assert!(town.facility_ids.contains(&id.to_owned()), "missing {id}");
         }
@@ -11441,6 +11442,13 @@ fn town_entrances_and_shared_facilities_match_source() {
             facility("demo.town-facility.thalos-paladin-guild").owner_class_ids,
             ["demo.class.paladin"]
         );
+        let tower = facility("demo.town-facility.thalos-sorcery-tower");
+        assert_eq!(
+            tower.owner_class_ids,
+            ["demo.class.high-mage", "demo.class.mage"]
+        );
+        let cost = tower.identify_all_items_cost.as_ref().unwrap();
+        assert_eq!((cost.owner_cost, cost.other_cost), (200, 1000));
         assert_eq!(
             facility("demo.town-facility.thalos-paladin-guild")
                 .service_actions
@@ -11456,7 +11464,6 @@ fn town_entrances_and_shared_facilities_match_source() {
         for deferred in [
             "demo.town-facility.thalos-arena",
             "demo.town-facility.thalos-casino",
-            "demo.town-facility.thalos-sorcery-tower",
             "demo.town-facility.thalos-rogue-guild",
         ] {
             assert!(!town.facility_ids.contains(&deferred.to_owned()));
@@ -12121,7 +12128,28 @@ fn fixed_wilderness_task_geometry_and_rewards_match_source() {
             task.reward.as_ref().unwrap().entries[0].item_kind_id,
             "demo.item.crisdurian"
         );
-        assert_eq!(task.reward.as_ref().unwrap().class_overrides.len(), 4);
+        assert_eq!(task.reward.as_ref().unwrap().class_overrides.len(), 6);
+        // q_old_castle: Mage and High-Mage share RANDOM27 mod 10 (1:1:8).
+        for class in ["demo.class.mage", "demo.class.high-mage"] {
+            assert_eq!(
+                task.reward
+                    .as_ref()
+                    .unwrap()
+                    .class_overrides
+                    .iter()
+                    .find(|entry| entry.class_id == class)
+                    .unwrap()
+                    .entries
+                    .iter()
+                    .map(|entry| (entry.item_kind_id.as_str(), entry.weight))
+                    .collect::<BTreeMap<_, _>>(),
+                BTreeMap::from([
+                    ("demo.item.gandalf", 1),
+                    ("demo.item.saruman", 1),
+                    ("demo.item.indra", 8),
+                ])
+            );
+        }
         assert_eq!(
             task.reward
                 .as_ref()

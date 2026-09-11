@@ -11,6 +11,7 @@ const positionKey = position => `${position.x},${position.y}`;
 // Navigation for the acceptance player; every step still goes through normal keyboard input.
 export function nextWalk(state, visited, target) {
   const floor = new Set(state.cells.filter(cell => cell.terrainId === "demo.terrain.floor" || cell.terrainId.includes("stairs")).map(cell => positionKey(cell.position)));
+  if (target) floor.add(positionKey(target)); // Explicit destinations also include projected shop/home entrances.
   const queue = [{ ...state.player.position, key: undefined }];
   const seen = new Set([positionKey(state.player.position)]);
   for (let index = 0; index < queue.length; index++) {

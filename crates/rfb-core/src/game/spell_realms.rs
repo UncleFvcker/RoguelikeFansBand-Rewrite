@@ -3,14 +3,27 @@ use super::*;
 use rfb_protocol::{RealmChangeBookDto, SpellRealmsDto};
 
 impl Game {
-    /// UI fixture: a quiet, lit map, level 20 (or an actual level drain), and a Life book.
+    /// Desktop fixtures: level 1 adds only a wand; other levels prepare a quiet map.
+    /// Level 0 drains XP, 20 exercises learning, and 25 unlocks Eat Magic.
     #[doc(hidden)]
-    pub fn debug_prepare_mage_e2e(&mut self, drained: bool) -> Result<(), CoreError> {
+    pub fn debug_prepare_mage_e2e(&mut self, level: u16) -> Result<(), CoreError> {
+        if !matches!(level, 0 | 1 | 20 | 25) {
+            return Err(CoreError::InvalidSave("unsupported Mage E2E level"));
+        }
+        if level == 1 {
+            self.debug_add_generated_inventory_item(
+                "e2e.mage-wand",
+                "demo.item.magic-missile-wand",
+                1,
+            )?;
+            self.mark_item_aware("demo.item.magic-missile-wand");
+            return Ok(());
+        }
         self.entities.clear();
         self.items
             .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
         self.glow.fill(true);
-        if drained {
+        if level == 0 {
             self.apply_player_experience_drain(
                 self.progress.experience,
                 "e2e.mage-drain",
@@ -18,7 +31,7 @@ impl Game {
             );
         } else {
             let experience = self
-                .experience_required_for_level(20)
+                .experience_required_for_level(level)
                 .saturating_sub(self.progress.experience);
             self.apply_player_experience(experience, &mut Vec::new());
         }
@@ -42,6 +55,14 @@ impl Game {
                 .id
                 .clone();
             self.debug_add_generated_inventory_item("e2e.mage-life-book", &kind, 1)?;
+        }
+        if level == 25 {
+            self.debug_add_generated_inventory_item(
+                "e2e.mage-acquirement",
+                "demo.item.acquirement-scroll",
+                1,
+            )?;
+            self.mark_item_aware("demo.item.acquirement-scroll");
         }
         self.refresh_player_resource_maxima();
         self.refresh_player_ability_state();

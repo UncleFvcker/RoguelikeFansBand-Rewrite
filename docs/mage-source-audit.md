@@ -1,8 +1,8 @@
 # 法师来源与消费者审计
 
-初审日期：2026-09-10，对应[法师计划](mage-class-plan.md)第一步，代码基线 `a09a334df`。以下源→实现差异表记录初审基线；截至 2026-09-11 已完成前六步，普通创角已开放 56 个双领域组合。实施结论与验证范围见文末。
+初审日期：2026-09-10，对应[法师计划](mage-class-plan.md)第一步，代码基线 `a09a334df`。以下源→实现差异表记录初审基线；截至 2026-09-11 已完成七步，普通创角已开放 56 个双领域组合并完成代表组合的桌面闭环。实施结论与验证范围见文末。
 
-RFB 来源为 `D:/codex/Frogcomposband/master` 的 `master` Git 对象，实际提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`，第六步复核未变。以下源路径和行号均指此提交，通过 `git show` / `git grep` 读取；实现路径指本项目。内容 1.414.0；当前协议 1.252、State Hash Schema 124、save header/payload 为 14/19。
+RFB 来源为 `D:/codex/Frogcomposband/master` 的 `master` Git 对象，实际提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`，第七步复核未变。以下源路径和行号均指此提交，通过 `git show` / `git grep` 读取；实现路径指本项目。内容 1.414.0；当前协议 1.252、State Hash Schema 124、save header/payload 为 14/19。
 
 ## 范围和审计方法
 
@@ -161,7 +161,7 @@ Build 保留出生身份，主领域不变；当前副领域与必要历史由 R
 
 ## 当前进度与验证
 
-前六步已完成，第六步代码基线为 `257f99ab2`。正式定义见 [Mage Class](../packs/rfb-demo-original/classes/mage.json)、[技能](../packs/rfb-demo-original/skillSets/mage.json)、[玩家 actor](../packs/rfb-demo-original/actors/mage-player.json)、[职业能力](../packs/rfb-demo-original/abilities/mage-eat-magic.json)及 [Build 目录](../packs/rfb-demo-original/builds/)。56 个有序组合各携带双方第一本书，共用职业定义；[创角目录](../web/src/character-creation.ts)已开放全部组合。
+七步已完成，第六步代码基线为 `257f99ab2`。正式定义见 [Mage Class](../packs/rfb-demo-original/classes/mage.json)、[技能](../packs/rfb-demo-original/skillSets/mage.json)、[玩家 actor](../packs/rfb-demo-original/actors/mage-player.json)、[职业能力](../packs/rfb-demo-original/abilities/mage-eat-magic.json)及 [Build 目录](../packs/rfb-demo-original/builds/)。56 个有序组合各携带双方第一本书，共用职业定义；[创角目录](../web/src/character-creation.ts)已开放全部组合。
 
 - 复用 importer 的 `parse_m_info`，按 book rank/书内次序导入 256 项 Mage 等级、基础费用、失败率和首用经验；逐项对照解析结果通过。`firstSuccessExperience` 已存 `sexp × minimumLevel` 的最终值，运行时不再乘等级；死亡 Wraithform 的 250×47 和 Nature's Wrath 的 150×40 有实际首用奖励覆盖。
 - 源属性/技能、武器熟练度（含双节棍 0/0）、400/100/20 攻击参数、MP/再生/负重、周期感知、美德与龙人变形等级已接入。保持公共出生属性和 HP progression 适配；没有复刻源点购或 HP 掷点曲线。
@@ -179,7 +179,7 @@ Build 保留出生身份，主领域不变；当前副领域与必要历史由 R
 
 第四步实际检查：37 项 Mage、既有 High-Mage/Paladin/随机祈祷、Mogaminator、书本分配、城镇、保存、发现统计、神器身份和 Mindcrafter 相关回归通过；协议 7、保存容器 2 项通过。`rfb-core` / `rfb-protocol` / `rfb-save` all-targets Clippy、生成绑定检查、前端 typecheck 和 41 项状态/会话/背包/创角消费者测试通过。新增持久状态进入哈希，初始保存回环先 observe，再刷新 26 条 active 契约；diff 只有 stateHash/saveRoundTripStateHash，全部 verify 通过。内容未变化，不重编内容 Schema 或升级包/lock。
 
-第七步仍待完成：自然场景的新游戏闭环、受影响的完整回归与优化版桌面交付。第六步的 WebDriver UI 证据和准备条件见文末，不表示自然练级、通关或 Android 验收。
+第七步已完成自然新开局至 2 级、明确准备的 25 级熟练度／吞噬魔法／改换及保存继续、相关回归与优化版桌面交付。优化 EXE 原生创角和 WebDriver 完整行为证据分开记录，详见[状态页](status.md)；不表示自然练到高等级、通关或 Android 验收。
 
 ## 第五步：职业关联与生成结论
 
@@ -292,4 +292,4 @@ Angwil 原法师塔增 Mage owner；新 [Thalos 巫术之塔](../packs/rfb-demo-
 
 实际检查：40 项 Mage（含新增遗忘/恢复投影断言）、84 项 High-Mage、2 项 Paladin、7 项协议及前端 209 项通过；核心/协议和 Tauri webdriver 的 all-targets Clippy、类型、格式及生成绑定检查通过。`npm run e2e:build` 构建 Tauri standalone WebDriver 包；`node e2e/tauri.e2e.mjs --mage-ui` 中英文均通过 56 个 UI 组合、原生键盘/焦点/取消/忙碌锁、双方学习、重复研习、遗忘恢复、确认/取消及存档恢复，截图检查 390px 和 200% 缩放。`--character-creation` 的既有创角与响应式布局回归也通过，含高阶法师/战士/圣骑士实际开局和行动。报告及截图在 `test-results/mage-ui/`，测试脚本为 [mage.e2e.mjs](../web/e2e/mage.e2e.mjs)。
 
-Mage 专项从普通人类 1 级创建，随后通过仅 webdriver 开放的准备命令授予 20 级经验、生命第一册和明亮无怪场地；遗忘使用真实经验损失，恢复重新授予经验。此证据验证 UI 与保存，不表示自然练级或书本获取。第七步的自然场景施法/生存/装置、新游戏闭环、优化 EXE 及完整交付仍待完成。
+Mage 专项从普通人类 1 级创建，随后通过仅 webdriver 开放的准备命令授予 20 级经验、生命第一册和明亮无怪场地；遗忘使用真实经验损失，恢复重新授予经验。此证据验证 UI 与保存，不表示自然练级或书本获取。第七步另有自然施法/生存/装置和保存确定性闭环，具体准备条件、原生优化 EXE 验收与交付见[状态页](status.md)。

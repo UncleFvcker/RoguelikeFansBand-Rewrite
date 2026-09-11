@@ -2,11 +2,13 @@
 
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import net from "node:net";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { nextWalk } from "./berserker.e2e.mjs";
+import { Localization } from "../src/localization.ts";
 
 const webDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryDirectory = path.resolve(webDirectory, "..");
@@ -16,6 +18,9 @@ const logs = [];
 let child;
 let client;
 let nativeSaveName;
+const localization = new Localization("zh-CN", { "en-US":[], "zh-CN":await Promise.all(
+  ["ui","content","game"].map(file=>readFile(path.join(repositoryDirectory,"locales/zh-CN",`${file}.ftl`),"utf8")),
+) });
 
 async function main() {
   if (process.platform !== "win32") {
@@ -33,6 +38,7 @@ async function main() {
           "--disable-gpu",
         ].filter(Boolean).join(" "),
         TAURI_WEBDRIVER_PORT: String(port),
+        WEBVIEW2_USER_DATA_FOLDER: path.join(repositoryDirectory, "target", "e2e", "supply-webview"),
         RFB_E2E_WORLD: "warrens",
       },
       stdio: ["ignore", "pipe", "pipe"],
@@ -51,6 +57,8 @@ async function main() {
         logs.push(`[dom] ${JSON.stringify(await client.execute(`
           return {
             homeOpen: document.querySelector("#home-dialog")?.open,
+            position: document.querySelector("#position-value")?.textContent,
+            shopTitle: document.querySelector("#shop-dialog")?.open ? document.querySelector("#shop-title")?.textContent : null,
             saveName: document.querySelector("#native-save-name")?.value,
             saveNameDisabled: document.querySelector("#native-save-name")?.disabled,
             saveButtonDisabled: document.querySelector("#native-save-create")?.disabled,
@@ -111,11 +119,9 @@ async function runSupplyLoop(driver) {
     "Warrens Warrior session",
     60_000,
   );
-  assert.equal(await text(driver, "#position-value"), "44, 16");
-  assert.equal(await text(driver, "#journey-dungeon-name"), "前哨站");
+  assert.match(await text(driver, "#hud-location-value"), /前哨站/);
 
-  await moveMany(driver, "Numpad4", "4", 12, -1, 0);
-  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
+  await walkToShop(driver,"demo.shop.outpost-general-store");
   await driver.waitFor(`return document.querySelector("#shop-dialog")?.open`, "automatic shop entry");
   const shopLayout = await driver.execute(`
     const dialog = document.querySelector("#shop-dialog");
@@ -124,8 +130,9 @@ async function runSupplyLoop(driver) {
       title: document.querySelector("#shop-title")?.textContent,
       owner: document.querySelector("#shop-owner")?.textContent,
       dialogFits: dialog.scrollWidth <= dialog.clientWidth && dialog.scrollHeight <= dialog.clientHeight,
+      dialogSize: [dialog.scrollWidth,dialog.clientWidth,dialog.scrollHeight,dialog.clientHeight],
       workspaceColumns: getComputedStyle(workspace).gridTemplateColumns.split(" ").length,
-      activeTab: document.querySelector('[role="tab"][aria-selected="true"]')?.id,
+      activeTab: document.querySelector('#shop-dialog [role="tab"][aria-selected="true"]')?.id,
       stockRows: document.querySelectorAll("#shop-item-list [data-shop-item-id]").length,
       stockNames: [...document.querySelectorAll("#shop-item-list .shop-item-name")]
         .map((item) => item.textContent),
@@ -133,11 +140,10 @@ async function runSupplyLoop(driver) {
   `);
   assert.equal(shopLayout.title, "杂货店");
   assert.match(shopLayout.owner, /玛拉·文/);
-  assert.equal(shopLayout.dialogFits, true);
+  assert.equal(shopLayout.dialogFits, true,JSON.stringify(shopLayout.dialogSize));
   assert.equal(shopLayout.workspaceColumns, 2);
   assert.equal(shopLayout.activeTab, "shop-buy-tab");
-  assert.equal(shopLayout.stockRows, 4);
-  assert.deepEqual(shopLayout.stockNames, ["一份口粮", "木制火把", "黄铜灯笼", "油瓶"]);
+  await checkShopProjection(driver,shopLayout);
 
   await mkdir(artifactDirectory, { recursive: true });
   await writeFile(
@@ -182,7 +188,7 @@ async function runSupplyLoop(driver) {
 
   const goldBeforeShopping = Number(await text(driver, "#shop-gold-value"));
   const rationBefore = await inventoryQuantity(driver, "demo.item.ration-of-food");
-  await selectShopItem(driver, "一份口粮");
+  await selectShopItem(driver, "食物口粮");
   await setShopQuantity(driver, 1);
   await click(driver, "#shop-confirm");
   await driver.waitFor(
@@ -196,11 +202,11 @@ async function runSupplyLoop(driver) {
     `inventory rows: ${JSON.stringify(await inventoryRows(driver))}`,
   );
 
-  await selectShopItem(driver, "黄铜灯笼");
+  await selectShopItem(driver, "黄铜提灯");
   await setShopQuantity(driver, 1);
   await click(driver, "#shop-confirm");
   await driver.waitFor(
-    `return document.querySelector("#shop-feedback")?.dataset.kind === "success" && document.querySelector("#inventory-list")?.textContent.includes("黄铜灯笼")`,
+    `return document.querySelector("#shop-feedback")?.dataset.kind === "success" && document.querySelector("#inventory-list")?.textContent.includes("黄铜提灯")`,
     "lantern purchase",
   );
   await click(driver, "#shop-sell-tab");
@@ -208,7 +214,7 @@ async function runSupplyLoop(driver) {
     `return document.querySelector("#shop-sell-tab")?.getAttribute("aria-selected") === "true"`,
     "sell tab",
   );
-  await selectShopItem(driver, "木制火把");
+  await selectShopItem(driver, "木火把");
   await setShopQuantity(driver, 1);
   await click(driver, "#shop-confirm");
   await driver.waitFor(
@@ -218,23 +224,14 @@ async function runSupplyLoop(driver) {
   assert.ok(Number(await text(driver, "#shop-gold-value")) < goldBeforeShopping);
 
   await click(driver, "#shop-close");
-  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
-  await moveMany(driver, "Numpad4", "4", 2, -1, 0);
-  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
+  await walkToShop(driver,"demo.shop.outpost-armoury");
   await driver.waitFor(
     `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "护甲店"`,
     "Armoury shop entry",
   );
   const armouryLayout = await currentShopLayout(driver);
   assert.match(armouryLayout.owner, /冷酷的达格罗/);
-  assert.equal(armouryLayout.stockRows, 5);
-  assert.deepEqual(armouryLayout.stockNames, [
-    "皮手套",
-    "软皮靴",
-    "硬皮帽",
-    "小皮盾",
-    "锁子甲",
-  ]);
+  await checkShopProjection(driver,armouryLayout);
   await selectShopItem(driver, "皮手套");
   await setShopQuantity(driver, 1);
   await click(driver, "#shop-confirm");
@@ -250,121 +247,90 @@ async function runSupplyLoop(driver) {
     "equipping purchased gloves",
   );
 
-  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
-  await moveMany(driver, "Numpad6", "6", 4, 1, 0);
-  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
+  await walkToShop(driver,"demo.shop.outpost-weaponsmith");
   await driver.waitFor(
     `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "武器店"`,
     "Weaponsmith shop entry",
   );
   const weaponsmithLayout = await currentShopLayout(driver);
   assert.match(weaponsmithLayout.owner, /屠兽者阿恩达尔/);
-  assert.equal(weaponsmithLayout.stockRows, 6);
-  assert.equal(weaponsmithLayout.stockNames.filter((name) => name === "箭矢").length, 1);
+  await checkShopProjection(driver,weaponsmithLayout);
 
   await click(driver, "#shop-close");
-  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
-  await moveMany(driver, "Numpad6", "6", 11, 1, 0);
-  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
+  await walkToShop(driver,"demo.shop.outpost-temple");
   await driver.waitFor(
     `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "圣殿"`,
     "Temple shop entry",
   );
   const templeLayout = await currentShopLayout(driver);
   assert.match(templeLayout.owner, /奥尔德伦·维尔/);
-  assert.equal(templeLayout.stockRows, 4);
-  assert.deepEqual(templeLayout.stockNames, [
-    "轻伤治疗药水",
-    "勇毅饮剂",
-    "归返卷轴",
-    "净化卷轴",
-  ]);
-  await selectShopItem(driver, "轻伤治疗药水");
+  await checkShopProjection(driver,templeLayout);
+  await selectShopItem(driver, "治疗轻伤药水");
   await setShopQuantity(driver, 1);
   await click(driver, "#shop-confirm");
   await driver.waitFor(
-    `return document.querySelector("#shop-feedback")?.dataset.kind === "success" && document.querySelector("#inventory-list")?.textContent.includes("轻伤治疗药水")`,
+    `return document.querySelector("#shop-feedback")?.dataset.kind === "success" && document.querySelector("#inventory-list")?.textContent.includes("治疗轻伤药水")`,
     "Temple healing purchase",
   );
 
   await click(driver, "#shop-close");
-  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
-  await moveMany(driver, "Numpad6", "6", 8, 1, 0);
-  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
+  await walkToShop(driver,"demo.shop.outpost-alchemist");
   await driver.waitFor(
     `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "炼金店"`,
     "Alchemist shop entry",
   );
   const alchemistLayout = await currentShopLayout(driver);
   assert.match(alchemistLayout.owner, /伊莉拉·莫斯/);
-  assert.equal(alchemistLayout.stockRows, 5);
-  assert.deepEqual(alchemistLayout.stockNames, [
-    "闪跃卷轴",
-    "远行卷轴",
-    "探物卷轴",
-    "探陷卷轴",
-    "调温饮剂",
-  ]);
-  await selectShopItem(driver, "闪跃卷轴");
+  await checkShopProjection(driver,alchemistLayout);
+  await selectShopItem(driver, "相位之门卷轴");
   await setShopQuantity(driver, 1);
   await click(driver, "#shop-confirm");
   await driver.waitFor(
-    `return document.querySelector("#shop-feedback")?.dataset.kind === "success" && document.querySelector("#inventory-list")?.textContent.includes("闪跃卷轴")`,
+    `return document.querySelector("#shop-feedback")?.dataset.kind === "success" && document.querySelector("#inventory-list")?.textContent.includes("相位之门卷轴")`,
     "Alchemist scroll purchase",
   );
 
   await click(driver, "#shop-close");
-  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
-  await moveMany(driver, "Numpad6", "6", 2, 1, 0);
-  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
+  await walkToShop(driver,"demo.shop.outpost-bookstore");
   await driver.waitFor(
     `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "书店"`,
     "Bookstore entry",
   );
   const bookstoreLayout = await currentShopLayout(driver);
   assert.match(bookstoreLayout.owner, /贪婪的多拉夫/);
-  assert.equal(bookstoreLayout.stockRows, 2);
-  assert.deepEqual(bookstoreLayout.stockNames, ["死亡的气息", "冥府之路"]);
+  await checkShopProjection(driver,bookstoreLayout);
 
   await click(driver, "#shop-close");
-  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
-  await moveMany(driver, "Numpad6", "6", 2, 1, 0);
-  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
+  await walkToShop(driver,"demo.shop.outpost-magic-shop");
   await driver.waitFor(
     `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "魔法店"`,
     "Magic Shop entry",
   );
   const magicShopLayout = await currentShopLayout(driver);
   assert.match(magicShopLayout.owner, /埃德林·索尔/);
-  assert.equal(magicShopLayout.stockRows, 3);
-  assert.deepEqual(magicShopLayout.stockNames, [
-    "魔法飞弹魔杖",
-    "探测物品法杖",
-    "鉴定法杖",
-  ]);
+  await checkShopProjection(driver,magicShopLayout);
 
   await click(driver, "#shop-close");
-  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
-  await moveMany(driver, "Numpad4", "4", 2, -1, 0);
-  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
+  await walkToShop(driver,"demo.shop.outpost-black-market");
   await driver.waitFor(
     `return document.querySelector("#shop-dialog")?.open && document.querySelector("#shop-title")?.textContent === "黑市"`,
     "Black Market entry",
   );
   const blackMarketLayout = await currentShopLayout(driver);
   assert.match(blackMarketLayout.owner, /公平的托皮/);
-  assert.equal(blackMarketLayout.stockRows, 2);
-  assert.deepEqual(blackMarketLayout.stockNames, ["黑暗通道", "死灵之书"]);
+  await checkShopProjection(driver,blackMarketLayout);
 
   await click(driver, "#shop-close");
-  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
-  await moveMany(driver, "Numpad6", "6", 19, 1, 0);
-  assert.equal(await text(driver, "#position-value"), "74, 16");
+  await walkTo(driver,state=>state.cells.find(cell=>cell.terrainId==="demo.terrain.stairs-down").position);
+  const entrance = (await snapshot(driver)).player.position;
+  await driver.execute(`const mode = document.querySelector("#camera-mode"); mode.value = "full-map";
+    mode.dispatchEvent(new Event("change", {bubbles:true})); return true;`);
+  await driver.waitFor('return document.querySelector("#map-host").dataset.cameraMode === "full-map"',"full-map camera");
   const fullMapCamera = await driver.execute(`
     const host = document.querySelector("#map-host");
     const cellSize = 28 * Number(host.dataset.zoom);
-    const playerLeft = 74 * cellSize - host.scrollLeft;
-    const playerTop = 16 * cellSize - host.scrollTop;
+    const playerLeft = arguments[0].x * cellSize - host.scrollLeft;
+    const playerTop = arguments[0].y * cellSize - host.scrollTop;
     return {
       mode: host.dataset.cameraMode,
       scrollX: host.scrollLeft,
@@ -374,13 +340,13 @@ async function runSupplyLoop(driver) {
         playerLeft + cellSize <= host.clientWidth &&
         playerTop + cellSize <= host.clientHeight,
     };
-  `);
+  `,[entrance]);
   assert.equal(fullMapCamera.mode, "full-map");
   assert.ok(fullMapCamera.scrollX > 0);
   assert.equal(fullMapCamera.playerVisible, true);
   await dispatchKey(driver, "Period", ">");
   await driver.waitFor(
-    `return document.querySelector("#map-host")?.dataset.worldId === "demo.world.middle-earth" && document.querySelector("#journey-depth")?.textContent.includes("1")`,
+    `return document.querySelector("#map-host")?.dataset.worldId === "demo.world.middle-earth" && document.querySelector("#hud-location-value")?.textContent.includes("兽穴") && document.querySelector("#hud-location-value")?.textContent.includes("1")`,
     "entering Warrens depth 1",
     30_000,
   );
@@ -394,7 +360,7 @@ async function runSupplyLoop(driver) {
   await selectInventoryItem(driver, "demo.item.ration-of-food");
   await click(driver, "#inventory-use");
   await driver.waitFor(
-    `return document.querySelector("#message-list")?.textContent.includes("你吃下了")`,
+    `return document.querySelector("#message-list")?.textContent.includes("你从食物口粮补充了")`,
     "Warrens ration consumption",
   );
   assert.equal(
@@ -415,14 +381,14 @@ async function runSupplyLoop(driver) {
 
   await dispatchKey(driver, "Comma", "<");
   await driver.waitFor(
-    `return document.querySelector("#position-value")?.textContent === "74, 16" && document.querySelector("#journey-dungeon-name")?.textContent === "前哨站"`,
+    `return document.querySelector("#position-value")?.textContent === arguments[0] && document.querySelector("#hud-location-value")?.textContent.includes("前哨站")`,
     "returning to Outpost",
     30_000,
+    [`${entrance.x}, ${entrance.y}`],
   );
-  await moveMany(driver, "Numpad4", "4", 42, -1, 0);
-  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
+  await walkToShop(driver,"demo.shop.outpost-general-store");
   await driver.waitFor(`return document.querySelector("#shop-dialog")?.open`, "return shop entry");
-  await selectShopItem(driver, "一份口粮");
+  await selectShopItem(driver, "食物口粮");
   await setShopQuantity(driver, 1);
   await click(driver, "#shop-confirm");
   await driver.waitFor(
@@ -431,14 +397,13 @@ async function runSupplyLoop(driver) {
   );
 
   await click(driver, "#shop-close");
-  await moveMany(driver, "Numpad2", "2", 3, 0, 1);
-  await moveMany(driver, "Numpad6", "6", 10, 1, 0);
-  await moveMany(driver, "Numpad8", "8", 3, 0, -1);
+  await walkTo(driver,state=>state.homes.find(home=>!home.museum).entrancePosition);
+  const home = (await snapshot(driver)).homes.find(home=>!home.museum);
   await driver.waitFor(
     `return document.querySelector("#home-dialog")?.open && document.querySelector("#home-title")?.textContent === "家"`,
     "automatic Home entry",
   );
-  assert.equal(await text(driver, "#position-value"), "27, 8");
+  assert.equal(await text(driver, "#position-value"),`${home.entrancePosition.x}, ${home.entrancePosition.y}`);
   assert.equal(
     await driver.execute(`return document.querySelector("#home-withdraw-tab")?.getAttribute("aria-selected");`),
     "true",
@@ -450,7 +415,7 @@ async function runSupplyLoop(driver) {
   );
   const rationsBeforeDeposit = await inventoryQuantity(driver, "demo.item.ration-of-food");
   const goldBeforeHome = await text(driver, "#gold-value");
-  await selectHomeItem(driver, "一份口粮");
+  await selectHomeItem(driver, "食物口粮");
   await setHomeQuantity(driver, 1);
   await click(driver, "#home-confirm");
   await driver.waitFor(
@@ -461,7 +426,7 @@ async function runSupplyLoop(driver) {
   assert.equal(await text(driver, "#gold-value"), goldBeforeHome);
   await click(driver, "#home-withdraw-tab");
   await driver.waitFor(
-    `return document.querySelectorAll("#home-item-list [data-home-item-id]").length === 1 && document.querySelector("#home-item-list")?.textContent.includes("一份口粮")`,
+    `return document.querySelectorAll("#home-item-list [data-home-item-id]").length === 1 && document.querySelector("#home-item-list")?.textContent.includes("食物口粮")`,
     "Home stored ration",
   );
 
@@ -484,10 +449,17 @@ async function runSupplyLoop(driver) {
     [nativeSaveName],
   );
 
-  await moveMany(driver, "Numpad2", "2", 1, 0, 1);
-  await moveMany(driver, "Numpad8", "8", 1, 0, -1);
+  const homeStreet = (await snapshot(driver)).cells.find(cell => cell.terrainId === "demo.terrain.floor"
+    && Math.max(Math.abs(cell.position.x-home.entrancePosition.x),Math.abs(cell.position.y-home.entrancePosition.y)) === 1)?.position;
+  assert.ok(homeStreet,"Home has an adjacent street");
+  const offset = {x:homeStreet.x-home.entrancePosition.x,y:homeStreet.y-home.entrancePosition.y};
+  await walkTo(driver,state=> {
+    const entry = state.homes.find(home=>!home.museum).entrancePosition;
+    return {x:entry.x+offset.x,y:entry.y+offset.y};
+  });
+  await walkTo(driver,state=>state.homes.find(home=>!home.museum).entrancePosition);
   await driver.waitFor(`return document.querySelector("#home-dialog")?.open`, "Home re-entry before mutation");
-  await selectHomeItem(driver, "一份口粮");
+  await selectHomeItem(driver, "食物口粮");
   await setHomeQuantity(driver, 1);
   await click(driver, "#home-confirm");
   await driver.waitFor(
@@ -502,7 +474,7 @@ async function runSupplyLoop(driver) {
     return true;
   `, [nativeSaveName]);
   await driver.waitFor(
-    `return document.querySelector("#hash-value")?.title === arguments[0] && document.querySelector("#home-dialog")?.open && document.querySelector("#home-item-list")?.textContent.includes("一份口粮")`,
+    `return document.querySelector("#hash-value")?.title === arguments[0] && document.querySelector("#home-dialog")?.open && document.querySelector("#home-item-list")?.textContent.includes("食物口粮")`,
     "supply-loop native restore",
     30_000,
     [savedHash],
@@ -523,6 +495,46 @@ async function currentShopLayout(driver) {
   `);
 }
 
+async function snapshot(driver) {
+  await driver.execute(`window.__supplySnapshot=null; window.__supplyError=null;
+    window.__TAURI_INTERNALS__.invoke("inspect_game_e2e").then(value=>window.__supplySnapshot=value,error=>window.__supplyError=String(error)); return true;`);
+  await driver.waitFor('return window.__supplySnapshot || window.__supplyError',"supply snapshot");
+  assert.equal(await driver.execute('return window.__supplyError'),null);
+  return driver.execute('return window.__supplySnapshot');
+}
+
+async function walkToShop(driver,id) {
+  await walkTo(driver,state=>state.shops.find(shop=>shop.id===id).entrancePosition);
+}
+
+async function walkTo(driver,selectTarget) {
+  let state = await snapshot(driver);
+  for (let step=0; step<400; step++) {
+    const {x,y} = state.player.position, target = selectTarget(state);
+    if (x===target.x && y===target.y) return;
+    const key = nextWalk(state,new Set(),target);
+    const [dx,dy] = ({"1":[-1,1],"2":[0,1],"3":[1,1],"4":[-1,0],"6":[1,0],"7":[-1,-1],"8":[0,-1],"9":[1,-1]})[key];
+    // A route can cross another entrance in the source town layout.
+    if (await driver.execute('return document.querySelector("#shop-dialog").open')) await click(driver,"#shop-close");
+    await dispatchKey(driver,`Numpad${key}`,key);
+    await driver.waitFor('return document.querySelector("#hash-value").title !== arguments[0] && document.querySelector("#connection-status").classList.contains("ready")',"supply movement",10000,[state.stateHash]);
+    const moved = await driver.execute('return {position:document.querySelector("#position-value").textContent,hash:document.querySelector("#hash-value").title}');
+    const [nextX,nextY] = moved.position.split(", ").map(Number);
+    // Ordinary town steps preserve the navigation grid. Refresh on recentering or a blocked step.
+    if (nextX !== x+dx || nextY !== y+dy) state = await snapshot(driver);
+    else { state.player.position={x:nextX,y:nextY}; state.stateHash=moved.hash; }
+  }
+  throw new Error("Supply walk did not reach its projected destination");
+}
+
+async function checkShopProjection(driver,layout) {
+  const shop = (await snapshot(driver)).shops.find(shop=>shop.playerAtEntrance);
+  assert.ok(shop);
+  assert.equal(layout.title,localization.format(shop.nameKey));
+  assert.equal(layout.stockRows,shop.stock.length);
+  assert.deepEqual(layout.stockNames,shop.stock.map(item=>localization.format(item.displayNameKey)));
+}
+
 async function selectHomeItem(driver, name) {
   await driver.execute(`
     const button = [...document.querySelectorAll("#home-item-list [data-home-item-id]")]
@@ -539,19 +551,6 @@ async function setHomeQuantity(driver, quantity) {
     input.dispatchEvent(new Event("input", { bubbles: true }));
     return true;
   `, [quantity]);
-}
-
-async function moveMany(driver, code, key, count, dx, dy) {
-  for (let index = 0; index < count; index += 1) {
-    const [x, y] = (await text(driver, "#position-value")).split(", ").map(Number);
-    await dispatchKey(driver, code, key);
-    await driver.waitFor(
-      `return document.querySelector("#position-value")?.textContent === arguments[0]`,
-      `movement to ${x + dx}, ${y + dy}`,
-      10_000,
-      [`${x + dx}, ${y + dy}`],
-    );
-  }
 }
 
 async function selectShopItem(driver, name) {

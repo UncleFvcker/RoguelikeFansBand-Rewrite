@@ -6,9 +6,10 @@ import { Localization } from "../src/localization.ts";
 import { MAGE_REALMS } from "../src/character-creation.ts";
 import { selectCreationBuild, selectCreationRace } from "./character-creation.e2e.mjs";
 import { connectKeyboard } from "./character-creation-layout.e2e.mjs";
+import { nextWalk } from "./berserker.e2e.mjs";
 
-// Step 6 UI acceptance. Level 20, a Life book and level drain are explicit fixtures.
-export async function runMageUiScenario(driver, directory, profile) {
+// Mage UI and new-game acceptance; all granted XP, books and devices are reported.
+export async function runMageUiScenario(driver, directory, profile, playthrough = false) {
   await mkdir(directory, { recursive: true });
   await driver.waitFor('return document.documentElement.dataset.appMode === "title"', "Mage title", 60_000);
   const keyboard = await connectKeyboard(profile);
@@ -99,8 +100,8 @@ export async function runMageUiScenario(driver, directory, profile) {
     }
     return current;
   }
-  async function prepare(drained) {
-    const prepared = await invoke("prepare_mage_e2e", { drained });
+  async function prepare(level) {
+    const prepared = await invoke("prepare_mage_e2e", { level });
     await load(await save(), prepared.stateHash);
     await chooseTalent();
     await abilitiesPage();
@@ -111,13 +112,204 @@ export async function runMageUiScenario(driver, directory, profile) {
     assert.equal(before.player.abilities.find(ability => ability.id === id)?.canStudy, true);
     await focus(studyButton(id)); await keyboard.key(key);
     const after = await changed(before.stateHash, `study ${id}`);
-    assert.equal(await focusIs(studyButton(id)), true, "study focus survives rerender");
+    assert.equal(await focusIs(after.player.abilities.find(a => a.id === id).canStudy ? studyButton(id) : row(id)), true, "study focus survives rerender or moves to its row when disabled");
     assert.equal(after.player.abilityLearning.remainingSlots, before.player.abilityLearning.remainingSlots - 1);
     return after;
   }
+  async function closePage() {
+    if (await driver.execute('return document.querySelector("#player-page-dialog").open')) await keyboard.key("Escape");
+  }
+  async function actKey(key) {
+    const before = await hash(); await keyboard.key(key);
+    return changed(before, `native key ${key}`);
+  }
+  async function aim(position, origin) {
+    await driver.waitFor('return document.querySelector("#map-host").dataset.targeting === "true"', "aiming");
+    let dx = position.x - origin.x, dy = position.y - origin.y;
+    while (dx || dy) {
+      const sx = Math.sign(dx), sy = Math.sign(dy);
+      await keyboard.key(({ "-1,-1":"7", "0,-1":"8", "1,-1":"9", "-1,0":"4", "1,0":"6", "-1,1":"1", "0,1":"2", "1,1":"3" })[`${sx},${sy}`]);
+      dx -= sx; dy -= sy;
+    }
+    await keyboard.key("Enter");
+  }
+  async function cast(id, target) {
+    await abilitiesPage();
+    const before = await snapshot(), ability = before.player.abilities.find(a => a.id === id);
+    assert.equal(ability?.canCast, true, `${id}: ${ability?.unavailableReason}`);
+    await focus(`${row(id)} .ability-cast-action`); await keyboard.key("Enter");
+    if (typeof target === "string") {
+      await driver.waitFor('return document.querySelector(".item-target-dialog")?.open', "item target choice");
+      await driver.execute('document.querySelector(".item-target-dialog select").value = arguments[0]; return true;', [target]);
+      await click('.item-target-dialog button[type="submit"]');
+    } else if (target) await aim(target, before.player.position);
+    const after = await changed(before.stateHash, `cast ${id}`);
+    assert.equal(after.player.isDead, false);
+    await closePage();
+    return after;
+  }
+  async function useItem(id, target) {
+    await closePage(); await click("#player-ui-inventory-open");
+    const before = await snapshot();
+    assert.equal(before.inventory.find(item => item.id === id)?.usable, true, id);
+    await driver.execute(`for (const input of document.querySelectorAll('#inventory-list input[type="checkbox"]:checked')) input.click();
+      document.querySelector('[data-item-id="' + arguments[0] + '"] input[type="checkbox"]').click(); return true;`, [id]);
+    await click("#inventory-use");
+    if (target) await aim(target, before.player.position);
+    const after = await changed(before.stateHash, `use ${id}`);
+    assert.equal(after.player.isDead, false);
+    await closePage();
+    return after;
+  }
+  async function exportPlayedSave(name) {
+    await driver.execute(`window.__mageExport = null;
+      window.__mageDownloadHooks = [URL.createObjectURL, URL.revokeObjectURL, HTMLAnchorElement.prototype.click];
+      URL.createObjectURL = blob => { window.__mageExport = { blob }; return "blob:mage-acceptance"; };
+      URL.revokeObjectURL = () => {}; HTMLAnchorElement.prototype.click = function () { window.__mageExport.name = this.download; };
+      document.querySelector('.hud-menu').open = true; return true;`);
+    await click("#save-button");
+    await driver.waitFor('return window.__mageExport?.name?.endsWith(".rfbsave")', "menu save export");
+    await driver.execute(`document.querySelector('.hud-menu').open = false;
+      [URL.createObjectURL, URL.revokeObjectURL, HTMLAnchorElement.prototype.click] = window.__mageDownloadHooks;
+      window.__mageExportIndex = null; window.__mageExport.blob.arrayBuffer().then(buffer => {
+        window.__mageSaves ??= []; window.__mageExportIndex = window.__mageSaves.push(Array.from(new Uint8Array(buffer))) - 1;
+      }); return true;`);
+    await driver.waitFor('return window.__mageExportIndex !== null', "exported bytes");
+    const index = await driver.execute('return window.__mageExportIndex');
+    await writeFile(path.join(directory, `${name}.rfbsave`), Buffer.from(await driver.execute('return window.__mageSaves[arguments[0]]', [index])));
+    return index;
+  }
+  async function playNewGame(born) {
+    const primary = "demo.ability.arcane-zap", secondary = "demo.ability.sorcery-detect-monsters";
+    const eat = "demo.ability.mage-eat-magic", wand = "e2e.mage-wand", scroll = "e2e.mage-acquirement";
+    const checks = [];
+    assert.equal(born.player.build.raceId, "demo.race.rfb-human");
+    assert.equal(born.player.progress.level, 1);
+    await abilitiesPage(); let current = await study(primary);
+    checks.push({ birth: { build:born.player.build.buildId, level:1, hash:born.stateHash, learningCapacity:born.player.abilityLearning.capacity, learned:primary, afterStudy:current.stateHash } });
+    await closePage(); await click("#player-ui-inventory-open");
+    const torch = current.inventory.find(item => item.kindId === "demo.item.wooden-torch");
+    assert.ok(torch);
+    await click(`[data-item-id="${torch.id}"] input[type="checkbox"]`);
+    const beforeTorch = await hash(); await click("#inventory-equip");
+    current = await changed(beforeTorch, "birth torch equipped"); await closePage();
+    const beforeDevice = current;
+    current = await prepare(1); await closePage();
+    assert.equal(current.player.progress.level, 1);
+    assert.deepEqual(current.player.position, beforeDevice.player.position);
+    assert.equal(current.player.hp, beforeDevice.player.hp);
+    assert.deepEqual(current.entities, beforeDevice.entities);
+    checks.push({ preparation:"One generated, kind-aware Magic Missile wand; no XP, HP, map or monster preparation.", item:current.inventory.find(item => item.id === wand), before:beforeDevice.stateHash, after:current.stateHash });
+    for (let step = 0; step < 120; step++) {
+      const entry = current.cells.find(cell => cell.terrainId === "demo.terrain.stairs-down").position;
+      if (current.player.position.x === entry.x && current.player.position.y === entry.y) break;
+      current = await actKey(nextWalk(current, new Set(), entry));
+    }
+    const outside = current.stateHash; await click("#traverse-stairs");
+    current = await changed(outside, "natural dungeon entry");
+    assert.equal(current.floorId, "demo.floor.warrens-depth-1");
+    const visited = new Set();
+    let spellHit, deviceHit;
+    for (let step = 0; step < 180 && (!spellHit || !deviceHit || !current.player.abilities.find(a=>a.id===secondary).castCount); step++) {
+      assert.equal(current.player.isDead, false);
+      if (current.player.abilities.find(a=>a.id===secondary).canStudy && !current.player.abilities.find(a=>a.id===secondary).learned) {
+        await abilitiesPage(); current = await study(secondary); await closePage();
+        checks.push({ naturalSecondaryStudy:{level:current.player.progress.level,ability:secondary,hash:current.stateHash} });
+      }
+      visited.add(`${current.player.position.x},${current.player.position.y}`);
+      const distance = position => Math.max(Math.abs(position.x - current.player.position.x), Math.abs(position.y - current.player.position.y));
+      const target = current.entities.filter(entity => entity.faction === "hostile").sort((a,b) => distance(a.position)-distance(b.position))[0];
+      if (!current.player.abilities.find(a=>a.id===secondary).castCount && current.player.abilities.find(a=>a.id===secondary).canCast && (!target || distance(target.position)>1)) {
+        current = await cast(secondary); continue;
+      }
+      if (target && distance(target.position) <= 6) {
+        const before = current;
+        const useSpell = !spellHit && current.player.abilities.find(a=>a.id===primary).canCast;
+        current = useSpell ? await cast(primary,target.position) : await useItem(wand,target.position);
+        const remainingHp = current.entities.find(entity => entity.id === target.id)?.hp ?? 0;
+        if (remainingHp < target.hp) {
+          const result = { target:{id:target.id,kindId:target.kindId,hpBefore:target.hp,hpAfter:remainingHp}, before:before.stateHash, after:current.stateHash, level:current.player.progress.level, playerHp:current.player.hp };
+          if (useSpell) { spellHit = result; await screenshot("natural-zap-hit"); }
+          else { deviceHit = result; await screenshot("natural-wand-hit"); }
+        }
+      } else current = await actKey(nextWalk(current,visited,target?.position));
+    }
+    assert.ok(spellHit && deviceHit, "both a learned spell and an allowed device must hit natural monsters");
+    assert.ok(current.player.abilities.find(a=>a.id===secondary).castCount > 0,"the naturally learned second realm spell must be cast");
+    checks.push({ naturalDungeon:{floor:current.floorId,spellHit,deviceHit,detection:current.player.abilities.find(a=>a.id===secondary),alive:!current.player.isDead}, preparation:"The wand above is the only item fixture; normal dungeon generation, movement, monsters and combat RNG." });
+    await exportPlayedSave("natural-start-with-test-wand");
+    process.stdout.write("Mage natural start: both realms learned, detection, Zap and device hit; survived.\n");
+
+    current = await prepare(25);
+    assert.equal(current.player.progress.level,25);
+    const proficiency = [];
+    for (const [id,cap] of [[primary,1600],[secondary,1400]]) {
+      const stages = [current.player.abilities.find(a=>a.id===id).proficiency];
+      while (current.player.abilities.find(a=>a.id===id).canStudy) {
+        current = await study(id); stages.push(current.player.abilities.find(a=>a.id===id).proficiency);
+      }
+      const ability = current.player.abilities.find(a=>a.id===id);
+      assert.equal(ability.proficiency,cap); assert.equal(ability.proficiencyCap,cap);
+      assert.equal(await driver.execute('return document.querySelector(arguments[0]).matches(":disabled")',[studyButton(id)]),true);
+      proficiency.push({id,stages,cap,rendered:await text(row(id))});
+    }
+    await screenshot("level25-study-caps"); await closePage();
+    // Spend real MP first; retain the real outer and internal Eat Magic failure rolls.
+    for (let attempt = 0; attempt < 4; attempt++) current = await cast(secondary);
+    const eatAttempts = [];
+    for (let attempt = 0; attempt < 30; attempt++) {
+      const before = current, device = before.inventory.find(item=>item.id===wand);
+      current = await cast(eat,wand);
+      const afterDevice = current.inventory.find(item=>item.id===wand);
+      const mana = state => state.player.resources.find(resource=>resource.id==="demo.resource.mana").current;
+      const entry = {before:before.stateHash,after:current.stateHash,mpBefore:mana(before),mpAfter:mana(current),spBefore:device.charges.current,spAfter:afterDevice?.charges.current,destroyed:!afterDevice};
+      eatAttempts.push(entry);
+      if (entry.mpAfter > entry.mpBefore && entry.spAfter < entry.spBefore) break;
+      assert.ok(afterDevice,"prepared wand survived Eat Magic until a successful drain");
+    }
+    assert.ok(eatAttempts.some(entry=>entry.mpAfter>entry.mpBefore && entry.spAfter<entry.spBefore));
+    await abilitiesPage(); await focus(row(eat)); await screenshot("level25-eat-magic");
+    checks.push({ preparation:"Real XP grant to level 25; clear active monsters, light map and refill HP/MP; add Life first book and one Acquirement scroll. No proficiency or success/RNG override.", level:25, proficiency, eatMagic:eatAttempts });
+
+    const beforeChange = current;
+    await focus(realmButton("life")); await keyboard.key("Enter");
+    current = await changed(beforeChange.stateHash,"played realm request");
+    await focus("#realm-change-accept"); await keyboard.key("Enter");
+    current = await changed(current.stateHash,"played realm confirmed");
+    assert.equal(current.player.abilityLearning.realms.secondRealmId,"life");
+    assert.deepEqual(current.player.abilityLearning.realms.previousRealmIds,["sorcery"]);
+    assert.equal(current.player.abilities.find(a=>a.id===primary).proficiency,1600);
+    const healing = "demo.ability.life-cure-light-wounds";
+    current = await study(healing); await closePage();
+    const saved = current, savedIndex = await exportPlayedSave("level25-changed-realm-test-prepared");
+    async function continuePlayedSave() {
+      let state = await snapshot();
+      state = await cast(primary,{x:state.player.position.x+1,y:state.player.position.y});
+      state = await cast(healing);
+      const beforeItems = new Set(state.items.map(item=>item.id));
+      state = await useItem(scroll);
+      assert.equal(state.inventory.some(item=>item.id===scroll),false);
+      const generated = state.items.filter(item=>!beforeItems.has(item.id));
+      assert.ok(generated.length>0,"Acquirement must produce a real ground item");
+      return {state,generated};
+    }
+    const continued = await continuePlayedSave();
+    await load(savedIndex,saved.stateHash);
+    const restored = await snapshot();
+    assert.deepEqual(restored.player,saved.player);
+    assert.deepEqual(restored.inventory,saved.inventory);
+    assert.deepEqual(restored.equipment,saved.equipment);
+    const replayed = await continuePlayedSave();
+    assert.equal(replayed.state.stateHash,continued.state.stateHash,"same casts and generation preserve complete state and RNG after load");
+    assert.deepEqual(replayed.generated,continued.generated);
+    await screenshot("changed-save-casts-generation-continue");
+    checks.push({ saveContinue:{saved:saved.stateHash,realms:saved.player.abilityLearning.realms,continued:continued.state.stateHash,restoredContinuation:replayed.state.stateHash,generated:continued.generated}, preparation:"Menu export and normal native import; real spell failure/effect and Acquirement rolls. Scroll is the explicitly prepared one above." });
+    await writeFile(path.join(directory,"checks.json"),JSON.stringify({build:born.player.build.buildId,checks},null,2)+"\n");
+    process.stdout.write("Mage level 25: source study caps, Eat Magic, realm change and saved spell/generation continuation passed.\n");
+  }
   try {
     await invoke("plugin:window|set_min_size", { label: "main", value: null });
-    for (const locale of ["zh-CN", "en-US"]) {
+    for (const locale of playthrough ? ["zh-CN"] : ["zh-CN", "en-US"]) {
       localization.setLocale(locale);
       await driver.execute('localStorage.setItem("rfb.locale", arguments[0]); return true;', [locale]);
       await keyboard.reload();
@@ -160,7 +352,8 @@ export async function runMageUiScenario(driver, directory, profile) {
       assert.equal(await driver.execute('return document.querySelector("#session-start-game").disabled'), false);
       await selectCreationBuild(driver, "demo.build.duelist");
       assert.equal(await driver.execute('return document.querySelector("#session-start-game").disabled'), true);
-      await selectCreationBuild(driver, "demo.build.mage-death-sorcery");
+      const build = playthrough ? "demo.build.mage-arcane-sorcery" : "demo.build.mage-death-sorcery";
+      await selectCreationBuild(driver, build);
       assert.equal(await driver.execute('return document.querySelector("#session-start-game").disabled'), false);
       await selectCreationRace(driver, "demo.race.rfb-human");
       await selectCreationBuild(driver, "demo.build.high-mage-death");
@@ -179,7 +372,7 @@ export async function runMageUiScenario(driver, directory, profile) {
         await screenshot(`${locale}-creation-${width}-${zoom}`);
       }
       await viewport(1280,720);
-      await selectCreationBuild(driver, "demo.build.mage-death-sorcery");
+      await selectCreationBuild(driver, build);
       await hold("initialize_game");
       await focus("#session-start-game"); await keyboard.key("Enter");
       await driver.waitFor('return !!window.__mageRelease', "creation request held");
@@ -190,10 +383,15 @@ export async function runMageUiScenario(driver, directory, profile) {
       await driver.waitFor('return document.documentElement.dataset.appMode === "playing" && document.querySelector("#connection-status").classList.contains("ready")', "normal Mage birth", 60_000);
       let current = await chooseTalent();
       assert.equal(current.player.progress.level, 1);
-      assert.equal(current.player.build.buildId, "demo.build.mage-death-sorcery");
-      assert.equal(current.player.abilityLearning.realms.firstRealmId, "death");
+      assert.equal(current.player.build.buildId, build);
+      assert.equal(current.player.abilityLearning.realms.firstRealmId, playthrough ? "arcane" : "death");
       assert.equal(current.player.abilityLearning.realms.secondRealmId, "sorcery");
-      current = await prepare(false);
+      if (playthrough) {
+        await playNewGame(current);
+        assert.deepEqual(keyboard.errors, []);
+        return;
+      }
+      current = await prepare(20);
       assert.equal(current.player.progress.level, 20);
       const primary = current.player.abilities.find(a => a.bookRealmId === "death" && a.canStudy && a.minimumLevel === 1).id;
       const secondary = current.player.abilities.find(a => a.bookRealmId === "sorcery" && a.canStudy && a.minimumLevel === 1).id;
@@ -214,13 +412,13 @@ export async function runMageUiScenario(driver, directory, profile) {
       assert.equal(await focusIs(studyButton(secondary)), true);
       const advanced = current.player.abilities.find(a => a.bookRealmId === "death" && a.canStudy && a.minimumLevel > 1).id;
       current = await study(advanced);
-      current = await prepare(true);
+      current = await prepare(0);
       assert.equal(current.player.progress.level, 1);
       assert.equal(current.player.abilities.find(a => a.id === advanced).forgotten, true);
       assert.ok((await text(row(advanced))).includes(localization.format("ability-status-forgotten")));
       assert.equal(await driver.execute('return document.querySelector(arguments[0]).matches(":disabled")', [studyButton(advanced)]), true);
       await screenshot(`${locale}-forgotten`);
-      current = await prepare(false);
+      current = await prepare(20);
       assert.equal(current.player.abilities.find(a => a.id === advanced).forgotten, undefined);
       assert.equal(current.player.abilities.find(a => a.id === advanced).learned, true);
       for (const [width, height, zoom] of [[390,844,1], [640,360,2]]) {

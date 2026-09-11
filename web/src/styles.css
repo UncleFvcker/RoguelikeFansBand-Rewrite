@@ -4167,6 +4167,11 @@ kbd {
   width: min(68rem, calc(100vw - 2rem));
 }
 
+.shop-dialog[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
 .shop-header > div {
   min-width: 0;
 }
@@ -4283,6 +4288,7 @@ kbd {
 
 .shop-workspace {
   display: grid;
+  min-height: 0;
   grid-template-columns: minmax(0, 1fr) minmax(18rem, 21rem);
   max-height: calc(100vh - 8rem);
   overflow: hidden;
