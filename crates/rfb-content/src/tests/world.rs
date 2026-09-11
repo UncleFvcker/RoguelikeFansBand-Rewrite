@@ -11132,6 +11132,10 @@ fn town_entrances_and_shared_facilities_match_source() {
                     dungeon_id: "demo.dungeon.eyrie".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 77, y: 37 },
+                    dungeon_id: "demo.dungeon.pyramidal-mound".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 84, y: 6 },
                     dungeon_id: "demo.dungeon.anti-magic-cave".to_owned(),
                 },

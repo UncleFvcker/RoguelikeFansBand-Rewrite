@@ -131,6 +131,11 @@
       "sourceIndex": 22,
       "sourceName": "Mount Olympus",
       "id": "demo.dungeon.mount-olympus"
+    },
+    {
+      "sourceIndex": 34,
+      "sourceName": "Pyramidal mound",
+      "id": "demo.dungeon.pyramidal-mound"
     }
   ],
   "townPlans": [
@@ -2287,6 +2292,76 @@
         "streamers": [
           "NONE",
           "NONE"
+        ]
+      }
+    },
+    {
+      "sourceIndex": 34,
+      "sourceName": "Pyramidal mound",
+      "id": "demo.dungeon.pyramidal-mound",
+      "position": {
+        "x": 77,
+        "y": 37
+      },
+      "minimumDepth": 64,
+      "maximumDepth": 92,
+      "monsterDivisor": 1,
+      "generationFlags": [
+        "PANTHEON_2",
+        "ALL_SHAFTS",
+        "CAVE"
+      ],
+      "monsterPreferences": [
+        "EGYPTIAN",
+        "EGYPTIAN2"
+      ],
+      "floorTerrainDistribution": [
+        {
+          "sourceTag": "FLOOR",
+          "percent": 100
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        }
+      ],
+      "tunnelPercent": 8,
+      "initialGuardian": {
+        "sourceIndex": 1267,
+        "sourceName": "Mummy king",
+        "chineseName": "木乃伊王",
+        "level": 56
+      },
+      "guardian": {
+        "sourceIndex": 1266,
+        "sourceName": "Amun, the Mysterious",
+        "chineseName": "神秘者阿蒙",
+        "level": 97
+      },
+      "wallTerrain": {
+        "distribution": [
+          {
+            "sourceTag": "GRANITE",
+            "percent": 95
+          },
+          {
+            "sourceTag": "QUARTZ_VEIN",
+            "percent": 5
+          },
+          {
+            "sourceTag": "GRANITE",
+            "percent": 0
+          }
+        ],
+        "outer": "GRANITE",
+        "inner": "GRANITE",
+        "streamers": [
+          "MAGMA_VEIN",
+          "QUARTZ_VEIN"
         ]
       }
     }

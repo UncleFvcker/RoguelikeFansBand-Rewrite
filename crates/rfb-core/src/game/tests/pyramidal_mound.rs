@@ -5,185 +5,19 @@ use crate::game::inventory::ItemIdentificationRequest;
 use crate::game::movement::actor_can_cross_terrain;
 use crate::game::world::geometry::{generated_terrain_index, maze_floor_distances};
 use rfb_protocol::WeaponTraitDto;
-use serde_json::json;
-use std::sync::OnceLock;
 
 const AMUN: &str = "demo.item.amun";
-const DUNGEON: &str = "test.dungeon.pyramidal-mound";
-const TABLE: &str = "test.encounter-table.pyramidal-mound";
+const DUNGEON: &str = "demo.dungeon.pyramidal-mound";
+const TABLE: &str = "demo.encounter-table.pyramidal-mound";
 const GUARDIAN: &str = "demo.actor.amun-the-mysterious";
 
 fn floor_id(depth: u16) -> String {
-    format!("test.floor.pyramidal-mound-depth-{depth}")
-}
-
-fn connection(
-    depth: u16,
-    target: Option<u16>,
-    kind: &str,
-    direction: &str,
-) -> rfb_content::ProceduralFloorConnectionDefinition {
-    let reverse = if direction == "up" { "down" } else { "up" };
-    serde_json::from_value(json!({
-        "id": format!("test.connection.pm-{depth}-{kind}-{direction}"),
-        "kind": kind,
-        "terrainId": format!("demo.terrain.{kind}-{direction}"),
-        "targetFloorId": target.map(floor_id).unwrap_or("demo.floor.surface".into()),
-        "targetConnectionId": target.map(|d| format!("test.connection.pm-{d}-{kind}-{reverse}"))
-    }))
-    .unwrap()
-}
-
-fn generation_catalog() -> Arc<ContentCatalog> {
-    static CONTENT: OnceLock<Arc<ContentCatalog>> = OnceLock::new();
-    CONTENT
-        .get_or_init(|| {
-            let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-                .join("../../packs/rfb-demo-original");
-            let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
-            // PM2 uses a separate test dungeon. PM4 will replace this builder with
-            // the formal catalog; no existing dungeon is repurposed as a stand-in.
-            let mut entry = artifact
-                .content
-                .terrain
-                .iter()
-                .find(|t| t.id == "demo.terrain.mount-olympus-entrance")
-                .unwrap()
-                .clone();
-            entry.id = "test.terrain.pyramidal-mound-entrance".into();
-            artifact.content.terrain.push(entry);
-            let mut table = artifact
-                .content
-                .encounter_tables
-                .iter()
-                .find(|t| t.id == "demo.encounter-table.mount-olympus")
-                .unwrap()
-                .clone();
-            table.id = TABLE.into();
-            let policy = table.global_allocation.as_mut().unwrap();
-            policy.preferred_tags = vec!["egyptian".into(), "egyptian2".into()];
-            policy.special_div = 1;
-            artifact.content.encounter_tables.push(table);
-            let world = artifact
-                .content
-                .worlds
-                .iter_mut()
-                .find(|w| w.id == DEFAULT_WORLD_ID)
-                .unwrap();
-            let mut template = world
-                .procedural_floors
-                .iter()
-                .find(|f| f.id == "demo.floor.mount-olympus-depth-80")
-                .unwrap()
-                .clone();
-            let streamers = world
-                .procedural_floors
-                .iter()
-                .find(|f| f.id == "demo.floor.warrens-depth-1")
-                .unwrap()
-                .layout
-                .as_ref()
-                .unwrap()
-                .streamers
-                .clone();
-            template.dungeon_id = Some(DUNGEON.into());
-            template.name_key = "floor-test-pyramidal-mound-name".into();
-            template.encounter_table_id = Some(TABLE.into());
-            template.generation_budget = Some(
-                serde_json::from_value(json!({
-                    "actorSlots": 20, "lootPlacements": 8, "roomPlacements": 6,
-                    "roomAreaTiles": 1100, "streamerPlacements": 2, "streamerAreaTiles": 32
-                }))
-                .unwrap(),
-            );
-            template.layout = Some(
-                serde_json::from_value(json!({
-                    "rooms": {
-                        "placement": "free", "minWidth": 8, "maxWidth": 20,
-                        "minHeight": 7, "maxHeight": 13,
-                        "shapes": [{"shape": "cavern", "weight": 1000},
-                                   {"shape": "rectangle", "weight": 450}]
-                    },
-                    "wallMix": [{"terrainId": "demo.terrain.quartz-vein", "percent": 5}],
-                    "streamers": streamers, "placeDoors": true
-                }))
-                .unwrap(),
-            );
-            world.dungeons.push(
-                serde_json::from_value(json!({
-                    "id": DUNGEON, "legacyIndex": 34, "pantheon": 2,
-                    "rootFloorId": floor_id(64), "guardianActorKindId": GUARDIAN,
-                    "entranceGuardian": {
-                        "instanceId": "test.guardian.pyramidal-mound-entrance.1",
-                        "actorKindId": "demo.actor.mummy-king", "position": {"x": 1, "y": 1}
-                    }
-                }))
-                .unwrap(),
-            );
-            // The complete logical chain is required by content validation, even
-            // though PM2 only exercises representative maps and connection edges.
-            for depth in 64..=92 {
-                let mut floor = template.clone();
-                floor.id = floor_id(depth);
-                floor.depth = depth;
-                floor.return_floor_id = if depth == 64 {
-                    world.initial_floor_id.clone()
-                } else {
-                    floor_id(depth - 1)
-                };
-                floor.next_floor_id = (depth < 92).then(|| floor_id(depth + 1));
-                floor.down_stair_terrain_id =
-                    (depth < 92).then(|| "demo.terrain.stairs-down".into());
-                floor.entry_terrain_id =
-                    (depth == 64).then(|| "test.terrain.pyramidal-mound-entrance".into());
-                floor.entry_connection_id =
-                    (depth == 64).then(|| "test.connection.pm-64-stairs-up".into());
-                floor.final_floor = depth == 92;
-                floor.guardian = (depth == 92).then(|| {
-                    serde_json::from_value(json!({
-                        "instanceId": "test.guardian.pyramidal-mound.1", "actorKindId": GUARDIAN,
-                        "rewardLootTableId": "demo.loot-table.mount-olympus-final-reward"
-                    }))
-                    .unwrap()
-                });
-                floor.connections = vec![connection(
-                    depth,
-                    (depth >= 66).then(|| depth - 2),
-                    if depth == 64 { "stairs" } else { "shaft" },
-                    "up",
-                )];
-                if depth < 92 {
-                    floor.connections.push(connection(
-                        depth,
-                        Some(if depth == 91 { 92 } else { depth + 2 }),
-                        if depth == 91 { "stairs" } else { "shaft" },
-                        "down",
-                    ));
-                } else {
-                    floor
-                        .connections
-                        .push(connection(92, Some(91), "stairs", "up"));
-                }
-                world.procedural_floors.push(floor);
-            }
-            Arc::new(ContentCatalog::from_artifact(
-                rfb_content::encode_content(artifact.content).unwrap(),
-            ))
-        })
-        .clone()
+    format!("demo.floor.pyramidal-mound-depth-{depth}")
 }
 
 fn generation_game(active: bool) -> Game {
     (0..32)
-        .map(|seed| {
-            Game::from_content_with_build(
-                seed,
-                generation_catalog(),
-                DEFAULT_WORLD_ID,
-                "demo.build.warrior",
-            )
-            .unwrap()
-        })
+        .map(|seed| Game::new_with_build(seed, "demo.build.warrior").unwrap())
         .find(|g| (g.active_pantheons & 4 != 0) == active)
         .unwrap()
 }
@@ -197,6 +31,238 @@ fn floor_definition(game: &Game, depth: u16) -> rfb_content::ProceduralFloorDefi
         .find(|f| f.id == floor_id(depth))
         .unwrap()
         .clone()
+}
+
+fn enter_pyramidal_mound_site(game: &mut Game) {
+    use super::support::dispatch_next;
+    choose_human_talent_if_pending(game);
+    dispatch_next(
+        game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    // Prepare the overland location; leaving the map and entering the dungeon
+    // still go through real commands and the formal wilderness projection.
+    game.wilderness_position = Some(Position { x: 77, y: 37 });
+    dispatch_next(game, GameCommand::LeaveWorldMap);
+}
+
+#[test]
+fn pyramidal_mound_formal_entry_shaft_round_trip_uses_rewards_and_restores_recall() {
+    use super::support::{dispatch_next, place_player_on_terrain};
+    let mut game = generation_game(true);
+    let world = game.content.world(&game.world_id).unwrap();
+    let dungeon = world.dungeons.iter().find(|d| d.id == DUNGEON).unwrap();
+    assert_eq!(dungeon.legacy_index, Some(34));
+    assert_eq!(dungeon.pantheon, Some(2));
+    assert_eq!(
+        world
+            .procedural_floors
+            .iter()
+            .filter(|f| f.dungeon_id.as_deref() == Some(DUNGEON))
+            .map(|f| f.depth)
+            .collect::<BTreeSet<_>>(),
+        (64..=92).collect()
+    );
+    let other_dungeons = game.dungeon_states.clone();
+    let position = Position { x: 77, y: 37 };
+    assert!(
+        game.wilderness_cell_dto(position)
+            .locations
+            .iter()
+            .any(|l| l.id == DUNGEON)
+    );
+    enter_pyramidal_mound_site(&mut game);
+    place_player_on_terrain(&mut game, "demo.terrain.pyramidal-mound-entrance");
+    let departure = game.player.position;
+    let entrance_id = "demo.guardian.pyramidal-mound-entrance.1";
+    let guardian = game.entities.iter().find(|a| a.id == entrance_id).unwrap();
+    assert_eq!(guardian.kind_id, "demo.actor.mummy-king");
+    assert_eq!(
+        guardian.position,
+        Position {
+            x: departure.x - 1,
+            y: departure.y + 1
+        }
+    );
+    game.entities.retain(|a| a.id == entrance_id);
+    game.items
+        .retain(|i| !matches!(i.location, ItemLocation::CarriedBy { .. }));
+    defeat_in_melee(&mut game);
+    assert!(game.dungeon_states[DUNGEON].entrance_guardian_defeated);
+    assert!(!game.dungeon_states[DUNGEON].guardian_defeated);
+    choose_human_talent_if_pending(&mut game);
+    // Arrival advances the real scheduler: high-depth monsters can attack this
+    // low-level traversal fixture before it clears unrelated encounters.
+    game.apply_player_melee_status(STATUS_INVULNERABILITY, 10_000, "test.pm.traversal");
+    game.player
+        .statuses
+        .iter_mut()
+        .find(|s| s.kind_id == STATUS_INVULNERABILITY)
+        .unwrap()
+        .incoming_damage_percent = 0;
+    place_player_on_terrain(&mut game, "demo.terrain.pyramidal-mound-entrance");
+    for depth in (64..=92).step_by(2) {
+        let entered = dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(entered.floor_id, floor_id(depth));
+        assert!(
+            !game.player_is_dead(),
+            "entry at depth {depth}: {:?}",
+            entered.events
+        );
+        assert_eq!(
+            game.entities
+                .iter()
+                .filter(|a| a.id == "demo.guardian.pyramidal-mound.1")
+                .count(),
+            usize::from(depth == 92)
+        );
+        if depth < 92 {
+            clear_monsters(&mut game);
+            place_player_on_terrain(&mut game, "demo.terrain.shaft-down");
+        }
+    }
+    assert!(
+        game.terrain
+            .iter()
+            .all(|t| t != "demo.terrain.shaft-down" && t != "demo.terrain.stairs-down")
+    );
+    game.entities
+        .retain(|a| a.id == "demo.guardian.pyramidal-mound.1");
+    game.items.retain(|i| {
+        matches!(
+            i.location,
+            ItemLocation::Inventory | ItemLocation::Equipped { .. }
+        )
+    });
+    // Isolate the guardian from status effects acquired during prepared travel.
+    game.player
+        .statuses
+        .retain(|s| s.kind_id == STATUS_INVULNERABILITY);
+    game.player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_SEE_INVISIBLE, 2000, "test.pm.senses").status);
+    let killed = defeat_in_melee(&mut game);
+    assert_eq!(killed.campaign.conquered_dungeons, 1);
+    assert!(game.dungeon_states[DUNGEON].guardian_defeated);
+    assert!(game.items.iter().any(|i| !matches!(
+        i.kind_id.as_str(),
+        AMUN | "demo.item.acquirement-scroll"
+    ) && matches!(i.location, ItemLocation::Ground(_))));
+    let artifact = pick_up_drop(&mut game, AMUN, GUARDIAN, &killed);
+    let scroll = pick_up_drop(&mut game, "demo.item.acquirement-scroll", GUARDIAN, &killed);
+    choose_human_talent_if_pending(&mut game);
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: scroll.clone(),
+            target: None,
+        },
+    );
+    assert!(!game.items.iter().any(|i| i.id == scroll));
+    assert!(
+        game.items
+            .iter()
+            .any(|i| i.origin_kind == Some(rfb_protocol::ItemOriginKindDto::Acquire))
+    );
+    game.identify_item_instance(&artifact, ItemIdentificationRequest::new(true));
+    game.equip_inventory_item(&artifact, None).unwrap();
+    game.refresh_player_resource_maxima();
+    for _ in 0..100 {
+        game.use_inventory_item(
+            &artifact,
+            Some(&TargetSelection::SelfTarget),
+            None,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        if game.player_has_telepathy() {
+            break;
+        }
+    }
+    assert!(game.player_has_telepathy());
+    let saved = game.to_save();
+    let mut game = Game::from_save(saved.clone()).unwrap();
+    assert_eq!(game.to_save(), saved);
+    for depth in (64..92).step_by(2).rev() {
+        clear_monsters(&mut game);
+        place_player_on_terrain(&mut game, "demo.terrain.shaft-up");
+        assert_eq!(
+            dispatch_next(&mut game, GameCommand::TraverseStairs).floor_id,
+            floor_id(depth)
+        );
+    }
+    clear_monsters(&mut game);
+    place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(game.wilderness_position, Some(position));
+    assert_eq!(game.player.position, departure);
+    assert!(game.entities.iter().all(|a| a.id != entrance_id));
+    clear_monsters(&mut game);
+    game.start_recall(0);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.current_floor_id, floor_id(92));
+    assert!(game.entities.iter().all(|a| a.kind_id != GUARDIAN));
+    assert!(game.items.iter().all(|i| i.id != scroll));
+    assert_eq!(game.items.iter().filter(|i| i.kind_id == AMUN).count(), 1);
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    for current in [&mut game, &mut restored] {
+        clear_monsters(current);
+        current.start_recall(0);
+        dispatch_next(current, GameCommand::Wait);
+        assert_eq!(current.wilderness_position, Some(position));
+        assert_eq!(current.player.position, departure);
+    }
+    assert_eq!(game.to_save(), restored.to_save());
+    for (id, state) in other_dungeons {
+        if id != DUNGEON {
+            assert_eq!(game.dungeon_states[&id], state, "{id}");
+        }
+    }
+}
+
+#[test]
+fn pyramidal_mound_inactive_pantheon_hides_entry_and_guardian_and_rejects_transition() {
+    let mut game = generation_game(false);
+    assert!(
+        !game
+            .wilderness_cell_dto(Position { x: 77, y: 37 })
+            .locations
+            .iter()
+            .any(|l| l.id == DUNGEON)
+    );
+    enter_pyramidal_mound_site(&mut game);
+    assert!(
+        game.terrain
+            .iter()
+            .all(|t| t != "demo.terrain.pyramidal-mound-entrance")
+    );
+    assert!(
+        game.entities
+            .iter()
+            .all(|a| a.id != "demo.guardian.pyramidal-mound-entrance.1")
+    );
+    assert!(
+        game.transition_floor(floor_id(64), None, None, false)
+            .unwrap()
+            .is_none()
+    );
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert!(
+        restored
+            .transition_floor(floor_id(92), None, None, false)
+            .unwrap()
+            .is_none()
+    );
+    assert!(restored.dungeon_states[DUNGEON].suppressed);
+    assert!(!restored.dungeon_states[DUNGEON].guardian_defeated);
 }
 
 #[test]
@@ -266,7 +332,7 @@ fn pyramidal_mound_representative_maps_keep_materials_routes_and_legal_spawns() 
                 assert!(actor_can_cross_terrain(kind, at(actor.position)));
                 if actor.kind_id == GUARDIAN {
                     assert_eq!(depth, 92);
-                    assert_eq!(actor.id, "test.guardian.pyramidal-mound.1");
+                    assert_eq!(actor.id, "demo.guardian.pyramidal-mound.1");
                     assert_eq!(kind.level, 97);
                     assert!(reached.contains_key(&actor.position));
                 } else {
@@ -594,7 +660,12 @@ fn battle_game() -> Game {
         .unwrap();
     clear_monsters(&mut game);
     game.items.clear();
-    game.player.position = (1..game.height - 1)
+    game.player.position = melee_position(&game);
+    game
+}
+
+fn melee_position(game: &Game) -> Position {
+    (1..game.height - 1)
         .find_map(|y| {
             (1..game.width - 2)
                 .map(|x| Position {
@@ -603,8 +674,7 @@ fn battle_game() -> Game {
                 })
                 .find(|p| game.is_walkable(*p) && game.is_walkable(Position { x: p.x + 1, y: p.y }))
         })
-        .unwrap();
-    game
+        .unwrap()
 }
 
 fn battle_actor(game: &Game, kind: &str, id: &str) -> Actor {
@@ -624,6 +694,11 @@ fn battle_actor(game: &Game, kind: &str, id: &str) -> Actor {
 fn defeat_in_melee(game: &mut Game) -> GameUpdate {
     // Prepare one target HP, ample player HP and a delayed turn, keeping real
     // defenses/contact auras. Restore player HP to its legal maximum for saves.
+    game.player.position = melee_position(game);
+    game.entities[0].position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
     game.player.hp = 100_000;
     game.entities[0].hp = 1;
     game.entities[0].energy_need = 100_000;
@@ -709,7 +784,7 @@ fn pyramidal_mound_guardians_melee_uses_true_identity_and_mummy_instance_account
     let actor = battle_actor(
         &game,
         "demo.actor.mummy-king",
-        "test.guardian.pyramidal-mound-entrance.1",
+        "demo.guardian.pyramidal-mound-entrance.1",
     );
     game.entities.push(actor);
     defeat_in_melee(&mut game);
