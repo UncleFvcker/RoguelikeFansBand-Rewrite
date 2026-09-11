@@ -1,0 +1,91 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "sourceIndex": 54,
+    "baseItemKindId": "demo.item.set-of-gauntlets",
+    "instant": false,
+    "rarityOneIn": 20
+  },
+  "baseValue": 15000,
+  "descriptionKey": "item-demo-paurhach-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.paurhach",
+        "nameKey": "device-activation-e5-beam-fire-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 12,
+        "rfbValue": 1050,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.paurhach"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 120
+    }
+  },
+  "equipmentSlot": "gloves",
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "glyph": "]",
+  "id": "demo.item.paurhach",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 9
+  },
+  "nameKey": "item-demo-paurhach-name",
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "BRAND_FIRE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_FIRE"
+    ],
+    "pval": 0,
+    "toArmor": 7
+  },
+  "tags": [
+    "activatable",
+    "artifact",
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 25,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": 2,
+    "meleeDamage": 2
+  },
+  "brands": [
+    "fire"
+  ],
+  "resistances": {
+    "fire": "resistant"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.thorin",
+  "nameKey": "item-demo-thorin-name",
+  "descriptionKey": "item-demo-thorin-description",
+  "glyph": ")",
+  "generationLevel": 70,
+  "weightTenthsPound": 65,
+  "maxStack": 1,
+  "baseValue": 120000,
+  "equipmentSlot": "shield",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 30,
+    "baseItemKindId": "demo.item.small-metal-shield",
+    "instant": false,
+    "rarityOneIn": 35,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "modifiers": {
+    "defense": 26,
+    "strength": 4,
+    "constitution": 4
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_ACID",
+      "RES_CHAOS",
+      "RES_SOUND",
+      "STR",
+      "XTRA_H_RES"
+    ],
+    "pval": 4,
+    "toArmor": 21
+  },
+  "resistances": {
+    "acid": "immune",
+    "sound": "resistant",
+    "chaos": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ]
+}

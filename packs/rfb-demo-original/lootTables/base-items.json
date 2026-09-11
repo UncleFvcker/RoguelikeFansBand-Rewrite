@@ -142,6 +142,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.t-shirt",
+      "maxDepth": 65535,
+      "minDepth": 1,
+      "quantity": 1,
+      "weight": 0
+    },
+    {
       "itemKindId": "demo.item.robe",
       "maxDepth": 65535,
       "minDepth": 1,

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 60000,
+  "descriptionKey": "item-demo-levitation-stone-description",
+  "equipmentSlot": "light",
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "glyph": "*",
+  "id": "demo.item.levitation-stone",
+  "maxStack": 1,
+  "nameKey": "item-demo-levitation-stone-name",
+  "rfbBaseKind": {
+    "sourceIndex": 610,
+    "tval": 39,
+    "sval": 9
+  },
+  "rfbValue": {
+    "flags": [
+      "INSTA_ART"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "equipment",
+    "instant-artifact-base",
+    "light-source"
+  ],
+  "weightTenthsPound": 10
+}

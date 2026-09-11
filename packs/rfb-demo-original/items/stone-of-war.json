@@ -1,0 +1,83 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "sourceIndex": 291,
+    "baseItemKindId": "demo.item.stone-621",
+    "instant": true,
+    "rarityOneIn": 150
+  },
+  "baseValue": 100000,
+  "descriptionKey": "item-demo-stone-of-war-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 8,
+        "id": "demo.item-activation.stone-of-war",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-berserk-name",
+        "rfbValue": 2125,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1,
+        "effectProgramId": "demo.effect.berserk-strength"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1000
+    }
+  },
+  "equipmentBonuses": {
+    "lightRadius": 3,
+    "meleeSkill": 6,
+    "meleeDamage": 6
+  },
+  "equipmentSlot": "light",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "*",
+  "id": "demo.item.stone-of-war",
+  "maxStack": 1,
+  "nameKey": "item-demo-stone-of-war-name",
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "FREE_ACT",
+      "FULL_NAME",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INSTA_ART"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "artifact",
+    "equipment",
+    "light-source"
+  ],
+  "weightTenthsPound": 20,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ]
+}

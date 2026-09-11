@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.eorlingas",
+  "nameKey": "item-demo-eorlingas-name",
+  "descriptionKey": "item-demo-eorlingas-description",
+  "glyph": "/",
+  "generationLevel": 30,
+  "weightTenthsPound": 360,
+  "maxStack": 1,
+  "baseValue": 100000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 100,
+    "baseItemKindId": "demo.item.lance",
+    "instant": false,
+    "rarityOneIn": 33
+  },
+  "weaponProficiencyBaseItemId": "demo.item.lance",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 3,
+    "toDamage": 21,
+    "damageDice": 3,
+    "damageSides": 10
+  },
+  "modifiers": {
+    "strength": 3,
+    "dexterity": 3,
+    "charisma": 3
+  },
+  "passives": [
+    "see-invisible"
+  ],
+  "slays": {
+    "troll": "slay",
+    "orc": "slay"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "ridingWeaponKind": "lance",
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "DEX",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RIDING",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "STR"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  }
+}

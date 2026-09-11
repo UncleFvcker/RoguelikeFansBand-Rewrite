@@ -117,7 +117,7 @@ for (const file of ["src/ego.c", "src/object2.c", "src/artifact.c"]) {
   }
 }
 const specialArtifactIndices = [41, 78, 144, 145, 146, 162, 190, 212, 320, 322];
-assert.deepEqual(items.filter(item => specialArtifactIndices.includes(item.artifactGeneration?.sourceIndex)).map(item => item.artifactGeneration.sourceIndex).sort((a, b) => a - b), [41, 162], "new identity-sensitive artifact requires applicability implementation/review");
+assert.deepEqual(items.filter(item => specialArtifactIndices.includes(item.artifactGeneration?.sourceIndex)).map(item => item.artifactGeneration.sourceIndex).sort((a, b) => a - b), [41, 145, 162, 322], "new identity-sensitive artifact requires applicability implementation/review");
 const terror = items.find(item => item.artifactGeneration?.sourceIndex === 41);
 assert.equal(terror.artifactGeneration.baseItemKindId, "demo.item.iron-helm");
 assert.equal(terror.artifactGeneration.rarityOneIn, 7);

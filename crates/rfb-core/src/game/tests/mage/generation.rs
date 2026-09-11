@@ -134,9 +134,26 @@ fn fixed_mage_artifacts_generate_extra_power_equip_and_resume_activation_cooldow
             Some(&kind),
             "natural source pool includes {slug}"
         );
+        if slug == "gandalf" {
+            // His fixed LITE and an XTRA_POWER LITE are the same source flag.
+            let seed = (0..5000)
+                .find(|seed| {
+                    let mut trial = game.clone();
+                    trial.rng = RfbRng::seeded(*seed);
+                    trial
+                        .fixed_item_draft(&context, kind.clone())
+                        .intrinsic_properties
+                        .rfb_flags
+                        .contains("LITE")
+                })
+                .expect("source ability draw must reach LITE");
+            game.rng = RfbRng::seeded(seed);
+        }
         let draft = game.fixed_item_draft(&context, kind.clone());
         if slug == "gandalf" {
             assert_ne!(draft.intrinsic_properties, Default::default());
+            assert!(draft.intrinsic_properties.rfb_flags.contains("LITE"));
+            assert_eq!(draft.intrinsic_properties.equipment_bonuses.light_radius, 0);
         }
         let item = game
             .commit_generated_item_draft(draft, ItemLocation::Inventory)
@@ -149,6 +166,10 @@ fn fixed_mage_artifacts_generate_extra_power_equip_and_resume_activation_cooldow
         game.reveal_current_visibility();
         game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
         let item = game.items.iter().find(|item| item.id == id).unwrap();
+        if slug == "gandalf" {
+            assert_eq!(game.item_equipment_bonuses(item).light_radius, 1);
+            assert_eq!(game.visible_item_equipment_bonuses(item).light_radius, 1);
+        }
         if slug == "indra" {
             assert_eq!(
                 game.effective_player_resistances()

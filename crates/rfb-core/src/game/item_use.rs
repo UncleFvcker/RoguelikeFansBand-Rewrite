@@ -3948,6 +3948,16 @@ impl Game {
             ItemUseEffectDefinition::Damage { .. }
             | ItemUseEffectDefinition::AreaDamage { .. }
             | ItemUseEffectDefinition::BeamDamage { .. } => {
+                if target.is_none()
+                    && self
+                        .items
+                        .iter()
+                        .find(|item| item.id == source_item_id)
+                        .and_then(|item| self.content.item(&item.kind_id))
+                        .is_some_and(|kind| kind.equipment_slot.is_some())
+                {
+                    return Some(ItemUsePlan::CancelledActivation);
+                }
                 let path = target_definition.and_then(|definition| {
                     target.and_then(|target| self.item_effect_path(definition, target))
                 })?;

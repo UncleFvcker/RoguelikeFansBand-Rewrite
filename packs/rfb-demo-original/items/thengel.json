@@ -1,0 +1,54 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.thengel",
+  "nameKey": "item-demo-thengel-name",
+  "descriptionKey": "item-demo-thengel-description",
+  "glyph": "]",
+  "generationLevel": 25,
+  "weightTenthsPound": 20,
+  "maxStack": 1,
+  "baseValue": 12000,
+  "equipmentSlot": "head",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 37,
+    "baseItemKindId": "demo.item.metal-cap",
+    "instant": false,
+    "rarityOneIn": 3
+  },
+  "modifiers": {
+    "defense": 15,
+    "wisdom": 3,
+    "charisma": 3
+  },
+  "equipmentBonuses": {
+    "spellCapacityBonus": 3
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SPELL_CAP",
+      "WIS"
+    ],
+    "pval": 3,
+    "toArmor": 12
+  }
+}

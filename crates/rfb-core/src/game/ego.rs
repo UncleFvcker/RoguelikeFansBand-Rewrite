@@ -272,23 +272,40 @@ pub(super) fn materialize_ego_with_rng(
         }
     }
     debug_assert!(affix_ids.windows(2).all(|pair| pair[0] != pair[1]));
-    let rolled_affixes = roll_affix_properties_with_rng(content, rng, &affix_ids, roll_depth);
+    let artifact_value = content
+        .item(kind_id)
+        .filter(|item| item.artifact_generation.is_some())
+        .and_then(|item| item.rfb_value.as_ref());
+    let power_before_resistance =
+        artifact_value.is_some_and(|value| value.flags.contains("XTRA_H_RES"));
+    let mut extra_power = artifact_value
+        .filter(|value| value.flags.contains("XTRA_POWER"))
+        .map(|_| AffixPropertyBundleDefinition::default());
+    // master:artifact.c::random_artifact_resistance calls one_ability before
+    // one_high_resistance when both are present. Other paths keep their order.
+    if power_before_resistance && let Some(properties) = &mut extra_power {
+        add_one_ability(rng, properties);
+    }
+    let mut rolled_affixes = roll_affix_properties_with_rng(content, rng, &affix_ids, roll_depth);
     let (activation, charges) =
         initial_item_runtime_state(content, rng, kind_id, &affix_ids, activation_depth);
-    let extra_power = content
-        .item(kind_id)
-        .filter(|item| {
-            item.artifact_generation.is_some()
-                && item
-                    .rfb_value
-                    .as_ref()
-                    .is_some_and(|value| value.flags.contains("XTRA_POWER"))
-        })
-        .map(|_| {
-            let mut properties = AffixPropertyBundleDefinition::default();
-            add_one_ability(rng, &mut properties);
-            properties
-        });
+    if !power_before_resistance && let Some(properties) = &mut extra_power {
+        add_one_ability(rng, properties);
+    }
+    if artifact_value.is_some_and(|value| value.flags.contains("LITE")) {
+        // Source one_ability adds a flag, so an existing LITE never becomes +2.
+        // Keep the rolled flag as instance state for identification and saving.
+        for properties in rolled_affixes
+            .iter_mut()
+            .map(|rolled| &mut rolled.properties)
+            .chain(extra_power.iter_mut())
+        {
+            if properties.equipment_bonuses.light_radius == 1 {
+                properties.rfb_flags.insert("LITE".to_owned());
+                properties.equipment_bonuses.light_radius = 0;
+            }
+        }
+    }
     EgoMaterialization::new(
         affix_ids,
         rolled_affixes,

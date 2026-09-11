@@ -1,0 +1,65 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.nightcap",
+  "nameKey": "item-demo-nightcap-name",
+  "descriptionKey": "item-demo-nightcap-description",
+  "glyph": "]",
+  "generationLevel": 30,
+  "weightTenthsPound": 8,
+  "maxStack": 1,
+  "baseValue": 15000,
+  "equipmentSlot": "head",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 358,
+    "baseItemKindId": "demo.item.knit-cap",
+    "instant": false,
+    "rarityOneIn": 5
+  },
+  "modifiers": {
+    "defense": 7
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 3,
+    "lightRadius": -1
+  },
+  "passives": [
+    "hold-life",
+    "esp-undead"
+  ],
+  "resistances": {
+    "cold": "resistant",
+    "dark": "resistant",
+    "fear": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "DARKNESS",
+      "ESP_UNDEAD",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_COLD",
+      "RES_DARK",
+      "RES_FEAR",
+      "STEALTH"
+    ],
+    "pval": 3,
+    "toArmor": 6
+  }
+}

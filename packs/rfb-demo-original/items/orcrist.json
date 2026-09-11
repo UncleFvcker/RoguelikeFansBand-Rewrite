@@ -1,0 +1,89 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.orcrist",
+  "nameKey": "item-demo-orcrist-name",
+  "descriptionKey": "item-demo-orcrist-description",
+  "glyph": "|",
+  "generationLevel": 20,
+  "weightTenthsPound": 150,
+  "maxStack": 1,
+  "baseValue": 40000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 75,
+    "baseItemKindId": "demo.item.broad-sword",
+    "instant": false,
+    "rarityOneIn": 20,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-res-or-power"
+    ]
+  },
+  "weaponProficiencyBaseItemId": "demo.item.broad-sword",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 10,
+    "toDamage": 15,
+    "damageDice": 2,
+    "damageSides": 6
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "BRAND_COLD",
+      "ESP_GIANT",
+      "ESP_ORC",
+      "ESP_TROLL",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "KILL_ORC",
+      "LITE",
+      "RES_COLD",
+      "RES_DARK",
+      "RIDING",
+      "SHOW_MODS",
+      "SLAY_EVIL",
+      "SLOW_DIGEST",
+      "STEALTH",
+      "XTRA_RES_OR_POWER"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 3,
+    "lightRadius": 1
+  },
+  "passives": [
+    "slow-digestion",
+    "esp-orc",
+    "esp-troll",
+    "esp-giant"
+  ],
+  "brands": [
+    "cold"
+  ],
+  "slays": {
+    "evil": "slay",
+    "orc": "kill"
+  },
+  "resistances": {
+    "cold": "resistant",
+    "dark": "resistant"
+  },
+  "ridingWeaponKind": "compatible"
+}

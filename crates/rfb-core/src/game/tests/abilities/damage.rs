@@ -597,7 +597,7 @@ fn bolt_or_beam_damage_uses_one_roll_and_changes_only_penetration() {
 
 #[test]
 fn p86e_mirror_shield_reflects_monster_bolts_once_with_exact_three_of_four_gate() {
-    let make_game = |seed| {
+    let make_game = |seed, kind: &str| {
         let mut game = Game::new(seed);
         clear_monsters(&mut game);
         for cell in &mut game.terrain {
@@ -622,11 +622,7 @@ fn p86e_mirror_shield_reflects_monster_bolts_once_with_exact_three_of_four_gate(
             100,
             true,
         ));
-        give_inventory_item(
-            &mut game,
-            "test.item.mirror-shield",
-            "demo.item.mirror-shield",
-        );
+        give_inventory_item(&mut game, "test.item.reflector", kind);
         game.items
             .last_mut()
             .expect("Mirror Shield should be granted")
@@ -666,41 +662,43 @@ fn p86e_mirror_shield_reflects_monster_bolts_once_with_exact_three_of_four_gate(
         events
     };
 
-    let mut equipment_check = make_game(0);
-    assert!(equipment_check.player_reflects_bolts());
-    equipment_check
-        .items
-        .last_mut()
-        .expect("Mirror Shield should remain present")
-        .location = ItemLocation::Inventory;
-    assert!(!equipment_check.player_reflects_bolts());
+    for kind in ["demo.item.mirror-shield", "demo.item.perseus"] {
+        let mut equipment_check = make_game(0, kind);
+        assert!(equipment_check.player_reflects_bolts());
+        equipment_check
+            .items
+            .last_mut()
+            .expect("Mirror Shield should remain present")
+            .location = ItemLocation::Inventory;
+        assert!(!equipment_check.player_reflects_bolts());
 
-    let mut reflected_rolls = 0;
-    for gate_roll in 0..4 {
-        let seed = (0..10_000)
-            .find(|seed| {
-                let mut rng = RfbRng::seeded(*seed);
-                assert_eq!(rng.bounded(1), 0, "1d1 damage must consume one draw");
-                rng.bounded(4) == gate_roll
-            })
-            .expect("each reflection gate result should have a deterministic seed");
-        let mut game = make_game(0);
-        game.rng = RfbRng::seeded(seed);
-        let events = cast_bolt(&mut game);
-        let reflections = events
-            .iter()
-            .filter(|event| matches!(event, DomainEvent::BoltReflected { .. }))
-            .count();
-        if gate_roll == 0 {
-            assert_eq!(reflections, 0);
-            assert!(game.player.hp < 100);
-        } else {
-            reflected_rolls += 1;
-            assert_eq!(reflections, 1, "one projectile may reflect only once");
-            assert_eq!(game.player.hp, 100);
+        let mut reflected_rolls = 0;
+        for gate_roll in 0..4 {
+            let seed = (0..10_000)
+                .find(|seed| {
+                    let mut rng = RfbRng::seeded(*seed);
+                    assert_eq!(rng.bounded(1), 0, "1d1 damage must consume one draw");
+                    rng.bounded(4) == gate_roll
+                })
+                .expect("each reflection gate result should have a deterministic seed");
+            let mut game = make_game(0, kind);
+            game.rng = RfbRng::seeded(seed);
+            let events = cast_bolt(&mut game);
+            let reflections = events
+                .iter()
+                .filter(|event| matches!(event, DomainEvent::BoltReflected { .. }))
+                .count();
+            if gate_roll == 0 {
+                assert_eq!(reflections, 0);
+                assert!(game.player.hp < 100);
+            } else {
+                reflected_rolls += 1;
+                assert_eq!(reflections, 1, "one projectile may reflect only once");
+                assert_eq!(game.player.hp, 100);
+            }
         }
+        assert_eq!(reflected_rolls, 3);
     }
-    assert_eq!(reflected_rolls, 3);
 }
 
 #[test]
@@ -729,7 +727,9 @@ fn mirror_shield_does_not_reflect_beams_balls_or_breaths() {
         },
     ];
 
-    for effect in effects {
+    for (effect, kind) in effects.into_iter().flat_map(|effect| {
+        ["demo.item.mirror-shield", "demo.item.perseus"].map(|kind| (effect.clone(), kind))
+    }) {
         let mut game = Game::new(0);
         clear_monsters(&mut game);
         game.player.position = Position { x: 3, y: 3 };
@@ -751,11 +751,7 @@ fn mirror_shield_does_not_reflect_beams_balls_or_breaths() {
             100,
             true,
         ));
-        give_inventory_item(
-            &mut game,
-            "test.item.mirror-shield",
-            "demo.item.mirror-shield",
-        );
+        give_inventory_item(&mut game, "test.item.reflector", kind);
         game.items
             .last_mut()
             .expect("Mirror Shield should be granted")

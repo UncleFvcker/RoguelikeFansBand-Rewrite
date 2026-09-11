@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 25000,
+  "descriptionKey": "item-demo-stone-621-description",
+  "equipmentSlot": "light",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "*",
+  "id": "demo.item.stone-621",
+  "maxStack": 1,
+  "nameKey": "item-demo-stone-621-name",
+  "rfbBaseKind": {
+    "sourceIndex": 621,
+    "tval": 39,
+    "sval": 20
+  },
+  "rfbValue": {
+    "flags": [
+      "INSTA_ART"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "equipment",
+    "instant-artifact-base",
+    "light-source"
+  ],
+  "weightTenthsPound": 5
+}

@@ -9227,6 +9227,42 @@ item-demo-phial-name = 玻璃瓶
 item-demo-phial-description = 一个玻璃瓶。
 item-demo-galadriel-name = 加拉德瑞尔的玻璃瓶
 item-demo-galadriel-description = 一个小水晶瓶，里面装着埃兰迪尔之星的光芒。它的光芒是不朽的，在它附近，黑暗无法留存。
+item-demo-star-name = 星星
+item-demo-star-description = 一颗星星。
+item-demo-stone-name = 石头
+item-demo-stone-description = 一块石头。
+item-demo-star-of-elendil-name = 埃兰迪尔的星星
+item-demo-star-of-elendil-description = 闪耀的西方之星，埃兰迪尔家族著名的传家宝。
+item-demo-stone-of-lore-name = 学识之石头
+item-demo-stone-of-lore-description = 一颗巨大的绿宝石，当你凝视它的深处时，你的脑海会充满知识和理解的画面。
+item-demo-thengel-name = 森格尔的金属帽
+item-demo-thengel-description = 一顶用精细雕刻的银饰浮雕着英勇场景的钢制脊形头盔。它赋予佩戴者高贵的品质、清晰的思路和理解力。
+item-demo-perseus-name = 珀耳修斯的小金属盾
+item-demo-perseus-description = 这面盾牌能反射魔法弹，并保护佩戴者的力量。
+item-demo-bard-name = 游吟诗人的软皮靴
+item-demo-bard-description = 这双靴子让佩戴者行动敏捷、脚步轻盈。
+item-demo-fell-rider-name = 可怕骑手的硬皮帽
+item-demo-fell-rider-description = 一顶古老、破旧的皮帽，上面绣着“可怕的费尔（Fell）出租马车行”的座右铭：‘可怕（FELL）。骑手——就是你。’
+item-demo-nightcap-name = 『睡帽』针织帽
+item-demo-nightcap-description = 一顶温暖的羊毛帽，非常适合那些在寒冷、黑暗的地方潜行的人。
+item-demo-four-winds-name = 四风之针织帽
+item-demo-four-winds-description = 一顶红蓝相间的帽子，顶部有一个四芒星，上面施加了神秘的法术来保护佩戴者免受元素的伤害。
+item-demo-osondir-name = 『奥松迪尔』长戟
+item-demo-osondir-description = 奥松迪尔高大威严地屹立着，抵御巨人们的愤怒，在邪恶的古墓中，他目光清澈，挥舞着一把闪耀着红宝石光芒的戟。
+item-demo-til-i-arc-name = 『提尔-伊-阿克』长枪
+item-demo-til-i-arc-description = 在这根长刺矛内，栖息着被魔法束缚的霜巨人和火恶魔的灵魂，它们在其中永远地交战。
+item-demo-eorlingas-name = 伊欧林加斯的骑枪
+item-demo-eorlingas-description = “前进吧，伊欧林加斯！”。“青年”伊欧来到了凯勒布兰特平原，拯救了被围困的刚铎，巨大的巨魔和可怕的狼都在他的长枪下四散奔逃。
+item-demo-barukkheled-name = 『巴鲁克海雷德』阔斧
+item-demo-barukkheled-description = 南部海岸的皇家传家宝，在对抗大地之中的邪恶生物时非常强大。
+item-demo-bloodspike-name = 『血刺』晨星锤
+item-demo-bloodspike-description = 当你挥舞着锁链悬挂的带刺铁球时，你感到脚步稳健有力——并让它沐浴在敌人的鲜血中。
+item-demo-nar-i-vagil-name = 『纳尔-伊-瓦吉尔』铁头木棍
+item-demo-nar-i-vagil-description = 以一颗炽热的星星命名，镶嵌着价值连城的宝石，束缚着神秘的保护和精神力量。
+item-demo-samson-name = 参孙的木棒
+item-demo-samson-description = 一根赋予佩戴者力量与体魄的木棒。
+item-demo-vagabond-name = 流浪汉的晨星锤
+item-demo-vagabond-description = 孤独旅行者唯一真正的朋友。
 item-demo-rohirrim-name = 洛汗骠骑的金属布面甲
 item-demo-rohirrim-description = 坚固的帆布内衬上覆盖着小金属板，两者都带有狩猎和战争的场景。当你穿上这件盔甲时，你感受到了在战斗中无人能敌的“青年”伊欧的灵魂萦绕在你周围。
 item-demo-arvedui-name = 阿维杜伊的链甲
@@ -9566,3 +9602,72 @@ build-demo-ranger-nature-arcane-name = 游侠：自然／奥秘
 build-demo-ranger-nature-arcane-description = 自然为主领域、奥秘为第二领域的游侠。
 build-demo-ranger-nature-daemon-name = 游侠：自然／恶魔
 build-demo-ranger-nature-daemon-description = 自然为主领域、恶魔为第二领域的游侠。
+item-demo-thorin-name = 索林之小金属盾
+item-demo-thorin-description = 唤起山下国王索林的力量和耐力，这面小金属盾是抵御土元素的证明。
+
+item-demo-celegorm-name = 凯勒巩的大皮盾
+item-demo-celegorm-description = 这面盾牌上装饰着许多许久未见的生物，它曾保护过希姆拉德领主凯勒巩；它周围有一种神秘的平衡，包容了元素之间的冲突。
+
+item-demo-anarion-name = 阿纳瑞安的大金属盾
+item-demo-anarion-description = 埃兰迪尔之子阿纳瑞安的伟大金属包边盾牌，索伦发现自己无力使其枯萎或削弱。
+
+item-demo-thror-name = 索尔之秘银铁头靴
+item-demo-thror-description = 坚固的皮革与钢铁制成的鞋子，如穿戴它们的饱经风霜的流亡矮人国王一样坚忍。由于是矮人制造的，穿上这双靴子的人将在群山中如履平地。
+
+item-demo-maedhros-name = 迈兹洛斯的左手短剑
+item-demo-maedhros-description = 一把带有大护手的短刺剑，由高大的迈兹洛斯佩戴，他是费诺的长子。在安格班（Thangorodrim）的地牢中失去右手后，他用左手挥舞这把剑。
+
+item-demo-glamdring-name = 『敌击剑』阔剑
+item-demo-glamdring-description = 这把燃烧着耀眼光芒的利刃，从那些胆敢靠近隐藏的贡多林而被击杀的半兽人口中，获得了“敌击剑（Foe-Hammer）”的绰号。
+
+item-demo-orcrist-name = 『兽咬剑』阔剑
+item-demo-orcrist-description = 这把闪烁着冷光的利刃，被那些深知其威力的半兽人简单地称为“咬剑（Biter）”。
+
+item-demo-gurthang-name = 『古桑格』双手剑
+item-demo-gurthang-description = 这把曾被强大的图林所挥舞的巨剑，是一把伟大的屠龙武器，曾沐浴过格劳龙的鲜血：但要小心，它最终也会饮下那些挥舞它之人的鲜血。
+
+item-demo-azaghal-name = 阿扎格哈尔的左手短剑
+item-demo-azaghal-description = 在尼南斯·阿农迪亚德（Nirnaeth）战役中，矮人们挡住了格劳龙的猛攻，他们的领主阿扎格哈尔在被踩在脚下之前，将这把短刀刺入了恶龙的腹部。龙之父的黑色鲜血现在成为所有靠近它的龙类的警告。
+
+item-demo-aule-name = 奥力之巨锤
+item-demo-aule-description = 奥力的神奇锤子，他是古代睿智矮人领主的创造者。它带有没有任何巨蛇或恶魔能抵挡的毁灭魔法，并唤起山脉的力量来抵御元素的喧嚣。
+
+item-demo-levitation-stone-name = 悬浮石
+item-demo-levitation-stone-description = 悬浮石
+
+item-demo-stone-621-name = 石头
+item-demo-stone-621-description = 石头
+
+item-demo-laputa-name = 拉普达的悬浮石
+item-demo-laputa-description = 拉普达的悬浮石
+
+item-demo-stone-of-war-name = 战争之石
+item-demo-stone-of-war-description = 战争之石
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: a_info 53/54/56/57/66/67/68.
+item-demo-cammithrim-name = 皮手套『坎米斯林』
+item-demo-cammithrim-description = 这些手套闪耀着极其明亮的光芒，不仅能为主人照亮道路，还能以极高的频率发射魔法射线。
+item-demo-paurhach-name = 铁护手『保尔哈赫』
+item-demo-paurhach-description = 一副燃烧着的护手，甚至能烧伤你的对手。
+item-demo-pauraegen-name = 铁护手『保尔雷根』
+item-demo-pauraegen-description = 一副周围环绕着火花的手部护具，能够电击你的对手。
+item-demo-paurnen-name = 铁护手『保尔能』
+item-demo-paurnen-description = 一副极具腐蚀性的手部护具，能够溶解你的对手。
+item-demo-narthanc-name = 匕首『纳桑克』
+item-demo-narthanc-description = 一把燃烧的匕首，具有完美的平衡性，适合进行致命的投掷。
+item-demo-nimthanc-name = 匕首『尼姆桑克』
+item-demo-nimthanc-description = 一把冰霜匕首，具有完美的平衡性，适合进行致命的投掷。
+item-demo-dethanc-name = 匕首『德桑克』
+item-demo-dethanc-description = 一把被火花覆盖的匕首，具有完美的平衡性，适合进行致命的投掷。
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: ordinary branches of a_info 145/322.
+item-demo-xiaolong-name = 小龙的双截棍
+item-demo-xiaolong-description = 小龙的双截棍
+item-demo-dragonlance-name = 重型骑枪『龙枪』
+item-demo-dragonlance-description = 重型骑枪『龙枪』
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: kind 245 / artifact 192.
+item-demo-t-shirt-name = T恤
+item-demo-t-shirt-description = T恤
+item-demo-legendary-lost-treasure-name = T恤『我干掉了地狱看门犬，结果只得到了这件破T恤！』
+item-demo-legendary-lost-treasure-description = T恤『我干掉了地狱看门犬，结果只得到了这件破T恤！』

@@ -1,0 +1,74 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.bloodspike",
+  "nameKey": "item-demo-bloodspike-name",
+  "descriptionKey": "item-demo-bloodspike-description",
+  "glyph": "\\",
+  "generationLevel": 35,
+  "weightTenthsPound": 150,
+  "maxStack": 1,
+  "baseValue": 50000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 114,
+    "baseItemKindId": "demo.item.morning-star",
+    "instant": false,
+    "rarityOneIn": 30
+  },
+  "weaponProficiencyBaseItemId": "demo.item.morning-star",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 8,
+    "toDamage": 22,
+    "damageDice": 2,
+    "damageSides": 7
+  },
+  "modifiers": {
+    "strength": 4
+  },
+  "passives": [
+    "see-invisible"
+  ],
+  "slays": {
+    "human": "slay",
+    "animal": "slay",
+    "troll": "slay",
+    "orc": "slay"
+  },
+  "resistances": {
+    "nexus": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_NEXUS",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_ANIMAL",
+      "SLAY_HUMAN",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "STR"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  }
+}

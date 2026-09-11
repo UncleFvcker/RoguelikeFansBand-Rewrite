@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.gurthang",
+  "nameKey": "item-demo-gurthang-name",
+  "descriptionKey": "item-demo-gurthang-description",
+  "glyph": "|",
+  "generationLevel": 35,
+  "weightTenthsPound": 200,
+  "maxStack": 1,
+  "baseValue": 100000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 76,
+    "baseItemKindId": "demo.item.two-handed-sword",
+    "instant": false,
+    "rarityOneIn": 30,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-res-or-power"
+    ]
+  },
+  "weaponProficiencyBaseItemId": "demo.item.two-handed-sword",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 13,
+    "toDamage": 17,
+    "damageDice": 3,
+    "damageSides": 7
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "KILL_DRAGON",
+      "REGEN",
+      "SHOW_MODS",
+      "SLAY_TROLL",
+      "SLOW_DIGEST",
+      "STR",
+      "XTRA_RES_OR_POWER"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "modifiers": {
+    "strength": 2
+  },
+  "passives": [
+    "slow-digestion",
+    "regeneration"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "troll": "slay",
+    "dragon": "kill"
+  }
+}

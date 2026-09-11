@@ -952,6 +952,29 @@ impl Game {
     }
 
     fn armor_combat_enchantments(&self, item: &ItemInstance, ranged: bool) -> (i32, i32) {
+        // master:equip.c also grants these gauntlets' and Stone of War's
+        // hit/damage to archery. Melee already receives their equipment bonuses.
+        if let Some(kind) = self.content.item(&item.kind_id)
+            && kind
+                .artifact_generation
+                .as_ref()
+                .is_some_and(|artifact| matches!(artifact.source_index, 54 | 56 | 57 | 185 | 291))
+        {
+            return (
+                i32::from(item.enchantments.to_hit)
+                    + if ranged {
+                        kind.equipment_bonuses.melee_skill
+                    } else {
+                        0
+                    },
+                i32::from(item.enchantments.to_damage)
+                    + if ranged {
+                        kind.equipment_bonuses.melee_damage
+                    } else {
+                        0
+                    },
+            );
+        }
         // master:equip.c excludes Terror Mask from shooter bonuses, including
         // enchantments applied after generation. Its static bonuses are melee-only.
         if self
@@ -2663,15 +2686,12 @@ impl Game {
         })
     }
 
-    pub(super) fn player_melee_damage_multiplier(
+    pub(super) fn item_damage_multiplier(
         &self,
-        profile: &ResolvedAttackProfile,
+        item: &ItemInstance,
         target: &Actor,
         definition: &rfb_content::ActorDefinition,
     ) -> i32 {
-        if profile.source_item_id.is_none() {
-            return 10;
-        }
         let mut multiplier = 10;
         let mut apply = |slays: &BTreeMap<SlayTarget, SlayLevel>,
                          brands: &BTreeSet<WeaponBrand>| {
@@ -2686,6 +2706,34 @@ impl Game {
                 }
             }
         };
+        if let Some(kind) = self.content.item(&item.kind_id) {
+            apply(&kind.slays, &kind.brands);
+        }
+        for affix_id in &item.affix_ids {
+            if let Some(affix) = self.content.affix(affix_id) {
+                apply(&affix.slays, &affix.brands);
+            }
+        }
+        apply(
+            &item.intrinsic_properties.slays,
+            &item.intrinsic_properties.brands,
+        );
+        for rolled in &item.rolled_affixes {
+            apply(&rolled.properties.slays, &rolled.properties.brands);
+        }
+        multiplier
+    }
+
+    pub(super) fn player_melee_damage_multiplier(
+        &self,
+        profile: &ResolvedAttackProfile,
+        target: &Actor,
+        definition: &rfb_content::ActorDefinition,
+    ) -> i32 {
+        if profile.source_item_id.is_none() {
+            return 10;
+        }
+        let mut multiplier = 10;
         for item in &self.items {
             if !matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
             {
@@ -2695,26 +2743,15 @@ impl Game {
             {
                 continue;
             }
-            if let Some(item_definition) = self.content.item(&item.kind_id) {
-                if item_definition.melee_profile.is_some()
-                    && profile.source_item_id.as_deref() != Some(&item.id)
-                {
-                    continue;
-                }
-                apply(&item_definition.slays, &item_definition.brands);
+            if self
+                .content
+                .item(&item.kind_id)
+                .is_some_and(|kind| kind.melee_profile.is_some())
+                && profile.source_item_id.as_deref() != Some(&item.id)
+            {
+                continue;
             }
-            for affix_id in &item.affix_ids {
-                if let Some(affix) = self.content.affix(affix_id) {
-                    apply(&affix.slays, &affix.brands);
-                }
-            }
-            apply(
-                &item.intrinsic_properties.slays,
-                &item.intrinsic_properties.brands,
-            );
-            for rolled in &item.rolled_affixes {
-                apply(&rolled.properties.slays, &rolled.properties.brands);
-            }
+            multiplier = multiplier.max(self.item_damage_multiplier(item, target, definition));
         }
         for status in &self.player.statuses {
             for brand in &status.granted_brands {

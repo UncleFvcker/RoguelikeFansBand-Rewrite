@@ -9222,6 +9222,42 @@ item-demo-poison-needle-description = Attempts to kill a monster instantly. Stri
 item-demo-phial-name = Phial
 item-demo-phial-description = A small glass phial.
 item-demo-galadriel-name = Phial of Galadriel
+item-demo-star-name = Star
+item-demo-star-description = A star.
+item-demo-stone-name = Stone
+item-demo-stone-description = A stone.
+item-demo-star-of-elendil-name = Star of Elendil
+item-demo-star-of-elendil-description = A shining western star, a renowned heirloom of Elendil's house.
+item-demo-stone-of-lore-name = Stone of Lore
+item-demo-stone-of-lore-description = A great emerald whose depths fill the mind with knowledge and understanding.
+item-demo-thengel-name = Metal Cap of Thengel
+item-demo-thengel-description = A crested steel helm with silver reliefs of heroic deeds, granting nobility, clarity and understanding.
+item-demo-perseus-name = Small Metal Shield of Perseus
+item-demo-perseus-description = A shield that reflects bolts and sustains its wearer's strength.
+item-demo-bard-name = Soft Leather Boots of the Bard
+item-demo-bard-description = Boots that lend their wearer agility and a quiet tread.
+item-demo-fell-rider-name = Hard Leather Cap of the Fell Rider
+item-demo-fell-rider-description = An old leather cap embroidered with the motto of Fell's carriage service.
+item-demo-nightcap-name = Knit Cap 'Nightcap'
+item-demo-nightcap-description = A warm woollen cap for those who move quietly through cold, dark places.
+item-demo-four-winds-name = Knit Cap of the Four Winds
+item-demo-four-winds-description = A red and blue cap with a four-pointed star, enchanted to protect its wearer from the elements.
+item-demo-osondir-name = Halberd 'Osondir'
+item-demo-osondir-description = Osondir stood against the wrath of giants, wielding a ruby-bright halberd in evil tombs.
+item-demo-til-i-arc-name = Pike 'Til-i-arc'
+item-demo-til-i-arc-description = The bound spirits of a frost giant and a fire demon wage an endless battle within this pike.
+item-demo-eorlingas-name = Lance of Eorlingas
+item-demo-eorlingas-description = The lance of Eorl the Young, before which trolls and wolves fled on the Field of Celebrant.
+item-demo-barukkheled-name = Broad Axe 'Barukkheled'
+item-demo-barukkheled-description = A royal heirloom of the southern shores, mighty against the evil creatures of the earth.
+item-demo-bloodspike-name = Morning Star 'Bloodspike'
+item-demo-bloodspike-description = Swinging its spiked iron ball lends strength to your stride and bathes it in your enemies' blood.
+item-demo-nar-i-vagil-name = Quarterstaff 'Nar-i-vagil'
+item-demo-nar-i-vagil-description = Named for a fiery star and set with precious gems, this staff holds powers of protection and the mind.
+item-demo-samson-name = Club of Samson
+item-demo-samson-description = A club that grants its wielder strength and vitality.
+item-demo-vagabond-name = Morning Star of the Vagabond
+item-demo-vagabond-description = The lonely traveller's only true friend.
 item-demo-galadriel-description = A small crystal phial holding the undying light of the Star of Earendil.
 item-demo-rohirrim-name = Metal Brigandine Armour of the Rohirrim
 item-demo-rohirrim-description = An ancient artifact with one hidden high resistance.
@@ -9558,3 +9594,72 @@ build-demo-ranger-nature-arcane-name = Ranger: Nature / Arcane
 build-demo-ranger-nature-arcane-description = A ranger with Nature as the primary realm and Arcane as the secondary realm.
 build-demo-ranger-nature-daemon-name = Ranger: Nature / Daemon
 build-demo-ranger-nature-daemon-description = A ranger with Nature as the primary realm and Daemon as the secondary realm.
+item-demo-thorin-name = Small Metal Shield of Thorin
+item-demo-thorin-description = Small Metal Shield of Thorin
+
+item-demo-celegorm-name = Large Leather Shield of Celegorm
+item-demo-celegorm-description = Large Leather Shield of Celegorm
+
+item-demo-anarion-name = Large Metal Shield of Anarion
+item-demo-anarion-description = Large Metal Shield of Anarion
+
+item-demo-thror-name = Pair of Mithril Shod Boots of Thror
+item-demo-thror-description = Pair of Mithril Shod Boots of Thror
+
+item-demo-maedhros-name = Main Gauche of Maedhros
+item-demo-maedhros-description = Main Gauche of Maedhros
+
+item-demo-glamdring-name = Broad Sword 'Glamdring'
+item-demo-glamdring-description = Broad Sword 'Glamdring'
+
+item-demo-orcrist-name = Broad Sword 'Orcrist'
+item-demo-orcrist-description = Broad Sword 'Orcrist'
+
+item-demo-gurthang-name = Two-Handed Sword 'Gurthang'
+item-demo-gurthang-description = Two-Handed Sword 'Gurthang'
+
+item-demo-azaghal-name = Main Gauche of Azaghal
+item-demo-azaghal-description = Main Gauche of Azaghal
+
+item-demo-aule-name = Great Hammer of Aule
+item-demo-aule-description = Great Hammer of Aule
+
+item-demo-levitation-stone-name = Levitation Stone
+item-demo-levitation-stone-description = Levitation Stone
+
+item-demo-stone-621-name = Stone
+item-demo-stone-621-description = Stone
+
+item-demo-laputa-name = Levitation Stone of Laputa
+item-demo-laputa-description = Levitation Stone of Laputa
+
+item-demo-stone-of-war-name = Stone of War
+item-demo-stone-of-war-description = Stone of War
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: a_info 53/54/56/57/66/67/68.
+item-demo-cammithrim-name = Set of Leather Gloves 'Cammithrim'
+item-demo-cammithrim-description = Set of Leather Gloves 'Cammithrim'
+item-demo-paurhach-name = Set of Gauntlets 'Paurhach'
+item-demo-paurhach-description = Set of Gauntlets 'Paurhach'
+item-demo-pauraegen-name = Set of Gauntlets 'Pauraegen'
+item-demo-pauraegen-description = Set of Gauntlets 'Pauraegen'
+item-demo-paurnen-name = Set of Gauntlets 'Paurnen'
+item-demo-paurnen-description = Set of Gauntlets 'Paurnen'
+item-demo-narthanc-name = Dagger 'Narthanc'
+item-demo-narthanc-description = Dagger 'Narthanc'
+item-demo-nimthanc-name = Dagger 'Nimthanc'
+item-demo-nimthanc-description = Dagger 'Nimthanc'
+item-demo-dethanc-name = Dagger 'Dethanc'
+item-demo-dethanc-description = Dagger 'Dethanc'
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: ordinary branches of a_info 145/322.
+item-demo-xiaolong-name = Nunchaku of Xiaolong
+item-demo-xiaolong-description = Nunchaku of Xiaolong
+item-demo-dragonlance-name = Heavy Lance 'Dragonlance'
+item-demo-dragonlance-description = Heavy Lance 'Dragonlance'
+
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: kind 245 / artifact 192.
+item-demo-t-shirt-name = T-shirt
+item-demo-t-shirt-description = T-shirt
+item-demo-legendary-lost-treasure-name = T-shirt 'I killed the GHB and all I got was this lousy T-shirt!'
+item-demo-legendary-lost-treasure-description = T-shirt 'I killed the GHB and all I got was this lousy T-shirt!'

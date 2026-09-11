@@ -1,0 +1,92 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "sourceIndex": 2,
+    "baseItemKindId": "demo.item.star",
+    "instant": true,
+    "rarityOneIn": 25
+  },
+  "baseValue": 32500,
+  "descriptionKey": "item-demo-star-of-elendil-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "id": "demo.item-activation.star-of-elendil",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-lite-map-area-name",
+        "rfbValue": 1300,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1,
+        "effectProgramId": "demo.effect.star-of-elendil"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 250
+    }
+  },
+  "equipmentBonuses": {
+    "lightRadius": 3
+  },
+  "equipmentSlot": "light",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "*",
+  "id": "demo.item.star-of-elendil",
+  "maxStack": 1,
+  "nameKey": "item-demo-star-of-elendil-name",
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "CON",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INSTA_ART",
+      "REGEN",
+      "SEE_INVIS",
+      "SPEED"
+    ],
+    "pval": 1,
+    "toArmor": 0
+  },
+  "tags": [
+    "artifact",
+    "equipment",
+    "light-source"
+  ],
+  "weightTenthsPound": 5,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "constitution": 1,
+    "charisma": 1,
+    "speed": 1
+  },
+  "passives": [
+    "see-invisible",
+    "hold-life",
+    "regeneration"
+  ]
+}

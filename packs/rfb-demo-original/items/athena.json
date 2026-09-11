@@ -59,13 +59,10 @@
       "INT",
       "PERMA_CURSE",
       "QUESTITEM",
-      "RIDING",
-      "SHOW_MODS",
       "SPELL_POWER",
       "SUST_INT",
       "SUST_WIS",
-      "TELEPATHY",
-      "TOWN"
+      "TELEPATHY"
     ],
     "pval": 4,
     "toArmor": 15

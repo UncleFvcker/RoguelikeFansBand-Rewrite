@@ -55,13 +55,11 @@
       "QUESTITEM",
       "RES_BLIND",
       "SEE_INVIS",
-      "SHOW_MODS",
       "STEALTH",
       "STR",
       "SUST_CHR",
       "SUST_DEX",
       "SUST_STR",
-      "TOWN",
       "XTRA_SHOTS"
     ],
     "pval": 3,

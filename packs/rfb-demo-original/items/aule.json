@@ -1,0 +1,96 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.aule",
+  "nameKey": "item-demo-aule-name",
+  "descriptionKey": "item-demo-aule-description",
+  "glyph": "\\",
+  "generationLevel": 80,
+  "weightTenthsPound": 120,
+  "maxStack": 1,
+  "baseValue": 250000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 117,
+    "baseItemKindId": "demo.item.great-hammer",
+    "instant": false,
+    "rarityOneIn": 75,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "weaponProficiencyBaseItemId": "demo.item.great-hammer",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 19,
+    "toDamage": 21,
+    "damageDice": 5,
+    "damageSides": 7
+  },
+  "modifiers": {
+    "wisdom": 4,
+    "defense": 5
+  },
+  "brands": [
+    "electricity"
+  ],
+  "slays": {
+    "dragon": "kill",
+    "evil": "slay",
+    "undead": "slay",
+    "demon": "slay"
+  },
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant",
+    "nexus": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "BRAND_ELEC",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "KILL_DRAGON",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_NEXUS",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_DEMON",
+      "SLAY_EVIL",
+      "SLAY_UNDEAD",
+      "WIS",
+      "XTRA_H_RES",
+      "XTRA_POWER"
+    ],
+    "pval": 4,
+    "toArmor": 5
+  },
+  "passives": [
+    "see-invisible"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ]
+}

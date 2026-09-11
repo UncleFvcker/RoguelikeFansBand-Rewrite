@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 use std::collections::{BTreeMap, BTreeSet};
 
-use rfb_content::{ContentCatalog, ItemDestructionElement, TaskObjectiveKind};
+use rfb_content::{ContentCatalog, EquipmentPassive, ItemDestructionElement, TaskObjectiveKind};
 use rfb_protocol::{
     ItemCurseSeverityDto, ItemEnchantmentsDto, ItemFeelingDto, ItemKnowledgeDto, ItemQualityDto,
     Position, WeaponTraitDto,
@@ -2374,6 +2374,20 @@ impl Game {
             .into_iter()
             .filter(|affix_id| knowledge.known_affix_ids.insert(affix_id.clone()))
             .collect();
+        // RFB equip.c: wearing LORE2 identifies the existing pack as well as
+        // enabling auto-identification for subsequent finds.
+        if self
+            .item_passives(&self.items[plan.inventory_index])
+            .contains(&EquipmentPassive::AutoIdentify)
+        {
+            let carried = self
+                .items
+                .iter()
+                .filter(|item| item.location == ItemLocation::Inventory)
+                .map(|item| item.id.clone())
+                .collect();
+            self.apply_player_item_knowledge(carried);
+        }
         Some(EquipOutcome {
             kind_id,
             slot_id: plan.slot_id,

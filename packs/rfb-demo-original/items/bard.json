@@ -1,0 +1,62 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.bard",
+  "nameKey": "item-demo-bard-name",
+  "descriptionKey": "item-demo-bard-description",
+  "glyph": "]",
+  "generationLevel": 30,
+  "weightTenthsPound": 20,
+  "maxStack": 1,
+  "baseValue": 70000,
+  "equipmentSlot": "boots",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 276,
+    "baseItemKindId": "demo.item.soft-leather-boots",
+    "instant": false,
+    "rarityOneIn": 25
+  },
+  "modifiers": {
+    "defense": 20,
+    "dexterity": 4,
+    "charisma": 4
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 4
+  },
+  "resistances": {
+    "poison": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "DEX",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_POIS",
+      "STEALTH"
+    ],
+    "pval": 4,
+    "toArmor": 18
+  }
+}

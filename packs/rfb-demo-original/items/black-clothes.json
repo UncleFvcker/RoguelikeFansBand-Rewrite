@@ -31,9 +31,9 @@
   },
   "rfbValue": {
     "flags": [
-      "STEALTH",
       "IGNORE_FIRE",
-      "PLURAL"
+      "PLURAL",
+      "STEALTH"
     ],
     "pval": 1,
     "toArmor": 12

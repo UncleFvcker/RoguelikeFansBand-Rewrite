@@ -47,8 +47,7 @@
       "QUESTITEM",
       "RES_CHAOS",
       "SPEED",
-      "STEALTH",
-      "TOWN"
+      "STEALTH"
     ],
     "pval": 7,
     "toArmor": 7

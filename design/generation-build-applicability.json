@@ -160,7 +160,7 @@
         "crates/rfb-core/src/game/tests/ranger/generation.rs#rewards_keep_birth_selection_replace_unique_bows_and_fail_atomically",
         "crates/rfb-core/src/game/tests/ranger/generation.rs#fixed_bows_generate_equip_fire_and_keep_uniqueness_after_loading"
       ],
-      "limits": "Other eight identity-sensitive artifacts, fixed harps, Mauler and monster Hydra/Troll/Jelly favorable branches remain deferred until their actual identities/content are available. No new location reward is enabled. Reward tests prepare task completion and do not claim natural Old Castle completion.",
+      "limits": "Six other identity-sensitive construction exceptions, two fixed harps, Archaeologist Dr Jones, Monk Xiaolong, Dragon-pact Warlock Dragonlance, and Mauler / monster Hydra/Troll/Jelly Terror Mask branches remain deferred until their actual identities/content are available. Named GHB acquisition uses the formal Warrens ecology with prepared combat, not natural leveling. Old Castle tests prepare task completion and do not claim natural quest completion. Random-artifacts game mode replacement is unavailable; ordinary named drops skip an already-generated artifact.",
       "sourceEvidence": [
         "lib/edit/q_old_castle.txt:343-349 Mage and High-Mage",
         "lib/edit/q_thieves.txt ordinary versus SPEED=2 reward",
@@ -343,11 +343,11 @@
       "start": 3254,
       "end": 3406,
       "status": "implemented-current-content",
-      "entry": "Terror Mask ordinary source level 50/rarity 7; all current creation classes. Dr Jones ordinary branch remains available.",
+      "entry": "Terror Mask ordinary source level 50/rarity 7; all current creation classes. Dr Jones ordinary branch remains available. Xiaolong and Dragonlance ordinary generation branches are available to current classes.",
       "change": "Gothmog, Twilight, Stormbringer, Destroyer, Terror Mask, Stone Mask, Muramasa, Dr Jones, Xiaolong, Dragonlance branches",
       "consumer": "fixed artifact construction, curses/dice/pval/slays/abilities",
-      "tests": "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save; crates/rfb-core/src/game/tests/items.rs#terror_mask_duplicate_power_and_resistance_do_not_reroll; crates/rfb-core/src/game/tests/items.rs#terror_mask_melee_only_bonuses_and_fear_activation_restore",
-      "prerequisite": "Eight other artifacts, Archaeologist-specific Dr Jones and Mauler/monster Hydra/Troll/Jelly Terror Mask branches remain unavailable; import each identity/content with its actual consumer and entry."
+      "tests": "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save; crates/rfb-core/src/game/tests/items.rs#terror_mask_duplicate_power_and_resistance_do_not_reroll; crates/rfb-core/src/game/tests/items.rs#terror_mask_melee_only_bonuses_and_fear_activation_restore; crates/rfb-core/src/game/tests/items.rs#a9_ordinary_identity_artifacts_generate_fight_and_preserve_their_scope_after_save",
+      "prerequisite": "Six other construction-exception artifacts, fixed harps, Archaeologist Dr Jones, Monk Xiaolong, Dragon-pact Warlock Dragonlance and Mauler/monster Hydra/Troll/Jelly Terror Mask branches remain unavailable; import each identity/content with its actual consumer and entry."
     },
     {
       "id": "inspired-smithing",

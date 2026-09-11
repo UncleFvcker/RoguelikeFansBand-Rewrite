@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.azaghal",
+  "nameKey": "item-demo-azaghal-name",
+  "descriptionKey": "item-demo-azaghal-description",
+  "glyph": "|",
+  "generationLevel": 15,
+  "weightTenthsPound": 30,
+  "maxStack": 1,
+  "baseValue": 40000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 135,
+    "baseItemKindId": "demo.item.main-gauche",
+    "instant": false,
+    "rarityOneIn": 30,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-res-or-power"
+    ]
+  },
+  "weaponProficiencyBaseItemId": "demo.item.main-gauche",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 12,
+    "toDamage": 14,
+    "damageDice": 2,
+    "damageSides": 6
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "ESP_DRAGON",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_FIRE",
+      "KILL_DRAGON",
+      "XTRA_RES_OR_POWER"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "passives": [
+    "esp-dragon"
+  ],
+  "slays": {
+    "dragon": "kill"
+  },
+  "resistances": {
+    "fire": "immune"
+  }
+}
