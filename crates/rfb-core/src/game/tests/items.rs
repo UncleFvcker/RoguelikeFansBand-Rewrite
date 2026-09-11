@@ -210,6 +210,232 @@ fn hobbit_fixed_artifacts_generate_equip_and_preserve_uniqueness_after_save() {
 }
 
 #[test]
+fn fixed_high_resistance_uses_one_source_roll_without_retrying_duplicates() {
+    let original = Game::new_with_build(419, "demo.build.warrior").unwrap();
+    let context = artifact_loot_context(40);
+    // artifact.c::one_high_resistance: randint0(12), including existing flags.
+    let source_order = [
+        ActorDamageType::Poison,
+        ActorDamageType::Light,
+        ActorDamageType::Dark,
+        ActorDamageType::Shards,
+        ActorDamageType::Blindness,
+        ActorDamageType::Confusion,
+        ActorDamageType::Sound,
+        ActorDamageType::Nether,
+        ActorDamageType::Nexus,
+        ActorDamageType::Chaos,
+        ActorDamageType::Disenchant,
+        ActorDamageType::Fear,
+    ];
+    for (index, element) in source_order.into_iter().enumerate() {
+        let seed = (0..10_000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(12) == index as u64)
+            .unwrap();
+        let mut game = original.clone();
+        game.rng = RfbRng::seeded(seed);
+        let mut expected_rng = game.rng.clone();
+        expected_rng.bounded(12);
+        let draft = game.fixed_item_draft(&context, "demo.item.rohirrim".into());
+        assert_eq!(game.rng, expected_rng);
+        assert_eq!(draft.rolled_affixes.len(), 1);
+        let properties = &draft.rolled_affixes[0].properties;
+        assert_eq!(properties.resistances.len(), 1);
+        assert_eq!(
+            properties.resistances[&element],
+            rfb_content::ActorResistanceLevel::Resistant
+        );
+        if matches!(element, ActorDamageType::Confusion | ActorDamageType::Sound) {
+            // A duplicate remains the same flag: no reroll or stronger resistance.
+            game.items.clear();
+            let item = game
+                .commit_generated_item_draft(draft, ItemLocation::Inventory)
+                .unwrap();
+            let id = item.id.clone();
+            game.items.push(item);
+            game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+            game.equip_inventory_item(&id, None).unwrap();
+            let item = &game.items[0];
+            let visible = game.visible_item_resistances(item);
+            assert_eq!(
+                visible
+                    .iter()
+                    .filter(|resistance| resistance.damage_type
+                        == DamageTypeDto::from(DamageType::from(element)))
+                    .count(),
+                1
+            );
+            assert_eq!(
+                game.effective_player_resistances().level(element.into()),
+                ResistanceLevel::Resistant
+            );
+        }
+    }
+}
+
+#[test]
+fn fixed_high_resistance_armor_generates_reveals_equips_and_restores() {
+    let mut game = Game::new_with_build(420, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    game.items.clear();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-40".into(),
+        depth: 40,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.ordinary-drop".into(),
+        },
+    };
+    let mut remaining = BTreeSet::from([
+        "rohirrim",
+        "arvedui",
+        "hithlomir",
+        "thalkettoth",
+        "thranduil",
+    ]);
+    // Repeated controlled-depth drops retain the complete ordinary production pool.
+    for _ in 0..50_000 {
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            if !remaining.remove(item.kind_id.strip_prefix("demo.item.").unwrap()) {
+                continue;
+            }
+            assert_eq!(
+                item.affix_ids,
+                ["rfb-legacy.affix.artifact-extra-high-resistance"]
+            );
+            assert_eq!(item.rolled_affixes.len(), 1);
+            assert_eq!(item.rolled_affixes[0].properties.resistances.len(), 1);
+            assert!(item.activation.is_none() && item.curse.is_none());
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "artifacts never generated: {remaining:?}"
+    );
+    assert_eq!(game.carried_weight_tenths_pound(), 575);
+    game.reveal_current_visibility();
+    let unknown = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(unknown.state_hash(), game.state_hash());
+    for (kind, base, defense, hit) in [
+        ("rohirrim", "metal-brigandine-armour", 34, 0),
+        ("arvedui", "chain-mail", 29, -2),
+        ("hithlomir", "soft-leather-armour", 24, 0),
+        ("thalkettoth", "leather-scale-mail", 36, -1),
+        ("thranduil", "hard-leather-cap", 12, 0),
+    ] {
+        let mut equipped = unknown.clone();
+        let item = equipped
+            .items
+            .iter()
+            .find(|item| item.kind_id == format!("demo.item.{kind}"))
+            .unwrap();
+        let id = item.id.clone();
+        let rolled = item.rolled_affixes.clone();
+        assert!(equipped.visible_item_resistances(item).is_empty());
+        let rng = equipped.rng.clone();
+        equipped.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        assert_eq!(equipped.rng, rng);
+        let item = equipped.items.iter().find(|item| item.id == id).unwrap();
+        let (&element, _) = rolled[0].properties.resistances.iter().next().unwrap();
+        assert!(
+            equipped.item_property_knowledge[&id]
+                .known_affix_ids
+                .contains(&rolled[0].affix_id)
+        );
+        assert!(
+            equipped
+                .visible_item_resistances(item)
+                .iter()
+                .any(|resistance| resistance.damage_type
+                    == DamageTypeDto::from(DamageType::from(element)))
+        );
+        let before = equipped.player_derived_stats();
+        equipped.equip_inventory_item(&id, None).unwrap();
+        assert_eq!(
+            equipped.player_derived_stats().armor_class.value,
+            before.armor_class.value + defense * 10
+        );
+        assert_eq!(equipped.player_equipment_bonuses().melee_skill, hit);
+        assert_eq!(
+            equipped
+                .effective_player_resistances()
+                .level(element.into()),
+            ResistanceLevel::Resistant
+        );
+        match kind {
+            "rohirrim" => {
+                assert_eq!(equipped.equipment_modifiers().strength, 2);
+                assert_eq!(equipped.equipment_modifiers().dexterity, 2);
+            }
+            "arvedui" => {
+                assert_eq!(equipped.equipment_modifiers().strength, 2);
+                assert_eq!(equipped.equipment_modifiers().charisma, 2);
+            }
+            "hithlomir" => assert_eq!(equipped.player_equipment_bonuses().stealth_skill, 4),
+            "thalkettoth" => {
+                assert_eq!(equipped.equipment_modifiers().dexterity, 2);
+                assert_eq!(equipped.equipment_modifiers().speed, 2);
+            }
+            "thranduil" => {
+                assert_eq!(equipped.equipment_modifiers().intelligence, 2);
+                assert_eq!(equipped.equipment_modifiers().wisdom, 2);
+                assert!(
+                    equipped
+                        .player_equipment_passives()
+                        .contains(&EquipmentPassive::Telepathy)
+                );
+            }
+            _ => unreachable!(),
+        }
+        equipped.reveal_current_visibility();
+        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), equipped.state_hash());
+        assert_eq!(
+            restored
+                .items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .rolled_affixes,
+            rolled
+        );
+        assert!(
+            restored
+                .generated_artifact_ids
+                .contains(&format!("demo.item.{kind}"))
+        );
+        let next = equipped
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap();
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            next
+        );
+        assert_eq!(restored.rng, equipped.rng);
+        assert_ne!(
+            restored.roll_fixed_artifact_kind_id(
+                &context,
+                Some(&format!("demo.item.{base}")),
+                false
+            ),
+            Some(format!("demo.item.{kind}"))
+        );
+    }
+}
+
+#[test]
 fn fixed_weapon_pair_generates_and_preserves_combat_and_passives_after_save() {
     let mut game = Game::new_with_build(418, "demo.build.warrior").unwrap();
     clear_monsters(&mut game);

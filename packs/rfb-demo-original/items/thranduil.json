@@ -1,0 +1,62 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.thranduil",
+  "nameKey": "item-demo-thranduil-name",
+  "descriptionKey": "item-demo-thranduil-description",
+  "glyph": "]",
+  "generationLevel": 30,
+  "weightTenthsPound": 15,
+  "maxStack": 1,
+  "baseValue": 50000,
+  "equipmentSlot": "head",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 36,
+    "baseItemKindId": "demo.item.hard-leather-cap",
+    "instant": false,
+    "rarityOneIn": 3,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "modifiers": {
+    "defense": 12,
+    "intelligence": 2,
+    "wisdom": 2
+  },
+  "resistances": {
+    "blindness": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "RES_BLIND",
+      "TELEPATHY",
+      "WIS",
+      "XTRA_H_RES"
+    ],
+    "pval": 2,
+    "toArmor": 10
+  },
+  "passives": [
+    "telepathy"
+  ]
+}
