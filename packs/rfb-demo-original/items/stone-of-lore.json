@@ -1,0 +1,86 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "artifactGeneration": {
+    "sourceIndex": 17,
+    "baseItemKindId": "demo.item.stone",
+    "instant": true,
+    "rarityOneIn": 12
+  },
+  "baseValue": 20000,
+  "descriptionKey": "item-demo-stone-of-lore-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 10,
+        "id": "demo.item-activation.stone-of-lore",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-probing-name",
+        "rfbValue": 1000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1,
+        "effectProgramId": "demo.effect.stone-of-lore"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 50
+    }
+  },
+  "equipmentBonuses": {
+    "lightRadius": 3
+  },
+  "equipmentSlot": "light",
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "glyph": "*",
+  "id": "demo.item.stone-of-lore",
+  "maxStack": 1,
+  "nameKey": "item-demo-stone-of-lore-name",
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INSTA_ART",
+      "INT",
+      "LORE2",
+      "WIS"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "tags": [
+    "artifact",
+    "equipment",
+    "light-source"
+  ],
+  "weightTenthsPound": 15,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "intelligence": 2,
+    "wisdom": 2
+  },
+  "passives": [
+    "auto-identify"
+  ]
+}

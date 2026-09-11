@@ -373,6 +373,246 @@ fn galadriel_instant_generation_lighting_activation_and_cooldown_survive_save() 
 }
 
 #[test]
+fn a1_instant_lights_generate_activate_and_resume_after_save() {
+    fn activate(game: &mut Game, id: &str) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        for _ in 0..100 {
+            game.use_inventory_item(
+                id,
+                Some(&TargetSelection::SelfTarget),
+                None,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
+            if game
+                .items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .charges
+                .unwrap()
+                .current
+                == 0
+            {
+                return events;
+            }
+        }
+        panic!("activation never succeeded: {id}");
+    }
+
+    for (slug, base, cooldown) in [
+        ("star-of-elendil", "star", 250),
+        ("stone-of-lore", "stone", 50),
+    ] {
+        let mut game = Game::new_with_build(423, "demo.build.warrior").unwrap();
+        choose_human_talent_if_pending(&mut game);
+        descend_one_floor(&mut game);
+        clear_monsters(&mut game);
+        game.items.clear();
+        game.player.position = Position { x: 10, y: 10 };
+        for y in 7..=13 {
+            for x in 7..=16 {
+                replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+            }
+        }
+        game.glow.fill(false);
+        let wall = Position { x: 14, y: 10 };
+        replace_terrain(&mut game, wall, "demo.terrain.wall");
+        let remote = Position { x: 16, y: 10 };
+        replace_terrain(&mut game, remote, "demo.terrain.wall");
+        let remote_index = game.index(remote).unwrap();
+        game.explored[remote_index] = false;
+        game.revealed_terrain.remove(&remote);
+        let context = artifact_loot_context(50);
+        let kind = format!("demo.item.{slug}");
+        let base = format!("demo.item.{base}");
+        assert!(
+            game.roll_fixed_artifact_kind_id(&context, Some(&base), false)
+                .is_none()
+        );
+        // Controlled base/depth and repeated real rarity rolls. The existing
+        // Galadriel test separately exercises the complete ordinary instant gate.
+        let selected = (0..5000).find_map(|seed| {
+            game.rng = RfbRng::seeded(seed);
+            game.roll_fixed_artifact_kind_id(&context, Some(&base), true)
+        });
+        assert_eq!(selected.as_ref(), Some(&kind));
+        let draft = game.fixed_item_draft(&context, selected.unwrap());
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        assert!(item.fuel.is_none());
+        assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+        let id = item.id.clone();
+        game.items.push(item);
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        assert!(
+            !game
+                .item_property_knowledge
+                .get(&id)
+                .is_some_and(|k| k.appraised)
+        );
+        game.reveal_current_visibility();
+        let restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.rng, game.rng);
+        game = restored;
+        give_inventory_item(&mut game, "test.carried", "demo.item.dagger");
+        let before = game.equipment_modifiers();
+        game.equip_inventory_item(&id, None).unwrap();
+        let after = game.equipment_modifiers();
+        assert_eq!(game.player_light_radius(), Some(3));
+        if slug == "star-of-elendil" {
+            assert_eq!(after.constitution - before.constitution, 1);
+            assert_eq!(after.charisma - before.charisma, 1);
+            assert_eq!(after.speed - before.speed, 1);
+            assert_eq!(game.player_see_invisible_sources(), 1);
+            assert_eq!(game.player_hold_life_sources(), 1);
+            assert!(
+                !game
+                    .item_property_knowledge
+                    .get("test.carried")
+                    .is_some_and(|k| k.appraised)
+            );
+        } else {
+            assert_eq!(after.intelligence - before.intelligence, 2);
+            assert_eq!(after.wisdom - before.wisdom, 2);
+            assert!(game.item_property_knowledge["test.carried"].appraised);
+            assert!(!game.item_property_knowledge["test.carried"].identified);
+        }
+        let target = Position { x: 11, y: 10 };
+        game.push_generated_actor("test.light-target".into(), "demo.actor.goblin", target);
+        let hp = game.entities[0].hp;
+        game.push_generated_actor(
+            "test.blocked".into(),
+            "demo.actor.sheep",
+            Position { x: 15, y: 10 },
+        );
+        game.world_tick = 0;
+        let events = activate(&mut game, &id);
+        if slug == "star-of-elendil" {
+            assert!(
+                game.explored[remote_index],
+                "mapping must cross an intervening wall"
+            );
+            assert!(game.glow[game.index(target).unwrap()]);
+            assert!(
+                game.entities
+                    .iter()
+                    .find(|a| a.id == "test.light-target")
+                    .is_none_or(|a| a.hp < hp)
+            );
+        } else {
+            let report = events
+                .iter()
+                .find_map(|event| match event {
+                    DomainEvent::AbilityMonstersProbed { resolution, .. } => Some(resolution),
+                    _ => None,
+                })
+                .expect("stone activation must use the full monster probe consumer");
+            assert_eq!(report.monsters.len(), 1);
+            assert_eq!(report.monsters[0].entity_id, "test.light-target");
+            assert_eq!(report.monsters[0].hp, hp);
+            assert_eq!(report.monsters[0].max_hp, game.entities[0].max_hp);
+            assert!(game.probed_actor_kind_ids.contains("demo.actor.goblin"));
+            assert!(!game.probed_actor_kind_ids.contains("demo.actor.sheep"));
+        }
+        let rng = game.rng.clone();
+        assert!(
+            !game
+                .use_inventory_item(
+                    &id,
+                    Some(&TargetSelection::SelfTarget),
+                    None,
+                    &mut Vec::new(),
+                    &mut BTreeSet::new(),
+                    &mut Vec::new()
+                )
+                .unwrap()
+        );
+        assert_eq!(game.rng, rng);
+        let middle = cooldown / 2;
+        for tick in 1..=middle {
+            game.world_tick = tick;
+            game.process_equipped_light_fuel(&mut Vec::new());
+            game.process_inventory_device_recovery(&mut Vec::new());
+        }
+        assert!(game.items[0].fuel.is_none());
+        game.reveal_current_visibility();
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.rng, game.rng);
+        assert_eq!(
+            u32::from(restored.items[0].device_recovery_progress),
+            middle
+        );
+        assert_eq!(restored.probed_actor_kind_ids, game.probed_actor_kind_ids);
+        assert!(restored.generated_artifact_ids.contains(&kind));
+        assert!(
+            restored
+                .roll_fixed_artifact_kind_id(&context, Some(&base), true)
+                .is_none()
+        );
+        if slug == "stone-of-lore" {
+            // Existing floor consumer must keep working after restoring LORE2.
+            give_inventory_item(&mut restored, "test.floor", "demo.item.long-sword");
+            restored.items.last_mut().unwrap().location =
+                ItemLocation::Ground(restored.player.position);
+            restored.apply_player_floor_item_knowledge();
+            restored.pick_up_item_at_player(Some("test.floor")).unwrap();
+            assert!(restored.item_property_knowledge["test.floor"].appraised);
+        }
+        for tick in middle + 1..cooldown {
+            restored.world_tick = tick;
+            restored.process_inventory_device_recovery(&mut Vec::new());
+        }
+        assert_eq!(restored.items[0].charges.unwrap().current, 0);
+        assert_eq!(
+            u32::from(restored.items[0].device_recovery_progress),
+            cooldown - 1
+        );
+        restored.world_tick = cooldown;
+        restored.process_inventory_device_recovery(&mut Vec::new());
+        assert_eq!(restored.items[0].charges.unwrap().current, 1);
+        assert_eq!(restored.items[0].device_recovery_progress, 0);
+        restored.reveal_current_visibility();
+        let mut continued = Game::from_save(restored.to_save()).unwrap();
+        assert_eq!(activate(&mut restored, &id), activate(&mut continued, &id));
+        assert_eq!(continued.state_hash(), restored.state_hash());
+        assert_eq!(continued.rng, restored.rng);
+        assert_eq!(
+            continued
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+        );
+        assert_eq!(continued.rng, restored.rng);
+        if slug == "stone-of-lore" {
+            let slot = match &restored.items[0].location {
+                ItemLocation::Equipped { slot_id } => slot_id.clone(),
+                _ => panic!("stone must remain equipped"),
+            };
+            restored.unequip_slot(&slot).unwrap();
+            give_inventory_item(&mut restored, "test.after-removal", "demo.item.short-sword");
+            restored.items.last_mut().unwrap().location =
+                ItemLocation::Ground(restored.player.position);
+            restored.apply_player_floor_item_knowledge();
+            assert!(
+                !restored
+                    .item_property_knowledge
+                    .get("test.after-removal")
+                    .is_some_and(|k| k.appraised)
+            );
+            assert!(restored.item_property_knowledge["test.carried"].appraised);
+        }
+    }
+}
+
+#[test]
 fn terror_mask_generation_uses_current_build_and_preserves_identity_after_save() {
     use rfb_protocol::ItemCurseEffectDto;
     for (build, favored) in [
