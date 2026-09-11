@@ -9609,3 +9609,6 @@ item-demo-gurthang-description = 这把曾被强大的图林所挥舞的巨剑�
 
 item-demo-azaghal-name = 阿扎格哈尔的左手短剑
 item-demo-azaghal-description = 在尼南斯·阿农迪亚德（Nirnaeth）战役中，矮人们挡住了格劳龙的猛攻，他们的领主阿扎格哈尔在被踩在脚下之前，将这把短刀刺入了恶龙的腹部。龙之父的黑色鲜血现在成为所有靠近它的龙类的警告。
+
+item-demo-aule-name = 奥力之巨锤
+item-demo-aule-description = 奥力的神奇锤子，他是古代睿智矮人领主的创造者。它带有没有任何巨蛇或恶魔能抵挡的毁灭魔法，并唤起山脉的力量来抵御元素的喧嚣。

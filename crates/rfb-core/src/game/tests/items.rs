@@ -2996,6 +2996,320 @@ fn p99e_paurnimmen_cold_beam_hits_each_actor_before_the_wall() {
 }
 
 #[test]
+fn a6_aule_rolls_source_ability_before_high_resistance_once() {
+    let original = Game::new_with_build(429, "demo.build.warrior").unwrap();
+    let context = artifact_loot_context(80);
+    let resistances = [
+        ActorDamageType::Poison,
+        ActorDamageType::Light,
+        ActorDamageType::Dark,
+        ActorDamageType::Shards,
+        ActorDamageType::Blindness,
+        ActorDamageType::Confusion,
+        ActorDamageType::Sound,
+        ActorDamageType::Nether,
+        ActorDamageType::Nexus,
+        ActorDamageType::Chaos,
+        ActorDamageType::Disenchant,
+        ActorDamageType::Fear,
+    ];
+    let low_esp = [
+        EquipmentPassive::EspAnimal,
+        EquipmentPassive::EspUndead,
+        EquipmentPassive::EspDemon,
+        EquipmentPassive::EspOrc,
+        EquipmentPassive::EspTroll,
+        EquipmentPassive::EspGiant,
+        EquipmentPassive::EspDragon,
+        EquipmentPassive::EspHuman,
+        EquipmentPassive::EspGood,
+    ];
+    // Eight simple powers and both source branches into all nine low ESPs.
+    let choices = (0..8)
+        .map(|choice| (choice, None))
+        .chain((8..10).flat_map(|choice| (0..9).map(move |esp| (choice, Some(esp)))));
+    for (choice, esp) in choices {
+        let resistance_index = (choice + esp.unwrap_or(0)) % 12;
+        let seed = (0..100_000)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                rng.bounded(10) == choice
+                    && esp.is_none_or(|esp| rng.bounded(9) == esp)
+                    && rng.bounded(12) == resistance_index
+            })
+            .expect("seed range must cover each source ability branch followed by resistance");
+        let mut expected_rng = RfbRng::seeded(seed);
+        assert_eq!(expected_rng.bounded(10), choice);
+        if let Some(esp) = esp {
+            assert_eq!(expected_rng.bounded(9), esp);
+        }
+        assert_eq!(expected_rng.bounded(12), resistance_index);
+        let mut expected_power = AffixPropertyBundleDefinition::default();
+        match choice {
+            0 => {
+                expected_power.passives.insert(EquipmentPassive::Levitation);
+            }
+            1 => {
+                expected_power.rfb_flags.insert("LITE".into());
+                expected_power.equipment_bonuses.light_radius = 1;
+            }
+            2 => {
+                expected_power
+                    .passives
+                    .insert(EquipmentPassive::SeeInvisible);
+            }
+            3 => {
+                expected_power.passives.insert(EquipmentPassive::Warning);
+            }
+            4 => {
+                expected_power
+                    .passives
+                    .insert(EquipmentPassive::SlowDigestion);
+            }
+            5 => {
+                expected_power
+                    .passives
+                    .insert(EquipmentPassive::Regeneration);
+            }
+            6 => expected_power
+                .status_immunities
+                .push(STATUS_PARALYSIS.into()),
+            7 => {
+                expected_power.passives.insert(EquipmentPassive::HoldLife);
+            }
+            _ => {
+                expected_power
+                    .passives
+                    .insert(low_esp[esp.unwrap() as usize]);
+            }
+        }
+        let mut game = original.clone();
+        game.rng = RfbRng::seeded(seed);
+        let draft = game.fixed_item_draft(&context, "demo.item.aule".into());
+        assert_eq!(game.rng, expected_rng);
+        assert_eq!(draft.intrinsic_properties, expected_power);
+        assert_eq!(
+            draft.affix_ids,
+            ["rfb-legacy.affix.artifact-extra-high-resistance"]
+        );
+        let [rolled] = draft.rolled_affixes.as_slice() else {
+            panic!("one high-resistance roll")
+        };
+        let expected_resistance = AffixPropertyBundleDefinition {
+            resistances: BTreeMap::from([(
+                resistances[resistance_index as usize],
+                rfb_content::ActorResistanceLevel::Resistant,
+            )]),
+            ..Default::default()
+        };
+        assert_eq!(rolled.properties, expected_resistance);
+        if resistance_index == 8 || matches!(choice, 2 | 6) {
+            // Existing NEXUS/SEE_INVIS/FREE_ACT flags neither reroll nor stack.
+            game.items.clear();
+            let item = game
+                .commit_generated_item_draft(draft, ItemLocation::Inventory)
+                .unwrap();
+            let id = item.id.clone();
+            game.items.push(item);
+            game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+            game.equip_inventory_item(&id, Some("right-hand")).unwrap();
+            assert_eq!(game.player_see_invisible_sources(), 1);
+            assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
+            assert_eq!(
+                game.effective_player_resistances().level(DamageType::Nexus),
+                ResistanceLevel::Resistant
+            );
+            assert_eq!(
+                game.visible_item_resistances(&game.items[0])
+                    .iter()
+                    .filter(|r| r.damage_type == DamageTypeDto::Nexus)
+                    .count(),
+                1
+            );
+            assert_eq!(game.rng, expected_rng);
+        }
+    }
+    // Existing mage artifacts and the favored Terror Mask initialize activation
+    // first; only Gandalf and this Mask branch then draw a power.
+    for slug in ["gandalf", "saruman", "indra", "terror-mask"] {
+        for seed in 0..16 {
+            let mut game = original.clone();
+            game.rng = RfbRng::seeded(seed);
+            let mut expected_rng = game.rng.clone();
+            let kind = format!("demo.item.{slug}");
+            let (activation, charges) =
+                initial_item_runtime_state(&game.content, &mut expected_rng, &kind, &[], 80);
+            if matches!(slug, "gandalf" | "terror-mask") && expected_rng.bounded(10) >= 8 {
+                expected_rng.bounded(9);
+            }
+            if slug == "terror-mask" {
+                expected_rng.bounded(12);
+            }
+            let draft = game.fixed_item_draft(&context, kind);
+            assert_eq!(game.rng, expected_rng, "unchanged RNG order for {slug}");
+            assert_eq!(draft.activation, activation);
+            assert_eq!(draft.charges, charges);
+        }
+    }
+}
+
+#[test]
+fn a6_aule_generates_with_both_extras_and_replays_combat_after_save() {
+    fn strike(game: &mut Game) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.resolve_player_melee(0, false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+            .unwrap();
+        events
+    }
+    let mut game = Game::new_with_build(430, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    descend_one_floor(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.player.position = Position { x: 10, y: 10 };
+    let adjacent = Position { x: 11, y: 10 };
+    replace_terrain(&mut game, Position { x: 10, y: 10 }, "demo.terrain.floor");
+    replace_terrain(&mut game, adjacent, "demo.terrain.floor");
+    game.glow.fill(true);
+    let context = artifact_loot_context(80);
+    let selected = (0..10_000)
+        .find_map(|seed| {
+            game.rng = RfbRng::seeded(seed);
+            game.roll_fixed_artifact_kind_id(&context, Some("demo.item.great-hammer"), false)
+                .filter(|kind| kind == "demo.item.aule")
+        })
+        .expect("Aule must occur with source rarity 75 at controlled base/depth 80");
+    let draft = game.fixed_item_draft(&context, selected);
+    let item = game
+        .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+        .unwrap();
+    assert!(item.activation.is_none() && item.charges.is_none() && item.curse.is_none());
+    let intrinsic = item.intrinsic_properties.clone();
+    let rolled = item.rolled_affixes.clone();
+    assert_ne!(intrinsic, AffixPropertyBundleDefinition::default());
+    assert_eq!(rolled.len(), 1);
+    let id = item.id.clone();
+    game.items.push(item);
+    game.pick_up_item_at_player(Some(&id)).unwrap();
+    assert_eq!(game.carried_weight_tenths_pound(), 120);
+    assert!(
+        !game
+            .item_property_knowledge
+            .get(&id)
+            .is_some_and(|k| k.appraised)
+    );
+    assert!(game.visible_item_passives(&game.items[0]).is_empty());
+    assert!(game.visible_item_resistances(&game.items[0]).is_empty());
+    game.reveal_current_visibility();
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.rng, game.rng);
+    assert_eq!(restored.items[0].intrinsic_properties, intrinsic);
+    assert_eq!(restored.items[0].rolled_affixes, rolled);
+    game = restored;
+    let rng = game.rng.clone();
+    game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    game.equip_inventory_item(&id, Some("right-hand")).unwrap();
+    assert_eq!(game.rng, rng);
+    assert!(
+        game.item_property_knowledge[&id]
+            .known_affix_ids
+            .contains(&rolled[0].affix_id)
+    );
+    assert!(
+        game.item_passives(&game.items[0])
+            .is_superset(&intrinsic.passives)
+    );
+    let modifiers = game.equipment_modifiers();
+    assert_eq!((modifiers.wisdom, modifiers.defense), (4, 5));
+    assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
+    // A duplicate intrinsic SEE_INVIS is still one equipped source.
+    assert_eq!(game.player_see_invisible_sources(), 1);
+    for element in [
+        DamageType::Acid,
+        DamageType::Electricity,
+        DamageType::Fire,
+        DamageType::Cold,
+        DamageType::Nexus,
+    ] {
+        assert_eq!(
+            game.effective_player_resistances().level(element),
+            ResistanceLevel::Resistant
+        );
+    }
+    let (&element, _) = rolled[0].properties.resistances.iter().next().unwrap();
+    assert_eq!(
+        game.effective_player_resistances().level(element.into()),
+        ResistanceLevel::Resistant
+    );
+    let profile = game.player_melee_profile(&game.player_derived_stats());
+    assert_eq!(profile.source_item_id.as_deref(), Some(id.as_str()));
+    assert_eq!(
+        (profile.damage_dice, profile.damage_sides, profile.to_hit),
+        (5, 7, 19)
+    );
+    // Slays and the electricity brand take the strongest applicable multiplier.
+    for (target, electricity, multiplier) in [
+        ("baby-blue-dragon", ResistanceLevel::Immune, 56),
+        ("skeleton-human", ResistanceLevel::Immune, 28),
+        ("manes", ResistanceLevel::Immune, 28),
+        ("sheep", ResistanceLevel::Normal, 24),
+        ("sheep", ResistanceLevel::Immune, 10),
+    ] {
+        clear_monsters(&mut game);
+        game.push_generated_actor(
+            "test.aule-target".into(),
+            &format!("demo.actor.{target}"),
+            adjacent,
+        );
+        game.entities[0].hp = 10_000;
+        game.entities[0].max_hp = 10_000;
+        game.entities[0]
+            .resistances
+            .set(DamageType::Electricity, electricity);
+        assert_eq!(
+            game.player_melee_damage_multiplier(
+                &profile,
+                &game.entities[0],
+                game.content.actor(&game.entities[0].kind_id).unwrap()
+            ),
+            multiplier
+        );
+    }
+    let seed = (0..100)
+        .find(|seed| {
+            let mut trial = game.clone();
+            trial.rng = RfbRng::seeded(*seed);
+            strike(&mut trial);
+            trial.entities[0].hp < 10_000
+        })
+        .expect("controlled seed range includes a real Aule hit");
+    game.rng = RfbRng::seeded(seed);
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.items[0].intrinsic_properties, intrinsic);
+    assert_eq!(restored.items[0].rolled_affixes, rolled);
+    assert_eq!(strike(&mut restored), strike(&mut game));
+    assert!(restored.entities[0].hp < 10_000);
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.rng, game.rng);
+    assert!(restored.generated_artifact_ids.contains("demo.item.aule"));
+    assert_eq!(
+        restored
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap(),
+        game.generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap()
+    );
+    assert_eq!(restored.rng, game.rng);
+    assert_ne!(
+        restored.roll_fixed_artifact_kind_id(&context, Some("demo.item.great-hammer"), false),
+        Some("demo.item.aule".into())
+    );
+}
+
+#[test]
 fn a5_res_or_power_weighted_boundaries_keep_one_draw_and_duplicate_flags() {
     let original = Game::new_with_build(427, "demo.build.warrior").unwrap();
     let context = artifact_loot_context(35);

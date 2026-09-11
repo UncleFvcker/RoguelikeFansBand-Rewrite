@@ -9605,3 +9605,6 @@ item-demo-gurthang-description = Two-Handed Sword 'Gurthang'
 
 item-demo-azaghal-name = Main Gauche of Azaghal
 item-demo-azaghal-description = Main Gauche of Azaghal
+
+item-demo-aule-name = Great Hammer of Aule
+item-demo-aule-description = Great Hammer of Aule
