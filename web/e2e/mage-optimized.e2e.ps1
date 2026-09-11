@@ -1,7 +1,8 @@
 ﻿# SPDX-License-Identifier: MPL-2.0
 param(
   [Parameter(Mandatory = $true)][string]$Executable,
-  [Parameter(Mandatory = $true)][string]$OutputDirectory
+  [Parameter(Mandatory = $true)][string]$OutputDirectory,
+  [ValidateSet('Mage', 'Ranger')][string]$Class = 'Mage'
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient
@@ -29,24 +30,27 @@ try {
   function ById([string]$id) { FindElement ([System.Windows.Automation.AutomationElement]::AutomationIdProperty) $id }
   function ByName([string]$name) { FindElement ([System.Windows.Automation.AutomationElement]::NameProperty) $name }
   function Invoke($element) { Write-Output "Invoking $($element.Current.Name)"; $element.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke() }
+  $className = if ($Class -eq 'Ranger') { '游侠' } else { '法师' }
+  $classGroup = if ($Class -eq 'Ranger') { '箭术' } else { '魔法' }
+  $capacity = if ($Class -eq 'Ranger') { 0 } else { 1 }
   Invoke (ById 'session-new-game')
-  (ById 'session-character-name').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue('Mage Smoke')
+  (ById 'session-character-name').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue("$Class Smoke")
   (ById 'session-seed').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue('925')
   (ById 'session-tab-career').GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
-  (ByName '魔法').GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern).Toggle()
-  Invoke (ByName '法师，进入领域选择')
-  Invoke (ByName '奥秘，进入领域选择')
+  (ByName $classGroup).GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern).Toggle()
+  Invoke (ByName "$className，进入领域选择")
+  if ($Class -eq 'Mage') { Invoke (ByName '奥秘，进入领域选择') }
   (ByName '咒术').GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern).Toggle()
   $start = ById 'session-start-game'
-  if (-not $start.Current.IsEnabled) { throw 'Mage realm selection did not enable creation' }
+  if (-not $start.Current.IsEnabled) { throw "$Class realm selection did not enable creation" }
   Invoke $start
-  $identity = (ByName 'Mage Smoke 人类法师').Current.Name
+  $identity = (ByName "$Class Smoke 人类$className").Current.Name
   $level = (ByName '1 / 1').Current.Name
-  $budget = (ByName '已学 0 / 1 · 剩余 1 个容量').Current.Name
+  $budget = (ByName "已学 0 / $capacity · 剩余 $capacity 个容量").Current.Name
   $location = (ByName '前哨站').Current.Name
   $resources = (ById 'resource-list').FindAll([System.Windows.Automation.TreeScope]::Children, [System.Windows.Automation.Condition]::TrueCondition)
   $resourceNames = @($resources | ForEach-Object { $_.Current.Name })
-  if (-not ($resourceNames -match '法力')) { throw 'Mage mana was not rendered' }
+  if (-not ($resourceNames -match '法力')) { throw "$Class mana was not rendered" }
   if (-not $app.CloseMainWindow()) { throw 'Native window did not accept close' }
   if (-not $app.WaitForExit(10000)) { throw 'Native process did not exit normally' }
   if ($app.ExitCode -ne 0) { throw "Native process exited with $($app.ExitCode)" }
@@ -56,13 +60,13 @@ try {
     executableSha256 = (Get-FileHash -LiteralPath $executablePath -Algorithm SHA256).Hash.ToLowerInvariant()
     checkedAtUtc = [DateTime]::UtcNow.ToString('o')
     method = 'Optimized standalone EXE; Windows UI Automation Invoke/Toggle/SelectionItem/Value patterns; no WebDriver or test commands'
-    checks = @('title', 'normal human Mage Arcane/Sorcery creation', 'level 1, mana and shared learning capacity', 'normal process exit')
+    checks = @('title', "normal human $Class creation with Sorcery secondary realm", 'level 1, mana and shared learning capacity', 'normal process exit')
     identity = $identity; level = $level; learningBudget = $budget; location = $location; resources = $resourceNames
     preparation = 'Fresh WebView profile, seed 925, normal creation only; no granted XP, books or devices'
     limitations = 'Native smoke covers creation and initial projection only. Gameplay, save determinism and screenshots are recorded separately by the same-source WebDriver build.'
     exitCode = $app.ExitCode
   } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $outputPath 'checks.json') -Encoding UTF8
-  Write-Output 'Optimized Mage native creation smoke passed.'
+  Write-Output "Optimized $Class native creation smoke passed."
 } finally {
   $env:WEBVIEW2_USER_DATA_FOLDER = $previousProfile
   if (-not $app.HasExited) { $app.CloseMainWindow() | Out-Null; if (-not $app.WaitForExit(5000)) { Stop-Process -Id $app.Id } }

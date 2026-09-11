@@ -5,8 +5,10 @@ import path from "node:path";
 import { Localization } from "../src/localization.ts";
 import { selectCreationBuild, selectCreationRace } from "./character-creation.e2e.mjs";
 import { connectKeyboard } from "./character-creation-layout.e2e.mjs";
+import { nextWalk } from "./berserker.e2e.mjs";
+import { prepareDungeonEntry } from "./dungeon-entry.e2e.mjs";
 
-export async function runRangerUiScenario(driver, directory, profile) {
+export async function runRangerUiScenario(driver, directory, profile, playthrough = false) {
   await mkdir(directory, { recursive: true });
   await driver.waitFor('return document.documentElement.dataset.appMode === "title"', "Ranger title", 60_000);
   const keyboard = await connectKeyboard(profile);
@@ -91,9 +93,9 @@ export async function runRangerUiScenario(driver, directory, profile) {
     await driver.execute('window.__rangerRelease(); return true;');
   }
   const bookRow = id => `.ability-book-heading[data-book-item-id="${id}"]`;
-  async function study(realm, busy = false) {
+  async function study(realm, busy = false, rank) {
     const before = await snapshot();
-    const candidate = before.player.abilities.find(a=>a.bookRealmId===realm && a.canStudy);
+    const candidate = before.player.abilities.find(a=>a.bookRealmId===realm && a.canStudy && (!rank || a.bookRank===rank));
     assert.ok(candidate, `${realm} has a core-approved learning candidate`);
     const selector = `${bookRow(candidate.bookItemId)} button`;
     assert.equal(await text(selector),localization.format("action-ability-study-random"));
@@ -112,8 +114,168 @@ export async function runRangerUiScenario(driver, directory, profile) {
     assert.equal(await focusIs(after.player.abilities.some(a=>a.bookItemId===candidate.bookItemId && a.canStudy) ? selector : bookRow(candidate.bookItemId)),true,"random study focus survives rendering");
     return { state:after, learned:learned[0] };
   }
+  async function closePage() {
+    if (await driver.execute('return document.querySelector("#player-page-dialog").open')) await keyboard.key("Escape");
+  }
+  async function actKey(key) {
+    const before = await driver.execute('return document.querySelector("#hash-value").title');
+    await keyboard.key(key); return changed(before, `key ${key}`);
+  }
+  async function aim(position, origin) {
+    await driver.waitFor('return document.querySelector("#map-host").dataset.targeting === "true"', "aiming");
+    let dx=position.x-origin.x, dy=position.y-origin.y;
+    while(dx || dy) {
+      const sx=Math.sign(dx), sy=Math.sign(dy);
+      await keyboard.key(({"-1,-1":"7","0,-1":"8","1,-1":"9","-1,0":"4","1,0":"6","-1,1":"1","0,1":"2","1,1":"3"})[`${sx},${sy}`]);
+      dx-=sx; dy-=sy;
+    }
+    await keyboard.key("Enter");
+  }
+  let castResolution;
+  async function cast(id) {
+    await page();
+    const before=await snapshot(), ability=before.player.abilities.find(a=>a.id===id);
+    assert.equal(ability?.canCast,true,`${id}: ${ability?.unavailableReason}`);
+    await focus(`[data-ability-id="${id}"] .ability-cast-action`); await keyboard.key("Enter");
+    const after=await changed(before.stateHash,`cast ${id}`);
+    castResolution=await driver.execute('return window.__rangerLastUpdate.events.find(e=>e.outcome?.type==="ability-cast")?.outcome.resolution');
+    assert.equal(castResolution?.abilityId,id);
+    assert.equal(after.player.isDead,false); await closePage(); return after;
+  }
+  async function exportPlayedSave(name) {
+    await driver.execute(`window.__rangerExport=null; window.__rangerDownloadHooks=[URL.createObjectURL,URL.revokeObjectURL,HTMLAnchorElement.prototype.click];
+      URL.createObjectURL=blob=>{window.__rangerExport={blob};return "blob:ranger-acceptance";};
+      URL.revokeObjectURL=()=>{}; HTMLAnchorElement.prototype.click=function(){window.__rangerExport.name=this.download;};
+      document.querySelector('.hud-menu').open=true; return true;`);
+    await click("#save-button"); await driver.waitFor('return window.__rangerExport?.name?.endsWith(".rfbsave")',"menu export");
+    await driver.execute(`document.querySelector('.hud-menu').open=false;
+      [URL.createObjectURL,URL.revokeObjectURL,HTMLAnchorElement.prototype.click]=window.__rangerDownloadHooks;
+      window.__rangerExportIndex=null; window.__rangerExport.blob.arrayBuffer().then(buffer=>{
+        window.__rangerSaves??=[]; window.__rangerExportIndex=window.__rangerSaves.push(Array.from(new Uint8Array(buffer)))-1;
+      }); return true;`);
+    await driver.waitFor('return window.__rangerExportIndex!==null',"save bytes");
+    const index=await driver.execute('return window.__rangerExportIndex');
+    await writeFile(path.join(directory,`${name}.rfbsave`),Buffer.from(await driver.execute('return window.__rangerSaves[arguments[0]]',[index])));
+    return index;
+  }
+  async function playNewGame() {
+    await driver.execute('localStorage.setItem("rfb.locale","zh-CN");localStorage.setItem("rfb.input-preset","numpad");return true;');
+    await keyboard.reload(); await driver.waitFor('return document.documentElement.dataset.appMode==="title"',"play title");
+    await driver.execute(`const original=window.fetch, endpoint=window.__TAURI_INTERNALS__.convertFileSrc("dispatch_game_command","ipc");
+      window.fetch=(url,options)=>url!==endpoint ? original(url,options) : original(url,options).then(async response=>{
+        window.__rangerLastUpdate=await response.clone().json(); return response;
+      });return true;`);
+    await viewport(1280,720); await click("#session-new-game");
+    await driver.execute('document.querySelector("#session-character-name").value="Ranger Play";document.querySelector("#session-seed").value="925";return true;');
+    await selectCreationRace(driver,"demo.race.rfb-human"); await selectCreationBuild(driver,"demo.build.ranger-nature-sorcery");
+    await focus("#session-start-game"); await keyboard.key("Enter");
+    await driver.waitFor('return document.documentElement.dataset.appMode==="playing" && document.querySelector("#connection-status").classList.contains("ready")',"normal Ranger birth",60_000);
+    await talent(); let current=await snapshot(); const checks=[];
+    assert.equal(current.player.progress.level,1); assert.equal(current.player.abilityLearning.capacity,0);
+    checks.push({birth:{build:current.player.build,hash:current.stateHash,equipment:current.equipment,inventory:current.inventory}});
+    process.stdout.write("Ranger: normal level-1 birth created.\n");
+    await click("#player-ui-inventory-open");
+    const torch=current.inventory.find(item=>item.kindId==="demo.item.wooden-torch"); assert.ok(torch);
+    await click(`[data-item-id="${torch.id}"] input[type="checkbox"]`); await click("#inventory-equip");
+    current=await changed(current.stateHash,"birth torch"); await closePage();
+    const fastEntry=process.argv.includes("--fast-entry");
+    if(fastEntry) { checks.push({fastEntry:await prepareDungeonEntry(driver)}); current=await snapshot(); }
+    else for(let step=0;step<120;step++) {
+      const entry=current.cells.find(c=>c.terrainId==="demo.terrain.stairs-down").position;
+      if(current.player.position.x===entry.x && current.player.position.y===entry.y) break;
+      current=await actKey(nextWalk(current,new Set(),entry));
+      if(step%20===19) process.stdout.write(`Ranger: walked ${step+1} steps toward the natural dungeon.\n`);
+    }
+    const outside=current.stateHash; await click("#traverse-stairs"); current=await changed(outside,"natural dungeon");
+    assert.equal(current.floorId,"demo.floor.warrens-depth-1");
+    const visited=new Set(); let hit;
+    for(let step=0;step<180 && !hit;step++) {
+      assert.equal(current.player.isDead,false); visited.add(`${current.player.position.x},${current.player.position.y}`);
+      const distance=p=>Math.max(Math.abs(p.x-current.player.position.x),Math.abs(p.y-current.player.position.y));
+      const target=current.entities.filter(e=>e.faction==="hostile").sort((a,b)=>distance(a.position)-distance(b.position))[0];
+      if(target && distance(target.position)<=6) {
+        const before=current; await focus("#target-mode-toggle"); await keyboard.key("Enter"); await aim(target.position,current.player.position);
+        current=await changed(before.stateHash,"birth bow shot");
+        const hpAfter=current.entities.find(e=>e.id===target.id)?.hp??0;
+        if(hpAfter<target.hp) hit={target:target.kindId,hpBefore:target.hp,hpAfter,before:before.stateHash,after:current.stateHash,playerHp:current.player.hp};
+      } else current=await actKey(nextWalk(current,visited,target?.position));
+    }
+    assert.ok(hit,"birth bow must hit a naturally generated monster"); assert.equal(current.player.isDead,false);
+    checks.push({naturalBowHit:hit,preparation:fastEntry ? "Only approach travel skipped; normal birth equipment, dungeon generation and combat RNG." : "None: normal birth, torch equip, movement, dungeon generation and combat RNG."});
+    await screenshot("natural-birth-bow-hit"); await exportPlayedSave(fastEntry ? "fast-entry-bow-start" : "natural-bow-start");
+    process.stdout.write("Ranger natural start: birth bow hit; survived.\n");
+    current=await prepare(3); const primary=await study("nature");
+    current=primary.state; const casts=[];
+    for(let attempt=0;attempt<15 && !current.player.abilities.find(a=>a.id===primary.learned.id).castCount;attempt++) {
+      if(!current.player.abilities.find(a=>a.id===primary.learned.id).canCast) { current=await prepare(3); await closePage(); }
+      current=await cast(primary.learned.id); casts.push({id:primary.learned.id,hash:current.stateHash,progress:current.player.abilities.find(a=>a.id===primary.learned.id)});
+    }
+    assert.ok(current.player.abilities.find(a=>a.id===primary.learned.id).castCount>0);
+    current=await prepare(5); const secondary=await study("sorcery"); current=secondary.state;
+    for(let attempt=0;attempt<15 && !current.player.abilities.find(a=>a.id===secondary.learned.id).castCount;attempt++) {
+      if(!current.player.abilities.find(a=>a.id===secondary.learned.id).canCast) { current=await prepare(5); await closePage(); }
+      current=await cast(secondary.learned.id); casts.push({id:secondary.learned.id,hash:current.stateHash,progress:current.player.abilities.find(a=>a.id===secondary.learned.id)});
+    }
+    assert.ok(current.player.abilities.find(a=>a.id===secondary.learned.id).castCount>0);
+    checks.push({randomStudy:{primary:primary.learned,secondary:secondary.learned},casts,preparation:"Explicit XP to 3 then 5 for shared learning capacity, clear active monsters, light map, refill HP/MP and add Death first book. Original birth books, random gifts and real cast failures retained; no WIS or proficiency override."});
+    await screenshot("both-realms-randomly-learned-and-cast");
+    current=await prepare(15); await closePage();
+    const probe="demo.ability.ranger-probe-monsters", probeAttempts=[];
+    for(let attempt=0;attempt<20 && !probeAttempts.some(a=>a.resolution.succeeded);attempt++) {
+      if(!current.player.abilities.find(a=>a.id===probe).canCast) { current=await prepare(15); await closePage(); }
+      const before=current; current=await cast(probe);
+      probeAttempts.push({before:before.stateHash,after:current.stateHash,hpBefore:before.player.hp,hpAfter:current.player.hp,resolution:castResolution,resources:current.player.resources});
+    }
+    assert.ok(probeAttempts.some(a=>a.resolution.succeeded));
+    const beforeSpill=current, spill=beforeSpill.player.abilities.find(a=>a.id===probe);
+    assert.ok(spill.hitPointCost>0); current=await cast(probe);
+    assert.equal(castResolution.resourcePaid,spill.resourceCost); assert.equal(castResolution.hpPaid,spill.hitPointCost);
+    probeAttempts.push({before:beforeSpill.stateHash,after:current.stateHash,hpBefore:beforeSpill.player.hp,hpAfter:current.player.hp,resolution:castResolution,resources:current.player.resources});
+    assert.equal((await text("#message-list")).includes("未知实体"),false);
+    assert.ok((await text("#message-list")).includes("探测怪物"));
+    checks.push({level15Probe:probeAttempts,preparation:"Explicit level 15, quiet map, full HP/MP; empty-target ability casts retain real failure/payment, followed by an actual MP-to-HP spill."});
+    current=await prepare(50); await closePage(); const origin=current.player.position;
+    current=await actKey("6"); assert.deepEqual(current.player.position,{x:origin.x+1,y:origin.y});
+    await screenshot("level50-standing-on-tree");
+    const treeSaved=current, treeIndex=await exportPlayedSave("level50-tree-test-prepared"); await load(treeIndex,treeSaved.stateHash);
+    // The live Sheep may occupy the old player tile; leave the tree through clear north floor.
+    const treeExit={x:origin.x+1,y:origin.y-1};
+    assert.equal(current.entities.some(e=>e.position.x===treeExit.x && e.position.y===treeExit.y),false);
+    current=await actKey("8"); assert.deepEqual(current.player.position,treeExit);
+    const high=current.player.abilities.filter(a=>a.bookRank===4); assert.equal(high.length,16);
+    assert.ok(high.some(a=>a.minimumLevel>50 && !a.canStudy && !a.canCast));
+    let probed=[];
+    for(let attempt=0;attempt<15 && !probed.some(m=>m.kindId==="demo.actor.sheep");attempt++) {
+      current=await cast(probe);
+      probed=await driver.execute('return window.__rangerLastUpdate.events.flatMap(e=>e.outcome?.type==="ability-monster-probe" ? e.outcome.resolution.monsters : [])');
+    }
+    assert.ok(probed.some(m=>m.kindId==="demo.actor.sheep"));
+    await screenshot("level50-probed-sheep");
+    await page(); const highGift=await study("nature",false,4); current=highGift.state;
+    assert.ok(highGift.learned.minimumLevel<=50); assert.equal(highGift.learned.proficiencyCap,1600);
+    checks.push({highLevel:{level:50,books:high,randomGift:highGift.learned,treeSave:treeSaved.stateHash,treePosition:treeSaved.player.position,treeExit,probed},preparation:"Explicit level 50 and two rank-4 books; replace a 3x3 area with floor plus an east tree and place a source Sheep west. No learned spell, attribute, success or RNG override."});
+    await page(); await screenshot("level50-tree-probe-high-books");
+    const beforeChange=current; await focus('#realm-change-books [data-realm-id="death"]'); await keyboard.key("Enter");
+    current=await changed(beforeChange.stateHash,"played change request"); await focus("#realm-change-accept"); await keyboard.key("Enter");
+    current=await changed(current.stateHash,"played change confirmation");
+    assert.equal(current.player.abilityLearning.realms.secondRealmId,"death"); assert.deepEqual(current.player.abilityLearning.realms.previousRealmIds,["sorcery"]);
+    assert.equal(current.player.abilities.find(a=>a.id===primary.learned.id).proficiency,beforeChange.player.abilities.find(a=>a.id===primary.learned.id).proficiency);
+    assert.equal(current.player.abilityLearning.remainingSlots,beforeChange.player.abilityLearning.remainingSlots-1);
+    await closePage(); const saved=current, savedIndex=await exportPlayedSave("level50-changed-realm-test-prepared");
+    async function continueSave() {
+      await cast(primary.learned.id); await cast(probe); await page(); const gift=await study("death"); await closePage(); return gift;
+    }
+    const continued=await continueSave(); await load(savedIndex,saved.stateHash);
+    const restored=await snapshot(); assert.deepEqual(restored.player,saved.player); assert.deepEqual(restored.inventory,saved.inventory); assert.deepEqual(restored.equipment,saved.equipment);
+    const replayed=await continueSave(); assert.equal(replayed.state.stateHash,continued.state.stateHash); assert.deepEqual(replayed.learned,continued.learned);
+    checks.push({saveContinuation:{saved:saved.stateHash,realms:saved.player.abilityLearning.realms,continued:continued.state.stateHash,replayed:replayed.state.stateHash,nextRandomGift:replayed.learned},preparation:"Menu export and native import; same two real casts and next random Death study verify state and RNG continuation."});
+    await screenshot("changed-save-casts-random-study-continued"); assert.deepEqual(keyboard.errors,[]);
+    await writeFile(path.join(directory,"checks.json"),JSON.stringify({checks},null,2)+"\n");
+    process.stdout.write("Ranger prepared levels 3/5/15/50: random study/casts, probing, tree save, high books and changed-realm continuation passed.\n");
+  }
   try {
     await invoke("plugin:window|set_min_size",{label:"main",value:null});
+    if(playthrough) { await playNewGame(); return; }
     for(const locale of ["zh-CN","en-US"]) {
       localization.setLocale(locale);
       const births=[];

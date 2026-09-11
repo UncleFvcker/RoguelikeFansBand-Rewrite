@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Localization } from "../src/localization.ts";
 import { connectKeyboard } from "./character-creation-layout.e2e.mjs";
+import { prepareDungeonEntry } from "./dungeon-entry.e2e.mjs";
 
 const directions = [[1, 0, "6"], [0, 1, "2"], [-1, 0, "4"], [0, -1, "8"], [1, 1, "3"], [-1, 1, "1"], [-1, -1, "7"], [1, -1, "9"]];
 const positionKey = position => `${position.x},${position.y}`;
@@ -241,12 +242,11 @@ export async function runBerserkerUiScenario(driver, directory, profile) {
     await driver.waitFor('return document.querySelector("#hash-value").title !== arguments[0]', "starting torch equipped", 10_000, [beforeTorch]);
     await ready(); await click("#player-page-close");
     const entrance = born.cells.find(cell => cell.terrainId === "demo.terrain.stairs-down").position;
-    assert.equal(entrance.y, born.player.position.y);
-    let walked = born;
-    while (walked.player.position.x < entrance.x) {
-      const beforeX = walked.player.position.x;
-      walked = await actKey("6");
-      assert.equal(walked.player.position.x, beforeX + 1);
+    let walked = await invoke("inspect_game_e2e");
+    if (process.argv.includes("--fast-entry")) { checks.push({ fastEntry: await prepareDungeonEntry(driver) }); walked = await invoke("inspect_game_e2e"); }
+    else for (let step = 0; step < 120; step++) {
+      if (walked.player.position.x === entrance.x && walked.player.position.y === entrance.y) break;
+      walked = await actKey(nextWalk(walked, new Set(), entrance));
     }
     const outsideHash = await hash(); await click("#traverse-stairs");
     await driver.waitFor('return document.querySelector("#hash-value").title !== arguments[0]', "normal dungeon entry", 10_000, [outsideHash]);
@@ -281,7 +281,7 @@ export async function runBerserkerUiScenario(driver, directory, profile) {
     await ready();
     const afterPotion = await invoke("inspect_game_e2e");
     assert.equal(afterPotion.inventory.find(item => item.id === potion.id)?.quantity ?? 0, potion.quantity - 1);
-    checks.push({ normalBirth: { birth: born.stateHash, walked: walked.stateHash, entrance, dungeon: dungeon.floorId, birthHit, potionBefore: beforePotion, potionAfter: afterPotion.stateHash }, precondition: "Normal new character, keyboard road and dungeon exploration, natural monster melee and starting potion; no test preparation" });
+    checks.push({ normalBirth: { birth: born.stateHash, walked: walked.stateHash, entrance, dungeon: dungeon.floorId, birthHit, potionBefore: beforePotion, potionAfter: afterPotion.stateHash }, precondition: "Normal new character, dungeon exploration, natural monster melee and starting potion; only --fast-entry skips the road, recorded separately when used." });
 
     for (const level of [7, 8, 9, 10, 14, 15, 19, 20, 24, 25, 29, 30]) {
       const prepared = await prepareLevel(level, false, level === 15);

@@ -17,10 +17,26 @@ const state = {
   currentEquipment: [],
   currentStatus: undefined,
 };
-const formatter = createPresentationFormatter(localization, () => state, {
+const helpers = {
   formatAttributeValueArgument: (value) => value ?? "?",
   formatTenthsPoundArgument: (value) => value ?? "?",
   itemCurseSeverityName: () => "?",
+};
+const formatter = createPresentationFormatter(localization, () => state, helpers);
+
+test("ability events use the projected name when it differs from the stable ID", () => {
+  const id = "demo.ability.ranger-probe-monsters";
+  const projected = createPresentationFormatter(localization, () => ({
+    ...state,
+    currentStatus: { player: { abilities: [{ id, nameKey: "ability-demo-sniper-probe-monsters-name" }] } },
+  }), helpers);
+  for (const [locale, name] of [["en-US", "Probe Monsters"], ["zh-CN", "探测怪物"]]) {
+    localization.setLocale(locale);
+    assert.ok(projected.formatEvent({
+      kind: "ability.cast-unavailable", messageKey: "ability-cast-unavailable",
+      args: { target: id, reason: "insufficient-resource" },
+    }).includes(name));
+  }
 });
 
 test("Duelist challenge and teleport events use localized opponent names", () => {

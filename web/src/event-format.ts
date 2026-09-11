@@ -1769,6 +1769,8 @@ export function createPresentationFormatter(
   }
 
   function contentName(id: string | undefined): string {
+    const ability = getState().currentStatus?.player.abilities?.find(ability => ability.id === id);
+    if (ability) return localization.format(ability.nameKey);
     if (id === "demo.resource.mana") {
       return localization.format("resource-demo-mana-name");
     }

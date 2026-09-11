@@ -75,7 +75,7 @@ async function main() {
     await rm(diagnosticDirectory, { recursive: true, force: true });
     await rm(desktopLogPath, { force: true });
     const port = await reservePort();
-    const creationLayout = process.argv.includes("--character-creation") || process.argv.includes("--creation-layout") || process.argv.includes("--mindcrafter") || process.argv.includes("--berserker") || process.argv.includes("--duelist-ui") || process.argv.includes("--mage-ui") || process.argv.includes("--mage-play") || process.argv.includes("--ranger-ui");
+    const creationLayout = process.argv.includes("--character-creation") || process.argv.includes("--creation-layout") || process.argv.includes("--mindcrafter") || process.argv.includes("--berserker") || process.argv.includes("--duelist-ui") || process.argv.includes("--mage-ui") || process.argv.includes("--mage-play") || process.argv.includes("--ranger-ui") || process.argv.includes("--ranger-play");
     const debugProfile = path.join(repositoryDirectory, "target", "e2e", "creation-webview");
     child = spawn(executable, [], {
       cwd: repositoryDirectory,
@@ -122,6 +122,8 @@ async function main() {
       await runMageUiScenario(client, path.join(artifactDirectory, "mage-ui"), debugProfile);
     } else if (process.argv.includes("--ranger-ui")) {
       await runRangerUiScenario(client, path.join(artifactDirectory, "ranger-ui"), debugProfile);
+    } else if (process.argv.includes("--ranger-play")) {
+      await runRangerUiScenario(client, path.join(artifactDirectory, "ranger-play"), debugProfile, true);
     } else if (process.argv.includes("--mage-play")) {
       await runMageUiScenario(client, path.join(artifactDirectory, "mage-play"), debugProfile, true);
     } else if (lifeForceOnly) {

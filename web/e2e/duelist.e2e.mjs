@@ -7,6 +7,7 @@ import { Localization } from "../src/localization.ts";
 import { connectKeyboard } from "./character-creation-layout.e2e.mjs";
 import { selectCreationRace } from "./character-creation.e2e.mjs";
 import { nextWalk } from "./berserker.e2e.mjs";
+import { prepareDungeonEntry } from "./dungeon-entry.e2e.mjs";
 
 // UI acceptance. High levels and targets are explicitly prepared, not natural progression.
 export async function runDuelistUiScenario(driver, directory, profile) {
@@ -121,7 +122,8 @@ export async function runDuelistUiScenario(driver, directory, profile) {
     await changed(beforeTorch, "birth torch equipped"); await keyboard.key("Escape");
     const entrance = born.cells.find(cell => cell.terrainId === "demo.terrain.stairs-down").position;
     let walked = await snapshot();
-    for (let step = 0; step < 120; step++) {
+    if (process.argv.includes("--fast-entry")) { checks.push({ fastEntry: await prepareDungeonEntry(driver) }); walked = await snapshot(); }
+    else for (let step = 0; step < 120; step++) {
       const entry = walked.cells.find(cell => cell.terrainId === "demo.terrain.stairs-down").position;
       if (walked.player.position.x === entry.x && walked.player.position.y === entry.y) break;
       walked = await actKey(nextWalk(walked, new Set(), entry));

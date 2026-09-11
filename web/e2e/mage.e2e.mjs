@@ -7,6 +7,7 @@ import { MAGE_REALMS } from "../src/character-creation.ts";
 import { selectCreationBuild, selectCreationRace } from "./character-creation.e2e.mjs";
 import { connectKeyboard } from "./character-creation-layout.e2e.mjs";
 import { nextWalk } from "./berserker.e2e.mjs";
+import { prepareDungeonEntry } from "./dungeon-entry.e2e.mjs";
 
 // Mage UI and new-game acceptance; all granted XP, books and devices are reported.
 export async function runMageUiScenario(driver, directory, profile, playthrough = false) {
@@ -200,7 +201,8 @@ export async function runMageUiScenario(driver, directory, profile, playthrough 
     assert.equal(current.player.hp, beforeDevice.player.hp);
     assert.deepEqual(current.entities, beforeDevice.entities);
     checks.push({ preparation:"One generated, kind-aware Magic Missile wand; no XP, HP, map or monster preparation.", item:current.inventory.find(item => item.id === wand), before:beforeDevice.stateHash, after:current.stateHash });
-    for (let step = 0; step < 120; step++) {
+    if (process.argv.includes("--fast-entry")) { checks.push({ fastEntry: await prepareDungeonEntry(driver) }); current = await snapshot(); }
+    else for (let step = 0; step < 120; step++) {
       const entry = current.cells.find(cell => cell.terrainId === "demo.terrain.stairs-down").position;
       if (current.player.position.x === entry.x && current.player.position.y === entry.y) break;
       current = await actKey(nextWalk(current, new Set(), entry));

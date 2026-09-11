@@ -358,6 +358,39 @@ fn plan_retained_instance_action(
 }
 
 impl Game {
+    /// Desktop fixture: skip approach travel without generating a floor or taking a turn.
+    #[doc(hidden)]
+    pub fn debug_prepare_stairs_e2e(&mut self, position: Position) -> Result<(), CoreError> {
+        let valid = self.map_scale == rfb_protocol::MapScaleDto::Local
+            && self.index(position).is_some()
+            && self
+                .content
+                .terrain(self.terrain_at(position))
+                .is_some_and(|terrain| {
+                    terrain
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "stairs-up" | "stairs-down"))
+                })
+            && !self.entities.iter().any(|actor| {
+                actor.position == position
+                    && Some(actor.id.as_str()) != self.riding_actor_id.as_deref()
+            });
+        if !valid {
+            return Err(CoreError::InvalidSave(
+                "E2E destination must be unoccupied local stairs",
+            ));
+        }
+        self.player.position = position;
+        if let Some(mount_id) = self.riding_actor_id.as_deref()
+            && let Some(mount) = self.entities.iter_mut().find(|actor| actor.id == mount_id)
+        {
+            mount.position = position;
+        }
+        self.reveal_current_visibility();
+        Ok(())
+    }
+
     pub(super) fn dungeon_entry_requirements_met(&self, dungeon: &DungeonDefinition) -> bool {
         self.dungeon_is_active(&dungeon.id)
             && dungeon_entry_requirements_met(

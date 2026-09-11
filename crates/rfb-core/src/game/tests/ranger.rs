@@ -10,6 +10,82 @@ mod realm_change;
 const BUILD: &str = "demo.build.ranger-nature-death";
 const MANA: &str = "demo.resource.mana";
 
+#[test]
+fn fast_stairs_preparation_preserves_birth_and_rng_then_uses_real_generation() {
+    let mut game = Game::new_with_build(925, learning::SORCERY_BUILD).unwrap();
+    choose_human_talent_if_pending(&mut game);
+    let before = game.snapshot();
+    let rng = game.rng.clone();
+    assert!(
+        game.debug_prepare_stairs_e2e(Position { x: -1, y: 0 })
+            .is_err()
+    );
+    assert!(game.debug_prepare_stairs_e2e(game.player.position).is_err());
+    assert_eq!(game.state_hash(), before.state_hash);
+    let stairs = before
+        .cells
+        .iter()
+        .find(|cell| cell.terrain_id == "demo.terrain.stairs-down")
+        .unwrap()
+        .position;
+    game.debug_prepare_stairs_e2e(stairs).unwrap();
+    let ready = game.snapshot();
+    assert_eq!(ready.turn, before.turn);
+    assert_eq!(ready.player.position, stairs);
+    assert_eq!(ready.player.progress, before.player.progress);
+    assert_eq!(ready.player.hp, before.player.hp);
+    assert_eq!(ready.inventory, before.inventory);
+    assert_eq!(ready.equipment, before.equipment);
+    assert_eq!(ready.entities, before.entities);
+    assert_eq!(game.rng, rng);
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.rng, game.rng);
+    super::support::dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.warrens-depth-1");
+    assert_ne!(game.rng, rng);
+    assert!(!game.entities.is_empty());
+}
+
+#[test]
+fn desktop_learning_and_tree_preparation_round_trip_a_real_dungeon() {
+    let mut game = Game::new_with_build(925, learning::SORCERY_BUILD).unwrap();
+    choose_human_talent_if_pending(&mut game);
+    game.transition_floor("demo.floor.warrens-depth-1".to_owned(), None, None, false)
+        .unwrap();
+    for level in [3, 5, 15, 50] {
+        game.debug_prepare_spell_learning_e2e(level).unwrap();
+        choose_human_talent_if_pending(&mut game);
+        assert_eq!(game.progress.level, level);
+        let restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.rng, game.rng);
+    }
+    assert!(
+        game.entities
+            .iter()
+            .any(|actor| actor.id == "e2e.ranger-probe-target")
+    );
+    assert_eq!(
+        game.terrain[game
+            .index(Position {
+                x: game.player.position.x + 1,
+                y: game.player.position.y
+            })
+            .unwrap()],
+        "demo.terrain.surface-tree"
+    );
+    let high = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .filter(|a| a.book_rank == Some(4))
+        .collect::<Vec<_>>();
+    assert_eq!(high.len(), 16);
+    assert!(high.iter().any(|a| a.minimum_level > 50 && !a.can_study));
+}
+
 fn at_level(build: &str, level: u16) -> Game {
     let mut game = Game::new_with_build(925, build).unwrap();
     clear_monsters(&mut game);

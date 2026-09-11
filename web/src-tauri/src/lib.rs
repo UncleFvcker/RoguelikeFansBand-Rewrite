@@ -388,6 +388,17 @@ impl AppState {
         Ok(session.recorder.game().snapshot())
     }
 
+    #[cfg(feature = "webdriver")]
+    fn prepare_stairs_e2e(&self, position: rfb_protocol::Position) -> Result<GameSnapshot, String> {
+        let mut session = self.lock_session()?;
+        let session = session.as_mut().ok_or("game session is not initialized")?;
+        let mut game = session.recorder.game().clone();
+        game.debug_prepare_stairs_e2e(position)
+            .map_err(|error| error.to_string())?;
+        session.recorder = ReplayRecorder::new(game);
+        Ok(session.recorder.game().snapshot())
+    }
+
     fn lock_session(&self) -> Result<std::sync::MutexGuard<'_, Option<GameSession>>, String> {
         self.session
             .lock()
@@ -667,6 +678,22 @@ fn prepare_spell_learning_e2e(
 }
 
 #[tauri::command]
+fn prepare_stairs_e2e(
+    state: tauri::State<'_, AppState>,
+    position: rfb_protocol::Position,
+) -> Result<GameSnapshot, String> {
+    #[cfg(feature = "webdriver")]
+    {
+        state.prepare_stairs_e2e(position)
+    }
+    #[cfg(not(feature = "webdriver"))]
+    {
+        let _ = (state, position);
+        Err("Stairs E2E fixture is unavailable".to_owned())
+    }
+}
+
+#[tauri::command]
 fn inspect_game_e2e(state: tauri::State<'_, AppState>) -> Result<GameSnapshot, String> {
     #[cfg(feature = "webdriver")]
     {
@@ -902,6 +929,7 @@ pub fn run() {
             prepare_berserker_e2e,
             prepare_duelist_e2e,
             prepare_spell_learning_e2e,
+            prepare_stairs_e2e,
             inspect_game_e2e,
             save_game,
             load_game,

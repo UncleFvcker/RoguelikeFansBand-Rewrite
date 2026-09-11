@@ -7,7 +7,7 @@ impl Game {
     /// Level 0 drains XP; the other levels exercise learning and class power boundaries.
     #[doc(hidden)]
     pub fn debug_prepare_spell_learning_e2e(&mut self, level: u16) -> Result<(), CoreError> {
-        if !matches!(level, 0 | 1 | 2 | 3 | 15 | 20 | 25) {
+        if !matches!(level, 0 | 1 | 2 | 3 | 5 | 15 | 20 | 25 | 50) {
             return Err(CoreError::InvalidSave(
                 "unsupported spell learning E2E level",
             ));
@@ -77,6 +77,55 @@ impl Game {
                 1,
             )?;
             self.mark_item_aware("demo.item.acquirement-scroll");
+        }
+        if ranger && level == 50 {
+            // Explicit desktop fixtures: high books and a small tree/probing scene.
+            // Keep learned spells, attributes and RNG outcomes from actual play.
+            let kinds: Vec<_> = self
+                .content
+                .item_definitions()
+                .filter(|item| {
+                    item.ability_book_id
+                        .as_deref()
+                        .and_then(|id| self.content.ability_book(id))
+                        .is_some_and(|book| {
+                            book.rank == Some(4)
+                                && matches!(book.realm_id.as_deref(), Some("nature" | "sorcery"))
+                        })
+                })
+                .map(|item| item.id.clone())
+                .collect();
+            for kind in kinds {
+                self.debug_add_generated_inventory_item(&format!("e2e.ranger.{kind}"), &kind, 1)?;
+            }
+            let origin = self.player.position;
+            for dy in -1..=1 {
+                for dx in -1..=1 {
+                    self.replace_terrain_from_source(
+                        Position {
+                            x: origin.x + dx,
+                            y: origin.y + dy,
+                        },
+                        if dx == 1 && dy == 0 {
+                            "demo.terrain.surface-tree"
+                        } else {
+                            "demo.terrain.floor"
+                        },
+                        terrain::TerrainChangeSource::Magic,
+                        &mut Vec::new(),
+                        &mut BTreeSet::new(),
+                    );
+                }
+            }
+            let actor = self.generated_actor(
+                "e2e.ranger-probe-target".to_owned(),
+                "demo.actor.sheep",
+                Position {
+                    x: origin.x - 1,
+                    y: origin.y,
+                },
+            );
+            self.entities.push(actor);
         }
         self.refresh_player_resource_maxima();
         self.refresh_player_ability_state();

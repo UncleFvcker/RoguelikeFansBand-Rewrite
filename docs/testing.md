@@ -25,6 +25,23 @@ git diff --check
 
 以上命令是用法示例，不是每批必跑流水线。Clippy/check 的 crate 和 targets 按真实改动选择；不为纯文档跑 Clippy。前端在 `web` 选择对应测试，如 `node --test src/character-traits-panel.test.ts`，再按需要运行 `npm run typecheck`。全量 `npm test` 留给实际跨界面改动或明确验收。
 
+## 桌面 E2E 快速到地牢
+
+职业实战不需要验收城镇步行时，在 `web` 执行下列命令。先运行一次 `npm run e2e:build`；修改 Rust 后需重新构建。
+
+```powershell
+node e2e/tauri.e2e.mjs --ranger-play --fast-entry
+node e2e/tauri.e2e.mjs --mage-play --fast-entry
+node e2e/tauri.e2e.mjs --duelist-ui --fast-entry
+node e2e/tauri.e2e.mjs --berserker --fast-entry
+```
+
+`--fast-entry` 复用 [dungeon-entry.e2e.mjs](../web/e2e/dungeon-entry.e2e.mjs)：从核心快照找到当前地图的实际下楼梯，经 `prepare_stairs_e2e({ position })` 将角色放到入口，再由原脚本点击下楼。该命令只在 WebDriver 构建可用，普通 EXE 拒绝调用；不授予经验/装备、不推进回合，也不预造地牢。地牢生成、怪物、战斗和后续 RNG 仍走正式规则；跳过路上的行动会使后续 RNG 起点不同于完整步行。
+
+准备后的状态通过正常存档读取路径进入 UI，报告记录位置、前后哈希、耗时和跳过步行的说明。去掉 `--fast-entry` 即恢复完整步行；验收移动/城镇路途时保留默认流程。现行这四个脚本以兽穴为目标，不把该参数用于任意世界传送。
+
+新增实战脚本可在正式创角后调用 `await prepareDungeonEntry(driver)`，随后沿正常 UI 执行下楼；不要再复制城镇寻路循环。
+
 ## Contract fixture
 
 当前集位于 [tests/fixtures/active/scenarios](../tests/fixtures/active/scenarios/)，分类和最低数量等政策来自 [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)。`rfb-contract` 的 [CLI](../crates/rfb-contract/src/main.rs)和[断言实现](../crates/rfb-contract/src/lib.rs)是精确语义依据。
