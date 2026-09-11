@@ -10,7 +10,7 @@
 | 协议 | 1.253 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 125 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 20 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.424.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.425.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v325，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 10 个 Class、73 个 Build、57 个 Race、36 本能力书、1,902 个 ability 文件、424 个 item、1,406 个 actor、169 个 affix、152 个 mutation。世界定义含 32 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、64 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
@@ -85,7 +85,7 @@ Ent、Spectre 的新游戏入口已开放。种族主线还接入原始经验值
 
 当前固定神器定义为 46/392，包含本次集成的 45 件与 PM1 新增的阿蒙神器。『恐惧面具』铁盔的生成身份分支已接入：战士、骑兵、狂战士获得源随机能力／抗性，其他当前职业获得固有诅咒；法师交叉已加入现有保存恢复测试。定义数量不代表自然获取或完整玩法均已验收，边界见[物品计划 I3](remaining-item-coverage-plan.md#i3固定神器与神器创造入口)。
 
-[金字塔土丘 PM1](../design/pyramidal-mound-dungeon-plan-20260911.md) 已完成阿蒙的匕首（源神器 350）、中文与来源登记。它按源稀有度进入普通固定神器选择，保留唯一登记，可拾取、装备、激活心灵感应并在冷却中保存恢复；装置状态时长先按 power 加成，再换算 tick。126 项相关核心检查、27 项内容物品、39 项本地化、26 条未刷新契约及 Clippy／格式／source-lock 检查通过。测试使用明确的底材、物品和状态准备，不表示自然探索获取。来源死亡路径审计将凤凰重生补入 PM3；阿蒙死亡神器绑定、奥西里斯额外药水与凤凰分支仍待该批实施。金字塔土丘入口尚未开放，本批没有桌面试玩或可玩构建。
+[金字塔土丘 PM1–PM3](../design/pyramidal-mound-dungeon-plan-20260911.md) 已接入阿蒙的匕首（源神器 350）及阿蒙 100% 特殊掉落，保留普通神器选择、唯一登记、Bad Luck 保证与已生成排重。阿蒙提前击杀的神器／普通掉落／独立征服卷轴已有真实拾取、装备／激活、使用及保存恢复证据；域外死亡不征服，木乃伊王按入口实例记账。奥西里斯在普通掉落之外额外生成一瓶新生药水，域外近战死亡后的拾取、使用和保存继续已验证。凤凰 1/3 满血复生发生在奖励、经验与唯一死亡登记前，近战／射击／状态伤害和真正死亡两侧有检查。源神器 335 的抑制分支及未表达的克隆、曾为宠物、内部竞技场／战斗状态仍未接入；掉落来源由事件证明，未增加持久来源分类。测试使用明确的场地、感知、HP 与 RNG 准备，正式金字塔土丘入口留待 PM4，没有本批桌面试玩或可玩构建。
 
 I3 光源第五组首件已接入 1 加拉德瑞尔的玻璃瓶及专用底材 605，固定神器正式映射为 41/392。底材不进入普通分配；神器通过现有 instant 生成，提供半径 3 的免燃料照明、搜索/感知 +25 和黑暗抗性。照明激活与 150 tick 冷却复用现有规则，核心验证完整池生成、拾取/鉴定/装备、实际激活/光照、冷却中保存与边界恢复、再次使用、唯一性及后续生成/RNG。79 项物品测试、20 项照明测试、来源估值、固定神器内容/名称/锁检查、十构筑审计及 26 条契约通过，未刷新 fixture。来源及各组边界见[物品计划 I3](remaining-item-coverage-plan.md#i3固定神器与神器创造入口)。本组未执行桌面或 Android 验收。
 

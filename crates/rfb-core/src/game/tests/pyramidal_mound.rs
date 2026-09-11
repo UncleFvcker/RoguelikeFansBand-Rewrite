@@ -112,7 +112,11 @@ fn generation_catalog() -> Arc<ContentCatalog> {
             world.dungeons.push(
                 serde_json::from_value(json!({
                     "id": DUNGEON, "legacyIndex": 34, "pantheon": 2,
-                    "rootFloorId": floor_id(64), "guardianActorKindId": GUARDIAN
+                    "rootFloorId": floor_id(64), "guardianActorKindId": GUARDIAN,
+                    "entranceGuardian": {
+                        "instanceId": "test.guardian.pyramidal-mound-entrance.1",
+                        "actorKindId": "demo.actor.mummy-king", "position": {"x": 1, "y": 1}
+                    }
                 }))
                 .unwrap(),
             );
@@ -137,7 +141,8 @@ fn generation_catalog() -> Arc<ContentCatalog> {
                 floor.final_floor = depth == 92;
                 floor.guardian = (depth == 92).then(|| {
                     serde_json::from_value(json!({
-                        "instanceId": "test.guardian.pyramidal-mound.1", "actorKindId": GUARDIAN
+                        "instanceId": "test.guardian.pyramidal-mound.1", "actorKindId": GUARDIAN,
+                        "rewardLootTableId": "demo.loot-table.mount-olympus-final-reward"
                     }))
                     .unwrap()
                 });
@@ -579,6 +584,421 @@ fn artifact_context() -> LootContext {
             actor_id: "test.ordinary-drop".into(),
         },
     }
+}
+
+fn battle_game() -> Game {
+    let mut game = generation_game(true);
+    choose_human_talent_if_pending(&mut game);
+    game.transition_floor(floor_id(78), None, None, false)
+        .unwrap()
+        .unwrap();
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.player.position = (1..game.height - 1)
+        .find_map(|y| {
+            (1..game.width - 2)
+                .map(|x| Position {
+                    x: x.into(),
+                    y: y.into(),
+                })
+                .find(|p| game.is_walkable(*p) && game.is_walkable(Position { x: p.x + 1, y: p.y }))
+        })
+        .unwrap();
+    game
+}
+
+fn battle_actor(game: &Game, kind: &str, id: &str) -> Actor {
+    spawn_actor_from_definition(
+        &mut RfbRng::seeded(0),
+        game.content.actor(kind).unwrap(),
+        id,
+        Position {
+            x: game.player.position.x + 1,
+            y: game.player.position.y,
+        },
+        100_000,
+        true,
+    )
+}
+
+fn defeat_in_melee(game: &mut Game) -> GameUpdate {
+    // Prepare one target HP, ample player HP and a delayed turn, keeping real
+    // defenses/contact auras. Restore player HP to its legal maximum for saves.
+    game.player.hp = 100_000;
+    game.entities[0].hp = 1;
+    game.entities[0].energy_need = 100_000;
+    game.entities[0].nice = true;
+    let base = game.clone();
+    for seed in 0..256 {
+        let mut attempt = base.clone();
+        attempt.rng = RfbRng::seeded(seed);
+        let update = super::support::dispatch_next(
+            &mut attempt,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+        );
+        if attempt.entities.is_empty() {
+            attempt.player.hp = attempt.player.max_hp;
+            *game = attempt;
+            return update;
+        }
+    }
+    panic!("prepared guardian never died in melee");
+}
+
+fn pick_up_drop(game: &mut Game, kind: &str, source: &str, update: &GameUpdate) -> String {
+    assert!(update.events.iter().any(|e| e.kind == "loot.drop"
+        && e.args.get("source").map(String::as_str) == Some(source)
+        && e.args.get("target").map(String::as_str) == Some(kind)));
+    let item = game.items.iter().find(|i| i.kind_id == kind).unwrap();
+    let id = item.id.clone();
+    let ItemLocation::Ground(position) = item.location else {
+        panic!("drop must reach the floor")
+    };
+    game.player.position = position;
+    game.pick_up_item_at_player(Some(&id)).unwrap();
+    assert_eq!(
+        game.items.iter().find(|i| i.id == id).unwrap().location,
+        ItemLocation::Inventory
+    );
+    id
+}
+
+#[test]
+fn pyramidal_mound_guardians_melee_uses_true_identity_and_mummy_instance_accounting() {
+    let base = battle_game();
+    for (kind, level) in [("demo.actor.mummy-king", 56), (GUARDIAN, 97)] {
+        let mut game = base.clone();
+        let mut actor = battle_actor(&game, kind, "test.pm.incoming");
+        if kind == GUARDIAN {
+            actor.appearance_kind_id = Some("demo.actor.goblin".into());
+        }
+        assert_eq!(game.actor_runtime_definition(&actor).unwrap().level, level);
+        game.entities.push(actor);
+        game.player.hp = 100_000;
+        let target = MonsterHostileTarget::Player {
+            entity_id: game.player.id.clone(),
+            kind_id: game.player.kind_id.clone(),
+            position: game.player.position,
+        };
+        for _ in 0..8 {
+            game.resolve_monster_melee_target(
+                0,
+                &target,
+                &mut Vec::new(),
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
+        }
+        assert!(game.player.hp < 100_000, "{kind}");
+    }
+    let mut game = base;
+    // Instance accounting is independent of the final guardian and global uniques.
+    let surface = game
+        .content
+        .world(&game.world_id)
+        .unwrap()
+        .initial_floor_id
+        .clone();
+    game.transition_floor(surface, None, None, false)
+        .unwrap()
+        .unwrap();
+    clear_monsters(&mut game);
+    let actor = battle_actor(
+        &game,
+        "demo.actor.mummy-king",
+        "test.guardian.pyramidal-mound-entrance.1",
+    );
+    game.entities.push(actor);
+    defeat_in_melee(&mut game);
+    assert!(game.dungeon_states[DUNGEON].entrance_guardian_defeated);
+    assert!(!game.dungeon_states[DUNGEON].guardian_defeated);
+    assert!(game.unique_actor_kind_is_available("demo.actor.mummy-king"));
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn pyramidal_mound_amun_early_melee_rewards_are_picked_up_used_and_saved_once() {
+    let mut game = battle_game();
+    let mut actor = battle_actor(&game, GUARDIAN, "test.pm.early-amun");
+    actor.appearance_kind_id = Some("demo.actor.goblin".into());
+    game.entities.push(actor);
+    // Prepared see-invisible status exercises perception without generating the reward early.
+    game.glow.fill(true);
+    game.refresh_invisible_visibility(true, &BTreeMap::new());
+    assert!(!game.entity_is_visible_to_player(&game.entities[0]));
+    game.player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_SEE_INVISIBLE, 2000, "test.pm.senses").status);
+    assert!(game.player_see_invisible_sources() > 0);
+    for _ in 0..100 {
+        game.refresh_invisible_visibility(true, &BTreeMap::new());
+        if game.entity_is_visible_to_player(&game.entities[0]) {
+            break;
+        }
+    }
+    assert!(game.entity_is_visible_to_player(&game.entities[0]));
+    game.progress
+        .active_mutation_ids
+        .insert("rfb.mutation.bad-luck".into());
+    let update = defeat_in_melee(&mut game);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|e| e.kind == "dungeon.guardian-defeated")
+    );
+    assert!(game.dungeon_states[DUNGEON].guardian_defeated);
+    assert!(!game.unique_actor_kind_is_available(GUARDIAN));
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|i| i.kind_id == "demo.item.acquirement-scroll")
+            .count(),
+        1
+    );
+    assert!(
+        game.items
+            .iter()
+            .any(|i| !matches!(i.kind_id.as_str(), AMUN | "demo.item.acquirement-scroll"))
+    );
+    let artifact = pick_up_drop(&mut game, AMUN, GUARDIAN, &update);
+    let scroll = pick_up_drop(&mut game, "demo.item.acquirement-scroll", GUARDIAN, &update);
+    choose_human_talent_if_pending(&mut game);
+    super::support::dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: scroll.clone(),
+            target: None,
+        },
+    );
+    assert!(!game.items.iter().any(|i| i.id == scroll));
+    assert!(
+        game.items
+            .iter()
+            .any(|i| i.origin_kind == Some(rfb_protocol::ItemOriginKindDto::Acquire))
+    );
+    game.identify_item_instance(&artifact, ItemIdentificationRequest::new(true));
+    game.equip_inventory_item(&artifact, None).unwrap();
+    game.refresh_player_resource_maxima();
+    for _ in 0..100 {
+        game.use_inventory_item(
+            &artifact,
+            Some(&TargetSelection::SelfTarget),
+            None,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        if game.player_has_telepathy() {
+            break;
+        }
+    }
+    assert!(game.player_has_telepathy());
+    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert!(restored.generated_artifact_ids.contains(AMUN));
+    let rewards = restored.items.iter().filter(|i| i.kind_id == AMUN).count();
+    restored
+        .transition_floor(floor_id(92), None, None, false)
+        .unwrap()
+        .unwrap();
+    assert!(restored.entities.iter().all(|a| a.kind_id != GUARDIAN));
+    assert!(restored.dungeon_states[DUNGEON].guardian_defeated);
+    assert_eq!(
+        restored.items.iter().filter(|i| i.kind_id == AMUN).count(),
+        rewards
+    );
+}
+
+#[test]
+fn pyramidal_mound_special_drops_keep_guarantee_exclusions_and_outside_death() {
+    let base = battle_game();
+    for (kind, item) in [
+        (GUARDIAN, AMUN),
+        ("demo.actor.osiris-the-reborn", "demo.item.new-life-potion"),
+    ] {
+        let mut game = base.clone();
+        game.progress
+            .active_mutation_ids
+            .insert("rfb.mutation.bad-luck".into());
+        let actor = battle_actor(&game, kind, "test.pm.drop");
+        game.entities.push(actor.clone());
+        let (drops, _) = game.generate_death_loot(&actor).unwrap();
+        assert_eq!(
+            drops
+                .iter()
+                .filter(|i| i.kind_id == item)
+                .map(|i| i.quantity)
+                .sum::<u32>(),
+            1
+        );
+        assert!(
+            drops
+                .iter()
+                .any(|i| i.kind_id != item && i.kind_id != "demo.item.acquirement-scroll")
+        );
+        if kind == GUARDIAN {
+            assert!(
+                game.generate_death_loot(&actor)
+                    .unwrap()
+                    .0
+                    .iter()
+                    .all(|i| i.kind_id != AMUN)
+            );
+        }
+        let mut pet_game = base.clone();
+        let mut pet = battle_actor(&pet_game, kind, "test.pm.pet");
+        pet.controller_id = Some(pet_game.player.id.clone());
+        assert!(
+            pet_game
+                .generate_death_loot(&pet)
+                .unwrap()
+                .0
+                .iter()
+                .all(|i| i.kind_id != item)
+        );
+    }
+    let mut game = base;
+    let surface = game
+        .content
+        .world(&game.world_id)
+        .unwrap()
+        .initial_floor_id
+        .clone();
+    game.transition_floor(surface.clone(), None, None, false)
+        .unwrap()
+        .unwrap();
+    game.transition_floor("demo.floor.warrens-depth-3".into(), None, None, false)
+        .unwrap()
+        .unwrap();
+    clear_monsters(&mut game);
+    game.items.clear();
+    let actor = battle_actor(&game, GUARDIAN, "test.pm.outside");
+    game.entities.push(actor);
+    super::world::defeat_guardian_with_status(&mut game, "test.pm.outside", STATUS_POISON);
+    assert!(game.items.iter().any(|i| i.kind_id == AMUN));
+    assert!(
+        game.items
+            .iter()
+            .all(|i| i.kind_id != "demo.item.acquirement-scroll")
+    );
+    assert!(!game.dungeon_states[DUNGEON].guardian_defeated);
+    game.transition_floor(surface, None, None, false)
+        .unwrap()
+        .unwrap();
+    game.transition_floor(floor_id(92), None, None, false)
+        .unwrap()
+        .unwrap();
+    assert!(game.entities.iter().all(|a| a.kind_id != GUARDIAN));
+    assert!(!game.dungeon_states[DUNGEON].guardian_defeated);
+}
+
+#[test]
+fn pyramidal_mound_phoenix_rebirth_keeps_melee_and_status_targets_alive() {
+    let mut base = battle_game();
+    let kind = "demo.actor.the-phoenix";
+    let mut actor = battle_actor(&base, kind, "test.pm.phoenix");
+    actor.hp = 1;
+    actor.energy_need = INITIAL_MONSTER_ENERGY_NEED;
+    base.entities.push(actor);
+    base.player.hp = 100_000;
+    for from_status in [false, true] {
+        let mut reborn = None;
+        for seed in 0..256 {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(seed);
+            let mut events = Vec::new();
+            let mut removed = Vec::new();
+            if from_status {
+                let mut status =
+                    monster_combat::melee_status(STATUS_BLEEDING, 10, &game.player.id).status;
+                status.intensity = 3;
+                game.entities[0].statuses.push(status);
+                game.process_status_tick(&mut events, &mut BTreeSet::new(), &mut removed, true)
+                    .unwrap();
+            } else {
+                game.resolve_player_melee(
+                    0,
+                    false,
+                    &mut events,
+                    &mut BTreeSet::new(),
+                    &mut removed,
+                )
+                .unwrap();
+            }
+            if events
+                .iter()
+                .any(|e| matches!(e, DomainEvent::PhoenixReborn { .. }))
+            {
+                assert!(removed.is_empty());
+                assert!(game.entities[0].hp > 0);
+                assert_eq!(game.progress.experience, base.progress.experience);
+                assert!(game.items.is_empty());
+                assert!(!game.defeated_limited_actor_counts.contains_key(kind));
+                game.player.hp = game.player.max_hp;
+                reborn = Some(game);
+                break;
+            }
+        }
+        let game = reborn.expect("one-third revival must be reachable");
+        let mut restored =
+            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        // A later actual fatal blow still reaches ordinary death and rewards.
+        defeat_in_melee(&mut restored);
+        assert!(!restored.unique_actor_kind_is_available(kind));
+        assert!(restored.progress.experience > game.progress.experience);
+        assert!(!restored.items.is_empty());
+    }
+}
+
+#[test]
+fn pyramidal_mound_osiris_extra_potion_is_consumed_after_real_death_and_pickup() {
+    let mut game = battle_game();
+    // The extra drop also works outside its pantheon dungeon.
+    let surface = game
+        .content
+        .world(&game.world_id)
+        .unwrap()
+        .initial_floor_id
+        .clone();
+    game.transition_floor(surface, None, None, false)
+        .unwrap()
+        .unwrap();
+    clear_monsters(&mut game);
+    game.items.clear();
+    let kind = "demo.actor.osiris-the-reborn";
+    game.entities
+        .push(battle_actor(&game, kind, "test.pm.osiris"));
+    let update = defeat_in_melee(&mut game);
+    assert!(!game.dungeon_states[DUNGEON].guardian_defeated);
+    assert!(
+        game.items
+            .iter()
+            .any(|i| i.kind_id != "demo.item.new-life-potion")
+    );
+    let id = pick_up_drop(&mut game, "demo.item.new-life-potion", kind, &update);
+    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    for current in [&mut game, &mut restored] {
+        choose_human_talent_if_pending(current);
+        current.progress.life_force = 125;
+        super::support::dispatch_next(
+            current,
+            GameCommand::UseItem {
+                item_id: id.clone(),
+                target: None,
+            },
+        );
+        assert!(!current.items.iter().any(|i| i.id == id));
+        assert_eq!(current.progress.life_force, 1000);
+    }
+    assert_eq!(restored.to_save(), game.to_save());
 }
 
 #[test]

@@ -269,6 +269,10 @@
   },
   "role": "monster",
   "speed": 133,
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.amun",
+    "chancePercent": 100
+  },
   "statusImmunities": [
     "rfb.status.confusion",
     "rfb.status.fear"

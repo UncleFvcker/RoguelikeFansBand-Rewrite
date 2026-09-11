@@ -274,6 +274,23 @@ impl Game {
         let depth = self.floor_depth(&floor_id);
         let mut generated = Vec::new();
         let mut gold = Vec::new();
+        // xtra2.c: Osiris's chosen item precedes and supplements ordinary drops.
+        if actor.kind_id == "demo.actor.osiris-the-reborn"
+            && actor.controller_id.as_deref() != Some(self.player.id.as_str())
+            && let Some(position) = self.ground_drop_position(actor.position, false)
+        {
+            let context = LootContext {
+                table_id: "demo.loot-table.base-items".into(),
+                floor_id: floor_id.clone(),
+                depth,
+                source: LootSource::MonsterDeath {
+                    actor_id: actor.id.clone(),
+                },
+            };
+            let draft = self.fixed_item_draft(&context, "demo.item.new-life-potion".into());
+            generated
+                .push(self.commit_generated_item_draft(draft, ItemLocation::Ground(position))?);
+        }
         if let Some(drop) = &actor_definition.special_artifact_drop
             && actor.controller_id.as_deref() != Some(self.player.id.as_str())
         {

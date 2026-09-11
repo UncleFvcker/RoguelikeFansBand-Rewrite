@@ -18,6 +18,13 @@ are recorded in design/pyramidal-mound-dungeon-plan-20260911.md. These materials
 retain their upstream terms and the notice in LICENSES/RFB-UPSTREAM-NOTICE.txt;
 the project's default content license does not replace them.
 
+The Amun special drop, Osiris extra potion and Phoenix rebirth in
+crates/rfb-core/src/game/{loot,death}.rs, the Amun actor binding and the
+Chinese rebirth message in locales/zh-CN/game.ftl adapt src/xtra2.c from
+the same master commit. The PM3 scope and unrepresented upstream exclusions
+are recorded in design/pyramidal-mound-dungeon-plan-20260911.md. These
+adaptations retain the upstream terms and notices referenced above.
+
 The Mindcrafter class rules, Chinese names and descriptions, psychic effects,
 and associated artifact/quest adaptations were checked against RoguelikeFansBand
 master commit a0d92b6378d148c5262cc236b8fa6ed2ca06a54c. Sources and retained

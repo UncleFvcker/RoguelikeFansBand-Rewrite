@@ -1052,18 +1052,20 @@ impl Game {
                 }
                 if application.fatal {
                     match &source {
-                        EarthquakeSource::Ability(ability_id) => self.resolve_actor_death(
-                            actor_index,
-                            DomainEvent::AbilitySlew {
-                                ability_id: ability_id.clone(),
-                                target_kind_id,
-                                damage,
-                                trace,
-                            },
-                            events,
-                            changed,
-                            removed_entities,
-                        )?,
+                        EarthquakeSource::Ability(ability_id) => self
+                            .resolve_actor_death(
+                                actor_index,
+                                DomainEvent::AbilitySlew {
+                                    ability_id: ability_id.clone(),
+                                    target_kind_id,
+                                    damage,
+                                    trace,
+                                },
+                                events,
+                                changed,
+                                removed_entities,
+                            )
+                            .map(|_| ())?,
                         EarthquakeSource::Monster(source_kind_id) => self
                             .resolve_actor_death_without_rewards(
                                 actor_index,
@@ -1077,17 +1079,19 @@ impl Game {
                                 changed,
                                 removed_entities,
                             )?,
-                        EarthquakeSource::Weapon(source_item_id) => self.resolve_actor_death(
-                            actor_index,
-                            DomainEvent::PlayerWeaponEarthquakeSlew {
-                                source_item_id: source_item_id.clone(),
-                                target_kind_id,
-                                damage,
-                            },
-                            events,
-                            changed,
-                            removed_entities,
-                        )?,
+                        EarthquakeSource::Weapon(source_item_id) => self
+                            .resolve_actor_death(
+                                actor_index,
+                                DomainEvent::PlayerWeaponEarthquakeSlew {
+                                    source_item_id: source_item_id.clone(),
+                                    target_kind_id,
+                                    damage,
+                                },
+                                events,
+                                changed,
+                                removed_entities,
+                            )
+                            .map(|_| ())?,
                     }
                 } else if let EarthquakeSource::Monster(source_kind_id) = &source {
                     events.push(DomainEvent::MonsterMeleeEntityHit {
