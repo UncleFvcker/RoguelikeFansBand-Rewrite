@@ -1,0 +1,59 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.thror",
+  "nameKey": "item-demo-thror-name",
+  "descriptionKey": "item-demo-thror-description",
+  "glyph": "]",
+  "generationLevel": 60,
+  "weightTenthsPound": 80,
+  "maxStack": 1,
+  "baseValue": 85000,
+  "equipmentSlot": "boots",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 62,
+    "baseItemKindId": "demo.item.mithril-shod-boots",
+    "instant": false,
+    "rarityOneIn": 25,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "modifiers": {
+    "defense": 26,
+    "strength": 3,
+    "constitution": 3,
+    "speed": 3
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SPEED",
+      "STR",
+      "XTRA_H_RES"
+    ],
+    "pval": 3,
+    "toArmor": 20
+  },
+  "equipmentBonuses": {
+    "meleeDamage": 2
+  }
+}

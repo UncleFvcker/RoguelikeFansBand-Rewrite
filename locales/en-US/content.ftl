@@ -9578,3 +9578,15 @@ terrain-demo-mount-olympus-entrance-description = The entrance to Mount Olympus.
 
 item-demo-terror-mask-name = The Iron Helm 'Terror Mask'
 item-demo-terror-mask-description = An ancient mask radiating terror.
+
+item-demo-thorin-name = Small Metal Shield of Thorin
+item-demo-thorin-description = Small Metal Shield of Thorin
+
+item-demo-celegorm-name = Large Leather Shield of Celegorm
+item-demo-celegorm-description = Large Leather Shield of Celegorm
+
+item-demo-anarion-name = Large Metal Shield of Anarion
+item-demo-anarion-description = Large Metal Shield of Anarion
+
+item-demo-thror-name = Pair of Mithril Shod Boots of Thror
+item-demo-thror-description = Pair of Mithril Shod Boots of Thror

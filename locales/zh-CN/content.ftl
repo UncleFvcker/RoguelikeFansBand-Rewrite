@@ -9582,3 +9582,15 @@ terrain-demo-mount-olympus-entrance-description = 奥林匹斯山的入口
 
 item-demo-terror-mask-name = 『恐惧面具』铁盔
 item-demo-terror-mask-description = 散发威压的古老面具。
+
+item-demo-thorin-name = 索林之小金属盾
+item-demo-thorin-description = 唤起山下国王索林的力量和耐力，这面小金属盾是抵御土元素的证明。
+
+item-demo-celegorm-name = 凯勒巩的大皮盾
+item-demo-celegorm-description = 这面盾牌上装饰着许多许久未见的生物，它曾保护过希姆拉德领主凯勒巩；它周围有一种神秘的平衡，包容了元素之间的冲突。
+
+item-demo-anarion-name = 阿纳瑞安的大金属盾
+item-demo-anarion-description = 埃兰迪尔之子阿纳瑞安的伟大金属包边盾牌，索伦发现自己无力使其枯萎或削弱。
+
+item-demo-thror-name = 索尔之秘银铁头靴
+item-demo-thror-description = 坚固的皮革与钢铁制成的鞋子，如穿戴它们的饱经风霜的流亡矮人国王一样坚忍。由于是矮人制造的，穿上这双靴子的人将在群山中如履平地。

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.celegorm",
+  "nameKey": "item-demo-celegorm-name",
+  "descriptionKey": "item-demo-celegorm-description",
+  "glyph": ")",
+  "generationLevel": 50,
+  "weightTenthsPound": 60,
+  "maxStack": 1,
+  "baseValue": 30000,
+  "equipmentSlot": "shield",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 31,
+    "baseItemKindId": "demo.item.large-leather-shield",
+    "instant": false,
+    "rarityOneIn": 3,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "modifiers": {
+    "defense": 26
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_DARK",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_LITE",
+      "XTRA_H_RES"
+    ],
+    "pval": 0,
+    "toArmor": 20
+  },
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "light": "resistant",
+    "dark": "resistant"
+  }
+}

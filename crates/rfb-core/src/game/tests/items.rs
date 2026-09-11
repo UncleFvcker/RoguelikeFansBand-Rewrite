@@ -1497,48 +1497,249 @@ fn fixed_high_resistance_uses_one_source_roll_without_retrying_duplicates() {
         ActorDamageType::Disenchant,
         ActorDamageType::Fear,
     ];
-    for (index, element) in source_order.into_iter().enumerate() {
-        let seed = (0..10_000)
-            .find(|seed| RfbRng::seeded(*seed).bounded(12) == index as u64)
-            .unwrap();
-        let mut game = original.clone();
-        game.rng = RfbRng::seeded(seed);
-        let mut expected_rng = game.rng.clone();
-        expected_rng.bounded(12);
-        let draft = game.fixed_item_draft(&context, "demo.item.rohirrim".into());
-        assert_eq!(game.rng, expected_rng);
-        assert_eq!(draft.rolled_affixes.len(), 1);
-        let properties = &draft.rolled_affixes[0].properties;
-        assert_eq!(properties.resistances.len(), 1);
-        assert_eq!(
-            properties.resistances[&element],
-            rfb_content::ActorResistanceLevel::Resistant
-        );
-        if matches!(element, ActorDamageType::Confusion | ActorDamageType::Sound) {
-            // A duplicate remains the same flag: no reroll or stronger resistance.
-            game.items.clear();
-            let item = game
-                .commit_generated_item_draft(draft, ItemLocation::Inventory)
+    for kind in ["rohirrim", "thorin", "celegorm", "anarion", "thror"] {
+        for (index, element) in source_order.into_iter().enumerate() {
+            let seed = (0..10_000)
+                .find(|seed| RfbRng::seeded(*seed).bounded(12) == index as u64)
                 .unwrap();
-            let id = item.id.clone();
-            game.items.push(item);
-            game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
-            game.equip_inventory_item(&id, None).unwrap();
-            let item = &game.items[0];
-            let visible = game.visible_item_resistances(item);
+            let mut game = original.clone();
+            game.rng = RfbRng::seeded(seed);
+            let mut expected_rng = game.rng.clone();
+            expected_rng.bounded(12);
+            let kind_id = format!("demo.item.{kind}");
+            let draft = game.fixed_item_draft(&context, kind_id.clone());
+            assert_eq!(game.rng, expected_rng);
+            assert_eq!(draft.rolled_affixes.len(), 1);
+            let properties = &draft.rolled_affixes[0].properties;
+            assert_eq!(properties.resistances.len(), 1);
             assert_eq!(
-                visible
-                    .iter()
-                    .filter(|resistance| resistance.damage_type
-                        == DamageTypeDto::from(DamageType::from(element)))
-                    .count(),
-                1
+                properties.resistances[&element],
+                rfb_content::ActorResistanceLevel::Resistant
             );
+            if game
+                .content
+                .item(&kind_id)
+                .unwrap()
+                .resistances
+                .contains_key(&element)
+            {
+                // A duplicate remains the same flag: no reroll or stronger resistance.
+                game.items.clear();
+                let item = game
+                    .commit_generated_item_draft(draft, ItemLocation::Inventory)
+                    .unwrap();
+                let id = item.id.clone();
+                game.items.push(item);
+                game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+                game.equip_inventory_item(&id, None).unwrap();
+                let item = &game.items[0];
+                let visible = game.visible_item_resistances(item);
+                assert_eq!(
+                    visible
+                        .iter()
+                        .filter(|resistance| resistance.damage_type
+                            == DamageTypeDto::from(DamageType::from(element)))
+                        .count(),
+                    1
+                );
+                assert_eq!(
+                    game.effective_player_resistances().level(element.into()),
+                    ResistanceLevel::Resistant
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn a4_high_resistance_armor_generates_equips_and_preserves_rolls_after_save() {
+    for (slug, base, weight) in [
+        ("thorin", "small-metal-shield", 65),
+        ("celegorm", "large-leather-shield", 60),
+        ("anarion", "large-metal-shield", 120),
+        ("thror", "mithril-shod-boots", 80),
+    ] {
+        let mut game = Game::new_with_build(426, "demo.build.warrior").unwrap();
+        choose_human_talent_if_pending(&mut game);
+        clear_monsters(&mut game);
+        game.items.clear();
+        let context = artifact_loot_context(70);
+        let kind = format!("demo.item.{slug}");
+        let base = format!("demo.item.{base}");
+        // Control base/depth, retaining the ordinary source-ordered candidates
+        // and real rarity draws. Full ordinary-pool generation is tested below.
+        let selected = (0..5000)
+            .find_map(|seed| {
+                game.rng = RfbRng::seeded(seed);
+                game.roll_fixed_artifact_kind_id(&context, Some(&base), false)
+                    .filter(|id| id == &kind)
+            })
+            .expect("each A4 armor must occur in its ordinary fixed-artifact candidate pool");
+        let draft = game.fixed_item_draft(&context, selected);
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        assert_eq!(
+            item.affix_ids,
+            ["rfb-legacy.affix.artifact-extra-high-resistance"]
+        );
+        assert_eq!(item.rolled_affixes.len(), 1);
+        assert_eq!(item.rolled_affixes[0].properties.resistances.len(), 1);
+        assert!(item.activation.is_none() && item.charges.is_none() && item.curse.is_none());
+        let rolled = item.rolled_affixes.clone();
+        let (&element, _) = rolled[0].properties.resistances.iter().next().unwrap();
+        let id = item.id.clone();
+        game.items.push(item);
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        assert_eq!(game.carried_weight_tenths_pound(), weight);
+        assert!(game.visible_item_resistances(&game.items[0]).is_empty());
+        game.reveal_current_visibility();
+        let restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.rng, game.rng);
+        assert_eq!(restored.items[0].rolled_affixes, rolled);
+        game = restored;
+        let rng = game.rng.clone();
+        game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        assert_eq!(game.rng, rng);
+        assert!(
+            game.item_property_knowledge[&id]
+                .known_affix_ids
+                .contains(&rolled[0].affix_id)
+        );
+        assert!(
+            game.visible_item_resistances(&game.items[0])
+                .iter()
+                .any(|r| r.damage_type == DamageTypeDto::from(DamageType::from(element)))
+        );
+        game.equip_inventory_item(&id, None).unwrap();
+        assert_eq!(game.equipment_modifiers().defense, 26);
+        assert_eq!(
+            game.effective_player_resistances().level(element.into()),
+            ResistanceLevel::Resistant
+        );
+        for (&damage_type, &level) in &game.content.item(&kind).unwrap().resistances {
             assert_eq!(
-                game.effective_player_resistances().level(element.into()),
-                ResistanceLevel::Resistant
+                game.effective_player_resistances()
+                    .level(damage_type.into()),
+                ResistanceLevel::from(level)
             );
         }
+        game.reveal_current_visibility();
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.items[0].rolled_affixes, rolled);
+        assert!(restored.generated_artifact_ids.contains(&kind));
+        // Exercise the actual consumers after restoration, while the original
+        // remains available to compare the next production generation and RNG.
+        let mut equipped = restored.clone();
+        let modifiers = equipped.equipment_modifiers();
+        let slot = match &equipped.items[0].location {
+            ItemLocation::Equipped { slot_id } => slot_id.clone(),
+            _ => panic!("generated armor must remain equipped"),
+        };
+        match slug {
+            "thorin" => {
+                assert_eq!((modifiers.strength, modifiers.constitution), (4, 4));
+                assert!(
+                    equipped
+                        .player_status_immunities()
+                        .contains(STATUS_PARALYSIS)
+                );
+                let hp = equipped.player.hp;
+                let result = equipped.resolve_monster_damage_to_player(
+                    "test.acid",
+                    "demo.actor.small-kobold",
+                    "test.acid-bolt",
+                    0,
+                    30,
+                    30,
+                    DamageType::Acid,
+                    &mut Vec::new(),
+                );
+                assert!(
+                    matches!(result, AbilityEffectResolutionDto::Damage { resolution, .. }
+                    if resolution.final_damage == 0)
+                );
+                assert_eq!(equipped.player.hp, hp);
+                equipped.unequip_slot(&slot).unwrap();
+                assert_eq!(
+                    equipped
+                        .effective_player_resistances()
+                        .level(DamageType::Acid),
+                    ResistanceLevel::Normal
+                );
+                assert!(
+                    !equipped
+                        .player_status_immunities()
+                        .contains(STATUS_PARALYSIS)
+                );
+            }
+            "celegorm" => {
+                // RES_COLD is absent in the source and not a high-resistance candidate.
+                assert_eq!(
+                    equipped
+                        .effective_player_resistances()
+                        .level(DamageType::Cold),
+                    ResistanceLevel::Normal
+                );
+            }
+            "anarion" => {
+                let attributes = equipped.progress.attributes;
+                let rng = equipped.rng.clone();
+                for attribute in [
+                    AttributeKind::Strength,
+                    AttributeKind::Intelligence,
+                    AttributeKind::Wisdom,
+                    AttributeKind::Dexterity,
+                    AttributeKind::Constitution,
+                    AttributeKind::Charisma,
+                ] {
+                    equipped.resolve_monster_attribute_drain(attribute);
+                }
+                assert_eq!(equipped.progress.attributes, attributes);
+                assert_eq!(equipped.rng, rng);
+            }
+            "thror" => {
+                assert_eq!(
+                    (modifiers.strength, modifiers.constitution, modifiers.speed),
+                    (3, 3, 3)
+                );
+                assert_eq!(equipped.player_equipment_bonuses().melee_damage, 2);
+                give_inventory_item(&mut equipped, "test.bow", "demo.item.short-bow");
+                equipped.equip_inventory_item("test.bow", None).unwrap();
+                let shot = equipped.player_projectile_profile().unwrap();
+                let melee = equipped.player_melee_profile(&equipped.player_derived_stats());
+                equipped.unequip_slot(&slot).unwrap();
+                let without = equipped.player_projectile_profile().unwrap();
+                assert_eq!(
+                    (shot.to_hit, shot.launcher_to_damage),
+                    (without.to_hit, without.launcher_to_damage)
+                );
+                assert!(
+                    melee.to_damage
+                        >= equipped
+                            .player_melee_profile(&equipped.player_derived_stats())
+                            .to_damage
+                            + 2
+                );
+                assert_eq!(equipped.player_equipment_bonuses().melee_damage, 0);
+                assert_eq!(equipped.equipment_modifiers().speed, 0);
+            }
+            _ => unreachable!(),
+        }
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            game.generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+        );
+        assert_eq!(restored.rng, game.rng);
+        assert_ne!(
+            restored.roll_fixed_artifact_kind_id(&context, Some(&base), false),
+            Some(kind)
+        );
     }
 }
 
