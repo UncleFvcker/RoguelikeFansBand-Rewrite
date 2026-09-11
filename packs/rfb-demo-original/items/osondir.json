@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.osondir",
+  "nameKey": "item-demo-osondir-name",
+  "descriptionKey": "item-demo-osondir-description",
+  "glyph": "/",
+  "generationLevel": 20,
+  "weightTenthsPound": 190,
+  "maxStack": 1,
+  "baseValue": 22000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 95,
+    "baseItemKindId": "demo.item.halberd",
+    "instant": false,
+    "rarityOneIn": 8
+  },
+  "weaponProficiencyBaseItemId": "demo.item.halberd",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 8,
+    "toDamage": 12,
+    "damageDice": 3,
+    "damageSides": 6
+  },
+  "modifiers": {
+    "charisma": 3
+  },
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "passives": [
+    "levitation",
+    "see-invisible"
+  ],
+  "brands": [
+    "fire"
+  ],
+  "slays": {
+    "undead": "slay",
+    "giant": "slay"
+  },
+  "resistances": {
+    "fire": "resistant",
+    "sound": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "BRAND_FIRE",
+      "CHR",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION",
+      "LITE",
+      "RES_FIRE",
+      "RES_SOUND",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_GIANT",
+      "SLAY_UNDEAD"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  }
+}

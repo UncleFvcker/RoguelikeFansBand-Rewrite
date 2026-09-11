@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.samson",
+  "nameKey": "item-demo-samson-name",
+  "descriptionKey": "item-demo-samson-description",
+  "glyph": "\\",
+  "generationLevel": 10,
+  "weightTenthsPound": 50,
+  "maxStack": 1,
+  "baseValue": 40000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 178,
+    "baseItemKindId": "demo.item.club",
+    "instant": false,
+    "rarityOneIn": 10
+  },
+  "weaponProficiencyBaseItemId": "demo.item.club",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 8,
+    "toDamage": 10,
+    "damageDice": 3,
+    "damageSides": 5
+  },
+  "modifiers": {
+    "strength": 3,
+    "constitution": 3
+  },
+  "passives": [
+    "see-invisible"
+  ],
+  "slays": {
+    "evil": "slay",
+    "undead": "slay"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SEE_INVIS",
+      "SLAY_EVIL",
+      "SLAY_UNDEAD",
+      "STR"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  }
+}

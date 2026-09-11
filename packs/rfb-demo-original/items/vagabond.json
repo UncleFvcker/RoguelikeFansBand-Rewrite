@@ -1,0 +1,71 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.vagabond",
+  "nameKey": "item-demo-vagabond-name",
+  "descriptionKey": "item-demo-vagabond-description",
+  "glyph": "\\",
+  "generationLevel": 22,
+  "weightTenthsPound": 150,
+  "maxStack": 1,
+  "baseValue": 35000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 347,
+    "baseItemKindId": "demo.item.morning-star",
+    "instant": false,
+    "rarityOneIn": 7
+  },
+  "weaponProficiencyBaseItemId": "demo.item.morning-star",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 16,
+    "toDamage": 15,
+    "damageDice": 2,
+    "damageSides": 7
+  },
+  "modifiers": {
+    "constitution": 4
+  },
+  "passives": [
+    "sustain-constitution",
+    "regeneration",
+    "hold-life",
+    "slow-digestion",
+    "blessed"
+  ],
+  "resistances": {
+    "fear": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "CON",
+      "HIDE_TYPE",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "REGEN",
+      "RES_FEAR",
+      "SLOW_DIGEST",
+      "SUST_CON"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  }
+}

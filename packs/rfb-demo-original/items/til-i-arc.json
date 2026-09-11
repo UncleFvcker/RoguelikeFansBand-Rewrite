@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.til-i-arc",
+  "nameKey": "item-demo-til-i-arc-name",
+  "descriptionKey": "item-demo-til-i-arc-description",
+  "glyph": "/",
+  "generationLevel": 20,
+  "weightTenthsPound": 160,
+  "maxStack": 1,
+  "baseValue": 32000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 96,
+    "baseItemKindId": "demo.item.pike",
+    "instant": false,
+    "rarityOneIn": 15
+  },
+  "weaponProficiencyBaseItemId": "demo.item.pike",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 12,
+    "toDamage": 15,
+    "damageDice": 2,
+    "damageSides": 6
+  },
+  "modifiers": {
+    "intelligence": 2,
+    "defense": 10
+  },
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "passives": [
+    "sustain-intelligence",
+    "slow-digestion"
+  ],
+  "brands": [
+    "cold",
+    "fire"
+  ],
+  "slays": {
+    "demon": "slay",
+    "troll": "slay",
+    "giant": "slay"
+  },
+  "resistances": {
+    "fire": "resistant",
+    "cold": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "BRAND_COLD",
+      "BRAND_FIRE",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "LITE",
+      "RES_COLD",
+      "RES_FIRE",
+      "SHOW_MODS",
+      "SLAY_DEMON",
+      "SLAY_GIANT",
+      "SLAY_TROLL",
+      "SLOW_DIGEST",
+      "SUST_INT"
+    ],
+    "pval": 2,
+    "toArmor": 10
+  }
+}

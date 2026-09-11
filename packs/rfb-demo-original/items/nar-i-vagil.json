@@ -1,0 +1,72 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.nar-i-vagil",
+  "nameKey": "item-demo-nar-i-vagil-name",
+  "descriptionKey": "item-demo-nar-i-vagil-description",
+  "glyph": "\\",
+  "generationLevel": 25,
+  "weightTenthsPound": 150,
+  "maxStack": 1,
+  "baseValue": 70000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 118,
+    "baseItemKindId": "demo.item.quarterstaff",
+    "instant": false,
+    "rarityOneIn": 10
+  },
+  "weaponProficiencyBaseItemId": "demo.item.quarterstaff",
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 10,
+    "toDamage": 20,
+    "damageDice": 1,
+    "damageSides": 10
+  },
+  "modifiers": {
+    "intelligence": 3
+  },
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "brands": [
+    "fire"
+  ],
+  "slays": {
+    "animal": "slay"
+  },
+  "resistances": {
+    "fire": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "BRAND_FIRE",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "LITE",
+      "RES_FIRE",
+      "SHOW_MODS",
+      "SLAY_ANIMAL"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  }
+}
