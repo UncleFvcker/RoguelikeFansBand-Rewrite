@@ -816,12 +816,17 @@ export class TaskServicePanel {
     row.append(copy);
     const action = taskActionForStatus(task.status);
     if (action) {
+      if (task.unavailableReason) {
+        const reason = document.createElement("p");
+        reason.textContent = this.#localization.format(task.unavailableReason);
+        copy.append(reason);
+      }
       const button = document.createElement("button");
       button.type = "button";
       button.className = "primary-button task-service-action";
       button.dataset.taskAction = action;
       button.dataset.taskId = task.taskId;
-      button.disabled = this.#state.busy;
+      button.disabled = this.#state.busy || Boolean(task.unavailableReason);
       button.textContent = this.#localization.format(
         taskActionLabelKey(action, task.hasItemReward),
       );

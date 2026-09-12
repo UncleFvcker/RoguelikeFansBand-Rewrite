@@ -549,6 +549,8 @@ fn task_service_artifact() -> rfb_content::CompiledArtifact {
         source_facility_id: Some(facility_id.to_owned()),
         prerequisite_task_id: None,
         unlock_when_prerequisite_failed: false,
+        unlock_when_prerequisite_abandoned: false,
+        requires_facility_membership: false,
         substitution: None,
         location: rfb_content::TaskLocationDefinition::DungeonDepth {
             dungeon_id: "demo.dungeon.warrens".to_owned(),
@@ -597,6 +599,8 @@ fn task_service_artifact() -> rfb_content::CompiledArtifact {
         source_facility_id: Some(facility_id.to_owned()),
         prerequisite_task_id: Some(task_id.to_owned()),
         unlock_when_prerequisite_failed: false,
+        unlock_when_prerequisite_abandoned: false,
+        requires_facility_membership: false,
         substitution: None,
         location: rfb_content::TaskLocationDefinition::DungeonDepth {
             dungeon_id: "demo.dungeon.warrens".to_owned(),

@@ -3,9 +3,6 @@
   "abilityBookId": "demo.ability-book.grimoire-of-power",
   "baseValue": 100000,
   "descriptionKey": "item-demo-grimoire-of-power-description",
-  "elementalDestructionVulnerabilities": [
-    "fire"
-  ],
   "formatVersion": 1,
   "generationLevel": 80,
   "glyph": "?",
@@ -23,5 +20,11 @@
     "sorcery",
     "spellbook"
   ],
-  "weightTenthsPound": 30
+  "weightTenthsPound": 30,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ]
 }

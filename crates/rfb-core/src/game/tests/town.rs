@@ -68,11 +68,12 @@ fn zul_towers_project_realm_owners_beastman_members_and_public_prices() {
             let service = snapshot.task_services.iter().find(|service| service.id == id).unwrap();
             assert!(service.player_at_entrance);
             if id == sorcery_id {
-                assert_eq!(service.tasks.len(), 1);
-                assert_eq!(service.tasks[0].task_id, "demo.task.zul-eddies");
-                assert_eq!(service.tasks[0].status, TaskStatusKindDto::Available);
+                assert_eq!(service.tasks.len(), 2);
+                let eddies = service.tasks.iter().find(|task| task.task_id == "demo.task.zul-eddies").unwrap();
+                assert_eq!(eddies.status, TaskStatusKindDto::Available);
+                assert!(eddies.unavailable_reason.is_none());
             } else {
-                assert!(service.tasks.is_empty());
+                assert_eq!(service.tasks.len(), 1);
             }
             let expected = if realm_owner && id != chaos_id {
                 FacilityMembershipDto::Owner
@@ -82,6 +83,9 @@ fn zul_towers_project_realm_owners_beastman_members_and_public_prices() {
                 FacilityMembershipDto::Visitor
             };
             assert_eq!(service.membership, expected, "{build}/{race}/{id}");
+            let node = service.tasks.iter().find(|task| task.task_id.ends_with("-node")).unwrap();
+            assert_eq!(node.unavailable_reason.as_deref(),
+                (expected == FacilityMembershipDto::Visitor).then_some("task-membership-required"));
             let base = if id == sorcery_id {
                 if realm_owner { 100 } else { 800 }
             } else if id == nature_id {
@@ -1105,7 +1109,7 @@ fn zul_eddies_failure_and_abandonment_never_unlock_town_teleport() {
         game = Game::from_save(game.to_save()).unwrap();
         game.player.position = game.town_local_to_active_position("demo.town.zul", Position { x: 65, y: 16 }).unwrap();
         assert!(game.facility_town_travel_destinations(tower).is_empty());
-        assert_eq!(game.accept_task(tower, task), Err("task-unavailable"));
+        assert_eq!(game.accept_task(tower, task), Err("task-already-taken"));
         game.teleport_to_town("demo.town.outpost").unwrap();
         assert!(!game.teleport_town_target_available("demo.town.zul"));
         assert_eq!(game.inn_travel_unavailable_reason(WHITE_HORSE_INN_ID, "demo.town.zul"), Some("town-unvisited"));
@@ -1154,6 +1158,209 @@ fn zul_eddies_reward_choice_is_durable_and_generated_artifacts_are_replaced() {
         if seen.len() == 3 { break; }
     }
     assert_eq!(seen, BTreeSet::from(["demo.item.sotkamo".to_owned(), "demo.item.visiting-team".to_owned(), "demo.item.superbat".to_owned()]));
+}
+
+#[test]
+fn zul_node_membership_and_eddies_terminal_prerequisite_are_independent() {
+    let tower = "demo.town-facility.zul-sorcery-tower";
+    let node = "demo.task.zul-sorcery-node";
+    for prerequisite in [TaskStatusKindDto::Available, TaskStatusKindDto::Taken,
+        TaskStatusKindDto::RewardAvailable, TaskStatusKindDto::Completed,
+        TaskStatusKindDto::Failed, TaskStatusKindDto::Abandoned]
+    {
+        let mut game = town_facility_game(42, "demo.build.mage-sorcery-nature", tower);
+        game.task_states.get_mut("demo.task.zul-eddies").unwrap().status = prerequisite;
+        let allowed = matches!(prerequisite, TaskStatusKindDto::Completed | TaskStatusKindDto::Failed | TaskStatusKindDto::Abandoned);
+        let before = game.to_save();
+        assert_eq!(game.accept_task(tower, node).is_ok(), allowed, "{prerequisite:?}");
+        if !allowed { assert_eq!(game.to_save(), before); }
+        assert_eq!(game.teleport_town_target_available("demo.town.zul"), prerequisite == TaskStatusKindDto::Completed);
+    }
+    for realm in ["sorcery", "chaos", "nature"] {
+        let tower = format!("demo.town-facility.zul-{realm}-tower");
+        let task = format!("demo.task.zul-{realm}-node");
+        let mut visitor = town_facility_game(42, "demo.build.warrior", &tower);
+        visitor.task_states.get_mut("demo.task.zul-eddies").unwrap().status = TaskStatusKindDto::Completed;
+        let before = visitor.to_save();
+        assert_eq!(visitor.accept_task(&tower, &task), Err("task-membership-required"));
+        assert_eq!(visitor.to_save(), before);
+        visitor.task_states.get_mut(&task).unwrap().status = TaskStatusKindDto::RewardAvailable;
+        let before = visitor.to_save();
+        assert_eq!(visitor.claim_task_reward(&tower, &task), Err("task-membership-required"));
+        assert_eq!(visitor.to_save(), before);
+    }
+}
+
+#[test]
+fn zul_nodes_enter_save_complete_return_and_deliver_each_source_book_once() {
+    for (realm, entry, start, count, book) in [
+        ("sorcery", Position { x: 78, y: 44 }, Position { x: 1, y: 23 }, 85, "grimoire-of-power"),
+        ("chaos", Position { x: 9, y: 1 }, Position { x: 1, y: 23 }, 97, "armageddon-tome"),
+        ("nature", Position { x: 61, y: 4 }, Position { x: 2, y: 24 }, 88, "natures-wrath"),
+    ] {
+        let tower = format!("demo.town-facility.zul-{realm}-tower");
+        let task = format!("demo.task.zul-{realm}-node");
+        // Beastman is a Chaos Member; the current Mage realms own the other two towers.
+        let mut game = Game::new_with_build_race_and_name(42, "demo.build.mage-sorcery-nature",
+            "rfb-legacy.race.beastman", "Nodes").unwrap();
+        enter_town_facility(&mut game, &tower);
+        support::clear_monsters(&mut game);
+        game.task_states.get_mut("demo.task.zul-eddies").unwrap().status = TaskStatusKindDto::Failed;
+        game.apply_player_melee_status(STATUS_INVULNERABILITY, 1000, "test.node-lifecycle");
+        dispatch_next(&mut game, GameCommand::AcceptTask { facility_id: tower.clone(), task_id: task.clone() });
+        let entry = game.town_local_to_active_position("demo.town.zul", entry).unwrap();
+        assert_eq!(game.terrain_at(entry), format!("demo.terrain.zul-{realm}-node-entry"));
+        game.player.position = entry;
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(game.current_floor_id, format!("demo.floor.zul-{realm}-node"));
+        let companions = game.entities.iter().filter(|actor| actor.id.contains(".companion.")).count();
+        assert_eq!(game.entities.len() - companions, count);
+        if realm == "nature" {
+            assert!(companions > 0, "source war bears allow FRIENDS(1d7)");
+            assert!(game.entities.iter().filter(|actor| actor.id.contains(".companion."))
+                .all(|actor| actor.kind_id == "demo.actor.war-bear" && actor.pack.is_some()));
+        } else {
+            assert_eq!(companions, 0, "source phantom warriors and hell hounds have NO_GROUP");
+        }
+        game.reveal_current_visibility();
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.entities, game.entities);
+        // Explicitly prepare success; this is lifecycle coverage, not natural combat acceptance.
+        support::clear_monsters(&mut restored);
+        dispatch_next(&mut restored, GameCommand::Wait);
+        assert_eq!(restored.task_states[&task].status, TaskStatusKindDto::RewardAvailable);
+        restored.player.position = start;
+        dispatch_next(&mut restored, GameCommand::TraverseStairs);
+        assert_eq!(restored.player.position, entry);
+        assert_eq!(restored.current_town().unwrap().id, "demo.town.zul");
+        let facility_position = restored.content.town_facility(&tower).unwrap().entrance_position;
+        restored.player.position = restored.town_local_to_active_position("demo.town.zul", position_from_content(facility_position)).unwrap();
+        restored.refresh_town_task_terrain(&mut BTreeSet::new());
+        let natural = match realm { "sorcery" => "surface-water-shallow", "chaos" => "surface-mountain", _ => "surface-tree" };
+        assert_eq!(restored.terrain_at(entry), format!("demo.terrain.{natural}"));
+        let inventory = restored.items.clone();
+        for index in 0..30 {
+            support::give_inventory_item(&mut restored, &format!("test.full.{index}"), "demo.item.short-sword");
+        }
+        let full = restored.to_save();
+        assert_eq!(restored.claim_task_reward(&tower, &task), Err("inventory-full"));
+        assert_eq!(restored.to_save(), full);
+        restored.items = inventory;
+        dispatch_next(&mut restored, GameCommand::ClaimTaskReward { facility_id: tower.clone(), task_id: task.clone() });
+        assert_eq!(restored.task_states[&task].status, TaskStatusKindDto::Completed);
+        let reward = restored.items.iter().find(|item| item.id == format!("{task}.reward.1")).unwrap();
+        assert_eq!(reward.kind_id, format!("demo.item.{book}"));
+        assert_eq!(reward.quantity, 1);
+        assert_eq!(reward.location, ItemLocation::Inventory);
+        assert!(!restored.teleport_town_target_available("demo.town.zul"), "node success cannot replace failed quest 77");
+        let before = restored.to_save();
+        assert_eq!(restored.claim_task_reward(&tower, &task), Err("reward-unavailable"));
+        assert_eq!(restored.to_save(), before);
+        restored = Game::from_save(before).unwrap();
+        // Separately prepare 77 settlement to exercise the unlocked cross-town/save path.
+        restored.task_states.get_mut("demo.task.zul-eddies").unwrap().status = TaskStatusKindDto::Completed;
+        restored.teleport_to_town("demo.town.outpost").unwrap();
+        restored.teleport_to_town("demo.town.zul").unwrap();
+        assert_eq!(restored.task_states[&task].status, TaskStatusKindDto::Completed);
+        assert_eq!(restored.items.iter().filter(|item| item.id == format!("{task}.reward.1")).count(), 1);
+    }
+}
+
+#[test]
+fn zul_node_failed_or_abandoned_return_restores_gate_and_cannot_be_reaccepted() {
+    for (realm, local) in [("sorcery", Position { x: 78, y: 44 }),
+        ("chaos", Position { x: 9, y: 1 }), ("nature", Position { x: 61, y: 4 })]
+    {
+        for abandon in [false, true] {
+            let tower = format!("demo.town-facility.zul-{realm}-tower");
+            let task = format!("demo.task.zul-{realm}-node");
+            let mut game = Game::new_with_build_race_and_name(42, "demo.build.mage-sorcery-nature",
+                "rfb-legacy.race.beastman", "Nodes").unwrap();
+            enter_town_facility(&mut game, &tower);
+            support::clear_monsters(&mut game);
+            game.task_states.get_mut("demo.task.zul-eddies").unwrap().status = TaskStatusKindDto::Abandoned;
+            game.apply_player_melee_status(STATUS_INVULNERABILITY, 1000, "test.node-lifecycle");
+            dispatch_next(&mut game, GameCommand::AcceptTask { facility_id: tower.clone(), task_id: task.clone() });
+            let entry = game.town_local_to_active_position("demo.town.zul", local).unwrap();
+            game.player.position = entry;
+            dispatch_next(&mut game, GameCommand::TraverseStairs);
+            assert!(game.entities.len() > 1);
+            dispatch_next(&mut game, if abandon { GameCommand::AbandonTask } else { GameCommand::TraverseStairs });
+            assert_eq!(game.task_states[&task].status, if abandon { TaskStatusKindDto::Abandoned } else { TaskStatusKindDto::Failed });
+            assert_eq!(game.player.position, entry);
+            // The shared town rule temporarily protects blocked return squares until departure.
+            assert!(game.content.terrain(game.terrain_at(entry)).unwrap().walkable);
+            game = Game::from_save(game.to_save()).unwrap();
+            let door = game.content.town_facility(&tower).unwrap().entrance_position;
+            game.player.position = game.town_local_to_active_position("demo.town.zul", position_from_content(door)).unwrap();
+            game.refresh_town_task_terrain(&mut BTreeSet::new());
+            let before = game.to_save();
+            assert_eq!(game.accept_task(&tower, &task), Err("task-already-taken"));
+            assert_eq!(game.claim_task_reward(&tower, &task), Err("reward-unavailable"));
+            assert_eq!(game.to_save(), before);
+            assert!(!game.items.iter().any(|item| item.id == format!("{task}.reward.1")));
+        }
+    }
+}
+
+#[test]
+fn node_interior_lava_and_water_use_periodic_exposure_flight_and_resistance() {
+    let tower = "demo.town-facility.zul-nature-tower";
+    let mut game = town_facility_game(42, "demo.build.mage-sorcery-nature", tower);
+    support::clear_monsters(&mut game);
+    dispatch_next(&mut game, GameCommand::AcceptTask { facility_id: tower.into(), task_id: "demo.task.zul-nature-node".into() });
+    game.player.position = game.town_local_to_active_position("demo.town.zul", Position{x:61,y:4}).unwrap();
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    support::clear_monsters(&mut game);
+    let position = game.player.position;
+    game.player.statuses.clear();
+    game.player.hp = 1000;
+    game.world_tick = 10;
+    support::replace_terrain(&mut game, position, "demo.terrain.surface-lava-deep");
+    game.rng = RfbRng::seeded(42);
+    let mut expected = game.rng.clone();
+    let raw = 6000 + expected.bounded(4000) as i32;
+    let amount = raw / 100 + i32::from(expected.bounded(100) < (raw % 100) as u64);
+    let mut events = Vec::new();
+    assert!(game.process_player_interior_water_lava_damage(&mut events));
+    assert_eq!(game.player.hp, 1000 - amount);
+    assert_eq!(game.rng, expected);
+    assert!(matches!(events.as_slice(), [DomainEvent::WildernessTerrainDamaged { damage, .. }] if *damage == amount));
+    game.apply_player_melee_status(STATUS_LEVITATION, 100, "test.flight");
+    support::replace_terrain(&mut game, position, "demo.terrain.surface-lava-shallow");
+    let before = game.rng.clone();
+    assert!(!game.process_player_interior_water_lava_damage(&mut Vec::new()));
+    assert_eq!(game.rng,before);
+    support::replace_terrain(&mut game, position, "demo.terrain.surface-lava-deep");
+    let before = game.player.hp;
+    assert!(game.process_player_interior_water_lava_damage(&mut Vec::new()));
+    assert!((12..=20).contains(&(before-game.player.hp)), "flying above deep lava still burns");
+    game.player.resistances.set(DamageType::Fire, ResistanceLevel::Immune);
+    let before = game.player.hp;
+    assert!(!game.process_player_interior_water_lava_damage(&mut Vec::new()));
+    assert_eq!(game.player.hp,before);
+    game.player.resistances.set(DamageType::Fire, ResistanceLevel::Normal);
+    game.player.statuses.clear();
+    game.apply_player_melee_status(STATUS_INVULNERABILITY, 1, "test.invulnerability");
+    game.world_tick = 9;
+    game.player.energy_need = 1;
+    let mut events = Vec::new();
+    game.advance_until_player_ready(false,true,false,&mut events,&mut BTreeSet::new(),&mut Vec::new()).unwrap();
+    assert!(!events.iter().any(|event| matches!(event,DomainEvent::WildernessTerrainDamaged {..})), "last invulnerability tick protects before expiration");
+    game.world_tick = 19;
+    game.player.energy_need = 1;
+    events.clear();
+    game.advance_until_player_ready(false,true,false,&mut events,&mut BTreeSet::new(),&mut Vec::new()).unwrap();
+    assert!(events.iter().any(|event| matches!(event,DomainEvent::WildernessTerrainDamaged {..})), "standing still takes periodic lava damage");
+    support::replace_terrain(&mut game,position,"demo.terrain.surface-water-deep");
+    for index in 0..100 { support::give_inventory_item(&mut game,&format!("test.weight.{index}"),"demo.item.short-sword"); }
+    assert!(game.carried_weight_tenths_pound()>game.player_carry_capacity_tenths_pound());
+    let before=game.player.hp;
+    assert!(game.process_player_interior_water_lava_damage(&mut Vec::new()));
+    assert!(game.player.hp<before);
+    game.apply_player_melee_status(STATUS_LEVITATION,100,"test.flight");
+    assert!(!game.process_player_interior_water_lava_damage(&mut Vec::new()));
 }
 
 fn enter_town(game: &mut Game, town_id: &str, position: Position) {

@@ -20,7 +20,8 @@
     "otherCost": 800
   },
   "taskIds": [
-    "demo.task.zul-eddies"
+    "demo.task.zul-eddies",
+    "demo.task.zul-sorcery-node"
   ],
   "townTeleport": {
     "requiredCompletedTaskId": "demo.task.zul-eddies",

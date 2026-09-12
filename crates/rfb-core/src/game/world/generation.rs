@@ -840,6 +840,33 @@ impl Game {
                 actor_starts_alerted(&actor),
             ));
         }
+        // Reserve authored cells first; source NO_GROUP leaders are absent from this list.
+        let mut occupied = entities.iter().map(|actor| actor.position).collect::<BTreeSet<_>>();
+        occupied.insert(position_from_content(inline_map.player_position));
+        for leader_id in &inline_map.friend_group_leader_ids {
+            let leader_index = entities.iter().position(|actor| &actor.id == leader_id)
+                .expect("validated friend leader must exist");
+            let leader = entities[leader_index].clone();
+            let kind = self.content.actor(&leader.kind_id).expect("friend leader kind must exist").clone();
+            let members = self.plan_original_friends(&kind, leader.position, definition.depth,
+                &terrain, width, height, &mut occupied);
+            if members.is_empty() { continue; }
+            let behavior = self.original_pack_behavior(&kind, false, members.len() + 1);
+            let pack_id = format!("{leader_id}.pack");
+            entities[leader_index].pack = Some(MonsterPackIdentity {
+                id: pack_id.clone(), leader_id: leader_id.clone(),
+                role: MonsterPackRoleDto::Leader, behavior,
+            });
+            for (ordinal, member) in members.into_iter().enumerate() {
+                let mut companion = self.generated_actor(format!("{leader_id}.companion.{}", ordinal + 1),
+                    &member.kind_id, member.position);
+                companion.pack = Some(MonsterPackIdentity {
+                    id: pack_id.clone(), leader_id: leader_id.clone(),
+                    role: MonsterPackRoleDto::Member, behavior,
+                });
+                entities.push(companion);
+            }
+        }
         if let Some(formation) = &inline_map.monster_formation {
             let mut candidates = formation
                 .candidate_actor_kind_ids

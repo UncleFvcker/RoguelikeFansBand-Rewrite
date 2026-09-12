@@ -211,6 +211,7 @@
     {"sourceIndex":300,"sourceName":"Bronze Dragon Scale Mail~","sourceId":"bronze-dragon-scale-mail","itemId":"demo.item.bronze-dragon-scale-mail","status":"active","contract":"zul-z2-implementation-pending-validation","sourceCommit":"a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"},
     {"sourceIndex":301,"sourceName":"Silver Dragon Scale Mail~","sourceId":"silver-dragon-scale-mail","itemId":"demo.item.silver-dragon-scale-mail","status":"active","contract":"zul-z2-implementation-pending-validation","sourceCommit":"a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"},
     {"sourceIndex":304,"sourceName":"Balance Dragon Scale Mail~","sourceId":"balance-dragon-scale-mail","itemId":"demo.item.balance-dragon-scale-mail","status":"active","contract":"zul-z2-implementation-pending-validation","sourceCommit":"a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"},
-    {"sourceIndex":305,"sourceName":"Power Dragon Scale Mail~","sourceId":"power-dragon-scale-mail","itemId":"demo.item.power-dragon-scale-mail","status":"active","contract":"zul-z2-implementation-pending-validation","sourceCommit":"a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"}
+    {"sourceIndex":305,"sourceName":"Power Dragon Scale Mail~","sourceId":"power-dragon-scale-mail","itemId":"demo.item.power-dragon-scale-mail","status":"active","contract":"zul-z2-implementation-pending-validation","sourceCommit":"a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"},
+    {"sourceIndex":515,"sourceName":"[Armageddon Tome]","sourceId":"armageddon-tome","itemId":"demo.item.armageddon-tome","status":"active","contract":"zul-z5-implementation-pending-validation","sourceCommit":"a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"}
   ]
 }

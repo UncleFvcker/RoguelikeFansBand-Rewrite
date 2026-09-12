@@ -139,8 +139,8 @@ default content license; no permission statement from another town is
 attributed to Zul. The encounter exception follows src/wild.c at that commit.
 Source selection, reused ordinary-shop adaptations and staged service limits
 are recorded in packs/rfb-demo-original/legacy-wilderness-selection.json and
-design/zul-town-import-plan-20260912.md. Quest 77 is added below; the three
-node quests remain a later implementation stage.
+design/zul-town-import-plan-20260912.md. Quest 77 and the three node quests
+are described below.
 
 Zul's Jeweler and Dragonskin stock hooks, owners and prices are adapted from
 src/shop.c, src/xtra1.c and src/object2.c at the same master commit. The ten
@@ -156,8 +156,8 @@ derive from lib/edit/t_zul.txt at that same commit. All-item identification,
 mutation treatment and the Ritual of Balance follow src/bldg.c; the ritual
 reuses this project's src/virtue.c adaptation with the player's current
 secondary realm. Existing birth virtue selection remains unchanged. Tower
-quest 77 and town teleport are implemented in the following batch; the three
-node quests remain pending. These batches have no execution acceptance yet.
+quest 77, town teleport and member node quests are described below.
+These batches have no execution acceptance yet.
 
 Zul quest 77 uses the complete lib/edit/q_eddies.txt map and Chinese dialogue,
 retaining its credit "New quest for FrogComposband 7.0.peppermint". The task
@@ -168,6 +168,17 @@ adaptations follow rooms.c, quest.c, bldg.c and wild.c; RESTORING follows
 devices.c. These materials retain their applicable upstream terms. Exact
 selection, local RNG/alertness adaptations and deferred validation are recorded
 in legacy-wilderness-selection.json and the Zul plan.
+
+Zul node quests 10-12 use the complete lib/edit/q_sorcery.txt, q_chaos.txt and
+q_nature.txt maps and Chinese dialogue at that same master commit, retaining
+each source credit: "Created by Topi Ylinen". Monster name resolution follows
+src/init1.c; MON(hell hound) resolves to source 829 Hell hound of Julian, with
+NO_GROUP. Source kind 515 and its Chinese display name come from k_info.txt and
+kind_name_zh.inc. Member admission follows bldg.c/t_zul.txt; terrain inheritance,
+friend groups and periodic water/lava exposure follow rooms.c, monster2.c and
+dungeon.c through the existing local mechanics. Their applicable upstream
+terms remain in force; local adaptations and deferred acceptance are recorded
+in the Zul source selection and plan. Chaos spellcasting is not included.
 
 The generated Android Gradle/Kotlin scaffold under web/src-tauri/gen/android is derived
 from Tauri CLI templates. Tauri is available under the Apache License 2.0 or MIT License:

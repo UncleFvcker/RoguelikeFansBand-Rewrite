@@ -35,7 +35,10 @@ test("paid facility selection and closing are free; only confirmation dispatches
       return this.children.flatMap((row) => row.children).find((element) =>
         element.tag === "select" && selector === `select[data-facility-service="${element.dataset.facilityService}"]`);
     }
-    closest(selector) { return selector === "[data-facility-action]" && this.dataset.facilityAction ? this : undefined; }
+    closest(selector) {
+      return (selector === "[data-facility-action]" && this.dataset.facilityAction)
+        || (selector === "[data-task-action]" && this.dataset.taskAction) ? this : undefined;
+    }
     showModal() { this.open = true; }
     close() { this.open = false; this.dispatchEvent(new Event("close")); }
   }
@@ -183,6 +186,32 @@ test("paid facility selection and closing are free; only confirmation dispatches
   panel.render(snapshot);
   elements.get("task-service-dialog").dispatchEvent(new Event("close"));
   assert.deepEqual(commands.pop(), { type: "casino", facilityId: "casino", action: { type: "leave" } });
+  const task = { taskId: "node", nameKey: "node-name", descriptionKey: "node-description",
+    status: "available", hasItemReward: true, unavailableReason: "task-membership-required" };
+  snapshot.taskServices = [{ id: "nature-tower", playerAtEntrance: true, membership: "visitor", tasks: [task] }];
+  panel.render(snapshot);
+  const taskButton = () => list.children.flatMap((row) => row.children).find((child) => child.dataset?.taskAction);
+  assert.equal(taskButton().disabled, true);
+  assert.equal(list.children[0].children[0].children.at(-1).textContent, "task-membership-required");
+  const taskClick = () => {
+    const click = new Event("click");
+    Object.defineProperty(click, "target", { value: taskButton() });
+    list.dispatchEvent(click);
+  };
+  taskClick();
+  assert.deepEqual(commands, []);
+  // Only the backend projection changes admission; the UI does not derive it from realm names.
+  task.unavailableReason = undefined;
+  panel.render(snapshot);
+  assert.equal(taskButton().disabled, false);
+  taskClick();
+  assert.deepEqual(commands.pop(), { type: "accept-task", facilityId: "nature-tower", taskId: "node" });
+  task.status = "reward-available";
+  task.unavailableReason = "task-membership-required";
+  panel.render(snapshot);
+  assert.equal(taskButton().disabled, true);
+  taskClick();
+  assert.deepEqual(commands, []);
 });
 
 test("monster research combines name, symbol and uniqueness filters without changing knowledge", () => {

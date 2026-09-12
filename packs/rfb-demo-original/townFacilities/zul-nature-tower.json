@@ -21,5 +21,8 @@
       "ownerCost": 2000,
       "otherCost": 10000
     }
+  ],
+  "taskIds": [
+    "demo.task.zul-nature-node"
   ]
 }

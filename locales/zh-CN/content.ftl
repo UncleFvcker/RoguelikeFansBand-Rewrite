@@ -9778,3 +9778,27 @@ task-demo-zul-eddies-completed-description = 是的，我听说了你的成功�
     我不确定它是什么，但它看起来像某种木棒。我们用不上它，
     请把它作为纪念品和感谢的礼物收下。
 task-demo-zul-eddies-failed-description = 太糟糕了，全镇的人都指望你呢。
+
+task-demo-zul-sorcery-node-name = 咒术节点 (祖尔)
+floor-demo-zul-sorcery-node-name = 咒术节点 (祖尔)
+terrain-demo-zul-sorcery-node-entry-name = 咒术节点 (祖尔)
+task-demo-zul-sorcery-node-description = 咒术法师们在附近的一片潮湿区域发现了一个神奇的咒术节点。你必须去寻找那个节点并消灭它的守卫，这样咒术之塔就能夺取节点的神秘能量。
+task-demo-zul-sorcery-node-completed-description = 你做得很好。
+task-demo-zul-sorcery-node-failed-description = 滚吧，无能的蠢货！神秘节点的维度能量已经消散，永远失去了！你本有机会，却把差事搞砸了。
+terrain-demo-zul-sorcery-node-entry-description = 咒术法师们在附近的一片潮湿区域发现了一个神奇的咒术节点。你必须去寻找那个节点并消灭它的守卫，这样咒术之塔就能夺取节点的神秘能量。
+task-demo-zul-chaos-node-name = 混沌节点 (祖尔)
+floor-demo-zul-chaos-node-name = 混沌节点 (祖尔)
+terrain-demo-zul-chaos-node-entry-name = 混沌节点 (祖尔)
+task-demo-zul-chaos-node-description = 混沌法师们在附近的一座火山里发现了一个神奇的混沌节点。你必须去寻找那个节点并消灭它的守卫，这样混沌塔就能夺取节点的神秘能量。
+task-demo-zul-chaos-node-completed-description = 你做得很好。
+task-demo-zul-chaos-node-failed-description = 滚吧，无能的蠢货！神秘节点的维度能量已经消散，永远失去了！你本有机会，却把差事搞砸了。
+terrain-demo-zul-chaos-node-entry-description = 混沌法师们在附近的一座火山里发现了一个神奇的混沌节点。你必须去寻找那个节点并消灭它的守卫，这样混沌塔就能夺取节点的神秘能量。
+task-demo-zul-nature-node-name = 自然节点 (祖尔)
+floor-demo-zul-nature-node-name = 自然节点 (祖尔)
+terrain-demo-zul-nature-node-entry-name = 自然节点 (祖尔)
+task-demo-zul-nature-node-description = 自然法师们在附近的一片森林里发现了一个神奇的自然节点。你必须去寻找那个节点并消灭它的守卫，这样自然之塔就能夺取节点的神秘能量。
+task-demo-zul-nature-node-completed-description = 你做得很好。一本强大的法术书正在外面等着你。
+task-demo-zul-nature-node-failed-description = 滚吧，无能的蠢货！神秘节点的维度能量已经消散，永远失去了！你本有机会，却把差事搞砸了。
+terrain-demo-zul-nature-node-entry-description = 自然法师们在附近的一片森林里发现了一个神奇的自然节点。你必须去寻找那个节点并消灭它的守卫，这样自然之塔就能夺取节点的神秘能量。
+item-demo-armageddon-tome-name = [末日巨著]
+item-demo-armageddon-tome-description = [末日巨著]

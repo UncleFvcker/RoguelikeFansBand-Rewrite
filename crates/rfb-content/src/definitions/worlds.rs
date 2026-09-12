@@ -476,6 +476,8 @@ pub struct InlineFloorMapDefinition {
     #[serde(default)]
     pub actor_spawns: Vec<ActorSpawn>,
     #[serde(default)]
+    pub friend_group_leader_ids: Vec<String>,
+    #[serde(default)]
     pub item_spawns: Vec<ItemSpawn>,
     #[serde(default)]
     pub scrambled_item_pair: Option<[ItemSpawn; 2]>,
@@ -707,6 +709,10 @@ pub struct TaskDefinition {
     pub prerequisite_task_id: Option<String>,
     #[serde(default)]
     pub unlock_when_prerequisite_failed: bool,
+    #[serde(default)]
+    pub unlock_when_prerequisite_abandoned: bool,
+    #[serde(default)]
+    pub requires_facility_membership: bool,
     #[serde(default)]
     pub substitution: Option<TaskSubstitutionDefinition>,
     pub location: TaskLocationDefinition,

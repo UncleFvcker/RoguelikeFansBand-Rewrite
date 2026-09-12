@@ -7,7 +7,7 @@ use rfb_content::{
     TaskLocationDefinition, TaskObjectiveDefinition, TaskObjectiveKind, TaskRewardDefinition,
     TaskRewardEntryDefinition, TownFacilityCategory, WorldDefinition,
 };
-use rfb_protocol::{CampaignStatusDto, ItemQualityDto, TaskStatusKindDto};
+use rfb_protocol::{CampaignStatusDto, FacilityMembershipDto, ItemQualityDto, TaskStatusKindDto};
 
 use crate::{
     error::CoreError,
@@ -159,6 +159,8 @@ fn task_initial_status(
                 state.status == TaskStatusKindDto::Completed
                     || (task.unlock_when_prerequisite_failed
                         && state.status == TaskStatusKindDto::Failed)
+                    || (task.unlock_when_prerequisite_abandoned
+                        && state.status == TaskStatusKindDto::Abandoned)
             })
         })
     {
@@ -764,6 +766,17 @@ impl Game {
     pub(super) fn fame_on_failure(&mut self) {
         self.fame -= (self.fame / 2).min(30);
     }
+    pub(super) fn task_membership_unavailable_reason(&self, task: &TaskDefinition) -> Option<&'static str> {
+        if !task.requires_facility_membership {
+            return None;
+        }
+        let facility = self.content.town_facility(
+            task.source_facility_id.as_deref().expect("member task must have a source facility"),
+        ).expect("task source facility must exist");
+        (self.town_facility_membership(facility) == FacilityMembershipDto::Visitor)
+            .then_some("task-membership-required")
+    }
+
     pub(super) fn accept_task(
         &mut self,
         facility_id: &str,
@@ -786,6 +799,9 @@ impl Game {
         };
         if task.source_facility_id.as_deref() != Some(facility_id) {
             return Err("task-source-mismatch");
+        }
+        if let Some(reason) = self.task_membership_unavailable_reason(&task) {
+            return Err(reason);
         }
         if !task_is_selected(world, &self.task_states, task_id) {
             return Err("task-unavailable");
@@ -965,6 +981,9 @@ impl Game {
         };
         if task.source_facility_id.as_deref() != Some(facility_id) {
             return Err("task-source-mismatch");
+        }
+        if let Some(reason) = self.task_membership_unavailable_reason(&task) {
+            return Err(reason);
         }
         if self
             .task_states

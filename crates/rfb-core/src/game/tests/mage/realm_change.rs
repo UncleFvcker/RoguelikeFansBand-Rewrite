@@ -32,6 +32,37 @@ fn give_book(game: &mut Game, realm: &str) -> String {
     id
 }
 
+#[test]
+fn zul_node_acceptance_and_claim_follow_the_changed_secondary_realm() {
+    let tower = "demo.town-facility.zul-nature-tower";
+    let task = "demo.task.zul-nature-node";
+    let mut game = prepared(BUILD, 30);
+    let nature = give_book(&mut game, "nature");
+    let sorcery = give_book(&mut game, "sorcery");
+    begin(&mut game, &nature);
+    confirm(&mut game, true);
+    crate::game::tests::town::enter_town_facility(&mut game, tower);
+    clear_monsters(&mut game);
+    assert!(game.accept_task(tower, task).is_ok());
+    // Prepare the objective result; realm ownership is exercised through real commands.
+    let state = game.task_states.get_mut(task).unwrap();
+    state.status = TaskStatusKindDto::RewardAvailable;
+    state.current = state.required;
+    begin(&mut game, &sorcery);
+    confirm(&mut game, true);
+    let projected = game.snapshot().task_services.into_iter().find(|service| service.id == tower).unwrap();
+    assert_eq!(projected.membership, FacilityMembershipDto::Visitor);
+    assert_eq!(projected.tasks[0].unavailable_reason.as_deref(), Some("task-membership-required"));
+    let before = game.to_save();
+    assert_eq!(game.claim_task_reward(tower, task), Err("task-membership-required"));
+    assert_eq!(game.to_save(), before);
+    game = Game::from_save(before).unwrap();
+    begin(&mut game, &nature);
+    confirm(&mut game, true);
+    assert!(game.claim_task_reward(tower, task).is_ok());
+    assert!(game.items.iter().any(|item| item.kind_id == "demo.item.natures-wrath" && item.location == ItemLocation::Inventory));
+}
+
 fn begin(game: &mut Game, book: &str) {
     dispatch_next(
         game,

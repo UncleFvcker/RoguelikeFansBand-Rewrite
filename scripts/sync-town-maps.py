@@ -125,7 +125,7 @@ def main():
     if name == "thalos":
         task_symbols = {"w": "shadow-fairies", "x": "djinnis-cavern", "L": "cyclops-lair", "z": "old-watchtower", "q": "cloning-pits", "y": "clear-wreckage", "r": "tidy-laboratory", "p": "basilisk-cave", "M": "dark-academy", "s": "staff-recovery", "F": "renegade-sorcerer"}
     elif name == "zul":
-        task_symbols = {"w": "eddies"}
+        task_symbols = {"w": "eddies", "z": "sorcery-node", "y": "chaos-node", "x": "nature-node"}
     rules = []
     for symbol, task in task_symbols.items():
         task_id = f"demo.task.{name}-{task}"

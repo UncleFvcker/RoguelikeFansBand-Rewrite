@@ -2271,6 +2271,18 @@ pub(super) fn validate_world(
                 }
             }
 
+            inline_map.friend_group_leader_ids.sort();
+            if inline_map.friend_group_leader_ids.windows(2).any(|ids| ids[0] == ids[1])
+                || inline_map.friend_group_leader_ids.iter().any(|id| {
+                    !inline_map.actor_spawns.iter().find(|spawn| &spawn.instance_id == id)
+                        .and_then(|spawn| actors.iter().find(|actor| actor.id == spawn.kind_id))
+                        .and_then(|actor| actor.allocation.as_ref())
+                        .is_some_and(|allocation| allocation.friends.is_some())
+                })
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
+
             // Source room templates can put a ground object under a fixed monster.
             // Keep actor overlap checks and object overlap checks independently.
             let actor_positions = occupied;
@@ -2655,7 +2667,12 @@ pub(super) fn validate_world(
                 return Err(ContentError::InvalidTask(task.id.clone()));
             }
         }
-        if task.unlock_when_prerequisite_failed && task.prerequisite_task_id.is_none() {
+        if (task.unlock_when_prerequisite_failed || task.unlock_when_prerequisite_abandoned)
+            && task.prerequisite_task_id.is_none()
+        {
+            return Err(ContentError::InvalidTask(task.id.clone()));
+        }
+        if task.requires_facility_membership && task.source_facility_id.is_none() {
             return Err(ContentError::InvalidTask(task.id.clone()));
         }
         if let Some(substitution) = &task.substitution {

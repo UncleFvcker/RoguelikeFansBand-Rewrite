@@ -1383,3 +1383,5 @@ ability-target-element = Element
 ability-element-target = Choose an element
 item-crafting-quantity-confirm = This stack has more than 30 missiles. Crafting can fail and consume the cast. Continue?
 item-mundanity-resistance-confirm = All resistances on this item will be lost. Continue?
+
+task-membership-required = This task requires membership or ownership of this tower.

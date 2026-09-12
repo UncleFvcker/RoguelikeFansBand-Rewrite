@@ -153,6 +153,7 @@
     {"sourceIndex":300,"sourceId":"bronze-dragon-scale-mail","id":"bronze-dragon-scale-mail"},
     {"sourceIndex":301,"sourceId":"silver-dragon-scale-mail","id":"silver-dragon-scale-mail"},
     {"sourceIndex":304,"sourceId":"balance-dragon-scale-mail","id":"balance-dragon-scale-mail"},
-    {"sourceIndex":305,"sourceId":"power-dragon-scale-mail","id":"power-dragon-scale-mail"}
+    {"sourceIndex":305,"sourceId":"power-dragon-scale-mail","id":"power-dragon-scale-mail"},
+    {"sourceIndex":515,"sourceId":"armageddon-tome","id":"armageddon-tome"}
   ]
 }

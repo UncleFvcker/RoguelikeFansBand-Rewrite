@@ -3,6 +3,56 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn zul_node_maps_rewards_and_admission_references_match_source() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let world = &artifact.content.worlds[0];
+    for (realm, width, height, count, book) in [("sorcery",31,25,85,"grimoire-of-power"),
+        ("chaos",31,25,97,"armageddon-tome"), ("nature",33,27,88,"natures-wrath")]
+    {
+        let task = world.tasks.iter().find(|task| task.id == format!("demo.task.zul-{realm}-node")).unwrap();
+        assert!(task.requires_facility_membership);
+        assert_eq!(task.prerequisite_task_id.as_deref(), (realm == "sorcery").then_some("demo.task.zul-eddies"));
+        assert_eq!(task.unlock_when_prerequisite_failed, realm == "sorcery");
+        assert_eq!(task.unlock_when_prerequisite_abandoned, realm == "sorcery");
+        assert_eq!(task.reward.as_ref().unwrap().entries[0].item_kind_id, format!("demo.item.{book}"));
+        let floor = world.procedural_floors.iter().find(|floor| floor.task_id.as_ref() == Some(&task.id)).unwrap();
+        assert_eq!((floor.width, floor.height, floor.depth), (width,height,65));
+        let map = floor.inline_map.as_ref().unwrap();
+        assert_eq!(map.actor_spawns.len(), count);
+        assert_eq!(map.terrain_overrides.iter().map(|group| group.positions.len()).sum::<usize>(), usize::from(width)*usize::from(height));
+        let at = |x,y| map.terrain_overrides.iter().find(|group| group.positions.contains(&ContentPosition{x,y})).unwrap().terrain_id.as_str();
+        if realm == "chaos" {
+            assert_eq!(at(0,0), "demo.terrain.mountain-wall");
+            assert_eq!(map.actor_spawns.iter().filter(|spawn| spawn.kind_id == "demo.actor.hell-hound-of-julian").count(),16);
+            assert!(map.friend_group_leader_ids.is_empty());
+        } else if realm == "nature" {
+            assert_eq!(at(6,4), "demo.terrain.surface-grass", "monster-only cells inherit dot GRASS");
+            assert_eq!(map.friend_group_leader_ids.len(),16);
+        } else {
+            assert_eq!(at(14,2), "demo.terrain.surface-water-shallow");
+            assert!(map.friend_group_leader_ids.is_empty());
+        }
+        let book = artifact.content.items.iter().find(|item| item.id == format!("demo.item.{book}")).unwrap();
+        assert_eq!(book.elemental_destruction_immunities.len(),4);
+        assert_eq!(book.ability_book_id.is_some(),realm != "chaos");
+    }
+    for invalid in ["no-facility", "no-prerequisite", "missing-friend", "duplicate-friend"] {
+        let mut content = artifact.content.clone();
+        let world = &mut content.worlds[0];
+        match invalid {
+            "no-facility" => world.tasks.iter_mut().find(|task| task.id == "demo.task.zul-chaos-node").unwrap().source_facility_id = None,
+            "no-prerequisite" => world.tasks.iter_mut().find(|task| task.id == "demo.task.zul-chaos-node").unwrap().unlock_when_prerequisite_abandoned = true,
+            _ => {
+                let map = world.procedural_floors.iter_mut().find(|floor| floor.id == "demo.floor.zul-nature-node").unwrap().inline_map.as_mut().unwrap();
+                let id = if invalid == "missing-friend" { "test.missing".into() } else { map.friend_group_leader_ids[0].clone() };
+                map.friend_group_leader_ids.push(id);
+            }
+        }
+        assert!(validate_and_normalize(&mut content).is_err(), "{invalid}");
+    }
+}
+
+#[test]
 fn zul_eddies_references_validate_forced_ego_and_task_gated_town_arrival() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let world = &artifact.content.worlds[0];
@@ -13920,6 +13970,7 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
     floor.abandoned_entry_terrain_id = None;
     floor.task_id = None;
     floor.inline_map = Some(InlineFloorMapDefinition {
+        friend_group_leader_ids: Vec::new(),
         vault_positions: Vec::new(),
         task_terrain_overrides: Vec::new(),
         inherit_wilderness_terrain: false,

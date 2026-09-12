@@ -1379,3 +1379,5 @@ ability-target-element = 元素
 ability-element-target = 选择元素
 item-crafting-quantity-confirm = 这叠弹药数量超过 30，工艺有可能失败并消耗本次施法。继续吗？
 item-mundanity-resistance-confirm = 该物品上的所有抗性都将丢失。确定要继续吗？
+
+task-membership-required = 这项任务需要本塔会员或塔主资格。

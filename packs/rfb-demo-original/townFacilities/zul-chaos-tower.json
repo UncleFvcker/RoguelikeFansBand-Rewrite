@@ -24,5 +24,8 @@
       "ownerCost": 1000,
       "otherCost": 5000
     }
+  ],
+  "taskIds": [
+    "demo.task.zul-chaos-node"
   ]
 }
