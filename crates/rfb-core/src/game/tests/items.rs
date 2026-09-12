@@ -14,6 +14,277 @@ fn artifact_loot_context(depth: u16) -> LootContext {
 }
 
 #[test]
+fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
+    let mut game = Game::new_with_build(467, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-85".into(),
+        depth: 85,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.b3-drop".into(),
+        },
+    };
+    let mut remaining = BTreeSet::from(["shadow-cloak", "luthien", "tuor"]);
+    // Full formal pool, quality and rarity draws; select an unmodified base.
+    for _ in 0..200_000 {
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            let slug = item.kind_id.strip_prefix("demo.item.").unwrap();
+            if !remaining.contains(slug)
+                || (slug == "shadow-cloak"
+                    && (item.quality != ItemQualityDto::Ordinary
+                        || item.enchantments != Default::default()
+                        || item.artifact_name.is_some()))
+            {
+                continue;
+            }
+            remaining.remove(slug);
+            assert!(item.curse.is_none());
+            assert_eq!(
+                item.rolled_affixes.len(),
+                usize::from(slug != "shadow-cloak")
+            );
+            assert_eq!(item.activation.is_some(), slug == "luthien");
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            assert!(
+                game.visible_item_resistances(game.items.last().unwrap())
+                    .is_empty()
+            );
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "B3 items never generated: {remaining:?}"
+    );
+    game.reveal_current_visibility();
+    let unknown = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(unknown.state_hash(), game.state_hash());
+    assert_eq!(unknown.rng, game.rng);
+    for (slug, defense, stealth) in [("shadow-cloak", 10, 0), ("luthien", 26, 2), ("tuor", 18, 4)] {
+        let mut equipped = unknown.clone();
+        let kind = format!("demo.item.{slug}");
+        equipped.items.retain(|item| item.kind_id == kind);
+        let id = equipped.items[0].id.clone();
+        let rolled = equipped.items[0].rolled_affixes.clone();
+        let rng = equipped.rng.clone();
+        equipped.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        assert_eq!(equipped.rng, rng);
+        let before = equipped.player_derived_stats().armor_class.value;
+        equipped.equip_inventory_item(&id, None).unwrap();
+        assert_eq!(equipped.carried_weight_tenths_pound(), 5);
+        assert_eq!(
+            equipped.player_derived_stats().armor_class.value,
+            before + defense * 10
+        );
+        assert_eq!(equipped.player_equipment_bonuses().stealth_skill, stealth);
+        for element in [DamageType::Light, DamageType::Dark] {
+            assert_eq!(
+                equipped.effective_player_resistances().level(element),
+                ResistanceLevel::Resistant
+            );
+        }
+        if let Some(affix) = rolled.first() {
+            let (&element, _) = affix.properties.resistances.iter().next().unwrap();
+            assert_eq!(
+                equipped
+                    .effective_player_resistances()
+                    .level(element.into()),
+                ResistanceLevel::Resistant
+            );
+        }
+        if slug == "luthien" {
+            let m = equipped.equipment_modifiers();
+            assert_eq!(
+                (m.intelligence, m.wisdom, m.charisma, m.speed),
+                (2, 2, 2, 2)
+            );
+            for element in [DamageType::Acid, DamageType::Fire, DamageType::Cold] {
+                assert_eq!(
+                    equipped.effective_player_resistances().level(element),
+                    ResistanceLevel::Resistant
+                );
+            }
+        } else if slug == "tuor" {
+            assert_eq!(
+                equipped
+                    .effective_player_resistances()
+                    .level(DamageType::Acid),
+                ResistanceLevel::Immune
+            );
+            assert!(
+                equipped
+                    .player_status_immunities()
+                    .contains(STATUS_PARALYSIS)
+            );
+            assert!(
+                equipped
+                    .player_equipment_passives()
+                    .contains(&EquipmentPassive::SeeInvisible)
+            );
+        }
+        equipped.reveal_current_visibility();
+        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), equipped.state_hash());
+        assert_eq!(restored.items[0].rolled_affixes, rolled);
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            equipped
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+        );
+        assert_eq!(restored.rng, equipped.rng);
+        if slug != "shadow-cloak" {
+            assert!(restored.generated_artifact_ids.contains(&kind));
+            assert_ne!(
+                restored.roll_fixed_artifact_kind_id(
+                    &context,
+                    Some("demo.item.shadow-cloak"),
+                    false
+                ),
+                Some(kind)
+            );
+        }
+    }
+}
+
+#[test]
+fn b3_luthien_restores_experience_and_150_life_force_with_saved_cooldown() {
+    fn activate(game: &mut Game, id: &str) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.use_inventory_item(
+            id,
+            Some(&TargetSelection::SelfTarget),
+            None,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        events
+    }
+    let mut game = Game::new_with_build(468, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    let context = artifact_loot_context(85);
+    let draft = game.fixed_item_draft(&context, "demo.item.luthien".into());
+    let item = game
+        .commit_generated_item_draft(draft, ItemLocation::Inventory)
+        .unwrap();
+    let id = item.id.clone();
+    assert_eq!(
+        item.activation.as_ref().unwrap().device_check_difficulty,
+        25
+    );
+    game.items.push(item);
+    game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    game.equip_inventory_item(&id, None).unwrap();
+    // Both experience values are below level two. HP only follows the existing
+    // life-force rescaling; this is not healing or RESTORING's attribute reset.
+    game.progress.experience = 1;
+    game.progress.maximum_experience = 2;
+    game.progress.life_force = 125;
+    game.resolve_monster_attribute_drain(AttributeKind::Strength);
+    let attributes = game.progress.attributes.clone();
+    game.player.hp = 1;
+    game.world_tick = 0;
+    let rolled = game.items[0].rolled_affixes.clone();
+    let mut success = None;
+    let mut failure = None;
+    for seed in 0..1000 {
+        let mut attempt = game.clone();
+        attempt.rng = RfbRng::seeded(seed);
+        activate(&mut attempt, &id);
+        if attempt.items[0].charges.unwrap().current == 0 {
+            success = Some(seed);
+        } else {
+            failure = Some(seed);
+        }
+        if success.is_some() && failure.is_some() {
+            break;
+        }
+    }
+    let mut failed = game.clone();
+    failed.rng = RfbRng::seeded(failure.expect("a real device failure seed"));
+    let mut expected_rng = failed.rng.clone();
+    expected_rng.bounded(100);
+    activate(&mut failed, &id);
+    assert_eq!(failed.rng, expected_rng);
+    assert_eq!(
+        (
+            failed.progress.experience,
+            failed.progress.life_force,
+            failed.player.hp
+        ),
+        (1, 125, 1)
+    );
+    assert_eq!(failed.items[0].charges.unwrap().current, 1);
+    assert_eq!(failed.items[0].device_recovery_progress, 0);
+    let success = success.expect("a real device success seed");
+    let mut life_force_only = game.clone();
+    life_force_only.restore_player_life_force(LifeForceRestorationRequest::add(150));
+    game.rng = RfbRng::seeded(success);
+    activate(&mut game, &id);
+    assert_eq!(
+        (
+            game.progress.experience,
+            game.progress.maximum_experience,
+            game.progress.life_force
+        ),
+        (2, 2, 275)
+    );
+    assert_eq!(game.player.hp, life_force_only.player.hp);
+    assert_eq!(game.progress.attributes, attributes);
+    assert_eq!(game.items[0].charges.unwrap().current, 0);
+    let rng = game.rng.clone();
+    activate(&mut game, &id);
+    assert_eq!(game.rng, rng);
+    assert_eq!(game.progress.life_force, 275);
+    for tick in 1..=2250 {
+        game.world_tick = tick;
+        game.process_inventory_device_recovery(&mut Vec::new());
+    }
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.items[0].device_recovery_progress, 2250);
+    assert_eq!(restored.items[0].rolled_affixes, rolled);
+    for tick in 2251..4500 {
+        restored.world_tick = tick;
+        restored.process_inventory_device_recovery(&mut Vec::new());
+    }
+    assert_eq!(restored.items[0].charges.unwrap().current, 0);
+    restored.world_tick = 4500;
+    restored.process_inventory_device_recovery(&mut Vec::new());
+    assert_eq!(restored.items[0].charges.unwrap().current, 1);
+    // Experience already restored: life force still increases, capped at 1000.
+    restored.progress.life_force = 950;
+    restored.rng = RfbRng::seeded(success);
+    restored.reveal_current_visibility();
+    let mut continued = Game::from_save(restored.to_save()).unwrap();
+    assert_eq!(activate(&mut restored, &id), activate(&mut continued, &id));
+    assert_eq!(
+        (restored.progress.experience, restored.progress.life_force),
+        (2, 1000)
+    );
+    assert_eq!(continued.state_hash(), restored.state_hash());
+    assert_eq!(continued.rng, restored.rng);
+    assert_eq!(restored.items[0].charges.unwrap().current, 0);
+}
+
+#[test]
 fn b1_b2_weapons_generate_equip_fight_and_preserve_source_properties_after_save() {
     fn strike(game: &mut Game) -> Vec<DomainEvent> {
         let mut events = Vec::new();
@@ -3898,6 +4169,8 @@ fn fixed_high_resistance_uses_one_source_roll_without_retrying_duplicates() {
         "isildur",
         "bando-musha",
         "bilbo",
+        "luthien",
+        "tuor",
     ] {
         for (index, element) in source_order.into_iter().enumerate() {
             let seed = (0..10_000)

@@ -1,0 +1,69 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.tuor",
+  "nameKey": "item-demo-tuor-name",
+  "descriptionKey": "item-demo-tuor-description",
+  "glyph": "(",
+  "generationLevel": 70,
+  "weightTenthsPound": 5,
+  "maxStack": 1,
+  "baseValue": 50000,
+  "equipmentSlot": "cloak",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 50,
+    "baseItemKindId": "demo.item.shadow-cloak",
+    "instant": false,
+    "rarityOneIn": 40,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "modifiers": {
+    "defense": 18
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_ACID",
+      "RES_DARK",
+      "RES_LITE",
+      "SEE_INVIS",
+      "STEALTH",
+      "XTRA_H_RES"
+    ],
+    "pval": 4,
+    "toArmor": 12
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 4
+  },
+  "resistances": {
+    "acid": "immune",
+    "light": "resistant",
+    "dark": "resistant"
+  },
+  "passives": [
+    "see-invisible"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ]
+}

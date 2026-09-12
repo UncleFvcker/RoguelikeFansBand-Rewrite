@@ -3172,7 +3172,7 @@
         "deviceCheckDifficulty": 40,
         "effect": {
           "effect": {
-            "lifeForce": 1000,
+            "lifeForce": 150,
             "restoreAttributes": false,
             "type": "restore-vitality"
           },

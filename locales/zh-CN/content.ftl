@@ -9735,3 +9735,12 @@ item-demo-thunderfist-name = 双手连枷『雷霆之拳』
 item-demo-thunderfist-description = 远古贝莱格斯特的矮人冠军克祖林（Kzurin）失落已久的武器，它的握柄上刻有力量符文，火焰和火花在其巨大的头部周围咆哮、噼啪作响。
 item-demo-deathwreaker-name = 瓦解权杖『死亡收割者』
 item-demo-deathwreaker-description = 这把武器如此巨大，似乎超出了凡人的力量，然而当你掂量它时，你能感受到体内巨人的力量。当你握住它乌木和钢铁制成的手柄时，火焰的日冕会燃烧起来，强大的保护魔法也会在你周围激活。你挥舞着的，正是巨龙的恐惧和不死生物的绝望！
+
+item-demo-shadow-cloak-name = 暗影披风
+item-demo-shadow-cloak-description = 一件午夜色的披风，将穿戴者包裹在暗影的褶皱中。
+
+item-demo-luthien-name = 露西安的暗影披风
+item-demo-luthien-description = 这件披风镶嵌着无数细小的钻石，其不透明的午夜色褶皱在你周围盘旋，你感受到了一丝恢复知识与力量的暗示与片段，这股力量曾存在于露西安——这位曾经知晓死亡的最美丽的生灵之中。
+
+item-demo-tuor-name = 图尔的暗影披风
+item-demo-tuor-description = 图尔从贡多林的废墟中逃出，历经秘密的路径和艰辛，他的披风保护他免受无数敌对目光的注视。

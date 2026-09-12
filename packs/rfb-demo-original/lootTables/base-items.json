@@ -2522,6 +2522,13 @@
       "weight": 25
     },
     {
+      "itemKindId": "demo.item.shadow-cloak",
+      "maxDepth": 65535,
+      "minDepth": 75,
+      "quantity": 1,
+      "weight": 20
+    },
+    {
       "itemKindId": "demo.item.multi-hued-dragon-scale-mail",
       "maxDepth": 65535,
       "minDepth": 75,

@@ -9727,3 +9727,12 @@ item-demo-thunderfist-name = Two-Handed Flail 'Thunderfist'
 item-demo-thunderfist-description = Two-Handed Flail 'Thunderfist'
 item-demo-deathwreaker-name = Mace of Disruption 'Deathwreaker'
 item-demo-deathwreaker-description = Mace of Disruption 'Deathwreaker'
+
+item-demo-shadow-cloak-name = Shadow Cloak
+item-demo-shadow-cloak-description = A midnight cloak that wraps its wearer in folds of shadow.
+
+item-demo-luthien-name = Shadow Cloak of Luthien
+item-demo-luthien-description = A diamond-studded midnight cloak carrying hints of restored knowledge and strength.
+
+item-demo-tuor-name = Shadow Cloak of Tuor
+item-demo-tuor-description = A cloak that concealed Tuor from hostile eyes during his escape from Gondolin.

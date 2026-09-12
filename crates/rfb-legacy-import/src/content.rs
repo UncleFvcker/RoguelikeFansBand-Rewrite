@@ -5883,7 +5883,7 @@ fn legacy_device_item_effect(
         "RESISTANCE" => (device_basic_resistance_effect(), self_target, false),
         "RESTORE_EXP" => (
             device_ability_effect(
-                serde_json::json!({"type": "restore-vitality", "lifeForce": 1000, "restoreAttributes": false}),
+                serde_json::json!({"type": "restore-vitality", "lifeForce": 150, "restoreAttributes": false}),
             ),
             self_target,
             false,
@@ -27071,6 +27071,30 @@ static cptr _ego_name_zh[] =
                 .sum::<u32>(),
             expectation.total_weight
         );
+    }
+
+    #[test]
+    fn restore_exp_activation_preserves_source_life_force_and_attribute_boundary() {
+        // master devices.c EFFECT_RESTORE_EXP: restore_level(); lp_player(150).
+        // RESTORING is a separate effect that restores attributes and 1000 life force.
+        for (token, life_force, attributes) in
+            [("RESTORE_EXP", 150, false), ("RESTORING", 1000, true)]
+        {
+            let candidate = LegacyEgoActivationCandidate {
+                source_order: 0,
+                token: token.to_owned(),
+                level: 25,
+                recovery_turns: 450,
+                rarity: 1,
+                biases: Vec::new(),
+            };
+            let (effect, target, _) = legacy_device_item_effect(&candidate).unwrap();
+            assert_eq!(
+                effect["effect"],
+                serde_json::json!({"type":"restore-vitality", "lifeForce":life_force, "restoreAttributes":attributes})
+            );
+            assert_eq!(target, device_self_target());
+        }
     }
 
     #[test]

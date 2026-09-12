@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 7500,
+  "descriptionKey": "item-demo-shadow-cloak-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentSlot": "cloak",
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "glyph": "(",
+  "id": "demo.item.shadow-cloak",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 10
+  },
+  "mogaminatorRare": true,
+  "nameKey": "item-demo-shadow-cloak-name",
+  "resistances": {
+    "dark": "resistant",
+    "light": "resistant"
+  },
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 199,
+    "sval": 6,
+    "tval": 35
+  },
+  "rfbValue": {
+    "flags": [
+      "RES_DARK",
+      "RES_LITE"
+    ],
+    "pval": 0,
+    "toArmor": 4
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 5
+}
