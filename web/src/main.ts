@@ -148,6 +148,7 @@ const objectListPanel = new ObjectListPanel({
   contentName,
   visibleItemName,
   onTravel: (position) => void inputController.travelLocalTo(position),
+  onCommand: (command) => void dispatch(command),
 });
 const monsterProbePanel = new MonsterProbePanel({
   document,

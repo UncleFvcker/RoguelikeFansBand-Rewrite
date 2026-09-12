@@ -30,7 +30,7 @@ fn cost_real_matches_independent_rfb_c_reference() {
 
 #[test]
 fn unsupported_types_are_not_scored_as_plain_equipment() {
-    for tval in [0, 55, 65, 66, 70, 80] {
+    for tval in [0, 4, 55, 65, 66, 70, 80] {
         assert_eq!(
             object_value(ValueObject {
                 tval,

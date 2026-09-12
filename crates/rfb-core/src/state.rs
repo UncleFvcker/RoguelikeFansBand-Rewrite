@@ -129,6 +129,7 @@ pub(crate) struct ItemInstance {
     pub(crate) fuel: Option<ItemFuelDto>,
     // Elapsed device recovery ticks/fractional energy; remaining cooldown for artifact mushrooms.
     pub(crate) device_recovery_progress: u16,
+    pub(crate) chest: Option<rfb_protocol::ChestSaveDto>,
     pub(crate) captured_actor: Option<CapturedActor>,
     pub(crate) location: ItemLocation,
 }

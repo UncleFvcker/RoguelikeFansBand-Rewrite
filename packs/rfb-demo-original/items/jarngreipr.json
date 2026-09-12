@@ -1,0 +1,58 @@
+{
+  "glyph": "]",
+  "generationLevel": 60,
+  "weightTenthsPound": 40,
+  "baseValue": 110000,
+  "maxStack": 1,
+  "equipmentSlot": "gloves",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 379,
+    "baseItemKindId": "demo.item.set-of-caestus",
+    "instant": false,
+    "rarityOneIn": 150
+  },
+  "rfbValue": {
+    "flags": [
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "RES_ELEC",
+      "SHOW_MODS",
+      "STR"
+    ],
+    "pval": 7,
+    "toArmor": 18
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 7,
+    "defense": 23
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 9,
+    "meleeDamage": 9
+  },
+  "resistances": {
+    "electricity": "resistant"
+  },
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.jarngreipr",
+  "nameKey": "item-demo-jarngreipr-name",
+  "descriptionKey": "item-demo-jarngreipr-description"
+}

@@ -1255,9 +1255,39 @@
       ],
       "type": "object"
     },
+    "MonsterArtifactDropChoiceDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "chancePercent": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "itemKindId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "itemKindId",
+        "chancePercent"
+      ],
+      "type": "object"
+    },
     "MonsterArtifactDropDefinition": {
       "additionalProperties": false,
       "properties": {
+        "alternative": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MonsterArtifactDropChoiceDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Select either branch with equal probability, then roll that branch once."
+        },
         "chancePercent": {
           "format": "uint8",
           "maximum": 255,

@@ -214,5 +214,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.aegir",
+    "chancePercent": 25
   }
 }

@@ -8,6 +8,7 @@ use super::visibility::{VISIBILITY_RADIUS, has_line_of_sight};
 use super::{abilities::AbilityTargetPlan, *};
 mod artifact_activations;
 mod artifact_creation;
+mod asgard;
 
 const WAYBREAD_INTOLERANCE_MUTATION_ID: &str = "rfb.mutation.waybread-into";
 const SKELETON_RACE_ID: &str = "rfb-legacy.race.skeleton";
@@ -19,6 +20,12 @@ pub(super) enum ItemUsePlan {
     RechargeItems {
         source_item_id: String,
         target_item_id: String,
+    },
+    Fishing {
+        direction: Direction,
+    },
+    StunningKick {
+        target_entity_id: Option<String>,
     },
     AbilityEffect {
         ability: Box<AbilityDefinition>,
@@ -126,6 +133,14 @@ pub(super) struct SettledItemUse {
 }
 
 impl Game {
+    pub(super) fn item_activation_needs_equipping(&self, item: &ItemInstance) -> bool {
+        !matches!(item.location, ItemLocation::Equipped { .. })
+            && self
+                .content
+                .item(&item.kind_id)
+                .is_some_and(|kind| kind.tags.iter().any(|tag| tag == "whistle"))
+    }
+
     fn player_is_skeleton(&self) -> bool {
         self.character_definitions()
             .is_some_and(|(_, race, _, _)| race.id == SKELETON_RACE_ID)
@@ -2113,6 +2128,10 @@ impl Game {
             charges: None,
             fuel: crate::save::initial_item_fuel(&self.content, &kind_id),
             device_recovery_progress: 0,
+            chest: item.chest.map(|_| rfb_protocol::ChestSaveDto {
+                difficulty: 0,
+                opening_depth: 0,
+            }),
             captured_actor: None,
         }
     }
@@ -2959,6 +2978,17 @@ impl Game {
         }
         let energy_cost = match &plan {
             ItemUsePlan::PiercingShot { energy_cost, .. } => Some(*energy_cost),
+            ItemUsePlan::Fishing { direction }
+                if self
+                    .index(self.position_in_direction(*direction))
+                    .and_then(|index| self.content.terrain(&self.terrain[index]))
+                    .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "water"))
+                    && self.entities.iter().any(|actor| {
+                        actor.hp > 0 && actor.position == self.position_in_direction(*direction)
+                    }) =>
+            {
+                Some(0)
+            }
             _ => None,
         };
         let noticed = self.resolve_inventory_item_effect(
@@ -3087,6 +3117,41 @@ impl Game {
         }
         let mut noticed = false;
         match (effect, plan) {
+            (ItemUseEffectDefinition::ReturnPets, ItemUsePlan::SelfTarget) => {
+                noticed = self.return_pets(&kind_id, events, changed);
+            }
+            (ItemUseEffectDefinition::Fishing, ItemUsePlan::Fishing { direction }) => {
+                noticed = self.start_fishing(&kind_id, direction, events);
+            }
+            (
+                ItemUseEffectDefinition::StunningKick { power },
+                ItemUsePlan::StunningKick { target_entity_id },
+            ) => {
+                noticed = self.resolve_stunning_kick(
+                    &kind_id,
+                    power,
+                    target_entity_id.as_deref(),
+                    events,
+                    changed,
+                );
+            }
+            (
+                ItemUseEffectDefinition::ApplyHeroism {
+                    duration_dice,
+                    duration_sides,
+                    duration_bonus,
+                    stacking,
+                },
+                ItemUsePlan::SelfTarget,
+            ) if profile_id.is_some() => {
+                let turns =
+                    self.roll_damage(duration_dice, duration_sides as u16) as u32 + duration_bonus;
+                let ticks = (device_power_value(u64::from(turns), device_power_bonus).min(10_000)
+                    as u32
+                    + 1)
+                    * 10;
+                noticed = self.resolve_item_heroism(&kind_id, 0, 0, ticks, stacking, events);
+            }
             (
                 ItemUseEffectDefinition::RechargeFromDevice { power },
                 ItemUsePlan::RechargeItems {
@@ -3957,6 +4022,42 @@ impl Game {
         }
         let self_target = target.is_none_or(|target| matches!(target, TargetSelection::SelfTarget));
         match effect {
+            ItemUseEffectDefinition::Fishing => match target {
+                None => Some(ItemUsePlan::CancelledActivation),
+                Some(TargetSelection::Direction { direction }) => Some(ItemUsePlan::Fishing {
+                    direction: *direction,
+                }),
+                _ => None,
+            },
+            ItemUseEffectDefinition::StunningKick { .. } => {
+                if self.dungeon_blocks_melee() || target.is_none() {
+                    return Some(ItemUsePlan::StunningKick {
+                        target_entity_id: None,
+                    });
+                }
+                let position = match target? {
+                    TargetSelection::Direction { direction } => {
+                        self.position_in_direction(*direction)
+                    }
+                    TargetSelection::Entity { entity_id } => {
+                        self.entities
+                            .iter()
+                            .find(|actor| actor.id == *entity_id && actor.hp > 0)?
+                            .position
+                    }
+                    _ => return None,
+                };
+                if rfb_distance(self.player.position, position) > 1 {
+                    return None;
+                }
+                Some(ItemUsePlan::StunningKick {
+                    target_entity_id: self
+                        .entities
+                        .iter()
+                        .find(|actor| actor.hp > 0 && actor.position == position)
+                        .map(|actor| actor.id.clone()),
+                })
+            }
             ItemUseEffectDefinition::Hermes => {
                 let range = self.hermes_range();
                 self.item_use_plan(
@@ -4067,6 +4168,7 @@ impl Game {
             | ItemUseEffectDefinition::ListArtifacts
             | ItemUseEffectDefinition::SummonOctopus
             | ItemUseEffectDefinition::SummonKraken
+            | ItemUseEffectDefinition::ReturnPets
             | ItemUseEffectDefinition::Escape
             | ItemUseEffectDefinition::Starburst { .. }
             | ItemUseEffectDefinition::ShowRumour { .. }
@@ -5552,15 +5654,22 @@ impl Game {
         duration_bonus: u32,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
+        let source_turns = (0..duration_dice).fold(duration_bonus, |total, _| {
+            total.saturating_add((self.rng.bounded(u64::from(duration_sides)) + 1) as u32)
+        });
+        // devices.c::_potion_power only boosts the unavailable potion-specialist
+        // Devicemaster. Ordinary device-power equipment does not boost this potion.
+        // Include the item action's immediate ten-tick window, as for timed potions.
+        let duration_ticks = source_turns.saturating_add(1).saturating_mul(10);
         let resolution = apply_ability_status_effect(
             &mut self.player,
             source_kind_id,
             0,
             "rfb.status.poetic-inspiration",
             1,
-            duration_bonus,
-            duration_dice,
-            duration_sides,
+            duration_ticks,
+            0,
+            0,
             AbilityStatusStackingDefinition::Extend,
             None,
             None,
@@ -5580,6 +5689,15 @@ impl Game {
             None,
             &mut self.rng,
         );
+        // effects.c::set_tim_poet caps the accumulated duration at 10000 turns.
+        if let Some(status) = self
+            .player
+            .statuses
+            .iter_mut()
+            .find(|status| status.kind_id == "rfb.status.poetic-inspiration")
+        {
+            status.remaining_ticks = status.remaining_ticks.min(100_010);
+        }
         let (duration, noticed) = match resolution {
             AbilityEffectResolutionDto::ApplyStatus {
                 applied_duration_ticks,
@@ -6520,6 +6638,9 @@ impl Game {
             | ItemUseEffectDefinition::EnchantEquipment
             | ItemUseEffectDefinition::SummonOctopus
             | ItemUseEffectDefinition::SummonKraken
+            | ItemUseEffectDefinition::ReturnPets
+            | ItemUseEffectDefinition::Fishing
+            | ItemUseEffectDefinition::StunningKick { .. }
             | ItemUseEffectDefinition::Escape
             | ItemUseEffectDefinition::Starburst { .. }
             | ItemUseEffectDefinition::AreaDestruction { .. }

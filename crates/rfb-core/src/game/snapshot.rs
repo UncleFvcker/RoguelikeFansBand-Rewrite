@@ -153,6 +153,7 @@ impl Game {
                 .map(crate::effect::StatusInstance::to_dto)
                 .collect(),
             confusing_strike_ready: self.confusing_strike_ready,
+            fishing_direction: self.fishing_direction,
             sniper_concentration: self.sniper_max_concentration().map(|maximum| {
                 rfb_protocol::SniperConcentrationDto {
                     current: self.sniper_concentration,
@@ -959,6 +960,7 @@ impl Game {
                 Some(ItemDto {
                     can_supply_recharge: self.item_can_supply_recharge(item),
                     can_receive_recharge: self.item_can_receive_recharge(item),
+                    chest: self.chest_dto(item),
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
                     display_name_key: self.item_display_name_key(&item.kind_id),
@@ -1037,11 +1039,16 @@ impl Game {
                     self.item_has_readable_inscription(item)
                         .then(|| self.ability_study_unavailable_reason().map(str::to_owned))
                         .flatten()
+                })
+                .or_else(|| {
+                    self.item_activation_needs_equipping(item)
+                        .then(|| "equip-first".to_owned())
                 }),
             readable: self.item_inscription_is_readable(item),
             usable: self.item_inscription_is_readable(item)
                 || (self.berserker_item_use_rejection_cost(item).is_none()
                     && self.item_activation_location_is_valid(item)
+                    && !self.item_activation_needs_equipping(item)
                     && !(item.is_artifact_mushroom(&self.content)
                         && item.device_recovery_progress > 0)
                     && self.content.item(&item.kind_id).is_some_and(|definition| {
@@ -1148,6 +1155,7 @@ impl Game {
             melee_profile: self.visible_item_melee_profile(item),
             projectile_profile: self.visible_item_projectile_profile(item),
             throw_profile: self.visible_item_throw_profile(item),
+            throw_target_spec: self.item_throw_target_spec(item),
         }
     }
 
@@ -1220,6 +1228,7 @@ impl Game {
                     melee_profile: self.visible_item_melee_profile(item),
                     projectile_profile: self.visible_item_projectile_profile(item),
                     throw_profile: self.visible_item_throw_profile(item),
+                    throw_target_spec: self.item_throw_target_spec(item),
                 })
             })
             .collect::<Vec<_>>();

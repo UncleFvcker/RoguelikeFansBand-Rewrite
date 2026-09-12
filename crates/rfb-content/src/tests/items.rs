@@ -1065,7 +1065,7 @@ fn equipment_and_ego_identities_match_source() {
             .filter_map(|item| item.rfb_base_kind)
             .filter(|kind| matches!(kind.tval, 20..=23))
             .collect::<Vec<_>>();
-        assert_eq!(base_kinds.len(), 80);
+        assert_eq!(base_kinds.len(), 81);
         assert_eq!(
             base_kinds
                 .iter()
@@ -1154,6 +1154,7 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.falchion",
                 "demo.item.fauchard",
                 "demo.item.flail",
+                "demo.item.freyr",
                 "demo.item.gae-bulg",
                 "demo.item.glaive",
                 "demo.item.glamdring",
@@ -1167,6 +1168,7 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.pain",
                 "demo.item.poseidon",
                 "demo.item.quickthorn",
+                "demo.item.runespear",
                 "demo.item.sabre",
                 "demo.item.spear",
                 "demo.item.totila",

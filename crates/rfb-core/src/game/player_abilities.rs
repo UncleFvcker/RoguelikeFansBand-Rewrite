@@ -1878,6 +1878,7 @@ impl Game {
         self.player.hp < self.effective_player_max_hp()
             || self.player_has_depleted_recoverable_resource(true)
             || self.magic_eater_can_regen()
+            || self.recall_is_active()
     }
 
     fn visible_hostile_exists(&self) -> bool {

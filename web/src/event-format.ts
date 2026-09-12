@@ -1638,8 +1638,20 @@ export function createPresentationFormatter(
           from: floorName(event.args.from),
           to: floorName(event.args.to),
         });
+      case "fishing-started":
+      case "fishing-no-water":
+      case "fishing-bait-lost":
+        return localization.format(`message-${event.messageKey}`);
+      case "fishing-blocked":
+      case "fishing-caught":
+        return localization.format(`message-${event.messageKey}`, { target: contentName(event.args.target) });
       case "item-thrown":
         return localization.format("message-item-thrown", {
+          target: visibleItemNameForKind(event.args.target),
+        });
+      case "item-return-failed":
+      case "item-catch-failed":
+        return localization.format(`message-${event.messageKey}`, {
           target: visibleItemNameForKind(event.args.target),
         });
       case "throw-miss":

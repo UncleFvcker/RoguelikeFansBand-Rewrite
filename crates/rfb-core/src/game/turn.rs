@@ -803,7 +803,9 @@ impl Game {
             // Equipment activation timeouts recover only while worn; absorbed devices use body rates.
             if item.activation.is_some()
                 && item.location == ItemLocation::Inventory
-                && content.item(&item.kind_id).is_some_and(|kind| kind.equipment_slot.is_some())
+                && content
+                    .item(&item.kind_id)
+                    .is_some_and(|kind| kind.equipment_slot.is_some())
             {
                 continue;
             }
@@ -1043,6 +1045,9 @@ impl Game {
             .iter()
             .any(|status_kind_id| status_kind_id == STATUS_TSUYOSHI);
         for damage in player_tick.damage {
+            if damage.outcome.applied > 0 {
+                self.fishing_direction = None;
+            }
             events.push(DomainEvent::PlayerStatusDamaged {
                 status_kind_id: damage.status_kind_id,
                 damage: damage.outcome,

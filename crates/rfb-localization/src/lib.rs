@@ -145,6 +145,16 @@ impl MogaminatorNames {
                     .format_exact(self.localizer.locale(), &item.name_key, None)?
             }
         };
+        // RFB object_desc includes the base kind before a fixed artifact name.
+        // Matching only the suffix made translated dragon names select different rules.
+        let base_name = if let Some(artifact) = &item.artifact_generation {
+            format!(
+                "{} {base_name}",
+                self.item_name(content, &artifact.base_item_kind_id, &[], None)?
+            )
+        } else {
+            base_name
+        };
         let base_name = if let Some(profile_id) = activation_profile_id {
             let profile = item
                 .device_generation
@@ -346,6 +356,16 @@ mod tests {
             ] {
                 assert!(localizer.has_message(locale, key), "{locale:?}/{key}");
             }
+            assert_eq!(
+                localizer
+                    .format_exact(locale, "floor-demo-asgard-depth-name", None)
+                    .unwrap(),
+                if locale == Locale::EnUs {
+                    "Asgard"
+                } else {
+                    "阿斯加德"
+                }
+            );
         }
     }
 

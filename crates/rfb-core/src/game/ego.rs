@@ -2781,6 +2781,7 @@ mod tests {
             charges: None,
             fuel: None,
             device_recovery_progress: 0,
+            chest: None,
             captured_actor: None,
             location: ItemLocation::Equipped {
                 slot_id: "launcher".to_owned(),
@@ -3596,6 +3597,7 @@ mod tests {
             charges: None,
             fuel: None,
             device_recovery_progress: 0,
+            chest: None,
             captured_actor: None,
             location: ItemLocation::Inventory,
         };
@@ -3704,6 +3706,7 @@ mod tests {
             charges: None,
             fuel: None,
             device_recovery_progress: 0,
+            chest: None,
             captured_actor: None,
             location: ItemLocation::Inventory,
         };
@@ -3722,7 +3725,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(crate::STATE_HASH_SCHEMA_VERSION, 129);
+        assert_eq!(crate::STATE_HASH_SCHEMA_VERSION, 130);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,
@@ -3762,6 +3765,7 @@ mod tests {
             charges: None,
             fuel: None,
             device_recovery_progress: 0,
+            chest: None,
             captured_actor: None,
             location: ItemLocation::Equipped {
                 slot_id: "launcher".to_owned(),

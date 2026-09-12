@@ -48,6 +48,10 @@ const RFB_STRENGTH_BLOW: [u16; 38] = [
     3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110,
     120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240,
 ];
+const RFB_DEXTERITY_TO_HIT: [i32; 38] = [
+    -3, -2, -2, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 6, 7, 8, 9, 9,
+    10, 11, 12, 13, 14, 15, 15, 16,
+];
 
 pub(in crate::game) fn good_priest_weapon_penalty(
     priest_class: bool,
@@ -899,6 +903,11 @@ impl Game {
             .map_or_else(EquipmentBonuses::default, |definition| {
                 definition.equipment_bonuses.clone()
             });
+        // equip.c: Ullur's native +21/+36 belongs only to shooter_info.
+        if self.item_is_fixed_artifact(item, 378) {
+            bonuses.melee_skill = 0;
+            bonuses.melee_damage = 0;
+        }
         for affix_id in &item.affix_ids {
             if let Some(affix) = self.content.affix(affix_id) {
                 merge_equipment_bonuses(&mut bonuses, &affix.equipment_bonuses);
@@ -971,13 +980,24 @@ impl Game {
     }
 
     fn armor_combat_enchantments(&self, item: &ItemInstance, ranged: bool) -> (i32, i32) {
+        if self.item_is_fixed_artifact(item, 378) {
+            let kind = self.content.item(&item.kind_id).unwrap();
+            return if ranged {
+                (
+                    kind.equipment_bonuses.melee_skill + i32::from(item.enchantments.to_hit),
+                    kind.equipment_bonuses.melee_damage + i32::from(item.enchantments.to_damage),
+                )
+            } else {
+                (0, 0)
+            };
+        }
         // master:equip.c also grants these artifacts' nonweapon equipment
         // hit/damage to archery. Melee already receives their equipment bonuses.
         if let Some(kind) = self.content.item(&item.kind_id)
             && kind.artifact_generation.as_ref().is_some_and(|artifact| {
                 matches!(
                     artifact.source_index,
-                    54 | 56 | 57 | 59 | 143 | 185 | 236 | 238 | 242 | 291
+                    54 | 56 | 57 | 59 | 143 | 185 | 236 | 238 | 242 | 291 | 371 | 372 | 379
                 )
             })
         {
@@ -1708,10 +1728,6 @@ impl Game {
     pub(super) fn player_throw_to_hit_bonus(&self) -> i32 {
         // xtra1.c shooter_info.to_h: attributes and nonweapon equipment, not
         // the equipped bow's enchantment or the shooting skill rating.
-        const DEX: [i32; 38] = [
-            -3, -2, -2, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 6, 7,
-            8, 9, 9, 10, 11, 12, 13, 14, 15, 15, 16,
-        ];
         const STR: [i32; 38] = [
             -3, -2, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7,
             8, 9, 10, 11, 12, 13, 14, 15, 15, 16,
@@ -1738,7 +1754,7 @@ impl Game {
             .map_or(0, |item| {
                 2 * (hold - i32::from(self.item_instance_weight(item) / 10)).min(0)
             });
-        DEX[index(AttributeKind::Dexterity)]
+        RFB_DEXTERITY_TO_HIT[index(AttributeKind::Dexterity)]
             + STR[index(AttributeKind::Strength)]
             + equipment
             + heavy_bow
@@ -2064,7 +2080,34 @@ impl Game {
         self.weapon_uses_two_hands(weapon)
     }
 
+    pub(super) fn item_is_fixed_artifact(&self, item: &ItemInstance, source_index: u32) -> bool {
+        self.content
+            .item(&item.kind_id)
+            .and_then(|kind| kind.artifact_generation.as_ref())
+            .is_some_and(|artifact| artifact.source_index == source_index)
+    }
+
+    pub(super) fn player_dexterity_to_hit(&self) -> i32 {
+        let index = self
+            .effective_player_attributes()
+            .index(AttributeKind::Dexterity)
+            .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP);
+        RFB_DEXTERITY_TO_HIT[usize::from(index)]
+    }
+
+    fn mjollnir_has_magni(&self, weapon: &ItemInstance) -> bool {
+        self.item_is_fixed_artifact(weapon, 136)
+            && self.items.iter().any(|item| {
+                matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) == Some("gloves"))
+                    && self.item_is_fixed_artifact(item, 379)
+            })
+    }
+
     fn weapon_uses_two_hands(&self, weapon: &ItemInstance) -> bool {
+        // obj_kind.c: Mjollnir never receives the two-handed holding bonus.
+        if self.item_is_fixed_artifact(weapon, 136) {
+            return false;
+        }
         let ItemLocation::Equipped {
             slot_id: weapon_slot,
         } = &weapon.location
@@ -2107,7 +2150,7 @@ impl Game {
         let two_hands = self.weapon_uses_two_hands(weapon);
         let hold = crate::stats::strength_hold_pounds(attributes.value(AttributeKind::Strength))
             * if two_hands { 2 } else { 1 };
-        if hold < weight / 10 {
+        if hold < weight / 10 && !self.mjollnir_has_magni(weapon) {
             return 100;
         }
         let two_hand_bonus = if two_hands && hold >= weight / 5 {
@@ -2469,6 +2512,17 @@ impl Game {
             attack_sources.push(rfb_protocol::CharacterStatSourceDto {
                 source_id: class_id.to_owned(),
                 amount: delta,
+            });
+        }
+        if let Some(weapon) = weapons
+            .iter()
+            .find(|item| Some(item.id.as_str()) == selected_item_id)
+            && self.mjollnir_has_magni(weapon)
+        {
+            blows = blows.saturating_add(100);
+            attack_sources.push(rfb_protocol::CharacterStatSourceDto {
+                source_id: weapon.id.clone(),
+                amount: 100,
             });
         }
         blows = blows.max(0);

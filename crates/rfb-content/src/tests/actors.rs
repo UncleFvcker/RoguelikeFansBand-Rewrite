@@ -27,6 +27,32 @@ fn special_artifact_drops_require_a_real_artifact_and_nonzero_probability() {
 }
 
 #[test]
+fn alternative_artifact_drops_validate_the_second_branch() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    for (kind, chance) in [("demo.item.missing", 40), ("demo.item.brisingamen", 0)] {
+        let mut content = artifact.content.clone();
+        let actor = content
+            .actors
+            .iter_mut()
+            .find(|actor| actor.id == "demo.actor.freyja-lady-of-the-slain")
+            .unwrap();
+        let alternative = actor
+            .special_artifact_drop
+            .as_mut()
+            .unwrap()
+            .alternative
+            .as_mut()
+            .unwrap();
+        alternative.item_kind_id = kind.into();
+        alternative.chance_percent = chance;
+        assert!(matches!(
+            validate_and_normalize(&mut content),
+            Err(ContentError::InvalidActorLootTable(_))
+        ));
+    }
+}
+
+#[test]
 fn capture_policies_distinguish_normal_unique_and_immune_monsters() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let policy = |id: &str| {

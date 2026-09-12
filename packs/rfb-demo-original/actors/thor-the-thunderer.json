@@ -203,5 +203,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.mjollnir",
+    "chancePercent": 40
   }
 }

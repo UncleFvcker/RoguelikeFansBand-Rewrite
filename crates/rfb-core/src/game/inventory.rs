@@ -972,6 +972,7 @@ pub(super) fn item_instances_stack_compatible(
         && left.charges == right.charges
         && left.fuel == right.fuel
         && left.device_recovery_progress == right.device_recovery_progress
+        && left.chest == right.chest
         && left.captured_actor == right.captured_actor
 }
 
@@ -1051,6 +1052,7 @@ impl Game {
         if quantity > 0 {
             let id = self.allocate_item_instance_id()?;
             let item = super::loot::GeneratedItemDraft {
+                chest: None,
                 artifact_name: None,
                 intrinsic_melee_damage_dice: None,
                 intrinsic_weight_tenths_pound: None,
@@ -2320,7 +2322,7 @@ impl Game {
         self.player_is_berserker() && severity != ItemCurseSeverityDto::Permanent
     }
 
-    fn try_remove_equipment_curse(&mut self, index: usize) -> bool {
+    pub(super) fn try_remove_equipment_curse(&mut self, index: usize) -> bool {
         let Some(severity) = self.items[index].curse else {
             return true;
         };

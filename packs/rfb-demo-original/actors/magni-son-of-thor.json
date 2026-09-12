@@ -176,5 +176,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.jarngreipr",
+    "chancePercent": 20
   }
 }

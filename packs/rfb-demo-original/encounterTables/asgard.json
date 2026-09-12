@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/encounter-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.encounter-table.asgard",
+  "rolls": 12,
+  "globalAllocation": {
+    "preferredGlyphs": [],
+    "preferredTags": [
+      "norse",
+      "norse2"
+    ],
+    "specialDiv": 2,
+    "ambientChanceOneIn": 160
+  },
+  "entries": []
+}

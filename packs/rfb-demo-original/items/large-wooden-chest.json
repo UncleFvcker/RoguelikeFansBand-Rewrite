@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.large-wooden-chest",
+  "nameKey": "item-demo-large-wooden-chest-name",
+  "descriptionKey": "item-demo-large-wooden-chest-description",
+  "glyph": "&",
+  "generationLevel": 15,
+  "weightTenthsPound": 500,
+  "baseValue": 60,
+  "maxStack": 1,
+  "tags": [
+    "chest"
+  ],
+  "rfbBaseKind": {
+    "sourceIndex": 641,
+    "tval": 7,
+    "sval": 5
+  }
+}

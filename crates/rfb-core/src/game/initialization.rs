@@ -212,6 +212,7 @@ fn append_starting_item(
         charges,
         fuel: initial_item_fuel(content, &starting_item.item_kind_id),
         device_recovery_progress: 0,
+        chest: None,
         captured_actor: None,
         location,
     });
@@ -477,6 +478,7 @@ impl Game {
                     charges: None,
                     fuel: initial_item_fuel(&content, &spawn.kind_id),
                     device_recovery_progress: 0,
+                    chest: None,
                     captured_actor: None,
                     location: ItemLocation::Ground(position_from_content(spawn.position)),
                 };
@@ -630,6 +632,7 @@ impl Game {
             recall: None,
             confusing_strike_ready: false,
             sniper_concentration: 0,
+            fishing_direction: None,
             probed_actor_kind_ids: BTreeSet::new(),
             minor_slow: 0,
             minor_slow_energy: 0,

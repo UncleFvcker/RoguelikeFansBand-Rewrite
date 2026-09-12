@@ -4,6 +4,7 @@ import type { AppState } from "./app-state";
 import type { Localization } from "./localization";
 import type {
   CellDto,
+  GameCommand,
   HomeDto,
   ItemDto,
   MogaminatorItemMatchDto,
@@ -25,6 +26,7 @@ export interface ObjectListEntry {
   readonly offsetX: number;
   readonly offsetY: number;
   readonly quantity?: number;
+  readonly chest?: ItemDto["chest"];
 }
 
 export interface ObjectListProjection {
@@ -60,6 +62,7 @@ export class ObjectListPanel {
   readonly #contentName: (contentId: string) => string;
   readonly #visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string;
   readonly #onTravel: (position: Position) => void;
+  readonly #onCommand: (command: GameCommand) => void;
   readonly #dom: ObjectListDom;
   #entries: ObjectListEntry[] = [];
   #selectedIndex = 0;
@@ -74,6 +77,7 @@ export class ObjectListPanel {
     contentName: (contentId: string) => string;
     visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string;
     onTravel: (position: Position) => void;
+    onCommand: (command: GameCommand) => void;
   }) {
     this.#document = options.document;
     this.#window = options.window;
@@ -82,6 +86,7 @@ export class ObjectListPanel {
     this.#contentName = options.contentName;
     this.#visibleItemName = options.visibleItemName;
     this.#onTravel = options.onTravel;
+    this.#onCommand = options.onCommand;
     this.#dom = createObjectListDom(this.#document);
   }
 
@@ -282,6 +287,24 @@ export class ObjectListPanel {
       });
       button.append(glyph, name, position);
       item.append(button);
+      if (entry.chest) {
+        for (const [type, enabled] of [
+          ["open-chest", entry.chest.canOpen],
+          ["disarm-chest", entry.chest.canDisarm],
+        ] as const) {
+          const action = this.#document.createElement("button");
+          action.type = "button";
+          action.textContent = this.#localization.format(`object-list-${type}`);
+          action.disabled = !enabled;
+          action.addEventListener("keydown", (event) => event.stopPropagation());
+          action.addEventListener("click", (event) => {
+            event.stopPropagation();
+            this.close();
+            this.#onCommand({ type, itemId: entry.id.slice("item:".length) });
+          });
+          item.append(action);
+        }
+      }
       list.append(item);
     }
     section.append(list);
@@ -388,6 +411,7 @@ export function buildObjectListEntries(options: ObjectListProjection): ObjectLis
       offsetX: item.position.x - options.playerPosition.x,
       offsetY: item.position.y - options.playerPosition.y,
       quantity: item.quantity,
+      chest: item.chest,
     }];
   });
   const compare = (left: ObjectListEntry, right: ObjectListEntry): number =>

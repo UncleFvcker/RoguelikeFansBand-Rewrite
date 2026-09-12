@@ -1,0 +1,97 @@
+{
+  "glyph": "|",
+  "generationLevel": 75,
+  "weightTenthsPound": 150,
+  "baseValue": 150000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 369,
+    "baseItemKindId": "demo.item.broad-sword",
+    "instant": false,
+    "rarityOneIn": 120
+  },
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "BLOWS",
+      "BRAND_FIRE",
+      "DEX",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "REGEN",
+      "RES_FIRE",
+      "RES_SOUND",
+      "RIDING",
+      "SHOW_MODS",
+      "SLAY_DEMON",
+      "SLAY_GIANT",
+      "SPEED",
+      "VORPAL",
+      "WIS",
+      "XTRA_POWER"
+    ],
+    "pval": 2,
+    "toArmor": 10
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 6,
+    "toHit": 21,
+    "toDamage": 12
+  },
+  "weaponProficiencyBaseItemId": "demo.item.broad-sword",
+  "ridingWeaponKind": "compatible",
+  "vorpal": true,
+  "modifiers": {
+    "wisdom": 2,
+    "dexterity": 2,
+    "defense": 10,
+    "speed": 2
+  },
+  "equipmentBonuses": {
+    "meleeAttacksDeltaPercent": 100,
+    "lightRadius": 1
+  },
+  "resistances": {
+    "fire": "resistant",
+    "sound": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "passives": [
+    "regeneration",
+    "blessed"
+  ],
+  "slays": {
+    "giant": "slay",
+    "demon": "slay"
+  },
+  "brands": [
+    "fire"
+  ],
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.freyr",
+  "nameKey": "item-demo-freyr-name",
+  "descriptionKey": "item-demo-freyr-description"
+}

@@ -106,6 +106,66 @@ fn rfb_bomb_damage(
 }
 
 impl Game {
+    fn record_actor_lifetime_defeat(&mut self, actor: &Actor) {
+        let definition = self
+            .content
+            .actor(&actor.kind_id)
+            .expect("dying actor definition exists");
+        if definition.finite_lifetime_instance_limit().is_some()
+            && !definition.tags.iter().any(|tag| tag == "guardian")
+            && !self.actor_is_dead_unique_resurrection(actor)
+        {
+            let defeated = self
+                .defeated_limited_actor_counts
+                .entry(actor.kind_id.clone())
+                .or_default();
+            *defeated = defeated.saturating_add(1);
+        }
+    }
+
+    fn summon_odins_avenger(
+        &mut self,
+        actor: &Actor,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        const VIDARR: &str = "demo.actor.vidarr-the-silent-avenger";
+        if actor.kind_id != "demo.actor.odin-the-all-father"
+            || self.actor_kind_available_instance_count(VIDARR) == 0
+        {
+            return;
+        }
+        let terrain = self.terrain.clone();
+        for _ in 0..100 {
+            let position = self.original_scatter_position(
+                &terrain,
+                self.width,
+                self.height,
+                actor.position,
+                20,
+            );
+            if position == self.player.position
+                || self
+                    .entities
+                    .iter()
+                    .any(|entity| entity.position == position)
+                || !self.actor_kind_can_enter_position(VIDARR, position)
+            {
+                continue;
+            }
+            let id = self.summon_entity_id(VIDARR, 0);
+            let mut entity = self.generated_actor(id, VIDARR, position);
+            entity.controller_id = actor.controller_id.clone();
+            entity.alerted = true;
+            changed.insert(position);
+            self.entities.push(entity);
+            if self.is_visible(position) {
+                events.push(DomainEvent::AsgardAvengerSummoned);
+            }
+            break;
+        }
+    }
+
     fn summon_variant_maintainer_software_bugs(
         &mut self,
         actor: &Actor,
@@ -524,6 +584,7 @@ impl Game {
                 charges,
                 fuel: initial_item_fuel(&self.content, &kind_id),
                 device_recovery_progress: 0,
+                chest: None,
                 captured_actor: None,
                 curse: initial_item_curse(&self.content, &kind_id),
                 permanent_destruction_immunities: Default::default(),
@@ -628,6 +689,7 @@ impl Game {
         self.apply_amberite_blood_curse(&dying_actor);
         self.actor_death_explosion(&dying_actor, events, changed, removed_entities)?;
         self.summon_variant_maintainer_software_bugs(&dying_actor, changed);
+        self.summon_odins_avenger(&dying_actor, events, changed);
         let index = self
             .entities
             .iter()
@@ -639,6 +701,18 @@ impl Game {
                 ))
             })?;
         self.entities.remove(index);
+        self.record_actor_lifetime_defeat(&dying_actor);
+        for item in self.generate_norse_death_extras(&dying_actor, false)? {
+            if let ItemLocation::Ground(position) = item.location {
+                changed.insert(position);
+            }
+            events.push(DomainEvent::LootDropped {
+                source_kind_id: dying_actor.kind_id.clone(),
+                target_kind_id: item.kind_id.clone(),
+                quantity: item.quantity,
+            });
+            self.items.push(item);
+        }
         self.record_banor_rupart_group_defeat(&dying_actor.kind_id);
         removed_entities.push(dying_actor.id);
         self.items
@@ -701,6 +775,7 @@ impl Game {
         self.apply_amberite_blood_curse(&dying_actor);
         self.actor_death_explosion(&dying_actor, events, changed, removed_entities)?;
         self.summon_variant_maintainer_software_bugs(&dying_actor, changed);
+        self.summon_odins_avenger(&dying_actor, events, changed);
         let index = self
             .entities
             .iter()
@@ -748,18 +823,7 @@ impl Game {
                         .saturating_add(if removed_definition.level >= 90 { 2 } else { 1 });
             }
         }
-        if removed_definition
-            .finite_lifetime_instance_limit()
-            .is_some()
-            && !removed_definition.tags.iter().any(|tag| tag == "guardian")
-            && !self.actor_is_dead_unique_resurrection(&removed)
-        {
-            let defeated = self
-                .defeated_limited_actor_counts
-                .entry(removed.kind_id.clone())
-                .or_default();
-            *defeated = defeated.saturating_add(1);
-        }
+        self.record_actor_lifetime_defeat(&removed);
         self.record_banor_rupart_group_defeat(&removed.kind_id);
         let experience_value = self.player_kill_experience_reward(removed_experience_value);
         if credit_player {

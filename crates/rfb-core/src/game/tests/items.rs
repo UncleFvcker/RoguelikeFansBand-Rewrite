@@ -2490,7 +2490,7 @@ fn b4_headgear_generates_equips_and_preserves_source_properties_after_save() {
         },
     };
     let mut remaining = cases.iter().map(|case| case.0).collect::<BTreeSet<_>>();
-    for _ in 0..20_000 {
+    for _ in 0..40_000 {
         for item in game
             .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
             .unwrap()
@@ -2527,29 +2527,54 @@ fn b4_headgear_generates_equips_and_preserves_source_properties_after_save() {
             break;
         }
     }
-    // Rare artifacts condition on a base already acquired from the full pool;
-    // source candidate order, OOD, rarity and uniqueness checks remain live.
-    for slug in remaining.clone() {
-        let kind = format!("demo.item.{slug}");
-        let Some(artifact) = &game.content.item(&kind).unwrap().artifact_generation else {
+    // Bases must occur in the full pool; condition rare artifacts on those
+    // observed bases, retaining source ordering, rarity and uniqueness checks.
+    for (slug, base) in [
+        ("hammerhand", "steel-helm"),
+        ("dor-lomin", "mithril-helm"),
+        ("amber", "golden-crown"),
+    ] {
+        if !remaining.contains(slug) {
             continue;
-        };
-        let base = artifact.base_item_kind_id.clone();
-        assert!(game.items.iter().any(|item| item.kind_id == base));
-        let selected = (0..20_000).find_map(|_| {
-            game.roll_fixed_artifact_kind_id(&context, Some(&base), false)
-                .filter(|candidate| candidate == &kind)
-        });
-        if let Some(selected) = selected {
-            let draft = game.fixed_item_draft(&context, selected);
-            let item = game
-                .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
-                .unwrap();
-            let id = item.id.clone();
-            game.items.push(item);
-            game.pick_up_item_at_player(Some(&id)).unwrap();
-            remaining.remove(slug);
         }
+        assert!(
+            !remaining.contains(base),
+            "base must occur in the full pool"
+        );
+        let kind = format!("demo.item.{slug}");
+        let base_kind = format!("demo.item.{base}");
+        assert!(
+            (0..20_000).any(|_| {
+                game.roll_fixed_artifact_kind_id(&context, Some(&base_kind), false)
+                    .as_deref()
+                    == Some(&kind)
+            }),
+            "source artifact selection must reach {slug}"
+        );
+        let draft = game.fixed_item_draft(&context, kind);
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        assert!(item.curse.is_none());
+        assert_eq!(item.rolled_affixes.len(), usize::from(slug == "amber"));
+        assert_eq!(
+            item.intrinsic_properties != Default::default(),
+            slug == "amber"
+        );
+        assert_eq!(
+            item.activation.is_some(),
+            matches!(slug, "dor-lomin" | "amber")
+        );
+        let id = item.id.clone();
+        game.items.push(item);
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        assert!(
+            !game
+                .item_property_knowledge
+                .get(&id)
+                .is_some_and(|k| k.appraised)
+        );
+        remaining.remove(slug);
     }
     assert!(
         remaining.is_empty(),
@@ -8061,6 +8086,18 @@ fn razorback_star_ball_and_full_10000_tick_cooldown_survive_save() {
 #[test]
 fn razorback_guardian_reward_shares_natural_generation_uniqueness() {
     let (mut game, _) = razorback_game();
+    // Instant fixed artifacts can preempt the base roll. Mark those unique
+    // identities generated to isolate the named random-artifact replacement.
+    game.generated_artifact_ids.extend(
+        game.content
+            .item_definitions()
+            .filter(|item| {
+                item.artifact_generation
+                    .as_ref()
+                    .is_some_and(|artifact| artifact.instant)
+            })
+            .map(|item| item.id.clone()),
+    );
     // Exercise the real Rlyeh replacement table at a controlled final floor.
     let floor = game
         .content
@@ -8090,9 +8127,16 @@ fn razorback_guardian_reward_shares_natural_generation_uniqueness() {
             .all(|item| item.kind_id != "demo.item.razorback")
     );
     // A named random artifact must be produced, not a lucky fixed-artifact roll.
-    assert!(replacement.last().is_some_and(|item| item.kind_id
-        == "demo.item.multi-hued-dragon-scale-mail"
-        && item.artifact_name.is_some()));
+    assert!(
+        replacement.last().is_some_and(|item| item.kind_id
+            == "demo.item.multi-hued-dragon-scale-mail"
+            && item.artifact_name.is_some()),
+        "rewards: {:?}",
+        replacement
+            .iter()
+            .map(|item| (&item.kind_id, &item.artifact_name))
+            .collect::<Vec<_>>()
+    );
     game.generated_artifact_ids.remove("demo.item.razorback");
     game.items
         .retain(|item| item.kind_id != "demo.item.razorback");

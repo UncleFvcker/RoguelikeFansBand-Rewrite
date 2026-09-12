@@ -113,6 +113,7 @@ pub(crate) use bounty::BountyOfficeOutcome;
 mod capabilities;
 mod capture_ball;
 mod chaos_patron;
+mod chests;
 mod damage;
 mod death;
 mod ego;
@@ -236,7 +237,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 129;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 130;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -886,6 +887,7 @@ pub struct Game {
     recall: Option<RecallStateDto>,
     confusing_strike_ready: bool,
     sniper_concentration: u8,
+    fishing_direction: Option<Direction>,
     probed_actor_kind_ids: BTreeSet<String>,
     minor_slow: u8,
     minor_slow_energy: u16,
@@ -1184,6 +1186,7 @@ impl Game {
         }
         let mut advances_world = magic_absorption_advances_world.unwrap_or(true)
             && !depleted_device_use
+            && (!matches!(&action, GameAction::ContinueFishing) || self.fishing_state_is_valid())
             && !zero_time_unavailable_item_use
             && !cursed_unequip
             && !cursed_equip_replacement
@@ -1230,6 +1233,7 @@ impl Game {
                     | GameAction::ResolveMogaminatorQuery { .. }
                     | GameAction::ResolveMutationDirection { .. }
                     | GameAction::CancelAbilityDirection
+                    | GameAction::CancelFishing
                     | GameAction::InscribeItem { .. }
                     | GameAction::SetInterfaceLocale { .. }
                     | GameAction::ConfigureTravel { .. }
@@ -1313,14 +1317,15 @@ impl Game {
         let mut player_moved = false;
         let deferred_item_turn = matches!(
             &action,
-            GameAction::UseAbsorbedDevice { .. } | GameAction::UseItem {
-                target: None
-                    | Some(
-                        TargetSelection::ArtifactCreationItem { .. }
-                            | TargetSelection::RechargeItems { .. }
-                    ),
-                ..
-            }
+            GameAction::UseAbsorbedDevice { .. }
+                | GameAction::UseItem {
+                    target: None
+                        | Some(
+                            TargetSelection::ArtifactCreationItem { .. }
+                                | TargetSelection::RechargeItems { .. }
+                        ),
+                    ..
+                }
         );
         let item_projectile_action = matches!(&action, GameAction::UseItem { item_id, .. }
             if matches!(self.inventory_item_use_effect(item_id), Some((ItemUseEffectDefinition::PiercingShot, _))));
@@ -1354,6 +1359,9 @@ impl Game {
             self.sniper_concentration = 0;
         }
 
+        if !matches!(&action, GameAction::ContinueFishing) {
+            self.fishing_direction = None;
+        }
         match action {
             GameAction::SelectMagicAbsorptionSlot { slot } => {
                 self.select_magic_absorption_slot(slot, &mut events);
@@ -2132,6 +2140,15 @@ impl Game {
                 }
             }
             GameAction::Wait => events.push(DomainEvent::Waited),
+            GameAction::CancelFishing => {
+                turn_advance = 0;
+            }
+            GameAction::ContinueFishing => {
+                if !self.continue_fishing(&mut events, &mut changed) {
+                    advances_world = false;
+                    turn_advance = 0;
+                }
+            }
             GameAction::AutoGet { object_id } => {
                 self.apply_player_floor_item_knowledge();
                 let valid_target =
@@ -2248,6 +2265,12 @@ impl Game {
             GameAction::Ride { direction } => {
                 self.resolve_riding(direction, &mut events, &mut changed);
             }
+            GameAction::OpenChest { item_id } => {
+                self.interact_chest(&item_id, false, &mut events, &mut changed)?;
+            }
+            GameAction::DisarmChest { item_id } => {
+                self.interact_chest(&item_id, true, &mut events, &mut changed)?;
+            }
             GameAction::OpenDoor { direction } => match self.open_door(direction) {
                 Some(DoorOpenOutcome::Opened { position }) => {
                     changed.insert(position);
@@ -2265,7 +2288,8 @@ impl Game {
             },
             GameAction::Search => {
                 let discovered = self.search_hidden_terrain();
-                if discovered.is_empty() {
+                let found_chest = self.search_chest_traps(&mut events, &mut changed);
+                if discovered.is_empty() && !found_chest {
                     events.push(DomainEvent::SearchFoundNothing);
                 } else {
                     for position in discovered {
@@ -2599,6 +2623,13 @@ impl Game {
                 self.bind_external_tasks_to_floor_transitions(&events);
             }
 
+            if self.fishing_direction.is_some()
+                && (self.player.position != player_position_before_command
+                    || self.current_floor_id != floor_before_command
+                    || !self.fishing_state_is_valid())
+            {
+                self.fishing_direction = None;
+            }
             let task_terrain_changed = self.refresh_town_task_terrain(&mut changed);
             let full_visibility_refresh = task_terrain_changed
                 || duelist_completion
@@ -2885,6 +2916,7 @@ impl Game {
             charges,
             fuel: initial_item_fuel(&self.content, kind_id),
             device_recovery_progress: 0,
+            chest: None,
             captured_actor: None,
             location: ItemLocation::Inventory,
         });
@@ -3224,6 +3256,7 @@ impl Game {
             .filter(|entity| entity.hp > 0)
             .map(|entity| entity.position)
             .chain(std::iter::once(origin))
+            .chain(std::iter::once(self.player.position))
             .chain(self.items.iter().filter_map(|item| match item.location {
                 ItemLocation::Ground(position) => Some(position),
                 ItemLocation::Inventory
@@ -3713,6 +3746,9 @@ impl Game {
         let item = &self.items[index];
         if matches!(item.location, ItemLocation::Absorbed { .. }) {
             return Err(CoreError::AbsorbedDeviceUnavailable("use-body-command"));
+        }
+        if self.item_activation_needs_equipping(item) {
+            return Ok(None);
         }
         let definition = self.content.item(&item.kind_id).cloned().ok_or_else(|| {
             CoreError::Invariant(format!(

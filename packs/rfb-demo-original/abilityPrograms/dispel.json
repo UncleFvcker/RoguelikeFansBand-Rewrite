@@ -7,6 +7,10 @@
     {
       "statusKindId": "rfb.status.haste",
       "type": "remove-status"
+    },
+    {
+      "statusKindId": "rfb.status.poetic-inspiration",
+      "type": "remove-status"
     }
   ]
 }

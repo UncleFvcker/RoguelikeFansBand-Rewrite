@@ -2522,6 +2522,16 @@ pub(super) fn validate_world(
         if procedural.connections.is_empty() {
             continue;
         }
+        let dungeon = world
+            .dungeons
+            .iter()
+            .find(|dungeon| Some(&dungeon.id) == procedural.dungeon_id.as_ref());
+        let extended_shafts = dungeon.is_some_and(DungeonDefinition::has_extended_shafts);
+        let shaft_delta = |target_depth| {
+            dungeon.map_or(2, |dungeon| {
+                dungeon.shaft_depth_delta(procedural.depth, target_depth > procedural.depth)
+            })
+        };
         if procedural.return_floor_id == world.initial_floor_id
             && procedural
                 .entry_connection_id
@@ -2561,7 +2571,8 @@ pub(super) fn validate_world(
                 let depth_delta = target.depth.abs_diff(procedural.depth);
                 if target_connection.kind != connection.kind
                     || (matches!(connection.kind, FloorConnectionKind::Stairs) && depth_delta != 1)
-                    || (matches!(connection.kind, FloorConnectionKind::Shaft) && depth_delta != 2)
+                    || (matches!(connection.kind, FloorConnectionKind::Shaft)
+                        && depth_delta != shaft_delta(target.depth))
                     || (target.lifecycle != procedural.lifecycle)
                     || (target.dungeon_id != procedural.dungeon_id)
                     || !terrain_tags
@@ -2606,7 +2617,10 @@ pub(super) fn validate_world(
                                 .iter()
                                 .find(|floor| floor.id == dungeon.root_floor_id)
                         })
-                        .is_some_and(|root| root.depth.checked_add(1) == Some(procedural.depth));
+                        .is_some_and(|root| {
+                            procedural.depth > root.depth
+                                && procedural.depth - root.depth < shaft_delta(0)
+                        });
                 if connection.target_connection_id.is_some()
                     || !(matches!(connection.kind, FloorConnectionKind::Stairs) || surface_shaft)
                     || !terrain_tags
@@ -2633,11 +2647,17 @@ pub(super) fn validate_world(
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
             };
             let depth_delta = target.depth.abs_diff(procedural.depth);
-            if target_connection.target_floor_id != procedural.id
-                || target_connection.target_connection_id.as_deref() != Some(connection.id.as_str())
+            // Source defaults need not be reciprocal at 78/82. On arrival the
+            // runtime records the actual return link in the existing state.
+            let source_shaft = extended_shafts && connection.kind == FloorConnectionKind::Shaft;
+            if (!source_shaft
+                && (target_connection.target_floor_id != procedural.id
+                    || target_connection.target_connection_id.as_deref()
+                        != Some(connection.id.as_str())))
                 || target_connection.kind != connection.kind
                 || (matches!(connection.kind, FloorConnectionKind::Stairs) && depth_delta != 1)
-                || (matches!(connection.kind, FloorConnectionKind::Shaft) && depth_delta != 2)
+                || (matches!(connection.kind, FloorConnectionKind::Shaft)
+                    && depth_delta != shaft_delta(target.depth))
                 || (target.lifecycle != procedural.lifecycle)
                 || (target.dungeon_id != procedural.dungeon_id)
                 || !terrain_tags
@@ -2647,6 +2667,15 @@ pub(super) fn validate_world(
                             tags.contains("stairs-down")
                         } else {
                             tags.contains("stairs-up")
+                        }
+                    })
+                || !terrain_tags
+                    .get(&target_connection.terrain_id)
+                    .is_some_and(|tags| {
+                        if target.depth > procedural.depth {
+                            tags.contains("stairs-up")
+                        } else {
+                            tags.contains("stairs-down")
                         }
                     })
             {
@@ -3245,6 +3274,17 @@ pub(super) fn validate_world(
                     .collect();
             }
             children_by_floor.insert(floor.id.as_str(), children);
+        }
+        if dungeon.has_extended_shafts() {
+            // Non-route depths can be entered by recall/other depth travel.
+            // Each declared shaft also supplies a real, saved return edge.
+            let reverse_edges = children_by_floor
+                .iter()
+                .flat_map(|(from, targets)| targets.iter().map(move |to| (*to, *from)))
+                .collect::<Vec<_>>();
+            for (from, to) in reverse_edges {
+                children_by_floor.entry(from).or_default().push(to);
+            }
         }
         if dungeon.guardian_actor_kind_id.is_some() && final_count == 0 {
             return Err(ContentError::InvalidProceduralFloor(root.id.clone()));

@@ -160,6 +160,8 @@ fn morivant_snakes_fetch_pickup_save_and_exit_keep_one_artifact() {
         .find(|item| item.id == "test.snakes.plain-whip")
         .unwrap()
         .location = ItemLocation::Ground(Position { x: 19, y: 4 });
+    game.equip_inventory_item(&whip_id, None).unwrap();
+    game.refresh_player_resource_maxima();
     game.rng = RfbRng::seeded(
         (0..1_000)
             .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)

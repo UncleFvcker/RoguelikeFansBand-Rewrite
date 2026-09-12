@@ -2191,10 +2191,12 @@ impl Game {
         };
 
         for (guardian, dungeon_world_position, position) in spawns {
-            if self
-                .entities
-                .iter()
-                .any(|actor| actor.id == guardian.instance_id || actor.position == position)
+            // wild.c checks mon_available_num before placing a unique guardian.
+            if !self.unique_actor_kind_is_available(&guardian.actor_kind_id)
+                || self
+                    .entities
+                    .iter()
+                    .any(|actor| actor.id == guardian.instance_id || actor.position == position)
                 || self.player.position == position
             {
                 continue;

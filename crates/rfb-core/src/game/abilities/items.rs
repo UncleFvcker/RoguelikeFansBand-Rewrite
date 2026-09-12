@@ -938,6 +938,7 @@ impl Game {
             unreachable!("item creation executor requires a create-item effect");
         };
         let draft = GeneratedItemDraft {
+            chest: None,
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,
@@ -1053,6 +1054,7 @@ impl Game {
             charges: None,
             fuel: None,
             device_recovery_progress: 0,
+            chest: None,
             captured_actor: None,
             location: ItemLocation::Inventory,
         };

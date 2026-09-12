@@ -227,6 +227,10 @@ def source_instances(read, exe, root, scoring_flags):
         base = kinds[base_definition["rfbBaseKind"]["sourceIndex"]]
         entry = artifacts[artifact["sourceIndex"]] if artifact else base
         tval, sval, pval = entry["identity"]
+        # object2.c prices whistles from k_info; new_object_cost's zero is
+        # not an equipment score or the actual price of these objects.
+        if tval == 4:
+            continue
         dd, ds, mult = dice_or_mult(entry["parameters"])
         base_dd, base_ds, base_mult = dice_or_mult(base["parameters"])
         ac, _, to_h, to_d, to_a = entry["parameters"]

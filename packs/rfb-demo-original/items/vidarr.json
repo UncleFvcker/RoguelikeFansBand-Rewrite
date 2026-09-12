@@ -1,0 +1,97 @@
+{
+  "glyph": "]",
+  "generationLevel": 40,
+  "weightTenthsPound": 80,
+  "baseValue": 200000,
+  "maxStack": 1,
+  "equipmentSlot": "boots",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 372,
+    "baseItemKindId": "demo.item.pair-of-hard-leather-boots",
+    "instant": false,
+    "rarityOneIn": 50
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION",
+      "QUESTITEM",
+      "RES_COLD",
+      "RES_DARK",
+      "RES_FIRE",
+      "RES_POIS",
+      "SPEED"
+    ],
+    "pval": 3,
+    "toArmor": 27
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 30,
+    "speed": 3
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 6,
+    "meleeDamage": 6
+  },
+  "resistances": {
+    "fire": "resistant",
+    "cold": "resistant",
+    "poison": "resistant",
+    "dark": "resistant"
+  },
+  "passives": [
+    "levitation"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.vidarr",
+        "nameKey": "device-activation-e5-stunning-kick-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 9375,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "entity"
+          ],
+          "range": 1,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.vidarr"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 800
+    }
+  },
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.vidarr",
+  "nameKey": "item-demo-vidarr-name",
+  "descriptionKey": "item-demo-vidarr-description"
+}

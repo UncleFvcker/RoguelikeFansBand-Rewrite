@@ -193,6 +193,23 @@ test("compact rows keep multi-selection and show live details without losing lis
   assert.deepEqual([...state.selectedInventoryIds], ["potion"]);
 });
 
+test("throwing from item details uses the core target spec and respects busy input", (t) => {
+  const { panel, dom, state, targets, commands } = createInventoryFixture(t);
+  const throwTargetSpec = { modes: ["direction"], range: 9, requiresLineOfEffect: true };
+  const weapon = item("hammer", { throwTargetSpec });
+  panel.render([weapon], []);
+  panel.openDetail(weapon.id);
+  const button = dom.inventoryDetailActions.children.find((child) => child.textContent.startsWith("action-inventory-throw"));
+  state.busy = true;
+  button.dispatchEvent(new Event("click"));
+  assert.equal(targets.length, 0);
+  state.busy = false;
+  button.dispatchEvent(new Event("click"));
+  assert.deepEqual(targets, [[throwTargetSpec, { type: "throw", itemId: weapon.id }]]);
+  assert.equal(dom.inventoryDetailDialog.open, false);
+  assert.deepEqual(commands, []);
+});
+
 test("bag details show the known final capacity and source ego without redundant identification labels", (t) => {
   const { panel, dom } = createInventoryFixture(t);
   const bag = item("bag", { equipmentSlot: "container" });

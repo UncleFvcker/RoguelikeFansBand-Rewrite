@@ -211,12 +211,34 @@ impl Game {
         )
     }
 
-    pub(super) fn ty_curse_summon(
+    pub(in crate::game) fn ty_curse_summon(
         &mut self,
         source: &str,
         category: &str,
         level: u16,
         unique: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> usize {
+        self.summon_hostile_category_at(
+            source,
+            category,
+            level,
+            unique,
+            self.player.position,
+            events,
+            changed,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub(in crate::game) fn summon_hostile_category_at(
+        &mut self,
+        source: &str,
+        category: &str,
+        level: u16,
+        unique: bool,
+        origin: Position,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) -> usize {
@@ -241,8 +263,7 @@ impl Game {
                 })
             });
         }
-        let positions =
-            self.open_positions_around_for_actor_kinds(self.player.position, 3, &candidates);
+        let positions = self.open_positions_around_for_actor_kinds(origin, 3, &candidates);
         let owner = self.player.id.clone();
         let mut resolution = self.resolve_category_summon(
             CategorySummonSpec {
@@ -322,7 +343,7 @@ impl Game {
         count
     }
 
-    fn ty_curse_high_summon(
+    pub(in crate::game) fn ty_curse_high_summon(
         &mut self,
         source: &str,
         depth: u16,

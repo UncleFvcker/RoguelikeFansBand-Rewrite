@@ -32,6 +32,34 @@ use rfb_protocol::{
 use std::collections::{BTreeMap, BTreeSet};
 
 impl Game {
+    pub(in crate::game) fn anger_monster_from_control_effect(&mut self, index: usize) {
+        let actor = &self.entities[index];
+        let definition = self.actor_runtime_definition(actor).unwrap();
+        let scarce = definition
+            .finite_lifetime_instance_limit()
+            .is_some_and(|limit| limit < 10)
+            || definition.tags.iter().any(|tag| tag == "unique2");
+        let actor_id = actor.id.clone();
+        if actor.friendly
+            || (actor.controller_id.is_some()
+                && self.rng.bounded(3) == 0
+                && scarce
+                && self.riding_actor_id.as_deref() != Some(actor_id.as_str()))
+        {
+            self.entities[index].friendly = false;
+            self.entities[index].controller_id = None;
+            self.clear_riding_bond_for(&actor_id);
+            for (virtue, amount) in [
+                (VirtueKindDto::Individualism, 1),
+                (VirtueKindDto::Honour, -1),
+                (VirtueKindDto::Justice, -1),
+                (VirtueKindDto::Compassion, -1),
+            ] {
+                self.add_virtue(virtue, amount);
+            }
+        }
+    }
+
     pub(in crate::game) fn projected_monster_status_targets(&self) -> Vec<String> {
         // spells2.c:project_hack requires geometric sight AND projectability,
         // not monster visibility. Ordinary projectable() has MAX_RANGE 18.
@@ -82,10 +110,6 @@ impl Game {
             let level = definition.level;
             let unique = definition.tags.iter().any(|tag| tag == "unique");
             let resist_all = definition.tags.iter().any(|tag| tag == "resist-all");
-            let scarce = definition
-                .finite_lifetime_instance_limit()
-                .is_some_and(|limit| limit < 10)
-                || definition.tags.iter().any(|tag| tag == "unique2");
             let status_immune =
                 projection != Stasis && self.actor_has_status_immunity(index, status_kind_id);
             let immune =
@@ -214,25 +238,8 @@ impl Game {
             }
             // Successful GF_OLD_SLEEP also calls anger_monster. Even a common
             // pet consumes the source one-in-three roll before the scarcity test.
-            if projection == Sleep
-                && rejection.is_none()
-                && (self.entities[index].friendly
-                    || (self.entities[index].controller_id.is_some()
-                        && self.rng.bounded(3) == 0
-                        && scarce
-                        && self.riding_actor_id.as_deref() != Some(actor_id.as_str())))
-            {
-                self.entities[index].friendly = false;
-                self.entities[index].controller_id = None;
-                self.clear_riding_bond_for(&actor_id);
-                for (virtue, amount) in [
-                    (VirtueKindDto::Individualism, 1),
-                    (VirtueKindDto::Honour, -1),
-                    (VirtueKindDto::Justice, -1),
-                    (VirtueKindDto::Compassion, -1),
-                ] {
-                    self.add_virtue(virtue, amount);
-                }
+            if projection == Sleep && rejection.is_none() {
+                self.anger_monster_from_control_effect(index);
             }
             let resolution = self.apply_monster_status_result(
                 index,

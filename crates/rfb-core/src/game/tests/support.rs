@@ -507,6 +507,7 @@ pub(in crate::game) fn give_inventory_item(game: &mut Game, id: &str, kind_id: &
         charges,
         fuel: initial_item_fuel(&game.content, kind_id),
         device_recovery_progress: 0,
+        chest: None,
         captured_actor: None,
         location: ItemLocation::Inventory,
     });

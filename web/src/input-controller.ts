@@ -63,6 +63,9 @@ export class InputController {
     kind: string,
   ) => void;
   #installed = false;
+  #fishingTimer: number | undefined;
+  #fishingRunning = false;
+  #fishingCancelRequested = false;
   #ridingDirection = false;
   #worldTravelDestination: Position | undefined;
   #localTravelDestination: Position | undefined;
@@ -106,6 +109,8 @@ export class InputController {
     if (this.#installed) return;
     this.#installed = true;
     this.#window.addEventListener("keydown", this.#handleKeydown);
+    this.#window.addEventListener("keydown", this.#interruptFishing, true);
+    this.#window.addEventListener("pointerdown", this.#interruptFishing, true);
     this.#window.addEventListener("resize", this.#handleResize);
     this.#dom.traverseStairs.addEventListener("click", this.#handleTraverseStairs);
     this.#dom.targetModeToggle.addEventListener("click", this.#handleTargetToggle);
@@ -116,6 +121,10 @@ export class InputController {
     if (!this.#installed) return;
     this.#installed = false;
     this.#window.removeEventListener("keydown", this.#handleKeydown);
+    this.#window.removeEventListener("keydown", this.#interruptFishing, true);
+    this.#window.removeEventListener("pointerdown", this.#interruptFishing, true);
+    this.#window.clearTimeout(this.#fishingTimer);
+    this.#fishingTimer = undefined;
     this.#window.removeEventListener("resize", this.#handleResize);
     this.#dom.traverseStairs.removeEventListener("click", this.#handleTraverseStairs);
     this.#dom.targetModeToggle.removeEventListener("click", this.#handleTargetToggle);
@@ -229,6 +238,10 @@ export class InputController {
     if (!this.#state.targeting) return;
     const cancelledDevice = announce && this.#state.targetingIntent?.type === "absorbed-device"
       ? this.#state.targetingIntent.itemId : undefined;
+    const intent = this.#state.targetingIntent;
+    const cancelledActivation = announce && intent?.type === "item"
+      && [...this.#state.inventory, ...this.#state.equipment].some(item =>
+        item.id === intent.itemId && item.activation && item.usable);
     const wasMapCursor =
       this.#state.targetingIntent?.type === "look" ||
       this.#state.targetingIntent?.type === "local-travel";
@@ -240,9 +253,14 @@ export class InputController {
     }
     this.render();
     if (cancelledDevice) void this.#dispatch({ type: "use-absorbed-device", itemId: cancelledDevice, targets: [] });
+    if (cancelledActivation && intent?.type === "item") {
+      void this.#dispatch({ type: "use-item", itemId: intent.itemId });
+    }
   }
 
   reconcileStatus(state: GameSnapshot | GameUpdate): void {
+    if (!state.player.fishingDirection) this.#fishingCancelRequested = false;
+    this.#scheduleFishing();
     if (state.player.pendingDuelist) {
       this.cancelTargeting(false);
       this.#state.terrainInteractionMode = undefined;
@@ -395,7 +413,8 @@ export class InputController {
     this.#dom.targetCursor.hidden = !this.#state.targeting;
     if (!this.#state.targeting) {
       this.#dom.targetModeStatus.textContent = this.#localization.format(
-        available ? "target-status-ready" : "target-status-unavailable",
+        this.#state.status?.player.fishingDirection ? "target-status-fishing"
+          : available ? "target-status-ready" : "target-status-unavailable",
       );
       delete this.#dom.mapHost.dataset.targetX;
       delete this.#dom.mapHost.dataset.targetY;
@@ -713,6 +732,33 @@ export class InputController {
     this.#announce(terrainModeMessageKey(mode), undefined, "system");
   }
 
+  readonly #interruptFishing = (): void => {
+    if (this.#state.status?.player.fishingDirection) this.#fishingCancelRequested = true;
+  };
+
+  #scheduleFishing(): void {
+    if (!this.#installed || this.#fishingRunning || this.#fishingTimer !== undefined ||
+        !this.#state.status?.player.fishingDirection) return;
+    this.#fishingTimer = this.#window.setTimeout(() => {
+      this.#fishingTimer = undefined;
+      void this.#advanceFishing();
+    }, 10);
+  }
+
+  async #advanceFishing(): Promise<void> {
+    if (!this.#installed || !this.#state.status?.player.fishingDirection) return;
+    if (this.#state.busy) { this.#scheduleFishing(); return; }
+    if (this.#state.commandBlocked) return;
+    this.#fishingRunning = true;
+    const revision = this.#state.status.revision;
+    try {
+      await this.#dispatch({ type: this.#fishingCancelRequested ? "cancel-fishing" : "continue-fishing" });
+    } finally {
+      this.#fishingRunning = false;
+    }
+    if (this.#state.status?.revision !== revision) this.#scheduleFishing();
+  }
+
   async #confirmTargeting(): Promise<void> {
     const state = this.#state.targeting;
     const status = this.#state.status;
@@ -745,6 +791,8 @@ export class InputController {
           ? { type: "use-item", itemId: intent.itemId, target }
           : intent.type === "absorbed-device"
             ? { type: "use-absorbed-device", itemId: intent.itemId, targets: [target] }
+          : intent.type === "throw" && target.type === "direction"
+            ? { type: "throw", itemId: intent.itemId, direction: target.direction }
           : { type: "fire-target", target },
     );
   }
@@ -1030,8 +1078,11 @@ function targetSpecForIntent(
     };
   }
   if (intent.type === "projectile") return state.player.projectileProfile?.targetSpec;
+  if (intent.type === "throw") {
+    return [...state.inventory, ...state.equipment].find(item => item.id === intent.itemId)?.throwTargetSpec;
+  }
   if (intent.type === "item") {
-    return [...state.inventory, ...(state.player.magicEater?.deviceCommands.flatMap(command => command.items) ?? [])].find(
+    return [...state.inventory, ...state.equipment, ...(state.player.magicEater?.deviceCommands.flatMap(command => command.items) ?? [])].find(
       (item) => item.id === intent.itemId && item.usable,
     )?.useTargetSpec;
   }

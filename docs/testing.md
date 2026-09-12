@@ -76,6 +76,36 @@ node e2e/tauri.e2e.mjs --berserker --fast-entry
 
 在 `web` 执行 `npm run e2e:build`，随后执行 `node e2e/tauri.e2e.mjs --thingol`。[聚焦脚本](../web/e2e/thingol.e2e.mjs)正常创建人类1级战士，核心导出测试显式选择出生天赋、清怪、授予并装备辛葛的披风、提供背包供能装置及脚下零能量装置，并选择一次成功且供能未损毁的种子。UI验证两个独立选择框、任一阶段取消的时间／能量边界、背包到脚下充能、冷却存档和原生加载后的同次充能哈希。报告、存档及截图在 `test-results/thingol/`。供能损毁／目标失败、普通生成与700 tick边界由核心专项覆盖；不宣称自然获取、练级或Android验收。
 
+## 阿斯加德验收准备
+
+AS7 已完成来源与生成物收口，并执行核心、阿斯加德桌面及普通 EXE 检查。实际结果、途中修复和检查点续跑范围见[计划 AS7](../design/asgard-dungeon-plan-20260912.md#as7来源状态与交付收口)，以下命令用于复现。
+
+仓库根目录先执行核心专项与普通 Tauri 准备接口拒绝分支；AS2–AS5 其余相关回归和全局契约范围见[计划](../design/asgard-dungeon-plan-20260912.md)。
+
+```powershell
+cargo test -p rfb-core --lib game::tests::asgard::
+cargo test -p rfb-tauri --lib tests::ordinary_native_app_rejects_asgard_preparation_before_session_access -- --exact
+```
+
+在 `web` 执行专用桌面场景，并用正常 standalone 构建产物检查真实 IPC 拒绝：
+
+```powershell
+npm run e2e:build
+node e2e/tauri.e2e.mjs --asgard
+npm run build:standalone:debug
+node e2e/asgard-standalone.e2e.mjs
+```
+
+[核心流程](../crates/rfb-core/src/game/tests/asgard/acceptance.rs)和[桌面场景](../web/e2e/asgard.e2e.mjs)共用受限的 [Rust 准备](../crates/rfb-core/src/game/floor/asgard_e2e.rs)：正常新战士出生选出北欧激活的种子，物理放到 (94,11)，给予 50 级、+100／+100 阔剑、两张召回之语卷轴、临时 +2000 最大 HP、+1000 近战技能／伤害、满有效玩家 HP 和 200000 tick 浮空／无敌／看见隐形，免疫流血／失明／混乱／恐惧／麻痹／震慑，揭示地图／隐藏门／陷阱。沿途清场按实际实体列表，保留海姆达尔、奥丁、维达及其携带物、能量和状态；战前仅将玩家放到既有目标旁并补满玩家 HP，不改三者 HP／最大 HP、种类或定义。三场战斗由生产攻击命令结算；这是准备后的攻击／流程验证，不是自然练级／难度通关；敌方仍使用正常 AI，玩家受伤、目标离开相邻位置或出现无关召唤时再次记录准备，攻击段在这些边界停止。独立核心用例另去掉玩家保护并检查三者源近战消费者。
+
+场景覆盖正式入口、九深度路线、64／76／80／88 画面、64／80 正常镜头滚动、三者死亡、奥丁死后维达仍存活的原生检查点、阔刃长矛『符文长矛』与获得物品卷轴的拾取／详情／实际用卷轴、返回和召回。原生键盘处理门、楼梯、拾取及路线／战斗起点；长段最多 16 次生产 Rust 命令，目标死亡或位移异常即停止，段末经真实保存恢复同步 UI。每次准备写明前后哈希、玩家参数、移除与保留实体；每次选中原生加载断言没有全列表读取。普通镜头维持 100%，不要求整张 96×33 地图装入视窗。
+
+桌面报告、19 张截图及失败记录在 `test-results/asgard/`。`route-report.json` 保留入口到战斗／奖励／地表返程的通过记录及旧逐回合召回段的同步超时；`recall-report.json` 从同一真实 `surface-return.rfbsave` 恢复，以原生 `r`／Rest 完成双向召回及四次原生保存恢复。`acceptance-summary.json` 汇总两段的对应哈希、范围和实际结果，不把续跑写成一次无中断全程通过。完整脚本现使用 Rest 等待召回，遇敌等中断后才重新准备；核心也验证满 HP 时待召回仍能休息推进。
+
+`standalone-guard-report.json` 由[普通产物脚本](../web/e2e/asgard-standalone.e2e.mjs)启动 `target/debug/rfb-tauri.exe` 后生成，记录 EXE SHA-256 及 arrival／route／battle 三阶段的真实拒绝，全部通过。该脚本通过 WebView2 的 `--edge-webview-switches` 为本次进程开启本机 CDP，使用新的 WebView 配置目录，不创建游戏或原生存档；管理员进程会忽略环境变量里的调试参数，见 [Microsoft 文档](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/security)。专用 E2E 仍使用独立应用标识；普通可玩 EXE 不能用 Cargo build 代替 Tauri standalone 构建。
+
+按用户要求，AS7 不再重跑祖尔整流程；此前 Z6 的验收记录继续保留。共用助手在本批由实际使用它们的阿斯加德场景验证，不将已经通过的其他城镇整流程自动加入验收范围。
+
 ## Contract fixture
 
 当前集位于 [tests/fixtures/active/scenarios](../tests/fixtures/active/scenarios/)，分类和最低数量等政策来自 [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)。`rfb-contract` 的 [CLI](../crates/rfb-contract/src/main.rs)和[断言实现](../crates/rfb-contract/src/lib.rs)是精确语义依据。

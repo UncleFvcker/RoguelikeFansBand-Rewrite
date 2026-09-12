@@ -437,6 +437,28 @@ impl AppState {
         Ok(session.recorder.game().snapshot())
     }
 
+    fn prepare_asgard_e2e(
+        &self,
+        phase: &str,
+        target_id: Option<&str>,
+    ) -> Result<GameSnapshot, String> {
+        #[cfg(feature = "webdriver")]
+        {
+            let mut session = self.lock_session()?;
+            let session = session.as_mut().ok_or("game session is not initialized")?;
+            let mut game = session.recorder.game().clone();
+            game.debug_prepare_asgard_e2e(phase, target_id)
+                .map_err(|error| error.to_string())?;
+            session.recorder = ReplayRecorder::new(game);
+            Ok(session.recorder.game().snapshot())
+        }
+        #[cfg(not(feature = "webdriver"))]
+        {
+            let _ = (phase, target_id);
+            Err("Asgard E2E fixture is unavailable".to_owned())
+        }
+    }
+
     fn lock_session(&self) -> Result<std::sync::MutexGuard<'_, Option<GameSession>>, String> {
         self.session
             .lock()
@@ -784,6 +806,20 @@ struct E2eInspection {
     wilderness_position: Option<rfb_protocol::Position>,
     wilderness_view_offset: rfb_protocol::Position,
     active_actor_count: usize,
+    active_actors: Vec<rfb_protocol::ActorSaveDto>,
+    active_pantheons: u8,
+    dungeon_states: Vec<rfb_protocol::DungeonStateSaveDto>,
+    defeated_actor_counts: Vec<rfb_protocol::DefeatedActorCountSaveDto>,
+    ground_items: Vec<rfb_protocol::ItemSaveDto>,
+}
+
+#[tauri::command]
+fn prepare_asgard_e2e(
+    state: tauri::State<'_, AppState>,
+    phase: String,
+    target_id: Option<String>,
+) -> Result<GameSnapshot, String> {
+    state.prepare_asgard_e2e(&phase, target_id.as_deref())
 }
 
 #[tauri::command]
@@ -802,6 +838,11 @@ fn inspect_game_e2e(state: tauri::State<'_, AppState>) -> Result<E2eInspection, 
             wilderness_position: save.wilderness_position,
             wilderness_view_offset: save.wilderness_view_offset,
             active_actor_count: save.entities.len(),
+            active_actors: save.entities,
+            active_pantheons: save.active_pantheons,
+            dungeon_states: save.dungeon_states,
+            defeated_actor_counts: save.defeated_limited_actor_counts,
+            ground_items: save.items,
         })
     }
     #[cfg(not(feature = "webdriver"))]
@@ -1033,6 +1074,7 @@ pub fn run() {
             prepare_stairs_e2e,
             prepare_town_map_e2e,
             prepare_zul_e2e,
+            prepare_asgard_e2e,
             inspect_game_e2e,
             save_game,
             load_game,
@@ -1058,6 +1100,21 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    #[cfg(not(feature = "webdriver"))]
+    fn ordinary_native_app_rejects_asgard_preparation_before_session_access() {
+        let state = super::AppState::default();
+        for (phase, target) in [
+            ("arrival", None),
+            ("route", None),
+            ("battle", Some("demo.guardian.asgard.1")),
+        ] {
+            assert_eq!(
+                state.prepare_asgard_e2e(phase, target).unwrap_err(),
+                "Asgard E2E fixture is unavailable"
+            );
+        }
+    }
     use rfb_protocol::{Direction, GameCommand};
     use rfb_replay::{decode as decode_replay, verify as verify_replay};
 

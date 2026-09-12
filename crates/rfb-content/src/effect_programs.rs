@@ -124,6 +124,8 @@ fn effect_program_input_for_step(
         | ItemUseEffectDefinition::RandomElementConeDamage { .. }
         | ItemUseEffectDefinition::TerrainBeam { .. }
         | ItemUseEffectDefinition::RidingCharge
+        | ItemUseEffectDefinition::Fishing
+        | ItemUseEffectDefinition::StunningKick { .. }
         | ItemUseEffectDefinition::PiercingShot => Some(EffectProgramInputDefinition::Actor),
         ItemUseEffectDefinition::VisibleApplyStatus { .. } => {
             Some(EffectProgramInputDefinition::SelfTarget)
@@ -197,8 +199,10 @@ pub(super) fn effect_program_input_matches_device_target(
                     )
                 })
                 && (1..=64).contains(&target.range)
-                && (matches!(effect, ItemUseEffectDefinition::Hermes)
-                    || target.requires_line_of_effect
+                && (matches!(
+                    effect,
+                    ItemUseEffectDefinition::Hermes | ItemUseEffectDefinition::Fishing
+                ) || target.requires_line_of_effect
                     || matches!(effect, ItemUseEffectDefinition::AbilityEffect { effect, .. }
                         if matches!(effect.as_ref(), AbilityEffectDefinition::FetchItem { .. })))
         }

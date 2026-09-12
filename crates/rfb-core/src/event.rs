@@ -606,6 +606,10 @@ pub(crate) enum DomainEvent {
     DoorUnlockFailed {
         position: Position,
     },
+    ChestInteracted {
+        message_key: String,
+    },
+    AsgardAvengerSummoned,
     DoorOpenUnavailable,
     DoorBashedOpen {
         position: Position,
@@ -973,6 +977,19 @@ pub(crate) enum DomainEvent {
         trace: ProjectileTrace,
     },
     ItemThrowUnavailable,
+    ItemReturnFailed {
+        item_kind_id: String,
+        came_back: bool,
+    },
+    FishingStarted,
+    FishingNoWater,
+    FishingBlocked {
+        actor_kind_id: String,
+    },
+    FishingCaught {
+        actor_kind_id: String,
+    },
+    FishingBaitLost,
     DeviceAbsorbed {
         item_id: String,
         item_kind_id: String,
@@ -2938,6 +2955,10 @@ impl DomainEvent {
                 "door-unlock-failed",
                 [("x", position.x.to_string()), ("y", position.y.to_string())],
             ),
+            Self::ChestInteracted { message_key } => dto_without_args("item.chest", &message_key),
+            Self::AsgardAvengerSummoned => {
+                dto_without_args("actor.asgard-avenger", "asgard-avenger-summoned")
+            }
             Self::DoorOpenUnavailable => {
                 dto_without_args("terrain.door-open-unavailable", "door-open-unavailable")
             }
@@ -4045,6 +4066,31 @@ impl DomainEvent {
                 dto("item.thrown", "item-thrown", [("target", target_kind_id)]),
                 trace,
             ),
+            Self::ItemReturnFailed {
+                item_kind_id,
+                came_back,
+            } => dto(
+                "item.return-failed",
+                if came_back {
+                    "item-catch-failed"
+                } else {
+                    "item-return-failed"
+                },
+                [("target", item_kind_id)],
+            ),
+            Self::FishingStarted => dto("fishing.started", "fishing-started", []),
+            Self::FishingNoWater => dto("fishing.no-water", "fishing-no-water", []),
+            Self::FishingBlocked { actor_kind_id } => dto(
+                "fishing.blocked",
+                "fishing-blocked",
+                [("target", actor_kind_id)],
+            ),
+            Self::FishingCaught { actor_kind_id } => dto(
+                "fishing.caught",
+                "fishing-caught",
+                [("target", actor_kind_id)],
+            ),
+            Self::FishingBaitLost => dto("fishing.bait-lost", "fishing-bait-lost", []),
             Self::ItemThrowMissed {
                 source_kind_id,
                 target_kind_id,

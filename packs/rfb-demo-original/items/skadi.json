@@ -1,0 +1,69 @@
+{
+  "glyph": "}",
+  "generationLevel": 80,
+  "weightTenthsPound": 30,
+  "baseValue": 66666,
+  "maxStack": 1,
+  "equipmentSlot": "launcher",
+  "tags": [
+    "artifact",
+    "equipment",
+    "launcher"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 377,
+    "baseItemKindId": "demo.item.long-bow",
+    "instant": false,
+    "rarityOneIn": 100
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_COLD",
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "RES_COLD",
+      "STEALTH",
+      "XTRA_SHOTS"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "projectileProfile": {
+    "ammunitionType": "arrow",
+    "damageMultiplierPercent": 375,
+    "range": 16,
+    "shotEnergy": 10000,
+    "toDamage": 18,
+    "toHit": 22
+  },
+  "modifiers": {
+    "dexterity": 3
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 3,
+    "baseShotDeltaPercent": 45
+  },
+  "resistances": {
+    "cold": "resistant"
+  },
+  "brands": [
+    "cold"
+  ],
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.skadi",
+  "nameKey": "item-demo-skadi-name",
+  "descriptionKey": "item-demo-skadi-description"
+}

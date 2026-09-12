@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.262";
+pub const PROTOCOL_VERSION: &str = "1.263";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 24;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 25;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -452,11 +452,19 @@ pub enum GameCommand {
     Ride {
         direction: Direction,
     },
+    OpenChest {
+        item_id: String,
+    },
+    DisarmChest {
+        item_id: String,
+    },
     OpenDoor {
         direction: Direction,
     },
     PickUp,
     Retire,
+    ContinueFishing,
+    CancelFishing,
     Rest {
         #[cfg_attr(feature = "bindings", schemars(range(min = 1, max = 100)))]
         turns: u16,
@@ -3976,6 +3984,7 @@ pub struct PlayerDto {
     pub confusing_strike_ready: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sniper_concentration: Option<SniperConcentrationDto>,
+    pub fishing_direction: Option<Direction>,
     #[serde(default)]
     pub resistances: Vec<ResistanceDto>,
     #[serde(default, skip_serializing_if = "is_default_player_progress")]
@@ -4111,6 +4120,23 @@ pub struct SummonDto {
     pub remaining_turns: u16,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChestSaveDto {
+    /// Positive: locked/trapped; negative: disarmed; zero: empty.
+    pub difficulty: i16,
+    pub opening_depth: u16,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ChestDto {
+    pub empty: bool,
+    pub can_open: bool,
+    pub can_disarm: bool,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -4119,6 +4145,8 @@ pub struct ItemDto {
     pub can_supply_recharge: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub can_receive_recharge: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub chest: Option<ChestDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     pub id: String,
@@ -4237,6 +4265,7 @@ pub enum ItemQualityDto {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ItemOriginKindDto {
+    Chest,
     Shop,
     Mixed,
     Mundanity,
@@ -4385,6 +4414,8 @@ pub struct CapturedActorDto {
 #[serde(rename_all = "camelCase")]
 pub struct InventoryItemDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub throw_target_spec: Option<TargetSpecDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bag_capacity: Option<u16>,
@@ -4490,6 +4521,8 @@ pub struct BodySlotDto {
 pub struct EquipmentItemDto {
     #[serde(default, skip_serializing_if = "is_false")]
     pub requires_recharge_targets: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub throw_target_spec: Option<TargetSpecDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5397,6 +5430,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(SummonDto);
     push_declaration!(EntityDto);
     push_declaration!(ItemDto);
+    push_declaration!(ChestDto);
     push_declaration!(ItemFuelKindDto);
     push_declaration!(ItemFuelDto);
     push_declaration!(GoldAppearanceDto);
@@ -5520,6 +5554,7 @@ pub struct PlayerSaveDto {
     #[serde(default, skip_serializing_if = "is_false")]
     pub confusing_strike_ready: bool,
     pub sniper_concentration: u8,
+    pub fishing_direction: Option<Direction>,
     pub probed_actor_kind_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resistances: Vec<ResistanceSaveDto>,
@@ -5840,6 +5875,7 @@ pub struct ItemSaveDto {
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub device_recovery_progress: u16,
+    pub chest: Option<ChestSaveDto>,
     pub captured_actor: Option<CapturedActorSaveDto>,
 }
 
@@ -5896,6 +5932,7 @@ pub struct InventoryItemSaveDto {
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub device_recovery_progress: u16,
+    pub chest: Option<ChestSaveDto>,
     pub captured_actor: Option<CapturedActorSaveDto>,
 }
 
@@ -5953,6 +5990,7 @@ pub struct EquipmentItemSaveDto {
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub device_recovery_progress: u16,
+    pub chest: Option<ChestSaveDto>,
     pub captured_actor: Option<CapturedActorSaveDto>,
 }
 
@@ -6010,6 +6048,7 @@ pub struct CarriedItemSaveDto {
     pub activation: Option<ItemActivationDto>,
     #[serde(default, skip_serializing_if = "is_zero_u16")]
     pub device_recovery_progress: u16,
+    pub chest: Option<ChestSaveDto>,
     pub captured_actor: Option<CapturedActorSaveDto>,
 }
 
@@ -6722,6 +6761,7 @@ mod tests {
                 statuses: Vec::new(),
                 confusing_strike_ready: false,
                 sniper_concentration: None,
+                fishing_direction: None,
                 resistances: Vec::new(),
                 progress: PlayerProgressDto::default(),
                 build: None,
@@ -6769,6 +6809,7 @@ mod tests {
             items: vec![ItemDto {
                 can_supply_recharge: false,
                 can_receive_recharge: false,
+                chest: None,
                 artifact_name: None,
                 id: "demo.item.ground.1".to_owned(),
                 kind_id: "demo.item.shard".to_owned(),
@@ -6837,6 +6878,7 @@ mod tests {
                 melee_profile: None,
                 projectile_profile: None,
                 throw_profile: None,
+                throw_target_spec: None,
             }],
             equipment: vec![EquipmentItemDto {
                 requires_recharge_targets: false,
@@ -6880,6 +6922,7 @@ mod tests {
                 melee_profile: None,
                 projectile_profile: None,
                 throw_profile: None,
+                throw_target_spec: None,
             }],
             next_item_instance_serial: 4,
             explored: vec![true],
@@ -7010,6 +7053,7 @@ mod tests {
             statuses: Vec::new(),
             confusing_strike_ready: false,
             sniper_concentration: 0,
+            fishing_direction: None,
             probed_actor_kind_ids: Vec::new(),
             resistances: Vec::new(),
             progress: None,

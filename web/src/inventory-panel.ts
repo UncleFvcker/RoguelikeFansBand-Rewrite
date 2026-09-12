@@ -606,6 +606,18 @@ export class InventoryPanel {
     this.#appendItemDetails(body, item);
     this.#dom.inventoryDetailActions.replaceChildren();
     if ("slotId" in item) this.#appendEquipmentActions(this.#dom.inventoryDetailActions, item);
+    if (item.throwTargetSpec) {
+      const button = body.ownerDocument.createElement("button");
+      button.type = "button";
+      button.textContent = this.#localization.format("action-inventory-throw");
+      button.disabled = this.#state.busy || this.#state.playerDead || this.#state.worldMap;
+      button.addEventListener("click", () => {
+        if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
+        this.#closeDetail();
+        this.#startTargeting(item.throwTargetSpec, { type: "throw", itemId: item.id });
+      });
+      this.#dom.inventoryDetailActions.append(button);
+    }
     body.scrollTop = scrollTop;
   }
 

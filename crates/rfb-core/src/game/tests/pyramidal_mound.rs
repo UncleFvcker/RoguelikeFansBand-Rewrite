@@ -104,7 +104,7 @@ fn pyramidal_mound_formal_entry_shaft_round_trip_uses_rewards_and_restores_recal
         .unwrap()
         .incoming_damage_percent = 0;
     place_player_on_terrain(&mut game, "demo.terrain.pyramidal-mound-entrance");
-    for depth in (64..=92).step_by(2) {
+    for depth in [64, 68, 72, 76, 80, 82, 84, 86, 88, 90, 92] {
         let entered = dispatch_next(&mut game, GameCommand::TraverseStairs);
         assert_eq!(entered.floor_id, floor_id(depth));
         assert!(
@@ -188,7 +188,7 @@ fn pyramidal_mound_formal_entry_shaft_round_trip_uses_rewards_and_restores_recal
     let saved = game.to_save();
     let mut game = Game::from_save(saved.clone()).unwrap();
     assert_eq!(game.to_save(), saved);
-    for depth in (64..92).step_by(2).rev() {
+    for depth in [90, 88, 86, 84, 82, 80, 76, 72, 68, 64] {
         clear_monsters(&mut game);
         place_player_on_terrain(&mut game, "demo.terrain.shaft-up");
         assert_eq!(
@@ -390,9 +390,10 @@ fn pyramidal_mound_representative_maps_keep_materials_routes_and_legal_spawns() 
 fn pyramidal_mound_shafts_stop_at_surface_and_final_floor() {
     let base = generation_game(true);
     for (depth, targets) in [
-        (64, vec![0, 66]),
-        (65, vec![0, 67]),
-        (78, vec![76, 80]),
+        (64, vec![0, 68]),
+        (65, vec![0, 69]),
+        (67, vec![0, 71]),
+        (78, vec![74, 80]),
         (91, vec![89, 92]),
         (92, vec![90, 91]),
     ] {
@@ -425,7 +426,7 @@ fn pyramidal_mound_shafts_stop_at_surface_and_final_floor() {
                     .transition_floor(
                         target_id.clone(),
                         c.target_connection_id.clone(),
-                        None,
+                        Some(c.id.clone()),
                         false,
                     )
                     .unwrap();

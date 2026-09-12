@@ -1577,6 +1577,72 @@ impl Game {
         escort_leader_kind_id: Option<&str>,
         required_terrain: Option<&rfb_content::TerrainDefinition>,
     ) -> Option<String> {
+        self.select_allocated_monster(
+            floor_id,
+            Some(policy),
+            base_level,
+            floor_depth,
+            current_task_id,
+            target_floor_kind_ids,
+            escort_leader_kind_id,
+            required_terrain,
+            false,
+        )
+    }
+
+    pub(super) fn select_fishing_monster(&mut self) -> Option<String> {
+        let floor_id = self.current_floor_id.clone();
+        let floor_depth = self.floor_depth(&floor_id);
+        let depth = if floor_depth > 0 {
+            floor_depth
+        } else {
+            self.wilderness_position
+                .map_or(0, |position| self.wilderness_danger_level(position))
+        };
+        let policy = self
+            .content
+            .world(&self.world_id)
+            .and_then(|world| {
+                world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| floor.id == floor_id)
+            })
+            .and_then(|floor| floor.encounter_table_id.as_ref())
+            .and_then(|id| self.content.encounter_table(id))
+            .and_then(|table| table.global_allocation.clone());
+        let kind_ids = self
+            .entities
+            .iter()
+            .map(|actor| actor.kind_id.clone())
+            .collect::<Vec<_>>();
+        let task_id = self.current_floor_task_id().map(str::to_owned);
+        self.select_allocated_monster(
+            &floor_id,
+            policy.as_ref(),
+            depth,
+            floor_depth,
+            task_id.as_deref(),
+            &kind_ids,
+            None,
+            None,
+            true,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn select_allocated_monster(
+        &mut self,
+        floor_id: &str,
+        policy: Option<&GlobalMonsterAllocationDefinition>,
+        base_level: u16,
+        floor_depth: u16,
+        current_task_id: Option<&str>,
+        target_floor_kind_ids: &[String],
+        escort_leader_kind_id: Option<&str>,
+        required_terrain: Option<&rfb_content::TerrainDefinition>,
+        fishing: bool,
+    ) -> Option<String> {
         let current_legacy_dungeon_index = self
             .floor_dungeon(floor_id)
             .and_then(|dungeon| dungeon.legacy_index);
@@ -1609,19 +1675,27 @@ impl Game {
                     return false;
                 };
                 if definition.role != ActorRole::Monster
+                    || (fishing
+                        && (actor_is_unique(definition)
+                            || !definition
+                                .movement
+                                .modes
+                                .contains(&ActorMovementMode::Aquatic)
+                            || !matches!(definition.glyph.as_str(), "J" | "j" | "l" | "w")))
                     || !self.dungeon_allows_monster(floor_id, definition, false)
                     || !self.pantheon_allows_allocation(floor_id, definition)
-                    || allocation.wild_only
+                    || (!fishing && allocation.wild_only)
                     || self.actor_kind_is_dungeon_guardian(&definition.id)
                     || definition.level > u32::from(selection_level)
                     || definition.level < u32::from(minimum_level)
                     || (allocation.max_depth != 0 && allocation.max_depth < selection_level)
                     || (allocation.force_depth && definition.level > u32::from(floor_depth))
                     || !actor_allocation_matches_task(allocation, current_task_id)
-                    || !actor_allocation_matches_legacy_dungeon(
-                        allocation,
-                        current_legacy_dungeon_index,
-                    )
+                    || (!fishing
+                        && !actor_allocation_matches_legacy_dungeon(
+                            allocation,
+                            current_legacy_dungeon_index,
+                        ))
                     || (actor_is_unique(definition)
                         && (!allow_uniques
                             || target_floor_kind_ids
@@ -1670,7 +1744,9 @@ impl Game {
             {
                 100 / allocation.rarity
             } else {
-                self.original_dungeon_weight(&definition, policy)
+                policy.map_or(100 / allocation.rarity, |policy| {
+                    self.original_dungeon_weight(&definition, policy)
+                })
             };
             if weight > 0
                 && allocation.max_depth != 999

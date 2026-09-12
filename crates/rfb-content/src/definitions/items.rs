@@ -1038,6 +1038,11 @@ pub enum ItemUseEffectDefinition {
     EnchantEquipment,
     SummonOctopus,
     SummonKraken,
+    ReturnPets,
+    Fishing,
+    StunningKick {
+        power: u16,
+    },
     Escape,
     Starburst {
         damage: u16,

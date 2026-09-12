@@ -39,6 +39,8 @@ export async function connectKeyboard(profile) {
     keys[letter] = [`Key${letter.toUpperCase()}`, letter.toUpperCase().charCodeAt(0)];
     keys[letter.toUpperCase()] = keys[letter];
   }
+  keys.B = ["KeyB", 66, 8];
+  keys[">"] = ["Period", 190, 8];
   const errors = [];
   socket.addEventListener("message", event => {
     const message = JSON.parse(event.data);
@@ -48,12 +50,17 @@ export async function connectKeyboard(profile) {
   return {
     errors,
     async key(key, modifiers = 0) {
-      const [code, windowsVirtualKeyCode] = keys[key];
-      const params = { key, code, windowsVirtualKeyCode, modifiers };
+      const [code, windowsVirtualKeyCode, implicitModifiers = 0] = keys[key];
+      const params = { key, code, windowsVirtualKeyCode, modifiers: modifiers | implicitModifiers };
       await send("Input.dispatchKeyEvent", { type: "keyDown", ...params, ...(key === " " ? { text: " " } : key === "Enter" ? { text: "\r" } : {}) });
       await send("Input.dispatchKeyEvent", { type: "keyUp", ...params });
     },
     async text(text) { await send("Input.insertText", { text }); },
+    async evaluate(expression) {
+      const result = await send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true });
+      if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? result.exceptionDetails.text);
+      return result.result.value;
+    },
     async reload() {
       await send("Page.enable", {});
       const loaded = new Promise((resolve, reject) => {

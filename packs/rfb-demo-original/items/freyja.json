@@ -1,0 +1,63 @@
+{
+  "glyph": "(",
+  "generationLevel": 50,
+  "weightTenthsPound": 30,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "equipmentSlot": "cloak",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 373,
+    "baseItemKindId": "demo.item.fur-cloak",
+    "instant": false,
+    "rarityOneIn": 20
+  },
+  "rfbValue": {
+    "flags": [
+      "FREE_ACT",
+      "FULL_NAME",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION",
+      "QUESTITEM",
+      "RES_COLD",
+      "RES_LITE",
+      "SPEED"
+    ],
+    "pval": 5,
+    "toArmor": 9
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 12,
+    "speed": 5
+  },
+  "resistances": {
+    "cold": "resistant",
+    "light": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "passives": [
+    "levitation"
+  ],
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.freyja",
+  "nameKey": "item-demo-freyja-name",
+  "descriptionKey": "item-demo-freyja-description"
+}

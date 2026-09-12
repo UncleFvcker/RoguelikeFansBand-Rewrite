@@ -195,5 +195,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.gjallarhorn",
+    "chancePercent": 40
   }
 }

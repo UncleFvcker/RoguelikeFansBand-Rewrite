@@ -955,6 +955,7 @@ fn palantir_lists_hidden_uniques_without_revealing_their_positions_and_old_castl
         "test.palantir",
         "demo.item.palantir-of-westernesse",
     );
+    game.equip_inventory_item("test.palantir", None).unwrap();
     game.rng = seeded(|rng| rng.bounded(100) < 5);
     let mut events = Vec::new();
     game.use_inventory_item(

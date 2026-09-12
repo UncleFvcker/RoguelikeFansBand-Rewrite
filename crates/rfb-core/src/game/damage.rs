@@ -92,6 +92,9 @@ impl Game {
         damage: DamageOutcome,
         fatality_policy: FatalityPolicy,
     ) -> DamageApplicationPlan {
+        if damage.applied > 0 {
+            self.fishing_direction = None;
+        }
         let transcendence = self
             .player
             .statuses

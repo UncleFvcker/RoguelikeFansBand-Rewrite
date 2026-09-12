@@ -104,6 +104,7 @@ impl From<rfb_content::ItemQuality> for ItemGenerationMode {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct GeneratedItemDraft {
+    pub(super) chest: Option<rfb_protocol::ChestSaveDto>,
     pub(super) artifact_name: Option<String>,
     pub(super) intrinsic_melee_damage_dice: Option<rfb_protocol::MeleeDamageDiceDto>,
     pub(super) intrinsic_weight_tenths_pound: Option<u16>,
@@ -156,6 +157,7 @@ impl GeneratedItemDraft {
             charges: self.charges,
             fuel: self.fuel,
             device_recovery_progress: 0,
+            chest: self.chest,
             captured_actor: None,
             location,
         }
@@ -165,6 +167,7 @@ impl GeneratedItemDraft {
 impl From<ItemInstance> for GeneratedItemDraft {
     fn from(item: ItemInstance) -> Self {
         Self {
+            chest: item.chest,
             artifact_name: item.artifact_name,
             intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
             intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
@@ -195,6 +198,7 @@ pub(super) enum LootSource {
     FloorRoom { room_id: String, spawn_id: String },
     Vault { vault_id: String, spawn_id: String },
     ItemUse { item_id: String },
+    Chest { item_id: String },
     Rubble { position: Position },
     Shop { shop_id: String },
 }
@@ -243,6 +247,60 @@ impl Game {
         Ok(items)
     }
 
+    pub(super) fn generate_norse_death_extras(
+        &mut self,
+        actor: &Actor,
+        allow_chosen: bool,
+    ) -> Result<Vec<ItemInstance>, CoreError> {
+        let floor_id = self.current_floor_id.clone();
+        let depth = self.floor_depth(&floor_id);
+        let mut generated = Vec::new();
+        if actor.kind_id == "demo.actor.frigg-queen-of-asgard"
+            || (allow_chosen
+                && actor.kind_id == "demo.actor.aegir-god-king-of-the-sea-giants"
+                && actor.controller_id.as_deref() != Some(self.player.id.as_str()))
+        {
+            let chest = actor.kind_id == "demo.actor.frigg-queen-of-asgard";
+            let kind = if chest {
+                "demo.item.large-wooden-chest"
+            } else {
+                "demo.item.booze-potion"
+            };
+            let context = LootContext {
+                table_id: "demo.loot-table.base-items".into(),
+                floor_id: floor_id.clone(),
+                depth,
+                source: LootSource::MonsterDeath {
+                    actor_id: actor.id.clone(),
+                },
+            };
+            let mut draft = self.fixed_item_draft(&context, kind.into());
+            let mut quantity = if chest {
+                1
+            } else {
+                self.rng.bounded(25) as u32 + 1
+            };
+            let maximum = self
+                .content
+                .item(kind)
+                .expect("Norse death item must exist")
+                .max_stack;
+            while quantity > 0 {
+                draft.quantity = quantity.min(maximum);
+                quantity -= draft.quantity;
+                if let Some(position) = self.ground_drop_position(actor.position, false) {
+                    let mut item = self.commit_generated_item_draft(
+                        draft.clone(),
+                        ItemLocation::Ground(position),
+                    )?;
+                    item.origin_actor_kind_id = Some(actor.kind_id.clone());
+                    generated.push(item);
+                }
+            }
+        }
+        Ok(generated)
+    }
+
     pub(super) fn generate_death_loot(
         &mut self,
         actor: &Actor,
@@ -275,6 +333,7 @@ impl Game {
         let depth = self.floor_depth(&floor_id);
         let mut generated = Vec::new();
         let mut gold = Vec::new();
+        generated.extend(self.generate_norse_death_extras(actor, true)?);
         // xtra2.c: Osiris's chosen item precedes and supplements ordinary drops.
         if actor.kind_id == "demo.actor.osiris-the-reborn"
             && actor.controller_id.as_deref() != Some(self.player.id.as_str())
@@ -295,7 +354,13 @@ impl Game {
         if let Some(drop) = &actor_definition.special_artifact_drop
             && actor.controller_id.as_deref() != Some(self.player.id.as_str())
         {
-            let mut chance = drop.chance_percent;
+            let (item_kind_id, mut chance) = if let Some(alternative) = &drop.alternative
+                && self.rng.bounded(2) != 0
+            {
+                (&alternative.item_kind_id, alternative.chance_percent)
+            } else {
+                (&drop.item_kind_id, drop.chance_percent)
+            };
             if chance < 100
                 && self
                     .progress
@@ -306,7 +371,7 @@ impl Game {
             }
             // xtra2.c rolls even when the artifact has already been generated.
             if self.rng.bounded(100) < u64::from(chance)
-                && !self.generated_artifact_ids.contains(&drop.item_kind_id)
+                && !self.generated_artifact_ids.contains(item_kind_id)
                 && let Some(position) = self.ground_drop_position(actor.position, true)
             {
                 let context = LootContext {
@@ -317,7 +382,7 @@ impl Game {
                         actor_id: actor.id.clone(),
                     },
                 };
-                let draft = self.fixed_item_draft(&context, drop.item_kind_id.clone());
+                let draft = self.fixed_item_draft(&context, item_kind_id.clone());
                 generated
                     .push(self.commit_generated_item_draft(draft, ItemLocation::Ground(position))?);
             }
@@ -678,7 +743,9 @@ impl Game {
                 LootSource::Vault { vault_id, spawn_id } => {
                     context.depth > 0 && !vault_id.is_empty() && !spawn_id.is_empty()
                 }
-                LootSource::ItemUse { item_id } => !item_id.is_empty(),
+                LootSource::ItemUse { item_id } | LootSource::Chest { item_id } => {
+                    !item_id.is_empty()
+                }
                 LootSource::Shop { shop_id } => !shop_id.is_empty(),
                 LootSource::Rubble { position } => {
                     context.depth > 0 && self.index(*position).is_some()
@@ -700,7 +767,7 @@ impl Game {
                 .is_some_and(|build| build.race_id == "rfb-legacy.race.tomte");
         let rfb_generation = table.rfb_ego_policy.is_some();
         let source_allocation = table.kind_selection.is_some();
-        let (entries, theme) = match &table.kind_selection {
+        let (mut entries, theme) = match &table.kind_selection {
             Some(rfb_content::LootKindSelectionDefinition::RfbTheme { pool_id, theme }) => (
                 self.content
                     .loot_table(pool_id)
@@ -711,6 +778,13 @@ impl Game {
             ),
             _ => (table.entries.clone(), None),
         };
+        if matches!(context.source, LootSource::Chest { .. }) {
+            entries.retain(|entry| {
+                self.content
+                    .item(&entry.item_kind_id)
+                    .is_some_and(|item| item.rfb_base_kind.is_none_or(|base| base.tval != 7))
+            });
+        }
         let eligible_entries = entries
             .iter()
             .filter(|entry| {
@@ -915,6 +989,9 @@ impl Game {
         if let Some(kind_id) = artifact_kind_id {
             return Some(self.fixed_item_draft(context, kind_id));
         }
+        if entry.item_kind_id == "demo.item.large-wooden-chest" {
+            return Some(self.fixed_item_draft(context, entry.item_kind_id.clone()));
+        }
         let mut base_intrinsic_properties =
             self.content.item(&entry.item_kind_id).and_then(|item| {
                 materialize_rfb_harp_intrinsic_with_rng(&mut self.rng, item, generation_depth)
@@ -1101,6 +1178,7 @@ impl Game {
                 generation_depth,
             );
             let draft = GeneratedItemDraft {
+                chest: None,
                 artifact_name: None,
                 intrinsic_melee_damage_dice: None,
                 intrinsic_weight_tenths_pound: None,
@@ -1110,6 +1188,7 @@ impl Game {
                 kind_id: entry.item_kind_id.clone(),
                 quantity: 1,
                 origin_kind: match context.source {
+                    LootSource::Chest { .. } => Some(ItemOriginKindDto::Chest),
                     LootSource::Rubble { .. } => Some(ItemOriginKindDto::Rubble),
                     _ => None,
                 },
@@ -1258,6 +1337,7 @@ impl Game {
             },
         );
         let mut draft = GeneratedItemDraft {
+            chest: None,
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,
@@ -1267,6 +1347,7 @@ impl Game {
             kind_id: kind_id_override.unwrap_or_else(|| entry.item_kind_id.clone()),
             quantity: entry.quantity,
             origin_kind: match &context.source {
+                LootSource::Chest { .. } => Some(ItemOriginKindDto::Chest),
                 LootSource::Rubble { .. } => Some(ItemOriginKindDto::Rubble),
                 _ => None,
             },
@@ -1413,6 +1494,11 @@ impl Game {
         context: &LootContext,
         kind_id: String,
     ) -> GeneratedItemDraft {
+        let chest =
+            (kind_id == "demo.item.large-wooden-chest").then(|| rfb_protocol::ChestSaveDto {
+                difficulty: (self.rng.bounded(15) + 1) as i16,
+                opening_depth: context.depth.saturating_add(5),
+            });
         // apply_magic marks a fixed artifact generated before object_is_icky;
         // rejecting its finished draft must not make it available again.
         self.register_generated_artifact(&kind_id);
@@ -1443,6 +1529,7 @@ impl Game {
             2,
         );
         let mut draft = GeneratedItemDraft {
+            chest,
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,
@@ -1452,6 +1539,7 @@ impl Game {
             damage_dice_override: None,
             quantity: 1,
             origin_kind: match &context.source {
+                LootSource::Chest { .. } => Some(ItemOriginKindDto::Chest),
                 LootSource::Rubble { .. } => Some(ItemOriginKindDto::Rubble),
                 _ => None,
             },

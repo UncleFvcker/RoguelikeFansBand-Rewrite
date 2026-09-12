@@ -1542,6 +1542,25 @@ impl Game {
         )
     }
 
+    pub(super) fn item_can_be_thrown(&self, item: &ItemInstance) -> bool {
+        item.quantity > 0
+            && (item.location == ItemLocation::Inventory
+                || (matches!(item.location, ItemLocation::Equipped { .. })
+                    && self.item_is_fixed_artifact(item, 136)))
+    }
+
+    pub(super) fn item_throw_target_spec(
+        &self,
+        item: &ItemInstance,
+    ) -> Option<rfb_protocol::TargetSpecDto> {
+        self.item_can_be_thrown(item)
+            .then(|| rfb_protocol::TargetSpecDto {
+                modes: vec![rfb_protocol::TargetModeDto::Direction],
+                range: self.item_throw_parameters(item).0,
+                requires_line_of_effect: true,
+            })
+    }
+
     pub(super) fn throw_inventory_item(
         &mut self,
         item_id: &str,
@@ -1550,12 +1569,24 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
-        let Some(item) = self.items.iter().find(|item| {
-            item.id == item_id && item.location == ItemLocation::Inventory && item.quantity > 0
-        }) else {
+        let Some(item_index) = self
+            .items
+            .iter()
+            .position(|item| item.id == item_id && self.item_can_be_thrown(item))
+        else {
             events.push(DomainEvent::ItemThrowUnavailable);
             return Ok(());
         };
+        if matches!(
+            self.items[item_index].location,
+            ItemLocation::Equipped { .. }
+        ) && !self.try_remove_equipment_curse(item_index)
+        {
+            events.push(DomainEvent::ItemThrowUnavailable);
+            return Ok(());
+        }
+        let item = &self.items[item_index];
+        let boomerang = self.item_is_fixed_artifact(item, 136);
         let (range, damage_multiplier) = self.item_throw_parameters(item);
         let profile = self
             .item_throw_profile(item)
@@ -1566,7 +1597,14 @@ impl Game {
                 damage_sides: profile.damage.sides,
                 damage_type: DamageType::from(profile.damage.damage_type),
             });
-        let Some(mut thrown) = self.take_inventory_item(item_id)? else {
+        // py_throw.c leaves a caught weapon in its original slot. Keep it there
+        // during combat too, so its equipment bonuses apply to the throw.
+        let thrown = if boomerang {
+            Some(item.clone())
+        } else {
+            self.take_inventory_item(item_id)?
+        };
+        let Some(mut thrown) = thrown else {
             events.push(DomainEvent::ItemThrowUnavailable);
             return Ok(());
         };
@@ -1576,7 +1614,25 @@ impl Game {
             .projectile_path(&TargetSelection::Direction { direction }, range)
             .expect("direction targeting must always produce a path");
         let (trace, target_index) = self.trace_projectile_path(path);
-        let landing = trace.landing;
+        let mut landing = trace.landing;
+        let (comes_back, caught) = if boomerang {
+            let chance = 20 + self.player_dexterity_to_hit() + (self.rng.bounded(30) + 1) as i32;
+            let comes_back = chance > 30 && self.rng.bounded(100) != 0;
+            let caught = comes_back
+                && !self.player_has_status_kind(STATUS_BLINDNESS)
+                && !self.player_has_status_kind(STATUS_HALLUCINATION)
+                && !self.player_has_status_kind(STATUS_CONFUSION)
+                && self.rng.bounded(100) != 0
+                && chance
+                    > 37 + if self.player_has_status_kind(STATUS_STUN) {
+                        10
+                    } else {
+                        0
+                    };
+            (comes_back, caught)
+        } else {
+            (false, false)
+        };
         if let (Some(profile), Some(index)) = (profile, target_index) {
             let target_definition = self
                 .actor_runtime_definition(&self.entities[index])
@@ -1739,6 +1795,20 @@ impl Game {
             events.push(DomainEvent::ItemThrown {
                 target_kind_id: source_kind_id,
                 trace,
+            });
+        }
+        if boomerang {
+            if caught {
+                self.apply_easy_tiring_fatigue(STANDARD_ACTION_COST);
+                return Ok(());
+            }
+            self.items.retain(|item| item.id != thrown.id);
+            if comes_back {
+                landing = self.player.position;
+            }
+            events.push(DomainEvent::ItemReturnFailed {
+                item_kind_id: thrown.kind_id.clone(),
+                came_back: comes_back,
             });
         }
         if let Some(position) =

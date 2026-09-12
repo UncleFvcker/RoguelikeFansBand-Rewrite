@@ -137,6 +137,11 @@
       "sourceIndex": 34,
       "sourceName": "Pyramidal mound",
       "id": "demo.dungeon.pyramidal-mound"
+    },
+    {
+      "sourceIndex": 39,
+      "sourceName": "Asgard",
+      "id": "demo.dungeon.asgard"
     }
   ],
   "townPlans": [
@@ -2345,6 +2350,77 @@
         "sourceName": "Amun, the Mysterious",
         "chineseName": "神秘者阿蒙",
         "level": 97
+      },
+      "wallTerrain": {
+        "distribution": [
+          {
+            "sourceTag": "GRANITE",
+            "percent": 95
+          },
+          {
+            "sourceTag": "QUARTZ_VEIN",
+            "percent": 5
+          },
+          {
+            "sourceTag": "GRANITE",
+            "percent": 0
+          }
+        ],
+        "outer": "GRANITE",
+        "inner": "GRANITE",
+        "streamers": [
+          "MAGMA_VEIN",
+          "QUARTZ_VEIN"
+        ]
+      }
+    },
+    {
+      "sourceIndex": 39,
+      "sourceName": "Asgard",
+      "id": "demo.dungeon.asgard",
+      "position": {
+        "x": 94,
+        "y": 11
+      },
+      "minimumDepth": 64,
+      "maximumDepth": 88,
+      "monsterDivisor": 2,
+      "generationFlags": [
+        "PANTHEON_3",
+        "ALL_SHAFTS",
+        "CAVE",
+        "CAVERN"
+      ],
+      "monsterPreferences": [
+        "NORSE",
+        "NORSE2"
+      ],
+      "floorTerrainDistribution": [
+        {
+          "sourceTag": "FLOOR",
+          "percent": 100
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        },
+        {
+          "sourceTag": "FLOOR",
+          "percent": 0
+        }
+      ],
+      "tunnelPercent": 20,
+      "initialGuardian": {
+        "sourceIndex": 1348,
+        "sourceName": "Heimdall, Guardian of Bifrost",
+        "chineseName": "彩虹桥守卫海姆达尔",
+        "level": 77
+      },
+      "guardian": {
+        "sourceIndex": 1343,
+        "sourceName": "Odin, the All-Father",
+        "chineseName": "众神之父奥丁",
+        "level": 90
       },
       "wallTerrain": {
         "distribution": [

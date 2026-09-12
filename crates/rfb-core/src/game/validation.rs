@@ -69,25 +69,48 @@ impl Game {
             return Err(CoreError::WorldMapTransitionUnavailable);
         }
         self.active_task_objective()?;
-        if let GameAction::UseAbsorbedDevice { item_id, targets } = action {
-            self.validate_absorbed_device_use(item_id, targets)?;
-        }
-        if let GameAction::UseItem { item_id, .. } = action {
-            self.inventory_item_use_context(item_id)?;
-            if matches!(
-                action,
-                GameAction::UseItem {
-                    target: None | Some(TargetSelection::SelfTarget),
-                    target_glyph: None,
-                    ..
+        match action {
+            GameAction::OpenChest { item_id } | GameAction::DisarmChest { item_id } => {
+                if self.items.iter().any(|item| {
+                    item.id == *item_id
+                        && self.chest_dto(item).is_some_and(|chest| {
+                            if matches!(action, GameAction::DisarmChest { .. }) {
+                                chest.can_disarm
+                                    && item.chest.is_some_and(|state| state.difficulty == 12)
+                            } else {
+                                chest.can_open
+                            }
+                        })
+                }) {
+                    self.next_item_instance_serial
+                        .checked_add(2)
+                        .ok_or(CoreError::ItemIdExhausted)?;
+                    self.next_gold_pile_serial
+                        .checked_add(3)
+                        .ok_or(CoreError::GoldPileIdExhausted)?;
                 }
-            ) && let Some((ItemUseEffectDefinition::Acquirement { maximum_count, .. }, _)) =
-                self.inventory_item_use_effect(item_id)
-            {
-                self.next_item_instance_serial
-                    .checked_add(u64::from(*maximum_count))
-                    .ok_or(CoreError::ItemIdExhausted)?;
             }
+            GameAction::UseAbsorbedDevice { item_id, targets } => {
+                self.validate_absorbed_device_use(item_id, targets)?;
+            }
+            GameAction::UseItem { item_id, .. } => {
+                self.inventory_item_use_context(item_id)?;
+                if matches!(
+                    action,
+                    GameAction::UseItem {
+                        target: None | Some(TargetSelection::SelfTarget),
+                        target_glyph: None,
+                        ..
+                    }
+                ) && let Some((ItemUseEffectDefinition::Acquirement { maximum_count, .. }, _)) =
+                    self.inventory_item_use_effect(item_id)
+                {
+                    self.next_item_instance_serial
+                        .checked_add(u64::from(*maximum_count))
+                        .ok_or(CoreError::ItemIdExhausted)?;
+                }
+            }
+            _ => {}
         }
         Ok(())
     }
@@ -170,6 +193,9 @@ pub(super) fn item_creation_state_is_valid(
     item: &ItemInstance,
     definition: &rfb_content::ItemDefinition,
 ) -> bool {
+    if crate::save::validate_chest_state(&item.kind_id, item.quantity, item.chest).is_err() {
+        return false;
+    }
     if item.book_counted && (definition.ability_book_id.is_none() || item.quantity != 1) {
         return false;
     }
@@ -212,7 +238,10 @@ pub(super) fn item_creation_state_is_valid(
                     }))
         }
         Some(
-            ItemOriginKindDto::Acquire | ItemOriginKindDto::Mundanity | ItemOriginKindDto::Rubble,
+            ItemOriginKindDto::Chest
+            | ItemOriginKindDto::Acquire
+            | ItemOriginKindDto::Mundanity
+            | ItemOriginKindDto::Rubble,
         ) => item.discount_percent == 0 || discounted_equipment,
         Some(ItemOriginKindDto::EndlessQuiver) => {
             (item.discount_percent == 0 || discounted_equipment)
@@ -391,18 +420,15 @@ pub(super) fn floor_connections_are_valid(
     connections: &[FloorConnectionState],
     world: &rfb_content::WorldDefinition,
 ) -> bool {
-    if connections.is_empty() {
-        return true;
-    }
     if floor_id == world.initial_floor_id {
-        return false;
+        return connections.is_empty();
     }
     let Some(definition) = world
         .procedural_floors
         .iter()
         .find(|definition| definition.id == floor_id)
     else {
-        return false;
+        return connections.is_empty();
     };
     if definition.connections.len() != connections.len() {
         return false;
@@ -518,11 +544,11 @@ impl Game {
         if !self.duelist_challenge_is_valid() {
             return Err(CoreError::InvalidSave("duelist challenge is invalid"));
         }
-        if !self.pending_duelist_is_valid() {
-            return Err(CoreError::InvalidSave("pending duelist choice is invalid"));
-        }
         if !self.magic_eater_state_is_valid() {
             return Err(CoreError::InvalidSave("magic eater state is invalid"));
+        }
+        if !self.pending_duelist_is_valid() {
+            return Err(CoreError::InvalidSave("pending duelist choice is invalid"));
         }
         let world = self
             .content
@@ -954,6 +980,11 @@ impl Game {
                     self.actor_can_enter_position(index, entity.position)
                 } else {
                     self.actor_kind_can_enter_position(&entity.kind_id, entity.position)
+                        // Passive teleport can leave a monster on terrain it cannot
+                        // enter by walking. Bounds, walls and occupancy still apply.
+                        || self.index(entity.position)
+                            .and_then(|index| self.content.terrain(&self.terrain[index]))
+                            .is_some_and(Self::terrain_allows_passive_monster_displacement)
                 })
                 || (!positions.insert(entity.position) && !is_mount)
             {
@@ -1217,13 +1248,21 @@ impl Game {
             let mut floor_monster_ids = BTreeSet::new();
             for entity in &floor.entities {
                 self.validate_actor(entity, ActorRole::Monster)?;
+                let position = entity.position;
+                let passive_terrain = (position.x >= 0
+                    && position.y >= 0
+                    && position.x < i32::from(floor.width)
+                    && position.y < i32::from(floor.height))
+                .then(|| position.y as usize * usize::from(floor.width) + position.x as usize)
+                .and_then(|index| self.content.terrain(&floor.terrain[index]))
+                .is_some_and(Self::terrain_allows_passive_monster_displacement);
                 if !instance_ids.insert(entity.id.clone())
-                    || !floor_actor_position_is_enterable(
+                    || !(floor_actor_position_is_enterable(
                         floor,
                         &entity.kind_id,
                         entity.position,
                         &self.content,
-                    )
+                    ) || passive_terrain)
                     || !floor_positions.insert(entity.position)
                 {
                     return Err(CoreError::InvalidSave(
@@ -1566,7 +1605,17 @@ impl Game {
                         .find(|stored| stored.id == final_floor.id)
                         .map(|floor| floor.entities.iter().any(|actor| &actor.id == guardian_id))
                 };
-                if guardian_present.is_some_and(|present| present == state.guardian_defeated) {
+                // A unique may already be dead, captured, or present on another
+                // floor when this floor is generated. Generation checks the same
+                // global allowance; absence must not imply local conquest.
+                if guardian_present.is_some_and(|present| {
+                    if present {
+                        state.guardian_defeated
+                    } else {
+                        !state.guardian_defeated
+                            && self.unique_actor_kind_is_available(&guardian.actor_kind_id)
+                    }
+                }) {
                     return Err(CoreError::InvalidSave("dungeon guardian state is invalid"));
                 }
             }
@@ -1852,7 +1901,6 @@ impl Game {
             true
         } else {
             expected_role == ActorRole::Monster
-                && actor.observed_player_resistances.len() <= 6
                 && runtime_definition
                     .monster_casting
                     .as_ref()

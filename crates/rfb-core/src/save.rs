@@ -391,6 +391,7 @@ pub(crate) fn item_from_dto(
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
+    validate_chest_state(&item.kind_id, item.quantity, item.chest)?;
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         previously_worn: item.previously_worn,
@@ -423,6 +424,7 @@ pub(crate) fn item_from_dto(
         charges: item.charges,
         fuel,
         device_recovery_progress: item.device_recovery_progress,
+        chest: item.chest,
         captured_actor,
         location: ItemLocation::Ground(item.position),
     })
@@ -487,6 +489,7 @@ fn inventory_item_from_dto_at(
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
+    validate_chest_state(&item.kind_id, item.quantity, item.chest)?;
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         previously_worn: item.previously_worn,
@@ -519,6 +522,7 @@ fn inventory_item_from_dto_at(
         charges: item.charges,
         fuel,
         device_recovery_progress: item.device_recovery_progress,
+        chest: item.chest,
         captured_actor,
         location,
     })
@@ -566,6 +570,7 @@ pub(crate) fn equipment_item_from_dto(
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
+    validate_chest_state(&item.kind_id, item.quantity, item.chest)?;
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         previously_worn: item.previously_worn,
@@ -598,6 +603,7 @@ pub(crate) fn equipment_item_from_dto(
         charges: item.charges,
         fuel,
         device_recovery_progress: item.device_recovery_progress,
+        chest: item.chest,
         captured_actor,
         location: ItemLocation::Equipped {
             slot_id: item.slot_id,
@@ -642,6 +648,7 @@ pub(crate) fn carried_item_from_dto(
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
+    validate_chest_state(&item.kind_id, item.quantity, item.chest)?;
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         previously_worn: item.previously_worn,
@@ -674,11 +681,33 @@ pub(crate) fn carried_item_from_dto(
         charges: item.charges,
         fuel,
         device_recovery_progress: item.device_recovery_progress,
+        chest: item.chest,
         captured_actor,
         location: ItemLocation::CarriedBy {
             actor_id: item.actor_id,
         },
     })
+}
+
+pub(crate) fn validate_chest_state(
+    kind: &str,
+    quantity: u32,
+    chest: Option<rfb_protocol::ChestSaveDto>,
+) -> Result<(), CoreError> {
+    let valid = match (kind == "demo.item.large-wooden-chest", chest) {
+        (true, Some(chest)) => {
+            quantity == 1
+                && (-15..=15).contains(&chest.difficulty)
+                && (chest.opening_depth >= 5 || (chest.difficulty == 0 && chest.opening_depth == 0))
+        }
+        (false, None) => true,
+        _ => false,
+    };
+    if valid {
+        Ok(())
+    } else {
+        Err(CoreError::Invariant("invalid chest state".into()))
+    }
 }
 
 fn captured_actor_from_save(
@@ -961,7 +990,8 @@ fn validate_item_creation_state(
                     }))
         }
         Some(
-            ItemOriginKindDto::Acquire
+            ItemOriginKindDto::Chest
+            | ItemOriginKindDto::Acquire
             | ItemOriginKindDto::Mundanity
             | ItemOriginKindDto::Rubble
             | ItemOriginKindDto::EndlessQuiver,
@@ -1011,6 +1041,7 @@ pub(crate) fn player_to_save(
             .collect(),
         confusing_strike_ready: false,
         sniper_concentration: 0,
+        fishing_direction: None,
         probed_actor_kind_ids: Vec::new(),
         resistances: player.resistances.to_save_dtos(),
         progress: Some(PlayerProgressSaveDto {
@@ -2102,6 +2133,7 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
                 charges: item.charges,
                 fuel: item.fuel,
                 device_recovery_progress: item.device_recovery_progress,
+                chest: item.chest,
                 captured_actor: item.captured_actor.as_ref().map(captured_actor_to_save),
             })
         })
@@ -2173,6 +2205,7 @@ fn inventory_item_to_save(item: &ItemInstance) -> InventoryItemSaveDto {
         charges: item.charges,
         fuel: item.fuel,
         device_recovery_progress: item.device_recovery_progress,
+        chest: item.chest,
         captured_actor: item.captured_actor.as_ref().map(captured_actor_to_save),
     }
 }
@@ -2217,6 +2250,7 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
                 charges: item.charges,
                 fuel: item.fuel,
                 device_recovery_progress: item.device_recovery_progress,
+                chest: item.chest,
                 captured_actor: item.captured_actor.as_ref().map(captured_actor_to_save),
             })
         })
@@ -2269,6 +2303,7 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
                 charges: item.charges,
                 fuel: item.fuel,
                 device_recovery_progress: item.device_recovery_progress,
+                chest: item.chest,
                 captured_actor: item.captured_actor.as_ref().map(captured_actor_to_save),
             })
         })

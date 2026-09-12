@@ -403,7 +403,14 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
                 || !content
                     .items
                     .iter()
-                    .any(|item| item.id == drop.item_kind_id && item.artifact_generation.is_some()))
+                    .any(|item| item.id == drop.item_kind_id && item.artifact_generation.is_some())
+                || drop.alternative.as_ref().is_some_and(|alternative| {
+                    !(1..=100).contains(&alternative.chance_percent)
+                        || !content.items.iter().any(|item| {
+                            item.id == alternative.item_kind_id
+                                && item.artifact_generation.is_some()
+                        })
+                }))
         {
             return Err(ContentError::InvalidActorLootTable(actor.id.clone()));
         }

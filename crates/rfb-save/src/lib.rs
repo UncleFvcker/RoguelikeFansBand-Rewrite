@@ -227,6 +227,7 @@ mod tests {
                 statuses: Vec::new(),
                 confusing_strike_ready: false,
                 sniper_concentration: 0,
+                fishing_direction: None,
                 probed_actor_kind_ids: Vec::new(),
                 resistances: Vec::new(),
                 progress: None,

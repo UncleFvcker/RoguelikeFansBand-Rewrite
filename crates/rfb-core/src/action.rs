@@ -100,6 +100,12 @@ pub(crate) enum GameAction {
     Ride {
         direction: Direction,
     },
+    OpenChest {
+        item_id: String,
+    },
+    DisarmChest {
+        item_id: String,
+    },
     OpenDoor {
         direction: Direction,
     },
@@ -123,6 +129,8 @@ pub(crate) enum GameAction {
     /// No command maps to it; it advances world time at standard cost.
     ParalyzedIdle,
     Wait,
+    ContinueFishing,
+    CancelFishing,
     PickUp,
     Retire,
     Rest {
@@ -300,6 +308,7 @@ impl GameAction {
             | Self::ResolveMogaminatorQuery { .. }
             | Self::ResolveMutationDirection { .. }
             | Self::CancelAbilityDirection
+            | Self::CancelFishing
             | Self::ClearDuelistChallenge
             | Self::ResolveDuelistChoice { .. }
             | Self::InscribeItem { .. }
@@ -437,6 +446,8 @@ impl From<GameCommand> for GameAction {
             GameCommand::TravelLocal { destination } => Self::TravelLocal { destination },
             GameCommand::Move { direction } => Self::Move { direction },
             GameCommand::Ride { direction } => Self::Ride { direction },
+            GameCommand::OpenChest { item_id } => Self::OpenChest { item_id },
+            GameCommand::DisarmChest { item_id } => Self::DisarmChest { item_id },
             GameCommand::OpenDoor { direction } => Self::OpenDoor { direction },
             GameCommand::InscribeItem {
                 item_id,
@@ -446,6 +457,8 @@ impl From<GameCommand> for GameAction {
                 inscription,
             },
             GameCommand::Wait => Self::Wait,
+            GameCommand::ContinueFishing => Self::ContinueFishing,
+            GameCommand::CancelFishing => Self::CancelFishing,
             GameCommand::PickUp => Self::PickUp,
             GameCommand::Retire => Self::Retire,
             GameCommand::Rest { turns } => Self::Rest { turns },

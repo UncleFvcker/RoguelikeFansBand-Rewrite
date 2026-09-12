@@ -1,0 +1,69 @@
+{
+  "glyph": "\\",
+  "generationLevel": 40,
+  "weightTenthsPound": 360,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 136,
+    "baseItemKindId": "demo.item.war-hammer",
+    "instant": false,
+    "rarityOneIn": 125
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_ELEC",
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_ELEC",
+      "SLAY_GIANT",
+      "STR",
+      "THROWING"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 6,
+    "damageSides": 5,
+    "toHit": 9,
+    "toDamage": 18
+  },
+  "weaponProficiencyBaseItemId": "demo.item.war-hammer",
+  "modifiers": {
+    "strength": 4,
+    "dexterity": 4
+  },
+  "resistances": {
+    "electricity": "immune"
+  },
+  "slays": {
+    "giant": "slay"
+  },
+  "brands": [
+    "electricity"
+  ],
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.mjollnir",
+  "nameKey": "item-demo-mjollnir-name",
+  "descriptionKey": "item-demo-mjollnir-description"
+}

@@ -1164,6 +1164,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.large-wooden-chest",
+      "maxDepth": 65535,
+      "minDepth": 15,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
       "itemKindId": "demo.item.capture-ball",
       "maxDepth": 65535,
       "minDepth": 15,

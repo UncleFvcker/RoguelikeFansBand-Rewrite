@@ -1,0 +1,110 @@
+{
+  "glyph": "[",
+  "generationLevel": 70,
+  "weightTenthsPound": 340,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 371,
+    "baseItemKindId": "demo.item.metal-lamellar-armour",
+    "instant": false,
+    "rarityOneIn": 100
+  },
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "RES_ACID",
+      "RES_BLIND",
+      "RES_CHAOS",
+      "RES_COLD",
+      "RES_ELEC",
+      "RES_FEAR",
+      "RES_SHARDS",
+      "RES_SOUND",
+      "SLOW_DIGEST",
+      "WIS"
+    ],
+    "pval": 3,
+    "toArmor": 27
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "wisdom": 3,
+    "constitution": 3,
+    "defense": 50
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 5,
+    "meleeDamage": 5
+  },
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "cold": "resistant",
+    "sound": "resistant",
+    "shards": "resistant",
+    "chaos": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis",
+    "rfb.status.fear",
+    "rfb.status.blindness"
+  ],
+  "passives": [
+    "slow-digestion"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.tyr",
+        "nameKey": "device-activation-e5-heroism-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 10,
+        "rfbValue": 2125,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.tyr"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 100
+    }
+  },
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.tyr",
+  "nameKey": "item-demo-tyr-name",
+  "descriptionKey": "item-demo-tyr-description"
+}

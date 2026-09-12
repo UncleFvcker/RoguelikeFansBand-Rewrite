@@ -149,7 +149,9 @@ fn artifact_identity_keeps_base_properties_value_knowledge_and_equipment() {
 fn artifact_identity_activation_and_recovery_need_no_ego_identity() {
     let mut game = game_with_artifact("demo.item.dagger");
     game.identify_item_instance(ID, ItemIdentificationRequest::new(true));
-    assert!(game.snapshot().inventory[0].usable);
+    assert!(!game.snapshot().inventory[0].usable);
+    game.equip_inventory_item(ID, None).unwrap();
+    assert!(game.snapshot().equipment[0].usable);
     let mut game = round_trip(&game);
     let mut events = Vec::new();
     for _ in 0..100 {

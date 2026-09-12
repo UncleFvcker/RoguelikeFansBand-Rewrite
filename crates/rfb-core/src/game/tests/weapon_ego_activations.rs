@@ -75,6 +75,7 @@ fn mattock_forced_base_disruption_activation_round_trips() {
     assert_eq!(item.charges.unwrap().current, 1);
     let item_id = item.id.clone();
     game.items.push(item);
+    game.equip_inventory_item(&item_id, None).unwrap();
 
     let save = game.to_save();
     let mut game = Game::from_save_with_content(save.clone(), game.content.clone())
@@ -250,6 +251,7 @@ fn riding_charge_game(seed: u64) -> Game {
         current: 1,
         maximum: 1,
     });
+    game.equip_inventory_item(ITEM_ID, None).unwrap();
     game
 }
 
@@ -357,6 +359,8 @@ fn activation_effect_game(seed: u64, affix_id: &str, effect: &str, weight: u16) 
         current: 1,
         maximum: 1,
     });
+    game.equip_inventory_item(ABILITY_EFFECT_ITEM_ID, None)
+        .unwrap();
     game
 }
 

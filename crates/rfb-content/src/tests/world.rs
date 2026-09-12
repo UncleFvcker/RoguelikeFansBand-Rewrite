@@ -3,6 +3,144 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn asgard_depths_and_source_shafts_keep_direction_span_and_dungeon_boundaries() {
+    let content = compile_pack_dir(&original_pack_path()).unwrap().content;
+    let world = &content.worlds[0];
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.asgard")
+        .unwrap();
+    assert_eq!(dungeon.legacy_index, Some(39));
+    assert_eq!(dungeon.pantheon, Some(3));
+    assert_eq!(
+        dungeon.guardian_actor_kind_id.as_deref(),
+        Some("demo.actor.odin-the-all-father")
+    );
+    assert_eq!(
+        dungeon.entrance_guardian.as_ref().unwrap().actor_kind_id,
+        "demo.actor.heimdall-guardian-of-bifrost"
+    );
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.asgard"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    let guardian = floors.last().unwrap().guardian.as_ref().unwrap();
+    assert_eq!(guardian.actor_kind_id, "demo.actor.odin-the-all-father");
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.asgard-final-reward")
+    );
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (64..=88).collect::<Vec<_>>()
+    );
+    assert!(
+        floors.windows(2).all(
+            |pair| pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+                && pair[1].return_floor_id == pair[0].id
+        )
+    );
+    for (depth, targets) in [
+        (64, vec![0, 68]),
+        (67, vec![0, 71]),
+        (68, vec![64, 72]),
+        (77, vec![73, 81]),
+        (78, vec![74, 80]),
+        (79, vec![75, 81]),
+        (80, vec![76, 82]),
+        (81, vec![77, 83]),
+        (82, vec![80, 84]),
+        (87, vec![85, 88]),
+        (88, vec![86, 87]),
+    ] {
+        let floor = floors.iter().find(|floor| floor.depth == depth).unwrap();
+        let mut actual = floor
+            .connections
+            .iter()
+            .map(|connection| {
+                if connection.target_floor_id == world.initial_floor_id {
+                    0
+                } else {
+                    world
+                        .procedural_floors
+                        .iter()
+                        .find(|target| target.id == connection.target_floor_id)
+                        .unwrap()
+                        .depth
+                }
+            })
+            .collect::<Vec<_>>();
+        actual.sort_unstable();
+        assert_eq!(actual, targets, "depth {depth}");
+    }
+    for (depth, suffix, target, arrival) in [
+        (
+            64,
+            "shaft-down",
+            "asgard-depth-66",
+            Some("asgard-66-shaft-up"),
+        ),
+        (
+            78,
+            "shaft-down",
+            "asgard-depth-82",
+            Some("asgard-82-shaft-up"),
+        ),
+        (
+            82,
+            "shaft-up",
+            "asgard-depth-78",
+            Some("asgard-78-shaft-down"),
+        ),
+        (68, "shaft-up", "surface", None),
+        (
+            68,
+            "shaft-up",
+            "pyramidal-mound-depth-64",
+            Some("pyramidal-mound-64-shaft-down"),
+        ),
+        (
+            64,
+            "shaft-down",
+            "asgard-depth-68",
+            Some("asgard-68-shaft-down"),
+        ),
+        (
+            64,
+            "shaft-down",
+            "asgard-depth-68",
+            Some("asgard-68-missing"),
+        ),
+        (
+            64,
+            "shaft-down",
+            "asgard-depth-99",
+            Some("asgard-99-shaft-up"),
+        ),
+    ] {
+        let mut invalid = content.clone();
+        let link = invalid.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == format!("demo.floor.asgard-depth-{depth}"))
+            .unwrap()
+            .connections
+            .iter_mut()
+            .find(|link| link.id.ends_with(suffix))
+            .unwrap();
+        link.target_floor_id = format!("demo.floor.{target}");
+        link.target_connection_id = arrival.map(|id| format!("demo.connection.{id}"));
+        assert!(
+            validate_and_normalize(&mut invalid).is_err(),
+            "{depth} {suffix} -> {target}"
+        );
+    }
+}
+
+#[test]
 fn zul_node_maps_rewards_and_admission_references_match_source() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let world = &artifact.content.worlds[0];
@@ -11334,6 +11472,10 @@ fn town_entrances_and_shared_facilities_match_source() {
                     dungeon_id: "demo.dungeon.castle".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 94, y: 11 },
+                    dungeon_id: "demo.dungeon.asgard".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 94, y: 52 },
                     dungeon_id: "demo.dungeon.chameleon-cave".to_owned(),
                 },
@@ -13226,7 +13368,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 408);
+    assert_eq!(base_items.entries.len(), 409);
     // Source kind 245 retains its 1/255 allocation as integer weight zero.
     assert_eq!(
         base_items
@@ -13293,10 +13435,10 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     .to_owned()
             });
     }
-    assert_eq!(active_source_items.len(), 353);
+    assert_eq!(active_source_items.len(), 356);
 
     let source_items_without_allocations =
-        BTreeSet::from([33, 34, 36, 37, 139, 345, 346, 347, 400, 401, 460]);
+        BTreeSet::from([33, 34, 36, 37, 109, 139, 345, 346, 347, 400, 401, 460, 708]);
     let expected_item_ids = active_source_items
         .iter()
         .filter(|(source_index, _)| !source_items_without_allocations.contains(source_index))
@@ -13342,7 +13484,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 374);
+    assert_eq!(expected_item_ids.len(), 375);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.
