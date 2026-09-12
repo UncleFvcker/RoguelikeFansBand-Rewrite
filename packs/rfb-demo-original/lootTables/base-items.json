@@ -1542,6 +1542,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.tetsubo",
+      "maxDepth": 65535,
+      "minDepth": 25,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
       "itemKindId": "demo.item.wizardstaff",
       "maxDepth": 65535,
       "minDepth": 25,
@@ -2130,6 +2137,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.two-handed-flail",
+      "maxDepth": 65535,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.great-hammer",
       "maxDepth": 65535,
       "minDepth": 45,
@@ -2534,6 +2548,13 @@
       "minDepth": 75,
       "quantity": 1,
       "weight": 16
+    },
+    {
+      "itemKindId": "demo.item.mace-of-disruption",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 12
     },
     {
       "itemKindId": "demo.item.seeker-bolt",

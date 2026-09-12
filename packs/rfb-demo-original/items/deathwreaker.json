@@ -1,0 +1,101 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.deathwreaker",
+  "nameKey": "item-demo-deathwreaker-name",
+  "descriptionKey": "item-demo-deathwreaker-description",
+  "glyph": "\\",
+  "generationLevel": 80,
+  "weightTenthsPound": 400,
+  "maxStack": 1,
+  "baseValue": 444444,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 121,
+    "baseItemKindId": "demo.item.mace-of-disruption",
+    "instant": false,
+    "rarityOneIn": 38
+  },
+  "weaponProficiencyBaseItemId": "demo.item.mace-of-disruption",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 7,
+    "damageSides": 8,
+    "toHit": 18,
+    "toDamage": 18
+  },
+  "modifiers": {
+    "strength": 6
+  },
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "BRAND_FIRE",
+      "BRAND_POIS",
+      "BRAND_VAMP",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_FIRE",
+      "LITE",
+      "NO_TELE",
+      "RES_CHAOS",
+      "RES_CONF",
+      "RES_DARK",
+      "RES_DISEN",
+      "RIDING",
+      "SHOW_MODS",
+      "SLAY_ANIMAL",
+      "SLAY_DRAGON",
+      "SLAY_EVIL",
+      "SLAY_HUMAN",
+      "SLAY_UNDEAD",
+      "STR",
+      "TUNNEL"
+    ],
+    "pval": 6,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "tunnelingPval": 6,
+  "ridingWeaponKind": "compatible",
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "passives": [
+    "anti-teleport",
+    "vampiric"
+  ],
+  "slays": {
+    "evil": "slay",
+    "undead": "slay",
+    "human": "slay",
+    "dragon": "slay",
+    "animal": "slay"
+  },
+  "brands": [
+    "fire",
+    "poison"
+  ],
+  "resistances": {
+    "fire": "immune",
+    "dark": "resistant",
+    "confusion": "resistant",
+    "chaos": "resistant",
+    "disenchant": "resistant"
+  }
+}

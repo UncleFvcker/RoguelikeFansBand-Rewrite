@@ -14,7 +14,7 @@ fn artifact_loot_context(depth: u16) -> LootContext {
 }
 
 #[test]
-fn b1_polearms_generate_equip_fight_and_preserve_source_properties_after_save() {
+fn b1_b2_weapons_generate_equip_fight_and_preserve_source_properties_after_save() {
     fn strike(game: &mut Game) -> Vec<DomainEvent> {
         let mut events = Vec::new();
         game.resolve_player_melee(0, false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
@@ -31,6 +31,22 @@ fn b1_polearms_generate_equip_fight_and_preserve_source_properties_after_save() 
         ("durin", "great-axe", 4, 5, 10, 20, 230, 15),
         ("dwarves", "lochaber-axe", 3, 9, 12, 17, 250, 0),
         ("dramborleg", "great-axe", 4, 5, 3, 12, 230, 0),
+        ("tetsubo", "tetsubo", 2, 8, 0, 0, 190, 0),
+        ("two-handed-flail", "two-handed-flail", 3, 7, 0, 0, 280, 0),
+        (
+            "mace-of-disruption",
+            "mace-of-disruption",
+            5,
+            8,
+            0,
+            0,
+            400,
+            0,
+        ),
+        ("nyoi-bou", "tetsubo", 7, 8, 5, 25, 500, 10),
+        ("shuten-douji", "tetsubo", 4, 8, 0, 20, 350, 10),
+        ("thunderfist", "two-handed-flail", 3, 7, 5, 18, 300, 0),
+        ("deathwreaker", "mace-of-disruption", 7, 8, 18, 18, 400, 0),
     ];
     let mut game = Game::new_with_build(465, "demo.build.warrior").unwrap();
     choose_human_talent_if_pending(&mut game);
@@ -40,8 +56,8 @@ fn b1_polearms_generate_equip_fight_and_preserve_source_properties_after_save() 
     game.terrain.fill("demo.terrain.floor".into());
     let context = LootContext {
         table_id: "demo.loot-table.base-items".into(),
-        floor_id: "test.floor.depth-75".into(),
-        depth: 75,
+        floor_id: "test.floor.depth-85".into(),
+        depth: 85,
         source: LootSource::MonsterDeath {
             actor_id: "test.b1-drop".into(),
         },
@@ -89,7 +105,7 @@ fn b1_polearms_generate_equip_fight_and_preserve_source_properties_after_save() 
     }
     assert!(
         remaining.is_empty(),
-        "B1 items never generated: {remaining:?}"
+        "B1/B2 items never generated: {remaining:?}"
     );
     game.reveal_current_visibility();
     let unknown = Game::from_save(game.to_save()).unwrap();
@@ -121,6 +137,7 @@ fn b1_polearms_generate_equip_fight_and_preserve_source_properties_after_save() 
         );
         let profile = equipped.player_melee_profile(&equipped.player_derived_stats());
         assert_eq!((profile.damage_dice, profile.damage_sides), (dice, sides));
+        assert_eq!(profile.critical_weight_tenths_pound, Some(weight as u16));
         let artifact = slug != base;
         if artifact {
             assert_eq!(
@@ -191,6 +208,32 @@ fn b1_polearms_generate_equip_fight_and_preserve_source_properties_after_save() 
                     rfb_protocol::WeaponTraitDto::Vorpal
                 ));
             }
+            "nyoi-bou" => {
+                assert_eq!(equipped.equipment_modifiers().strength, 5);
+                assert_eq!(equipped.player_see_invisible_sources(), 1);
+            }
+            "shuten-douji" => assert_eq!(equipped.equipment_modifiers().strength, 6),
+            "thunderfist" => {
+                assert_eq!(equipped.equipment_modifiers().strength, 4);
+                assert_eq!(equipped.player_equipment_bonuses().light_radius, 1);
+            }
+            "deathwreaker" => {
+                assert_eq!(equipped.equipment_modifiers().strength, 6);
+                assert_eq!(equipped.player_equipment_bonuses().light_radius, 1);
+                assert!(equipped.player_has_anti_teleport());
+                assert!(equipped.player_has_equipped_curse_effect(ItemCurseEffectDto::Aggravate));
+                assert!(
+                    equipped
+                        .player_equipment_passives()
+                        .contains(&EquipmentPassive::Vampiric)
+                );
+                assert_eq!(
+                    equipped
+                        .effective_player_resistances()
+                        .level(DamageType::Fire),
+                    ResistanceLevel::Immune
+                );
+            }
             _ => {}
         }
         equipped.refresh_player_resource_maxima();
@@ -224,7 +267,8 @@ fn b1_polearms_generate_equip_fight_and_preserve_source_properties_after_save() 
                 match slug {
                     "sha-wujing" | "dramborleg" => 56,
                     "durin" => 28,
-                    "benkei" | "dwarves" => 19,
+                    "benkei" | "dwarves" | "nyoi-bou" => 19,
+                    "thunderfist" | "deathwreaker" => 24,
                     _ => 10,
                 },
             ),
@@ -232,11 +276,29 @@ fn b1_polearms_generate_equip_fight_and_preserve_source_properties_after_save() 
                 "demo.actor.baby-blue-dragon",
                 match slug {
                     "durin" => 56,
-                    "benkei" | "sha-wujing" | "dwarves" => 19,
+                    "benkei" | "sha-wujing" | "dwarves" | "nyoi-bou" => 19,
+                    "deathwreaker" => 28,
+                    "thunderfist" => 24,
                     _ => 10,
                 },
             ),
-            ("demo.actor.blubbering-idiot", 10),
+            (
+                "demo.actor.blubbering-idiot",
+                if matches!(slug, "thunderfist" | "deathwreaker") {
+                    24
+                } else {
+                    10
+                },
+            ),
+            (
+                "demo.actor.skeleton-human",
+                match slug {
+                    "benkei" | "sha-wujing" | "mace-of-disruption" | "deathwreaker" => 28,
+                    "dwarves" | "nyoi-bou" => 19,
+                    "thunderfist" => 24,
+                    _ => 10,
+                },
+            ),
         ] {
             let mut combat = restored.clone();
             combat.push_generated_actor(
@@ -263,7 +325,7 @@ fn b1_polearms_generate_equip_fight_and_preserve_source_properties_after_save() 
                     strike(&mut trial);
                     trial.entities.is_empty()
                 })
-                .expect("generated B1 artifact must land a real attack");
+                .expect("generated B1/B2 artifact must land a real attack");
             combat.rng = RfbRng::seeded(seed);
             combat.reveal_current_visibility();
             let mut replay = Game::from_save(combat.to_save()).unwrap();
@@ -272,6 +334,140 @@ fn b1_polearms_generate_equip_fight_and_preserve_source_properties_after_save() 
             assert_eq!(replay.state_hash(), combat.state_hash());
         }
     }
+}
+
+#[test]
+fn b2_heavy_artifacts_preserve_riding_drain_and_teleport_boundaries() {
+    fn strike(game: &mut Game) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.resolve_player_melee(0, false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+            .unwrap();
+        events
+    }
+    let mut base = Game::new_with_build(466, "demo.build.cavalry").unwrap();
+    choose_human_talent_if_pending(&mut base);
+    clear_monsters(&mut base);
+    base.riding_actor_id = None;
+    base.items.clear();
+    base.terrain.fill("demo.terrain.floor".into());
+    base.player.position = Position { x: 10, y: 10 };
+    for kind in ["demo.item.nyoi-bou", "demo.item.deathwreaker"] {
+        let mut game = base.clone();
+        give_inventory_item(&mut game, "test.b2-weapon", kind);
+        game.equip_inventory_item("test.b2-weapon", Some("right-hand"))
+            .unwrap();
+        let on_foot = game.player_melee_profile(&game.player_derived_stats());
+        game.push_generated_actor(
+            "test.b2-mount".into(),
+            "demo.actor.horse",
+            game.player.position,
+        );
+        game.entities[0].controller_id = Some(game.player.id.clone());
+        game.riding_actor_id = Some("test.b2-mount".into());
+        let mounted = game.player_melee_profile(&game.player_derived_stats());
+        // RIDING-compatible heavy weapons have no mounted penalty or lance bonus.
+        assert_eq!(
+            (mounted.to_hit, mounted.damage_dice, mounted.damage_sides),
+            (on_foot.to_hit, 7, 8)
+        );
+        game.refresh_player_resource_maxima();
+        game.reveal_current_visibility();
+        let restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(
+            restored
+                .player_melee_profile(&restored.player_derived_stats())
+                .to_hit,
+            mounted.to_hit
+        );
+    }
+    give_inventory_item(&mut base, "test.b2-drain", "demo.item.deathwreaker");
+    base.equip_inventory_item("test.b2-drain", Some("right-hand"))
+        .unwrap();
+    base.refresh_player_resource_maxima();
+    base.reveal_current_visibility();
+    let mut restored = Game::from_save(base.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), base.state_hash());
+    let before = restored.player.position;
+    let rng = restored.rng.clone();
+    restored.curse_teleport(10, &mut Vec::new(), &mut BTreeSet::new());
+    assert_eq!(restored.player.position, before);
+    assert_eq!(restored.rng, rng);
+    restored.unequip_slot("right-hand").unwrap();
+    restored.curse_teleport(10, &mut Vec::new(), &mut BTreeSet::new());
+    assert_ne!(restored.player.position, before);
+
+    for (kind, living) in [
+        ("demo.actor.blubbering-idiot", true),
+        ("demo.actor.skeleton-human", false),
+    ] {
+        let mut target = base.clone();
+        target.player.hp = 1;
+        target.push_generated_actor(
+            "test.b2-drain-target".into(),
+            kind,
+            Position { x: 11, y: 10 },
+        );
+        // Surviving targets isolate drainage; these inflated HPs are never saved.
+        target.entities[0].hp = 100_000;
+        target.entities[0].max_hp = 100_000;
+        let mut observed = false;
+        for seed in 0..1000 {
+            let mut trial = target.clone();
+            trial.rng = RfbRng::seeded(seed);
+            let events = strike(&mut trial);
+            if trial.entities[0].hp == 100_000 {
+                continue;
+            }
+            let healed = events.iter().any(|event| {
+                matches!(event,
+                DomainEvent::PlayerVampiricHealed { resolution } if resolution.applied > 0)
+            });
+            if living && !healed {
+                continue;
+            }
+            assert_eq!(healed, living);
+            assert_eq!(trial.player.hp > 1, living);
+            observed = true;
+            break;
+        }
+        assert!(observed, "missing drain boundary for {kind}");
+    }
+
+    let mut thunder = base;
+    thunder.items.clear();
+    give_inventory_item(&mut thunder, "test.b2-thunder", "demo.item.thunderfist");
+    thunder
+        .equip_inventory_item("test.b2-thunder", Some("right-hand"))
+        .unwrap();
+    thunder.push_generated_actor(
+        "test.b2-brand".into(),
+        "demo.actor.blubbering-idiot",
+        Position { x: 11, y: 10 },
+    );
+    let profile = thunder.player_melee_profile(&thunder.player_derived_stats());
+    let definition = thunder
+        .content
+        .actor("demo.actor.blubbering-idiot")
+        .unwrap();
+    assert_eq!(
+        thunder.player_melee_damage_multiplier(&profile, &thunder.entities[0], definition),
+        24
+    );
+    thunder.entities[0]
+        .resistances
+        .set(DamageType::Fire, ResistanceLevel::Immune);
+    assert_eq!(
+        thunder.player_melee_damage_multiplier(&profile, &thunder.entities[0], definition),
+        24
+    );
+    thunder.entities[0]
+        .resistances
+        .set(DamageType::Electricity, ResistanceLevel::Immune);
+    assert_eq!(
+        thunder.player_melee_damage_multiplier(&profile, &thunder.entities[0], definition),
+        10
+    );
 }
 
 #[test]
