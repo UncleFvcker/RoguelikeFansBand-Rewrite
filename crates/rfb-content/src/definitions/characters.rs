@@ -347,6 +347,33 @@ pub struct ClassDefinition {
     pub tags: Vec<String>,
 }
 
+impl ClassDefinition {
+    /// Shared birth, book-change and saved-history eligibility. The primary
+    /// realm remains the character's birth identity.
+    #[must_use]
+    pub fn allows_second_realm(&self, first_realm: &str, second_realm: &str) -> bool {
+        if first_realm == second_realm {
+            return false;
+        }
+        // RFB master a0d92b6378: py_birth.c and cmd5.c::item_tester_learn_spell.
+        if self.id == "demo.class.priest"
+            && match first_realm {
+                "life" | "crusade" => matches!(second_realm, "death" | "daemon"),
+                "death" | "daemon" => matches!(second_realm, "life" | "crusade"),
+                _ => true,
+            }
+        {
+            return false;
+        }
+        self.casting_profile.as_ref().is_some_and(|profile| {
+            profile
+                .realm_profiles
+                .iter()
+                .any(|realm| realm.realm_id == second_realm)
+        })
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

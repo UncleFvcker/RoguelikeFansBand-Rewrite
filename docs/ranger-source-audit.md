@@ -64,6 +64,7 @@
 | `do-spell.c:3609,6041` 熵之法球/地狱之焰 Ranger 等级伤害为 `L+floor(L/4)`，基础 3d6，半径 L<30 为 2、否则 3 | 现有两个 ability 的等级缩放为 `floor(3L/2)`。使用 Ranger realm override 的 levelScaling 修正，两项均可达，不另复制 program；保留半径及其他效果 |
 | `lawyer.c` Death index 21 费用为 `base + clamp(base,50,100)`，封顶 250；与职业无关 | 当前 effective_casting_ability 已公共处理，复用。先导入 Ranger 基础费用，再做该调整，最后做熟练度费用，避免重复加算 |
 | `spells3.c:spell_chance` 副领域 +5 只限 Mage/Blood-Mage/Priest/Yellow-Mage；Ranger 不在内 | 第三步公共化学习/保存时必须保留独立的失败率条件。Ranger 仍受骑乘、装备/状态、美德、WIS 最低失败率、眩晕、95 封顶及熟练度减免的源顺序影响；最低 5 不是最终绝不低于 5，Expert/Master 减免在后 |
+| `virtue.c:690–730` WIS施法者的阵营惩罚上限10，其他属性上限5 | 牧师第三步补充核对并修正了共享函数固定5的遗漏；游侠同样使用10，仍没有副领域额外5%。已有中立阵营证据不代表高阵营数值边界已经验收；新增共享回归待牧师最终统一编译执行 |
 | `mod_need_mana` 用当前主副熟练度做整数减耗；成功首用奖励及 `MAGIC_GAIN_EXP` 适用于 Ranger | 已有精确整数算式、首用字段和练习实现可复用。主副 cap、深度/难度练习、美德和 Death 失败反噬当前多处只在 `player_is_mage()` 分支生效，第三步须接 Ranger；不把“所有 Mage 专属规则”一起放开 |
 
 本轮 Nature/Sorcery/Arcane 没有发现需要复制效果程序的 Ranger 专属分支；沿现有公共程序及其验证。Chaos、Trump 和其他非法领域中的职业分支不进入本轮。

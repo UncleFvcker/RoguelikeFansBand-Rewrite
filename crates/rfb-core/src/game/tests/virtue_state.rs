@@ -1,6 +1,64 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::support::clear_monsters;
 use super::*;
+
+#[test]
+fn book_alignment_uses_the_source_wisdom_ceiling_and_keeps_intelligence_at_five() {
+    for (build, opposed_spell, sign, ceiling) in [
+        (
+            "demo.build.priest-life-nature",
+            "demo.ability.life-cure-light-wounds",
+            -1,
+            10,
+        ),
+        (
+            "demo.build.priest-death-nature",
+            "demo.ability.death-detect-unlife",
+            1,
+            10,
+        ),
+        (
+            "demo.build.ranger-nature-death",
+            "demo.ability.death-detect-unlife",
+            1,
+            10,
+        ),
+        (
+            "demo.build.mage-death-nature",
+            "demo.ability.death-detect-unlife",
+            1,
+            5,
+        ),
+    ] {
+        let mut game = Game::new_with_build(925, build).unwrap();
+        clear_monsters(&mut game);
+        game.virtues = [
+            VirtueKindDto::Faith,
+            VirtueKindDto::Temperance,
+            VirtueKindDto::Justice,
+            VirtueKindDto::Unlife,
+            VirtueKindDto::Nature,
+            VirtueKindDto::Harmony,
+            VirtueKindDto::Knowledge,
+            VirtueKindDto::Chance,
+        ]
+        .map(|kind| VirtueDto { kind, value: 0 });
+        game.virtues[2].value = sign * 43; // Justice counts double: alignment +/-86.
+        assert_eq!(
+            game.book_spell_alignment_modifier(opposed_spell),
+            if ceiling == 10 { 5 } else { 3 }
+        );
+        game.virtues[2].value = sign * 125;
+        assert_eq!(game.book_spell_alignment_modifier(opposed_spell), ceiling);
+        assert_eq!(
+            game.book_spell_alignment_modifier("demo.ability.nature-detect-creatures"),
+            ceiling
+        );
+        game.virtues[2].value = -sign * 125;
+        assert_eq!(game.book_spell_alignment_modifier(opposed_spell), -1);
+    }
+}
 
 fn virtue_kinds(game: &Game) -> Vec<VirtueKindDto> {
     game.snapshot()

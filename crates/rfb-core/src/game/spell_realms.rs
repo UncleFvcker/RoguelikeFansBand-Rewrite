@@ -166,7 +166,8 @@ impl Game {
         if let Some(reason) = self.ability_study_unavailable_reason() {
             return Err(unavailable(reason));
         }
-        let profile = self.casting_profile().expect("dual-realm caster");
+        let (build, _, class, _) = self.character_definitions().expect("dual-realm build");
+        let profile = class.casting_profile.as_ref().expect("dual-realm caster");
         if self.ability_learning_remaining(profile) == 0 {
             return Err(unavailable("learning-capacity-full"));
         }
@@ -185,7 +186,10 @@ impl Game {
         {
             return Err(unavailable("already-active-realm"));
         }
-        if !profile.realm_profiles.iter().any(|realm| {
+        if !class.allows_second_realm(
+            build.first_realm_id.as_deref().expect("dual-realm primary"),
+            realm_id,
+        ) || !profile.realm_profiles.iter().any(|realm| {
             realm.realm_id == realm_id && realm.ability_book_ids.iter().any(|id| id == book_id)
         }) {
             return Err(unavailable("unsupported-realm"));
@@ -265,7 +269,10 @@ impl Game {
         self.refresh_player_ability_state();
         let resolutions = self.apply_mogaminator_to_items(vec![book_id.clone()], false, false)?;
         self.record_mogaminator_resolutions(resolutions, events, changed);
-        Ok(self.player_is_ranger() && self.resolve_prayer_study(&book_id, events))
+        Ok(self
+            .casting_profile()
+            .is_some_and(|profile| profile.study_mode == CastingStudyMode::DivineRandom)
+            && self.resolve_prayer_study(&book_id, events))
     }
 
     pub(super) fn validate_spell_realms(&self) -> Result<(), CoreError> {
@@ -281,14 +288,8 @@ impl Game {
             return Err(invalid);
         };
         let (build, _, class, _) = self.character_definitions().expect("dual-realm build");
-        let profile = class.casting_profile.as_ref().expect("dual-realm caster");
-        let supported = |id: &str| {
-            Some(id) != build.first_realm_id.as_deref()
-                && profile
-                    .realm_profiles
-                    .iter()
-                    .any(|realm| realm.realm_id == id)
-        };
+        let first = build.first_realm_id.as_deref().expect("dual-realm primary");
+        let supported = |id: &str| class.allows_second_realm(first, id);
         if !supported(&realms.second_realm_id)
             || !realms.previous_realm_ids.iter().all(|id| supported(id))
             || !realms

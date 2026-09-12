@@ -2,6 +2,9 @@
 use super::support::{choose_human_talent_if_pending, clear_monsters, give_inventory_item};
 use super::*;
 
+mod learning;
+mod realm_change;
+
 const BUILD: &str = "demo.build.priest-life-sorcery";
 const MANA: &str = "demo.resource.mana";
 
@@ -108,7 +111,8 @@ fn experience_growth_uses_wisdom_and_ninety_six_studies_without_mage_regeneratio
         game.character_definitions().unwrap().2.pet_upkeep_divisor,
         35
     );
-    game.progress.attributes.wisdom = 118;
+    game.progress.attributes.wisdom = game.progress.attribute_potentials.wisdom;
+    game.progress.maximum_attributes.wisdom = game.progress.attributes.wisdom;
     game.refresh_player_ability_state();
     assert_eq!(
         game.ability_learning_capacity(game.casting_profile().unwrap()),

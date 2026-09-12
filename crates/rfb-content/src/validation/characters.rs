@@ -766,15 +766,11 @@ pub(super) fn validate_characters(
             || (class.id == "demo.class.ranger"
                 && build.first_realm_id.as_deref() != Some("nature"))
             || (class.id == "demo.class.priest"
-                && match build.first_realm_id.as_deref() {
-                    Some("life" | "crusade") => {
-                        matches!(build.second_realm_id.as_deref(), Some("death" | "daemon"))
-                    }
-                    Some("death" | "daemon") => {
-                        matches!(build.second_realm_id.as_deref(), Some("life" | "crusade"))
-                    }
-                    _ => true,
-                })
+                && !build
+                    .first_realm_id
+                    .as_deref()
+                    .zip(build.second_realm_id.as_deref())
+                    .is_some_and(|(first, second)| class.allows_second_realm(first, second)))
         {
             return Err(ContentError::InvalidCharacterBuild(build.id.clone()));
         }

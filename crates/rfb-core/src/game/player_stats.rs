@@ -1272,7 +1272,7 @@ impl Game {
     }
 
     pub(super) fn player_uses_dual_realm_learning(&self) -> bool {
-        self.player_is_mage() || self.player_is_ranger()
+        self.player_is_mage() || self.player_is_ranger() || self.player_is_priest()
     }
 
     pub(super) fn player_is_berserker(&self) -> bool {

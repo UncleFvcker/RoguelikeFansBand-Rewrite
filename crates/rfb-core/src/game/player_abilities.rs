@@ -607,7 +607,8 @@ impl Game {
                     .saturating_sub(attribute_adjustment)
                     .saturating_add(if self.player_uses_dual_realm_learning() {
                         5 * i32::from(
-                            self.player_is_mage() && self.ability_is_secondary_realm(&ability.id),
+                            (self.player_is_mage() || self.player_is_priest())
+                                && self.ability_is_secondary_realm(&ability.id),
                         ) + self.book_spell_alignment_modifier(&ability.id)
                     } else {
                         0
@@ -1101,7 +1102,7 @@ impl Game {
         self.ability_learning_order.push(ability_id.clone());
         if self.player_uses_dual_realm_learning() {
             self.spent_spell_learning += 1;
-            // cmd5.c uses the class spell_book (Ranger: LIFE), not the realm.
+            // cmd5.c uses the class spell_book (Ranger/Priest: LIFE), not the realm.
             self.add_virtue(VirtueKindDto::Faith, 1);
         }
         Ok(ability_id)
@@ -1220,6 +1221,8 @@ impl Game {
                 .sum();
             let historical_capacity = if self.player_is_ranger() {
                 (3 * u32::from(self.progress.max_level.saturating_sub(2))).min(80)
+            } else if self.player_is_priest() {
+                (3 * u32::from(self.progress.max_level)).min(96)
             } else {
                 (3 * u32::from(self.progress.max_level)).min(100)
             } + u32::from(self.bonus_spell_learning_capacity);
@@ -1231,10 +1234,10 @@ impl Game {
             // counter survives replacement; at most 64 forgotten slots can augment capacity.
             self.spent_spell_learning >= self.ability_learning_order.len() as u32
                 && (has_replaced_realm
-                    || if self.player_is_ranger() {
-                        self.spent_spell_learning == self.ability_learning_order.len() as u32
-                    } else {
+                    || if self.player_is_mage() {
                         self.spent_spell_learning <= maximum_studies
+                    } else {
+                        self.spent_spell_learning == self.ability_learning_order.len() as u32
                     })
                 && self.spent_spell_learning
                     <= historical_capacity

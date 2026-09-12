@@ -79,6 +79,7 @@
 | 随机学习按书内顺序对合格候选依次 `one_in_(k)`，只选未学祈祷；成功学习+Faith | `cmd5.c:683–710`；复用 `study_random_player_ability`与共享支出。没有候选时不制造替代法术、不耗学习回合；不开放Mage重复研习或手动遗忘 |
 | 主副熟练度1600/1400，首用经验、后续练习与遗忘恢复 | `cmd5.c:1490`附近与`xtra1.c:2980`之后；复用现有学习顺序、remembered集合和ability progress；源同时活动最多64槽，容量是累计支出额度，不是同时持有96个法术 |
 | 祈祷失败：副领域+5，每把不适用刃器+25；按源阶段应用装备、美德、最低失败、震慑、95上限与练习减免 | `spells3.c:3396–3440`。当前 `ability_failure_percent`副领域只认Mage、没有刃器25；Priest的最低失败取属性表，没有Ranger固定5%。**两种职业能力走 `calculate_fail_rate`，不叠加书本的副领域或刃器惩罚** |
+| WIS施法者的阵营失败惩罚上限10，其他施法属性上限5；生命/圣战偏邪、死亡/恶魔偏善和自然失衡分别按源阈值插值 | 第三步补充核对 `virtue.c:690–730`：源 `which_stat == A_WIS` 将上限从5改为10。原有共享 `book_spell_alignment_modifier`固定5，须同时修正Priest与Ranger；强烈同阵营的生命/圣战或死亡/恶魔仍减1。职业主领域的善恶资格与动态美德阵营是不同规则，不以动态美德改变职业能力分支 |
 | beam基础为等级/2；公共领域效果用当前Class参数 | `do-spell.c:200–207`；现有profile可表达。神圣法球 `do-spell.c:6667–6693` 的Priest为 `3d6 + L + floor(L/2)`，30级起半径3；当前法术已配置3/2缩放，需验证实际投影与施放，不新添一层加成 |
 | 改换副领域先清掉旧副领域学习/首用/练习/遗忘，保留主领域、旧领域历史与已付支出，然后继续学习 | `cmd5.c:573–601,660–717`；复用[mage_realms既有状态](../crates/rfb-core/src/game/spell_realms.rs)，不因字段旧名称复制Priest状态。确认后无候选仍保留改换，取消确认保留原状态 |
 | 保存边界 | [角色内容校验](../crates/rfb-content/src/validation/characters.rs)、[spell_realms.rs](../crates/rfb-core/src/game/spell_realms.rs)、`player_spell_memory_is_valid`、[validation.rs](../crates/rfb-core/src/game/validation.rs)必须同时接线：限制当前/历史/待确认领域，随机职业未改换时支出与学习数一致，历史容量采用96而非当前非Ranger分支的100；拒绝伪造跨阵营、重复/非法历史、超额支出与错误能力状态 |

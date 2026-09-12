@@ -337,11 +337,25 @@ impl Game {
                 0
             };
         }
+        // RFB virtue.c::virtue_mod_spell_fail: WIS casters have a 10% ceiling.
+        let maximum = if self.casting_profile().is_some_and(|profile| {
+            profile.casting_attribute == rfb_content::CastingAttribute::Wisdom
+        }) {
+            10
+        } else {
+            5
+        };
         match self.book_spell_realm(ability_id) {
-            Some("nature") if alignment.abs() > 50 => (1 + (alignment.abs() - 51) * 4 / 150).min(5),
-            Some("life" | "crusade") if alignment < -20 => (1 + (-alignment - 21) * 4 / 130).min(5),
+            Some("nature") if alignment.abs() > 50 => {
+                (1 + (alignment.abs() - 51) * (maximum - 1) / 150).min(maximum)
+            }
+            Some("life" | "crusade") if alignment < -20 => {
+                (1 + (-alignment - 21) * (maximum - 1) / 130).min(maximum)
+            }
             Some("life" | "crusade") if alignment > 150 => -1,
-            Some("death" | "daemon") if alignment > 20 => (1 + (alignment - 21) * 4 / 130).min(5),
+            Some("death" | "daemon") if alignment > 20 => {
+                (1 + (alignment - 21) * (maximum - 1) / 130).min(maximum)
+            }
             Some("death" | "daemon") if alignment < -150 => -1,
             _ => 0,
         }
