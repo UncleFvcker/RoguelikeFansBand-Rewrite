@@ -1449,6 +1449,8 @@ mod tests {
         assert!(accepts(RfbDropTheme::Dwarf, "demo.item.mattock"));
         assert!(accepts(RfbDropTheme::Dwarf, "demo.item.dwarven-shovel"));
         assert!(accepts(RfbDropTheme::Dwarf, "demo.item.dwarven-pick"));
+        assert!(accepts(RfbDropTheme::Dwarf, "demo.item.mithril-plate-mail"));
+        assert!(!accepts(RfbDropTheme::Dwarf, "demo.item.mithril-shield"));
         assert!(!accepts(RfbDropTheme::Dwarf, "demo.item.guisarme"));
         assert!(!accepts(RfbDropTheme::Dwarf, "demo.item.scythe-of-slicing"));
         assert!(accepts(RfbDropTheme::Hobbit, "demo.item.ration-of-food"));

@@ -17,13 +17,13 @@
   "summary": {
     "sourceKindRecords": 545,
     "validSourceKinds": 544,
-    "mappedCanonicalKinds": 400,
-    "remainingValidKinds": 144,
+    "mappedCanonicalKinds": 407,
+    "remainingValidKinds": 137,
     "excludedPlaceholderKinds": 1,
-    "importerMechanicsReady": 10,
+    "importerMechanicsReady": 3,
     "importerBlocked": 134,
-    "formalItems": 579,
-    "baseAllocationRows": 413,
+    "formalItems": 586,
+    "baseAllocationRows": 420,
     "fixedArtifactRecords": 392,
     "formalFixedArtifacts": 156,
     "missingFixedArtifacts": 236,
@@ -383,12 +383,19 @@
     }
   },
   "ordinaryEquipmentCompletion": {
-    "status": "i1-a-implemented-awaiting-five-step-validation",
+    "status": "i1-a-b-implemented-awaiting-five-step-validation",
     "sourceIndices": [
       100,
       108,
       152,
-      155
+      155,
+      219,
+      241,
+      259,
+      280,
+      281,
+      286,
+      288
     ],
     "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
     "sourceEvidence": [
@@ -396,17 +403,21 @@
       "src/kind_name_zh.inc:107/115/159/162",
       "lib/edit/s_info.txt:weapon type/subtype 3:16, 3:30, 1:3, 1:6",
       "src/object2.c:_kind_theme_dwarf",
-      "src/obj_kind.c:object_is_rare"
+      "src/obj_kind.c:object_is_rare",
+      "lib/edit/k_info.txt:219/241/259/280/281/286/288",
+      "src/kind_name_zh.inc:226/248/266/287/288/293/295"
     ],
-    "implementation": "Four plain bases use existing weapon/digger generation, riding and tunneling. Explicit source exceptions: Warrior-Mage polearm caps 7000, Mindcrafter digger caps 4000, Cavalry slicing-scythe cap 8000, Duelist initial 0/cap 4000; the other ten classes use source-equivalent defaults. Allocation rows are 21/1, 60/4, 40/1 and 50/1. No fixed artifact added.",
+    "implementation": "Four plain bases use existing weapon/digger generation, riding and tunneling. Explicit source exceptions: Warrior-Mage polearm caps 7000, Mindcrafter digger caps 4000, Cavalry slicing-scythe cap 8000, Duelist initial 0/cap 4000; the other ten classes use source-equivalent defaults. Allocation rows are 21/1, 60/4, 40/1 and 50/1. No fixed artifact added. I1-B adds seven plain armor bases: source AC/hit/weight, physical head/shield/body slots, four-element item destruction immunity on Mithril Shield and Mithril Plate Mail, and the existing Dwarf theme for Mithril Plate Mail. These IGNORE flags do not grant player resistance. Allocation rows are 50/3, 50/2, 35/7, 40/2, 45/1, 50/1 and 60/4; no new rules, class profiles or artifacts.",
     "pendingValidation": [
       "game::tests::items::i1_a_ordinary_weapons_and_diggers_generate_and_act_after_save",
       "game::tests::inventory::original_diggers_use_weight_and_tunneling_pval_without_stacking_with_weapons",
       "game::tests::warrior_mage::proficiencies_virtues_and_racial_births_use_warrior_mage_rules",
       "game::loot::allocation::tests::themes_read_source_identity_including_previously_missing_domains",
-      "Existing weapon proficiency, riding, ordinary/Good/Great/Tailored, Ego and random artifact consumers; source names, class proficiency audit, source C value references, content lock and generation applicability."
+      "Existing weapon proficiency, riding, ordinary/Good/Great/Tailored, Ego and random artifact consumers; source names, class proficiency audit, source C value references, content lock and generation applicability.",
+      "game::tests::items::ordinary_heavy_armor_allocation_reaches_equipment_and_save (extended with I1-B seven bases, head/shield slots, unknown save, corrosion, no player elemental resistance, unequip and continued generation)",
+      "Existing caster armor encumbrance, armor Ego/random artifact generation and equipped armor corruption consumers."
     ],
-    "evidence": "Implementation and test source only. No compilation or test execution in I1-A; all five ordinary-equipment steps must be implemented before unified compilation, checks and report refresh. Existing acceptance does not cover these additions."
+    "evidence": "Implementation and test source only for I1-A and I1-B. No compilation or test execution; all five ordinary-equipment steps must be implemented before unified compilation, checks and report refresh. Existing acceptance does not cover these additions."
   },
   "remainingKinds": [
     {"sourceIndex": 0, "sourceName": "something", "sourceNameZh": "某物", "reviewGroup": "placeholder", "hasNaturalAllocationRows": false, "sourceFlags": [], "sourceActivation": null, "importerBlockers": []},
@@ -420,20 +431,13 @@
     {"sourceIndex": 170, "sourceName": "Flute", "sourceNameZh": "& 把~长笛", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["CHR", "INSTA_ART", "NO_ENCHANT"], "sourceActivation": null, "importerBlockers": ["item-flag:CHR", "item-flag:INSTA_ART", "launcher-unpaired"]},
     {"sourceIndex": 179, "sourceName": "Black Arrow", "sourceNameZh": "& 支~黑箭", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["INSTA_ART", "SHOW_MODS"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART"]},
     {"sourceIndex": 198, "sourceName": "Ethereal Cloak", "sourceNameZh": "& 件~空灵披风", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"], "sourceActivation": null, "importerBlockers": []},
-    {"sourceIndex": 219, "sourceName": "Kabuto", "sourceNameZh": "& 顶~兜", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": [], "sourceActivation": null, "importerBlockers": []},
     {"sourceIndex": 223, "sourceName": "Massive Iron Crown", "sourceNameZh": "& 顶~重铁王冠", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["INSTA_ART"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART"]},
     {"sourceIndex": 231, "sourceName": "Set of Mithril Gauntlets", "sourceNameZh": "& 副~秘银护手", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": ["IGNORE_ACID", "IGNORE_FIRE", "IGNORE_ELEC", "IGNORE_COLD"], "sourceActivation": null, "importerBlockers": []},
     {"sourceIndex": 234, "sourceName": "Hand :Decrepit", "sourceNameZh": "& 只~手", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["INSTA_ART", "FIXED_FLAVOR"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART"]},
-    {"sourceIndex": 241, "sourceName": "Mithril Shield", "sourceNameZh": "& 面~秘银盾", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": ["IGNORE_ACID", "IGNORE_FIRE", "IGNORE_ELEC", "IGNORE_COLD"], "sourceActivation": null, "importerBlockers": []},
     {"sourceIndex": 243, "sourceName": "Mirror", "sourceNameZh": "& 面~镜子", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["IGNORE_ACID", "REFLECT", "INSTA_ART"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART"]},
     {"sourceIndex": 244, "sourceName": "Card", "sourceNameZh": "& 张~纸牌", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["INSTA_ART"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART"]},
-    {"sourceIndex": 259, "sourceName": "Stone and Hide Armour", "sourceNameZh": "石皮甲~", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": [], "sourceActivation": null, "importerBlockers": []},
     {"sourceIndex": 260, "sourceName": "Sexy Swimsuit", "sourceNameZh": "性感泳装~", "reviewGroup": "swimsuit", "hasNaturalAllocationRows": true, "sourceFlags": ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD", "AGGRAVATE"], "sourceActivation": null, "importerBlockers": ["item-flag:AGGRAVATE"]},
     {"sourceIndex": 262, "sourceName": "Costume", "sourceNameZh": "戏服~", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["INSTA_ART"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART"]},
-    {"sourceIndex": 280, "sourceName": "Do-maru", "sourceNameZh": "胴丸~", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": []},
-    {"sourceIndex": 281, "sourceName": "Partial Plate Armour", "sourceNameZh": "半身板甲~", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": []},
-    {"sourceIndex": 286, "sourceName": "Ribbed Plate Armour", "sourceNameZh": "罗纹板甲~", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": []},
-    {"sourceIndex": 288, "sourceName": "Mithril Plate Mail", "sourceNameZh": "秘银板甲~", "reviewGroup": "ordinary-armor", "hasNaturalAllocationRows": true, "sourceFlags": ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"], "sourceActivation": null, "importerBlockers": []},
     {"sourceIndex": 368, "sourceName": "Madness:mumblus incognitus", "sourceNameZh": "疯狂", "reviewGroup": "madness-scroll", "hasNaturalAllocationRows": true, "sourceFlags": ["FIXED_FLAVOR"], "sourceActivation": null, "importerBlockers": ["scroll-effect"]},
     {"sourceIndex": 465, "sourceName": "Liquid Logrus:Murky Brown", "sourceNameZh": "液态洛格鲁斯", "reviewGroup": "liquid-logrus", "hasNaturalAllocationRows": true, "sourceFlags": ["NO_SHUFFLE"], "sourceActivation": null, "importerBlockers": ["consumable-effect", "potion-shatter-effect"]},
     {"sourceIndex": 512, "sourceName": "[Sign of Chaos]", "sourceNameZh": "[混沌的标志]", "reviewGroup": "realm-books", "hasNaturalAllocationRows": true, "sourceFlags": ["TOWN"], "sourceActivation": null, "importerBlockers": ["book-system"]},

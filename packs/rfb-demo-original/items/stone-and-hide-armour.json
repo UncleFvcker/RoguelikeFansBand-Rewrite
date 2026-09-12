@@ -1,0 +1,40 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1000,
+  "descriptionKey": "item-demo-stone-and-hide-armour-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -1
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 35,
+  "glyph": "(",
+  "id": "demo.item.stone-and-hide-armour",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 15
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-stone-and-hide-armour-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 259,
+    "sval": 15,
+    "tval": 36
+  },
+  "rfbValue": {
+    "flags": [],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 200
+}

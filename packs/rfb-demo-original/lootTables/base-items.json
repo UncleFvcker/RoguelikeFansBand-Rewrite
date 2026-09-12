@@ -1885,6 +1885,13 @@
       "weight": 33
     },
     {
+      "itemKindId": "demo.item.stone-and-hide-armour",
+      "maxDepth": 65535,
+      "minDepth": 35,
+      "quantity": 1,
+      "weight": 14
+    },
+    {
       "itemKindId": "demo.item.bar-chain-mail",
       "maxDepth": 65535,
       "minDepth": 35,
@@ -2067,6 +2074,13 @@
       "weight": 25
     },
     {
+      "itemKindId": "demo.item.do-maru",
+      "maxDepth": 65535,
+      "minDepth": 40,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
       "itemKindId": "demo.item.black-dragon-scale-mail",
       "maxDepth": 65535,
       "minDepth": 40,
@@ -2235,6 +2249,13 @@
       "weight": 33
     },
     {
+      "itemKindId": "demo.item.partial-plate-armour",
+      "maxDepth": 65535,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.metal-lamellar-armour",
       "maxDepth": 65535,
       "minDepth": 45,
@@ -2368,7 +2389,28 @@
       "weight": 50
     },
     {
+      "itemKindId": "demo.item.kabuto",
+      "maxDepth": 65535,
+      "minDepth": 50,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.mithril-shield",
+      "maxDepth": 65535,
+      "minDepth": 50,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
       "itemKindId": "demo.item.robe",
+      "maxDepth": 65535,
+      "minDepth": 50,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.ribbed-plate-armour",
       "maxDepth": 65535,
       "minDepth": 50,
       "quantity": 1,
@@ -2541,6 +2583,13 @@
       "minDepth": 60,
       "quantity": 1,
       "weight": 20
+    },
+    {
+      "itemKindId": "demo.item.mithril-plate-mail",
+      "maxDepth": 65535,
+      "minDepth": 60,
+      "quantity": 1,
+      "weight": 25
     },
     {
       "itemKindId": "demo.item.law-dragon-scale-mail",

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 300,
+  "descriptionKey": "item-demo-kabuto-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentSlot": "head",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "]",
+  "id": "demo.item.kabuto",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 7
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-kabuto-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 219,
+    "sval": 9,
+    "tval": 32
+  },
+  "rfbValue": {
+    "flags": [],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 80
+}

@@ -4455,6 +4455,9 @@ fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
     for (depth, indices) in [
         (35, &[272, 274, 276, 277, 278, 279][..]),
         (55, &[283, 284, 285, 287][..]),
+        // I1-B extends the existing armor flow to head/shield slots and the
+        // remaining plain body armors. RFB master a0d92b6378, k_info records.
+        (65, &[219, 241, 259, 280, 281, 286, 288][..]),
     ] {
         let mut game = Game::new_with_build(409, "demo.build.warrior").unwrap();
         clear_monsters(&mut game);
@@ -4480,10 +4483,11 @@ fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
                 let Some(base) = definition.rfb_base_kind else {
                     continue;
                 };
-                // Ordinary quality can still carry negative enchantments.
-                // Check the unenchanted base's own AC and hit penalty here.
+                // Ordinary quality can still carry negative enchantments or curses.
+                // Use a plain removable instance for the equip/unequip comparison.
                 if item.quality != ItemQualityDto::Ordinary
                     || item.enchantments != Default::default()
+                    || item.curse.is_some()
                     || !remaining.remove(&base.source_index)
                 {
                     continue;
@@ -4491,20 +4495,56 @@ fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
                 let defense = definition.modifiers.defense;
                 let hit = definition.equipment_bonuses.melee_skill;
                 let weight = u32::from(definition.weight_tenths_pound);
+                let slot = match definition.equipment_slot.as_deref() {
+                    Some("head") => "head",
+                    Some("shield") => "left-hand",
+                    Some("body") => "body",
+                    other => panic!("unexpected armor slot: {other:?}"),
+                };
+                let acid_immune = definition
+                    .elemental_destruction_immunities
+                    .contains(&rfb_content::ItemDestructionElement::Acid);
                 let baseline = game.player_derived_stats();
                 let id = item.id.clone();
                 game.items.push(item);
                 game.pick_up_item_at_player(Some(&id)).unwrap();
                 assert_eq!(game.carried_weight_tenths_pound(), weight);
+                game.reveal_current_visibility();
+                let unknown = Game::from_save(game.to_save()).unwrap();
+                assert_eq!(unknown.state_hash(), game.state_hash());
+                assert!(
+                    !unknown
+                        .item_property_knowledge
+                        .get(&id)
+                        .is_some_and(|k| k.appraised)
+                );
                 game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
                 assert!(game.item_property_knowledge[&id].identified);
-                game.equip_inventory_item(&id, Some("body")).unwrap();
+                game.equip_inventory_item(&id, Some(slot)).unwrap();
                 let equipped = game.player_derived_stats();
                 assert_eq!(
                     equipped.armor_class.value - baseline.armor_class.value,
                     defense * 10
                 );
                 assert_eq!(equipped.melee_skill.value - baseline.melee_skill.value, hit);
+                assert_eq!(equipped.ranged_skill.value, baseline.ranged_skill.value);
+                for element in [
+                    DamageType::Acid,
+                    DamageType::Electricity,
+                    DamageType::Fire,
+                    DamageType::Cold,
+                ] {
+                    assert_eq!(
+                        game.effective_player_resistances().level(element),
+                        ResistanceLevel::Normal
+                    );
+                }
+                let mut corroded = game.clone();
+                assert!(corroded.corrode_player_armor(&mut Vec::new()));
+                assert_eq!(
+                    corroded.items[0].enchantments.to_armor,
+                    if acid_immune { 0 } else { -1 }
+                );
                 game.reveal_current_visibility();
                 let mut restored = Game::from_save(game.to_save()).unwrap();
                 assert_eq!(restored.state_hash(), game.state_hash());
@@ -4522,6 +4562,15 @@ fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
                     .unwrap();
                 assert_eq!(next, replay);
                 assert_eq!(restored.rng, game.rng);
+                assert!(game.unequip_slot(slot).is_some());
+                assert_eq!(
+                    game.player_derived_stats().armor_class.value,
+                    baseline.armor_class.value
+                );
+                assert_eq!(
+                    game.player_derived_stats().melee_skill.value,
+                    baseline.melee_skill.value
+                );
                 game.items.clear();
             }
             if remaining.is_empty() {

@@ -1,6 +1,13 @@
 {
   "schemaVersion": 1,
   "items": [
+    { "sourceIndex": 219, "id": "kabuto" },
+    { "sourceIndex": 241, "id": "mithril-shield" },
+    { "sourceIndex": 259, "id": "stone-and-hide-armour" },
+    { "sourceIndex": 280, "id": "do-maru" },
+    { "sourceIndex": 281, "id": "partial-plate-armour" },
+    { "sourceIndex": 286, "id": "ribbed-plate-armour" },
+    { "sourceIndex": 288, "id": "mithril-plate-mail" },
     { "sourceIndex": 100, "id": "guisarme" },
     { "sourceIndex": 108, "id": "scythe-of-slicing" },
     { "sourceIndex": 152, "id": "dwarven-shovel" },
