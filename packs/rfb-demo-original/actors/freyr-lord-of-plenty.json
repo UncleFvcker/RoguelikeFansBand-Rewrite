@@ -189,5 +189,13 @@
     "norse",
     "orc-cave",
     "unique"
-  ]
+  ],
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.freyr",
+    "chancePercent": 20,
+    "alternative": {
+      "itemKindId": "demo.item.ingwe",
+      "chancePercent": 50
+    }
+  }
 }

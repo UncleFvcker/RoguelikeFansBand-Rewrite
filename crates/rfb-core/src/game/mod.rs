@@ -113,6 +113,7 @@ pub(crate) use bounty::BountyOfficeOutcome;
 mod capabilities;
 mod capture_ball;
 mod chaos_patron;
+mod chests;
 mod damage;
 mod death;
 mod ego;
@@ -235,7 +236,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 128;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 129;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -2224,6 +2225,12 @@ impl Game {
             GameAction::Ride { direction } => {
                 self.resolve_riding(direction, &mut events, &mut changed);
             }
+            GameAction::OpenChest { item_id } => {
+                self.interact_chest(&item_id, false, &mut events, &mut changed)?;
+            }
+            GameAction::DisarmChest { item_id } => {
+                self.interact_chest(&item_id, true, &mut events, &mut changed)?;
+            }
             GameAction::OpenDoor { direction } => match self.open_door(direction) {
                 Some(DoorOpenOutcome::Opened { position }) => {
                     changed.insert(position);
@@ -2241,7 +2248,8 @@ impl Game {
             },
             GameAction::Search => {
                 let discovered = self.search_hidden_terrain();
-                if discovered.is_empty() {
+                let found_chest = self.search_chest_traps(&mut events, &mut changed);
+                if discovered.is_empty() && !found_chest {
                     events.push(DomainEvent::SearchFoundNothing);
                 } else {
                     for position in discovered {
@@ -2851,6 +2859,7 @@ impl Game {
             charges,
             fuel: initial_item_fuel(&self.content, kind_id),
             device_recovery_progress: 0,
+            chest: None,
             captured_actor: None,
             location: ItemLocation::Inventory,
         });

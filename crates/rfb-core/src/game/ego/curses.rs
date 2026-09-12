@@ -335,6 +335,7 @@ pub(super) fn finalize_materialization(
     result: &mut EgoMaterialization,
 ) {
     let mut item = GeneratedItemDraft {
+        chest: None,
         artifact_name: None,
         intrinsic_melee_damage_dice: None,
         intrinsic_weight_tenths_pound: None,

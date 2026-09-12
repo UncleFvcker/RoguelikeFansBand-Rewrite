@@ -226,3 +226,11 @@ src/spells3.c, src/py_throw.c, src/obj_kind.c, src/xtra1.c, src/equip.c and
 src/object3.c. Existing upstream notices and license terms remain applicable.
 Implementation scope and pending AS7 verification are recorded in
 design/asgard-dungeon-plan-20260912.md.
+
+Asgard AS3 death drops and large wooden chest kind641 adapt the same RFB
+master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c. Additional sources are
+src/xtra2.c, src/object2.c, src/cmd2.c, src/tables.c, src/cave.c and
+src/spells3.c (mundanity), with names from src/kind_name_zh.inc.
+Existing upstream notices and license terms remain applicable. Implementation
+and retained adaptations are recorded in design/asgard-dungeon-plan-20260912.md;
+compilation, generated data and behavior acceptance remain pending AS7.

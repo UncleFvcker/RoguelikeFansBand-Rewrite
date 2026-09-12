@@ -212,6 +212,7 @@ fn append_starting_item(
         charges,
         fuel: initial_item_fuel(content, &starting_item.item_kind_id),
         device_recovery_progress: 0,
+        chest: None,
         captured_actor: None,
         location,
     });
@@ -477,6 +478,7 @@ impl Game {
                     charges: None,
                     fuel: initial_item_fuel(&content, &spawn.kind_id),
                     device_recovery_progress: 0,
+                    chest: None,
                     captured_actor: None,
                     location: ItemLocation::Ground(position_from_content(spawn.position)),
                 };

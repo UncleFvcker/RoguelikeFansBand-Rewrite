@@ -1402,3 +1402,5 @@ item-crafting-quantity-confirm = 这叠弹药数量超过 30，工艺有可能�
 item-mundanity-resistance-confirm = 该物品上的所有抗性都将丢失。确定要继续吗？
 
 task-membership-required = 这项任务需要本塔会员或塔主资格。
+object-list-open-chest = 开箱
+object-list-disarm-chest = 解除宝箱陷阱

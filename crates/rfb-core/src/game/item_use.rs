@@ -2195,6 +2195,10 @@ impl Game {
             charges: None,
             fuel: crate::save::initial_item_fuel(&self.content, &kind_id),
             device_recovery_progress: 0,
+            chest: item.chest.map(|_| rfb_protocol::ChestSaveDto {
+                difficulty: 0,
+                opening_depth: 0,
+            }),
             captured_actor: None,
         }
     }

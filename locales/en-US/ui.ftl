@@ -1406,3 +1406,5 @@ item-crafting-quantity-confirm = This stack has more than 30 missiles. Crafting 
 item-mundanity-resistance-confirm = All resistances on this item will be lost. Continue?
 
 task-membership-required = This task requires membership or ownership of this tower.
+object-list-open-chest = Open chest
+object-list-disarm-chest = Disarm chest

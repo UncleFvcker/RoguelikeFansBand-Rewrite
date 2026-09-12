@@ -592,6 +592,10 @@ pub(crate) enum DomainEvent {
     DoorUnlockFailed {
         position: Position,
     },
+    ChestInteracted {
+        message_key: String,
+    },
+    AsgardAvengerSummoned,
     DoorOpenUnavailable,
     DoorBashedOpen {
         position: Position,
@@ -2899,6 +2903,10 @@ impl DomainEvent {
                 "door-unlock-failed",
                 [("x", position.x.to_string()), ("y", position.y.to_string())],
             ),
+            Self::ChestInteracted { message_key } => dto_without_args("item.chest", &message_key),
+            Self::AsgardAvengerSummoned => {
+                dto_without_args("actor.asgard-avenger", "asgard-avenger-summoned")
+            }
             Self::DoorOpenUnavailable => {
                 dto_without_args("terrain.door-open-unavailable", "door-open-unavailable")
             }

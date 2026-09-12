@@ -526,6 +526,17 @@ pub struct ActorDefinition {
 pub struct MonsterArtifactDropDefinition {
     pub item_kind_id: String,
     pub chance_percent: u8,
+    /// Select either branch with equal probability, then roll that branch once.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alternative: Option<MonsterArtifactDropChoiceDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MonsterArtifactDropChoiceDefinition {
+    pub item_kind_id: String,
+    pub chance_percent: u8,
 }
 
 impl ActorDefinition {

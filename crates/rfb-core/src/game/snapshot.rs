@@ -950,6 +950,7 @@ impl Game {
                     return None;
                 }
                 Some(ItemDto {
+                    chest: self.chest_dto(item),
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
                     display_name_key: self.item_display_name_key(&item.kind_id),

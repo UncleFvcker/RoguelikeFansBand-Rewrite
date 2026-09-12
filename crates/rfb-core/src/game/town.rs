@@ -518,6 +518,7 @@ fn plain_shop_item(
         charges,
         fuel: initial_item_fuel(content, item_kind_id),
         device_recovery_progress: 0,
+        chest: None,
         captured_actor: None,
         location: ItemLocation::Shop {
             shop_id: shop_id.to_owned(),

@@ -1053,6 +1053,7 @@ impl Game {
             charges: None,
             fuel: None,
             device_recovery_progress: 0,
+            chest: None,
             captured_actor: None,
             location: ItemLocation::Inventory,
         };

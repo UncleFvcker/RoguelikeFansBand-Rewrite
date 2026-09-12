@@ -851,6 +851,7 @@ fn elemental_brand_is_suppressed_only_by_matching_immunity() {
         charges: None,
         fuel: None,
         device_recovery_progress: 0,
+        chest: None,
         captured_actor: None,
         location: ItemLocation::Equipped {
             slot_id: weapon_slot,
@@ -919,6 +920,7 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
         charges: None,
         fuel: None,
         device_recovery_progress: 0,
+        chest: None,
         captured_actor: None,
         location: ItemLocation::Inventory,
     });

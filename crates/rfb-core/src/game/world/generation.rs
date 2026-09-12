@@ -769,6 +769,7 @@ impl Game {
             charges: None,
             fuel: initial_item_fuel(&self.content, &spawn.kind_id),
             device_recovery_progress: 0,
+            chest: None,
             captured_actor: None,
             location: ItemLocation::Ground(Position {
                 x: i32::from(position.x),
@@ -2794,6 +2795,7 @@ impl Game {
                 charges,
                 fuel: initial_item_fuel(&self.content, &entry.item_kind_id),
                 device_recovery_progress: 0,
+                chest: None,
                 captured_actor: None,
                 location: ItemLocation::Ground(position),
             });
@@ -2845,6 +2847,7 @@ impl Game {
                         charges,
                         fuel,
                         device_recovery_progress: 0,
+                        chest: None,
                         captured_actor: None,
                         location: ItemLocation::Ground(first_center),
                     });

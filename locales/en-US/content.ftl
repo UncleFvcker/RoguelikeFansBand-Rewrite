@@ -10065,3 +10065,5 @@ item-demo-ullur-name = Ring of Ullur
 item-demo-ullur-description = Ring of Ullur. +21 accuracy and +36 damage apply only to shooting; activates speed.
 item-demo-jarngreipr-name = Set Of Caestus 'Jarngreipr'
 item-demo-jarngreipr-description = Set Of Caestus 'Jarngreipr'
+item-demo-large-wooden-chest-name = Large wooden chest
+item-demo-large-wooden-chest-description = Large wooden chest

@@ -197,5 +197,9 @@
     "norse",
     "orc-cave",
     "unique"
-  ]
+  ],
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.tyr",
+    "chancePercent": 10
+  }
 }

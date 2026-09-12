@@ -175,5 +175,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.frigg",
+    "chancePercent": 5
   }
 }

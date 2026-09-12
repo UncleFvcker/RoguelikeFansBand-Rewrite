@@ -706,6 +706,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             curse: item.curse,
             permanent_destruction_immunities: Vec::new(),
             device_recovery_progress: item.device_recovery_progress,
+            chest: None,
             captured_actor: None,
         });
     }

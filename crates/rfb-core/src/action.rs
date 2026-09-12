@@ -100,6 +100,12 @@ pub(crate) enum GameAction {
     Ride {
         direction: Direction,
     },
+    OpenChest {
+        item_id: String,
+    },
+    DisarmChest {
+        item_id: String,
+    },
     OpenDoor {
         direction: Direction,
     },
@@ -405,6 +411,8 @@ impl From<GameCommand> for GameAction {
             GameCommand::TravelLocal { destination } => Self::TravelLocal { destination },
             GameCommand::Move { direction } => Self::Move { direction },
             GameCommand::Ride { direction } => Self::Ride { direction },
+            GameCommand::OpenChest { item_id } => Self::OpenChest { item_id },
+            GameCommand::DisarmChest { item_id } => Self::DisarmChest { item_id },
             GameCommand::OpenDoor { direction } => Self::OpenDoor { direction },
             GameCommand::InscribeItem {
                 item_id,

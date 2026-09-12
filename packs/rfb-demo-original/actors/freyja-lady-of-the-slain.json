@@ -221,5 +221,13 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.freyja",
+    "chancePercent": 30,
+    "alternative": {
+      "itemKindId": "demo.item.brisingamen",
+      "chancePercent": 40
+    }
   }
 }

@@ -68,6 +68,26 @@ impl Game {
         }
         self.active_task_objective()?;
         match action {
+            GameAction::OpenChest { item_id } | GameAction::DisarmChest { item_id } => {
+                if self.items.iter().any(|item| {
+                    item.id == *item_id
+                        && self.chest_dto(item).is_some_and(|chest| {
+                            if matches!(action, GameAction::DisarmChest { .. }) {
+                                chest.can_disarm
+                                    && item.chest.is_some_and(|state| state.difficulty == 12)
+                            } else {
+                                chest.can_open
+                            }
+                        })
+                }) {
+                    self.next_item_instance_serial
+                        .checked_add(2)
+                        .ok_or(CoreError::ItemIdExhausted)?;
+                    self.next_gold_pile_serial
+                        .checked_add(3)
+                        .ok_or(CoreError::GoldPileIdExhausted)?;
+                }
+            }
             GameAction::UseItem { item_id, .. }
             | GameAction::UseItemForRecharge { item_id, .. } => {
                 self.inventory_item_use_context(item_id)?;
@@ -169,6 +189,9 @@ pub(super) fn item_creation_state_is_valid(
     item: &ItemInstance,
     definition: &rfb_content::ItemDefinition,
 ) -> bool {
+    if crate::save::validate_chest_state(&item.kind_id, item.quantity, item.chest).is_err() {
+        return false;
+    }
     if item.book_counted && (definition.ability_book_id.is_none() || item.quantity != 1) {
         return false;
     }
@@ -211,7 +234,10 @@ pub(super) fn item_creation_state_is_valid(
                     }))
         }
         Some(
-            ItemOriginKindDto::Acquire | ItemOriginKindDto::Mundanity | ItemOriginKindDto::Rubble,
+            ItemOriginKindDto::Chest
+            | ItemOriginKindDto::Acquire
+            | ItemOriginKindDto::Mundanity
+            | ItemOriginKindDto::Rubble,
         ) => item.discount_percent == 0 || discounted_equipment,
         Some(ItemOriginKindDto::EndlessQuiver) => {
             (item.discount_percent == 0 || discounted_equipment)

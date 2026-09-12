@@ -188,5 +188,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.vidarr",
+    "chancePercent": 10
   }
 }

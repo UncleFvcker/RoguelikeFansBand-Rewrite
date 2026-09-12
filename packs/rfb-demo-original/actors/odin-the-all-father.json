@@ -243,5 +243,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.runespear",
+    "chancePercent": 100
   }
 }

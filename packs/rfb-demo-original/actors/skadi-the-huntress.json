@@ -200,5 +200,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.skadi",
+    "chancePercent": 10
   }
 }

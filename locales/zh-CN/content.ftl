@@ -10096,3 +10096,5 @@ item-demo-ullur-name = 乌勒尔的戒指
 item-demo-ullur-description = 乌勒尔的戒指。命中 +21、伤害 +36 仅用于射击；可以激活加速。
 item-demo-jarngreipr-name = 搏击拳套『雅恩格利佩尔』
 item-demo-jarngreipr-description = 搏击拳套『雅恩格利佩尔』
+item-demo-large-wooden-chest-name = 大木箱
+item-demo-large-wooden-chest-description = 大木箱

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 use super::support::*;
 use super::*;
+mod deaths;
 
 fn game() -> Game {
     let mut game = Game::new_with_build(493, "demo.build.warrior").unwrap();
