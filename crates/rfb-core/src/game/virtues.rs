@@ -75,6 +75,9 @@ pub(super) fn initial_virtues(
             "demo.class.archer" | "demo.class.ranger" => {
                 kinds.extend([VirtueKindDto::Nature, VirtueKindDto::Temperance]);
             }
+            "demo.class.priest" => {
+                kinds.extend([VirtueKindDto::Faith, VirtueKindDto::Temperance]);
+            }
             "demo.class.warrior" => {
                 kinds.extend([VirtueKindDto::Valour, VirtueKindDto::Honour]);
             }

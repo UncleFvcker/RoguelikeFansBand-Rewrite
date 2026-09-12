@@ -57,6 +57,7 @@ mod persistence;
 mod pet_upkeep;
 mod poison_needle;
 mod prayer_study;
+mod priest;
 mod progression;
 mod pyramidal_mound;
 mod race_attribute_sustains;

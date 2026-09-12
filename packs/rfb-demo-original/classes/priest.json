@@ -1,0 +1,566 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "id": "demo.class.priest",
+  "nameKey": "class-demo-priest-name",
+  "descriptionKey": "class-demo-priest-description",
+  "modifiers": {
+    "strength": -1,
+    "intelligence": -3,
+    "wisdom": 3,
+    "dexterity": -1,
+    "constitution": 0,
+    "charisma": 2
+  },
+  "lifePercent": 100,
+  "experiencePercent": 120,
+  "baseHp": 4,
+  "skillSetId": "demo.skill-set.priest",
+  "weaponProficiency": {
+    "defaultInitial": 2000,
+    "defaultMaximum": 4000,
+    "overrides": {
+      "demo.item.ball-and-chain": {
+        "initial": 2000,
+        "maximum": 7000
+      },
+      "demo.item.bo-staff": {
+        "initial": 2000,
+        "maximum": 7000
+      },
+      "demo.item.club": {
+        "initial": 2000,
+        "maximum": 7000
+      },
+      "demo.item.flail": {
+        "initial": 2000,
+        "maximum": 7000
+      },
+      "demo.item.great-hammer": {
+        "initial": 2000,
+        "maximum": 7000
+      },
+      "demo.item.jo-staff": {
+        "initial": 2000,
+        "maximum": 7000
+      },
+      "demo.item.lead-filled-mace": {
+        "initial": 2000,
+        "maximum": 7000
+      },
+      "demo.item.mace": {
+        "initial": 4000,
+        "maximum": 7000
+      },
+      "demo.item.morning-star": {
+        "initial": 2000,
+        "maximum": 7000
+      },
+      "demo.item.quarterstaff": {
+        "initial": 2000,
+        "maximum": 7000
+      },
+      "demo.item.three-piece-rod": {
+        "initial": 2000,
+        "maximum": 7000
+      },
+      "demo.item.war-hammer": {
+        "initial": 2000,
+        "maximum": 7000
+      },
+      "demo.item.whip": {
+        "initial": 2000,
+        "maximum": 7000
+      },
+      "demo.item.wizardstaff": {
+        "initial": 4000,
+        "maximum": 7000
+      }
+    }
+  },
+  "ridingProficiency": {
+    "initial": 0,
+    "maximum": 2000
+  },
+  "dualWieldingMaximum": 4000,
+  "petUpkeepDivisor": 35,
+  "usesSpellScrolls": true,
+  "castingProfile": {
+    "resourceId": "demo.resource.mana",
+    "castingAttribute": "wisdom",
+    "capacityFormula": "rfb-mana",
+    "baseCapacity": 0,
+    "capacityPerLevel": 0,
+    "capacityPerAttributeIndex": 0,
+    "capacityPercent": 100,
+    "learningFormula": "rfb-dual-realm",
+    "failureFormula": "rfb-magic",
+    "baseLearningCapacity": 0,
+    "learningCapacityPerLevel": 0,
+    "learningCapacityPerAttributeIndex": 0,
+    "learningCapacityCap": 96,
+    "resourceRecoveryPercent": 100,
+    "minimumFailurePercent": 0,
+    "beamChanceLevelMultiplier": 1,
+    "beamChanceLevelDivisor": 2,
+    "encumbrance": {
+      "maximumWeightTenthsPound": 430,
+      "weaponWeightPercent": 67,
+      "penaltyWeightTenthsPound": 800,
+      "gloveEncumbrance": false
+    },
+    "realmProfiles": [
+      {
+        "realmId": "life",
+        "abilityBookIds": [
+          "demo.ability-book.book-of-common-prayer",
+          "demo.ability-book.high-mass",
+          "demo.ability-book.book-of-the-unicorn",
+          "demo.ability-book.blessings-of-the-grail"
+        ],
+        "abilityOverrides": [
+          {"abilityId": "demo.ability.life-cure-light-wounds", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 10, "firstSuccessExperience": 4},
+          {"abilityId": "demo.ability.life-bless", "minimumLevel": 1, "resourceCost": 2, "baseFailurePercent": 15, "firstSuccessExperience": 4},
+          {"abilityId": "demo.ability.life-regeneration", "minimumLevel": 1, "resourceCost": 2, "baseFailurePercent": 20, "firstSuccessExperience": 4},
+          {"abilityId": "demo.ability.life-call-light", "minimumLevel": 3, "resourceCost": 2, "baseFailurePercent": 25, "firstSuccessExperience": 3},
+          {"abilityId": "demo.ability.life-detect-doors-and-traps", "minimumLevel": 3, "resourceCost": 3, "baseFailurePercent": 27, "firstSuccessExperience": 6},
+          {"abilityId": "demo.ability.life-cure-medium-wounds", "minimumLevel": 4, "resourceCost": 4, "baseFailurePercent": 28, "firstSuccessExperience": 8},
+          {"abilityId": "demo.ability.life-cure-poison", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 32, "firstSuccessExperience": 20},
+          {"abilityId": "demo.ability.life-satisfy-hunger", "minimumLevel": 7, "resourceCost": 5, "baseFailurePercent": 38, "firstSuccessExperience": 28},
+          {"abilityId": "demo.ability.life-remove-curse", "minimumLevel": 7, "resourceCost": 6, "baseFailurePercent": 38, "firstSuccessExperience": 35},
+          {"abilityId": "demo.ability.life-fasting", "minimumLevel": 9, "resourceCost": 6, "baseFailurePercent": 38, "firstSuccessExperience": 36},
+          {"abilityId": "demo.ability.life-cure-critical-wounds", "minimumLevel": 9, "resourceCost": 7, "baseFailurePercent": 40, "firstSuccessExperience": 36},
+          {"abilityId": "demo.ability.life-resist-heat-and-cold", "minimumLevel": 10, "resourceCost": 8, "baseFailurePercent": 38, "firstSuccessExperience": 40},
+          {"abilityId": "demo.ability.life-sense-surroundings", "minimumLevel": 10, "resourceCost": 8, "baseFailurePercent": 40, "firstSuccessExperience": 40},
+          {"abilityId": "demo.ability.life-turn-undead", "minimumLevel": 11, "resourceCost": 8, "baseFailurePercent": 42, "firstSuccessExperience": 44},
+          {"abilityId": "demo.ability.life-healing", "minimumLevel": 20, "resourceCost": 16, "baseFailurePercent": 60, "firstSuccessExperience": 140},
+          {"abilityId": "demo.ability.life-glyph-of-warding", "minimumLevel": 33, "resourceCost": 55, "baseFailurePercent": 90, "firstSuccessExperience": 495},
+          {"abilityId": "demo.ability.life-dispel-curse", "minimumLevel": 15, "resourceCost": 14, "baseFailurePercent": 50, "firstSuccessExperience": 750},
+          {"abilityId": "demo.ability.life-perception", "minimumLevel": 16, "resourceCost": 14, "baseFailurePercent": 80, "firstSuccessExperience": 960},
+          {"abilityId": "demo.ability.life-dispel-undead", "minimumLevel": 17, "resourceCost": 14, "baseFailurePercent": 55, "firstSuccessExperience": 1190},
+          {"abilityId": "demo.ability.life-sustain-attributes", "minimumLevel": 24, "resourceCost": 20, "baseFailurePercent": 55, "firstSuccessExperience": 1680},
+          {"abilityId": "demo.ability.life-cure-mutation", "minimumLevel": 25, "resourceCost": 20, "baseFailurePercent": 70, "firstSuccessExperience": 3000},
+          {"abilityId": "demo.ability.life-word-of-recall", "minimumLevel": 25, "resourceCost": 25, "baseFailurePercent": 80, "firstSuccessExperience": 6250},
+          {"abilityId": "demo.ability.life-transcendence", "minimumLevel": 39, "resourceCost": 32, "baseFailurePercent": 95, "firstSuccessExperience": 7800},
+          {"abilityId": "demo.ability.life-warding-true", "minimumLevel": 44, "resourceCost": 44, "baseFailurePercent": 80, "firstSuccessExperience": 11000},
+          {"abilityId": "demo.ability.life-sterilization", "minimumLevel": 5, "resourceCost": 9, "baseFailurePercent": 50, "firstSuccessExperience": 400},
+          {"abilityId": "demo.ability.life-detection", "minimumLevel": 15, "resourceCost": 14, "baseFailurePercent": 50, "firstSuccessExperience": 1500},
+          {"abilityId": "demo.ability.life-annihilate-undead", "minimumLevel": 30, "resourceCost": 30, "baseFailurePercent": 80, "firstSuccessExperience": 3900},
+          {"abilityId": "demo.ability.life-clairvoyance", "minimumLevel": 35, "resourceCost": 70, "baseFailurePercent": 90, "firstSuccessExperience": 8750},
+          {"abilityId": "demo.ability.life-restoration", "minimumLevel": 40, "resourceCost": 50, "baseFailurePercent": 80, "firstSuccessExperience": 5200},
+          {"abilityId": "demo.ability.life-healing-true", "minimumLevel": 40, "resourceCost": 40, "baseFailurePercent": 80, "firstSuccessExperience": 8000},
+          {"abilityId": "demo.ability.life-holy-vision", "minimumLevel": 42, "resourceCost": 90, "baseFailurePercent": 85, "firstSuccessExperience": 8400},
+          {"abilityId": "demo.ability.life-ultimate-resistance", "minimumLevel": 45, "resourceCost": 90, "baseFailurePercent": 85, "firstSuccessExperience": 11250}
+        ]
+      },
+      {
+        "realmId": "sorcery",
+        "abilityBookIds": [
+          "demo.ability-book.beginners-handbook",
+          "demo.ability-book.master-sorcerers-handbook",
+          "demo.ability-book.pattern-sorcery",
+          "demo.ability-book.grimoire-of-power"
+        ],
+        "abilityOverrides": [
+          {"abilityId": "demo.ability.sorcery-detect-monsters", "minimumLevel": 2, "resourceCost": 1, "baseFailurePercent": 18, "firstSuccessExperience": 8},
+          {"abilityId": "demo.ability.sorcery-phase-door", "minimumLevel": 3, "resourceCost": 2, "baseFailurePercent": 19, "firstSuccessExperience": 12},
+          {"abilityId": "demo.ability.sorcery-detect-doors-traps", "minimumLevel": 4, "resourceCost": 3, "baseFailurePercent": 20, "firstSuccessExperience": 4},
+          {"abilityId": "demo.ability.sorcery-light-area", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 25, "firstSuccessExperience": 5},
+          {"abilityId": "demo.ability.sorcery-confuse-monster", "minimumLevel": 6, "resourceCost": 5, "baseFailurePercent": 25, "firstSuccessExperience": 6},
+          {"abilityId": "demo.ability.sorcery-teleport", "minimumLevel": 7, "resourceCost": 6, "baseFailurePercent": 30, "firstSuccessExperience": 35},
+          {"abilityId": "demo.ability.sorcery-sleep-monster", "minimumLevel": 9, "resourceCost": 7, "baseFailurePercent": 25, "firstSuccessExperience": 36},
+          {"abilityId": "demo.ability.sorcery-recharging", "minimumLevel": 11, "resourceCost": 10, "baseFailurePercent": 70, "firstSuccessExperience": 99},
+          {"abilityId": "demo.ability.sorcery-magic-mapping", "minimumLevel": 13, "resourceCost": 11, "baseFailurePercent": 70, "firstSuccessExperience": 104},
+          {"abilityId": "demo.ability.sorcery-identify", "minimumLevel": 14, "resourceCost": 12, "baseFailurePercent": 70, "firstSuccessExperience": 84},
+          {"abilityId": "demo.ability.sorcery-slow-monster", "minimumLevel": 15, "resourceCost": 13, "baseFailurePercent": 70, "firstSuccessExperience": 105},
+          {"abilityId": "demo.ability.sorcery-mass-sleep", "minimumLevel": 16, "resourceCost": 14, "baseFailurePercent": 45, "firstSuccessExperience": 96},
+          {"abilityId": "demo.ability.sorcery-teleport-away", "minimumLevel": 22, "resourceCost": 15, "baseFailurePercent": 55, "firstSuccessExperience": 176},
+          {"abilityId": "demo.ability.sorcery-haste-self", "minimumLevel": 27, "resourceCost": 17, "baseFailurePercent": 60, "firstSuccessExperience": 270},
+          {"abilityId": "demo.ability.sorcery-true-detection", "minimumLevel": 30, "resourceCost": 22, "baseFailurePercent": 65, "firstSuccessExperience": 450},
+          {"abilityId": "demo.ability.sorcery-true-identify", "minimumLevel": 36, "resourceCost": 33, "baseFailurePercent": 70, "firstSuccessExperience": 720},
+          {"abilityId": "demo.ability.sorcery-inventory-protection", "minimumLevel": 7, "resourceCost": 7, "baseFailurePercent": 20, "firstSuccessExperience": 105},
+          {"abilityId": "demo.ability.sorcery-create-stair", "minimumLevel": 14, "resourceCost": 14, "baseFailurePercent": 75, "firstSuccessExperience": 560},
+          {"abilityId": "demo.ability.sorcery-esp", "minimumLevel": 18, "resourceCost": 18, "baseFailurePercent": 55, "firstSuccessExperience": 450},
+          {"abilityId": "demo.ability.sorcery-teleport-town", "minimumLevel": 20, "resourceCost": 33, "baseFailurePercent": 65, "firstSuccessExperience": 800},
+          {"abilityId": "demo.ability.sorcery-self-knowledge", "minimumLevel": 20, "resourceCost": 20, "baseFailurePercent": 80, "firstSuccessExperience": 1000},
+          {"abilityId": "demo.ability.sorcery-teleport-level", "minimumLevel": 22, "resourceCost": 22, "baseFailurePercent": 55, "firstSuccessExperience": 550},
+          {"abilityId": "demo.ability.sorcery-word-of-recall", "minimumLevel": 27, "resourceCost": 27, "baseFailurePercent": 70, "firstSuccessExperience": 513},
+          {"abilityId": "demo.ability.sorcery-dimension-door", "minimumLevel": 42, "resourceCost": 45, "baseFailurePercent": 75, "firstSuccessExperience": 4200},
+          {"abilityId": "demo.ability.sorcery-probe", "minimumLevel": 13, "resourceCost": 13, "baseFailurePercent": 35, "firstSuccessExperience": 260},
+          {"abilityId": "demo.ability.sorcery-create-door", "minimumLevel": 21, "resourceCost": 25, "baseFailurePercent": 75, "firstSuccessExperience": 2100},
+          {"abilityId": "demo.ability.sorcery-fetch", "minimumLevel": 24, "resourceCost": 24, "baseFailurePercent": 70, "firstSuccessExperience": 1680},
+          {"abilityId": "demo.ability.sorcery-clairvoyance", "minimumLevel": 33, "resourceCost": 40, "baseFailurePercent": 75, "firstSuccessExperience": 3960},
+          {"abilityId": "demo.ability.sorcery-device-mastery", "minimumLevel": 43, "resourceCost": 85, "baseFailurePercent": 90, "firstSuccessExperience": 4300},
+          {"abilityId": "demo.ability.sorcery-alchemy", "minimumLevel": 45, "resourceCost": 50, "baseFailurePercent": 85, "firstSuccessExperience": 7875},
+          {"abilityId": "demo.ability.sorcery-banish", "minimumLevel": 46, "resourceCost": 45, "baseFailurePercent": 55, "firstSuccessExperience": 9200},
+          {"abilityId": "demo.ability.sorcery-invulnerability", "minimumLevel": 48, "resourceCost": 70, "baseFailurePercent": 80, "firstSuccessExperience": 12000}
+        ]
+      },
+      {
+        "realmId": "nature",
+        "abilityBookIds": [
+          "demo.ability-book.call-of-the-wild",
+          "demo.ability-book.nature-mastery",
+          "demo.ability-book.natures-gifts",
+          "demo.ability-book.natures-wrath"
+        ],
+        "abilityOverrides": [
+          {"abilityId": "demo.ability.nature-detect-creatures", "minimumLevel": 2, "resourceCost": 1, "baseFailurePercent": 20, "firstSuccessExperience": 8},
+          {"abilityId": "demo.ability.nature-lightning", "minimumLevel": 5, "resourceCost": 3, "baseFailurePercent": 20, "firstSuccessExperience": 20},
+          {"abilityId": "demo.ability.nature-detect-doors-and-traps", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 20, "firstSuccessExperience": 5},
+          {"abilityId": "demo.ability.nature-produce-food", "minimumLevel": 6, "resourceCost": 5, "baseFailurePercent": 30, "firstSuccessExperience": 24},
+          {"abilityId": "demo.ability.nature-daylight", "minimumLevel": 6, "resourceCost": 5, "baseFailurePercent": 45, "firstSuccessExperience": 30},
+          {"abilityId": "demo.ability.nature-wind-walker", "minimumLevel": 6, "resourceCost": 6, "baseFailurePercent": 45, "firstSuccessExperience": 30},
+          {"abilityId": "demo.ability.nature-resist-environment", "minimumLevel": 7, "resourceCost": 7, "baseFailurePercent": 45, "firstSuccessExperience": 35},
+          {"abilityId": "demo.ability.nature-cure-wounds-and-poison", "minimumLevel": 7, "resourceCost": 7, "baseFailurePercent": 30, "firstSuccessExperience": 28},
+          {"abilityId": "demo.ability.nature-stone-to-mud", "minimumLevel": 7, "resourceCost": 7, "baseFailurePercent": 35, "firstSuccessExperience": 42},
+          {"abilityId": "demo.ability.nature-frost-bolt", "minimumLevel": 8, "resourceCost": 7, "baseFailurePercent": 25, "firstSuccessExperience": 48},
+          {"abilityId": "demo.ability.nature-awareness", "minimumLevel": 9, "resourceCost": 10, "baseFailurePercent": 35, "firstSuccessExperience": 54},
+          {"abilityId": "demo.ability.nature-fire-bolt", "minimumLevel": 10, "resourceCost": 10, "baseFailurePercent": 35, "firstSuccessExperience": 60},
+          {"abilityId": "demo.ability.nature-ray-of-sunlight", "minimumLevel": 11, "resourceCost": 11, "baseFailurePercent": 25, "firstSuccessExperience": 55},
+          {"abilityId": "demo.ability.nature-entangle", "minimumLevel": 20, "resourceCost": 20, "baseFailurePercent": 60, "firstSuccessExperience": 140},
+          {"abilityId": "demo.ability.nature-natures-gate", "minimumLevel": 30, "resourceCost": 30, "baseFailurePercent": 50, "firstSuccessExperience": 240},
+          {"abilityId": "demo.ability.nature-herbal-healing", "minimumLevel": 42, "resourceCost": 60, "baseFailurePercent": 85, "firstSuccessExperience": 2100},
+          {"abilityId": "demo.ability.nature-stair-building", "minimumLevel": 11, "resourceCost": 12, "baseFailurePercent": 35, "firstSuccessExperience": 484},
+          {"abilityId": "demo.ability.nature-stone-skin", "minimumLevel": 12, "resourceCost": 13, "baseFailurePercent": 70, "firstSuccessExperience": 1440},
+          {"abilityId": "demo.ability.nature-resistance-true", "minimumLevel": 18, "resourceCost": 20, "baseFailurePercent": 80, "firstSuccessExperience": 1080},
+          {"abilityId": "demo.ability.nature-forest-creation", "minimumLevel": 23, "resourceCost": 25, "baseFailurePercent": 75, "firstSuccessExperience": 920},
+          {"abilityId": "demo.ability.nature-stone-tell", "minimumLevel": 39, "resourceCost": 40, "baseFailurePercent": 85, "firstSuccessExperience": 7800},
+          {"abilityId": "demo.ability.nature-wall-of-stone", "minimumLevel": 40, "resourceCost": 50, "baseFailurePercent": 80, "firstSuccessExperience": 10000},
+          {"abilityId": "demo.ability.nature-protect-from-corrosion", "minimumLevel": 42, "resourceCost": 90, "baseFailurePercent": 85, "firstSuccessExperience": 10500},
+          {"abilityId": "demo.ability.nature-call-sunlight", "minimumLevel": 44, "resourceCost": 37, "baseFailurePercent": 85, "firstSuccessExperience": 4400},
+          {"abilityId": "demo.ability.nature-earthquake", "minimumLevel": 22, "resourceCost": 22, "baseFailurePercent": 55, "firstSuccessExperience": 528},
+          {"abilityId": "demo.ability.nature-fire-storm", "minimumLevel": 25, "resourceCost": 25, "baseFailurePercent": 55, "firstSuccessExperience": 625},
+          {"abilityId": "demo.ability.nature-blizzard", "minimumLevel": 27, "resourceCost": 27, "baseFailurePercent": 70, "firstSuccessExperience": 783},
+          {"abilityId": "demo.ability.nature-lightning-storm", "minimumLevel": 32, "resourceCost": 30, "baseFailurePercent": 70, "firstSuccessExperience": 928},
+          {"abilityId": "demo.ability.nature-whirlpool", "minimumLevel": 37, "resourceCost": 32, "baseFailurePercent": 80, "firstSuccessExperience": 2405},
+          {"abilityId": "demo.ability.nature-ice-bolt", "minimumLevel": 41, "resourceCost": 45, "baseFailurePercent": 75, "firstSuccessExperience": 10250},
+          {"abilityId": "demo.ability.nature-gravity-storm", "minimumLevel": 42, "resourceCost": 45, "baseFailurePercent": 75, "firstSuccessExperience": 10500},
+          {"abilityId": "demo.ability.nature-natures-wrath", "minimumLevel": 44, "resourceCost": 80, "baseFailurePercent": 60, "firstSuccessExperience": 6600}
+        ]
+      },
+      {
+        "realmId": "death",
+        "abilityBookIds": [
+          "demo.ability-book.black-prayers",
+          "demo.ability-book.black-mass",
+          "demo.ability-book.black-channels",
+          "demo.ability-book.necronomicon"
+        ],
+        "abilityOverrides": [
+          {"abilityId": "demo.ability.death-detect-unlife", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 20, "firstSuccessExperience": 4},
+          {"abilityId": "demo.ability.death-malediction", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 20, "firstSuccessExperience": 4},
+          {"abilityId": "demo.ability.death-detect-evil", "minimumLevel": 2, "resourceCost": 1, "baseFailurePercent": 20, "firstSuccessExperience": 8},
+          {"abilityId": "demo.ability.death-stinking-cloud", "minimumLevel": 2, "resourceCost": 2, "baseFailurePercent": 20, "firstSuccessExperience": 6},
+          {"abilityId": "demo.ability.death-black-sleep", "minimumLevel": 3, "resourceCost": 3, "baseFailurePercent": 20, "firstSuccessExperience": 12},
+          {"abilityId": "demo.ability.death-necromantic-resistance", "minimumLevel": 5, "resourceCost": 9, "baseFailurePercent": 55, "firstSuccessExperience": 30},
+          {"abilityId": "demo.ability.death-horrify", "minimumLevel": 7, "resourceCost": 7, "baseFailurePercent": 20, "firstSuccessExperience": 28},
+          {"abilityId": "demo.ability.death-enslave-undead", "minimumLevel": 8, "resourceCost": 8, "baseFailurePercent": 20, "firstSuccessExperience": 32},
+          {
+            "abilityId": "demo.ability.death-entropy-orb",
+            "minimumLevel": 10,
+            "resourceCost": 10,
+            "baseFailurePercent": 30,
+            "firstSuccessExperience": 50,
+            "levelScaling": [
+              {
+                "effectIndex": 0,
+                "field": "damage-bonus",
+                "multiplier": 5,
+                "divisor": 4
+              },
+              {
+                "effectIndex": 0,
+                "field": "radius",
+                "multiplier": 1,
+                "divisor": 30
+              }
+            ]
+          },
+          {"abilityId": "demo.ability.death-nether-bolt", "minimumLevel": 11, "resourceCost": 10, "baseFailurePercent": 20, "firstSuccessExperience": 44},
+          {"abilityId": "demo.ability.death-cloud-kill", "minimumLevel": 14, "resourceCost": 12, "baseFailurePercent": 40, "firstSuccessExperience": 140},
+          {"abilityId": "demo.ability.death-genocide-one", "minimumLevel": 22, "resourceCost": 20, "baseFailurePercent": 75, "firstSuccessExperience": 660},
+          {"abilityId": "demo.ability.death-poison-branding", "minimumLevel": 26, "resourceCost": 65, "baseFailurePercent": 70, "firstSuccessExperience": 780},
+          {"abilityId": "demo.ability.death-vampiric-drain", "minimumLevel": 30, "resourceCost": 25, "baseFailurePercent": 50, "firstSuccessExperience": 480},
+          {"abilityId": "demo.ability.death-animate-dead", "minimumLevel": 32, "resourceCost": 30, "baseFailurePercent": 70, "firstSuccessExperience": 2240},
+          {"abilityId": "demo.ability.death-genocide", "minimumLevel": 35, "resourceCost": 30, "baseFailurePercent": 85, "firstSuccessExperience": 875},
+          {"abilityId": "demo.ability.death-berserk", "minimumLevel": 8, "resourceCost": 15, "baseFailurePercent": 70, "firstSuccessExperience": 1440},
+          {"abilityId": "demo.ability.death-invoke-spirits", "minimumLevel": 8, "resourceCost": 10, "baseFailurePercent": 70, "firstSuccessExperience": 240},
+          {"abilityId": "demo.ability.death-dark-bolt", "minimumLevel": 9, "resourceCost": 9, "baseFailurePercent": 20, "firstSuccessExperience": 135},
+          {"abilityId": "demo.ability.death-battle-frenzy", "minimumLevel": 25, "resourceCost": 20, "baseFailurePercent": 65, "firstSuccessExperience": 1250},
+          {"abilityId": "demo.ability.death-vampiric-branding", "minimumLevel": 31, "resourceCost": 80, "baseFailurePercent": 60, "firstSuccessExperience": 2790},
+          {"abilityId": "demo.ability.death-vampirism-true", "minimumLevel": 33, "resourceCost": 30, "baseFailurePercent": 50, "firstSuccessExperience": 4125},
+          {"abilityId": "demo.ability.death-nether-wave", "minimumLevel": 34, "resourceCost": 30, "baseFailurePercent": 60, "firstSuccessExperience": 1360},
+          {"abilityId": "demo.ability.death-darkness-storm", "minimumLevel": 36, "resourceCost": 35, "baseFailurePercent": 60, "firstSuccessExperience": 7200},
+          {"abilityId": "demo.ability.death-death-ray", "minimumLevel": 16, "resourceCost": 16, "baseFailurePercent": 65, "firstSuccessExperience": 800},
+          {"abilityId": "demo.ability.death-raise-dead", "minimumLevel": 22, "resourceCost": 60, "baseFailurePercent": 85, "firstSuccessExperience": 5500},
+          {"abilityId": "demo.ability.death-esoteria", "minimumLevel": 26, "resourceCost": 35, "baseFailurePercent": 85, "firstSuccessExperience": 6500},
+          {"abilityId": "demo.ability.death-vampiric-transformation", "minimumLevel": 32, "resourceCost": 35, "baseFailurePercent": 75, "firstSuccessExperience": 6400},
+          {"abilityId": "demo.ability.death-restore-life", "minimumLevel": 37, "resourceCost": 40, "baseFailurePercent": 65, "firstSuccessExperience": 5550},
+          {"abilityId": "demo.ability.death-mass-genocide", "minimumLevel": 38, "resourceCost": 66, "baseFailurePercent": 70, "firstSuccessExperience": 3800},
+          {"abilityId": "demo.ability.death-hellfire", "minimumLevel": 40, "resourceCost": 53, "baseFailurePercent": 70, "firstSuccessExperience": 8000},
+          {"abilityId": "demo.ability.death-wraithform", "minimumLevel": 45, "resourceCost": 75, "baseFailurePercent": 80, "firstSuccessExperience": 11250}
+        ]
+      },
+      {
+        "realmId": "arcane",
+        "abilityBookIds": [
+          "demo.ability-book.cantrips-for-beginners",
+          "demo.ability-book.minor-arcana",
+          "demo.ability-book.major-arcana",
+          "demo.ability-book.manual-of-mastery"
+        ],
+        "abilityOverrides": [
+          {"abilityId": "demo.ability.arcane-zap", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 15, "firstSuccessExperience": 4},
+          {"abilityId": "demo.ability.arcane-wizard-lock", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 28, "firstSuccessExperience": 5},
+          {"abilityId": "demo.ability.arcane-detect-invisibility", "minimumLevel": 2, "resourceCost": 1, "baseFailurePercent": 28, "firstSuccessExperience": 8},
+          {"abilityId": "demo.ability.arcane-detect-monsters", "minimumLevel": 2, "resourceCost": 2, "baseFailurePercent": 28, "firstSuccessExperience": 10},
+          {"abilityId": "demo.ability.arcane-blink", "minimumLevel": 3, "resourceCost": 3, "baseFailurePercent": 28, "firstSuccessExperience": 15},
+          {"abilityId": "demo.ability.arcane-light-area", "minimumLevel": 5, "resourceCost": 5, "baseFailurePercent": 35, "firstSuccessExperience": 30},
+          {"abilityId": "demo.ability.arcane-trap-door-destruction", "minimumLevel": 6, "resourceCost": 6, "baseFailurePercent": 28, "firstSuccessExperience": 42},
+          {"abilityId": "demo.ability.arcane-cure-light-wounds", "minimumLevel": 7, "resourceCost": 6, "baseFailurePercent": 39, "firstSuccessExperience": 35},
+          {"abilityId": "demo.ability.arcane-detect-doors-traps", "minimumLevel": 8, "resourceCost": 7, "baseFailurePercent": 35, "firstSuccessExperience": 56},
+          {"abilityId": "demo.ability.arcane-phlogiston", "minimumLevel": 9, "resourceCost": 8, "baseFailurePercent": 55, "firstSuccessExperience": 63},
+          {"abilityId": "demo.ability.arcane-detect-treasure", "minimumLevel": 10, "resourceCost": 9, "baseFailurePercent": 45, "firstSuccessExperience": 60},
+          {"abilityId": "demo.ability.arcane-detect-enchantment", "minimumLevel": 11, "resourceCost": 10, "baseFailurePercent": 45, "firstSuccessExperience": 66},
+          {"abilityId": "demo.ability.arcane-detect-objects", "minimumLevel": 12, "resourceCost": 11, "baseFailurePercent": 45, "firstSuccessExperience": 72},
+          {"abilityId": "demo.ability.arcane-cure-poison", "minimumLevel": 13, "resourceCost": 12, "baseFailurePercent": 45, "firstSuccessExperience": 78},
+          {"abilityId": "demo.ability.arcane-resist-cold", "minimumLevel": 14, "resourceCost": 13, "baseFailurePercent": 45, "firstSuccessExperience": 70},
+          {"abilityId": "demo.ability.arcane-resist-fire", "minimumLevel": 15, "resourceCost": 14, "baseFailurePercent": 45, "firstSuccessExperience": 75},
+          {"abilityId": "demo.ability.arcane-resist-lightning", "minimumLevel": 16, "resourceCost": 15, "baseFailurePercent": 45, "firstSuccessExperience": 80},
+          {"abilityId": "demo.ability.arcane-resist-acid", "minimumLevel": 17, "resourceCost": 16, "baseFailurePercent": 45, "firstSuccessExperience": 85},
+          {"abilityId": "demo.ability.arcane-cure-medium-wounds", "minimumLevel": 18, "resourceCost": 17, "baseFailurePercent": 28, "firstSuccessExperience": 108},
+          {"abilityId": "demo.ability.arcane-teleport", "minimumLevel": 19, "resourceCost": 18, "baseFailurePercent": 45, "firstSuccessExperience": 152},
+          {"abilityId": "demo.ability.arcane-identify", "minimumLevel": 22, "resourceCost": 25, "baseFailurePercent": 55, "firstSuccessExperience": 550},
+          {"abilityId": "demo.ability.arcane-stone-to-mud", "minimumLevel": 24, "resourceCost": 22, "baseFailurePercent": 55, "firstSuccessExperience": 216},
+          {"abilityId": "demo.ability.arcane-ray-of-light", "minimumLevel": 27, "resourceCost": 24, "baseFailurePercent": 55, "firstSuccessExperience": 243},
+          {"abilityId": "demo.ability.arcane-satisfy-hunger", "minimumLevel": 29, "resourceCost": 26, "baseFailurePercent": 65, "firstSuccessExperience": 348},
+          {"abilityId": "demo.ability.arcane-see-invisible", "minimumLevel": 33, "resourceCost": 30, "baseFailurePercent": 55, "firstSuccessExperience": 429},
+          {"abilityId": "demo.ability.arcane-resist-poison", "minimumLevel": 37, "resourceCost": 32, "baseFailurePercent": 75, "firstSuccessExperience": 1850},
+          {"abilityId": "demo.ability.arcane-teleport-level", "minimumLevel": 40, "resourceCost": 36, "baseFailurePercent": 75, "firstSuccessExperience": 1000},
+          {"abilityId": "demo.ability.arcane-teleport-away", "minimumLevel": 42, "resourceCost": 38, "baseFailurePercent": 65, "firstSuccessExperience": 1050},
+          {"abilityId": "demo.ability.arcane-recharging", "minimumLevel": 44, "resourceCost": 39, "baseFailurePercent": 61, "firstSuccessExperience": 1320},
+          {"abilityId": "demo.ability.arcane-detection", "minimumLevel": 46, "resourceCost": 40, "baseFailurePercent": 75, "firstSuccessExperience": 1840},
+          {"abilityId": "demo.ability.arcane-word-of-recall", "minimumLevel": 47, "resourceCost": 55, "baseFailurePercent": 65, "firstSuccessExperience": 2350},
+          {"abilityId": "demo.ability.arcane-clairvoyance", "minimumLevel": 50, "resourceCost": 120, "baseFailurePercent": 75, "firstSuccessExperience": 10000}
+        ]
+      },
+      {
+        "realmId": "craft",
+        "abilityBookIds": [
+          "demo.ability-book.handbook-for-pupils",
+          "demo.ability-book.grade-holders-book",
+          "demo.ability-book.note-of-acting-master",
+          "demo.ability-book.spiritual-enlightenment"
+        ],
+        "abilityOverrides": [
+          {"abilityId": "demo.ability.craft-minor-enchantment", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 20, "firstSuccessExperience": 4},
+          {"abilityId": "demo.ability.craft-regeneration", "minimumLevel": 3, "resourceCost": 3, "baseFailurePercent": 20, "firstSuccessExperience": 12},
+          {"abilityId": "demo.ability.craft-satisfy-hunger", "minimumLevel": 4, "resourceCost": 4, "baseFailurePercent": 30, "firstSuccessExperience": 12},
+          {"abilityId": "demo.ability.craft-resist-cold", "minimumLevel": 6, "resourceCost": 6, "baseFailurePercent": 35, "firstSuccessExperience": 30},
+          {"abilityId": "demo.ability.craft-resist-fire", "minimumLevel": 7, "resourceCost": 6, "baseFailurePercent": 35, "firstSuccessExperience": 35},
+          {"abilityId": "demo.ability.craft-heroism", "minimumLevel": 9, "resourceCost": 7, "baseFailurePercent": 45, "firstSuccessExperience": 54},
+          {"abilityId": "demo.ability.craft-resist-electricity", "minimumLevel": 10, "resourceCost": 6, "baseFailurePercent": 35, "firstSuccessExperience": 50},
+          {"abilityId": "demo.ability.craft-resist-acid", "minimumLevel": 11, "resourceCost": 6, "baseFailurePercent": 35, "firstSuccessExperience": 55},
+          {"abilityId": "demo.ability.craft-see-invisible", "minimumLevel": 13, "resourceCost": 15, "baseFailurePercent": 45, "firstSuccessExperience": 52},
+          {"abilityId": "demo.ability.craft-remove-curse", "minimumLevel": 15, "resourceCost": 13, "baseFailurePercent": 30, "firstSuccessExperience": 60},
+          {"abilityId": "demo.ability.craft-resist-poison", "minimumLevel": 18, "resourceCost": 17, "baseFailurePercent": 60, "firstSuccessExperience": 108},
+          {"abilityId": "demo.ability.craft-berserk", "minimumLevel": 22, "resourceCost": 20, "baseFailurePercent": 75, "firstSuccessExperience": 1760},
+          {"abilityId": "demo.ability.craft-self-knowledge", "minimumLevel": 23, "resourceCost": 21, "baseFailurePercent": 85, "firstSuccessExperience": 1150},
+          {"abilityId": "demo.ability.craft-identify", "minimumLevel": 26, "resourceCost": 24, "baseFailurePercent": 50, "firstSuccessExperience": 104},
+          {"abilityId": "demo.ability.craft-curing", "minimumLevel": 29, "resourceCost": 28, "baseFailurePercent": 60, "firstSuccessExperience": 145},
+          {"abilityId": "demo.ability.craft-elemental-brand", "minimumLevel": 42, "resourceCost": 70, "baseFailurePercent": 85, "firstSuccessExperience": 2100},
+          {"abilityId": "demo.ability.craft-telepathy", "minimumLevel": 14, "resourceCost": 14, "baseFailurePercent": 45, "firstSuccessExperience": 168},
+          {"abilityId": "demo.ability.craft-stone-skin", "minimumLevel": 16, "resourceCost": 12, "baseFailurePercent": 70, "firstSuccessExperience": 1920},
+          {"abilityId": "demo.ability.craft-resistance", "minimumLevel": 22, "resourceCost": 23, "baseFailurePercent": 85, "firstSuccessExperience": 1320},
+          {"abilityId": "demo.ability.craft-haste-self", "minimumLevel": 27, "resourceCost": 17, "baseFailurePercent": 60, "firstSuccessExperience": 270},
+          {"abilityId": "demo.ability.craft-whirlwind-attack", "minimumLevel": 33, "resourceCost": 38, "baseFailurePercent": 55, "firstSuccessExperience": 1650},
+          {"abilityId": "demo.ability.craft-polish-shield", "minimumLevel": 36, "resourceCost": 60, "baseFailurePercent": 80, "firstSuccessExperience": 5400},
+          {"abilityId": "demo.ability.craft-weapon-mastery", "minimumLevel": 43, "resourceCost": 70, "baseFailurePercent": 70, "firstSuccessExperience": 8600},
+          {"abilityId": "demo.ability.craft-magic-armor", "minimumLevel": 46, "resourceCost": 60, "baseFailurePercent": 70, "firstSuccessExperience": 9200},
+          {"abilityId": "demo.ability.craft-remove-all-curses", "minimumLevel": 15, "resourceCost": 15, "baseFailurePercent": 65, "firstSuccessExperience": 750},
+          {"abilityId": "demo.ability.craft-mundanity", "minimumLevel": 33, "resourceCost": 58, "baseFailurePercent": 75, "firstSuccessExperience": 4950},
+          {"abilityId": "demo.ability.craft-knowledge-true", "minimumLevel": 38, "resourceCost": 50, "baseFailurePercent": 85, "firstSuccessExperience": 7600},
+          {"abilityId": "demo.ability.craft-enchantment", "minimumLevel": 40, "resourceCost": 80, "baseFailurePercent": 90, "firstSuccessExperience": 8000},
+          {"abilityId": "demo.ability.craft-crafting", "minimumLevel": 40, "resourceCost": 100, "baseFailurePercent": 90, "firstSuccessExperience": 8000},
+          {"abilityId": "demo.ability.craft-living-trump", "minimumLevel": 45, "resourceCost": 110, "baseFailurePercent": 75, "firstSuccessExperience": 11250},
+          {"abilityId": "demo.ability.craft-elemental-immunity", "minimumLevel": 48, "resourceCost": 70, "baseFailurePercent": 75, "firstSuccessExperience": 12000},
+          {"abilityId": "demo.ability.craft-mana-brand", "minimumLevel": 99, "resourceCost": 0, "baseFailurePercent": 0, "firstSuccessExperience": 0}
+        ]
+      },
+      {
+        "realmId": "daemon",
+        "abilityBookIds": [
+          "demo.ability-book.dark-incantations",
+          "demo.ability-book.immortal-rituals",
+          "demo.ability-book.demonthoughts",
+          "demo.ability-book.hellfire-tome"
+        ],
+        "abilityOverrides": [
+          {"abilityId": "demo.ability.daemon-magic-missile", "minimumLevel": 2, "resourceCost": 1, "baseFailurePercent": 22, "firstSuccessExperience": 8},
+          {"abilityId": "demo.ability.daemon-detect-unlife", "minimumLevel": 3, "resourceCost": 2, "baseFailurePercent": 24, "firstSuccessExperience": 12},
+          {"abilityId": "demo.ability.daemon-evil-bless", "minimumLevel": 4, "resourceCost": 3, "baseFailurePercent": 26, "firstSuccessExperience": 16},
+          {"abilityId": "demo.ability.daemon-resist-fire", "minimumLevel": 5, "resourceCost": 6, "baseFailurePercent": 30, "firstSuccessExperience": 30},
+          {"abilityId": "demo.ability.daemon-horrify", "minimumLevel": 10, "resourceCost": 7, "baseFailurePercent": 30, "firstSuccessExperience": 50},
+          {"abilityId": "demo.ability.daemon-nether-bolt", "minimumLevel": 12, "resourceCost": 9, "baseFailurePercent": 50, "firstSuccessExperience": 72},
+          {"abilityId": "demo.ability.daemon-summon-manes", "minimumLevel": 14, "resourceCost": 12, "baseFailurePercent": 35, "firstSuccessExperience": 70},
+          {
+            "abilityId": "demo.ability.daemon-hellish-flame",
+            "minimumLevel": 15,
+            "resourceCost": 15,
+            "baseFailurePercent": 50,
+            "firstSuccessExperience": 105,
+            "levelScaling": [
+              {
+                "effectIndex": 0,
+                "field": "damage-bonus",
+                "multiplier": 5,
+                "divisor": 4
+              },
+              {
+                "effectIndex": 0,
+                "field": "radius",
+                "multiplier": 1,
+                "divisor": 30
+              }
+            ]
+          },
+          {"abilityId": "demo.ability.daemon-dominate-demon", "minimumLevel": 17, "resourceCost": 17, "baseFailurePercent": 50, "firstSuccessExperience": 153},
+          {"abilityId": "demo.ability.daemon-vision", "minimumLevel": 20, "resourceCost": 19, "baseFailurePercent": 65, "firstSuccessExperience": 400},
+          {"abilityId": "demo.ability.daemon-resist-nether", "minimumLevel": 23, "resourceCost": 23, "baseFailurePercent": 60, "firstSuccessExperience": 253},
+          {"abilityId": "demo.ability.daemon-plasma-bolt", "minimumLevel": 25, "resourceCost": 18, "baseFailurePercent": 65, "firstSuccessExperience": 300},
+          {"abilityId": "demo.ability.daemon-fire-ball", "minimumLevel": 27, "resourceCost": 20, "baseFailurePercent": 65, "firstSuccessExperience": 324},
+          {"abilityId": "demo.ability.daemon-fire-branding", "minimumLevel": 33, "resourceCost": 75, "baseFailurePercent": 90, "firstSuccessExperience": 990},
+          {"abilityId": "demo.ability.daemon-nether-ball", "minimumLevel": 35, "resourceCost": 32, "baseFailurePercent": 70, "firstSuccessExperience": 1050},
+          {"abilityId": "demo.ability.daemon-summon-demon", "minimumLevel": 39, "resourceCost": 85, "baseFailurePercent": 85, "firstSuccessExperience": 1560},
+          {"abilityId": "demo.ability.daemon-devilish-eye", "minimumLevel": 14, "resourceCost": 14, "baseFailurePercent": 45, "firstSuccessExperience": 126},
+          {"abilityId": "demo.ability.daemon-devilish-cloak", "minimumLevel": 18, "resourceCost": 20, "baseFailurePercent": 70, "firstSuccessExperience": 360},
+          {"abilityId": "demo.ability.daemon-flow-of-lava", "minimumLevel": 27, "resourceCost": 25, "baseFailurePercent": 75, "firstSuccessExperience": 945},
+          {"abilityId": "demo.ability.daemon-plasma-ball", "minimumLevel": 36, "resourceCost": 34, "baseFailurePercent": 80, "firstSuccessExperience": 3600},
+          {"abilityId": "demo.ability.daemon-polymorph-demon", "minimumLevel": 37, "resourceCost": 50, "baseFailurePercent": 85, "firstSuccessExperience": 5550},
+          {"abilityId": "demo.ability.daemon-nether-wave", "minimumLevel": 39, "resourceCost": 40, "baseFailurePercent": 80, "firstSuccessExperience": 3900},
+          {"abilityId": "demo.ability.daemon-kiss-of-succubus", "minimumLevel": 40, "resourceCost": 44, "baseFailurePercent": 75, "firstSuccessExperience": 2000},
+          {"abilityId": "demo.ability.daemon-doom-hand", "minimumLevel": 47, "resourceCost": 95, "baseFailurePercent": 90, "firstSuccessExperience": 11750},
+          {"abilityId": "demo.ability.daemon-raise-the-morale", "minimumLevel": 9, "resourceCost": 9, "baseFailurePercent": 66, "firstSuccessExperience": 72},
+          {"abilityId": "demo.ability.daemon-immortal-body", "minimumLevel": 28, "resourceCost": 28, "baseFailurePercent": 85, "firstSuccessExperience": 980},
+          {"abilityId": "demo.ability.daemon-insanity-circle", "minimumLevel": 38, "resourceCost": 40, "baseFailurePercent": 80, "firstSuccessExperience": 7600},
+          {"abilityId": "demo.ability.daemon-explode-pets", "minimumLevel": 43, "resourceCost": 58, "baseFailurePercent": 85, "firstSuccessExperience": 4300},
+          {"abilityId": "demo.ability.daemon-summon-greater-demon", "minimumLevel": 45, "resourceCost": 100, "baseFailurePercent": 90, "firstSuccessExperience": 11250},
+          {"abilityId": "demo.ability.daemon-hellfire", "minimumLevel": 48, "resourceCost": 100, "baseFailurePercent": 90, "firstSuccessExperience": 12000},
+          {"abilityId": "demo.ability.daemon-send-to-hell", "minimumLevel": 49, "resourceCost": 95, "baseFailurePercent": 80, "firstSuccessExperience": 9800},
+          {"abilityId": "demo.ability.daemon-polymorph-demonlord", "minimumLevel": 50, "resourceCost": 80, "baseFailurePercent": 85, "firstSuccessExperience": 12500}
+        ]
+      },
+      {
+        "realmId": "crusade",
+        "abilityBookIds": [
+          "demo.ability-book.rites-of-initiation",
+          "demo.ability-book.ways-of-war",
+          "demo.ability-book.exorcism-and-dispelling",
+          "demo.ability-book.wrath-of-god"
+        ],
+        "abilityOverrides": [
+          {"abilityId": "demo.ability.crusade-punishment", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 20, "firstSuccessExperience": 4},
+          {"abilityId": "demo.ability.crusade-detect-evil", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 10, "firstSuccessExperience": 4},
+          {"abilityId": "demo.ability.crusade-remove-fear", "minimumLevel": 3, "resourceCost": 2, "baseFailurePercent": 25, "firstSuccessExperience": 3},
+          {"abilityId": "demo.ability.crusade-scare-monster", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 30, "firstSuccessExperience": 10},
+          {"abilityId": "demo.ability.crusade-sanctuary", "minimumLevel": 6, "resourceCost": 5, "baseFailurePercent": 34, "firstSuccessExperience": 24},
+          {"abilityId": "demo.ability.crusade-portal", "minimumLevel": 10, "resourceCost": 7, "baseFailurePercent": 35, "firstSuccessExperience": 20},
+          {"abilityId": "demo.ability.crusade-star-dust", "minimumLevel": 12, "resourceCost": 12, "baseFailurePercent": 50, "firstSuccessExperience": 72},
+          {"abilityId": "demo.ability.crusade-purification", "minimumLevel": 14, "resourceCost": 10, "baseFailurePercent": 50, "firstSuccessExperience": 56},
+          {"abilityId": "demo.ability.crusade-scatter-evil", "minimumLevel": 15, "resourceCost": 14, "baseFailurePercent": 50, "firstSuccessExperience": 150},
+          {"abilityId": "demo.ability.crusade-holy-orb", "minimumLevel": 16, "resourceCost": 14, "baseFailurePercent": 50, "firstSuccessExperience": 64},
+          {"abilityId": "demo.ability.crusade-exorcism", "minimumLevel": 18, "resourceCost": 17, "baseFailurePercent": 40, "firstSuccessExperience": 180},
+          {"abilityId": "demo.ability.crusade-remove-curse", "minimumLevel": 21, "resourceCost": 19, "baseFailurePercent": 70, "firstSuccessExperience": 84},
+          {"abilityId": "demo.ability.crusade-sense-unseen", "minimumLevel": 26, "resourceCost": 22, "baseFailurePercent": 55, "firstSuccessExperience": 182},
+          {"abilityId": "demo.ability.crusade-protection-from-evil", "minimumLevel": 29, "resourceCost": 23, "baseFailurePercent": 60, "firstSuccessExperience": 290},
+          {"abilityId": "demo.ability.crusade-judgment-thunder", "minimumLevel": 36, "resourceCost": 35, "baseFailurePercent": 85, "firstSuccessExperience": 540},
+          {"abilityId": "demo.ability.crusade-holy-word", "minimumLevel": 40, "resourceCost": 35, "baseFailurePercent": 85, "firstSuccessExperience": 800},
+          {"abilityId": "demo.ability.crusade-unbarring-ways", "minimumLevel": 5, "resourceCost": 5, "baseFailurePercent": 33, "firstSuccessExperience": 200},
+          {"abilityId": "demo.ability.crusade-arrest", "minimumLevel": 15, "resourceCost": 13, "baseFailurePercent": 83, "firstSuccessExperience": 600},
+          {"abilityId": "demo.ability.crusade-angelic-cloak", "minimumLevel": 20, "resourceCost": 15, "baseFailurePercent": 55, "firstSuccessExperience": 1400},
+          {"abilityId": "demo.ability.crusade-dispel-undead-and-demons", "minimumLevel": 23, "resourceCost": 17, "baseFailurePercent": 60, "firstSuccessExperience": 1610},
+          {"abilityId": "demo.ability.crusade-dispel-evil", "minimumLevel": 30, "resourceCost": 25, "baseFailurePercent": 70, "firstSuccessExperience": 3600},
+          {"abilityId": "demo.ability.crusade-holy-blade", "minimumLevel": 34, "resourceCost": 75, "baseFailurePercent": 95, "firstSuccessExperience": 3400},
+          {"abilityId": "demo.ability.crusade-star-burst", "minimumLevel": 37, "resourceCost": 45, "baseFailurePercent": 70, "firstSuccessExperience": 7400},
+          {"abilityId": "demo.ability.crusade-summon-angel", "minimumLevel": 43, "resourceCost": 100, "baseFailurePercent": 90, "firstSuccessExperience": 10750},
+          {"abilityId": "demo.ability.crusade-heroism", "minimumLevel": 9, "resourceCost": 9, "baseFailurePercent": 66, "firstSuccessExperience": 720},
+          {"abilityId": "demo.ability.crusade-dispel-curse", "minimumLevel": 28, "resourceCost": 30, "baseFailurePercent": 80, "firstSuccessExperience": 7000},
+          {"abilityId": "demo.ability.crusade-banish-evil", "minimumLevel": 30, "resourceCost": 28, "baseFailurePercent": 65, "firstSuccessExperience": 3000},
+          {"abilityId": "demo.ability.crusade-armageddon", "minimumLevel": 38, "resourceCost": 22, "baseFailurePercent": 80, "firstSuccessExperience": 5700},
+          {"abilityId": "demo.ability.crusade-an-eye-for-an-eye", "minimumLevel": 40, "resourceCost": 40, "baseFailurePercent": 80, "firstSuccessExperience": 6000},
+          {"abilityId": "demo.ability.crusade-wrath-of-the-god", "minimumLevel": 43, "resourceCost": 65, "baseFailurePercent": 90, "firstSuccessExperience": 8600},
+          {"abilityId": "demo.ability.crusade-divine-intervention", "minimumLevel": 45, "resourceCost": 90, "baseFailurePercent": 90, "firstSuccessExperience": 9000},
+          {"abilityId": "demo.ability.crusade-crusade", "minimumLevel": 46, "resourceCost": 100, "baseFailurePercent": 85, "firstSuccessExperience": 11500}
+        ]
+      },
+      {
+        "realmId": "armageddon",
+        "abilityBookIds": [
+          "demo.ability-book.book-of-elements",
+          "demo.ability-book.earth-wind-and-fire",
+          "demo.ability-book.path-of-destruction",
+          "demo.ability-book.day-of-ragnarok"
+        ],
+        "abilityOverrides": [
+          {"abilityId": "demo.ability.armageddon-lightning-bolt", "minimumLevel": 3, "resourceCost": 6, "baseFailurePercent": 30, "firstSuccessExperience": 12},
+          {"abilityId": "demo.ability.armageddon-frost-bolt", "minimumLevel": 5, "resourceCost": 7, "baseFailurePercent": 30, "firstSuccessExperience": 20},
+          {"abilityId": "demo.ability.armageddon-fire-bolt", "minimumLevel": 7, "resourceCost": 9, "baseFailurePercent": 40, "firstSuccessExperience": 7},
+          {"abilityId": "demo.ability.armageddon-acid-bolt", "minimumLevel": 10, "resourceCost": 10, "baseFailurePercent": 40, "firstSuccessExperience": 20},
+          {"abilityId": "demo.ability.armageddon-lightning-ball", "minimumLevel": 13, "resourceCost": 11, "baseFailurePercent": 40, "firstSuccessExperience": 52},
+          {"abilityId": "demo.ability.armageddon-frost-ball", "minimumLevel": 15, "resourceCost": 13, "baseFailurePercent": 45, "firstSuccessExperience": 30},
+          {"abilityId": "demo.ability.armageddon-fire-ball", "minimumLevel": 17, "resourceCost": 15, "baseFailurePercent": 45, "firstSuccessExperience": 102},
+          {"abilityId": "demo.ability.armageddon-acid-ball", "minimumLevel": 20, "resourceCost": 17, "baseFailurePercent": 50, "firstSuccessExperience": 80},
+          {"abilityId": "demo.ability.armageddon-shard-bolt", "minimumLevel": 21, "resourceCost": 17, "baseFailurePercent": 50, "firstSuccessExperience": 210},
+          {"abilityId": "demo.ability.armageddon-gravity-bolt", "minimumLevel": 23, "resourceCost": 20, "baseFailurePercent": 60, "firstSuccessExperience": 92},
+          {"abilityId": "demo.ability.armageddon-plasma-bolt", "minimumLevel": 25, "resourceCost": 26, "baseFailurePercent": 60, "firstSuccessExperience": 250},
+          {"abilityId": "demo.ability.armageddon-meteor", "minimumLevel": 27, "resourceCost": 32, "baseFailurePercent": 60, "firstSuccessExperience": 135},
+          {"abilityId": "demo.ability.armageddon-thunderclap", "minimumLevel": 29, "resourceCost": 33, "baseFailurePercent": 60, "firstSuccessExperience": 203},
+          {"abilityId": "demo.ability.armageddon-windblast", "minimumLevel": 33, "resourceCost": 36, "baseFailurePercent": 60, "firstSuccessExperience": 330},
+          {"abilityId": "demo.ability.armageddon-hellstorm", "minimumLevel": 36, "resourceCost": 45, "baseFailurePercent": 60, "firstSuccessExperience": 540},
+          {"abilityId": "demo.ability.armageddon-rocket", "minimumLevel": 38, "resourceCost": 60, "baseFailurePercent": 60, "firstSuccessExperience": 760},
+          {"abilityId": "demo.ability.armageddon-ice-bolt", "minimumLevel": 23, "resourceCost": 25, "baseFailurePercent": 60, "firstSuccessExperience": 920},
+          {"abilityId": "demo.ability.armageddon-water-ball", "minimumLevel": 26, "resourceCost": 32, "baseFailurePercent": 60, "firstSuccessExperience": 1300},
+          {"abilityId": "demo.ability.armageddon-breathe-lightning", "minimumLevel": 31, "resourceCost": 37, "baseFailurePercent": 60, "firstSuccessExperience": 2170},
+          {"abilityId": "demo.ability.armageddon-breathe-frost", "minimumLevel": 34, "resourceCost": 38, "baseFailurePercent": 60, "firstSuccessExperience": 2380},
+          {"abilityId": "demo.ability.armageddon-breathe-fire", "minimumLevel": 36, "resourceCost": 39, "baseFailurePercent": 70, "firstSuccessExperience": 4320},
+          {"abilityId": "demo.ability.armageddon-breathe-acid", "minimumLevel": 38, "resourceCost": 40, "baseFailurePercent": 70, "firstSuccessExperience": 3800},
+          {"abilityId": "demo.ability.armageddon-breathe-plasma", "minimumLevel": 40, "resourceCost": 45, "baseFailurePercent": 70, "firstSuccessExperience": 8000},
+          {"abilityId": "demo.ability.armageddon-breathe-gravity", "minimumLevel": 44, "resourceCost": 50, "baseFailurePercent": 70, "firstSuccessExperience": 11000},
+          {"abilityId": "demo.ability.armageddon-mana-bolt", "minimumLevel": 26, "resourceCost": 22, "baseFailurePercent": 50, "firstSuccessExperience": 2080},
+          {"abilityId": "demo.ability.armageddon-plasma-ball", "minimumLevel": 30, "resourceCost": 32, "baseFailurePercent": 60, "firstSuccessExperience": 7500},
+          {"abilityId": "demo.ability.armageddon-mana-ball", "minimumLevel": 41, "resourceCost": 37, "baseFailurePercent": 70, "firstSuccessExperience": 4100},
+          {"abilityId": "demo.ability.armageddon-breathe-sound", "minimumLevel": 43, "resourceCost": 50, "baseFailurePercent": 70, "firstSuccessExperience": 6450},
+          {"abilityId": "demo.ability.armageddon-breathe-inertia", "minimumLevel": 45, "resourceCost": 50, "baseFailurePercent": 70, "firstSuccessExperience": 6750},
+          {"abilityId": "demo.ability.armageddon-breathe-disintegration", "minimumLevel": 48, "resourceCost": 60, "baseFailurePercent": 80, "firstSuccessExperience": 9600},
+          {"abilityId": "demo.ability.armageddon-breathe-mana", "minimumLevel": 49, "resourceCost": 70, "baseFailurePercent": 85, "firstSuccessExperience": 9800},
+          {"abilityId": "demo.ability.armageddon-breathe-shards", "minimumLevel": 50, "resourceCost": 90, "baseFailurePercent": 85, "firstSuccessExperience": 12500}
+        ]
+      }
+    ],
+    "firstSpellLevel": 1,
+    "studyMode": "divine-random"
+  },
+  "abilities": [],
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.mace",
+      "quantity": 1,
+      "equipped": true
+    },
+    {
+      "itemKindId": "demo.item.robe",
+      "quantity": 1,
+      "equipped": true
+    },
+    {
+      "itemKindId": "demo.item.healing-potion",
+      "quantity": 1
+    }
+  ],
+  "tags": [
+    "priest",
+    "caster",
+    "rfb-compatibility"
+  ]
+}

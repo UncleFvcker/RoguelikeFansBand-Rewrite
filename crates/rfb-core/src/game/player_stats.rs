@@ -1265,6 +1265,12 @@ impl Game {
             .is_some_and(|build| build.class_id == "demo.class.ranger")
     }
 
+    pub(super) fn player_is_priest(&self) -> bool {
+        self.build
+            .as_ref()
+            .is_some_and(|build| build.class_id == "demo.class.priest")
+    }
+
     pub(super) fn player_uses_dual_realm_learning(&self) -> bool {
         self.player_is_mage() || self.player_is_ranger()
     }
@@ -2333,7 +2339,8 @@ impl Game {
             || self.player_is_berserker()
             || self.player_is_duelist()
             || self.player_is_mage()
-            || self.player_is_ranger())
+            || self.player_is_ranger()
+            || self.player_is_priest())
             && let Some(weapon) = self
                 .items
                 .iter()
@@ -2365,7 +2372,11 @@ impl Game {
                 )
             } else {
                 (
-                    "demo.class.mindcrafter",
+                    if self.player_is_priest() {
+                        "demo.class.priest"
+                    } else {
+                        "demo.class.mindcrafter"
+                    },
                     self.class_base_blows(weapon, 500, 100, 35),
                     0,
                 )

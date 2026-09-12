@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json",
+  "formatVersion": 1,
+  "id": "demo.build.priest-crusade-craft",
+  "nameKey": "build-demo-priest-crusade-craft-name",
+  "descriptionKey": "build-demo-priest-crusade-craft-description",
+  "raceId": "demo.race.rfb-human",
+  "classId": "demo.class.priest",
+  "personalityId": "demo.personality.ordinary",
+  "playerActorId": "demo.actor.priest-player",
+  "firstRealmId": "crusade",
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.rites-of-initiation",
+      "quantity": 1
+    },
+    {
+      "itemKindId": "demo.item.handbook-for-pupils",
+      "quantity": 1
+    }
+  ],
+  "attributes": {
+    "strength": 13,
+    "intelligence": 13,
+    "wisdom": 13,
+    "dexterity": 13,
+    "constitution": 13,
+    "charisma": 13
+  },
+  "tags": [
+    "caster",
+    "priest",
+    "crusade",
+    "craft",
+    "rfb-compatibility"
+  ],
+  "secondRealmId": "craft"
+}
