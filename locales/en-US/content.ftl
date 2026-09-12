@@ -9605,6 +9605,9 @@ floor-demo-mount-olympus-depth-name = Mount Olympus Depth { $depth }
 terrain-demo-mount-olympus-entrance-name = Mount Olympus Entrance
 terrain-demo-mount-olympus-entrance-description = The entrance to Mount Olympus.
 floor-demo-pyramidal-mound-depth-name = Pyramidal Mound Depth { $depth }
+floor-demo-asgard-depth-name = Asgard Depth { $depth }
+terrain-demo-asgard-entrance-name = Asgard
+terrain-demo-asgard-entrance-description = A rainbow bridge to Asgard.
 terrain-demo-pyramidal-mound-entrance-name = Pyramidal Mound Entrance
 terrain-demo-pyramidal-mound-entrance-description = Dark stairs descend into the pyramidal mound.
 

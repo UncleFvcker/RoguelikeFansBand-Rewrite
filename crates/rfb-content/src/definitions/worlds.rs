@@ -306,6 +306,21 @@ pub struct DungeonDefinition {
     pub entry_requirements: Vec<DungeonEntryRequirementDefinition>,
 }
 
+impl DungeonDefinition {
+    /// RFB floors.c: Asgard and Pyramidal Mound extend shafts near the top.
+    pub fn has_extended_shafts(&self) -> bool {
+        matches!(self.legacy_index, Some(34 | 39))
+    }
+
+    pub fn shaft_depth_delta(&self, depth: u16, descending: bool) -> u16 {
+        if self.has_extended_shafts() && depth < if descending { 78 } else { 82 } {
+            4
+        } else {
+            2
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

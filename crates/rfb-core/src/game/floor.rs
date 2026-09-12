@@ -1059,7 +1059,17 @@ impl Game {
             } else {
                 unreachable!("planned destination must remain available")
             };
-        if destination_was_generated
+        let reconnect_source_shaft = plan.target_definition.as_ref().is_some_and(|floor| {
+            self.content.world(&self.world_id).is_some_and(|world| {
+                world.dungeons.iter().any(|dungeon| {
+                    Some(&dungeon.id) == floor.dungeon_id.as_ref() && dungeon.has_extended_shafts()
+                })
+            }) && floor.connections.iter().any(|connection| {
+                Some(&connection.id) == plan.arrival_connection_id.as_ref()
+                    && connection.kind == rfb_content::FloorConnectionKind::Shaft
+            })
+        });
+        if (destination_was_generated || reconnect_source_shaft)
             && let (Some(arrival_connection_id), Some(departure_connection_id)) = (
                 plan.arrival_connection_id.as_ref(),
                 plan.departure_connection_id.as_ref(),

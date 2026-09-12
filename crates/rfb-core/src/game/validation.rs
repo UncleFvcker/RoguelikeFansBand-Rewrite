@@ -414,18 +414,15 @@ pub(super) fn floor_connections_are_valid(
     connections: &[FloorConnectionState],
     world: &rfb_content::WorldDefinition,
 ) -> bool {
-    if connections.is_empty() {
-        return true;
-    }
     if floor_id == world.initial_floor_id {
-        return false;
+        return connections.is_empty();
     }
     let Some(definition) = world
         .procedural_floors
         .iter()
         .find(|definition| definition.id == floor_id)
     else {
-        return false;
+        return connections.is_empty();
     };
     if definition.connections.len() != connections.len() {
         return false;

@@ -3,6 +3,123 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn asgard_depths_and_source_shafts_keep_direction_span_and_dungeon_boundaries() {
+    let content = compile_pack_dir(&original_pack_path()).unwrap().content;
+    let world = &content.worlds[0];
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.asgard"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (64..=88).collect::<Vec<_>>()
+    );
+    assert!(
+        floors.windows(2).all(
+            |pair| pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+                && pair[1].return_floor_id == pair[0].id
+        )
+    );
+    for (depth, targets) in [
+        (64, vec![0, 68]),
+        (67, vec![0, 71]),
+        (68, vec![64, 72]),
+        (77, vec![73, 81]),
+        (78, vec![74, 80]),
+        (79, vec![75, 81]),
+        (80, vec![76, 82]),
+        (81, vec![77, 83]),
+        (82, vec![80, 84]),
+        (87, vec![85, 88]),
+        (88, vec![86, 87]),
+    ] {
+        let floor = floors.iter().find(|floor| floor.depth == depth).unwrap();
+        let mut actual = floor
+            .connections
+            .iter()
+            .map(|connection| {
+                if connection.target_floor_id == world.initial_floor_id {
+                    0
+                } else {
+                    world
+                        .procedural_floors
+                        .iter()
+                        .find(|target| target.id == connection.target_floor_id)
+                        .unwrap()
+                        .depth
+                }
+            })
+            .collect::<Vec<_>>();
+        actual.sort_unstable();
+        assert_eq!(actual, targets, "depth {depth}");
+    }
+    for (depth, suffix, target, arrival) in [
+        (
+            64,
+            "shaft-down",
+            "asgard-depth-66",
+            Some("asgard-66-shaft-up"),
+        ),
+        (
+            78,
+            "shaft-down",
+            "asgard-depth-82",
+            Some("asgard-82-shaft-up"),
+        ),
+        (
+            82,
+            "shaft-up",
+            "asgard-depth-78",
+            Some("asgard-78-shaft-down"),
+        ),
+        (68, "shaft-up", "surface", None),
+        (
+            68,
+            "shaft-up",
+            "pyramidal-mound-depth-64",
+            Some("pyramidal-mound-64-shaft-down"),
+        ),
+        (
+            64,
+            "shaft-down",
+            "asgard-depth-68",
+            Some("asgard-68-shaft-down"),
+        ),
+        (
+            64,
+            "shaft-down",
+            "asgard-depth-68",
+            Some("asgard-68-missing"),
+        ),
+        (
+            64,
+            "shaft-down",
+            "asgard-depth-99",
+            Some("asgard-99-shaft-up"),
+        ),
+    ] {
+        let mut invalid = content.clone();
+        let link = invalid.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == format!("demo.floor.asgard-depth-{depth}"))
+            .unwrap()
+            .connections
+            .iter_mut()
+            .find(|link| link.id.ends_with(suffix))
+            .unwrap();
+        link.target_floor_id = format!("demo.floor.{target}");
+        link.target_connection_id = arrival.map(|id| format!("demo.connection.{id}"));
+        assert!(
+            validate_and_normalize(&mut invalid).is_err(),
+            "{depth} {suffix} -> {target}"
+        );
+    }
+}
+
+#[test]
 fn zul_node_maps_rewards_and_admission_references_match_source() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let world = &artifact.content.worlds[0];
