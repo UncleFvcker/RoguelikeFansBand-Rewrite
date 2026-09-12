@@ -895,6 +895,7 @@ fn game_with_second_town(seed: u64) -> (Game, Position) {
     floor.abandoned_entry_terrain_id = None;
     floor.task_id = None;
     floor.inline_map = Some(rfb_content::InlineFloorMapDefinition {
+        task_terrain_overrides: Vec::new(),
         inherit_wilderness_terrain: false,
         player_position: rfb_content::ContentPosition { x: 1, y: 1 },
         terrain_overrides: vec![

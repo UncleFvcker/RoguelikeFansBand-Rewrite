@@ -613,6 +613,11 @@ pub(super) fn validate_world(
         .iter()
         .map(|floor| floor.id.clone())
         .collect::<BTreeSet<_>>();
+    let town_terrain_task_ids = world
+        .tasks
+        .iter()
+        .map(|task| task.id.clone())
+        .collect::<BTreeSet<_>>();
     let town_floor_ids = world
         .procedural_floors
         .iter()
@@ -2173,6 +2178,46 @@ pub(super) fn validate_world(
                     painted_terrain.insert(*position, terrain_override.terrain_id.as_str());
                 }
             }
+            let mut task_positions = BTreeSet::new();
+            for rule in &mut inline_map.task_terrain_overrides {
+                if procedural.lifecycle != FloorLifecycle::Town
+                    || rule.positions.is_empty()
+                    || rule.cases.is_empty()
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                require_reference(terrain_ids, &rule.default_terrain_id, &procedural.id)?;
+                let mut conditions = BTreeSet::new();
+                for case in &rule.cases {
+                    require_reference(terrain_ids, &case.terrain_id, &procedural.id)?;
+                    if !town_terrain_task_ids.contains(&case.task_id)
+                        || case.statuses.is_empty()
+                        || case
+                            .statuses
+                            .iter()
+                            .any(|status| !conditions.insert((&case.task_id, *status)))
+                    {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                }
+                rule.positions.sort();
+                for position in &rule.positions {
+                    validate_position(
+                        *position,
+                        procedural.width,
+                        procedural.height,
+                        &procedural.id,
+                    )?;
+                    if !task_positions.insert(*position)
+                        || (*position == inline_map.player_position
+                            && std::iter::once(&rule.default_terrain_id)
+                                .chain(rule.cases.iter().map(|case| &case.terrain_id))
+                                .any(|id| terrain_walkability.get(id) != Some(&true)))
+                    {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                }
+            }
             let terrain_at = |position: ContentPosition| {
                 painted_terrain
                     .get(&position)
@@ -3375,31 +3420,33 @@ pub(super) fn validate_world(
             let shop = shops
                 .get(shop_id)
                 .expect("validated town shop reference must remain available");
-            validate_position(shop.entrance_position, town_width, town_height, &shop.id)?;
-            require_reference(terrain_ids, &shop.entrance_terrain_id, &shop.id)?;
-            let effective_terrain_id = town_terrain
-                .get(&shop.entrance_position)
-                .copied()
-                .unwrap_or(town_fill_terrain_id);
-            let position_is_new = entrance_positions.insert(shop.entrance_position);
-            let shares_quest_service = town.facility_ids.iter().any(|facility_id| {
-                town_facilities.get(facility_id).is_some_and(|facility| {
-                    facility.category == TownFacilityCategory::QuestGiver
-                        && facility
-                            .entrance_positions()
-                            .any(|position| position == shop.entrance_position)
-                        && facility.entrance_terrain_id == shop.entrance_terrain_id
-                })
-            });
-            if !shop_entrance_positions.insert(shop.entrance_position)
-                || (!position_is_new && !shares_quest_service)
-                || effective_terrain_id != shop.entrance_terrain_id
-                || terrain_walkability.get(effective_terrain_id) != Some(&true)
-                || !terrain_tags
-                    .get(effective_terrain_id)
-                    .is_some_and(|tags| tags.contains("shop-entrance"))
-            {
-                return Err(ContentError::InvalidShop(shop.id.clone()));
+            for position in shop.entrance_positions() {
+                validate_position(position, town_width, town_height, &shop.id)?;
+                require_reference(terrain_ids, &shop.entrance_terrain_id, &shop.id)?;
+                let effective_terrain_id = town_terrain
+                    .get(&position)
+                    .copied()
+                    .unwrap_or(town_fill_terrain_id);
+                let position_is_new = entrance_positions.insert(position);
+                let shares_quest_service = town.facility_ids.iter().any(|facility_id| {
+                    town_facilities.get(facility_id).is_some_and(|facility| {
+                        facility.category == TownFacilityCategory::QuestGiver
+                            && facility
+                                .entrance_positions()
+                                .any(|facility_position| facility_position == position)
+                            && facility.entrance_terrain_id == shop.entrance_terrain_id
+                    })
+                });
+                if !shop_entrance_positions.insert(position)
+                    || (!position_is_new && !shares_quest_service)
+                    || effective_terrain_id != shop.entrance_terrain_id
+                    || terrain_walkability.get(effective_terrain_id) != Some(&true)
+                    || !terrain_tags
+                        .get(effective_terrain_id)
+                        .is_some_and(|tags| tags.contains("shop-entrance"))
+                {
+                    return Err(ContentError::InvalidShop(shop.id.clone()));
+                }
             }
         }
     }

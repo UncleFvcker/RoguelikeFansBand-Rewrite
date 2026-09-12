@@ -135,6 +135,13 @@
     "$schema": {
       "type": "string"
     },
+    "additionalEntrancePositions": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ContentPosition"
+      },
+      "type": "array"
+    },
     "category": {
       "$ref": "#/$defs/ShopCategory"
     },

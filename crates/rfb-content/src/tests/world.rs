@@ -13884,6 +13884,7 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
     floor.abandoned_entry_terrain_id = None;
     floor.task_id = None;
     floor.inline_map = Some(InlineFloorMapDefinition {
+        task_terrain_overrides: Vec::new(),
         inherit_wilderness_terrain: false,
         player_position: ContentPosition { x: 1, y: 1 },
         terrain_overrides: vec![

@@ -1856,6 +1856,105 @@ impl Game {
         }
     }
 
+    fn town_task_terrain_id<'a>(
+        &self,
+        rule: &'a rfb_content::TownTaskTerrainOverrideDefinition,
+    ) -> &'a str {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world exists");
+        rule.cases
+            .iter()
+            .find(|case| {
+                super::tasks::projected_task_state(world, &self.task_states, &case.task_id)
+                    .is_some_and(|state| {
+                        case.statuses
+                            .iter()
+                            .any(|status| super::tasks::task_status_matches(state.status, *status))
+                    })
+            })
+            .map_or(&rule.default_terrain_id, |case| &case.terrain_id)
+    }
+
+    pub(super) fn apply_initial_town_task_terrain(
+        &self,
+        floor: &ProceduralFloorDefinition,
+        terrain: &mut [String],
+    ) {
+        for rule in floor
+            .inline_map
+            .iter()
+            .flat_map(|map| &map.task_terrain_overrides)
+        {
+            let terrain_id = self.town_task_terrain_id(rule);
+            for position in &rule.positions {
+                terrain[usize::from(position.y) * usize::from(floor.width)
+                    + usize::from(position.x)] = terrain_id.to_owned();
+            }
+        }
+    }
+
+    pub(super) fn refresh_town_task_terrain(&mut self, changed: &mut BTreeSet<Position>) -> bool {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world exists");
+        let mut updates = Vec::new();
+        for floor in &world.procedural_floors {
+            for rule in floor
+                .inline_map
+                .iter()
+                .flat_map(|map| &map.task_terrain_overrides)
+            {
+                let terrain_id = self.town_task_terrain_id(rule);
+                for position in &rule.positions {
+                    updates.push((
+                        floor.id.clone(),
+                        floor.width,
+                        *position,
+                        terrain_id.to_owned(),
+                        floor.floor_terrain_id.clone(),
+                    ));
+                }
+            }
+        }
+        let mut visible_changed = false;
+        for (floor_id, width, local, mut terrain_id, floor_terrain_id) in updates {
+            let town_id = self
+                .town_for_floor(&floor_id)
+                .expect("task terrain belongs to a town")
+                .id
+                .clone();
+            let visible = self
+                .town_local_to_active_position(&town_id, position_from_content(local))
+                .and_then(|position| self.index(position).map(|index| (position, index)));
+            // A blocked return square uses ordinary floor until the player leaves.
+            // Do not preserve an old service entrance while its task condition is closed.
+            if visible.is_some_and(|(position, _)| position == self.player.position)
+                && !self
+                    .content
+                    .terrain(&terrain_id)
+                    .expect("validated task terrain")
+                    .walkable
+            {
+                terrain_id = floor_terrain_id;
+            }
+            if let Some(stored) = self.stored_floors.get_mut(&floor_id) {
+                stored.terrain[usize::from(local.y) * usize::from(width) + usize::from(local.x)] =
+                    terrain_id.clone();
+            }
+            if let Some((position, index)) = visible
+                && self.terrain[index] != terrain_id
+            {
+                self.terrain[index] = terrain_id;
+                changed.insert(position);
+                visible_changed = true;
+            }
+        }
+        visible_changed
+    }
+
     fn town_template_terrain(&self, town_id: &str) -> (u16, u16, Vec<String>) {
         let world = self
             .content
@@ -1890,6 +1989,7 @@ impl Game {
                     + usize::from(position.x)] = terrain_override.terrain_id.clone();
             }
         }
+        self.apply_initial_town_task_terrain(floor, &mut terrain);
         (floor.width, floor.height, terrain)
     }
 

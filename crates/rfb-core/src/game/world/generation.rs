@@ -820,6 +820,7 @@ impl Game {
             }
         }
 
+        self.apply_initial_town_task_terrain(definition, &mut terrain);
         let mut entities = Vec::new();
         for spawn in &inline_map.actor_spawns {
             let actor = self

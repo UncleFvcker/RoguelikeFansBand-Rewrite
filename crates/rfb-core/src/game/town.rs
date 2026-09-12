@@ -265,8 +265,6 @@ pub(super) fn restore_home_states(
     world: &WorldDefinition,
     content: &ContentCatalog,
     town_states: &BTreeMap<String, TownState>,
-    current_floor_id: &str,
-    player_position: Position,
     saved_homes: &[HomeStateSaveDto],
 ) -> Result<BTreeMap<String, HomeState>, CoreError> {
     let expected = world_town_ids(world)
@@ -291,19 +289,9 @@ pub(super) fn restore_home_states(
                 facility_id: saved.facility_id.clone(),
             };
         }
-        let player_at_shared_home = world_town_for_floor(world, content, current_floor_id)
-            .into_iter()
-            .flat_map(|town| home_facilities(town, content))
-            .any(|facility| {
-                facility.storage_id.as_deref() == Some(saved.facility_id.as_str())
-                    && facility
-                        .entrance_positions()
-                        .any(|position| player_position == position_from_content(position))
-            });
         if !expected.contains(&saved.facility_id)
             || storage.category != TownFacilityCategory::Home
             || storage.storage_id.as_deref() != Some(storage.id.as_str())
-            || (player_at_shared_home && !saved.visited)
             || states
                 .insert(
                     saved.facility_id.clone(),
@@ -428,7 +416,9 @@ pub(super) fn restore_town_and_shop_states(
             .expect("validated shop town must remain available");
         if state.owner_id != shop.owner.id
             || (current_floor_id == town.floor_id
-                && player_position == position_from_content(shop.entrance_position)
+                && shop
+                    .entrance_positions()
+                    .any(|position| player_position == position_from_content(position))
                 && !state.visited)
         {
             return Err(CoreError::InvalidSave("shop state is invalid"));
@@ -439,7 +429,8 @@ pub(super) fn restore_town_and_shop_states(
             let shop = content
                 .shop(shop_id)
                 .expect("validated town shop must remain available");
-            player_position == position_from_content(shop.entrance_position)
+            shop.entrance_positions()
+                .any(|position| player_position == position_from_content(position))
                 && !shop_states.get(shop_id).is_some_and(|state| state.visited)
         })
     {
@@ -994,9 +985,7 @@ fn shop_accessible(game: &Game, shop: &ShopDefinition) -> bool {
     game.current_town()
         .is_some_and(|current| current.id == town.id)
         && game.shop_states.contains_key(&shop.id)
-        && game
-            .town_local_to_active_position(&town.id, position_from_content(shop.entrance_position))
-            == Some(game.player.position)
+        && game.shop_entrance_position(shop) == Some(game.player.position)
 }
 
 fn shop_purchase_group(
@@ -1485,6 +1474,17 @@ impl Game {
         facility.town_id == town.id
             && town.facility_ids.contains(&facility.id)
             && self.town_facility_entrance_position(facility) == Some(self.player.position)
+            && self.terrain_at(self.player.position) == facility.entrance_terrain_id
+    }
+
+    pub(super) fn shop_entrance_position(&self, shop: &ShopDefinition) -> Option<Position> {
+        let mut positions = shop.entrance_positions().filter_map(|position| {
+            self.town_local_to_active_position(&shop.town_id, position_from_content(position))
+        });
+        let primary = positions.next();
+        positions
+            .find(|position| *position == self.player.position)
+            .or(primary)
     }
 
     pub(super) fn town_facility_entrance_position(
@@ -2649,10 +2649,7 @@ impl Game {
             .iter()
             .find(|shop_id| {
                 self.content.shop(shop_id).is_some_and(|shop| {
-                    self.town_local_to_active_position(
-                        &town.id,
-                        position_from_content(shop.entrance_position),
-                    ) == Some(self.player.position)
+                    self.shop_entrance_position(shop) == Some(self.player.position)
                 })
             })
             .cloned()
@@ -2785,11 +2782,7 @@ impl Game {
                 .shop(shop_id)
                 .expect("validated town shop must remain available")
                 .clone();
-            if self.town_local_to_active_position(
-                &town.id,
-                position_from_content(shop.entrance_position),
-            ) != Some(self.player.position)
-            {
+            if self.shop_entrance_position(&shop) != Some(self.player.position) {
                 continue;
             }
             if !self.shop_states.contains_key(shop_id) {
@@ -2814,7 +2807,7 @@ impl Game {
             }
         }
         for facility in home_facilities(&town, &self.content) {
-            if self.town_facility_entrance_position(facility) == Some(self.player.position)
+            if self.town_facility_accessible(&facility.id)
                 && let Some(state) = self.home_states.get_mut(
                     facility
                         .storage_id
@@ -2851,10 +2844,7 @@ impl Game {
             .filter_map(|shop_id| self.content.shop(shop_id))
             .map(|shop| {
                 let entrance_position = self
-                    .town_local_to_active_position(
-                        &town.id,
-                        position_from_content(shop.entrance_position),
-                    )
+                    .shop_entrance_position(shop)
                     .expect("current town shop must retain an active position");
                 let player_at_entrance = self.player.position == entrance_position;
                 let inn_travel_destinations = if player_at_entrance && shop.inn_stay_cost.is_some()
@@ -3020,7 +3010,7 @@ impl Game {
                 let entrance_position = self
                     .town_facility_entrance_position(facility)
                     .expect("current town Home must retain an active position");
-                let player_at_entrance = self.player.position == entrance_position;
+                let player_at_entrance = self.town_facility_accessible(&facility.id);
                 let state = facility
                     .storage_id
                     .as_deref()

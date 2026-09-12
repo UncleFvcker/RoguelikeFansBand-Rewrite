@@ -151,6 +151,8 @@ pub struct ShopDefinition {
     pub town_id: String,
     pub category: ShopCategory,
     pub entrance_position: ContentPosition,
+    #[serde(default)]
+    pub additional_entrance_positions: Vec<ContentPosition>,
     pub entrance_terrain_id: String,
     #[serde(default)]
     pub inn_stay_cost: Option<u32>,
@@ -161,6 +163,13 @@ pub struct ShopDefinition {
     pub owner: ShopOwnerDefinition,
     pub stock: Vec<ShopStockDefinition>,
     pub maintenance: ShopMaintenanceDefinition,
+}
+
+impl ShopDefinition {
+    pub fn entrance_positions(&self) -> impl Iterator<Item = ContentPosition> + '_ {
+        std::iter::once(self.entrance_position)
+            .chain(self.additional_entrance_positions.iter().copied())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

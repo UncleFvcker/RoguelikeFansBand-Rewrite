@@ -364,9 +364,12 @@ pub enum DungeonEntryRequirementDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum DungeonEntryTaskStatus {
+    Locked,
     Available,
+    Taken,
     Active,
     Paused,
+    RewardAvailable,
     Completed,
     Failed,
     Abandoned,
@@ -467,6 +470,8 @@ pub struct InlineFloorMapDefinition {
     pub player_position: ContentPosition,
     pub terrain_overrides: Vec<InlineTerrainOverrideDefinition>,
     #[serde(default)]
+    pub task_terrain_overrides: Vec<TownTaskTerrainOverrideDefinition>,
+    #[serde(default)]
     pub actor_spawns: Vec<ActorSpawn>,
     #[serde(default)]
     pub item_spawns: Vec<ItemSpawn>,
@@ -478,6 +483,25 @@ pub struct InlineFloorMapDefinition {
     pub loot_spawns: Vec<InlineFloorLootSpawnDefinition>,
     #[serde(default)]
     pub monster_formation: Option<InlineMonsterFormationDefinition>,
+}
+
+/// Town cells controlled by task state. The first matching case wins.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TownTaskTerrainOverrideDefinition {
+    pub positions: Vec<ContentPosition>,
+    pub default_terrain_id: String,
+    pub cases: Vec<TownTaskTerrainCaseDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TownTaskTerrainCaseDefinition {
+    pub task_id: String,
+    pub statuses: Vec<DungeonEntryTaskStatus>,
+    pub terrain_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

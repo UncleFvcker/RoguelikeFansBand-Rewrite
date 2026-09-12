@@ -174,7 +174,9 @@ pub(super) fn validate_towns_and_shops(
             || facility.bounty_office.is_some()
             || shops.iter().any(|shop| {
                 shop.town_id == facility.town_id
-                    && shop.entrance_position == facility.entrance_position
+                    && shop.entrance_positions().any(|position| {
+                        facility.entrance_positions().any(|other| other == position)
+                    })
                     && shop.entrance_terrain_id == facility.entrance_terrain_id
             });
         if (facility.category == TownFacilityCategory::Home

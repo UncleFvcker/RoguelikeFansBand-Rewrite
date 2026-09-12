@@ -702,10 +702,7 @@ impl Game {
                         .content
                         .shop(shop_id)
                         .expect("validated town shop must remain available");
-                    self.town_local_to_active_position(
-                        &town.id,
-                        position_from_content(shop.entrance_position),
-                    ) == Some(self.player.position)
+                    self.shop_entrance_position(shop) == Some(self.player.position)
                         && !self
                             .shop_states
                             .get(shop_id)
@@ -719,10 +716,7 @@ impl Game {
                         .town_facility(facility_id)
                         .expect("validated town facility must remain available");
                     facility.category == rfb_content::TownFacilityCategory::Home
-                        && self.town_local_to_active_position(
-                            &town.id,
-                            position_from_content(facility.entrance_position),
-                        ) == Some(self.player.position)
+                        && self.town_facility_accessible(&facility.id)
                         && !self
                             .home_states
                             .get(

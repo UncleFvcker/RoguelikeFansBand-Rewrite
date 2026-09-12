@@ -208,6 +208,25 @@ pub(super) fn projected_task_state(
     Some(state)
 }
 
+pub(super) fn task_status_matches(
+    actual: TaskStatusKindDto,
+    expected: rfb_content::DungeonEntryTaskStatus,
+) -> bool {
+    use rfb_content::DungeonEntryTaskStatus as Status;
+    actual
+        == match expected {
+            Status::Locked => TaskStatusKindDto::Locked,
+            Status::Available => TaskStatusKindDto::Available,
+            Status::Taken => TaskStatusKindDto::Taken,
+            Status::Active => TaskStatusKindDto::Active,
+            Status::Paused => TaskStatusKindDto::Paused,
+            Status::RewardAvailable => TaskStatusKindDto::RewardAvailable,
+            Status::Completed => TaskStatusKindDto::Completed,
+            Status::Failed => TaskStatusKindDto::Failed,
+            Status::Abandoned => TaskStatusKindDto::Abandoned,
+        }
+}
+
 pub(super) fn task_applies_to_floor(
     task: &TaskDefinition,
     floor: &ProceduralFloorDefinition,

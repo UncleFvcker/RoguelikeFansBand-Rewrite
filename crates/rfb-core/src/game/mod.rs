@@ -2540,9 +2540,11 @@ impl Game {
             self.bind_external_tasks_to_floor_transitions(&events);
         }
 
-        let full_visibility_refresh = duelist_completion
-            .as_ref()
-            .is_some_and(|completion| completion.refresh_visibility)
+        let task_terrain_changed = self.refresh_town_task_terrain(&mut changed);
+        let full_visibility_refresh = task_terrain_changed
+            || duelist_completion
+                .as_ref()
+                .is_some_and(|completion| completion.refresh_visibility)
             || self.player.position != player_position_before_command
             || self.current_floor_id != floor_before_command
             || self.player_light_radius() != light_radius_before_command

@@ -1655,7 +1655,7 @@ impl Game {
                 let entrance_position = self
                     .town_facility_entrance_position(facility)
                     .expect("current town task service must retain an active position");
-                let player_at_entrance = self.player.position == entrance_position;
+                let player_at_entrance = self.town_facility_accessible(&facility.id);
                 let tasks = if player_at_entrance {
                     facility
                         .task_ids

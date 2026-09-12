@@ -259,9 +259,12 @@
     },
     "DungeonEntryTaskStatus": {
       "enum": [
+        "locked",
         "available",
+        "taken",
         "active",
         "paused",
+        "reward-available",
         "completed",
         "failed",
         "abandoned"
@@ -477,6 +480,13 @@
             "array",
             "null"
           ]
+        },
+        "taskTerrainOverrides": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TownTaskTerrainOverrideDefinition"
+          },
+          "type": "array"
         },
         "terrainOverrides": {
           "items": {
@@ -2279,6 +2289,56 @@
       "required": [
         "terrainId",
         "positions"
+      ],
+      "type": "object"
+    },
+    "TownTaskTerrainCaseDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "statuses": {
+          "items": {
+            "$ref": "#/$defs/DungeonEntryTaskStatus"
+          },
+          "type": "array"
+        },
+        "taskId": {
+          "type": "string"
+        },
+        "terrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "taskId",
+        "statuses",
+        "terrainId"
+      ],
+      "type": "object"
+    },
+    "TownTaskTerrainOverrideDefinition": {
+      "additionalProperties": false,
+      "description": "Town cells controlled by task state. The first matching case wins.",
+      "properties": {
+        "cases": {
+          "items": {
+            "$ref": "#/$defs/TownTaskTerrainCaseDefinition"
+          },
+          "type": "array"
+        },
+        "defaultTerrainId": {
+          "type": "string"
+        },
+        "positions": {
+          "items": {
+            "$ref": "#/$defs/ContentPosition"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "positions",
+        "defaultTerrainId",
+        "cases"
       ],
       "type": "object"
     },

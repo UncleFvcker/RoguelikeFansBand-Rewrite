@@ -3,6 +3,82 @@ use std::collections::BTreeMap;
 use super::*;
 
 #[test]
+fn town_task_terrain_rejects_invalid_references_overlaps_and_non_town_usage() {
+    let mut valid = compile_pack_dir(&original_pack_path()).unwrap().content;
+    let floor = valid.worlds[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|floor| floor.id == "demo.floor.anambar")
+        .unwrap();
+    floor
+        .inline_map
+        .as_mut()
+        .unwrap()
+        .task_terrain_overrides
+        .push(TownTaskTerrainOverrideDefinition {
+            positions: vec![ContentPosition { x: 3, y: 5 }],
+            default_terrain_id: "demo.terrain.surface-grass".into(),
+            cases: vec![TownTaskTerrainCaseDefinition {
+                task_id: "demo.task.anambar-cop-quest".into(),
+                statuses: vec![DungeonEntryTaskStatus::Taken],
+                terrain_id: "demo.terrain.permanent-wall".into(),
+            }],
+        });
+    validate_and_normalize(&mut valid).unwrap();
+    for fault in 0..7 {
+        let mut invalid = valid.clone();
+        let floor = invalid.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.anambar")
+            .unwrap();
+        let rules = &mut floor.inline_map.as_mut().unwrap().task_terrain_overrides;
+        match fault {
+            0 => rules[0].cases[0].task_id = "demo.task.missing".into(),
+            1 => rules[0].cases[0].terrain_id = "demo.terrain.missing".into(),
+            2 => rules[0].cases[0].statuses.clear(),
+            3 => {
+                let position = rules[0].positions[0];
+                rules[0].positions.push(position);
+            }
+            4 => rules[0].positions[0].x = floor.width,
+            5 => {
+                let case = rules[0].cases[0].clone();
+                rules[0].cases.push(case);
+            }
+            6 => floor.lifecycle = FloorLifecycle::OneShot,
+            _ => unreachable!(),
+        }
+        assert!(
+            validate_and_normalize(&mut invalid).is_err(),
+            "fault {fault}"
+        );
+    }
+}
+
+#[test]
+fn shop_additional_doors_reject_duplicates_collisions_and_wrong_terrain() {
+    let original = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for fault in 0..3 {
+        let mut invalid = original.clone();
+        let shop = invalid
+            .shops
+            .iter_mut()
+            .find(|shop| shop.id == "demo.shop.anambar-general-store")
+            .unwrap();
+        shop.additional_entrance_positions.push(match fault {
+            0 => shop.entrance_position,
+            1 => ContentPosition { x: 6, y: 1 }, // Another shop.
+            _ => ContentPosition { x: 3, y: 5 }, // Ordinary floor.
+        });
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidShop(_))
+        ));
+    }
+}
+
+#[test]
 fn ranger_requires_nature_and_a_distinct_supported_second_realm() {
     let original = compile_pack_dir(&original_pack_path()).unwrap().content;
     for (first, second) in [

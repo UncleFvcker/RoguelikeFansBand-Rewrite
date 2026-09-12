@@ -3,9 +3,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use rfb_content::{
-    DungeonDefinition, DungeonEntryRequirementDefinition, DungeonEntryTaskStatus,
-    DungeonInstanceLifecycle, FloorLifecycle, ProceduralFloorDefinition, RetakeFloorPolicy,
-    TerrainDefinition, WildernessLocationDefinition, WorldDefinition,
+    DungeonDefinition, DungeonEntryRequirementDefinition, DungeonInstanceLifecycle, FloorLifecycle,
+    ProceduralFloorDefinition, RetakeFloorPolicy, TerrainDefinition, WildernessLocationDefinition,
+    WorldDefinition,
 };
 use rfb_protocol::{Position, RecallStateDto, SummonCommandModeDto, TaskStatusKindDto};
 
@@ -157,27 +157,9 @@ fn dungeon_entry_requirements_met(
         .entry_requirements
         .iter()
         .all(|requirement| match requirement {
-            DungeonEntryRequirementDefinition::TaskStatus { task_id, status } => {
-                task_states.get(task_id).is_some_and(|state| {
-                    matches!(
-                        (state.status, status),
-                        (
-                            TaskStatusKindDto::Available,
-                            DungeonEntryTaskStatus::Available
-                        ) | (TaskStatusKindDto::Active, DungeonEntryTaskStatus::Active)
-                            | (TaskStatusKindDto::Paused, DungeonEntryTaskStatus::Paused)
-                            | (
-                                TaskStatusKindDto::Completed,
-                                DungeonEntryTaskStatus::Completed
-                            )
-                            | (TaskStatusKindDto::Failed, DungeonEntryTaskStatus::Failed)
-                            | (
-                                TaskStatusKindDto::Abandoned,
-                                DungeonEntryTaskStatus::Abandoned
-                            )
-                    )
-                })
-            }
+            DungeonEntryRequirementDefinition::TaskStatus { task_id, status } => task_states
+                .get(task_id)
+                .is_some_and(|state| super::tasks::task_status_matches(state.status, *status)),
             DungeonEntryRequirementDefinition::DungeonConquered { dungeon_id } => dungeon_states
                 .get(dungeon_id)
                 .is_some_and(|state| !state.suppressed && state.guardian_defeated),
