@@ -3907,7 +3907,11 @@ impl Game {
             } => {
                 let target_definition = target_definition?.clone();
                 if target.is_none()
-                    && matches!(effect.as_ref(), AbilityEffectDefinition::FetchItem { .. })
+                    && matches!(
+                        effect.as_ref(),
+                        AbilityEffectDefinition::FetchItem { .. }
+                            | AbilityEffectDefinition::ConeDamage { .. }
+                    )
                 {
                     return Some(ItemUsePlan::CancelledActivation);
                 }

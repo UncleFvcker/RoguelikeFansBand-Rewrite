@@ -534,10 +534,12 @@ impl Game {
     /// Combines resistance tiers from every defensive source the player
     /// carries: the actor's own profile, the build's race, and each equipped
     /// item plus its affixes. Deterministic merge: immune anywhere wins, then
-    /// strong; a resistant source is cancelled back to normal by any
-    /// vulnerable source; lone vulnerability stays vulnerable.
+    /// strong. Temporary elemental opposition adds one tier to permanent
+    /// resistance, capped at strong by the current compact scale; vulnerability
+    /// cancels one resistant tier. Overlapping opposition statuses do not stack.
     pub(super) fn effective_player_resistances(&self) -> ResistanceProfile {
         let mut sources: BTreeMap<DamageType, (bool, bool, bool, bool)> = BTreeMap::new();
+        let mut opposition = BTreeSet::new();
         let mut record = |damage_type: DamageType, level: ResistanceLevel| {
             let entry = sources.entry(damage_type).or_default();
             match level {
@@ -553,7 +555,22 @@ impl Game {
         }
         for status in &self.player.statuses {
             for (damage_type, level) in &status.granted_resistances {
-                record(*damage_type, *level);
+                if *level == ResistanceLevel::Resistant
+                    && matches!(
+                        damage_type,
+                        DamageType::Acid
+                            | DamageType::Electricity
+                            | DamageType::Fire
+                            | DamageType::Cold
+                            | DamageType::Poison
+                    )
+                {
+                    // RFB xtra1.c IS_OPPOSE_* contributes once via res_add.
+                    opposition.insert(*damage_type);
+                    record(*damage_type, ResistanceLevel::Normal);
+                } else {
+                    record(*damage_type, *level);
+                }
             }
         }
         if let Some((_, race, class, _)) = self.character_definitions() {
@@ -663,16 +680,15 @@ impl Game {
                 ResistanceLevel::Immune
             } else if strong {
                 ResistanceLevel::Strong
-            } else if resistant {
-                if vulnerable {
-                    ResistanceLevel::Normal
-                } else {
-                    ResistanceLevel::Resistant
-                }
-            } else if vulnerable {
-                ResistanceLevel::Vulnerable
             } else {
-                ResistanceLevel::Normal
+                match i32::from(resistant) + i32::from(opposition.contains(&damage_type))
+                    - i32::from(vulnerable)
+                {
+                    -1 => ResistanceLevel::Vulnerable,
+                    0 => ResistanceLevel::Normal,
+                    1 => ResistanceLevel::Resistant,
+                    _ => ResistanceLevel::Strong,
+                }
             };
             profile.set(damage_type, level);
         }

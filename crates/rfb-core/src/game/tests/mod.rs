@@ -30,6 +30,7 @@ mod combat;
 mod craft;
 mod devices;
 mod disaster_area;
+mod dragon_scale_artifacts;
 mod duelist;
 mod dungeon_anti_magic;
 mod dungeon_anti_melee;

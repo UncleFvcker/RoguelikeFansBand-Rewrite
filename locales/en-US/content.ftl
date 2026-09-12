@@ -10028,3 +10028,9 @@ terrain-demo-zul-eddies-entry-description = The Eddies in the Space-Time Continu
 task-demo-zul-eddies-description = The time mages' experiments have distorted space and time around Zul, making reliable teleportation impossible. Defeat them so the tower can restore the town's links to the outside world.
 task-demo-zul-eddies-completed-description = Thank you for your help. We can teleport safely again. While repairing the continuum, we found this strange wooden bat; please accept it as a souvenir and a token of our gratitude.
 task-demo-zul-eddies-failed-description = Too bad. The whole town was counting on you.
+
+item-demo-seiryu-name = 'Elemental of Ching-Rong'
+item-demo-seiryu-description = Blue dragon-scale armour that activates temporary resistance to five elements.
+
+item-demo-midnight-dragon-scale-mail-name = Midnight Dragon Scale Mail
+item-demo-midnight-dragon-scale-mail-description = Black dragon-scale armour that dims nearby light and breathes acid.

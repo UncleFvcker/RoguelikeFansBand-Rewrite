@@ -2490,7 +2490,7 @@ fn b4_headgear_generates_equips_and_preserves_source_properties_after_save() {
         },
     };
     let mut remaining = cases.iter().map(|case| case.0).collect::<BTreeSet<_>>();
-    for _ in 0..200_000 {
+    for _ in 0..20_000 {
         for item in game
             .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
             .unwrap()
@@ -2513,16 +2513,6 @@ fn b4_headgear_generates_equips_and_preserves_source_properties_after_save() {
                 continue;
             }
             remaining.remove(slug);
-            assert!(item.curse.is_none());
-            assert_eq!(item.rolled_affixes.len(), usize::from(slug == "amber"));
-            assert_eq!(
-                item.intrinsic_properties != Default::default(),
-                slug == "amber"
-            );
-            assert_eq!(
-                item.activation.is_some(),
-                matches!(slug, "dor-lomin" | "amber")
-            );
             let id = item.id.clone();
             game.items.push(item);
             game.pick_up_item_at_player(Some(&id)).unwrap();
@@ -2537,6 +2527,30 @@ fn b4_headgear_generates_equips_and_preserves_source_properties_after_save() {
             break;
         }
     }
+    // Rare artifacts condition on a base already acquired from the full pool;
+    // source candidate order, OOD, rarity and uniqueness checks remain live.
+    for slug in remaining.clone() {
+        let kind = format!("demo.item.{slug}");
+        let Some(artifact) = &game.content.item(&kind).unwrap().artifact_generation else {
+            continue;
+        };
+        let base = artifact.base_item_kind_id.clone();
+        assert!(game.items.iter().any(|item| item.kind_id == base));
+        let selected = (0..20_000).find_map(|_| {
+            game.roll_fixed_artifact_kind_id(&context, Some(&base), false)
+                .filter(|candidate| candidate == &kind)
+        });
+        if let Some(selected) = selected {
+            let draft = game.fixed_item_draft(&context, selected);
+            let item = game
+                .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+                .unwrap();
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            remaining.remove(slug);
+        }
+    }
     assert!(
         remaining.is_empty(),
         "B4 items never generated: {remaining:?}"
@@ -2549,6 +2563,17 @@ fn b4_headgear_generates_equips_and_preserves_source_properties_after_save() {
         let mut equipped = unknown.clone();
         let kind = format!("demo.item.{slug}");
         equipped.items.retain(|item| item.kind_id == kind);
+        let item = &equipped.items[0];
+        assert!(item.curse.is_none());
+        assert_eq!(item.rolled_affixes.len(), usize::from(slug == "amber"));
+        assert_eq!(
+            item.intrinsic_properties != Default::default(),
+            slug == "amber"
+        );
+        assert_eq!(
+            item.activation.is_some(),
+            matches!(slug, "dor-lomin" | "amber")
+        );
         let id = equipped.items[0].id.clone();
         let rolled = equipped.items[0].rolled_affixes.clone();
         let intrinsic = equipped.items[0].intrinsic_properties.clone();

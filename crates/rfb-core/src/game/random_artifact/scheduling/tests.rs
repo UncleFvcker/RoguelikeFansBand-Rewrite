@@ -233,6 +233,8 @@ fn random_artifact_forced_base_pipeline_covers_slots_and_special_robe_and_light(
         "robe",
         "chain-mail",
         "multi-hued-dragon-scale-mail",
+        "black-dragon-scale-mail",
+        "blue-dragon-scale-mail",
         "ring",
         "amulet",
         "feanorian-lamp",
@@ -277,6 +279,21 @@ fn random_artifact_forced_base_pipeline_covers_slots_and_special_robe_and_light(
             }
         }
         let draft = found.unwrap_or_else(|| panic!("no artifact for {kind}"));
+        if kind.ends_with("dragon-scale-mail") {
+            let base = &game
+                .content
+                .item(&kind)
+                .unwrap()
+                .device_generation
+                .as_ref()
+                .unwrap()
+                .activations[0];
+            let activation = draft.activation.as_ref().unwrap();
+            assert_eq!(
+                activation.profile_id, base.id,
+                "random artifacts keep the base breath"
+            );
+        }
         slots.insert(
             game.content
                 .item(&kind)

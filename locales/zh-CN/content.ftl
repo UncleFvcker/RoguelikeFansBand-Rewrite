@@ -10059,3 +10059,9 @@ task-demo-zul-nature-node-failed-description = 滚吧，无能的蠢货！神秘
 terrain-demo-zul-nature-node-entry-description = 自然法师们在附近的一片森林里发现了一个神奇的自然节点。你必须去寻找那个节点并消灭它的守卫，这样自然之塔就能夺取节点的神秘能量。
 item-demo-armageddon-tome-name = [末日巨著]
 item-demo-armageddon-tome-description = [末日巨著]
+
+item-demo-seiryu-name = 『青龙元素』
+item-demo-seiryu-description = 青蓝色龙鳞护甲，能激活对五种元素的临时抗性。
+
+item-demo-midnight-dragon-scale-mail-name = 午夜龙鳞甲
+item-demo-midnight-dragon-scale-mail-description = 一套乌黑的鳞甲，能削弱周围光照并喷吐酸液。
