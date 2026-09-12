@@ -1,0 +1,101 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.soulkeeper",
+  "nameKey": "item-demo-soulkeeper-name",
+  "descriptionKey": "item-demo-soulkeeper-description",
+  "glyph": "[",
+  "generationLevel": 75,
+  "weightTenthsPound": 420,
+  "baseValue": 200000,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 19,
+    "baseItemKindId": "demo.item.adamantite-plate-mail",
+    "instant": false,
+    "rarityOneIn": 9
+  },
+  "modifiers": {
+    "defense": 70,
+    "constitution": 2
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "chaos": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_CHAOS",
+      "RES_COLD",
+      "RES_DARK",
+      "RES_NETHER",
+      "RES_NEXUS",
+      "SUST_CON"
+    ],
+    "pval": 2,
+    "toArmor": 20
+  },
+  "equipmentBonuses": {
+    "meleeSkill": -4
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "id": "demo.item-activation.soulkeeper",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "item-activation-demo-soulkeeper-heal-name",
+        "rfbValue": 15000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1,
+        "effectProgramId": "demo.effect.soulkeeper-heal"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 8880
+    }
+  },
+  "passives": [
+    "hold-life",
+    "sustain-constitution"
+  ]
+}

@@ -9776,3 +9776,13 @@ item-demo-fingolfin-description = 精灵与人类的战士国王芬国昐的手�
 
 item-demo-earendil-shield-name = 埃兰迪尔的骑士盾
 item-demo-earendil-shield-description = 一面闪耀的盾牌，曾由伟大的航海家埃兰迪尔持有，“上面刻着让一切伤痛与伤害远离他的符文”。
+
+item-demo-rusty-chain-mail-name = 生锈的链甲
+item-demo-rusty-chain-mail-description = 这套盔甲的每个链环都因生锈而变得脆弱，腐蚀的圆环僵硬且不结实。
+item-demo-adamantite-plate-mail-name = 精金板甲
+item-demo-adamantite-plate-mail-description = 像钻石一样坚硬的精金构成了这套精美的盔甲；在中土世界没有其他东西能提供如此强大的保护。
+item-demo-morlok-name = 莫洛克大祭司的生锈的链甲
+item-demo-morlok-description = 莫洛克大祭司的生锈的链甲
+item-demo-soulkeeper-name = 『守魂者』精金板甲
+item-demo-soulkeeper-description = 一套不朽的精金盔甲，具有不可战胜的力量来抵挡邪恶和破坏性魔法，它能像任何其他东西都无法做到的那样保护佩戴者的生命力。
+item-activation-demo-soulkeeper-heal-name = 治疗

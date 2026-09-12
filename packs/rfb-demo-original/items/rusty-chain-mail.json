@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 550,
+  "descriptionKey": "item-demo-rusty-chain-mail-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -5
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 25,
+  "glyph": "[",
+  "id": "demo.item.rusty-chain-mail",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 6
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-rusty-chain-mail-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 270,
+    "sval": 1,
+    "tval": 37
+  },
+  "rfbValue": {
+    "flags": [],
+    "pval": 0,
+    "toArmor": -8
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 200
+}

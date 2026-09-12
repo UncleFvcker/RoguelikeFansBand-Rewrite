@@ -9768,3 +9768,13 @@ item-demo-fingolfin-description = The handgear of Fingolfin, the warrior king wh
 
 item-demo-earendil-shield-name = Knight's Shield of Earendil
 item-demo-earendil-shield-description = A shining shield of the great mariner Earendil, inscribed with runes to ward away pain and harm.
+
+item-demo-rusty-chain-mail-name = Rusty Chain Mail
+item-demo-rusty-chain-mail-description = Rusty Chain Mail
+item-demo-adamantite-plate-mail-name = Adamantite Plate Mail
+item-demo-adamantite-plate-mail-description = Adamantite Plate Mail
+item-demo-morlok-name = Rusty Chain Mail of The High Priest of Morlok
+item-demo-morlok-description = Rusty Chain Mail of The High Priest of Morlok
+item-demo-soulkeeper-name = Adamantite Plate Mail 'Soulkeeper'
+item-demo-soulkeeper-description = Adamantite Plate Mail 'Soulkeeper'
+item-activation-demo-soulkeeper-heal-name = Healing

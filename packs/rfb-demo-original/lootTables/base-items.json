@@ -1570,6 +1570,13 @@
       "weight": 25
     },
     {
+      "itemKindId": "demo.item.rusty-chain-mail",
+      "maxDepth": 65535,
+      "minDepth": 25,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.metal-scale-mail",
       "maxDepth": 65535,
       "minDepth": 25,
@@ -2562,6 +2569,13 @@
       "minDepth": 75,
       "quantity": 1,
       "weight": 20
+    },
+    {
+      "itemKindId": "demo.item.adamantite-plate-mail",
+      "maxDepth": 65535,
+      "minDepth": 75,
+      "quantity": 1,
+      "weight": 12
     },
     {
       "itemKindId": "demo.item.multi-hued-dragon-scale-mail",

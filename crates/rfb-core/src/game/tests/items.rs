@@ -14,6 +14,374 @@ fn artifact_loot_context(depth: u16) -> LootContext {
 }
 
 #[test]
+fn b6_body_armor_generates_equips_and_preserves_negative_properties_after_save() {
+    let cases = [
+        ("rusty-chain-mail", 6, 200, -5),
+        ("adamantite-plate-mail", 50, 420, -4),
+        ("morlok", -26, 200, -5),
+        ("soulkeeper", 70, 420, -4),
+    ];
+    let mut game = Game::new_with_build(474, "demo.build.mage-life-arcane").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-95".into(),
+        depth: 95,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.b6-drop".into(),
+        },
+    };
+    let mut remaining = cases.iter().map(|c| c.0).collect::<BTreeSet<_>>();
+    for _ in 0..200_000 {
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            let slug = item.kind_id.strip_prefix("demo.item.").unwrap();
+            if !remaining.contains(slug) {
+                continue;
+            }
+            let artifact = game
+                .content
+                .item(&item.kind_id)
+                .unwrap()
+                .artifact_generation
+                .is_some();
+            if !artifact
+                && (item.quality != ItemQualityDto::Ordinary
+                    || item.enchantments != Default::default()
+                    || item.artifact_name.is_some())
+            {
+                continue;
+            }
+            remaining.remove(slug);
+            assert!(item.rolled_affixes.is_empty());
+            assert_eq!(item.intrinsic_properties, Default::default());
+            assert_eq!(
+                item.curse,
+                if slug == "morlok" {
+                    Some(ItemCurseSeverityDto::Heavy)
+                } else {
+                    None
+                }
+            );
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            assert!(
+                !game
+                    .item_property_knowledge
+                    .get(&id)
+                    .is_some_and(|k| k.appraised)
+            );
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "B6 items never generated: {remaining:?}"
+    );
+    game.reveal_current_visibility();
+    let unknown = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(unknown.state_hash(), game.state_hash());
+    for (slug, defense, weight, hit) in cases {
+        let mut equipped = unknown.clone();
+        let kind = format!("demo.item.{slug}");
+        equipped.items.retain(|i| i.kind_id == kind);
+        let id = equipped.items[0].id.clone();
+        assert_eq!(equipped.carried_weight_tenths_pound(), weight);
+        let rng = equipped.rng.clone();
+        equipped.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        assert_eq!(equipped.rng, rng);
+        equipped.equip_inventory_item(&id, None).unwrap();
+        let mods = equipped.equipment_modifiers();
+        assert_eq!(mods.defense, defense);
+        assert_eq!(equipped.player_equipment_bonuses().melee_skill, hit);
+        if slug == "morlok" {
+            assert_eq!(
+                (mods.strength, mods.dexterity, mods.constitution),
+                (-2, -2, -2)
+            );
+            assert_eq!((mods.intelligence, mods.wisdom, mods.charisma), (2, 2, 2));
+            assert_eq!(equipped.effective_player_spell_power_bonus(), 2);
+            assert!(equipped.player_aggravates_monsters());
+            assert!(equipped.player_has_equipped_curse_effect(ItemCurseEffectDto::TyCurse));
+        }
+        if slug == "soulkeeper" {
+            assert_eq!(mods.constitution, 2);
+            let passives = equipped.player_equipment_passives();
+            assert!(passives.contains(&EquipmentPassive::HoldLife));
+            assert!(passives.contains(&EquipmentPassive::SustainConstitution));
+        }
+        if matches!(slug, "soulkeeper" | "morlok") {
+            for element in [
+                DamageType::Acid,
+                DamageType::Cold,
+                DamageType::Dark,
+                DamageType::Nether,
+                DamageType::Nexus,
+                DamageType::Chaos,
+            ] {
+                assert_eq!(
+                    equipped.effective_player_resistances().level(element),
+                    ResistanceLevel::Resistant
+                );
+            }
+        }
+        if slug == "morlok" {
+            for element in [
+                DamageType::Electricity,
+                DamageType::Fire,
+                DamageType::Poison,
+                DamageType::Confusion,
+                DamageType::Light,
+            ] {
+                assert_eq!(
+                    equipped.effective_player_resistances().level(element),
+                    ResistanceLevel::Resistant
+                );
+            }
+        }
+        equipped.reveal_current_visibility();
+        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), equipped.state_hash());
+        assert_eq!(restored.items[0], equipped.items[0]);
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            equipped
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+        );
+        assert_eq!(restored.rng, equipped.rng);
+        if let Some(a) = restored
+            .content
+            .item(&kind)
+            .unwrap()
+            .artifact_generation
+            .clone()
+        {
+            assert!(restored.generated_artifact_ids.contains(&kind));
+            assert_ne!(
+                restored.roll_fixed_artifact_kind_id(&context, Some(&a.base_item_kind_id), false),
+                Some(kind)
+            );
+        }
+    }
+}
+
+#[test]
+fn b6_morlok_spell_power_and_intrinsic_curses_survive_dispelling_until_unequipped() {
+    let mut game = Game::new_with_build(475, "demo.build.mage-life-arcane").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.terrain.fill("demo.terrain.floor".into());
+    game.player.position = Position { x: 10, y: 10 };
+    game.apply_player_experience(game.experience_required_for_level(30), &mut Vec::new());
+    let before = game.equipment_modifiers();
+    let draft = game.fixed_item_draft(&artifact_loot_context(95), "demo.item.morlok".into());
+    let item = game
+        .commit_generated_item_draft(draft, ItemLocation::Inventory)
+        .unwrap();
+    let id = item.id.clone();
+    game.items.push(item);
+    game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    game.equip_inventory_item(&id, None).unwrap();
+    let slot = match &game.items[0].location {
+        ItemLocation::Equipped { slot_id } => slot_id.clone(),
+        _ => unreachable!(),
+    };
+    assert!(game.unequip_slot(&slot).is_none());
+    game.remove_equipped_curses(RemoveEquippedCursesRequest::new(false));
+    assert_eq!(game.items[0].curse, Some(ItemCurseSeverityDto::Heavy));
+    game.remove_equipped_curses(RemoveEquippedCursesRequest::new(true));
+    assert!(game.items[0].curse.is_none());
+    assert!(game.player_aggravates_monsters());
+    assert!(game.player_has_equipped_curse_effect(ItemCurseEffectDto::TyCurse));
+    assert_eq!(game.equipment_modifiers().defense, -26);
+    // Removing the detachable curse does not disable the artifact's TY_CURSE consumer.
+    let mut doomed = game.clone();
+    let seed = (1..100_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(200) == 0 && matches!(rng.bounded(34) + 1, 30 | 31)
+        })
+        .unwrap();
+    doomed.rng = RfbRng::seeded(seed);
+    doomed.player.hp = 1;
+    doomed.world_tick = 10;
+    doomed
+        .process_equipped_curse_effects(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .unwrap();
+    assert!(doomed.player_is_dead());
+
+    give_inventory_item(
+        &mut game,
+        "test.b6-book",
+        "demo.item.cantrips-for-beginners",
+    );
+    let spell = "demo.ability.arcane-zap";
+    game.study_player_ability("test.b6-book", spell).unwrap();
+    game.debug_ability_casts_succeed = true;
+    game.refresh_player_resource_maxima();
+    let mana = game.resources.get_mut("demo.resource.mana").unwrap();
+    mana.current = mana.maximum;
+    game.entities.push(actor_from_runtime_spawn(
+        "test.b6-target",
+        "demo.actor.small-kobold",
+        Position { x: 12, y: 10 },
+        1000,
+        100,
+        100,
+        true,
+    ));
+    game.reveal_current_visibility();
+    let mut powered = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(powered.state_hash(), game.state_hash());
+    powered.debug_ability_casts_succeed = true;
+    let mut unpowered = powered.clone();
+    unpowered.unequip_slot(&slot).unwrap();
+    assert_eq!(unpowered.equipment_modifiers(), before);
+    assert_eq!(unpowered.effective_player_spell_power_bonus(), 0);
+    assert!(!unpowered.player_aggravates_monsters());
+    assert!(!unpowered.player_has_equipped_curse_effect(ItemCurseEffectDto::TyCurse));
+    let mut damage = Vec::new();
+    for caster in [&mut unpowered, &mut powered] {
+        caster.rng = RfbRng::seeded(476);
+        let mut events = Vec::new();
+        caster
+            .resolve_player_ability(
+                spell,
+                TargetSelection::Direction {
+                    direction: Direction::East,
+                },
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
+        damage.push(
+            events
+                .iter()
+                .find_map(|event| match event {
+                    DomainEvent::AbilityHit { damage, .. } => Some(damage.raw),
+                    _ => None,
+                })
+                .expect("actual learned spell must hit"),
+        );
+    }
+    assert!(damage[1] > damage[0]);
+    assert_eq!(damage[1], damage[0] + damage[0] * 2 / 13);
+    assert_eq!(powered.rng, unpowered.rng);
+}
+
+#[test]
+fn b6_soulkeeper_heals_1000_only_cures_bleeding_and_restores_cooldown() {
+    fn activate(game: &mut Game, id: &str) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.use_inventory_item(
+            id,
+            Some(&TargetSelection::SelfTarget),
+            None,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        events
+    }
+    let mut game = Game::new_with_build(477, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    let draft = game.fixed_item_draft(&artifact_loot_context(95), "demo.item.soulkeeper".into());
+    let item = game
+        .commit_generated_item_draft(draft, ItemLocation::Inventory)
+        .unwrap();
+    let id = item.id.clone();
+    assert_eq!(
+        item.activation.as_ref().unwrap().device_check_difficulty,
+        35
+    );
+    game.items.push(item);
+    game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    game.equip_inventory_item(&id, None).unwrap();
+    game.player.hp = 1;
+    for status in [STATUS_BLEEDING, STATUS_POISON, STATUS_STUN, STATUS_FEAR] {
+        game.player
+            .statuses
+            .push(monster_combat::melee_status(status, 100, "test.b6-status").status);
+    }
+    let mut success = None;
+    let mut failure = None;
+    for seed in 0..1000 {
+        let mut attempt = game.clone();
+        attempt.rng = RfbRng::seeded(seed);
+        activate(&mut attempt, &id);
+        if attempt.items[0].charges.unwrap().current == 1 {
+            failure = Some(seed);
+        } else {
+            success = Some(seed);
+        }
+        if success.is_some() && failure.is_some() {
+            break;
+        }
+    }
+    let mut failed = game.clone();
+    failed.rng = RfbRng::seeded(failure.unwrap());
+    let mut expected_rng = failed.rng.clone();
+    expected_rng.bounded(100);
+    activate(&mut failed, &id);
+    assert_eq!(failed.rng, expected_rng);
+    assert_eq!(failed.player.hp, 1);
+    assert_eq!(failed.player.statuses, game.player.statuses);
+    assert_eq!(failed.items[0].charges.unwrap().current, 1);
+    assert_eq!(failed.items[0].device_recovery_progress, 0);
+    let success = success.unwrap();
+    game.rng = RfbRng::seeded(success);
+    let events = activate(&mut game, &id);
+    assert!(events.iter().any(|event| matches!(event, DomainEvent::AbilityHealed { resolution, .. } if resolution.requested == 1000 && resolution.applied == game.effective_player_max_hp() - 1)));
+    assert_eq!(game.player.hp, game.effective_player_max_hp());
+    assert!(!game.player_has_status_kind(STATUS_BLEEDING));
+    for status in [STATUS_POISON, STATUS_STUN, STATUS_FEAR] {
+        assert!(game.player_has_status_kind(status));
+    }
+    let rng = game.rng.clone();
+    activate(&mut game, &id);
+    assert_eq!(game.rng, rng);
+    assert_eq!(game.items[0].charges.unwrap().current, 0);
+    for tick in 1..=4440 {
+        game.world_tick = tick;
+        game.process_inventory_device_recovery(&mut Vec::new());
+    }
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.items[0].device_recovery_progress, 4440);
+    for tick in 4441..8880 {
+        restored.world_tick = tick;
+        restored.process_inventory_device_recovery(&mut Vec::new());
+    }
+    assert_eq!(restored.items[0].charges.unwrap().current, 0);
+    restored.world_tick = 8880;
+    restored.process_inventory_device_recovery(&mut Vec::new());
+    assert_eq!(restored.items[0].charges.unwrap().current, 1);
+    assert_eq!(restored.items[0].device_recovery_progress, 0);
+    restored.rng = RfbRng::seeded(success);
+    restored.reveal_current_visibility();
+    let mut continued = Game::from_save(restored.to_save()).unwrap();
+    assert_eq!(activate(&mut continued, &id), activate(&mut restored, &id));
+    assert_eq!(continued.state_hash(), restored.state_hash());
+    assert_eq!(continued.rng, restored.rng);
+}
+
+#[test]
 fn b5_gloves_and_shields_generate_equip_and_preserve_combat_bonuses_after_save() {
     let cases = [
         ("set-of-caestus", 2, 10, 3, 5),
