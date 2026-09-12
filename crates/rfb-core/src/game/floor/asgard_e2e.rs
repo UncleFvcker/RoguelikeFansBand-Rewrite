@@ -83,14 +83,32 @@ impl Game {
                 ] {
                     self.apply_player_melee_status(status, 200_000, "e2e.asgard.traversal");
                 }
-                self.player
+                let protection = self
+                    .player
                     .statuses
                     .iter_mut()
                     .find(|status| status.kind_id == STATUS_INVULNERABILITY)
-                    .unwrap()
-                    .incoming_damage_percent = 0;
+                    .unwrap();
+                protection.incoming_damage_percent = 0;
+                // Source invulnerability can be penetrated; give the prepared
+                // player enough HP for a whole enemy action before refilling.
+                protection.granted_modifiers.max_hp = 2000;
+                protection.granted_equipment_bonuses.melee_skill = 1000;
+                protection.granted_equipment_bonuses.melee_damage = 1000;
+                protection.granted_status_immunities.extend(
+                    [
+                        STATUS_BLEEDING,
+                        STATUS_BLINDNESS,
+                        STATUS_CONFUSION,
+                        STATUS_FEAR,
+                        STATUS_PARALYSIS,
+                        STATUS_STUN,
+                    ]
+                    .into_iter()
+                    .map(str::to_owned),
+                );
                 self.refresh_player_resource_maxima();
-                self.player.hp = self.player.max_hp;
+                self.player.hp = self.effective_player_max_hp();
                 self.mogaminator.enabled = false;
             }
             "route" if local && target_id.is_none() => {}
@@ -137,7 +155,7 @@ impl Game {
                 .ok_or(CoreError::InvalidSave(
                     "Asgard battle fixture needs a free adjacent tile",
                 ))?;
-                self.player.hp = self.player.max_hp;
+                self.player.hp = self.effective_player_max_hp();
             }
             _ => {
                 return Err(CoreError::InvalidSave(

@@ -39,7 +39,7 @@ export async function prepareAsgard({invoke,snapshot,reloadPrepared,report}, pha
 export async function runAsgardScenario(context) {
   const {driver,keyboard,report,invoke,snapshot,click,changed,closeDialogs,reloadPrepared,capture,walkTo,nativeSaveRoundTrip,saveListCount,setShift} = context;
   await driver.execute('window.__asgardErrors=[];window.addEventListener("error",event=>window.__asgardErrors.push(event.message));window.addEventListener("unhandledrejection",event=>window.__asgardErrors.push(String(event.reason)));return true;');
-  report.fixture = "Fresh Human Warrior; normal birth seeds are tried until Norse is active, without editing the pantheon mask. WebDriver preparation physically places the surface at 94,11, grants source XP to level 50, a +100/+100 broad sword, two Homeward scrolls, long levitation/invulnerability/see-invisible, full player HP and map/secret discovery. Route preparation removes unrelated actors and carried items, preserves Heimdall/Odin/Vidarr at their source HP/defenses, energy and statuses; their ordinary AI continues. Battle preparation places the player on a free adjacent tile and restores player HP. Victory uses actual player melee commands; this is not natural leveling/difficulty acceptance. No terrain, guardian HP, conquest flags or rewards are fabricated. Native keys cover battle/route starts, doors, stairs and pickup; longer movement/attack sequences call production Rust commands and reload the exact native save.";
+  report.fixture = "Fresh Human Warrior; normal birth seeds are tried until Norse is active, without editing the pantheon mask. WebDriver preparation physically places the surface at 94,11, grants source XP to level 50, a +100/+100 broad sword, two Homeward scrolls, long levitation/invulnerability/see-invisible, immunity to bleeding/blindness/confusion/fear/paralysis/stun, +2000 temporary maximum HP, +1000 temporary melee skill and melee damage, full effective player HP and map/secret discovery. Route preparation removes unrelated actors and carried items, preserves Heimdall/Odin/Vidarr at their source HP/defenses, energy and statuses; their ordinary AI continues. Battle preparation places the player on a free adjacent tile and restores effective player HP; repeat when damaged, displaced, or unrelated summons appear. Attack batches stop at those boundaries. Victory uses actual player melee commands; this is not natural leveling/difficulty acceptance. No terrain, guardian HP, conquest flags or rewards are fabricated. Native keys cover battle/route starts, doors, stairs and pickup; longer movement/attack sequences call production Rust commands and reload the exact native save.";
   const births = [];
   let state = await snapshot();
   for (let seed = 0; (state.activePantheons & 8) === 0 && seed < 32; seed++) {
@@ -83,7 +83,7 @@ export async function runAsgardScenario(context) {
     while(trace.length<512) {
       let actor=state.activeActors.find(actor=>actor.id===source.id);
       if(!actor) break;
-      if(Math.max(Math.abs(actor.position.x-state.player.position.x),Math.abs(actor.position.y-state.player.position.y))>1) {
+      if(Math.max(Math.abs(actor.position.x-state.player.position.x),Math.abs(actor.position.y-state.player.position.y))>1 || state.player.hp<state.player.maxHp || state.activeActors.some(actor=>!protectedKinds.has(actor.kindId))) {
         state=await prepareAsgard(context,"battle",source.id);
         actor=state.activeActors.find(actor=>actor.id===source.id);
       }
@@ -103,9 +103,9 @@ export async function runAsgardScenario(context) {
               const current=await window.__TAURI_INTERNALS__.invoke('inspect_game_e2e');
               const actor=current.activeActors.find(actor=>actor.id===arguments[3]);
               trace.push({input:'production Rust melee',hash:update.stateHash,hp:actor?.hp ?? 0,events:update.events});
-              if(!actor || update.player.hp<=0 || update.player.position.x!==arguments[4].x || update.player.position.y!==arguments[4].y || actor.position.x!==arguments[5].x || actor.position.y!==arguments[5].y) break;
+              if(!actor || update.player.hp<update.player.maxHp || current.activeActors.some(actor=>!arguments[6].includes(actor.kindId)) || update.player.position.x!==arguments[4].x || update.player.position.y!==arguments[4].y || actor.position.x!==arguments[5].x || actor.position.y!==arguments[5].y) break;
             } return trace;
-          })().then(value=>window.__asgardAttacks=value,error=>window.__asgardAttackError=String(error));return true;`,[state.lastCommandSeq,state.revision,direction,source.id,state.player.position,actor.position]);
+          })().then(value=>window.__asgardAttacks=value,error=>window.__asgardAttackError=String(error));return true;`,[state.lastCommandSeq,state.revision,direction,source.id,state.player.position,actor.position,[...protectedKinds]]);
         await driver.waitFor('return window.__asgardAttacks!==undefined || window.__asgardAttackError',`${name} melee segment`,60_000);
         assert.equal(await driver.execute('return window.__asgardAttackError'),null);
         trace.push(...await driver.execute('return window.__asgardAttacks'));
@@ -139,6 +139,7 @@ export async function runAsgardScenario(context) {
   for(const depth of [64,68,72,76,80,82,84,86,88]) {
     if(depth!==64) await stairs("demo.terrain.shaft-down",`demo.floor.asgard-depth-${depth}`);
     state=await prepareAsgard(context,"route");
+    assert.ok(!(await driver.execute('return document.querySelector("#hud-location-value").textContent')).includes("$depth"));
     if([64,76,80,88].includes(depth)) {
       await capture(`depth-${depth}-arrival`);
       await nativeSaveRoundTrip(`depth-${depth}`);
@@ -149,7 +150,8 @@ export async function runAsgardScenario(context) {
       const far=candidates.reduce((best,cell)=>Math.abs(cell.position.x-state.player.position.x)>Math.abs(best.position.x-state.player.position.x)?cell:best);
       await walkTo(far.position);await capture(`depth-${depth}-scrolled`);
       const after=report.screenshots.at(-1).diagnostics;
-      assert.ok(Number(before.scrollX)!==Number(after.scrollX) || Number(before.scrollY)!==Number(after.scrollY),"normal camera should follow a distant walk");
+      assert.equal(after.cameraMode,"player-centered");
+      assert.ok(Number(before.cameraX)!==Number(after.cameraX) || Number(before.cameraY)!==Number(after.cameraY),"normal camera should follow a distant walk");
       report.checks.push({type:"camera",depth,from:before,to:after,zoom:1});
     }
   }
@@ -205,10 +207,10 @@ export async function runAsgardScenario(context) {
   await capture("returned-to-bifrost");await nativeSaveRoundTrip("surface-return");
   for(const [id,expected] of [["e2e.asgard.recall.1","demo.floor.asgard-depth-88"],["e2e.asgard.recall.2","core.floor.wilderness"]]) {
     await use(id);await nativeSaveRoundTrip(`recall-pending-${expected}`);
-    for(let turn=0;turn<40;turn++) {
+    for(let attempt=0;attempt<40;attempt++) {
       state=await snapshot();if(state.floorId===expected) break;
       state=await prepareAsgard(context,"route");
-      await keyboard.key("5");await changed(state.stateHash,"recall countdown");
+      await closeDialogs();await keyboard.key("r");await changed(state.stateHash,"rest through recall countdown");
     }
     state=await snapshot();assert.equal(state.floorId,expected);
     assert.ok(!state.activeActors.some(actor=>protectedKinds.has(actor.kindId)));

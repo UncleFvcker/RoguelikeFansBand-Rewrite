@@ -1882,7 +1882,6 @@ impl Game {
             true
         } else {
             expected_role == ActorRole::Monster
-                && actor.observed_player_resistances.len() <= 6
                 && runtime_definition
                     .monster_casting
                     .as_ref()

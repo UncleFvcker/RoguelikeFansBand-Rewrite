@@ -21,7 +21,7 @@ import { AppState } from "./app-state.ts";
 test("saved fishing resumes one command at a time and input cancels after a busy command", async () => {
   const state = new AppState();
   state.mode = "playing";
-  state.status = { lastCommandSeq: 1, floorId: "floor", mapScale: "local",
+  state.status = { revision: 1, lastCommandSeq: 1, floorId: "floor", mapScale: "local",
     player: { position: { x: 1, y: 1 }, fishingDirection: "east" }, entities: [] };
   const timers = new Map();
   const listeners = new Map();
@@ -39,7 +39,8 @@ test("saved fishing resumes one command at a time and input cancels after a busy
     localization: {}, getInputPreset: () => "vi", getZoom: () => 1,
     dispatch: async command => {
       commands.push(command);
-      state.status.lastCommandSeq++;
+      const { lastCommandSeq: _, ...update } = state.status;
+      state.status = { ...update, revision: update.revision + 1 };
       if (command.type === "cancel-fishing") state.status.player.fishingDirection = null;
       controller.reconcileStatus(state.status);
     },

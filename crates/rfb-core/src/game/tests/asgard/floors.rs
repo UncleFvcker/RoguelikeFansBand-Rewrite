@@ -13,6 +13,13 @@ fn map_game() -> Game {
         .find(|game| game.active_pantheons & 8 != 0)
         .unwrap();
     choose_human_talent_if_pending(&mut game);
+    // Route-only fixture must survive the entry pulse before blockers can be
+    // cleared, including the living source guardian at the surface return.
+    let experience = game.experience_required_for_level(50);
+    game.apply_player_experience(experience, &mut Vec::new());
+    choose_human_talent_if_pending(&mut game);
+    game.apply_player_melee_status(STATUS_INVULNERABILITY, 200_000, "test.asgard.route");
+    game.player.hp = game.effective_player_max_hp();
     clear_monsters(&mut game);
     game
 }

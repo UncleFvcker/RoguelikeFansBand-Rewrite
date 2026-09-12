@@ -4015,7 +4015,7 @@ impl DomainEvent {
                 came_back,
             } => dto(
                 "item.return-failed",
-                if *came_back {
+                if came_back {
                     "item-catch-failed"
                 } else {
                     "item-return-failed"

@@ -938,6 +938,7 @@ impl Game {
             unreachable!("item creation executor requires a create-item effect");
         };
         let draft = GeneratedItemDraft {
+            chest: None,
             artifact_name: None,
             intrinsic_melee_damage_dice: None,
             intrinsic_weight_tenths_pound: None,

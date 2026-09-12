@@ -36,6 +36,7 @@ export async function connectKeyboard(profile) {
   for (const digit of ["1", "3", "4", "7", "8", "9"]) keys[digit] = [`Numpad${digit}`, 96 + Number(digit)];
   keys.g = ["KeyG", 71];
   keys.o = ["KeyO", 79];
+  keys.r = ["KeyR", 82];
   keys.B = ["KeyB", 66, 8];
   keys[">"] = ["Period", 190, 8];
   const errors = [];

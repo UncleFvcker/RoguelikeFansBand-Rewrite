@@ -1630,6 +1630,7 @@ impl Game {
         )
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn select_allocated_monster(
         &mut self,
         floor_id: &str,

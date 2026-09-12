@@ -18,6 +18,7 @@ fn game() -> Game {
             replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
         }
     }
+    game.reveal_current_visibility();
     game
 }
 

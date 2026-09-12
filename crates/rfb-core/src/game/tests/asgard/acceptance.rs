@@ -22,7 +22,66 @@ fn prepared() -> Game {
     game
 }
 
-fn battle(game: &mut Game, kind: &str, level: u16) {
+#[test]
+fn asgard_odin_remembers_more_than_six_real_spell_resistances_across_save() {
+    let mut game = game();
+    game.apply_player_melee_status(STATUS_INVULNERABILITY, 200_000, "test.odin-memory");
+    game.player
+        .statuses
+        .iter_mut()
+        .find(|s| s.kind_id == STATUS_INVULNERABILITY)
+        .unwrap()
+        .granted_modifiers
+        .max_hp = 10_000;
+    game.player.hp = game.effective_player_max_hp();
+    game.push_generated_actor("test.odin".into(), ODIN, Position { x: 12, y: 10 });
+    for ability_id in [
+        "rfb-legacy.ability.psy-spear-1d180-150",
+        "rfb-legacy.ability.ball-dark-10d10-410",
+        "rfb-legacy.ability.ball-electricity-1d270-16",
+        "rfb-legacy.ability.ball-mana-10d10-360",
+        "rfb-legacy.ability.ball-chaos-10d10-180",
+        "rfb-legacy.ability.ball-nether-10d10-140",
+        "rfb-legacy.ability.brain-smash-12d12",
+    ] {
+        let ability = game.content.ability(ability_id).unwrap().clone();
+        let plan = game.monster_ability_plan(0, ability, 1).unwrap();
+        game.resolve_monster_ability_plan(
+            0,
+            ODIN,
+            &plan,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        );
+    }
+    assert!(game.entities[0].observed_player_resistances.len() > 6);
+    game.reveal_current_visibility();
+    let saved = game.to_save();
+    let restored = Game::from_save(saved.clone()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(
+        restored.entities[0].observed_player_resistances,
+        game.entities[0].observed_player_resistances
+    );
+    let mut duplicate = saved.clone();
+    let memory = &mut duplicate.entities[0].observed_player_resistances;
+    memory.push(memory[0].clone());
+    assert!(matches!(
+        Game::from_save(duplicate),
+        Err(CoreError::InvalidSave(
+            "monster resistance memory is invalid"
+        ))
+    ));
+    let mut controlled = saved;
+    controlled.entities[0].controller_id = Some(game.player.id.clone());
+    assert!(matches!(
+        Game::from_save(controlled),
+        Err(CoreError::InvalidSave("actor state is invalid"))
+    ));
+}
+
+fn battle(game: &mut Game, kind: &str, level: u32) {
     let actor = game
         .entities
         .iter()
@@ -42,7 +101,7 @@ fn battle(game: &mut Game, kind: &str, level: u16) {
         &definition
     );
     let mut hits = 0;
-    for _ in 0..512 {
+    for step in 0..512 {
         let Some(actor) = game.entities.iter().find(|actor| actor.id == id) else {
             assert!(hits > 0, "victory needs player attack events");
             assert!(!game.unique_actor_kind_is_available(kind));
@@ -52,7 +111,13 @@ fn battle(game: &mut Game, kind: &str, level: u16) {
             actor.position.x - game.player.position.x,
             actor.position.y - game.player.position.y,
         );
-        if delta.0.abs().max(delta.1.abs()) > 1 {
+        if delta.0.abs().max(delta.1.abs()) > 1
+            || game.player.hp < game.effective_player_max_hp()
+            || game
+                .entities
+                .iter()
+                .any(|actor| ![HEIMDALL, ODIN, VIDARR].contains(&actor.kind_id.as_str()))
+        {
             game.debug_prepare_asgard_e2e("battle", Some(&id)).unwrap();
             let actor = game.entities.iter().find(|actor| actor.id == id).unwrap();
             delta = (
@@ -73,13 +138,27 @@ fn battle(game: &mut Game, kind: &str, level: u16) {
         .into_iter()
         .find(|direction| direction.delta() == delta)
         .unwrap();
+        let before_hp = (game.player.hp, game.effective_player_max_hp());
         let update = dispatch_next(game, GameCommand::Move { direction });
         hits += update
             .events
             .iter()
             .filter(|event| event.kind == "combat.hit")
             .count();
-        assert!(!game.player_is_dead());
+        assert!(
+            !game.player_is_dead(),
+            "{kind}: step={step}, hits={hits}, before_hp={before_hp:?}, hp={}, statuses={:?}, enemy_hp={:?}",
+            game.player.hp,
+            game.player
+                .statuses
+                .iter()
+                .map(|status| (&status.kind_id, status.remaining_ticks))
+                .collect::<Vec<_>>(),
+            game.entities
+                .iter()
+                .find(|actor| actor.id == id)
+                .map(|actor| actor.hp)
+        );
         choose_human_talent_if_pending(game);
     }
     panic!("full-HP {kind} survived 512 prepared melee actions");
@@ -224,7 +303,8 @@ fn asgard_prepared_full_source_guardians_route_rewards_return_and_recall_resume(
                     break;
                 }
                 current.debug_prepare_asgard_e2e("route", None).unwrap();
-                dispatch_next(current, GameCommand::Wait);
+                let update = dispatch_next(current, GameCommand::Rest { turns: 9_999 });
+                assert!(super::super::support::rest_resolution(&update).completed_turns > 0);
             }
             assert_eq!(current.current_floor_id, expected);
             assert!(

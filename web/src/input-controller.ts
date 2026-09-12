@@ -738,13 +738,13 @@ export class InputController {
     if (this.#state.busy) { this.#scheduleFishing(); return; }
     if (this.#state.commandBlocked) return;
     this.#fishingRunning = true;
-    const sequence = this.#state.status.lastCommandSeq;
+    const revision = this.#state.status.revision;
     try {
       await this.#dispatch({ type: this.#fishingCancelRequested ? "cancel-fishing" : "continue-fishing" });
     } finally {
       this.#fishingRunning = false;
     }
-    if (this.#state.status?.lastCommandSeq !== sequence) this.#scheduleFishing();
+    if (this.#state.status?.revision !== revision) this.#scheduleFishing();
   }
 
   async #confirmTargeting(): Promise<void> {

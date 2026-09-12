@@ -346,6 +346,16 @@ mod tests {
             ] {
                 assert!(localizer.has_message(locale, key), "{locale:?}/{key}");
             }
+            assert_eq!(
+                localizer
+                    .format_exact(locale, "floor-demo-asgard-depth-name", None)
+                    .unwrap(),
+                if locale == Locale::EnUs {
+                    "Asgard"
+                } else {
+                    "阿斯加德"
+                }
+            );
         }
     }
 

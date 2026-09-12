@@ -49,10 +49,14 @@ export async function runTownMapScenario(driver, directory, profile, scenario = 
   }
   async function reloadPrepared() {
     const before = await snapshot();
-    await invoke("save_game", { savedAt: "2026-09-12T12:00:00Z" });
+    const bytes = await invoke("save_game", { savedAt: "2026-09-12T12:00:00Z" });
     await driver.execute(`const files=new DataTransfer();files.items.add(new File([new Uint8Array(window.__townReply)],"town-map-prepared.rfbsave"));
       const input=document.querySelector("#load-input");input.files=files.files;input.dispatchEvent(new Event("change",{bubbles:true}));return true;`);
-    await driver.waitFor('return document.querySelector("#hash-value").title===arguments[0] && document.querySelector("#connection-status").classList.contains("ready")', "prepared native save displayed", 30_000, [before.stateHash]);
+    await driver.waitFor('return document.querySelector("#connection-status").classList.contains("error") || document.querySelector("#hash-value").title===arguments[0] && document.querySelector("#connection-status").classList.contains("ready")', "prepared native save displayed", 30_000, [before.stateHash]);
+    if(await driver.execute('return document.querySelector("#connection-status").classList.contains("error")')) {
+      await writeFile(path.join(directory,"prepared-save-failure.rfbsave"),Buffer.from(bytes));
+      throw new Error("Prepared native save rejected; exact bytes saved for diagnosis");
+    }
     assert.equal((await snapshot()).stateHash, before.stateHash);
     return before;
   }

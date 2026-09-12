@@ -16,8 +16,10 @@ const directory = path.join(root,"test-results","asgard");
 await mkdir(directory,{recursive:true});
 await mkdir(path.join(root,"target","e2e"),{recursive:true});
 const profile = await mkdtemp(path.join(root,"target","e2e","asgard-standalone-"));
-const child = spawn(executable,[],{cwd:root,windowsHide:true,stdio:["ignore","pipe","pipe"],env:{...process.env,
-  WEBVIEW2_USER_DATA_FOLDER:profile,WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS:"--remote-debugging-port=0 --disable-gpu"}});
+// Elevated WebView2 hosts ignore environment-based browser arguments.
+// Use the documented host command-line switch for this local IPC probe.
+const child = spawn(executable,["--edge-webview-switches=--remote-debugging-port=0 --disable-gpu"],{cwd:root,windowsHide:true,stdio:["ignore","pipe","pipe"],env:{...process.env,
+  WEBVIEW2_USER_DATA_FOLDER:profile}});
 let keyboard;
 const logs=[];
 child.stdout.on("data",data=>logs.push(String(data)));

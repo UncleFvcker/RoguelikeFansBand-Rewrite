@@ -1567,8 +1567,8 @@
         "instanceId": "demo.guardian.asgard-entrance.1",
         "actorKindId": "demo.actor.heimdall-guardian-of-bifrost",
         "position": {
-          "x": 98,
-          "y": 34
+          "x": 97,
+          "y": 33
         }
       }
     }

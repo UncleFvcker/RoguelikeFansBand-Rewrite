@@ -8492,6 +8492,25 @@
         "outcome"
       ]
     },
+    "ChestDto": {
+      "type": "object",
+      "properties": {
+        "canDisarm": {
+          "type": "boolean"
+        },
+        "canOpen": {
+          "type": "boolean"
+        },
+        "empty": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "empty",
+        "canOpen",
+        "canDisarm"
+      ]
+    },
     "ContentVisualDto": {
       "type": "object",
       "properties": {
@@ -9220,6 +9239,16 @@
           "anyOf": [
             {
               "$ref": "#/$defs/ThrowProfileDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "throwTargetSpec": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TargetSpecDto"
             },
             {
               "type": "null"
@@ -10065,6 +10094,38 @@
         {
           "type": "object",
           "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "open-chest"
+            }
+          },
+          "required": [
+            "type",
+            "itemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "disarm-chest"
+            }
+          },
+          "required": [
+            "type",
+            "itemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "direction": {
               "$ref": "#/$defs/Direction"
             },
@@ -10096,6 +10157,30 @@
             "type": {
               "type": "string",
               "const": "retire"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "continue-fishing"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "cancel-fishing"
             }
           },
           "required": [
@@ -12126,6 +12211,16 @@
             }
           ]
         },
+        "throwTargetSpec": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TargetSpecDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "usable": {
           "type": "boolean",
           "default": false
@@ -12342,6 +12437,16 @@
           "type": [
             "string",
             "null"
+          ]
+        },
+        "chest": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ChestDto"
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "curse": {
@@ -13669,6 +13774,16 @@
         },
         "fasting": {
           "type": "boolean"
+        },
+        "fishingDirection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Direction"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "gold": {
           "type": "integer",

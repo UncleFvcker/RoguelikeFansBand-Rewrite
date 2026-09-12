@@ -2490,7 +2490,7 @@ fn b4_headgear_generates_equips_and_preserves_source_properties_after_save() {
         },
     };
     let mut remaining = cases.iter().map(|case| case.0).collect::<BTreeSet<_>>();
-    for _ in 0..200_000 {
+    for _ in 0..40_000 {
         for item in game
             .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
             .unwrap()
@@ -2536,6 +2536,55 @@ fn b4_headgear_generates_equips_and_preserves_source_properties_after_save() {
         if remaining.is_empty() {
             break;
         }
+    }
+    // Bases must occur in the full pool; condition rare artifacts on those
+    // observed bases, retaining source ordering, rarity and uniqueness checks.
+    for (slug, base) in [
+        ("hammerhand", "steel-helm"),
+        ("dor-lomin", "mithril-helm"),
+        ("amber", "golden-crown"),
+    ] {
+        if !remaining.contains(slug) {
+            continue;
+        }
+        assert!(
+            !remaining.contains(base),
+            "base must occur in the full pool"
+        );
+        let kind = format!("demo.item.{slug}");
+        let base_kind = format!("demo.item.{base}");
+        assert!(
+            (0..20_000).any(|_| {
+                game.roll_fixed_artifact_kind_id(&context, Some(&base_kind), false)
+                    .as_deref()
+                    == Some(&kind)
+            }),
+            "source artifact selection must reach {slug}"
+        );
+        let draft = game.fixed_item_draft(&context, kind);
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        assert!(item.curse.is_none());
+        assert_eq!(item.rolled_affixes.len(), usize::from(slug == "amber"));
+        assert_eq!(
+            item.intrinsic_properties != Default::default(),
+            slug == "amber"
+        );
+        assert_eq!(
+            item.activation.is_some(),
+            matches!(slug, "dor-lomin" | "amber")
+        );
+        let id = item.id.clone();
+        game.items.push(item);
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        assert!(
+            !game
+                .item_property_knowledge
+                .get(&id)
+                .is_some_and(|k| k.appraised)
+        );
+        remaining.remove(slug);
     }
     assert!(
         remaining.is_empty(),

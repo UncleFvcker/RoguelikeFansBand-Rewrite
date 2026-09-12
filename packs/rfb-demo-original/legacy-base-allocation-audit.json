@@ -1,7 +1,13 @@
 {
   "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits",
-  "allocationRowCount": 408,
+  "allocationRowCount": 409,
   "explicitItems": [
+    {
+      "itemId": "demo.item.aegir",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
     {
       "itemId": "demo.item.aeglos",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
@@ -148,6 +154,12 @@
     },
     {
       "itemId": "demo.item.boromir",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.brisingamen",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -369,6 +381,24 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.freyja",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.freyr",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.frigg",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.frost-ball-wand",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -388,6 +418,12 @@
     },
     {
       "itemId": "demo.item.gandalf",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.gjallarhorn",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -495,7 +531,19 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.ingwe",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.isildur",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.jarngreipr",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -549,6 +597,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.mjollnir",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.morlok",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -574,6 +628,12 @@
     },
     {
       "itemId": "demo.item.nimthanc",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.njord",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -693,6 +753,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.runespear",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.sam",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -730,6 +796,12 @@
     },
     {
       "itemId": "demo.item.shuten-douji",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.skadi",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -891,7 +963,25 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.tyr",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.ullur",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.vagabond",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.vidarr",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -2597,12 +2687,12 @@
     {
       "allocations": [],
       "hasNaturalAllocationRows": false,
-      "itemId": null,
+      "itemId": "demo.item.fishingpole",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "INSTA_ART base; explicit artifact creation only",
       "sourceIndex": 109,
       "sourceName": "Fishingpole",
-      "status": "not-imported",
+      "status": "explicit-only",
       "sval": 40,
       "tval": 22
     },
@@ -9858,12 +9948,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.large-wooden-chest",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 641,
       "sourceName": "Large wooden chest",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 5,
       "tval": 7
     },
@@ -10756,12 +10846,12 @@
     {
       "allocations": [],
       "hasNaturalAllocationRows": false,
-      "itemId": null,
+      "itemId": "demo.item.great-horn",
       "maxDepth": 60,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source kind has no natural allocation rows",
       "sourceIndex": 708,
       "sourceName": "Great Horn",
-      "status": "not-imported",
+      "status": "no-natural-allocation",
       "sval": 2,
       "tval": 4
     },

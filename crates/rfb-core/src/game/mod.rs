@@ -1182,7 +1182,7 @@ impl Game {
             action = GameAction::Move { direction };
         }
         let mut advances_world = !depleted_device_use
-            && !(matches!(&action, GameAction::ContinueFishing) && !self.fishing_state_is_valid())
+            && (!matches!(&action, GameAction::ContinueFishing) || self.fishing_state_is_valid())
             && !zero_time_unavailable_item_use
             && !cursed_unequip
             && !cursed_equip_replacement
@@ -3199,6 +3199,7 @@ impl Game {
             .filter(|entity| entity.hp > 0)
             .map(|entity| entity.position)
             .chain(std::iter::once(origin))
+            .chain(std::iter::once(self.player.position))
             .chain(self.items.iter().filter_map(|item| match item.location {
                 ItemLocation::Ground(position) => Some(position),
                 ItemLocation::Inventory

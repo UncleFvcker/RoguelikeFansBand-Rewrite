@@ -1052,6 +1052,7 @@ impl Game {
         if quantity > 0 {
             let id = self.allocate_item_instance_id()?;
             let item = super::loot::GeneratedItemDraft {
+                chest: None,
                 artifact_name: None,
                 intrinsic_melee_damage_dice: None,
                 intrinsic_weight_tenths_pound: None,

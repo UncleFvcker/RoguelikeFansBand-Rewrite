@@ -73,7 +73,8 @@ impl Game {
         if self.rng.bounded(1000) != 0 {
             return true;
         }
-        let position = self.position_in_direction(self.fishing_direction.take().unwrap());
+        let direction = self.fishing_direction.take().unwrap();
+        let position = self.position_in_direction(direction);
         let caught = self
             .select_fishing_monster()
             .filter(|_| self.rng.bounded(2) == 0)

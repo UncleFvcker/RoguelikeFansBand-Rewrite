@@ -41,6 +41,7 @@ pub(super) fn death(game: &mut Game, id: &str, rewards: bool) -> Vec<DomainEvent
         )
         .unwrap();
     }
+    game.reveal_current_visibility();
     events
 }
 
@@ -55,7 +56,7 @@ fn chest(game: &mut Game, difficulty: i16) -> String {
     let id = item.id.clone();
     game.items.push(item);
     game.mogaminator.enabled = false;
-    game.mark_item_instances_discovered(&[id.clone()]);
+    game.mark_item_instances_discovered(std::slice::from_ref(&id));
     id
 }
 
@@ -367,7 +368,7 @@ fn asgard_chest_disarm_requires_knowledge_and_preserves_treasure() {
     );
     assert!(game.gold_piles.is_empty());
     let hp = game.player.hp;
-    let attributes = game.progress.attributes.clone();
+    let attributes = game.progress.attributes;
     let mut restored = Game::from_save(game.to_save()).unwrap();
     restored
         .interact_chest(&id, false, &mut Vec::new(), &mut BTreeSet::new())
@@ -396,6 +397,7 @@ fn asgard_chest_scatter_poison_needles_alarm_and_summoning_have_real_effects() {
         let mut events = Vec::new();
         game.interact_chest(&id, false, &mut events, &mut BTreeSet::new())
             .unwrap();
+        game.reveal_current_visibility();
         match difficulty {
             1 => assert!(
                 game.player
@@ -444,10 +446,9 @@ fn asgard_chest_scatter_poison_needles_alarm_and_summoning_have_real_effects() {
                 .difficulty,
             0
         );
-        assert_eq!(
-            Game::from_save(game.to_save()).unwrap().state_hash(),
-            game.state_hash()
-        );
+        let restored = Game::from_save(game.to_save())
+            .unwrap_or_else(|error| panic!("difficulty {difficulty}: {error}"));
+        assert_eq!(restored.state_hash(), game.state_hash());
     }
 }
 
