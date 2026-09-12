@@ -9746,3 +9746,9 @@ build-demo-warrior-mage-arcane-crusade-name = Warrior-Mage: Arcane / Crusade
 build-demo-warrior-mage-arcane-crusade-description = A Warrior-Mage with Arcane as the primary realm and Crusade as the second realm.
 build-demo-warrior-mage-arcane-armageddon-name = Warrior-Mage: Arcane / Armageddon
 build-demo-warrior-mage-arcane-armageddon-description = A Warrior-Mage with Arcane as the primary realm and Armageddon as the second realm.
+
+ability-demo-warrior-mage-hp-to-sp-name = Convert HP to SP
+ability-demo-warrior-mage-hp-to-sp-description = Spend life equal to your level and recover one fifth of actual life lost as mana. Full mana still costs life; low life can be fatal. A failed activation spends neither resource.
+
+ability-demo-warrior-mage-sp-to-hp-name = Convert SP to HP
+ability-demo-warrior-mage-sp-to-hp-description = Spend mana equal to your level divided by five (rounded down) to heal life equal to your level. Full life still costs mana; insufficient mana fails the conversion but spends a turn.

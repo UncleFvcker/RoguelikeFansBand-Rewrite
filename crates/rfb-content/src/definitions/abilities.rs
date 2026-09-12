@@ -793,6 +793,8 @@ pub enum AbilityEffectDefinition {
         restore_attributes: bool,
     },
     ClearMind,
+    HealthToMana,
+    ManaToHealth,
     Precognition,
     Psychometry,
     MindArmor,

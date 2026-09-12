@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.254";
+pub const PROTOCOL_VERSION: &str = "1.255";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 21;
 
@@ -1713,6 +1713,14 @@ pub enum AbilityEffectSpecDto {
     MassIdentify,
     RestoreVitality {
         life_force: u16,
+    },
+    HealthToMana {
+        hit_point_cost: u32,
+        mana_divisor: u32,
+    },
+    ManaToHealth {
+        mana_cost: u32,
+        healing: u32,
     },
     ClearMind {
         amount: u32,
@@ -3721,6 +3729,19 @@ pub struct PetUpkeepDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct ResourceConversionResolutionDto {
+    pub resource_id: String,
+    pub hp_before: i32,
+    pub hp_after: i32,
+    pub resource_before: u32,
+    pub resource_after: u32,
+    pub converted: bool,
+    pub fatal: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct ResourceRecoveryResolutionDto {
     pub resource_id: String,
     pub before: u32,
@@ -3823,6 +3844,9 @@ pub enum GameEventOutcomeDto {
     },
     Heal {
         resolution: HealingResolutionDto,
+    },
+    ResourceConversion {
+        resolution: ResourceConversionResolutionDto,
     },
     ResourceRecovery {
         resolution: ResourceRecoveryResolutionDto,
@@ -5341,6 +5365,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(PetDto);
     push_declaration!(SniperConcentrationDto);
     push_declaration!(ResourceRecoveryResolutionDto);
+    push_declaration!(ResourceConversionResolutionDto);
     push_declaration!(MonsterDisplacementResolutionDto);
     push_declaration!(RestStopReasonDto);
     push_declaration!(RestResolutionDto);

@@ -24,6 +24,22 @@ const helpers = {
 };
 const formatter = createPresentationFormatter(localization, () => state, helpers);
 
+test("resource conversion messages show actual life and mana changes in both languages", () => {
+  for (const [locale, failed] of [["en-US", "conversion failed"], ["zh-CN", "你转换失败了"]]) {
+    localization.setLocale(locale);
+    for (const messageKey of ["ability-resource-converted", "ability-resource-conversion-failed"]) {
+      const message = formatter.formatEvent({
+        kind: "ability.resource-converted", messageKey,
+        args: { target: "demo.ability.warrior-mage-hp-to-sp", hpBefore: "24", hpAfter: "-1", manaBefore: "0", manaAfter: "5" },
+      });
+      assert.ok(message.includes("24 → -1"));
+      assert.ok(message.includes("0 → 5"));
+      assert.equal(message.includes(failed), messageKey.endsWith("failed"));
+      assert.ok(!message.includes("demo.ability"));
+    }
+  }
+});
+
 test("ability events use the projected name when it differs from the stable ID", () => {
   const id = "demo.ability.ranger-probe-monsters";
   const projected = createPresentationFormatter(localization, () => ({

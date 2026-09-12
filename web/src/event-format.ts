@@ -401,6 +401,13 @@ export function createPresentationFormatter(
           ability: contentName(event.args.source),
           amount: event.args.amount ?? "?",
         });
+      case "ability-resource-converted":
+      case "ability-resource-conversion-failed":
+        return localization.format(`message-${event.messageKey}`, {
+          ability: contentName(event.args.target),
+          hpBefore: event.args.hpBefore ?? "?", hpAfter: event.args.hpAfter ?? "?",
+          manaBefore: event.args.manaBefore ?? "?", manaAfter: event.args.manaAfter ?? "?",
+        });
       case "resource-recovered":
         return localization.format("message-resource-recovered", {
           resource: contentName(event.args.target),

@@ -9758,3 +9758,9 @@ build-demo-warrior-mage-arcane-crusade-name = 战法师：奥秘／圣战
 build-demo-warrior-mage-arcane-crusade-description = 奥秘为主领域、圣战为第二领域的战法师。
 build-demo-warrior-mage-arcane-armageddon-name = 战法师：奥秘／毁灭
 build-demo-warrior-mage-arcane-armageddon-description = 奥秘为主领域、毁灭为第二领域的战法师。
+
+ability-demo-warrior-mage-hp-to-sp-name = 生命转法力
+ability-demo-warrior-mage-hp-to-sp-description = 消耗相当于等级的生命，恢复实际生命损失的五分之一法力。满法力仍消耗生命，低血量可能死亡；施放失败不扣内部资源。
+
+ability-demo-warrior-mage-sp-to-hp-name = 法力转生命
+ability-demo-warrior-mage-sp-to-hp-description = 消耗等级除以五（向下取整）的法力，治疗相当于等级的生命。满生命仍耗法力；法力不足时转换失败并消耗一回合。

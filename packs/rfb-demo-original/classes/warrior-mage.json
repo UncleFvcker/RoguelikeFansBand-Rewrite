@@ -554,7 +554,10 @@
     "firstSpellLevel": 1,
     "studyMode": "chosen"
   },
-  "abilities": [],
+  "abilities": [
+    {"abilityId": "demo.ability.warrior-mage-hp-to-sp", "minimumLevel": 25, "governingAttribute": "intelligence", "resourceId": "demo.resource.mana", "resourceCost": 0, "baseFailurePercent": 50, "minimumFailurePercent": 0, "blockedByDungeonAntiMagic": false},
+    {"abilityId": "demo.ability.warrior-mage-sp-to-hp", "minimumLevel": 25, "governingAttribute": "intelligence", "resourceId": "demo.resource.mana", "resourceCost": 0, "baseFailurePercent": 50, "minimumFailurePercent": 0, "blockedByDungeonAntiMagic": false}
+  ],
   "startingItems": [
     {
       "itemKindId": "demo.item.short-sword",

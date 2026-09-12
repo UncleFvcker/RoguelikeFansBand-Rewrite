@@ -743,6 +743,14 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
                 life_force: *life_force,
             }
         }
+        AbilityEffectDefinition::HealthToMana => AbilityEffectSpecDto::HealthToMana {
+            hit_point_cost: 0,
+            mana_divisor: 5,
+        },
+        AbilityEffectDefinition::ManaToHealth => AbilityEffectSpecDto::ManaToHealth {
+            mana_cost: 0,
+            healing: 0,
+        },
         AbilityEffectDefinition::ClearMind => AbilityEffectSpecDto::ClearMind { amount: 2 },
         AbilityEffectDefinition::Precognition => AbilityEffectSpecDto::Precognition {
             detect_invisible: false,
@@ -956,6 +964,13 @@ pub(super) fn player_ability_effect_spec_dto(
                 ability.spell_power_bonus,
             )
             .min(u64::from(u16::MAX)) as u16;
+        }
+        AbilityEffectSpecDto::HealthToMana { hit_point_cost, .. } => {
+            *hit_point_cost = u32::from(level);
+        }
+        AbilityEffectSpecDto::ManaToHealth { mana_cost, healing } => {
+            *mana_cost = u32::from(level / 5);
+            *healing = u32::from(level);
         }
         AbilityEffectSpecDto::ClearMind { amount } => {
             *amount = super::player_abilities::clear_mind_recovery_amount(level);

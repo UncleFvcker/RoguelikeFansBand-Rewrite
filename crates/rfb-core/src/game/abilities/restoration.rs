@@ -48,6 +48,67 @@ fn set_attribute_value(attributes: &mut AttributeSet, kind: AttributeKind, value
 }
 
 impl Game {
+    pub(super) fn resolve_player_resource_conversion(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let resource_id = self
+            .casting_profile()
+            .expect("conversion requires casting profile")
+            .resource_id
+            .clone();
+        let hp_before = self.player.hp;
+        let resource_before = self.resources[&resource_id].current;
+        let level = u32::from(self.progress.level);
+        let converted = match ability.effect {
+            AbilityEffectDefinition::HealthToMana => {
+                // DAMAGE_USELIFE bypasses ordinary defenses, but take_hit still applies Transcendence.
+                let damage = resolve_damage(
+                    DamagePacket::new(level as i32, DamageType::Physical),
+                    ResistanceLevel::Normal,
+                );
+                let damage = self
+                    .apply_final_player_damage(damage, FatalityPolicy::BelowZero)
+                    .damage
+                    .applied;
+                let gain = damage as u32 / 5;
+                let pool = self
+                    .resources
+                    .get_mut(&resource_id)
+                    .expect("casting resource exists");
+                pool.current = pool.current.saturating_add(gain).min(pool.maximum);
+                gain > 0
+            }
+            AbilityEffectDefinition::ManaToHealth => {
+                let cost = level / 5;
+                if resource_before >= cost {
+                    self.resources
+                        .get_mut(&resource_id)
+                        .expect("casting resource exists")
+                        .current -= cost;
+                    self.apply_player_healing(level as i32);
+                    true
+                } else {
+                    false
+                }
+            }
+            _ => unreachable!("resource conversion effect"),
+        };
+        events.push(DomainEvent::AbilityResourceConverted {
+            ability_id: ability.id.clone(),
+            resolution: rfb_protocol::ResourceConversionResolutionDto {
+                resource_id: resource_id.clone(),
+                hp_before,
+                hp_after: self.player.hp,
+                resource_before,
+                resource_after: self.resources[&resource_id].current,
+                converted,
+                fatal: self.player_is_dead(),
+            },
+        });
+    }
+
     pub(in crate::game) fn ability_element_targets(
         &self,
         ability: &AbilityDefinition,

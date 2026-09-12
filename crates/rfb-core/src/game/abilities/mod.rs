@@ -715,6 +715,12 @@ impl Game {
             (AbilityEffectDefinition::RestoreVitality { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_restore_vitality_effect(&ability, events);
             }
+            (
+                AbilityEffectDefinition::HealthToMana | AbilityEffectDefinition::ManaToHealth,
+                AbilityTargetPlan::SelfTarget,
+            ) => {
+                self.resolve_player_resource_conversion(&ability, events);
+            }
             (AbilityEffectDefinition::ClearMind, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_clear_mind(events);
             }

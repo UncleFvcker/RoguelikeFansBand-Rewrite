@@ -899,6 +899,8 @@ impl Game {
             | AbilityEffectDefinition::HealDice { .. }
             | AbilityEffectDefinition::RemoveEquippedCurses { .. }
             | AbilityEffectDefinition::BeginFasting
+            | AbilityEffectDefinition::HealthToMana
+            | AbilityEffectDefinition::ManaToHealth
             | AbilityEffectDefinition::ClearMind
             | AbilityEffectDefinition::Precognition
             | AbilityEffectDefinition::MindArmor

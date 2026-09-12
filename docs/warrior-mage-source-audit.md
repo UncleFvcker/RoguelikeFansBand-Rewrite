@@ -106,7 +106,7 @@ T四项为最低等级/MP/基础失败率/首用经验乘数；写入 `firstSucc
 
 失败率沿 `spells.c:1006–1057 calculate_fail_rate_aux`，不是书本熟练度公式：等级/INT、装备与突变、最低失败、震慑和95上限、EasySpell等按源阶段处理。当前 `class_ability_failure_percent`的EasySpell和震慑部分仅服务少数已有职业，战法师必须补入；魅力吊坠恰好有EasySpell，不能只验证裸装。源HeavySpell、未开放身份等共同差异不在这里制造职业特判来掩盖。
 
-[mutations.rs](../crates/rfb-core/src/game/mutations.rs)的`resolve_periodic_sp_to_hp`和`resolve_periodic_hp_to_sp`是1:1的周期转换，对应源SPELL_PROCESS，不能改成主动5:1规则。两个主动效果落在现有[restoration.rs](../crates/rfb-core/src/game/abilities/restoration.rs)职责范围，复用既有资源、伤害和治疗原语；不新增转换管理器或独立持久状态。效果结果与UI必须显示真实损失/收益及失败/不足原因，不能只有“费用0”。类型变化时再生成Schema/协议绑定。
+[mutations.rs](../crates/rfb-core/src/game/mutations.rs)的`resolve_periodic_sp_to_hp`和`resolve_periodic_hp_to_sp`是1:1的周期转换，对应源SPELL_PROCESS，不能改成主动5:1规则。第四步已将两个主动效果接入现有[restoration.rs](../crates/rfb-core/src/game/abilities/restoration.rs)职责范围，复用既有资源、伤害和治疗原语；不新增转换管理器或独立持久状态。效果结果与UI必须显示真实损失/收益及失败/不足原因，不能只有“费用0”。第四步新增转换效果投影和包含实际资源前后值、转换成败、死亡结果的协议DTO；[专项测试代码](../crates/rfb-core/src/game/tests/warrior_mage/powers.rs)已补。用户要求测试/编译统一留到第七步结束后，Schema/协议绑定生成和最终验收一并待办；不把已写代码标为全部验证通过。
 
 ## 6. 生成、奖励、设施与必要神器
 

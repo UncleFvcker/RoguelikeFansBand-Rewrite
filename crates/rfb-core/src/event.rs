@@ -332,6 +332,10 @@ pub(crate) enum DomainEvent {
     EquipmentRegenerated {
         resolution: HealingResolutionDto,
     },
+    AbilityResourceConverted {
+        ability_id: String,
+        resolution: rfb_protocol::ResourceConversionResolutionDto,
+    },
     ResourceRecovered {
         resolution: ResourceRecoveryResolutionDto,
     },
@@ -2263,6 +2267,25 @@ impl DomainEvent {
                 "equipment-regenerated",
                 [("amount", resolution.applied.to_string())],
                 GameEventOutcomeDto::Heal { resolution },
+            ),
+            Self::AbilityResourceConverted {
+                ability_id,
+                resolution,
+            } => dto_with_outcome(
+                "ability.resource-converted",
+                if resolution.converted {
+                    "ability-resource-converted"
+                } else {
+                    "ability-resource-conversion-failed"
+                },
+                [
+                    ("target", ability_id),
+                    ("hpBefore", resolution.hp_before.to_string()),
+                    ("hpAfter", resolution.hp_after.to_string()),
+                    ("manaBefore", resolution.resource_before.to_string()),
+                    ("manaAfter", resolution.resource_after.to_string()),
+                ],
+                GameEventOutcomeDto::ResourceConversion { resolution },
             ),
             Self::ResourceRecovered { resolution } => dto_with_outcome(
                 "resource.recovered",

@@ -3,6 +3,7 @@ use super::support::{choose_human_talent_if_pending, clear_monsters, give_invent
 use super::*;
 
 mod learning;
+mod powers;
 
 const BUILD: &str = "demo.build.warrior-mage-arcane-sorcery";
 const MANA: &str = "demo.resource.mana";

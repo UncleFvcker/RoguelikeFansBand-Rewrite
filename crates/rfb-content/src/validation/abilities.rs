@@ -927,6 +927,8 @@ pub(super) fn validate_abilities(
                     (1..=1_000).contains(life_force)
                 }
                 AbilityEffectDefinition::AlterReality
+                | AbilityEffectDefinition::HealthToMana
+                | AbilityEffectDefinition::ManaToHealth
                 | AbilityEffectDefinition::ClearMind
                 | AbilityEffectDefinition::Precognition
                 | AbilityEffectDefinition::Psychometry
@@ -1411,6 +1413,8 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::MassSleepOrStasis { .. }
             | AbilityEffectDefinition::SleepingDust { .. }
             | AbilityEffectDefinition::RestoreVitality { .. }
+            | AbilityEffectDefinition::HealthToMana
+            | AbilityEffectDefinition::ManaToHealth
             | AbilityEffectDefinition::ClearMind
             | AbilityEffectDefinition::Precognition
             | AbilityEffectDefinition::MindArmor

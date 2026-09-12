@@ -243,6 +243,8 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::DevourFlesh { .. }
                     | AbilityEffectDefinition::Vomit
                     | AbilityEffectDefinition::RestoreVitality { .. }
+                    | AbilityEffectDefinition::HealthToMana
+                    | AbilityEffectDefinition::ManaToHealth
                     | AbilityEffectDefinition::ClearMind
                     | AbilityEffectDefinition::Precognition
                     | AbilityEffectDefinition::MindArmor

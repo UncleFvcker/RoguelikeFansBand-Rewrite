@@ -870,7 +870,7 @@ impl Game {
             .saturating_add(self.player_spell_failure_modifier_percent())
             .saturating_sub(
                 if self.player_has_mindcraft_stone()
-                    || (self.player_is_priest()
+                    || ((self.player_is_priest() || self.player_is_warrior_mage())
                         && self
                             .player_equipment_passives()
                             .contains(&EquipmentPassive::EasySpell))
@@ -889,6 +889,7 @@ impl Game {
                 if self.player_is_mindcrafter()
                     || self.player_is_berserker()
                     || self.player_is_priest()
+                    || self.player_is_warrior_mage()
                 {
                     self.player
                         .statuses
@@ -904,7 +905,7 @@ impl Game {
             .min(95)
             .saturating_sub(
                 if self.player_has_mindcraft_stone()
-                    || (self.player_is_priest()
+                    || ((self.player_is_priest() || self.player_is_warrior_mage())
                         && self
                             .player_equipment_passives()
                             .contains(&EquipmentPassive::EasySpell))

@@ -636,8 +636,12 @@ pub(super) fn validate_characters(
                     .find(|ability| ability.id == activation.ability_id)
                     .is_none_or(|ability| {
                         ability.player.is_some()
-                            || (matches!(ability.effect, crate::AbilityEffectDefinition::ClearMind)
-                                && class.casting_profile.is_none())
+                            || (matches!(
+                                ability.effect,
+                                crate::AbilityEffectDefinition::ClearMind
+                                    | crate::AbilityEffectDefinition::HealthToMana
+                                    | crate::AbilityEffectDefinition::ManaToHealth
+                            ) && class.casting_profile.is_none())
                             || (matches!(
                                 ability.effect,
                                 crate::AbilityEffectDefinition::Concentrate
