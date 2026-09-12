@@ -41,13 +41,16 @@ pub(super) fn reward_ready(seed: u64, build: &str, task: &str) -> (Game, String,
     super::town::enter_town_facility(&mut game, &facility);
     game.mark_shop_visited_at_player().unwrap();
     game.reveal_current_visibility();
+    let objectives = task_objectives(game.content.world(&game.world_id).unwrap(), &id);
+    let stage_index = u32::try_from(objectives.len() - 1).unwrap();
+    let required = objectives.last().unwrap().required;
     game.task_states.insert(
         id.clone(),
         TaskState {
             status: TaskStatusKindDto::RewardAvailable,
-            stage_index: 0,
-            current: 1,
-            required: 1,
+            stage_index,
+            current: required,
+            required,
             active_floor_id: None,
             retakes_used: 0,
         },

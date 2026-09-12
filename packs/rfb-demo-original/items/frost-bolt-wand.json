@@ -10,7 +10,6 @@
   "weightTenthsPound": 2,
   "maxStack": 1,
   "baseValue": 850,
-  "rfbBaseKind": {"sourceIndex": 312, "tval": 65, "sval": 0},
   "elementalDestructionVulnerabilities": ["electricity"],
   "deviceGeneration": {
     "recovery": {"intervalTicks": 10, "energyPerMille": 10},

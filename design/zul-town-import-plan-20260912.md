@@ -16,7 +16,7 @@
 | `src/quest_name_zh.inc`、`quest.c` | 任务中文显示名和任务状态／奖励消费者；不翻译 `q_info.txt` 英文内部名称来替代中文表 |
 | `src/shop.c`、`bldg.c`、`virtue.c`、`wild.c`、`rooms.c` | 特殊商店生成与买卖价、服务资格和扣费、美德重建、到访／传送与模板解释 |
 
-三种节点地图保留 `Created by Topi Ylinen`；漩涡地图保留 `New quest for FrogComposband 7.0.peppermint`。`t_zul.txt` 没有独立作者声明，不补造作者，也不借用其他城镇的许可说明。实际导入时按材料更新 [NOTICE](../NOTICE)、适用上游声明和[来源选择记录](../packs/rfb-demo-original/legacy-wilderness-selection.json)，未确认的中文或物品映射列为 unresolved，不自行起名。
+三种节点地图保留 `Created by Topi Ylinen`；漩涡地图保留 `New quest for FrogComposband 7.0.peppermint`。`t_zul.txt` 没有独立作者声明，不补造作者，也不借用其他城镇的许可说明。实际导入时按材料更新 [NOTICE](../NOTICE)、适用上游声明和[来源选择记录](../packs/rfb-demo-original/legacy-wilderness-selection.json)，未确认的中文或物品映射列为 unresolved，不自行起名。选择记录采用导入器的源设施/服务格式；完整地图、任务、适配与验收元数据保留在[祖尔审计记录](../packs/rfb-demo-original/legacy-zul-audit.json)。
 
 ## 2. 完整地图与入口
 

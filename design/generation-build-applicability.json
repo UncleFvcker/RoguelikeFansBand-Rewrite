@@ -774,24 +774,7 @@
       "prerequisite": "Import the applicable content and actual identity/consumer together; review ordinary branches as well."
     }
   ],
-  "gaps": [
-    {
-      "id": "magic-eater-step7-acceptance",
-      "status": "pending",
-      "buildIds": [
-        "demo.build.magic-eater"
-      ],
-      "areas": [
-        "base-allocation-tailored",
-        "ego-negative",
-        "random-artifact",
-        "fixed-artifact-reward",
-        "use-save"
-      ],
-      "reason": "Implementation, normal creation/UI and test cases exist. No Magic-Eater tests, desktop scenarios or compilation have run; step-7 acceptance remains required.",
-      "requiredEvidence": "After step 7 implementation, execute the scoped core/content/frontend and global contracts, generate bindings/schema/lock/audits, and complete natural level-1 plus explicitly prepared 30-slot, automatic consumer, inn and save/next-generation desktop acceptance."
-    }
-  ],
+  "gaps": [],
   "builds": [
     {
       "buildId": "demo.build.warrior",
@@ -4448,14 +4431,12 @@
     },
     {
       "buildId": "demo.build.magic-eater",
-      "gapIds": [
-        "magic-eater-step7-acceptance"
-      ],
+      "gapIds": [],
       "areas": [
         {
           "review": "base-allocation-tailored",
           "status": "implemented",
-          "reason": "Device class; Tailored checks 1/5 first, then the shared 1/7 after the non-applicable needs-book branch. Ordinary allocation weights are unchanged. Tests are written but not executed; acceptance remains in the linked step-7 gap.",
+          "reason": "Device class; Tailored checks 1/5 first, then the shared 1/7 after the non-applicable needs-book branch. Ordinary allocation weights are unchanged. Source-order and actual three-category generation/use/save tests passed.",
           "implementation": [
             "crates/rfb-core/src/game/loot/allocation.rs"
           ],
@@ -4467,7 +4448,7 @@
         {
           "review": "ego-negative",
           "status": "no-special-difference",
-          "reason": "No class Ego generation branch. Existing device Ego instance properties survive absorption; body items grant no equipment passives. Negative random-artifact curses and the actual Impotence mutation use shared consumers. Tests are written but not executed; acceptance remains in the linked step-7 gap.",
+          "reason": "No class Ego generation branch. Existing device Ego instance properties survive absorption; body items grant no equipment passives. Negative random-artifact curses and the actual Impotence mutation use shared consumers. Absorption, negative-instance and mutation/use/save tests passed.",
           "implementation": [
             "crates/rfb-core/src/game/magic_eater/usage.rs",
             "crates/rfb-core/src/game/ego/noncraft.rs"
@@ -4482,7 +4463,7 @@
         {
           "review": "random-artifact",
           "status": "implemented",
-          "reason": "The no-theme scroll branch uses Mage bias and 20-percent Warrior conversion after the shared 1/4 gate. Natural and explicit themes keep shared behavior. Activated non-device armor, jewelry and weapons cannot be absorbed. Tests are written but not executed; acceptance remains in the linked step-7 gap.",
+          "reason": "The no-theme scroll branch uses Mage bias and 20-percent Warrior conversion after the shared 1/4 gate. Natural and explicit themes keep shared behavior. Activated non-device armor, jewelry and weapons cannot be absorbed. Source-bias, scroll instance and save tests passed.",
           "implementation": [
             "crates/rfb-core/src/game/random_artifact.rs#initial_bias"
           ],
@@ -4495,7 +4476,7 @@
         {
           "review": "fixed-artifact-reward",
           "status": "implemented",
-          "reason": "Long Sword, normal Orc Camp Frost Ball and Wargs Frost Bolt use actual rewards. Old Castle birth selection is Lohengrin/Charmed Pendant at 1:4, with unique-ledger replacement and full-inventory atomicity. Tests are written but not executed; acceptance remains in the linked step-7 gap.",
+          "reason": "Long Sword, normal Orc Camp Frost Ball and Wargs Frost Bolt use actual rewards. Old Castle birth selection is Lohengrin/Charmed Pendant at 1:4, with unique-ledger replacement and full-inventory atomicity. Actual reward, duplicate/full-pack transaction and save tests passed.",
           "implementation": [
             "crates/rfb-core/src/game/tasks.rs",
             "packs/rfb-demo-original/worlds/middle-earth.json",
@@ -4509,7 +4490,7 @@
         {
           "review": "use-save",
           "status": "implemented",
-          "reason": "Body-first Mogaminator and TravelLocal detection preserve source strict SP and slot order. Saved options/coverage govern boundary triggers; inn fills body SP and two towers retain ordinary Visitor prices. Saves resume instance SP/fractions, effects and next generation. Tests are written but not executed; acceptance remains in the linked step-7 gap.",
+          "reason": "Body-first Mogaminator and TravelLocal detection preserve source strict SP and slot order. Saved options/coverage govern boundary triggers; inn fills body SP and two towers retain ordinary Visitor prices. Core consumer/service and next-generation replay tests passed. Desktop acceptance passed natural level-1 device combat, prepared thirty slots, replacement, three-category depletion/rest/reuse and normal save continuation in both locales.",
           "implementation": [
             "crates/rfb-core/src/game/magic_eater/automatic.rs",
             "crates/rfb-core/src/game/mogaminator.rs",
@@ -4519,7 +4500,8 @@
           ],
           "tests": [
             "crates/rfb-core/src/game/tests/magic_eater/consumers.rs",
-            "crates/rfb-core/src/game/tests/magic_eater/generation.rs"
+            "crates/rfb-core/src/game/tests/magic_eater/generation.rs",
+            "web/e2e/magic-eater.e2e.mjs#runMagicEaterUiScenario"
           ]
         }
       ]

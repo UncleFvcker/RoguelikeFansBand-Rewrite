@@ -1258,11 +1258,18 @@ pub(super) fn validate_items(
         }
         if let Some(generation) = &mut item.device_generation {
             if let Some(source) = &generation.rfb_device {
-                let capacity_multiplier = match item.rfb_base_kind.map(|kind| kind.tval) {
-                    Some(66) => 2,
-                    Some(55 | 65) => 4,
+                // Fixed reward profiles share the ordinary device family, not its unique base-kind ID.
+                let categories =
+                    ["wand", "staff", "rod"].map(|tag| item.tags.iter().any(|value| value == tag));
+                let (tval, capacity_multiplier) = match categories {
+                    [true, false, false] => (65, 4),
+                    [false, true, false] => (55, 4),
+                    [false, false, true] => (66, 2),
                     _ => return Err(ContentError::InvalidItemUseAction(item.id.clone())),
                 };
+                if item.rfb_base_kind.is_some_and(|kind| kind.tval != tval) {
+                    return Err(ContentError::InvalidItemUseAction(item.id.clone()));
+                }
                 let ids = source
                     .effects
                     .iter()

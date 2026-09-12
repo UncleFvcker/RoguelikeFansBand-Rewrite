@@ -2451,7 +2451,7 @@ impl Game {
         Ok(())
     }
 
-    fn relocate_to_town(&mut self, destination_town_id: &str) -> Result<(), CoreError> {
+    pub(super) fn relocate_to_town(&mut self, destination_town_id: &str) -> Result<(), CoreError> {
         let world = self
             .content
             .world(&self.world_id)

@@ -110,7 +110,7 @@ export class MagicEaterPanel {
     for (const control of this.#auxiliary?.querySelectorAll<HTMLInputElement | HTMLButtonElement | HTMLSelectElement>("input, button, select") ?? []) control.disabled = state.busy;
     this.#category.disabled = state.busy || Boolean(pending);
     for (const id of ["body", "ordinary", "absorb"]) this.#element<HTMLButtonElement>(id).disabled = locked;
-    const ability = state.status?.player.abilities.find(ability => ability.effects.some(effect => effect.type === "magic-eater-absorb"));
+    const ability = state.status?.player.abilities?.find(ability => ability.effects.some(effect => effect.type === "magic-eater-absorb"));
     this.#element<HTMLButtonElement>("absorb").disabled = locked || !ability?.canCast || !ability.itemTargets?.length;
     for (const id of ["save", "load", "close", "confirm"]) this.#element<HTMLButtonElement>(id).disabled = state.busy;
     this.#element<HTMLInputElement>("inherit").disabled = state.busy;
@@ -182,7 +182,7 @@ export class MagicEaterPanel {
 
   #absorb(): void {
     const { state } = this.#options;
-    const ability = state.status?.player.abilities.find(ability => ability.effects.some(effect => effect.type === "magic-eater-absorb"));
+    const ability = state.status?.player.abilities?.find(ability => ability.effects.some(effect => effect.type === "magic-eater-absorb"));
     if (state.busy || state.commandBlocked || !ability?.canCast) return;
     this.#options.selectItemTarget(ability.itemTargets?.map(target => target.itemId) ?? [], id => this.#options.dispatch({ type: "cast-ability", abilityId: ability.id, target: { type: "item", itemId: id } }));
   }

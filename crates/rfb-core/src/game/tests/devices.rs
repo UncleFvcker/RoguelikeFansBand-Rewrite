@@ -304,7 +304,7 @@ fn source_identification_cancel_refunds_time_after_successful_check_and_berserke
 #[test]
 fn ordinary_floor_device_uses_shared_sp_check_and_effect_but_only_at_player_feet() {
     let mut base = utility_game();
-    give_inventory_item(&mut base, "test.floor-device", "demo.item.detection-rod");
+    give_inventory_item(&mut base, "test.floor-device", "demo.item.resonance-rod");
     let mut seen = BTreeSet::new();
     for seed in 0..128 {
         let mut carried = base.clone();
@@ -348,7 +348,7 @@ fn ordinary_floor_device_uses_shared_sp_check_and_effect_but_only_at_player_feet
     assert_eq!(seen, BTreeSet::from([false, true]));
     base.items[0].location = ItemLocation::Ground(base.player.position);
     base.items[0].charges.as_mut().unwrap().current = 0;
-    let before = (base.turn, base.world_tick, base.rng.clone());
+    let before = (base.world_tick, base.player.energy_need, base.rng.clone());
     dispatch_next(
         &mut base,
         GameCommand::UseItem {
@@ -356,7 +356,10 @@ fn ordinary_floor_device_uses_shared_sp_check_and_effect_but_only_at_player_feet
             target: Some(TargetSelection::SelfTarget),
         },
     );
-    assert_eq!((base.turn, base.world_tick, base.rng.clone()), before);
+    assert_eq!(
+        (base.world_tick, base.player.energy_need, base.rng.clone()),
+        before
+    );
     base.player.position.x += 1;
     let mut events = Vec::new();
     base.use_inventory_item(

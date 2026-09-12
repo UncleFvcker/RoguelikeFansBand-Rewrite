@@ -44,6 +44,14 @@ node e2e/tauri.e2e.mjs --berserker --fast-entry
 
 新增实战脚本可在正式创角后调用 `await prepareDungeonEntry(driver)`，随后沿正常 UI 执行下楼；不要再复制城镇寻路循环。
 
+## 食魔者桌面验收
+
+在`web`执行`npm run e2e:build`，随后执行`node e2e/tauri.e2e.mjs --magic-eater-ui`。场景默认复用快速楼梯入口，正常下楼生成兽穴；无需额外的`--fast-entry`参数。先正常人类1级出生、吸收出生魔杖并攻击自然怪物，再明确准备25级、前哨站照明清场、30个生成/吸收装置和脚下替换物。每类首槽先准备一次使用的SP，实际执行耗尽、普通休息充满和再次使用；从正常导出存档加载后重演，比较完整事件、槽位投影和状态哈希。
+
+中英文流程包含满槽覆盖/铭刻继承、换位标签、详情、行走设置、待选择/已确认存档、键盘取消与忙碌锁。390px和200%只用于专项截图，之后及退出时恢复1280×720、100%缩放。报告、截图与存档在`test-results/magic-eater-ui/`。自动消费者、旅店/两塔和下一次生成/SP小数/RNG由核心用例验证，桌面准备不代表自然取得30件装置或自然练级。
+
+可玩优化产物使用`npm run build -- --no-bundle`。在根目录执行`web/e2e/mage-optimized.e2e.ps1 -Executable <EXE绝对路径> -OutputDirectory <证据目录> -Class MagicEater`，通过进程定向UI Automation验证普通无领域创角、1级/无公共MP、体内菜单及正常退出；此原生烟测与WebDriver实战分别记录。与其他任务共用桌面时先协调占用，再启动E2E；本流程不包含Android验收。
+
 ## 两城地图桌面验收
 
 在 `web` 先执行 `npm run e2e:build`，再执行 `node e2e/tauri.e2e.mjs --town-maps`。使用 Tauri 专用 WebDriver 构建，独立应用标识 `io.github.unclefvcker.rfb-rewrite.e2e` 隔离日常存档和共享馆藏；地图不是浏览器模拟数据。

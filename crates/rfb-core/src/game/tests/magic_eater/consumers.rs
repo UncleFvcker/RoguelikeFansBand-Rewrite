@@ -97,7 +97,7 @@ fn mogaminator_prefers_source_body_identify_and_keeps_strict_sp_and_slot_order()
             .push(monster_combat::melee_status(status, 100, "test.auto").status);
     }
     let rng = game.rng.clone();
-    let clock = (game.turn, game.world_tick, game.player.energy);
+    let clock = (game.turn, game.world_tick, game.player.energy_need);
     for target in ["test.first-target", "test.fallback-target"] {
         give_inventory_item(&mut game, target, "demo.item.dagger");
         let outcomes = game
@@ -119,7 +119,7 @@ fn mogaminator_prefers_source_body_identify_and_keeps_strict_sp_and_slot_order()
         pack_before - item(&game, "test.pack").activation.as_ref().unwrap().cost
     );
     assert_eq!(game.rng, rng);
-    assert_eq!((game.turn, game.world_tick, game.player.energy), clock);
+    assert_eq!((game.turn, game.world_tick, game.player.energy_need), clock);
     assert!(game.resources.is_empty());
 }
 
@@ -326,6 +326,7 @@ fn inn_fills_body_sp_and_fraction_only_after_successful_payment() {
     assert_eq!(game.stay_at_inn(facility), Err("needs-healer"));
     assert_eq!(game.to_save(), before);
     game.player.statuses.clear();
+    game.reveal_current_visibility();
     let mut restored = Game::from_save(game.to_save()).unwrap();
     assert_eq!(game.stay_at_inn(facility), restored.stay_at_inn(facility));
     let staff = item(&game, "test.staff");

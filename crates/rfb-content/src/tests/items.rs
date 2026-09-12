@@ -1825,6 +1825,18 @@ fn restorative_item_sequences_require_bounded_effects_and_known_resources() {
 #[test]
 fn dynamic_devices_require_stable_profiles_depth_coverage_and_capacity() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let mut wrong_family = artifact.content.clone();
+    wrong_family
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.frost-bolt-wand")
+        .unwrap()
+        .tags
+        .push("rod".into());
+    assert!(matches!(
+        validate_and_normalize(&mut wrong_family),
+        Err(ContentError::InvalidItemUseAction(_))
+    ));
     let mut invalid = artifact.content.clone();
     let frost = invalid
         .items

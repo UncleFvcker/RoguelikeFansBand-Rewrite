@@ -35,6 +35,7 @@ impl Game {
                 "Magic-Eater E2E requires a local Magic-Eater",
             ));
         }
+        self.relocate_to_town("demo.town.outpost")?;
         self.pending_magic_absorption = None;
         self.entities.clear();
         self.items.retain(|item| {
@@ -67,7 +68,7 @@ impl Game {
         self.player.hp = self.effective_player_max_hp();
         for (category, kind) in [
             ("wand", "demo.item.magic-missile-wand"),
-            ("staff", "demo.item.identify-staff"),
+            ("staff", "demo.item.enlightenment-staff"),
             ("rod", "demo.item.detection-rod"),
         ] {
             for slot in 0..SLOTS_PER_CATEGORY {
@@ -75,6 +76,11 @@ impl Game {
                 self.debug_add_generated_inventory_item(&id, kind, 1)?;
                 self.begin_magic_absorption(&id, &mut Vec::new())?;
                 self.select_magic_absorption_slot(slot, &mut Vec::new());
+                if slot == 0 {
+                    let item = self.items.iter_mut().find(|item| item.id == id).unwrap();
+                    item.charges.as_mut().unwrap().current = item.activation.as_ref().unwrap().cost;
+                    item.device_recovery_progress = 0;
+                }
             }
         }
         self.debug_add_generated_inventory_item(

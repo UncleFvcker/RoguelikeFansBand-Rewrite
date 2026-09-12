@@ -15,6 +15,19 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "magic-eater-absorb",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "damageBonus": {
               "default": 0,
               "format": "uint16",

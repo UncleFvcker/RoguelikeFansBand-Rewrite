@@ -2918,10 +2918,10 @@ impl Game {
             };
 
         self.mark_item_tried(&kind_id);
-        if let Some(difficulty) = difficulty {
-            if !self.check_item_device(index, &definition, &effect, difficulty, events) {
-                return Ok(None);
-            }
+        if let Some(difficulty) = difficulty
+            && !self.check_item_device(index, &definition, &effect, difficulty, events)
+        {
+            return Ok(None);
         }
 
         let item_device_power_bonus =

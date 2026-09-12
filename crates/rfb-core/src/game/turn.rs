@@ -760,8 +760,16 @@ impl Game {
             .iter()
             .enumerate()
             .map(|(index, item)| {
-                let rate = matches!(item.location, ItemLocation::Absorbed { .. })
-                    .then(|| self.absorbed_device_recovery_per_mille(item));
+                let rate = matches!(item.location, ItemLocation::Absorbed { .. }).then(|| {
+                    if world_tick.is_multiple_of(10)
+                        && item.charges.is_some_and(|sp| sp.current < sp.maximum)
+                    {
+                        self.absorbed_device_recovery_per_mille(item)
+                    } else {
+                        // Off-period/full devices still follow the same cleanup and ordering.
+                        0
+                    }
+                });
                 (index, rate)
             })
             .collect::<Vec<_>>();

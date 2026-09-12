@@ -468,14 +468,6 @@
                 <ul id="inventory-list" class="inventory-list" aria-live="polite"></ul>
               </section>
             </div>
-            <dialog id="inventory-detail-dialog" aria-labelledby="inventory-detail-title">
-              <header>
-                <h2 id="inventory-detail-title"></h2>
-                <button id="inventory-detail-close" type="button" class="quiet-button" data-l10n-id="action-dialog-close"></button>
-              </header>
-              <div id="inventory-detail-body"></div>
-              <footer id="inventory-detail-actions"></footer>
-            </dialog>
           </section>
 
           <section id="native-save-panel" class="save-panel" aria-labelledby="native-save-title">
@@ -612,6 +604,15 @@
           </section>
         </section>
       </div>
+
+      <dialog id="inventory-detail-dialog" aria-labelledby="inventory-detail-title">
+        <header>
+          <h2 id="inventory-detail-title"></h2>
+          <button id="inventory-detail-close" type="button" class="quiet-button" data-l10n-id="action-dialog-close"></button>
+        </header>
+        <div id="inventory-detail-body"></div>
+        <footer id="inventory-detail-actions"></footer>
+      </dialog>
 
       <dialog id="player-page-dialog" class="player-page-dialog" aria-labelledby="player-page-title">
         <header>

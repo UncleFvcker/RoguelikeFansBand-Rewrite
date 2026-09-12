@@ -5,8 +5,9 @@ import path from "node:path";
 import { Localization } from "../src/localization.ts";
 import { selectCreationBuild, selectCreationRace } from "./character-creation.e2e.mjs";
 import { connectKeyboard } from "./character-creation-layout.e2e.mjs";
+import { nextWalk } from "./berserker.e2e.mjs";
+import { prepareDungeonEntry } from "./dungeon-entry.e2e.mjs";
 
-// Written in step 6; execute after bindings, compilation and checks in step 7.
 export async function runMagicEaterUiScenario(driver, directory, profile) {
   await mkdir(directory, { recursive: true });
   const keyboard = await connectKeyboard(profile);
@@ -14,7 +15,7 @@ export async function runMagicEaterUiScenario(driver, directory, profile) {
     await Promise.all(["ui", "content", "game"].map(file => readFile(new URL(`../../locales/${locale}/${file}.ftl`, import.meta.url), "utf8"))),
   ])));
   const localization = new Localization("zh-CN", sources);
-  const report = { preparation: "Normal human level-1 birth and birth-wand absorption first. Then explicitly prepare level 25, a lit quiet floor, thirty generated/absorbed devices and one floor replacement. Full slots and high level are prepared, not naturally acquired. Commands, cancellation, export/load and continuation use the regular UI.", locales: [] };
+  const report = { preparation: "Normal human level-1 birth and birth-wand absorption first; Chinese run skips approach walking with the existing stairs fixture, traverses stairs normally and attacks a naturally generated monster. Then explicitly prepare level 25 in Outpost using the existing town transfer, a lit 3x3 area, thirty generated/absorbed devices (slot zero in each category has one use of SP) and one floor replacement. Full slots and high level are prepared, not naturally acquired. Commands, cancellation, export/load, depletion, rest and continuation use the regular UI.", locales: [] };
   const click = selector => driver.execute('document.querySelector(arguments[0]).click(); return true;', [selector]);
   const focus = selector => driver.execute('document.querySelector(arguments[0]).focus(); return true;', [selector]);
   const text = selector => driver.execute('return document.querySelector(arguments[0]).textContent;', [selector]);
@@ -27,8 +28,8 @@ export async function runMagicEaterUiScenario(driver, directory, profile) {
     return driver.execute('return window.__meResult');
   }
   const snapshot = () => invoke("inspect_game_e2e");
-  async function changed(hash, label) {
-    await driver.waitFor('return document.querySelector("#hash-value").title !== arguments[0]', label, 20_000, [hash]);
+  async function changed(hash, label, timeout = 20_000) {
+    await driver.waitFor('return document.querySelector("#hash-value").title !== arguments[0]', label, timeout, [hash]);
     await ready(); return snapshot();
   }
   async function viewport(width, height, zoom = 1) {
@@ -97,6 +98,92 @@ export async function runMagicEaterUiScenario(driver, directory, profile) {
     const after = await changed(before.stateHash, "body rod use");
     return { after, events: await driver.execute('return window.__meUpdate.events') };
   }
+  async function closePages() {
+    for (const selector of ["#magic-eater-dialog", "#player-page-dialog"]) {
+      if (await driver.execute('return document.querySelector(arguments[0]).open', [selector])) await keyboard.key("Escape");
+    }
+  }
+  async function useDevice(category, slot, target) {
+    await open(); await focus("#magic-eater-slots"); await keyboard.key(category);
+    const before = await snapshot(); await click(slotButton(slot, "use"));
+    if (target) {
+      await driver.waitFor('return document.querySelector("#map-host").dataset.targetingAction==="absorbed-device"', "device aiming");
+      let dx = target.x-before.player.position.x, dy = target.y-before.player.position.y;
+      while (dx || dy) {
+        const sx = Math.sign(dx), sy = Math.sign(dy);
+        await keyboard.key(({ "-1,-1":"7", "0,-1":"8", "1,-1":"9", "-1,0":"4", "1,0":"6", "-1,1":"1", "0,1":"2", "1,1":"3" })[`${sx},${sy}`]);
+        dx -= sx; dy -= sy;
+      }
+      await keyboard.key("Enter");
+    }
+    const after = await changed(before.stateHash, "device use"); await closePages();
+    return { after, events: await driver.execute('return window.__meUpdate.events') };
+  }
+  async function naturalCombat(current) {
+    await closePages(); await click("#player-ui-inventory-open");
+    const torch = current.inventory.find(item => item.kindId === "demo.item.wooden-torch"); assert.ok(torch);
+    await click(`[data-item-id="${torch.id}"] input[type="checkbox"]`); await click("#inventory-equip");
+    current = await changed(current.stateHash, "birth torch"); await closePages();
+    report.fastEntry = await prepareDungeonEntry(driver); current = await snapshot();
+    await click("#traverse-stairs"); current = await changed(current.stateHash, "natural dungeon");
+    assert.equal(current.floorId, "demo.floor.warrens-depth-1");
+    const visited = new Set(); let hit;
+    for (let step = 0; step < 220 && !hit; step++) {
+      assert.equal(current.player.isDead, false);
+      visited.add(`${current.player.position.x},${current.player.position.y}`);
+      const distance = p => Math.max(Math.abs(p.x-current.player.position.x), Math.abs(p.y-current.player.position.y));
+      const target = current.entities.filter(e => e.faction === "hostile").sort((a,b) => distance(a.position)-distance(b.position))[0];
+      if (target && distance(target.position) <= 6 && current.player.magicEater.slots[0].item.usable) {
+        const before = current; const used = await useDevice("W", 0, target.position); current = used.after;
+        const remaining = current.entities.find(e => e.id === target.id)?.hp ?? 0;
+        if (remaining < target.hp) hit = { target: target.kindId, hpBefore: target.hp, hpAfter: remaining, before: before.stateHash, after: current.stateHash, events: used.events };
+      } else {
+        await keyboard.key(nextWalk(current, visited, target?.position)); current = await changed(current.stateHash, "explore dungeon");
+      }
+    }
+    assert.ok(hit, "absorbed birth wand damages a naturally generated monster"); assert.equal(current.player.isDead, false);
+    await writeFile(path.join(directory, "natural-dungeon.png"), await driver.screenshot(), "base64");
+    await open(); await exportSave("natural-dungeon"); await closePages();
+    process.stdout.write("Magic-Eater: normal birth and natural dungeon device combat passed.\n");
+    return hit;
+  }
+  async function depleteRecoverReuse() {
+    const checks = [];
+    for (const [key, index] of [["W",0], ["S",10], ["R",20]]) {
+      let current = await snapshot(), attempts = [];
+      const id = current.player.magicEater.slots[index].item.id;
+      for (let attempt = 0; attempt < 100 && current.player.magicEater.slots[index].item.usable; attempt++) {
+        const result = await useDevice(key, 0, key === "W" ? { x: current.player.position.x+1, y: current.player.position.y } : null);
+        current = result.after; attempts.push(result.events);
+      }
+      const slot = current.player.magicEater.slots[index];
+      assert.ok(slot.item.charges.current < slot.item.activation.cost, `${key} depleted`);
+      checks.push({ key, index, id, depleted: slot.item.charges.current, attempts });
+    }
+    await open(); const before = await snapshot(), index = await exportSave("depleted-three-categories");
+    async function recoverAndUse() {
+      await closePages(); const before = await snapshot(); await keyboard.key("r");
+      let current = await changed(before.stateHash, "rest for body SP", 120_000);
+      const recovered = current.player.magicEater;
+      const restEvents = await driver.execute('return window.__meUpdate.events');
+      assert.ok(recovered.slots.every(slot => slot.item.charges.current === slot.item.charges.maximum), JSON.stringify(restEvents));
+      for (const check of checks) {
+        const slot = recovered.slots[check.index]; assert.equal(slot.item.id, check.id); assert.ok(slot.item.charges.current > check.depleted);
+        let spent = false;
+        for (let attempt = 0; attempt < 100 && !spent; attempt++) {
+          const available = current.player.magicEater.slots[check.index].item.charges.current;
+          current = (await useDevice(check.key, 0, check.key === "W" ? { x: current.player.position.x+1, y: current.player.position.y } : null)).after;
+          spent = current.player.magicEater.slots[check.index].item.charges.current < available;
+        }
+        assert.ok(spent, `${check.key} reusable`);
+      }
+      return { recovered, current, restEvents };
+    }
+    const continued = await recoverAndUse(); await load(index, before.stateHash);
+    assert.deepEqual(await recoverAndUse(), continued);
+    process.stdout.write("Magic-Eater: three categories depleted, rested to full, reused and replayed identically after normal loading.\n");
+    return { checks, saved: before.stateHash, continued: continued.current.stateHash };
+  }
   try {
     await invoke("plugin:window|set_min_size", { label: "main", value: null });
     for (const locale of ["zh-CN", "en-US"]) {
@@ -132,12 +219,15 @@ export async function runMagicEaterUiScenario(driver, directory, profile) {
       assert.equal(cancelled.player.magicEater.slots[0].item.charges.current, current.player.magicEater.slots[0].item.charges.current);
       assert.equal(cancelled.turn, current.turn + (cancellationEvents.some(event => event.kind === "skill.device-failure") ? 1 : 0), "natural failure spends time; successful check and cancellation refunds it");
 
+      if (locale === "zh-CN") report.naturalCombat = await naturalCombat(cancelled);
+
       const prepared = await invoke("prepare_magic_eater_e2e");
-      const bytes = await invoke("save_game", { savedAt: "2026-09-12T12:00:00Z" });
-      const preparedIndex = await driver.execute('window.__meSaves??=[];return window.__meSaves.push(arguments[0])-1;', [bytes]);
+      await invoke("save_game", { savedAt: "2026-09-12T12:00:00Z" });
+      const preparedIndex = await driver.execute('window.__meSaves??=[];return window.__meSaves.push(window.__meResult)-1;');
       current = await load(preparedIndex, prepared.stateHash); current = await chooseTalent();
       assert.equal(current.player.magicEater.slots.filter(slot => slot.item).length, 30);
-      await open(); current = await inscribe(0, "@mq retained");
+      if (locale === "zh-CN") report.depletion = await depleteRecoverReuse();
+      await open(); await focus("#magic-eater-slots"); await keyboard.key("W"); current = await inscribe(0, "@mq retained");
       await selectSource("e2e.magic-eater.replacement"); current = await changed(current.stateHash, "floor absorption selection");
       const pendingSlotSave = await exportSave(`${locale}-pending-slot`), pendingSlotHash = current.stateHash;
       await keyboard.key("Escape"); current = await changed(current.stateHash, "cancel slot selection");
@@ -148,6 +238,7 @@ export async function runMagicEaterUiScenario(driver, directory, profile) {
       for (const [width, height, zoom] of [[390, 844, 1], [640, 360, 2]]) {
         await viewport(width, height, zoom); await capture(`${locale}-replacement-${width}-${zoom}`, "#magic-eater-dialog");
       }
+      await viewport(1280, 720);
       await keyboard.key("Escape"); await changed(pendingHash, "cancel replacement");
       current = await load(pendingSave, pendingHash);
       assert.equal(await driver.execute('return document.activeElement.id'), "magic-eater-close");
@@ -185,5 +276,7 @@ export async function runMagicEaterUiScenario(driver, directory, profile) {
     }
     assert.deepEqual(keyboard.errors, []);
     await writeFile(path.join(directory, "report.json"), `${JSON.stringify(report, null, 2)}\n`);
-  } finally { keyboard.close(); }
+  } finally {
+    try { await viewport(1280, 720); } finally { keyboard.close(); }
+  }
 }

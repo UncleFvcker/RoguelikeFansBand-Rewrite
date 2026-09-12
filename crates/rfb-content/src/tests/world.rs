@@ -12383,7 +12383,7 @@ fn fixed_wilderness_task_geometry_and_rewards_match_source() {
             task.reward.as_ref().unwrap().entries[0].item_kind_id,
             "demo.item.crisdurian"
         );
-        assert_eq!(task.reward.as_ref().unwrap().class_overrides.len(), 9);
+        assert_eq!(task.reward.as_ref().unwrap().class_overrides.len(), 10);
         // q_old_castle: Ranger uses RANDOM27 mod 5 (1:4).
         assert_eq!(
             task.reward

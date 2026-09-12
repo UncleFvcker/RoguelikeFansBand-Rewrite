@@ -3164,6 +3164,18 @@
         {
           "type": "object",
           "properties": {
+            "type": {
+              "type": "string",
+              "const": "magic-eater-absorb"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "damageBonus": {
               "type": "integer",
               "format": "uint16",
@@ -7134,6 +7146,79 @@
         "targetCount"
       ]
     },
+    "AbsorbedDeviceCategoryDto": {
+      "type": "string",
+      "enum": [
+        "wand",
+        "staff",
+        "rod"
+      ]
+    },
+    "AbsorbedDeviceSlotDto": {
+      "type": "object",
+      "properties": {
+        "allowsMultipleTargets": {
+          "type": "boolean"
+        },
+        "category": {
+          "$ref": "#/$defs/AbsorbedDeviceCategoryDto"
+        },
+        "deviceLabel": {
+          "type": "string"
+        },
+        "energyCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "int32"
+        },
+        "failurePerMille": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "item": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InventoryItemDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "recoveryPerMille": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "slot": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "useLabel": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "category",
+        "slot",
+        "useLabel",
+        "deviceLabel",
+        "allowsMultipleTargets"
+      ]
+    },
     "AttackProfileDto": {
       "type": "object",
       "properties": {
@@ -8611,6 +8696,24 @@
         "psy-spear"
       ]
     },
+    "DeviceCommandDto": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "$ref": "#/$defs/AbsorbedDeviceCategoryDto"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/InventoryItemDto"
+          }
+        }
+      },
+      "required": [
+        "category",
+        "items"
+      ]
+    },
     "Direction": {
       "type": "string",
       "enum": [
@@ -9937,6 +10040,75 @@
         {
           "type": "object",
           "properties": {
+            "slot": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "select-magic-absorption-slot"
+            }
+          },
+          "required": [
+            "type",
+            "slot"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "confirm": {
+              "type": "boolean"
+            },
+            "inheritInscription": {
+              "type": "boolean"
+            },
+            "type": {
+              "type": "string",
+              "const": "resolve-magic-absorption"
+            }
+          },
+          "required": [
+            "type",
+            "confirm",
+            "inheritInscription"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "category": {
+              "$ref": "#/$defs/AbsorbedDeviceCategoryDto"
+            },
+            "firstSlot": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "secondSlot": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "swap-absorbed-devices"
+            }
+          },
+          "required": [
+            "type",
+            "category",
+            "firstSlot",
+            "secondSlot"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "direction": {
               "$ref": "#/$defs/Direction"
             },
@@ -10476,6 +10648,22 @@
         {
           "type": "object",
           "properties": {
+            "options": {
+              "$ref": "#/$defs/TravelOptionsDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "configure-travel"
+            }
+          },
+          "required": [
+            "type",
+            "options"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "mode": {
               "$ref": "#/$defs/SummonCommandModeDto"
             },
@@ -10665,6 +10853,30 @@
             "type",
             "itemId",
             "glyph"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "targets": {
+              "description": "Zero or one target; identification accepts an ordered sequence.",
+              "type": "array",
+              "default": [],
+              "items": {
+                "$ref": "#/$defs/TargetSelection"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "use-absorbed-device"
+            }
+          },
+          "required": [
+            "type",
+            "itemId"
           ]
         },
         {
@@ -11371,6 +11583,9 @@
             }
           ]
         },
+        "travelOptions": {
+          "$ref": "#/$defs/TravelOptionsDto"
+        },
         "turn": {
           "type": "integer",
           "format": "uint32",
@@ -11410,6 +11625,7 @@
         }
       },
       "required": [
+        "travelOptions",
         "protocolVersion",
         "revision",
         "turn",
@@ -11592,6 +11808,9 @@
             }
           ]
         },
+        "travelOptions": {
+          "$ref": "#/$defs/TravelOptionsDto"
+        },
         "turn": {
           "type": "integer",
           "format": "uint32",
@@ -11621,6 +11840,7 @@
         }
       },
       "required": [
+        "travelOptions",
         "baseRevision",
         "revision",
         "turn",
@@ -12660,6 +12880,55 @@
         "zh-CN"
       ]
     },
+    "MagicAbsorptionReplacementDto": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "type": "string"
+        },
+        "slot": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "slot",
+        "itemId"
+      ]
+    },
+    "MagicEaterDto": {
+      "type": "object",
+      "properties": {
+        "deviceCommands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DeviceCommandDto"
+          }
+        },
+        "pendingAbsorption": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PendingMagicAbsorptionDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AbsorbedDeviceSlotDto"
+          }
+        }
+      },
+      "required": [
+        "slots",
+        "deviceCommands"
+      ]
+    },
     "MapScaleDto": {
       "type": "string",
       "enum": [
@@ -13377,6 +13646,31 @@
         "castResolution"
       ]
     },
+    "PendingMagicAbsorptionDto": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "$ref": "#/$defs/AbsorbedDeviceCategoryDto"
+        },
+        "replacement": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MagicAbsorptionReplacementDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sourceItemId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sourceItemId",
+        "category"
+      ]
+    },
     "PendingMutationDirectionDto": {
       "type": "object",
       "properties": {
@@ -13703,6 +13997,16 @@
         },
         "kindId": {
           "type": "string"
+        },
+        "magicEater": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MagicEaterDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "maxHp": {
           "type": "integer",
@@ -15866,6 +16170,25 @@
         "mutation",
         "equipment",
         "temporary-effect"
+      ]
+    },
+    "TravelOptionsDto": {
+      "type": "object",
+      "properties": {
+        "autoDetectTraps": {
+          "type": "boolean"
+        },
+        "autoMapArea": {
+          "type": "boolean"
+        },
+        "disturbTrapDetect": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "autoDetectTraps",
+        "autoMapArea",
+        "disturbTrapDetect"
       ]
     },
     "VirtueDto": {

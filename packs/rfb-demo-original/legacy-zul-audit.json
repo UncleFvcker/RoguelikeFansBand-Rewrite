@@ -1,0 +1,566 @@
+{
+  "sourceIndex": 7,
+  "sourceName": "祖尔",
+  "id": "demo.town.zul",
+  "position": {
+    "x": 77,
+    "y": 6
+  },
+  "sourceFile": "lib/edit/t_zul.txt",
+  "sourceRef": "master",
+  "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+  "sourceFiles": [
+    "lib/edit/t_zul.txt",
+    "lib/edit/t_pref.txt",
+    "lib/edit/t_info.txt",
+    "lib/edit/w_info.txt",
+    "lib/edit/f_info.txt",
+    "src/wild.c",
+    "src/shop.c",
+    "src/xtra1.c",
+    "src/object2.c",
+    "lib/edit/k_info.txt",
+    "src/kind_name_zh.inc",
+    "src/devices.c",
+    "src/bldg.c",
+    "src/virtue.c",
+    "lib/edit/q_sorcery.txt",
+    "lib/edit/q_chaos.txt",
+    "lib/edit/q_nature.txt",
+    "src/init1.c",
+    "src/rooms.c",
+    "src/dungeon.c",
+    "lib/edit/q_info.txt",
+    "src/quest_name_zh.inc"
+  ],
+  "surfaceMap": {
+    "width": 94,
+    "height": 57,
+    "mapOrigin": {
+      "x": 0,
+      "y": 0
+    },
+    "explicitCells": 2158,
+    "inheritedCells": 3200,
+    "arrivalPosition": {
+      "x": 53,
+      "y": 32
+    },
+    "generator": "scripts/sync-town-maps.py --town zul"
+  },
+  "standardFacilities": [
+    {
+      "symbol": "1",
+      "sourceTag": "GENERAL_STORE",
+      "positions": [
+        {
+          "x": 31,
+          "y": 27
+        }
+      ]
+    },
+    {
+      "symbol": "3",
+      "sourceTag": "WEAPON_SMITHS",
+      "positions": [
+        {
+          "x": 58,
+          "y": 32
+        }
+      ]
+    },
+    {
+      "symbol": "4",
+      "sourceTag": "TEMPLE",
+      "positions": [
+        {
+          "x": 54,
+          "y": 48
+        }
+      ]
+    },
+    {
+      "symbol": "5",
+      "sourceTag": "ALCHEMY_SHOP",
+      "positions": [
+        {
+          "x": 40,
+          "y": 29
+        }
+      ]
+    },
+    {
+      "symbol": "6",
+      "sourceTag": "MAGIC_SHOP",
+      "positions": [
+        {
+          "x": 50,
+          "y": 24
+        }
+      ]
+    },
+    {
+      "symbol": "7",
+      "sourceTag": "BLACK_MARKET",
+      "positions": [
+        {
+          "x": 31,
+          "y": 40
+        }
+      ]
+    },
+    {
+      "symbol": "9",
+      "sourceTag": "BOOKSTORE",
+      "positions": [
+        {
+          "x": 37,
+          "y": 21
+        }
+      ]
+    }
+  ],
+  "specialFacilities": [
+    {
+      "symbol": "A",
+      "sourceTag": "JEWELER",
+      "positions": [
+        {
+          "x": 16,
+          "y": 29
+        }
+      ],
+      "implementation": "generated instance stock and source price hooks verified by Z6 core and desktop acceptance",
+      "shopId": "demo.shop.zul-jeweler"
+    },
+    {
+      "symbol": "D",
+      "sourceTag": "DRAGONSKIN",
+      "positions": [
+        {
+          "x": 58,
+          "y": 30
+        }
+      ],
+      "implementation": "generated instance stock and source price hooks verified by Z6 core and desktop acceptance",
+      "shopId": "demo.shop.zul-dragonskin"
+    }
+  ],
+  "buildings": [
+    {
+      "buildingIndex": 8,
+      "name": "巫术之塔",
+      "ownerName": "塔尼斯提尔",
+      "ownerRace": "精灵",
+      "symbol": "i",
+      "positions": [
+        {
+          "x": 65,
+          "y": 16
+        }
+      ],
+      "implementation": "Source non-task services and member node quest verified by Z6 core and desktop acceptance",
+      "facilityId": "demo.town-facility.zul-sorcery-tower",
+      "ownerRealmIds": [
+        "sorcery"
+      ],
+      "identifyAllItemsCost": {
+        "ownerCost": 100,
+        "otherCost": 800
+      },
+      "townTeleport": {
+        "requiredCompletedTaskId": "demo.task.zul-eddies",
+        "price": {
+          "ownerCost": 200,
+          "otherCost": 500
+        }
+      }
+    },
+    {
+      "buildingIndex": 14,
+      "name": "混沌之塔",
+      "ownerName": "泽诺",
+      "ownerRace": "兽人",
+      "symbol": "o",
+      "positions": [
+        {
+          "x": 57,
+          "y": 16
+        }
+      ],
+      "implementation": "Source non-task services and member node quest verified by Z6 core and desktop acceptance",
+      "facilityId": "demo.town-facility.zul-chaos-tower",
+      "ownerRealmIds": [
+        "chaos"
+      ],
+      "memberRaceIds": [
+        "rfb-legacy.race.beastman"
+      ],
+      "serviceActions": [
+        {
+          "kind": "cure-mutation",
+          "ownerCost": 1000,
+          "otherCost": 5000
+        }
+      ]
+    },
+    {
+      "buildingIndex": 15,
+      "name": "自然之塔",
+      "ownerName": "乔什",
+      "ownerRace": "精灵",
+      "symbol": "p",
+      "positions": [
+        {
+          "x": 72,
+          "y": 16
+        }
+      ],
+      "implementation": "Source non-task services and member node quest verified by Z6 core and desktop acceptance",
+      "facilityId": "demo.town-facility.zul-nature-tower",
+      "ownerRealmIds": [
+        "nature"
+      ],
+      "serviceActions": [
+        {
+          "kind": "balance-ritual",
+          "ownerCost": 2000,
+          "otherCost": 10000
+        }
+      ]
+    }
+  ],
+  "adaptations": [
+    "Z1 imports the complete unconditional town surface and seven ordinary shops. No inn, armoury, shroomery, home or museum is added. Z2 adds the two special shops and Z3 the three tower non-quest services; Z4 adds quest 77 and tower teleport; Z5 adds the three member node quests and their source book rewards.",
+    "Ordinary shops reuse the existing Thalos category stock pools, owners, prices and maintenance definitions under distinct Zul shop/owner IDs. This is the existing local shop adaptation, not a port of every source owner or inventory-generation branch.",
+    "Blank template cells inherit coordinate-seeded wilderness terrain. Source world cell 7 is mountain, level 20, without a road flag.",
+    "Zul is excluded from the local ordinary-town monster placement mask for both initial and scrolled wilderness sampling. In source wild.c the exclude rectangle retains old viewport cells, not town safety. Existing coordinate-seeded area rolls, actor allocation, daylight and persistent-town actors remain local adaptations; source per-cell suppression probabilities and encounter RNG are not reproduced exactly.",
+    "TownState.visited records physical visitation. All town-teleport callers additionally require successful quest-77 settlement for Zul and arrive at the sorcery tower main door (65,16). No extra unlock boolean or invented inn.",
+    "Z6 compiles pack 1.436.0 and its matching lock, regenerates schemas/bindings/allocation audit, and verifies source maps, focused regressions and the 26 unchanged global contracts. Desktop evidence and preparation limits are recorded in the Zul plan.",
+    "The Ritual of Balance uses the existing virtue class/race/realm mapping and random slot filling with the current secondary realm. Birth realm selection and RNG order are preserved. No new virtue mappings, source-identical RNG sequence, or permanent ritual state are introduced. Services dispatch on activation; closing the panel beforehand is free."
+  ],
+  "specialShopGeneration": {
+    "poolId": "demo.loot-table.base-items",
+    "jewelrySourceIndices": [
+      310,
+      311
+    ],
+    "dragonArmorSourceIndices": [
+      292,
+      293,
+      294,
+      295,
+      296,
+      297,
+      298,
+      299,
+      300,
+      301,
+      302,
+      303,
+      304,
+      305
+    ],
+    "dragonPartSourceIndices": [
+      200,
+      207,
+      218,
+      232,
+      239
+    ],
+    "fixedArtifacts": false,
+    "jewelryArtifactAcceptance": "1/6 after creation and discounts",
+    "owners": "fixed first source owner: Dalana (human, greed 108, cap 20000); Beowulf (human, greed 110, cap 50000)",
+    "maintenanceAdaptation": "12-19 target, at most 99 attempts; existing 10000-tick refill and empty-shop refill; NPC culling, nonbasic experience throttle and owner rotation not ported",
+    "equipmentAdaptation": "reuse current allocator/ego/randart engine and device recovery/cone projection; preserve high-level kind gates; no new NO_SHUFFLE option",
+    "validation": "Source generation/price/RNG boundaries, buy/sell/replenishment/rejection and encoded save restoration verified; 64 seeded high-level stock rolls cover current affix passives and store discounts.",
+    "saveOrigin": "Generated special stock carries Shop origin, following ORIGIN_STORE in shop.c. Nonzero source discounts require an eligible nonartifact jewelry/dragon-part item; current passive enums round-trip without the obsolete development-save migration table."
+  },
+  "eddiesQuest": {
+    "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+    "sourceQuestId": 77,
+    "sourceFile": "lib/edit/q_eddies.txt",
+    "sourceCredit": "New quest for FrogComposband 7.0.peppermint",
+    "taskId": "demo.task.zul-eddies",
+    "floorId": "demo.floor.zul-eddies",
+    "sourceLevel": 55,
+    "dimensions": [
+      29,
+      37
+    ],
+    "entryPosition": {
+      "x": 91,
+      "y": 32
+    },
+    "playerPosition": {
+      "x": 14,
+      "y": 35
+    },
+    "objective": "clear-floor: all 25 source placements",
+    "actors": [
+      {
+        "sourceIndex": 1091,
+        "id": "demo.actor.time-initiate",
+        "count": 16
+      },
+      {
+        "sourceIndex": 1092,
+        "id": "demo.actor.chronomage",
+        "count": 7
+      },
+      {
+        "sourceIndex": 1093,
+        "id": "demo.actor.temporal-champion",
+        "count": 2
+      }
+    ],
+    "baseKind": {
+      "sourceIndex": 139,
+      "id": "demo.item.baseball-bat",
+      "allocation": "INSTA_ART; no ordinary source allocation rows; Chinese kind-format prefix removed, display text retained"
+    },
+    "rewards": [
+      {
+        "sourceIndex": 343,
+        "id": "demo.item.sotkamo"
+      },
+      {
+        "sourceIndex": 344,
+        "id": "demo.item.visiting-team"
+      },
+      {
+        "sourceIndex": 345,
+        "id": "demo.item.superbat"
+      }
+    ],
+    "rewardSelection": "Equal weights from durable task_selection_seed(task ID, wilderness seed), adapting RANDOM77 mod 3; does not reroll on snapshots, load, intervening actions or failed claims. Existing fixed-artifact registry and replacement generator retained.",
+    "loot": {
+      "source": "OBJ(CLOAK, DEPTH+30):EGO(bat)",
+      "generationDepth": 85,
+      "sourceTval": 35,
+      "egoSourceIndex": 102,
+      "affixId": "rfb-legacy.affix.the-bat",
+      "positions": [
+        {
+          "x": 6,
+          "y": 32
+        },
+        {
+          "x": 22,
+          "y": 32
+        }
+      ]
+    },
+    "adaptations": [
+      "Existing actor melee/time breath/slow/haste/level-teleport rules and alertness initialization retained. Source sleeping/wakeup counters and exact monster generation RNG are not ported; FORCE_SLEEP retains the existing nice flag adaptation.",
+      "Seven TREE(ICKY) cells use the existing vault-cell state. Fixed monsters may share cells with ground loot; overlap within each placement class still rejects.",
+      "Source cloak get_obj_num uses existing source allocation weights/good-kind filter, then existing armor/ego magic with forced bat; fixed and random artifacts cannot replace the forced ego. RNG sequencing remains the local equipment adaptation.",
+      "Sotkamo RESTORING uses the existing restore-all-vitality effect (all drained attributes, experience and life force), difficulty 40/cooldown 75 turns. Visiting Team STUN enters the existing weapon stun consumer. Superbat LIFE uses +9% HP.",
+      "Task 77 is public. Pending/failed/abandoned states do not unlock teleport. Node 10 requires current tower membership and completed/failed/abandoned quest 77; completing node 10 cannot replace successful quest-77 settlement."
+    ],
+    "validation": "Core lifecycle, source cloaks, active save, reward/replacement and travel qualification regressions passed. Desktop scope and explicit outcome preparation are recorded in the Zul plan."
+  },
+  "nodeQuests": [
+    {
+      "sourceQuestId": 10,
+      "sourceFile": "lib/edit/q_sorcery.txt",
+      "sourceCredit": "Created by Topi Ylinen",
+      "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+      "taskId": "demo.task.zul-sorcery-node",
+      "floorId": "demo.floor.zul-sorcery-node",
+      "sourceLevel": 65,
+      "dimensions": [
+        31,
+        25
+      ],
+      "entryPosition": {
+        "x": 78,
+        "y": 44
+      },
+      "playerPosition": {
+        "x": 1,
+        "y": 23
+      },
+      "actors": [
+        {
+          "id": "demo.actor.guardian-naga",
+          "sourceIndex": 269,
+          "count": 14
+        },
+        {
+          "id": "demo.actor.phantom-beast",
+          "sourceIndex": 385,
+          "count": 14
+        },
+        {
+          "id": "demo.actor.phantom-warrior",
+          "sourceIndex": 152,
+          "count": 44
+        },
+        {
+          "id": "demo.actor.air-elemental",
+          "sourceIndex": 526,
+          "count": 8
+        },
+        {
+          "id": "demo.actor.great-wyrm-of-many-colours",
+          "sourceIndex": 790,
+          "count": 5
+        }
+      ],
+      "rewardItemId": "demo.item.grimoire-of-power",
+      "membership": "Member or Owner of the source tower, using current realm/race identity",
+      "validation": "Core admission, floor/source reward, success/failure/abandonment, save and return regressions passed. Desktop scope and explicit outcome preparation are recorded in the Zul plan."
+    },
+    {
+      "sourceQuestId": 11,
+      "sourceFile": "lib/edit/q_chaos.txt",
+      "sourceCredit": "Created by Topi Ylinen",
+      "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+      "taskId": "demo.task.zul-chaos-node",
+      "floorId": "demo.floor.zul-chaos-node",
+      "sourceLevel": 65,
+      "dimensions": [
+        31,
+        25
+      ],
+      "entryPosition": {
+        "x": 9,
+        "y": 1
+      },
+      "playerPosition": {
+        "x": 1,
+        "y": 23
+      },
+      "actors": [
+        {
+          "id": "demo.actor.fire-elemental",
+          "sourceIndex": 510,
+          "count": 24
+        },
+        {
+          "id": "demo.actor.magma-elemental",
+          "sourceIndex": 584,
+          "count": 13
+        },
+        {
+          "id": "demo.actor.chaos-spawn",
+          "sourceIndex": 574,
+          "count": 39
+        },
+        {
+          "id": "demo.actor.hell-hound-of-julian",
+          "sourceIndex": 829,
+          "count": 16
+        },
+        {
+          "id": "demo.actor.great-hell-wyrm",
+          "sourceIndex": 756,
+          "count": 5
+        }
+      ],
+      "rewardItemId": "demo.item.armageddon-tome",
+      "membership": "Member or Owner of the source tower, using current realm/race identity",
+      "validation": "Core admission, floor/source reward, success/failure/abandonment, save and return regressions passed. Desktop scope and explicit outcome preparation are recorded in the Zul plan."
+    },
+    {
+      "sourceQuestId": 12,
+      "sourceFile": "lib/edit/q_nature.txt",
+      "sourceCredit": "Created by Topi Ylinen",
+      "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+      "taskId": "demo.task.zul-nature-node",
+      "floorId": "demo.floor.zul-nature-node",
+      "sourceLevel": 65,
+      "dimensions": [
+        33,
+        27
+      ],
+      "entryPosition": {
+        "x": 61,
+        "y": 4
+      },
+      "playerPosition": {
+        "x": 2,
+        "y": 24
+      },
+      "actors": [
+        {
+          "id": "demo.actor.colossus",
+          "sourceIndex": 558,
+          "count": 9
+        },
+        {
+          "id": "demo.actor.war-bear",
+          "sourceIndex": 173,
+          "count": 16
+        },
+        {
+          "id": "demo.actor.basilisk",
+          "sourceIndex": 453,
+          "count": 19
+        },
+        {
+          "id": "demo.actor.giant-spider",
+          "sourceIndex": 175,
+          "count": 15
+        },
+        {
+          "id": "demo.actor.earth-elemental",
+          "sourceIndex": 525,
+          "count": 22
+        },
+        {
+          "id": "demo.actor.great-storm-wyrm",
+          "sourceIndex": 728,
+          "count": 7
+        }
+      ],
+      "rewardItemId": "demo.item.natures-wrath",
+      "membership": "Member or Owner of the source tower, using current realm/race identity",
+      "validation": "Core admission, floor/source reward, success/failure/abandonment, save and return regressions passed. Desktop scope and explicit outcome preparation are recorded in the Zul plan."
+    }
+  ],
+  "nodeAdaptations": [
+    "MON(hell hound) resolves by source init1.c substring lookup to source 829 Hell hound of Julian; NO_GROUP suppresses its FRIENDS(3d3).",
+    "Authored leaders reserve their cells before optional friend expansion. War-bear FRIENDS(1d7) reuses original friend count/scatter/pack behavior; phantom warriors and Hell hounds retain NO_GROUP. Sleep counters and exact source RNG sequencing are not ported. Clear-floor counts actual living monsters, including companions and later summons.",
+    "Nature monster-only cells inherit the source dot GRASS. Chaos MOUNTAIN_WALL is the existing impassable permanent mountain-wall, not outdoor climbable mountains.",
+    "Armageddon Tome (kind 515) is a physical reward/trade item with no abilityBookId until the Chaos casting realm is delivered. Sorcery/Nature rewards keep their existing book bindings. All three fourth books retain source destruction immunity. Ordinary allocation was generated and verified with pack 1.436.0; Chaos casting remains unavailable.",
+    "Quest 10 requires 77 Completed, Failed or Abandoned, and current tower membership. Quests 11/12 have no 77 prerequisite. Accept and claim share backend membership checks; failed 77 never grants Zul teleport.",
+    "Interior water/lava hazards join the existing periodic turn path. Wilderness hazard timing is retained; elemental race exemptions remain limited to delivered identities. Items and monster alertness retain existing adaptations."
+  ],
+  "nodeTaskCells": [
+    {
+      "sourceQuestId": 10,
+      "symbol": "z",
+      "defaultTerrain": "SHALLOW_WATER",
+      "positions": [
+        {
+          "x": 78,
+          "y": 44
+        }
+      ]
+    },
+    {
+      "sourceQuestId": 11,
+      "symbol": "y",
+      "defaultTerrain": "MOUNTAIN",
+      "positions": [
+        {
+          "x": 9,
+          "y": 1
+        }
+      ]
+    },
+    {
+      "sourceQuestId": 12,
+      "symbol": "x",
+      "defaultTerrain": "TREE",
+      "positions": [
+        {
+          "x": 61,
+          "y": 4
+        }
+      ]
+    }
+  ]
+}

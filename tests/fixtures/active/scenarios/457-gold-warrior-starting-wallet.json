@@ -15,8 +15,8 @@
     "finalState": {
       "lastCommandSeq": 0,
       "playerGold": 405,
-      "stateHash": "988924b53f44e830bf21d65ebd697e3a6ca7bce9b3fe60684530ff8eb6975a64"
+      "stateHash": "70b4f96158e0d4673e0bb519f1612fcec3f8a12f7a14fc7c58789a013d043cbc"
     },
-    "saveRoundTripStateHash": "988924b53f44e830bf21d65ebd697e3a6ca7bce9b3fe60684530ff8eb6975a64"
+    "saveRoundTripStateHash": "70b4f96158e0d4673e0bb519f1612fcec3f8a12f7a14fc7c58789a013d043cbc"
   }
 }

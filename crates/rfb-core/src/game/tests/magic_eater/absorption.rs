@@ -374,7 +374,15 @@ fn all_thirty_slots_swap_inscribe_and_round_trip_without_pack_capacity_or_weight
     game.player.position = stairs;
     dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(game.current_floor_id, "demo.floor.warrens-depth-1");
-    assert_eq!(game.to_save().absorbed_devices, body_before);
+    let body_after = game.to_save().absorbed_devices;
+    assert_eq!(body_after.len(), body_before.len());
+    for (mut after, before) in body_after.into_iter().zip(body_before) {
+        // Traversal is a world action, so fractional device recovery is expected.
+        assert!(after.item.charges.unwrap().current >= before.item.charges.unwrap().current);
+        after.item.charges = before.item.charges;
+        after.item.device_recovery_progress = before.item.device_recovery_progress;
+        assert_eq!(after, before);
+    }
     assert!(game.stored_floors.values().all(|floor| {
         floor
             .items

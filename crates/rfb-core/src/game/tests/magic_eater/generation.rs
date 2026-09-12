@@ -45,6 +45,15 @@ fn natural_three_device_categories_pick_up_absorb_use_recover_and_replay_generat
         let (energy, _) = use_body(&mut game, &id, &targets);
         assert_eq!(energy, 100);
         assert_eq!(item(&game, &id).charges.unwrap().current, before - cost);
+        let mut attempts = 0;
+        while item(&game, &id).charges.unwrap().current >= cost && attempts < 1000 {
+            use_body(&mut game, &id, &targets);
+            attempts += 1;
+        }
+        assert!(
+            item(&game, &id).charges.unwrap().current < cost,
+            "{id} exhausted"
+        );
         ids.push(id);
     }
     clear_monsters(&mut game);
@@ -61,6 +70,27 @@ fn natural_three_device_categories_pick_up_absorb_use_recover_and_replay_generat
     }
     for (id, before) in ids.iter().zip(spent) {
         assert!(item(&game, id).charges.unwrap().current > before);
+        let targets = if item(&game, id).kind_id == "demo.item.magic-missile-wand" {
+            vec![TargetSelection::Direction {
+                direction: Direction::East,
+            }]
+        } else {
+            Vec::new()
+        };
+        let available = item(&game, id).charges.unwrap().current;
+        for _ in 0..100 {
+            assert_eq!(
+                use_body(&mut game, id, &targets),
+                use_body(&mut restored, id, &targets)
+            );
+            if item(&game, id).charges.unwrap().current < available {
+                break;
+            }
+        }
+        assert!(
+            item(&game, id).charges.unwrap().current < available,
+            "{id} reusable after recovery"
+        );
     }
     assert_eq!(game.to_save(), restored.to_save());
     let context = LootContext {
@@ -233,6 +263,7 @@ fn two_towers_keep_visitor_membership_and_charge_the_source_ordinary_price() {
         );
         assert_eq!(game.to_save(), before);
         game.gold = cost;
+        game.reveal_current_visibility();
         let mut restored = Game::from_save(game.to_save()).unwrap();
         for run in [&mut game, &mut restored] {
             run.identify_all_at_facility(&facility).unwrap();
@@ -290,6 +321,7 @@ fn ordinary_frost_bolt_scales_stored_power_and_replays_after_absorption() {
             .map(|_| damage_rng.bounded(8) as i32 + 1)
             .sum::<i32>();
         game.rng = start_rng;
+        game.reveal_current_visibility();
         let mut ordinary = game.clone();
         ordinary
             .items
@@ -301,7 +333,7 @@ fn ordinary_frost_bolt_scales_stored_power_and_replays_after_absorption() {
         let target = TargetSelection::Direction {
             direction: Direction::East,
         };
-        let (_, events) = use_body(&mut game, "test.frost", &[target.clone()]);
+        let (_, events) = use_body(&mut game, "test.frost", std::slice::from_ref(&target));
         let actual_damage = events
             .iter()
             .find_map(|event| match event {
@@ -312,7 +344,7 @@ fn ordinary_frost_bolt_scales_stored_power_and_replays_after_absorption() {
             .expect("cold bolt hit the adjacent target");
         assert_eq!(actual_damage, expected_damage, "source (5 + power / 8)d8");
         assert_eq!(
-            use_body(&mut restored, "test.frost", &[target.clone()]).1,
+            use_body(&mut restored, "test.frost", std::slice::from_ref(&target)).1,
             events
         );
         let mut normal_events = Vec::new();

@@ -5221,6 +5221,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(AbsorbedDeviceSlotDto);
     push_declaration!(MagicEaterDto);
     push_declaration!(DeviceCommandDto);
+    push_declaration!(TravelOptionsDto);
     push_declaration!(LocaleDto);
     push_declaration!(AutoGetModeDto);
     push_declaration!(MogaminatorDispositionDto);

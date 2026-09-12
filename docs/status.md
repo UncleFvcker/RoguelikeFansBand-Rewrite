@@ -9,15 +9,17 @@
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 源1.262；绑定/Schema待食魔者第七步生成 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | 源129；契约待食魔者第七步核验 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| 协议 | 1.262；绑定/Schema已同步 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | 129；26条契约已核验 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 24 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 源1.440.0；lock仍1.437.0，待食魔者第七步统一核验 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
-| 契约政策 | contract-v328，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
+| 内容包 | 1.440.0；pack/lock已同步 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 契约政策 | contract-v329，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 14 个 Class、110 个 Build、57 个 Race、36 本能力书、1,908 个 ability、550 个 item、1,410 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon；城镇有 7 个 town、69 个 shop、67 个 townFacility。基础分配池为 408 行，固定神器映射 134/392；创角入口源码开放14职业、103个Build。这些是定义与入口数量，行为验收范围见下文。
 
-食魔者[接入计划](magic-eater-class-plan.md)前六步实现已完成：无领域Build、出生/成长/无公共MP、三类各10体内槽、吸收/覆盖/铭刻继承/换位、真实使用/失败/费用/恢复与保存已接入。Mogaminator体内优先鉴定、TravelLocal自动探陷阱/地图及保存覆盖范围、Tailored先1/5后1/7、Mage/20卷轴、任务奖励/旧城堡1:4及重复替代、旅店恢复和两塔普通资格均已实现。15种装置、26个profile覆盖24条源行，其余97条保留缺口。创角新增“魔法装置 → 食魔者”，能力页接体内装置菜单及普通装置后备入口、核心铭刻标签、目标/取消、焦点/忙碌锁；确认窗口接正常存档导出/载入，设置页接三个随存档保存的自动行走选项。新增中英文前端与桌面场景，覆盖390px/200%、正常出生吸收、明确准备30槽、满槽覆盖/铭刻/换位、设置及待选择/已吸收保存续用；均未执行。五类生成责任保留一个待验收gap。当前仅完成格式、引用和diff静态检查；按用户安排，编译、测试、Schema/绑定、内容锁、来源报告、桌面实战及全局契约核验留到第七步实现结束后。
+食魔者[七步计划](magic-eater-class-plan.md)已完成：无领域Build/无公共MP、三类各10体内槽、吸收/覆盖/铭刻继承/换位、真实使用/失败/费用/周期恢复及保存已开放。Mogaminator体内优先鉴定、TravelLocal自动探测/地图及保存覆盖、Tailored先1/5后1/7、Mage/20卷轴、任务奖励/旧城堡1:4及重复替代、旅店恢复和两塔普通资格通过核心验证。15种装置、26个profile覆盖24条源行，另97条仍为未开放范围。正式入口为“魔法装置 → 食魔者”，103个开放Build生成责任审计通过，0个可玩范围证据gap。
+
+食魔者桌面实战从人类1级出生吸收魔杖开始，约1.4秒快速到楼梯后正常进入自然兽穴并攻击怪物存活；随后明确准备25级、前哨站照明清场和完整30槽，完成三类耗尽→普通休息充满→再用。正常菜单导出/加载后相同恢复与使用的事件、槽位及哈希一致；下一次实际生成/SP小数/RNG由核心验证。中英文、390px/200%、满槽替换/铭刻/换位、焦点/取消/忙碌锁和设置通过，缩放截图后恢复100%。核心全量1681通过/2失败，夹具修正后35项定向复验通过（含33项食魔者），最终有效1683通过/3项原有ignored；内容169、导入器196、前端220、Tauri23及其余workspace、Clippy、生成物/lock检查通过。26条契约仅哈希发生变化，工具刷新至v329后全部通过。优化EXE原生烟测通过普通创角、无公共MP、体内菜单及正常退出；程序/源码/许可/证据/校验值位于`release/RoguelikeFansBand-Rewrite_0.1.0_magic-eater-20260912_windows-x64/`。完整证据与限制见[验收记录](magic-eater-class-plan.md#验证与交付)，不包含自然高等级、完整通关或Android验收。
 
 战法师已完成[七步计划](warrior-mage-class-plan.md)：8个固定主奥秘Build、288项参数、双书出生/成长、INT法力/负重/近战/感知及双领域自主学习、重复研习、84点支出、遗忘/改换/保存已接入。25级双向转换保留真实失败、内部支付、满池代价、低HP死亡及公共伤害/治疗修正；旧城堡1:4/重复替代、两件神器/秘银链甲、实际激活/冷却、盗贼长剑、两塔会员与Mage/20卷轴消费者通过。正式入口为“混合 → 战法师 → 第二领域”，含工艺；当前13职业、102个Build，8个新增Build的40项生成责任与来源报告已验收，0个可玩范围证据gap。
 

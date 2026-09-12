@@ -14551,9 +14551,19 @@ fn selected_town_source_file(text: &str, source_index: u32) -> Option<&str> {
 }
 
 fn town_feature_tags(text: &str) -> BTreeMap<char, String> {
+    let mut unconditional = true;
     text.lines()
         .filter_map(|line| {
-            let rest = line.trim().strip_prefix("L:")?;
+            let line = line.trim();
+            if let Some(condition) = line.strip_prefix("?:") {
+                unconditional = condition.trim() == "1";
+                return None;
+            }
+            // Facility plans describe the baseline, not a particular quest-state overlay.
+            if !unconditional {
+                return None;
+            }
+            let rest = line.strip_prefix("L:")?;
             let (symbol, tag) = rest.split_once(':')?;
             let mut chars = symbol.chars();
             let symbol = chars.next()?;
@@ -15120,6 +15130,8 @@ fn validate_demo_wilderness_plans(
             )));
         }
         let town_source = read_legacy_object_at(source, source_commit, &town.source_file)?;
+        let mut feature_tags = feature_tags.clone();
+        feature_tags.extend(town_feature_tags(&town_source));
         let mut symbols = BTreeSet::new();
         for facility in &town.standard_facilities {
             if !symbols.insert(facility.symbol)
@@ -19345,6 +19357,17 @@ pub fn sync_demo_item_destruction(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn town_facility_tags_keep_unconditional_local_overrides() {
+        let mut tags = town_feature_tags("L:8:HOME\nL:A:BOOK_STORE\n");
+        tags.extend(town_feature_tags(
+            "L:A:JEWELER\n?:[EQU $QUEST74 Taken]\nL:8:QUEST_ENTER(74)\n?:1\nL:B:DRAGONSKIN\n",
+        ));
+        assert_eq!(tags[&'8'], "HOME");
+        assert_eq!(tags[&'A'], "JEWELER");
+        assert_eq!(tags[&'B'], "DRAGONSKIN");
+    }
 
     #[test]
     fn dungeon_wall_terrain_parses_full_a_record_and_rejects_malformed_input() {
