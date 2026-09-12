@@ -56,6 +56,7 @@ export async function connectKeyboard(profile) {
       await send("Input.dispatchKeyEvent", { type: "keyUp", ...params });
     },
     async text(text) { await send("Input.insertText", { text }); },
+    async screenshot() { return (await send("Page.captureScreenshot", { format: "png" })).data; },
     async evaluate(expression) {
       const result = await send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true });
       if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? result.exceptionDetails.text);

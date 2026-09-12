@@ -106,6 +106,14 @@ node e2e/asgard-standalone.e2e.mjs
 
 按用户要求，AS7 不再重跑祖尔整流程；此前 Z6 的验收记录继续保留。共用助手在本批由实际使用它们的阿斯加德场景验证，不将已经通过的其他城镇整流程自动加入验收范围。
 
+## 常规装备底材桌面验收
+
+在 `web` 执行 `npm run build:standalone:debug`，随后执行 `node e2e/ordinary-equipment-standalone.e2e.mjs`。[场景](../web/e2e/ordinary-equipment-standalone.e2e.mjs)使用普通 Tauri EXE、隔离的 WebView 配置目录和正式创角／装备／输入／保存加载路径，不启用 WebDriver 专用准备 IPC。
+
+正常创建人类1级战士并导出存档后，[核心导出用例](../crates/rfb-core/src/game/tests/death_scythe.rs)显式选择出生天赋、清怪、准备小片地格与相邻目标／岩浆矿脉，授予并鉴定七件代表底材。镰刀准备合法的 −255 命中附魔、临时 +2000 最大 HP、满有效 HP，并选择非致死反噬种子；钩镰枪及泳装目标起始睡眠。UI依次装备钩镰枪、矮人镐、秘银板甲／空灵披风／秘银护手、泳装和镰刀，并用原生按键攻击、挖掘或等待。每个动作后导出／正常加载，核对核心预演的完整状态哈希，再继续下一动作。
+
+报告、截图和存档在 `test-results/ordinary-equipment/`。准备后的交互与保存证据不代表自然取得七件稀有装备或自然练级；完整源分配、其他成员、概率与致死边界由核心验证。普通镰刀不自动返回，共用返回反噬仅在核心准备的返回状态中验证；未开放的返回能力入口和 Monster Sword 内部 kind111 不在桌面范围内。
+
 ## Contract fixture
 
 当前集位于 [tests/fixtures/active/scenarios](../tests/fixtures/active/scenarios/)，分类和最低数量等政策来自 [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)。`rfb-contract` 的 [CLI](../crates/rfb-contract/src/main.rs)和[断言实现](../crates/rfb-contract/src/lib.rs)是精确语义依据。

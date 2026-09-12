@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1250,
+  "descriptionKey": "item-demo-do-maru-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -2
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "glyph": "[",
+  "id": "demo.item.do-maru",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 20
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-do-maru-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 280,
+    "sval": 11,
+    "tval": 37
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 290
+}

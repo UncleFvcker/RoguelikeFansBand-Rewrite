@@ -2,6 +2,31 @@ use super::*;
 use std::collections::BTreeSet;
 
 #[test]
+fn zero_weight_ordinary_armor_is_limited_to_the_ethereal_cloak_base() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let cloak = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.ethereal-cloak")
+        .unwrap();
+    assert_eq!(cloak.weight_tenths_pound, 0);
+    for (sval, weight) in [(4, 0), (5, 10_001)] {
+        let mut invalid = artifact.content.clone();
+        let cloak = invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.ethereal-cloak")
+            .unwrap();
+        cloak.rfb_base_kind.as_mut().unwrap().sval = sval;
+        cloak.weight_tenths_pound = weight;
+        assert!(
+            matches!(validate_and_normalize(&mut invalid), Err(ContentError::InvalidItemWeight(id)) if id == "demo.item.ethereal-cloak")
+        );
+    }
+}
+
+#[test]
 fn source_allocation_references_are_exclusive_and_preserve_source_rows() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let mut content = artifact.content.clone();
@@ -1065,7 +1090,7 @@ fn equipment_and_ego_identities_match_source() {
             .filter_map(|item| item.rfb_base_kind)
             .filter(|kind| matches!(kind.tval, 20..=23))
             .collect::<Vec<_>>();
-        assert_eq!(base_kinds.len(), 81);
+        assert_eq!(base_kinds.len(), 86);
         assert_eq!(
             base_kinds
                 .iter()
@@ -1146,6 +1171,7 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.ball-and-chain",
                 "demo.item.broad-spear",
                 "demo.item.broad-sword",
+                "demo.item.death-scythe",
                 "demo.item.deathwreaker",
                 "demo.item.diamond-edge",
                 "demo.item.dragonlance",
@@ -1170,6 +1196,7 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.quickthorn",
                 "demo.item.runespear",
                 "demo.item.sabre",
+                "demo.item.scythe-of-slicing",
                 "demo.item.spear",
                 "demo.item.totila",
                 "demo.item.trident",

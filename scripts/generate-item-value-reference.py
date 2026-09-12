@@ -298,6 +298,10 @@ def reference_cases(flags):
                   ["KILL_EVIL","KILL_DEMON","SLAY_EVIL","BRAND_FIRE","BRAND_COLD","BRAND_MANA","VORPAL2","BLOWS","STUN"]]:
         for name in ["ring","sword"]:
             add(name+"-combined-"+str(len(cases)),bases[name],pval=3,flags=flags,toD=10)
+    swimsuit = {"tval":36,"sval":50,"weight":2,"flags":["IGNORE_ACID","IGNORE_ELEC","IGNORE_FIRE","IGNORE_COLD","AGGRAVATE"]}
+    add("swimsuit-minimum-value",swimsuit)
+    add("swimsuit-aggravation-discount",swimsuit,toD=1)
+    add("swimsuit-negative-enchantment-minimum",swimsuit,toA=-1)
     return cases
 
 
@@ -364,7 +368,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="rfb-value-") as temporary:
         exe,flags=build_harness(read,Path(temporary))
         cases=reference_cases(flags)
-        values=oracle_values(exe,[case["object"] for case in cases])
+        values=oracle_values(exe,[case["object"] for case in cases],flags)
         assert len(values)==len(cases)
         for case,value in zip(cases,values): case["expected"]=value
         output=root/"crates/rfb-core/src/game/item_value/reference.json"

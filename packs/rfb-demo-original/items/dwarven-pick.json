@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 600,
+  "descriptionKey": "item-demo-dwarven-pick-description",
+  "equipmentSlot": "tool",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "\\",
+  "id": "demo.item.dwarven-pick",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 6,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-dwarven-pick-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 155,
+    "sval": 6,
+    "tval": 20
+  },
+  "rfbValue": {
+    "flags": [
+      "SHOW_MODS",
+      "TUNNEL"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "tool",
+    "weapon"
+  ],
+  "tunnelingPval": 4,
+  "weightTenthsPound": 200
+}

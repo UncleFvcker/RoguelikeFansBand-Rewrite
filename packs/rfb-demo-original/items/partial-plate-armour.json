@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1200,
+  "descriptionKey": "item-demo-partial-plate-armour-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -3
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 45,
+  "glyph": "[",
+  "id": "demo.item.partial-plate-armour",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 22
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-partial-plate-armour-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 281,
+    "sval": 12,
+    "tval": 37
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 260
+}

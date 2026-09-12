@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1500,
+  "descriptionKey": "item-demo-ribbed-plate-armour-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -3
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "[",
+  "id": "demo.item.ribbed-plate-armour",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 28
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-ribbed-plate-armour-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 286,
+    "sval": 18,
+    "tval": 37
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 380
+}

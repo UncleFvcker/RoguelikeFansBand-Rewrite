@@ -20,6 +20,8 @@
     "defaultInitial": 2000,
     "defaultMaximum": 6000,
     "overrides": {
+      "demo.item.guisarme": { "initial": 2000, "maximum": 7000 },
+      "demo.item.scythe-of-slicing": { "initial": 2000, "maximum": 7000 },
       "demo.item.heavy-crossbow": {
         "initial": 2000,
         "maximum": 4000

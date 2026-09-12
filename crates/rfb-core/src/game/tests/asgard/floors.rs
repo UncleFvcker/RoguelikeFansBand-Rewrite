@@ -52,6 +52,14 @@ fn clear_route_monsters(game: &mut Game) {
             monster_combat::melee_status(STATUS_SLEEP, 200_000, "test.asgard.route"),
         );
     }
+    // The real arrival pulse can paralyze the player. Clear that control effect
+    // in this route preparation; combat/status consumers have their own tests.
+    game.player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PARALYSIS);
+    // Removing actors may remove their light; refresh the prepared visibility
+    // before asserting an exact save/load round trip.
+    game.reveal_current_visibility();
 }
 
 fn enter_depth(game: &mut Game, depth: u16) {
@@ -68,9 +76,12 @@ fn enter_depth(game: &mut Game, depth: u16) {
 fn traverse(game: &mut Game, terrain: &str, expected: u16) {
     clear_route_monsters(game);
     place_player_on_terrain(game, terrain);
+    let update = dispatch_next(game, GameCommand::TraverseStairs);
     assert_eq!(
-        dispatch_next(game, GameCommand::TraverseStairs).floor_id,
-        floor_id(expected)
+        update.floor_id,
+        floor_id(expected),
+        "events {:?}",
+        update.events
     );
     clear_route_monsters(game);
 }

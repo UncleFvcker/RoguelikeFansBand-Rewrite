@@ -661,7 +661,14 @@ fn discounted_item_base_value(
         .item(&item.kind_id)
         .and_then(|definition| definition.rfb_base_kind)
         .is_some_and(|base| matches!(base.tval, 16..=23 | 30..=40 | 45 | 46));
+    // This base's source value floor also applies in the older finite-stock
+    // armouries; using k_info cost78000 would bypass its swimsuit valuation.
+    let swimsuit = content
+        .item(&item.kind_id)
+        .and_then(|kind| kind.rfb_base_kind)
+        .is_some_and(|base| (base.tval, base.sval) == (36, 50));
     let base_value = if item.artifact_name.is_some()
+        || swimsuit
         || (stock::generates_equipment(shop.category) && source_equipment)
     {
         super::item_value::obj_value_real(content, item)

@@ -13,6 +13,330 @@ fn artifact_loot_context(depth: u16) -> LootContext {
     }
 }
 
+#[test]
+fn i1_a_ordinary_weapons_and_diggers_generate_and_act_after_save() {
+    fn act(game: &mut Game, digger: bool) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        if digger {
+            game.dig_terrain(Direction::North, &mut events, &mut BTreeSet::new())
+                .unwrap();
+        } else {
+            game.resolve_player_melee(0, false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+                .unwrap();
+        }
+        events
+    }
+    // RFB master a0d92b6378: k_info 100/108/152/155. Controlled depth,
+    // complete source pools and unchanged quality rolls; no natural leveling claim.
+    // object2.c::kind_is_weapon excludes diggers from unthemed categories;
+    // the two tools are obtained through the real Dwarf drop theme instead.
+    let cases = [
+        ("guisarme", 2, 7, 165, false),
+        ("scythe-of-slicing", 8, 4, 250, false),
+        ("dwarven-shovel", 1, 4, 120, true),
+        ("dwarven-pick", 1, 6, 200, true),
+    ];
+    let mut game = Game::new_with_build(471, "demo.build.high-mage-death").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.player.position = Position { x: 10, y: 10 };
+    game.terrain.fill("demo.terrain.floor".into());
+    let mut context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-85".into(),
+        depth: 85,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.i1-a-drop".into(),
+        },
+    };
+    let mut remaining = cases.iter().map(|case| case.0).collect::<BTreeSet<_>>();
+    for _ in 0..20_000 {
+        if remaining.iter().all(|slug| slug.starts_with("dwarven-")) {
+            context.table_id = "demo.loot-table.dwarf".into();
+        }
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            let slug = item.kind_id.strip_prefix("demo.item.").unwrap();
+            if item.quality != ItemQualityDto::Ordinary
+                || item.enchantments != Default::default()
+                || item.artifact_name.is_some()
+                || !remaining.remove(slug)
+            {
+                continue;
+            }
+            assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            assert!(
+                !game
+                    .item_property_knowledge
+                    .get(&id)
+                    .is_some_and(|k| k.appraised)
+            );
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "missing ordinary bases: {remaining:?}"
+    );
+    game.reveal_current_visibility();
+    let unknown = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(unknown.state_hash(), game.state_hash());
+    assert_eq!(unknown.rng, game.rng);
+    for (slug, dice, sides, weight, digger) in cases {
+        let mut equipped = unknown.clone();
+        equipped
+            .items
+            .retain(|item| item.kind_id == format!("demo.item.{slug}"));
+        let id = equipped.items[0].id.clone();
+        let profile = equipped.item_melee_profile(&equipped.items[0]).unwrap();
+        assert_eq!((profile.damage.dice, profile.damage.sides), (dice, sides));
+        assert_eq!(equipped.carried_weight_tenths_pound(), weight);
+        let mut bare = equipped.clone();
+        equipped.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        equipped
+            .equip_inventory_item(&id, Some(if digger { "tool" } else { "right-hand" }))
+            .unwrap();
+        equipped.refresh_player_resource_maxima();
+        let wall = equipped.position_in_direction(Direction::North);
+        let wall_index = equipped.index(wall).unwrap();
+        if digger {
+            assert!(bare.player_derived_stats().dig_skill.value <= 10);
+            replace_terrain(&mut bare, wall, "demo.terrain.magma-vein");
+            assert!(matches!(
+                bare.dig_terrain(Direction::North, &mut Vec::new(), &mut BTreeSet::new()),
+                Some(TerrainDigOutcome::Failed {
+                    retryable: false,
+                    ..
+                })
+            ));
+            replace_terrain(&mut equipped, wall, "demo.terrain.magma-vein");
+        } else {
+            equipped.push_generated_actor(
+                "test.i1-a-target".into(),
+                "demo.actor.blubbering-idiot",
+                Position { x: 11, y: 10 },
+            );
+            equipped.entities[0].hp = 1;
+        }
+        let seed = (0..1000)
+            .find(|seed| {
+                let mut trial = equipped.clone();
+                trial.rng = RfbRng::seeded(*seed);
+                act(&mut trial, digger);
+                if digger {
+                    trial.terrain[wall_index] != "demo.terrain.magma-vein"
+                } else {
+                    trial.entities.is_empty()
+                }
+            })
+            .expect("generated equipment must perform its actual action");
+        equipped.rng = RfbRng::seeded(seed);
+        equipped.reveal_current_visibility();
+        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        assert_eq!(act(&mut restored, digger), act(&mut equipped, digger));
+        if digger {
+            assert_ne!(equipped.terrain[wall_index], "demo.terrain.magma-vein");
+        } else {
+            assert!(equipped.entities.is_empty());
+        }
+        assert_eq!(restored.state_hash(), equipped.state_hash());
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            equipped
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+        );
+        assert_eq!(restored.rng, equipped.rng);
+    }
+}
+
+#[test]
+fn i1_d_swimsuit_generates_aggravates_and_keeps_its_value_after_save() {
+    let mut game = Game::new_with_build(498, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.player.position = Position { x: 10, y: 10 };
+    for x in 10..=11 {
+        replace_terrain(&mut game, Position { x, y: 10 }, "demo.terrain.floor");
+    }
+    let kind = "demo.item.sexy-swimsuit";
+    let table = game
+        .content
+        .loot_table("demo.loot-table.base-items")
+        .unwrap();
+    let row = table
+        .entries
+        .iter()
+        .find(|row| row.item_kind_id == kind)
+        .unwrap();
+    assert_eq!((row.min_depth, row.weight), (30, 1));
+    let context = LootContext {
+        table_id: table.id.clone(),
+        floor_id: "test.floor.depth-35".into(),
+        depth: 35,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.i1-d-drop".into(),
+        },
+    };
+    // Select a plain instance from the complete pool, retaining source rarity.
+    let item = (0..200_000)
+        .find_map(|_| {
+            game.generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+                .unwrap()
+                .into_iter()
+                .find(|item| {
+                    item.kind_id == kind
+                        && item.quality == ItemQualityDto::Ordinary
+                        && item.enchantments == Default::default()
+                        && item.curse.is_none()
+                        && item.artifact_name.is_none()
+                })
+        })
+        .expect("source swimsuit allocation should be reachable");
+    assert!(item.rolled_affixes.is_empty());
+    assert_eq!(item.intrinsic_properties, Default::default());
+    assert_eq!(
+        game.content
+            .item(kind)
+            .unwrap()
+            .rfb_value
+            .as_ref()
+            .unwrap()
+            .pval,
+        0
+    );
+    assert_eq!(
+        super::super::item_value::obj_value_real(&game.content, &item),
+        Some(1)
+    );
+    let mut enchanted = item.clone();
+    enchanted.enchantments.to_damage = 1;
+    // object3.c: 800 * 5/6, then the ordinary-item (p+1)*3/4 discount.
+    assert_eq!(
+        super::super::item_value::obj_value_real(&game.content, &enchanted),
+        Some(500)
+    );
+    let id = item.id.clone();
+    game.items.push(item);
+    game.pick_up_item_at_player(Some(&id)).unwrap();
+    assert!(
+        !game
+            .item_property_knowledge
+            .get(&id)
+            .is_some_and(|knowledge| knowledge.appraised)
+    );
+    game.reveal_current_visibility();
+    let unknown = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(unknown.state_hash(), game.state_hash());
+    assert_eq!(unknown.rng, game.rng);
+    let rng = game.rng.clone();
+    game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    assert_eq!(game.rng, rng);
+    let before = game.equipment_modifiers();
+    assert!(!game.player_aggravates_monsters());
+    game.equip_inventory_item(&id, Some("body")).unwrap();
+    assert_eq!(
+        game.equipment_modifiers(),
+        before,
+        "ordinary identity gets no six-stat bonus"
+    );
+    assert_eq!(game.carried_weight_tenths_pound(), 2);
+    assert!(game.player_aggravates_monsters());
+    for element in [
+        DamageType::Acid,
+        DamageType::Electricity,
+        DamageType::Fire,
+        DamageType::Cold,
+    ] {
+        assert_eq!(
+            game.effective_player_resistances().level(element),
+            ResistanceLevel::Normal
+        );
+    }
+    game.push_generated_actor(
+        "test.i1-d-sleeper".into(),
+        "demo.actor.small-kobold",
+        Position { x: 11, y: 10 },
+    );
+    game.apply_actor_melee_status(0, STATUS_SLEEP, 500, "test.i1-d-sleep");
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert!(restored.player_aggravates_monsters());
+    let mut events = Vec::new();
+    let mut restored_events = Vec::new();
+    game.wake_monster_for_equipped_aggravation(0, &mut events, &mut BTreeSet::new());
+    restored.wake_monster_for_equipped_aggravation(0, &mut restored_events, &mut BTreeSet::new());
+    assert!(!events.is_empty());
+    assert_eq!(events, restored_events);
+    assert!(
+        restored.entities[0]
+            .statuses
+            .iter()
+            .all(|status| status.kind_id != STATUS_SLEEP)
+    );
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.rng, game.rng);
+    assert_eq!(restored.unequip_slot("body").as_deref(), Some(kind));
+    assert!(!restored.player_aggravates_monsters());
+    restored.apply_actor_melee_status(0, STATUS_SLEEP, 500, "test.i1-d-sleep");
+    restored.wake_monster_for_equipped_aggravation(0, &mut Vec::new(), &mut BTreeSet::new());
+    assert!(
+        restored.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_SLEEP)
+    );
+
+    // The real armoury transaction uses the source value floor, not k_info's 78000.
+    restored.entities.clear();
+    restored.player.position = Position { x: 115, y: 28 };
+    restored.mark_shop_visited_at_player().unwrap();
+    let shop_id = "demo.shop.outpost-armoury";
+    let snapshot = restored.snapshot();
+    let quote = snapshot
+        .shops
+        .iter()
+        .find(|shop| shop.id == shop_id)
+        .unwrap()
+        .sell_quotes
+        .iter()
+        .find(|quote| quote.item_id == id)
+        .unwrap();
+    assert_eq!(quote.unit_price, 1);
+    let gold = restored.gold;
+    let sale = restored.sell_to_shop(shop_id, &id, 1).unwrap();
+    assert_eq!(sale.total_price, 1);
+    assert_eq!(restored.gold, gold + 1);
+    let purchase = restored.buy_from_shop(shop_id, &sale.item_id, 1).unwrap();
+    assert_eq!(purchase.unit_price, 1);
+    let bought = restored
+        .items
+        .iter()
+        .find(|item| item.kind_id == kind)
+        .unwrap();
+    assert_eq!(
+        super::super::item_value::obj_value_real(&restored.content, bought),
+        Some(1)
+    );
+    restored.reveal_current_visibility();
+    assert_eq!(
+        Game::from_save(restored.to_save()).unwrap().state_hash(),
+        restored.state_hash()
+    );
+}
+
 fn c2_throw(game: &mut Game, id: &str) -> Vec<DomainEvent> {
     let mut events = Vec::new();
     game.throw_inventory_item(
@@ -1899,6 +2223,7 @@ fn b6_soulkeeper_heals_1000_only_cures_bleeding_and_restores_cooldown() {
 fn b5_gloves_and_shields_generate_equip_and_preserve_combat_bonuses_after_save() {
     let cases = [
         ("set-of-caestus", 2, 10, 3, 5),
+        ("mithril-gauntlets", 15, 15, 1, 1),
         ("knights-shield", 10, 160, 0, 0),
         ("fingolfin", 25, 40, 10, 12),
         ("earendil-shield", 30, 160, 0, 0),
@@ -2804,7 +3129,7 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
             actor_id: "test.b3-drop".into(),
         },
     };
-    let mut remaining = BTreeSet::from(["shadow-cloak", "luthien", "tuor"]);
+    let mut remaining = BTreeSet::from(["shadow-cloak", "ethereal-cloak", "luthien", "tuor"]);
     // Full formal pool, quality and rarity draws; select an unmodified base.
     for _ in 0..20_000 {
         for item in game
@@ -2813,7 +3138,7 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
         {
             let slug = item.kind_id.strip_prefix("demo.item.").unwrap();
             if !remaining.contains(slug)
-                || (slug == "shadow-cloak"
+                || (matches!(slug, "shadow-cloak" | "ethereal-cloak")
                     && (item.quality != ItemQualityDto::Ordinary
                         || item.enchantments != Default::default()
                         || item.artifact_name.is_some()))
@@ -2824,7 +3149,7 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
             assert!(item.curse.is_none());
             assert_eq!(
                 item.rolled_affixes.len(),
-                usize::from(slug != "shadow-cloak")
+                usize::from(!matches!(slug, "shadow-cloak" | "ethereal-cloak"))
             );
             assert_eq!(item.activation.is_some(), slug == "luthien");
             let id = item.id.clone();
@@ -2846,6 +3171,7 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
         }
     }
     assert!(!remaining.contains("shadow-cloak"));
+    assert!(!remaining.contains("ethereal-cloak"));
     // Condition rare artifact selection on the base reached above, retaining
     // source depth/rarity gates and the complete fixed-artifact candidate set.
     for slug in remaining {
@@ -2871,7 +3197,12 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
     let unknown = Game::from_save(game.to_save()).unwrap();
     assert_eq!(unknown.state_hash(), game.state_hash());
     assert_eq!(unknown.rng, game.rng);
-    for (slug, defense, stealth) in [("shadow-cloak", 10, 0), ("luthien", 26, 2), ("tuor", 18, 4)] {
+    for (slug, defense, stealth) in [
+        ("shadow-cloak", 10, 0),
+        ("ethereal-cloak", 10, 0),
+        ("luthien", 26, 2),
+        ("tuor", 18, 4),
+    ] {
         let mut equipped = unknown.clone();
         let kind = format!("demo.item.{slug}");
         equipped.items.retain(|item| item.kind_id == kind);
@@ -2882,7 +3213,10 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
         assert_eq!(equipped.rng, rng);
         let before = equipped.player_derived_stats().armor_class.value;
         equipped.equip_inventory_item(&id, None).unwrap();
-        assert_eq!(equipped.carried_weight_tenths_pound(), 5);
+        assert_eq!(
+            equipped.carried_weight_tenths_pound(),
+            if slug == "ethereal-cloak" { 0 } else { 5 }
+        );
         assert_eq!(
             equipped.player_derived_stats().armor_class.value,
             before + defense * 10
@@ -2891,8 +3225,28 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
         for element in [DamageType::Light, DamageType::Dark] {
             assert_eq!(
                 equipped.effective_player_resistances().level(element),
-                ResistanceLevel::Resistant
+                if slug == "ethereal-cloak" {
+                    ResistanceLevel::Normal
+                } else {
+                    ResistanceLevel::Resistant
+                }
             );
+        }
+        if slug == "ethereal-cloak" {
+            let mut corroded = equipped.clone();
+            assert!(corroded.corrode_player_armor(&mut Vec::new()));
+            assert_eq!(corroded.items[0].enchantments.to_armor, 0);
+            for element in [
+                DamageType::Acid,
+                DamageType::Electricity,
+                DamageType::Fire,
+                DamageType::Cold,
+            ] {
+                assert_eq!(
+                    equipped.effective_player_resistances().level(element),
+                    ResistanceLevel::Normal
+                );
+            }
         }
         if let Some(affix) = rolled.first() {
             let (&element, _) = affix.properties.resistances.iter().next().unwrap();
@@ -2947,7 +3301,7 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
                 .unwrap()
         );
         assert_eq!(restored.rng, equipped.rng);
-        if slug != "shadow-cloak" {
+        if !matches!(slug, "shadow-cloak" | "ethereal-cloak") {
             assert!(restored.generated_artifact_ids.contains(&kind));
             assert_ne!(
                 restored.roll_fixed_artifact_kind_id(
@@ -4313,6 +4667,9 @@ fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
     for (depth, indices) in [
         (35, &[272, 274, 276, 277, 278, 279][..]),
         (55, &[283, 284, 285, 287][..]),
+        // I1-B extends the existing armor flow to head/shield slots and the
+        // remaining plain body armors. RFB master a0d92b6378, k_info records.
+        (65, &[219, 241, 259, 280, 281, 286, 288][..]),
     ] {
         let mut game = Game::new_with_build(409, "demo.build.warrior").unwrap();
         clear_monsters(&mut game);
@@ -4329,7 +4686,7 @@ fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
         // Controlled depth and repeated drops; the formal pool, weights, quality
         // rolls and materialization remain intact. This is not a leveling test.
         let mut remaining = indices.iter().copied().collect::<BTreeSet<_>>();
-        for _ in 0..10_000 {
+        for _ in 0..30_000 {
             let generated = game
                 .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
                 .unwrap();
@@ -4338,10 +4695,11 @@ fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
                 let Some(base) = definition.rfb_base_kind else {
                     continue;
                 };
-                // Ordinary quality can still carry negative enchantments.
-                // Check the unenchanted base's own AC and hit penalty here.
+                // Ordinary quality can still carry negative enchantments or curses.
+                // Use a plain removable instance for the equip/unequip comparison.
                 if item.quality != ItemQualityDto::Ordinary
                     || item.enchantments != Default::default()
+                    || item.curse.is_some()
                     || !remaining.remove(&base.source_index)
                 {
                     continue;
@@ -4349,20 +4707,56 @@ fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
                 let defense = definition.modifiers.defense;
                 let hit = definition.equipment_bonuses.melee_skill;
                 let weight = u32::from(definition.weight_tenths_pound);
+                let slot = match definition.equipment_slot.as_deref() {
+                    Some("head") => "head",
+                    Some("shield") => "left-hand",
+                    Some("body") => "body",
+                    other => panic!("unexpected armor slot: {other:?}"),
+                };
+                let acid_immune = definition
+                    .elemental_destruction_immunities
+                    .contains(&rfb_content::ItemDestructionElement::Acid);
                 let baseline = game.player_derived_stats();
                 let id = item.id.clone();
                 game.items.push(item);
                 game.pick_up_item_at_player(Some(&id)).unwrap();
                 assert_eq!(game.carried_weight_tenths_pound(), weight);
+                game.reveal_current_visibility();
+                let unknown = Game::from_save(game.to_save()).unwrap();
+                assert_eq!(unknown.state_hash(), game.state_hash());
+                assert!(
+                    !unknown
+                        .item_property_knowledge
+                        .get(&id)
+                        .is_some_and(|k| k.appraised)
+                );
                 game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
                 assert!(game.item_property_knowledge[&id].identified);
-                game.equip_inventory_item(&id, Some("body")).unwrap();
+                game.equip_inventory_item(&id, Some(slot)).unwrap();
                 let equipped = game.player_derived_stats();
                 assert_eq!(
                     equipped.armor_class.value - baseline.armor_class.value,
                     defense * 10
                 );
                 assert_eq!(equipped.melee_skill.value - baseline.melee_skill.value, hit);
+                assert_eq!(equipped.ranged_skill.value, baseline.ranged_skill.value);
+                for element in [
+                    DamageType::Acid,
+                    DamageType::Electricity,
+                    DamageType::Fire,
+                    DamageType::Cold,
+                ] {
+                    assert_eq!(
+                        game.effective_player_resistances().level(element),
+                        ResistanceLevel::Normal
+                    );
+                }
+                let mut corroded = game.clone();
+                assert!(corroded.corrode_player_armor(&mut Vec::new()));
+                assert_eq!(
+                    corroded.items[0].enchantments.to_armor,
+                    if acid_immune { 0 } else { -1 }
+                );
                 game.reveal_current_visibility();
                 let mut restored = Game::from_save(game.to_save()).unwrap();
                 assert_eq!(restored.state_hash(), game.state_hash());
@@ -4380,6 +4774,15 @@ fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
                     .unwrap();
                 assert_eq!(next, replay);
                 assert_eq!(restored.rng, game.rng);
+                assert!(game.unequip_slot(slot).is_some());
+                assert_eq!(
+                    game.player_derived_stats().armor_class.value,
+                    baseline.armor_class.value
+                );
+                assert_eq!(
+                    game.player_derived_stats().melee_skill.value,
+                    baseline.melee_skill.value
+                );
                 game.items.clear();
             }
             if remaining.is_empty() {

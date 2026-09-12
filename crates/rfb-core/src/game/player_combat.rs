@@ -1611,7 +1611,7 @@ impl Game {
         } else {
             self.take_inventory_item(item_id)?
         };
-        let Some(mut thrown) = thrown else {
+        let Some(thrown) = thrown else {
             events.push(DomainEvent::ItemThrowUnavailable);
             return Ok(());
         };
@@ -1621,7 +1621,7 @@ impl Game {
             .projectile_path(&TargetSelection::Direction { direction }, range)
             .expect("direction targeting must always produce a path");
         let (trace, target_index) = self.trace_projectile_path(path);
-        let mut landing = trace.landing;
+        let landing = trace.landing;
         let (comes_back, caught) = if boomerang {
             let chance = 20 + self.player_dexterity_to_hit() + (self.rng.bounded(30) + 1) as i32;
             let comes_back = chance > 30 && self.rng.bounded(100) != 0;
@@ -1804,10 +1804,36 @@ impl Game {
                 trace,
             });
         }
-        if boomerang {
+        self.finish_item_throw(
+            thrown,
+            landing,
+            boomerang.then_some((comes_back, caught)),
+            events,
+            changed,
+        );
+        self.apply_easy_tiring_fatigue(STANDARD_ACTION_COST);
+        Ok(())
+    }
+
+    pub(super) fn finish_item_throw(
+        &mut self,
+        mut thrown: ItemInstance,
+        mut landing: Position,
+        returning: Option<(bool, bool)>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        if let Some((comes_back, caught)) = returning {
+            // py_throw.c::_return tests one_in_(2) before fail_catch, and only
+            // for an actual return. This does not grant the scythe a return ability.
+            if comes_back
+                && self.item_is_death_scythe(&thrown)
+                && (self.rng.bounded(2) == 0 || !caught)
+            {
+                self.resolve_death_scythe_backlash(&thrown, None, events);
+            }
             if caught {
-                self.apply_easy_tiring_fatigue(STANDARD_ACTION_COST);
-                return Ok(());
+                return;
             }
             self.items.retain(|item| item.id != thrown.id);
             if comes_back {
@@ -1834,8 +1860,6 @@ impl Game {
                 rule_line: None,
             });
         }
-        self.apply_easy_tiring_fatigue(STANDARD_ACTION_COST);
-        Ok(())
     }
 
     fn draconian_strike_damage_multiplier(
@@ -2174,6 +2198,19 @@ impl Game {
                 };
                 if !hit {
                     events.push(profile.miss_event(&target_kind));
+                    if let Some(item) = profile
+                        .source_item_id
+                        .as_ref()
+                        .and_then(|id| self.items.iter().find(|item| &item.id == id))
+                        .filter(|item| self.item_is_death_scythe(item))
+                        .cloned()
+                        && self.rng.bounded(3) == 0
+                    {
+                        self.resolve_death_scythe_backlash(&item, Some(&profile), events);
+                        if self.player_is_dead() {
+                            break 'profiles;
+                        }
+                    }
                     self.check_human_dexterity_sprain(
                         if profile.source_item_id.is_some() {
                             250
@@ -2290,9 +2327,13 @@ impl Game {
                 } else {
                     self.scale_player_melee_damage(rolled_damage)
                 };
-                let pierces_invulnerability = profile.source_item_id.is_some()
+                let berserker_pierces = profile.source_item_id.is_some()
                     && self.player_is_berserker()
                     && self.rng.bounded(2) == 0;
+                let pierces_invulnerability = berserker_pierces
+                    || source_weapon_index.is_some_and(|item_index| {
+                        self.item_is_death_scythe(&self.items[item_index])
+                    });
                 let damage_type = profile.damage_type;
                 let resistance = self.entities[index].resistances.level(damage_type);
                 let damage =
@@ -2482,6 +2523,21 @@ impl Game {
                 }
                 touched_surviving_target = true;
                 self.resolve_confusing_strike(index, &definition, events);
+                // cmd1.c returns on a slain target before this Duelist branch.
+                if self.player_is_duelist()
+                    && let Some(item) = profile
+                        .source_item_id
+                        .as_ref()
+                        .and_then(|id| self.items.iter().find(|item| &item.id == id))
+                        .filter(|item| self.item_is_death_scythe(item))
+                        .cloned()
+                    && self.rng.bounded(3) != 0
+                {
+                    self.resolve_death_scythe_backlash(&item, Some(&profile), events);
+                    if self.player_is_dead() {
+                        break 'profiles;
+                    }
+                }
             }
             if let Some(source_item_id) = &profile.source_item_id {
                 self.resolve_bloodrip_backlash(source_item_id, events);

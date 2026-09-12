@@ -1776,6 +1776,8 @@ mod tests {
             "cloak",
             "leather-gloves",
             "pair-of-metal-shod-boots",
+            "ethereal-cloak",
+            "mithril-gauntlets",
         ] {
             let item = game.content.item(&format!("demo.item.{id}")).unwrap();
             for seed in 1..=6000 {

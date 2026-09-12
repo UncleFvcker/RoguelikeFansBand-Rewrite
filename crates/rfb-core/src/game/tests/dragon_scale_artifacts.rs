@@ -469,24 +469,39 @@ fn c4b_bladeturner_ordinary_acquisition_ball_then_shared_boosted_duration_and_sa
         },
     };
     let base = "demo.item.power-dragon-scale-mail";
+    let mut acquired_artifact = None;
     (0..100_000)
         .find_map(|_| {
-            game.generate_loot_instances(&context, ItemLocation::Inventory)
-                .unwrap()
+            let items = game
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap();
+            // The full-pool search may roll the unique before its plain base.
+            // Keep that real instance instead of discarding it and retrying an
+            // already-consumed unique gate.
+            for item in &items {
+                if item.kind_id == "demo.item.bladeturner" {
+                    acquired_artifact = Some(item.clone());
+                }
+            }
+            items
                 .into_iter()
                 .find(|item| item.kind_id == base && item.artifact_name.is_none())
         })
         .expect("power dragon scales must be reachable through the full ordinary pool");
-    let kind = (0..20_000)
-        .find_map(|_| {
-            game.roll_fixed_artifact_kind_id(&context, Some(base), false)
-                .filter(|kind| kind == "demo.item.bladeturner")
-        })
-        .expect("the observed base must reach Bladeturner with all artifact gates intact");
-    let draft = game.fixed_item_draft(&context, kind);
-    let item = game
-        .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
-        .unwrap();
+    let item = if let Some(mut item) = acquired_artifact {
+        item.location = ItemLocation::Ground(game.player.position);
+        item
+    } else {
+        let kind = (0..20_000)
+            .find_map(|_| {
+                game.roll_fixed_artifact_kind_id(&context, Some(base), false)
+                    .filter(|kind| kind == "demo.item.bladeturner")
+            })
+            .expect("the observed base must reach Bladeturner with all artifact gates intact");
+        let draft = game.fixed_item_draft(&context, kind);
+        game.commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+            .unwrap()
+    };
     let id = item.id.clone();
     game.items.push(item);
     game.pick_up_item_at_player(Some(&id)).unwrap();

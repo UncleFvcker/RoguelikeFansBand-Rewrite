@@ -4689,9 +4689,10 @@
           "base-harp-bard"
         ],
         "entry": "Natural floor/monster allocation and existing Acquirement service; ordinary modes retain non-tailored kinds.",
-        "reason": "All 103 default builds resolve to the human standard body; race selection supplies real body slots and Tomte birth-headgear rules. Source object_is_favorite defaults to all melee weapons for Warrior, Berserker, Sniper, High Mage, Mage, Paladin and Mindcrafter; Archer and Cavalry have explicit filters. Source device-class membership is independent of ability to use devices. Completed-item rejection follows caster glove encumbrance, not general usability. Duelist uses source base weapon proficiency caps above Beginner for melee favorites; tailored body armor has the fixed 200 weight limit and shields are excluded. The ordinary pool remains unchanged. Mage, High Mage and Magic-Eater are device classes; Magic-Eater adds the source first 1/5 Tailored preference before the shared 1/7. Mage's current secondary realm, not its birth Build, participates in book eligibility and needs-book; changing realms preserves discovery history. Ranger excludes ordinary melee favorites without an Archer/Sniper 1/5 bow draw or device preference. Current primary/secondary books and found counts drive the shared 1/10 needs-book branch; changes preserve discovery counts. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. Warrior-Mage: Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. Step-7 branch acceptance is recorded in docs/warrior-mage-source-audit.md; integrated regression results are recorded in docs/status.md.",
+        "reason": "All 103 default builds resolve to the human standard body; race selection supplies real body slots and Tomte birth-headgear rules. Source object_is_favorite defaults to all melee weapons for Warrior, Berserker, Sniper, High Mage, Mage, Paladin and Mindcrafter; Archer and Cavalry have explicit filters. Source device-class membership is independent of ability to use devices. Completed-item rejection follows caster glove encumbrance, not general usability. Duelist uses source base weapon proficiency caps above Beginner for melee favorites; tailored body armor has the fixed 200 weight limit and shields are excluded. The ordinary pool retains all eligible classes. Ordinary-equipment completion adds kinds100/108/152/155/219/241/259/280/281/286/288/198/231/260/110 with the original allocation weights and existing class/theme predicates. Dwarf-themed diggers and Mithril Plate Mail, riding-compatible scythes, caster glove/armor weight and source proficiency exceptions use the shared consumers. Death Scythe is not a Duelist favorite (source cap0); Warrior starts at2000, Cavalry cap8000. It skips natural weapon enchantment/Ego/random-artifact generation and Crafting, while ordinary enchantment and Artifact Creation remain separately eligible. Current Duelist hit backlash and Tonberry/mimic self-damage are covered by the dedicated core tests; no return ability is granted by this base. Mage, High Mage and Magic-Eater are device classes; Magic-Eater adds the source first 1/5 Tailored preference before the shared 1/7. Mage's current secondary realm, not its birth Build, participates in book eligibility and needs-book; changing realms preserves discovery history. Ranger excludes ordinary melee favorites without an Archer/Sniper 1/5 bow draw or device preference. Current primary/secondary books and found counts drive the shared 1/10 needs-book branch; changes preserve discovery counts. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. Warrior-Mage: Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. Step-7 branch acceptance is recorded in docs/warrior-mage-source-audit.md; integrated regression results are recorded in docs/status.md.",
         "sourceEvidence": [
           "src/obj_kind.c:97-162 object_is_favorite",
+          "master a0d92b6378: k_info kinds100/108/152/155/219/241/259/280/281/286/288/198/231/260/110; s_info W:3:50; object2.c:2304-2307,2376-2387; cmd1.c death_scythe_miss; py_throw.c _return",
           "src/autopick.c:848-868 object_is_icky",
           "src/object2.c:3747-3752 completed tailored rejection",
           "src/equip.c:372 slot compatibility",
@@ -4702,6 +4703,7 @@
         ],
         "implementation": [
           "crates/rfb-core/src/game/loot/allocation.rs",
+          "crates/rfb-core/src/game/item_combat.rs#resolve_death_scythe_backlash",
           "crates/rfb-core/src/game/loot.rs#generate_loot_draft_attempt",
           "crates/rfb-core/src/game/player_abilities.rs#item_is_icky",
           "crates/rfb-core/src/game/item_knowledge.rs",
@@ -4710,6 +4712,9 @@
           "crates/rfb-core/src/game/spell_realms.rs"
         ],
         "tests": [
+          "crates/rfb-core/src/game/tests/death_scythe.rs",
+          "crates/rfb-core/src/game/tests/items.rs#i1_a_ordinary_weapons_and_diggers_generate_and_act_after_save",
+          "crates/rfb-core/src/game/tests/items.rs#i1_d_swimsuit_generates_aggravates_and_keeps_its_value_after_save",
           "crates/rfb-core/src/game/loot/allocation.rs#tailored_uses_playable_class_equipment_realms_and_birth_race",
           "crates/rfb-core/src/game/loot/allocation.rs#tailored_preference_draws_follow_class_then_book_then_device",
           "crates/rfb-core/src/game/tests/book_discovery.rs",
@@ -7205,6 +7210,13 @@
       "sval": 1
     },
     {
+      "itemId": "demo.item.guisarme",
+      "status": "source-type-verified",
+      "sourceIndex": 100,
+      "sval": 16,
+      "tval": 22
+    },
+    {
       "itemId": "demo.item.naginata",
       "status": "source-type-verified",
       "sourceIndex": 93,
@@ -7345,6 +7357,13 @@
       "tval": 34
     },
     {
+      "itemId": "demo.item.sexy-swimsuit",
+      "status": "source-type-verified",
+      "sourceIndex": 260,
+      "sval": 50,
+      "tval": 36
+    },
+    {
       "itemId": "demo.item.augmented-chain-mail",
       "status": "source-type-verified",
       "sourceIndex": 275,
@@ -7378,6 +7397,13 @@
       "sourceIndex": 105,
       "sval": 26,
       "tval": 22
+    },
+    {
+      "itemId": "demo.item.stone-and-hide-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 259,
+      "sval": 15,
+      "tval": 36
     },
     {
       "itemId": "demo.item.bar-chain-mail",
@@ -7457,6 +7483,13 @@
       "tval": 22
     },
     {
+      "itemId": "demo.item.dwarven-shovel",
+      "status": "source-type-verified",
+      "sourceIndex": 152,
+      "sval": 3,
+      "tval": 20
+    },
+    {
       "itemId": "demo.item.heavy-crossbow",
       "status": "source-type-verified",
       "sourceIndex": 164,
@@ -7511,6 +7544,13 @@
       "sourceIndex": 258,
       "sval": 13,
       "tval": 36
+    },
+    {
+      "itemId": "demo.item.do-maru",
+      "status": "source-type-verified",
+      "sourceIndex": 280,
+      "sval": 11,
+      "tval": 37
     },
     {
       "itemId": "demo.item.black-dragon-scale-mail",
@@ -7576,6 +7616,13 @@
       "tval": 21
     },
     {
+      "itemId": "demo.item.partial-plate-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 281,
+      "sval": 12,
+      "tval": 37
+    },
+    {
       "itemId": "demo.item.metal-lamellar-armour",
       "status": "source-type-verified",
       "sourceIndex": 282,
@@ -7604,6 +7651,13 @@
       "sval": 5
     },
     {
+      "itemId": "demo.item.dwarven-pick",
+      "status": "source-type-verified",
+      "sourceIndex": 155,
+      "sval": 6,
+      "tval": 20
+    },
+    {
       "itemId": "demo.item.mattock",
       "status": "source-type-verified",
       "sourceIndex": 156,
@@ -7630,6 +7684,34 @@
       "sourceIndex": 217,
       "sval": 7,
       "tval": 32
+    },
+    {
+      "itemId": "demo.item.kabuto",
+      "status": "source-type-verified",
+      "sourceIndex": 219,
+      "sval": 9,
+      "tval": 32
+    },
+    {
+      "itemId": "demo.item.mithril-gauntlets",
+      "status": "source-type-verified",
+      "sourceIndex": 231,
+      "sval": 5,
+      "tval": 31
+    },
+    {
+      "itemId": "demo.item.mithril-shield",
+      "status": "source-type-verified",
+      "sourceIndex": 241,
+      "sval": 8,
+      "tval": 34
+    },
+    {
+      "itemId": "demo.item.ribbed-plate-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 286,
+      "sval": 18,
+      "tval": 37
     },
     {
       "itemId": "demo.item.pseudo-dragon-scale-mail",
@@ -7681,6 +7763,13 @@
       "tval": 37
     },
     {
+      "itemId": "demo.item.scythe-of-slicing",
+      "status": "source-type-verified",
+      "sourceIndex": 108,
+      "sval": 30,
+      "tval": 22
+    },
+    {
       "itemId": "demo.item.mithril-bolt",
       "status": "source-type-verified",
       "sourceIndex": 187,
@@ -7723,6 +7812,13 @@
       "sval": 6
     },
     {
+      "itemId": "demo.item.mithril-plate-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 288,
+      "sval": 25,
+      "tval": 37
+    },
+    {
       "itemId": "demo.item.law-dragon-scale-mail",
       "status": "source-type-verified",
       "sourceIndex": 299,
@@ -7751,11 +7847,25 @@
       "tval": 23
     },
     {
+      "itemId": "demo.item.death-scythe",
+      "status": "source-type-verified",
+      "sourceIndex": 110,
+      "sval": 50,
+      "tval": 22
+    },
+    {
       "itemId": "demo.item.seeker-arrow",
       "status": "source-type-verified",
       "sourceIndex": 178,
       "sval": 4,
       "tval": 17
+    },
+    {
+      "itemId": "demo.item.ethereal-cloak",
+      "status": "source-type-verified",
+      "sourceIndex": 198,
+      "sval": 5,
+      "tval": 35
     },
     {
       "itemId": "demo.item.mirror-shield",

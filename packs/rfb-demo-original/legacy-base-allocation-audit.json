@@ -1,6 +1,6 @@
 {
   "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits",
-  "allocationRowCount": 409,
+  "allocationRowCount": 424,
   "explicitItems": [
     {
       "itemId": "demo.item.aegir",
@@ -141,6 +141,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.bladeturner",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.bloodrip",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -220,6 +226,12 @@
     },
     {
       "itemId": "demo.item.crisdurian",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.darnya",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -400,6 +412,12 @@
     },
     {
       "itemId": "demo.item.frost-ball-wand",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.frost-bolt-wand",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -597,6 +615,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.midnight-dragon-scale-mail",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.mjollnir",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -646,6 +670,12 @@
     },
     {
       "itemId": "demo.item.nyoi-bou",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.one-ring",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -783,6 +813,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.seiryu",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.set-of-gauntlets-paurnimmen",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -832,6 +868,12 @@
     },
     {
       "itemId": "demo.item.soulsword",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.spectral-dragon-scale-mail",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -892,6 +934,12 @@
     },
     {
       "itemId": "demo.item.thengel",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.thingol",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -2523,12 +2571,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.guisarme",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 100,
       "sourceName": "Guisarme",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 16,
       "tval": 22
     },
@@ -2675,12 +2723,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.scythe-of-slicing",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 108,
       "sourceName": "Scythe of Slicing",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 30,
       "tval": 22
     },
@@ -2706,12 +2754,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.death-scythe",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 110,
       "sourceName": "Death Scythe",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 50,
       "tval": 22
     },
@@ -3153,12 +3201,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.dwarven-shovel",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 152,
       "sourceName": "Dwarven Shovel",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 3,
       "tval": 20
     },
@@ -3210,12 +3258,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.dwarven-pick",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 155,
       "sourceName": "Dwarven Pick",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 6,
       "tval": 20
     },
@@ -3738,12 +3786,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.ethereal-cloak",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 198,
       "sourceName": "Ethereal Cloak",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 5,
       "tval": 35
     },
@@ -4023,12 +4071,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.kabuto",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 219,
       "sourceName": "Kabuto",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 9,
       "tval": 32
     },
@@ -4231,12 +4279,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.mithril-gauntlets",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 231,
       "sourceName": "Set of Mithril Gauntlets",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 5,
       "tval": 31
     },
@@ -4414,12 +4462,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.mithril-shield",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 241,
       "sourceName": "Mithril Shield",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 8,
       "tval": 34
     },
@@ -4748,12 +4796,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.stone-and-hide-armour",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 259,
       "sourceName": "Stone and Hide Armour",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 15,
       "tval": 36
     },
@@ -4767,12 +4815,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.sexy-swimsuit",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 260,
       "sourceName": "Sexy Swimsuit",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 50,
       "tval": 36
     },
@@ -5007,12 +5055,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.do-maru",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 280,
       "sourceName": "Do-maru",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 11,
       "tval": 37
     },
@@ -5026,12 +5074,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.partial-plate-armour",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 281,
       "sourceName": "Partial Plate Armour",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 12,
       "tval": 37
     },
@@ -5121,12 +5169,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.ribbed-plate-armour",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 286,
       "sourceName": "Ribbed Plate Armour",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 18,
       "tval": 37
     },
@@ -5159,12 +5207,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.mithril-plate-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 288,
       "sourceName": "Mithril Plate Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 25,
       "tval": 37
     },

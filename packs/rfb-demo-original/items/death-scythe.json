@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 10000,
+  "brands": ["acid", "cold", "electricity", "fire", "poison"],
+  "descriptionKey": "item-demo-death-scythe-description",
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "elementalDestructionVulnerabilities": ["acid", "fire"],
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 70,
+  "glyph": "/",
+  "id": "demo.item.death-scythe",
+  "initialCurse": "heavy",
+  "maxStack": 1,
+  "meleeProfile": {"attacks": 1, "damageDice": 10, "damageSides": 10, "toDamage": 30, "toHit": -50},
+  "mogaminatorRare": true,
+  "nameKey": "item-demo-death-scythe-name",
+  "passives": ["vampiric"],
+  "resistsEnchantment": false,
+  "rfbBaseKind": {"sourceIndex": 110, "sval": 50, "tval": 22},
+  "rfbValue": {
+    "flags": ["SHOW_MODS", "VORPAL", "CURSED", "HEAVY_CURSE", "SLAY_DRAGON", "SLAY_ANIMAL", "SLAY_EVIL", "SLAY_HUMAN", "BRAND_VAMP", "SLAY_UNDEAD", "SLAY_DEMON", "SLAY_TROLL", "SLAY_GIANT", "SLAY_ORC", "BRAND_FIRE", "BRAND_ELEC", "BRAND_COLD", "BRAND_ACID", "BRAND_POIS", "IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD", "RIDING"],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "ridingWeaponKind": "compatible",
+  "slays": {"animal": "slay", "demon": "slay", "dragon": "slay", "evil": "slay", "giant": "slay", "human": "slay", "orc": "slay", "troll": "slay", "undead": "slay"},
+  "tags": ["equipment", "rfb-compatibility", "weapon"],
+  "vorpal": true,
+  "weightTenthsPound": 350
+}

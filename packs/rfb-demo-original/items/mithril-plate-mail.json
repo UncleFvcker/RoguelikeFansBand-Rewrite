@@ -1,0 +1,50 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 15000,
+  "descriptionKey": "item-demo-mithril-plate-mail-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -3
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "glyph": "[",
+  "id": "demo.item.mithril-plate-mail",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 40
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-mithril-plate-mail-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 288,
+    "sval": 25,
+    "tval": 37
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IGNORE_COLD"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 300
+}

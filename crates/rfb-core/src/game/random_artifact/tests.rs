@@ -232,12 +232,37 @@ fn random_artifact_factory_covers_slots_and_preserves_item_identity_and_save_int
         })
         .collect::<std::collections::BTreeMap<_, _>>()
         .into_iter()
+        .chain([
+            (35, "demo.item.ethereal-cloak".into()),
+            (31, "demo.item.mithril-gauntlets".into()),
+        ])
         .collect();
     let mut seen = BTreeSet::new();
     for (slot, kind) in kinds {
         give_inventory_item(&mut game, "test.generated-artifact", &kind);
         let original = game.items.pop().unwrap();
         let before = original.clone();
+        if matches!(
+            kind.as_str(),
+            "demo.item.ethereal-cloak" | "demo.item.mithril-gauntlets"
+        ) {
+            let object =
+                crate::game::item_value::instance::value_object(&game.content, &original).unwrap();
+            assert_eq!(
+                (
+                    object.ac,
+                    object.to_a,
+                    object.to_h,
+                    object.to_d,
+                    object.weight
+                ),
+                if slot == 35 {
+                    (0, 10, 0, 0, 0)
+                } else {
+                    (5, 10, 1, 1, 15)
+                }
+            );
+        }
         let mut quarks = BTreeSet::new();
         let (item, attempts) = materialize(
             &game.content,
@@ -256,6 +281,9 @@ fn random_artifact_factory_covers_slots_and_preserves_item_identity_and_save_int
         )
         .unwrap();
         assert!((1..=1001).contains(&attempts));
+        if kind == "demo.item.ethereal-cloak" {
+            assert_eq!(game.item_instance_weight(&item), 0);
+        }
         assert_eq!(original, before);
         assert_eq!(item.id, original.id);
         assert_eq!(item.location, original.location);

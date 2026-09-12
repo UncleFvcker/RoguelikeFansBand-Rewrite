@@ -179,9 +179,15 @@ fn dark_cave_disaster_area_real_entries_all_depths_rewards_and_return() {
             choose_human_talent_if_pending(&mut game);
             assert!(game.dungeon_states[&dungeon].guardian_defeated);
             assert_eq!(game.snapshot().campaign.conquered_dungeons, 1);
-            let reward = game.items.iter_mut().find(|i| i.kind_id == book).unwrap();
+            // Ordinary floor/death loot may independently contain this book.
+            // The isolated guardian reward test below covers its one-shot grant.
+            let reward = game
+                .items
+                .iter_mut()
+                .find(|i| i.kind_id == book && matches!(i.location, ItemLocation::Ground(_)))
+                .unwrap();
+            let reward_id = reward.id.clone();
             reward.location = ItemLocation::Inventory;
-            assert_eq!(game.items.iter().filter(|i| i.kind_id == book).count(), 1);
             clear_monsters(&mut game);
             let hash = game.state_hash();
             game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
@@ -230,7 +236,13 @@ fn dark_cave_disaster_area_real_entries_all_depths_rewards_and_return() {
             dispatch_next(&mut game, GameCommand::Wait);
             assert_eq!(game.current_floor_id, floor_id(bottom));
             assert!(game.entities.iter().all(|a| a.id != boss));
-            assert_eq!(game.items.iter().filter(|i| i.kind_id == book).count(), 1);
+            assert_eq!(
+                game.items
+                    .iter()
+                    .filter(|i| i.id == reward_id && i.kind_id == book)
+                    .count(),
+                1
+            );
             clear_monsters(&mut game);
             game.start_recall(0);
             dispatch_next(&mut game, GameCommand::Wait);
