@@ -1073,6 +1073,10 @@ h1 {
   font-family: "Cascadia Mono", Consolas, monospace;
 }
 
+.message-item-one-ring-inscription-read {
+  white-space: pre-line;
+}
+
 .message-combat-hit,
 .message-combat-slay {
   color: #ffc18d;

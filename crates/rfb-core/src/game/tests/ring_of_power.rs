@@ -4,6 +4,7 @@ use super::*;
 use crate::stats::AttributeSet;
 
 const KIND: &str = "demo.item.darnya";
+const POWER: &str = "demo.item.one-ring";
 const START: Position = Position { x: 99, y: 33 };
 const EAST: TargetSelection = TargetSelection::Direction {
     direction: Direction::East,
@@ -38,8 +39,8 @@ fn prepare(build: &str) -> Game {
     game
 }
 
-fn give_darnya(game: &mut Game) -> String {
-    let draft = game.fixed_item_draft(&context(), KIND.into());
+fn give_ring(game: &mut Game, kind: &str) -> String {
+    let draft = game.fixed_item_draft(&context(), kind.into());
     let item = game
         .commit_generated_item_draft(draft, ItemLocation::Ground(START))
         .unwrap();
@@ -74,6 +75,32 @@ fn charge(game: &Game, id: &str) -> u32 {
 }
 
 #[test]
+#[ignore = "prepares a bound One Ring for the focused standalone reading scenario"]
+fn export_c5b_desktop_save() {
+    let input = std::path::PathBuf::from(std::env::var("C5B_DESKTOP_INPUT").unwrap());
+    let (header, payload) = rfb_save::decode(&std::fs::read(&input).unwrap()).unwrap();
+    assert!(header.museum_binding.is_some());
+    let mut game = Game::from_save(payload).unwrap();
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.player.position = START;
+    replace_terrain(&mut game, START, "demo.terrain.floor");
+    give_ring(&mut game, POWER);
+    game.items[0].charges.as_mut().unwrap().current = 0;
+    game.items[0].device_recovery_progress = 123;
+    game.reveal_current_visibility();
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(game.state_hash(), restored.state_hash());
+    std::fs::write(input.with_file_name("prepared.hash"), game.state_hash()).unwrap();
+    std::fs::write(
+        input.with_file_name("prepared.rfbsave"),
+        rfb_save::encode(&header, &game.to_save()).unwrap(),
+    )
+    .unwrap();
+}
+
+#[test]
 fn c5a_darnya_ordinary_generation_permanent_curse_cancel_failure_and_cooldown_survive_save() {
     let mut game = prepare("demo.build.warrior");
     let mut probe = game.clone();
@@ -87,10 +114,13 @@ fn c5a_darnya_ordinary_generation_permanent_curse_cancel_failure_and_cooldown_su
         })
         .expect("the complete ordinary pool must produce the ring base");
     let kind = (0..10_000)
-        .find_map(|_| game.roll_fixed_artifact_kind_id(&context(), Some("demo.item.ring"), false))
+        .find_map(|_| {
+            game.roll_fixed_artifact_kind_id(&context(), Some("demo.item.ring"), false)
+                .filter(|kind| kind == KIND)
+        })
         .expect("the observed base must reach Darnya through level, rarity and unique gates");
     assert_eq!(kind, KIND);
-    let id = give_darnya(&mut game);
+    let id = give_ring(&mut game, KIND);
     assert_eq!(
         game.visible_item_modifiers(&game.items[0]),
         StatModifiersDto::default()
@@ -220,7 +250,7 @@ fn c5a_darnya_ordinary_generation_permanent_curse_cancel_failure_and_cooldown_su
 #[test]
 fn c5a_one_ring_all_ten_rolls_keep_source_weights_permanent_costs_and_saved_rng() {
     let mut base = prepare("demo.build.high-mage-death");
-    let id = give_darnya(&mut base);
+    let id = give_ring(&mut base, KIND);
     base.equip_inventory_item(&id, None).unwrap();
     base.identify_item_instance(&id, ItemIdentificationRequest::new(true));
     base.apply_player_experience(100, &mut Vec::new());
@@ -371,7 +401,7 @@ fn c5a_one_ring_all_ten_rolls_keep_source_weights_permanent_costs_and_saved_rng(
 #[test]
 fn c5a_one_ring_dispel_ball_and_bolt_hit_real_targets_without_device_boost() {
     let mut base = prepare("demo.build.warrior");
-    let id = give_darnya(&mut base);
+    let id = give_ring(&mut base, KIND);
     base.equip_inventory_item(&id, None).unwrap();
     base.identify_item_instance(&id, ItemIdentificationRequest::new(true));
     let mut power = monster_combat::melee_status(STATUS_BERSERK, 6000, "test.c5a").status;
@@ -454,7 +484,7 @@ fn c5a_one_ring_dispel_ball_and_bolt_hit_real_targets_without_device_boost() {
 #[test]
 fn c5a_backlash_recalculates_lost_levels_and_resources_once_and_respects_lower_bounds() {
     let mut base = prepare("demo.build.high-mage-death");
-    let id = give_darnya(&mut base);
+    let id = give_ring(&mut base, KIND);
     base.equip_inventory_item(&id, None).unwrap();
     base.identify_item_instance(&id, ItemIdentificationRequest::new(true));
     for amount in [0, 3, base.experience_required_for_level(40)] {
@@ -519,5 +549,436 @@ fn c5a_backlash_recalculates_lost_levels_and_resources_once_and_respects_lower_b
             game.state_hash(),
             Game::from_save(game.to_save()).unwrap().state_hash()
         );
+    }
+}
+
+#[test]
+fn c5b_one_ring_ordinary_generation_permanent_properties_and_shared_activation_survive_save() {
+    let mut game = prepare("demo.build.warrior");
+    let mut probe = game.clone();
+    (0..20_000)
+        .find_map(|_| {
+            probe
+                .generate_loot_instances(&context(), ItemLocation::Inventory)
+                .unwrap()
+                .into_iter()
+                .find(|item| item.kind_id == "demo.item.ring")
+        })
+        .expect("ordinary ring base");
+    let selected = (0..20_000)
+        .find_map(|_| {
+            game.roll_fixed_artifact_kind_id(&context(), Some("demo.item.ring"), false)
+                .filter(|kind| kind == POWER)
+        })
+        .expect("source rarity127 in the complete ring artifact candidate set");
+    assert_eq!(selected, POWER);
+    // Real one_ability precedes one_high_resistance; HoldLife is an extra,
+    // not an intrinsic flag of the One Ring.
+    let seed = (0..1000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(10) == 7 && rng.bounded(12) == 0
+        })
+        .unwrap();
+    game.rng = RfbRng::seeded(seed);
+    let mut expected_rng = game.rng.clone();
+    assert_eq!(expected_rng.bounded(10), 7);
+    assert_eq!(expected_rng.bounded(12), 0);
+    // Existing profile/maximum/current initialization draws, each with bound1.
+    for _ in 0..3 {
+        assert_eq!(expected_rng.bounded(1), 0);
+    }
+    let id = give_ring(&mut game, POWER);
+    assert_eq!(game.rng, expected_rng);
+    assert!(
+        game.items[0]
+            .intrinsic_properties
+            .passives
+            .contains(&EquipmentPassive::HoldLife)
+    );
+    assert_eq!(game.items[0].rolled_affixes.len(), 1);
+    assert_eq!(
+        game.items[0].rolled_affixes[0]
+            .properties
+            .resistances
+            .get(&ActorDamageType::Poison),
+        Some(&rfb_content::ActorResistanceLevel::Resistant)
+    );
+    assert!(game.visible_item_passives(&game.items[0]).is_empty());
+    let mut loaded = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(game.state_hash(), loaded.state_hash());
+    let before = loaded.effective_player_attributes();
+    loaded.equip_inventory_item(&id, None).unwrap();
+    loaded.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    assert!(loaded.effective_player_attributes().strength > before.strength);
+    let modifiers = loaded.equipment_modifiers();
+    assert_eq!(
+        [
+            modifiers.strength,
+            modifiers.intelligence,
+            modifiers.wisdom,
+            modifiers.dexterity,
+            modifiers.constitution,
+            modifiers.charisma,
+            modifiers.speed
+        ],
+        [5; 7]
+    );
+    for attribute in [
+        AttributeKind::Strength,
+        AttributeKind::Intelligence,
+        AttributeKind::Wisdom,
+        AttributeKind::Dexterity,
+        AttributeKind::Constitution,
+        AttributeKind::Charisma,
+    ] {
+        assert!(loaded.player_sustains_attribute(attribute));
+    }
+    for passive in [
+        EquipmentPassive::SeeInvisible,
+        EquipmentPassive::Regeneration,
+        EquipmentPassive::EspDemon,
+        EquipmentPassive::EspUndead,
+        EquipmentPassive::HoldLife,
+    ] {
+        assert!(loaded.player_equipment_passives().contains(&passive));
+    }
+    for damage_type in [
+        DamageType::Acid,
+        DamageType::Electricity,
+        DamageType::Fire,
+        DamageType::Cold,
+    ] {
+        assert_eq!(
+            loaded.effective_player_resistances().level(damage_type),
+            ResistanceLevel::Immune
+        );
+        let hp = loaded.player.hp;
+        loaded.resolve_monster_damage_to_player(
+            "test.monster",
+            "demo.actor.ogre",
+            "test.element",
+            0,
+            20,
+            20,
+            damage_type,
+            &mut Vec::new(),
+        );
+        assert_eq!(loaded.player.hp, hp);
+    }
+    assert_eq!(loaded.items[0].curse, Some(ItemCurseSeverityDto::Permanent));
+    assert!(
+        loaded
+            .content
+            .item(POWER)
+            .unwrap()
+            .rfb_value
+            .as_ref()
+            .unwrap()
+            .flags
+            .contains("FIXED_ART")
+    );
+    let slot = match &loaded.items[0].location {
+        ItemLocation::Equipped { slot_id } => slot_id.clone(),
+        _ => unreachable!(),
+    };
+    give_inventory_item(
+        &mut loaded,
+        "test.cleanse",
+        "demo.item.greater-cleansing-scroll",
+    );
+    activate(&mut loaded, "test.cleanse", None);
+    assert!(loaded.unequip_slot(&slot).is_none());
+    give_inventory_item(&mut loaded, "test.replacement", "demo.item.ring");
+    assert!(
+        loaded
+            .equip_inventory_item("test.replacement", Some(&slot))
+            .is_none()
+    );
+    loaded.apply_player_experience(100, &mut Vec::new());
+    let maximum_before = loaded.progress.maximum_attributes;
+    loaded.rng = RfbRng::seeded(SEEDS[0]);
+    let mut saved = Game::from_save(loaded.to_save()).unwrap();
+    let events = activate(&mut loaded, &id, Some(&EAST));
+    assert_eq!(events, activate(&mut saved, &id, Some(&EAST)));
+    assert_eq!(
+        (
+            loaded.progress.experience,
+            loaded.progress.maximum_experience
+        ),
+        (75, 82)
+    );
+    assert!(loaded.progress.maximum_attributes.strength < maximum_before.strength);
+    assert_eq!(charge(&loaded, &id), 0);
+    assert!(!loaded.inventory_item_dto(&loaded.items[0]).readable);
+    for run in [&mut loaded, &mut saved] {
+        for tick in 1..=5000 {
+            run.world_tick += 1;
+            run.process_inventory_device_recovery(&mut Vec::new());
+            if tick == 4999 {
+                assert_eq!(charge(run, &id), 0);
+            }
+        }
+        assert_eq!(charge(run, &id), 1);
+        assert!(run.generated_artifact_ids.contains(POWER));
+        assert_ne!(
+            run.roll_fixed_artifact_kind_id(&context(), Some("demo.item.ring"), false),
+            Some(POWER.into())
+        );
+    }
+    assert_eq!(loaded.state_hash(), saved.state_hash());
+    assert_eq!(
+        loaded
+            .generate_loot_instances(&context(), ItemLocation::Inventory)
+            .unwrap(),
+        saved
+            .generate_loot_instances(&context(), ItemLocation::Inventory)
+            .unwrap()
+    );
+    assert_eq!(loaded.rng, saved.rng);
+}
+
+#[test]
+fn c5b_one_ring_reading_uses_pack_or_floor_and_reading_energy_without_activation() {
+    for (build, speed_reader) in [
+        ("demo.build.warrior", false),
+        ("demo.build.warrior", true),
+        ("demo.build.berserker", true),
+    ] {
+        let mut base = prepare(build);
+        let id = give_ring(&mut base, POWER);
+        if speed_reader {
+            assert!(base.gain_mutation("rfb.mutation.speed-reader", &mut Vec::new()));
+        }
+        base.items[0].charges.as_mut().unwrap().current = 0;
+        base.items[0].device_recovery_progress = 123;
+        let action = GameAction::UseItem {
+            item_id: id.clone(),
+            target: None,
+            target_glyph: None,
+        };
+        assert_eq!(
+            base.player_mutation_action_energy_cost(&action, STANDARD_ACTION_COST),
+            if speed_reader { 50 } else { 100 }
+        );
+        for location in [ItemLocation::Inventory, ItemLocation::Ground(START)] {
+            let mut game = base.clone();
+            game.items[0].location = location.clone();
+            game.reveal_current_visibility();
+            let can_read = !game.player_is_berserker();
+            assert_eq!(game.item_inscription_is_readable(&game.items[0]), can_read);
+            if location == ItemLocation::Inventory {
+                let projection = game.inventory_item_dto(&game.items[0]);
+                assert_eq!(projection.usable, can_read);
+                assert_eq!(projection.readable, can_read);
+                assert!(projection.use_target_spec.is_none());
+            } else {
+                assert_eq!(
+                    game.items_dto()
+                        .iter()
+                        .find(|item| item.id == id)
+                        .unwrap()
+                        .readable,
+                    can_read
+                );
+            }
+            let before_item = game.items[0].clone();
+            let before_knowledge = game.item_property_knowledge.clone();
+            let rng = game.rng.clone();
+            // Even a supplied activation direction cannot activate a carried ring.
+            let events = activate(&mut game, &id, Some(&EAST));
+            assert_eq!(
+                events.contains(&DomainEvent::OneRingInscriptionRead),
+                can_read
+            );
+            assert_eq!(events.contains(&DomainEvent::ItemUseUnavailable), !can_read);
+            assert_eq!(game.rng, rng);
+            assert_eq!(game.items[0], before_item);
+            assert_eq!(game.item_property_knowledge, before_knowledge);
+            let mut saved = Game::from_save(game.to_save()).unwrap();
+            let tick = game.world_tick;
+            let command = GameCommand::UseItem {
+                item_id: id.clone(),
+                target: None,
+            };
+            let read = dispatch_next(&mut game, command.clone());
+            assert_eq!(read.events, dispatch_next(&mut saved, command).events);
+            assert!(game.world_tick > tick); // Illiteracy also spends reading energy.
+            assert_eq!(game.items[0].device_recovery_progress, 123);
+            assert_eq!(charge(&game, &id), 0);
+            assert_eq!(game.state_hash(), saved.state_hash());
+            for status in [STATUS_BLINDNESS, STATUS_CONFUSION] {
+                let mut blocked = base.clone();
+                blocked
+                    .player
+                    .statuses
+                    .push(monster_combat::melee_status(status, 100, "test.c5b").status);
+                let tick = blocked.world_tick;
+                let rng = blocked.rng.clone();
+                let event = dispatch_next(
+                    &mut blocked,
+                    GameCommand::UseItem {
+                        item_id: id.clone(),
+                        target: None,
+                    },
+                );
+                assert!(
+                    !event
+                        .events
+                        .iter()
+                        .any(|event| event.kind == "item.one-ring-inscription-read")
+                );
+                assert_eq!(blocked.world_tick, tick);
+                assert_eq!(blocked.rng, rng);
+            }
+        }
+        let mut dark = base;
+        descend_one_floor(&mut dark);
+        clear_monsters(&mut dark);
+        dark.glow.fill(false);
+        dark.items.retain(|item| item.id == id);
+        assert!(!dark.position_is_lit(dark.player.position));
+        let tick = dark.world_tick;
+        dispatch_next(
+            &mut dark,
+            GameCommand::UseItem {
+                item_id: id,
+                target: None,
+            },
+        );
+        assert_eq!(dark.world_tick, tick);
+    }
+}
+
+#[test]
+fn c5b_one_ring_mastery_and_brands_follow_weapon_hands_and_innate_attacks_after_save() {
+    let mut base = prepare("demo.build.warrior");
+    let id = give_ring(&mut base, POWER);
+    assert!(base.gain_mutation("rfb.mutation.horns", &mut Vec::new()));
+    let ring_slot = base
+        .body_slots
+        .iter()
+        .filter(|slot| slot.slot_type == "ring")
+        .nth(1)
+        .unwrap()
+        .id
+        .clone();
+    base.equip_inventory_item(&id, Some(&ring_slot)).unwrap();
+    let offhand_slot = base
+        .body_slots
+        .iter()
+        .find(|slot| slot.slot_type == "shield")
+        .unwrap()
+        .id
+        .clone();
+    for (weapon_kind, offhand_kind, main_bonus, offhand_bonus, innate_bonus) in [
+        ("demo.item.dagger", None, 0, 0, 5),
+        ("demo.item.long-sword", None, 5, 0, 0),
+        ("demo.item.dagger", Some("demo.item.dagger"), 0, 5, 0),
+        (
+            "demo.item.dagger",
+            Some("demo.item.small-metal-shield"),
+            0,
+            0,
+            5,
+        ),
+    ] {
+        let mut game = base.clone();
+        give_inventory_item(&mut game, "test.main", weapon_kind);
+        game.equip_inventory_item("test.main", None).unwrap();
+        if let Some(kind) = offhand_kind {
+            give_inventory_item(&mut game, "test.offhand", kind);
+            game.equip_inventory_item("test.offhand", Some(&offhand_slot))
+                .unwrap();
+        }
+        game.push_generated_actor(
+            "test.target".into(),
+            "demo.actor.great-hell-wyrm",
+            Position {
+                x: START.x + 1,
+                y: START.y,
+            },
+        );
+        game = Game::from_save(game.to_save()).unwrap();
+        let stats = game.player_derived_stats();
+        let profiles = game.player_melee_profiles(&stats);
+        for profile in &profiles {
+            let (kind, bonus) = if profile.source_item_id.as_deref() == Some("test.main") {
+                (weapon_kind, main_bonus)
+            } else {
+                (offhand_kind.unwrap(), offhand_bonus)
+            };
+            let dice = game
+                .content
+                .item(kind)
+                .unwrap()
+                .melee_profile
+                .as_ref()
+                .unwrap()
+                .damage_dice;
+            assert_eq!(profile.damage_dice, dice + bonus);
+            for nonimmune in [
+                DamageType::Acid,
+                DamageType::Electricity,
+                DamageType::Fire,
+                DamageType::Cold,
+            ] {
+                for element in [
+                    DamageType::Acid,
+                    DamageType::Electricity,
+                    DamageType::Fire,
+                    DamageType::Cold,
+                ] {
+                    game.entities[0].resistances.set(
+                        element,
+                        if element == nonimmune {
+                            ResistanceLevel::Normal
+                        } else {
+                            ResistanceLevel::Immune
+                        },
+                    );
+                }
+                assert_eq!(
+                    game.player_melee_damage_multiplier(
+                        profile,
+                        &game.entities[0],
+                        game.content.actor("demo.actor.great-hell-wyrm").unwrap()
+                    ),
+                    if bonus == 5 { 24 } else { 10 }
+                );
+            }
+        }
+        let innate = game.player_mutation_innate_attack_profiles(&stats);
+        assert_eq!(innate[0].damage_dice, 2 + innate_bonus);
+        assert_eq!(
+            game.player_melee_damage_multiplier(
+                &innate[0],
+                &game.entities[0],
+                game.content.actor("demo.actor.great-hell-wyrm").unwrap()
+            ),
+            10
+        );
+        game.rng = RfbRng::seeded(SEEDS[0]);
+        let mut saved = Game::from_save(game.to_save()).unwrap();
+        let mut events = Vec::new();
+        let hp = game.entities[0].hp;
+        game.resolve_player_melee(0, true, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+            .unwrap();
+        let mut resumed_events = Vec::new();
+        saved
+            .resolve_player_melee(
+                0,
+                true,
+                &mut resumed_events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
+        assert_eq!(events, resumed_events);
+        assert!(
+            game.entities[0].hp < hp,
+            "{weapon_kind}/{offhand_kind:?}: {events:?}"
+        );
+        assert_eq!(game.state_hash(), saved.state_hash());
     }
 }

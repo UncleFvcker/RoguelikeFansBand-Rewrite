@@ -518,6 +518,37 @@ test("artifact creation uses core candidates, confirms stack loss, and distingui
   assert.equal(prompts.length, 2);
 });
 
+test("inscription reading uses core pack and floor candidates without activation targeting", (t) => {
+  const { panel, dom, state, document, commands, targets } = createInventoryFixture(t);
+  const ring = item("ring", { readable: true, usable: true, useTargetSpec: null,
+    charges: { current: 0, maximum: 1 } });
+  state.status.items = [
+    { id: "floor-ring", kindId: "demo.item.one-ring", displayNameKey: "one-ring", readable: true },
+    { id: "out-of-reach", kindId: "demo.item.one-ring", displayNameKey: "one-ring", readable: false },
+  ];
+  panel.render([ring, item("darnya", { readable: false })], []);
+  assert.equal(dom.inventoryRead.hidden, false);
+  const choose = () => {
+    dom.inventoryRead.dispatchEvent(new Event("click"));
+    const form = document.body.children[0].children[0];
+    const select = form.children[1].children[1];
+    assert.deepEqual(select.children.map(option => option.value), ["ring", "floor-ring"]);
+    select.value = "floor-ring";
+    return form;
+  };
+  choose().children[2].children[0].dispatchEvent(new Event("click"));
+  assert.deepEqual(commands, []);
+  choose().dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.deepEqual(commands, [{ type: "use-item", itemId: "floor-ring" }]);
+  state.selectedInventoryIds.add("ring");
+  dom.inventoryUse.dispatchEvent(new Event("click"));
+  assert.deepEqual(commands.at(-1), { type: "use-item", itemId: "ring" });
+  assert.deepEqual(targets, []);
+  state.status.items = [];
+  panel.render([{ ...ring, readable: false, usable: false }], []);
+  assert.equal(dom.inventoryRead.hidden, true);
+});
+
 function createInventoryFixture(t) {
   // The controller's DOM boundary only; this does not simulate browser layout.
   class Element extends EventTarget {
@@ -554,7 +585,7 @@ function createInventoryFixture(t) {
   const document = { createElement: (tag) => new Element(tag), activeElement: undefined, body: new Element() };
   const dom = Object.fromEntries([
     "inventoryCount", "inventoryFilters", "inventorySearch", "inventoryFilterReset",
-    "inventorySelectionCount", "inventoryUse", "inventoryAbsorb", "inventoryUseOnMount",
+    "inventorySelectionCount", "inventoryUse", "inventoryAbsorb", "inventoryRead", "inventoryUseOnMount",
     "inventoryAppraise", "inventoryEquip", "inventoryDrop", "inventoryDropQuantity",
     "inventoryInscription", "inventoryInscribe", "inventoryDestroy", "inventoryList", "equipmentList",
     "inventoryDetailDialog", "inventoryDetailTitle", "inventoryDetailBody", "inventoryDetailClose",

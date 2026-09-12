@@ -1797,7 +1797,9 @@ impl Game {
                 .map(|definition| definition.tags.as_slice()),
             _ => None,
         };
-        let scroll_use = item_tags.is_some_and(|tags| tags.iter().any(|tag| tag == "scroll"));
+        let scroll_use = item_tags.is_some_and(|tags| tags.iter().any(|tag| tag == "scroll"))
+            || matches!(action, GameAction::UseItem { item_id, .. }
+                if self.items.iter().any(|item| item.id == *item_id && self.item_has_readable_inscription(item)));
         let potion_use = item_tags.is_some_and(|tags| tags.iter().any(|tag| tag == "potion"));
         if walking {
             // RFB applies Limp before Fleet of Foot; descending source order

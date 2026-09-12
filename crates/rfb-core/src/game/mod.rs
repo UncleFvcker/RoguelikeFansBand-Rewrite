@@ -3613,6 +3613,9 @@ impl Game {
         }) else {
             return false;
         };
+        if self.item_has_readable_inscription(item) {
+            return false;
+        }
         if item.is_artifact_mushroom(&self.content) {
             return item.device_recovery_progress > 0;
         }
@@ -3733,6 +3736,15 @@ impl Game {
         target: Option<&TargetSelection>,
         target_glyph: Option<&str>,
     ) -> bool {
+        if self
+            .items
+            .iter()
+            .any(|item| item.id == source_item_id && self.item_has_readable_inscription(item))
+        {
+            // cmd6.c checks sight/light/confusion before taking reading energy;
+            // Berserker's illiteracy is checked after that energy is committed.
+            return self.ability_study_unavailable_reason().is_some();
+        }
         if let Some(cost) = self
             .items
             .iter()

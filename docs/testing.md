@@ -60,6 +60,10 @@ node e2e/tauri.e2e.mjs --berserker --fast-entry
 
 实际 UI 流程覆盖普通／珠宝／龙皮购物、丢物、三塔身份和服务、生命／自然副领域切换、两个方向的视野滚动、四图进出与源奖励、巫术塔和旧城旅店往返。荒野位置／视图偏移来自核心专用检查响应，不把边缘攻击的滚动误算成移动。原生保存／加载逐次核对完整状态哈希；最终往返核对巫术塔落点及原地物品身份。报告和截图在 `test-results/zul/`；失败细节沿用 `test-results` 诊断。完整流程通过后可执行 `node e2e/tauri.e2e.mjs --zul --zul-map-review`：读取四个任务内原生检查点，显式清场／揭示并用 45% WebView 缩放查看完整地图，另写 `map-review-report.json`，结束时恢复最终跨城检查点及原缩放，不覆盖主流程报告。整图落在视窗内仅是这四张截图的完整性检查，不限制正常游戏地图尺寸或镜头滚动。此模式显式刷新一次原生存档列表，并用后端日志断言新游戏和各次选中槽位加载不触发额外列表扫描。无敌和任务清场属于显式测试准备，不代表自然战斗、练级通关、Chaos 施法或 Android 验收。祖尔的失败／放弃、价格拒绝、地形伤害和来源随机边界由核心专项覆盖，见[计划 Z6](../design/zul-town-import-plan-20260912.md#z6聚焦桌面验收与来源收口)。
 
+## 至尊魔戒读取桌面验收
+
+在 `web` 执行 `npm run e2e:build`，随后执行 `node e2e/tauri.e2e.mjs --one-ring`。[聚焦脚本](../web/e2e/one-ring.e2e.mjs)正常创建人类1级战士，再通过核心导出测试显式选择出生天赋、清怪、移到准备地格并授予零充能魔戒，保留真实博物馆绑定。准备存档经过正常加载入口后，由UI选择、取消、读取、丢到脚下再读取；核对四行中文消息、物品不消耗及原生保存恢复后的相同下一次读取哈希。报告、存档与两张截图在 `test-results/one-ring/`。该场景只验收读取交互；普通生成、装备战斗、激活、时间／状态边界沿核心戒指专项验证，不宣称自然获取或Android验收。
+
 ## Contract fixture
 
 当前集位于 [tests/fixtures/active/scenarios](../tests/fixtures/active/scenarios/)，分类和最低数量等政策来自 [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)。`rfb-contract` 的 [CLI](../crates/rfb-contract/src/main.rs)和[断言实现](../crates/rfb-contract/src/lib.rs)是精确语义依据。

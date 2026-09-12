@@ -774,6 +774,16 @@ impl Game {
             ) {
                 continue;
             }
+            // dungeon.c::process_world_aux_recharge ticks equipment activation
+            // timeouts only while worn; pack devices and mushrooms are separate.
+            if item.activation.is_some()
+                && item.location == ItemLocation::Inventory
+                && content
+                    .item(&item.kind_id)
+                    .is_some_and(|kind| kind.equipment_slot.is_some())
+            {
+                continue;
+            }
             let Some(recovery) = item_device_generation(
                 content,
                 &item.kind_id,

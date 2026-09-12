@@ -1376,6 +1376,7 @@ pub(crate) enum DomainEvent {
         from_floor_id: String,
         to_floor_id: String,
     },
+    OneRingInscriptionRead,
     ItemUseUnavailable,
     WeaponProficiencyImproved {
         item_kind_id: String,
@@ -5430,6 +5431,10 @@ impl DomainEvent {
                 "item.recall-triggered",
                 "item-recall-triggered",
                 [("from", from_floor_id), ("to", to_floor_id)],
+            ),
+            Self::OneRingInscriptionRead => dto_without_args(
+                "item.one-ring-inscription-read",
+                "item-one-ring-inscription-read",
             ),
             Self::ItemUseUnavailable => {
                 dto_without_args("item.use-unavailable", "item-use-unavailable")

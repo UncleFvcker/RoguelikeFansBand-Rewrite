@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.258";
+pub const PROTOCOL_VERSION: &str = "1.259";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 22;
 
@@ -4034,6 +4034,8 @@ pub struct ItemDto {
     pub feeling: Option<ItemFeelingDto>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub absorbable: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub readable: bool,
     pub position: Position,
     pub quantity: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4301,6 +4303,8 @@ pub struct InventoryItemDto {
     pub use_unavailable_reason: Option<String>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub absorbable: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub readable: bool,
     #[serde(default)]
     pub mount_usable: bool,
     #[serde(default)]
@@ -6629,6 +6633,7 @@ mod tests {
                 display_name_key: "item-demo-shard-name".to_owned(),
                 knowledge: ItemKnowledgeDto::Aware,
                 absorbable: false,
+                readable: false,
                 position: Position { x: 0, y: 0 },
                 feeling: None,
                 quantity: 2,
@@ -6649,6 +6654,7 @@ mod tests {
                 usable: false,
                 use_unavailable_reason: None,
                 absorbable: false,
+                readable: false,
                 mount_usable: false,
                 capture_ball: false,
                 captured_actor: None,

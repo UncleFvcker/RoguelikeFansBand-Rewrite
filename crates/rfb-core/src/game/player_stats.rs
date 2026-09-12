@@ -2616,6 +2616,30 @@ impl Game {
                 profile.extra_attack_chance_percent = (blows % 100) as u8;
             }
         }
+        // equip.c::_weaponmastery sends a ring's bonus to innate attacks when
+        // neither its own hand nor the other hand's two-handed weapon uses it.
+        let weapons = self.equipped_melee_weapons();
+        let mastery: i32 = self
+            .items
+            .iter()
+            .filter(|item| {
+                let ItemLocation::Equipped { slot_id } = &item.location else {
+                    return false;
+                };
+                match self.body_slot_type(slot_id) {
+                    Some("tool") => false,
+                    Some("ring") => !weapons
+                        .iter()
+                        .any(|weapon| self.ring_affects_weapon(slot_id, Some(&weapon.id))),
+                    _ => weapons.is_empty(),
+                }
+            })
+            .map(|item| self.item_equipment_bonuses(item).weapon_dice_bonus)
+            .sum();
+        for profile in &mut profiles {
+            profile.damage_dice =
+                (i32::from(profile.damage_dice) + mastery).clamp(0, i32::from(u16::MAX)) as u16;
+        }
         profiles
     }
 

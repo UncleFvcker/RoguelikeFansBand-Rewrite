@@ -47,6 +47,7 @@ type InventoryDom = Pick<
   | "inventorySelectionCount"
   | "inventoryUse"
   | "inventoryAbsorb"
+  | "inventoryRead"
   | "inventoryUseOnMount"
   | "inventoryAppraise"
   | "inventoryEquip"
@@ -139,6 +140,7 @@ export class InventoryPanel {
     this.#dom.inventoryFilterReset.addEventListener("click", this.#handleFilterReset);
     this.#dom.inventoryUse.addEventListener("click", this.#handleUse);
     this.#dom.inventoryAbsorb.addEventListener("click", this.#handleAbsorb);
+    this.#dom.inventoryRead.addEventListener("click", this.#handleRead);
     this.#dom.inventoryUseOnMount.addEventListener("click", this.#handleUseOnMount);
     this.#dom.inventoryAppraise.addEventListener("click", this.#handleAppraise);
     this.#dom.inventoryEquip.addEventListener("click", this.#handleEquip);
@@ -165,6 +167,7 @@ export class InventoryPanel {
     this.#dom.inventoryFilterReset.removeEventListener("click", this.#handleFilterReset);
     this.#dom.inventoryUse.removeEventListener("click", this.#handleUse);
     this.#dom.inventoryAbsorb.removeEventListener("click", this.#handleAbsorb);
+    this.#dom.inventoryRead.removeEventListener("click", this.#handleRead);
     this.#dom.inventoryUseOnMount.removeEventListener("click", this.#handleUseOnMount);
     this.#dom.inventoryAppraise.removeEventListener("click", this.#handleAppraise);
     this.#dom.inventoryEquip.removeEventListener("click", this.#handleEquip);
@@ -227,6 +230,7 @@ export class InventoryPanel {
       [this.#dom.inventoryUse, Boolean((item?.usable && !item.requiresRechargeTargets) || selectedRechargingItems(selected))],
       [this.#dom.inventoryAbsorb, absorbableItemCandidates(this.#state,
         (key, kindId, artifactName) => this.#formatter.visibleItemName(key, kindId, artifactName)).length > 0],
+      [this.#dom.inventoryRead, this.#readableItems().length > 0],
       [this.#dom.inventoryUseOnMount, Boolean(item?.mountUsable && this.#state.status?.player.ridingActorId)],
       [this.#dom.inventoryAppraise, item?.identification === "unexamined"],
       [this.#dom.inventoryDrop, selected.length > 0],
@@ -238,7 +242,7 @@ export class InventoryPanel {
       button.disabled = blocked || !available;
     }
     this.#dom.inventoryMore.hidden = [
-      this.#dom.inventoryAbsorb, this.#dom.inventoryUseOnMount, this.#dom.inventoryAppraise,
+      this.#dom.inventoryAbsorb, this.#dom.inventoryRead, this.#dom.inventoryUseOnMount, this.#dom.inventoryAppraise,
       this.#dom.inventoryInscribe, this.#dom.inventoryDestroy,
     ].every((button) => button.hidden);
     this.#dom.inventoryMore.disabled = blocked;
@@ -287,6 +291,19 @@ export class InventoryPanel {
 
   readonly #handleUse = (): void => {
     void this.#useSelectedItem();
+  };
+
+  #readableItems(): Array<{ id: string; label: string }> {
+    return [...this.#state.inventory, ...(this.#state.status?.items ?? [])]
+      .filter(item => item.readable)
+      .map(item => ({ id: item.id, label: this.#formatter.visibleItemName(item.displayNameKey, item.kindId, item.artifactName) }));
+  }
+
+  readonly #handleRead = (): void => {
+    this.#closeMore();
+    if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
+    this.#onInventoryInteraction();
+    this.#selectItemTargetFrom(this.#readableItems(), itemId => this.#dispatch({ type: "use-item", itemId }));
   };
 
   readonly #handleAbsorb = (): void => {

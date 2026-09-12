@@ -712,6 +712,10 @@ duelist-follow-teleport-failure = 你在追随 { $target } 的传送时迷失了
 
 message-ability-item-magic-success = { $ability }完成了物品处理。
 message-ring-of-power-backlash = 你被一股恶意的光环包围着。
+message-item-one-ring-inscription-read = ‘至尊戒，驭众戒；
+    至尊戒，寻众戒；
+    至尊戒，引众戒；
+    禁锢众戒黑暗中。’
 message-ability-item-magic-failed = { $ability }未能改变物品。
 message-monster-phoenix-reborn = 凤凰浴火重生！
 

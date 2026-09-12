@@ -10072,6 +10072,8 @@ device-activation-bladeturner-name = 英雄气概、全抗性与元素吐息
 
 item-demo-spectral-dragon-scale-mail-name = 幽灵龙鳞甲
 item-demo-darnya-name = 懦弱之 (达雅)
+item-demo-one-ring-name = 力量之 (至尊魔戒)
+item-demo-one-ring-description = 提升六项属性与速度，赋予四元素免疫、维持属性、武器精通和四元素品牌，并带有永久诅咒。未装备时可以阅读铭文；装备后激活可能造成永久属性与经验损失。
 item-demo-darnya-description = 华丽、炫目的镀金，铭刻着用奇怪的“呵呵（Heheh）”语写成的符文，拥有极其强大的力量，不可避免地会扭曲并控制任何佩戴它的凡间生物。
 device-activation-one-ring-name = 怪异之物
 item-demo-spectral-dragon-scale-mail-description = 透明的白色龙鳞甲，能穿过墙壁而不受密度伤害，并继承白龙的寒冷吐息。

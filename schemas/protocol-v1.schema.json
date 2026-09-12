@@ -12122,6 +12122,9 @@
           "format": "uint32",
           "minimum": 0
         },
+        "readable": {
+          "type": "boolean"
+        },
         "requiresCraftingTarget": {
           "type": "boolean"
         },
@@ -12443,6 +12446,9 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0
+        },
+        "readable": {
+          "type": "boolean"
         }
       },
       "required": [

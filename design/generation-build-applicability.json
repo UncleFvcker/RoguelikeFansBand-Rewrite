@@ -188,7 +188,11 @@
         "packs/rfb-demo-original/items/darnya.json",
         "packs/rfb-demo-original/effectPrograms/one-ring.json",
         "crates/rfb-core/src/game/abilities/restoration.rs#resolve_player_ring_of_power_backlash",
-        "crates/rfb-core/src/game/item_use.rs#item_activation_location_is_valid"
+        "crates/rfb-core/src/game/item_use.rs#item_activation_location_is_valid",
+        "packs/rfb-demo-original/items/one-ring.json",
+        "crates/rfb-core/src/game/item_use.rs#read_one_ring_inscription",
+        "crates/rfb-core/src/game/player_stats.rs#player_mutation_innate_attack_profiles",
+        "crates/rfb-core/src/game/turn.rs#process_inventory_device_recovery"
       ],
       "tests": [
         "crates/rfb-core/src/game/tests/tasks.rs#old_castle_reward_is_forced_even_when_the_artifact_was_generated_before_claim",
@@ -248,7 +252,10 @@
         "crates/rfb-core/src/game/tests/ring_of_power.rs#c5a_darnya_ordinary_generation_permanent_curse_cancel_failure_and_cooldown_survive_save",
         "crates/rfb-core/src/game/tests/ring_of_power.rs#c5a_one_ring_all_ten_rolls_keep_source_weights_permanent_costs_and_saved_rng",
         "crates/rfb-core/src/game/tests/ring_of_power.rs#c5a_one_ring_dispel_ball_and_bolt_hit_real_targets_without_device_boost",
-        "crates/rfb-core/src/game/tests/ring_of_power.rs#c5a_backlash_recalculates_lost_levels_and_resources_once_and_respects_lower_bounds"
+        "crates/rfb-core/src/game/tests/ring_of_power.rs#c5a_backlash_recalculates_lost_levels_and_resources_once_and_respects_lower_bounds",
+        "crates/rfb-core/src/game/tests/ring_of_power.rs#c5b_one_ring_ordinary_generation_permanent_properties_and_shared_activation_survive_save",
+        "crates/rfb-core/src/game/tests/ring_of_power.rs#c5b_one_ring_reading_uses_pack_or_floor_and_reading_energy_without_activation",
+        "crates/rfb-core/src/game/tests/ring_of_power.rs#c5b_one_ring_mastery_and_brands_follow_weapon_hands_and_innate_attacks_after_save"
       ],
       "limits": "Six other identity-sensitive construction exceptions, two fixed harps, Archaeologist Dr Jones, Monk Xiaolong, Dragon-pact Warlock Dragonlance, and Mauler / monster Hydra/Troll/Jelly Terror Mask branches remain deferred until their actual identities/content are available. Named GHB acquisition uses the formal Warrens ecology with prepared combat, not natural leveling. Old Castle tests prepare task completion and do not claim natural quest completion. Random-artifacts game mode replacement is unavailable; ordinary named drops skip an already-generated artifact. Priest step-7 core and consumer regressions passed for all 24 builds. Bilingual menu/UI and two representative good/evil desktop runs passed with explicit level, item and map preparation; no 24-fold campaign or natural high-level progression claim. No open creation identity grants source ambush: Scout level20 with undisrupted equipment, Skillmaster stealth3 and POS_BACKSTAB possessed bodies remain identity dependencies; no fake build or universal sleeping-target double damage. Source pre-action fear/arena handling, specialized consumable breakage and boomerang/catch are outside this batch; source return mechanics136/383 remain in step5. Existing recovery, regeneration and fixed-artifact landing adaptations remain. Core controlled-precondition evidence, not natural leveling or desktop acceptance. Caine799/Fiona791/Hagen383 additional50/50/66-percent drops remain named acquisition dependencies. Shooting retains the existing compatible-ammunition selection by instance ID, hit/critical/damage implementation and landing adaptations; no new manual ammunition selector. Shared bleeding intensity/recovery, friendly-target handling and melee proficiency behavior remain existing adaptations. Blood-Knight guaranteed Bloodrip backlash remains an unopened identity dependency; current classes use the source one-in-two branch.",
       "sourceEvidence": [

@@ -225,7 +225,6 @@ fn c4c_spectral_ordinary_equipment_inherited_breath_and_wall_lifecycle_survive_s
         .unwrap();
         events
     };
-    let ready_tick = game.world_tick + 300;
     let events = activate(&mut game);
     assert_eq!(activate(&mut restored), events);
     assert!(events.iter().any(|e| matches!(e, DomainEvent::AbilityConeDamage { resolution, .. }
@@ -295,6 +294,7 @@ fn c4c_spectral_ordinary_equipment_inherited_breath_and_wall_lifecycle_survive_s
             .passes_walls
     );
     game.reveal_current_visibility();
+    let recovery_progress = game.items[0].device_recovery_progress;
     let mut restored = Game::from_save(game.to_save()).unwrap();
     for run in [&mut game, &mut restored] {
         let hp = run.player.hp;
@@ -317,8 +317,16 @@ fn c4c_spectral_ordinary_equipment_inherited_breath_and_wall_lifecycle_survive_s
             },
         );
         assert_eq!(run.player.position, START);
-        // Device recovery stays attached to the same saved item after replacement.
+        // Unworn equipment pauses its timeout, including after save/load.
         let index = run.items.iter().position(|item| item.id == id).unwrap();
+        for _ in 0..300 {
+            run.world_tick += 1;
+            run.process_inventory_device_recovery(&mut Vec::new());
+        }
+        assert_eq!(run.items[index].device_recovery_progress, recovery_progress);
+        assert_eq!(run.items[index].charges.unwrap().current, 0);
+        run.equip_inventory_item(&id, None).unwrap();
+        let ready_tick = run.world_tick + 300 - u32::from(recovery_progress);
         while run.world_tick < ready_tick - 1 {
             run.world_tick += 1;
             run.process_inventory_device_recovery(&mut Vec::new());

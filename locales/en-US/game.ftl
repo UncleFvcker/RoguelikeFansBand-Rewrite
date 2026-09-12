@@ -727,6 +727,10 @@ duelist-follow-teleport-failure = You lose your way while following { $target } 
 
 message-ability-item-magic-success = { $ability } changed the item.
 message-ring-of-power-backlash = You are surrounded by a malevolent aura.
+message-item-one-ring-inscription-read = One Ring to rule them all,
+    One Ring to find them,
+    One Ring to bring them all,
+    And in the darkness bind them.
 message-ability-item-magic-failed = { $ability } did not change the item.
 message-monster-phoenix-reborn = The Phoenix rises from its ashes!
 

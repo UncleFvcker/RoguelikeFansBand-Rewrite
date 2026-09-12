@@ -2781,6 +2781,36 @@ impl Game {
         noticed
     }
 
+    pub(super) fn item_has_readable_inscription(&self, item: &ItemInstance) -> bool {
+        // cmd6.c::_can_read: the One Ring can be read from the pack or floor,
+        // while its equipped use is the separate ONE_RING activation.
+        item.kind_id == "demo.item.one-ring"
+            && item.quantity > 0
+            && (item.location == ItemLocation::Inventory
+                || item.location == ItemLocation::Ground(self.player.position))
+    }
+
+    pub(super) fn item_inscription_is_readable(&self, item: &ItemInstance) -> bool {
+        self.item_has_readable_inscription(item)
+            && self.ability_study_unavailable_reason().is_none()
+            && !self.player_is_berserker()
+    }
+
+    fn read_one_ring_inscription(&mut self, events: &mut Vec<DomainEvent>) {
+        // Reading has no device check, charge use, cooldown or identification.
+        if self.ability_study_unavailable_reason().is_some() || self.player_is_berserker() {
+            events.push(DomainEvent::ItemUseUnavailable);
+            return;
+        }
+        if self.item_knowledge_dto("demo.item.one-ring") != ItemKnowledgeDto::Aware {
+            self.add_virtue(VirtueKindDto::Patience, -1);
+            self.add_virtue(VirtueKindDto::Chance, 1);
+            self.add_virtue(VirtueKindDto::Knowledge, -1);
+        }
+        self.mark_item_tried("demo.item.one-ring");
+        events.push(DomainEvent::OneRingInscriptionRead);
+    }
+
     /// RFB cmd6/devices: forbidden scroll/activation attempts take a turn;
     /// wand, staff and rod failures do not. Scroll speed still uses the usual energy modifier.
     pub(super) fn berserker_item_use_rejection_cost(&self, item: &ItemInstance) -> Option<i32> {
@@ -2821,6 +2851,14 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<Option<i32>, CoreError> {
+        if self
+            .items
+            .iter()
+            .any(|item| item.id == item_id && self.item_has_readable_inscription(item))
+        {
+            self.read_one_ring_inscription(events);
+            return Ok(None);
+        }
         let Some((index, definition)) = self.inventory_item_use_context(item_id)? else {
             events.push(DomainEvent::ItemUseUnavailable);
             return Ok(None);

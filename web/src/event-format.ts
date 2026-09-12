@@ -1522,6 +1522,8 @@ export function createPresentationFormatter(
         });
       case "item-use-unavailable":
         return localization.format("message-item-use-unavailable");
+      case "item-one-ring-inscription-read":
+        return localization.format("message-item-one-ring-inscription-read");
       case "device-energy-recovered":
         return localization.format("message-device-energy-recovered", {
           target: visibleItemNameForKind(event.args.target),

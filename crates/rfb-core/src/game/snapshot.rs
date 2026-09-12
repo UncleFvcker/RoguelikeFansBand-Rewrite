@@ -955,6 +955,7 @@ impl Game {
                     artifact_name: self.visible_artifact_name(item),
                     knowledge: self.item_knowledge_dto(&item.kind_id),
                     absorbable: self.item_can_be_absorbed(item),
+                    readable: self.item_inscription_is_readable(item),
                     position: *position,
                     feeling: self.item_feeling(item),
                     quantity: item.quantity,
@@ -990,6 +991,9 @@ impl Game {
         &self,
         item: &ItemInstance,
     ) -> Option<rfb_protocol::TargetSpecDto> {
+        if self.item_has_readable_inscription(item) {
+            return None;
+        }
         let mut target = item.activation.as_ref()?.target_spec.clone();
         if matches!(
             self.inventory_item_use_effect(&item.id),
@@ -1018,21 +1022,29 @@ impl Game {
             knowledge: self.item_knowledge_dto(&item.kind_id),
             use_unavailable_reason: self
                 .berserker_item_use_rejection_cost(item)
-                .map(|_| "berserker".to_owned()),
-            usable: self.berserker_item_use_rejection_cost(item).is_none()
-                && self.item_activation_location_is_valid(item)
-                && !(item.is_artifact_mushroom(&self.content) && item.device_recovery_progress > 0)
-                && self.content.item(&item.kind_id).is_some_and(|definition| {
-                    definition.use_action.as_ref().is_some_and(|action| {
-                        action.charges.is_none_or(|charges| {
-                            item.charges
-                                .is_some_and(|state| state.current >= charges.cost)
-                        })
-                    }) || item.activation.as_ref().is_some_and(|activation| {
-                        item.charges
-                            .is_some_and(|state| state.current >= activation.cost)
-                    })
+                .map(|_| "berserker".to_owned())
+                .or_else(|| {
+                    self.item_has_readable_inscription(item)
+                        .then(|| self.ability_study_unavailable_reason().map(str::to_owned))
+                        .flatten()
                 }),
+            readable: self.item_inscription_is_readable(item),
+            usable: self.item_inscription_is_readable(item)
+                || (self.berserker_item_use_rejection_cost(item).is_none()
+                    && self.item_activation_location_is_valid(item)
+                    && !(item.is_artifact_mushroom(&self.content)
+                        && item.device_recovery_progress > 0)
+                    && self.content.item(&item.kind_id).is_some_and(|definition| {
+                        definition.use_action.as_ref().is_some_and(|action| {
+                            action.charges.is_none_or(|charges| {
+                                item.charges
+                                    .is_some_and(|state| state.current >= charges.cost)
+                            })
+                        }) || item.activation.as_ref().is_some_and(|activation| {
+                            item.charges
+                                .is_some_and(|state| state.current >= activation.cost)
+                        })
+                    })),
             absorbable: self.item_can_be_absorbed(item),
             mount_usable: self.mount_item_is_usable(&item.kind_id),
             capture_ball: self

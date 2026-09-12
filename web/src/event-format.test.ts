@@ -957,6 +957,14 @@ test("Warrens transitions name the Outpost and stairs without legacy Echo text",
   localization.setLocale("en-US");
 });
 
+test("One Ring reading displays all four inscription lines in both locales", () => {
+  const event = { kind: "item.one-ring-inscription-read", messageKey: "item-one-ring-inscription-read", args: {} };
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "‘至尊戒，驭众戒；\n至尊戒，寻众戒；\n至尊戒，引众戒；\n禁锢众戒黑暗中。’");
+  localization.setLocale("en-US");
+  assert.equal(formatter.formatEvent(event), "One Ring to rule them all,\nOne Ring to find them,\nOne Ring to bring them all,\nAnd in the darkness bind them.");
+});
+
 function readLocale(locale: "en-US" | "zh-CN"): string[] {
   return ["ui.ftl", "game.ftl", "content.ftl"].map((file) =>
     readFileSync(new URL(`../../locales/${locale}/${file}`, import.meta.url), "utf8"),
