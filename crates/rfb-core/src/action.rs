@@ -249,6 +249,10 @@ pub(crate) enum GameAction {
         source_item_id: String,
         target_item_id: String,
     },
+    UseAbsorbedDevice {
+        item_id: String,
+        targets: Vec<TargetSelection>,
+    },
     Unequip {
         slot_id: String,
     },
@@ -577,6 +581,9 @@ impl From<GameCommand> for GameAction {
                 target: None,
                 target_glyph: Some(glyph),
             },
+            GameCommand::UseAbsorbedDevice { item_id, targets } => {
+                Self::UseAbsorbedDevice { item_id, targets }
+            }
             GameCommand::UseItemForRecharge {
                 item_id,
                 source_item_id,

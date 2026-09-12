@@ -28,6 +28,19 @@ pub struct CheckContext {
     pub difficulty: DerivedStat,
 }
 
+impl CheckContext {
+    /// Shared percentile bands plus the uniform contest, rounded to the nearest per mille.
+    #[must_use]
+    pub fn failure_per_mille(&self) -> u16 {
+        let ability = i64::from(self.ability.value);
+        if ability <= 0 {
+            return 950;
+        }
+        let threshold = i64::from(self.difficulty.value.max(0).saturating_mul(3) / 4);
+        (50 + (900 * threshold.min(ability) + ability / 2) / ability) as u16
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CheckOutcome {
     AutomaticSuccess,
@@ -158,6 +171,14 @@ mod tests {
             ability: stats.resolve(StatKind::MeleeSkill, StatBounds::NON_NEGATIVE),
             difficulty: stats.resolve(StatKind::ArmorClass, StatBounds::NON_NEGATIVE),
         }
+    }
+
+    #[test]
+    fn displayed_failure_includes_both_percentile_bands_and_the_contest() {
+        // 5% automatic failure + 90% * (15 failing contest rolls / 60).
+        assert_eq!(context(60, 20).failure_per_mille(), 275);
+        assert_eq!(context(0, 20).failure_per_mille(), 950);
+        assert_eq!(context(60, 0).failure_per_mille(), 50);
     }
 
     #[test]

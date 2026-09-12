@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.259";
+pub const PROTOCOL_VERSION: &str = "1.260";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 23;
 
@@ -275,6 +275,9 @@ pub struct AbsorbedDeviceSlotDto {
     pub category: AbsorbedDeviceCategoryDto,
     pub slot: u8,
     pub item: Option<InventoryItemDto>,
+    pub failure_per_mille: Option<u16>,
+    pub energy_cost: Option<i32>,
+    pub recovery_per_mille: Option<u16>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -550,6 +553,12 @@ pub enum GameCommand {
     UseItemByGlyph {
         item_id: String,
         glyph: String,
+    },
+    UseAbsorbedDevice {
+        item_id: String,
+        /// Zero or one target; identification accepts an ordered sequence.
+        #[serde(default)]
+        targets: Vec<TargetSelection>,
     },
     UseItemForRecharge {
         item_id: String,

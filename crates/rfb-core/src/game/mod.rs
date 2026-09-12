@@ -1028,6 +1028,7 @@ impl Game {
         }
         // Preflight choice commands before any time, cooldown or RNG mutation.
         let magic_absorption_advances_world = self.magic_absorption_action_time(&action)?;
+        let absorbed_device_action = matches!(&action, GameAction::UseAbsorbedDevice { .. });
         let reevaluate_all_mogaminator_items = matches!(
             &action,
             GameAction::ConfigureMogaminator { .. } | GameAction::SetInterfaceLocale { .. }
@@ -1053,7 +1054,7 @@ impl Game {
             .collect::<BTreeSet<_>>();
         self.command_actor_deaths.clear();
         self.validate_runtime_invariants(&action)?;
-        if magic_absorption_advances_world != Some(false) {
+        if magic_absorption_advances_world != Some(false) && !absorbed_device_action {
             self.refresh_daily_bounty_target();
         }
         let base_revision = self.revision;
@@ -1312,10 +1313,11 @@ impl Game {
         let mut player_moved = false;
         let deferred_item_turn = matches!(
             &action,
-            GameAction::UseItem {
-                target: None | Some(TargetSelection::ArtifactCreationItem { .. }),
-                ..
-            }
+            GameAction::UseAbsorbedDevice { .. }
+                | GameAction::UseItem {
+                    target: None | Some(TargetSelection::ArtifactCreationItem { .. }),
+                    ..
+                }
         );
         let item_projectile_action = matches!(&action, GameAction::UseItem { item_id, .. }
             if matches!(self.inventory_item_use_effect(item_id), Some((ItemUseEffectDefinition::PiercingShot, _))));
@@ -1987,6 +1989,17 @@ impl Game {
                     self.sniper_concentration = 0;
                 }
             }
+            GameAction::UseAbsorbedDevice { item_id, targets } => {
+                action_cost = self.use_absorbed_device(
+                    &item_id,
+                    &targets,
+                    &mut events,
+                    &mut changed,
+                    &mut removed_entities,
+                )?;
+                advances_world = action_cost > 0;
+                turn_advance = u32::from(advances_world);
+            }
             GameAction::RefuelLight {
                 target_item_id,
                 source_item_id,
@@ -2376,6 +2389,9 @@ impl Game {
             }
         }
 
+        if absorbed_device_action && advances_world {
+            self.refresh_daily_bounty_target();
+        }
         if let Some(completion) = &duelist_completion {
             turn_advance = completion.turn_advance;
             world_tick_before_command = completion.world_tick_before;
@@ -2394,7 +2410,9 @@ impl Game {
 
         // Body selection, cancellation and rearrangement only edit UI/slot state.
         // Do not trigger sensing, automatic consumers or visibility RNG while choosing.
-        if magic_absorption_advances_world != Some(false) {
+        if magic_absorption_advances_world != Some(false)
+            && (!absorbed_device_action || advances_world)
+        {
             self.process_chaos_patron_level_rewards(
                 &mut events,
                 &mut chaos_patron_event_cursor,
@@ -3678,6 +3696,9 @@ impl Game {
             return Ok(None);
         };
         let item = &self.items[index];
+        if matches!(item.location, ItemLocation::Absorbed { .. }) {
+            return Err(CoreError::AbsorbedDeviceUnavailable("use-body-command"));
+        }
         let definition = self.content.item(&item.kind_id).cloned().ok_or_else(|| {
             CoreError::Invariant(format!(
                 "inventory item {} references missing kind {}",

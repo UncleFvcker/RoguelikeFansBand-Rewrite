@@ -160,6 +160,10 @@ fn absorbs_pack_and_floor_instances_with_zero_sp_and_retains_all_instance_fields
         let before_world = game.world_tick;
         let update = {
             dispatch_next(&mut game, begin("test.absorb"));
+            // The commit itself preserves SP/fraction; the ensuing world tick may recover it.
+            let mut commit_only = game.clone();
+            commit_only.select_magic_absorption_slot(9, &mut Vec::new());
+            assert_eq!(item(&commit_only, "test.absorb"), expected);
             dispatch_next(
                 &mut game,
                 GameCommand::SelectMagicAbsorptionSlot { slot: 9 },
@@ -173,6 +177,8 @@ fn absorbs_pack_and_floor_instances_with_zero_sp_and_retains_all_instance_fields
         );
         assert_eq!(game.turn, before_turn + 1);
         assert!(game.world_tick > before_world);
+        expected.charges = item(&game, "test.absorb").charges;
+        expected.device_recovery_progress = item(&game, "test.absorb").device_recovery_progress;
         assert_eq!(item(&game, "test.absorb"), expected);
         assert_eq!(
             game.player_derived_stats().device_skill.value,

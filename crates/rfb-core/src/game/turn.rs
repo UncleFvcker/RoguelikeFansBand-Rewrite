@@ -755,39 +755,67 @@ impl Game {
 
     pub(super) fn process_inventory_device_recovery(&mut self, events: &mut Vec<DomainEvent>) {
         let world_tick = self.world_tick;
+        let mut recovery_order = self
+            .items
+            .iter()
+            .enumerate()
+            .map(|(index, item)| {
+                let rate = matches!(item.location, ItemLocation::Absorbed { .. })
+                    .then(|| self.absorbed_device_recovery_per_mille(item));
+                (index, rate)
+            })
+            .collect::<Vec<_>>();
+        // Saves group containers separately; body recovery must keep source category/slot order.
+        recovery_order.sort_by_key(|(index, _)| match self.items[*index].location {
+            ItemLocation::Absorbed { category, slot } => Some((category, slot)),
+            _ => None,
+        });
         let content = &self.content;
-        for item in &mut self.items {
+        for (index, body_rate) in recovery_order {
+            let item = &mut self.items[index];
             if item.location == ItemLocation::Inventory && item.is_artifact_mushroom(content) {
                 item.device_recovery_progress = item.device_recovery_progress.saturating_sub(1);
                 continue;
             }
             if !matches!(
                 item.location,
-                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                ItemLocation::Inventory
+                    | ItemLocation::Equipped { .. }
+                    | ItemLocation::Absorbed { .. }
             ) {
                 continue;
             }
-            let Some(recovery) = item_device_generation(
-                content,
-                &item.kind_id,
-                &item.affix_ids,
-                item.activation
-                    .as_ref()
-                    .map(|activation| activation.profile_id.as_str()),
-                item.artifact_name.is_some(),
-            )
-            .and_then(|generation| {
-                item.activation
-                    .as_ref()
-                    .and_then(|activation| {
-                        generation
-                            .activations
-                            .iter()
-                            .find(|profile| profile.id == activation.profile_id)
+            let Some(recovery) = body_rate
+                .map(
+                    |energy_per_mille| rfb_content::ItemDeviceRecoveryDefinition {
+                        interval_ticks: 10,
+                        energy_per_mille,
+                    },
+                )
+                .or_else(|| {
+                    item_device_generation(
+                        content,
+                        &item.kind_id,
+                        &item.affix_ids,
+                        item.activation
+                            .as_ref()
+                            .map(|activation| activation.profile_id.as_str()),
+                        item.artifact_name.is_some(),
+                    )
+                    .and_then(|generation| {
+                        item.activation
+                            .as_ref()
+                            .and_then(|activation| {
+                                generation
+                                    .activations
+                                    .iter()
+                                    .find(|profile| profile.id == activation.profile_id)
+                            })
+                            .and_then(|profile| profile.recovery)
+                            .or(generation.recovery)
                     })
-                    .and_then(|profile| profile.recovery)
-                    .or(generation.recovery)
-            }) else {
+                })
+            else {
                 continue;
             };
             let Some(charges) = item.charges.as_ref() else {
@@ -797,11 +825,12 @@ impl Game {
                 item.device_recovery_progress = 0;
                 continue;
             }
-            let regeneration = if super::ego::item_has_ego(content, item, 252) {
-                1 + super::ego::device_pval(item)
-            } else {
-                1
-            };
+            let regeneration =
+                if body_rate.is_none() && super::ego::item_has_ego(content, item, 252) {
+                    1 + super::ego::device_pval(item)
+                } else {
+                    1
+                };
             let charges = item
                 .charges
                 .as_mut()
@@ -817,10 +846,11 @@ impl Game {
                 if !world_tick.is_multiple_of(u32::from(recovery.interval_ticks)) {
                     continue;
                 }
-                let source_device = content
-                    .item(&item.kind_id)
-                    .and_then(|definition| definition.device_generation.as_ref())
-                    .is_some_and(|generation| generation.rfb_device.is_some());
+                let source_device = body_rate.is_some()
+                    || content
+                        .item(&item.kind_id)
+                        .and_then(|definition| definition.device_generation.as_ref())
+                        .is_some_and(|generation| generation.rfb_device.is_some());
                 let mut scaled = u64::from(charges.maximum)
                     .saturating_mul(u64::from(recovery.energy_per_mille))
                     .saturating_mul(u64::from(regeneration));

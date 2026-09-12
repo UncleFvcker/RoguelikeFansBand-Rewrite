@@ -16,6 +16,7 @@ use super::{
 };
 
 const SLOTS_PER_CATEGORY: u8 = 10;
+mod usage;
 const CATEGORIES: [(AbsorbedDeviceCategoryDto, &str); 3] = [
     (AbsorbedDeviceCategoryDto::Wand, "wand"),
     (AbsorbedDeviceCategoryDto::Staff, "staff"),
@@ -313,17 +314,8 @@ impl Game {
             slots: CATEGORIES
                 .iter()
                 .flat_map(|(category, _)| {
-                    (0..SLOTS_PER_CATEGORY).map(move |slot| AbsorbedDeviceSlotDto {
-                        category: *category,
-                        slot,
-                        item: self.absorbed_device(*category, slot).map(|item| {
-                            let mut dto = self.inventory_item_dto(item);
-                            // The dedicated use flow is added separately from the body container.
-                            dto.usable = false;
-                            dto.use_unavailable_reason = Some("absorbed-device".to_owned());
-                            dto
-                        }),
-                    })
+                    (0..SLOTS_PER_CATEGORY)
+                        .map(move |slot| self.absorbed_device_slot_dto(*category, slot))
                 })
                 .collect(),
             pending_absorption: self.pending_magic_absorption.clone(),

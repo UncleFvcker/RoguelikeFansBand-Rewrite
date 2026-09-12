@@ -69,6 +69,9 @@ impl Game {
         }
         self.active_task_objective()?;
         match action {
+            GameAction::UseAbsorbedDevice { item_id, targets } => {
+                self.validate_absorbed_device_use(item_id, targets)?;
+            }
             GameAction::UseItem { item_id, .. }
             | GameAction::UseItemForRecharge { item_id, .. } => {
                 self.inventory_item_use_context(item_id)?;

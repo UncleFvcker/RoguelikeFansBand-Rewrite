@@ -2918,43 +2918,7 @@ impl Game {
 
         self.mark_item_tried(&kind_id);
         if let Some(difficulty) = difficulty {
-            let ability = self.apply_impotence_device_skill_modifier(
-                &self.player_derived_stats().device_skill,
-                &self.items[index],
-                &definition,
-                &effect,
-            );
-            let mut difficulty_pipeline = DerivedStatsPipeline::new();
-            difficulty_pipeline.add(
-                StatKind::ActionDifficulty,
-                StatLayer::Environment,
-                &kind_id,
-                difficulty,
-            );
-            let check = resolve_check(
-                &mut self.rng,
-                CheckContext {
-                    kind: CheckKind::UseDevice,
-                    actor_id: self.player.id.clone(),
-                    target_id: Some(item_id.to_owned()),
-                    ability,
-                    difficulty: difficulty_pipeline
-                        .resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
-                },
-            );
-            let succeeded = check.succeeded();
-            let skill_id = self
-                .content
-                .skill_by_kind(SkillKind::Device)
-                .expect("validated device skill must remain available")
-                .id
-                .clone();
-            events.push(DomainEvent::DeviceSkillChecked {
-                source_kind_id: kind_id.clone(),
-                succeeded,
-                resolution: check.to_dto(skill_id),
-            });
-            if !succeeded {
+            if !self.check_item_device(index, &definition, &effect, difficulty, events) {
                 return Ok(None);
             }
         }
@@ -3120,7 +3084,7 @@ impl Game {
         }
     }
 
-    fn resolve_inventory_item_effect(
+    pub(super) fn resolve_inventory_item_effect(
         &mut self,
         settled: SettledItemUse,
         events: &mut Vec<DomainEvent>,
@@ -3876,6 +3840,60 @@ impl Game {
             _ => unreachable!("validated item effect and target plan must remain compatible"),
         }
         Ok(noticed)
+    }
+
+    pub(super) fn item_device_check_context(
+        &self,
+        item: &ItemInstance,
+        definition: &rfb_content::ItemDefinition,
+        effect: &ItemUseEffectDefinition,
+        difficulty: i32,
+    ) -> CheckContext {
+        let ability = self.apply_impotence_device_skill_modifier(
+            &self.player_derived_stats().device_skill,
+            item,
+            definition,
+            effect,
+        );
+        let mut pipeline = DerivedStatsPipeline::new();
+        pipeline.add(
+            StatKind::ActionDifficulty,
+            StatLayer::Environment,
+            &item.kind_id,
+            difficulty,
+        );
+        CheckContext {
+            kind: CheckKind::UseDevice,
+            actor_id: self.player.id.clone(),
+            target_id: Some(item.id.clone()),
+            ability,
+            difficulty: pipeline.resolve(StatKind::ActionDifficulty, StatBounds::NON_NEGATIVE),
+        }
+    }
+
+    pub(super) fn check_item_device(
+        &mut self,
+        index: usize,
+        definition: &rfb_content::ItemDefinition,
+        effect: &ItemUseEffectDefinition,
+        difficulty: i32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let context =
+            self.item_device_check_context(&self.items[index], definition, effect, difficulty);
+        let check = resolve_check(&mut self.rng, context);
+        let succeeded = check.succeeded();
+        let skill_id = &self
+            .content
+            .skill_by_kind(SkillKind::Device)
+            .expect("validated device skill must remain available")
+            .id;
+        events.push(DomainEvent::DeviceSkillChecked {
+            source_kind_id: self.items[index].kind_id.clone(),
+            succeeded,
+            resolution: check.to_dto(skill_id),
+        });
+        succeeded
     }
 
     pub(super) fn item_use_plan(

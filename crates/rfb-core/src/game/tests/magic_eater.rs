@@ -5,6 +5,7 @@ use super::*;
 const BUILD: &str = "demo.build.magic-eater";
 
 mod absorption;
+mod usage;
 
 fn at_level(level: u16) -> Game {
     let mut game = Game::new_with_build(925, BUILD).unwrap();

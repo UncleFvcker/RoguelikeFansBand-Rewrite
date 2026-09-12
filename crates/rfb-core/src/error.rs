@@ -5,6 +5,8 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum CoreError {
+    #[error("absorbed device use is unavailable: {0}")]
+    AbsorbedDeviceUnavailable(&'static str),
     #[error("magic absorption is unavailable: {0}")]
     MagicAbsorptionUnavailable(&'static str),
     #[error("finish the pending realm change first")]
