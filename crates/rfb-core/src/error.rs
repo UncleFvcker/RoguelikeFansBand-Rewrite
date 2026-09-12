@@ -41,6 +41,10 @@ pub enum CoreError {
     RaceMutationChoiceRequired,
     #[error("the requested race mutation choice is unavailable")]
     RaceMutationChoiceUnavailable,
+    #[error("Maia path choice is required")]
+    MaiaPathChoiceRequired,
+    #[error("Maia path choice is unavailable")]
+    MaiaPathChoiceUnavailable,
     #[error("world map transition is unavailable from the current state")]
     WorldMapTransitionUnavailable,
     #[error("the command is unavailable while viewing the world map")]

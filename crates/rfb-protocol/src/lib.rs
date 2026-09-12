@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.263";
+pub const PROTOCOL_VERSION: &str = "1.264";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 25;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 26;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -334,6 +334,9 @@ pub enum GameCommand {
     ChooseRaceMutation {
         reward_id: String,
         mutation_id: String,
+    },
+    ChooseMaiaPath {
+        path: MaiaPathDto,
     },
     Appraise {
         item_id: String,
@@ -1719,6 +1722,9 @@ pub enum AbilityEffectSpecDto {
     DimensionDoor {
         range: u16,
     },
+    Jump {
+        range: u16,
+    },
     RemoveStatus {
         status_kind_id: String,
     },
@@ -2452,6 +2458,14 @@ pub struct PlayerMutationDto {
 pub struct PendingRaceMutationChoiceDto {
     pub reward_id: String,
     pub candidates: Vec<PlayerMutationDto>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum MaiaPathDto {
+    Enlightened,
+    Corrupted,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -3755,6 +3769,7 @@ pub struct MonsterDisplacementResolutionDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "kebab-case")]
 pub enum RestStopReasonDto {
+    MaiaPathChoiceRequired,
     Damaged,
     EnemyVisible,
     FullResources,
@@ -3912,6 +3927,8 @@ pub struct SniperConcentrationDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PlayerDto {
+    pub maia_path: Option<MaiaPathDto>,
+    pub pending_maia_path_choice: bool,
     pub magic_eater: Option<MagicEaterDto>,
     pub trait_details: CharacterTraitDetailsDto,
     pub id: String,
@@ -4141,6 +4158,8 @@ pub struct ChestDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ItemDto {
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub usable: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub can_supply_recharge: bool,
     #[serde(default, skip_serializing_if = "is_false")]
@@ -5423,6 +5442,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(MutationRatingDto);
     push_declaration!(PlayerMutationDto);
     push_declaration!(PendingRaceMutationChoiceDto);
+    push_declaration!(MaiaPathDto);
     push_declaration!(VirtueKindDto);
     push_declaration!(VirtueDto);
     push_declaration!(PlayerDto);
@@ -5523,6 +5543,7 @@ pub struct RngSaveDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PlayerSaveDto {
+    pub maia_path: Option<MaiaPathDto>,
     pub id: String,
     pub name: String,
     pub kind_id: String,
@@ -5663,6 +5684,7 @@ pub struct PlayerProgressSaveDto {
     pub weapon_proficiencies: Vec<WeaponProficiencySaveDto>,
     pub riding_proficiency: u16,
     pub dual_wielding_proficiency: u16,
+    pub centaur_hoof_proficiency: u16,
     pub mining_proficiency: u16,
     pub materials: Vec<MaterialSaveDto>,
 }
@@ -6141,6 +6163,7 @@ pub struct ItemKnowledgeSaveDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemPropertyKnowledgeSaveDto {
+    pub known_curse: bool,
     pub item_id: String,
     pub discovered: bool,
     #[serde(default, skip_serializing_if = "is_false")]
@@ -6723,6 +6746,8 @@ mod tests {
                 fame: 0,
                 nutrition: PLAYER_NUTRITION_BIRTH,
                 fasting: false,
+                maia_path: None,
+                pending_maia_path_choice: false,
                 nutrition_state: NutritionStateDto::Normal,
                 speed: 110,
                 energy_need: 0,
@@ -6807,6 +6832,7 @@ mod tests {
                 summon: None,
             }],
             items: vec![ItemDto {
+                usable: false,
                 can_supply_recharge: false,
                 can_receive_recharge: false,
                 chest: None,
@@ -7039,6 +7065,7 @@ mod tests {
             fame: 0,
             nutrition: PLAYER_NUTRITION_BIRTH,
             fasting: false,
+            maia_path: None,
             base_max_hp: 10,
             base_speed: 110,
             energy_need: 0,

@@ -241,6 +241,7 @@ impl Game {
             return Ok(true);
         }
         self.process_inventory_device_recovery(events);
+        self.refresh_android_experience(events);
         self.process_class_item_sensing();
         self.process_captured_actor_regeneration();
         let reality_changed =
@@ -1236,6 +1237,7 @@ impl Game {
                 removed_entities,
                 &mut surround_reservations,
             )?;
+            self.refresh_android_experience(events);
             if self.duelist_prompt().is_some() {
                 self.continue_after_duelist_choice(
                     rfb_protocol::DuelistContinuationDto::MonsterPulse {

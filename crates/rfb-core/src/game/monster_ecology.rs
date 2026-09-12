@@ -67,6 +67,13 @@ pub(super) enum OriginalGroupRole {
     Escort,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum AllocationPurpose {
+    Ordinary,
+    Fishing,
+    BalrogBirth,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct OriginalGroupMember {
     pub(super) kind_id: String,
@@ -1586,7 +1593,7 @@ impl Game {
             target_floor_kind_ids,
             escort_leader_kind_id,
             required_terrain,
-            false,
+            AllocationPurpose::Ordinary,
         )
     }
 
@@ -1626,7 +1633,22 @@ impl Game {
             &kind_ids,
             None,
             None,
-            true,
+            AllocationPurpose::Fishing,
+        )
+    }
+
+    pub(super) fn select_balrog_birth_corpse_actor(&mut self) -> Option<String> {
+        let floor = self.current_floor_id.clone();
+        self.select_allocated_monster(
+            &floor,
+            None,
+            2,
+            0,
+            None,
+            &[],
+            None,
+            None,
+            AllocationPurpose::BalrogBirth,
         )
     }
 
@@ -1641,8 +1663,9 @@ impl Game {
         target_floor_kind_ids: &[String],
         escort_leader_kind_id: Option<&str>,
         required_terrain: Option<&rfb_content::TerrainDefinition>,
-        fishing: bool,
+        purpose: AllocationPurpose,
     ) -> Option<String> {
+        let fishing = purpose == AllocationPurpose::Fishing;
         let current_legacy_dungeon_index = self
             .floor_dungeon(floor_id)
             .and_then(|dungeon| dungeon.legacy_index);
@@ -1675,6 +1698,9 @@ impl Game {
                     return false;
                 };
                 if definition.role != ActorRole::Monster
+                    || (purpose == AllocationPurpose::BalrogBirth
+                        && (actor_is_unique(definition)
+                            || !hunger::actor_is_human_remains_source(definition)))
                     || (fishing
                         && (actor_is_unique(definition)
                             || !definition

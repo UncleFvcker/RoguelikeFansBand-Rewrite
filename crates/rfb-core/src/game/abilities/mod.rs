@@ -125,7 +125,10 @@ impl Game {
                 self.player.energy_need = energy;
                 return Ok(step.map_translation);
             }
-            (AbilityEffectDefinition::Teleport, AbilityTargetPlan::Teleport { destination }) => {
+            (
+                AbilityEffectDefinition::Teleport | AbilityEffectDefinition::Jump { .. },
+                AbilityTargetPlan::Teleport { destination },
+            ) => {
                 self.resolve_player_teleport_effect(&ability, destination, events, changed);
             }
             (

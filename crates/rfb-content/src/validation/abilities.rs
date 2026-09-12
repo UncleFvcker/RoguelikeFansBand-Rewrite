@@ -453,6 +453,7 @@ pub(super) fn validate_abilities(
                     true
                 }
                 AbilityEffectDefinition::DimensionDoor { range } => (1..=255).contains(range),
+                AbilityEffectDefinition::Jump { range } => (1..=255).contains(range),
                 AbilityEffectDefinition::FetchItem {
                     maximum_weight_tenths_pound,
                 } => {
@@ -1277,6 +1278,11 @@ pub(super) fn validate_abilities(
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Position]
                     && (1..=255).contains(&ability.target.range)
                     && !ability.target.requires_line_of_effect
+            }
+            AbilityEffectDefinition::Jump { .. } => {
+                ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Position]
+                    && (1..=255).contains(&ability.target.range)
+                    && ability.target.requires_line_of_effect
             }
             AbilityEffectDefinition::TeleportTown => town_target_rule,
             AbilityEffectDefinition::FetchItem { .. } => {

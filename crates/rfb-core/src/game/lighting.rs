@@ -41,10 +41,12 @@ pub(super) fn starting_torch_supply(
     build: Option<&CharacterBuildIdentity>,
     rng: &mut RfbRng,
 ) -> Option<StartingTorchSupply> {
-    build.is_some().then(|| StartingTorchSupply {
-        quantity: u32::try_from(rng.bounded(5) + 3).expect("birth torch quantity must fit u32"),
-        fuel: u16::try_from((rng.bounded(5) + 3) * 500).expect("birth torch fuel must fit u16"),
-    })
+    build
+        .is_some_and(|identity| identity.race_id != "rfb-legacy.race.vampire")
+        .then(|| StartingTorchSupply {
+            quantity: u32::try_from(rng.bounded(5) + 3).expect("birth torch quantity must fit u32"),
+            fuel: u16::try_from((rng.bounded(5) + 3) * 500).expect("birth torch fuel must fit u16"),
+        })
 }
 
 fn source_intensity(source: Position, target: Position, radius: i32, maximum: u8) -> u8 {
@@ -493,7 +495,12 @@ impl Game {
             .map(|status| status.granted_equipment_bonuses.light_radius)
             .max()
             .unwrap_or_default();
-        let radius = equipment
+        let innate_and_equipment = equipment.saturating_add(if self.player_is_enlightened_maia() {
+            1 + i32::from(self.progress.level.saturating_sub(20) / 6)
+        } else {
+            0
+        });
+        let radius = innate_and_equipment
             .max(self.player_mutation_light_radius())
             .max(status);
         // xtra1.c:calc_torch caps positive light before the intrinsic weak glow.
@@ -502,12 +509,15 @@ impl Game {
         } else {
             radius
         };
-        let radius = if radius <= 0 && self.player_is_vampire() {
-            equipment.saturating_add(1)
+        let radius = if radius <= 0
+            && (self.player_is_vampire()
+                || (self.player_is_maia() && self.player_is_enlightened_maia()))
+        {
+            innate_and_equipment.saturating_add(1)
         } else {
             radius
         };
-        (radius > 0).then_some(radius)
+        (radius > 0).then_some(radius.min(14))
     }
 
     pub(super) fn item_has_darkness(&self, item: &crate::state::ItemInstance) -> bool {

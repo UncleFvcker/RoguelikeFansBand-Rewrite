@@ -27,6 +27,7 @@ export interface ObjectListEntry {
   readonly offsetY: number;
   readonly quantity?: number;
   readonly chest?: ItemDto["chest"];
+  readonly usable?: boolean;
 }
 
 export interface ObjectListProjection {
@@ -287,6 +288,20 @@ export class ObjectListPanel {
       });
       button.append(glyph, name, position);
       item.append(button);
+      if (entry.usable) {
+        const action = this.#document.createElement("button");
+        action.type = "button";
+        action.disabled = this.#state.busy || this.#state.playerDead || Boolean(this.#state.worldMap);
+        action.textContent = this.#localization.format("action-inventory-use");
+        action.addEventListener("keydown", (event) => event.stopPropagation());
+        action.addEventListener("click", (event) => {
+          event.stopPropagation();
+          if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
+          this.close();
+          this.#onCommand({ type: "use-item", itemId: entry.id.slice("item:".length) });
+        });
+        item.append(action);
+      }
       if (entry.chest) {
         for (const [type, enabled] of [
           ["open-chest", entry.chest.canOpen],
@@ -412,6 +427,7 @@ export function buildObjectListEntries(options: ObjectListProjection): ObjectLis
       offsetY: item.position.y - options.playerPosition.y,
       quantity: item.quantity,
       chest: item.chest,
+      usable: item.usable,
     }];
   });
   const compare = (left: ObjectListEntry, right: ObjectListEntry): number =>

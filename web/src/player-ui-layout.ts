@@ -157,6 +157,11 @@ export class PlayerUiLayout {
     if (page === "character") this.#restoreCharacterScroll();
   }
 
+  showMaiaChoice(): void {
+    this.open("character");
+    this.#activateTab(this.#dom.characterTabs.find(tab => tab.dataset.characterPage === "other")!);
+  }
+
   readonly #showSettings = (): void => {
     if (!this.#dom.settingsDialog.open) this.#dom.settingsDialog.showModal();
   };

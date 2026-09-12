@@ -196,7 +196,11 @@ pub(super) fn apply_ability_level_scaling(
             ))
             .expect("validated level-scaled radius must fit u8");
         }
-        (AbilityEffectDefinition::DimensionDoor { range }, AbilityLevelScalingField::Radius) => {
+        (
+            AbilityEffectDefinition::DimensionDoor { range }
+            | AbilityEffectDefinition::Jump { range },
+            AbilityLevelScalingField::Radius,
+        ) => {
             *range = u16::try_from(scaled_ability_level_value(
                 u64::from(*range),
                 scaling,

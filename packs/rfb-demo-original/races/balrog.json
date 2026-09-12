@@ -1,6 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
   "baseHp": 24,
+  "abilities": [{
+    "minimumLevel": 15,
+    "governingAttribute": "constitution",
+    "cost": 10,
+    "costScaling": { "startLevel": 3, "levelInterval": 3, "amount": 1 },
+    "baseFailurePercent": 70,
+    "abilityId": "rfb.ability.race.demon-breath"
+  }],
   "bodySlots": [
     {
       "id": "right-hand",
@@ -65,10 +73,15 @@
   ],
   "descriptionKey": "race-legacy-balrog-description",
   "experiencePercent": 180,
+  "foodNutritionDivisor": 20,
   "formatVersion": 1,
   "id": "rfb-legacy.race.balrog",
   "kinCategory": "kin-glyph-85",
   "legacyIndex": 32,
+  "infravision": 5,
+  "holdLifeMinimumLevel": 1,
+  "seeInvisibleMinimumLevel": 10,
+  "levelResistances": [{ "minimumLevel": 45, "resistances": { "fire": "strong" } }],
   "lifePercent": 106,
   "modifiers": {
     "charisma": 2,
@@ -86,7 +99,10 @@
   "shopAdjustPercent": 140,
   "skillSetId": "rfb-legacy.skill-set.race-balrog",
   "tags": [
+    "demon",
     "legacy-import",
-    "polymorph-candidate"
+    "nonliving",
+    "polymorph-candidate",
+    "rfb-compatibility"
   ]
 }

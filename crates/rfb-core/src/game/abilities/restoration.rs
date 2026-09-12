@@ -97,14 +97,19 @@ impl Game {
                 next_maximum,
             );
         }
-        let lost_experience = self.progress.experience / 4;
-        self.progress.experience -= lost_experience;
-        self.progress.maximum_experience -= self.progress.experience / 4;
-        let lost_levels = self.progress.lose_experience(
-            0,
-            self.character_experience_percent(),
-            self.victory_level_cap_unlocked(),
-        );
+        let (lost_experience, lost_levels) = if self.player_is_native_android() {
+            (0, Vec::new())
+        } else {
+            let lost_experience = self.progress.experience / 4;
+            self.progress.experience -= lost_experience;
+            self.progress.maximum_experience -= self.progress.experience / 4;
+            let lost_levels = self.progress.lose_experience(
+                0,
+                self.character_experience_percent(),
+                self.victory_level_cap_unlocked(),
+            );
+            (lost_experience, lost_levels)
+        };
         self.refresh_character_skills();
         self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
         events.push(DomainEvent::ExperienceDrained {

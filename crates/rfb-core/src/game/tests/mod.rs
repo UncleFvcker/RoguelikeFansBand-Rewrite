@@ -17,6 +17,7 @@ use super::*;
 
 mod abilities;
 mod acquirement;
+mod android;
 mod archer;
 mod arena;
 mod artifact_identity;
@@ -24,9 +25,11 @@ mod asgard;
 mod attribute_sources;
 mod berserker;
 
+mod balrog;
 mod book_discovery;
 mod capture_ball;
 mod cavalry;
+mod centaur;
 mod combat;
 mod craft;
 mod devices;
@@ -46,6 +49,7 @@ mod items;
 mod lighting;
 mod mage;
 mod magic_eater;
+mod maia;
 mod mindcrafter;
 mod mining_progress;
 mod monster_ai;

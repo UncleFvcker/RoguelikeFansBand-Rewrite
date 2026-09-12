@@ -39,6 +39,7 @@ impl Game {
                     | GameAction::ConfigureMogaminator { .. }
                     | GameAction::ConfigureTravel { .. }
                     | GameAction::ChooseRaceMutation { .. }
+                    | GameAction::ChooseMaiaPath { .. }
                     | GameAction::InscribeItem { .. }
                     | GameAction::SwapAbsorbedDevices { .. }
                     | GameAction::SetInterfaceLocale { .. }
@@ -898,9 +899,15 @@ impl Game {
         }
         let expected_skills =
             character_skill_progress(&self.content, self.build.as_ref(), self.progress.level)?;
-        if !self
-            .progress
-            .validate(self.character_experience_percent(), victory_cap_unlocked)
+        if !self.progress.validate(
+            |level| self.experience_required_for_level(level),
+            victory_cap_unlocked,
+        ) || (self.player_is_native_android()
+            && !self.player_is_dead()
+            && (self.progress.experience != self.android_equipment_experience()
+                || self.progress.maximum_experience != self.progress.experience
+                || self.progress.experience
+                    < self.experience_required_for_level(self.progress.level)))
             || self.progress.skills != expected_skills
             || self
                 .character_definitions()

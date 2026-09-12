@@ -5643,6 +5643,7 @@ fn home_deposit_withdraw_grouping_and_save_are_authoritative() {
         ration.id.clone(),
         ItemPropertyKnowledgeState {
             known_blessed: false,
+            known_curse: false,
             discovered: true,
             appraised: true,
             identified: true,

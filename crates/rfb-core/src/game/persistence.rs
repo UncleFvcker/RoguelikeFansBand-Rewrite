@@ -529,6 +529,7 @@ fn restore_character_progress(
         weapon_proficiencies,
         riding_proficiency: saved.riding_proficiency,
         dual_wielding_proficiency: saved.dual_wielding_proficiency,
+        centaur_hoof_proficiency: saved.centaur_hoof_proficiency,
         mining_proficiency: saved.mining_proficiency,
         materials,
         active_mutation_ids,
@@ -614,9 +615,11 @@ fn item_property_knowledge_from_save(
                     .contains(&rfb_protocol::WeaponTraitDto::Blessed))
             || (entry.feeling.is_some()
                 && (identified
-                    || !content
-                        .item(&item.kind_id)
-                        .is_some_and(super::item_knowledge::item_can_be_sensed)))
+                    || !((entry.known_curse
+                        && entry.feeling == Some(rfb_protocol::ItemFeelingDto::Cursed))
+                        || content
+                            .item(&item.kind_id)
+                            .is_some_and(super::item_knowledge::item_can_be_sensed))))
             || known_affix_ids.len() != known_affix_count
             || known_affix_ids.iter().any(|affix_id| {
                 !item.affix_ids.contains(affix_id) || content.affix(affix_id).is_none()
@@ -626,6 +629,7 @@ fn item_property_knowledge_from_save(
                 .insert(
                     entry.item_id,
                     ItemPropertyKnowledgeState {
+                        known_curse: entry.known_curse,
                         discovered: entry.discovered,
                         appraised,
                         identified,
@@ -1125,6 +1129,7 @@ impl Game {
         let fame = payload.player.fame;
         let nutrition = payload.player.nutrition;
         let fasting = payload.player.fasting;
+        let maia_path = payload.player.maia_path;
         let player_name =
             normalize_player_name(&payload.player.name).ok_or(CoreError::InvalidPlayerName)?;
         let player = actor_from_player(payload.player, &content)?;
@@ -1477,6 +1482,7 @@ impl Game {
             casino: payload.casino,
             nutrition,
             fasting,
+            maia_path,
             build,
             body_slots,
             progress,
@@ -1560,6 +1566,11 @@ impl Game {
         game.validate_loaded_state()?;
         if game.fishing_direction.is_some() && !game.fishing_state_is_valid() {
             return Err(CoreError::InvalidSave("player fishing state is invalid"));
+        }
+        if game.maia_path.is_some()
+            && (!game.player_is_native_maia() || game.progress.max_level < 20)
+        {
+            return Err(CoreError::InvalidSave("invalid Maia path"));
         }
         if !game.casino_state_is_valid() {
             return Err(CoreError::InvalidSave("casino state is invalid"));
@@ -1769,6 +1780,7 @@ impl Game {
         player.fame = self.fame;
         player.nutrition = self.nutrition;
         player.fasting = self.fasting;
+        player.maia_path = self.maia_path;
         player.resources = self
             .resources
             .iter()
@@ -1890,6 +1902,7 @@ impl Game {
                         )
                 });
                 ItemPropertyKnowledgeSaveDto {
+                    known_curse: knowledge.is_some_and(|knowledge| knowledge.known_curse),
                     item_id,
                     discovered: held || knowledge.is_some_and(|knowledge| knowledge.discovered),
                     appraised: knowledge.is_some_and(|knowledge| knowledge.appraised),

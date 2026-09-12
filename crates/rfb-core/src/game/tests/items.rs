@@ -8188,6 +8188,7 @@ fn dr_jones_game() -> (Game, String) {
         id.clone(),
         ItemPropertyKnowledgeState {
             known_blessed: false,
+            known_curse: false,
             discovered: true,
             appraised: true,
             identified: true,
@@ -9327,6 +9328,7 @@ fn p100e_soulsword_rolls_and_persists_one_extra_power_and_increases_life() {
         item_id.clone(),
         ItemPropertyKnowledgeState {
             known_blessed: false,
+            known_curse: false,
             discovered: true,
             appraised: true,
             identified: true,

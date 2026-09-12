@@ -31,6 +31,9 @@ pub(crate) enum GameAction {
         reward_id: String,
         mutation_id: String,
     },
+    ChooseMaiaPath {
+        path: rfb_protocol::MaiaPathDto,
+    },
     Appraise {
         item_id: String,
     },
@@ -283,6 +286,7 @@ impl GameAction {
             | Self::DismissPets
             | Self::IncreaseAttribute { .. }
             | Self::ChooseRaceMutation { .. }
+            | Self::ChooseMaiaPath { .. }
             | Self::EnterWorldMap { .. }
             | Self::LeaveWorldMap
             | Self::Retire
@@ -372,6 +376,7 @@ impl From<GameCommand> for GameAction {
                 mutation_id,
             },
             GameCommand::Appraise { item_id } => Self::Appraise { item_id },
+            GameCommand::ChooseMaiaPath { path } => Self::ChooseMaiaPath { path },
             GameCommand::BashDoor { direction } => Self::BashDoor { direction },
             GameCommand::BuyFromShop {
                 shop_id,

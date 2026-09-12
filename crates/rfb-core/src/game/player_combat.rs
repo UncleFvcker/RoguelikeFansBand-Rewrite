@@ -1318,9 +1318,16 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<DamageOutcome, CoreError> {
-        // GF_DISP_ALL ignores resistance, including the ring's dispel branch.
-        let resistance = ((ability_id == "demo.item-activation.one-ring"
-            && damage_type == DamageType::Physical)
+        // GF_MISSILE and GF_DISP_ALL bypass armor and physical resistance.
+        let resistance = ((damage_type == DamageType::Physical
+            && matches!(
+                ability_id,
+                "demo.item-activation.one-ring"
+                    | "rfb.ability.race.android-ray-gun"
+                    | "rfb.ability.race.android-blaster"
+                    | "rfb.ability.race.android-bazooka"
+                    | "rfb.ability.race.android-beam-cannon"
+            ))
             || self.content.ability(ability_id).is_some_and(|ability| {
                 matches!(ability.effect, AbilityEffectDefinition::Evocation)
             }))
@@ -2108,6 +2115,10 @@ impl Game {
             }
             let duelist_attack =
                 profile.source_item_id.is_some() && self.duelist_opponent(&target_entity_id);
+            // cmd1.c trains each innate profile once, before hit rolls, including misses.
+            if profile.attack_name.as_deref() == Some("马蹄") {
+                self.train_centaur_hooves(definition.level, events);
+            }
             let vampiric_weapon =
                 matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vampiric))
                     || (profile.source_item_id.is_some() && self.items.iter().any(|item| {

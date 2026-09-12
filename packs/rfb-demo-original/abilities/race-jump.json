@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.jump",
+  "nameKey": "ability-rfb-race-jump-name",
+  "descriptionKey": "ability-rfb-race-jump-description",
+  "target": {
+    "modes": [
+      "position"
+    ],
+    "range": 2,
+    "requiresLineOfEffect": true
+  },
+  "levelScaling": [
+    {
+      "effectIndex": 0,
+      "field": "radius",
+      "multiplier": 1,
+      "divisor": 35
+    }
+  ],
+  "tags": [
+    "movement",
+    "race"
+  ],
+  "abilityProgramId": "rfb.ability-program.race.jump"
+}

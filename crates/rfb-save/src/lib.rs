@@ -213,6 +213,7 @@ mod tests {
                 gold: 0,
                 nutrition: rfb_protocol::PLAYER_NUTRITION_BIRTH,
                 fasting: false,
+                maia_path: None,
                 base_max_hp: 10,
                 base_speed: 110,
                 energy_need: 0,

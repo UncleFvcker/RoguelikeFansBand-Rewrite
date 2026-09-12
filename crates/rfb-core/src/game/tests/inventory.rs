@@ -937,6 +937,7 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
         item_id.clone(),
         ItemPropertyKnowledgeState {
             known_blessed: false,
+            known_curse: false,
             discovered: true,
             appraised: true,
             identified: true,

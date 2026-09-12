@@ -411,6 +411,7 @@ impl Game {
         }
         if !ego::one_in(&mut self.rng, 4) {
             self.curse_disenchant_equipment();
+            self.refresh_android_experience(events);
         }
         let attribute = attributes[self.rng.bounded(6) as usize];
         let amount = 12 + ego::randint1(&mut self.rng, 6) as u8;

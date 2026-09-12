@@ -5415,6 +5415,25 @@
         {
           "type": "object",
           "properties": {
+            "range": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "jump"
+            }
+          },
+          "required": [
+            "type",
+            "range"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "statusKindId": {
               "type": "string"
             },
@@ -9674,6 +9693,22 @@
         {
           "type": "object",
           "properties": {
+            "path": {
+              "$ref": "#/$defs/MaiaPathDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "choose-maia-path"
+            }
+          },
+          "required": [
+            "type",
+            "path"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "itemId": {
               "type": "string"
             },
@@ -12783,6 +12818,9 @@
         },
         "readable": {
           "type": "boolean"
+        },
+        "usable": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -13080,6 +13118,13 @@
       "required": [
         "slots",
         "deviceCommands"
+      ]
+    },
+    "MaiaPathDto": {
+      "type": "string",
+      "enum": [
+        "enlightened",
+        "corrupted"
       ]
     },
     "MapScaleDto": {
@@ -14171,6 +14216,16 @@
             }
           ]
         },
+        "maiaPath": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MaiaPathDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "maxHp": {
           "type": "integer",
           "format": "int32"
@@ -14247,6 +14302,9 @@
               "type": "null"
             }
           ]
+        },
+        "pendingMaiaPathChoice": {
+          "type": "boolean"
         },
         "pendingMutationDirection": {
           "anyOf": [
@@ -14374,6 +14432,7 @@
         }
       },
       "required": [
+        "pendingMaiaPathChoice",
         "traitDetails",
         "id",
         "name",
@@ -14968,6 +15027,7 @@
     "RestStopReasonDto": {
       "type": "string",
       "enum": [
+        "maia-path-choice-required",
         "damaged",
         "enemy-visible",
         "full-resources",

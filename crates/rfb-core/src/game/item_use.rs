@@ -314,7 +314,9 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         let before_state = self.nutrition_state();
-        let amount = if self.player_is_skeleton() {
+        let amount = if self.player_is_android() && source_kind_id == "demo.item.flask-of-oil" {
+            amount
+        } else if self.player_is_skeleton() || self.player_is_android() {
             0
         } else {
             amount / self.player_food_nutrition_divisor()
@@ -4017,6 +4019,18 @@ impl Game {
         target: Option<&TargetSelection>,
         target_glyph: Option<&str>,
     ) -> Option<ItemUsePlan> {
+        if self
+            .items
+            .iter()
+            .find(|item| item.id == source_item_id)
+            .is_some_and(|item| {
+                item.kind_id == "demo.item.corpse-remains"
+                    && !self.player_can_sacrifice_corpse(item)
+                    || (item.kind_id == "demo.item.flask-of-oil" && !self.player_is_android())
+            })
+        {
+            return None;
+        }
         if target_glyph.is_some() && !matches!(effect, ItemUseEffectDefinition::Genocide { .. }) {
             return None;
         }
@@ -5073,6 +5087,9 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         let amount = self.progress.experience / u64::from(divisor);
+        if self.player_is_native_android() {
+            return false;
+        }
         self.progress.experience = self.progress.experience.saturating_sub(amount);
         self.mark_item_aware(source_kind_id);
         events.push(DomainEvent::ItemExperienceLost {
@@ -6095,6 +6112,9 @@ impl Game {
                 self.resolve_item_nutrition_increase(source_kind_id, *amount, events)
             }
             ItemUseEffectDefinition::SatisfyHunger => {
+                if source_kind_id == "demo.item.corpse-remains" {
+                    events.push(DomainEvent::CorpseSacrificed);
+                }
                 self.resolve_item_satisfy_hunger(source_kind_id, false, events)
             }
             effect @ (ItemUseEffectDefinition::Heal { .. }

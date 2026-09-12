@@ -1613,6 +1613,26 @@
         {
           "additionalProperties": false,
           "properties": {
+            "range": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "jump",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "range"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "actorKindId": {
               "type": "string"
             },

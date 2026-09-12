@@ -6846,7 +6846,7 @@ pub fn parse_character_block(name: &str, body: &str) -> LegacyCharacterEntry {
                     {
                         entry.calc_bonuses_fn = Some(rhs.to_owned());
                     }
-                    if other == "get_powers"
+                    if matches!(other, "get_powers" | "get_powers_fn")
                         && !rhs.is_empty()
                         && rhs.bytes().all(|byte| {
                             byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_'
@@ -6863,13 +6863,41 @@ pub fn parse_character_block(name: &str, body: &str) -> LegacyCharacterEntry {
         entry.hold_life_minimum_level = Some(1);
         entry.healing_received_percent = 50;
     }
-    if matches!(entry.id.as_str(), "spectre" | "vampire") {
+    if matches!(
+        entry.id.as_str(),
+        "spectre" | "vampire" | "balrog" | "android"
+    ) {
         entry.hold_life_minimum_level = Some(1);
     }
     entry
 }
 
 fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
+    if entry.id == "android" && entry.get_powers_fn.as_deref() == Some("_android_get_powers") {
+        // races_a.c mutates one power according to current level instead of returning a table.
+        entry.abilities = [
+            ("ray-gun", 1, 7, 30),
+            ("blaster", 10, 13, 30),
+            ("bazooka", 25, 26, 40),
+            ("beam-cannon", 35, 40, 50),
+            ("rocket-launcher", 45, 60, 70),
+        ]
+        .into_iter()
+        .map(
+            |(name, minimum_level, cost, base_failure_percent)| LegacyInnatePower {
+                ability_id: format!("rfb.ability.race.android-{name}"),
+                governing_attribute: "strength".to_owned(),
+                minimum_level,
+                cost,
+                base_failure_percent,
+            },
+        )
+        .collect();
+        entry
+            .hooks
+            .retain(|hook| !matches!(hook.as_str(), "get_powers" | "get_powers_fn"));
+        return;
+    }
     let Some(table_name) = entry.get_powers_fn.as_deref() else {
         return;
     };
@@ -6938,12 +6966,14 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
             "shadow_shifting_spell" => "rfb.ability.race.amberite-shadow-shifting",
             "pattern_mindwalk_spell" => "rfb.ability.race.amberite-pattern-mindwalk",
             "scare_monster_spell" => "rfb.ability.race.scare-monster",
+            "jump_spell" => "rfb.ability.race.jump",
             "sleeping_dust_spell" => "rfb.ability.race.sleeping-dust",
             "spit_acid_spell" => "rfb.ability.race.spit-acid",
             "stone_skin_spell" => "rfb.ability.race.golem-stone-skin",
             "stone_to_mud_spell" => "rfb.ability.race.stone-to-mud",
             "throw_boulder_spell" => "rfb.ability.race.throw-boulder",
             "vampirism_spell" => "rfb.ability.race.vampirism",
+            "demon_breath_spell" => "rfb.ability.race.demon-breath",
             _ => {
                 gaps.push(format!("get_powers:{spell}"));
                 continue;
@@ -7715,6 +7745,7 @@ fn character_skill_set_json(entry: &LegacyCharacterEntry, id: &str) -> serde_jso
 fn character_gap_accounting(entry: &LegacyCharacterEntry, report: &mut ContentImportReport) {
     for flag in &entry.flags {
         if (flag == "RACE_IS_DEMON" && legacy_race_tags(entry).contains(&"demon"))
+            || (entry.id == "android" && flag == "RACE_NO_POLY")
             || (entry.id == "golem"
                 && matches!(flag.as_str(), "RACE_IS_NONLIVING" | "RACE_EATS_DEVICES"))
             || (matches!(entry.id.as_str(), "skeleton" | "zombie" | "spectre")
@@ -7730,8 +7761,12 @@ fn character_gap_accounting(entry: &LegacyCharacterEntry, report: &mut ContentIm
                     flag.as_str(),
                     "RACE_IS_NONLIVING" | "RACE_IS_UNDEAD" | "RACE_DEMI_TALENT"
                 ))
+            || (matches!(entry.id.as_str(), "balrog" | "android") && flag == "RACE_IS_NONLIVING")
             || (entry.id == "vampire"
-                && matches!(flag.as_str(), "RACE_IS_NONLIVING" | "RACE_IS_UNDEAD"))
+                && matches!(
+                    flag.as_str(),
+                    "RACE_IS_NONLIVING" | "RACE_IS_UNDEAD" | "RACE_NIGHT_START"
+                ))
         {
             continue;
         }
@@ -7740,7 +7775,18 @@ fn character_gap_accounting(entry: &LegacyCharacterEntry, report: &mut ContentIm
     for hook in &entry.hooks {
         if (entry.id == "einheri" && matches!(hook.as_str(), "gain_level" | "get_flags"))
             || (entry.id == "beastman" && matches!(hook.as_str(), "birth" | "gain_level"))
-            || (matches!(entry.id.as_str(), "tomte" | "spectre") && hook == "birth")
+            || (matches!(
+                entry.id.as_str(),
+                "tomte" | "spectre" | "vampire" | "centaur" | "balrog" | "android"
+            ) && hook == "birth")
+            || (matches!(entry.id.as_str(), "balrog" | "android") && hook == "get_flags")
+            || (entry.id == "centaur"
+                && matches!(hook.as_str(), "calc_innate_attacks" | "get_flags"))
+            || (entry.id == "maia"
+                && matches!(
+                    hook.as_str(),
+                    "gain_level" | "get_flags" | "calc_weapon_bonuses"
+                ))
         {
             continue;
         }
@@ -7783,12 +7829,39 @@ fn legacy_race_kin_glyph(id: &str) -> char {
 }
 
 fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
-    if entry.id == "vampire" {
-        // The life-force conversion target is runnable; birth and creation stay unopened.
+    if entry.id == "android" {
         return vec![
+            "legacy-import",
+            "polymorph-immune",
+            "nonliving",
+            "slow-digestion",
+            "rfb-compatibility",
+        ];
+    }
+    if entry.id == "balrog" {
+        return vec![
+            "demon",
             "legacy-import",
             "nonliving",
             "polymorph-candidate",
+            "rfb-compatibility",
+        ];
+    }
+    if entry.id == "maia" {
+        return vec![
+            "legacy-import",
+            "polymorph-candidate",
+            "rfb-compatibility",
+            "slow-digestion",
+        ];
+    }
+    if entry.id == "vampire" {
+        return vec![
+            "legacy-import",
+            "night-start",
+            "nonliving",
+            "polymorph-candidate",
+            "rfb-compatibility",
             "undead",
             "vampire",
         ];
@@ -7805,7 +7878,7 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
             "undead",
         ];
     }
-    if entry.id == "ent" {
+    if matches!(entry.id.as_str(), "ent" | "centaur") {
         return vec![
             "forest-adapted",
             "legacy-import",
@@ -8022,17 +8095,30 @@ fn race_json(
             .collect::<Vec<_>>(),
         "tags": legacy_race_tags(entry),
     });
-    if matches!(entry.id.as_str(), "ent" | "spectre") {
+    if matches!(entry.id.as_str(), "ent" | "spectre" | "balrog" | "android") {
         value["foodNutritionDivisor"] = serde_json::json!(20);
     }
     if entry.id == "vampire" {
         value["foodNutritionDivisor"] = serde_json::json!(10);
+        // races_k.c: _vampire_birth. Core omits this racial supply for berserkers.
+        value["startingItems"] = serde_json::json!([{
+            "itemKindId": "demo.item.darkness-scroll", "quantity": 2, "maximumQuantity": 5,
+        }]);
     }
     if entry.id == "spectre" {
         // races_k.c: _spectre_birth; common initialization supplies py_birth_light.
         value["startingItems"] = serde_json::json!([{
             "itemKindId": "demo.item.staff-of-nothing", "quantity": 1, "fullyCharged": true,
         }]);
+    }
+    if entry.id == "android" {
+        value["armorClass"] = serde_json::json!(10);
+        value["levelStatScalings"] = serde_json::json!([
+            {"stat": "armor-class", "multiplier": 2, "divisor": 5},
+        ]);
+        value["startingItems"] = serde_json::json!([
+            {"itemKindId": "demo.item.flask-of-oil", "quantity": 7, "maximumQuantity": 12},
+        ]);
     }
     let modifiers = character_modifiers(entry);
     if !modifiers.is_empty() {
@@ -8064,6 +8150,12 @@ fn race_json(
                 }))
                 .collect::<Vec<_>>()
         );
+    }
+    if entry.id == "balrog" {
+        // The compact core uses Strong for the second fire-resistance source.
+        value["levelResistances"] = serde_json::json!([{
+            "minimumLevel": 45, "resistances": {"fire": "strong"},
+        }]);
     }
     if entry.free_act {
         value["statusImmunities"] = serde_json::json!(["rfb.status.paralysis"]);
@@ -8134,7 +8226,10 @@ fn race_json(
                             "startLevel": 45, "levelInterval": 50, "amount": 30,
                         });
                     }
-                    if power.ability_id == "rfb.ability.race.vampirism" {
+                    if matches!(
+                        power.ability_id.as_str(),
+                        "rfb.ability.race.vampirism" | "rfb.ability.race.demon-breath"
+                    ) {
                         value["costScaling"] = serde_json::json!({
                             "startLevel": 3, "levelInterval": 3, "amount": 1,
                         });
@@ -8155,6 +8250,19 @@ fn race_json(
         }]);
     }
     character_gap_accounting(entry, report);
+    if entry.id == "maia" {
+        // Branch conditions cannot become unconditional birth defenses.
+        let object = value.as_object_mut().expect("race JSON is an object");
+        for key in [
+            "resistances",
+            "levelResistances",
+            "levitation",
+            "seeInvisible",
+            "seeInvisibleMinimumLevel",
+        ] {
+            object.remove(key);
+        }
+    }
     value
 }
 
@@ -15654,7 +15762,7 @@ const P62_POLYMORPH_RACES: &[(u16, &str, bool)] = &[
     (33, "dunadan", true),
     (34, "shadow-fairy", true),
     (35, "kutar", true),
-    (36, "android", false),
+    (36, "android", true),
     (37, "doppelganger", true),
     (51, "centaur", true),
     (60, "wood-elf", true),
@@ -15760,6 +15868,16 @@ fn write_p62_locale_block(
             description.replace('\n', "\n    ")
         } else if chinese {
             "RFB 临时变形形态。".to_owned()
+        } else if id == "vampire" {
+            "Vampires are powerful undead who resist cold, poison, nether and darkness. Sunlight is dangerous to them, and they feed by draining nearby living creatures. They begin their adventures at night.".to_owned()
+        } else if id == "centaur" {
+            "Centaurs combine a human torso with a horse's body and legs. They move faster as they gain experience, leap short distances and add hoof attacks to their melee. They cannot wear boots and cross forest vegetation quickly.".to_owned()
+        } else if id == "balrog" {
+            "Balrogs are powerful nonliving demons who resist fire and nether, preserve life and learn to see invisible creatures. They feed by sacrificing human corpses and can breathe fire or nether.".to_owned()
+        } else if id == "android" {
+            "Androids gain and lose levels as their equipment changes. Rings, amulets and lights do not contribute experience. Their mechanical bodies resist poison and experience drain, need oil for nutrition and require care around electricity. Their built-in weapon changes as they gain levels.".to_owned()
+        } else if id == "maia" {
+            "Maiar are spirits who serve the Valar. At level 20 they must choose enlightenment or corruption, gaining different powers and restrictions on spell realms.".to_owned()
         } else {
             "Temporary RFB polymorph form.".to_owned()
         };
@@ -15835,6 +15953,8 @@ pub fn sync_demo_polymorph_races(
         if entry.flags.iter().any(|flag| flag == "RACE_NO_POLY") {
             tags.push("polymorph-immune");
         }
+        tags.sort_unstable();
+        tags.dedup();
         race["tags"] = serde_json::json!(tags);
         fs::write(
             races_output.join(format!("{id}.json")),
@@ -25739,7 +25859,7 @@ static power_info _wood_elf_get_powers[] =
     }
 
     #[test]
-    fn vampire_runtime_import_leaves_birth_dependencies_closed() {
+    fn vampire_import_preserves_night_birth_supplies_and_power() {
         let mut vampire = parse_character_block(
             "vampire",
             r#"
@@ -25774,18 +25894,206 @@ static power_info _vampire_get_powers[] =
         assert_eq!(race["abilities"][0]["cost"], 1);
         assert_eq!(race["abilities"][0]["baseFailurePercent"], 60);
         let tags = legacy_race_tags(&vampire);
-        for tag in ["nonliving", "undead", "vampire"] {
+        for tag in [
+            "nonliving",
+            "undead",
+            "vampire",
+            "night-start",
+            "rfb-compatibility",
+        ] {
             assert!(tags.contains(&tag));
         }
-        for tag in ["night-start", "rfb-compatibility"] {
-            assert!(!tags.contains(&tag));
-        }
-        assert!(race.get("startingItems").is_none());
+        assert_eq!(
+            race["startingItems"][0]["itemKindId"],
+            "demo.item.darkness-scroll"
+        );
+        assert_eq!(race["startingItems"][0]["quantity"], 2);
+        assert_eq!(race["startingItems"][0]["maximumQuantity"], 5);
         character_gap_accounting(&vampire, &mut report);
         assert!(!report.unmapped_race_flags.contains_key("RACE_IS_NONLIVING"));
         assert!(!report.unmapped_race_flags.contains_key("RACE_IS_UNDEAD"));
-        assert!(report.unmapped_race_flags.contains_key("RACE_NIGHT_START"));
-        assert!(report.race_hook_gaps.contains_key("birth"));
+        assert!(!report.unmapped_race_flags.contains_key("RACE_NIGHT_START"));
+        assert!(!report.race_hook_gaps.contains_key("birth"));
+    }
+
+    #[test]
+    fn centaur_import_preserves_speed_power_and_body_hook_accounting() {
+        const SOURCE: &str = r#"
+static void _centaur_calc_bonuses(void)
+{
+    p_ptr->pspeed += p_ptr->lev / 10;
+}
+static power_info _centaur_get_powers[] =
+{
+    { A_DEX, {15, 10, 50, jump_spell}},
+    { -1, {-1, -1, -1, NULL} }
+};
+"#;
+        let mut entry = parse_character_block(
+            "centaur",
+            r#"
+me.name = "半人马";
+me.birth = _centaur_birth;
+me.calc_innate_attacks = _centaur_calc_innate_attacks;
+me.get_flags = _centaur_get_flags;
+me.get_powers = _centaur_get_powers;
+"#,
+        );
+        let (_, _, _, _, _, _, _, _, speed, _, _, _) =
+            parse_calc_bonuses_defenses(SOURCE, "_centaur_calc_bonuses");
+        entry.speed_per_ten_levels = speed;
+        parse_race_powers(SOURCE, &mut entry);
+        let mut report = ContentImportReport::default();
+        let race = race_json(
+            &entry,
+            &[("body".to_owned(), "body".to_owned())],
+            &mut report,
+        );
+        assert_eq!(
+            race["levelStatScalings"],
+            serde_json::json!([{"stat": "speed", "multiplier": 1, "divisor": 10}])
+        );
+        assert_eq!(
+            race["abilities"],
+            serde_json::json!([{
+                "abilityId": "rfb.ability.race.jump", "minimumLevel": 15,
+                "governingAttribute": "dexterity", "cost": 10, "baseFailurePercent": 50
+            }])
+        );
+        assert!(legacy_race_tags(&entry).contains(&"forest-adapted"));
+        assert!(legacy_race_tags(&entry).contains(&"rfb-compatibility"));
+        for hook in ["birth", "calc_innate_attacks", "get_flags"] {
+            assert!(!report.race_hook_gaps.contains_key(hook), "{hook}");
+        }
+    }
+
+    #[test]
+    fn balrog_import_preserves_passives_and_breath_cost_scaling() {
+        const SOURCE: &str = r#"
+static power_info _balrog_get_powers[] =
+{
+    { A_CON, {15, 10, 70, demon_breath_spell}},
+    { -1, {-1, -1, -1, NULL} }
+};
+static void _balrog_calc_bonuses(void)
+{
+    res_add(RES_FIRE);
+    res_add(RES_NETHER);
+    p_ptr->hold_life++;
+    if (p_ptr->lev >= 10) p_ptr->see_inv++;
+    if (p_ptr->lev >= 45) res_add(RES_FIRE);
+    p_ptr->align -= 200;
+}
+"#;
+        let mut entry = parse_character_block(
+            "balrog",
+            r#"
+me.name = "炎魔";
+me.infra = 5;
+me.flags = RACE_IS_NONLIVING | RACE_IS_DEMON;
+me.birth = _balrog_birth;
+me.get_flags = _balrog_get_flags;
+me.get_powers = _balrog_get_powers;
+"#,
+        );
+        let defenses = parse_calc_bonuses_defenses(SOURCE, "_balrog_calc_bonuses");
+        entry.resistances = defenses.0;
+        entry.see_invisible = defenses.3;
+        entry.see_invisible_minimum_level = defenses.4;
+        parse_race_powers(SOURCE, &mut entry);
+        let mut report = ContentImportReport::default();
+        let race = race_json(&entry, &[], &mut report);
+        assert_eq!(race["infravision"], 5);
+        assert_eq!(race["holdLifeMinimumLevel"], 1);
+        assert_eq!(race["foodNutritionDivisor"], 20);
+        assert_eq!(race["seeInvisibleMinimumLevel"], 10);
+        assert_eq!(race["levelResistances"][0]["resistances"]["fire"], "strong");
+        assert_eq!(
+            race["abilities"][0],
+            serde_json::json!({
+                "abilityId": "rfb.ability.race.demon-breath", "minimumLevel": 15,
+                "governingAttribute": "constitution", "cost": 10, "baseFailurePercent": 70,
+                "costScaling": {"startLevel": 3, "levelInterval": 3, "amount": 1},
+            })
+        );
+        assert!(legacy_race_tags(&entry).contains(&"demon"));
+        assert!(legacy_race_tags(&entry).contains(&"nonliving"));
+        assert!(report.unmapped_race_flags.is_empty());
+        assert!(!report.race_hook_gaps.contains_key("birth"));
+        assert!(!report.race_hook_gaps.contains_key("get_flags"));
+    }
+
+    #[test]
+    fn android_import_maps_dynamic_power_stages_and_birth_passives() {
+        let mut entry = parse_character_block(
+            "android",
+            r#"
+me.name = "人造人";
+me.exp = 200;
+me.birth = _android_birth;
+me.get_powers_fn = _android_get_powers;
+me.get_flags = _android_get_flags;
+me.flags = RACE_IS_NONLIVING | RACE_NO_POLY;
+"#,
+        );
+        parse_race_powers("", &mut entry);
+        let mut report = ContentImportReport::default();
+        let race = race_json(&entry, &[], &mut report);
+        assert_eq!(race["abilities"].as_array().unwrap().len(), 5);
+        assert_eq!(race["abilities"][0]["minimumLevel"], 1);
+        assert_eq!(race["abilities"][4]["minimumLevel"], 45);
+        assert_eq!(
+            race["abilities"][4]["abilityId"],
+            "rfb.ability.race.android-rocket-launcher"
+        );
+        assert_eq!(race["abilities"][4]["cost"], 60);
+        assert_eq!(race["armorClass"], 10);
+        assert_eq!(race["levelStatScalings"][0]["divisor"], 5);
+        assert_eq!(race["holdLifeMinimumLevel"], 1);
+        assert_eq!(race["foodNutritionDivisor"], 20);
+        assert_eq!(
+            race["startingItems"][0]["itemKindId"],
+            "demo.item.flask-of-oil"
+        );
+        assert_eq!(race["startingItems"][0]["quantity"], 7);
+        assert_eq!(race["startingItems"][0]["maximumQuantity"], 12);
+        assert!(legacy_race_tags(&entry).contains(&"nonliving"));
+        assert!(legacy_race_tags(&entry).contains(&"polymorph-immune"));
+        assert!(report.unmapped_race_flags.is_empty());
+        assert!(report.race_hook_gaps.is_empty());
+    }
+
+    #[test]
+    fn maia_import_keeps_branch_defenses_out_of_birth_definition() {
+        let mut entry = parse_character_block(
+            "maia",
+            r#"
+me.name = "迈雅";
+me.infra = 10;
+me.base_hp = 22;
+me.life = 100;
+me.exp = 400;
+me.gain_level = _maia_gain_level;
+me.calc_weapon_bonuses = _maia_calc_weapon_bonuses;
+me.get_flags = _maia_get_flags;
+"#,
+        );
+        entry
+            .resistances
+            .push(("time".to_owned(), "resistant".to_owned()));
+        entry.see_invisible = true;
+        entry.levitation = true;
+        let mut report = ContentImportReport::default();
+        let race = race_json(&entry, &[], &mut report);
+        assert_eq!(race["infravision"], 10);
+        assert_eq!(race["baseHp"], 22);
+        assert!(race.get("resistances").is_none());
+        assert!(race.get("seeInvisible").is_none());
+        assert!(race.get("levitation").is_none());
+        assert!(legacy_race_tags(&entry).contains(&"rfb-compatibility"));
+        assert!(legacy_race_tags(&entry).contains(&"slow-digestion"));
+        assert!(!legacy_race_tags(&entry).contains(&"demon"));
+        assert!(!report.race_hook_gaps.contains_key("gain_level"));
     }
 
     #[test]

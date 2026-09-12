@@ -832,6 +832,106 @@ pub(super) fn object_value(mut object: ValueObject) -> Option<i32> {
 }
 
 impl super::Game {
+    pub(super) fn player_is_native_android(&self) -> bool {
+        self.build
+            .as_ref()
+            .is_some_and(|build| build.race_id == "rfb-legacy.race.android")
+    }
+
+    pub(super) fn android_item_experience(&self, item: &crate::state::ItemInstance) -> u64 {
+        let definition = self
+            .content
+            .item(&item.kind_id)
+            .expect("validated item kind");
+        let base = definition
+            .artifact_generation
+            .as_ref()
+            .map_or(definition, |artifact| {
+                self.content
+                    .item(&artifact.base_item_kind_id)
+                    .expect("validated artifact base")
+            });
+        let Some(kind) = base.rfb_base_kind else {
+            // Rewrite-only demonstration items have no RFB equipment experience.
+            return 0;
+        };
+        if !(19..=50).contains(&kind.tval) || matches!(kind.tval, 39 | 40 | 45) {
+            return 0;
+        }
+        let mut object = instance::value_object(&self.content, item)
+            .expect("RFB wearable must retain authoritative value inputs");
+        object.permanent_curse = false;
+        let enhanced = object.artifact
+            || object.ego != 0
+            || kind.tval == 38
+            || matches!(
+                (kind.tval, kind.sval),
+                (30, 4) | (31, 6) | (32, 8) | (34, 6) | (35, 7) | (23, 31)
+            );
+        let random_or_ego = object.artifact || object.ego != 0;
+        let mut value = i64::from(object_value(object).expect("RFB wearable has real value"));
+        if value <= 0 {
+            return 0;
+        }
+        if (kind.tval, kind.sval) == (36, 50)
+            && self.build.as_ref().is_none_or(|build| {
+                build.personality_id != "rfb-legacy.personality.sexy"
+                    && build.class_id != "rfb-legacy.class.politician"
+            })
+        {
+            value /= 32;
+        }
+        value = value.min(5_000_000);
+        let mut level = (i64::from(base.generation_level) - 8).max(1);
+        if let Some(artifact) = &definition.artifact_generation {
+            let artifact_level = (i64::from(definition.generation_level) - 8).max(5);
+            let rarity_divisor = if artifact.instant { 10 } else { 3 };
+            level = (level + artifact_level) / 2
+                + (i64::from(artifact.rarity_one_in) / rarity_divisor).min(20);
+        } else if random_or_ego {
+            let fake_level = ((10 + value / 1500).min(90) - 8).max(5);
+            level = level.max((level + fake_level) / 2 + 3);
+        }
+        if matches!(kind.tval, 38 | 50) {
+            level /= 2;
+        }
+        let experience = if enhanced {
+            level = match level {
+                66.. => 35 + (level - 65) / 5,
+                36.. => 25 + (level - 35) / 3,
+                16.. => 15 + (level - 15) / 2,
+                _ => level,
+            };
+            value.min(100_000) * level * level / 2 + (value - 100_000).max(0) * level * level / 8
+        } else {
+            value.min(100_000) * level + (value - 100_000).max(0) * level / 4
+        };
+        let experience = match kind.tval {
+            19..=23 => experience / 48,
+            36..=38 => 3 * experience / 32,
+            _ => experience / 16,
+        };
+        u64::try_from(experience).expect("equipment experience is nonnegative")
+    }
+
+    pub(super) fn android_equipment_experience(&self) -> u64 {
+        self.items
+            .iter()
+            .filter(|item| matches!(item.location, crate::state::ItemLocation::Equipped { .. }))
+            .map(|item| self.android_item_experience(item))
+            .sum::<u64>()
+            .min(crate::stats::MAX_EXPERIENCE)
+    }
+
+    pub(super) fn refresh_android_experience(
+        &mut self,
+        events: &mut Vec<crate::event::DomainEvent>,
+    ) {
+        if self.player_is_native_android() {
+            self.apply_player_experience(0, events);
+        }
+    }
+
     pub(super) fn item_total_enchantments(
         &self,
         item: &crate::state::ItemInstance,

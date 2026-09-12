@@ -1,6 +1,8 @@
 # 状态快照
 
-核对日期：2026-09-12。本轮集成种族职业 `065f4c93f`、法术道具 `d4e0dffc9`、地牢城镇 `3711c91b3`：食魔者、C4／C5 神器与辛葛装置间充能、阿斯加德 AS1–AS7。本页区分当前配置与各批注明范围的验收证据。
+核对日期：2026-09-13。本轮集成种族职业 `065f4c93f`、法术道具 `d4e0dffc9`、地牢城镇 `3711c91b3`：食魔者、C4／C5 神器与辛葛装置间充能、阿斯加德 AS1–AS7。本页区分当前配置与各批注明范围的验收证据。
+
+在上述已验证基线上，[六种族接入](defined-races-integration-plan.md)的吸血鬼、半人马、炎魔、人造人、迈雅已完成源码修改及中英文创建入口。吸血鬼补出生/物资/美德；半人马补速度、躯干护甲折减、马蹄与熟练度保存、跳跃及骑兵禁配；炎魔补被动成长、出生尸体/脚下与背包献祭、阵营伤害和恶魔吐息；人造人补真实装备经验、独立曲线、换装升降级、油料、被动、五段武器及保存一致性核对；迈雅补20级道路选择、两分支成长、领域禁令、免食、照明、诅咒知识/脱装与保存。源码创建入口51项（主种族43）、能力1915项。按用户最新调整暂缓变形怪，前五族已完成编译与自动验证：核心有效1769项通过/5项原有ignored，前端230项、Tauri24项及其余workspace测试通过；Clippy、生成物、内容锁、103构筑适用性和26条active契约通过。首轮失败及定向修复范围见[验证记录](defined-races-integration-plan.md#五族编译与测试2026-09-13)。普通可玩 Tauri standalone 调试产物已构建至 `target/debug/rfb-tauri.exe`；各族桌面交互和Android未执行。
 
 祖尔导入：[Z1–Z6 计划](../design/zul-town-import-plan-20260912.md)中的 Z1–Z6 已完成本计划范围的实现与验收。已注册 (77,6) 的 94×57 山地模板与九家独立商店，保留 2,158 个显式格、3,200 个荒野继承格；祖尔不使用普通城镇的刷怪排除。珠宝店与龙皮百货已接随机装备生成、专属估值／交易规则和库存保存；补十种龙鳞甲及喷吐激活，14 种源龙鳞甲与五种龙皮部位均有正式定义，高等级源门槛保持。三塔已接主／当前副领域身份、兽化人会员、全部鉴定、突变治疗和平衡仪式；仪式复用美德生成器重建八项零值美德，出生 RNG 顺序保持。没有旅店／Home／博物馆，物理到访尚不开放祖尔传送。Z4 已接完整漩涡任务、两件等级 85 蝙蝠披风、三个固定神器奖励及仅成功领奖开放的传送；塔与旅店／法术共用目的地资格，祖尔抵达巫术塔 (65,16)。Z5 已接三节点完整地图、会员接取与领奖、任务 10 的漩涡终态前置、源书奖励、战熊同伴及任务内水／熔岩伤害；新增 `[末日巨著]` 实体，Chaos 施法体系仍未交付。Z6 已生成 Schema／绑定／分配审计／内容锁，完成相关核心／内容／本地化检查及 26 条未刷新契约。Windows Tauri standalone 与专用 WebDriver 构建通过，桌面覆盖三类商店、三塔服务与领域切换、四任务源奖励、滚动及跨城往返；15 次原生保存恢复、30 张主流程截图和四张完整地图截图通过。测试使用等级／保护状态／清场准备，不代表自然战斗通关或 Android 验收。新游戏及选中存档加载已移除额外全列表刷新，后端日志验证未扫描其他槽位。商店与美德生成的保留适配见计划 Z2／Z3／Z4／Z5。
 
@@ -11,13 +13,13 @@
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.263；绑定/Schema已同步 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | 130 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload / 容器 | 14 / 25 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.444.0；pack/lock已同步 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
-| 契约政策 | contract-v330，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
+| 协议 | 1.264；绑定/Schema已同步 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | 131 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload / 容器 | 14 / 26 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
+| 内容包 | 1.445.0；pack/lock已同步 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 契约政策 | contract-v331，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 14 个 Class、110 个 Build、57 个 Race、36 本能力书、1,908 个 ability、575 个 item、1,410 个 actor、169 个 affix、152 个 mutation。世界定义含 34 个 dungeon（阿斯加德入口受出生神系门控）；城镇有 7 个 town、69 个 shop、67 个 townFacility。基础分配池为 409 行，固定神器定义映射 156/392；创角开放14职业、103个Build。这些是定义与入口数量，行为验收范围见下文。
+正式源目录含 14 个 Class、110 个 Build、57 个 Race、36 本能力书、1,915 个 ability、575 个 item、1,410 个 actor、169 个 affix、152 个 mutation。世界定义含 34 个 dungeon（阿斯加德入口受出生神系门控）；城镇有 7 个 town、69 个 shop、67 个 townFacility。基础分配池为 409 行，固定神器定义映射 156/392；创角开放14职业、103个Build。这些是定义与入口数量，行为验收范围见下文。
 
 食魔者[七步计划](magic-eater-class-plan.md)已完成：无领域Build/无公共MP、三类各10体内槽、吸收/覆盖/铭刻继承/换位、真实使用/失败/费用/周期恢复及保存已开放。Mogaminator体内优先鉴定、TravelLocal自动探测/地图及保存覆盖、Tailored先1/5后1/7、Mage/20卷轴、任务奖励/旧城堡1:4及重复替代、旅店恢复和两塔普通资格通过核心验证。15种装置、26个profile覆盖24条源行，另97条仍为未开放范围。正式入口为“魔法装置 → 食魔者”，103个开放Build生成责任审计通过，0个可玩范围证据gap。
 
@@ -78,7 +80,7 @@ I6 首组已使现有物理合堆路径允许不同获取来源、单边铭文�
 
 ## 玩家入口
 
-职业与种族目录在 [character-creation.ts](../web/src/character-creation.ts)，提交入口在 [session-shell.ts](../web/src/session-shell.ts)，表单在 [web/index.html](../web/index.html)。当前入口目录提供14个职业、103个构筑、46个种族，其中法师占56个有序领域组合、牧师占24个、战法师占8个；战法师新增UI与代表实战已完成上述验收：
+职业与种族目录在 [character-creation.ts](../web/src/character-creation.ts)，提交入口在 [session-shell.ts](../web/src/session-shell.ts)，表单在 [web/index.html](../web/index.html)。当前源码入口目录提供14个职业、103个构筑、51个种族选项（43个主种族，龙人九分支）；新增吸血鬼、半人马、炎魔、人造人、迈雅通过本轮自动验证，半人马禁配骑兵；桌面交互验收仍待专项安排。能力定义为1,915个，内容lock已同步。其中法师占56个有序领域组合、牧师占24个、战法师占8个；战法师新增UI与代表实战已完成上述验收：
 
 创角界面已完成[四步面板改造](character-creation-ui-plan.md)：桌面固定为 `84vw × 84dvh`，提供概览、种族、职业标签页和常驻摘要/开始按钮。种族按八个原版分类显示，龙人进入九个亚种层；职业现按七个原版分类显示，牧师在“祈祷”下选择主副领域，战法师在“混合”下选择副领域；高阶法师进入死亡/工艺领域层，圣骑士进入死亡领域层，心灵术士在“心智”下直接选择。详情查看与确认选择分开，取消分支保留已选组合。窄屏提供选择/说明切换，支持原生缩放、短屏内部滚动及焦点恢复。原面板改造已验证中英文、多种桌面尺寸、390像素窄屏及200%缩放；当时46个种族、6个构筑、提交校验与失败重试均有覆盖。实际验收人类战士、红色龙人死亡高阶法师、骷髅死亡圣骑士开局及有效动作；结果页路由使用终局投影测试后创建真实新会话。心灵术士新增入口的验证范围见下文；系统输入法、屏幕阅读器和Android人工验收不在已验证范围内。
 

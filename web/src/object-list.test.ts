@@ -97,6 +97,14 @@ test("ground object labels include sensed feelings without replacing inscription
   assert.equal(entry.name, "item:item-ration {l10n:item-feeling-excellent, keep}");
 });
 
+test("ground use availability follows the core projection", () => {
+  const input = projection();
+  input.items[0].usable = true;
+  assert.equal(buildObjectListEntries(input).find(entry => entry.id === "item:ration.1").usable, true);
+  input.items[0].usable = false;
+  assert.equal(buildObjectListEntries(input).find(entry => entry.id === "item:ration.1").usable, false);
+});
+
 test("equal-position object sorting uses stable instance ids", () => {
   const options = projection();
   options.items = [

@@ -5,6 +5,20 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { GameSession } from "./game-session.ts";
+import { AppState } from "./app-state.ts";
+
+test("a pending Maia choice blocks play and accepts an explicit choice on the world map", async () => {
+  const state = new AppState();
+  state.mode = "playing";
+  state.status = { player: { pendingMaiaPathChoice: true }, mapScale: "world" };
+  const calls = [];
+  const session = new GameSession({ state, execute: async command => { calls.push(command); return {}; }, applyUpdate: () => {}, refreshBusyControls: () => {}, showError: error => { throw error; } });
+  assert.equal(state.commandBlocked, true);
+  await session.dispatch({ type: "wait" });
+  assert.equal(calls.length, 0);
+  await session.dispatch({ type: "choose-maia-path", path: "enlightened" });
+  assert.deepEqual(calls, [{ type: "choose-maia-path", path: "enlightened" }]);
+});
 
 function sessionState() {
   return {

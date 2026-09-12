@@ -1023,6 +1023,7 @@ pub(crate) fn player_to_save(
         fame: 0,
         nutrition: rfb_protocol::PLAYER_NUTRITION_BIRTH,
         fasting: false,
+        maia_path: None,
         base_max_hp: player.max_hp,
         base_speed: player.speed,
         energy_need: player.energy_need,
@@ -1098,6 +1099,7 @@ pub(crate) fn player_to_save(
                 .collect(),
             riding_proficiency: progress.riding_proficiency,
             dual_wielding_proficiency: progress.dual_wielding_proficiency,
+            centaur_hoof_proficiency: progress.centaur_hoof_proficiency,
             mining_proficiency: progress.mining_proficiency,
             materials: progress
                 .materials

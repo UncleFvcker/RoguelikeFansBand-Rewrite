@@ -232,6 +232,9 @@ impl Game {
         changed: &mut BTreeSet<Position>,
     ) {
         if self.player_has_anti_teleport() {
+            if matches!(ability.effect, AbilityEffectDefinition::Jump { .. }) {
+                events.push(DomainEvent::JumpTeleportBlocked);
+            }
             return;
         }
         let from = self.player.position;

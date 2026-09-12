@@ -283,13 +283,15 @@ export class SessionShell {
       race: raceName,
       career: careerName,
     });
-    if (this.#duelistTonberry) {
-      this.#dom.creationSummary.textContent += ` · ${this.#localization.format("session-duelist-tonberry-unavailable")}`;
+    if (this.#unavailableCombination) {
+      this.#dom.creationSummary.textContent += ` · ${this.#localization.format(this.#unavailableCombination)}`;
     }
   };
 
-  get #duelistTonberry(): boolean {
-    return this.#careerMenu.selectedId === "demo.build.duelist" && this.#raceMenu.selectedId === "rfb-legacy.race.tonberry";
+  get #unavailableCombination(): string | undefined {
+    if (this.#careerMenu.selectedId === "demo.build.duelist" && this.#raceMenu.selectedId === "rfb-legacy.race.tonberry") return "session-duelist-tonberry-unavailable";
+    if (this.#careerMenu.selectedId === "demo.build.cavalry" && this.#raceMenu.selectedId === "rfb-legacy.race.centaur") return "session-cavalry-centaur-unavailable";
+    return undefined;
   }
 
   showLoad(): void {
@@ -329,7 +331,7 @@ export class SessionShell {
   readonly #startNewGame = (event: SubmitEvent): void => {
     event.preventDefault();
     if (this.#busy) return;
-    if (this.#raceMenu.pending || this.#careerMenu.pending || this.#duelistTonberry) return;
+    if (this.#raceMenu.pending || this.#careerMenu.pending || this.#unavailableCombination) return;
     const seed = canonicalSessionSeed(this.#dom.seedInput.value);
     if (!seed) {
       this.#dom.error.textContent = this.#localization.format("session-seed-invalid");
@@ -488,7 +490,7 @@ export class SessionShell {
       if (control === this.#dom.continueButton) continue;
       control.disabled = this.#busy;
     }
-    this.#dom.startGameButton.disabled = this.#busy || this.#raceMenu.pending || this.#careerMenu.pending || this.#duelistTonberry;
+    this.#dom.startGameButton.disabled = this.#busy || this.#raceMenu.pending || this.#careerMenu.pending || !!this.#unavailableCombination;
     for (const button of this.#dom.loadList.querySelectorAll<HTMLButtonElement>("button")) {
       const row = button.closest<HTMLElement>(".native-save-item");
       const summary = this.#saves.find((save) => save.slotId === row?.dataset.slotId);

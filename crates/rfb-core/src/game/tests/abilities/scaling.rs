@@ -538,7 +538,7 @@ fn ability_scaling_changes_only_the_selected_effect_field() {
                 | F::StatusPower
                 | F::GenocidePower => "/power",
                 F::IdentifyPower => "/fullIdentifyPower",
-                F::Radius if kind == "dimension-door" => "/range",
+                F::Radius if matches!(kind.as_str(), "dimension-door" | "jump") => "/range",
                 F::Radius => "/radius",
                 F::BeamChancePercent => "/beamChancePercent",
                 F::StatusIntensity => "/intensity",

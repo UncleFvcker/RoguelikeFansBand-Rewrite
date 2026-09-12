@@ -345,6 +345,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::TeleportTarget
                     | AbilityEffectDefinition::TeleportLevel
                     | AbilityEffectDefinition::DimensionDoor { .. }
+                    | AbilityEffectDefinition::Jump { .. }
                     | AbilityEffectDefinition::PolymorphTarget
                     | AbilityEffectDefinition::SniperShot { .. }
                     | AbilityEffectDefinition::Rodeo

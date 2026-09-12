@@ -127,14 +127,19 @@ fn roll_virtues(
             "rfb-legacy.race.shadow-fairy" => kinds.push(VirtueKindDto::Enchantment),
             "rfb-legacy.race.mindflayer" => kinds.push(VirtueKindDto::Enlightenment),
             "rfb-legacy.race.imp" => kinds.push(VirtueKindDto::Faith),
-            "rfb-legacy.race.golem" => kinds.push(VirtueKindDto::Justice),
+            "rfb-legacy.race.golem" | "rfb-legacy.race.balrog" => {
+                kinds.push(VirtueKindDto::Justice)
+            }
             "rfb-legacy.race.archon" => kinds.push(VirtueKindDto::Justice),
             "rfb-legacy.race.sprite" => kinds.push(VirtueKindDto::Nature),
             "rfb-legacy.race.einheri"
             | "rfb-legacy.race.skeleton"
             | "rfb-legacy.race.zombie"
+            | "rfb-legacy.race.vampire"
             | "rfb-legacy.race.spectre" => kinds.push(VirtueKindDto::Unlife),
-            "rfb-legacy.race.wood-elf" | "rfb-legacy.race.ent" => kinds.push(VirtueKindDto::Nature),
+            "rfb-legacy.race.wood-elf" | "rfb-legacy.race.ent" | "rfb-legacy.race.centaur" => {
+                kinds.push(VirtueKindDto::Nature)
+            }
             "rfb-legacy.race.draconian-red"
             | "rfb-legacy.race.draconian-white"
             | "rfb-legacy.race.draconian-blue"
@@ -330,7 +335,7 @@ impl Game {
         }
     }
 
-    pub(super) fn book_spell_alignment_modifier(&self, ability_id: &str) -> i32 {
+    pub(super) fn player_alignment(&self) -> i32 {
         use VirtueKindDto::*;
         let mut alignment: i32 = self
             .entities
@@ -365,6 +370,19 @@ impl Game {
                 0
             };
         }
+        alignment
+            + match self
+                .character_definitions()
+                .map(|(_, race, _, _)| race.id.as_str())
+            {
+                Some("rfb-legacy.race.balrog") => -200,
+                Some("rfb-legacy.race.archon") => 200,
+                _ => 0,
+            }
+    }
+
+    pub(super) fn book_spell_alignment_modifier(&self, ability_id: &str) -> i32 {
+        let alignment = self.player_alignment();
         // RFB virtue.c::virtue_mod_spell_fail: WIS casters have a 10% ceiling.
         let maximum = if self.casting_profile().is_some_and(|profile| {
             profile.casting_attribute == rfb_content::CastingAttribute::Wisdom

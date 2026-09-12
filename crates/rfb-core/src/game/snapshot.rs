@@ -166,6 +166,8 @@ impl Game {
             resources: self.player_resource_dtos(),
             mutations: self.player_mutation_dtos(),
             pending_race_mutation_choice: self.pending_race_mutation_choice_dto(),
+            maia_path: self.maia_path,
+            pending_maia_path_choice: self.pending_maia_path_choice(),
             virtues: self.virtues.to_vec(),
             ability_learning: self.player_ability_learning_dto(),
             abilities: self.player_ability_dtos(),
@@ -338,6 +340,7 @@ impl Game {
             .map(|(_, race, _, _)| {
                 race.abilities
                     .iter()
+                    .filter(|activation| self.race_power_is_current(activation))
                     .map(|activation| (activation.ability_id.clone(), activation.clone()))
                     .collect::<BTreeMap<_, _>>()
             })
@@ -556,7 +559,11 @@ impl Game {
                 {
                     target_spec.range = profile.range;
                 }
-                let unavailable_reason = if self.player_has_status_kind(STATUS_CONFUSION)
+                let unavailable_reason = if source == AbilitySourceDto::Learned
+                    && self.maia_forbids_spell(&ability_id)
+                {
+                    Some("maia-realm-forbidden")
+                } else if self.player_has_status_kind(STATUS_CONFUSION)
                     && !ability
                         .tags
                         .iter()
@@ -718,6 +725,7 @@ impl Game {
                         && self.ability_learning_order.contains(&ability_id),
                     book_item_id: book_item_id.clone(),
                     can_study: source == AbilitySourceDto::Learned
+                        && !self.maia_forbids_spell(&ability_id)
                         && (!self.ability_learning_order.contains(&ability_id)
                             || ((self.player_is_mage() || self.player_is_warrior_mage())
                                 && learned
@@ -958,6 +966,7 @@ impl Game {
                     return None;
                 }
                 Some(ItemDto {
+                    usable: self.item_is_edible_at_feet(item),
                     can_supply_recharge: self.item_can_supply_recharge(item),
                     can_receive_recharge: self.item_can_receive_recharge(item),
                     chest: self.chest_dto(item),
@@ -1047,6 +1056,9 @@ impl Game {
             readable: self.item_inscription_is_readable(item),
             usable: self.item_inscription_is_readable(item)
                 || (self.berserker_item_use_rejection_cost(item).is_none()
+                    && (item.kind_id != "demo.item.corpse-remains"
+                        || self.player_can_sacrifice_corpse(item))
+                    && (item.kind_id != "demo.item.flask-of-oil" || self.player_is_android())
                     && self.item_activation_location_is_valid(item)
                     && !self.item_activation_needs_equipping(item)
                     && !(item.is_artifact_mushroom(&self.content)

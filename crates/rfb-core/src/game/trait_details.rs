@@ -60,6 +60,32 @@ impl Game {
             innate
                 .status_immunities
                 .extend(race.status_immunities.iter().cloned());
+            innate
+                .resistances
+                .extend(
+                    self.maia_resistances()
+                        .into_iter()
+                        .map(|(kind, level)| ResistanceDto {
+                            damage_type: kind.into(),
+                            level: level.into(),
+                        }),
+                );
+            if race.id == "rfb-legacy.race.maia" {
+                innate.passives.extend([P::EspDemon, P::EspEvil]);
+            }
+            if race.id == "rfb-legacy.race.maia" && self.player_is_enlightened_maia() {
+                innate.passives.push(P::SeeInvisible);
+                if self.progress.level >= 50 {
+                    innate
+                        .passives
+                        .extend([P::Levitation, P::ColdAura, P::ElectricityAura]);
+                }
+            } else if race.id == "rfb-legacy.race.maia"
+                && self.player_is_corrupted_maia()
+                && self.progress.level >= 50
+            {
+                innate.passives.push(P::FireAura);
+            }
             for sustain in &race.attribute_sustains {
                 innate
                     .passives
@@ -234,6 +260,18 @@ impl Game {
             sources.push(entry);
         }
         let mut attacks = Vec::new();
+        if self.player_is_maia() && self.player_is_enlightened_maia() && self.progress.level >= 50 {
+            attacks.push(CharacterAttackTraitDto {
+                source_id: "rfb-legacy.race.maia".to_owned(),
+                scope: TraitAttackScopeDto::ArmedMelee,
+                slays: vec![rfb_protocol::SlayDto {
+                    target: rfb_protocol::SlayTargetDto::Evil,
+                    level: rfb_protocol::SlayLevelDto::Slay,
+                }],
+                brands: Vec::new(),
+                vampiric: false,
+            });
+        }
         for item in equipped {
             let mut entry = source(K::Equipment, &item.id);
             entry.resistances = self.visible_item_resistance_sources(item);
@@ -391,7 +429,12 @@ impl Game {
         .map(|passive| {
             (
                 equipment_passive_dto(passive),
-                equipment_passives.contains(&passive),
+                equipment_passives.contains(&passive)
+                    || (self.player_is_maia()
+                        && matches!(
+                            passive,
+                            EquipmentPassive::EspDemon | EquipmentPassive::EspEvil
+                        )),
                 None,
             )
         })
@@ -728,6 +771,13 @@ impl Game {
             for effect in ego::curses::CURSE_EFFECTS.into_iter().flatten() {
                 let known = (self.item_identification(item) == ItemIdentificationDto::Identified
                     && self.item_has_intrinsic_curse_effect(item, effect))
+                    || (knowledge.is_some_and(|known| known.known_curse)
+                        && item.curse.is_some()
+                        && (item.intrinsic_curse_effects.contains(&effect)
+                            || item
+                                .rolled_affixes
+                                .iter()
+                                .any(|rolled| rolled.curse_effects.contains(&effect))))
                     || item.rolled_affixes.iter().any(|rolled| {
                         rolled.curse_effects.contains(&effect)
                             && knowledge.is_some_and(|known| {
@@ -736,16 +786,17 @@ impl Game {
                     });
                 if known {
                     let active = (self.item_identification(item)
-                        != ItemIdentificationDto::Unexamined)
-                        .then(|| {
-                            self.item_has_active_equipped_curse_effect(item, effect)
-                                && (effect != ItemCurseEffectDto::Teleport
-                                    || item.curse.is_some()
-                                    || item
-                                        .inscription
-                                        .as_deref()
-                                        .is_none_or(|inscription| !inscription.contains('.')))
-                        });
+                        != ItemIdentificationDto::Unexamined
+                        || knowledge.is_some_and(|known| known.known_curse))
+                    .then(|| {
+                        self.item_has_active_equipped_curse_effect(item, effect)
+                            && (effect != ItemCurseEffectDto::Teleport
+                                || item.curse.is_some()
+                                || item
+                                    .inscription
+                                    .as_deref()
+                                    .is_none_or(|inscription| !inscription.contains('.')))
+                    });
                     effects.push(CharacterCurseEffectDto {
                         effect,
                         active,

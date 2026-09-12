@@ -53,6 +53,7 @@ export class AppState {
       this.mode !== "playing" ||
       this.playerDead ||
       this.campaignEnded ||
+      this.status?.player.pendingMaiaPathChoice === true ||
       (this.status?.player.pendingMutationDirection != null ||
         this.status?.player.pendingAbilityDirection != null ||
         this.status?.player.abilityLearning?.realms?.pendingChange != null ||

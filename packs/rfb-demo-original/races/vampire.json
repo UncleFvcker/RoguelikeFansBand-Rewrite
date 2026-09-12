@@ -99,10 +99,17 @@
   },
   "shopAdjustPercent": 130,
   "skillSetId": "rfb-legacy.skill-set.race-vampire",
+  "startingItems": [{
+    "itemKindId": "demo.item.darkness-scroll",
+    "quantity": 2,
+    "maximumQuantity": 5
+  }],
   "tags": [
     "legacy-import",
+    "night-start",
     "nonliving",
     "polymorph-candidate",
+    "rfb-compatibility",
     "undead",
     "vampire"
   ]

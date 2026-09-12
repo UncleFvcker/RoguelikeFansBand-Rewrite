@@ -1,6 +1,12 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
   "baseHp": 26,
+  "armorClass": 10,
+  "levelStatScalings": [{ "stat": "armor-class", "multiplier": 2, "divisor": 5 }],
+  "foodNutritionDivisor": 20,
+  "holdLifeMinimumLevel": 1,
+  "startingItems": [{ "itemKindId": "demo.item.flask-of-oil", "quantity": 7, "maximumQuantity": 12 }],
+  "abilities": [{"abilityId":"rfb.ability.race.android-ray-gun","minimumLevel":1,"cost":7,"baseFailurePercent":30,"governingAttribute":"strength"},{"abilityId":"rfb.ability.race.android-blaster","minimumLevel":10,"cost":13,"baseFailurePercent":30,"governingAttribute":"strength"},{"abilityId":"rfb.ability.race.android-bazooka","minimumLevel":25,"cost":26,"baseFailurePercent":40,"governingAttribute":"strength"},{"abilityId":"rfb.ability.race.android-beam-cannon","minimumLevel":35,"cost":40,"baseFailurePercent":50,"governingAttribute":"strength"},{"abilityId":"rfb.ability.race.android-rocket-launcher","minimumLevel":45,"cost":60,"baseFailurePercent":70,"governingAttribute":"strength"}],
   "bodySlots": [
     {
       "id": "right-hand",
@@ -88,6 +94,9 @@
   ],
   "tags": [
     "legacy-import",
-    "polymorph-immune"
+    "polymorph-immune",
+    "nonliving",
+    "slow-digestion",
+    "rfb-compatibility"
   ]
 }

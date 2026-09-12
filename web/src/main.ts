@@ -203,6 +203,7 @@ const gameSession = new GameSession({
     }
     mapHost.dataset.mapScale = update.mapScale;
     statusPanel.render(update);
+    if (update.player.pendingMaiaPathChoice) playerUiLayout.showMaiaChoice();
     objectListPanel.reconcileStatus();
     inventoryPanel.render(update.inventory, update.equipment);
     shopPanel.render(update);
@@ -677,6 +678,7 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   mogaminatorEditor?.render(snapshot.mogaminator);
   promptMogaminatorQuery(snapshot.mogaminator);
   sessionShell.showGame(snapshot);
+  if (snapshot.player.pendingMaiaPathChoice) playerUiLayout.showMaiaChoice();
   journeyResult.renderSnapshot(snapshot);
   if (snapshot.mogaminator.locale !== localization.locale) {
     void dispatch({ type: "set-interface-locale", locale: localization.locale });
@@ -748,6 +750,7 @@ async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   journeyResult.renderSnapshot(snapshot);
   appState.connection = "ready";
   renderConnectionStatus();
+  if (snapshot.player.pendingMaiaPathChoice) playerUiLayout.showMaiaChoice();
   if (snapshot.mogaminator.locale !== localization.locale) {
     await dispatch({ type: "set-interface-locale", locale: localization.locale });
   }

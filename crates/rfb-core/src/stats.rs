@@ -242,6 +242,22 @@ pub fn experience_required_for_level_with_factor(level: u16, experience_percent:
     experience_required_for_level(level) * u64::from(experience_percent) / 100
 }
 
+pub(crate) fn android_experience_required_for_level(level: u16) -> u64 {
+    // RFB xtra2.c::_player_exp_a, with the native race's fixed 200% factor.
+    const THRESHOLDS: [u64; 50] = [
+        20, 50, 100, 170, 280, 430, 650, 950, 1400, 1850, 2300, 2900, 3600, 4400, 5400, 6800, 8400,
+        10400, 12500, 17500, 25000, 35000, 50000, 75000, 100000, 150000, 200000, 275000, 350000,
+        450000, 550000, 650000, 800000, 950000, 1100000, 1250000, 1400000, 1550000, 1700000,
+        1900000, 2100000, 2300000, 2550000, 2800000, 3050000, 3300000, 3700000, 4100000, 4500000,
+        5000000,
+    ];
+    match level {
+        0 | 1 => 0,
+        2..=51 => THRESHOLDS[usize::from(level - 2)] * 2,
+        _ => experience_required_for_level_with_factor(level, 200),
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CharacterProgress {
     pub attributes: AttributeSet,
@@ -261,6 +277,7 @@ pub struct CharacterProgress {
     pub weapon_proficiencies: BTreeMap<String, u16>,
     pub riding_proficiency: u16,
     pub dual_wielding_proficiency: u16,
+    pub centaur_hoof_proficiency: u16,
     pub mining_proficiency: u16,
     pub materials: BTreeMap<String, u32>,
     pub active_mutation_ids: BTreeSet<String>,
@@ -318,6 +335,7 @@ impl CharacterProgress {
             skills: BTreeMap::new(),
             weapon_proficiencies: BTreeMap::new(),
             dual_wielding_proficiency: 0,
+            centaur_hoof_proficiency: 0,
             riding_proficiency: 0,
             mining_proficiency: 0,
             materials: BTreeMap::new(),
@@ -526,22 +544,24 @@ impl CharacterProgress {
     }
 
     fn recalculate_level(&mut self, experience_percent: u16, victorious: bool) -> Vec<u16> {
+        self.recalculate_level_with_threshold(
+            |level| experience_required_for_level_with_factor(level, experience_percent),
+            victorious,
+        )
+    }
+
+    pub(crate) fn recalculate_level_with_threshold(
+        &mut self,
+        threshold: impl Fn(u16) -> u64,
+        victorious: bool,
+    ) -> Vec<u16> {
         let cap = Self::level_cap(victorious);
         let mut levels = Vec::new();
-        while self.level > 1
-            && self.experience
-                < experience_required_for_level_with_factor(self.level, experience_percent)
-        {
+        while self.level > 1 && self.experience < threshold(self.level) {
             self.level -= 1;
             levels.push(self.level);
         }
-        while self.level < cap
-            && self.experience
-                >= experience_required_for_level_with_factor(
-                    self.level.saturating_add(1),
-                    experience_percent,
-                )
-        {
+        while self.level < cap && self.experience >= threshold(self.level.saturating_add(1)) {
             self.level += 1;
             let reached_new_maximum = self.level > self.max_level;
             self.max_level = self.max_level.max(self.level);
@@ -752,7 +772,7 @@ impl CharacterProgress {
         true
     }
 
-    pub fn validate(&self, experience_percent: u16, victorious: bool) -> bool {
+    pub fn validate(&self, threshold: impl Fn(u16) -> u64, victorious: bool) -> bool {
         self.level >= 1
             && self.level <= Self::level_cap(victorious)
             && self.max_level >= self.level
@@ -830,9 +850,9 @@ impl CharacterProgress {
                 .weapon_proficiencies
                 .iter()
                 .all(|(id, current)| !id.is_empty() && *current <= 8_000)
+            && self.centaur_hoof_proficiency <= 8_000
             && (self.level == Self::level_cap(victorious)
-                || self.experience
-                    < experience_required_for_level_with_factor(self.level + 1, experience_percent))
+                || self.experience < threshold(self.level + 1))
     }
 }
 
@@ -1199,7 +1219,7 @@ mod tests {
         assert_eq!(unlocked.last(), Some(&100));
         assert_eq!(progress.level, 100);
         assert_eq!(progress.pending_attribute_increases, 20);
-        assert!(progress.validate(100, true));
+        assert!(progress.validate(experience_required_for_level, true));
     }
 
     #[test]

@@ -54,6 +54,7 @@ pub(super) fn record_book_found(
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(super) struct ItemPropertyKnowledgeState {
+    pub(super) known_curse: bool,
     pub(super) discovered: bool,
     pub(super) appraised: bool,
     pub(super) identified: bool,
@@ -70,6 +71,7 @@ pub(super) fn item_properties_match(
     let left = left.unwrap_or(&empty);
     let right = right.unwrap_or(&empty);
     left.appraised == right.appraised
+        && left.known_curse == right.known_curse
         && left.identified == right.identified
         && left.feeling == right.feeling
         && left.known_affix_ids == right.known_affix_ids
@@ -1158,10 +1160,11 @@ impl Game {
                 u64::try_from(self.player_resistance_percent(profile.resistance).max(0))
                     .expect("nonnegative resistance must fit u64");
             // RFB master a0d92b6378: resist.c::res_save_inventory.
-            let power = if profile.resistance == DamageType::Fire
+            let power = if (profile.resistance == DamageType::Fire
                 && self
                     .character_definitions()
-                    .is_some_and(|(_, race, _, _)| race.id == "rfb-legacy.race.ent")
+                    .is_some_and(|(_, race, _, _)| race.id == "rfb-legacy.race.ent"))
+                || (profile.resistance == DamageType::Electricity && self.player_is_android())
             {
                 54
             } else {
@@ -1453,6 +1456,9 @@ impl Game {
             destination_ids.push(item.id.clone());
             self.items.push(item);
         }
+        for id in &destination_ids {
+            self.maia_sense_carried_curse(id);
+        }
         destination_ids
     }
 
@@ -1523,6 +1529,7 @@ impl Game {
             target_kind_id,
             protected,
         });
+        self.refresh_android_experience(events);
         true
     }
 
@@ -2319,7 +2326,8 @@ impl Game {
     }
 
     pub(super) fn player_can_force_remove_curse(&self, severity: ItemCurseSeverityDto) -> bool {
-        self.player_is_berserker() && severity != ItemCurseSeverityDto::Permanent
+        (self.player_is_corrupted_maia() && severity == ItemCurseSeverityDto::Normal)
+            || (self.player_is_berserker() && severity != ItemCurseSeverityDto::Permanent)
     }
 
     pub(super) fn try_remove_equipment_curse(&mut self, index: usize) -> bool {
@@ -2330,9 +2338,11 @@ impl Game {
             return false;
         }
         // equip.c::_can_takeoff: the second roll is made only if the first fails.
-        if !((severity == ItemCurseSeverityDto::Heavy && self.rng.bounded(7) == 0)
-            || self.rng.bounded(4) == 0)
-        {
+        let curse_breaks = (self.player_is_corrupted_maia()
+            && severity == ItemCurseSeverityDto::Normal)
+            || (severity == ItemCurseSeverityDto::Heavy && self.rng.bounded(7) == 0)
+            || self.rng.bounded(4) == 0;
+        if !curse_breaks {
             return false;
         }
         clear_item_curse(&mut self.items[index]);
@@ -2342,6 +2352,7 @@ impl Game {
             .or_default();
         knowledge.appraised = true;
         knowledge.feeling = None;
+        knowledge.known_curse = false;
         true
     }
 
@@ -2499,8 +2510,10 @@ impl Game {
                     &mut self.items[plan.ground_index],
                 );
                 let source = self.items[plan.ground_index].clone();
+                let mut carried_ids = Vec::new();
                 for (stack_index, transferred) in plan.stack_transfers {
                     merge_item_stack(&mut self.items[stack_index], &source, transferred);
+                    carried_ids.push(self.items[stack_index].id.clone());
                 }
                 if plan.remaining == 0 {
                     let removed = self.items.remove(plan.ground_index);
@@ -2508,6 +2521,10 @@ impl Game {
                 } else {
                     self.items[plan.ground_index].quantity = plan.remaining;
                     self.items[plan.ground_index].location = ItemLocation::Inventory;
+                    carried_ids.push(self.items[plan.ground_index].id.clone());
+                }
+                for id in carried_ids {
+                    self.maia_sense_carried_curse(&id);
                 }
                 Ok(PickUpOutcome::Picked {
                     kind_id: plan.kind_id,

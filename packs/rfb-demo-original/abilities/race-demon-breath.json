@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.demon-breath",
+  "nameKey": "ability-rfb-race-demon-breath-name",
+  "descriptionKey": "ability-rfb-race-demon-breath-description",
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 18,
+    "requiresLineOfEffect": true
+  },
+  "affectsGroundItems": true,
+  "spellPowerFields": [
+    {
+      "effectIndex": 0,
+      "field": "final-damage"
+    }
+  ],
+  "tags": [
+    "breath",
+    "fire",
+    "nether",
+    "race"
+  ],
+  "abilityProgramId": "rfb.ability-program.race.demon-breath"
+}

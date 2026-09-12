@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.android-rocket-launcher",
+  "nameKey": "ability-rfb-race-android-rocket-launcher-name",
+  "descriptionKey": "ability-rfb-race-android-rocket-launcher-description",
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 18,
+    "requiresLineOfEffect": true
+  },
+  "levelScaling": [
+    {
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "levelOffset": 1,
+      "multiplier": 7,
+      "divisor": 1
+    }
+  ],
+  "spellPowerFields": [
+    {
+      "effectIndex": 0,
+      "field": "final-damage"
+    }
+  ],
+  "affectsGroundItems": true,
+  "tags": [
+    "race",
+    "android",
+    "damage"
+  ],
+  "abilityProgramId": "rfb.ability-program.race.android-rocket-launcher"
+}

@@ -125,10 +125,19 @@ fn append_starting_items(
     for starting_item in race
         .starting_items
         .iter()
+        // races_k.c: _vampire_birth grants Darkness scrolls only to non-berserkers.
+        .filter(|_| race.id != "rfb-legacy.race.vampire" || class.id != "demo.class.berserker")
         .chain(class.starting_items.iter())
         .chain(personality.starting_items.iter())
         .chain(build.starting_items.iter())
     {
+        if race.id == "rfb-legacy.race.android"
+            && content
+                .item(&starting_item.item_kind_id)
+                .is_some_and(|item| item.equipment_slot.as_deref() == Some("body"))
+        {
+            continue;
+        }
         append_starting_item(content, starting_item, body_slots, items, next_serial, rng)?;
     }
     Ok(())
@@ -333,6 +342,14 @@ impl Game {
             ));
         }
         if let Some(race) = birth_race
+            && race.id == "rfb-legacy.race.centaur"
+            && build
+                .as_ref()
+                .is_some_and(|build| build.class_id == "demo.class.cavalry")
+        {
+            return Err(CoreError::CharacterRaceUnavailable(race.id.clone()));
+        }
+        if let Some(race) = birth_race
             && !race.tags.iter().any(|tag| tag == "rfb-compatibility")
         {
             return Err(CoreError::CharacterRaceUnavailable(race.id.clone()));
@@ -368,7 +385,13 @@ impl Game {
         );
         let mut rng = RfbRng::seeded(seed);
         let virtues = virtues::initial_virtues(&content, build.as_ref(), &mut rng);
-        let gold = gold::starting_gold(build.as_ref(), &mut rng);
+        let mut gold = gold::starting_gold(build.as_ref(), &mut rng);
+        if build
+            .as_ref()
+            .is_some_and(|build| build.race_id == "rfb-legacy.race.android")
+        {
+            gold /= 5;
+        }
         let starting_food_supply = hunger::starting_food_supply(build.as_ref(), &mut rng);
         let starting_torches = lighting::starting_torch_supply(build.as_ref(), &mut rng);
         // dungeon.c: _suppress_extra_pantheons, default two of four. Current
@@ -379,6 +402,12 @@ impl Game {
         }
         let dungeon_states = initial_dungeon_states(world, seed, active_pantheons);
         let mut progress = CharacterProgress::new(seed, player_definition.max_hp);
+        if build
+            .as_ref()
+            .is_some_and(|identity| identity.race_id == "rfb-legacy.race.centaur")
+        {
+            progress.centaur_hoof_proficiency = 4_000;
+        }
         if let Some(identity) = build.as_ref() {
             let (definition, _, class, _) = build_definitions(&content, identity)?;
             progress.attributes = initial_character_attributes(definition);
@@ -612,6 +641,7 @@ impl Game {
             fame: 0,
             nutrition: rfb_protocol::PLAYER_NUTRITION_BIRTH,
             fasting: false,
+            maia_path: None,
             gold_piles: Vec::new(),
             item_knowledge: BTreeMap::new(),
             item_property_knowledge: BTreeMap::new(),
@@ -666,6 +696,7 @@ impl Game {
             monster_division_remainders: BTreeMap::new(),
         };
         game.initialize_birth_race_mutations();
+        game.initialize_balrog_birth_supplies()?;
         if game.player_uses_dual_realm_learning() {
             game.mage_realms = Some(rfb_protocol::MageRealmsSaveDto {
                 second_realm_id: game
@@ -681,6 +712,7 @@ impl Game {
         }
         game.initialize_player_ability_state();
         game.initialize_starting_item_knowledge();
+        game.refresh_android_experience(&mut Vec::new());
         for index in 0..game.items.len() {
             if matches!(
                 game.items[index].location,
@@ -706,6 +738,44 @@ impl Game {
         game.refresh_weird_mind_visibility(true, &BTreeMap::new());
         game.reveal_current_visibility();
         Ok(game)
+    }
+
+    fn initialize_balrog_birth_supplies(&mut self) -> Result<(), CoreError> {
+        if self
+            .build
+            .as_ref()
+            .is_none_or(|build| build.race_id != "rfb-legacy.race.balrog")
+        {
+            return Ok(());
+        }
+        // races_a.c::_balrog_birth: 3–4 non-unique p/h/t corpses from get_mon_num(2).
+        let count = 3 + self.rng.bounded(2);
+        for _ in 0..count {
+            let actor = self.select_balrog_birth_corpse_actor().ok_or_else(|| {
+                CoreError::Invariant(
+                    "Balrog birth requires a human corpse allocation candidate".to_owned(),
+                )
+            })?;
+            append_starting_item(
+                &self.content,
+                &StartingItemDefinition {
+                    item_kind_id: "demo.item.corpse-remains".to_owned(),
+                    quantity: 1,
+                    maximum_quantity: None,
+                    equipped: false,
+                    fully_charged: false,
+                },
+                &self.body_slots,
+                &mut self.items,
+                &mut self.next_item_instance_serial,
+                &mut self.rng,
+            )?;
+            self.items
+                .last_mut()
+                .expect("birth corpse was appended")
+                .origin_actor_kind_id = Some(actor);
+        }
+        Ok(())
     }
 
     fn initialize_starting_item_knowledge(&mut self) {
@@ -734,6 +804,7 @@ impl Game {
                     item.id.clone(),
                     ItemPropertyKnowledgeState {
                         known_blessed: false,
+                        known_curse: false,
                         discovered: true,
                         appraised: true,
                         identified: true,

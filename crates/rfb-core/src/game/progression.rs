@@ -15,6 +15,7 @@ use crate::{
     effect::STATUS_UNWELL,
     error::CoreError,
     event::DomainEvent,
+    resistance::{DamageType, ResistanceLevel},
     rng::RfbRng,
     state::ResourcePool,
     stats::{
@@ -245,10 +246,7 @@ pub(super) fn resolve_character_build(
     let race = content
         .race(race_id)
         .ok_or_else(|| CoreError::UnknownCharacterRace(race_id.to_owned()))?;
-    // Vampire supports saved post-conversion bodies; initialization checks birth separately.
-    if !race.tags.iter().any(|tag| tag == "rfb-compatibility")
-        && race.id != "rfb-legacy.race.vampire"
-    {
+    if !race.tags.iter().any(|tag| tag == "rfb-compatibility") {
         return Err(CoreError::CharacterRaceUnavailable(race_id.to_owned()));
     }
     Ok(Some(CharacterBuildIdentity {
@@ -412,6 +410,9 @@ fn effective_attributes<'a>(
 
 fn character_experience_percent(definitions: Option<CharacterDefinitions<'_>>) -> u16 {
     definitions.map_or(100, |(_, race, class, personality)| {
+        if race.id == "rfb-legacy.race.android" {
+            return race.experience_percent;
+        }
         let factor = u64::from(race.experience_percent) * u64::from(class.experience_percent) / 100;
         u16::try_from(factor * u64::from(personality.experience_percent) / 100).unwrap_or(u16::MAX)
     })
@@ -433,6 +434,7 @@ fn character_base_max_hp_at_level(
     level: u16,
     definitions: Option<CharacterDefinitions<'_>>,
     constitution_percent: i32,
+    race_hp_bonus: i32,
 ) -> i32 {
     let mut base = hp_progression
         .get(usize::from(level.saturating_sub(1)))
@@ -442,6 +444,7 @@ fn character_base_max_hp_at_level(
     if let Some((_, race, class, personality)) = definitions {
         base = base
             .saturating_add(race.base_hp)
+            .saturating_add(race_hp_bonus)
             .saturating_add(class.base_hp)
             .saturating_add(personality.base_hp)
             .max(1);
@@ -518,6 +521,87 @@ fn rescale_u32(current: u32, previous_maximum: u32, next_maximum: u32) -> u32 {
 }
 
 impl Game {
+    pub(super) fn player_is_maia(&self) -> bool {
+        self.character_definitions()
+            .is_some_and(|(_, race, _, _)| race.id == "rfb-legacy.race.maia")
+    }
+    pub(super) fn player_is_native_maia(&self) -> bool {
+        self.build
+            .as_ref()
+            .is_some_and(|build| build.race_id == "rfb-legacy.race.maia")
+    }
+
+    pub(super) fn player_is_enlightened_maia(&self) -> bool {
+        self.player_is_native_maia()
+            && self.maia_path == Some(rfb_protocol::MaiaPathDto::Enlightened)
+    }
+
+    pub(super) fn player_is_corrupted_maia(&self) -> bool {
+        self.player_is_native_maia() && self.maia_path == Some(rfb_protocol::MaiaPathDto::Corrupted)
+    }
+
+    pub(super) fn pending_maia_path_choice(&self) -> bool {
+        self.player_is_native_maia() && self.maia_path.is_none() && self.progress.level >= 20
+    }
+
+    pub(super) fn choose_maia_path(&mut self, path: rfb_protocol::MaiaPathDto) {
+        let max_hp = self.effective_player_max_hp();
+        let resources = self.player_resource_maxima();
+        self.maia_path = Some(path);
+        self.refresh_after_attribute_change(max_hp, &resources);
+        self.reveal_current_visibility();
+    }
+
+    // RFB master a0d92b6378: races_k.c. These helpers use native prace, including in forms.
+    pub(super) fn maia_forbids_realm(&self, realm: &str) -> bool {
+        (self.player_is_enlightened_maia()
+            && matches!(realm, "death" | "daemon" | "hex" | "necromancy"))
+            || (self.player_is_corrupted_maia() && matches!(realm, "life" | "crusade"))
+    }
+
+    pub(super) fn maia_resistances(&self) -> Vec<(DamageType, ResistanceLevel)> {
+        let mut resistances = Vec::new();
+        if !self.player_is_maia() {
+            return resistances;
+        }
+        if self.player_is_enlightened_maia() {
+            resistances.extend(
+                [DamageType::Time, DamageType::Light]
+                    .map(|kind| (kind, ResistanceLevel::Resistant)),
+            );
+            if self.progress.level >= 50 {
+                resistances.extend(
+                    [
+                        DamageType::Poison,
+                        DamageType::Electricity,
+                        DamageType::Cold,
+                    ]
+                    .map(|kind| (kind, ResistanceLevel::Resistant)),
+                );
+            }
+        } else if self.player_is_corrupted_maia() {
+            resistances.extend(
+                [DamageType::Time, DamageType::Fire, DamageType::Dark]
+                    .map(|kind| (kind, ResistanceLevel::Resistant)),
+            );
+            if self.progress.level >= 50 {
+                resistances.extend([
+                    (DamageType::Poison, ResistanceLevel::Resistant),
+                    (DamageType::Fire, ResistanceLevel::Immune),
+                ]);
+            }
+        }
+        resistances
+    }
+
+    pub(super) fn maia_has_contact_aura(&self, kind: DamageType) -> bool {
+        self.player_is_maia()
+            && self.progress.level >= 50
+            && ((self.player_is_enlightened_maia()
+                && matches!(kind, DamageType::Cold | DamageType::Electricity))
+                || (self.player_is_corrupted_maia() && kind == DamageType::Fire))
+    }
+
     /// The first HP refresh consumes the caller's settled maximum, including pending life-force loss.
     pub(super) fn change_player_race(
         &mut self,
@@ -579,6 +663,7 @@ impl Game {
             .as_mut()
             .expect("native identity must exist")
             .race_id = race_id.to_owned();
+        self.maia_path = None;
         let base_max_hp = self.progress.hp_progression[0];
         self.progress.hp_progression =
             CharacterProgress::roll_hp_progression(base_max_hp, &mut self.rng);
@@ -938,6 +1023,9 @@ impl Game {
     }
 
     pub(super) fn experience_required_for_level(&self, level: u16) -> u64 {
+        if self.player_is_native_android() {
+            return crate::stats::android_experience_required_for_level(level);
+        }
         crate::stats::experience_required_for_level_with_factor(
             level,
             self.character_experience_percent(),
@@ -983,6 +1071,11 @@ impl Game {
                 self.player_attributes_at_level(level, None)
                     .constitution_hp_percent(),
             ),
+            if self.player_is_maia() && self.player_is_corrupted_maia() {
+                i32::from(level.saturating_sub(20).min(30) * 2 + level.saturating_sub(50))
+            } else {
+                0
+            },
         )
     }
 
@@ -993,11 +1086,26 @@ impl Game {
         let previous_level = self.progress.level;
         let previous_max_level = self.progress.max_level;
         let mut previous_max_hp = self.player_max_hp_at_level(previous_level);
-        let levels = self.progress.gain_experience(
-            amount,
-            self.character_experience_percent(),
-            self.victory_level_cap_unlocked(),
-        );
+        let amount = if self.player_is_native_android() {
+            0
+        } else {
+            amount
+        };
+        let levels = if self.player_is_native_android() {
+            let experience = self.android_equipment_experience();
+            self.progress.experience = experience;
+            self.progress.maximum_experience = experience;
+            self.progress.recalculate_level_with_threshold(
+                crate::stats::android_experience_required_for_level,
+                self.victory_level_cap_unlocked(),
+            )
+        } else {
+            self.progress.gain_experience(
+                amount,
+                self.character_experience_percent(),
+                self.victory_level_cap_unlocked(),
+            )
+        };
         let newly_reached_levels = levels
             .iter()
             .filter(|level| **level > previous_max_level)
@@ -1164,6 +1272,9 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> u64 {
         let before = self.progress.experience;
+        if self.player_is_native_android() {
+            return 0;
+        }
         let previous_max_hp = self.effective_player_max_hp();
         let previous_resource_maxima = self.player_resource_maxima();
         let lost_levels = self.progress.lose_experience(

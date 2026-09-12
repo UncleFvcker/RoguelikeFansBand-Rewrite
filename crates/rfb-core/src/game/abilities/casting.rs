@@ -55,6 +55,13 @@ impl Game {
         &self,
         ability_id: &str,
     ) -> Option<&'static str> {
+        if self.maia_forbids_spell(ability_id)
+            && self.mutation_activation_for_ability(ability_id).is_none()
+            && self.race_ability_activation(ability_id).is_none()
+            && self.class_ability_activation(ability_id).is_none()
+        {
+            return Some("maia-realm-forbidden");
+        }
         if self.dungeon_blocks_player_ability(ability_id) {
             return Some("anti-magic");
         }
@@ -249,7 +256,9 @@ impl Game {
                 let profile = casting_profile
                     .as_ref()
                     .expect("learned ability source requires a casting profile");
-                if !self.learned_abilities.contains(ability_id) {
+                if self.maia_forbids_spell(ability_id) {
+                    Some("maia-realm-forbidden")
+                } else if !self.learned_abilities.contains(ability_id) {
                     Some("not-learned")
                 } else if self.progress.level < player.minimum_level {
                     Some("level-too-low")

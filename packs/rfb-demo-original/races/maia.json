@@ -69,6 +69,7 @@
   "id": "rfb-legacy.race.maia",
   "kinCategory": "kin-glyph-112",
   "legacyIndex": 74,
+  "infravision": 10,
   "lifePercent": 100,
   "modifiers": {
     "charisma": 2,
@@ -83,6 +84,8 @@
   "skillSetId": "rfb-legacy.skill-set.race-maia",
   "tags": [
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "slow-digestion"
   ]
 }

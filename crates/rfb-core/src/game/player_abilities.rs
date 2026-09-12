@@ -200,6 +200,26 @@ impl Game {
         .collect()
     }
 
+    pub(super) fn maia_forbids_book(&self, book_id: &str) -> bool {
+        self.content
+            .ability_book(book_id)
+            .and_then(|book| book.realm_id.as_deref())
+            .is_some_and(|realm| self.maia_forbids_realm(realm))
+    }
+
+    pub(super) fn maia_forbids_spell(&self, ability_id: &str) -> bool {
+        if self.maia_path.is_none() || !self.player_is_native_maia() {
+            return false;
+        }
+        self.active_casting_book_ids().into_iter().any(|book_id| {
+            self.maia_forbids_book(book_id)
+                && self
+                    .content
+                    .ability_book(book_id)
+                    .is_some_and(|book| book.ability_ids.iter().any(|id| id == ability_id))
+        })
+    }
+
     pub(super) fn active_casting_book_ids(&self) -> Vec<&str> {
         self.active_casting_realm_profiles()
             .into_iter()
@@ -265,8 +285,21 @@ impl Game {
         self.character_definitions().and_then(|(_, race, _, _)| {
             race.abilities
                 .iter()
+                .filter(|activation| self.race_power_is_current(activation))
                 .find(|activation| activation.ability_id == ability_id)
         })
+    }
+
+    pub(super) fn race_power_is_current(&self, activation: &InnatePowerDefinition) -> bool {
+        !self.player_is_android()
+            || activation.minimum_level
+                == match self.progress.level {
+                    1..=9 => 1,
+                    10..=24 => 10,
+                    25..=34 => 25,
+                    35..=44 => 35,
+                    _ => 45,
+                }
     }
 
     pub(super) fn uses_spell_scrolls(&self) -> bool {
@@ -453,7 +486,8 @@ impl Game {
         }
         apply_area_damage_multiplier(&mut ability.effect, level);
         match &ability.effect {
-            AbilityEffectDefinition::DimensionDoor { range } => ability.target.range = *range,
+            AbilityEffectDefinition::DimensionDoor { range }
+            | AbilityEffectDefinition::Jump { range } => ability.target.range = *range,
             AbilityEffectDefinition::BeamDamage {
                 maximum_range: Some(maximum_range),
                 ..
@@ -1058,6 +1092,12 @@ impl Game {
         if let Some(reason) = self.ability_study_unavailable_reason() {
             return Err(reason);
         }
+        if self
+            .study_book_id(book_item_id)
+            .is_some_and(|id| self.maia_forbids_book(id))
+        {
+            return Err("maia-realm-forbidden");
+        }
         let Some(ability) = self.content.ability(ability_id) else {
             return Err("unknown-ability");
         };
@@ -1134,6 +1174,12 @@ impl Game {
         }
         if let Some(reason) = self.ability_study_unavailable_reason() {
             return Err(reason);
+        }
+        if self
+            .study_book_id(book_item_id)
+            .is_some_and(|id| self.maia_forbids_book(id))
+        {
+            return Err("maia-realm-forbidden");
         }
         if self.ability_learning_remaining(&profile) == 0 {
             return Err("learning-capacity-full");
@@ -1924,6 +1970,9 @@ impl Game {
                     removed_entities,
                 )?;
                 completed_turns = completed_turns.saturating_add(1);
+                if self.pending_maia_path_choice() {
+                    break RestStopReasonDto::MaiaPathChoiceRequired;
+                }
                 if self.duelist_prompt().is_some() {
                     break RestStopReasonDto::DuelistChoiceRequired;
                 }

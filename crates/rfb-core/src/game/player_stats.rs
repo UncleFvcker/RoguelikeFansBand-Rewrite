@@ -75,7 +75,7 @@ fn launcher_range(multiplier_percent: u16) -> u16 {
     13_u16.saturating_add(multiplier_percent / 80).min(18)
 }
 
-fn draconian_innate_blows(attributes: AttributeSet, weight: u16, maximum: u16) -> u16 {
+fn innate_blows(attributes: AttributeSet, weight: u16, maximum: u16) -> u16 {
     let strength_index = usize::from(
         attributes
             .index(AttributeKind::Strength)
@@ -557,6 +557,9 @@ impl Game {
         for (damage_type, level) in self.player.resistances.iter() {
             record(damage_type, level);
         }
+        for (damage_type, level) in self.maia_resistances() {
+            record(damage_type, level);
+        }
         for status in &self.player.statuses {
             for (damage_type, level) in &status.granted_resistances {
                 if *level == ResistanceLevel::Resistant
@@ -763,6 +766,9 @@ impl Game {
                 (percent + 1) / 2
             }
             Some("rfb-legacy.race.ent") if damage_type == DamageType::Fire => percent * 7 / 10,
+            Some("rfb-legacy.race.android") if damage_type == DamageType::Electricity => {
+                percent * 7 / 10
+            }
             _ if self.player_is_vampire() && damage_type == DamageType::Light => (percent + 1) / 2,
             _ => percent,
         }
@@ -789,6 +795,50 @@ impl Game {
                 damage.resistance,
                 percent,
             );
+        }
+        if matches!(
+            damage.damage_type,
+            DamageType::HolyFire | DamageType::HellFire
+        ) {
+            // gf.c::gf_holy_dam/gf_hell_dam; retain raw/armor diagnostics when vulnerable.
+            let alignment = self.player_alignment();
+            let race = self
+                .character_definitions()
+                .map(|(_, race, _, _)| race.id.as_str());
+            let extra = match damage.damage_type {
+                DamageType::HolyFire => race == Some("rfb-legacy.race.balrog"),
+                DamageType::HellFire => race == Some("rfb-legacy.race.archon") && alignment >= 0,
+                _ => false,
+            };
+            let amount = damage.applied
+                + if extra {
+                    (damage.applied * 2 / 3).min(30)
+                } else {
+                    0
+                };
+            let alignment = if damage.damage_type == DamageType::HolyFire {
+                alignment
+            } else {
+                -alignment
+            };
+            let table = [
+                (-150, 200),
+                (-50, 150),
+                (-10, 125),
+                (10, 80),
+                (50, 66),
+                (150, 50),
+            ];
+            let alignment = alignment.clamp(-150, 150);
+            let pair = table
+                .windows(2)
+                .find(|pair| alignment <= pair[1].0)
+                .unwrap();
+            let percent = pair[0].1
+                + (alignment - pair[0].0) * (pair[1].1 - pair[0].1) / (pair[1].0 - pair[0].0);
+            let applied = amount * percent / 100;
+            damage.resistance_delta += damage.applied - applied;
+            damage.applied = applied;
         }
         damage
     }
@@ -886,7 +936,10 @@ impl Game {
         }
         modifiers.defense = modifiers
             .defense
-            .saturating_add(i32::from(item.enchantments.to_armor))
+            .saturating_add(i32::from(item.enchantments.to_armor));
+        modifiers.defense = self.body_armor_for_current_form(item, modifiers.defense);
+        modifiers.defense = modifiers
+            .defense
             .saturating_sub(self.equipped_curse_penalty(
                 item,
                 ItemCurseEffectDto::LowArmor,
@@ -894,6 +947,25 @@ impl Game {
                 30,
             ));
         modifiers
+    }
+
+    pub(super) fn body_armor_for_current_form(&self, item: &ItemInstance, defense: i32) -> i32 {
+        if self
+            .character_definitions()
+            .is_some_and(|(_, race, _, _)| race.id == "rfb-legacy.race.centaur")
+            && let Some(definition) = self.content.item(&item.kind_id)
+            && definition.equipment_slot.as_deref() == Some("body")
+        {
+            // races_a.c: subtract each third separately; negative enchantments are retained.
+            let base = definition.modifiers.defense
+                - definition
+                    .rfb_value
+                    .as_ref()
+                    .map_or(0, |value| i32::from(value.to_armor));
+            let enchantment = defense - base;
+            return defense - base / 3 - enchantment.max(0) / 3;
+        }
+        defense
     }
 
     pub(super) fn item_equipment_bonuses(&self, item: &ItemInstance) -> EquipmentBonuses {
@@ -1180,6 +1252,7 @@ impl Game {
                     .is_some_and(|minimum_level| self.progress.level >= minimum_level)
         });
         equipment_sources
+            + usize::from(self.player_is_maia() && self.player_is_enlightened_maia())
             + usize::from(race_source)
             + usize::from(self.player.statuses.iter().any(|status| {
                 matches!(
@@ -1221,6 +1294,9 @@ impl Game {
 
     pub(super) fn player_levitates(&self) -> bool {
         self.player_has_status_kind(STATUS_LEVITATION)
+            || (self.player_is_maia()
+                && self.player_is_enlightened_maia()
+                && self.progress.level >= 50)
             || self
                 .character_definitions()
                 .is_some_and(|(_, race, _, _)| race.levitation)
@@ -1244,6 +1320,14 @@ impl Game {
         &self,
         definition: &rfb_content::ActorDefinition,
     ) -> bool {
+        if self.player_is_maia()
+            && definition
+                .tags
+                .iter()
+                .any(|tag| matches!(tag.as_str(), "demon" | "evil"))
+        {
+            return true;
+        }
         let passives = self.player_equipment_passives();
         [
             (EquipmentPassive::EspAnimal, "animal"),
@@ -2664,6 +2748,50 @@ impl Game {
                 }
             })
             .collect::<Vec<_>>();
+        if self
+            .character_definitions()
+            .is_some_and(|(_, race, _, _)| race.id == "rfb-legacy.race.centaur")
+        {
+            let level = self.progress.level;
+            let to_hit = i32::from(level / 2)
+                + (i32::from(self.progress.centaur_hoof_proficiency) - 4_000) / 200;
+            let blows = innate_blows(self.effective_player_attributes(), 150, 200);
+            let common_to_hit = innate_skill
+                .contributions
+                .iter()
+                .filter(|contribution| {
+                    matches!(
+                        contribution.layer,
+                        StatLayer::Equipment
+                            | StatLayer::Status
+                            | StatLayer::Stance
+                            | StatLayer::Environment
+                    )
+                })
+                .map(|contribution| contribution.amount)
+                .sum::<i32>();
+            profiles.push(ResolvedAttackProfile {
+                poison_needle: false,
+                attacks: blows / 100,
+                extra_attack_chance_percent: (blows % 100) as u8,
+                attack_sources: Vec::new(),
+                melee_skill: innate_skill.with_modifier(
+                    StatLayer::Species,
+                    "rfb-legacy.race.centaur",
+                    to_hit * 3,
+                    StatBounds::NON_NEGATIVE,
+                ),
+                to_hit: common_to_hit + to_hit,
+                to_damage: innate_damage_bonus + prorated_level_value(15, level, 1, 1, 1) as i32,
+                damage_dice: 1 + level / 16,
+                damage_sides: 4 + level / 21,
+                damage_type: DamageType::Physical,
+                source_item_id: None,
+                source_mutation_id: None,
+                attack_name: Some("马蹄".to_owned()),
+                critical_weight_tenths_pound: Some(150),
+            });
+        }
         if self.player_has_draconian_metamorphosis() {
             profiles.extend(
                 self.draconian_metamorphosis_attack_profiles(&innate_skill, innate_damage_bonus),
@@ -2818,8 +2946,7 @@ impl Game {
             }
         };
         let claw_weight = 100_u16.saturating_add(attack_level);
-        let claw_blows =
-            draconian_innate_blows(self.effective_player_attributes(), claw_weight, 400);
+        let claw_blows = innate_blows(self.effective_player_attributes(), claw_weight, 400);
         let bite_maximum = match attack_level {
             175.. => 400,
             160.. => 300,
@@ -2829,7 +2956,7 @@ impl Game {
             _ => 100,
         };
         let bite_weight = 200_u16.saturating_add(attack_level.saturating_mul(2));
-        let bite_blows = draconian_innate_blows(
+        let bite_blows = innate_blows(
             self.effective_player_attributes(),
             bite_weight,
             bite_maximum,
@@ -2906,6 +3033,13 @@ impl Game {
             return 10;
         }
         let mut multiplier = 10;
+        if self.player_is_maia()
+            && self.player_is_enlightened_maia()
+            && self.progress.level >= 50
+            && slay_target_matches(SlayTarget::Evil, definition)
+        {
+            multiplier = slay_multiplier(SlayTarget::Evil, SlayLevel::Slay);
+        }
         for item in &self.items {
             if !matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
             {
@@ -2991,9 +3125,17 @@ impl Game {
             StatKind::ArmorClass,
             StatLayer::Species,
             &race.id,
-            race.armor_class.saturating_add(level_scaling(
-                rfb_content::RaceLevelStatDefinition::ArmorClass,
-            )),
+            race.armor_class
+                .saturating_add(level_scaling(
+                    rfb_content::RaceLevelStatDefinition::ArmorClass,
+                ))
+                .saturating_add(
+                    if race.id == "rfb-legacy.race.maia" && self.player_is_enlightened_maia() {
+                        i32::from(self.progress.level.saturating_sub(20) / 2).min(15)
+                    } else {
+                        0
+                    },
+                ),
         );
         for (layer, source_id, modifiers) in [
             (StatLayer::Species, race.id.as_str(), &race.modifiers),

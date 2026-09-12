@@ -7,5 +7,6 @@
   "glyph": "%",
   "weightTenthsPound": 100,
   "maxStack": 1,
+  "useAction": { "effectProgramId": "demo.effect.satisfy-hunger-scroll" },
   "tags": ["corpse"]
 }

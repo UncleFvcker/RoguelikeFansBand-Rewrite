@@ -32,10 +32,10 @@ export const RACE_GROUPS = [
   { id: "elf", options: [race("dark-elf"), race("high-elf"), race("tomte", ["trait-tomte-headgear-rule"]), race("wood-elf")] },
   { id: "small", options: [race("dwarf"), race("gnome"), race("hobbit"), race("nibelung")] },
   { id: "fairy", options: [race("shadow-fairy"), race("sprite")] },
-  { id: "celestial", options: [race("archon"), race("imp")] },
+  { id: "celestial", options: [race("archon"), race("balrog", ["basics", "defenses", "alignment", "diet", "power", "birth"].map(rule => `trait-balrog-rule-${rule}`)), race("maia", ["birth", "choice", "realms"].map(rule => `trait-maia-rule-${rule}`)), race("imp")] },
   { id: "giant", options: [race("cyclops"), race("half-giant"), race("half-orc"), race("half-titan"), race("half-troll"), race("kobold"), race("ogre"), race("snotling")] },
-  { id: "undead", options: [race("einheri"), race("skeleton"), race("spectre", ["basics", "defenses", "senses", "passage", "density", "diet", "power", "birth"].map(rule => `trait-spectre-rule-${rule}`)), race("zombie")] },
-  { id: "other", options: [race("beastman"), race("boit"), DRACONIAN, race("ent", ["basics", "growth", "digging", "fire", "diet", "forest", "power", "birth"].map(rule => `trait-ent-rule-${rule}`)), race("golem"), race("klackon"), race("kutar"), race("mindflayer"), race("tonberry", ["basics", "speed", "damage", "attacks", "confusion", "birth"].map(rule => `trait-tonberry-rule-${rule}`)), race("yeek")] },
+  { id: "undead", options: [race("einheri"), race("skeleton"), race("spectre", ["basics", "defenses", "senses", "passage", "density", "diet", "power", "birth"].map(rule => `trait-spectre-rule-${rule}`)), race("vampire", ["basics", "defenses", "light", "diet", "power", "birth"].map(rule => `trait-vampire-rule-${rule}`)), race("zombie")] },
+  { id: "other", options: [race("android", ["basics", "experience", "defenses", "diet", "power", "birth"].map(rule => `trait-android-rule-${rule}`)), race("beastman"), race("boit"), race("centaur", ["basics", "speed", "armor", "hooves", "power", "birth"].map(rule => `trait-centaur-rule-${rule}`)), DRACONIAN, race("ent", ["basics", "growth", "digging", "fire", "diet", "forest", "power", "birth"].map(rule => `trait-ent-rule-${rule}`)), race("golem"), race("klackon"), race("kutar"), race("mindflayer"), race("tonberry", ["basics", "speed", "damage", "attacks", "confusion", "birth"].map(rule => `trait-tonberry-rule-${rule}`)), race("yeek")] },
 ] as const satisfies readonly CreationGroup[];
 
 type GroupEntry = (typeof RACE_GROUPS)[number]["options"][number];

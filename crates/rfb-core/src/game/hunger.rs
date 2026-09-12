@@ -30,13 +30,51 @@ pub(super) fn starting_food_supply(
         .is_some_and(|identity| {
             !matches!(
                 identity.race_id.as_str(),
-                GOLEM_RACE_ID | SKELETON_RACE_ID | ZOMBIE_RACE_ID | "rfb-legacy.race.spectre"
+                GOLEM_RACE_ID
+                    | SKELETON_RACE_ID
+                    | ZOMBIE_RACE_ID
+                    | "rfb-legacy.race.spectre"
+                    | "rfb-legacy.race.vampire"
+                    | "rfb-legacy.race.balrog"
+                    | "rfb-legacy.race.android"
             )
         })
         .then(|| (RATION_ITEM_KIND_ID, (rng.bounded(5) + 5) as u32))
 }
 
+// birth.c::monster_hook_human and cmd6.c::_can_eat use glyphs, not RF2_HUMAN.
+pub(super) fn actor_is_human_remains_source(actor: &rfb_content::ActorDefinition) -> bool {
+    matches!(actor.glyph.as_str(), "p" | "h" | "t")
+}
+
 impl Game {
+    pub(super) fn player_is_android(&self) -> bool {
+        self.character_definitions()
+            .is_some_and(|(_, race, _, _)| race.id == "rfb-legacy.race.android")
+    }
+
+    pub(super) fn item_is_edible_at_feet(&self, item: &ItemInstance) -> bool {
+        item.location == ItemLocation::Ground(self.player.position)
+            && (self.player_can_sacrifice_corpse(item)
+                || (self.player_is_android() && item.kind_id == "demo.item.flask-of-oil"))
+    }
+    pub(super) fn item_is_human_corpse(&self, item: &ItemInstance) -> bool {
+        self.content.item(&item.kind_id).is_some_and(|kind| {
+            kind.tags.iter().any(|tag| tag == "corpse")
+                && !kind.tags.iter().any(|tag| tag == "skeleton")
+        }) && item
+            .origin_actor_kind_id
+            .as_deref()
+            .and_then(|id| self.content.actor(id))
+            .is_some_and(actor_is_human_remains_source)
+    }
+
+    pub(super) fn player_can_sacrifice_corpse(&self, item: &ItemInstance) -> bool {
+        self.character_definitions()
+            .is_some_and(|(_, race, _, _)| race.tags.iter().any(|tag| tag == "demon"))
+            && self.item_is_human_corpse(item)
+    }
+
     pub(super) fn consume_inn_meal(&mut self, events: &mut Vec<DomainEvent>) -> &'static str {
         // The effective race already includes the active racial form.
         let race_id = self
@@ -156,7 +194,9 @@ impl Game {
         }
 
         let before_state = self.nutrition_state();
-        if self.nutrition >= NUTRITION_BLOATED {
+        if self.player_is_native_maia() && self.maia_path.is_some() {
+            self.nutrition = NUTRITION_FULL;
+        } else if self.nutrition >= NUTRITION_BLOATED {
             self.nutrition = self.nutrition.saturating_sub(100);
         } else if self
             .world_tick

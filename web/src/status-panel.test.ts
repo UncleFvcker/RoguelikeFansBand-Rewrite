@@ -16,12 +16,42 @@ import {
   proficiencyRankMessageKey,
   wildernessClock,
   renderCharacterOverview,
+  renderCharacterMutations,
   renderHudExperience,
   hudLocationText,
   attributeSourceCell,
   StatusPanel,
 } from "./status-panel.ts";
 import { AppState } from "./app-state.ts";
+
+test("Maia choice requires a click and survives closing and rerendering", async () => {
+  class Element {
+    children = []; dataset = {}; handlers = {}; textContent = "";
+    get ownerDocument() { return document; }
+    querySelectorAll() { return []; }
+    append(...children) { this.children.push(...children); }
+    replaceChildren(...children) { this.children = children; }
+    addEventListener(type, handler) { this.handlers[type] = handler; }
+  }
+  const document = { createElement: () => new Element() };
+  const list = new Element();
+  const commands = [];
+  const localization = { format: key => key };
+  const state = { busy: false, playerDead: false, campaignEnded: false };
+  const maia = { maiaPath: null, pendingMaiaPathChoice: true };
+  const render = () => renderCharacterMutations(list, [], null, state, localization, async command => commands.push(command), maia);
+  render(); render();
+  assert.deepEqual(commands, []);
+  const buttons = () => list.children[0].children.filter(node => node.handlers.click);
+  assert.deepEqual(buttons().map(button => button.textContent), ["maia-path-enlightened", "maia-path-corrupted"]);
+  buttons()[1].handlers.click();
+  assert.deepEqual(commands, [{ type: "choose-maia-path", path: "corrupted" }]);
+  state.busy = true; render();
+  assert.ok(buttons().every(button => button.disabled));
+  state.busy = false; maia.pendingMaiaPathChoice = false; maia.maiaPath = "corrupted"; render();
+  assert.equal(buttons().length, 0);
+  assert.equal(list.children[0].children[1].textContent, "maia-path-corrupted");
+});
 
 test("HUD experience uses exact cumulative XP, clamps the meter and labels the next threshold", () => {
   const meter = { setAttribute(key, value) { this[key] = value; } };

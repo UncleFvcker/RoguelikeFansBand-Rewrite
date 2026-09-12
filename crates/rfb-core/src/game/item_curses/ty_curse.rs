@@ -607,6 +607,7 @@ mod tests {
             game.items[0].id.clone(),
             inventory::ItemPropertyKnowledgeState {
                 known_blessed: false,
+                known_curse: false,
                 discovered: true,
                 appraised: true,
                 identified: true,

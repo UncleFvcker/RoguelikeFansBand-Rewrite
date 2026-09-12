@@ -78,6 +78,7 @@ impl Game {
                     knowledge.feeling = None;
                     knowledge.known_affix_ids.clear();
                     knowledge.known_blessed = false;
+                    knowledge.known_curse = false;
                 }
                 if self.player_is_berserker()
                     || self.player_is_duelist()
@@ -340,6 +341,30 @@ impl Game {
         self.apply_player_item_knowledge(item_ids);
     }
 
+    pub(super) fn maia_sense_carried_curse(&mut self, item_id: &str) {
+        if !self.player_is_enlightened_maia()
+            || !self.items.iter().any(|item| {
+                item.id == item_id
+                    && item.curse.is_some()
+                    && matches!(
+                        item.location,
+                        ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                    )
+            })
+        {
+            return;
+        }
+        let knowledge = self
+            .item_property_knowledge
+            .entry(item_id.to_owned())
+            .or_default();
+        knowledge.discovered = true;
+        knowledge.known_curse = true;
+        if !knowledge.identified && knowledge.feeling.is_none() {
+            knowledge.feeling = Some(ItemFeelingDto::Cursed);
+        }
+    }
+
     pub(super) fn apply_player_item_knowledge(&mut self, mut item_ids: Vec<String>) {
         let identifies = self.player_auto_identifies_items();
         let senses = self.player_is_berserker()
@@ -375,6 +400,14 @@ impl Game {
     }
 
     pub(super) fn visible_item_modifiers(&self, item: &ItemInstance) -> StatModifiersDto {
+        let mut modifiers = self.known_item_modifiers(item);
+        if self.item_base_properties_known(item) {
+            modifiers.defense = self.body_armor_for_current_form(item, modifiers.defense);
+        }
+        modifiers
+    }
+
+    fn known_item_modifiers(&self, item: &ItemInstance) -> StatModifiersDto {
         if !self.item_base_properties_known(item) {
             return StatModifiersDto::default();
         }
@@ -541,14 +574,26 @@ impl Game {
     }
 
     pub(super) fn visible_item_curse(&self, item: &ItemInstance) -> Option<ItemCurseSeverityDto> {
-        (self.item_identification(item) != ItemIdentificationDto::Unexamined)
-            .then_some(item.curse)
-            .flatten()
+        (self.item_identification(item) != ItemIdentificationDto::Unexamined
+            || self
+                .item_property_knowledge
+                .get(&item.id)
+                .is_some_and(|knowledge| knowledge.known_curse))
+        .then_some(item.curse)
+        .flatten()
     }
 
     pub(super) fn visible_item_enchantments(&self, item: &ItemInstance) -> ItemEnchantmentsDto {
         if self.item_identification(item) == ItemIdentificationDto::Identified {
-            item.enchantments
+            let mut enchantments = item.enchantments;
+            let defense = self.known_item_modifiers(item).defense;
+            // Display the known instance delta after applying the same body rule as combat.
+            enchantments.to_armor = i16::try_from(
+                self.body_armor_for_current_form(item, defense + i32::from(enchantments.to_armor))
+                    - self.body_armor_for_current_form(item, defense),
+            )
+            .expect("body armor reduction cannot increase the enchantment magnitude");
+            enchantments
         } else {
             Default::default()
         }

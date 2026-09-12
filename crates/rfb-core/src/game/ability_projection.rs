@@ -70,6 +70,7 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
         AbilityEffectDefinition::DimensionDoor { range } => {
             AbilityEffectSpecDto::DimensionDoor { range: *range }
         }
+        AbilityEffectDefinition::Jump { range } => AbilityEffectSpecDto::Jump { range: *range },
         AbilityEffectDefinition::Damage {
             damage_dice,
             damage_sides,

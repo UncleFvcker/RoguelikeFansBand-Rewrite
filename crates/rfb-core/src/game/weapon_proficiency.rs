@@ -323,36 +323,7 @@ impl Game {
             .kind_id
             .clone();
         let resolved = self.weapon_proficiency(&item_kind_id)?;
-        if resolved.current >= resolved.maximum
-            || i32::try_from(monster_level).unwrap_or(i32::MAX)
-                < interpolate(
-                    i32::from(self.progress.level),
-                    &PLAYER_MINIMUM_MONSTER_LEVEL,
-                )
-            || i32::from(resolved.current)
-                >= interpolate(
-                    i32::try_from(monster_level).unwrap_or(i32::MAX),
-                    &MONSTER_SKILL_CEILING,
-                )
-        {
-            return None;
-        }
-
-        let step = interpolate(i32::from(resolved.current), &WEAPON_GAIN);
-        let mut increase = step / 10;
-        let remainder = step % 10;
-        if remainder != 0
-            && self.rng.bounded(10) < u64::try_from(remainder).expect("positive remainder")
-        {
-            increase += 1;
-        }
-        if increase <= 0 {
-            return None;
-        }
-        let next = resolved
-            .current
-            .saturating_add(u16::try_from(increase).expect("weapon gain must fit u16"))
-            .min(resolved.maximum);
+        let next = self.trained_weapon_skill(resolved.current, resolved.maximum, monster_level);
         if next == resolved.current {
             return None;
         }
@@ -362,6 +333,51 @@ impl Game {
             .weapon_proficiencies
             .insert(resolved.base_item_id.clone(), next);
         (old_bonus != new_bonus).then_some(resolved.base_item_id)
+    }
+
+    pub(super) fn train_centaur_hooves(
+        &mut self,
+        monster_level: u32,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let current = self.progress.centaur_hoof_proficiency;
+        let next = self.trained_weapon_skill(current, WEAPON_EXP_MASTER, monster_level);
+        self.progress.centaur_hoof_proficiency = next;
+        if proficiency_bonus(current, false) != proficiency_bonus(next, false) {
+            events.push(DomainEvent::CentaurHoofProficiencyImproved);
+        }
+    }
+
+    fn trained_weapon_skill(&mut self, current: u16, maximum: u16, monster_level: u32) -> u16 {
+        if current >= maximum
+            || i32::try_from(monster_level).unwrap_or(i32::MAX)
+                < interpolate(
+                    i32::from(self.progress.level),
+                    &PLAYER_MINIMUM_MONSTER_LEVEL,
+                )
+            || i32::from(current)
+                >= interpolate(
+                    i32::try_from(monster_level).unwrap_or(i32::MAX),
+                    &MONSTER_SKILL_CEILING,
+                )
+        {
+            return current;
+        }
+
+        let step = interpolate(i32::from(current), &WEAPON_GAIN);
+        let mut increase = step / 10;
+        let remainder = step % 10;
+        if remainder != 0
+            && self.rng.bounded(10) < u64::try_from(remainder).expect("positive remainder")
+        {
+            increase += 1;
+        }
+        if increase <= 0 {
+            return current;
+        }
+        current
+            .saturating_add(u16::try_from(increase).expect("weapon gain must fit u16"))
+            .min(maximum)
     }
 }
 

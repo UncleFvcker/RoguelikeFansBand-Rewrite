@@ -7,6 +7,16 @@ import test from "node:test";
 
 import { PlayerUiLayout, playerPageForShortcut } from "./player-ui-layout.ts";
 
+test("Maia choice opens the character Other page and can be reopened after closing", (t) => {
+  const { layout, element } = createLayoutFixture(t);
+  layout.showMaiaChoice();
+  assert.equal(element("player-page-dialog").open, true);
+  assert.equal(element("character-tab-other").getAttribute("aria-selected"), "true");
+  layout.closePage();
+  layout.showMaiaChoice();
+  assert.equal(element("character-tab-other").getAttribute("aria-selected"), "true");
+});
+
 test("player pages use conventional shortcuts without consuming movement keys", () => {
   assert.equal(playerPageForShortcut("i"), "inventory");
   assert.equal(playerPageForShortcut("I"), "inventory");

@@ -796,6 +796,7 @@ export function renderCharacterMutations(
   pendingChoice: PendingRaceMutationChoiceDto | null | undefined,
   state: Pick<AppState, "busy" | "playerDead" | "campaignEnded">,
   localization: Localization, dispatch: (command: GameCommand) => Promise<void>,
+  maia?: Pick<PlayerDto, "maiaPath" | "pendingMaiaPathChoice">,
 ): void {
   const document = list.ownerDocument;
   const expanded = new Set([...list.querySelectorAll<HTMLDetailsElement>("details[open]")]
@@ -832,6 +833,33 @@ export function renderCharacterMutations(
     return details;
   };
   const rows: HTMLLIElement[] = [];
+  if (maia?.pendingMaiaPathChoice || maia?.maiaPath) {
+    const row = document.createElement("li");
+    row.className = "mutation-choice-card";
+    const title = document.createElement("strong");
+    title.textContent = localization.format("maia-path-title");
+    row.append(title);
+    if (maia.pendingMaiaPathChoice) {
+      const prompt = document.createElement("p");
+      prompt.textContent = localization.format("maia-path-prompt");
+      row.append(prompt);
+      for (const path of ["enlightened", "corrupted"] as const) {
+        const description = document.createElement("p");
+        description.textContent = localization.format(`maia-path-${path}-description`);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = localization.format(`maia-path-${path}`);
+        button.disabled = state.busy || state.playerDead || state.campaignEnded;
+        button.addEventListener("click", () => void dispatch({ type: "choose-maia-path", path }));
+        row.append(description, button);
+      }
+    } else if (maia.maiaPath) {
+      const choice = document.createElement("p");
+      choice.textContent = localization.format(`maia-path-${maia.maiaPath}`);
+      row.append(choice);
+    }
+    rows.push(row);
+  }
   if (pendingChoice) {
     const choice = document.createElement("li");
     choice.className = "mutation-choice-card";
@@ -1042,6 +1070,7 @@ export class StatusPanel {
       state.player.mutations ?? [],
       state.player.pendingRaceMutationChoice,
       this.#state, this.#localization, this.#dispatch,
+      state.player,
     );
     this.#renderAbilities(
       state.player.abilities ?? [],
@@ -1411,6 +1440,9 @@ export class StatusPanel {
   }
 
   updateAbilityActions(): void {
+    for (const button of this.#dom.mutationList.querySelectorAll<HTMLButtonElement>("button")) {
+      button.disabled = this.#state.busy || this.#state.playerDead || this.#state.campaignEnded;
+    }
     if (this.#state.busy) this.#rememberAbilityFocus();
     this.#dom.abilityActionsLock.disabled = this.#state.busy || this.#state.commandBlocked || this.#state.worldMap;
     if (!this.#state.busy && this.#abilityFocus) {

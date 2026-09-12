@@ -2104,6 +2104,7 @@ impl Game {
                     }
                     MeleeBlowEffectDefinition::Disenchant { .. } => {
                         self.resolve_player_disenchantment();
+                        self.refresh_android_experience(events);
                         None
                     }
                     MeleeBlowEffectDefinition::EatGold { .. } => {
@@ -2257,6 +2258,9 @@ impl Game {
             })
             .map(|mutation| vec![mutation.id.clone()])
             .collect();
+        if self.maia_has_contact_aura(damage_type) {
+            groups.push(vec!["rfb-legacy.race.maia".to_owned()]);
+        }
         if matches!(
             damage_type,
             DamageType::Fire | DamageType::Electricity | DamageType::Cold

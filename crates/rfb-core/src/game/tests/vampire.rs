@@ -11,7 +11,7 @@ const EAST: Position = Position { x: 100, y: 33 };
 fn native(race: &str) -> Game {
     let mut game = Game::new_with_build(83, "demo.build.high-mage-death").unwrap();
     clear_monsters(&mut game);
-    // Explicit post-conversion precondition; this neither opens birth nor implements change_race.
+    // Explicit post-conversion precondition; native birth is exercised separately below.
     game.build.as_mut().unwrap().race_id = race.to_owned();
     game.player.position = START;
     for y in 31..=35 {
@@ -167,7 +167,207 @@ fn five_native_targets_survive_act_use_resources_and_continue_saved_state() {
         );
         assert_eq!(restored.state_hash(), game.state_hash());
     }
-    assert!(Game::new_with_build_race_and_name(83, "demo.build.warrior", VAMPIRE, "test").is_err());
+}
+
+#[test]
+fn vampire_birth_preserves_fourteen_class_kits_and_grants_only_usable_racial_supplies() {
+    for build_id in [
+        "demo.build.warrior",
+        "demo.build.berserker",
+        "demo.build.duelist",
+        "demo.build.archer",
+        "demo.build.sniper",
+        "demo.build.ranger-nature-sorcery",
+        "demo.build.mage-life-sorcery",
+        "demo.build.high-mage-death",
+        "demo.build.magic-eater",
+        "demo.build.priest-life-sorcery",
+        "demo.build.paladin-death",
+        "demo.build.warrior-mage-arcane-life",
+        "demo.build.cavalry",
+        "demo.build.mindcrafter",
+    ] {
+        let game = Game::new_with_build_race_and_name(83, build_id, VAMPIRE, "test").unwrap();
+        assert_eq!(game.world_tick, wilderness::WILDERNESS_NIGHT_START_TICK);
+        assert!(!game.wilderness_is_daytime());
+        assert!(
+            game.virtues
+                .iter()
+                .any(|virtue| virtue.kind == VirtueKindDto::Unlife)
+        );
+        assert_eq!(game.player_light_radius(), Some(1));
+        let carried: Vec<_> = game
+            .items
+            .iter()
+            .filter(|item| !matches!(item.location, ItemLocation::Ground(_)))
+            .collect();
+        assert!(carried.iter().all(|item| !matches!(
+            item.kind_id.as_str(),
+            "demo.item.ration-of-food" | "demo.item.wooden-torch"
+        )));
+        let scrolls: u32 = carried
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.darkness-scroll")
+            .map(|item| item.quantity)
+            .sum();
+        if build_id == "demo.build.berserker" {
+            assert_eq!(scrolls, 0);
+        } else {
+            assert!((2..=5).contains(&scrolls), "{build_id}: {scrolls}");
+            assert!(game.item_knowledge["demo.item.darkness-scroll"].aware);
+        }
+        let (build, _, class, personality) = game.character_definitions().unwrap();
+        for expected in class
+            .starting_items
+            .iter()
+            .chain(&personality.starting_items)
+            .chain(&build.starting_items)
+        {
+            assert!(
+                carried
+                    .iter()
+                    .any(|item| item.kind_id == expected.item_kind_id
+                        && (expected.quantity
+                            ..=expected.maximum_quantity.unwrap_or(expected.quantity))
+                            .contains(&item.quantity)
+                        && matches!(item.location, ItemLocation::Equipped { .. })
+                            == expected.equipped),
+                "{build_id}: {}",
+                expected.item_kind_id
+            );
+        }
+        let bite = game
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .find(|ability| ability.id == BITE)
+            .unwrap();
+        assert_eq!(bite.minimum_level, 2);
+        assert!(!bite.can_cast);
+        let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        assert_eq!(restored.snapshot(), game.snapshot());
+        assert_eq!(restored.state_hash(), game.state_hash());
+    }
+}
+
+#[test]
+fn vampire_birth_scroll_can_create_daylight_shelter_and_continue_after_save() {
+    let mut game =
+        Game::new_with_build_race_and_name(83, "demo.build.warrior", VAMPIRE, "test").unwrap();
+    clear_monsters(&mut game);
+    game.player.position = START;
+    replace_terrain(&mut game, START, "demo.terrain.floor");
+    game.world_tick = 10;
+    let scroll = game
+        .items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.darkness-scroll")
+        .unwrap();
+    let id = scroll.id.clone();
+    let quantity = scroll.quantity;
+    let before = game.player.hp;
+    assert!(game.process_vampire_light_damage(&mut Vec::new()));
+    assert_eq!(game.player.hp, before - 1);
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: id.clone(),
+            target: None,
+        },
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == id)
+            .unwrap()
+            .quantity,
+        quantity - 1
+    );
+    assert!(game.daylight_suppressed[game.index(START).unwrap()]);
+    assert!(!game.process_vampire_light_damage(&mut Vec::new()));
+    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(
+        dispatch_next(&mut restored, GameCommand::Wait),
+        dispatch_next(&mut game, GameCommand::Wait)
+    );
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn native_vampire_bite_spends_hp_without_sp_on_success_and_failure_after_save() {
+    for build_id in [
+        "demo.build.warrior",
+        "demo.build.berserker",
+        "demo.build.magic-eater",
+    ] {
+        let mut template =
+            Game::new_with_build_race_and_name(83, build_id, VAMPIRE, "test").unwrap();
+        clear_monsters(&mut template);
+        template.player.position = START;
+        replace_terrain(&mut template, START, "demo.terrain.floor");
+        replace_terrain(&mut template, EAST, "demo.terrain.floor");
+        template
+            .apply_player_experience(template.experience_required_for_level(2), &mut Vec::new());
+        for pool in template.resources.values_mut() {
+            pool.current = 0;
+        }
+        template.player.hp = 10;
+        template.nutrition = 10_000; // A full vampire cannot heal from the bite.
+        template.push_generated_actor("test.birth.bite".to_owned(), "demo.actor.sheep", EAST);
+        let bite = template
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .find(|ability| ability.id == BITE)
+            .unwrap();
+        assert!(bite.can_cast);
+        assert_eq!(bite.resource_cost, 1);
+        for success in [false, true] {
+            let mut game = template.clone();
+            let seed = (0..1000)
+                .find(|seed| {
+                    (RfbRng::seeded(*seed).bounded(100) >= u64::from(bite.failure_percent))
+                        == success
+                })
+                .expect("both native bite outcomes must be reachable");
+            game.rng = RfbRng::seeded(seed);
+            let mut restored =
+                Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+            let cast = |current: &mut Game| {
+                let mut events = Vec::new();
+                current
+                    .resolve_player_ability(
+                        BITE,
+                        TargetSelection::Direction {
+                            direction: Direction::East,
+                        },
+                        &mut events,
+                        &mut BTreeSet::new(),
+                        &mut Vec::new(),
+                    )
+                    .unwrap();
+                assert_eq!(current.player.hp, 9, "{build_id}: {events:?}");
+                assert_eq!(
+                    events
+                        .iter()
+                        .any(|event| matches!(event, DomainEvent::AbilityCastSucceeded { .. })),
+                    success
+                );
+                assert_eq!(
+                    events
+                        .iter()
+                        .any(|event| matches!(event, DomainEvent::AbilityCastFailed { .. })),
+                    !success
+                );
+                assert_eq!(current.nutrition > 10_000, success);
+                events
+            };
+            assert_eq!(cast(&mut restored), cast(&mut game));
+            assert_eq!(restored.state_hash(), game.state_hash());
+        }
+    }
 }
 
 #[test]

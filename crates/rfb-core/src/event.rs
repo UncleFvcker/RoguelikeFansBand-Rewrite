@@ -1413,6 +1413,9 @@ pub(crate) enum DomainEvent {
     WeaponProficiencyImproved {
         item_kind_id: String,
     },
+    CentaurHoofProficiencyImproved,
+    CorpseSacrificed,
+    JumpTeleportBlocked,
     RidingProficiencyImproved {
         current: u16,
     },
@@ -5545,6 +5548,16 @@ impl DomainEvent {
                 "weapon-proficiency-improved",
                 [("target", item_kind_id)],
             ),
+            Self::CentaurHoofProficiencyImproved => dto_without_args(
+                "progress.centaur-hoof-proficiency-improved",
+                "centaur-hoof-proficiency-improved",
+            ),
+            Self::CorpseSacrificed => {
+                dto_without_args("item.corpse-sacrificed", "corpse-sacrificed")
+            }
+            Self::JumpTeleportBlocked => {
+                dto_without_args("ability.jump-blocked", "jump-teleport-blocked")
+            }
             Self::RidingProficiencyImproved { current } => dto_without_args(
                 "progress.riding-proficiency-improved",
                 match current {
@@ -6268,6 +6281,7 @@ fn attribute_kind_id(attribute: crate::stats::AttributeKind) -> &'static str {
 
 fn rest_stop_reason(reason: &RestStopReasonDto) -> String {
     match reason {
+        RestStopReasonDto::MaiaPathChoiceRequired => "maia-path-choice-required",
         RestStopReasonDto::Damaged => "damaged",
         RestStopReasonDto::EnemyVisible => "enemy-visible",
         RestStopReasonDto::FullResources => "full-resources",

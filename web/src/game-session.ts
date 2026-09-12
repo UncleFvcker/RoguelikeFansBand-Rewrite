@@ -28,6 +28,8 @@ export class GameSession {
     if (
       this.#state.busy ||
       (this.#state.commandBlocked &&
+        !(this.#state.status?.player.pendingMaiaPathChoice &&
+          ["choose-maia-path", "set-interface-locale"].includes(command.type)) &&
         command.type !== "resolve-mutation-direction" &&
         command.type !== "resolve-ability-direction" &&
         command.type !== "cancel-ability-direction" &&
@@ -36,6 +38,7 @@ export class GameSession {
         !(this.#state.status?.player.magicEater?.pendingAbsorption &&
           ["select-magic-absorption-slot", "resolve-magic-absorption", "set-interface-locale"].includes(command.type))) ||
       (this.#state.worldMap &&
+        command.type !== "choose-maia-path" &&
         command.type !== "move" &&
         command.type !== "travel-world" &&
         command.type !== "leave-world-map" &&

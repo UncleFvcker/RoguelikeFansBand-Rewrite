@@ -595,6 +595,9 @@ pub enum AbilityEffectDefinition {
     DimensionDoor {
         range: u16,
     },
+    Jump {
+        range: u16,
+    },
     Summon {
         actor_kind_id: String,
         count: u8,
@@ -1059,9 +1062,11 @@ fn ability_level_scaling_base_and_limit(
         (AbilityEffectDefinition::BlinkSelf { radius, .. }, AbilityLevelScalingField::Radius) => {
             Some((u64::from(*radius), 255))
         }
-        (AbilityEffectDefinition::DimensionDoor { range }, AbilityLevelScalingField::Radius) => {
-            Some((u64::from(*range), 255))
-        }
+        (
+            AbilityEffectDefinition::DimensionDoor { range }
+            | AbilityEffectDefinition::Jump { range },
+            AbilityLevelScalingField::Radius,
+        ) => Some((u64::from(*range), 255)),
         (
             AbilityEffectDefinition::BoltOrBeamDamage {
                 beam_chance_percent,

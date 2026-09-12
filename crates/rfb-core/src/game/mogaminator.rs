@@ -387,6 +387,9 @@ impl Game {
         &mut self,
         mut item_ids: Vec<String>,
     ) -> Result<Vec<MogaminatorItemResolution>, CoreError> {
+        for id in &item_ids {
+            self.maia_sense_carried_curse(id);
+        }
         item_ids.sort();
         self.apply_mogaminator_to_items(item_ids, false, true)
     }
@@ -1121,14 +1124,24 @@ impl Game {
                     && other.location == ItemLocation::Inventory
                     && inventory::item_instances_stack_compatible(&self.content, other, item)
             }),
-            MogaminatorPredicate::Special => class.is_some_and(|class| {
-                definition.tags.iter().any(|tag| {
-                    class
-                        .special_item_tags
-                        .iter()
-                        .any(|candidate| candidate == tag)
-                })
-            }),
+            MogaminatorPredicate::Special => {
+                self.player_can_sacrifice_corpse(item)
+                    || (self.item_is_human_corpse(item)
+                        && self
+                            .character_definitions()
+                            .is_some_and(|(build, _, _, _)| {
+                                build.first_realm_id.as_deref() == Some("daemon")
+                                    || build.second_realm_id.as_deref() == Some("daemon")
+                            }))
+                    || class.is_some_and(|class| {
+                        definition.tags.iter().any(|tag| {
+                            class
+                                .special_item_tags
+                                .iter()
+                                .any(|candidate| candidate == tag)
+                        })
+                    })
+            }
             MogaminatorPredicate::Unusable => slot.is_some_and(|slot| {
                 !self
                     .body_slots
@@ -1143,7 +1156,7 @@ impl Game {
                 corpse_actor.is_some_and(|actor| actor.tags.iter().any(|tag| tag == "unique"))
             }
             MogaminatorPredicate::Human => {
-                corpse_actor.is_some_and(|actor| actor.tags.iter().any(|tag| tag == "human"))
+                tagged("corpse") && corpse_actor.is_some_and(hunger::actor_is_human_remains_source)
             }
             MogaminatorPredicate::MoreDiceThan(value) => {
                 identification != ItemIdentificationDto::Unexamined
@@ -1335,6 +1348,41 @@ fn compare_values(left: &str, right: &str) -> std::cmp::Ordering {
 mod tests {
     use super::*;
     use rfb_protocol::GameCommand;
+
+    #[test]
+    fn human_and_special_corpse_predicates_use_source_glyph_and_current_diet() {
+        let game = Game::new_with_build_race_and_name(
+            83,
+            "demo.build.warrior",
+            "rfb-legacy.race.balrog",
+            "test",
+        )
+        .unwrap();
+        let mut corpse = game
+            .items
+            .iter()
+            .find(|item| game.item_is_human_corpse(item))
+            .unwrap()
+            .clone();
+        // Lowercase h qualifies even without the HUMAN flag; uppercase H does not.
+        corpse.origin_actor_kind_id = Some(
+            game.content
+                .actor_definitions()
+                .find(|actor| actor.glyph == "h" && !actor.tags.iter().any(|tag| tag == "human"))
+                .unwrap()
+                .id
+                .clone(),
+        );
+        assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::Human, &corpse));
+        assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::Special, &corpse));
+        corpse.kind_id = "demo.item.skeleton-remains".to_owned();
+        assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::Human, &corpse));
+        assert!(!game.mogaminator_predicate_matches(MogaminatorPredicate::Special, &corpse));
+        corpse.kind_id = "demo.item.corpse-remains".to_owned();
+        corpse.origin_actor_kind_id = Some("demo.actor.sheep".to_owned());
+        assert!(!game.mogaminator_predicate_matches(MogaminatorPredicate::Human, &corpse));
+        assert!(!game.mogaminator_predicate_matches(MogaminatorPredicate::Special, &corpse));
+    }
 
     #[test]
     fn priest_favorites_require_known_blessing_even_for_evil_primary_realms() {
@@ -1790,6 +1838,7 @@ mod tests {
                             item.id.clone(),
                             inventory::ItemPropertyKnowledgeState {
                                 known_blessed: false,
+                                known_curse: false,
                                 discovered: true,
                                 appraised,
                                 identified,

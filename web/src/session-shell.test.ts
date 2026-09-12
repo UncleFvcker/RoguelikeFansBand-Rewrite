@@ -54,8 +54,8 @@ test("the race menu exposes exactly the races accepted by core creation", () => 
   const formal = readdirSync(directory).map(file => JSON.parse(readFileSync(new URL(file, directory), "utf8")))
     .filter(race => race.tags.includes("rfb-compatibility"));
   assert.deepEqual([...PLAYTEST_RACE_IDS].sort(), formal.map(race => race.id).sort());
-  assert.equal(PLAYTEST_RACE_IDS.length, 46);
-  assert.equal(new Set(PLAYTEST_RACE_IDS).size, 46);
+  assert.equal(PLAYTEST_RACE_IDS.length, 51);
+  assert.equal(new Set(PLAYTEST_RACE_IDS).size, 51);
   assert.equal(RACE_GROUPS.length, 8);
   assert.ok(RACE_GROUPS.every(group => group.options.length > 0));
   for (const entry of CREATION_RACES) {

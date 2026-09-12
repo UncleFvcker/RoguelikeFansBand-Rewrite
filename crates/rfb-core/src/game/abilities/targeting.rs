@@ -280,6 +280,18 @@ impl Game {
                     ),
                 })
             }
+            AbilityEffectDefinition::Jump { range } => {
+                let TargetSelection::Position { position } = target else {
+                    return None;
+                };
+                (ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Position]
+                    && rfb_distance(self.player.position, *position) <= u32::from(range)
+                    && self.player_can_teleport_to(*position, false)
+                    && has_line_of_sight(self, self.player.position, *position))
+                .then_some(AbilityTargetPlan::Teleport {
+                    destination: *position,
+                })
+            }
             AbilityEffectDefinition::TeleportTown => {
                 let TargetSelection::Town { town_id } = target else {
                     return None;

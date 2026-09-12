@@ -15,6 +15,7 @@
   "glyph": "!",
   "id": "demo.item.flask-of-oil",
   "maxStack": 100,
+  "useAction": { "effectProgramId": "demo.effect.ration-nutrition" },
   "mogaminatorRare": false,
   "nameKey": "item-demo-flask-of-oil-name",
   "rfbBaseKind": {

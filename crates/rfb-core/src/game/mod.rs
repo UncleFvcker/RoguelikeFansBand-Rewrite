@@ -237,7 +237,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 130;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 131;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -868,6 +868,7 @@ pub struct Game {
     casino: Option<rfb_protocol::CasinoStateSaveDto>,
     nutrition: u16,
     fasting: bool,
+    maia_path: Option<rfb_protocol::MaiaPathDto>,
     gold_piles: Vec<GoldPile>,
     item_knowledge: BTreeMap<String, ItemKnowledgeState>,
     item_property_knowledge: BTreeMap<String, ItemPropertyKnowledgeState>,
@@ -946,7 +947,18 @@ impl Game {
         let mut action = GameAction::from(envelope.command);
         let pending_race_mutation_choice = self.pending_race_mutation_choice();
         let race_mutation_choice_pending = pending_race_mutation_choice.is_some();
+        let maia_choice = matches!(action, GameAction::ChooseMaiaPath { .. });
+        if self.pending_maia_path_choice()
+            && !maia_choice
+            && !matches!(action, GameAction::SetInterfaceLocale { .. })
+        {
+            return Err(CoreError::MaiaPathChoiceRequired);
+        }
+        if maia_choice && !self.pending_maia_path_choice() {
+            return Err(CoreError::MaiaPathChoiceUnavailable);
+        }
         if self.pending_realm_change_book().is_some()
+            && !maia_choice
             && !matches!(action, GameAction::ResolveRealmChange { .. })
         {
             return Err(CoreError::RealmChangeRequired);
@@ -961,12 +973,13 @@ impl Game {
             _ => {}
         }
         if self.duelist_prompt().is_some()
-            && !matches!(
-                action,
-                GameAction::ResolveDuelistChoice { .. } | GameAction::SetInterfaceLocale { .. }
-            )
-            && !(race_mutation_choice_pending
-                && matches!(action, GameAction::ChooseRaceMutation { .. }))
+            && !(maia_choice
+                || matches!(
+                    action,
+                    GameAction::ResolveDuelistChoice { .. } | GameAction::SetInterfaceLocale { .. }
+                )
+                || (race_mutation_choice_pending
+                    && matches!(action, GameAction::ChooseRaceMutation { .. })))
         {
             return Err(CoreError::DuelistChoiceRequired);
         }
@@ -974,9 +987,10 @@ impl Game {
             self.validate_duelist_choice(choice)?;
         }
         if self.pending_mutation_direction.is_some()
-            && !matches!(action, GameAction::ResolveMutationDirection { .. })
-            && !(race_mutation_choice_pending
-                && matches!(action, GameAction::ChooseRaceMutation { .. }))
+            && !(maia_choice
+                || matches!(action, GameAction::ResolveMutationDirection { .. })
+                || (race_mutation_choice_pending
+                    && matches!(action, GameAction::ChooseRaceMutation { .. })))
         {
             return Err(CoreError::MutationDirectionRequired);
         }
@@ -986,6 +1000,7 @@ impl Game {
             return Err(CoreError::MutationDirectionUnavailable);
         }
         if self.pending_ability_direction.is_some()
+            && !maia_choice
             && !matches!(
                 action,
                 GameAction::ResolveAbilityDirection { .. } | GameAction::CancelAbilityDirection
@@ -1002,6 +1017,7 @@ impl Game {
             return Err(CoreError::AbilityDirectionUnavailable);
         }
         if self.casino.is_some()
+            && !maia_choice
             && !matches!(
                 action,
                 GameAction::Casino { .. } | GameAction::SetInterfaceLocale { .. }
@@ -1219,6 +1235,7 @@ impl Game {
                     | GameAction::UseBountyOffice { .. }
                     | GameAction::IncreaseAttribute { .. }
                     | GameAction::ChooseRaceMutation { .. }
+                    | GameAction::ChooseMaiaPath { .. }
                     | GameAction::LeaveWorldMap
                     | GameAction::RenameAtFacility { .. }
                     | GameAction::Rest { .. }
@@ -1472,6 +1489,7 @@ impl Game {
                     "validated race mutation choice must remain available"
                 );
             }
+            GameAction::ChooseMaiaPath { path } => self.choose_maia_path(path),
             GameAction::BashDoor { direction } => match self.bash_door(direction) {
                 Some(DoorBashOutcome::Succeeded { position }) => {
                     changed.insert(position);
@@ -2505,6 +2523,7 @@ impl Game {
                 self.record_mogaminator_resolutions(resolutions, &mut events, &mut changed);
             }
 
+            self.refresh_android_experience(&mut events);
             self.refresh_duelist_challenge();
             if advances_world && self.pending_duelist.is_none() && !self.player_is_dead() {
                 events.extend(self.resolve_wilderness_terrain_hazard(self.player.position));
@@ -3767,6 +3786,7 @@ impl Game {
         }
         if item.location != ItemLocation::Inventory
             && !self.item_is_device_at_feet(item)
+            && !self.item_is_edible_at_feet(item)
             && !(matches!(item.location, ItemLocation::Equipped { .. })
                 && (definition.capture_ball || item.activation.is_some()))
         {
@@ -3807,6 +3827,7 @@ impl Game {
                 && self.item_activation_location_is_valid(item)
                 && (item.location == ItemLocation::Inventory
                     || self.item_is_device_at_feet(item)
+                    || self.item_is_edible_at_feet(item)
                     || (matches!(item.location, ItemLocation::Equipped { .. })
                         && item.activation.is_some()))
                 && item.quantity > 0
