@@ -10069,3 +10069,6 @@ item-demo-midnight-dragon-scale-mail-description = 一套乌黑的鳞甲，能�
 item-demo-bladeturner-name = 『折刃者』
 item-demo-bladeturner-description = 多彩龙鳞护甲，激活时发射飞弹球，随后获得英雄气概、祝福与五元素抗性。
 device-activation-bladeturner-name = 英雄气概、全抗性与元素吐息
+
+item-demo-spectral-dragon-scale-mail-name = 幽灵龙鳞甲
+item-demo-spectral-dragon-scale-mail-description = 透明的白色龙鳞甲，能穿过墙壁而不受密度伤害，并继承白龙的寒冷吐息。

@@ -9269,6 +9269,8 @@
         "vampiric",
         "hold-life",
         "levitation",
+        "pass-wall",
+        "no-passwall-damage",
         "warning",
         "slow-digestion",
         "reflects-bolts",

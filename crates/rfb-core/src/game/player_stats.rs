@@ -709,6 +709,9 @@ impl Game {
                 .statuses
                 .iter()
                 .any(|status| status.grants_wall_passage)
+            || self
+                .player_equipment_passives()
+                .contains(&EquipmentPassive::PassWall)
     }
 
     pub(super) fn player_reflects_bolts(&self) -> bool {

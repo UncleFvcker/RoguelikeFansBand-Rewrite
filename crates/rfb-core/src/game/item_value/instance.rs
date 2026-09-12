@@ -270,14 +270,18 @@ impl ValueObject {
             self.flags.insert(flag.to_owned());
         }
         for passive in &properties.passives {
-            self.flags.insert(passive_flag(*passive).to_owned());
+            if let Some(flag) = passive_flag(*passive) {
+                self.flags.insert(flag.to_owned());
+            }
         }
     }
 }
 
-pub(in crate::game) fn passive_flag(passive: EquipmentPassive) -> &'static str {
+pub(in crate::game) fn passive_flag(passive: EquipmentPassive) -> Option<&'static str> {
     use EquipmentPassive::*;
-    match passive {
+    Some(match passive {
+        // Source artifact226's hidden passwall value is scored by fixedArtifact.
+        PassWall | NoPasswallDamage => return None,
         Regeneration => "REGEN",
         SeeInvisible => "SEE_INVIS",
         Vampiric => "BRAND_VAMP",
@@ -321,5 +325,5 @@ pub(in crate::game) fn passive_flag(passive: EquipmentPassive) -> &'static str {
         SustainDexterity => "SUST_DEX",
         SustainConstitution => "SUST_CON",
         SustainCharisma => "SUST_CHR",
-    }
+    })
 }

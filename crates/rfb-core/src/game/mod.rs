@@ -4742,6 +4742,8 @@ const fn equipment_passive_dto(passive: EquipmentPassive) -> EquipmentPassiveDto
         EquipmentPassive::Vampiric => EquipmentPassiveDto::Vampiric,
         EquipmentPassive::HoldLife => EquipmentPassiveDto::HoldLife,
         EquipmentPassive::Levitation => EquipmentPassiveDto::Levitation,
+        EquipmentPassive::PassWall => EquipmentPassiveDto::PassWall,
+        EquipmentPassive::NoPasswallDamage => EquipmentPassiveDto::NoPasswallDamage,
         EquipmentPassive::Warning => EquipmentPassiveDto::Warning,
         EquipmentPassive::SlowDigestion => EquipmentPassiveDto::SlowDigestion,
         EquipmentPassive::ReflectsBolts => EquipmentPassiveDto::ReflectsBolts,

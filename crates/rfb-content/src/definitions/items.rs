@@ -72,6 +72,8 @@ pub enum EquipmentPassive {
     Vampiric,
     HoldLife,
     Levitation,
+    PassWall,
+    NoPasswallDamage,
     Warning,
     SlowDigestion,
     ReflectsBolts,

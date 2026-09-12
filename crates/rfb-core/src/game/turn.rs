@@ -437,6 +437,13 @@ impl Game {
         }
         let terrain_id = terrain.id.clone();
         let crushing = !self.player_can_pass_walls();
+        if !crushing
+            && self
+                .player_equipment_passives()
+                .contains(&EquipmentPassive::NoPasswallDamage)
+        {
+            return false;
+        }
         let mut raw_damage = 1 + i32::from(self.progress.level / 5);
         if !crushing
             && self

@@ -1,0 +1,119 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.spectral-dragon-scale-mail",
+  "nameKey": "item-demo-spectral-dragon-scale-mail-name",
+  "descriptionKey": "item-demo-spectral-dragon-scale-mail-description",
+  "glyph": "[",
+  "generationLevel": 75,
+  "weightTenthsPound": 100,
+  "baseValue": 350000,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 226,
+    "baseItemKindId": "demo.item.white-dragon-scale-mail",
+    "instant": false,
+    "rarityOneIn": 30
+  },
+  "modifiers": {
+    "defense": 60,
+    "strength": -3,
+    "dexterity": -3,
+    "constitution": -3
+  },
+  "equipmentBonuses": {
+    "meleeSkill": -2,
+    "stealthSkill": 3,
+    "lifePercent": -9
+  },
+  "resistances": {
+    "cold": "resistant",
+    "poison": "resistant",
+    "confusion": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "disenchant": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "AURA_COLD",
+      "CURSED",
+      "DEC_CON",
+      "DEC_DEX",
+      "DEC_LIFE",
+      "DEC_STR",
+      "FULL_NAME",
+      "HEAVY_CURSE",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION",
+      "RES_COLD",
+      "RES_CONF",
+      "RES_DISEN",
+      "RES_NETHER",
+      "RES_NEXUS",
+      "RES_POIS",
+      "SEE_INVIS",
+      "STEALTH"
+    ],
+    "pval": 3,
+    "toArmor": 20
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effectProgramId": "rfb.effect.dragon-breath-294",
+        "id": "rfb.device-activation.dragon-breath-294",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-breathe-cold-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 300
+        },
+        "rfbValue": 5250,
+        "target": {
+          "modes": [
+            "direction"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "passives": [
+    "cold-aura",
+    "see-invisible",
+    "hold-life",
+    "levitation",
+    "pass-wall",
+    "no-passwall-damage"
+  ],
+  "initialCurse": "heavy"
+}

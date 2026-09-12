@@ -239,6 +239,7 @@ impl Game {
             entry.resistances = self.visible_item_resistance_sources(item);
             entry.status_immunities = self.visible_item_status_immunities(item);
             entry.passives = self.visible_item_passives(item);
+            entry.passes_walls = entry.passives.contains(&P::PassWall);
             entry.life_percent = self.visible_item_equipment_bonuses(item).life_percent;
             entry.reflects_bolts = self.item_knowledge_dto(&item.kind_id)
                 == ItemKnowledgeDto::Aware
@@ -359,6 +360,7 @@ impl Game {
         let equipment_passives = self.player_equipment_passives();
         let mut passive_values: Vec<_> = [
             EquipmentPassive::Regeneration,
+            EquipmentPassive::NoPasswallDamage,
             EquipmentPassive::Warning,
             EquipmentPassive::RevengeAura,
             EquipmentPassive::ManaRegeneration,

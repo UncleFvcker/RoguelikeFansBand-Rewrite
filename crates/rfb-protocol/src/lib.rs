@@ -804,6 +804,8 @@ pub enum EquipmentPassiveDto {
     Vampiric,
     HoldLife,
     Levitation,
+    PassWall,
+    NoPasswallDamage,
     Warning,
     SlowDigestion,
     ReflectsBolts,

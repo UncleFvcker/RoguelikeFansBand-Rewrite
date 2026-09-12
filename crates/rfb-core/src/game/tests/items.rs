@@ -3687,27 +3687,25 @@ fn heavy_base_artifacts_generate_with_source_overrides_and_saved_random_properti
             actor_id: "test.ordinary-drop".into(),
         },
     };
-    let mut remaining = BTreeSet::from(["isildur", "yositsune", "bando-musha", "bilbo"]);
-    // New bases and artifacts both pass through the unchanged complete source
-    // allocation, quality and rarity pools; only the depth is controlled.
-    for _ in 0..50_000 {
-        for item in game
-            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+    let cases = [
+        ("isildur", "full-plate-armour", 50, 300, 0, 0),
+        ("yositsune", "haramakido", 45, 200, 0, 0),
+        ("bando-musha", "o-yoroi", 44, 320, 5, 5),
+        ("bilbo", "mithril-chain-mail", 35, 70, 2, 2),
+    ];
+    // Probe the complete allocation separately, so discarded probe artifacts do
+    // not consume uniqueness in the subsequent base-conditioned consumer test.
+    let mut probe = game.clone();
+    let mut remaining = cases
+        .iter()
+        .map(|(_, base, ..)| format!("demo.item.{base}"))
+        .collect::<BTreeSet<_>>();
+    for _ in 0..20_000 {
+        for item in probe
+            .generate_loot_instances(&context, ItemLocation::Inventory)
             .unwrap()
         {
-            if !remaining.remove(item.kind_id.strip_prefix("demo.item.").unwrap()) {
-                continue;
-            }
-            assert!(item.activation.is_none() && item.curse.is_none());
-            let id = item.id.clone();
-            game.items.push(item);
-            game.pick_up_item_at_player(Some(&id)).unwrap();
-            assert!(
-                !game
-                    .item_property_knowledge
-                    .get(&id)
-                    .is_some_and(|k| k.appraised)
-            );
+            remaining.remove(&item.kind_id);
         }
         if remaining.is_empty() {
             break;
@@ -3715,18 +3713,37 @@ fn heavy_base_artifacts_generate_with_source_overrides_and_saved_random_properti
     }
     assert!(
         remaining.is_empty(),
-        "artifacts never generated: {remaining:?}"
+        "ordinary bases never generated: {remaining:?}"
     );
+    for (slug, base, ..) in cases {
+        let kind_id = format!("demo.item.{slug}");
+        let base_id = format!("demo.item.{base}");
+        let selected = (0..20_000)
+            .find_map(|_| {
+                game.roll_fixed_artifact_kind_id(&context, Some(&base_id), false)
+                    .filter(|kind| kind == &kind_id)
+            })
+            .expect("observed base must reach its artifact through all source gates");
+        let draft = game.fixed_item_draft(&context, selected);
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        assert!(item.activation.is_none() && item.curse.is_none());
+        let id = item.id.clone();
+        game.items.push(item);
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        assert!(
+            !game
+                .item_property_knowledge
+                .get(&id)
+                .is_some_and(|k| k.appraised)
+        );
+    }
     game.reveal_current_visibility();
     let unknown = Game::from_save(game.to_save()).unwrap();
     assert_eq!(unknown.state_hash(), game.state_hash());
     assert_eq!(unknown.rng, game.rng);
-    for (slug, base, defense, weight, hit, damage) in [
-        ("isildur", "full-plate-armour", 50, 300, 0, 0),
-        ("yositsune", "haramakido", 45, 200, 0, 0),
-        ("bando-musha", "o-yoroi", 44, 320, 5, 5),
-        ("bilbo", "mithril-chain-mail", 35, 70, 2, 2),
-    ] {
+    for (slug, base, defense, weight, hit, damage) in cases {
         let mut equipped = unknown.clone();
         let kind = format!("demo.item.{slug}");
         equipped.items.retain(|item| item.kind_id == kind);
