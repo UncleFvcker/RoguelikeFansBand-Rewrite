@@ -952,13 +952,12 @@ impl Game {
     }
 
     fn armor_combat_enchantments(&self, item: &ItemInstance, ranged: bool) -> (i32, i32) {
-        // master:equip.c also grants these gauntlets' and Stone of War's
+        // master:equip.c also grants these gauntlets', Aragorn's and Stone of War's
         // hit/damage to archery. Melee already receives their equipment bonuses.
         if let Some(kind) = self.content.item(&item.kind_id)
-            && kind
-                .artifact_generation
-                .as_ref()
-                .is_some_and(|artifact| matches!(artifact.source_index, 54 | 56 | 57 | 185 | 291))
+            && kind.artifact_generation.as_ref().is_some_and(|artifact| {
+                matches!(artifact.source_index, 54 | 56 | 57 | 185 | 238 | 291)
+            })
         {
             return (
                 i32::from(item.enchantments.to_hit)

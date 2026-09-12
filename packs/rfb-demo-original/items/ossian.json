@@ -1,0 +1,63 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.ossian",
+  "nameKey": "item-demo-ossian-name",
+  "descriptionKey": "item-demo-ossian-description",
+  "glyph": ")",
+  "generationLevel": 40,
+  "weightTenthsPound": 60,
+  "maxStack": 1,
+  "baseValue": 30000,
+  "equipmentSlot": "shield",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 357,
+    "baseItemKindId": "demo.item.large-leather-shield",
+    "instant": false,
+    "rarityOneIn": 20
+  },
+  "modifiers": {
+    "defense": 28,
+    "strength": 3,
+    "constitution": 3
+  },
+  "passives": [
+    "regeneration",
+    "reflects-bolts",
+    "sustain-strength",
+    "sustain-constitution"
+  ],
+  "resistances": {
+    "fear": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "REFLECT",
+      "REGEN",
+      "RES_FEAR",
+      "STR",
+      "SUST_CON",
+      "SUST_STR"
+    ],
+    "pval": 3,
+    "toArmor": 22
+  }
+}

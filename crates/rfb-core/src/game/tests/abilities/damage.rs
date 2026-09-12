@@ -662,7 +662,11 @@ fn p86e_mirror_shield_reflects_monster_bolts_once_with_exact_three_of_four_gate(
         events
     };
 
-    for kind in ["demo.item.mirror-shield", "demo.item.perseus"] {
+    for kind in [
+        "demo.item.mirror-shield",
+        "demo.item.perseus",
+        "demo.item.ossian",
+    ] {
         let mut equipment_check = make_game(0, kind);
         assert!(equipment_check.player_reflects_bolts());
         equipment_check
@@ -728,7 +732,12 @@ fn mirror_shield_does_not_reflect_beams_balls_or_breaths() {
     ];
 
     for (effect, kind) in effects.into_iter().flat_map(|effect| {
-        ["demo.item.mirror-shield", "demo.item.perseus"].map(|kind| (effect.clone(), kind))
+        [
+            "demo.item.mirror-shield",
+            "demo.item.perseus",
+            "demo.item.ossian",
+        ]
+        .map(|kind| (effect.clone(), kind))
     }) {
         let mut game = Game::new(0);
         clear_monsters(&mut game);

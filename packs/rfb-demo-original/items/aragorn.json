@@ -1,0 +1,72 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.aragorn",
+  "nameKey": "item-demo-aragorn-name",
+  "descriptionKey": "item-demo-aragorn-description",
+  "glyph": "]",
+  "generationLevel": 50,
+  "weightTenthsPound": 20,
+  "maxStack": 1,
+  "baseValue": 30000,
+  "equipmentSlot": "boots",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 238,
+    "baseItemKindId": "demo.item.soft-leather-boots",
+    "instant": false,
+    "rarityOneIn": 20
+  },
+  "modifiers": {
+    "defense": 21,
+    "strength": 2,
+    "dexterity": 2,
+    "wisdom": 2,
+    "speed": 2
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 7,
+    "meleeDamage": 3,
+    "stealthSkill": 2
+  },
+  "resistances": {
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_COLD",
+      "RES_ELEC",
+      "RES_FIRE",
+      "SPEED",
+      "STEALTH",
+      "STR",
+      "WIS"
+    ],
+    "pval": 2,
+    "toArmor": 17
+  }
+}

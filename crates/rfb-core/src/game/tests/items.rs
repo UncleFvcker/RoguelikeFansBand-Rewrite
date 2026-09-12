@@ -14,6 +14,228 @@ fn artifact_loot_context(depth: u16) -> LootContext {
 }
 
 #[test]
+fn ready_armor_group_generates_equips_and_preserves_consumers_after_save() {
+    let mut game = Game::new_with_build(462, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-60".into(),
+        depth: 60,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.ordinary-drop".into(),
+        },
+    };
+    let mut remaining = BTreeSet::from([
+        "demo.item.numenor",
+        "demo.item.aragorn",
+        "demo.item.ossian",
+        "demo.item.great-wizzard",
+    ]);
+    // Controlled depth and repeated ordinary drops retain the complete base,
+    // quality, source rarity and uniqueness pools, without forced materialization.
+    for _ in 0..100_000 {
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            if !remaining.remove(item.kind_id.as_str()) {
+                continue;
+            }
+            assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+            assert!(item.activation.is_none() && item.curse.is_none());
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            assert!(
+                !game
+                    .item_property_knowledge
+                    .get(&id)
+                    .is_some_and(|k| k.appraised)
+            );
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "artifacts never generated: {remaining:?}"
+    );
+    game.reveal_current_visibility();
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.rng, game.rng);
+    game = restored;
+    for (slug, base, defense) in [
+        ("numenor", "jewel-encrusted-crown", 15),
+        ("aragorn", "soft-leather-boots", 21),
+        ("ossian", "large-leather-shield", 28),
+        ("great-wizzard", "pointy-hat", 9),
+    ] {
+        let kind = format!("demo.item.{slug}");
+        let id = game
+            .items
+            .iter()
+            .find(|item| item.kind_id == kind)
+            .unwrap()
+            .id
+            .clone();
+        game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        assert!(game.item_property_knowledge[&id].identified);
+        game.equip_inventory_item(&id, None).unwrap();
+        let modifiers = game.equipment_modifiers();
+        assert_eq!(modifiers.defense, defense);
+        match slug {
+            "numenor" => {
+                assert_eq!(
+                    (
+                        modifiers.intelligence,
+                        modifiers.dexterity,
+                        modifiers.charisma
+                    ),
+                    (3, 3, 3)
+                );
+                assert_eq!(game.player_equipment_bonuses().light_radius, 1);
+                for element in [DamageType::Shards, DamageType::Sound, DamageType::Light] {
+                    assert_eq!(
+                        game.effective_player_resistances().level(element),
+                        ResistanceLevel::Resistant
+                    );
+                }
+            }
+            "aragorn" => {
+                assert_eq!(
+                    (
+                        modifiers.strength,
+                        modifiers.dexterity,
+                        modifiers.wisdom,
+                        modifiers.speed
+                    ),
+                    (2, 2, 2, 2)
+                );
+                let bonuses = game.player_equipment_bonuses();
+                assert_eq!(
+                    (
+                        bonuses.melee_skill,
+                        bonuses.melee_damage,
+                        bonuses.stealth_skill
+                    ),
+                    (7, 3, 2)
+                );
+                assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
+                for element in [DamageType::Electricity, DamageType::Fire, DamageType::Cold] {
+                    assert_eq!(
+                        game.effective_player_resistances().level(element),
+                        ResistanceLevel::Resistant
+                    );
+                }
+                give_inventory_item(&mut game, "test.ready-bow", "demo.item.short-bow");
+                game.equip_inventory_item("test.ready-bow", None).unwrap();
+                let equipped = game.player_projectile_profile().unwrap();
+                let mut without_bonus = game.clone();
+                without_bonus
+                    .items
+                    .iter_mut()
+                    .find(|item| item.id == id)
+                    .unwrap()
+                    .location = ItemLocation::Inventory;
+                // This light bow has no heavy-shoot penalty with or without the boots.
+                let baseline = without_bonus.player_projectile_profile().unwrap();
+                assert_eq!(
+                    (
+                        equipped.to_hit - baseline.to_hit,
+                        equipped.launcher_to_damage - baseline.launcher_to_damage
+                    ),
+                    (7, 3)
+                );
+                game.items.retain(|item| item.id != "test.ready-bow");
+            }
+            "ossian" => {
+                assert_eq!((modifiers.strength, modifiers.constitution), (3, 3));
+                assert!(game.player_reflects_bolts());
+                assert_eq!(
+                    game.effective_player_resistances().level(DamageType::Fear),
+                    ResistanceLevel::Resistant
+                );
+                let before = game.progress.attributes;
+                let rng = game.rng.clone();
+                game.resolve_monster_attribute_drain(AttributeKind::Strength);
+                game.resolve_monster_attribute_drain(AttributeKind::Constitution);
+                assert_eq!(game.progress.attributes, before);
+                assert_eq!(game.rng, rng);
+            }
+            "great-wizzard" => {
+                assert_eq!(game.player_equipment_bonuses().stealth_skill, -1);
+                assert!(
+                    game.items
+                        .iter()
+                        .find(|item| item.id == id)
+                        .unwrap()
+                        .curse
+                        .is_none()
+                );
+            }
+            _ => unreachable!(),
+        }
+        game.refresh_player_resource_maxima();
+        game.reveal_current_visibility();
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(
+            restored.player_derived_stats().armor_class,
+            game.player_derived_stats().armor_class
+        );
+        assert!(restored.generated_artifact_ids.contains(&kind));
+        assert_ne!(
+            restored.roll_fixed_artifact_kind_id(
+                &context,
+                Some(&format!("demo.item.{base}")),
+                false
+            ),
+            Some(kind)
+        );
+        // Replay from the same saved state, before the extra uniqueness query.
+        let mut replay = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(
+            replay
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            game.generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+        );
+        assert_eq!(replay.rng, game.rng);
+        if slug == "ossian" {
+            restored.player.hp = 1;
+            restored.world_tick = 0;
+            let update = dispatch_next(&mut restored, GameCommand::Wait);
+            assert!(
+                update
+                    .events
+                    .iter()
+                    .any(|event| event.message_key == "equipment-regenerated")
+            );
+            assert!(restored.player.hp > 1);
+        }
+        let slot = match &game
+            .items
+            .iter()
+            .find(|item| item.id == id)
+            .unwrap()
+            .location
+        {
+            ItemLocation::Equipped { slot_id } => slot_id.clone(),
+            _ => panic!("generated armor must remain equipped"),
+        };
+        game.unequip_slot(&slot).unwrap();
+        game.refresh_player_resource_maxima();
+        assert_eq!(game.equipment_modifiers(), Default::default());
+        assert_eq!(game.player_equipment_bonuses(), Default::default());
+    }
+}
+
+#[test]
 fn a10_hell_beast_natural_entry_drops_zero_rarity_artifact_once_after_save() {
     const BEAST: &str = "demo.actor.greater-hell-beast";
     const SHIRT: &str = "demo.item.legendary-lost-treasure";

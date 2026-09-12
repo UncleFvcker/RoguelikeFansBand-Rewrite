@@ -1,0 +1,50 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.great-wizzard",
+  "nameKey": "item-demo-great-wizzard-name",
+  "descriptionKey": "item-demo-great-wizzard-description",
+  "glyph": "]",
+  "generationLevel": 10,
+  "weightTenthsPound": 20,
+  "maxStack": 1,
+  "baseValue": 1000,
+  "equipmentSlot": "head",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 380,
+    "baseItemKindId": "demo.item.pointy-hat",
+    "instant": false,
+    "rarityOneIn": 40
+  },
+  "modifiers": {
+    "defense": 9
+  },
+  "equipmentBonuses": {
+    "stealthSkill": -1
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "DEC_STEALTH",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE"
+    ],
+    "pval": 1,
+    "toArmor": 8
+  }
+}
