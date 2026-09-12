@@ -818,6 +818,24 @@ impl Game {
         }
         let entry_changes = task_floors(world, task_id)
             .filter_map(|floor| {
+                // Conditional town cells derive their entrance from the new task state.
+                // Ordinary terrain (water, mountain, Home's wall) has no available marker.
+                if world.procedural_floors.iter().any(|town| {
+                    town.id == floor.return_floor_id
+                        && town.inline_map.as_ref().is_some_and(|map| {
+                            map.task_terrain_overrides.iter().any(|rule| {
+                                rule.cases.iter().any(|case| {
+                                    case.task_id == task_id
+                                        && Some(&case.terrain_id) == floor.entry_terrain_id.as_ref()
+                                        && case
+                                            .statuses
+                                            .contains(&rfb_content::DungeonEntryTaskStatus::Taken)
+                                })
+                            })
+                        })
+                }) {
+                    return None;
+                }
                 Some((
                     floor.available_entry_terrain_id.as_ref()?.clone(),
                     floor.entry_terrain_id.as_ref()?.clone(),
@@ -879,6 +897,49 @@ impl Game {
             }
         }
         Ok(changed)
+    }
+
+    pub(super) fn spawn_task_failure_return(&mut self, task_id: &str) {
+        let Some(spawn) = self
+            .content
+            .world(&self.world_id)
+            .and_then(|world| task_definition(world, task_id))
+            .and_then(|task| task.failure_return_spawn.as_ref())
+            .cloned()
+        else {
+            return;
+        };
+        // The source rolls while rebuilding this town tile. Persistent towns instead
+        // roll once on failure return; the resulting actor remains ordinary saved town state.
+        if self.rng.bounded(100) >= u64::from(spawn.chance_percent) {
+            return;
+        }
+        let position = crate::save::position_from_content(spawn.position);
+        let definition = self
+            .content
+            .actor(&spawn.actor_kind_id)
+            .expect("validated failure actor");
+        if position == self.player.position
+            || self.entities.iter().any(|actor| actor.position == position)
+            || !super::movement::actor_can_cross_terrain(
+                definition,
+                self.content
+                    .terrain(self.terrain_at(position))
+                    .expect("return terrain exists"),
+            )
+        {
+            return;
+        }
+        let actor = super::spawn_actor_from_definition(
+            &mut self.rng,
+            definition,
+            &format!("{task_id}.failure-return"),
+            position,
+            super::INITIAL_MONSTER_ENERGY_NEED,
+            super::actor_starts_alerted(definition),
+        );
+        self.entities.push(actor);
+        self.entities.sort_by(|left, right| left.id.cmp(&right.id));
     }
 
     pub(super) fn claim_task_reward(

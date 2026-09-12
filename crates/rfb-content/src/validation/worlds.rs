@@ -2714,6 +2714,54 @@ pub(super) fn validate_world(
             }
         };
 
+        if let Some(spawn) = &task.failure_return_spawn {
+            require_actor_role(
+                actor_roles,
+                &spawn.actor_kind_id,
+                ActorRole::Monster,
+                &task.id,
+            )?;
+            let member = world
+                .procedural_floors
+                .iter()
+                .find(|floor| location_floor_ids.contains(floor.id.as_str()))
+                .ok_or_else(|| ContentError::InvalidTask(task.id.clone()))?;
+            let town = world
+                .procedural_floors
+                .iter()
+                .find(|floor| {
+                    floor.id == member.return_floor_id && floor.lifecycle == FloorLifecycle::Town
+                })
+                .ok_or_else(|| ContentError::InvalidTask(task.id.clone()))?;
+            if dungeon_depth_location
+                || location_floor_ids.len() != 1
+                || member.retakeable
+                || !(1..=100).contains(&spawn.chance_percent)
+            {
+                return Err(ContentError::InvalidTask(task.id.clone()));
+            }
+            validate_position(spawn.position, town.width, town.height, &task.id)?;
+            let map = town.inline_map.as_ref().expect("town map was validated");
+            let terrain = map
+                .terrain_overrides
+                .iter()
+                .find(|group| group.positions.contains(&spawn.position))
+                .map_or(&town.floor_terrain_id, |group| &group.terrain_id);
+            if spawn.position == map.player_position
+                || terrain_walkability.get(terrain) != Some(&true)
+                || map
+                    .actor_spawns
+                    .iter()
+                    .any(|actor| actor.position == spawn.position)
+                || map
+                    .task_terrain_overrides
+                    .iter()
+                    .any(|rule| rule.positions.contains(&spawn.position))
+            {
+                return Err(ContentError::InvalidTask(task.id.clone()));
+            }
+        }
+
         if let Some(terrain_id) = &task.completion_exit_terrain_id {
             require_reference(terrain_ids, terrain_id, &task.id)?;
             if task.source_facility_id.is_none()
@@ -3162,6 +3210,32 @@ pub(super) fn validate_world(
                 || town_floor_ids.contains(&floor.return_floor_id))
     }) {
         let entry_terrain_id = floor.entry_terrain_id.as_deref();
+        let conditional_entries = world
+            .procedural_floors
+            .iter()
+            .flat_map(|town| {
+                town.inline_map
+                    .iter()
+                    .flat_map(|map| &map.task_terrain_overrides)
+                    .filter(|rule| {
+                        rule.cases.iter().any(|case| {
+                            Some(case.terrain_id.as_str()) == entry_terrain_id
+                                && Some(case.task_id.as_str()) == floor.task_id.as_deref()
+                                && case.statuses.contains(&DungeonEntryTaskStatus::Taken)
+                        })
+                    })
+                    .flat_map(move |rule| {
+                        rule.positions
+                            .iter()
+                            .map(move |position| (town.id.as_str(), position))
+                    })
+            })
+            .collect::<Vec<_>>();
+        if !conditional_entries.is_empty()
+            && (conditional_entries.len() != 1 || conditional_entries[0].0 != floor.return_floor_id)
+        {
+            return Err(ContentError::InvalidProceduralFloor(floor.id.clone()));
+        }
         let dungeon_id = floor.dungeon_id.as_deref();
         if let Some(existing_dungeon_id) = entry_terrain_owners.get(&entry_terrain_id).copied() {
             let is_substitution_pair =

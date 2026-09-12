@@ -16,6 +16,7 @@
     "demo.task.anambar-apina-island",
     "demo.task.anambar-lord-bovin-treachery"
   ],
-  "entrancePosition": { "x": 16, "y": 9 },
-  "entranceTerrainId": "demo.terrain.mayor-office-entrance"
+  "entrancePosition": {"x":107,"y":28},
+  "entranceTerrainId": "demo.terrain.mayor-office-entrance",
+  "additionalEntrancePositions": [{"x":108,"y":28},{"x":109,"y":28},{"x":110,"y":28}]
 }

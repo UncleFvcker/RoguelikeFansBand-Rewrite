@@ -565,6 +565,7 @@ fn task_service_artifact() -> rfb_content::CompiledArtifact {
         }],
         target_placements: Vec::new(),
         completion_exit_terrain_id: None,
+        failure_return_spawn: None,
         reward: Some(rfb_content::TaskRewardDefinition {
             item_instance_id: "demo.task.test-warrens-depth.reward.1".to_owned(),
             entries: vec![
@@ -612,6 +613,7 @@ fn task_service_artifact() -> rfb_content::CompiledArtifact {
         }],
         target_placements: Vec::new(),
         completion_exit_terrain_id: None,
+        failure_return_spawn: None,
         reward: Some(rfb_content::TaskRewardDefinition {
             item_instance_id: "demo.task.test-prerequisite.reward.1".to_owned(),
             entries: vec![rfb_content::TaskRewardEntryDefinition {

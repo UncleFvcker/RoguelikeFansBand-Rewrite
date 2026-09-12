@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-anambar-armoury-description",
   "townId": "demo.town.anambar",
   "category": "armoury",
-  "entrancePosition": { "x": 6, "y": 1 },
+  "entrancePosition": {"x":105,"y":44},
   "entranceTerrainId": "demo.terrain.armoury-entrance",
   "owner": {
     "id": "demo.shop-owner.anambar-dagro",
@@ -37,5 +37,6 @@
     { "itemKindId": "demo.item.small-leather-shield", "initialMinimum": 1, "initialMaximum": 2, "maintenanceMinimum": 1, "maintenanceMaximum": 2 },
     { "itemKindId": "demo.item.chain-mail", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 }
   ],
-  "maintenance": { "intervalWorldTicks": 10000 }
+  "maintenance": { "intervalWorldTicks": 10000 },
+  "additionalEntrancePositions": [{"x":106,"y":44}]
 }

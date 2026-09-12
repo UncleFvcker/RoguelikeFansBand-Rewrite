@@ -701,8 +701,20 @@ pub struct TaskDefinition {
     pub target_placements: Vec<TaskTargetPlacementDefinition>,
     #[serde(default)]
     pub completion_exit_terrain_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub failure_return_spawn: Option<TaskFailureReturnSpawnDefinition>,
     #[serde(default)]
     pub reward: Option<TaskRewardDefinition>,
+}
+
+/// One attempt when a non-retakeable task fails or is abandoned, on its town return floor.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TaskFailureReturnSpawnDefinition {
+    pub actor_kind_id: String,
+    pub position: ContentPosition,
+    pub chance_percent: u8,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

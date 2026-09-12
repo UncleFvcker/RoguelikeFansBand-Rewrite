@@ -2675,17 +2675,17 @@ mod tests {
         let mut game =
             Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
         game.wilderness_position = Some(Position { x: 26, y: 39 });
-        game.wilderness_view_offset = Position::default();
+        game.wilderness_view_offset = Position { x: 1, y: 0 };
         let view = wilderness_view_positions();
         let view_cell_count = view.len();
 
         let allowed = game.wilderness_positions_outside_visible_towns(view);
 
-        assert_eq!(allowed.len(), view_cell_count - 23 * 11);
-        assert!(!allowed.contains(&Position { x: 78, y: 23 }));
-        assert!(!allowed.contains(&Position { x: 100, y: 33 }));
-        assert!(allowed.contains(&Position { x: 77, y: 23 }));
-        assert!(allowed.contains(&Position { x: 101, y: 33 }));
+        assert_eq!(allowed.len(), view_cell_count - 132 * 66);
+        assert!(!allowed.contains(&Position { x: 0, y: 0 }));
+        assert!(!allowed.contains(&Position { x: 131, y: 65 }));
+        assert!(allowed.contains(&Position { x: 132, y: 0 }));
+        assert!(allowed.contains(&Position { x: 197, y: 65 }));
     }
 
     #[test]
@@ -2741,18 +2741,34 @@ mod tests {
         let evolved = game.cached_wilderness_view_terrain(anambar);
 
         let width = usize::from(WILDERNESS_VIEW_WIDTH);
+        let fixed = game
+            .content
+            .world(&game.world_id)
+            .unwrap()
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.anambar")
+            .unwrap()
+            .inline_map
+            .as_ref()
+            .unwrap()
+            .terrain_overrides
+            .iter()
+            .flat_map(|group| &group.positions)
+            .map(|position| (usize::from(position.x), usize::from(position.y)))
+            .collect::<BTreeSet<_>>();
         let mut outside_changed = false;
         for y in 0..usize::from(WILDERNESS_VIEW_HEIGHT) {
             for x in 0..width {
                 let index = y * width + x;
-                if (78..101).contains(&x) && (23..34).contains(&y) {
+                if fixed.contains(&(x, y)) {
                     assert_eq!(evolved[index], initial[index]);
                 } else if evolved[index] != initial[index] {
                     outside_changed = true;
                 }
             }
         }
-        assert_eq!(initial[33 * width + 99], "demo.terrain.outpost-gate");
+        assert_eq!(initial[33 * width + 99], "demo.terrain.floor");
         assert!(outside_changed);
     }
 
@@ -2797,7 +2813,7 @@ mod tests {
             assert!(
                 after
                     .iter()
-                    .any(|terrain_id| terrain_id == "demo.terrain.outpost-wall")
+                    .any(|terrain_id| terrain_id == "demo.terrain.permanent-wall")
             );
 
             for y in 0..i32::from(WILDERNESS_VIEW_HEIGHT) {
@@ -3148,10 +3164,10 @@ mod tests {
             .expect("visible Anambar slice should initialize");
 
         let anambar = &game.stored_floors["demo.floor.anambar"];
-        assert_eq!((anambar.width, anambar.height), (23, 11));
+        assert_eq!((anambar.width, anambar.height), (198, 66));
         assert_eq!(
-            game.terrain_at(Position { x: 144, y: 23 }),
-            "demo.terrain.outpost-wall"
+            game.terrain_at(Position { x: 138, y: 45 }),
+            "demo.terrain.library-entrance"
         );
     }
 

@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-anambar-weaponsmith-description",
   "townId": "demo.town.anambar",
   "category": "weaponsmith",
-  "entrancePosition": { "x": 10, "y": 1 },
+  "entrancePosition": {"x":110,"y":44},
   "entranceTerrainId": "demo.terrain.weaponsmith-entrance",
   "owner": {
     "id": "demo.shop-owner.anambar-arndal",
@@ -49,5 +49,6 @@
     { "itemKindId": "demo.item.rounded-pebble", "initialMinimum": 20, "initialMaximum": 60, "maintenanceMinimum": 20, "maintenanceMaximum": 60 },
     { "itemKindId": "demo.item.iron-shot", "initialMinimum": 20, "initialMaximum": 60, "maintenanceMinimum": 20, "maintenanceMaximum": 60 }
   ],
-  "maintenance": { "intervalWorldTicks": 10000 }
+  "maintenance": { "intervalWorldTicks": 10000 },
+  "additionalEntrancePositions": [{"x":111,"y":44}]
 }

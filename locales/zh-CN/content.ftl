@@ -640,7 +640,12 @@ shop-owner-demo-anambar-otto-name = 奥托
 town-facility-demo-anambar-library-name = 图书馆
 town-facility-demo-anambar-library-description = 托妮卡在这里研究物品、鉴定物品，并提供城镇商店纵览。
 town-facility-demo-anambar-library-owner-name = 托妮卡
-town-facility-demo-anambar-library-overview = 阿南巴设有杂货店、护甲店、武器店、神殿、炼金店、魔法店、黑市、家、书店与蘑菇店；其他特殊建筑另行提供任务或服务。
+town-facility-demo-anambar-library-overview = 阿南巴设有十家商店、图书馆、公会、镇长办公室、警察局及共享馆藏的博物馆。家在完成警察首项任务并结算后开放；赌场、驯兽师、记者公会、盗贼巢穴和银行目前仅保留建筑入口。
+
+terrain-demo-reporters-guild-entrance-name = 记者公会
+terrain-demo-reporters-guild-entrance-description = 记者公会的入口，目前未开放服务。
+terrain-demo-cornucopia-bank-entrance-name = 聚宝盆银行
+terrain-demo-cornucopia-bank-entrance-description = 聚宝盆银行的入口，目前未开放服务。
 town-facility-demo-anambar-weapon-master-name = 武器大师
 town-facility-demo-anambar-weapon-master-description = 锤趾汤姆泰克按当前护甲等级评估防护能力。
 town-facility-demo-anambar-weapon-master-owner-name = 锤趾汤姆泰克

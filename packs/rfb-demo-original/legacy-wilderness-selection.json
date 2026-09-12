@@ -160,7 +160,9 @@
         { "symbol": "8", "sourceTag": "HOME" },
         { "symbol": "9", "sourceTag": "BOOKSTORE" }
       ],
-      "specialFacilities": [],
+      "specialFacilities": [
+        { "symbol": "M", "sourceIndex": 95, "sourceTag": "MUSEUM", "sourceName": "博物馆" }
+      ],
       "buildings": [
       {
         "buildingIndex": 4,
@@ -761,7 +763,7 @@
         "name": "镇长办公室",
         "ownerName": "锆石·吉姆",
         "ownerRace": "人类",
-        "entrancePosition": { "x": 16, "y": 9 },
+        "entrancePosition": { "x": 107, "y": 28 },
         "requestActionIndex": 0,
         "logicalSourceTaskIndexes": [22, 60, 68, 67, 75]
       },
@@ -771,7 +773,7 @@
         "name": "警察局",
         "ownerName": "瓦茨",
         "ownerRace": "小魔怪",
-        "entrancePosition": { "x": 12, "y": 9 },
+        "entrancePosition": { "x": 74, "y": 33 },
         "requestActionIndex": 4,
         "logicalSourceTaskIndexes": [74, 73, 72]
       }

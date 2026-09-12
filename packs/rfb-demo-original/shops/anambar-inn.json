@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-anambar-inn-description",
   "townId": "demo.town.anambar",
   "category": "general-store",
-  "entrancePosition": { "x": 18, "y": 9 },
+  "entrancePosition": {"x":60,"y":54},
   "entranceTerrainId": "demo.terrain.inn-entrance",
   "innReputationCost": 1,
   "innStayCost": 25,

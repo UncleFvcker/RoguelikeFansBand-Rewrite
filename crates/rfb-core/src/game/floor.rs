@@ -1188,6 +1188,14 @@ impl Game {
         }
 
         self.activate_floor(destination, global_items);
+        if let Some(departure) = &plan.one_shot_departure
+            && matches!(
+                departure.resolution,
+                Some(TaskResolution::Failed | TaskResolution::Abandoned)
+            )
+        {
+            self.spawn_task_failure_return(&departure.task_id);
+        }
         if let Some(mut mount) = riding_actor {
             mount.position = self.player.position;
             self.entities.push(mount);

@@ -7,6 +7,6 @@
   "townId": "demo.town.anambar",
   "category": "home",
   "storageId": "demo.town-facility.outpost-home",
-  "entrancePosition": { "x": 10, "y": 9 },
+  "entrancePosition": {"x":105,"y":57},
   "entranceTerrainId": "demo.terrain.home-entrance"
 }

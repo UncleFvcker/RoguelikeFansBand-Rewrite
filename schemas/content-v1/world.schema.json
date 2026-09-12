@@ -1964,6 +1964,16 @@
             "null"
           ]
         },
+        "failureReturnSpawn": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TaskFailureReturnSpawnDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "id": {
           "type": "string"
         },
@@ -2033,6 +2043,30 @@
         "descriptionKey",
         "location",
         "objectives"
+      ],
+      "type": "object"
+    },
+    "TaskFailureReturnSpawnDefinition": {
+      "additionalProperties": false,
+      "description": "One attempt when a non-retakeable task fails or is abandoned, on its town return floor.",
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "chancePercent": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "position": {
+          "$ref": "#/$defs/ContentPosition"
+        }
+      },
+      "required": [
+        "actorKindId",
+        "position",
+        "chancePercent"
       ],
       "type": "object"
     },

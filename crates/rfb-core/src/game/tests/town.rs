@@ -16,6 +16,7 @@ const SHROOMERY_ID: &str = "demo.shop.outpost-shroomery";
 const WHITE_HORSE_INN_ID: &str = "demo.shop.outpost-white-horse";
 const HOME_ID: &str = "demo.town-facility.outpost-home";
 const ANAMBAR_HOME_ID: &str = "demo.town-facility.anambar-home";
+const ANAMBAR_MUSEUM_ID: &str = "demo.town-facility.anambar-museum";
 const ANAMBAR_INN_ID: &str = "demo.shop.anambar-inn";
 const THALOS_INN_ID: &str = "demo.shop.thalos-inn";
 const THALOS_MUSEUM_ID: &str = "demo.town-facility.thalos-museum";
@@ -48,29 +49,8 @@ fn at1_game(edit: impl FnOnce(&mut rfb_content::CompiledContentV1)) -> Game {
 #[test]
 fn at1_shop_doors_share_stock_transactions_projection_and_save() {
     let id = "demo.shop.anambar-general-store";
-    let second = rfb_content::ContentPosition { x: 3, y: 1 };
-    let mut game = at1_game(|content| {
-        let shop = content.shops.iter_mut().find(|shop| shop.id == id).unwrap();
-        shop.additional_entrance_positions.push(second);
-        let entrance = shop.entrance_terrain_id.clone();
-        let map = content.worlds[0]
-            .procedural_floors
-            .iter_mut()
-            .find(|floor| floor.id == "demo.floor.anambar")
-            .unwrap()
-            .inline_map
-            .as_mut()
-            .unwrap();
-        for terrain in &mut map.terrain_overrides {
-            terrain.positions.retain(|position| *position != second);
-        }
-        map.terrain_overrides
-            .iter_mut()
-            .find(|terrain| terrain.terrain_id == entrance)
-            .unwrap()
-            .positions
-            .push(second);
-    });
+    let second = rfb_content::ContentPosition { x: 92, y: 46 };
+    let mut game = Game::new(42);
     enter_town(&mut game, "demo.town.anambar", Position { x: 26, y: 39 });
     game.player.position = game
         .town_local_to_active_position("demo.town.anambar", position_from_content(second))
@@ -99,7 +79,7 @@ fn at1_shop_doors_share_stock_transactions_projection_and_save() {
     let stock = game.shop_states[id].clone();
     let rng = game.rng_draw_counter();
     game.player.position = game
-        .town_local_to_active_position("demo.town.anambar", Position { x: 2, y: 1 })
+        .town_local_to_active_position("demo.town.anambar", Position { x: 92, y: 45 })
         .unwrap();
     game.mark_shop_visited_at_player().unwrap();
     assert_eq!(game.shop_states[id], stock);
@@ -142,25 +122,16 @@ fn at1_task_home_shared_cell_updates_service_and_preserves_town_across_save() {
     };
     let task_id = "demo.task.anambar-cop-quest";
     let service_id = "demo.town-facility.anambar-police-station";
-    let home = rfb_content::ContentPosition { x: 10, y: 9 };
+    let home = rfb_content::ContentPosition { x: 105, y: 57 };
     let mut game = at1_game(|content| {
-        content.worlds[0]
-            .procedural_floors
-            .iter_mut()
-            .find(|floor| floor.id == "demo.floor.anambar-cop-quest")
-            .unwrap()
-            .return_floor_id = "demo.floor.anambar".into();
         let floor = content.worlds[0]
             .procedural_floors
             .iter_mut()
             .find(|floor| floor.id == "demo.floor.anambar")
             .unwrap();
         let map = floor.inline_map.as_mut().unwrap();
-        map.terrain_overrides
-            .iter_mut()
-            .find(|terrain| terrain.terrain_id == "demo.terrain.anambar-cop-quest-entry-available")
-            .unwrap()
-            .terrain_id = "demo.terrain.surface-grass".into();
+        map.task_terrain_overrides
+            .retain(|rule| !rule.positions.contains(&home));
         map.task_terrain_overrides.push(Rule {
             positions: vec![home],
             default_terrain_id: "demo.terrain.permanent-wall".into(),
@@ -314,6 +285,152 @@ fn at1_task_home_shared_cell_updates_service_and_preserves_town_across_save() {
 
 fn enter_morivant(game: &mut Game) {
     enter_town(game, MORIVANT_TOWN_ID, Position { x: 47, y: 50 });
+}
+
+#[test]
+fn at2_anambar_far_task_returns_to_scrolled_entrance_and_preserves_ground_item() {
+    let mut game = Game::new(202);
+    enter_town(&mut game, "demo.town.anambar", Position { x: 26, y: 39 });
+    let mayor_id = "demo.town-facility.anambar-mayor-office";
+    let task_id = "demo.task.anambar-orc-camp";
+    game.player.position = Position { x: 110, y: 28 }; // Fourth source door.
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: mayor_id.into(),
+            task_id: task_id.into(),
+        },
+    );
+    assert_eq!(game.task_states[task_id].status, TaskStatusKindDto::Taken);
+    game.player.position = Position { x: 100, y: 41 };
+    support::give_inventory_item(&mut game, "test.anambar.floor-item", "demo.item.dagger");
+    game.drop_inventory_quantity("test.anambar.floor-item", 1)
+        .unwrap()
+        .unwrap();
+    let item = game
+        .items
+        .iter()
+        .find(|item| item.location == ItemLocation::Ground(game.player.position))
+        .unwrap()
+        .clone();
+    // Cross the real east scroll boundary on the source road, then approach the far entrance.
+    game.player.position = Position { x: 131, y: 41 };
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_ne!(game.wilderness_view_offset, Position { x: 0, y: 0 });
+    let entry = game
+        .town_local_to_active_position("demo.town.anambar", Position { x: 183, y: 62 })
+        .unwrap();
+    assert_eq!(
+        game.terrain_at(entry),
+        "demo.terrain.anambar-orc-camp-entry"
+    );
+    game.player.position = entry;
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.anambar-orc-camp");
+    dispatch_next(&mut game, GameCommand::AbandonTask);
+    assert_eq!(
+        game.task_states[task_id].status,
+        TaskStatusKindDto::Abandoned
+    );
+    assert_eq!(
+        game.player.position,
+        game.town_local_to_active_position("demo.town.anambar", Position { x: 183, y: 62 })
+            .unwrap()
+    );
+    assert_eq!(game.terrain_at(game.player.position), "demo.terrain.dirt");
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    restored.teleport_to_town("demo.town.outpost").unwrap();
+    restored.teleport_to_town("demo.town.anambar").unwrap();
+    let mut expected = item;
+    expected.location = ItemLocation::Ground(
+        restored
+            .town_local_to_active_position("demo.town.anambar", Position { x: 100, y: 41 })
+            .unwrap(),
+    );
+    assert!(restored.items.contains(&expected));
+    assert_eq!(
+        restored.terrain_at(Position { x: 183, y: 62 }),
+        "demo.terrain.dirt"
+    );
+    assert!(Game::from_save(restored.to_save()).is_ok());
+}
+
+#[test]
+fn at2_anambar_dinosaur_failure_rolls_once_and_keeps_the_actor_after_save_and_travel() {
+    let task_id = "demo.task.anambar-dinosaur-quest";
+    let mayor_id = "demo.town-facility.anambar-mayor-office";
+    let mut game = Game::new(203);
+    enter_town(&mut game, "demo.town.anambar", Position { x: 26, y: 39 });
+    // Explicit prerequisite setup; the test concerns the actual failure return.
+    for id in [
+        "demo.task.anambar-orc-camp",
+        "demo.task.anambar-clear-tunnels",
+        "demo.task.anambar-scary-rock-treasure",
+    ] {
+        if let Some(state) = game.task_states.get_mut(id) {
+            state.status = TaskStatusKindDto::Completed;
+            state.current = state.required;
+        }
+    }
+    game.player.position = Position { x: 107, y: 28 };
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: mayor_id.into(),
+            task_id: task_id.into(),
+        },
+    );
+    game.player.position = Position { x: 78, y: 25 };
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.anambar-dinosaur-quest");
+    let before = game.to_save();
+    for should_spawn in [false, true] {
+        let mut current = Game::from_save(before.clone()).unwrap();
+        // Select either side of the real 33% draw without changing formal content.
+        let seed = (0..1000)
+            .find(|seed| (RfbRng::seeded(*seed).bounded(100) < 33) == should_spawn)
+            .unwrap();
+        current.rng = RfbRng::seeded(seed);
+        dispatch_next(&mut current, GameCommand::AbandonTask);
+        assert_eq!(
+            current.task_states[task_id].status,
+            TaskStatusKindDto::Abandoned
+        );
+        let actor_id = format!("{task_id}.failure-return");
+        let actor = current
+            .entities
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .cloned();
+        assert_eq!(actor.is_some(), should_spawn);
+        if let Some(actor) = &actor {
+            assert_eq!(actor.kind_id, "demo.actor.triceratops");
+            assert_eq!(actor.position, Position { x: 93, y: 26 });
+        }
+        let rng = current.rng_draw_counter();
+        let _ = current.snapshot();
+        let _ = current.snapshot();
+        assert_eq!(current.rng_draw_counter(), rng);
+        let mut restored = Game::from_save(current.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), current.state_hash());
+        for copy in [&mut current, &mut restored] {
+            copy.teleport_to_town("demo.town.outpost").unwrap();
+            copy.teleport_to_town("demo.town.anambar").unwrap();
+            assert_eq!(
+                copy.entities
+                    .iter()
+                    .find(|candidate| candidate.id == actor_id),
+                actor.as_ref()
+            );
+        }
+        assert_eq!(restored.state_hash(), current.state_hash());
+    }
 }
 
 fn enter_town(game: &mut Game, town_id: &str, position: Position) {
@@ -700,13 +817,7 @@ fn town_prices_apply_rfb_fame_charisma_race_and_rounding_in_order() {
 
 #[test]
 fn building_enchantment_quotes_tiers_forces_only_selected_steps_and_preserves_save() {
-    let mut game = anambar_facility_game(
-        51,
-        "demo.build.warrior",
-        None,
-        ANAMBAR_WARRIOR_GUILD_ID,
-        Position { x: 86, y: 24 },
-    );
+    let mut game = anambar_facility_game(51, "demo.build.warrior", None, ANAMBAR_WARRIOR_GUILD_ID);
     game.apply_player_experience(4_500_000, &mut Vec::new());
     support::choose_human_talent_if_pending(&mut game);
     support::give_inventory_item(&mut game, "test.enchant.broken", "demo.item.broken-sword");
@@ -2546,7 +2657,9 @@ fn anambar_inn_game(seed: u64) -> Game {
     );
     game.wilderness_position = Some(Position { x: 26, y: 39 });
     dispatch_next(&mut game, GameCommand::LeaveWorldMap);
-    game.player.position = Position { x: 96, y: 32 };
+    game.player.position = game
+        .shop_entrance_position(game.content.shop(ANAMBAR_INN_ID).unwrap())
+        .unwrap();
     game.mark_shop_visited_at_player().unwrap();
     assert!(projected_shop(&game.snapshot().shops, ANAMBAR_INN_ID).player_at_entrance);
     game
@@ -2583,7 +2696,9 @@ fn anambar_library_game(seed: u64) -> Game {
     );
     game.wilderness_position = Some(Position { x: 26, y: 39 });
     dispatch_next(&mut game, GameCommand::LeaveWorldMap);
-    game.player.position = Position { x: 94, y: 24 };
+    game.player.position = game
+        .town_facility_entrance_position(game.content.town_facility(ANAMBAR_LIBRARY_ID).unwrap())
+        .unwrap();
     assert!(
         game.snapshot()
             .task_services
@@ -2598,7 +2713,6 @@ fn anambar_facility_game(
     build_id: &str,
     race_id: Option<&str>,
     facility_id: &str,
-    position: Position,
 ) -> Game {
     let mut game = match race_id {
         Some(race_id) => {
@@ -2616,7 +2730,9 @@ fn anambar_facility_game(
     );
     game.wilderness_position = Some(Position { x: 26, y: 39 });
     dispatch_next(&mut game, GameCommand::LeaveWorldMap);
-    game.player.position = position;
+    game.player.position = game
+        .town_facility_entrance_position(game.content.town_facility(facility_id).unwrap())
+        .unwrap();
     assert!(
         game.snapshot()
             .task_services
@@ -2866,7 +2982,7 @@ fn p109c_thalos_inn_travels_to_a_visited_town_for_the_projected_price() {
 #[test]
 fn museums_share_ordinary_items_across_towns_and_reject_true_artifacts() {
     let mut game = Game::new_with_build(109, "demo.build.warrior").unwrap();
-    game.player.position = Position { x: 97, y: 46 };
+    enter_town_facility(&mut game, ANAMBAR_MUSEUM_ID);
     game.mark_shop_visited_at_player().unwrap();
     support::give_inventory_item(&mut game, "test.museum.dagger", "demo.item.dagger");
     game.items
@@ -2893,8 +3009,8 @@ fn museums_share_ordinary_items_across_towns_and_reject_true_artifacts() {
         .snapshot()
         .homes
         .into_iter()
-        .find(|home| home.id == OUTPOST_MUSEUM_ID)
-        .expect("Outpost Museum should be projected");
+        .find(|home| home.id == ANAMBAR_MUSEUM_ID)
+        .expect("Anambar Museum should be projected");
     assert!(museum.player_at_entrance);
     assert!(
         museum
@@ -2912,7 +3028,7 @@ fn museums_share_ordinary_items_across_towns_and_reject_true_artifacts() {
     let rejected = dispatch_next(
         &mut game,
         GameCommand::DepositAtHome {
-            facility_id: OUTPOST_MUSEUM_ID.to_owned(),
+            facility_id: ANAMBAR_MUSEUM_ID.to_owned(),
             item_id: "test.museum.arkenstone".to_owned(),
             quantity: 1,
         },
@@ -2923,7 +3039,7 @@ fn museums_share_ordinary_items_across_towns_and_reject_true_artifacts() {
     let deposited = dispatch_next(
         &mut game,
         GameCommand::DepositAtHome {
-            facility_id: OUTPOST_MUSEUM_ID.to_owned(),
+            facility_id: ANAMBAR_MUSEUM_ID.to_owned(),
             item_id: "test.museum.dagger".to_owned(),
             quantity: 1,
         },
@@ -2937,14 +3053,26 @@ fn museums_share_ordinary_items_across_towns_and_reject_true_artifacts() {
         .snapshot()
         .homes
         .into_iter()
-        .find(|home| home.id == OUTPOST_MUSEUM_ID)
-        .expect("Outpost Museum should remain projected")
+        .find(|home| home.id == ANAMBAR_MUSEUM_ID)
+        .expect("Anambar Museum should remain projected")
         .stored_items
         .into_iter()
         .find(|item| item.kind_id == "demo.item.dagger")
         .expect("donated dagger should be displayed");
     assert!(stored.inscription.is_none());
     assert!(stored.details.as_ref().unwrap().inscription.is_none());
+    game.player.position = game
+        .town_local_to_active_position("demo.town.anambar", Position { x: 60, y: 49 })
+        .unwrap();
+    assert!(game.town_facility_accessible(ANAMBAR_MUSEUM_ID));
+    let second_door = game
+        .snapshot()
+        .homes
+        .into_iter()
+        .find(|home| home.id == ANAMBAR_MUSEUM_ID)
+        .unwrap();
+    assert_eq!(second_door.stored_items, vec![stored.clone()]);
+    game = Game::from_save(game.to_save()).unwrap();
     let home_before = game.home_states["demo.town-facility.outpost-home"].clone();
     enter_town_facility(&mut game, THALOS_MUSEUM_ID);
     let thalos_collection = game
@@ -3451,7 +3579,11 @@ fn inn_travel_requires_a_visited_town_and_arrives_at_its_inn() {
     assert_eq!(to_anambar.events[0].kind, "inn.travel");
     assert_eq!(game.gold, 0);
     assert_eq!(game.wilderness_position, Some(Position { x: 26, y: 39 }));
-    assert_eq!(game.player.position, Position { x: 96, y: 32 });
+    assert_eq!(
+        game.player.position,
+        game.shop_entrance_position(game.content.shop(ANAMBAR_INN_ID).unwrap())
+            .unwrap()
+    );
     assert!(projected_shop(&game.snapshot().shops, ANAMBAR_INN_ID).player_at_entrance);
 }
 
@@ -3672,13 +3804,8 @@ fn p104c_anambar_library_identifies_researches_and_identifies_all_without_time_o
 
 #[test]
 fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_and_recall() {
-    let mut warrior = anambar_facility_game(
-        105,
-        "demo.build.warrior",
-        None,
-        ANAMBAR_WARRIOR_GUILD_ID,
-        Position { x: 86, y: 24 },
-    );
+    let mut warrior =
+        anambar_facility_game(105, "demo.build.warrior", None, ANAMBAR_WARRIOR_GUILD_ID);
     let guild = warrior
         .snapshot()
         .task_services
@@ -3720,13 +3847,7 @@ fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_a
             .any(|event| event.kind == "facility.item-enchanted")
     );
 
-    let mut archer = anambar_facility_game(
-        106,
-        "demo.build.archer",
-        None,
-        ANAMBAR_ARCHER_GUILD_ID,
-        Position { x: 98, y: 24 },
-    );
+    let mut archer = anambar_facility_game(106, "demo.build.archer", None, ANAMBAR_ARCHER_GUILD_ID);
     let archer_guild = archer
         .snapshot()
         .task_services
@@ -3772,7 +3893,6 @@ fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_a
         "demo.build.paladin-death",
         None,
         ANAMBAR_MAMMON_TEMPLE_ID,
-        Position { x: 90, y: 24 },
     );
     let temple = healing
         .snapshot()
@@ -3821,13 +3941,8 @@ fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_a
             .any(|event| event.kind == "facility.healed")
     );
 
-    let mut restored = anambar_facility_game(
-        108,
-        "demo.build.warrior",
-        None,
-        ANAMBAR_MAMMON_TEMPLE_ID,
-        Position { x: 90, y: 24 },
-    );
+    let mut restored =
+        anambar_facility_game(108, "demo.build.warrior", None, ANAMBAR_MAMMON_TEMPLE_ID);
     restored.progress.attributes.strength = restored
         .progress
         .maximum_attributes
@@ -3862,13 +3977,8 @@ fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_a
             .any(|event| event.kind == "facility.vitality-restored")
     );
 
-    let mut mutated = anambar_facility_game(
-        109,
-        "demo.build.warrior",
-        None,
-        ANAMBAR_MAMMON_TEMPLE_ID,
-        Position { x: 90, y: 24 },
-    );
+    let mut mutated =
+        anambar_facility_game(109, "demo.build.warrior", None, ANAMBAR_MAMMON_TEMPLE_ID);
     mutated.progress.active_mutation_ids.clear();
     mutated.progress.locked_mutation_ids.clear();
     mutated
@@ -3894,13 +4004,8 @@ fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_a
             .any(|event| event.kind == "facility.mutation-cured")
     );
 
-    let mut assessed = anambar_facility_game(
-        110,
-        "demo.build.warrior",
-        None,
-        ANAMBAR_WEAPON_MASTER_ID,
-        Position { x: 82, y: 24 },
-    );
+    let mut assessed =
+        anambar_facility_game(110, "demo.build.warrior", None, ANAMBAR_WEAPON_MASTER_ID);
     assessed.gold = assessed.town_service_price(400);
     let update = dispatch_next(
         &mut assessed,
@@ -3919,13 +4024,7 @@ fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_a
             .any(|event| event.kind == "facility.armor-assessed")
     );
 
-    let mut recall = anambar_facility_game(
-        111,
-        "demo.build.warrior",
-        None,
-        ANAMBAR_TRUMP_TOWER_ID,
-        Position { x: 86, y: 32 },
-    );
+    let mut recall = anambar_facility_game(111, "demo.build.warrior", None, ANAMBAR_TRUMP_TOWER_ID);
     let mut amberite_form =
         monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 20, "test.p105").status;
     amberite_form.granted_race_id = Some("rfb-legacy.race.amberite".to_owned());
@@ -4121,7 +4220,9 @@ fn anambar_home_uses_the_outpost_home_inventory() {
             .any(|shop_id| shop_id.starts_with("demo.shop.anambar-"))
     );
 
-    game.player.position = Position { x: 96, y: 32 };
+    game.player.position = game
+        .shop_entrance_position(game.content.shop(ANAMBAR_INN_ID).unwrap())
+        .unwrap();
     game.mark_shop_visited_at_player().unwrap();
     let inn = projected_shop(&game.snapshot().shops, ANAMBAR_INN_ID).clone();
     assert!(inn.visited && inn.player_at_entrance && !inn.stock.is_empty());
@@ -4136,7 +4237,48 @@ fn anambar_home_uses_the_outpost_home_inventory() {
         .contains(&item.kind_id.as_str())
     }));
 
-    game.player.position = Position { x: 88, y: 32 };
+    let home_position = game
+        .town_facility_entrance_position(game.content.town_facility(ANAMBAR_HOME_ID).unwrap())
+        .unwrap();
+    game.player.position = home_position;
+    assert!(!game.town_facility_accessible(ANAMBAR_HOME_ID));
+    assert!(
+        game.deposit_at_home(ANAMBAR_HOME_ID, "closed-home", 1)
+            .is_err()
+    );
+    let police_id = "demo.town-facility.anambar-police-station";
+    let task_id = "demo.task.anambar-cop-quest";
+    game.player.position = game
+        .town_facility_entrance_position(game.content.town_facility(police_id).unwrap())
+        .unwrap();
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: police_id.into(),
+            task_id: task_id.into(),
+        },
+    );
+    game.player.position = home_position;
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.anambar-cop-quest");
+    support::clear_monsters(&mut game); // Explicit completion setup; this is a town access test.
+    dispatch_next(&mut game, GameCommand::Wait);
+    support::place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.player.position, home_position);
+    assert!(!game.town_facility_accessible(ANAMBAR_HOME_ID));
+    game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    game.player.position = game
+        .town_facility_entrance_position(game.content.town_facility(police_id).unwrap())
+        .unwrap();
+    dispatch_next(
+        &mut game,
+        GameCommand::ClaimTaskReward {
+            facility_id: police_id.into(),
+            task_id: task_id.into(),
+        },
+    );
+    game.player.position = home_position;
     game.mark_shop_visited_at_player().unwrap();
     let home = game
         .snapshot()

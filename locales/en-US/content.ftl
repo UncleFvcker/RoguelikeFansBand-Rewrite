@@ -636,7 +636,12 @@ shop-owner-demo-anambar-otto-name = Otto
 town-facility-demo-anambar-library-name = Library
 town-facility-demo-anambar-library-description = Tonika researches and identifies items and provides an overview of the town shops.
 town-facility-demo-anambar-library-owner-name = Tonika
-town-facility-demo-anambar-library-overview = Anambar has a General Store, Armoury, Weaponsmith, Temple, Alchemist, Magic Shop, Black Market, Home, Bookstore, and Shroomery; other special buildings offer separate services or quests.
+town-facility-demo-anambar-library-overview = Anambar has ten shops, a library, guilds, the Mayor's Office, the Police Station, and a museum sharing the collection. Home opens after completing and concluding the first police quest. The casino, beastmaster, reporters' guild, thieves' den, and bank currently retain entrances only.
+
+terrain-demo-reporters-guild-entrance-name = Reporters' Guild
+terrain-demo-reporters-guild-entrance-description = The guild entrance; services are not open.
+terrain-demo-cornucopia-bank-entrance-name = Cornucopia Bank
+terrain-demo-cornucopia-bank-entrance-description = The bank entrance; services are not open.
 town-facility-demo-anambar-weapon-master-name = Weaponmaster
 town-facility-demo-anambar-weapon-master-description = Hammer-Toe Tomtech assesses your protection from your current armor class.
 town-facility-demo-anambar-weapon-master-owner-name = Hammer-Toe Tomtech

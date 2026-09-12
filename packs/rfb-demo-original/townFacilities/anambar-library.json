@@ -11,6 +11,7 @@
   "researchItemCost": 1300,
   "identifyAllItemsCost": { "ownerCost": 350, "otherCost": 350 },
   "overviewMessageKey": "town-facility-demo-anambar-library-overview",
-  "entrancePosition": { "x": 16, "y": 1 },
-  "entranceTerrainId": "demo.terrain.library-entrance"
+  "entrancePosition": {"x":72,"y":45},
+  "entranceTerrainId": "demo.terrain.library-entrance",
+  "additionalEntrancePositions": [{"x":80,"y":45},{"x":72,"y":46},{"x":80,"y":46}]
 }

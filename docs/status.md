@@ -1,6 +1,6 @@
 # 状态快照
 
-核对日期：2026-09-12。集成基线包含种族职业 `edfcac5fb`、法术道具 `886d8da89` 和地牢城镇 `1ef1b7261`，合入游侠、A1–A10 神器与金字塔土丘；地牢城镇方向随后完成 AT1 必要能力。本页区分当前代码/配置与各批注明范围的验收证据。
+核对日期：2026-09-12。集成基线包含种族职业 `edfcac5fb`、法术道具 `886d8da89` 和地牢城镇 `1ef1b7261`，合入游侠、A1–A10 神器与金字塔土丘；地牢城镇方向随后完成 AT1 能力及 AT2 阿南巴地图。本页区分当前代码/配置与各批注明范围的验收证据。
 
 ## 版本与源内容
 
@@ -10,12 +10,12 @@
 | 协议 | 1.253 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 125 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 20 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.428.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.429.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v326，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 11 个 Class、77 个 Build、57 个 Race、36 本能力书、1,903 个 ability 文件、469 个 item、1,407 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、64 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 11 个 Class、77 个 Build、57 个 Race、36 本能力书、1,903 个 ability 文件、469 个 item、1,407 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、65 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
-[两城地图恢复 AT1](../design/anambar-thalos-map-restoration-plan-20260912.md#at1落实多门与条件地表所需的最小能力已完成)已接入商店多门共享库存、任务条件格组和设施实际地形门禁，投影／执行共用判定，沿用现有保存状态。两个正式包派生专项通过多门续购和条件 Home 的实际任务／领奖／保存链路；两城正式地图仍为 23×11，尚未迁移新门格或条件规则。完整地图分别留给 AT2／AT3，没有本批桌面或 Android 验收。
+[两城地图恢复 AT1／AT2](../design/anambar-thalos-map-restoration-plan-20260912.md)已接入多门共享库存、任务条件格及设施门禁，并将阿南巴正式地图恢复为 198×66（7,671 个显式格、5,397 个继承格）。十家商店、十个设施和九处条件任务入口已迁至源坐标；新增两门博物馆共用馆藏，Home 在警察首任务成功结算后开放。实际服务、偏移视图任务返回、保存与城镇传送保留地面物品通过；三角龙失败场景适配为返回时单次 33% 抽选，沿用 actor 保存且不因快照／往返重抽。萨洛斯仍为 23×11，留待 AT3；本批没有桌面或 Android 验收。
 
 A1–A10 新增三十八件固定神器与五种底材；连同游侠两把弓与阿蒙专属神器，当前固定神器映射为 86/392。A10 的 Greater Hell-Beast 192 专属奖励保留零稀有度与已生成时跳过的源规则。法术道具方向的 235 项核心、36 项内容、39 项本地化、66 构筑审计与 8 项工具测试、相关 Clippy 和 26 条未刷新契约为该批证据；本次合并后的数量已由 `rfb-contentc inspect-source` 核对，集成检查见下文。范围与保留缺口见[神器计划](artifact-import-plan.md#a10-统一验证结果)：145／322 仅当前身份普通分支，萨鲁曼额外掉落、未开放身份／领域／地点消费者仍保留。没有新增自然练级、桌面或 Android 验收。
 

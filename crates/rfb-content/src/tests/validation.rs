@@ -3,6 +3,48 @@ use std::collections::BTreeMap;
 use super::*;
 
 #[test]
+fn task_failure_return_spawn_rejects_invalid_actors_positions_probability_and_lifecycle() {
+    let content = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for fault in 0..6 {
+        let mut invalid = content.clone();
+        let world = &mut invalid.worlds[0];
+        let task = world
+            .tasks
+            .iter_mut()
+            .find(|task| task.id == "demo.task.anambar-dinosaur-quest")
+            .unwrap();
+        let spawn = task.failure_return_spawn.as_mut().unwrap();
+        match fault {
+            0 => spawn.actor_kind_id = "demo.actor.missing".into(),
+            1 => spawn.chance_percent = 101,
+            2 => spawn.position.x = 198,
+            3 => spawn.position = ContentPosition { x: 105, y: 57 }, // Conditional Home cell.
+            4 => {
+                world
+                    .procedural_floors
+                    .iter_mut()
+                    .find(|floor| floor.id == "demo.floor.anambar-dinosaur-quest")
+                    .unwrap()
+                    .retakeable = true
+            }
+            5 => {
+                world
+                    .procedural_floors
+                    .iter_mut()
+                    .find(|floor| floor.id == "demo.floor.anambar-dinosaur-quest")
+                    .unwrap()
+                    .return_floor_id = "demo.floor.surface".into()
+            }
+            _ => unreachable!(),
+        }
+        assert!(
+            validate_and_normalize(&mut invalid).is_err(),
+            "fault {fault}"
+        );
+    }
+}
+
+#[test]
 fn town_task_terrain_rejects_invalid_references_overlaps_and_non_town_usage() {
     let mut valid = compile_pack_dir(&original_pack_path()).unwrap().content;
     let floor = valid.worlds[0]
@@ -68,8 +110,8 @@ fn shop_additional_doors_reject_duplicates_collisions_and_wrong_terrain() {
             .unwrap();
         shop.additional_entrance_positions.push(match fault {
             0 => shop.entrance_position,
-            1 => ContentPosition { x: 6, y: 1 }, // Another shop.
-            _ => ContentPosition { x: 3, y: 5 }, // Ordinary floor.
+            1 => ContentPosition { x: 105, y: 44 }, // Another shop.
+            _ => ContentPosition { x: 99, y: 33 },  // Ordinary floor.
         });
         assert!(matches!(
             validate_and_normalize(&mut invalid),

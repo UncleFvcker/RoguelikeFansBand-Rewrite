@@ -12,6 +12,7 @@
     { "kind": "enchant-weapon", "ownerCost": 0, "otherCost": 0 },
     { "kind": "enchant-armor", "ownerCost": 0, "otherCost": 0 }
   ],
-  "entrancePosition": { "x": 8, "y": 1 },
-  "entranceTerrainId": "demo.terrain.warrior-guild-entrance"
+  "entrancePosition": {"x":110,"y":46},
+  "entranceTerrainId": "demo.terrain.warrior-guild-entrance",
+  "additionalEntrancePositions": [{"x":111,"y":46}]
 }

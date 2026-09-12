@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-anambar-magic-shop-description",
   "townId": "demo.town.anambar",
   "category": "magic-shop",
-  "entrancePosition": { "x": 2, "y": 9 },
+  "entrancePosition": {"x":32,"y":55},
   "entranceTerrainId": "demo.terrain.magic-shop-entrance",
   "owner": {
     "id": "demo.shop-owner.anambar-edrin-sol",
