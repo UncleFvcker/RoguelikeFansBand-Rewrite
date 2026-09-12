@@ -14,6 +14,446 @@ fn artifact_loot_context(depth: u16) -> LootContext {
 }
 
 #[test]
+fn b4_headgear_activations_respect_targets_healing_and_saved_recovery() {
+    fn activate(game: &mut Game, id: &str) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.use_inventory_item(
+            id,
+            Some(&TargetSelection::SelfTarget),
+            None,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        events
+    }
+    for (slug, difficulty, cooldown) in [("dor-lomin", 20, 1000), ("amber", 40, 2500)] {
+        let mut game = Game::new_with_build(471, "demo.build.warrior").unwrap();
+        choose_human_talent_if_pending(&mut game);
+        clear_monsters(&mut game);
+        game.items.clear();
+        game.player.position = Position { x: 10, y: 10 };
+        game.terrain.fill("demo.terrain.floor".into());
+        game.glow.fill(true);
+        let context = artifact_loot_context(85);
+        let draft = game.fixed_item_draft(&context, format!("demo.item.{slug}"));
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Inventory)
+            .unwrap();
+        let id = item.id.clone();
+        assert_eq!(
+            item.activation.as_ref().unwrap().device_check_difficulty,
+            difficulty
+        );
+        game.items.push(item);
+        game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        game.equip_inventory_item(&id, None).unwrap();
+        if slug == "dor-lomin" {
+            for (id, kind, position) in [
+                ("test.near", "demo.actor.goblin", Position { x: 11, y: 10 }),
+                (
+                    "test.immune",
+                    "demo.actor.skeleton-human",
+                    Position { x: 10, y: 11 },
+                ),
+                (
+                    "test.resist",
+                    "demo.actor.ancient-red-dragon",
+                    Position { x: 11, y: 9 },
+                ),
+                (
+                    "test.blocked",
+                    "demo.actor.goblin",
+                    Position { x: 14, y: 10 },
+                ),
+                ("test.far", "demo.actor.goblin", Position { x: 1, y: 1 }),
+            ] {
+                game.push_generated_actor(id.into(), kind, position);
+            }
+            replace_terrain(&mut game, Position { x: 13, y: 10 }, "demo.terrain.wall");
+        } else {
+            game.player.hp = 1;
+            for status in [STATUS_BLEEDING, STATUS_POISON] {
+                game.player
+                    .statuses
+                    .push(monster_combat::melee_status(status, 100, "test.b4-status").status);
+            }
+        }
+        game.world_tick = 0;
+        game.reveal_current_visibility();
+        if slug == "dor-lomin" {
+            assert!(game.entity_is_visible_by_telepathy(&game.entities[3]));
+            assert!(!has_line_of_effect(
+                &game,
+                game.player.position,
+                game.entities[3].position
+            ));
+        }
+        let mut success = None;
+        let mut failure = None;
+        for seed in 0..1000 {
+            let mut attempt = game.clone();
+            attempt.rng = RfbRng::seeded(seed);
+            let events = activate(&mut attempt, &id);
+            if attempt.items[0].charges.unwrap().current==1 { failure=Some(seed); }
+            else if slug=="amber" || (
+                attempt.entities[0].statuses.iter().any(|s| s.kind_id==STATUS_FEAR) &&
+                events.iter().any(|event| matches!(event,DomainEvent::AbilityEffectsResolved {resolution,..} if resolution.target_entity_id.as_deref()==Some("test.resist") && resolution.effects.iter().any(|effect| matches!(effect,AbilityEffectResolutionDto::ApplyStatus {change:rfb_protocol::AbilityStatusChangeDto::Resisted,..}))))
+            ) { success=Some(seed); }
+            if success.is_some() && failure.is_some() {
+                break;
+            }
+        }
+        let mut failed = game.clone();
+        failed.rng = RfbRng::seeded(failure.expect("a real failed device check"));
+        let mut expected_rng = failed.rng.clone();
+        expected_rng.bounded(100);
+        let statuses = failed.player.statuses.clone();
+        let hp = failed.player.hp;
+        activate(&mut failed, &id);
+        assert_eq!(failed.rng, expected_rng);
+        assert_eq!(failed.player.hp, hp);
+        assert_eq!(failed.player.statuses, statuses);
+        assert_eq!(failed.items[0].charges.unwrap().current, 1);
+        assert_eq!(failed.items[0].device_recovery_progress, 0);
+        assert!(
+            failed
+                .entities
+                .iter()
+                .all(|a| a.statuses.iter().all(|s| s.kind_id != STATUS_FEAR))
+        );
+        let success = success.expect("a successful activation and resisted fear target");
+        game.rng = RfbRng::seeded(success);
+        let events = activate(&mut game, &id);
+        if slug == "dor-lomin" {
+            assert!(
+                game.entities[0]
+                    .statuses
+                    .iter()
+                    .any(|s| s.kind_id == STATUS_FEAR)
+            );
+            assert!(events.iter().any(|event| matches!(event,DomainEvent::AbilityEffectsResolved {resolution,..} if resolution.target_entity_id.as_deref()==Some("test.immune") && resolution.effects.iter().any(|effect| matches!(effect,AbilityEffectResolutionDto::ApplyStatus {change:rfb_protocol::AbilityStatusChangeDto::Immune,..})))));
+            for actor in &game.entities[1..] {
+                assert!(
+                    actor.statuses.iter().all(|s| s.kind_id != STATUS_FEAR),
+                    "{}",
+                    actor.id
+                );
+            }
+        } else {
+            assert!(events.iter().any(|event| matches!(event,DomainEvent::AbilityHealed {resolution,..} if resolution.requested==700 && resolution.applied==game.effective_player_max_hp()-1)));
+            assert_eq!(game.player.hp, game.effective_player_max_hp());
+            assert!(!game.player_has_status_kind(STATUS_BLEEDING));
+            assert!(game.player_has_status_kind(STATUS_POISON));
+        }
+        assert_eq!(game.items[0].charges.unwrap().current, 0);
+        let rng = game.rng.clone();
+        activate(&mut game, &id);
+        assert_eq!(game.rng, rng);
+        for tick in 1..=cooldown / 2 {
+            game.world_tick = tick;
+            game.process_inventory_device_recovery(&mut Vec::new());
+        }
+        game.reveal_current_visibility();
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(
+            u32::from(restored.items[0].device_recovery_progress),
+            cooldown / 2
+        );
+        for tick in cooldown / 2 + 1..cooldown {
+            restored.world_tick = tick;
+            restored.process_inventory_device_recovery(&mut Vec::new());
+        }
+        assert_eq!(restored.items[0].charges.unwrap().current, 0);
+        restored.world_tick = cooldown;
+        restored.process_inventory_device_recovery(&mut Vec::new());
+        assert_eq!(restored.items[0].charges.unwrap().current, 1);
+        assert_eq!(restored.items[0].device_recovery_progress, 0);
+        restored.rng = RfbRng::seeded(success);
+        restored.reveal_current_visibility();
+        let mut continued = Game::from_save(restored.to_save()).unwrap();
+        assert_eq!(activate(&mut restored, &id), activate(&mut continued, &id));
+        assert_eq!(continued.state_hash(), restored.state_hash());
+        assert_eq!(continued.rng, restored.rng);
+        assert_eq!(continued.items[0].charges.unwrap().current, 0);
+    }
+}
+
+#[test]
+fn b4_headgear_generates_equips_and_preserves_source_properties_after_save() {
+    let cases = [
+        ("steel-helm", 6, 60),
+        ("mithril-helm", 8, 50),
+        ("golden-crown", 0, 30),
+        ("hammerhand", 26, 60),
+        ("dor-lomin", 28, 75),
+        ("amber", 15, 30),
+    ];
+    let mut game = Game::new_with_build(469, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-85".into(),
+        depth: 85,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.b4-drop".into(),
+        },
+    };
+    let mut remaining = cases.iter().map(|case| case.0).collect::<BTreeSet<_>>();
+    for _ in 0..200_000 {
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            let slug = item.kind_id.strip_prefix("demo.item.").unwrap();
+            if !remaining.contains(slug) {
+                continue;
+            }
+            let artifact = game
+                .content
+                .item(&item.kind_id)
+                .unwrap()
+                .artifact_generation
+                .is_some();
+            if !artifact
+                && (item.quality != ItemQualityDto::Ordinary
+                    || item.enchantments != Default::default()
+                    || item.artifact_name.is_some())
+            {
+                continue;
+            }
+            remaining.remove(slug);
+            assert!(item.curse.is_none());
+            assert_eq!(item.rolled_affixes.len(), usize::from(slug == "amber"));
+            assert_eq!(
+                item.intrinsic_properties != Default::default(),
+                slug == "amber"
+            );
+            assert_eq!(
+                item.activation.is_some(),
+                matches!(slug, "dor-lomin" | "amber")
+            );
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            assert!(
+                !game
+                    .item_property_knowledge
+                    .get(&id)
+                    .is_some_and(|k| k.appraised)
+            );
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "B4 items never generated: {remaining:?}"
+    );
+    game.reveal_current_visibility();
+    let unknown = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(unknown.state_hash(), game.state_hash());
+    assert_eq!(unknown.rng, game.rng);
+    for (slug, defense, weight) in cases {
+        let mut equipped = unknown.clone();
+        let kind = format!("demo.item.{slug}");
+        equipped.items.retain(|item| item.kind_id == kind);
+        let id = equipped.items[0].id.clone();
+        let rolled = equipped.items[0].rolled_affixes.clone();
+        let intrinsic = equipped.items[0].intrinsic_properties.clone();
+        let rng = equipped.rng.clone();
+        equipped.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        assert_eq!(equipped.rng, rng);
+        let before = equipped.player_derived_stats().armor_class.value;
+        equipped.equip_inventory_item(&id, None).unwrap();
+        assert_eq!(equipped.carried_weight_tenths_pound(), weight);
+        assert_eq!(
+            equipped.player_derived_stats().armor_class.value,
+            before + defense * 10
+        );
+        let m = equipped.equipment_modifiers();
+        match slug {
+            "hammerhand" => {
+                assert_eq!((m.strength, m.dexterity, m.constitution), (3, 3, 3));
+                let b = equipped.player_equipment_bonuses();
+                assert_eq!(
+                    (
+                        b.melee_skill,
+                        b.melee_damage,
+                        b.ranged_skill,
+                        b.stealth_skill
+                    ),
+                    (3, 4, 0, -3)
+                );
+                give_inventory_item(&mut equipped, "test.b4-bow", "demo.item.short-bow");
+                equipped.equip_inventory_item("test.b4-bow", None).unwrap();
+                let projectile = equipped.player_projectile_profile().unwrap();
+                let melee = equipped.player_derived_stats();
+                equipped.items[0].enchantments.to_hit = 1;
+                equipped.items[0].enchantments.to_damage = 2;
+                let enchanted = equipped.player_projectile_profile().unwrap();
+                assert_eq!(
+                    (enchanted.to_hit, enchanted.launcher_to_damage),
+                    (projectile.to_hit, projectile.launcher_to_damage)
+                );
+                assert_eq!(
+                    equipped.player_derived_stats().melee_skill.value,
+                    melee.melee_skill.value + 1
+                );
+                assert_eq!(
+                    equipped.player_derived_stats().melee_damage_bonus.value,
+                    melee.melee_damage_bonus.value + 2
+                );
+                for element in [DamageType::Acid, DamageType::Nexus] {
+                    assert_eq!(
+                        equipped.effective_player_resistances().level(element),
+                        ResistanceLevel::Resistant
+                    );
+                }
+            }
+            "dor-lomin" => {
+                assert_eq!((m.strength, m.dexterity, m.constitution), (4, 4, 4));
+                assert!(equipped.player_has_telepathy());
+                assert!(
+                    equipped
+                        .player_equipment_passives()
+                        .contains(&EquipmentPassive::SeeInvisible)
+                );
+                for element in [
+                    DamageType::Acid,
+                    DamageType::Electricity,
+                    DamageType::Fire,
+                    DamageType::Cold,
+                    DamageType::Light,
+                    DamageType::Blindness,
+                ] {
+                    assert_eq!(
+                        equipped.effective_player_resistances().level(element),
+                        ResistanceLevel::Resistant
+                    );
+                }
+                assert_eq!(equipped.player_equipment_bonuses().light_radius, 1);
+            }
+            "amber" => {
+                assert_eq!(
+                    (m.strength, m.wisdom, m.constitution, m.speed),
+                    (3, 3, 3, 3)
+                );
+                assert!(
+                    equipped
+                        .player_equipment_passives()
+                        .contains(&EquipmentPassive::Regeneration)
+                );
+                assert!(
+                    equipped
+                        .player_equipment_passives()
+                        .contains(&EquipmentPassive::SeeInvisible)
+                );
+                assert_eq!(equipped.player_equipment_bonuses().light_radius, 1);
+                for element in [
+                    DamageType::Electricity,
+                    DamageType::Fire,
+                    DamageType::Light,
+                    DamageType::Blindness,
+                    DamageType::Confusion,
+                    DamageType::Chaos,
+                ] {
+                    assert_eq!(
+                        equipped.effective_player_resistances().level(element),
+                        ResistanceLevel::Resistant
+                    );
+                }
+                let (&element, _) = rolled[0].properties.resistances.iter().next().unwrap();
+                assert_eq!(
+                    equipped
+                        .effective_player_resistances()
+                        .level(element.into()),
+                    ResistanceLevel::Resistant
+                );
+            }
+            _ => {}
+        }
+        equipped.reveal_current_visibility();
+        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), equipped.state_hash());
+        assert_eq!(restored.items[0].rolled_affixes, rolled);
+        assert_eq!(restored.items[0].intrinsic_properties, intrinsic);
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            equipped
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+        );
+        assert_eq!(restored.rng, equipped.rng);
+        if let Some(artifact) = restored
+            .content
+            .item(&kind)
+            .unwrap()
+            .artifact_generation
+            .clone()
+        {
+            assert!(restored.generated_artifact_ids.contains(&kind));
+            assert_ne!(
+                restored.roll_fixed_artifact_kind_id(
+                    &context,
+                    Some(&artifact.base_item_kind_id),
+                    false
+                ),
+                Some(kind)
+            );
+        }
+    }
+}
+
+#[test]
+fn b4_amber_rolls_power_before_high_resistance_without_retrying_duplicates() {
+    let mut game = Game::new_with_build(470, "demo.build.warrior").unwrap();
+    let context = artifact_loot_context(85);
+    // LITE and RES_LITE already exist. Both duplicate draws must remain saved,
+    // consume no retry, and leave the equipped light radius at one.
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(10) == 1 && rng.bounded(12) == 1
+        })
+        .unwrap();
+    game.rng = RfbRng::seeded(seed);
+    let mut expected = game.rng.clone();
+    expected.bounded(10);
+    expected.bounded(12);
+    for _ in 0..3 {
+        expected.bounded(1);
+    }
+    let draft = game.fixed_item_draft(&context, "demo.item.amber".into());
+    assert_eq!(game.rng, expected);
+    assert!(draft.intrinsic_properties.rfb_flags.contains("LITE"));
+    assert_eq!(draft.intrinsic_properties.equipment_bonuses.light_radius, 0);
+    assert_eq!(
+        draft.rolled_affixes[0].properties.resistances[&ActorDamageType::Light],
+        rfb_content::ActorResistanceLevel::Resistant
+    );
+    game.items.clear();
+    let item = game
+        .commit_generated_item_draft(draft, ItemLocation::Inventory)
+        .unwrap();
+    let id = item.id.clone();
+    game.items.push(item);
+    game.equip_inventory_item(&id, None).unwrap();
+    assert_eq!(game.player_equipment_bonuses().light_radius, 1);
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Light),
+        ResistanceLevel::Resistant
+    );
+}
+
+#[test]
 fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
     let mut game = Game::new_with_build(467, "demo.build.warrior").unwrap();
     choose_human_talent_if_pending(&mut game);

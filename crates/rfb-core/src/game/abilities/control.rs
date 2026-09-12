@@ -8,7 +8,7 @@ use crate::game::abilities::AbilityTargetPlan;
 use crate::game::ability_scaling::spell_power_value;
 use crate::game::damage::FatalityPolicy;
 use crate::game::item_use::VisibleBanishmentOutcome;
-use crate::game::projectile_geometry::rfb_distance;
+use crate::game::projectile_geometry::{has_line_of_effect, rfb_distance};
 use crate::game::status_effects::{apply_ability_status_effect, remove_ability_status_effect};
 use crate::game::{
     CRUSADE_ARREST_ABILITY_ID, Game, ability_genocide_scope_dto, actor_matches_category,
@@ -466,6 +466,7 @@ impl Game {
             .filter(|entity| {
                 entity.hp > 0
                     && self.entity_is_visible_to_player(entity)
+                    && has_line_of_effect(self, self.player.position, entity.position)
                     && target_category.as_ref().is_none_or(|category| {
                         self.content
                             .actor(&entity.kind_id)
@@ -490,6 +491,12 @@ impl Game {
                 .content
                 .actor(&target_kind_id)
                 .map(|definition| definition.level);
+            let resistances = self.entities[index].resistances.clone();
+            let status_immunities = if self.actor_has_status_immunity(index, status_kind_id) {
+                BTreeSet::from([status_kind_id.clone()])
+            } else {
+                BTreeSet::new()
+            };
             let resolution = apply_ability_status_effect(
                 &mut self.entities[index],
                 &ability.id,
@@ -511,7 +518,7 @@ impl Game {
                 false,
                 100,
                 target_level,
-                None,
+                Some((&resistances, &status_immunities, None)),
                 &mut self.rng,
             );
             changed.insert(self.entities[index].position);

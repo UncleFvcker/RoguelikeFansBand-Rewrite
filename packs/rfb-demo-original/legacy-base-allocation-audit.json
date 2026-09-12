@@ -1,7 +1,13 @@
 {
   "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits",
-  "allocationRowCount": 389,
+  "allocationRowCount": 392,
   "explicitItems": [
+    {
+      "itemId": "demo.item.amber",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
     {
       "itemId": "demo.item.amun",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
@@ -195,6 +201,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.dor-lomin",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.dr-jones-whip",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -328,6 +340,12 @@
     },
     {
       "itemId": "demo.item.hades",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.hammerhand",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -3702,12 +3720,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.steel-helm",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 216,
       "sourceName": "Steel Helm",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 6,
       "tval": 32
     },
@@ -3721,12 +3739,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.mithril-helm",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 217,
       "sourceName": "Mithril Helm",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 7,
       "tval": 32
     },
@@ -3797,12 +3815,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.golden-crown",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 221,
       "sourceName": "Golden Crown",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 11,
       "tval": 33
     },

@@ -9736,3 +9736,23 @@ item-demo-luthien-description = A diamond-studded midnight cloak carrying hints 
 
 item-demo-tuor-name = Shadow Cloak of Tuor
 item-demo-tuor-description = A cloak that concealed Tuor from hostile eyes during his escape from Gondolin.
+
+item-demo-steel-helm-name = Steel Helm
+item-demo-steel-helm-description = A massive helmet of steel plates and a mail curtain covering the head and shoulders.
+
+item-demo-mithril-helm-name = Mithril Helm
+item-demo-mithril-helm-description = A sturdy helmet of pure mithril enclosing the head.
+
+item-demo-golden-crown-name = Golden Crown
+item-demo-golden-crown-description = An elegant golden crown with slender points, fit for a king.
+
+item-demo-hammerhand-name = Steel Helm of Hammerhand
+item-demo-hammerhand-description = A great helm as stalwart as the hero of the Westdike. Helm Hammerhand struck mighty blows!
+
+item-demo-dor-lomin-name = Mithril Helm of Dor-Lomin
+item-demo-dor-lomin-description = The legendary dragon helm of Turin Turambar, feared by the servants of Morgoth.
+
+item-demo-amber-name = Golden Crown of Amber
+item-demo-amber-description = Golden Crown of Amber
+
+item-activation-demo-amber-heal-name = Healing

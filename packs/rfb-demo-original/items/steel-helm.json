@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 200,
+  "descriptionKey": "item-demo-steel-helm-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentSlot": "head",
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "glyph": "]",
+  "id": "demo.item.steel-helm",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 6
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-steel-helm-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 216,
+    "sval": 6,
+    "tval": 32
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 60
+}

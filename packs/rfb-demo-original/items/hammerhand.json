@@ -1,0 +1,65 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.hammerhand",
+  "nameKey": "item-demo-hammerhand-name",
+  "descriptionKey": "item-demo-hammerhand-description",
+  "glyph": "]",
+  "generationLevel": 50,
+  "weightTenthsPound": 60,
+  "baseValue": 45000,
+  "maxStack": 1,
+  "equipmentSlot": "head",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 38,
+    "baseItemKindId": "demo.item.steel-helm",
+    "instant": false,
+    "rarityOneIn": 5
+  },
+  "modifiers": {
+    "defense": 26,
+    "strength": 3,
+    "dexterity": 3,
+    "constitution": 3
+  },
+  "resistances": {
+    "acid": "resistant",
+    "nexus": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "DEC_STEALTH",
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_NEXUS",
+      "SHOW_MODS",
+      "STR"
+    ],
+    "pval": 3,
+    "toArmor": 20
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 3,
+    "meleeDamage": 4,
+    "stealthSkill": -3
+  }
+}

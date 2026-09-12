@@ -1,0 +1,114 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.amber",
+  "nameKey": "item-demo-amber-name",
+  "descriptionKey": "item-demo-amber-description",
+  "glyph": "]",
+  "generationLevel": 80,
+  "weightTenthsPound": 30,
+  "baseValue": 125000,
+  "maxStack": 1,
+  "equipmentSlot": "head",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 42,
+    "baseItemKindId": "demo.item.golden-crown",
+    "instant": false,
+    "rarityOneIn": 40,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "modifiers": {
+    "defense": 15,
+    "strength": 3,
+    "wisdom": 3,
+    "constitution": 3,
+    "speed": 3
+  },
+  "resistances": {
+    "fire": "resistant",
+    "light": "resistant",
+    "blindness": "resistant",
+    "electricity": "resistant",
+    "confusion": "resistant",
+    "chaos": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "REGEN",
+      "RES_BLIND",
+      "RES_CHAOS",
+      "RES_CONF",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_LITE",
+      "SEE_INVIS",
+      "SPEED",
+      "STR",
+      "WIS",
+      "XTRA_H_RES",
+      "XTRA_POWER"
+    ],
+    "pval": 3,
+    "toArmor": 15
+  },
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "passives": [
+    "see-invisible",
+    "regeneration"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 40,
+        "id": "demo.item-activation.amber",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "item-activation-demo-amber-heal-name",
+        "rfbValue": 10500,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1,
+        "effectProgramId": "demo.effect.amber-heal"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 2500
+    }
+  }
+}

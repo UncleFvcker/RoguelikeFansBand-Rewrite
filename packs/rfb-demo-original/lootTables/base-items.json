@@ -1997,6 +1997,20 @@
       "weight": 50
     },
     {
+      "itemKindId": "demo.item.steel-helm",
+      "maxDepth": 65535,
+      "minDepth": 40,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.golden-crown",
+      "maxDepth": 65535,
+      "minDepth": 40,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.jewel-encrusted-crown",
       "maxDepth": 65535,
       "minDepth": 40,
@@ -2257,6 +2271,13 @@
     },
     {
       "itemKindId": "demo.item.mithril-shod-boots",
+      "maxDepth": 65535,
+      "minDepth": 50,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
+      "itemKindId": "demo.item.mithril-helm",
       "maxDepth": 65535,
       "minDepth": 50,
       "quantity": 1,

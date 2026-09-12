@@ -9744,3 +9744,23 @@ item-demo-luthien-description = 这件披风镶嵌着无数细小的钻石，其
 
 item-demo-tuor-name = 图尔的暗影披风
 item-demo-tuor-description = 图尔从贡多林的废墟中逃出，历经秘密的路径和艰辛，他的披风保护他免受无数敌对目光的注视。
+
+item-demo-steel-helm-name = 钢盔
+item-demo-steel-helm-description = 这顶巨大的头盔用钢板和锁子甲帘罩住头部和肩膀。
+
+item-demo-mithril-helm-name = 秘银头盔
+item-demo-mithril-helm-description = 一顶纯秘银制成的坚固头盔，完全包裹住头部。
+
+item-demo-golden-crown-name = 金王冠
+item-demo-golden-crown-description = 一个优雅的金色头冠，带有向上突出的细长尖刺。看起来它应该戴在国王的额头上。
+
+item-demo-hammerhand-name = 锤手的钢盔
+item-demo-hammerhand-description = 一顶如西部防线（Westdike）的英雄般稳固的巨盔。锤手海尔姆的打击是极其强大的！
+
+item-demo-dor-lomin-name = 多尔露明的秘银头盔
+item-demo-dor-lomin-description = 图林·图伦拔传说中的龙盔，令魔苟斯的仆从感到恐惧的物品。
+
+item-demo-amber-name = 安珀的金王冠
+item-demo-amber-description = 安珀的金王冠
+
+item-activation-demo-amber-heal-name = 治疗

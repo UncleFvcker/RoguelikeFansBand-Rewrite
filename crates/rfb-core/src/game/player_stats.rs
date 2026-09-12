@@ -977,13 +977,13 @@ impl Game {
                     },
             );
         }
-        // master:equip.c excludes Terror Mask from shooter bonuses, including
-        // enchantments applied after generation. Its static bonuses are melee-only.
+        // master:equip.c excludes Hammerhand and Terror Mask from shooter bonuses,
+        // including enchantments applied after generation. Static bonuses are melee-only.
         if self
             .content
             .item(&item.kind_id)
             .and_then(|kind| kind.artifact_generation.as_ref())
-            .is_some_and(|artifact| artifact.source_index == 41)
+            .is_some_and(|artifact| matches!(artifact.source_index, 38 | 41))
         {
             return if ranged {
                 (0, 0)
