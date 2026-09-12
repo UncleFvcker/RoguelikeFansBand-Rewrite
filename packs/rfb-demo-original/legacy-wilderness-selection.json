@@ -913,7 +913,7 @@
         "name": "宫殿",
         "ownerName": "苏丹·伊德里斯",
         "ownerRace": "人类",
-        "entrancePosition": { "x": 1, "y": 9 },
+        "entrancePosition": { "x": 21, "y": 38 },
         "requestActionIndex": 0,
         "logicalSourceTaskIndexes": [71, 70, 69, 33, 61]
       },
@@ -923,7 +923,7 @@
         "name": "皇家书院",
         "ownerName": "伊祖卡玛领主",
         "ownerRace": "人类",
-        "entrancePosition": { "x": 21, "y": 9 },
+        "entrancePosition": { "x": 55, "y": 31 },
         "requestActionIndex": 0,
         "logicalSourceTaskIndexes": [63, 65, 66, 76, 64]
       }

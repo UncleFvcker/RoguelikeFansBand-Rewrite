@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-anambar-temple-description",
   "townId": "demo.town.thalos",
   "category": "temple",
-  "entrancePosition": { "x": 8, "y": 1 },
+  "entrancePosition": {"x":86,"y":42},
   "entranceTerrainId": "demo.terrain.temple-entrance",
   "owner": {
     "id": "demo.shop-owner.thalos-aldren-vale",

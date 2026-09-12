@@ -12,6 +12,6 @@
     { "kind": "heal", "ownerCost": 0, "otherCost": 150 },
     { "kind": "restore-vitality", "ownerCost": 400, "otherCost": 1500 }
   ],
-  "entrancePosition": { "x": 12, "y": 9 },
+  "entrancePosition": {"x":106,"y":29},
   "entranceTerrainId": "demo.terrain.life-temple-entrance"
 }

@@ -1246,7 +1246,7 @@ fn p107j_rewardless_service_task_waits_for_conclusion_without_creating_an_item()
 
 #[test]
 fn p110_thalos_projects_five_correlated_tasks_from_each_quest_line() {
-    let projected = |seed: u64, facility_id: &str, position: Position| {
+    let projected = |seed: u64, facility_id: &str| {
         let mut game = Game::new_with_build(seed, "demo.build.warrior")
             .expect("Middle-earth game should start");
         dispatch_next(
@@ -1258,7 +1258,9 @@ fn p110_thalos_projects_five_correlated_tasks_from_each_quest_line() {
         );
         game.wilderness_position = Some(Position { x: 17, y: 29 });
         dispatch_next(&mut game, GameCommand::LeaveWorldMap);
-        game.player.position = position;
+        game.player.position = game
+            .town_facility_entrance_position(game.content.town_facility(facility_id).unwrap())
+            .unwrap();
         game.snapshot()
             .task_services
             .into_iter()
@@ -1270,16 +1272,8 @@ fn p110_thalos_projects_five_correlated_tasks_from_each_quest_line() {
             .collect::<BTreeMap<_, _>>()
     };
 
-    let first_palace = projected(
-        10,
-        "demo.town-facility.thalos-palace",
-        Position { x: 89, y: 32 },
-    );
-    let second_palace = projected(
-        11,
-        "demo.town-facility.thalos-palace",
-        Position { x: 89, y: 32 },
-    );
+    let first_palace = projected(10, "demo.town-facility.thalos-palace");
+    let second_palace = projected(11, "demo.town-facility.thalos-palace");
     for palace in [&first_palace, &second_palace] {
         assert_eq!(palace.len(), 5);
         assert_eq!(
@@ -1293,16 +1287,8 @@ fn p110_thalos_projects_five_correlated_tasks_from_each_quest_line() {
     }
     assert_ne!(first_palace, second_palace);
 
-    let first_academy = projected(
-        10,
-        "demo.town-facility.thalos-royal-academy",
-        Position { x: 109, y: 32 },
-    );
-    let second_academy = projected(
-        11,
-        "demo.town-facility.thalos-royal-academy",
-        Position { x: 109, y: 32 },
-    );
+    let first_academy = projected(10, "demo.town-facility.thalos-royal-academy");
+    let second_academy = projected(11, "demo.town-facility.thalos-royal-academy");
     for academy in [&first_academy, &second_academy] {
         assert_eq!(academy.len(), 5);
         assert_eq!(

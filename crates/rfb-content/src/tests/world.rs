@@ -10991,7 +10991,7 @@ fn town_entrances_and_shared_facilities_match_source() {
             [
                 WildernessLocationDefinition::Town {
                     position: ContentPosition { x: 17, y: 29 },
-                    map_origin: ContentPosition { x: 88, y: 23 },
+                    map_origin: ContentPosition { x: 0, y: 0 },
                     town_id: "demo.town.thalos".to_owned(),
                 },
                 WildernessLocationDefinition::Town {
@@ -11363,7 +11363,7 @@ fn town_entrances_and_shared_facilities_match_source() {
             .expect("Thalos should exist");
         assert_eq!(town.floor_id, "demo.floor.thalos");
         assert_eq!(town.shop_ids.len(), 10);
-        assert_eq!(town.facility_ids.len(), 12);
+        assert_eq!(town.facility_ids.len(), 11);
         for id in [
             "demo.town-facility.thalos-home",
             "demo.town-facility.thalos-library",
@@ -11371,7 +11371,6 @@ fn town_entrances_and_shared_facilities_match_source() {
             "demo.town-facility.thalos-weapon-master",
             "demo.town-facility.thalos-warrior-guild",
             "demo.town-facility.thalos-life-temple",
-            "demo.town-facility.thalos-archer-guild",
             "demo.town-facility.thalos-paladin-guild",
             "demo.town-facility.thalos-palace",
             "demo.town-facility.thalos-royal-academy",
@@ -11391,7 +11390,7 @@ fn town_entrances_and_shared_facilities_match_source() {
                 location,
                 WildernessLocationDefinition::Town {
                     position: ContentPosition { x: 17, y: 29 },
-                    map_origin: ContentPosition { x: 88, y: 23 },
+                    map_origin: ContentPosition { x: 0, y: 0 },
                     town_id,
                 } if town_id == "demo.town.thalos"
             )
@@ -11411,7 +11410,7 @@ fn town_entrances_and_shared_facilities_match_source() {
             .iter()
             .find(|floor| floor.id == town.floor_id)
             .expect("Thalos floor should exist");
-        assert_eq!((floor.width, floor.height), (23, 11));
+        assert_eq!((floor.width, floor.height), (198, 66));
         assert_eq!(
             floor.next_floor_id.as_deref(),
             Some("demo.floor.icky-cave-depth-10")
@@ -11424,7 +11423,7 @@ fn town_entrances_and_shared_facilities_match_source() {
             .inline_map
             .as_ref()
             .expect("Thalos should use a fixed map");
-        assert_eq!(inline.player_position, ContentPosition { x: 11, y: 9 });
+        assert_eq!(inline.player_position, ContentPosition { x: 99, y: 33 });
         let has_terrain = |terrain_id: &str, position: ContentPosition| {
             inline.terrain_overrides.iter().any(|override_| {
                 override_.terrain_id == terrain_id && override_.positions.contains(&position)
@@ -11454,12 +11453,24 @@ fn town_entrances_and_shared_facilities_match_source() {
         }
         assert!(has_terrain(
             "demo.terrain.icky-cave-entrance",
-            ContentPosition { x: 18, y: 9 }
+            ContentPosition { x: 164, y: 47 }
         ));
         assert!(has_terrain(
-            "demo.terrain.outpost-gate",
-            ContentPosition { x: 11, y: 10 }
+            "demo.terrain.door-closed",
+            ContentPosition { x: 59, y: 54 }
         ));
+        assert!(has_terrain(
+            "demo.terrain.floor",
+            ContentPosition { x: 22, y: 39 }
+        ));
+        assert_eq!(
+            inline
+                .terrain_overrides
+                .iter()
+                .map(|row| row.positions.len())
+                .sum::<usize>(),
+            198 * 66
+        );
         let icky_root = world
             .procedural_floors
             .iter()
@@ -11522,6 +11533,7 @@ fn town_entrances_and_shared_facilities_match_source() {
             "demo.town-facility.thalos-arena",
             "demo.town-facility.thalos-casino",
             "demo.town-facility.thalos-rogue-guild",
+            "demo.town-facility.thalos-archer-guild",
         ] {
             assert!(!town.facility_ids.contains(&deferred.to_owned()));
         }
@@ -11553,7 +11565,7 @@ fn town_entrances_and_shared_facilities_match_source() {
         assert_eq!(museum.category, TownFacilityCategory::Home);
         assert_eq!(museum.storage_id.as_deref(), Some(museum.id.as_str()));
         assert!(museum.reject_artifact_deposits);
-        assert_eq!(museum.entrance_position, ContentPosition { x: 20, y: 9 });
+        assert_eq!(museum.entrance_position, ContentPosition { x: 86, y: 50 });
         assert_eq!(museum.entrance_terrain_id, "demo.terrain.museum-entrance");
     }
 }
@@ -14366,8 +14378,16 @@ fn thalos_task_maps_and_rewards_match_source() {
         let academy = facility("demo.town-facility.thalos-royal-academy");
         assert!(town.facility_ids.contains(&palace.id));
         assert!(town.facility_ids.contains(&academy.id));
-        assert_eq!(palace.entrance_position, ContentPosition { x: 1, y: 9 });
-        assert_eq!(academy.entrance_position, ContentPosition { x: 21, y: 9 });
+        assert_eq!(palace.entrance_position, ContentPosition { x: 21, y: 38 });
+        assert_eq!(
+            palace.additional_entrance_positions,
+            [
+                ContentPosition { x: 21, y: 39 },
+                ContentPosition { x: 21, y: 40 },
+                ContentPosition { x: 21, y: 41 }
+            ]
+        );
+        assert_eq!(academy.entrance_position, ContentPosition { x: 55, y: 31 });
         assert_eq!(palace.task_ids.len(), 6);
         assert_eq!(academy.task_ids.len(), 7);
 
@@ -14496,7 +14516,26 @@ fn thalos_task_maps_and_rewards_match_source() {
                 .unwrap_or_else(|| panic!("{floor_id} should exist"));
             assert_eq!(floor.lifecycle, FloorLifecycle::OneShot);
             assert_eq!((floor.width, floor.height), (width, height));
-            assert_eq!(floor.return_floor_id, "demo.floor.surface");
+            assert_eq!(floor.return_floor_id, "demo.floor.thalos");
+            let town_map = world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == "demo.floor.thalos")
+                .unwrap()
+                .inline_map
+                .as_ref()
+                .unwrap();
+            assert!(
+                town_map
+                    .task_terrain_overrides
+                    .iter()
+                    .any(|rule| rule.cases.iter().any(|case| case.task_id
+                        == format!("demo.task.thalos-{slug}")
+                        && case.terrain_id == format!("demo.terrain.thalos-{slug}-entry")
+                        && case
+                            .statuses
+                            .contains(&crate::DungeonEntryTaskStatus::Taken)))
+            );
             assert_eq!(
                 floor.task_id.as_deref(),
                 Some(format!("demo.task.thalos-{slug}").as_str())

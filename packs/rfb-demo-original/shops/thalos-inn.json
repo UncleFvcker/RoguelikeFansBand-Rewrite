@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-thalos-inn-description",
   "townId": "demo.town.thalos",
   "category": "general-store",
-  "entrancePosition": { "x": 20, "y": 1 },
+  "entrancePosition": {"x":24,"y":49},
   "entranceTerrainId": "demo.terrain.inn-entrance",
   "innReputationCost": 1,
   "innStayCost": 20,

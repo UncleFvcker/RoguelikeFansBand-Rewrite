@@ -433,6 +433,373 @@ fn at2_anambar_dinosaur_failure_rolls_once_and_keeps_the_actor_after_save_and_tr
     }
 }
 
+#[test]
+fn at3_thalos_museum_closes_for_dark_academy_and_restores_its_collection_on_success() {
+    let task_id = "demo.task.thalos-dark-academy";
+    let academy = "demo.town-facility.thalos-royal-academy";
+    let mut game = [10, 11]
+        .into_iter()
+        .map(thalos_game)
+        .find(|game| game.task_states.contains_key(task_id))
+        .unwrap();
+    game.player.position = Position { x: 86, y: 50 };
+    game.mark_shop_visited_at_player().unwrap();
+    support::give_inventory_item(&mut game, "test.thalos.museum-item", "demo.item.dagger");
+    dispatch_next(
+        &mut game,
+        GameCommand::DepositAtHome {
+            facility_id: THALOS_MUSEUM_ID.into(),
+            item_id: "test.thalos.museum-item".into(),
+            quantity: 1,
+        },
+    );
+    let collection = game.home_states[THALOS_MUSEUM_ID].clone();
+    let stored_item = game
+        .snapshot()
+        .homes
+        .into_iter()
+        .find(|home| home.id == THALOS_MUSEUM_ID)
+        .unwrap()
+        .stored_items[0]
+        .id
+        .clone();
+    // Prepare only the prior academy quests; entrance, completion and rewards use real commands.
+    prepare_thalos_completed_tasks(
+        &mut game,
+        &["mushrooms", "tidy-laboratory", "staff-recovery-first"],
+    );
+    game.player.position = Position { x: 55, y: 31 };
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: academy.into(),
+            task_id: task_id.into(),
+        },
+    );
+    assert_eq!(game.task_states[task_id].status, TaskStatusKindDto::Taken);
+    game.player.position = Position { x: 86, y: 50 };
+    assert_eq!(
+        game.terrain_at(game.player.position),
+        "demo.terrain.thalos-dark-academy-entry"
+    );
+    assert!(!game.town_facility_accessible(THALOS_MUSEUM_ID));
+    assert!(
+        !game
+            .snapshot()
+            .homes
+            .into_iter()
+            .find(|home| home.id == THALOS_MUSEUM_ID)
+            .unwrap()
+            .player_at_entrance
+    );
+    let rejected = dispatch_next(
+        &mut game,
+        GameCommand::WithdrawFromHome {
+            facility_id: THALOS_MUSEUM_ID.into(),
+            item_id: stored_item.clone(),
+            quantity: 1,
+        },
+    );
+    assert_eq!(rejected.events[0].kind, "home.transfer-unavailable");
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.thalos-dark-academy");
+    let inside = game.to_save();
+    // The persistent museum remains closed after either unsuccessful departure.
+    for abandon in [false, true] {
+        let mut failed = Game::from_save(inside.clone()).unwrap();
+        if abandon {
+            dispatch_next(&mut failed, GameCommand::AbandonTask);
+        } else {
+            support::place_player_on_terrain(&mut failed, "demo.terrain.stairs-up");
+            dispatch_next(&mut failed, GameCommand::TraverseStairs);
+        }
+        assert_eq!(
+            failed.task_states[task_id].status,
+            if abandon {
+                TaskStatusKindDto::Abandoned
+            } else {
+                TaskStatusKindDto::Failed
+            }
+        );
+        failed.player.position = Position { x: 87, y: 50 };
+        dispatch_next(&mut failed, GameCommand::Wait);
+        assert_eq!(
+            failed.terrain_at(Position { x: 86, y: 50 }),
+            "demo.terrain.permanent-wall"
+        );
+        assert!(!failed.town_facility_accessible(THALOS_MUSEUM_ID));
+        failed = Game::from_save(failed.to_save()).unwrap();
+        failed.teleport_to_town("demo.town.outpost").unwrap();
+        failed.teleport_to_town("demo.town.thalos").unwrap();
+        assert_eq!(
+            failed.terrain_at(Position { x: 86, y: 50 }),
+            "demo.terrain.permanent-wall"
+        );
+        assert_eq!(failed.home_states[THALOS_MUSEUM_ID], collection);
+    }
+    support::clear_monsters(&mut game);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(
+        game.task_states[task_id].status,
+        TaskStatusKindDto::RewardAvailable
+    );
+    support::place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.player.position, Position { x: 86, y: 50 });
+    assert!(!game.town_facility_accessible(THALOS_MUSEUM_ID));
+    game.player.position = Position { x: 55, y: 31 };
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(
+        game.terrain_at(Position { x: 86, y: 50 }),
+        "demo.terrain.permanent-wall"
+    );
+    game = Game::from_save(game.to_save()).unwrap();
+    dispatch_next(
+        &mut game,
+        GameCommand::ClaimTaskReward {
+            facility_id: academy.into(),
+            task_id: task_id.into(),
+        },
+    );
+    assert_eq!(
+        game.task_states[task_id].status,
+        TaskStatusKindDto::Completed
+    );
+    assert_eq!(
+        game.terrain_at(Position { x: 86, y: 50 }),
+        "demo.terrain.museum-entrance"
+    );
+    game.player.position = Position { x: 86, y: 50 };
+    assert!(game.town_facility_accessible(THALOS_MUSEUM_ID));
+    assert_eq!(game.home_states[THALOS_MUSEUM_ID], collection);
+    dispatch_next(
+        &mut game,
+        GameCommand::WithdrawFromHome {
+            facility_id: THALOS_MUSEUM_ID.into(),
+            item_id: stored_item,
+            quantity: 1,
+        },
+    );
+    assert!(game.home_states[THALOS_MUSEUM_ID].inventory.is_empty());
+    assert!(Game::from_save(game.to_save()).is_ok());
+}
+
+#[test]
+fn at3_thalos_staff_variants_share_one_door_without_closing_the_other_branch_museum() {
+    let mut variants = BTreeSet::new();
+    for seed in [10, 11] {
+        let mut game = thalos_game(seed);
+        let task_id = if game
+            .task_states
+            .contains_key("demo.task.thalos-staff-recovery")
+        {
+            "demo.task.thalos-staff-recovery"
+        } else {
+            "demo.task.thalos-staff-recovery-first"
+        };
+        variants.insert(task_id);
+        prepare_thalos_completed_tasks(
+            &mut game,
+            &["mushrooms", "tidy-laboratory", "basilisk-cave"],
+        );
+        game.player.position = Position { x: 55, y: 31 };
+        dispatch_next(
+            &mut game,
+            GameCommand::AcceptTask {
+                facility_id: "demo.town-facility.thalos-royal-academy".into(),
+                task_id: task_id.into(),
+            },
+        );
+        assert_eq!(
+            game.terrain_at(Position { x: 86, y: 50 }),
+            "demo.terrain.museum-entrance"
+        );
+        game.player.position = Position { x: 60, y: 25 };
+        assert_eq!(
+            game.terrain_at(game.player.position),
+            task_id.replace("demo.task.", "demo.terrain.") + "-entry"
+        );
+        game = Game::from_save(game.to_save()).unwrap();
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(
+            game.current_floor_id,
+            task_id.replace("demo.task.", "demo.floor.")
+        );
+        dispatch_next(&mut game, GameCommand::AbandonTask);
+        assert_eq!(game.player.position, Position { x: 60, y: 25 });
+        assert_eq!(game.terrain_at(game.player.position), "demo.terrain.floor");
+    }
+    assert_eq!(variants.len(), 2);
+}
+
+#[test]
+fn at3_thalos_tower_cells_follow_palace_conclusion_and_sorcerer_return() {
+    let mut game = thalos_game(10);
+    let fairy = "demo.task.thalos-shadow-fairies";
+    let sorcerer = "demo.task.thalos-renegade-sorcerer";
+    let palace = "demo.town-facility.thalos-palace";
+    let academy = "demo.town-facility.thalos-royal-academy";
+    let tower = [
+        (
+            "surface-grass",
+            vec![
+                (156, 57),
+                (157, 57),
+                (155, 58),
+                (156, 58),
+                (157, 58),
+                (158, 58),
+                (157, 59),
+                (158, 59),
+            ],
+        ),
+        ("surface-brake", vec![(155, 59), (156, 59), (156, 60)]),
+        ("surface-flower", vec![(157, 60)]),
+    ];
+    let assert_tower = |game: &Game, natural: bool| {
+        for (terrain, cells) in &tower {
+            for &(x, y) in cells {
+                let position = game
+                    .town_local_to_active_position("demo.town.thalos", Position { x, y })
+                    .unwrap();
+                assert_eq!(
+                    game.terrain_at(position),
+                    if natural {
+                        format!("demo.terrain.{terrain}")
+                    } else {
+                        "demo.terrain.permanent-wall".into()
+                    },
+                    "{x},{y}"
+                );
+            }
+        }
+    };
+    assert_tower(&game, true);
+    game.player.position = Position { x: 21, y: 41 }; // Fourth palace door.
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: palace.into(),
+            task_id: fairy.into(),
+        },
+    );
+    assert_eq!(game.task_states[fairy].status, TaskStatusKindDto::Taken);
+    assert_tower(&game, true);
+    game.player.position = Position { x: 131, y: 39 };
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(game.wilderness_view_offset, Position { x: 1, y: 0 });
+    game.player.position = game
+        .town_local_to_active_position("demo.town.thalos", Position { x: 141, y: 23 })
+        .unwrap();
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.thalos-shadow-fairies");
+    support::clear_monsters(&mut game);
+    dispatch_next(&mut game, GameCommand::Wait);
+    support::place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(
+        game.player.position,
+        game.town_local_to_active_position("demo.town.thalos", Position { x: 141, y: 23 })
+            .unwrap()
+    );
+    assert_tower(&game, true);
+    game.teleport_to_town("demo.town.outpost").unwrap();
+    game.teleport_to_town("demo.town.thalos").unwrap();
+    game.player.position = Position { x: 21, y: 38 };
+    dispatch_next(
+        &mut game,
+        GameCommand::ClaimTaskReward {
+            facility_id: palace.into(),
+            task_id: fairy.into(),
+        },
+    );
+    assert_eq!(game.task_states[fairy].status, TaskStatusKindDto::Completed);
+    assert_tower(&game, false);
+    // Academy prerequisite battles are outside this map-state test.
+    prepare_thalos_completed_tasks(
+        &mut game,
+        &[
+            "mushrooms",
+            "tidy-laboratory",
+            "basilisk-cave",
+            "staff-recovery-first",
+            "staff-recovery",
+            "dark-academy",
+        ],
+    );
+    game.player.position = Position { x: 55, y: 31 };
+    dispatch_next(
+        &mut game,
+        GameCommand::AcceptTask {
+            facility_id: academy.into(),
+            task_id: sorcerer.into(),
+        },
+    );
+    game.player.position = Position { x: 157, y: 60 };
+    assert_eq!(
+        game.terrain_at(game.player.position),
+        "demo.terrain.thalos-renegade-sorcerer-entry"
+    );
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.thalos-renegade-sorcerer");
+    let mut failed = Game::from_save(game.to_save()).unwrap();
+    dispatch_next(&mut failed, GameCommand::AbandonTask);
+    failed.player.position = Position { x: 156, y: 61 };
+    dispatch_next(&mut failed, GameCommand::Wait);
+    assert_tower(&failed, false);
+    failed = Game::from_save(failed.to_save()).unwrap();
+    assert_tower(&failed, false);
+    // Prepare the sorcerer kill result; this test verifies return and conclusion geometry.
+    support::clear_monsters(&mut game);
+    let state = game.task_states.get_mut(sorcerer).unwrap();
+    state.current = state.required;
+    state.status = TaskStatusKindDto::RewardAvailable;
+    state.active_floor_id = None;
+    dispatch_next(&mut game, GameCommand::Wait);
+    support::place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    game.player.position = Position { x: 55, y: 31 };
+    dispatch_next(
+        &mut game,
+        GameCommand::ClaimTaskReward {
+            facility_id: academy.into(),
+            task_id: sorcerer.into(),
+        },
+    );
+    assert_eq!(
+        game.task_states[sorcerer].status,
+        TaskStatusKindDto::Completed
+    );
+    assert_tower(&game, true);
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    for current in [&mut game, &mut restored] {
+        current.teleport_to_town("demo.town.outpost").unwrap();
+        current.teleport_to_town("demo.town.thalos").unwrap();
+        assert_tower(current, true);
+    }
+    assert_eq!(game.state_hash(), restored.state_hash());
+}
+
+fn prepare_thalos_completed_tasks(game: &mut Game, slugs: &[&str]) {
+    for slug in slugs {
+        let id = format!("demo.task.thalos-{slug}");
+        if let Some(mut state) = crate::game::tasks::projected_task_state(
+            game.content.world(&game.world_id).unwrap(),
+            &game.task_states,
+            &id,
+        ) {
+            state.status = TaskStatusKindDto::Completed;
+            state.current = state.required;
+            game.task_states.insert(id, state);
+        }
+    }
+}
+
 fn enter_town(game: &mut Game, town_id: &str, position: Position) {
     dispatch_next(
         game,
@@ -2917,7 +3284,7 @@ fn p108c_thalos_projects_its_embedded_icky_cave_and_returns_to_town() {
         Some("demo.town.thalos")
     );
     assert!(game.town_states["demo.town.thalos"].visited);
-    let entrance = Position { x: 106, y: 32 };
+    let entrance = Position { x: 164, y: 47 };
     assert_eq!(game.terrain_at(entrance), "demo.terrain.icky-cave-entrance");
     assert_eq!(
         game.terrain
@@ -2927,10 +3294,22 @@ fn p108c_thalos_projects_its_embedded_icky_cave_and_returns_to_town() {
         1
     );
 
-    game.player.position = entrance;
+    // Walk across the east scroll boundary on the source road before entering the lake cave.
+    game.player.position = Position { x: 131, y: 39 };
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(game.wilderness_view_offset, Position { x: 1, y: 0 });
+    game.player.position = game
+        .town_local_to_active_position("demo.town.thalos", entrance)
+        .unwrap();
     let entered = dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(entered.floor_id, "demo.floor.icky-cave-depth-10");
     assert_eq!(game.current_floor_id, "demo.floor.icky-cave-depth-10");
+    game = Game::from_save(game.to_save()).unwrap();
 
     let upstairs_index = game
         .terrain
@@ -2948,13 +3327,23 @@ fn p108c_thalos_projects_its_embedded_icky_cave_and_returns_to_town() {
         game.current_town().map(|town| town.id.as_str()),
         Some("demo.town.thalos")
     );
-    assert_eq!(game.terrain_at(entrance), "demo.terrain.icky-cave-entrance");
+    let returned_entrance = game
+        .town_local_to_active_position("demo.town.thalos", entrance)
+        .unwrap();
+    assert_eq!(game.player.position, returned_entrance);
+    assert_eq!(
+        game.terrain_at(returned_entrance),
+        "demo.terrain.icky-cave-entrance"
+    );
+    assert!(Game::from_save(game.to_save()).is_ok());
 }
 
 #[test]
 fn p109c_thalos_inn_travels_to_a_visited_town_for_the_projected_price() {
     let mut game = thalos_game(109);
-    game.player.position = Position { x: 108, y: 24 };
+    game.player.position = game
+        .shop_entrance_position(game.content.shop(THALOS_INN_ID).unwrap())
+        .unwrap();
     game.mark_shop_visited_at_player().unwrap();
     game.gold = game.town_service_price(500);
 

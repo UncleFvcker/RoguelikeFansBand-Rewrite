@@ -6,7 +6,6 @@
   "descriptionKey": "town-demo-thalos-description",
   "floorId": "demo.floor.thalos",
   "facilityIds": [
-    "demo.town-facility.thalos-archer-guild",
     "demo.town-facility.thalos-bounty-office",
     "demo.town-facility.thalos-home",
     "demo.town-facility.thalos-library",

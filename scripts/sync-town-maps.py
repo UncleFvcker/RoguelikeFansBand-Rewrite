@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
-"""Generate Anambar's surface and doors from RFB master Git objects; --check is read-only."""
+"""Generate Anambar or Thalos from RFB master Git objects; --check is read-only."""
 import argparse
 from collections import defaultdict
 import json
@@ -9,8 +9,6 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 PACK = ROOT / "packs/rfb-demo-original"
-TOWN = "demo.town.anambar"
-FLOOR = "demo.floor.anambar"
 
 
 def read_json(path):
@@ -59,6 +57,7 @@ def replace_members(text, key, update):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", type=Path)
+    parser.add_argument("--town", required=True, choices=["anambar", "thalos"])
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
     commit = subprocess.check_output(["git", "-C", str(args.source), "rev-parse", "master"], text=True).strip()
@@ -66,7 +65,9 @@ def main():
     def source(path):
         return subprocess.check_output(["git", "-C", str(args.source), "show", f"{commit}:{path}"]).decode("utf-8")
 
-    town_source = source("lib/edit/t_ana.txt")
+    name = args.town
+    town_id, floor_id = f"demo.town.{name}", f"demo.floor.{name}"
+    town_source = source(f"lib/edit/{'t_ana' if name == 'anambar' else 't_thalos'}.txt")
     rows = [line[2:] for line in town_source.splitlines() if line.startswith("M:")]
     assert len(rows) == 66 and all(len(row) == 198 for row in rows)
     positions = defaultdict(list)
@@ -76,7 +77,7 @@ def main():
 
     # Unconditional legend, before the task expressions. Preserve the source's blank cells.
     tags = {}
-    for text in (source("lib/edit/t_pref.txt"), town_source.split("################## Cop Quests")[0]):
+    for text in (source("lib/edit/t_pref.txt"), town_source.split("?:")[0]):
         for line in text.splitlines():
             if line.startswith("L:"):
                 tags[line[2]] = line[4:]
@@ -92,10 +93,16 @@ def main():
     }
     shop_symbols = dict(zip("012345679e", ["shroomery", "general-store", "armoury", "weaponsmith", "temple", "alchemist", "magic-shop", "black-market", "bookstore", "inn"]))
     facility_symbols = {"a": "library", "b": "mayor-office", "g": "weapon-master", "h": "warrior-guild", "j": "mammon-temple", "l": "archer-guild", "n": "police-station", "o": "trump-tower", "8": "home", "M": "museum"}
+    if name == "thalos":
+        facility_symbols = {"a": "library", "b": "palace", "f": "bounty-office", "g": "weapon-master", "h": "warrior-guild", "i": "sorcery-tower", "j": "life-temple", "m": "paladin-guild", "n": "royal-academy", "8": "home", "M": "museum"}
+        materials.update({"BUILDING_2": "town-arena-entrance", "ENTRANCE(GLOW | MARK, 21)": "icky-cave-entrance"})
+        # Undeclared ! has the default FLOOR; rooms.c has no ! object/monster case.
+        tags["!"] = "FLOOR"
+        assert not positions.get("l") and positions["!"] == [{"x": 22, "y": 39}]
     outputs = {}
     for directory, mapping in (("shops", shop_symbols), ("townFacilities", facility_symbols)):
-        for symbol, name in mapping.items():
-            path = PACK / directory / f"anambar-{name}.json"
+        for symbol, facility in mapping.items():
+            path = PACK / directory / f"{name}-{facility}.json"
             value = read_json(path)
             materials[tags[symbol]] = value["entranceTerrainId"].removeprefix("demo.terrain.")
             text = replace_property(path.read_text(encoding="utf-8"), "entrancePosition", positions[symbol][0])
@@ -105,34 +112,53 @@ def main():
     for symbol, cells in positions.items():
         if symbol != " ":
             terrain["demo.terrain." + materials[tags[symbol]]].extend(cells)
-    assert sum(map(len, terrain.values())) == 7671
+    explicit = sum(map(len, terrain.values()))
+    assert explicit == (7671 if name == "anambar" else 13068)
     task_symbols = {"v": "orc-camp", "u": "clear-tunnels", "U": "scary-rock-treasure", "z": "dinosaur-quest", "w": "apina-island", "W": "lord-bovin-treachery", "8": "cop-quest", "y": "smugglers-den", "x": "cellar-killer"}
+    if name == "thalos":
+        task_symbols = {"w": "shadow-fairies", "x": "djinnis-cavern", "L": "cyclops-lair", "z": "old-watchtower", "q": "cloning-pits", "y": "clear-wreckage", "r": "tidy-laboratory", "p": "basilisk-cave", "M": "dark-academy", "s": "staff-recovery", "F": "renegade-sorcerer"}
     rules = []
-    for symbol, name in task_symbols.items():
-        task_id = f"demo.task.anambar-{name}"
-        cases = [{"taskId": task_id, "statuses": ["taken", "active"], "terrainId": f"demo.terrain.anambar-{name}-entry"}]
+    for symbol, task in task_symbols.items():
+        task_id = f"demo.task.{name}-{task}"
+        cases = [{"taskId": task_id, "statuses": ["taken", "active"], "terrainId": f"demo.terrain.{name}-{task}-entry"}]
         default = "demo.terrain." + materials[tags[symbol]]
         if symbol == "8":
             default = "demo.terrain.permanent-wall"
             cases.append({"taskId": task_id, "statuses": ["completed"], "terrainId": "demo.terrain.home-entrance"})
+        if name == "thalos" and symbol == "M":
+            cases.append({"taskId": task_id, "statuses": ["reward-available", "failed", "abandoned"], "terrainId": "demo.terrain.permanent-wall"})
+        if name == "thalos" and symbol == "s":
+            cases.append({"taskId": "demo.task.thalos-staff-recovery-first", "statuses": ["taken", "active"], "terrainId": "demo.terrain.thalos-staff-recovery-first-entry"})
         rules.append({"positions": positions[symbol], "defaultTerrainId": default, "cases": cases})
+    if name == "thalos":
+        for symbol, natural in (("D", "surface-grass"), ("E", "surface-brake"), ("F", "surface-flower")):
+            rule = next((rule for rule in rules if rule["positions"] == positions[symbol]), None)
+            if rule is None:
+                rule = {"positions": positions[symbol], "defaultTerrainId": "demo.terrain.permanent-wall", "cases": [{"taskId": "demo.task.thalos-renegade-sorcerer", "statuses": ["taken", "active"], "terrainId": "demo.terrain.permanent-wall"}]}
+                rules.append(rule)
+            # Later source assignments win: quest 64 Taken/Finished precede quest 71's early state.
+            rule["cases"].extend([
+                {"taskId": "demo.task.thalos-renegade-sorcerer", "statuses": ["completed"], "terrainId": f"demo.terrain.{natural}"},
+                {"taskId": "demo.task.thalos-shadow-fairies", "statuses": ["locked", "available", "taken", "active", "reward-available"], "terrainId": f"demo.terrain.{natural}"},
+            ])
 
     world_path = PACK / "worlds/middle-earth.json"
     text = world_path.read_text(encoding="utf-8")
 
     def update_floor(floor):
-        if floor["id"] == FLOOR:
+        if floor["id"] == floor_id:
             floor.update(width=198, height=66)
-            floor["inlineMap"] = {"inheritWildernessTerrain": True, "playerPosition": {"x": 99, "y": 33}, "terrainOverrides": [{"terrainId": name, "positions": sorted(cells, key=lambda p: (p["y"], p["x"]))} for name, cells in sorted(terrain.items())], "taskTerrainOverrides": rules}
-        elif floor.get("taskId", "").startswith("demo.task.anambar-"):
-            floor["returnFloorId"] = FLOOR
+            # Both maps overlay open wilderness; Thalos explicitly covers every underlying cell.
+            floor["inlineMap"] = {"inheritWildernessTerrain": True, "playerPosition": {"x": 99, "y": 33}, "terrainOverrides": [{"terrainId": terrain_id, "positions": sorted(cells, key=lambda p: (p["y"], p["x"]))} for terrain_id, cells in sorted(terrain.items())], "taskTerrainOverrides": rules}
+        elif floor.get("taskId", "").startswith(f"demo.task.{name}-"):
+            floor["returnFloorId"] = floor_id
 
     def update_task(task):
-        if task["id"] == "demo.task.anambar-dinosaur-quest":
+        if name == "anambar" and task["id"] == "demo.task.anambar-dinosaur-quest":
             task["failureReturnSpawn"] = {"actorKindId": "demo.actor.triceratops", "position": positions["t"][0], "chancePercent": 33}
 
     def update_location(location):
-        if location.get("townId") == TOWN:
+        if location.get("townId") == town_id:
             location["mapOrigin"] = {"x": 0, "y": 0}
 
     text = replace_members(text, "proceduralFloors", update_floor)
@@ -140,10 +166,10 @@ def main():
     outputs[world_path] = replace_members(text, "locations", update_location)
     changed = [path for path, value in outputs.items() if path.read_text(encoding="utf-8") != value]
     if args.check and changed:
-        raise SystemExit("Anambar source drift: " + ", ".join(str(p.relative_to(ROOT)) for p in changed))
+        raise SystemExit(f"{name} source drift: " + ", ".join(str(p.relative_to(ROOT)) for p in changed))
     for path in changed:
         path.write_text(outputs[path], encoding="utf-8", newline="\n")
-    print(f"Anambar {commit}: 198x66, 7671 explicit cells, 5397 inherited cells; {len(changed)} files {'differ' if args.check else 'updated'}")
+    print(f"{name} {commit}: 198x66, {explicit} explicit cells, {13068 - explicit} inherited cells; {len(changed)} files {'differ' if args.check else 'updated'}")
 
 
 if __name__ == "__main__":

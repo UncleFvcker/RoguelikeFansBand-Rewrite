@@ -15,6 +15,7 @@
     "demo.task.thalos-cloning-pits",
     "demo.task.thalos-clear-wreckage"
   ],
-  "entrancePosition": { "x": 1, "y": 9 },
-  "entranceTerrainId": "demo.terrain.palace-entrance"
+  "entrancePosition": {"x":21,"y":38},
+  "entranceTerrainId": "demo.terrain.palace-entrance",
+  "additionalEntrancePositions": [{"x":21,"y":39},{"x":21,"y":40},{"x":21,"y":41}]
 }

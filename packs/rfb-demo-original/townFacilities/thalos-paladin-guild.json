@@ -12,6 +12,6 @@
     { "kind": "enchant-armor", "ownerCost": 300, "otherCost": 600 },
     { "kind": "heal", "ownerCost": 0, "otherCost": 150 }
   ],
-  "entrancePosition": { "x": 16, "y": 9 },
+  "entrancePosition": {"x":47,"y":50},
   "entranceTerrainId": "demo.terrain.paladin-guild-entrance"
 }
