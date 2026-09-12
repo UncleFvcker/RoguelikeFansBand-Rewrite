@@ -531,7 +531,7 @@ pub(super) fn rest_resolution(update: &GameUpdate) -> &RestResolutionDto {
         .expect("rest resolution should exist")
 }
 
-pub(super) fn clear_monsters(game: &mut Game) {
+pub(in crate::game) fn clear_monsters(game: &mut Game) {
     game.entities.clear();
     game.items
         .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));

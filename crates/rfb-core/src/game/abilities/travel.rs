@@ -395,11 +395,7 @@ impl Game {
         else {
             unreachable!("recall executor requires a recall effect");
         };
-        let recall = self
-            .recall
-            .as_ref()
-            .expect("planned recall must retain its destination")
-            .clone();
+        let recall = self.recall_transition_target();
         let (action_dto, delay) = match action {
             RecallUseAction::Start => {
                 let rolled = self

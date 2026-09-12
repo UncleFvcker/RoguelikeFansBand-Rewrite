@@ -548,8 +548,10 @@ fn mutation_eat_magic_and_weigh_magic_use_existing_device_and_status_state() {
         incoming_damage_percent: 100,
     });
     observer.recall = Some(RecallStateDto {
-        dungeon_id: "demo.dungeon.warrens".to_owned(),
-        floor_id: "demo.floor.warrens.1".to_owned(),
+        destination: Some(rfb_protocol::RecallDestinationDto {
+            dungeon_id: "demo.dungeon.warrens".to_owned(),
+            floor_id: "demo.floor.warrens.1".to_owned(),
+        }),
         remaining_turns: Some(9),
     });
     events.clear();

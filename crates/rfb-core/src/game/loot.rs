@@ -933,7 +933,15 @@ impl Game {
             .content
             .item(&entry.item_kind_id)
             .is_some_and(|item| item.tags.iter().any(|tag| tag == "device"));
-        let rolled_power = match table.quality_policy {
+        let world = self.content.world(&self.world_id).expect("active world");
+        let dungeon_policy = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == context.floor_id)
+            .and_then(|floor| floor.dungeon_id.as_ref())
+            .and_then(|id| world.dungeons.iter().find(|dungeon| &dungeon.id == id))
+            .and_then(|dungeon| dungeon.loot_quality_policy);
+        let rolled_power = match dungeon_policy.or(table.quality_policy) {
             Some(policy) => {
                 self.roll_rfb_depth_loot_power(policy, generation_depth, jewelry, device, mode)
             }
@@ -1772,5 +1780,62 @@ pub(super) const fn power_quality(power: i16) -> ItemQualityDto {
         1 => ItemQualityDto::Fine,
         2.. => ItemQualityDto::Exceptional,
         _ => ItemQualityDto::Ordinary,
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn random_floor_quality_uses_the_loot_context_before_floor_activation() {
+    let base = Game::new_with_build(29, "demo.build.warrior").unwrap();
+    let table = base
+        .content
+        .loot_table("demo.loot-table.base-items")
+        .unwrap()
+        .clone();
+    let entry = table
+        .entries
+        .iter()
+        .find(|entry| entry.item_kind_id == "demo.item.dagger")
+        .unwrap();
+    // 85 fails the default 75 cap but passes Volcano's 90; 35 passes its 40 great cap.
+    let seed = (0..1_000_000)
+        .find(|seed| {
+            let mut rng = crate::rng::RfbRng::seeded(*seed);
+            rng.bounded(100) == 85 && rng.bounded(100) == 35
+        })
+        .unwrap();
+    for (floor_id, expected) in [
+        (
+            "demo.floor.random-forest-depth-50",
+            ItemQualityDto::Ordinary,
+        ),
+        (
+            "demo.floor.random-volcano-depth-90",
+            ItemQualityDto::Exceptional,
+        ),
+    ] {
+        let mut game = base.clone();
+        game.rng = crate::rng::RfbRng::seeded(seed);
+        assert_ne!(game.current_floor_id, floor_id);
+        let context = LootContext {
+            table_id: table.id.clone(),
+            floor_id: floor_id.into(),
+            depth: 90,
+            source: LootSource::FloorRoom {
+                room_id: "entry".into(),
+                spawn_id: "test.quality".into(),
+            },
+        };
+        let draft = game
+            .materialize_loot_entry(
+                &context,
+                ItemGenerationMode::Ordinary,
+                &table,
+                entry,
+                None,
+                None,
+            )
+            .unwrap();
+        assert_eq!(draft.quality, expected, "{floor_id}");
     }
 }

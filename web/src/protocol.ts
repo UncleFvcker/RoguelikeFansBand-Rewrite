@@ -381,7 +381,9 @@ export type GameEventOutcomeDto = { "type": "ability-area-damage", resolution: A
 
 export type StatusDto = { kindId: string, intensity: number, remainingTicks: number, grantedResistances?: Array<ResistanceDto>, grantedBrands?: Array<WeaponBrandDto>, grantedModifiers: StatModifiersDto, grantedEquipmentBonuses: EquipmentBonusesDto, grantedStatusImmunities?: Array<string>, grantedRaceId?: string | null, grantsWallPassage: boolean, incomingDamagePercent: number, };
 
-export type RecallStateDto = { dungeonId: string, floorId: string, remainingTurns?: number | null, };
+export type RecallDestinationDto = { dungeonId: string, floorId: string, };
+
+export type RecallStateDto = { destination?: RecallDestinationDto | null, remainingTurns?: number | null, };
 
 export type NutritionStateDto = "bloated" | "full" | "normal" | "hungry" | "weak" | "faint" | "starving";
 

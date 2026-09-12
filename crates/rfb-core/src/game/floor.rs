@@ -9,7 +9,9 @@ use rfb_content::{
     ProceduralFloorDefinition, RetakeFloorPolicy, TerrainDefinition, WildernessLocationDefinition,
     WorldDefinition,
 };
-use rfb_protocol::{Position, RecallStateDto, SummonCommandModeDto, TaskStatusKindDto};
+use rfb_protocol::{
+    Position, RecallDestinationDto, RecallStateDto, SummonCommandModeDto, TaskStatusKindDto,
+};
 
 use crate::{
     error::CoreError,
@@ -283,6 +285,19 @@ fn stair_transition_target(
         }));
     }
     if terrain.tags.iter().any(|tag| tag == "stairs-down") {
+        if world
+            .dungeons
+            .iter()
+            .any(|dungeon| Some(&dungeon.id) == current.dungeon_id.as_ref() && dungeon.random)
+        {
+            return Ok(random_dungeon_next_floor(world, current).map(|floor| {
+                FloorTransitionTarget {
+                    floor_id: floor.id.clone(),
+                    arrival_connection_id: None,
+                    departure_connection_id: None,
+                }
+            }));
+        }
         return Ok(Some(FloorTransitionTarget {
             floor_id: current.next_floor_id.clone().ok_or(CoreError::InvalidSave(
                 "downward floor connection is missing",
@@ -292,6 +307,16 @@ fn stair_transition_target(
         }));
     }
     Ok(None)
+}
+
+pub(super) fn random_dungeon_next_floor<'a>(
+    world: &'a WorldDefinition,
+    current: &ProceduralFloorDefinition,
+) -> Option<&'a ProceduralFloorDefinition> {
+    world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.dungeon_id == current.dungeon_id && floor.depth == current.depth + 1)
 }
 
 fn plan_retained_instance_action(
@@ -397,6 +422,7 @@ impl Game {
                 .recall
                 .as_ref()
                 .filter(|recall| recall.remaining_turns.is_none())
+                .and_then(|recall| recall.destination.as_ref())
                 .and_then(|recall| {
                     let floor = world.procedural_floors.iter().find(|floor| {
                         floor.id == recall.floor_id
@@ -428,6 +454,34 @@ impl Game {
             return (Vec::new(), Vec::new());
         };
         let current_dungeon_id = current.dungeon_id.as_deref();
+        if let Some(dungeon) = world
+            .dungeons
+            .iter()
+            .find(|dungeon| Some(dungeon.id.as_str()) == current_dungeon_id && dungeon.random)
+        {
+            let root = world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == dungeon.root_floor_id)
+                .expect("random dungeon must retain its root floor");
+            let upward = (current.depth > root.depth)
+                .then(|| FloorTransitionTarget {
+                    floor_id: root.return_floor_id.clone(),
+                    arrival_connection_id: None,
+                    departure_connection_id: None,
+                })
+                .into_iter()
+                .collect();
+            let downward = random_dungeon_next_floor(world, current)
+                .map(|floor| FloorTransitionTarget {
+                    floor_id: floor.id.clone(),
+                    arrival_connection_id: None,
+                    departure_connection_id: None,
+                })
+                .into_iter()
+                .collect();
+            return (upward, downward);
+        }
         let mut upward = Vec::new();
         let mut downward = Vec::new();
         for state in &self.floor_connections {
@@ -496,8 +550,11 @@ impl Game {
     }
 
     pub(super) fn recall_use_plan(&self) -> Option<RecallUseAction> {
-        let recall = self.recall.as_ref()?;
-        if recall.remaining_turns.is_some() {
+        if self
+            .recall
+            .as_ref()
+            .is_some_and(|recall| recall.remaining_turns.is_some())
+        {
             return Some(RecallUseAction::Cancel);
         }
         let world = self
@@ -508,15 +565,26 @@ impl Game {
             || self.is_wilderness_floor()
             || self.current_town().is_some()
         {
+            let recall = self.recall.as_ref()?.destination.as_ref()?;
             let dungeon = world
                 .dungeons
                 .iter()
-                .find(|dungeon| dungeon.id == recall.dungeon_id)?;
+                .find(|dungeon| dungeon.id == recall.dungeon_id && !dungeon.random)?;
             return self
                 .dungeon_entry_requirements_met(dungeon)
                 .then_some(RecallUseAction::Start);
         }
-        floor_dungeon_id(world, &self.current_floor_id).map(|_| RecallUseAction::Start)
+        floor_dungeon_id(world, &self.current_floor_id)
+            .filter(|id| {
+                self.recall
+                    .as_ref()
+                    .is_some_and(|recall| recall.destination.is_some())
+                    || world
+                        .dungeons
+                        .iter()
+                        .any(|dungeon| dungeon.id == *id && dungeon.random)
+            })
+            .map(|_| RecallUseAction::Start)
     }
 
     pub(super) fn recall_reset_plan(&self) -> Option<RecallDestination> {
@@ -530,6 +598,12 @@ impl Game {
             .is_none_or(|recall| recall.remaining_turns.is_none()))
         .then(|| floor_dungeon_id(world, &self.current_floor_id))
         .flatten()
+        .filter(|id| {
+            world
+                .dungeons
+                .iter()
+                .any(|dungeon| dungeon.id == *id && !dungeon.random)
+        })
         .map(|dungeon_id| RecallDestination {
             dungeon_id,
             floor_id: self.current_floor_id.clone(),
@@ -537,22 +611,24 @@ impl Game {
     }
 
     pub(super) fn start_recall(&mut self, delay: u16) -> RecallDestination {
-        let recall = self
-            .recall
-            .as_mut()
-            .expect("planned recall must retain its destination");
+        let destination = self.recall_transition_target();
+        let recall = self.recall.get_or_insert(RecallStateDto {
+            destination: None,
+            remaining_turns: None,
+        });
         recall.remaining_turns = Some(delay.saturating_add(1));
-        RecallDestination {
-            dungeon_id: recall.dungeon_id.clone(),
-            floor_id: recall.floor_id.clone(),
-        }
+        destination
     }
 
     pub(super) fn cancel_recall(&mut self) {
-        self.recall
+        let recall = self
+            .recall
             .as_mut()
-            .expect("planned recall cancellation must retain its destination")
-            .remaining_turns = None;
+            .expect("planned recall cancellation must retain its state");
+        recall.remaining_turns = None;
+        if recall.destination.is_none() {
+            self.recall = None;
+        }
     }
 
     pub(super) fn reset_recall(&mut self, destination: RecallDestination) {
@@ -561,8 +637,10 @@ impl Game {
             .expect("recall destination must retain its dungeon")
             .recall_floor_id = Some(destination.floor_id.clone());
         self.recall = Some(RecallStateDto {
-            dungeon_id: destination.dungeon_id,
-            floor_id: destination.floor_id,
+            destination: Some(RecallDestinationDto {
+                dungeon_id: destination.dungeon_id,
+                floor_id: destination.floor_id,
+            }),
             remaining_turns: None,
         });
     }
@@ -924,6 +1002,37 @@ impl Game {
                 floor.id == source_floor_id && floor.lifecycle == FloorLifecycle::Town
             });
         if source_is_surface
+            && world.procedural_floors.iter().any(|floor| {
+                floor.id == target.floor_id
+                    && world.dungeons.iter().any(|dungeon| {
+                        Some(&dungeon.id) == floor.dungeon_id.as_ref() && dungeon.random
+                    })
+            })
+        {
+            if !self.is_wilderness_floor() || embedded_town_floor_id.is_some() {
+                return Ok(None);
+            }
+            if !self.wilderness_connections_are_valid(&self.terrain, &self.floor_connections) {
+                return Ok(None);
+            }
+            let Some(connection) = self.floor_connections.iter().find(|connection| {
+                connection.position == self.player.position
+                    && connection.wilderness_entrance.is_some()
+            }) else {
+                return Ok(None);
+            };
+            let target = FloorTransitionTarget {
+                floor_id: connection
+                    .target_floor_id
+                    .clone()
+                    .expect("validated entrance retains its root"),
+                arrival_connection_id: None,
+                departure_connection_id: None,
+            };
+            let source_floor_id = source_floor_id.to_owned();
+            return self.enter_random_dungeon(target, &source_floor_id);
+        }
+        if source_is_surface
             && let Some(target_floor) = world.procedural_floors.iter().find(|floor| {
                 floor.id == target.floor_id && floor.lifecycle == FloorLifecycle::Dungeon
             })
@@ -963,6 +1072,48 @@ impl Game {
         if self.current_town().is_some() {
             self.initialize_continuous_wilderness_surface()?;
         }
+        Ok(Some(outcome))
+    }
+
+    fn enter_random_dungeon(
+        &mut self,
+        target: FloorTransitionTarget,
+        source_floor_id: &str,
+    ) -> Result<Option<FloorTransitionOutcome>, CoreError> {
+        // Validate before drawing a depth, then commit generation and RNG together.
+        if self
+            .plan_floor_transition(target.clone(), false, Some(source_floor_id))?
+            .is_none()
+        {
+            return Ok(None);
+        }
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must remain available");
+        let root = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == target.floor_id)
+            .expect("random entry must retain its floor");
+        let mut floors = world
+            .procedural_floors
+            .iter()
+            .filter(|floor| floor.dungeon_id == root.dungeon_id)
+            .collect::<Vec<_>>();
+        floors.sort_by_key(|floor| floor.depth);
+        let mut staged = self.clone();
+        let index = staged.rng.bounded(floors.len() as u64) as usize;
+        let target = FloorTransitionTarget {
+            floor_id: floors[index].id.clone(),
+            arrival_connection_id: None,
+            departure_connection_id: None,
+        };
+        let Some(plan) = staged.plan_floor_transition(target, false, Some(source_floor_id))? else {
+            return Ok(None);
+        };
+        let outcome = staged.commit_floor_transition(plan)?;
+        *self = staged;
         Ok(Some(outcome))
     }
 
@@ -1473,12 +1624,26 @@ impl Game {
         let Some(current) = world.procedural_floors.iter().find(|floor| {
             floor.id == self.current_floor_id && floor.lifecycle == FloorLifecycle::Dungeon
         }) else {
+            if self
+                .recall
+                .as_ref()
+                .is_some_and(|recall| recall.destination.is_none())
+            {
+                self.recall = None;
+            }
             return;
         };
         let dungeon_id = current
             .dungeon_id
             .as_ref()
             .expect("dungeon floor must retain its dungeon");
+        if world
+            .dungeons
+            .iter()
+            .any(|dungeon| &dungeon.id == dungeon_id && dungeon.random)
+        {
+            return;
+        }
         let state = self
             .dungeon_states
             .get_mut(dungeon_id)
@@ -1494,11 +1659,13 @@ impl Game {
             state.recall_floor_id = Some(current.id.clone());
         }
         self.recall = Some(RecallStateDto {
-            dungeon_id: dungeon_id.clone(),
-            floor_id: state
-                .recall_floor_id
-                .clone()
-                .expect("visited dungeon must retain its recall floor"),
+            destination: Some(RecallDestinationDto {
+                dungeon_id: dungeon_id.clone(),
+                floor_id: state
+                    .recall_floor_id
+                    .clone()
+                    .expect("visited dungeon must retain its recall floor"),
+            }),
             remaining_turns: self
                 .recall
                 .as_ref()
@@ -1514,46 +1681,58 @@ impl Game {
         if remaining_turns > 1 {
             return Some(RecallAdvancePlan::Countdown(remaining_turns - 1));
         }
+        Some(RecallAdvancePlan::Trigger {
+            from_floor_id: self.current_floor_id.clone(),
+            target_floor_id: self.recall_transition_target().floor_id,
+        })
+    }
+
+    pub(super) fn recall_transition_target(&self) -> RecallDestination {
         let world = self
             .content
             .world(&self.world_id)
             .expect("active world must remain available");
-        Some(RecallAdvancePlan::Trigger {
-            from_floor_id: self.current_floor_id.clone(),
-            target_floor_id: if self.current_floor_id == world.initial_floor_id
-                || self.is_wilderness_floor()
-                || self.current_town().is_some()
-            {
-                self.recall
-                    .as_ref()
-                    .expect("pending recall must retain its destination")
-                    .floor_id
-                    .clone()
-            } else {
-                let current = world
-                    .procedural_floors
-                    .iter()
-                    .find(|floor| floor.id == self.current_floor_id)
-                    .expect("pending dungeon recall must retain its current floor");
-                let dungeon_id = current
-                    .dungeon_id
-                    .as_ref()
-                    .expect("pending dungeon recall must retain its dungeon ID");
-                let root_floor_id = &world
-                    .dungeons
-                    .iter()
-                    .find(|dungeon| dungeon.id == *dungeon_id)
-                    .expect("pending dungeon recall must retain its dungeon definition")
-                    .root_floor_id;
-                world
-                    .procedural_floors
-                    .iter()
-                    .find(|floor| floor.id == *root_floor_id)
-                    .expect("pending dungeon recall must retain its root floor")
-                    .return_floor_id
-                    .clone()
-            },
-        })
+        if self.current_floor_id == world.initial_floor_id
+            || self.is_wilderness_floor()
+            || self.current_town().is_some()
+        {
+            let destination = self
+                .recall
+                .as_ref()
+                .and_then(|recall| recall.destination.as_ref())
+                .expect("surface recall must retain its ordinary dungeon destination");
+            RecallDestination {
+                dungeon_id: destination.dungeon_id.clone(),
+                floor_id: destination.floor_id.clone(),
+            }
+        } else {
+            let current = world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == self.current_floor_id)
+                .expect("pending dungeon recall must retain its current floor");
+            let dungeon_id = current
+                .dungeon_id
+                .as_ref()
+                .expect("pending dungeon recall must retain its dungeon ID");
+            let root_floor_id = &world
+                .dungeons
+                .iter()
+                .find(|dungeon| dungeon.id == *dungeon_id)
+                .expect("pending dungeon recall must retain its dungeon definition")
+                .root_floor_id;
+            let floor_id = world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == *root_floor_id)
+                .expect("pending dungeon recall must retain its root floor")
+                .return_floor_id
+                .clone();
+            RecallDestination {
+                dungeon_id: dungeon_id.clone(),
+                floor_id,
+            }
+        }
     }
 
     pub(super) fn advance_recall(
@@ -1575,10 +1754,7 @@ impl Game {
                 from_floor_id,
                 target_floor_id,
             } => {
-                self.recall
-                    .as_mut()
-                    .expect("pending recall must retain its destination")
-                    .remaining_turns = None;
+                self.cancel_recall();
                 let Some(transition) = self.transition_floor(target_floor_id, None, None, false)?
                 else {
                     return Ok(());

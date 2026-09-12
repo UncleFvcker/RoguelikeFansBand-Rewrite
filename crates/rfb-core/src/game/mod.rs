@@ -237,7 +237,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 130;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 132;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -829,7 +829,7 @@ pub struct Game {
     wilderness_position: Option<Position>,
     wilderness_view_offset: Position,
     wilderness_seed: u64,
-    wilderness_terrain_cache: BTreeMap<Position, Vec<String>>,
+    wilderness_terrain_cache: BTreeMap<Position, wilderness::WildernessChunk>,
     world_travel_destination: Option<Position>,
     interface_locale: LocaleDto,
     travel_options: rfb_protocol::TravelOptionsDto,

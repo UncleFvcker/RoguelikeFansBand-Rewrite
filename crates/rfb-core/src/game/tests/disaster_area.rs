@@ -221,7 +221,14 @@ fn dark_cave_disaster_area_real_entries_all_depths_rewards_and_return() {
             assert_eq!(game.player.position, departure);
             assert!(!game.dungeon_has_darkness());
             let mut invalid = game.to_save();
-            let recall = invalid.player.recall.as_mut().unwrap();
+            let recall = invalid
+                .player
+                .recall
+                .as_mut()
+                .unwrap()
+                .destination
+                .as_mut()
+                .unwrap();
             recall.dungeon_id = suppressed;
             recall.floor_id = suppressed_floor;
             assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());

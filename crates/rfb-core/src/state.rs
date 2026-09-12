@@ -279,6 +279,7 @@ pub(crate) struct FloorConnectionState {
     pub(crate) position: Position,
     pub(crate) target_floor_id: Option<String>,
     pub(crate) target_connection_id: Option<String>,
+    pub(crate) wilderness_entrance: Option<rfb_protocol::WildernessEntranceSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

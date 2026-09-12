@@ -202,6 +202,62 @@ pub struct WildernessDefinition {
     pub legend: Vec<WildernessLegendEntry>,
     pub rows: Vec<String>,
     pub locations: Vec<WildernessLocationDefinition>,
+    /// Source-ordered special-encounter pool, including unimplemented maps.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub encounters: Vec<WildernessEncounterDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WildernessEncounterDefinition {
+    pub id: String,
+    pub terrain: WildernessTerrain,
+    pub min_level: u16,
+    #[serde(default)]
+    pub max_level: Option<u16>,
+    /// RFB uses integer 1000 / rarity; zero excludes a template.
+    pub rarity: u16,
+    #[serde(default)]
+    pub time: Option<WildernessEncounterTime>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub requires_shop: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub debug: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entrance_map: Option<WildernessEntranceMapDefinition>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum WildernessEncounterTime {
+    Day,
+    Night,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WildernessEntranceMapDefinition {
+    pub dungeon_id: String,
+    /// Spaces leave the underlying wilderness unchanged.
+    pub rows: Vec<String>,
+    pub legend: Vec<WildernessEntranceLegendEntry>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub no_rotate: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WildernessEntranceLegendEntry {
+    pub symbol: String,
+    pub terrain_id: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub glow: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub mark: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -282,6 +338,17 @@ pub struct CampaignDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DungeonDefinition {
     pub id: String,
+    /// RFB DF1_RANDOM: wilderness entry selects a depth; ascent leaves the instance.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub random: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub loot_quality_policy: Option<super::LootQualityPolicyDefinition>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tunnel_percent: Option<u8>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub outer_wall_terrain_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wilderness_terrain: Option<WildernessTerrain>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "schemas", schemars(range(min = 1, max = 4)))]
     pub pantheon: Option<u8>,

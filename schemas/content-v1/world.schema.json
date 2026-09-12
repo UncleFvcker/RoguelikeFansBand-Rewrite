@@ -136,11 +136,27 @@
             "null"
           ]
         },
+        "lootQualityPolicy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LootQualityPolicyDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "noMagic": {
           "type": "boolean"
         },
         "noMelee": {
           "type": "boolean"
+        },
+        "outerWallTerrainId": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "pantheon": {
           "format": "uint8",
@@ -150,6 +166,10 @@
             "integer",
             "null"
           ]
+        },
+        "random": {
+          "description": "RFB DF1_RANDOM: wilderness entry selects a depth; ascent leaves the instance.",
+          "type": "boolean"
         },
         "rootFloorId": {
           "type": "string"
@@ -164,6 +184,25 @@
             }
           ],
           "default": null
+        },
+        "tunnelPercent": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "wildernessTerrain": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WildernessTerrain"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -693,6 +732,37 @@
         "quantity"
       ],
       "type": "object"
+    },
+    "LootQualityPolicyDefinition": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "goodCapPercent": {
+              "format": "uint8",
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "greatCapPercent": {
+              "format": "uint8",
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "kind": {
+              "const": "rfb-depth",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "goodCapPercent",
+            "greatCapPercent"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "ProceduralActorSpawnDefinition": {
       "additionalProperties": false,
@@ -2441,6 +2511,13 @@
     "WildernessDefinition": {
       "additionalProperties": false,
       "properties": {
+        "encounters": {
+          "description": "Source-ordered special-encounter pool, including unimplemented maps.",
+          "items": {
+            "$ref": "#/$defs/WildernessEncounterDefinition"
+          },
+          "type": "array"
+        },
         "height": {
           "format": "uint16",
           "maximum": 65535,
@@ -2482,6 +2559,133 @@
         "legend",
         "rows",
         "locations"
+      ],
+      "type": "object"
+    },
+    "WildernessEncounterDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "debug": {
+          "type": "boolean"
+        },
+        "entranceMap": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WildernessEntranceMapDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "maxLevel": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "minLevel": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "rarity": {
+          "description": "RFB uses integer 1000 / rarity; zero excludes a template.",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requiresShop": {
+          "type": "boolean"
+        },
+        "terrain": {
+          "$ref": "#/$defs/WildernessTerrain"
+        },
+        "time": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WildernessEncounterTime"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id",
+        "terrain",
+        "minLevel",
+        "rarity"
+      ],
+      "type": "object"
+    },
+    "WildernessEncounterTime": {
+      "enum": [
+        "day",
+        "night"
+      ],
+      "type": "string"
+    },
+    "WildernessEntranceLegendEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "glow": {
+          "type": "boolean"
+        },
+        "mark": {
+          "type": "boolean"
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "terrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "symbol",
+        "terrainId"
+      ],
+      "type": "object"
+    },
+    "WildernessEntranceMapDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "dungeonId": {
+          "type": "string"
+        },
+        "legend": {
+          "items": {
+            "$ref": "#/$defs/WildernessEntranceLegendEntry"
+          },
+          "type": "array"
+        },
+        "noRotate": {
+          "type": "boolean"
+        },
+        "rows": {
+          "description": "Spaces leave the underlying wilderness unchanged.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "dungeonId",
+        "rows",
+        "legend"
       ],
       "type": "object"
     },

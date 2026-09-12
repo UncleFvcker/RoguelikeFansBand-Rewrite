@@ -1196,7 +1196,17 @@ fn b7_avavir_recall_counts_down_returns_and_cancels_without_teleporting() {
     assert_eq!(restored.current_floor_id, surface);
     assert_eq!(restored.state_hash(), game.state_hash());
     assert!(restored.recall.as_ref().unwrap().remaining_turns.is_none());
-    assert_eq!(restored.recall.as_ref().unwrap().floor_id, dungeon);
+    assert_eq!(
+        restored
+            .recall
+            .as_ref()
+            .unwrap()
+            .destination
+            .as_ref()
+            .unwrap()
+            .floor_id,
+        dungeon
+    );
     // A charged Avavir cancels an already-running recall; it does not roll a new delay.
     let mut cancelled = original.clone();
     cancelled.start_recall(10);
@@ -10685,6 +10695,7 @@ fn adjacent_terrain_creation_consumes_empty_result_as_tried_without_rng() {
         position: connection_position,
         target_floor_id: None,
         target_connection_id: None,
+        wilderness_entrance: None,
     });
     give_inventory_item(&mut game, ITEM_ID, KIND_ID);
     let before = game.snapshot();

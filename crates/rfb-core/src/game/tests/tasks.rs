@@ -1110,6 +1110,7 @@ fn p107_task_substitutions_are_correlated_persisted_and_hide_losing_variants() {
     );
 
     first.advance_wilderness_generation();
+    first.activate_wilderness_position(None, false).unwrap();
     assert_eq!(projected_ids(&mut first), first_ids);
     let content = first.content.clone();
     let mut restored = Game::from_save_with_content(first.to_save(), content)
@@ -2887,8 +2888,10 @@ fn p86d_camelot_entrance_recall_conquest_and_reward_round_trip() {
     assert_eq!(game.current_floor_id, "demo.floor.camelot-depth-27");
     support::clear_monsters(&mut game);
     game.recall = Some(RecallStateDto {
-        dungeon_id: "demo.dungeon.camelot".to_owned(),
-        floor_id: "demo.floor.camelot-depth-27".to_owned(),
+        destination: Some(rfb_protocol::RecallDestinationDto {
+            dungeon_id: "demo.dungeon.camelot".to_owned(),
+            floor_id: "demo.floor.camelot-depth-27".to_owned(),
+        }),
         remaining_turns: Some(1),
     });
     let recalled = dispatch_next(&mut game, GameCommand::Wait);
@@ -3084,8 +3087,10 @@ fn p87d_tidal_cave_entrance_recall_conquest_and_reward_round_trip() {
     assert_eq!(game.state_hash(), mid_depth_hash);
     game.entities.clear();
     game.recall = Some(RecallStateDto {
-        dungeon_id: "demo.dungeon.tidal-cave".to_owned(),
-        floor_id: "demo.floor.tidal-cave-depth-20".to_owned(),
+        destination: Some(rfb_protocol::RecallDestinationDto {
+            dungeon_id: "demo.dungeon.tidal-cave".to_owned(),
+            floor_id: "demo.floor.tidal-cave-depth-20".to_owned(),
+        }),
         remaining_turns: Some(1),
     });
     let recalled = dispatch_next(&mut game, GameCommand::Wait);
@@ -3294,8 +3299,10 @@ fn p88d_icky_cave_entrance_recall_conquest_and_reward_round_trip() {
     assert_eq!(game.state_hash(), mid_depth_hash);
     game.entities.clear();
     game.recall = Some(RecallStateDto {
-        dungeon_id: "demo.dungeon.icky-cave".to_owned(),
-        floor_id: "demo.floor.icky-cave-depth-14".to_owned(),
+        destination: Some(rfb_protocol::RecallDestinationDto {
+            dungeon_id: "demo.dungeon.icky-cave".to_owned(),
+            floor_id: "demo.floor.icky-cave-depth-14".to_owned(),
+        }),
         remaining_turns: Some(1),
     });
     let recalled = dispatch_next(&mut game, GameCommand::Wait);

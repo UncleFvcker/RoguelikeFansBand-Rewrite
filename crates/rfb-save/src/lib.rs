@@ -183,6 +183,7 @@ mod tests {
             wilderness_position: None,
             wilderness_view_offset: Position::default(),
             wilderness_seed: 0,
+            wilderness_chunks: Vec::new(),
             world_travel_destination: None,
             interface_locale: rfb_protocol::LocaleDto::ZhCn,
             mogaminator: rfb_protocol::MogaminatorSaveDto {

@@ -1966,6 +1966,7 @@ impl Game {
         world
             .dungeons
             .iter()
+            .filter(|dungeon| !dungeon.random)
             .filter_map(|dungeon| {
                 let recall_id = self.dungeon_states[&dungeon.id].recall_floor_id.as_ref()?;
                 if !self.dungeon_entry_requirements_met(dungeon) {

@@ -1,0 +1,471 @@
+{
+  "schemaVersion": 1,
+  "sourceRef": "master",
+  "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+  "sources": [
+    "lib/edit/d_info.txt",
+    "src/dungeon_name_zh.inc",
+    "lib/edit/v_info.txt",
+    "src/init1.c",
+    "src/rooms.c",
+    "src/wild.c",
+    "src/floors.c",
+    "src/generate.c",
+    "src/cmd2.c",
+    "src/spells3.c",
+    "src/dungeon.c",
+    "src/object2.c",
+    "src/spells2.c",
+    "src/generate.h"
+  ],
+  "profiles": [
+    {
+      "sourceIndex": 26,
+      "sourceName": "Random Forest",
+      "chineseName": "随机森林",
+      "sourceLine": 303,
+      "sourceFields": {
+        "D": [
+          "一条进入未知森林的小径"
+        ],
+        "W": [
+          "25:50:5:3:14:160:75:20:0x0001:0x0052"
+        ],
+        "L": [
+          "GRASS:85:FLOWER:5:SHALLOW_WATER:10:15"
+        ],
+        "A": [
+          "TREE:80:QUARTZ_VEIN:10:GRASS:10:BRAKE:TREE:GRANITE:BRAKE"
+        ],
+        "F": [
+          "NO_DOORS | WATER_RIVER | MONSTER_DIV_15 | RANDOM | WILD_TYPE_7"
+        ],
+        "M": [
+          "ANIMAL | R_CHAR_phZCq | WILD_WOOD | WILD_WOOD"
+        ]
+      },
+      "dungeonId": "demo.dungeon.random-forest",
+      "floorCount": 26,
+      "parameterStatus": {
+        "W.depth": "formal member depths",
+        "W.mode": "existing MODE_OR allocation",
+        "W.minPlayerLevel": "no active entry consumer in master; not an entry level gate",
+        "W.minAlloc": "fixed population budget adaptation",
+        "W.ambient": "existing allocation",
+        "W.goodGreat": "dungeon lootQualityPolicy applied through LootContext floor identity",
+        "W.pitNest": "template monster-filter masks; full source room templates are outside the finite geometry adaptation, no pit/nest rooms declared",
+        "L.materials": "existing floorMix",
+        "L.tunnelPercent": "dungeon tunnelPercent chooses existing L or cave-like corridor",
+        "A.materials": "existing wallMix",
+        "A.outer": "outerWallTerrainId paints room perimeters before tunnels",
+        "A.inner": "no inner-wall room template in the supported circle/cavern/rectangle geometry; source value retained, no runtime flag claimed",
+        "A.streamers": "existing streamers",
+        "F.WILD_TYPE": "forest 5:1 circle/cavern room mix and dungeon terrain-change consumers",
+        "F.generation": "random runtime destruction 1/36, lake 1/18 with depth thresholds, then cavern depth chance; river depth gate and lake-vault exclusion",
+        "M": "existing OR preferences; duplicate WILD_WOOD normalized"
+      }
+    },
+    {
+      "sourceIndex": 27,
+      "sourceName": "Random Volcano",
+      "chineseName": "随机火山",
+      "sourceLine": 311,
+      "sourceFields": {
+        "D": [
+          "一个通向未知火山中心的地洞"
+        ],
+        "W": [
+          "50:90:18:3:14:160:90:40:0x01bf:0x02fd"
+        ],
+        "L": [
+          "DIRT:40:SHALLOW_LAVA:40:DEEP_LAVA:20:0"
+        ],
+        "A": [
+          "GRANITE:90:DARK_PIT:10:GRANITE:0:GRANITE:GRANITE:MAGMA_VEIN:QUARTZ_VEIN"
+        ],
+        "F": [
+          "CAVE | MONSTER_DIV_0 | CAVERN | LAKE_LAVA | LAVA_RIVER | DESTROY | RANDOM",
+          "WILD_TYPE_10"
+        ],
+        "M": [
+          "IM_FIRE | CAN_FLY | WILD_VOLCANO"
+        ]
+      },
+      "dungeonId": "demo.dungeon.random-volcano",
+      "floorCount": 41,
+      "parameterStatus": {
+        "W.depth": "formal member depths",
+        "W.mode": "existing MODE_OR allocation",
+        "W.minPlayerLevel": "no active entry consumer in master; not an entry level gate",
+        "W.minAlloc": "fixed population budget adaptation",
+        "W.ambient": "existing allocation",
+        "W.goodGreat": "dungeon lootQualityPolicy applied through LootContext floor identity",
+        "W.pitNest": "template monster-filter masks; full source room templates are outside the finite geometry adaptation, no pit/nest rooms declared",
+        "L.materials": "existing floorMix",
+        "L.tunnelPercent": "dungeon tunnelPercent chooses existing L or cave-like corridor",
+        "A.materials": "existing wallMix",
+        "A.outer": "outerWallTerrainId paints room perimeters before tunnels",
+        "A.inner": "no inner-wall room template in the supported circle/cavern/rectangle geometry; source value retained, no runtime flag claimed",
+        "A.streamers": "existing streamers",
+        "F.WILD_TYPE": "forest 5:1 circle/cavern room mix and dungeon terrain-change consumers",
+        "F.generation": "random runtime destruction 1/36, lake 1/18 with depth thresholds, then cavern depth chance; river depth gate and lake-vault exclusion",
+        "M": "existing OR preferences; duplicate WILD_WOOD normalized"
+      }
+    },
+    {
+      "sourceIndex": 28,
+      "sourceName": "Random Mountain",
+      "chineseName": "随机山脉",
+      "sourceLine": 320,
+      "sourceFields": {
+        "D": [
+          "一条通向未知山脉的道路"
+        ],
+        "W": [
+          "40:70:20:3:14:160:85:35:0x00b7:0x00df"
+        ],
+        "L": [
+          "GRASS:100:GRASS:0:GRASS:0:0"
+        ],
+        "A": [
+          "MOUNTAIN_WALL:100:GRANITE:0:GRANITE:0:MOUNTAIN_WALL:GRANITE:MAGMA_VEIN:QUARTZ_VEIN"
+        ],
+        "F": [
+          "MONSTER_DIV_16 | WATER_RIVER | CAVE | CAVERN | NO_DOORS | BIG | RANDOM",
+          "WILD_TYPE_11"
+        ],
+        "M": [
+          "TROLL | GIANT | CAN_FLY | ANIMAL | WILD_MOUNTAIN | R_CHAR_OYH"
+        ]
+      },
+      "dungeonId": "demo.dungeon.random-mountain",
+      "floorCount": 31,
+      "parameterStatus": {
+        "W.depth": "formal member depths",
+        "W.mode": "existing MODE_OR allocation",
+        "W.minPlayerLevel": "no active entry consumer in master; not an entry level gate",
+        "W.minAlloc": "fixed population budget adaptation",
+        "W.ambient": "existing allocation",
+        "W.goodGreat": "dungeon lootQualityPolicy applied through LootContext floor identity",
+        "W.pitNest": "template monster-filter masks; full source room templates are outside the finite geometry adaptation, no pit/nest rooms declared",
+        "L.materials": "existing floorMix",
+        "L.tunnelPercent": "dungeon tunnelPercent chooses existing L or cave-like corridor",
+        "A.materials": "existing wallMix",
+        "A.outer": "outerWallTerrainId paints room perimeters before tunnels",
+        "A.inner": "no inner-wall room template in the supported circle/cavern/rectangle geometry; source value retained, no runtime flag claimed",
+        "A.streamers": "existing streamers",
+        "F.WILD_TYPE": "forest 5:1 circle/cavern room mix and dungeon terrain-change consumers",
+        "F.generation": "random runtime destruction 1/36, lake 1/18 with depth thresholds, then cavern depth chance; river depth gate and lake-vault exclusion",
+        "M": "existing OR preferences; duplicate WILD_WOOD normalized"
+      }
+    },
+    {
+      "sourceIndex": 29,
+      "sourceName": "Random Sea",
+      "chineseName": "随机海洋",
+      "sourceLine": 329,
+      "sourceFields": {
+        "D": [
+          "一条通往未知失落之地的水下道路"
+        ],
+        "W": [
+          "55:75:30:3:14:160:80:35:0x0000:0x0000"
+        ],
+        "L": [
+          "FLOOR:80:SHALLOW_WATER:20:FLOOR:0:100"
+        ],
+        "A": [
+          "DEEP_WATER:80:SHALLOW_WATER:10:GRANITE:10:GRANITE:GRANITE:NONE:NONE"
+        ],
+        "F": [
+          "MONSTER_DIV_0 | LAKE_WATER | WATER_RIVER | DESTROY | RANDOM | WILD_TYPE_2"
+        ],
+        "M": [
+          "CAN_SWIM | CAN_FLY | AQUATIC | WILD_OCEAN"
+        ]
+      },
+      "dungeonId": "demo.dungeon.random-sea",
+      "floorCount": 21,
+      "parameterStatus": {
+        "W.depth": "formal member depths",
+        "W.mode": "existing MODE_OR allocation",
+        "W.minPlayerLevel": "no active entry consumer in master; not an entry level gate",
+        "W.minAlloc": "fixed population budget adaptation",
+        "W.ambient": "existing allocation",
+        "W.goodGreat": "dungeon lootQualityPolicy applied through LootContext floor identity",
+        "W.pitNest": "template monster-filter masks; full source room templates are outside the finite geometry adaptation, no pit/nest rooms declared",
+        "L.materials": "existing floorMix",
+        "L.tunnelPercent": "dungeon tunnelPercent chooses existing L or cave-like corridor",
+        "A.materials": "existing wallMix",
+        "A.outer": "outerWallTerrainId paints room perimeters before tunnels",
+        "A.inner": "no inner-wall room template in the supported circle/cavern/rectangle geometry; source value retained, no runtime flag claimed",
+        "A.streamers": "existing streamers",
+        "F.WILD_TYPE": "forest 5:1 circle/cavern room mix and dungeon terrain-change consumers",
+        "F.generation": "random runtime destruction 1/36, lake 1/18 with depth thresholds, then cavern depth chance; river depth gate and lake-vault exclusion",
+        "M": "existing OR preferences; duplicate WILD_WOOD normalized"
+      }
+    }
+  ],
+  "encounters": [
+    {
+      "id": "demo.wilderness-encounter.lava-random-volcano-level",
+      "sourceName": "Random Volcano Level",
+      "sourceLine": 696,
+      "sourceType": "WILD:LAVA",
+      "sourceWhen": "40:*:1",
+      "mapImplemented": true
+    },
+    {
+      "id": "demo.wilderness-encounter.lava-demonologist",
+      "sourceName": "Demonologist",
+      "sourceLine": 711,
+      "sourceType": "WILD:LAVA",
+      "sourceWhen": "40:*:16",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.lava-how-vile",
+      "sourceName": "How Vile!",
+      "sourceLine": 726,
+      "sourceType": "WILD:LAVA",
+      "sourceWhen": "20:*:2",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.lava-hounds-of-hell",
+      "sourceName": "Hounds of Hell",
+      "sourceLine": 734,
+      "sourceType": "WILD:LAVA",
+      "sourceWhen": "40:*:32",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.mountain-empty-cave",
+      "sourceName": "Empty Cave",
+      "sourceLine": 744,
+      "sourceType": "WILD:MOUNTAIN",
+      "sourceWhen": "40:*:1",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.mountain-ogre-cave",
+      "sourceName": "Ogre Cave",
+      "sourceLine": 764,
+      "sourceType": "WILD:MOUNTAIN:FORMATION",
+      "sourceWhen": "40:*:2",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.mountain-troll-cave",
+      "sourceName": "Troll Cave",
+      "sourceLine": 786,
+      "sourceType": "WILD:MOUNTAIN:FORMATION",
+      "sourceWhen": "40:*:2",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.mountain-giant-cave",
+      "sourceName": "Giant Cave",
+      "sourceLine": 808,
+      "sourceType": "WILD:MOUNTAIN:FORMATION",
+      "sourceWhen": "40:*:8",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.mountain-eyrie",
+      "sourceName": "Eyrie",
+      "sourceLine": 830,
+      "sourceType": "WILD:MOUNTAIN:FORMATION",
+      "sourceWhen": "40:*:4",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.mountain-monastery",
+      "sourceName": "Monastery",
+      "sourceLine": 840,
+      "sourceType": "WILD:MOUNTAIN:FORMATION",
+      "sourceWhen": "40:*:8",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.mountain-lord-of-chaos",
+      "sourceName": "Lord of Chaos",
+      "sourceLine": 862,
+      "sourceType": "WILD:MOUNTAIN",
+      "sourceWhen": "40:*:16",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.mountain-sorcerer-s-tower-ii",
+      "sourceName": "Sorcerer's Tower II",
+      "sourceLine": 875,
+      "sourceType": "WILD:MOUNTAIN",
+      "sourceWhen": "50:*:32",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.mountain-dragon-s-lair",
+      "sourceName": "Dragon's Lair",
+      "sourceLine": 890,
+      "sourceType": "WILD:MOUNTAIN",
+      "sourceWhen": "40:*:32",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.mountain-mountain-resort",
+      "sourceName": "Mountain Resort",
+      "sourceLine": 916,
+      "sourceType": "WILD:MOUNTAIN:SHOP",
+      "sourceWhen": "50:*:32",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.mountain-random-mountain-level",
+      "sourceName": "Random Mountain Level",
+      "sourceLine": 937,
+      "sourceType": "WILD:MOUNTAIN",
+      "sourceWhen": "40:*:16",
+      "mapImplemented": true
+    },
+    {
+      "id": "demo.wilderness-encounter.mountain-random-volcano-level",
+      "sourceName": "Random Volcano Level",
+      "sourceLine": 943,
+      "sourceType": "WILD:MOUNTAIN",
+      "sourceWhen": "40:*:16",
+      "mapImplemented": true
+    },
+    {
+      "id": "demo.wilderness-encounter.trees-spiders",
+      "sourceName": "Spiders",
+      "sourceLine": 1036,
+      "sourceType": "WILD:TREES:FORMATION",
+      "sourceWhen": "10:*:2",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.trees-roasting-hobbits",
+      "sourceName": "Roasting Hobbits",
+      "sourceLine": 1049,
+      "sourceType": "WILD:TREES:NIGHT",
+      "sourceWhen": "15:*:4",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.trees-ewok-village",
+      "sourceName": "Ewok Village",
+      "sourceLine": 1062,
+      "sourceType": "WILD:TREES",
+      "sourceWhen": "10:*:4",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.trees-druidic-circle",
+      "sourceName": "Druidic Circle",
+      "sourceLine": 1074,
+      "sourceType": "WILD:TREES",
+      "sourceWhen": "10:*:32",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.trees-treeherder",
+      "sourceName": "Treeherder",
+      "sourceLine": 1097,
+      "sourceType": "WILD:TREES",
+      "sourceWhen": "30:*:200",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.trees-random-forest-level",
+      "sourceName": "Random Forest Level",
+      "sourceLine": 1109,
+      "sourceType": "WILD:TREES",
+      "sourceWhen": "20:*:8",
+      "mapImplemented": true
+    },
+    {
+      "id": "demo.wilderness-encounter.water-random-sea-level",
+      "sourceName": "Random Sea Level",
+      "sourceLine": 1129,
+      "sourceType": "WILD:WATER",
+      "sourceWhen": "40:*:8",
+      "mapImplemented": true
+    },
+    {
+      "id": "demo.wilderness-encounter.snow-troll-clearing",
+      "sourceName": "Troll Clearing",
+      "sourceLine": 1146,
+      "sourceType": "WILD:SNOW",
+      "sourceWhen": "20:50:2",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.snow-swimming-hole",
+      "sourceName": "Swimming Hole",
+      "sourceLine": 1176,
+      "sourceType": "WILD:SNOW",
+      "sourceWhen": "25:*:3",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.snow-surprise-dungeon",
+      "sourceName": "Surprise Dungeon",
+      "sourceLine": 1187,
+      "sourceType": "WILD:SNOW",
+      "sourceWhen": "50:*:8",
+      "mapImplemented": true
+    },
+    {
+      "id": "demo.wilderness-encounter.snow-bear-cave",
+      "sourceName": "Bear Cave",
+      "sourceLine": 1198,
+      "sourceType": "WILD:SNOW",
+      "sourceWhen": "20:*:2",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.snow-ice-giants",
+      "sourceName": "Ice Giants",
+      "sourceLine": 1214,
+      "sourceType": "WILD:SNOW",
+      "sourceWhen": "40:*:6",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.snow-dragon-family",
+      "sourceName": "Dragon Family",
+      "sourceLine": 1250,
+      "sourceType": "WILD:SNOW",
+      "sourceWhen": "30:60:3",
+      "mapImplemented": false
+    },
+    {
+      "id": "demo.wilderness-encounter.snow-winnipeg",
+      "sourceName": "Winnipeg",
+      "sourceLine": 1266,
+      "sourceType": "WILD:SNOW",
+      "sourceWhen": "15:35:2",
+      "mapImplemented": false
+    }
+  ],
+  "adaptations": [
+    "119 independent formal depths; gameplay entry and travel are not implemented by this generator.",
+    "RD2 runtime uniformly selects a member depth on entry; ascent exits, level teleport descends one depth or exits, and surface return resets the instance.",
+    "Natural down stairs are absent; source floors.c stair_creation still permits magical down stairs below maximum depth.",
+    "Outward recall may have no ordinary destination. Unlike source recall_dungeon assignment on departure, Rewrite preserves the last ordinary destination and never records random dungeons for surface recall or reset.",
+    "Random entry stages depth RNG and generation with the existing floor transition; failed entry commits neither. RD3 binds only actual map entrances to normal stair traversal.",
+    "RD3 attempts special encounters per newly generated 66x22 chunk using a stream derived from Game wilderness_seed and absolute chunk coordinates, not per original RFB generation region. Frequencies and RNG sequences are not claimed identical to upstream.",
+    "Source terrain normalization, level/day/night/shop eligibility, integer 1000/rarity weights, eligible DEBUG precedence, rotation constraints and up to 100 placement attempts are retained. Wilderness shop eligibility uses the upstream reset-to-true default; unimplemented shop/formation outcomes do not reroll.",
+    "Cache saves retain both no-placement decisions and selected template ID/origin/transform. Base terrain and template parameters are derived from content. Bounded eviction and wilderness seed updates retain the existing refresh policy; reload and cached visits do not redraw encounters.",
+    "Actual entrance connections retain template placement and absolute chunk identity; local positions translate with scrolling. Placement excludes roads, towns, fixed locations, ambush generation and the arrival cell, and preserves GLOW/MARK on mapped cells.",
+    "30 source-ordered candidates from the five entrance terrains; only six entrance maps materialized.",
+    "Swimming Hole declares ENTRANCE but does not place it; retains selection metadata only.",
+    "Unimplemented encounter selection must not reroll or renormalize the six entrance templates.",
+    "Non-BIG maps use 96x33; BIG uses 198x66. Existing finite room/loot/population budgets are reused.",
+    "RD5 uses source random-floor feature eligibility and mutual exclusion. Water/fire vault lake variants share the existing finite lake geometry, while retaining their river exclusion. Destruction cave/earth-vault variants share bounded rubble geometry; fractal generation and embedded source vault populations are not reproduced.",
+    "Source pit/nest masks only affect monster-bearing room templates. Those full source templates are outside the supported finite room geometry; no unimplemented pit/nest feature is emitted. Inner-wall materials therefore remain source metadata. min_plev has no active entry consumer in master.",
+    "Forest earthquakes and destruction preserve water and use tree/brake/grass materials. Existing spell radius, affected-cell and actor/item resolution remain Rewrite rules; source destruction power reduction and weighted floor/wall substitutions for other wilderness dungeon types are not reproduced.",
+    "Schema, content lock and behavior validation are pending the agreed final validation phase.",
+    "Upstream terms retained by NOTICE and LICENSES/RFB-UPSTREAM-NOTICE.txt."
+  ]
+}

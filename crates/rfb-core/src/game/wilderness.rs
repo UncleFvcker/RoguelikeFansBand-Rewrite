@@ -1,11 +1,150 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::*;
+mod random_e2e;
 use rfb_content::{
     ActorHabitat, ActorMovementMode, ProceduralFloorDefinition, WILDERNESS_WORLD_CELL_HEIGHT,
-    WILDERNESS_WORLD_CELL_WIDTH, WildernessDefinition, WildernessLegendEntry,
+    WILDERNESS_WORLD_CELL_WIDTH, WildernessDefinition, WildernessEncounterDefinition,
+    WildernessEncounterTime, WildernessEntranceMapDefinition, WildernessLegendEntry,
     WildernessLocationDefinition, WildernessTerrain, WorldDefinition,
 };
+#[cfg(test)]
+use rfb_protocol::GameCommand;
+use rfb_protocol::{
+    WildernessChunkSaveDto, WildernessEncounterPlacementSaveDto, WildernessEntranceSaveDto,
+};
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct WildernessChunk {
+    terrain: Vec<String>,
+    placement: Option<WildernessEncounterPlacementSaveDto>,
+}
+
+const WILDERNESS_ENCOUNTER_RNG_SALT: u64 = 0xEC01_17E2;
+
+fn encounter_terrain(terrain: WildernessTerrain) -> WildernessTerrain {
+    match terrain {
+        WildernessTerrain::ShallowLava => WildernessTerrain::DeepLava,
+        WildernessTerrain::ShallowWater => WildernessTerrain::DeepWater,
+        WildernessTerrain::Dirt | WildernessTerrain::Desert => WildernessTerrain::Grass,
+        WildernessTerrain::Glacier | WildernessTerrain::PackIce => WildernessTerrain::Snow,
+        other => other,
+    }
+}
+
+fn encounter_is_eligible(
+    encounter: &WildernessEncounterDefinition,
+    terrain: WildernessTerrain,
+    level: u16,
+    daytime: bool,
+    shop_allowed: bool,
+) -> bool {
+    encounter.terrain == encounter_terrain(terrain)
+        && level >= encounter.min_level
+        && encounter.max_level.is_none_or(|maximum| level <= maximum)
+        && encounter.rarity > 0
+        && (!encounter.requires_shop || shop_allowed)
+        && match encounter.time {
+            Some(WildernessEncounterTime::Day) => daytime,
+            Some(WildernessEncounterTime::Night) => !daytime,
+            None => true,
+        }
+}
+
+fn choose_wilderness_encounter<'a>(
+    wilderness: &'a WildernessDefinition,
+    terrain: WildernessTerrain,
+    level: u16,
+    daytime: bool,
+    shop_allowed: bool,
+    rng: &mut RfbRng,
+) -> Option<&'a WildernessEncounterDefinition> {
+    let candidates = wilderness
+        .encounters
+        .iter()
+        .filter(|encounter| encounter_is_eligible(encounter, terrain, level, daytime, shop_allowed))
+        .collect::<Vec<_>>();
+    if let Some(encounter) = candidates.iter().find(|encounter| encounter.debug) {
+        return Some(encounter);
+    }
+    let total = candidates
+        .iter()
+        .map(|encounter| 1000 / u64::from(encounter.rarity))
+        .sum::<u64>();
+    if total == 0 {
+        return None;
+    }
+    let mut roll = rng.bounded(total);
+    for encounter in candidates {
+        let weight = 1000 / u64::from(encounter.rarity);
+        if roll < weight {
+            return Some(encounter);
+        }
+        roll -= weight;
+    }
+    unreachable!("encounter roll must select from its weighted pool")
+}
+
+fn encounter_dimensions(map: &WildernessEntranceMapDefinition, transform: u8) -> (i32, i32) {
+    let (width, height) = (map.rows[0].len() as i32, map.rows.len() as i32);
+    if transform & 1 == 0 {
+        (width, height)
+    } else {
+        (height, width)
+    }
+}
+
+fn encounter_position(
+    map: &WildernessEntranceMapDefinition,
+    transform: u8,
+    mut p: Position,
+) -> Position {
+    let (mut width, mut height) = (map.rows[0].len() as i32, map.rows.len() as i32);
+    for _ in 0..(transform & 3) {
+        p = Position {
+            x: height - 1 - p.y,
+            y: p.x,
+        };
+        std::mem::swap(&mut width, &mut height);
+    }
+    if transform & 4 != 0 {
+        p.x = width - 1 - p.x;
+    }
+    p
+}
+
+fn encounter_cells<'a>(
+    map: &'a WildernessEntranceMapDefinition,
+    placement: &'a WildernessEncounterPlacementSaveDto,
+) -> impl Iterator<Item = (Position, &'a rfb_content::WildernessEntranceLegendEntry)> {
+    map.rows.iter().enumerate().flat_map(move |(y, row)| {
+        row.bytes().enumerate().filter_map(move |(x, symbol)| {
+            if symbol == b' ' {
+                return None;
+            }
+            let cell = map
+                .legend
+                .iter()
+                .find(|cell| cell.symbol.as_bytes() == [symbol])
+                .expect("validated entrance map must retain its legend");
+            let p = encounter_position(
+                map,
+                placement.transform,
+                Position {
+                    x: x as i32,
+                    y: y as i32,
+                },
+            );
+            Some((
+                Position {
+                    x: placement.origin.x + p.x,
+                    y: placement.origin.y + p.y,
+                },
+                cell,
+            ))
+        })
+    })
+}
 
 pub(super) const WILDERNESS_FLOOR_ID: &str = "core.floor.wilderness";
 pub(super) const WORLD_MAP_ACTION_MULTIPLIER: i32 = 132;
@@ -1078,12 +1217,31 @@ impl Game {
         let old_glow = std::mem::take(&mut self.glow);
         let old_daylight_suppressed = std::mem::take(&mut self.daylight_suppressed);
         let old_explored = std::mem::take(&mut self.explored);
-        let mut terrain = self.cached_wilderness_view_terrain(next_world);
-        let mut glow = vec![false; terrain.len()];
+        let mut terrain = self.cached_wilderness_view_terrain(next_world, None, true);
+        let (mut glow, mut explored, mut connections) =
+            self.wilderness_encounter_view_state(next_world, &terrain);
+        connections.retain(|connection| {
+            translate_wilderness_position(
+                connection.position,
+                Position {
+                    x: -translation.x,
+                    y: -translation.y,
+                },
+            )
+            .is_none()
+        });
+        for mut connection in std::mem::take(&mut self.floor_connections) {
+            if let Some(position) = translate_wilderness_position(connection.position, translation)
+            {
+                connection.position = position;
+                connections.push(connection);
+            }
+        }
+        connections.sort_by(|left, right| left.id.cmp(&right.id));
+        self.floor_connections = connections;
         let mut daylight_suppressed = vec![false; terrain.len()];
         let old_vault_cells = std::mem::take(&mut self.vault_cells);
         let mut vault_cells = vec![false; terrain.len()];
-        let mut explored = vec![false; terrain.len()];
         let width = usize::from(WILDERNESS_VIEW_WIDTH);
         for y in 0..i32::from(WILDERNESS_VIEW_HEIGHT) {
             for x in 0..i32::from(WILDERNESS_VIEW_WIDTH) {
@@ -1255,7 +1413,8 @@ impl Game {
                 .get(&town.floor_id)
                 .and_then(|floor| visible.local_to_view(floor.player_position))
         });
-        let floor = self.generate_local_wilderness_floor(position, arrival.or(town_arrival));
+        let floor =
+            self.generate_local_wilderness_floor(position, arrival.or(town_arrival), ambush);
         self.activate_floor(floor, global_items);
         self.restore_riding_actor(riding_actor);
         self.load_visible_town_states()?;
@@ -1471,7 +1630,7 @@ impl Game {
             return Err(CoreError::InvalidSave("town floor state is duplicated"));
         }
         let wilderness =
-            self.generate_local_wilderness_floor(world_position, Some(player_position));
+            self.generate_local_wilderness_floor(world_position, Some(player_position), false);
         self.activate_floor(wilderness, global_items);
         self.restore_riding_actor(riding_actor);
         self.load_visible_town_states()?;
@@ -2228,7 +2387,100 @@ impl Game {
         self.entities.sort_by(|left, right| left.id.cmp(&right.id));
     }
 
-    fn cached_wilderness_view_terrain(&mut self, world_position: Position) -> Vec<String> {
+    fn roll_wilderness_encounter(
+        &self,
+        chunk: Position,
+        world_position: Position,
+        arrival: Option<Position>,
+        allow_encounters: bool,
+        rng: &mut RfbRng,
+    ) -> Option<WildernessEncounterPlacementSaveDto> {
+        let wilderness = self.wilderness();
+        let site = wilderness_chunk_world_position(chunk);
+        let entry = wilderness_legend_at(wilderness, site)?;
+        if !allow_encounters
+            || entry.terrain == WildernessTerrain::Edge
+            || entry.road
+            || wilderness_has_location(wilderness, site)
+            || self
+                .town_at_wilderness_position(world_position)
+                .is_some_and(|town| town.id != "demo.town.zul")
+        {
+            return None;
+        }
+        if rng.bounded(WILDERNESS_INTERESTING_CHANCE) != 0 {
+            return None;
+        }
+        // rooms.c resets shop_allowed before wilderness generation. Unimplemented shops
+        // still participate in this pool; selecting one does not select again.
+        let encounter = choose_wilderness_encounter(
+            wilderness,
+            entry.terrain,
+            self.wilderness_danger_level(site),
+            self.wilderness_is_daytime(),
+            true,
+            rng,
+        )?;
+        let map = encounter.entrance_map.as_ref()?;
+        let center = wilderness_view_center_chunk(world_position, self.wilderness_view_offset);
+        let chunk_origin = Position {
+            x: (chunk.x - center.x + 1) * i32::from(WILDERNESS_CHUNK_WIDTH),
+            y: (chunk.y - center.y + 1) * i32::from(WILDERNESS_CHUNK_HEIGHT),
+        };
+        let towns = self.visible_towns(world_position);
+        // Source retries placement of the selected room, never the weighted selection.
+        for _ in 0..100 {
+            let mut transform = 0;
+            if !map.no_rotate {
+                let (width, height) = encounter_dimensions(map, 0);
+                if width <= i32::from(WILDERNESS_CHUNK_HEIGHT) - 4
+                    && height <= i32::from(WILDERNESS_CHUNK_WIDTH) - 6
+                    && height * 100 / width > 70
+                    && rng.bounded(2) == 0
+                {
+                    transform |= 1;
+                }
+                if rng.bounded(2) == 0 {
+                    transform |= 2;
+                }
+                if rng.bounded(2) == 0 {
+                    transform |= 4;
+                }
+            }
+            let (width, height) = encounter_dimensions(map, transform);
+            let origin = Position {
+                x: 2 + rng.bounded((i32::from(WILDERNESS_CHUNK_WIDTH) - width - 4).max(1) as u64)
+                    as i32,
+                y: 1 + rng.bounded((i32::from(WILDERNESS_CHUNK_HEIGHT) - height - 2).max(1) as u64)
+                    as i32,
+            };
+            let left = chunk_origin.x + origin.x;
+            let top = chunk_origin.y + origin.y;
+            if arrival.is_some_and(|p| {
+                p.x >= left && p.x < left + width && p.y >= top && p.y < top + height
+            }) || towns.iter().any(|town| {
+                left < town.view_origin.x + i32::from(town.width)
+                    && left + width > town.view_origin.x
+                    && top < town.view_origin.y + i32::from(town.height)
+                    && top + height > town.view_origin.y
+            }) {
+                continue;
+            }
+            return Some(WildernessEncounterPlacementSaveDto {
+                encounter_id: encounter.id.clone(),
+                origin,
+                transform,
+            });
+        }
+        None
+    }
+
+    fn cached_wilderness_view_terrain(
+        &mut self,
+        world_position: Position,
+        arrival: Option<Position>,
+        allow_encounters: bool,
+    ) -> Vec<String> {
         let center = wilderness_view_center_chunk(world_position, self.wilderness_view_offset);
         self.wilderness_terrain_cache.retain(|position, _| {
             (position.x - center.x).abs() <= WILDERNESS_CACHE_RADIUS_CHUNKS
@@ -2244,8 +2496,35 @@ impl Game {
                 if self.wilderness_terrain_cache.contains_key(&chunk) {
                     continue;
                 }
-                let terrain = generate_wilderness_chunk(self.wilderness(), wilderness_seed, chunk);
-                self.wilderness_terrain_cache.insert(chunk, terrain);
+                let mut terrain =
+                    generate_wilderness_chunk(self.wilderness(), wilderness_seed, chunk);
+                let mut rng = RfbRng::seeded(coordinate_seed(
+                    wilderness_seed ^ WILDERNESS_ENCOUNTER_RNG_SALT,
+                    chunk,
+                ));
+                let placement = self.roll_wilderness_encounter(
+                    chunk,
+                    world_position,
+                    arrival,
+                    allow_encounters,
+                    &mut rng,
+                );
+                if let Some(placement) = &placement {
+                    let map = self
+                        .wilderness()
+                        .encounters
+                        .iter()
+                        .find(|encounter| encounter.id == placement.encounter_id)
+                        .and_then(|encounter| encounter.entrance_map.as_ref())
+                        .expect("selected entrance map must exist");
+                    for (p, cell) in encounter_cells(map, placement) {
+                        terrain
+                            [p.y as usize * usize::from(WILDERNESS_CHUNK_WIDTH) + p.x as usize] =
+                            cell.terrain_id.clone();
+                    }
+                }
+                self.wilderness_terrain_cache
+                    .insert(chunk, WildernessChunk { terrain, placement });
             }
         }
 
@@ -2267,8 +2546,9 @@ impl Game {
                     let source_start = local_y * chunk_width;
                     let destination_start =
                         (chunk_y * chunk_height + local_y) * view_width + chunk_x * chunk_width;
-                    terrain[destination_start..destination_start + chunk_width]
-                        .clone_from_slice(&source[source_start..source_start + chunk_width]);
+                    terrain[destination_start..destination_start + chunk_width].clone_from_slice(
+                        &source.terrain[source_start..source_start + chunk_width],
+                    );
                 }
             }
         }
@@ -2277,10 +2557,343 @@ impl Game {
         terrain
     }
 
+    fn wilderness_encounter_view_state(
+        &self,
+        world_position: Position,
+        terrain: &[String],
+    ) -> (Vec<bool>, Vec<bool>, Vec<FloorConnectionState>) {
+        let mut glow = vec![false; terrain.len()];
+        let mut explored = vec![false; terrain.len()];
+        let mut connections = Vec::new();
+        let center = wilderness_view_center_chunk(world_position, self.wilderness_view_offset);
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must exist");
+        for (chunk, cached) in &self.wilderness_terrain_cache {
+            let Some(placement) = &cached.placement else {
+                continue;
+            };
+            let map = self
+                .wilderness()
+                .encounters
+                .iter()
+                .find(|encounter| encounter.id == placement.encounter_id)
+                .and_then(|encounter| encounter.entrance_map.as_ref())
+                .expect("cached entrance map must exist");
+            let root = world
+                .dungeons
+                .iter()
+                .find(|dungeon| dungeon.id == map.dungeon_id)
+                .and_then(|dungeon| {
+                    world
+                        .procedural_floors
+                        .iter()
+                        .find(|floor| floor.id == dungeon.root_floor_id)
+                })
+                .expect("entrance dungeon root must exist");
+            for (p, cell) in encounter_cells(map, placement) {
+                let p = Position {
+                    x: (chunk.x - center.x + 1) * i32::from(WILDERNESS_CHUNK_WIDTH) + p.x,
+                    y: (chunk.y - center.y + 1) * i32::from(WILDERNESS_CHUNK_HEIGHT) + p.y,
+                };
+                if translate_wilderness_position(p, Position::default()).is_none() {
+                    continue;
+                }
+                let index = p.y as usize * usize::from(WILDERNESS_VIEW_WIDTH) + p.x as usize;
+                if terrain[index] != cell.terrain_id {
+                    continue;
+                }
+                glow[index] = cell.glow;
+                explored[index] = cell.mark;
+                if root.entry_terrain_id.as_ref() == Some(&cell.terrain_id) {
+                    connections.push(FloorConnectionState {
+                        id: format!("core.wilderness-entrance.{}.{}", chunk.x, chunk.y),
+                        position: p,
+                        target_floor_id: Some(root.id.clone()),
+                        target_connection_id: None,
+                        wilderness_entrance: Some(WildernessEntranceSaveDto {
+                            chunk: *chunk,
+                            placement: placement.clone(),
+                        }),
+                    });
+                }
+            }
+        }
+        connections.sort_by(|left, right| left.id.cmp(&right.id));
+        (glow, explored, connections)
+    }
+
+    pub(super) fn wilderness_chunks_to_save(&self) -> Vec<WildernessChunkSaveDto> {
+        self.wilderness_terrain_cache
+            .iter()
+            .map(|(chunk, cached)| WildernessChunkSaveDto {
+                chunk: *chunk,
+                placement: cached.placement.clone(),
+            })
+            .collect()
+    }
+
+    fn wilderness_placement_is_valid(
+        &self,
+        chunk: Position,
+        placement: &WildernessEncounterPlacementSaveDto,
+    ) -> bool {
+        let Some(wilderness) = self
+            .content
+            .world(&self.world_id)
+            .and_then(|world| world.wilderness.as_ref())
+        else {
+            return false;
+        };
+        if !(-1..i32::from(wilderness.width) * 3 - 1).contains(&chunk.x)
+            || !(-1..i32::from(wilderness.height) * 3 - 1).contains(&chunk.y)
+        {
+            return false;
+        }
+        let site = wilderness_chunk_world_position(chunk);
+        let Some(entry) = wilderness_legend_at(wilderness, site) else {
+            return false;
+        };
+        let Some(encounter) = wilderness
+            .encounters
+            .iter()
+            .find(|encounter| encounter.id == placement.encounter_id)
+        else {
+            return false;
+        };
+        let Some(map) = encounter.entrance_map.as_ref() else {
+            return false;
+        };
+        // Day/night was evaluated at generation, not at the later save/load time.
+        if entry.road
+            || wilderness_has_location(wilderness, site)
+            || placement.transform > 7
+            || !encounter_is_eligible(
+                encounter,
+                entry.terrain,
+                self.wilderness_danger_level(site),
+                encounter.time != Some(WildernessEncounterTime::Night),
+                true,
+            )
+            || (map.no_rotate && placement.transform != 0)
+        {
+            return false;
+        }
+        let (width, height) = encounter_dimensions(map, placement.transform);
+        let (original_width, original_height) = encounter_dimensions(map, 0);
+        if placement.transform & 1 != 0
+            && (original_width > i32::from(WILDERNESS_CHUNK_HEIGHT) - 4
+                || original_height > i32::from(WILDERNESS_CHUNK_WIDTH) - 6
+                || original_height * 100 / original_width <= 70)
+        {
+            return false;
+        }
+        let origin = placement.origin;
+        if !(2..i32::from(WILDERNESS_CHUNK_WIDTH)).contains(&origin.x)
+            || !(1..i32::from(WILDERNESS_CHUNK_HEIGHT)).contains(&origin.y)
+            || origin.x + width > i32::from(WILDERNESS_CHUNK_WIDTH) - 2
+            || origin.y + height > i32::from(WILDERNESS_CHUNK_HEIGHT) - 1
+        {
+            return false;
+        }
+        let center = wilderness_view_center_chunk(site, self.wilderness_view_offset);
+        let left = (chunk.x - center.x + 1) * i32::from(WILDERNESS_CHUNK_WIDTH) + origin.x;
+        let top = (chunk.y - center.y + 1) * i32::from(WILDERNESS_CHUNK_HEIGHT) + origin.y;
+        !self.visible_towns(site).iter().any(|town| {
+            left < town.view_origin.x + i32::from(town.width)
+                && left + width > town.view_origin.x
+                && top < town.view_origin.y + i32::from(town.height)
+                && top + height > town.view_origin.y
+        })
+    }
+
+    pub(super) fn restore_wilderness_chunks(
+        &mut self,
+        chunks: Vec<WildernessChunkSaveDto>,
+    ) -> Result<(), CoreError> {
+        if chunks.is_empty() {
+            return Ok(());
+        }
+        if !(-1..=1).contains(&self.wilderness_view_offset.x)
+            || !(-1..=1).contains(&self.wilderness_view_offset.y)
+        {
+            return Err(CoreError::InvalidSave("wilderness view offset is invalid"));
+        }
+        let Some(position) = self.wilderness_position.filter(|_| {
+            self.content
+                .world(&self.world_id)
+                .is_some_and(|world| world.wilderness.is_some())
+        }) else {
+            return Err(CoreError::InvalidSave(
+                "wilderness cache has no world position",
+            ));
+        };
+        let center = wilderness_view_center_chunk(position, self.wilderness_view_offset);
+        if chunks.len() > 25 {
+            return Err(CoreError::InvalidSave("wilderness cache is too large"));
+        }
+        for saved in chunks {
+            if !(-1..i32::from(self.wilderness().width) * 3 - 1).contains(&saved.chunk.x)
+                || !(-1..i32::from(self.wilderness().height) * 3 - 1).contains(&saved.chunk.y)
+                || saved.chunk.x.abs_diff(center.x) > WILDERNESS_CACHE_RADIUS_CHUNKS as u32
+                || saved.chunk.y.abs_diff(center.y) > WILDERNESS_CACHE_RADIUS_CHUNKS as u32
+                || self.wilderness_terrain_cache.contains_key(&saved.chunk)
+                || saved.placement.as_ref().is_some_and(|placement| {
+                    !self.wilderness_placement_is_valid(saved.chunk, placement)
+                })
+            {
+                return Err(CoreError::InvalidSave("wilderness cache entry is invalid"));
+            }
+            let mut terrain =
+                generate_wilderness_chunk(self.wilderness(), self.wilderness_seed, saved.chunk);
+            if let Some(placement) = &saved.placement {
+                let map = self
+                    .wilderness()
+                    .encounters
+                    .iter()
+                    .find(|encounter| encounter.id == placement.encounter_id)
+                    .and_then(|encounter| encounter.entrance_map.as_ref())
+                    .expect("validated encounter map must exist");
+                for (p, cell) in encounter_cells(map, placement) {
+                    terrain[p.y as usize * usize::from(WILDERNESS_CHUNK_WIDTH) + p.x as usize] =
+                        cell.terrain_id.clone();
+                }
+            }
+            self.wilderness_terrain_cache.insert(
+                saved.chunk,
+                WildernessChunk {
+                    terrain,
+                    placement: saved.placement,
+                },
+            );
+        }
+        Ok(())
+    }
+
+    pub(super) fn wilderness_connections_are_valid(
+        &self,
+        terrain: &[String],
+        connections: &[FloorConnectionState],
+    ) -> bool {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must exist");
+        if terrain.len() != usize::from(WILDERNESS_VIEW_WIDTH) * usize::from(WILDERNESS_VIEW_HEIGHT)
+        {
+            return false;
+        }
+        let mut occupied = BTreeSet::new();
+        if self.map_scale == MapScaleDto::Local {
+            let Some(position) = self.wilderness_position else {
+                return false;
+            };
+            let center = wilderness_view_center_chunk(position, self.wilderness_view_offset);
+            if (-1..=1).any(|dy| {
+                (-1..=1).any(|dx| {
+                    !self.wilderness_terrain_cache.contains_key(&Position {
+                        x: center.x + dx,
+                        y: center.y + dy,
+                    })
+                })
+            }) {
+                return false;
+            }
+        }
+        for connection in connections {
+            let Some(binding) = &connection.wilderness_entrance else {
+                return false;
+            };
+            if !self.wilderness_placement_is_valid(binding.chunk, &binding.placement)
+                || connection.id
+                    != format!(
+                        "core.wilderness-entrance.{}.{}",
+                        binding.chunk.x, binding.chunk.y
+                    )
+                || connection.target_connection_id.is_some()
+                || self
+                    .wilderness_terrain_cache
+                    .get(&binding.chunk)
+                    .is_some_and(|cached| cached.placement.as_ref() != Some(&binding.placement))
+                || !occupied.insert(connection.position)
+            {
+                return false;
+            }
+            let map = self
+                .wilderness()
+                .encounters
+                .iter()
+                .find(|encounter| encounter.id == binding.placement.encounter_id)
+                .and_then(|encounter| encounter.entrance_map.as_ref())
+                .expect("validated entrance map must exist");
+            let root = world
+                .dungeons
+                .iter()
+                .find(|dungeon| dungeon.id == map.dungeon_id && dungeon.random)
+                .and_then(|dungeon| {
+                    world
+                        .procedural_floors
+                        .iter()
+                        .find(|floor| floor.id == dungeon.root_floor_id)
+                })
+                .expect("validated entrance dungeon must exist");
+            if connection.target_floor_id.as_ref() != Some(&root.id)
+                || translate_wilderness_position(connection.position, Position::default()).is_none()
+                || root.entry_terrain_id.as_ref()
+                    != terrain.get(
+                        connection.position.y as usize * usize::from(WILDERNESS_VIEW_WIDTH)
+                            + connection.position.x as usize,
+                    )
+            {
+                return false;
+            }
+            if self.map_scale == MapScaleDto::Local {
+                let Some(world_position) = self.wilderness_position else {
+                    return false;
+                };
+                let center =
+                    wilderness_view_center_chunk(world_position, self.wilderness_view_offset);
+                let expected = encounter_cells(map, &binding.placement)
+                    .find(|(_, cell)| root.entry_terrain_id.as_ref() == Some(&cell.terrain_id))
+                    .map(|(p, _)| Position {
+                        x: (binding.chunk.x - center.x + 1) * i32::from(WILDERNESS_CHUNK_WIDTH)
+                            + p.x,
+                        y: (binding.chunk.y - center.y + 1) * i32::from(WILDERNESS_CHUNK_HEIGHT)
+                            + p.y,
+                    });
+                if expected != Some(connection.position) {
+                    return false;
+                }
+            }
+        }
+        // A naked terrain ID is not an entrance binding.
+        let entrance_terrain = world
+            .dungeons
+            .iter()
+            .filter(|dungeon| dungeon.random)
+            .filter_map(|dungeon| {
+                world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| floor.id == dungeon.root_floor_id)
+            })
+            .filter_map(|floor| floor.entry_terrain_id.as_deref())
+            .collect::<BTreeSet<_>>();
+        terrain.iter().enumerate().all(|(index, id)| {
+            !entrance_terrain.contains(id.as_str())
+                || occupied.contains(&Position {
+                    x: (index % usize::from(WILDERNESS_VIEW_WIDTH)) as i32,
+                    y: (index / usize::from(WILDERNESS_VIEW_WIDTH)) as i32,
+                })
+        })
+    }
+
     fn generate_local_wilderness_floor(
         &mut self,
         world_position: Position,
         arrival: Option<Position>,
+        ambush: bool,
     ) -> FloorState {
         let width = WILDERNESS_VIEW_WIDTH;
         let height = WILDERNESS_VIEW_HEIGHT;
@@ -2291,7 +2904,10 @@ impl Game {
             x: i32::from(width) / 2,
             y: i32::from(height) / 2,
         });
-        let mut terrain = self.cached_wilderness_view_terrain(world_position);
+        let mut terrain =
+            self.cached_wilderness_view_terrain(world_position, Some(player_position), !ambush);
+        let (glow, explored, connections) =
+            self.wilderness_encounter_view_state(world_position, &terrain);
         let player_index = usize::try_from(player_position.y).expect("arrival y must fit usize")
             * usize::from(width)
             + usize::try_from(player_position.x).expect("arrival x must fit usize");
@@ -2328,17 +2944,17 @@ impl Game {
             width,
             height,
             terrain,
-            glow: vec![false; usize::from(width) * usize::from(height)],
+            glow,
             daylight_suppressed: vec![false; usize::from(width) * usize::from(height)],
             vault_cells: vec![false; usize::from(width) * usize::from(height)],
             player_position,
             entities: Vec::new(),
             items: Vec::new(),
             gold_piles: Vec::new(),
-            explored: vec![false; usize::from(width) * usize::from(height)],
+            explored,
             revealed_terrain: BTreeSet::new(),
             detection_coverage: crate::state::DetectionCoverage::default(),
-            connections: Vec::new(),
+            connections,
             regions: Vec::new(),
         }
     }
@@ -2567,8 +3183,506 @@ mod w3_tests {
 }
 
 #[cfg(test)]
+pub(super) fn prepare_random_entry_for_test(game: &mut Game, encounter_id: &str) {
+    prepare_random_entries_for_test(game, encounter_id, false);
+}
+
+#[cfg(test)]
+pub(super) fn prepare_random_entries_for_test(game: &mut Game, encounter_id: &str, paired: bool) {
+    use crate::game::tests::support::{
+        choose_human_talent_if_pending, clear_monsters, dispatch_next,
+    };
+    choose_human_talent_if_pending(game);
+    dispatch_next(
+        game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    let encounter = game
+        .wilderness()
+        .encounters
+        .iter()
+        .find(|entry| entry.id == encounter_id)
+        .unwrap();
+    let position = (0..game.wilderness().height)
+        .flat_map(|y| {
+            (0..game.wilderness().width).map(move |x| Position {
+                x: i32::from(x),
+                y: i32::from(y),
+            })
+        })
+        .find(|position| {
+            let entry = wilderness_legend_at(game.wilderness(), *position).unwrap();
+            !entry.road
+                && !wilderness_has_location(game.wilderness(), *position)
+                && encounter_is_eligible(
+                    encounter,
+                    entry.terrain,
+                    game.wilderness_danger_level(*position),
+                    game.wilderness_is_daytime(),
+                    true,
+                )
+                && game.visible_towns(*position).is_empty()
+                && game.player_can_enter_world_cell(neighbor_position(*position, 1, 0))
+        })
+        .expect("formal wilderness must contain an eligible encounter site");
+    game.wilderness_position = Some(position);
+    game.wilderness_view_offset = Position::default();
+    let chunk = wilderness_view_center_chunk(position, Position::default());
+    let arrival = Position {
+        x: i32::from(WILDERNESS_VIEW_WIDTH / 2),
+        y: i32::from(WILDERNESS_VIEW_HEIGHT / 2),
+    };
+    // Search only the deterministic draw/placement calculation, then generate once.
+    game.wilderness_seed = (0..1_000_000)
+        .find(|seed| {
+            (0..=i32::from(paired)).all(|dx| {
+                let candidate = neighbor_position(chunk, dx, 0);
+                let mut rng = RfbRng::seeded(coordinate_seed(
+                    *seed ^ WILDERNESS_ENCOUNTER_RNG_SALT,
+                    candidate,
+                ));
+                game.roll_wilderness_encounter(candidate, position, Some(arrival), true, &mut rng)
+                    .is_some_and(|placement| placement.encounter_id == encounter_id)
+            })
+        })
+        .expect("bounded source draw search must find the requested encounter");
+    game.wilderness_terrain_cache.clear();
+    game.activate_wilderness_position(None, false).unwrap();
+    game.map_scale = MapScaleDto::Local;
+    clear_monsters(game);
+    game.player.position = game
+        .floor_connections
+        .iter()
+        .find(|connection| {
+            connection
+                .wilderness_entrance
+                .as_ref()
+                .is_some_and(|binding| {
+                    binding.chunk == chunk && binding.placement.encounter_id == encounter_id
+                })
+        })
+        .unwrap()
+        .position;
+    game.reveal_current_visibility();
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
+
+    fn rng_for_draw(bound: u64, value: u64) -> RfbRng {
+        RfbRng::seeded(
+            (0..100_000)
+                .find(|seed| RfbRng::seeded(*seed).bounded(bound) == value)
+                .unwrap(),
+        )
+    }
+
+    #[test]
+    fn wilderness_encounter_weights_keep_the_full_source_pool_and_boundaries() {
+        let game = Game::new_with_build(42, "demo.build.warrior").unwrap();
+        let pool = game.wilderness();
+        let eligible = pool
+            .encounters
+            .iter()
+            .filter(|entry| encounter_is_eligible(entry, WildernessTerrain::Trees, 60, true, true))
+            .collect::<Vec<_>>();
+        assert!(eligible.iter().any(|entry| entry.entrance_map.is_none()));
+        assert!(eligible.iter().any(|entry| entry.entrance_map.is_some()));
+        let total = eligible
+            .iter()
+            .map(|entry| 1000 / u64::from(entry.rarity))
+            .sum::<u64>();
+        let mut start = 0;
+        for entry in eligible {
+            let weight = 1000 / u64::from(entry.rarity);
+            for boundary in [start, start + weight - 1] {
+                let mut rng = rng_for_draw(total, boundary);
+                let mut expected = rng.clone();
+                expected.bounded(total);
+                assert_eq!(
+                    choose_wilderness_encounter(
+                        pool,
+                        WildernessTerrain::Trees,
+                        60,
+                        true,
+                        true,
+                        &mut rng
+                    )
+                    .unwrap()
+                    .id,
+                    entry.id
+                );
+                assert_eq!(rng, expected);
+            }
+            start += weight;
+        }
+    }
+
+    #[test]
+    fn wilderness_encounter_eligibility_applies_terrain_level_time_and_shop_rules() {
+        let game = Game::new_with_build(42, "demo.build.warrior").unwrap();
+        let mut entry = game
+            .wilderness()
+            .encounters
+            .iter()
+            .find(|entry| entry.entrance_map.is_some())
+            .unwrap()
+            .clone();
+        entry.terrain = WildernessTerrain::DeepWater;
+        entry.min_level = 40;
+        entry.max_level = Some(60);
+        assert!(encounter_is_eligible(
+            &entry,
+            WildernessTerrain::ShallowWater,
+            40,
+            true,
+            true
+        ));
+        assert!(encounter_is_eligible(
+            &entry,
+            WildernessTerrain::DeepWater,
+            60,
+            true,
+            true
+        ));
+        assert!(!encounter_is_eligible(
+            &entry,
+            WildernessTerrain::DeepWater,
+            39,
+            true,
+            true
+        ));
+        assert!(!encounter_is_eligible(
+            &entry,
+            WildernessTerrain::DeepWater,
+            61,
+            true,
+            true
+        ));
+        assert!(!encounter_is_eligible(
+            &entry,
+            WildernessTerrain::Trees,
+            50,
+            true,
+            true
+        ));
+        assert_eq!(
+            encounter_terrain(WildernessTerrain::ShallowLava),
+            WildernessTerrain::DeepLava
+        );
+        assert_eq!(
+            encounter_terrain(WildernessTerrain::Glacier),
+            WildernessTerrain::Snow
+        );
+        assert_eq!(
+            encounter_terrain(WildernessTerrain::PackIce),
+            WildernessTerrain::Snow
+        );
+        assert_eq!(
+            encounter_terrain(WildernessTerrain::Desert),
+            WildernessTerrain::Grass
+        );
+        entry.time = Some(WildernessEncounterTime::Night);
+        entry.requires_shop = true;
+        assert!(!encounter_is_eligible(
+            &entry,
+            WildernessTerrain::DeepWater,
+            50,
+            true,
+            true
+        ));
+        assert!(!encounter_is_eligible(
+            &entry,
+            WildernessTerrain::DeepWater,
+            50,
+            false,
+            false
+        ));
+        assert!(encounter_is_eligible(
+            &entry,
+            WildernessTerrain::DeepWater,
+            50,
+            false,
+            true
+        ));
+        entry.rarity = 0;
+        assert!(!encounter_is_eligible(
+            &entry,
+            WildernessTerrain::DeepWater,
+            50,
+            false,
+            true
+        ));
+    }
+
+    #[test]
+    fn unimplemented_wilderness_selection_does_not_reroll_and_excluded_sites_do_not_draw() {
+        let mut game = Game::new_with_build(42, "demo.build.warrior").unwrap();
+        prepare_random_entry_for_test(
+            &mut game,
+            "demo.wilderness-encounter.trees-random-forest-level",
+        );
+        let site = game.wilderness_position.unwrap();
+        let chunk = wilderness_view_center_chunk(site, Position::default());
+        let level = game.wilderness_danger_level(site);
+        let seed = (0..100_000)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                rng.bounded(10) == 0
+                    && choose_wilderness_encounter(
+                        game.wilderness(),
+                        WildernessTerrain::Trees,
+                        level,
+                        game.wilderness_is_daytime(),
+                        true,
+                        &mut rng,
+                    )
+                    .is_some_and(|entry| entry.entrance_map.is_none())
+            })
+            .unwrap();
+        let mut rng = RfbRng::seeded(seed);
+        let mut expected = rng.clone();
+        expected.bounded(10);
+        choose_wilderness_encounter(
+            game.wilderness(),
+            WildernessTerrain::Trees,
+            level,
+            game.wilderness_is_daytime(),
+            true,
+            &mut expected,
+        );
+        assert!(
+            game.roll_wilderness_encounter(chunk, site, None, true, &mut rng)
+                .is_none()
+        );
+        assert_eq!(rng, expected);
+        let before = rng.clone();
+        assert!(
+            game.roll_wilderness_encounter(chunk, site, None, false, &mut rng)
+                .is_none()
+        );
+        let fixed = position_from_content(game.wilderness().start_position);
+        let road = (0..game.wilderness().height)
+            .flat_map(|y| {
+                (0..game.wilderness().width).map(move |x| Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                })
+            })
+            .find(|p| {
+                wilderness_legend_at(game.wilderness(), *p).unwrap().road
+                    && !wilderness_has_location(game.wilderness(), *p)
+            })
+            .unwrap();
+        for excluded in [fixed, Position { x: 0, y: 0 }, road] {
+            let chunk = wilderness_view_center_chunk(excluded, Position::default());
+            assert!(
+                game.roll_wilderness_encounter(chunk, excluded, None, true, &mut rng)
+                    .is_none()
+            );
+        }
+        assert_eq!(rng, before);
+    }
+
+    #[test]
+    fn six_wilderness_entrance_maps_place_bound_stairs_glow_and_mark() {
+        let baseline = Game::new_with_build(42, "demo.build.warrior").unwrap();
+        let ids = baseline
+            .wilderness()
+            .encounters
+            .iter()
+            .filter(|entry| entry.entrance_map.is_some())
+            .map(|entry| entry.id.clone())
+            .collect::<Vec<_>>();
+        assert_eq!(ids.len(), 6);
+        for id in ids {
+            let mut game = baseline.clone();
+            prepare_random_entry_for_test(&mut game, &id);
+            let connection = game
+                .floor_connections
+                .iter()
+                .find(|connection| connection.position == game.player.position)
+                .unwrap();
+            let binding = connection.wilderness_entrance.as_ref().unwrap();
+            assert_eq!(binding.placement.encounter_id, id);
+            let map = game
+                .wilderness()
+                .encounters
+                .iter()
+                .find(|entry| entry.id == id)
+                .unwrap()
+                .entrance_map
+                .as_ref()
+                .unwrap();
+            let center = wilderness_view_center_chunk(
+                game.wilderness_position.unwrap(),
+                game.wilderness_view_offset,
+            );
+            for (p, cell) in encounter_cells(map, &binding.placement) {
+                let p = Position {
+                    x: (binding.chunk.x - center.x + 1) * i32::from(WILDERNESS_CHUNK_WIDTH) + p.x,
+                    y: (binding.chunk.y - center.y + 1) * i32::from(WILDERNESS_CHUNK_HEIGHT) + p.y,
+                };
+                let index = game.index(p).unwrap();
+                assert_eq!(game.terrain[index], cell.terrain_id);
+                assert_eq!(game.glow[index], cell.glow);
+                assert!(!cell.mark || game.explored[index]);
+            }
+            let restored =
+                Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+            assert_eq!(restored.floor_connections, game.floor_connections);
+            assert_eq!(restored.state_hash(), game.state_hash());
+            let expected_dungeon = map.dungeon_id.clone();
+            crate::game::tests::support::dispatch_next(&mut game, GameCommand::TraverseStairs);
+            let world = game.content.world(&game.world_id).unwrap();
+            let entered = world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == game.current_floor_id)
+                .unwrap();
+            assert_eq!(entered.dungeon_id.as_ref(), Some(&expected_dungeon));
+            assert!(game.current_dungeon_instance_id.is_some());
+        }
+    }
+
+    fn scroll_for_encounter_test(game: &mut Game, right: bool) {
+        let x = if right {
+            i32::from(WILDERNESS_VIEW_WIDTH - WILDERNESS_CHUNK_WIDTH)
+        } else {
+            i32::from(WILDERNESS_CHUNK_WIDTH) - 1
+        };
+        let target = Position {
+            x,
+            y: i32::from(WILDERNESS_VIEW_HEIGHT / 2),
+        };
+        game.player.position = Position {
+            x: if right { x - 1 } else { x + 1 },
+            y: target.y,
+        };
+        let WildernessPlayerEntry::Local { target, .. } = game
+            .scroll_wilderness_for_player_entry(target, &mut Vec::new())
+            .unwrap()
+        else {
+            panic!("legal scroll");
+        };
+        game.player.position = target;
+        game.reveal_current_visibility();
+    }
+
+    #[test]
+    fn wilderness_entrance_scroll_cache_and_reload_preserve_the_same_binding() {
+        use crate::game::tests::support::give_inventory_item;
+        let mut game = Game::new_with_build(42, "demo.build.warrior").unwrap();
+        prepare_random_entry_for_test(
+            &mut game,
+            "demo.wilderness-encounter.trees-random-forest-level",
+        );
+        let entrance = game
+            .floor_connections
+            .iter()
+            .find(|connection| connection.position == game.player.position)
+            .unwrap()
+            .clone();
+        give_inventory_item(&mut game, "test.random.scroll-item", "demo.item.dagger");
+        game.drop_inventory_quantity("test.random.scroll-item", 1)
+            .unwrap()
+            .unwrap();
+        let item = game
+            .items
+            .iter()
+            .find(|item| item.location == ItemLocation::Ground(entrance.position))
+            .unwrap()
+            .clone();
+        scroll_for_encounter_test(&mut game, true);
+        let shifted = game
+            .floor_connections
+            .iter()
+            .find(|connection| connection.id == entrance.id)
+            .unwrap();
+        assert_eq!(
+            shifted.position.x,
+            entrance.position.x - i32::from(WILDERNESS_CHUNK_WIDTH)
+        );
+        assert_eq!(shifted.wilderness_entrance, entrance.wilderness_entrance);
+        let mut shifted_item = item.clone();
+        shifted_item.location = ItemLocation::Ground(shifted.position);
+        assert_eq!(
+            game.items.iter().find(|candidate| candidate.id == item.id),
+            Some(&shifted_item)
+        );
+        game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        assert_eq!(
+            game.items.iter().find(|candidate| candidate.id == item.id),
+            Some(&shifted_item)
+        );
+        scroll_for_encounter_test(&mut game, true);
+        assert!(
+            game.floor_connections
+                .iter()
+                .all(|connection| connection.id != entrance.id)
+        );
+        // Ordinary wilderness ground items follow the existing off-view crop policy.
+        assert!(game.items.iter().all(|candidate| candidate.id != item.id));
+        game.world_tick += WILDERNESS_DAY_TICKS / 2;
+        let mut restored =
+            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        for _ in 0..2 {
+            scroll_for_encounter_test(&mut game, false);
+            scroll_for_encounter_test(&mut restored, false);
+        }
+        assert_eq!(
+            game.floor_connections
+                .iter()
+                .find(|connection| connection.id == entrance.id),
+            Some(&entrance)
+        );
+        assert_eq!(game.state_hash(), restored.state_hash());
+        game.player.position = entrance.position;
+        crate::game::tests::support::dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert!(
+            game.current_floor_id
+                .starts_with("demo.floor.random-forest-depth-")
+        );
+    }
+
+    #[test]
+    fn wilderness_entrance_save_and_use_reject_unbound_or_conflicting_state() {
+        let mut game = Game::new_with_build(42, "demo.build.warrior").unwrap();
+        prepare_random_entry_for_test(
+            &mut game,
+            "demo.wilderness-encounter.trees-random-forest-level",
+        );
+        let mut naked = game.clone();
+        naked.floor_connections.clear();
+        let before = naked.to_save();
+        assert!(naked.traverse_stairs(false).unwrap().is_none());
+        assert_eq!(naked.to_save(), before);
+        assert!(Game::from_save_with_content(before, game.content.clone()).is_err());
+        let mut invalid = game.to_save();
+        invalid.wilderness_chunks.clear();
+        assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+        let mut invalid = game.to_save();
+        invalid
+            .wilderness_chunks
+            .push(invalid.wilderness_chunks[0].clone());
+        assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+        let mut invalid = game.to_save();
+        invalid.floor_connections[0]
+            .wilderness_entrance
+            .as_mut()
+            .unwrap()
+            .placement
+            .transform = 8;
+        assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+        let mut invalid = game.to_save();
+        invalid.floor_connections[0].target_floor_id =
+            Some("demo.floor.warrens-depth-1".to_owned());
+        assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+    }
 
     #[test]
     fn angwil_forest_inherits_seeded_chunks_and_survives_scroll_and_save() {
@@ -2621,7 +3735,7 @@ mod tests {
                         x: i32::from(x),
                         y: i32::from(y)
                     }),
-                    game.wilderness_terrain_cache[&chunk][index]
+                    game.wilderness_terrain_cache[&chunk].terrain[index]
                 );
                 inherited += 1;
             }
@@ -2767,10 +3881,10 @@ mod tests {
         let position = game
             .wilderness_position
             .expect("Warrens journey should define a wilderness start");
-        let initial = game.cached_wilderness_view_terrain(position);
+        let initial = game.cached_wilderness_view_terrain(position, None, true);
 
         game.wilderness_view_offset = Position { x: 1, y: 0 };
-        let shifted = game.cached_wilderness_view_terrain(position);
+        let shifted = game.cached_wilderness_view_terrain(position, None, true);
 
         let width = usize::from(WILDERNESS_VIEW_WIDTH);
         let overlap_width = width - usize::from(WILDERNESS_CHUNK_WIDTH);
@@ -2789,7 +3903,7 @@ mod tests {
         let position = game
             .wilderness_position
             .expect("Warrens journey should define a wilderness start");
-        let terrain = game.cached_wilderness_view_terrain(position);
+        let terrain = game.cached_wilderness_view_terrain(position, None, true);
         let view_index = 23 * usize::from(WILDERNESS_VIEW_WIDTH) + 96;
         assert_eq!(terrain[view_index], "demo.terrain.permanent-wall");
 
@@ -2800,7 +3914,7 @@ mod tests {
             .get(&map_chunk)
             .expect("visible base chunk should remain cached");
         let chunk_index = usize::from(WILDERNESS_CHUNK_WIDTH) + 30;
-        assert_ne!(cached[chunk_index], "demo.terrain.permanent-wall");
+        assert_ne!(cached.terrain[chunk_index], "demo.terrain.permanent-wall");
     }
 
     #[test]
@@ -2808,9 +3922,9 @@ mod tests {
         let mut game =
             Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
         let anambar = Position { x: 26, y: 39 };
-        let initial = game.cached_wilderness_view_terrain(anambar);
+        let initial = game.cached_wilderness_view_terrain(anambar, None, true);
         game.advance_wilderness_generation();
-        let evolved = game.cached_wilderness_view_terrain(anambar);
+        let evolved = game.cached_wilderness_view_terrain(anambar, None, true);
 
         let width = usize::from(WILDERNESS_VIEW_WIDTH);
         let fixed = game
@@ -2879,9 +3993,9 @@ mod tests {
 
         for (before_world, before_offset, after_offset, translation) in approaches {
             game.wilderness_view_offset = before_offset;
-            let before = game.cached_wilderness_view_terrain(before_world);
+            let before = game.cached_wilderness_view_terrain(before_world, None, true);
             game.wilderness_view_offset = after_offset;
-            let after = game.cached_wilderness_view_terrain(anambar);
+            let after = game.cached_wilderness_view_terrain(anambar, None, true);
             assert!(
                 after
                     .iter()
@@ -2932,7 +4046,7 @@ mod tests {
                     let chunk_index = usize::from(y % WILDERNESS_CHUNK_HEIGHT)
                         * usize::from(WILDERNESS_CHUNK_WIDTH)
                         + usize::from(x % WILDERNESS_CHUNK_WIDTH);
-                    let expected = &game.wilderness_terrain_cache[&chunk][chunk_index];
+                    let expected = &game.wilderness_terrain_cache[&chunk].terrain[chunk_index];
                     assert_eq!(
                         &initial[usize::from(y) * usize::from(world.width) + usize::from(x)],
                         expected
@@ -3226,7 +4340,7 @@ mod tests {
         game.store_visible_town_states();
         game.wilderness_position = Some(Position { x: 26, y: 39 });
         game.wilderness_view_offset = Position { x: -1, y: 0 };
-        let terrain = game.cached_wilderness_view_terrain(Position { x: 26, y: 39 });
+        let terrain = game.cached_wilderness_view_terrain(Position { x: 26, y: 39 }, None, true);
         game.terrain = terrain;
         game.glow.fill(false);
         game.explored.fill(false);
@@ -3251,12 +4365,15 @@ mod tests {
             .wilderness_position
             .expect("Warrens journey should define a wilderness start");
         let state_hash = game.state_hash();
-        let initial = game.cached_wilderness_view_terrain(position);
+        let initial = game.cached_wilderness_view_terrain(position, None, true);
         assert_eq!(game.wilderness_terrain_cache.len(), 9);
         assert_eq!(game.state_hash(), state_hash);
 
         game.wilderness_terrain_cache.clear();
-        assert_eq!(game.cached_wilderness_view_terrain(position), initial);
+        assert_eq!(
+            game.cached_wilderness_view_terrain(position, None, true),
+            initial
+        );
         assert_eq!(game.state_hash(), state_hash);
 
         let old_center = wilderness_view_center_chunk(position, Position::default());
@@ -3264,13 +4381,13 @@ mod tests {
             x: position.x + 2,
             y: position.y,
         };
-        game.cached_wilderness_view_terrain(far_position);
+        game.cached_wilderness_view_terrain(far_position, None, true);
         assert!(game.wilderness_terrain_cache.len() <= 25);
         assert!(!game.wilderness_terrain_cache.contains_key(&old_center));
 
         game.advance_wilderness_generation();
         assert!(game.wilderness_terrain_cache.is_empty());
-        let evolved = game.cached_wilderness_view_terrain(position);
+        let evolved = game.cached_wilderness_view_terrain(position, None, true);
         assert_ne!(evolved, initial);
     }
 
@@ -3316,7 +4433,7 @@ mod tests {
             .expect("authoritative map should contain an eligible deterministic site");
         game.wilderness_position = Some(site);
 
-        let floor = game.generate_local_wilderness_floor(site, None);
+        let floor = game.generate_local_wilderness_floor(site, None, false);
 
         assert!(
             floor

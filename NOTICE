@@ -8,6 +8,15 @@ Materials adapted from RoguelikeFansBand, FrogComposband and Angband retain thei
 
 Third-party notices will be appended here as dependencies and assets are introduced.
 
+The four random wilderness dungeon profiles (d_info.txt indices 26-29),
+their Chinese names/descriptions, and the wilderness entrance templates and
+selection metadata adapt RoguelikeFansBand master commit
+a0d92b6378d148c5262cc236b8fa6ed2ca06a54c. Their source records and pending rule
+consumers are recorded in packs/rfb-demo-original/legacy-random-dungeon-source.json
+and design/random-wilderness-dungeons-plan-20260912.md. These materials retain
+their upstream terms and the notice in LICENSES/RFB-UPSTREAM-NOTICE.txt;
+the project's default content license does not replace them.
+
 The Warrior-Mage class definition, Chinese name and description, birth equipment,
 spell parameters, growth, melee, item sensing, virtues, dual-realm learning,
 saved realm changes, active HP/SP conversion, generation preferences, task

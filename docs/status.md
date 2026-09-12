@@ -1,6 +1,6 @@
 # 状态快照
 
-核对日期：2026-09-12。本轮集成种族职业 `065f4c93f`、法术道具 `d4e0dffc9`、地牢城镇 `3711c91b3`：食魔者、C4／C5 神器与辛葛装置间充能、阿斯加德 AS1–AS7。本页区分当前配置与各批注明范围的验收证据。
+核对日期：2026-09-13。集成基线包含种族职业 `065f4c93f`、法术道具 `d4e0dffc9`、地牢城镇 `3711c91b3`；本工作树另完成随机荒野地牢 RD1–RD6。本页区分当前配置与各批注明范围的验收证据。
 
 祖尔导入：[Z1–Z6 计划](../design/zul-town-import-plan-20260912.md)中的 Z1–Z6 已完成本计划范围的实现与验收。已注册 (77,6) 的 94×57 山地模板与九家独立商店，保留 2,158 个显式格、3,200 个荒野继承格；祖尔不使用普通城镇的刷怪排除。珠宝店与龙皮百货已接随机装备生成、专属估值／交易规则和库存保存；补十种龙鳞甲及喷吐激活，14 种源龙鳞甲与五种龙皮部位均有正式定义，高等级源门槛保持。三塔已接主／当前副领域身份、兽化人会员、全部鉴定、突变治疗和平衡仪式；仪式复用美德生成器重建八项零值美德，出生 RNG 顺序保持。没有旅店／Home／博物馆，物理到访尚不开放祖尔传送。Z4 已接完整漩涡任务、两件等级 85 蝙蝠披风、三个固定神器奖励及仅成功领奖开放的传送；塔与旅店／法术共用目的地资格，祖尔抵达巫术塔 (65,16)。Z5 已接三节点完整地图、会员接取与领奖、任务 10 的漩涡终态前置、源书奖励、战熊同伴及任务内水／熔岩伤害；新增 `[末日巨著]` 实体，Chaos 施法体系仍未交付。Z6 已生成 Schema／绑定／分配审计／内容锁，完成相关核心／内容／本地化检查及 26 条未刷新契约。Windows Tauri standalone 与专用 WebDriver 构建通过，桌面覆盖三类商店、三塔服务与领域切换、四任务源奖励、滚动及跨城往返；15 次原生保存恢复、30 张主流程截图和四张完整地图截图通过。测试使用等级／保护状态／清场准备，不代表自然战斗通关或 Android 验收。新游戏及选中存档加载已移除额外全列表刷新，后端日志验证未扫描其他槽位。商店与美德生成的保留适配见计划 Z2／Z3／Z4／Z5。
 
@@ -8,16 +8,18 @@
 
 ## 版本与源内容
 
+随机荒野地牢：[RD1–RD6](../design/random-wilderness-dungeons-plan-20260912.md#统一验收结果2026-09-13)已完成本计划范围的实现与验收。四类、119 个独立深度、六种正式入口地图进入分块生成和保存；30 个源候选保留完整权重，抽到未实现模板时不重抽。随机入场、上楼离开、楼层传送、实例重建、无普通目的地的向外召回及普通目的地保留均有行为证据。品质上限、隧道／外墙／森林材料、湖泊／破坏／洞窟互斥和河流条件已接入。核心全量首轮 1,748 通过／9 失败，修复后 26 项定向复验通过，最终有效 1,757 通过／5 项原有 ignored；内容 175、协议 7、保存 2、回放 9、前端 61、原生接口拒绝 2 项及 Clippy／生成物／lock 检查通过。26 条契约仅刷新已解释的状态哈希并复验。桌面四类完成进入、深度显示、上楼、再次入场新实例、召回返回和 20 次原生保存恢复；另从海洋召回检查点续跑通过。普通 Tauri standalone 已验证启动、三阶段准备 IPC 拒绝及正常退出。完整源房间模板／湖泊 vault 几何及普通荒野遭遇仍属保留适配，桌面准备不代表自然遭遇频率或战斗难度通关；证据与产物见计划。
+
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.263；绑定/Schema已同步 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | 130 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload / 容器 | 14 / 25 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.444.0；pack/lock已同步 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
-| 契约政策 | contract-v330，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
+| 协议 | 1.265；绑定／Schema 已同步核验 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | 132；全局契约已核验 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload / 容器 | 14 / 27 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
+| 内容包 | 1.445.0；lock 已同步核验 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 契约政策 | contract-v331，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 14 个 Class、110 个 Build、57 个 Race、36 本能力书、1,908 个 ability、575 个 item、1,410 个 actor、169 个 affix、152 个 mutation。世界定义含 34 个 dungeon（阿斯加德入口受出生神系门控）；城镇有 7 个 town、69 个 shop、67 个 townFacility。基础分配池为 409 行，固定神器定义映射 156/392；创角开放14职业、103个Build。这些是定义与入口数量，行为验收范围见下文。
+正式源目录含 14 个 Class、110 个 Build、57 个 Race、36 本能力书、1,908 个 ability、575 个 item、1,410 个 actor、169 个 affix、152 个 mutation。世界定义含 38 个 dungeon（四类随机地牢入口及返回已验收，阿斯加德入口受出生神系门控）；城镇有 7 个 town、69 个 shop、67 个 townFacility。基础分配池为 409 行，固定神器定义映射 156/392；创角开放14职业、103个Build。这些是定义与入口数量，行为验收范围见下文。
 
 食魔者[七步计划](magic-eater-class-plan.md)已完成：无领域Build/无公共MP、三类各10体内槽、吸收/覆盖/铭刻继承/换位、真实使用/失败/费用/周期恢复及保存已开放。Mogaminator体内优先鉴定、TravelLocal自动探测/地图及保存覆盖、Tailored先1/5后1/7、Mage/20卷轴、任务奖励/旧城堡1:4及重复替代、旅店恢复和两塔普通资格通过核心验证。15种装置、26个profile覆盖24条源行，另97条仍为未开放范围。正式入口为“魔法装置 → 食魔者”，103个开放Build生成责任审计通过，0个可玩范围证据gap。
 

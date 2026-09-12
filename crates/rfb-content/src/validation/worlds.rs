@@ -286,6 +286,101 @@ fn wilderness_legend_at(
         .find(|entry| entry.symbol.as_bytes() == [*symbol])
 }
 
+fn validate_wilderness_encounters(
+    world: &WorldDefinition,
+    terrain: &[TerrainDefinition],
+) -> Result<(), ContentError> {
+    let Some(wilderness) = &world.wilderness else {
+        return Ok(());
+    };
+    let mut ids = BTreeSet::new();
+    // Preserve source order: it controls weighted selection and DEBUG precedence.
+    for encounter in &wilderness.encounters {
+        validate_definition_id(&encounter.id, "wilderness-encounter")?;
+        if !ids.insert(&encounter.id)
+            || encounter
+                .max_level
+                .is_some_and(|max| max < encounter.min_level)
+            || !matches!(
+                encounter.terrain,
+                WildernessTerrain::DeepLava
+                    | WildernessTerrain::Mountain
+                    | WildernessTerrain::Trees
+                    | WildernessTerrain::DeepWater
+                    | WildernessTerrain::Snow
+            )
+        {
+            return Err(ContentError::InvalidWilderness(world.id.clone()));
+        }
+        let Some(map) = &encounter.entrance_map else {
+            continue;
+        };
+        validate_definition_id(&map.dungeon_id, "dungeon")?;
+        let dungeon = world
+            .dungeons
+            .iter()
+            .find(|dungeon| dungeon.id == map.dungeon_id && dungeon.random)
+            .ok_or_else(|| ContentError::InvalidWilderness(world.id.clone()))?;
+        let root = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == dungeon.root_floor_id)
+            .ok_or_else(|| ContentError::InvalidWilderness(world.id.clone()))?;
+        let width = map.rows.first().map_or(0, |row| row.chars().count());
+        if width == 0 || width > 62 || map.rows.is_empty() || map.rows.len() > 20 {
+            return Err(ContentError::InvalidWilderness(world.id.clone()));
+        }
+        let mut legend = BTreeMap::new();
+        for entry in &map.legend {
+            let mut chars = entry.symbol.chars();
+            let symbol = chars.next().filter(|symbol| !symbol.is_whitespace());
+            let Some(symbol) = symbol else {
+                return Err(ContentError::InvalidWilderness(world.id.clone()));
+            };
+            if chars.next().is_some() || legend.insert(symbol, entry).is_some() {
+                return Err(ContentError::InvalidWilderness(world.id.clone()));
+            }
+            if !terrain.iter().any(|terrain| terrain.id == entry.terrain_id) {
+                return Err(ContentError::DanglingReference {
+                    owner: encounter.id.clone(),
+                    target: entry.terrain_id.clone(),
+                });
+            }
+        }
+        let mut entrance_count = 0;
+        let mut used = BTreeSet::new();
+        for row in &map.rows {
+            if row.chars().count() != width {
+                return Err(ContentError::InvalidWilderness(world.id.clone()));
+            }
+            for symbol in row.chars().filter(|symbol| *symbol != ' ') {
+                let entry = legend
+                    .get(&symbol)
+                    .ok_or_else(|| ContentError::InvalidWilderness(world.id.clone()))?;
+                used.insert(symbol);
+                let definition = terrain
+                    .iter()
+                    .find(|terrain| terrain.id == entry.terrain_id)
+                    .expect("encounter terrain reference was validated");
+                if definition.tags.iter().any(|tag| tag == "stairs-down") {
+                    if root.entry_terrain_id.as_ref() != Some(&entry.terrain_id)
+                        || !definition.walkable
+                        || !entry.glow
+                        || !entry.mark
+                    {
+                        return Err(ContentError::InvalidWilderness(world.id.clone()));
+                    }
+                    entrance_count += 1;
+                }
+            }
+        }
+        if entrance_count != 1 || used.len() != legend.len() {
+            return Err(ContentError::InvalidWilderness(world.id.clone()));
+        }
+    }
+    Ok(())
+}
+
 fn wilderness_neighbor_is_road(
     wilderness: &WildernessDefinition,
     position: ContentPosition,
@@ -640,6 +735,38 @@ pub(super) fn validate_world(
     for dungeon in &mut world.dungeons {
         validate_definition_id(&dungeon.id, "dungeon")?;
         validate_definition_id(&dungeon.root_floor_id, "floor")?;
+        if dungeon.tunnel_percent.is_some_and(|percent| percent > 100)
+            || dungeon
+                .loot_quality_policy
+                .is_some_and(|policy| match policy {
+                    LootQualityPolicyDefinition::RfbDepth {
+                        good_cap_percent,
+                        great_cap_percent,
+                    } => good_cap_percent > 100 || great_cap_percent > good_cap_percent,
+                })
+            || (dungeon.random
+                && (dungeon.tunnel_percent.is_none()
+                    || dungeon.outer_wall_terrain_id.is_none()
+                    || dungeon.wilderness_terrain.is_none()
+                    || dungeon.loot_quality_policy.is_none()))
+        {
+            return Err(ContentError::InvalidProceduralFloor(dungeon.id.clone()));
+        }
+        if let Some(id) = &dungeon.outer_wall_terrain_id {
+            require_reference(terrain_ids, id, &dungeon.id)?;
+            if terrain
+                .iter()
+                .find(|entry| &entry.id == id)
+                .is_some_and(|entry| {
+                    entry
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "stairs-up" | "stairs-down"))
+                })
+            {
+                return Err(ContentError::InvalidProceduralFloor(dungeon.id.clone()));
+            }
+        }
         if dungeon.pantheon.is_some_and(|id| !(1..=4).contains(&id)) {
             return Err(ContentError::InvalidProceduralFloor(dungeon.id.clone()));
         }
@@ -716,6 +843,7 @@ pub(super) fn validate_world(
     if let Some(wilderness) = &mut world.wilderness {
         validate_wilderness(&world.id, wilderness, &dungeon_definition_ids, towns)?;
     }
+    validate_wilderness_encounters(world, terrain)?;
     let world_town_ids = world
         .wilderness
         .iter()
@@ -747,6 +875,14 @@ pub(super) fn validate_world(
         }
     }
     for procedural in &mut world.procedural_floors {
+        let random = procedural
+            .dungeon_id
+            .as_deref()
+            .and_then(|id| dungeons_by_id.get(id))
+            .is_some_and(|dungeon| dungeon.random);
+        if random && procedural.layout.is_none() {
+            return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+        }
         validate_definition_id(&procedural.id, "floor")?;
         validate_message_key(&procedural.name_key)?;
         if procedural.lifecycle == FloorLifecycle::Town
@@ -1068,7 +1204,16 @@ pub(super) fn validate_world(
                         || terrain
                             .iter()
                             .find(|terrain| terrain.id == entry.terrain_id)
-                            .is_none_or(|terrain| terrain.walkable != walkable)
+                            .is_none_or(|terrain| {
+                                (!random && terrain.walkable != walkable)
+                                    || (random
+                                        && terrain.tags.iter().any(|tag| {
+                                            matches!(
+                                                tag.as_str(),
+                                                "stairs-up" | "stairs-down" | "permanent"
+                                            )
+                                        }))
+                            })
                         || layout.mode != ProceduralLayoutMode::Rooms
                     {
                         return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
@@ -1415,8 +1560,12 @@ pub(super) fn validate_world(
                             || terrain_count != layout.streamers.len()
                             || layout.streamers.iter().any(|candidate| {
                                 !(1..=1_000_000).contains(&candidate.weight)
-                                    || terrain_walkability.get(&candidate.terrain_id)
+                                    || (terrain_walkability.get(&candidate.terrain_id)
                                         != Some(&false)
+                                        && !(random
+                                            && terrain_tags
+                                                .get(&candidate.terrain_id)
+                                                .is_some_and(|tags| tags.contains("brush"))))
                                     || candidate.terrain_id == procedural.wall_terrain_id
                                     || candidate.terrain_id == procedural.floor_terrain_id
                                     || eligible_theme_entries
@@ -1594,8 +1743,9 @@ pub(super) fn validate_world(
                             || (!rubble_floor_boundary
                                 && [deep_terrain_id, shallow_terrain_id]
                                     .contains(&procedural.floor_terrain_id.as_str()))
-                            || [deep_terrain_id, shallow_terrain_id]
-                                .contains(&procedural.wall_terrain_id.as_str())
+                            || (!random
+                                && [deep_terrain_id, shallow_terrain_id]
+                                    .contains(&procedural.wall_terrain_id.as_str()))
                             || layout.cavern.as_ref().is_some_and(|cavern| {
                                 [deep_terrain_id, shallow_terrain_id]
                                     .contains(&cavern.terrain_id.as_str())
@@ -1776,8 +1926,12 @@ pub(super) fn validate_world(
                             || terrain_count != layout.streamers.len()
                             || layout.streamers.iter().any(|candidate| {
                                 !(1..=1_000_000).contains(&candidate.weight)
-                                    || terrain_walkability.get(&candidate.terrain_id)
+                                    || (terrain_walkability.get(&candidate.terrain_id)
                                         != Some(&false)
+                                        && !(random
+                                            && terrain_tags
+                                                .get(&candidate.terrain_id)
+                                                .is_some_and(|tags| tags.contains("brush"))))
                                     || candidate.terrain_id == procedural.wall_terrain_id
                                     || candidate.terrain_id == procedural.floor_terrain_id
                                     || layout.destroyed.as_ref().is_some_and(|destroyed| {
@@ -3182,6 +3336,56 @@ pub(super) fn validate_world(
             .iter()
             .filter(|floor| floor.dungeon_id.as_deref() == Some(dungeon_id))
             .collect::<Vec<_>>();
+        if dungeon.random {
+            let depths = members
+                .iter()
+                .map(|floor| floor.depth)
+                .collect::<BTreeSet<_>>();
+            let root = members
+                .iter()
+                .find(|floor| floor.id == dungeon.root_floor_id)
+                .ok_or_else(|| ContentError::InvalidProceduralFloor(dungeon.id.clone()))?;
+            let min = depths.first().copied().unwrap_or(0);
+            let max = depths.last().copied().unwrap_or(0);
+            if min == 0
+                || root.depth != min
+                || depths.len() != members.len()
+                || usize::from(max - min) + 1 != members.len()
+                || dungeon.instance_lifecycle != DungeonInstanceLifecycle::ResetOnSurface
+                || dungeon.guardian_actor_kind_id.is_some()
+                || dungeon.entrance_guardian.is_some()
+                || dungeon.substitution.is_some()
+                || world
+                    .campaign
+                    .as_ref()
+                    .is_some_and(|campaign| campaign.victory_dungeon_ids.contains(&dungeon.id))
+                || world
+                    .wilderness
+                    .iter()
+                    .flat_map(|wilderness| &wilderness.locations)
+                    .any(|location| {
+                        matches!(location,
+                        WildernessLocationDefinition::Dungeon { dungeon_id, .. }
+                            if dungeon_id == &dungeon.id)
+                    })
+                || members.iter().any(|floor| {
+                    floor.lifecycle != FloorLifecycle::Dungeon
+                        || floor.return_floor_id != world.initial_floor_id
+                        || floor.entry_terrain_id.is_none()
+                        || floor.entry_terrain_id != root.entry_terrain_id
+                        || floor.next_floor_id.is_some()
+                        || floor.down_stair_terrain_id.is_some()
+                        || floor.entry_connection_id.is_some()
+                        || !floor.connections.is_empty()
+                        || floor.final_floor
+                        || floor.guardian.is_some()
+                })
+            {
+                return Err(ContentError::InvalidProceduralFloor(dungeon.id.clone()));
+            }
+            // Every depth is a legal independent entry, with a direct surface return.
+            continue;
+        }
         let roots = members
             .iter()
             .filter(|floor| {
@@ -3388,7 +3592,11 @@ pub(super) fn validate_world(
                                     substitution.alternate_dungeon_id == left
                                 })
                     });
-            if !is_substitution_pair {
+            let same_random_dungeon = existing_dungeon_id == dungeon_id
+                && dungeon_id
+                    .and_then(|id| dungeons_by_id.get(id))
+                    .is_some_and(|dungeon| dungeon.random);
+            if !is_substitution_pair && !same_random_dungeon {
                 return Err(ContentError::InvalidProceduralFloor(floor.id.clone()));
             }
         } else {

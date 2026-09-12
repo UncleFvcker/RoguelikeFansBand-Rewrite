@@ -1404,6 +1404,22 @@ impl Game {
         quartz_terrain_id: &str,
         magma_terrain_id: &str,
     ) -> AreaDestructionPlan {
+        let forest = self.in_forest_dungeon();
+        let (floor_terrain_id, wall_terrain_id, quartz_terrain_id, magma_terrain_id) = if forest {
+            (
+                "demo.terrain.surface-grass",
+                "demo.terrain.surface-tree",
+                "demo.terrain.surface-brake",
+                "demo.terrain.surface-tree",
+            )
+        } else {
+            (
+                floor_terrain_id,
+                wall_terrain_id,
+                quartz_terrain_id,
+                magma_terrain_id,
+            )
+        };
         let radius_span = u64::from(maximum_radius - minimum_radius) + 1;
         let radius = minimum_radius
             + u8::try_from(self.rng.bounded(radius_span))
@@ -1419,6 +1435,11 @@ impl Game {
                 if self.index(position).is_some()
                     && rfb_distance(center, position) <= radius_limit
                     && !self.terrain_is_area_destruction_protected(position)
+                    && !(forest
+                        && self
+                            .content
+                            .terrain(self.terrain_at(position))
+                            .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "water")))
                 {
                     positions.push(position);
                 }

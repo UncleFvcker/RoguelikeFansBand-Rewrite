@@ -486,8 +486,10 @@ fn mutation_detection_recall_and_resistance_use_existing_authoritative_state() {
     let floor_id = dungeon.root_floor_id.clone();
     recall.current_floor_id = floor_id.clone();
     recall.recall = Some(RecallStateDto {
-        dungeon_id,
-        floor_id,
+        destination: Some(rfb_protocol::RecallDestinationDto {
+            dungeon_id,
+            floor_id,
+        }),
         remaining_turns: None,
     });
     recall.debug_set_recall_delay_turns(Some(7));

@@ -3746,8 +3746,10 @@ fn angwil_trump_tower_prices_and_recall_survive_save_and_return() {
         assert_eq!(cost, game.town_service_price(base_cost));
         let departure = game.player.position;
         game.recall = Some(RecallStateDto {
-            dungeon_id: "demo.dungeon.tidal-cave".to_owned(),
-            floor_id: "demo.floor.tidal-cave-depth-15".to_owned(),
+            destination: Some(rfb_protocol::RecallDestinationDto {
+                dungeon_id: "demo.dungeon.tidal-cave".to_owned(),
+                floor_id: "demo.floor.tidal-cave-depth-15".to_owned(),
+            }),
             remaining_turns: None,
         });
         if cost > 0 {
@@ -3913,7 +3915,13 @@ fn dungeon_recall_records_survive_switching_dungeons_and_allow_explicit_lowering
         game.update_recall_destination_for_current_floor();
     }
     assert_eq!(
-        game.recall.as_ref().unwrap().floor_id,
+        game.recall
+            .as_ref()
+            .unwrap()
+            .destination
+            .as_ref()
+            .unwrap()
+            .floor_id,
         "demo.floor.tidal-cave-depth-20"
     );
     game.reset_recall(game.recall_reset_plan().unwrap());
@@ -3950,8 +3958,10 @@ fn morivant_recall_resumes_after_save_and_returns_to_the_departure_position() {
         .unwrap();
     let departure = game.player.position;
     game.recall = Some(RecallStateDto {
-        dungeon_id: "demo.dungeon.tidal-cave".to_owned(),
-        floor_id: "demo.floor.tidal-cave-depth-15".to_owned(),
+        destination: Some(rfb_protocol::RecallDestinationDto {
+            dungeon_id: "demo.dungeon.tidal-cave".to_owned(),
+            floor_id: "demo.floor.tidal-cave-depth-15".to_owned(),
+        }),
         remaining_turns: None,
     });
     game.gold = game.town_service_price(50);
@@ -4931,8 +4941,10 @@ fn inn_stays_use_content_prices_and_restore_the_player_at_half_day() {
         game.minor_slow_energy = 41;
         game.reality_change_ticks = 20;
         game.recall = Some(RecallStateDto {
-            dungeon_id: "demo.dungeon.warrens".to_owned(),
-            floor_id: "demo.floor.warrens-depth-1".to_owned(),
+            destination: Some(rfb_protocol::RecallDestinationDto {
+                dungeon_id: "demo.dungeon.warrens".to_owned(),
+                floor_id: "demo.floor.warrens-depth-1".to_owned(),
+            }),
             remaining_turns: Some(2),
         });
         game.resources
@@ -5578,8 +5590,10 @@ fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_a
         recall.town_service_price(150)
     );
     recall.recall = Some(RecallStateDto {
-        dungeon_id: "demo.dungeon.warrens".to_owned(),
-        floor_id: "demo.floor.warrens-depth-1".to_owned(),
+        destination: Some(rfb_protocol::RecallDestinationDto {
+            dungeon_id: "demo.dungeon.warrens".to_owned(),
+            floor_id: "demo.floor.warrens-depth-1".to_owned(),
+        }),
         remaining_turns: None,
     });
     recall.gold = tower.service_actions[0].cost;

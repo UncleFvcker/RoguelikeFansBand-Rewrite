@@ -311,6 +311,7 @@ fn ent_tree_creation_respects_occupied_special_and_boundary_squares() {
                             position: target,
                             target_floor_id: None,
                             target_connection_id: None,
+                            wilderness_entrance: None,
                         });
                 }
                 "stairs" => replace_terrain(&mut game, target, "demo.terrain.stairs-down"),

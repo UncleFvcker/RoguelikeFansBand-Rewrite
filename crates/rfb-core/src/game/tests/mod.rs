@@ -66,6 +66,7 @@ mod priest;
 mod progression;
 mod pyramidal_mound;
 mod race_attribute_sustains;
+mod random_dungeons;
 mod ranger;
 mod riding;
 mod riding_bond;
