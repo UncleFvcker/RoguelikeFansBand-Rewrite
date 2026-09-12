@@ -421,6 +421,12 @@ pub(super) fn floor_connections_are_valid(
     connections: &[FloorConnectionState],
     world: &rfb_content::WorldDefinition,
 ) -> bool {
+    if connections
+        .iter()
+        .any(|connection| connection.wilderness_entrance.is_some())
+    {
+        return false;
+    }
     if floor_id == world.initial_floor_id {
         return connections.is_empty();
     }
@@ -790,13 +796,42 @@ impl Game {
                 ));
             }
         }
+        if let Some(dungeon) = world
+            .dungeons
+            .iter()
+            .find(|dungeon| Some(&dungeon.id) == current_dungeon_id.as_ref() && dungeon.random)
+            && !self
+                .stored_floors
+                .get(wilderness::WILDERNESS_FLOOR_ID)
+                .is_some_and(|surface| {
+                    surface.connections.iter().any(|connection| {
+                        connection.position == surface.player_position
+                            && connection.wilderness_entrance.is_some()
+                            && connection.target_floor_id.as_ref() == Some(&dungeon.root_floor_id)
+                    })
+                })
+        {
+            return Err(CoreError::InvalidSave(
+                "random dungeon return entrance is invalid",
+            ));
+        }
         if let Some(recall) = &self.recall {
-            let destination_is_valid = self.dungeon_is_active(&recall.dungeon_id)
-                && world.procedural_floors.iter().any(|floor| {
-                    floor.id == recall.floor_id
-                        && floor.lifecycle == FloorLifecycle::Dungeon
-                        && floor.dungeon_id.as_deref() == Some(recall.dungeon_id.as_str())
-                });
+            let destination_is_valid = recall.destination.as_ref().map_or_else(
+                || recall.remaining_turns.is_some() && current_dungeon_id.is_some(),
+                |destination| {
+                    self.dungeon_is_active(&destination.dungeon_id)
+                        && world
+                            .dungeons
+                            .iter()
+                            .any(|dungeon| dungeon.id == destination.dungeon_id && !dungeon.random)
+                        && world.procedural_floors.iter().any(|floor| {
+                            floor.id == destination.floor_id
+                                && floor.lifecycle == FloorLifecycle::Dungeon
+                                && floor.dungeon_id.as_deref()
+                                    == Some(destination.dungeon_id.as_str())
+                        })
+                },
+            );
             let pending_is_valid = recall
                 .remaining_turns
                 .is_none_or(|turns| (1..=2_000).contains(&turns));
@@ -822,14 +857,18 @@ impl Game {
                 ));
             }
         }
-        if !floor_connections_are_valid(
-            &self.current_floor_id,
-            self.width,
-            self.height,
-            &self.terrain,
-            &self.floor_connections,
-            world,
-        ) {
+        if !(if self.is_wilderness_floor() {
+            self.wilderness_connections_are_valid(&self.terrain, &self.floor_connections)
+        } else {
+            floor_connections_are_valid(
+                &self.current_floor_id,
+                self.width,
+                self.height,
+                &self.terrain,
+                &self.floor_connections,
+                world,
+            )
+        }) {
             return Err(CoreError::InvalidSave(
                 "active floor connection state is invalid",
             ));
@@ -1221,14 +1260,18 @@ impl Game {
             {
                 return Err(CoreError::InvalidSave("stored floor state is invalid"));
             }
-            if !floor_connections_are_valid(
-                &floor.id,
-                floor.width,
-                floor.height,
-                &floor.terrain,
-                &floor.connections,
-                world,
-            ) {
+            if !(if floor.id == wilderness::WILDERNESS_FLOOR_ID {
+                self.wilderness_connections_are_valid(&floor.terrain, &floor.connections)
+            } else {
+                floor_connections_are_valid(
+                    &floor.id,
+                    floor.width,
+                    floor.height,
+                    &floor.terrain,
+                    &floor.connections,
+                    world,
+                )
+            }) {
                 return Err(CoreError::InvalidSave(
                     "stored floor connection state is invalid",
                 ));
@@ -1523,11 +1566,12 @@ impl Game {
                 ));
             }
             if state.recall_floor_id.as_ref().is_some_and(|id| {
-                !world.procedural_floors.iter().any(|floor| {
-                    floor.id == *id
-                        && floor.lifecycle == FloorLifecycle::Dungeon
-                        && floor.dungeon_id.as_ref() == Some(dungeon_id)
-                })
+                dungeon.random
+                    || !world.procedural_floors.iter().any(|floor| {
+                        floor.id == *id
+                            && floor.lifecycle == FloorLifecycle::Dungeon
+                            && floor.dungeon_id.as_ref() == Some(dungeon_id)
+                    })
             }) {
                 return Err(CoreError::InvalidSave("dungeon recall floor is invalid"));
             }

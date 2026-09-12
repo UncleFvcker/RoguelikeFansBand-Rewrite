@@ -114,6 +114,21 @@ node e2e/asgard-standalone.e2e.mjs
 
 报告、截图和存档在 `test-results/ordinary-equipment/`。准备后的交互与保存证据不代表自然取得七件稀有装备或自然练级；完整源分配、其他成员、概率与致死边界由核心验证。普通镰刀不自动返回，共用返回反噬仅在核心准备的返回状态中验证；未开放的返回能力入口和 Monster Sword 内部 kind111 不在桌面范围内。
 
+## 随机荒野地牢桌面专项
+
+在 `web` 执行：
+
+```powershell
+npm run e2e:build
+node e2e/tauri.e2e.mjs --random-dungeons
+npm run build:standalone:debug
+node e2e/asgard-standalone.e2e.mjs --random-dungeons
+```
+
+专项复用原生键盘、保存列表与截图助手，四次正常人类战士创角后使用受限准备抵达正式生成的入口。出生种子为 42；森林／火山／山脉／海洋的已验证荒野种子分别为 1／6／301／0。准备给一张归返卷轴、长效悬浮／无敌并清场照明；上楼准备只定位已有楼梯。四类进入和深度、原生保存加载、上楼返回、再次入场新实例、召回返回均走正常命令；召回以 `rest` 推进。这不代表自然遭遇频率、练级、获取卷轴或战斗难度验收。
+
+证据保存在 `test-results/random-dungeons/`。失败后可用 `--random-resume=forest:entered` 之类的参数恢复该目录的原生存档检查点；类型为 forest／volcano／mountain／sea，阶段为 arrival／entered／ascended／reentered／recall-pending／returned。脚本核对内容身份和保存哈希，恢复后只继续未完成阶段；改变内容后应重新生成相应检查点。普通 standalone 分支实际检查三阶段准备 IPC 均被拒绝，并要求窗口正常关闭后进程退出码为 0。
+
 ## Contract fixture
 
 当前集位于 [tests/fixtures/active/scenarios](../tests/fixtures/active/scenarios/)，分类和最低数量等政策来自 [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)。`rfb-contract` 的 [CLI](../crates/rfb-contract/src/main.rs)和[断言实现](../crates/rfb-contract/src/lib.rs)是精确语义依据。

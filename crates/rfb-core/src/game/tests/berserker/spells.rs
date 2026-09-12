@@ -355,8 +355,10 @@ fn earthquake_and_recall_keep_shared_floor_rules_and_hp_costs() {
     let dungeon = world.dungeons.first().unwrap();
     game.current_floor_id = dungeon.root_floor_id.clone();
     game.recall = Some(RecallStateDto {
-        dungeon_id: dungeon.id.clone(),
-        floor_id: dungeon.root_floor_id.clone(),
+        destination: Some(rfb_protocol::RecallDestinationDto {
+            dungeon_id: dungeon.id.clone(),
+            floor_id: dungeon.root_floor_id.clone(),
+        }),
         remaining_turns: None,
     });
     let mut expected = game.clone();

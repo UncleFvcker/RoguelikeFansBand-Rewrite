@@ -163,6 +163,35 @@ fn android_chain_mail_uses_real_value_and_equip_commands_raise_and_lower_level_o
 }
 
 #[test]
+fn android_new_mithril_plate_experience_survives_save_and_unequip() {
+    let mut game = prepared();
+    game.items.clear();
+    game.refresh_android_experience(&mut Vec::new());
+    give_inventory_item(&mut game, "test.mail", "demo.item.mithril-plate-mail");
+    // Source C real value 18750, kind level 60: 18750 * (60 - 8) * 3 / 32.
+    dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: "test.mail".to_owned(),
+            slot_id: Some("body".to_owned()),
+        },
+    );
+    assert_eq!(game.progress.experience, 91_406);
+    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let command = GameCommand::Unequip {
+        slot_id: "body".to_owned(),
+    };
+    assert_eq!(
+        dispatch_next(&mut game, command.clone()),
+        dispatch_next(&mut restored, command)
+    );
+    assert_eq!(
+        (restored.progress.experience, restored.progress.level),
+        (0, 1)
+    );
+}
+
+#[test]
 fn android_experience_excludes_jewelry_lights_and_inventory() {
     let mut game = prepared();
     game.items.clear();

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.random-volcano-entrance",
+  "nameKey": "terrain-demo-random-volcano-entrance-name",
+  "descriptionKey": "terrain-demo-random-volcano-entrance-description",
+  "glyph": ">",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": [
+    "stairs-down",
+    "passage"
+  ]
+}

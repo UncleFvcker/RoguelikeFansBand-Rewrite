@@ -25,7 +25,7 @@
   "assertions": {
     "finalState": {
       "lastCommandSeq": 1,
-      "stateHash": "e8f0aa094d80a7c6200c391c44467453fde7a14e4dd60247aee7ec15d4e70d0b",
+      "stateHash": "a957966c82429be0770c726f128818e6d384d56faa3f0de50f34f1963fa8d655",
       "tasks": {
         "demo.task.thieves-hideout": {
           "required": 1,

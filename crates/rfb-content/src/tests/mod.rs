@@ -18,5 +18,6 @@ mod actors;
 mod catalog;
 mod items;
 mod pipeline;
+mod random_dungeons;
 mod validation;
 mod world;

@@ -204,6 +204,7 @@ impl Game {
         };
         self.recall
             .as_ref()
+            .and_then(|recall| recall.destination.as_ref())
             .and_then(|recall| floor_depth(&recall.floor_id))
             .or_else(|| floor_depth(&self.current_floor_id))
             .unwrap_or(self.progress.level)
@@ -449,10 +450,13 @@ impl Game {
             floor.lifecycle == FloorLifecycle::Dungeon
                 && floor.task_id.is_none()
                 && !floor.final_floor
-                && floor
-                    .dungeon_id
-                    .as_deref()
-                    .is_some_and(|id| self.dungeon_is_active(id))
+                && floor.dungeon_id.as_deref().is_some_and(|id| {
+                    self.dungeon_is_active(id)
+                        && world
+                            .dungeons
+                            .iter()
+                            .any(|dungeon| dungeon.id == id && !dungeon.random)
+                })
                 && !self.stored_floors.contains_key(&floor.id)
         };
         let floors = world
@@ -460,7 +464,11 @@ impl Game {
             .iter()
             .filter(eligible)
             .collect::<Vec<_>>();
-        if let Some(recall) = &self.recall {
+        if let Some(recall) = self
+            .recall
+            .as_ref()
+            .and_then(|recall| recall.destination.as_ref())
+        {
             let target = world
                 .procedural_floors
                 .iter()

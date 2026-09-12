@@ -491,6 +491,17 @@ fn force_brand_pays_source_mana_threshold_and_alignment_scales_before_flat_damag
         amounts,
         vec![amounts[0], amounts[0] * 2, amounts[0], amounts[0] * 3]
     );
+
+    // Current-form alignment from the race rules also feeds scythe backlash.
+    base.virtues[0].kind = VirtueKindDto::Justice;
+    base.virtues[0].value = -50;
+    let mut form = monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 500, "test.archon").status;
+    form.granted_race_id = Some("rfb-legacy.race.archon".into());
+    base.player.statuses.push(form);
+    base.rng = RfbRng::seeded(73);
+    let mut events = Vec::new();
+    base.resolve_death_scythe_backlash(&item, None, &mut events);
+    assert_eq!(backlash_amount(&events) - 30, amounts[0]);
 }
 
 #[test]

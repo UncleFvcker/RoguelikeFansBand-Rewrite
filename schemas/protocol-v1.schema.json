@@ -14794,7 +14794,7 @@
         "realmId"
       ]
     },
-    "RecallStateDto": {
+    "RecallDestinationDto": {
       "type": "object",
       "properties": {
         "dungeonId": {
@@ -14802,6 +14802,26 @@
         },
         "floorId": {
           "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "dungeonId",
+        "floorId"
+      ]
+    },
+    "RecallStateDto": {
+      "type": "object",
+      "properties": {
+        "destination": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RecallDestinationDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "remainingTurns": {
           "type": [
@@ -14813,11 +14833,7 @@
           "minimum": 0
         }
       },
-      "additionalProperties": false,
-      "required": [
-        "dungeonId",
-        "floorId"
-      ]
+      "additionalProperties": false
     },
     "ResearchMonsterDto": {
       "type": "object",

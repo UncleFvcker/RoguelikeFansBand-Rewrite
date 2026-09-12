@@ -192,7 +192,14 @@ fn anti_cave_round_trip(seed: u64, slug: &str, suppressed: &str, world_position:
     assert!(game.dungeon_states[&dungeon_id].entrance_guardian_defeated);
     game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
     let mut invalid = game.to_save();
-    let recall = invalid.player.recall.as_mut().unwrap();
+    let recall = invalid
+        .player
+        .recall
+        .as_mut()
+        .unwrap()
+        .destination
+        .as_mut()
+        .unwrap();
     recall.dungeon_id = suppressed_id.clone();
     recall.floor_id = format!("demo.floor.{suppressed}-depth-40");
     assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
@@ -1005,6 +1012,7 @@ fn p89b_substitute_selection_is_seeded_persisted_and_hashed() {
     assert_eq!(suppressed_conquest.campaign_counts().0, 0);
     assert!(suppressed_conquest.validate_loaded_state().is_err());
     alternate.advance_wilderness_generation();
+    alternate.activate_wilderness_position(None, false).unwrap();
     assert!(!alternate.dungeon_is_active("demo.dungeon.hideout"));
     assert!(alternate.dungeon_is_active("demo.dungeon.man-cave"));
 

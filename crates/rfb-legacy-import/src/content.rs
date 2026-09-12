@@ -15726,7 +15726,7 @@ pub fn sync_demo_wilderness(
             })
         })
         .collect::<Vec<_>>();
-    let wilderness_json = serde_json::json!({
+    let mut wilderness_json = serde_json::json!({
         "width": wilderness.width,
         "height": wilderness.height,
         "startPosition": { "x": wilderness.start_x, "y": wilderness.start_y },
@@ -15734,6 +15734,9 @@ pub fn sync_demo_wilderness(
         "rows": wilderness.rows,
         "locations": locations,
     });
+    if let Some(encounters) = world.pointer("/wilderness/encounters") {
+        wilderness_json["encounters"] = encounters.clone();
+    }
     fs::write(
         output,
         replace_wilderness_property(&world_source, &wilderness_json)?,

@@ -459,6 +459,24 @@ impl AppState {
         }
     }
 
+    fn prepare_random_dungeon_e2e(&self, kind: &str, phase: &str) -> Result<GameSnapshot, String> {
+        #[cfg(feature = "webdriver")]
+        {
+            let mut session = self.lock_session()?;
+            let session = session.as_mut().ok_or("game session is not initialized")?;
+            let mut game = session.recorder.game().clone();
+            game.debug_prepare_random_dungeon_e2e(kind, phase)
+                .map_err(|error| error.to_string())?;
+            session.recorder = ReplayRecorder::new(game);
+            Ok(session.recorder.game().snapshot())
+        }
+        #[cfg(not(feature = "webdriver"))]
+        {
+            let _ = (kind, phase);
+            Err("Random dungeon E2E fixture is unavailable".to_owned())
+        }
+    }
+
     fn lock_session(&self) -> Result<std::sync::MutexGuard<'_, Option<GameSession>>, String> {
         self.session
             .lock()
@@ -805,6 +823,8 @@ struct E2eInspection {
     snapshot: GameSnapshot,
     wilderness_position: Option<rfb_protocol::Position>,
     wilderness_view_offset: rfb_protocol::Position,
+    wilderness_seed: u64,
+    dungeon_instance_id: Option<String>,
     active_actor_count: usize,
     active_actors: Vec<rfb_protocol::ActorSaveDto>,
     active_pantheons: u8,
@@ -823,6 +843,15 @@ fn prepare_asgard_e2e(
 }
 
 #[tauri::command]
+fn prepare_random_dungeon_e2e(
+    state: tauri::State<'_, AppState>,
+    kind: String,
+    phase: String,
+) -> Result<GameSnapshot, String> {
+    state.prepare_random_dungeon_e2e(&kind, &phase)
+}
+
+#[tauri::command]
 fn inspect_game_e2e(state: tauri::State<'_, AppState>) -> Result<E2eInspection, String> {
     #[cfg(feature = "webdriver")]
     {
@@ -837,6 +866,8 @@ fn inspect_game_e2e(state: tauri::State<'_, AppState>) -> Result<E2eInspection, 
             snapshot: game.snapshot(),
             wilderness_position: save.wilderness_position,
             wilderness_view_offset: save.wilderness_view_offset,
+            wilderness_seed: save.wilderness_seed,
+            dungeon_instance_id: save.current_dungeon_instance_id,
             active_actor_count: save.entities.len(),
             active_actors: save.entities,
             active_pantheons: save.active_pantheons,
@@ -1075,6 +1106,7 @@ pub fn run() {
             prepare_town_map_e2e,
             prepare_zul_e2e,
             prepare_asgard_e2e,
+            prepare_random_dungeon_e2e,
             inspect_game_e2e,
             save_game,
             load_game,
@@ -1100,6 +1132,19 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    #[cfg(not(feature = "webdriver"))]
+    fn ordinary_native_app_rejects_random_dungeon_preparation_before_session_access() {
+        let state = super::AppState::default();
+        for phase in ["arrival", "route", "stairs"] {
+            assert_eq!(
+                state
+                    .prepare_random_dungeon_e2e("forest", phase)
+                    .unwrap_err(),
+                "Random dungeon E2E fixture is unavailable"
+            );
+        }
+    }
     #[test]
     #[cfg(not(feature = "webdriver"))]
     fn ordinary_native_app_rejects_asgard_preparation_before_session_access() {

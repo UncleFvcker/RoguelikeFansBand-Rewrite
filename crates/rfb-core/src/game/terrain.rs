@@ -263,6 +263,21 @@ fn action_difficulty(source_id: &str, difficulty: i32) -> DerivedStat {
 }
 
 impl Game {
+    pub(super) fn in_forest_dungeon(&self) -> bool {
+        let world = self.content.world(&self.world_id).expect("active world");
+        world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == self.current_floor_id)
+            .and_then(|floor| floor.dungeon_id.as_ref())
+            .is_some_and(|id| {
+                world.dungeons.iter().any(|dungeon| {
+                    &dungeon.id == id
+                        && dungeon.wilderness_terrain == Some(rfb_content::WildernessTerrain::Trees)
+                })
+            })
+    }
+
     pub(super) fn replace_terrain_from_source(
         &mut self,
         position: Position,

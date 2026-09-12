@@ -10177,3 +10177,16 @@ item-demo-sexy-swimsuit-name = 性感泳装
 item-demo-sexy-swimsuit-description = 性感泳装
 item-demo-death-scythe-name = 死神镰刀
 item-demo-death-scythe-description = 死神镰刀
+
+floor-demo-random-forest-depth-name = 随机森林
+terrain-demo-random-forest-entrance-name = 随机森林
+terrain-demo-random-forest-entrance-description = 一条进入未知森林的小径
+floor-demo-random-volcano-depth-name = 随机火山
+terrain-demo-random-volcano-entrance-name = 随机火山
+terrain-demo-random-volcano-entrance-description = 一个通向未知火山中心的地洞
+floor-demo-random-mountain-depth-name = 随机山脉
+terrain-demo-random-mountain-entrance-name = 随机山脉
+terrain-demo-random-mountain-entrance-description = 一条通向未知山脉的道路
+floor-demo-random-sea-depth-name = 随机海洋
+terrain-demo-random-sea-entrance-name = 随机海洋
+terrain-demo-random-sea-entrance-description = 一条通往未知失落之地的水下道路

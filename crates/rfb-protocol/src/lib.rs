@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.264";
+pub const PROTOCOL_VERSION: &str = "1.266";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 26;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 28;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -4064,9 +4064,17 @@ pub enum NutritionStateDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct RecallStateDto {
+pub struct RecallDestinationDto {
     pub dungeon_id: String,
     pub floor_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RecallStateDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub destination: Option<RecallDestinationDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub remaining_turns: Option<u16>,
 }
@@ -5437,6 +5445,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(HealingResolutionDto);
     push_declaration!(GameEventOutcomeDto);
     push_declaration!(StatusDto);
+    push_declaration!(RecallDestinationDto);
     push_declaration!(RecallStateDto);
     push_declaration!(NutritionStateDto);
     push_declaration!(MutationRatingDto);
@@ -6083,6 +6092,30 @@ pub struct FloorConnectionSaveDto {
     pub target_floor_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub target_connection_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wilderness_entrance: Option<WildernessEntranceSaveDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WildernessEncounterPlacementSaveDto {
+    pub encounter_id: String,
+    pub origin: Position,
+    pub transform: u8,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WildernessEntranceSaveDto {
+    pub chunk: Position,
+    pub placement: WildernessEncounterPlacementSaveDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WildernessChunkSaveDto {
+    pub chunk: Position,
+    pub placement: Option<WildernessEncounterPlacementSaveDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -6322,6 +6355,7 @@ pub struct SavePayloadV1 {
     pub wilderness_view_offset: Position,
     #[serde(default)]
     pub wilderness_seed: u64,
+    pub wilderness_chunks: Vec<WildernessChunkSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub world_travel_destination: Option<Position>,
     pub interface_locale: LocaleDto,
@@ -6975,6 +7009,7 @@ mod tests {
         current["pendingMagicAbsorption"] = serde_json::Value::Null;
         current["randomArtifactNames"] = serde_json::json!([]);
         current["activePantheons"] = serde_json::json!(2 | 8);
+        current["wildernessChunks"] = serde_json::json!([]);
         current["entities"][0]["nice"] = serde_json::json!(false);
         current["entities"][0]["experience"] = serde_json::json!(0);
         current["entities"][0]["anger"] = serde_json::json!(0);

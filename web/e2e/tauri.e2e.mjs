@@ -81,7 +81,7 @@ async function main() {
     await rm(diagnosticDirectory, { recursive: true, force: true });
     await rm(desktopLogPath, { force: true });
     const port = await reservePort();
-    const creationLayout = process.argv.includes("--asgard") || process.argv.includes("--magic-eater-ui") || process.argv.includes("--zul") || process.argv.includes("--town-maps") || process.argv.includes("--warrior-mage-play") || process.argv.includes("--warrior-mage-ui") || process.argv.includes("--character-creation") || process.argv.includes("--creation-layout") || process.argv.includes("--mindcrafter") || process.argv.includes("--berserker") || process.argv.includes("--duelist-ui") || process.argv.includes("--mage-ui") || process.argv.includes("--mage-play") || process.argv.includes("--ranger-ui") || process.argv.includes("--ranger-play") || process.argv.includes("--priest-ui") || process.argv.includes("--priest-play");
+    const creationLayout = process.argv.includes("--random-dungeons") || process.argv.includes("--asgard") || process.argv.includes("--magic-eater-ui") || process.argv.includes("--zul") || process.argv.includes("--town-maps") || process.argv.includes("--warrior-mage-play") || process.argv.includes("--warrior-mage-ui") || process.argv.includes("--character-creation") || process.argv.includes("--creation-layout") || process.argv.includes("--mindcrafter") || process.argv.includes("--berserker") || process.argv.includes("--duelist-ui") || process.argv.includes("--mage-ui") || process.argv.includes("--mage-play") || process.argv.includes("--ranger-ui") || process.argv.includes("--ranger-play") || process.argv.includes("--priest-ui") || process.argv.includes("--priest-play");
     const debugProfile = path.join(repositoryDirectory, "target", "e2e", "creation-webview");
     child = spawn(executable, [], {
       cwd: repositoryDirectory,
@@ -119,6 +119,8 @@ async function main() {
       await runTownMapScenario(client, path.join(artifactDirectory, "town-maps"), debugProfile);
     } else if (process.argv.includes("--zul")) {
       await runTownMapScenario(client, path.join(artifactDirectory, "zul"), debugProfile, "zul");
+    } else if (process.argv.includes("--random-dungeons")) {
+      await runTownMapScenario(client, path.join(artifactDirectory, "random-dungeons"), debugProfile, "random-dungeons");
     } else if (process.argv.includes("--asgard")) {
       await runTownMapScenario(client, path.join(artifactDirectory, "asgard"), debugProfile, "asgard");
     } else if (process.argv.includes("--character-creation")) {

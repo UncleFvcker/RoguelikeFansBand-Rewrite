@@ -476,9 +476,20 @@ impl Game {
                         .procedural_floors
                         .iter()
                         .find(|floor| floor.id == self.current_floor_id)
+                        .map(|floor| (world, floor))
                 })
-                .map_or((false, false), |floor| {
-                    (true, floor.next_floor_id.is_some())
+                .map_or((false, false), |(world, floor)| {
+                    let random = world.dungeons.iter().any(|dungeon| {
+                        Some(&dungeon.id) == floor.dungeon_id.as_ref() && dungeon.random
+                    });
+                    (
+                        true,
+                        if random {
+                            super::super::floor::random_dungeon_next_floor(world, floor).is_some()
+                        } else {
+                            floor.next_floor_id.is_some()
+                        },
+                    )
                 })
         };
         let terrain_id = match (can_create_up, can_create_down) {
@@ -883,6 +894,22 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
         let radius_squared = i32::from(radius).pow(2);
+        let forest = self.in_forest_dungeon();
+        let forest_walls = [
+            "demo.terrain.surface-tree".to_owned(),
+            "demo.terrain.surface-brake".to_owned(),
+            "demo.terrain.surface-tree".to_owned(),
+        ];
+        let wall_terrain_ids = if forest {
+            &forest_walls[..]
+        } else {
+            wall_terrain_ids
+        };
+        let floor_terrain_id = if forest {
+            "demo.terrain.surface-grass"
+        } else {
+            floor_terrain_id
+        };
         let mut affected_positions = Vec::new();
         for y in center.y - i32::from(radius)..=center.y + i32::from(radius) {
             for x in center.x - i32::from(radius)..=center.x + i32::from(radius) {
@@ -895,6 +922,11 @@ impl Game {
                     || y <= 0
                     || x >= i32::from(self.width) - 1
                     || y >= i32::from(self.height) - 1
+                    || (forest
+                        && self
+                            .content
+                            .terrain(self.terrain_at(position))
+                            .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "water")))
                     || self
                         .floor_connections
                         .iter()

@@ -12,7 +12,8 @@ import { connectKeyboard } from "./character-creation-layout.e2e.mjs";
 // with a fresh WebView profile; no WebDriver server or in-game session is needed.
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const executable = path.join(root,"target","debug","rfb-tauri.exe");
-const directory = path.join(root,"test-results","asgard");
+const random = process.argv.includes("--random-dungeons");
+const directory = path.join(root,"test-results",random ? "random-dungeons" : "asgard");
 await mkdir(directory,{recursive:true});
 await mkdir(path.join(root,"target","e2e"),{recursive:true});
 const profile = await mkdtemp(path.join(root,"target","e2e","asgard-standalone-"));
@@ -49,18 +50,26 @@ try {
   }
   const checks=await keyboard.evaluate(`(async()=>{
     const results=[];
-    for(const [phase,targetId] of [['arrival',null],['route',null],['battle','demo.guardian.asgard.1']]) {
-      try { await window.__TAURI_INTERNALS__.invoke('prepare_asgard_e2e',{phase,targetId});results.push({phase,accepted:true}); }
+    for(const [phase,targetId] of ${JSON.stringify(random ? [["arrival",null],["route",null],["stairs",null]] : [["arrival",null],["route",null],["battle","demo.guardian.asgard.1"]])}) {
+      try { await window.__TAURI_INTERNALS__.invoke('${random ? "prepare_random_dungeon_e2e" : "prepare_asgard_e2e"}',${random ? "{phase,kind:'forest'}" : "{phase,targetId}"});results.push({phase,accepted:true}); }
       catch(error) { results.push({phase,error:String(error)}); }
     }
     return results;
   })()`);
   assert.equal(checks.length,3);
-  for(const check of checks) assert.equal(check.error,"Asgard E2E fixture is unavailable");
+  for(const check of checks) assert.equal(check.error,`${random ? "Random dungeon" : "Asgard"} E2E fixture is unavailable`);
   assert.deepEqual(keyboard.errors,[]);
+  // Ask the native main window to close, then verify normal process termination.
+  keyboard.close();keyboard=null;
+  await new Promise((resolve,reject)=>{
+    const close=spawn("powershell.exe",["-NoProfile","-NonInteractive","-Command",`(Get-Process -Id ${child.pid}).CloseMainWindow()`],{windowsHide:true,stdio:"ignore"});
+    close.on("error",reject);close.on("exit",code=>code===0?resolve():reject(new Error(`close window: ${code}`)));
+  });
+  for(let attempt=0;child.exitCode===null && attempt<100;attempt++) await delay(100);
+  assert.equal(child.exitCode,0,"ordinary standalone must exit normally");
   await writeFile(path.join(directory,"standalone-guard-report.json"),JSON.stringify({executable,
-    sha256:createHash("sha256").update(await readFile(executable)).digest("hex"),checks,errors:keyboard.errors},null,2)+"\n");
-  process.stdout.write("Ordinary Tauri standalone rejected all Asgard preparation phases.\n");
+    sha256:createHash("sha256").update(await readFile(executable)).digest("hex"),checks,exitCode:child.exitCode,errors:[]},null,2)+"\n");
+  process.stdout.write(`Ordinary Tauri standalone rejected all ${random ? "random dungeon" : "Asgard"} preparation phases and exited normally.\n`);
 } finally {
   keyboard?.close();
   if(child.exitCode===null && child.signalCode===null) child.kill();

@@ -6320,8 +6320,10 @@ fn arcane_detection_recall_and_level_teleport_reuse_existing_transactions() {
         .current = 100;
     game.debug_recall_delay_turns = Some(27);
     game.recall = Some(RecallStateDto {
-        dungeon_id: "demo.dungeon.warrens".to_owned(),
-        floor_id: "demo.floor.warrens-depth-1".to_owned(),
+        destination: Some(rfb_protocol::RecallDestinationDto {
+            dungeon_id: "demo.dungeon.warrens".to_owned(),
+            floor_id: "demo.floor.warrens-depth-1".to_owned(),
+        }),
         remaining_turns: None,
     });
     game.resolve_player_ability(

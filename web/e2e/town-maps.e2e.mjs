@@ -7,9 +7,10 @@ import { selectCreationBuild, selectCreationRace } from "./character-creation.e2
 import { nextWalk } from "./berserker.e2e.mjs";
 import { runZulScenario } from "./zul.e2e.mjs";
 import { runAsgardScenario, prepareAsgard } from "./asgard.e2e.mjs";
+import { runRandomDungeonsScenario } from "./random-dungeons.e2e.mjs";
 
 export async function runTownMapScenario(driver, directory, profile, scenario = "towns") {
-  const zulOnly = scenario === "zul", asgardOnly = scenario === "asgard", batchWalk = zulOnly || asgardOnly;
+  const zulOnly = scenario === "zul", asgardOnly = scenario === "asgard", randomOnly = scenario === "random-dungeons", batchWalk = zulOnly || asgardOnly || randomOnly;
   await mkdir(directory, { recursive: true });
   const keyboard = await connectKeyboard(profile);
   const terrainDirectory = new URL("../../packs/rfb-demo-original/terrain/", import.meta.url);
@@ -160,7 +161,7 @@ export async function runTownMapScenario(driver, directory, profile, scenario = 
   async function nativeSaveRoundTrip(name) {
     await closeDialogs();
     const before=await snapshot();
-    const saveName=`${asgardOnly ? "AS6" : zulOnly ? "Z6" : "AT4"} ${name} ${Date.now()}`;
+    const saveName=`${randomOnly ? "RD6" : asgardOnly ? "AS6" : zulOnly ? "Z6" : "AT4"} ${name} ${Date.now()}`;
     await driver.execute('const input=document.querySelector("#native-save-name");input.value=arguments[0];input.dispatchEvent(new Event("input",{bubbles:true}));document.querySelector("#native-save-create").click();return true;', [saveName]);
     try {
       await driver.waitFor('return [...document.querySelectorAll(".native-save-name")].some(row=>row.textContent===arguments[0])', "town native save", 15_000,[saveName]);
@@ -209,9 +210,9 @@ export async function runTownMapScenario(driver, directory, profile, scenario = 
     report.contentHash=born.contentHash;
     report.protocolVersion=born.protocolVersion;
     if(batchWalk) {
-      const run = asgardOnly ? runAsgardScenario : runZulScenario;
+      const run = randomOnly ? runRandomDungeonsScenario : asgardOnly ? runAsgardScenario : runZulScenario;
       try {
-        await run({driver,keyboard,report,invoke,snapshot,click,changed,closeDialogs,reloadPrepared,capture,walkTo,nativeSaveRoundTrip,travelFromInn,saveListCount,
+        await run({driver,keyboard,report,invoke,snapshot,click,changed,closeDialogs,reloadPrepared,capture,walkTo,nativeSaveRoundTrip,travelFromInn,saveListCount,directory,
           setShift:value=>{shift=value;},getShift:()=>({...shift})});
         assert.deepEqual(keyboard.errors,[]);
         report.status="passed";

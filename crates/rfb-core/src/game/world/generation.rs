@@ -14,6 +14,49 @@ use super::super::monster_ecology::OriginalGroupRole;
 use super::super::movement::actor_can_cross_terrain;
 use super::super::*;
 
+#[derive(Debug, Default, PartialEq, Eq)]
+pub(in crate::game) struct RandomFloorFeatures {
+    pub(in crate::game) destroyed: bool,
+    pub(in crate::game) lake: bool,
+    pub(in crate::game) lake_vault: bool,
+    pub(in crate::game) cavern: bool,
+}
+
+pub(in crate::game) fn roll_random_floor_features(
+    rng: &mut RfbRng,
+    definition: &ProceduralFloorDefinition,
+    lava: bool,
+) -> RandomFloorFeatures {
+    let layout = definition.layout.as_ref().expect("random dungeon layout");
+    let depth = u64::from(definition.depth);
+    // generate.c gen_caverns_and_lakes: destruction, lake, then cavern.
+    let destroyed = depth > 30 && rng.bounded(36) == 0 && layout.destroyed.is_some();
+    if destroyed {
+        rng.bounded(2); // Cave / earth-vault share our bounded rubble geometry.
+    }
+    let mut features = RandomFloorFeatures {
+        destroyed,
+        ..Default::default()
+    };
+    if rng.bounded(18) == 0
+        && !destroyed
+        && layout.lake.is_some()
+        && depth > if lava { 80 } else { 50 }
+    {
+        features.lake = true;
+        features.lake_vault = rng.bounded(3) == 2;
+        if features.lake_vault {
+            rng.bounded(1); // Source one_in_(remaining lake weight).
+        }
+    }
+    features.cavern = depth > 20
+        && !features.lake
+        && !destroyed
+        && layout.cavern.is_some()
+        && rng.bounded(1000) + 1 < depth;
+    features
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::game) struct GeneratedRoom {
     pub(in crate::game) id: String,
@@ -1065,6 +1108,27 @@ impl Game {
         if let Some(inline_map) = &definition.inline_map {
             return self.generate_inline_floor(definition, inline_map, dungeon_instance_id);
         }
+        // DF1_RANDOM forbids natural down stairs; magic-created stairs are separate.
+        let dungeon = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must exist")
+            .dungeons
+            .iter()
+            .find(|dungeon| Some(&dungeon.id) == definition.dungeon_id.as_ref())
+            .cloned();
+        let random = dungeon.as_ref().is_some_and(|dungeon| dungeon.random);
+        let lava = dungeon.as_ref().is_some_and(|dungeon| {
+            dungeon.wilderness_terrain == Some(rfb_content::WildernessTerrain::DeepLava)
+        });
+        let down_stair_terrain_id = definition
+            .down_stair_terrain_id
+            .as_ref()
+            .filter(|_| !random);
+        let tunnel = dungeon
+            .as_ref()
+            .and_then(|dungeon| dungeon.tunnel_percent)
+            .map(|percent| (definition.depth, percent));
         let maze_only = definition
             .layout
             .as_ref()
@@ -1267,11 +1331,16 @@ impl Game {
             .layout
             .as_ref()
             .filter(|layout| !layout.floor_mix.is_empty() || !layout.wall_mix.is_empty());
+        let random_features =
+            random.then(|| roll_random_floor_features(&mut self.rng, definition, lava));
         let cavern_origin = definition.layout.as_ref().and_then(|layout| {
             layout
                 .cavern
                 .as_ref()
                 .filter(|cavern| {
+                    if let Some(features) = &random_features {
+                        return features.cavern;
+                    }
                     !cavern.rfb_depth_chance
                         || (definition.depth > 20
                             && layout.lake.is_none()
@@ -1287,14 +1356,22 @@ impl Game {
             .as_ref()
             .filter(|_| mixed_layout.is_none())
             .and_then(|layout| {
-                layout.lake.as_ref().map(|lake| {
-                    self.generate_connected_lake(
-                        definition,
-                        &lake.deep_terrain_id,
-                        &lake.shallow_terrain_id,
-                        &mut terrain,
-                    )
-                })
+                layout
+                    .lake
+                    .as_ref()
+                    .filter(|_| {
+                        random_features
+                            .as_ref()
+                            .is_none_or(|features| features.lake)
+                    })
+                    .map(|lake| {
+                        self.generate_connected_lake(
+                            definition,
+                            &lake.deep_terrain_id,
+                            &lake.shallow_terrain_id,
+                            &mut terrain,
+                        )
+                    })
             });
         let maze_walkable = if maze_only {
             let maze = definition
@@ -1404,9 +1481,39 @@ impl Game {
                 });
             carve_generated_room(&mut terrain, width, room, room_terrain_id);
         }
-        let cave_room_layout = rooms
-            .iter()
-            .any(|room| room.shape == ProceduralRoomShape::Cavern);
+        if let Some(wall) = dungeon
+            .as_ref()
+            .and_then(|dungeon| dungeon.outer_wall_terrain_id.as_ref())
+        {
+            let room_cells = rooms
+                .iter()
+                .flat_map(generated_room_cells)
+                .collect::<BTreeSet<_>>();
+            for position in &room_cells {
+                for dy in -1..=1 {
+                    for dx in -1..=1 {
+                        let edge = Position {
+                            x: position.x + dx,
+                            y: position.y + dy,
+                        };
+                        if edge.x > 0
+                            && edge.y > 0
+                            && edge.x < i32::from(width) - 1
+                            && edge.y < i32::from(height) - 1
+                            && !room_cells.contains(&edge)
+                            && terrain[generated_terrain_index(width, edge)]
+                                == definition.wall_terrain_id
+                        {
+                            set_generated_terrain(&mut terrain, width, edge, wall);
+                        }
+                    }
+                }
+            }
+        }
+        let cave_room_layout = rooms.iter().any(|room| {
+            room.shape == ProceduralRoomShape::Cavern
+                || (random && room.shape == ProceduralRoomShape::Circle)
+        });
         let (first_center, second_center) = if maze_only {
             maze_floor_anchors(&maze_walkable)
         } else if arena_rooms {
@@ -1440,7 +1547,7 @@ impl Game {
                 width,
                 &rooms,
                 &generated_floor_terrain_id,
-                arena_rooms.then_some(definition.depth),
+                tunnel.or(arena_rooms.then_some((definition.depth, 8))),
             );
             if let Some(origin) = cavern_origin {
                 carve_generated_corridor(
@@ -1460,7 +1567,11 @@ impl Game {
         } else {
             Vec::new()
         };
-        if let Some(lake) = mixed_layout.and_then(|layout| layout.lake.as_ref()) {
+        if let Some(lake) = mixed_layout.and_then(|layout| layout.lake.as_ref())
+            && random_features
+                .as_ref()
+                .is_none_or(|features| features.lake)
+        {
             self.generate_connected_lake(
                 definition,
                 &lake.deep_terrain_id,
@@ -1472,6 +1583,11 @@ impl Game {
             .layout
             .as_ref()
             .and_then(|layout| layout.destroyed.as_ref())
+            .filter(|_| {
+                random_features
+                    .as_ref()
+                    .is_none_or(|features| features.destroyed)
+            })
         {
             self.generate_destroyed_region(definition, &destroyed.terrain_id, &mut terrain);
         }
@@ -1479,12 +1595,20 @@ impl Game {
             .layout
             .as_ref()
             .and_then(|layout| layout.river.as_ref())
+            && !random_features
+                .as_ref()
+                .is_some_and(|features| features.lake_vault)
             && river
                 .chance_one_in
                 .is_none_or(|chance| self.rng.bounded(u64::from(chance)) == 0)
-            && (!river.rfb_depth_chance
-                || (self.rng.bounded(u64::from(definition.depth)) + 1 > 5
-                    && self.rng.bounded(256) > u64::from(definition.depth)))
+            && (if random {
+                self.rng.bounded(u64::from(definition.depth)) + 1 > 5
+                    && (self.rng.bounded(256) > u64::from(definition.depth) || lava)
+            } else {
+                !river.rfb_depth_chance
+                    || (self.rng.bounded(u64::from(definition.depth)) + 1 > 5
+                        && self.rng.bounded(256) > u64::from(definition.depth))
+            })
         {
             let (deep_terrain_id, shallow_terrain_id) = river
                 .alternative
@@ -1545,7 +1669,7 @@ impl Game {
                 width,
                 &rooms,
                 &generated_floor_terrain_id,
-                arena_rooms.then_some(definition.depth),
+                tunnel.or(arena_rooms.then_some((definition.depth, 8))),
             );
         }
         if let Some(cavern_origin) = cavern_origin.filter(|_| mixed_layout.is_none()) {
@@ -1662,7 +1786,7 @@ impl Game {
                 first_center,
                 &definition.up_stair_terrain_id,
             );
-            if let Some(down_stair_terrain_id) = &definition.down_stair_terrain_id {
+            if let Some(down_stair_terrain_id) = down_stair_terrain_id {
                 set_generated_terrain(
                     &mut terrain,
                     width,
@@ -1826,10 +1950,7 @@ impl Game {
             self.place_configured_stairs(
                 definition,
                 first_center,
-                definition
-                    .down_stair_terrain_id
-                    .as_ref()
-                    .map(|_| down_stair_position),
+                down_stair_terrain_id.map(|_| down_stair_position),
                 &stair_reserved,
                 &mut terrain,
             )
@@ -1850,7 +1971,7 @@ impl Game {
         if let Some(door_position) = door_position {
             feature_reserved.insert(door_position);
         }
-        if floor_connections.is_empty() && definition.down_stair_terrain_id.is_some() {
+        if floor_connections.is_empty() && down_stair_terrain_id.is_some() {
             feature_reserved.insert(down_stair_position);
         }
         for placement in &vault_placements {
@@ -1971,7 +2092,7 @@ impl Game {
                 }
             }));
         }
-        if floor_connections.is_empty() && definition.down_stair_terrain_id.is_some() {
+        if floor_connections.is_empty() && down_stair_terrain_id.is_some() {
             occupied.insert(down_stair_position);
         }
         let guardian_position = guardian.map(|_| {
@@ -3063,7 +3184,7 @@ impl Game {
                     .bounded(u64::from(stairs.up.maximum - stairs.up.minimum + 1)),
             )
             .expect("stair count roll must fit u16");
-        let down_total = stairs.down.map(|range| {
+        let down_total = stairs.down.filter(|_| primary_down.is_some()).map(|range| {
             range.minimum
                 + u16::try_from(
                     self.rng
@@ -3205,14 +3326,14 @@ impl Game {
         width: u16,
         rooms: &[GeneratedRoom],
         floor_terrain_id: &str,
-        arena_depth: Option<u16>,
+        tunnel: Option<(u16, u8)>,
     ) {
-        if arena_depth.is_some()
+        if tunnel.is_some()
             || rooms
                 .iter()
                 .any(|room| room.shape == ProceduralRoomShape::Cavern)
         {
-            self.carve_cave_room_network(terrain, width, rooms, floor_terrain_id, arena_depth);
+            self.carve_cave_room_network(terrain, width, rooms, floor_terrain_id, tunnel);
         } else {
             for pair in rooms.windows(2) {
                 carve_generated_corridor(
@@ -3316,7 +3437,7 @@ impl Game {
         width: u16,
         rooms: &[GeneratedRoom],
         floor_terrain_id: &str,
-        arena_depth: Option<u16>,
+        tunnel: Option<(u16, u8)>,
     ) {
         let mut centers = rooms.iter().map(GeneratedRoom::center).collect::<Vec<_>>();
         for remaining in (2..=centers.len()).rev() {
@@ -3330,9 +3451,11 @@ impl Game {
         for index in 0..centers.len() {
             let from = centers[index];
             let to = centers[(index + 1) % centers.len()];
-            // Source dungeon 25 selects the cave-like tunnel when randint1(depth) > 8.
+            // Source selects the cave-like tunnel when randint1(depth) > tunnel_percent.
             // Reuse our existing monotone cave corridor and ordinary L corridor.
-            if arena_depth.is_some_and(|depth| self.rng.bounded(u64::from(depth)) < 8) {
+            if tunnel.is_some_and(|(depth, percent)| {
+                self.rng.bounded(u64::from(depth)) < u64::from(percent)
+            }) {
                 carve_generated_corridor(terrain, width, from, to, floor_terrain_id);
             } else {
                 self.carve_randomized_corridor(terrain, width, from, to, floor_terrain_id);
@@ -5324,6 +5447,7 @@ fn place_generated_floor_connections(
             position,
             target_floor_id: None,
             target_connection_id: None,
+            wilderness_entrance: None,
         });
     }
     placed.sort_by(|left, right| left.id.cmp(&right.id));

@@ -10146,3 +10146,16 @@ item-demo-sexy-swimsuit-name = Sexy Swimsuit
 item-demo-sexy-swimsuit-description = Sexy Swimsuit
 item-demo-death-scythe-name = Death Scythe
 item-demo-death-scythe-description = Death Scythe
+
+floor-demo-random-forest-depth-name = Random Forest
+terrain-demo-random-forest-entrance-name = Random Forest
+terrain-demo-random-forest-entrance-description = 一条进入未知森林的小径
+floor-demo-random-volcano-depth-name = Random Volcano
+terrain-demo-random-volcano-entrance-name = Random Volcano
+terrain-demo-random-volcano-entrance-description = 一个通向未知火山中心的地洞
+floor-demo-random-mountain-depth-name = Random Mountain
+terrain-demo-random-mountain-entrance-name = Random Mountain
+terrain-demo-random-mountain-entrance-description = 一条通向未知山脉的道路
+floor-demo-random-sea-depth-name = Random Sea
+terrain-demo-random-sea-entrance-name = Random Sea
+terrain-demo-random-sea-entrance-description = 一条通往未知失落之地的水下道路

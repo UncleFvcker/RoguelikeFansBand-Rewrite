@@ -2525,6 +2525,7 @@ pub(crate) fn floor_connections_to_save(
             position: connection.position,
             target_floor_id: connection.target_floor_id.clone(),
             target_connection_id: connection.target_connection_id.clone(),
+            wilderness_entrance: connection.wilderness_entrance.clone(),
         })
         .collect::<Vec<_>>();
     connections.sort_by(|left, right| left.id.cmp(&right.id));
@@ -2552,6 +2553,7 @@ pub(crate) fn floor_connections_from_save(
                 position: connection.position,
                 target_floor_id: connection.target_floor_id,
                 target_connection_id: connection.target_connection_id,
+                wilderness_entrance: connection.wilderness_entrance,
             })
         })
         .collect::<Result<Vec<_>, CoreError>>()?;

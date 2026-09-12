@@ -665,6 +665,7 @@ struct StateHashPayloadV98<'a> {
     wilderness_position: Option<Position>,
     wilderness_view_offset: Position,
     wilderness_seed: u64,
+    wilderness_chunks: Vec<rfb_protocol::WildernessChunkSaveDto>,
     world_travel_destination: Option<Position>,
     interface_locale: rfb_protocol::LocaleDto,
     mogaminator: rfb_protocol::MogaminatorSaveDto,
@@ -1549,6 +1550,7 @@ impl Game {
             debug_item_curses_resisted: false,
             monster_division_remainders: BTreeMap::new(),
         };
+        game.restore_wilderness_chunks(payload.wilderness_chunks)?;
         game.validate_spell_realms()?;
         game.restore_player_ability_state(
             saved_resources,
@@ -1595,6 +1597,7 @@ impl Game {
             wilderness_position: self.wilderness_position,
             wilderness_view_offset: self.wilderness_view_offset,
             wilderness_seed: self.wilderness_seed,
+            wilderness_chunks: self.wilderness_chunks_to_save(),
             world_travel_destination: self.world_travel_destination,
             interface_locale: self.interface_locale,
             mogaminator: self.mogaminator.to_save(),
@@ -1683,6 +1686,7 @@ impl Game {
             wilderness_position: self.wilderness_position,
             wilderness_view_offset: self.wilderness_view_offset,
             wilderness_seed: self.wilderness_seed,
+            wilderness_chunks: self.wilderness_chunks_to_save(),
             world_travel_destination: self.world_travel_destination,
             interface_locale: self.interface_locale,
             mogaminator: self.mogaminator.to_save(),
