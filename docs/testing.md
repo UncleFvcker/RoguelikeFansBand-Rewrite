@@ -32,6 +32,7 @@ git diff --check
 ```powershell
 node e2e/tauri.e2e.mjs --ranger-play --fast-entry
 node e2e/tauri.e2e.mjs --priest-play --fast-entry
+node e2e/tauri.e2e.mjs --warrior-mage-play --fast-entry
 node e2e/tauri.e2e.mjs --mage-play --fast-entry
 node e2e/tauri.e2e.mjs --duelist-ui --fast-entry
 node e2e/tauri.e2e.mjs --berserker --fast-entry

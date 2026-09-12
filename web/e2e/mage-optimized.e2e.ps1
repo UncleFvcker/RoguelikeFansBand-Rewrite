@@ -2,7 +2,7 @@
 param(
   [Parameter(Mandatory = $true)][string]$Executable,
   [Parameter(Mandatory = $true)][string]$OutputDirectory,
-  [ValidateSet('Mage', 'Ranger', 'Priest')][string]$Class = 'Mage'
+  [ValidateSet('Mage', 'Ranger', 'Priest', 'WarriorMage')][string]$Class = 'Mage'
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient
@@ -30,8 +30,8 @@ try {
   function ById([string]$id) { FindElement ([System.Windows.Automation.AutomationElement]::AutomationIdProperty) $id }
   function ByName([string]$name) { FindElement ([System.Windows.Automation.AutomationElement]::NameProperty) $name }
   function Invoke($element) { Write-Output "Invoking $($element.Current.Name)"; $element.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke() }
-  $className = switch ($Class) { 'Ranger' { '游侠' }; 'Priest' { '牧师' }; default { '法师' } }
-  $classGroup = switch ($Class) { 'Ranger' { '箭术' }; 'Priest' { '祈祷' }; default { '魔法' } }
+  $className = switch ($Class) { 'Ranger' { '游侠' }; 'Priest' { '牧师' }; 'WarriorMage' { '战法师' }; default { '法师' } }
+  $classGroup = switch ($Class) { 'Ranger' { '箭术' }; 'Priest' { '祈祷' }; 'WarriorMage' { '混合' }; default { '魔法' } }
   $capacity = if ($Class -eq 'Ranger') { 0 } else { 1 }
   # The raw HTML button exists before localization and session handlers are ready.
   Invoke (ByName '新游戏')

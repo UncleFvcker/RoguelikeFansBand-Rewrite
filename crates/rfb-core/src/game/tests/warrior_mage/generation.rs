@@ -68,7 +68,7 @@ fn every_build_claims_and_uses_the_source_thieves_and_orc_rewards() {
                 let before = charges(&game, &id);
                 game.use_inventory_item(
                     &id,
-                    Some(TargetSelection::Direction {
+                    Some(&TargetSelection::Direction {
                         direction: Direction::East,
                     }),
                     None,

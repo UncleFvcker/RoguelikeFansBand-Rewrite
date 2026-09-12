@@ -5763,6 +5763,54 @@
         {
           "type": "object",
           "properties": {
+            "hitPointCost": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "manaDivisor": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "health-to-mana"
+            }
+          },
+          "required": [
+            "type",
+            "hitPointCost",
+            "manaDivisor"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "healing": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "manaCost": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "mana-to-health"
+            }
+          },
+          "required": [
+            "type",
+            "manaCost",
+            "healing"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "amount": {
               "type": "integer",
               "format": "uint32",
@@ -11031,6 +11079,22 @@
           "type": "object",
           "properties": {
             "resolution": {
+              "$ref": "#/$defs/ResourceConversionResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "resource-conversion"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
               "$ref": "#/$defs/ResourceRecoveryResolutionDto"
             },
             "type": {
@@ -14290,6 +14354,47 @@
         "resistant",
         "strong",
         "immune"
+      ]
+    },
+    "ResourceConversionResolutionDto": {
+      "type": "object",
+      "properties": {
+        "converted": {
+          "type": "boolean"
+        },
+        "fatal": {
+          "type": "boolean"
+        },
+        "hpAfter": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hpBefore": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "resourceAfter": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "resourceBefore": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "resourceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "resourceId",
+        "hpBefore",
+        "hpAfter",
+        "resourceBefore",
+        "resourceAfter",
+        "converted",
+        "fatal"
       ]
     },
     "ResourcePoolDto": {

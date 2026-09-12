@@ -96,12 +96,19 @@ impl Game {
         {
             self.debug_add_generated_inventory_item("e2e.priest-dagger", "demo.item.dagger", 1)?;
         }
-        if self.player_is_priest() && matches!(level, 35 | 42 | 50) {
+        if (self.player_is_priest() && matches!(level, 35 | 42 | 50))
+            || (self.player_is_warrior_mage() && matches!(level, 25 | 50))
+        {
             // Explicit desktop preparation: current-realm high books and a melee/power target.
+            let fixture_class = if self.player_is_warrior_mage() {
+                "warrior-mage"
+            } else {
+                "priest"
+            };
             if level == 50 {
                 let first_realm = self
                     .character_definitions()
-                    .expect("Priest build")
+                    .expect("dual-realm build")
                     .0
                     .first_realm_id
                     .as_deref();
@@ -122,7 +129,7 @@ impl Game {
                     .map(|item| item.id.clone())
                     .collect();
                 for kind in kinds {
-                    let id = format!("e2e.priest.{kind}");
+                    let id = format!("e2e.{fixture_class}.{kind}");
                     if !self.items.iter().any(|item| item.id == id) {
                         self.debug_add_generated_inventory_item(&id, &kind, 1)?;
                     }
@@ -144,7 +151,7 @@ impl Game {
                 }
             }
             let actor = self.generated_actor(
-                "e2e.priest-power-target".to_owned(),
+                format!("e2e.{fixture_class}-power-target"),
                 "demo.actor.sheep",
                 Position {
                     x: origin.x - 1,

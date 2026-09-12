@@ -2780,6 +2780,32 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "health-to-mana",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "mana-to-health",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "precognition",
               "type": "string"
             }

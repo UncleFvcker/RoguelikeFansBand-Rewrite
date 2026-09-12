@@ -7415,6 +7415,10 @@ fn b4_glove_exemptions_use_flags_and_final_shared_pval_not_net_stat_bonus() {
 }
 
 fn b4_pick_up_tailored_kind(game: &mut Game, kind: &str) -> String {
+    b4_pick_up_tailored_matching(game, |_, candidate| candidate == kind)
+}
+
+fn b4_pick_up_tailored_matching(game: &mut Game, accepts: impl Fn(&Game, &str) -> bool) -> String {
     let context = LootContext {
         table_id: "demo.loot-table.base-items".into(),
         floor_id: game.current_floor_id.clone(),
@@ -7423,22 +7427,14 @@ fn b4_pick_up_tailored_kind(game: &mut Game, kind: &str) -> String {
             item_id: "test.tailored-reward".into(),
         },
     };
-    let found = game
-        .item_knowledge
-        .get(kind)
-        .map_or(0, |state| state.found_count);
+    let knowledge = game.item_knowledge.clone();
     let draft = (0..512)
         .find_map(|_| {
             game.generate_one_loot_draft(&context, ItemGenerationMode::TailoredGreat)
-                .filter(|draft| draft.kind_id == kind)
+                .filter(|draft| accepts(game, &draft.kind_id))
         })
-        .unwrap_or_else(|| panic!("tailored kind unreachable: {kind}"));
-    assert_eq!(
-        game.item_knowledge
-            .get(kind)
-            .map_or(0, |state| state.found_count),
-        found
-    );
+        .expect("a suitable tailored item must be generated");
+    assert_eq!(game.item_knowledge, knowledge);
     let item = game
         .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
         .unwrap();
@@ -7460,20 +7456,22 @@ fn all_priest_builds_generate_tailored_hafted_weapons_equip_and_resume_generatio
         clear_monsters(&mut game);
         choose_human_talent_if_pending(&mut game);
         game.items.clear();
-        let kind = if game.player_is_warrior_mage() {
-            "demo.item.dagger"
-        } else {
-            "demo.item.mace"
+        let accepts = |game: &Game, kind: &str| {
+            if game.player_is_warrior_mage() {
+                game.content.item(kind).unwrap().equipment_slot.as_deref() == Some("weapon")
+            } else {
+                kind == "demo.item.mace"
+            }
         };
-        let id = b4_pick_up_tailored_kind(&mut game, kind);
+        let id = b4_pick_up_tailored_matching(&mut game, accepts);
         assert!(game.equip_inventory_item(&id, None).is_some());
         game.refresh_player_resource_maxima();
         game.refresh_player_ability_state();
         assert!(!game.item_is_icky(&game.items[0], false));
         let mut restored = Game::from_save(game.to_save()).unwrap();
         assert_eq!(
-            b4_pick_up_tailored_kind(&mut game, kind),
-            b4_pick_up_tailored_kind(&mut restored, kind)
+            b4_pick_up_tailored_matching(&mut game, accepts),
+            b4_pick_up_tailored_matching(&mut restored, accepts)
         );
         assert_eq!(game.to_save(), restored.to_save());
     }

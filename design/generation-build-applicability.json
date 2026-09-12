@@ -340,7 +340,7 @@
       "end": 2325,
       "status": "implemented-current-builds",
       "entry": "demo.item.artifact-creation-scroll; ordinary allocation and Arena final reward",
-      "change": "class/subclass bias on the scroll branch; ordinary natural generation does not run it; Mage shares High Mage bias and the 20% Warrior conversion; Warrior-Mage shares that Mage/20 branch (implementation written; step-7 acceptance pending)",
+      "change": "class/subclass bias on the scroll branch; ordinary natural generation does not run it; Mage shares High Mage bias and the 20% Warrior conversion; Warrior-Mage shares that Mage/20 branch (verified in step-7 core and saved-consumer regressions)",
       "consumer": "crates/rfb-core/src/game/item_use/artifact_creation.rs; random_artifact/materialization.rs; virtues.rs",
       "tests": "crates/rfb-core/src/game/tests/items.rs#artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name; crates/rfb-core/src/game/tests/arena.rs; crates/rfb-core/src/game/random_artifact/tests.rs",
       "prerequisite": null
@@ -706,31 +706,7 @@
       "prerequisite": "Import the applicable content and actual identity/consumer together; review ordinary branches as well."
     }
   ],
-  "gaps": [
-    {
-      "id": "warrior-mage-step7-acceptance",
-      "status": "pending",
-      "buildIds": [
-        "demo.build.warrior-mage-arcane-life",
-        "demo.build.warrior-mage-arcane-sorcery",
-        "demo.build.warrior-mage-arcane-nature",
-        "demo.build.warrior-mage-arcane-death",
-        "demo.build.warrior-mage-arcane-craft",
-        "demo.build.warrior-mage-arcane-daemon",
-        "demo.build.warrior-mage-arcane-crusade",
-        "demo.build.warrior-mage-arcane-armageddon"
-      ],
-      "areas": [
-        "base-allocation-tailored",
-        "ego-negative",
-        "random-artifact",
-        "fixed-artifact-reward",
-        "use-save"
-      ],
-      "reason": "Implementation and test code are registered; tests, compilation, generated bindings/Schema, lock synchronization and source audit report regeneration have not been completed under the user-requested deferral.",
-      "requiredEvidence": "After step 7, run Warrior-Mage and directly affected shared consumer regressions, bilingual UI and prepared desktop play; regenerate authoritative allocation/applicability reports and verify final content lock. Close this gap only on successful execution."
-    }
-  ],
+  "gaps": [],
   "builds": [
     {
       "buildId": "demo.build.warrior",
@@ -3755,14 +3731,12 @@
     },
     {
       "buildId": "demo.build.warrior-mage-arcane-life",
-      "gapIds": [
-        "warrior-mage-step7-acceptance"
-      ],
+      "gapIds": [],
       "areas": [
         {
           "review": "base-allocation-tailored",
           "status": "no-special-difference",
-          "reason": "Born with arcane/life; current secondary realm is authoritative. Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/life; current secondary realm is authoritative. Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/loot/allocation.rs",
             "crates/rfb-core/src/game/player_abilities.rs#item_is_icky"
@@ -3776,7 +3750,7 @@
         {
           "review": "ego-negative",
           "status": "no-special-difference",
-          "reason": "Born with arcane/life; current secondary realm is authoritative. No additional Warrior-Mage Ego branch. Eight real builds exercise themes, negative random artifacts, equipped curse removal rejection and saved generation continuation. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/life; current secondary realm is authoritative. No additional Warrior-Mage Ego branch. Eight real builds exercise themes, negative random artifacts, equipped curse removal rejection and saved generation continuation. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/ego/applicability.rs",
             "crates/rfb-core/src/game/random_artifact/scheduling.rs"
@@ -3789,7 +3763,7 @@
         {
           "review": "random-artifact",
           "status": "implemented",
-          "reason": "Born with arcane/life; current secondary realm is authoritative. The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/life; current secondary realm is authoritative. The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/random_artifact.rs#initial_bias"
           ],
@@ -3802,7 +3776,7 @@
         {
           "review": "fixed-artifact-reward",
           "status": "implemented",
-          "reason": "Born with arcane/life; current secondary realm is authoritative. Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/life; current secondary realm is authoritative. Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/tasks.rs",
             "packs/rfb-demo-original/worlds/middle-earth.json",
@@ -3818,7 +3792,7 @@
         {
           "review": "use-save",
           "status": "implemented",
-          "reason": "Born with arcane/life; current secondary realm is authoritative. Generated equipment, scrolls and fixed-reward activations use shared item state. Both class towers grant Member at non-Owner prices. A confirmed realm change updates real book inscriptions and realm facilities while retaining class memberships. Conversion/UI save continuation uses actual Game state. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/life; current secondary realm is authoritative. Generated equipment, scrolls and fixed-reward activations use shared item state. Both class towers grant Member at non-Owner prices. A confirmed realm change updates real book inscriptions and realm facilities while retaining class memberships. Conversion/UI save continuation uses actual Game state. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/item_use.rs",
             "crates/rfb-core/src/game/town.rs",
@@ -3836,14 +3810,12 @@
     },
     {
       "buildId": "demo.build.warrior-mage-arcane-sorcery",
-      "gapIds": [
-        "warrior-mage-step7-acceptance"
-      ],
+      "gapIds": [],
       "areas": [
         {
           "review": "base-allocation-tailored",
           "status": "no-special-difference",
-          "reason": "Born with arcane/sorcery; current secondary realm is authoritative. Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/sorcery; current secondary realm is authoritative. Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/loot/allocation.rs",
             "crates/rfb-core/src/game/player_abilities.rs#item_is_icky"
@@ -3857,7 +3829,7 @@
         {
           "review": "ego-negative",
           "status": "no-special-difference",
-          "reason": "Born with arcane/sorcery; current secondary realm is authoritative. No additional Warrior-Mage Ego branch. Eight real builds exercise themes, negative random artifacts, equipped curse removal rejection and saved generation continuation. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/sorcery; current secondary realm is authoritative. No additional Warrior-Mage Ego branch. Eight real builds exercise themes, negative random artifacts, equipped curse removal rejection and saved generation continuation. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/ego/applicability.rs",
             "crates/rfb-core/src/game/random_artifact/scheduling.rs"
@@ -3870,7 +3842,7 @@
         {
           "review": "random-artifact",
           "status": "implemented",
-          "reason": "Born with arcane/sorcery; current secondary realm is authoritative. The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/sorcery; current secondary realm is authoritative. The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/random_artifact.rs#initial_bias"
           ],
@@ -3883,7 +3855,7 @@
         {
           "review": "fixed-artifact-reward",
           "status": "implemented",
-          "reason": "Born with arcane/sorcery; current secondary realm is authoritative. Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/sorcery; current secondary realm is authoritative. Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/tasks.rs",
             "packs/rfb-demo-original/worlds/middle-earth.json",
@@ -3899,7 +3871,7 @@
         {
           "review": "use-save",
           "status": "implemented",
-          "reason": "Born with arcane/sorcery; current secondary realm is authoritative. Generated equipment, scrolls and fixed-reward activations use shared item state. Both class towers grant Member at non-Owner prices. A confirmed realm change updates real book inscriptions and realm facilities while retaining class memberships. Conversion/UI save continuation uses actual Game state. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/sorcery; current secondary realm is authoritative. Generated equipment, scrolls and fixed-reward activations use shared item state. Both class towers grant Member at non-Owner prices. A confirmed realm change updates real book inscriptions and realm facilities while retaining class memberships. Conversion/UI save continuation uses actual Game state. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/item_use.rs",
             "crates/rfb-core/src/game/town.rs",
@@ -3917,14 +3889,12 @@
     },
     {
       "buildId": "demo.build.warrior-mage-arcane-nature",
-      "gapIds": [
-        "warrior-mage-step7-acceptance"
-      ],
+      "gapIds": [],
       "areas": [
         {
           "review": "base-allocation-tailored",
           "status": "no-special-difference",
-          "reason": "Born with arcane/nature; current secondary realm is authoritative. Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/nature; current secondary realm is authoritative. Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/loot/allocation.rs",
             "crates/rfb-core/src/game/player_abilities.rs#item_is_icky"
@@ -3938,7 +3908,7 @@
         {
           "review": "ego-negative",
           "status": "no-special-difference",
-          "reason": "Born with arcane/nature; current secondary realm is authoritative. No additional Warrior-Mage Ego branch. Eight real builds exercise themes, negative random artifacts, equipped curse removal rejection and saved generation continuation. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/nature; current secondary realm is authoritative. No additional Warrior-Mage Ego branch. Eight real builds exercise themes, negative random artifacts, equipped curse removal rejection and saved generation continuation. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/ego/applicability.rs",
             "crates/rfb-core/src/game/random_artifact/scheduling.rs"
@@ -3951,7 +3921,7 @@
         {
           "review": "random-artifact",
           "status": "implemented",
-          "reason": "Born with arcane/nature; current secondary realm is authoritative. The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/nature; current secondary realm is authoritative. The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/random_artifact.rs#initial_bias"
           ],
@@ -3964,7 +3934,7 @@
         {
           "review": "fixed-artifact-reward",
           "status": "implemented",
-          "reason": "Born with arcane/nature; current secondary realm is authoritative. Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/nature; current secondary realm is authoritative. Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/tasks.rs",
             "packs/rfb-demo-original/worlds/middle-earth.json",
@@ -3980,7 +3950,7 @@
         {
           "review": "use-save",
           "status": "implemented",
-          "reason": "Born with arcane/nature; current secondary realm is authoritative. Generated equipment, scrolls and fixed-reward activations use shared item state. Both class towers grant Member at non-Owner prices. A confirmed realm change updates real book inscriptions and realm facilities while retaining class memberships. Conversion/UI save continuation uses actual Game state. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/nature; current secondary realm is authoritative. Generated equipment, scrolls and fixed-reward activations use shared item state. Both class towers grant Member at non-Owner prices. A confirmed realm change updates real book inscriptions and realm facilities while retaining class memberships. Conversion/UI save continuation uses actual Game state. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/item_use.rs",
             "crates/rfb-core/src/game/town.rs",
@@ -3998,14 +3968,12 @@
     },
     {
       "buildId": "demo.build.warrior-mage-arcane-death",
-      "gapIds": [
-        "warrior-mage-step7-acceptance"
-      ],
+      "gapIds": [],
       "areas": [
         {
           "review": "base-allocation-tailored",
           "status": "no-special-difference",
-          "reason": "Born with arcane/death; current secondary realm is authoritative. Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/death; current secondary realm is authoritative. Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/loot/allocation.rs",
             "crates/rfb-core/src/game/player_abilities.rs#item_is_icky"
@@ -4019,7 +3987,7 @@
         {
           "review": "ego-negative",
           "status": "no-special-difference",
-          "reason": "Born with arcane/death; current secondary realm is authoritative. No additional Warrior-Mage Ego branch. Eight real builds exercise themes, negative random artifacts, equipped curse removal rejection and saved generation continuation. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/death; current secondary realm is authoritative. No additional Warrior-Mage Ego branch. Eight real builds exercise themes, negative random artifacts, equipped curse removal rejection and saved generation continuation. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/ego/applicability.rs",
             "crates/rfb-core/src/game/random_artifact/scheduling.rs"
@@ -4032,7 +4000,7 @@
         {
           "review": "random-artifact",
           "status": "implemented",
-          "reason": "Born with arcane/death; current secondary realm is authoritative. The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/death; current secondary realm is authoritative. The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/random_artifact.rs#initial_bias"
           ],
@@ -4045,7 +4013,7 @@
         {
           "review": "fixed-artifact-reward",
           "status": "implemented",
-          "reason": "Born with arcane/death; current secondary realm is authoritative. Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/death; current secondary realm is authoritative. Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/tasks.rs",
             "packs/rfb-demo-original/worlds/middle-earth.json",
@@ -4061,7 +4029,7 @@
         {
           "review": "use-save",
           "status": "implemented",
-          "reason": "Born with arcane/death; current secondary realm is authoritative. Generated equipment, scrolls and fixed-reward activations use shared item state. Both class towers grant Member at non-Owner prices. A confirmed realm change updates real book inscriptions and realm facilities while retaining class memberships. Conversion/UI save continuation uses actual Game state. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/death; current secondary realm is authoritative. Generated equipment, scrolls and fixed-reward activations use shared item state. Both class towers grant Member at non-Owner prices. A confirmed realm change updates real book inscriptions and realm facilities while retaining class memberships. Conversion/UI save continuation uses actual Game state. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/item_use.rs",
             "crates/rfb-core/src/game/town.rs",
@@ -4079,14 +4047,12 @@
     },
     {
       "buildId": "demo.build.warrior-mage-arcane-craft",
-      "gapIds": [
-        "warrior-mage-step7-acceptance"
-      ],
+      "gapIds": [],
       "areas": [
         {
           "review": "base-allocation-tailored",
           "status": "no-special-difference",
-          "reason": "Born with arcane/craft; current secondary realm is authoritative. Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/craft; current secondary realm is authoritative. Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/loot/allocation.rs",
             "crates/rfb-core/src/game/player_abilities.rs#item_is_icky"
@@ -4100,7 +4066,7 @@
         {
           "review": "ego-negative",
           "status": "no-special-difference",
-          "reason": "Born with arcane/craft; current secondary realm is authoritative. No additional Warrior-Mage Ego branch. Eight real builds exercise themes, negative random artifacts, equipped curse removal rejection and saved generation continuation. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/craft; current secondary realm is authoritative. No additional Warrior-Mage Ego branch. Eight real builds exercise themes, negative random artifacts, equipped curse removal rejection and saved generation continuation. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/ego/applicability.rs",
             "crates/rfb-core/src/game/random_artifact/scheduling.rs"
@@ -4113,7 +4079,7 @@
         {
           "review": "random-artifact",
           "status": "implemented",
-          "reason": "Born with arcane/craft; current secondary realm is authoritative. The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/craft; current secondary realm is authoritative. The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/random_artifact.rs#initial_bias"
           ],
@@ -4126,7 +4092,7 @@
         {
           "review": "fixed-artifact-reward",
           "status": "implemented",
-          "reason": "Born with arcane/craft; current secondary realm is authoritative. Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/craft; current secondary realm is authoritative. Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/tasks.rs",
             "packs/rfb-demo-original/worlds/middle-earth.json",
@@ -4142,7 +4108,7 @@
         {
           "review": "use-save",
           "status": "implemented",
-          "reason": "Born with arcane/craft; current secondary realm is authoritative. Generated equipment, scrolls and fixed-reward activations use shared item state. Both class towers grant Member at non-Owner prices. A confirmed realm change updates real book inscriptions and realm facilities while retaining class memberships. Conversion/UI save continuation uses actual Game state. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/craft; current secondary realm is authoritative. Generated equipment, scrolls and fixed-reward activations use shared item state. Both class towers grant Member at non-Owner prices. A confirmed realm change updates real book inscriptions and realm facilities while retaining class memberships. Conversion/UI save continuation uses actual Game state. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/item_use.rs",
             "crates/rfb-core/src/game/town.rs",
@@ -4160,14 +4126,12 @@
     },
     {
       "buildId": "demo.build.warrior-mage-arcane-daemon",
-      "gapIds": [
-        "warrior-mage-step7-acceptance"
-      ],
+      "gapIds": [],
       "areas": [
         {
           "review": "base-allocation-tailored",
           "status": "no-special-difference",
-          "reason": "Born with arcane/daemon; current secondary realm is authoritative. Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/daemon; current secondary realm is authoritative. Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/loot/allocation.rs",
             "crates/rfb-core/src/game/player_abilities.rs#item_is_icky"
@@ -4181,7 +4145,7 @@
         {
           "review": "ego-negative",
           "status": "no-special-difference",
-          "reason": "Born with arcane/daemon; current secondary realm is authoritative. No additional Warrior-Mage Ego branch. Eight real builds exercise themes, negative random artifacts, equipped curse removal rejection and saved generation continuation. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/daemon; current secondary realm is authoritative. No additional Warrior-Mage Ego branch. Eight real builds exercise themes, negative random artifacts, equipped curse removal rejection and saved generation continuation. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/ego/applicability.rs",
             "crates/rfb-core/src/game/random_artifact/scheduling.rs"
@@ -4194,7 +4158,7 @@
         {
           "review": "random-artifact",
           "status": "implemented",
-          "reason": "Born with arcane/daemon; current secondary realm is authoritative. The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/daemon; current secondary realm is authoritative. The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/random_artifact.rs#initial_bias"
           ],
@@ -4207,7 +4171,7 @@
         {
           "review": "fixed-artifact-reward",
           "status": "implemented",
-          "reason": "Born with arcane/daemon; current secondary realm is authoritative. Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/daemon; current secondary realm is authoritative. Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/tasks.rs",
             "packs/rfb-demo-original/worlds/middle-earth.json",
@@ -4223,7 +4187,7 @@
         {
           "review": "use-save",
           "status": "implemented",
-          "reason": "Born with arcane/daemon; current secondary realm is authoritative. Generated equipment, scrolls and fixed-reward activations use shared item state. Both class towers grant Member at non-Owner prices. A confirmed realm change updates real book inscriptions and realm facilities while retaining class memberships. Conversion/UI save continuation uses actual Game state. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/daemon; current secondary realm is authoritative. Generated equipment, scrolls and fixed-reward activations use shared item state. Both class towers grant Member at non-Owner prices. A confirmed realm change updates real book inscriptions and realm facilities while retaining class memberships. Conversion/UI save continuation uses actual Game state. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/item_use.rs",
             "crates/rfb-core/src/game/town.rs",
@@ -4241,14 +4205,12 @@
     },
     {
       "buildId": "demo.build.warrior-mage-arcane-crusade",
-      "gapIds": [
-        "warrior-mage-step7-acceptance"
-      ],
+      "gapIds": [],
       "areas": [
         {
           "review": "base-allocation-tailored",
           "status": "no-special-difference",
-          "reason": "Born with arcane/crusade; current secondary realm is authoritative. Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/crusade; current secondary realm is authoritative. Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/loot/allocation.rs",
             "crates/rfb-core/src/game/player_abilities.rs#item_is_icky"
@@ -4262,7 +4224,7 @@
         {
           "review": "ego-negative",
           "status": "no-special-difference",
-          "reason": "Born with arcane/crusade; current secondary realm is authoritative. No additional Warrior-Mage Ego branch. Eight real builds exercise themes, negative random artifacts, equipped curse removal rejection and saved generation continuation. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/crusade; current secondary realm is authoritative. No additional Warrior-Mage Ego branch. Eight real builds exercise themes, negative random artifacts, equipped curse removal rejection and saved generation continuation. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/ego/applicability.rs",
             "crates/rfb-core/src/game/random_artifact/scheduling.rs"
@@ -4275,7 +4237,7 @@
         {
           "review": "random-artifact",
           "status": "implemented",
-          "reason": "Born with arcane/crusade; current secondary realm is authoritative. The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/crusade; current secondary realm is authoritative. The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/random_artifact.rs#initial_bias"
           ],
@@ -4288,7 +4250,7 @@
         {
           "review": "fixed-artifact-reward",
           "status": "implemented",
-          "reason": "Born with arcane/crusade; current secondary realm is authoritative. Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/crusade; current secondary realm is authoritative. Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/tasks.rs",
             "packs/rfb-demo-original/worlds/middle-earth.json",
@@ -4304,7 +4266,7 @@
         {
           "review": "use-save",
           "status": "implemented",
-          "reason": "Born with arcane/crusade; current secondary realm is authoritative. Generated equipment, scrolls and fixed-reward activations use shared item state. Both class towers grant Member at non-Owner prices. A confirmed realm change updates real book inscriptions and realm facilities while retaining class memberships. Conversion/UI save continuation uses actual Game state. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/crusade; current secondary realm is authoritative. Generated equipment, scrolls and fixed-reward activations use shared item state. Both class towers grant Member at non-Owner prices. A confirmed realm change updates real book inscriptions and realm facilities while retaining class memberships. Conversion/UI save continuation uses actual Game state. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/item_use.rs",
             "crates/rfb-core/src/game/town.rs",
@@ -4322,14 +4284,12 @@
     },
     {
       "buildId": "demo.build.warrior-mage-arcane-armageddon",
-      "gapIds": [
-        "warrior-mage-step7-acceptance"
-      ],
+      "gapIds": [],
       "areas": [
         {
           "review": "base-allocation-tailored",
           "status": "no-special-difference",
-          "reason": "Born with arcane/armageddon; current secondary realm is authoritative. Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/armageddon; current secondary realm is authoritative. Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/loot/allocation.rs",
             "crates/rfb-core/src/game/player_abilities.rs#item_is_icky"
@@ -4343,7 +4303,7 @@
         {
           "review": "ego-negative",
           "status": "no-special-difference",
-          "reason": "Born with arcane/armageddon; current secondary realm is authoritative. No additional Warrior-Mage Ego branch. Eight real builds exercise themes, negative random artifacts, equipped curse removal rejection and saved generation continuation. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/armageddon; current secondary realm is authoritative. No additional Warrior-Mage Ego branch. Eight real builds exercise themes, negative random artifacts, equipped curse removal rejection and saved generation continuation. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/ego/applicability.rs",
             "crates/rfb-core/src/game/random_artifact/scheduling.rs"
@@ -4356,7 +4316,7 @@
         {
           "review": "random-artifact",
           "status": "implemented",
-          "reason": "Born with arcane/armageddon; current secondary realm is authoritative. The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/armageddon; current secondary realm is authoritative. The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/random_artifact.rs#initial_bias"
           ],
@@ -4369,7 +4329,7 @@
         {
           "review": "fixed-artifact-reward",
           "status": "implemented",
-          "reason": "Born with arcane/armageddon; current secondary realm is authoritative. Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/armageddon; current secondary realm is authoritative. Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/tasks.rs",
             "packs/rfb-demo-original/worlds/middle-earth.json",
@@ -4385,7 +4345,7 @@
         {
           "review": "use-save",
           "status": "implemented",
-          "reason": "Born with arcane/armageddon; current secondary realm is authoritative. Generated equipment, scrolls and fixed-reward activations use shared item state. Both class towers grant Member at non-Owner prices. A confirmed realm change updates real book inscriptions and realm facilities while retaining class memberships. Conversion/UI save continuation uses actual Game state. References are unexecuted until step-7 acceptance.",
+          "reason": "Born with arcane/armageddon; current secondary realm is authoritative. Generated equipment, scrolls and fixed-reward activations use shared item state. Both class towers grant Member at non-Owner prices. A confirmed realm change updates real book inscriptions and realm facilities while retaining class memberships. Conversion/UI save continuation uses actual Game state. Verified by the step-7 core regressions; desktop evidence uses the Arcane/Sorcery representative and explicitly prepared high levels.",
           "implementation": [
             "crates/rfb-core/src/game/item_use.rs",
             "crates/rfb-core/src/game/town.rs",

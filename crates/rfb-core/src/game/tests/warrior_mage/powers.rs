@@ -402,6 +402,7 @@ fn melee_conversion_book_cast_and_healing_continue_identically_after_loading() {
         },
     );
     assert!(conversion.events.iter().any(|e| matches!(&e.outcome, Some(GameEventOutcomeDto::ResourceConversion { resolution }) if resolution.hp_before - resolution.hp_after == 25 && resolution.resource_after == 5)));
+    game.debug_set_ability_casts_succeed(false);
     let mut restored = Game::from_save(game.to_save()).unwrap();
     for id in [spell, HP_TO_MP, MP_TO_HP] {
         let command = GameCommand::CastAbility {

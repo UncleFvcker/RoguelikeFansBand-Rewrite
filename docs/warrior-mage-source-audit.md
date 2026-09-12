@@ -106,7 +106,7 @@ T四项为最低等级/MP/基础失败率/首用经验乘数；写入 `firstSucc
 
 失败率沿 `spells.c:1006–1057 calculate_fail_rate_aux`，不是书本熟练度公式：等级/INT、装备与突变、最低失败、震慑和95上限、EasySpell等按源阶段处理。当前 `class_ability_failure_percent`的EasySpell和震慑部分仅服务少数已有职业，战法师必须补入；魅力吊坠恰好有EasySpell，不能只验证裸装。源HeavySpell、未开放身份等共同差异不在这里制造职业特判来掩盖。
 
-[mutations.rs](../crates/rfb-core/src/game/mutations.rs)的`resolve_periodic_sp_to_hp`和`resolve_periodic_hp_to_sp`是1:1的周期转换，对应源SPELL_PROCESS，不能改成主动5:1规则。第四步已将两个主动效果接入现有[restoration.rs](../crates/rfb-core/src/game/abilities/restoration.rs)职责范围，复用既有资源、伤害和治疗原语；不新增转换管理器或独立持久状态。效果结果与UI必须显示真实损失/收益及失败/不足原因，不能只有“费用0”。第四步新增转换效果投影和包含实际资源前后值、转换成败、死亡结果的协议DTO；[专项测试代码](../crates/rfb-core/src/game/tests/warrior_mage/powers.rs)已补。用户要求测试/编译统一留到第七步结束后，Schema/协议绑定生成和最终验收一并待办；不把已写代码标为全部验证通过。
+[mutations.rs](../crates/rfb-core/src/game/mutations.rs)的`resolve_periodic_sp_to_hp`和`resolve_periodic_hp_to_sp`是1:1的周期转换，对应源SPELL_PROCESS，不能改成主动5:1规则。第四步已将两个主动效果接入现有[restoration.rs](../crates/rfb-core/src/game/abilities/restoration.rs)职责范围，复用既有资源、伤害和治疗原语；不新增转换管理器或独立持久状态。效果结果与UI必须显示真实损失/收益及失败/不足原因，不能只有“费用0”。第四步新增转换效果投影和包含实际资源前后值、转换成败、死亡结果的协议DTO；[专项测试](../crates/rfb-core/src/game/tests/warrior_mage/powers.rs)已在第七步统一验收通过，Schema/协议绑定由生成器同步并检查，详见第9节。
 
 ## 6. 生成、奖励、设施与必要神器
 
@@ -136,15 +136,15 @@ T四项为最低等级/MP/基础失败率/首用经验乘数；写入 `firstSucc
 
 神器22激活为 `HEAL_CURING_HERO:50:300:777`；经 `devices.c:2466–2488 effect_parse`核对，格式是**效果:等级:冷却:额外量**，所以power/难度50、源冷却300、治疗额外量777。这里的777覆盖默认治疗公式，不是加在默认300之上。神器219为 `RESTORE_MANA:50:777`，power/难度50、冷却777。`devices.c:4933–4970`已有准确效果来源，项目已有Ego/随机神器的天使治愈组合以及 `RestoreResourceFull`。复用原语并保留本神器参数，不复制Ego的900冷却/80难度；按现有源回合到tick约定分别表达300和777冷却。
 
-天使治愈还涉及清理失明/流血/混乱/震慑、减毒、解除狂暴、英雄状态和minislow减少1；恢复法力还给背包魔杖/法杖25%、魔棒50%充能，跳过恢复法力装置，并解除狂暴。当前[item_use.rs](../crates/rfb-core/src/game/item_use.rs)分别有资源满恢复与`RechargeCarriedDevices`原语，不能假设`RestoreResourceFull`自动执行后者。现有Ego天使治愈组合使用完全清毒、固定治疗公式且省略部分后果，也不能原样拷贝；第五步已按新神器的效果组装，并补充下述实现/公共边界记录。神器219的EasySpell与职业能力失败率联动、两件激活的实际后果已写入测试，留待统一执行。
+天使治愈还涉及清理失明/流血/混乱/震慑、减毒、解除狂暴、英雄状态和minislow减少1；恢复法力还给背包魔杖/法杖25%、魔棒50%充能，跳过恢复法力装置，并解除狂暴。当前[item_use.rs](../crates/rfb-core/src/game/item_use.rs)分别有资源满恢复与`RechargeCarriedDevices`原语，不能假设`RestoreResourceFull`自动执行后者。现有Ego天使治愈组合使用完全清毒、固定治疗公式且省略部分后果，也不能原样拷贝；第五步已按新神器的效果组装，并补充下述实现/公共边界记录。神器219的EasySpell与职业能力失败率联动、两件激活的实际后果已在第七步统一测试中通过。
 
 第五步实现保留同一来源提交和上游许可，新增底材按55/4进入基础分配；神器属性由正式定义进入既有固定神器生成、装备、唯一性及激活管线。罗恩格林采用777基础治疗与3000-tick冷却；减毒使用当前毒状态的tick表示（最少3000或现有量的一半），显式英雄KeepStrongest保持较长已有时长，轻微减速减少1复用现有minor_slow。吊坠复用perfect-focus-restoration，冷却7770 ticks；INT/CHR、搜索/感知、红外、装置技能、三光环、警告与EasySpell写入现有字段/被动。英雄效果仍沿现有共用heroism计时、最大生命与恐惧免疫模型；未新增源no_slow独立状态。
 
-[第五步专项代码](../crates/rfb-core/src/game/tests/warrior_mage/generation.rs)包含普通奖励、固定1:4选择、失败领取事务、重复替代、自然神器生成/装备/实际激活/冷却、两塔实付价格和改换后的铭刻/资格。共享allocation、ego/applicability、random_artifact与items用例扩展到8个真实Build，覆盖非装置偏好、奥秘优质书排除、双方needs-book、手套成品/未知属性、负向生成、卷轴和保存后继续行动。这些是已写测试代码，尚未运行；按用户要求，编译、Schema/绑定、最终lock、基础分配审计与入口报告统一留到第七步结束后。
+[第五步专项代码](../crates/rfb-core/src/game/tests/warrior_mage/generation.rs)包含普通奖励、固定1:4选择、失败领取事务、重复替代、自然神器生成/装备/实际激活/冷却、两塔实付价格和改换后的铭刻/资格。共享allocation、ego/applicability、random_artifact与items用例扩展到8个真实Build，覆盖非装置偏好、奥秘优质书排除、双方needs-book、手套成品/未知属性、负向生成、卷轴和保存后继续行动。上述职业专项及共享用例已在第七步统一通过；编译、生成物、最终lock、基础分配与入口报告均已同步核验。共享背包装置充能增加按实例ID排序，保持保存前后的结算事件和RNG一致，详见第9节。
 
 ## 7. 每个Build的五类审计责任
 
-第六步已在正式输入中对8个完整Build ID登记下列五个area，共40项记录；实现及测试引用对应第五步实际代码。所有新增Build均关联`warrior-mage-step7-acceptance`待验gap，测试引用不等于执行通过。**现有94入口生成报告尚未重生成**；用户要求统一留到第七步结束后执行测试、编译和来源报告核验。
+第六步登记8个完整Build ID的五个area，共40项责任；第七步实际执行职业与共享消费者回归、双语UI和准备后的桌面实战后，已移除`warrior-mage-step7-acceptance`待验gap并通过正式来源工具重生成报告。当前102入口/0个可玩范围证据gap；全原版未开放身份、领域和公共适配差异继续保留。
 
 | area ID | 应复用的条件与必须补齐的行为证据 |
 | --- | --- |
@@ -172,10 +172,26 @@ T四项为最低等级/MP/基础失败率/首用经验乘数；写入 `firstSucc
 
 第一步已完成。本文保留审计时的代码基线与缺口；后续实际完成范围以[接入计划](warrior-mage-class-plan.md)和提交说明为准。没有未决中文名或职业规则选择；第七步负责统一实战与桌面交付，高等级测试准备须明确记录。
 
-## 9. 正式入口与UI待验范围
+## 9. 第七步统一验收（2026-09-12）
 
-第六步按同一来源`src/py_birth.c:1357–1358`将战法师加入现有“混合”分类，在固定奥秘之下只选副领域；八项含工艺，没有重复奥秘或未接入领域。书本页复用核心`chosen`投影和主副学习/改换状态，不复制职业判断。能力页消费核心`HealthToMana`/`ManaToHealth`数值，区别标称零费用与内部支付，并解释满资源、死亡、法力不足耗回合和施放失败；实际资源变化继续使用第四步日志。
+第四至七步实现完成后，按用户安排统一执行编译与验收。来源仍为master提交`a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。最终内容1.433.0，hash为`b5f520772a798fc8e37a43fa317c6e23c58d0cf5965abe84bde23246f4f1c0cc`，lock已verify；协议1.255及内容Schema由生成器更新并通过检查。save14/21/容器1、State Hash Schema126和contract-v327不变。
 
-已写`web/e2e/warrior-mage.e2e.mjs`并接入`node e2e/tauri.e2e.mjs --warrior-mage-ui`。场景计划覆盖双语8个菜单、代表奥秘/咒术正常人类1级出生、自主选择与重复研习、转换和恢复待确认存档后改换生命、相同后续学习/转换状态。等级24/25、安静亮图、满HP/MP和生命第一册均为显式测试准备；不声称自然获得。390px与200%下检查创角、书本和改换窗口，键盘与IPC忙碌锁沿既有WebDriver/CDP工具，无Computer Use。这里只写入用例，没有运行、截图、编译或可玩产物。
+| 检查 | 实际结果与边界 |
+| --- | --- |
+| 战法师专项 | 31项通过，覆盖出生成长、双领域学习/遗忘/改换/保存、主动转换及生成/奖励/设施；首次专项编译的目标借用错误及2项失败修正后复验通过 |
+| workspace | 核心1583通过、3项原有ignored；全量先1582通过/1失败，夹具修正后精确复验1项通过。内容163通过（全量161通过/2个旧数量断言失败，修正后2项通过）；契约政策2项通过（既存常量326与实际政策327不符，修正后2项通过）。其余契约库7、CLI2、fixture6通过/1个全量标记ignored，导入器194、probe2、本地化39、协议7、回放9、保存2、Tauri23通过 |
+| 前端与静态检查 | 前端214、typecheck、workspace all-targets Clippy、格式、协议绑定/Schema与内容Schema检查通过；UI及standalone构建通过。构建有既有Vite大chunk提示，生成器有ts-rs对deny_unknown_fields的提示 |
+| 契约 | 26条active场景全部通过；本批没有观察到需刷新的差异，没有刷新fixture |
+| 来源/生成报告 | 实际Git对象来源核验通过；160身份、158底材、40标志；基础分配378行。8个战法师Build的40项责任执行后关闭待验gap，102入口/0个可玩范围证据gap只读检查通过；不代表全原版runtime parity完整 |
+| 双语UI | 中英文各8菜单、普通出生、学习/重复研习、24/25级资格、真实转换、键盘/取消/IPC忙碌锁、390px/200%及待确认/已改换保存续演通过 |
+| 实战 | 奥秘/咒术人类1级正常出生；出生装备在正常生成的兽穴完成Zap击杀兵蚁、近战击杀巨型白鼠，自然升至2级后副领域学习/施法。快速入口1559ms，只跳过城镇步行 |
+| 准备后实战 | 25级真实双向转换、转换后Zap继续伤害目标；50级双方第四册可达法术学习/施放。改换为生命后正常菜单导出/原生加载，再执行HP→MP、奥秘探测、生命治疗和MP→HP；全部事件、完整投影与哈希一致，最终hash为`3607a328b1d62714e63c980dd4d90abaf73697b18858a5ea6a0c2f0f9d2902b8` |
+| 优化桌面 | `npm run build -- --no-bundle`生成Tauri standalone；优化EXE经进程定向Windows UI Automation验证普通战法师创角、1级资源/容量投影和正常退出 |
 
-来源提交未变；内容1.433.0，lock仍为1.431.0，协议/内容Schema及正式来源报告待统一同步。第七步结束验收前不能把新入口数量、测试代码或实现引用当作行为通过证明。
+统一验证中修正了一个真实共享问题：`RechargeCarriedDevices`按背包容器插入顺序结算，而加载会按实例ID恢复，导致两端充能事件及后续随机消耗顺序不同。现在按实例ID稳定结算，保留装置筛选、充能比例与公式；两件新神器的实际激活和保存续演均通过。
+
+测试修正保持规则和断言强度：转换续演在保存前恢复自然失败模式，避免把不持久化的调试成功开关带入比较；战法师Tailored验收选择实际生成的近战武器，牧师仍要求钝器，而不再强求在512次抽样中找到无特殊偏好的匕首。后者的公共帮助函数另复验7个直接调用者通过。桌面脚本在施放自动关页后重新开页再检查布局；保存续演选用当时资源足够的奥秘探测，不再误选魔力不足的高阶法术，未修改游戏的费用/随机成功率。最初失败日志与最终复验日志一并保留。
+
+报告、截图和存档位于`test-results/warrior-mage-ui/`及`warrior-mage-play/`，统一日志位于`test-results/warrior-mage-validation/logs/`，优化原生报告为`test-results/warrior-mage-optimized/checks.json`。复现命令见[验证指南](testing.md)。交付目录`release/RoguelikeFansBand-Rewrite_0.1.0_warrior-mage-20260912_windows-x64/`包含EXE、提交源码、许可、证据及SHA-256清单。
+
+高等级经验、24/25/50级准备、亮图/清怪、HP/MP恢复、生命第一册、50级当前双方第四册和25/50级3×3地板/绵羊均为显式测试准备，保留自然施放失败；不表示自然取得等级或物资。详细实战/截图来自同源WebDriver构建，优化EXE烟测范围单独列明。未验收自然高等级、完整通关、Android或人工试玩；第8节公共适配（包括治疗美德与源no_slow未独立表达）以及未接入领域仍保留。

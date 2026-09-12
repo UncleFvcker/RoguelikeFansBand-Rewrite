@@ -6203,10 +6203,14 @@ impl Game {
             }
             ItemUseEffectDefinition::RechargeCarriedDevices => {
                 let mut noticed = false;
-                for item in &mut self.items {
-                    if item.location != ItemLocation::Inventory {
-                        continue;
-                    }
+                // Saves order items by ID; recharge events and RNG draws use the same order.
+                let mut carried = self
+                    .items
+                    .iter_mut()
+                    .filter(|item| item.location == ItemLocation::Inventory)
+                    .collect::<Vec<_>>();
+                carried.sort_by(|left, right| left.id.cmp(&right.id));
+                for item in carried {
                     let definition = self
                         .content
                         .item(&item.kind_id)
