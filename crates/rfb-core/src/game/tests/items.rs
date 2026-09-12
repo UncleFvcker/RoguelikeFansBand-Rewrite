@@ -4531,16 +4531,16 @@ fn galadriel_instant_generation_lighting_activation_and_cooldown_survive_save() 
     assert!(game.glow[game.index(target).unwrap()]);
     let rng = game.rng.clone();
     assert!(
-        !game
-            .use_inventory_item(
-                &id,
-                Some(&TargetSelection::SelfTarget),
-                None,
-                &mut events,
-                &mut BTreeSet::new(),
-                &mut Vec::new()
-            )
-            .unwrap()
+        game.use_inventory_item(
+            &id,
+            Some(&TargetSelection::SelfTarget),
+            None,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new()
+        )
+        .unwrap()
+        .is_none()
     );
     assert_eq!(game.rng, rng);
     for tick in 1..=75 {
@@ -4750,16 +4750,16 @@ fn a1_instant_lights_generate_activate_and_resume_after_save() {
         }
         let rng = game.rng.clone();
         assert!(
-            !game
-                .use_inventory_item(
-                    &id,
-                    Some(&TargetSelection::SelfTarget),
-                    None,
-                    &mut Vec::new(),
-                    &mut BTreeSet::new(),
-                    &mut Vec::new()
-                )
-                .unwrap()
+            game.use_inventory_item(
+                &id,
+                Some(&TargetSelection::SelfTarget),
+                None,
+                &mut Vec::new(),
+                &mut BTreeSet::new(),
+                &mut Vec::new()
+            )
+            .unwrap()
+            .is_none()
         );
         assert_eq!(game.rng, rng);
         clear_monsters(&mut game);
@@ -6962,16 +6962,16 @@ fn terror_mask_melee_only_bonuses_and_fear_activation_restore() {
     );
     let rng = game.rng.clone();
     assert!(
-        !game
-            .use_inventory_item(
-                &id,
-                Some(&TargetSelection::SelfTarget),
-                None,
-                &mut events,
-                &mut BTreeSet::new(),
-                &mut Vec::new()
-            )
-            .unwrap()
+        game.use_inventory_item(
+            &id,
+            Some(&TargetSelection::SelfTarget),
+            None,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new()
+        )
+        .unwrap()
+        .is_none()
     );
     assert_eq!(game.rng, rng);
     for tick in 1..=500 {

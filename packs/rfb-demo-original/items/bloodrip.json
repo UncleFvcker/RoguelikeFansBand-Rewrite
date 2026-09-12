@@ -1,0 +1,113 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.bloodrip",
+  "nameKey": "item-demo-bloodrip-name",
+  "descriptionKey": "item-demo-bloodrip-description",
+  "glyph": "|",
+  "generationLevel": 66,
+  "weightTenthsPound": 150,
+  "baseValue": 166666,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 243,
+    "baseItemKindId": "demo.item.bastard-sword",
+    "instant": false,
+    "rarityOneIn": 6
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_VAMP",
+      "CON",
+      "DEC_STEALTH",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_CONF",
+      "RES_SOUND",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_GOOD",
+      "VORPAL"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "weaponProficiencyBaseItemId": "demo.item.bastard-sword",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 6,
+    "damageSides": 6,
+    "toHit": 10,
+    "toDamage": 10
+  },
+  "modifiers": {
+    "constitution": 2
+  },
+  "equipmentBonuses": {
+    "stealthSkill": -2
+  },
+  "passives": [
+    "vampiric",
+    "see-invisible"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "good": "slay"
+  },
+  "resistances": {
+    "confusion": "resistant",
+    "sound": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.bloodrip",
+        "nameKey": "device-activation-e5-whirlwind-attack-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 40,
+        "rfbValue": 5000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.bloodrip"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 660
+    }
+  },
+  "vorpal": true
+}

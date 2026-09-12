@@ -2,6 +2,7 @@
 
 use super::ability_scaling::device_power_value;
 use super::loot::{ItemGenerationMode, LootContext, LootSource};
+use super::player_combat::ProjectileMode;
 use super::projectile_geometry::{has_line_of_effect, rfb_distance};
 use super::visibility::{VISIBILITY_RADIUS, has_line_of_sight};
 use super::{abilities::AbilityTargetPlan, *};
@@ -45,6 +46,10 @@ pub(super) enum ItemUsePlan {
     },
     Projectile {
         path: Vec<Position>,
+    },
+    PiercingShot {
+        target: TargetSelection,
+        energy_cost: i32,
     },
     RidingCharge {
         target_entity_id: Option<String>,
@@ -2773,7 +2778,7 @@ impl Game {
         .then_some(STANDARD_ACTION_COST)
     }
 
-    /// Returns true when a cancelled device use or failed artifact creation refunds time.
+    /// Returns an energy override for refunded uses or an actual shooting action.
     pub(super) fn use_inventory_item(
         &mut self,
         item_id: &str,
@@ -2782,34 +2787,34 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) -> Result<bool, CoreError> {
+    ) -> Result<Option<i32>, CoreError> {
         let Some((index, definition)) = self.inventory_item_use_context(item_id)? else {
             events.push(DomainEvent::ItemUseUnavailable);
-            return Ok(false);
+            return Ok(None);
         };
         let kind_id = self.items[index].kind_id.clone();
         if self.items[index].is_artifact_mushroom(&self.content)
             && self.items[index].device_recovery_progress > 0
         {
             events.push(DomainEvent::ItemUseUnavailable);
-            return Ok(false);
+            return Ok(None);
         }
         if self
             .berserker_item_use_rejection_cost(&self.items[index])
             .is_some()
         {
             events.push(DomainEvent::ItemUseUnavailable);
-            return Ok(false);
+            return Ok(None);
         }
         if definition.capture_ball {
             self.use_capture_ball(index, target, events, changed, removed_entities);
-            return Ok(false);
+            return Ok(None);
         }
         if self.mount_item_target_is_valid(item_id, target).is_some()
             && let Some(mount_use) = definition.mount_use.clone()
         {
             self.use_inventory_mount_item(index, &kind_id, &mount_use, target, events, changed);
-            return Ok(false);
+            return Ok(None);
         }
         let activation = self.items[index].activation.clone();
         let (profile_id, difficulty, cost, effect, plan) =
@@ -2836,7 +2841,7 @@ impl Game {
                     target_glyph,
                 ) else {
                     events.push(DomainEvent::ItemUseUnavailable);
-                    return Ok(false);
+                    return Ok(None);
                 };
                 (
                     Some(activation.profile_id.clone()),
@@ -2850,7 +2855,7 @@ impl Game {
                     self.item_use_plan(item_id, &action.effect, None, target, target_glyph)
                 else {
                     events.push(DomainEvent::ItemUseUnavailable);
-                    return Ok(false);
+                    return Ok(None);
                 };
                 (
                     None,
@@ -2861,7 +2866,7 @@ impl Game {
                 )
             } else {
                 events.push(DomainEvent::ItemUseUnavailable);
-                return Ok(false);
+                return Ok(None);
             };
         if cost.is_some_and(|cost| {
             self.items[index]
@@ -2869,7 +2874,7 @@ impl Game {
                 .is_none_or(|state| state.current < cost)
         }) {
             events.push(DomainEvent::ItemUseUnavailable);
-            return Ok(false);
+            return Ok(None);
         }
 
         let player_is_skeleton = self.player_is_skeleton();
@@ -2925,7 +2930,7 @@ impl Game {
                 resolution: check.to_dto(skill_id),
             });
             if !succeeded {
-                return Ok(false);
+                return Ok(None);
             }
         }
 
@@ -2947,9 +2952,9 @@ impl Game {
                 // cmd6.c: successful device check followed by cancel identifies
                 // the device, spends no SP and refunds the action energy.
                 self.identify_item_instance(item_id, ItemIdentificationRequest::new(false));
-                return Ok(true);
+                return Ok(Some(0));
             }
-            return Ok(false);
+            return Ok(None);
         }
         if let ItemUsePlan::ArtifactCreation { item_id, name } = &plan
             && !self.resolve_artifact_creation(
@@ -2960,7 +2965,7 @@ impl Game {
                 changed,
             )?
         {
-            return Ok(true);
+            return Ok(Some(0));
         }
         if self.items[index].is_artifact_mushroom(&self.content) {
             self.items[index].device_recovery_progress =
@@ -2982,8 +2987,12 @@ impl Game {
             .unwrap_or(0)
             + item_device_power_bonus;
         if matches!(plan, ItemUsePlan::ArtifactCreation { .. }) {
-            return Ok(false);
+            return Ok(None);
         }
+        let energy_cost = match &plan {
+            ItemUsePlan::PiercingShot { energy_cost, .. } => Some(*energy_cost),
+            _ => None,
+        };
         let noticed = self.resolve_inventory_item_effect(
             SettledItemUse {
                 kind_id,
@@ -3026,7 +3035,7 @@ impl Game {
                 removed_entities,
             );
         }
-        Ok(false)
+        Ok(energy_cost)
     }
 
     fn boost_item_ability_effect(&mut self, effect: &mut AbilityEffectDefinition, bonus: i32) {
@@ -3692,6 +3701,16 @@ impl Game {
                 )?;
                 self.mark_item_aware(&kind_id);
             }
+            (ItemUseEffectDefinition::PiercingShot, ItemUsePlan::PiercingShot { target, .. }) => {
+                self.resolve_player_projectile(
+                    target,
+                    ProjectileMode::Piercing,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+                self.mark_item_aware(&kind_id);
+            }
             (
                 ItemUseEffectDefinition::RidingCharge,
                 ItemUsePlan::RidingCharge {
@@ -4033,14 +4052,59 @@ impl Game {
                 })?;
                 Some(ItemUsePlan::Projectile { path })
             }
+            ItemUseEffectDefinition::PiercingShot => {
+                let Some(target) = target else {
+                    return Some(ItemUsePlan::CancelledActivation);
+                };
+                let Some(profile) = self.player_projectile_profile() else {
+                    return Some(ItemUsePlan::CancelledActivation);
+                };
+                if profile.ammo_item_id.is_none() {
+                    return Some(ItemUsePlan::CancelledActivation);
+                }
+                self.player_projectile_path_for_mode(
+                    target,
+                    profile.range,
+                    ProjectileMode::Piercing,
+                )?;
+                Some(ItemUsePlan::PiercingShot {
+                    target: target.clone(),
+                    energy_cost: profile.energy_cost,
+                })
+            }
             ItemUseEffectDefinition::RidingCharge => {
-                let mount_index = self.riding_actor_id.as_deref().and_then(|mount_id| {
+                let Some(mount_index) = self.riding_actor_id.as_deref().and_then(|mount_id| {
                     self.entities
                         .iter()
                         .position(|entity| entity.id == mount_id)
-                })?;
-                let path = target_definition
-                    .and_then(|definition| self.item_effect_path(definition, target?))?;
+                }) else {
+                    return Some(ItemUsePlan::CancelledActivation);
+                };
+                let path = if self.player_is_duelist() {
+                    // spells2.c::rush_attack locks onto the current challenge,
+                    // even when another direction was supplied to the activation.
+                    let Some(opponent) = self.entities.iter().find(|actor| {
+                        actor.hp > 0
+                            && self.duelist_target_id.as_deref() == Some(actor.id.as_str())
+                            && has_line_of_sight(self, self.player.position, actor.position)
+                    }) else {
+                        return Some(ItemUsePlan::CancelledActivation);
+                    };
+                    super::projectile_geometry::projectile_path_between(
+                        self.player.position,
+                        opponent.position,
+                        u16::MAX,
+                    )?
+                    .into_iter()
+                    .take(7)
+                    .collect()
+                } else {
+                    let Some(target) = target else {
+                        return Some(ItemUsePlan::CancelledActivation);
+                    };
+                    target_definition
+                        .and_then(|definition| self.item_effect_path(definition, target))?
+                };
                 let mut destination = self.player.position;
                 let mut target_entity_id = None;
                 for position in path {
@@ -6297,6 +6361,7 @@ impl Game {
             | ItemUseEffectDefinition::BeamDamage { .. }
             | ItemUseEffectDefinition::TerrainBeam { .. }
             | ItemUseEffectDefinition::RidingCharge
+            | ItemUseEffectDefinition::PiercingShot
             | ItemUseEffectDefinition::RandomElementConeDamage { .. }
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::AggravateMonsters

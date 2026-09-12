@@ -1159,6 +1159,7 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.glamdring",
                 "demo.item.hagen",
                 "demo.item.heavy-lance",
+                "demo.item.impaler",
                 "demo.item.lance",
                 "demo.item.long-sword",
                 "demo.item.nyoi-bou",
@@ -1182,6 +1183,7 @@ fn equipment_and_ego_identities_match_source() {
                     if matches!(
                         id,
                         "demo.item.heavy-lance"
+                            | "demo.item.impaler"
                             | "demo.item.lance"
                             | "demo.item.dragonlance"
                             | "demo.item.eorlingas"

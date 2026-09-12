@@ -2091,7 +2091,8 @@ impl Game {
                 entity.position == position
                     && entity.hp > 0
                     && (self.player_is_berserker() || !self.actor_is_player_side(entity))
-                    && (self.entity_is_visible_to_player(entity) || self.is_walkable(position))
+                    && (self.entity_is_visible_to_player(entity)
+                        || self.projectile_can_cross(position))
             }) else {
                 continue;
             };

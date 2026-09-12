@@ -977,6 +977,7 @@ pub enum ItemUseEffectDefinition {
         operation: AbilityTerrainBeamOperationDefinition,
     },
     RidingCharge,
+    PiercingShot,
     RemoveStatus {
         status_kind_id: String,
     },

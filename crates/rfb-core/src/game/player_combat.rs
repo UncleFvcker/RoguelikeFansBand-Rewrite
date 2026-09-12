@@ -325,6 +325,7 @@ fn sniper_alignment_slay_bonus(slays: &BTreeMap<SlayTarget, SlayLevel>, target: 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum ProjectileMode {
     Normal,
+    Piercing,
     Sniper(SniperShotModeDefinition),
 }
 
@@ -332,7 +333,10 @@ impl ProjectileMode {
     const fn continues_through_target(self) -> bool {
         matches!(
             self,
-            Self::Sniper(SniperShotModeDefinition::Knockback | SniperShotModeDefinition::Piercing)
+            Self::Piercing
+                | Self::Sniper(
+                    SniperShotModeDefinition::Knockback | SniperShotModeDefinition::Piercing
+                )
         )
     }
 
@@ -361,6 +365,7 @@ struct ProjectileShotOutcome {
 
 #[derive(Default)]
 struct ProjectileCollisionOutcome {
+    hit: bool,
     knockback_landing: Option<Position>,
     fatal: bool,
 }
@@ -775,6 +780,7 @@ impl Game {
     ) -> Result<ProjectileShotOutcome, CoreError> {
         let origin = self.player.position;
         let mut active_concentration = concentration;
+        let mut penetrations = 0;
         let mut impact = origin;
         let mut landing = origin;
         let mut traversed = Vec::new();
@@ -859,6 +865,7 @@ impl Game {
                 profile,
                 mode,
                 active_concentration,
+                -60 * penetrations,
                 trace,
                 &path[path_index.saturating_add(1)..],
                 events,
@@ -869,13 +876,25 @@ impl Game {
                 landing = knockback_landing;
             }
             fatal = outcome.fatal;
-            if mode != ProjectileMode::Sniper(SniperShotModeDefinition::Piercing) {
+            if self.player_is_dead()
+                || (outcome.hit
+                    && profile.ammunition_behavior == Some(AmmunitionBehaviorDefinition::Exploding))
+            {
                 break;
             }
-            if active_concentration == 0 {
-                break;
+            match mode {
+                ProjectileMode::Piercing if outcome.hit && penetrations < 5 => {
+                    // cmd2.c SHOOT_PIERCE: unlike SP_PIERCE, a miss stops the
+                    // shot; each penetration subtracts 20 * BTH_PLUS_ADJ.
+                    penetrations += 1;
+                }
+                ProjectileMode::Sniper(SniperShotModeDefinition::Piercing)
+                    if active_concentration > 0 =>
+                {
+                    active_concentration -= 1;
+                }
+                _ => break,
             }
-            active_concentration -= 1;
         }
         let trace = ProjectileTrace {
             origin,
@@ -902,6 +921,7 @@ impl Game {
         profile: &ResolvedProjectileProfile,
         mode: ProjectileMode,
         concentration: u8,
+        hit_modifier: i32,
         trace: ProjectileTrace,
         remaining_path: &[Position],
         events: &mut Vec<DomainEvent>,
@@ -942,6 +962,14 @@ impl Game {
                 StatLayer::Class,
                 base_item_id,
                 modifier,
+                StatBounds::NON_NEGATIVE,
+            );
+        }
+        if hit_modifier != 0 {
+            ranged_skill = ranged_skill.with_modifier(
+                StatLayer::Environment,
+                "piercing-shot",
+                hit_modifier,
                 StatBounds::NON_NEGATIVE,
             );
         }
@@ -1144,6 +1172,7 @@ impl Game {
                 removed_entities,
             )?;
             return Ok(ProjectileCollisionOutcome {
+                hit: true,
                 fatal,
                 ..ProjectileCollisionOutcome::default()
             });
@@ -1154,6 +1183,7 @@ impl Game {
                     .expect("knockback distance must fit usize"),
             );
             return Ok(ProjectileCollisionOutcome {
+                hit: true,
                 knockback_landing: self.knockback_projectile_target(
                     &target_entity_id,
                     remaining_path,
@@ -1163,7 +1193,10 @@ impl Game {
                 fatal: false,
             });
         }
-        Ok(ProjectileCollisionOutcome::default())
+        Ok(ProjectileCollisionOutcome {
+            hit: true,
+            ..ProjectileCollisionOutcome::default()
+        })
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -1236,6 +1269,7 @@ impl Game {
             }
         }
         Ok(ProjectileCollisionOutcome {
+            hit: true,
             fatal: original_target_fatal,
             ..ProjectileCollisionOutcome::default()
         })
@@ -2010,6 +2044,7 @@ impl Game {
                 &definition,
                 strike_mode,
             );
+            let mut stop_attacking = false;
             for attack_number in 1..=profile_attacks {
                 attacks_used = attacks_used.saturating_add(1);
                 self.apply_easy_tiring_fatigue(50);
@@ -2288,7 +2323,8 @@ impl Game {
                             removed_entities,
                         )?;
                     }
-                    break 'profiles;
+                    stop_attacking = true;
+                    break;
                 }
                 if vampiric_weapon
                     && (!profile.poison_needle || !application.fatal)
@@ -2343,10 +2379,17 @@ impl Game {
                     if duelist_attack {
                         self.begin_duelist_endless_challenge();
                     }
-                    break 'profiles;
+                    stop_attacking = true;
+                    break;
                 }
                 touched_surviving_target = true;
                 self.resolve_confusing_strike(index, &definition, events);
+            }
+            if let Some(source_item_id) = &profile.source_item_id {
+                self.resolve_bloodrip_backlash(source_item_id, events);
+            }
+            if stop_attacking {
+                break 'profiles;
             }
         }
         if touched_surviving_target
@@ -2380,6 +2423,49 @@ impl Game {
             killed,
             energy_cost_on_kill,
         })
+    }
+
+    fn resolve_bloodrip_backlash(&mut self, item_id: &str, events: &mut Vec<DomainEvent>) {
+        let Some(kind_id) = self
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .filter(|item| {
+                self.content
+                    .item(&item.kind_id)
+                    .and_then(|kind| kind.artifact_generation.as_ref())
+                    .is_some_and(|artifact| artifact.source_index == 243)
+            })
+            .map(|item| item.kind_id.clone())
+        else {
+            return;
+        };
+        // cmd1.c applies this once after this hand, even on a miss or kill.
+        // Blood-Knight's guaranteed branch requires that unopened identity.
+        if self.rng.bounded(2) != 0 {
+            return;
+        }
+        let amount = 2 + self.roll_damage(2, 3) as u32;
+        let before = self
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_BLEEDING)
+            .map_or(0, |status| status.remaining_ticks);
+        let amount = amount.min(10_000_u32.saturating_sub(before));
+        let noticed = amount > 0
+            && !self.player_is_dead()
+            && !self.player_status_immunities().contains(STATUS_BLEEDING);
+        if noticed {
+            self.apply_player_melee_status(STATUS_BLEEDING, amount as i32, &kind_id);
+        }
+        events.push(DomainEvent::ItemStatusResolved {
+            display_name_key: self.item_display_name_key(&kind_id),
+            source_kind_id: kind_id,
+            status_kind_id: STATUS_BLEEDING.to_owned(),
+            duration: noticed.then_some(amount),
+            noticed,
+        });
     }
 
     pub(super) fn resolve_monster_revenge_aura(

@@ -1310,6 +1310,8 @@ impl Game {
                 ..
             }
         );
+        let item_projectile_action = matches!(&action, GameAction::UseItem { item_id, .. }
+            if matches!(self.inventory_item_use_effect(item_id), Some((ItemUseEffectDefinition::PiercingShot, _))));
         let deferred_spell_study = self.player_uses_dual_realm_learning()
             && matches!(
                 &action,
@@ -1329,6 +1331,7 @@ impl Game {
         if (advances_world || matches!(&action, GameAction::Rest { turns } if *turns > 0))
             && !deferred_item_turn
             && !deferred_spell_study
+            && !item_projectile_action
             && !matches!(
                 &action,
                 GameAction::CastAbility { .. }
@@ -1944,7 +1947,7 @@ impl Game {
                 target,
                 target_glyph,
             } => {
-                if self.use_inventory_item(
+                if let Some(energy_cost) = self.use_inventory_item(
                     &item_id,
                     target.as_ref(),
                     target_glyph.as_deref(),
@@ -1952,8 +1955,13 @@ impl Game {
                     &mut changed,
                     &mut removed_entities,
                 )? {
-                    advances_world = false;
-                    action_cost = 0;
+                    if energy_cost == 0 {
+                        advances_world = false;
+                    }
+                    action_cost = energy_cost;
+                }
+                if item_projectile_action {
+                    self.sniper_concentration = 0;
                 }
             }
             GameAction::RefuelLight {

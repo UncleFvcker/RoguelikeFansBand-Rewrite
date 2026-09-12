@@ -249,7 +249,8 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::IncreaseSpellLearningCapacity
         | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
         | ItemUseEffectDefinition::TerrainBeam { .. }
-        | ItemUseEffectDefinition::RidingCharge => true,
+        | ItemUseEffectDefinition::RidingCharge
+        | ItemUseEffectDefinition::PiercingShot => true,
         ItemUseEffectDefinition::MassGenocide { power, radius } => *power > 0 && *radius > 0,
         ItemUseEffectDefinition::Genocide { power } => (1..=1_000).contains(power),
         ItemUseEffectDefinition::RechargeFromDevice { power } => (1..=1_000).contains(power),
@@ -766,7 +767,8 @@ pub(super) fn validate_items(
                     ItemUseEffectDefinition::Damage { .. }
                     | ItemUseEffectDefinition::AreaDamage { .. }
                     | ItemUseEffectDefinition::BeamDamage { .. }
-                    | ItemUseEffectDefinition::TerrainBeam { .. } => projectile_target,
+                    | ItemUseEffectDefinition::TerrainBeam { .. }
+                    | ItemUseEffectDefinition::PiercingShot => projectile_target,
                     ItemUseEffectDefinition::RidingCharge => {
                         target.modes.as_slice()
                             == [

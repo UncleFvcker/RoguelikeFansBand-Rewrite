@@ -39,6 +39,7 @@ mod gold;
 mod high_mage;
 mod hunger;
 mod inventory;
+mod item_combat_activations;
 mod items;
 mod lighting;
 mod mage;

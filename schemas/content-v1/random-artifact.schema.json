@@ -6062,6 +6062,19 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "piercing-shot",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "statusKindId": {
               "type": "string"
             },

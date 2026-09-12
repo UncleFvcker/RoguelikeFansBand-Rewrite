@@ -1,0 +1,96 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.impaler",
+  "nameKey": "item-demo-impaler-name",
+  "descriptionKey": "item-demo-impaler-description",
+  "glyph": "/",
+  "generationLevel": 60,
+  "weightTenthsPound": 450,
+  "baseValue": 1000000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 324,
+    "baseItemKindId": "demo.item.heavy-lance",
+    "instant": false,
+    "rarityOneIn": 40
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_POIS",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RIDING",
+      "SLAY_GIANT",
+      "SLAY_HUMAN",
+      "SLAY_TROLL"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "weaponProficiencyBaseItemId": "demo.item.heavy-lance",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 5,
+    "damageSides": 10,
+    "toHit": 17,
+    "toDamage": 23
+  },
+  "ridingWeaponKind": "lance",
+  "slays": {
+    "human": "slay",
+    "giant": "slay",
+    "troll": "slay"
+  },
+  "brands": [
+    "poison"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.impaler",
+        "nameKey": "device-activation-c3-charge-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 10,
+        "rfbValue": 5000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "entity"
+          ],
+          "range": 7,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.impaler"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1000
+    }
+  }
+}

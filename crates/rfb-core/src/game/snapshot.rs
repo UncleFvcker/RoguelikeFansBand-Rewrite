@@ -996,6 +996,14 @@ impl Game {
         ) {
             target.range = self.hermes_range();
         }
+        if matches!(
+            self.inventory_item_use_effect(&item.id),
+            Some((ItemUseEffectDefinition::PiercingShot, _))
+        ) {
+            target.range = self
+                .player_projectile_profile()
+                .map_or(0, |profile| profile.range);
+        }
         Some(target)
     }
 

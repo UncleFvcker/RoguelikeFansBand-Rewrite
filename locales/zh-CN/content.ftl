@@ -9828,3 +9828,14 @@ item-demo-hagen-description = 哈根的
 
 item-demo-gae-bulg-name = 『盖伯尔加之矛』
 item-demo-gae-bulg-description = 『盖伯尔加之矛』
+
+item-demo-ballista-name = 『弩炮』
+item-demo-ballista-description = 『弩炮』
+
+item-demo-impaler-name = 『穿刺者』
+item-demo-impaler-description = 『穿刺者』
+
+item-demo-bloodrip-name = 『嗜血裂杀』
+item-demo-bloodrip-description = 这把武器注入了第一代鲜血骑士的灵魂。当心！它渴望鲜血，甚至是挥舞者的鲜血！但对于那些走在血色之路上的人来说，没有比这更好的武器了。
+device-activation-c3-piercing-shot-name = 穿透射击
+device-activation-c3-charge-name = 冲锋
