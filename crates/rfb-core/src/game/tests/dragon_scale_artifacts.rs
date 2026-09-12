@@ -393,6 +393,7 @@ fn c4a_plain_and_ego_scales_keep_base_breath_and_replay_after_cancel() {
     for (slug, element, damage) in [
         ("black", DamageTypeDto::Acid, 150),
         ("blue", DamageTypeDto::Electricity, 150),
+        ("power", DamageTypeDto::Physical, 300),
     ] {
         for ego in [false, true] {
             let mut game = Game::new_with_build(506, "demo.build.warrior").unwrap();
@@ -450,4 +451,342 @@ fn c4a_plain_and_ego_scales_keep_base_breath_and_replay_after_cancel() {
             assert_eq!(game.state_hash(), restored.state_hash());
         }
     }
+}
+
+#[test]
+fn c4b_bladeturner_ordinary_acquisition_ball_then_shared_boosted_duration_and_save() {
+    let mut game = Game::new_with_build(507, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    descend_one_floor(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-110".into(),
+        depth: 110,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.c4b".into(),
+        },
+    };
+    let base = "demo.item.power-dragon-scale-mail";
+    (0..100_000)
+        .find_map(|_| {
+            game.generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+                .into_iter()
+                .find(|item| item.kind_id == base && item.artifact_name.is_none())
+        })
+        .expect("power dragon scales must be reachable through the full ordinary pool");
+    let kind = (0..20_000)
+        .find_map(|_| {
+            game.roll_fixed_artifact_kind_id(&context, Some(base), false)
+                .filter(|kind| kind == "demo.item.bladeturner")
+        })
+        .expect("the observed base must reach Bladeturner with all artifact gates intact");
+    let draft = game.fixed_item_draft(&context, kind);
+    let item = game
+        .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+        .unwrap();
+    let id = item.id.clone();
+    game.items.push(item);
+    game.pick_up_item_at_player(Some(&id)).unwrap();
+    assert!(game.visible_item_resistances(&game.items[0]).is_empty());
+    game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    game.equip_inventory_item(&id, None).unwrap();
+    assert_eq!(game.carried_weight_tenths_pound(), 600);
+    assert_eq!(
+        game.item_base_modifiers("demo.item.bladeturner").defense,
+        85
+    );
+    assert_eq!(game.player_equipment_bonuses().melee_skill, -8);
+    assert!(game.player_levitates());
+    assert_eq!(game.player_hold_life_sources(), 1);
+    assert!(
+        game.player_equipment_passives()
+            .contains(&EquipmentPassive::Regeneration)
+    );
+    assert!(game.player_status_immunities().contains(STATUS_BLINDNESS));
+    assert_eq!(game.visible_item_resistances(&game.items[0]).len(), 14);
+    elemental_hit(&game, DamageType::Fire, 10);
+    game.player.position = Position { x: 10, y: 10 };
+    for y in 5..=15 {
+        for x in 9..=30 {
+            replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+        }
+    }
+    replace_terrain(&mut game, Position { x: 14, y: 9 }, "demo.terrain.wall");
+    for (name, position) in [
+        ("center", Position { x: 14, y: 10 }),
+        ("edge", Position { x: 18, y: 10 }),
+        ("outside", Position { x: 19, y: 10 }),
+        ("blocked", Position { x: 14, y: 8 }),
+    ] {
+        game.push_generated_actor(
+            format!("test.{name}"),
+            "demo.actor.great-hell-wyrm",
+            position,
+        );
+    }
+    // GF_MISSILE ignores both high AC and elemental/physical resistance.
+    game.entities[0]
+        .resistances
+        .set(DamageType::Physical, ResistanceLevel::Immune);
+    let mut power = monster_combat::melee_status(STATUS_BERSERK, 5000, "test").status;
+    power.granted_modifiers.device_power_bonus = 5;
+    game.player.statuses.push(power);
+    let hp: Vec<_> = game.entities.iter().map(|a| a.hp).collect();
+    let player_hp = game.player.hp;
+    let max_hp = game.effective_player_max_hp();
+    let armor = game.player_derived_stats().armor_class.value;
+    let skills = game.player_derived_stats();
+    let east = TargetSelection::Direction {
+        direction: Direction::East,
+    };
+    game.rng = RfbRng::seeded(ready_seed());
+    game.reveal_current_visibility();
+    let mut expected = game.clone();
+    expected.rng.bounded(100);
+    let path = expected.projectile_path(&east, 18).unwrap();
+    expected
+        .resolve_player_area_damage_with_base_policy(
+            "demo.item-activation.bladeturner",
+            path,
+            true,
+            DamageType::Physical,
+            4,
+            None,
+            375,
+            true,
+            true,
+            true,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+    let rolled = 51 + expected.rng.bounded(50) as u32;
+    let duration = rolled + rolled / 4;
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let events = activate(&mut game, &id, Some(&east));
+    assert_eq!(activate(&mut restored, &id, Some(&east)), events);
+    assert_eq!(
+        game.rng, expected.rng,
+        "the shared duration is rolled after ball consumers"
+    );
+    assert_eq!(game.state_hash(), restored.state_hash());
+    assert!(events.iter().any(|e| matches!(e, DomainEvent::AbilityAreaDamage { resolution, .. }
+        if resolution.base_raw_damage == 375 && resolution.radius == 4
+        && resolution.damage_type == DamageTypeDto::Physical && resolution.center == (Position { x: 14, y: 10 }))));
+    assert_eq!(
+        game.entities
+            .iter()
+            .zip(hp)
+            .map(|(a, hp)| hp - a.hp)
+            .collect::<Vec<_>>(),
+        [375, 75, 0, 0]
+    );
+    let last_hit = events
+        .iter()
+        .rposition(|e| matches!(e, DomainEvent::AbilityHit { .. }))
+        .unwrap();
+    let blessing = events
+        .iter()
+        .position(|e| matches!(e, DomainEvent::ItemBlessed { .. }))
+        .unwrap();
+    assert!(last_hit < blessing);
+    for kind in [
+        "rfb.status.hero",
+        "rfb.status.blessed",
+        STATUS_BASIC_RESISTANCE,
+    ] {
+        assert_eq!(
+            game.player
+                .statuses
+                .iter()
+                .find(|s| s.kind_id == kind)
+                .unwrap()
+                .remaining_ticks,
+            duration
+        );
+    }
+    assert_eq!(game.player.hp, player_hp, "the activation does not heal");
+    assert_eq!(game.effective_player_max_hp(), max_hp + 10);
+    assert_eq!(game.player_derived_stats().armor_class.value, armor + 5);
+    assert_eq!(
+        game.player_derived_stats().melee_skill.value,
+        skills.melee_skill.value + 22
+    );
+    assert_eq!(
+        game.player_derived_stats().ranged_skill.value,
+        skills.ranged_skill.value + 22
+    );
+    assert!(game.player_status_immunities().contains(STATUS_FEAR));
+    for element in [
+        DamageType::Acid,
+        DamageType::Electricity,
+        DamageType::Fire,
+        DamageType::Cold,
+        DamageType::Poison,
+    ] {
+        elemental_hit(&game, element, 7);
+    }
+    assert_eq!(charge(&game, &id), 0);
+    assert!(activate(&mut game, &id, Some(&east)).contains(&DomainEvent::ItemUseUnavailable));
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    for run in [&mut game, &mut restored] {
+        clear_monsters(run);
+        for tick in 1..=4000 {
+            run.world_tick += 1;
+            run.process_status_tick(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new(), true)
+                .unwrap();
+            run.process_inventory_device_recovery(&mut Vec::new());
+            if tick == duration {
+                for kind in [
+                    "rfb.status.hero",
+                    "rfb.status.blessed",
+                    STATUS_BASIC_RESISTANCE,
+                ] {
+                    assert!(!run.player_has_status_kind(kind));
+                }
+                assert_eq!(run.effective_player_max_hp(), max_hp);
+                elemental_hit(run, DamageType::Fire, 10);
+            }
+            if tick == 3999 {
+                assert_eq!(charge(run, &id), 0);
+            }
+        }
+        assert_eq!(charge(run, &id), 1);
+    }
+    assert_eq!(game.state_hash(), restored.state_hash());
+    assert_eq!(
+        game.generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap(),
+        restored
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap()
+    );
+    assert_eq!(game.rng, restored.rng);
+    assert_ne!(
+        game.roll_fixed_artifact_kind_id(&context, Some(base), false),
+        Some("demo.item.bladeturner".into())
+    );
+}
+
+#[test]
+fn c4b_bladeturner_command_cancel_failure_and_independent_longer_statuses() {
+    let mut game = Game::new_with_build(508, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-110".into(),
+        depth: 110,
+        source: LootSource::ItemUse {
+            item_id: "test.acquirement".into(),
+        },
+    };
+    let draft = game.fixed_item_draft(&context, "demo.item.bladeturner".into());
+    let mut item = game
+        .commit_generated_item_draft(draft, ItemLocation::Inventory)
+        .unwrap();
+    item.id = "test.bladeturner".into();
+    game.items.push(item);
+    game.equip_inventory_item("test.bladeturner", None).unwrap();
+    let east = TargetSelection::Direction {
+        direction: Direction::East,
+    };
+    for (seed, target) in [
+        (ready_seed(), None),
+        (
+            (0..1000)
+                .find(|seed| RfbRng::seeded(*seed).bounded(100) >= 95)
+                .unwrap(),
+            Some(east.clone()),
+        ),
+    ] {
+        game.rng = RfbRng::seeded(seed);
+        let tick = game.world_tick;
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::UseItem {
+                item_id: "test.bladeturner".into(),
+                target,
+            },
+        );
+        assert!(
+            game.world_tick > tick,
+            "cancellation/failure consumes the activation turn"
+        );
+        assert_eq!(charge(&game, "test.bladeturner"), 1);
+        assert!(!update.events.iter().any(|e| matches!(
+            &e.outcome,
+            Some(GameEventOutcomeDto::AbilityAreaDamage { .. })
+        )));
+        for kind in [
+            "rfb.status.hero",
+            "rfb.status.blessed",
+            STATUS_BASIC_RESISTANCE,
+        ] {
+            assert!(!game.player_has_status_kind(kind));
+        }
+    }
+    game.rng = RfbRng::seeded(ready_seed());
+    let mut expected = game.rng.clone();
+    expected.bounded(100);
+    activate(&mut game, "test.bladeturner", None);
+    assert_eq!(game.rng, expected, "cancel rolls only the device check");
+    game.resolve_item_heroism(
+        "test.old",
+        0,
+        0,
+        1000,
+        AbilityStatusStackingDefinition::KeepStrongest,
+        &mut Vec::new(),
+    );
+    game.resolve_item_blessing(
+        "test.old",
+        0,
+        0,
+        1,
+        AbilityStatusStackingDefinition::Extend,
+        &mut Vec::new(),
+    );
+    game.resolve_item_basic_resistance("test.old", 0, 0, 2000, &mut Vec::new());
+    game.rng = RfbRng::seeded(ready_seed());
+    let mut expected = game.rng.clone();
+    expected.bounded(100);
+    let duration = 51 + expected.bounded(50) as u32;
+    activate(&mut game, "test.bladeturner", Some(&east));
+    assert_eq!(
+        game.rng, expected,
+        "an empty ball still rolls one shared duration"
+    );
+    for (kind, ticks) in [
+        ("rfb.status.hero", 1000),
+        ("rfb.status.blessed", duration),
+        (STATUS_BASIC_RESISTANCE, 2000),
+    ] {
+        assert_eq!(
+            game.player
+                .statuses
+                .iter()
+                .find(|s| s.kind_id == kind)
+                .unwrap()
+                .remaining_ticks,
+            ticks
+        );
+    }
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    for run in [&mut game, &mut restored] {
+        for _ in 0..duration {
+            run.world_tick += 1;
+            run.process_status_tick(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new(), true)
+                .unwrap();
+        }
+        assert!(!run.player_has_status_kind("rfb.status.blessed"));
+        assert!(run.player_has_status_kind("rfb.status.hero"));
+        assert!(run.player_has_status_kind(STATUS_BASIC_RESISTANCE));
+    }
+    assert_eq!(game.state_hash(), restored.state_hash());
 }

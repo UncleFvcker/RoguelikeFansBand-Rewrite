@@ -6267,6 +6267,19 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "bladeturner",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "star-ball",
               "type": "string"
             }

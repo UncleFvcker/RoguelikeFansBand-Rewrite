@@ -3344,6 +3344,7 @@ impl Game {
                             damage,
                             true,
                             true,
+                            false,
                             events,
                             changed,
                             removed_entities,
@@ -3412,6 +3413,7 @@ impl Game {
                     device_power_value(u64::from(damage) * 2, device_power_bonus) as i32,
                     true,
                     true,
+                    false,
                     events,
                     changed,
                     removed_entities,
@@ -3696,6 +3698,17 @@ impl Game {
                 changed,
                 removed_entities,
             )?,
+            (ItemUseEffectDefinition::Bladeturner, plan @ ItemUsePlan::Projectile { .. }) => {
+                self.resolve_item_bladeturner(
+                    kind_id,
+                    profile_id,
+                    plan,
+                    device_power_bonus,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
             (
                 effect @ ItemUseEffectDefinition::BeamDamage { .. },
                 plan @ ItemUsePlan::Projectile { .. },
@@ -4057,6 +4070,7 @@ impl Game {
                 })
             }
             ItemUseEffectDefinition::Damage { .. }
+            | ItemUseEffectDefinition::Bladeturner
             | ItemUseEffectDefinition::AreaDamage { .. }
             | ItemUseEffectDefinition::BeamDamage { .. } => {
                 if target.is_none()
@@ -5145,6 +5159,7 @@ impl Game {
         duration_dice: u16,
         duration_sides: u32,
         duration_bonus: u32,
+        stacking: AbilityStatusStackingDefinition,
         events: &mut Vec<DomainEvent>,
     ) {
         let resolution = apply_ability_status_effect(
@@ -5156,7 +5171,7 @@ impl Game {
             duration_bonus,
             duration_dice,
             duration_sides,
-            AbilityStatusStackingDefinition::Extend,
+            stacking,
             None,
             None,
             &BTreeMap::new(),
@@ -5907,6 +5922,7 @@ impl Game {
                     *duration_dice,
                     *duration_sides,
                     *duration_bonus,
+                    AbilityStatusStackingDefinition::Extend,
                     events,
                 );
                 true
@@ -5982,6 +5998,7 @@ impl Game {
                         0,
                         0,
                         duration.saturating_sub(existing),
+                        AbilityStatusStackingDefinition::Extend,
                         events,
                     );
                     existing < duration
@@ -6402,6 +6419,7 @@ impl Game {
                 self.resolve_item_self_knowledge(source_kind_id, events)
             }
             ItemUseEffectDefinition::Hermes
+            | ItemUseEffectDefinition::Bladeturner
             | ItemUseEffectDefinition::AbilityEffect { .. }
             | ItemUseEffectDefinition::Damage { .. }
             | ItemUseEffectDefinition::AreaDamage { .. }

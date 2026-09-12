@@ -1026,6 +1026,7 @@ pub enum ItemUseEffectDefinition {
     CreateArrows,
     SummonMonsters,
     Hermes,
+    Bladeturner,
     StarBall,
     Starlight {
         damage_dice: u16,

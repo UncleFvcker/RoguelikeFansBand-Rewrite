@@ -7,6 +7,66 @@ use super::*;
 
 impl Game {
     #[allow(clippy::too_many_arguments)]
+    pub(super) fn resolve_item_bladeturner(
+        &mut self,
+        source_kind_id: String,
+        profile_id: Option<String>,
+        plan: ItemUsePlan,
+        device_power_bonus: i32,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let ItemUsePlan::Projectile { path } = plan else {
+            unreachable!("Bladeturner requires a projectile plan")
+        };
+        let profile_id = profile_id.expect("Bladeturner activation must carry a profile ID");
+        self.mark_item_aware(&source_kind_id);
+        self.resolve_player_area_damage_with_base_policy(
+            &profile_id,
+            path,
+            true,
+            DamageType::Physical,
+            4,
+            None,
+            i32::try_from(device_power_value(300, device_power_bonus))
+                .expect("device-powered missile damage must fit i32"),
+            true,
+            true,
+            true,
+            events,
+            changed,
+            removed_entities,
+        )?;
+        // EFFECT_BLADETURNER rolls once, after fire_ball and its consumers.
+        let duration = u32::try_from(device_power_value(
+            u64::try_from(50 + self.roll_damage(1, 50)).expect("positive duration"),
+            device_power_bonus,
+        ))
+        .expect("device-powered duration must fit u32");
+        if self.player.hp > 0 {
+            self.resolve_item_heroism(
+                &source_kind_id,
+                0,
+                0,
+                duration,
+                AbilityStatusStackingDefinition::KeepStrongest,
+                events,
+            );
+            self.resolve_item_blessing(
+                &source_kind_id,
+                0,
+                0,
+                duration,
+                AbilityStatusStackingDefinition::KeepStrongest,
+                events,
+            );
+            self.resolve_item_basic_resistance(&source_kind_id, 0, 0, duration, events);
+        }
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn resolve_item_activation_area_damage(
         &mut self,
         source_kind_id: String,

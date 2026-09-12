@@ -10034,3 +10034,7 @@ item-demo-seiryu-description = Blue dragon-scale armour that activates temporary
 
 item-demo-midnight-dragon-scale-mail-name = Midnight Dragon Scale Mail
 item-demo-midnight-dragon-scale-mail-description = Black dragon-scale armour that dims nearby light and breathes acid.
+
+item-demo-bladeturner-name = 'Bladeturner'
+item-demo-bladeturner-description = Multicoloured dragon-scale armour that fires a missile ball, then grants heroism, blessing and resistance to five elements.
+device-activation-bladeturner-name = Heroism, Resistance and Breathe Elements

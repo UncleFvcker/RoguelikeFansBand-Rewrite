@@ -10065,3 +10065,7 @@ item-demo-seiryu-description = 青蓝色龙鳞护甲，能激活对五种元素�
 
 item-demo-midnight-dragon-scale-mail-name = 午夜龙鳞甲
 item-demo-midnight-dragon-scale-mail-description = 一套乌黑的鳞甲，能削弱周围光照并喷吐酸液。
+
+item-demo-bladeturner-name = 『折刃者』
+item-demo-bladeturner-description = 多彩龙鳞护甲，激活时发射飞弹球，随后获得英雄气概、祝福与五元素抗性。
+device-activation-bladeturner-name = 英雄气概、全抗性与元素吐息

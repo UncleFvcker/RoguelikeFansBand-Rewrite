@@ -41,7 +41,9 @@ pub(crate) fn valid_item_effect(
     loot_table_ids: &BTreeSet<String>,
 ) -> bool {
     match effect {
-        ItemUseEffectDefinition::AbilityEffect { .. } | ItemUseEffectDefinition::Hermes => true,
+        ItemUseEffectDefinition::AbilityEffect { .. }
+        | ItemUseEffectDefinition::Hermes
+        | ItemUseEffectDefinition::Bladeturner => true,
         ItemUseEffectDefinition::NoNumericEffect => true,
         ItemUseEffectDefinition::IncreaseNutrition { amount } => (1..=15_000).contains(amount),
         ItemUseEffectDefinition::SatisfyHunger => true,
@@ -586,6 +588,7 @@ pub(crate) fn valid_item_effect(
 fn item_effect_is_self_targeted(effect: &ItemUseEffectDefinition) -> bool {
     match effect {
         ItemUseEffectDefinition::Hermes
+        | ItemUseEffectDefinition::Bladeturner
         | ItemUseEffectDefinition::Damage { .. }
         | ItemUseEffectDefinition::AreaDamage { .. }
         | ItemUseEffectDefinition::BeamDamage { .. }
@@ -770,6 +773,7 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::VisibleApplyStatus { .. } => self_target,
                     ItemUseEffectDefinition::RechargeFromDevice { .. } => false,
                     ItemUseEffectDefinition::Damage { .. }
+                    | ItemUseEffectDefinition::Bladeturner
                     | ItemUseEffectDefinition::AreaDamage { .. }
                     | ItemUseEffectDefinition::BeamDamage { .. }
                     | ItemUseEffectDefinition::TerrainBeam { .. }

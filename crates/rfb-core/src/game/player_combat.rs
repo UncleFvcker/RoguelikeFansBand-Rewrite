@@ -1331,6 +1331,7 @@ impl Game {
             trace,
             resistance,
             true,
+            false,
             events,
             changed,
             removed_entities,
@@ -1356,6 +1357,7 @@ impl Game {
             trace,
             Some(ResistanceLevel::Normal),
             true,
+            false,
             events,
             changed,
             removed_entities,
@@ -1381,6 +1383,7 @@ impl Game {
             trace,
             Some(ResistanceLevel::Normal),
             true,
+            false,
             events,
             changed,
             removed_entities,
@@ -1388,7 +1391,7 @@ impl Game {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn resolve_ability_damage_to_entity_with_resistance(
+    pub(super) fn resolve_ability_damage_to_entity_with_resistance(
         &mut self,
         index: usize,
         ability_id: &str,
@@ -1397,6 +1400,7 @@ impl Game {
         trace: ProjectileTrace,
         resistance_override: Option<ResistanceLevel>,
         award_player_kill: bool,
+        missile: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -1445,8 +1449,12 @@ impl Game {
         let damage = resolve_armored_damage(
             raw_damage,
             damage_type,
-            target.armor_class.value,
-            resistance,
+            if missile { 0 } else { target.armor_class.value },
+            if missile {
+                ResistanceLevel::Normal
+            } else {
+                resistance
+            },
         );
         let damage = crate::game::damage::scale_damage_outcome(
             damage,
@@ -1524,6 +1532,7 @@ impl Game {
             raw_damage,
             trace,
             None,
+            false,
             false,
             events,
             changed,
