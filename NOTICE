@@ -241,3 +241,12 @@ lib/edit/d_info.txt, src/dungeon_name_zh.inc, src/floors.c, src/bldg.c,
 src/generate.c and src/rooms.c. Existing upstream notices and license terms
 remain applicable. Map budgets, saved-return adaptations and pending AS7
 verification are recorded in design/asgard-dungeon-plan-20260912.md.
+
+Asgard AS5 entrance, unique guardian availability, default conquest reward and
+Mead of Poetry behavior adapt the same RFB master
+a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: lib/edit/d_info.txt,
+lib/edit/k_info.txt, src/kind_name_zh.inc, src/quest.c, src/wild.c,
+src/monster2.c, src/object2.c, src/devices.c and src/effects.c.
+Existing upstream notices and license terms remain applicable. The formal
+entry is now registered; behavior verification remains pending AS7 as recorded
+in design/asgard-dungeon-plan-20260912.md.

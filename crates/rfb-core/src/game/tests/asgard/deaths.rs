@@ -7,7 +7,7 @@ const FRIGG: &str = "demo.actor.frigg-queen-of-asgard";
 const FREYJA: &str = "demo.actor.freyja-lady-of-the-slain";
 const CHEST: &str = "demo.item.large-wooden-chest";
 
-fn death(game: &mut Game, id: &str, rewards: bool) -> Vec<DomainEvent> {
+pub(super) fn death(game: &mut Game, id: &str, rewards: bool) -> Vec<DomainEvent> {
     let index = game
         .entities
         .iter()

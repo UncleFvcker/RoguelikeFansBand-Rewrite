@@ -2907,6 +2907,7 @@ impl Game {
     ) -> Vec<AbilityEffectResolutionDto> {
         let effects = ability.effect.ordered_effects();
         let mut resolutions = Vec::with_capacity(effects.len());
+        let mut dispel_resisted = None;
         for (index, effect) in effects.iter().enumerate() {
             let effect_index =
                 u8::try_from(index).expect("validated monster ability effect index must fit u8");
@@ -3210,7 +3211,7 @@ impl Game {
                     }
                 }
                 AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
-                    if self.player_resists_dispel() {
+                    if *dispel_resisted.get_or_insert_with(|| self.player_resists_dispel()) {
                         AbilityEffectResolutionDto::Skipped {
                             effect_index,
                             reason: AbilityEffectSkipReasonDto::Saved,

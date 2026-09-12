@@ -27,6 +27,8 @@ fn chinese_display_name(entry: &LegacyItemEntry, template: &str) -> String {
     // supplies a stem for flavored consumables; retain its verbatim spelling.
     match entry.tval {
         70 => format!("{name}卷轴"),
+        // Mead of Poetry has a complete source display name, not a potion stem.
+        75 if entry.sval == 14 => name,
         75 => format!("{name}药水"),
         80 if entry.name.contains(':') => format!("{name}蘑菇"),
         11 => name.trim_end_matches('#').to_owned(),
@@ -330,6 +332,8 @@ mod tests {
             ..Default::default()
         };
         assert_eq!(chinese_display_name(&entry, "治愈"), "治愈药水");
+        entry.sval = 14;
+        assert_eq!(chinese_display_name(&entry, "诗歌蜜酒"), "诗歌蜜酒");
         entry.tval = 70;
         assert_eq!(chinese_display_name(&entry, "*鉴定*"), "*鉴定*卷轴");
         entry.tval = 80;

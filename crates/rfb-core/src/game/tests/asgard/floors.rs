@@ -28,25 +28,41 @@ fn definition(game: &Game, depth: u16) -> rfb_content::ProceduralFloorDefinition
         .clone()
 }
 
+fn clear_route_monsters(game: &mut Game) {
+    // AS5 binds the final guardian. Keep its state valid while this test only
+    // exercises connections; guardian combat is prepared separately in AS6.
+    game.entities
+        .retain(|actor| actor.id == "demo.guardian.asgard.1");
+    game.items.retain(|item| match &item.location {
+        ItemLocation::CarriedBy { actor_id } => {
+            game.entities.iter().any(|actor| &actor.id == actor_id)
+        }
+        _ => true,
+    });
+    for actor in &mut game.entities {
+        actor.energy_need = 100_000;
+    }
+}
+
 fn enter_depth(game: &mut Game, depth: u16) {
     // Depth travel preparation, not evidence of the AS5 wilderness entry.
-    clear_monsters(game);
+    clear_route_monsters(game);
     assert!(
         game.transition_floor(floor_id(depth), None, None, false)
             .unwrap()
             .is_some()
     );
-    clear_monsters(game);
+    clear_route_monsters(game);
 }
 
 fn traverse(game: &mut Game, terrain: &str, expected: u16) {
-    clear_monsters(game);
+    clear_route_monsters(game);
     place_player_on_terrain(game, terrain);
     assert_eq!(
         dispatch_next(game, GameCommand::TraverseStairs).floor_id,
         floor_id(expected)
     );
-    clear_monsters(game);
+    clear_route_monsters(game);
 }
 
 #[test]

@@ -1586,7 +1586,17 @@ impl Game {
                         .find(|stored| stored.id == final_floor.id)
                         .map(|floor| floor.entities.iter().any(|actor| &actor.id == guardian_id))
                 };
-                if guardian_present.is_some_and(|present| present == state.guardian_defeated) {
+                // A unique may already be dead, captured, or present on another
+                // floor when this floor is generated. Generation checks the same
+                // global allowance; absence must not imply local conquest.
+                if guardian_present.is_some_and(|present| {
+                    if present {
+                        state.guardian_defeated
+                    } else {
+                        !state.guardian_defeated
+                            && self.unique_actor_kind_is_available(&guardian.actor_kind_id)
+                    }
+                }) {
                     return Err(CoreError::InvalidSave("dungeon guardian state is invalid"));
                 }
             }

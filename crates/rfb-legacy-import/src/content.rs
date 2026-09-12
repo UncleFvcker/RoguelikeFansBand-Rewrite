@@ -9872,7 +9872,10 @@ fn map_misc_spell_token(
             abilities.entry(id.clone()).or_insert_with(|| {
                 misc_ability(
                     "dispel",
-                    serde_json::json!({"type": "remove-status", "statusKindId": "rfb.status.haste"}),
+                    serde_json::json!({"type": "sequence", "effects": [
+                        {"type": "remove-status", "statusKindId": "rfb.status.haste"},
+                        {"type": "remove-status", "statusKindId": "rfb.status.poetic-inspiration"}
+                    ]}),
                 )
             });
             Some(id)

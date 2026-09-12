@@ -5561,15 +5561,22 @@ impl Game {
         duration_bonus: u32,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
+        let source_turns = (0..duration_dice).fold(duration_bonus, |total, _| {
+            total.saturating_add((self.rng.bounded(u64::from(duration_sides)) + 1) as u32)
+        });
+        // devices.c::_potion_power only boosts the unavailable potion-specialist
+        // Devicemaster. Ordinary device-power equipment does not boost this potion.
+        // Include the item action's immediate ten-tick window, as for timed potions.
+        let duration_ticks = source_turns.saturating_add(1).saturating_mul(10);
         let resolution = apply_ability_status_effect(
             &mut self.player,
             source_kind_id,
             0,
             "rfb.status.poetic-inspiration",
             1,
-            duration_bonus,
-            duration_dice,
-            duration_sides,
+            duration_ticks,
+            0,
+            0,
             AbilityStatusStackingDefinition::Extend,
             None,
             None,
@@ -5589,6 +5596,15 @@ impl Game {
             None,
             &mut self.rng,
         );
+        // effects.c::set_tim_poet caps the accumulated duration at 10000 turns.
+        if let Some(status) = self
+            .player
+            .statuses
+            .iter_mut()
+            .find(|status| status.kind_id == "rfb.status.poetic-inspiration")
+        {
+            status.remaining_ticks = status.remaining_ticks.min(100_010);
+        }
         let (duration, noticed) = match resolution {
             AbilityEffectResolutionDto::ApplyStatus {
                 applied_duration_ticks,

@@ -6,12 +6,33 @@ use super::*;
 fn asgard_depths_and_source_shafts_keep_direction_span_and_dungeon_boundaries() {
     let content = compile_pack_dir(&original_pack_path()).unwrap().content;
     let world = &content.worlds[0];
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.asgard")
+        .unwrap();
+    assert_eq!(dungeon.legacy_index, Some(39));
+    assert_eq!(dungeon.pantheon, Some(3));
+    assert_eq!(
+        dungeon.guardian_actor_kind_id.as_deref(),
+        Some("demo.actor.odin-the-all-father")
+    );
+    assert_eq!(
+        dungeon.entrance_guardian.as_ref().unwrap().actor_kind_id,
+        "demo.actor.heimdall-guardian-of-bifrost"
+    );
     let mut floors = world
         .procedural_floors
         .iter()
         .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.asgard"))
         .collect::<Vec<_>>();
     floors.sort_by_key(|floor| floor.depth);
+    let guardian = floors.last().unwrap().guardian.as_ref().unwrap();
+    assert_eq!(guardian.actor_kind_id, "demo.actor.odin-the-all-father");
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.asgard-final-reward")
+    );
     assert_eq!(
         floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
         (64..=88).collect::<Vec<_>>()
@@ -11449,6 +11470,10 @@ fn town_entrances_and_shared_facilities_match_source() {
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 88, y: 34 },
                     dungeon_id: "demo.dungeon.castle".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 94, y: 11 },
+                    dungeon_id: "demo.dungeon.asgard".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 94, y: 52 },

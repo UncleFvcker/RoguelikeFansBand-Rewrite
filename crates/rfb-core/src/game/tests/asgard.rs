@@ -3,6 +3,8 @@ use super::support::*;
 use super::*;
 mod deaths;
 mod floors;
+mod integration;
+mod mead;
 
 fn game() -> Game {
     let mut game = Game::new_with_build(493, "demo.build.warrior").unwrap();

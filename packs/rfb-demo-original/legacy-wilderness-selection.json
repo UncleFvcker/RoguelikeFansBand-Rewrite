@@ -137,6 +137,11 @@
       "sourceIndex": 34,
       "sourceName": "Pyramidal mound",
       "id": "demo.dungeon.pyramidal-mound"
+    },
+    {
+      "sourceIndex": 39,
+      "sourceName": "Asgard",
+      "id": "demo.dungeon.asgard"
     }
   ],
   "townPlans": [

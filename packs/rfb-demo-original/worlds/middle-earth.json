@@ -389,6 +389,14 @@
         }
       },
       {
+        "dungeonId": "demo.dungeon.asgard",
+        "kind": "dungeon",
+        "position": {
+          "x": 94,
+          "y": 11
+        }
+      },
+      {
         "dungeonId": "demo.dungeon.chameleon-cave",
         "kind": "dungeon",
         "position": {
@@ -1553,7 +1561,16 @@
       "id": "demo.dungeon.asgard",
       "legacyIndex": 39,
       "pantheon": 3,
-      "rootFloorId": "demo.floor.asgard-depth-64"
+      "rootFloorId": "demo.floor.asgard-depth-64",
+      "guardianActorKindId": "demo.actor.odin-the-all-father",
+      "entranceGuardian": {
+        "instanceId": "demo.guardian.asgard-entrance.1",
+        "actorKindId": "demo.actor.heimdall-guardian-of-bifrost",
+        "position": {
+          "x": 98,
+          "y": 34
+        }
+      }
     }
   ],
   "campaign": {
@@ -37402,7 +37419,12 @@
           "targetFloorId": "demo.floor.asgard-depth-87",
           "targetConnectionId": "demo.connection.asgard-87-stairs-down"
         }
-      ]
+      ],
+      "guardian": {
+        "instanceId": "demo.guardian.asgard.1",
+        "actorKindId": "demo.actor.odin-the-all-father",
+        "rewardLootTableId": "demo.loot-table.asgard-final-reward"
+      }
     }
   ]
 }
