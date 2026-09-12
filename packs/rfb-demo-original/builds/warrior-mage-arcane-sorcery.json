@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json",
+  "formatVersion": 1,
+  "id": "demo.build.warrior-mage-arcane-sorcery",
+  "nameKey": "build-demo-warrior-mage-arcane-sorcery-name",
+  "descriptionKey": "build-demo-warrior-mage-arcane-sorcery-description",
+  "raceId": "demo.race.rfb-human",
+  "classId": "demo.class.warrior-mage",
+  "personalityId": "demo.personality.ordinary",
+  "playerActorId": "demo.actor.warrior-mage-player",
+  "firstRealmId": "arcane",
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.cantrips-for-beginners",
+      "quantity": 1
+    },
+    {
+      "itemKindId": "demo.item.beginners-handbook",
+      "quantity": 1
+    }
+  ],
+  "attributes": {
+    "strength": 13,
+    "intelligence": 13,
+    "wisdom": 13,
+    "dexterity": 13,
+    "constitution": 13,
+    "charisma": 13
+  },
+  "tags": [
+    "caster",
+    "warrior-mage",
+    "arcane",
+    "sorcery",
+    "rfb-compatibility"
+  ],
+  "secondRealmId": "sorcery"
+}

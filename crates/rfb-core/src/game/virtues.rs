@@ -78,6 +78,9 @@ pub(super) fn initial_virtues(
             "demo.class.priest" => {
                 kinds.extend([VirtueKindDto::Faith, VirtueKindDto::Temperance]);
             }
+            "demo.class.warrior-mage" => {
+                kinds.extend([VirtueKindDto::Enchantment, VirtueKindDto::Valour]);
+            }
             "demo.class.warrior" => {
                 kinds.extend([VirtueKindDto::Valour, VirtueKindDto::Honour]);
             }

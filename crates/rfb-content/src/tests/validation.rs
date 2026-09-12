@@ -3,6 +3,31 @@ use std::collections::BTreeMap;
 use super::*;
 
 #[test]
+fn warrior_mage_requires_arcane_and_a_distinct_supported_second_realm() {
+    let original = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for (first, second) in [
+        (None, Some("life")),
+        (Some("arcane"), None),
+        (Some("life"), Some("death")),
+        (Some("arcane"), Some("arcane")),
+        (Some("arcane"), Some("chaos")),
+    ] {
+        let mut invalid = original.clone();
+        let build = invalid
+            .builds
+            .iter_mut()
+            .find(|build| build.id == "demo.build.warrior-mage-arcane-life")
+            .unwrap();
+        build.first_realm_id = first.map(str::to_owned);
+        build.second_realm_id = second.map(str::to_owned);
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidCharacterBuild(_))
+        ));
+    }
+}
+
+#[test]
 fn priest_birth_requires_a_primary_alignment_and_distinct_non_opposing_second_realm() {
     let original = compile_pack_dir(&original_pack_path()).unwrap().content;
     for (first, second) in [

@@ -352,7 +352,9 @@ impl ClassDefinition {
     /// realm remains the character's birth identity.
     #[must_use]
     pub fn allows_second_realm(&self, first_realm: &str, second_realm: &str) -> bool {
-        if first_realm == second_realm {
+        if first_realm == second_realm
+            || (self.id == "demo.class.warrior-mage" && first_realm != "arcane")
+        {
             return false;
         }
         // RFB master a0d92b6378: py_birth.c and cmd5.c::item_tester_learn_spell.

@@ -242,7 +242,8 @@ impl Game {
         if !(self.player_is_mindcrafter()
             || self.player_is_mage()
             || self.player_is_ranger()
-            || self.player_is_priest())
+            || self.player_is_priest()
+            || self.player_is_warrior_mage())
             || self.player_has_status_kind(STATUS_CONFUSION)
             || !self.world_tick.is_multiple_of(10)
         {
@@ -263,6 +264,8 @@ impl Game {
         } else if self.player_is_priest() {
             // RFB master a0d92b6378: priest.c FAST/WEAK, MED/STRONG.
             [(false, 9_000_u32), (true, 20_000)]
+        } else if self.player_is_warrior_mage() {
+            [(false, 20_000_u32), (true, 20_000)]
         } else {
             [(false, 80_000_u32), (true, 20_000)]
         };

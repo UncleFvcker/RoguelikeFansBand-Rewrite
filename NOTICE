@@ -8,6 +8,14 @@ Materials adapted from RoguelikeFansBand, FrogComposband and Angband retain thei
 
 Third-party notices will be appended here as dependencies and assets are introduced.
 
+The Warrior-Mage class definition, Chinese name and description, birth equipment,
+spell parameters, growth, melee, item sensing, virtues and monster anti-magic
+weights adapt RoguelikeFansBand master commit
+a0d92b6378d148c5262cc236b8fa6ed2ca06a54c. Source mappings and retained adaptation
+limits are recorded in docs/warrior-mage-source-audit.md. These upstream materials
+retain their original terms and the notice in LICENSES/RFB-UPSTREAM-NOTICE.txt;
+the project's default content license does not replace them.
+
 The Amun dagger definition and Chinese text in
 packs/rfb-demo-original/items/amun.json and locales/zh-CN/content.ftl adapt
 lib/edit/a_info.txt record 350, src/artifact_name_zh.inc and the dagger base
