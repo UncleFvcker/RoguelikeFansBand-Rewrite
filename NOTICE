@@ -130,6 +130,18 @@ town map is attributed to Thalos. Source selection and adaptation limits
 are recorded in packs/rfb-demo-original/legacy-wilderness-selection.json
 and design/anambar-thalos-map-restoration-plan-20260912.md.
 
+The Zul town layout, door names and wilderness location are adapted from
+lib/edit/t_zul.txt, t_pref.txt, f_info.txt, t_info.txt and w_info.txt at
+RoguelikeFansBand master commit a0d92b6378d148c5262cc236b8fa6ed2ca06a54c.
+The source town template does not identify an individual author. This
+imported material retains its upstream terms rather than this repository's
+default content license; no permission statement from another town is
+attributed to Zul. The encounter exception follows src/wild.c at that commit.
+Source selection, reused ordinary-shop adaptations and staged service limits
+are recorded in packs/rfb-demo-original/legacy-wilderness-selection.json and
+design/zul-town-import-plan-20260912.md. The four quest maps are not included
+in this initial town import.
+
 The generated Android Gradle/Kotlin scaffold under web/src-tauri/gen/android is derived
 from Tauri CLI templates. Tauri is available under the Apache License 2.0 or MIT License:
 https://github.com/tauri-apps/tauri

@@ -47,6 +47,66 @@ fn at1_game(edit: impl FnOnce(&mut rfb_content::CompiledContentV1)) -> Game {
 }
 
 #[test]
+fn zul_ordinary_shops_trade_independently_and_save_without_unlocking_teleport() {
+    let mut game = Game::new(42);
+    enter_town(&mut game, "demo.town.zul", Position { x: 77, y: 6 });
+    assert_eq!(game.player.position, Position { x: 53, y: 32 });
+    assert!(game.town_states["demo.town.zul"].visited);
+    // Prepare funds and direct door positions; this is a business-state test, not a route run.
+    game.gold = 1_000_000;
+    for category in [
+        "general-store",
+        "weaponsmith",
+        "temple",
+        "alchemist",
+        "magic-shop",
+        "black-market",
+        "bookstore",
+    ] {
+        let id = format!("demo.shop.zul-{category}");
+        let shop = game.content.shop(&id).unwrap();
+        game.player.position = game
+            .town_local_to_active_position(
+                "demo.town.zul",
+                position_from_content(shop.entrance_position),
+            )
+            .unwrap();
+        game.mark_shop_visited_at_player().unwrap();
+        let before = game.shop_states.clone();
+        let snapshot = game.snapshot();
+        let item_id = projected_shop(&snapshot.shops, &id).stock[0].id.clone();
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::BuyFromShop {
+                shop_id: id.clone(),
+                item_id,
+                quantity: 1,
+            },
+        );
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.kind == "shop.purchase")
+        );
+        for (other_id, state) in &before {
+            if other_id != &id {
+                assert_eq!(&game.shop_states[other_id], state);
+            }
+        }
+    }
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    // Physical visitation must not grant the quest-77 teleport qualification.
+    game.teleport_to_town("demo.town.outpost").unwrap();
+    assert!(
+        game.teleport_town_targets()
+            .iter()
+            .all(|target| target.town_id != "demo.town.zul")
+    );
+}
+
+#[test]
 fn at1_shop_doors_share_stock_transactions_projection_and_save() {
     let id = "demo.shop.anambar-general-store";
     let second = rfb_content::ContentPosition { x: 92, y: 46 };

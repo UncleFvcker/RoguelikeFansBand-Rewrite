@@ -2,7 +2,7 @@
 
 核对日期：2026-09-12。集成基线包含种族职业 `edfcac5fb`、法术道具 `886d8da89` 和地牢城镇 `1ef1b7261`，合入游侠、A1–A10 神器与金字塔土丘；地牢城镇方向随后完成两城地图 AT1–AT5（实施及桌面验收至 `35a9720b0`，AT5 为文档收口）。本页区分当前代码/配置与各批注明范围的验收证据。
 
-后续城镇计划：[祖尔导入 Z1–Z6](../design/zul-town-import-plan-20260912.md)已规划、尚未实施，覆盖 94×57 山地模板、七家普通及两家特殊商店、三塔身份／服务、四个任务和任务控制的传送。祖尔没有源旅店／Home／博物馆；规划不增加当前开放城镇或服务数量。
+祖尔导入：[Z1–Z6 计划](../design/zul-town-import-plan-20260912.md)中的 Z1 已实施、待验证。已注册 (77,6) 的 94×57 山地模板与七家独立普通商店，保留 2,158 个显式格、3,200 个荒野继承格及两家特殊商店／三塔门格；祖尔不使用普通城镇的刷怪排除。没有旅店／Home／博物馆，物理到访尚不开放祖尔传送。Z2–Z6 的特殊商店、三塔、任务与验收待推进；按用户安排，全部实施后统一编译和测试，Z1 回归用例已编写但未运行，尚无本批运行证据或桌面产物。
 
 ## 版本与源内容
 
@@ -12,10 +12,10 @@
 | 协议 | 1.253 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 125 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 20 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.430.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 源 1.431.0；lock 1.430.0 待统一编译更新 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v326，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 11 个 Class、77 个 Build、57 个 Race、36 本能力书、1,903 个 ability 文件、469 个 item、1,407 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、64 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 11 个 Class、77 个 Build、57 个 Race、36 本能力书、1,903 个 ability 文件、469 个 item、1,407 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon 条目；城镇源目录有 7 个 town、67 个 shop、64 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量；新增祖尔尚待统一验证。
 
 [两城地图恢复 AT1–AT5](../design/anambar-thalos-map-restoration-plan-20260912.md)已完成。阿南巴为 198×66（7,671 个显式格、5,397 个继承格），十家商店、十个设施和九处条件任务入口使用源坐标；两门博物馆共用馆藏，Home 在警察首任务成功结算后开放。三角龙失败场景适配为返回时单次 33% 抽选，不因快照／往返重抽。萨洛斯为 198×66（13,068 格全覆盖），十家商店、十一个设施及十二个副本入口／返回链已迁移；无源弓箭手门已移除，黑暗学院控制博物馆门禁，巫师塔十二格随任务变化，恶心洞穴唯一入口为 (164,47)。真实入口、条件存取、偏移视图返回及保存／传送通过；核心测试显式准备任务前置和清场／击杀结果。AT4 专用 Tauri WebDriver 已验收两城原生键盘滚动、购物与丢物、任务放弃返回、世界地图／旅店往返、六次原生保存恢复，并检查 12 张实际截图；准备仅到访／揭示城镇并提供路费。旅店目的地下拉回调异常已修复，最终前端异常为零。证据在 `test-results/town-maps/`，复现见[验证指南](testing.md#两城地图桌面验收)。AT5 已汇总五类证据、`master@a0d92b6378d148c5262cc236b8fa6ed2ca06a54c` 来源与 NOTICE 声明；阿南巴五类、萨洛斯三类外观设施仍未开放，现有业务和地下图的适配边界见计划 AT5。没有自然通关、新优化发行包或 Android 验收；本次收口只改文档。
 

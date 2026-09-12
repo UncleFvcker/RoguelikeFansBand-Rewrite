@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
-"""Generate Anambar or Thalos from RFB master Git objects; --check is read-only."""
+"""Generate Anambar, Thalos or Zul from RFB master Git objects; --check is read-only."""
 import argparse
 from collections import defaultdict
 import json
@@ -57,7 +57,7 @@ def replace_members(text, key, update):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", type=Path)
-    parser.add_argument("--town", required=True, choices=["anambar", "thalos"])
+    parser.add_argument("--town", required=True, choices=["anambar", "thalos", "zul"])
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
     commit = subprocess.check_output(["git", "-C", str(args.source), "rev-parse", "master"], text=True).strip()
@@ -67,9 +67,11 @@ def main():
 
     name = args.town
     town_id, floor_id = f"demo.town.{name}", f"demo.floor.{name}"
-    town_source = source(f"lib/edit/{'t_ana' if name == 'anambar' else 't_thalos'}.txt")
+    source_name = {"anambar": "t_ana", "thalos": "t_thalos", "zul": "t_zul"}[name]
+    town_source = source(f"lib/edit/{source_name}.txt")
     rows = [line[2:] for line in town_source.splitlines() if line.startswith("M:")]
-    assert len(rows) == 66 and all(len(row) == 198 for row in rows)
+    width, height = (94, 57) if name == "zul" else (198, 66)
+    assert len(rows) == height and all(len(row) == width for row in rows)
     positions = defaultdict(list)
     for y, row in enumerate(rows):
         for x, symbol in enumerate(row):
@@ -84,6 +86,7 @@ def main():
     materials = {
         "FLOOR": "floor", "TREE": "surface-tree", "SHALLOW_WATER": "surface-water-shallow",
         "DEEP_WATER": "surface-water-deep", "MOUNTAIN": "surface-mountain", "DIRT": "dirt",
+        "SHALLOW_LAVA": "surface-lava-shallow", "DEEP_LAVA": "surface-lava-deep",
         "GRASS": "surface-grass", "BRAKE": "surface-brake", "FLOWER": "surface-flower",
         "RUBBLE": "rubble", "PERMANENT": "permanent-wall", "CLOSED_DOOR": "door-closed",
         "HOME": "home-entrance", "MUSEUM": "museum-entrance",
@@ -99,6 +102,13 @@ def main():
         # Undeclared ! has the default FLOOR; rooms.c has no ! object/monster case.
         tags["!"] = "FLOOR"
         assert not positions.get("l") and positions["!"] == [{"x": 22, "y": 39}]
+    elif name == "zul":
+        shop_symbols = {symbol: shop_symbols[symbol] for symbol in "1345679"}
+        facility_symbols = {}
+        # Z1 preserves these source doors; their services are registered in Z2/Z3.
+        materials.update({"JEWELER": "jeweler-entrance", "DRAGONSKIN": "dragonskin-entrance",
+                          "BUILDING_8": "sorcery-tower-entrance", "BUILDING_14": "chaos-tower-entrance",
+                          "BUILDING_15": "nature-tower-entrance"})
     outputs = {}
     for directory, mapping in (("shops", shop_symbols), ("townFacilities", facility_symbols)):
         for symbol, facility in mapping.items():
@@ -113,10 +123,12 @@ def main():
         if symbol != " ":
             terrain["demo.terrain." + materials[tags[symbol]]].extend(cells)
     explicit = sum(map(len, terrain.values()))
-    assert explicit == (7671 if name == "anambar" else 13068)
+    assert explicit == {"anambar": 7671, "thalos": 13068, "zul": 2158}[name]
     task_symbols = {"v": "orc-camp", "u": "clear-tunnels", "U": "scary-rock-treasure", "z": "dinosaur-quest", "w": "apina-island", "W": "lord-bovin-treachery", "8": "cop-quest", "y": "smugglers-den", "x": "cellar-killer"}
     if name == "thalos":
         task_symbols = {"w": "shadow-fairies", "x": "djinnis-cavern", "L": "cyclops-lair", "z": "old-watchtower", "q": "cloning-pits", "y": "clear-wreckage", "r": "tidy-laboratory", "p": "basilisk-cave", "M": "dark-academy", "s": "staff-recovery", "F": "renegade-sorcerer"}
+    elif name == "zul":
+        task_symbols = {}
     rules = []
     for symbol, task in task_symbols.items():
         task_id = f"demo.task.{name}-{task}"
@@ -147,9 +159,10 @@ def main():
 
     def update_floor(floor):
         if floor["id"] == floor_id:
-            floor.update(width=198, height=66)
-            # Both maps overlay open wilderness; Thalos explicitly covers every underlying cell.
-            floor["inlineMap"] = {"inheritWildernessTerrain": True, "playerPosition": {"x": 99, "y": 33}, "terrainOverrides": [{"terrainId": terrain_id, "positions": sorted(cells, key=lambda p: (p["y"], p["x"]))} for terrain_id, cells in sorted(terrain.items())], "taskTerrainOverrides": rules}
+            floor.update(width=width, height=height)
+            # Source blank cells inherit wilderness; Thalos covers every underlying cell.
+            arrival = {"x": 53, "y": 32} if name == "zul" else {"x": 99, "y": 33}
+            floor["inlineMap"] = {"inheritWildernessTerrain": True, "playerPosition": arrival, "terrainOverrides": [{"terrainId": terrain_id, "positions": sorted(cells, key=lambda p: (p["y"], p["x"]))} for terrain_id, cells in sorted(terrain.items())], "taskTerrainOverrides": rules}
         elif floor.get("taskId", "").startswith(f"demo.task.{name}-"):
             floor["returnFloorId"] = floor_id
 
@@ -169,7 +182,7 @@ def main():
         raise SystemExit(f"{name} source drift: " + ", ".join(str(p.relative_to(ROOT)) for p in changed))
     for path in changed:
         path.write_text(outputs[path], encoding="utf-8", newline="\n")
-    print(f"{name} {commit}: 198x66, {explicit} explicit cells, {13068 - explicit} inherited cells; {len(changed)} files {'differ' if args.check else 'updated'}")
+    print(f"{name} {commit}: {width}x{height}, {explicit} explicit cells, {width * height - explicit} inherited cells; {len(changed)} files {'differ' if args.check else 'updated'}")
 
 
 if __name__ == "__main__":

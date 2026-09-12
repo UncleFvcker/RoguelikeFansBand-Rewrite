@@ -1379,6 +1379,8 @@ impl Game {
             .filter(|position| {
                 towns
                     .iter()
+                    // RFB wild.c excludes Zul from ordinary town encounter suppression.
+                    .filter(|town| town.town_id != "demo.town.zul")
                     .all(|town| town.view_to_local(*position).is_none())
             })
             .collect()
@@ -2686,6 +2688,25 @@ mod tests {
         assert!(!allowed.contains(&Position { x: 131, y: 65 }));
         assert!(allowed.contains(&Position { x: 132, y: 0 }));
         assert!(allowed.contains(&Position { x: 197, y: 65 }));
+    }
+
+    #[test]
+    fn zul_remains_exposed_to_wilderness_monsters_including_scrolled_views() {
+        let mut game = Game::new_with_build(42, "demo.build.warrior").unwrap();
+        game.wilderness_position = Some(Position { x: 77, y: 6 });
+        assert_eq!(game.wilderness_danger_level(Position { x: 77, y: 6 }), 20);
+        assert_eq!(
+            game.wilderness_initial_monster_rolls_at(Position { x: 77, y: 6 }),
+            10
+        );
+        for offset in [Position { x: 0, y: 0 }, Position { x: 1, y: 1 }] {
+            game.wilderness_view_offset = offset;
+            let view = wilderness_view_positions();
+            assert_eq!(
+                game.wilderness_positions_outside_visible_towns(view.clone()),
+                view
+            );
+        }
     }
 
     #[test]
