@@ -1333,7 +1333,6 @@ pub(super) fn validate_items(
                                 | ItemUseEffectDefinition::ApplyHeroism { .. }
                                 | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
                                 | ItemUseEffectDefinition::ApplyStoneSkin { .. }
-                                | ItemUseEffectDefinition::RestoreLifeLevels { .. }
                                 | ItemUseEffectDefinition::RestoreAllAttributes
                                 | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
                                 | ItemUseEffectDefinition::ApplyLifeRestoration { .. }

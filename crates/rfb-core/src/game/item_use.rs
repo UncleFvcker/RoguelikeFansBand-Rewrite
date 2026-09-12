@@ -1025,8 +1025,7 @@ impl Game {
             .iter()
             .filter(|entity| {
                 entity.hp > 0
-                    && chebyshev_distance(self.player.position, entity.position)
-                        <= u32::from(radius)
+                    && rfb_distance(self.player.position, entity.position) <= u32::from(radius)
             })
             .map(|entity| entity.id.clone())
             .collect::<Vec<_>>();
@@ -1040,6 +1039,10 @@ impl Game {
             removed_entities,
         );
         self.mark_item_aware(source_kind_id);
+        if !resolution.removed_entity_ids.is_empty() {
+            self.add_virtue(VirtueKindDto::Vitality, -2);
+            self.add_virtue(VirtueKindDto::Chance, -1);
+        }
         events.push(DomainEvent::ItemMassGenocide {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
@@ -1080,6 +1083,10 @@ impl Game {
             removed_entities,
         );
         self.mark_item_aware(source_kind_id);
+        if !resolution.removed_entity_ids.is_empty() {
+            self.add_virtue(VirtueKindDto::Vitality, -2);
+            self.add_virtue(VirtueKindDto::Chance, -1);
+        }
         events.push(DomainEvent::ItemGenocide {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),

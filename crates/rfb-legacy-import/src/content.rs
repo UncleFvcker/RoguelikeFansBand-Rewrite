@@ -5833,7 +5833,7 @@ fn legacy_device_item_effect(
         ),
         "RECALL" => (
             device_ability_effect(
-                serde_json::json!({"type": "recall", "delayDice": 1, "delaySides": 20, "delayBonus": 15}),
+                serde_json::json!({"type": "recall", "delayDice": 1, "delaySides": 21, "delayBonus": 14}),
             ),
             self_target,
             false,
@@ -27115,6 +27115,13 @@ static cptr _ego_name_zh[] =
             ]
         );
         assert_eq!(effects.len(), 7); // No HP healing or fear removal.
+        assert_eq!(target, device_self_target());
+        candidate.token = "RECALL".to_owned();
+        let (effect, target, _) = legacy_device_item_effect(&candidate).unwrap();
+        assert_eq!(
+            effect["effect"],
+            serde_json::json!({"type":"recall","delayDice":1,"delaySides":21,"delayBonus":14})
+        );
         assert_eq!(target, device_self_target());
     }
 

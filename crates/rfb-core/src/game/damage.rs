@@ -16,6 +16,8 @@ use super::Game;
 pub(super) enum FatalityPolicy {
     BelowZero,
     AtOrBelowZero,
+    /// Genocide fatigue can reduce HP to zero, but cannot kill the caster.
+    Nonlethal,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,13 +33,17 @@ pub(super) struct DamageApplicationPlan {
 
 pub(super) fn plan_damage_application(
     target: &Actor,
-    damage: DamageOutcome,
+    mut damage: DamageOutcome,
     fatality_policy: FatalityPolicy,
 ) -> DamageApplicationPlan {
+    if matches!(fatality_policy, FatalityPolicy::Nonlethal) {
+        damage.applied = damage.applied.min(target.hp.max(0));
+    }
     let hp_after = target.hp.saturating_sub(damage.applied);
     let fatal = match fatality_policy {
         FatalityPolicy::BelowZero => hp_after < 0,
         FatalityPolicy::AtOrBelowZero => hp_after <= 0,
+        FatalityPolicy::Nonlethal => false,
     };
     DamageApplicationPlan {
         target_id: target.id.clone(),

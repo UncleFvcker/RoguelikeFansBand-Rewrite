@@ -1,0 +1,116 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.avavir",
+  "nameKey": "item-demo-avavir-name",
+  "descriptionKey": "item-demo-avavir-description",
+  "glyph": "/",
+  "generationLevel": 30,
+  "weightTenthsPound": 250,
+  "maxStack": 1,
+  "baseValue": 18000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 109,
+    "baseItemKindId": "demo.item.scythe",
+    "instant": false,
+    "rarityOneIn": 8
+  },
+  "weaponProficiencyBaseItemId": "demo.item.scythe",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 5,
+    "damageSides": 4,
+    "toHit": 8,
+    "toDamage": 8
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_COLD",
+      "BRAND_FIRE",
+      "CHR",
+      "DEX",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "RES_COLD",
+      "RES_FIRE",
+      "RES_LITE",
+      "SEE_INVIS",
+      "SHOW_MODS"
+    ],
+    "pval": 3,
+    "toArmor": 10
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 10,
+    "dexterity": 3,
+    "charisma": 3
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "resistances": {
+    "fire": "resistant",
+    "cold": "resistant",
+    "light": "resistant"
+  },
+  "passives": [
+    "see-invisible"
+  ],
+  "brands": [
+    "cold",
+    "fire"
+  ],
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "id": "demo.item-activation.avavir",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-recall-name",
+        "rfbValue": 1000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1,
+        "effectProgramId": "demo.effect.recall-homeward"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1000
+    }
+  }
+}

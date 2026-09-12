@@ -466,6 +466,7 @@ fn invisible_replay_game(seed: u64, race_id: &str) -> Game {
         anger: 0,
         friendly: false,
         no_pet: false,
+        no_genocide: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: Vec::new(),
         statuses: Vec::new(),

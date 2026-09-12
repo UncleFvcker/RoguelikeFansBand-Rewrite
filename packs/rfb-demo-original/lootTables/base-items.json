@@ -2158,6 +2158,13 @@
       "weight": 25
     },
     {
+      "itemKindId": "demo.item.scythe",
+      "maxDepth": 65535,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.lochaber-axe",
       "maxDepth": 65535,
       "minDepth": 45,

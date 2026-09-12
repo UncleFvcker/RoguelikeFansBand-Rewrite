@@ -897,9 +897,9 @@
         "deviceCheckDifficulty": 25,
         "effect": {
           "effect": {
-            "delayBonus": 15,
+            "delayBonus": 14,
             "delayDice": 1,
-            "delaySides": 20,
+            "delaySides": 21,
             "type": "recall"
           },
           "type": "ability-effect"
@@ -1959,10 +1959,20 @@
         "deviceCheckDifficulty": 35,
         "effect": {
           "effect": {
-            "durationBonus": 20,
             "durationDice": 1,
             "durationSides": 20,
-            "type": "resist-elements"
+            "durationTicks": 20,
+            "grantedResistances": {
+              "acid": "resistant",
+              "cold": "resistant",
+              "electricity": "resistant",
+              "fire": "resistant",
+              "poison": "resistant"
+            },
+            "intensity": 1,
+            "stacking": "keep-strongest",
+            "statusKindId": "rfb.status.basic-resistance",
+            "type": "apply-status"
           },
           "type": "ability-effect"
         },
@@ -3455,8 +3465,20 @@
         },
         "deviceCheckDifficulty": 80,
         "effect": {
-          "resourceId": "demo.resource.mana",
-          "type": "restore-resource-full"
+          "effects": [
+            {
+              "resourceId": "demo.resource.mana",
+              "type": "restore-resource-full"
+            },
+            {
+              "type": "recharge-carried-devices"
+            },
+            {
+              "statusKindId": "rfb.status.berserk",
+              "type": "remove-status"
+            }
+          ],
+          "type": "sequence"
         },
         "id": "rfb.device-activation.random-artifact.restore-mana",
         "maxDepth": 100,

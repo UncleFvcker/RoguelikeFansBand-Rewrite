@@ -9778,3 +9778,10 @@ item-demo-morlok-description = Rusty Chain Mail of The High Priest of Morlok
 item-demo-soulkeeper-name = Adamantite Plate Mail 'Soulkeeper'
 item-demo-soulkeeper-description = Adamantite Plate Mail 'Soulkeeper'
 item-activation-demo-soulkeeper-heal-name = Healing
+
+item-demo-scythe-name = Scythe
+item-demo-scythe-description = Scythe
+item-demo-avavir-name = Scythe 'Avavir'
+item-demo-avavir-description = Scythe 'Avavir'
+item-demo-eonwe-name = Great Axe of Eonwe
+item-demo-eonwe-description = Great Axe of Eonwe

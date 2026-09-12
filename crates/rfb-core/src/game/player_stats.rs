@@ -3599,7 +3599,8 @@ impl Game {
         } else {
             StatBounds::NON_NEGATIVE
         };
-        let armor_bounds = if include_equipment && self.player_is_duelist() {
+        // Cursed equipment can make any player's AC negative, not only Duelist penalties.
+        let armor_bounds = if include_equipment {
             StatBounds::UNBOUNDED
         } else {
             StatBounds::NON_NEGATIVE

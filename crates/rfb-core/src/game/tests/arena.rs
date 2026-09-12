@@ -178,6 +178,26 @@ fn fight_guardian(game: &mut Game, id: &str) -> Actor {
         // source HP, armor, immunities, AI, and the real command/turn resolver.
         game.player.position = standing;
         game.player.hp = game.effective_player_max_hp();
+        game.nutrition = crate::game::hunger::NUTRITION_FULL;
+        game.player.statuses.retain(|status| {
+            matches!(
+                status.kind_id.as_str(),
+                STATUS_INVULNERABILITY | STATUS_HASTE
+            )
+        });
+        // Choose a reproducible combat turn that lands and survives. This
+        // remains a prepared reward/turn-consumer check, with source guardian
+        // HP and AI; it does not rely on the former flat-damage Vorpal bug.
+        let seed = (0..1000)
+            .find(|seed| {
+                let mut trial = game.clone();
+                trial.rng = RfbRng::seeded(*seed);
+                let update = dispatch_next(&mut trial, GameCommand::Move { direction });
+                !trial.player_is_dead()
+                    && update.events.iter().any(|event| event.kind == "combat.hit")
+            })
+            .expect("a prepared combat turn must hit and survive");
+        game.rng = RfbRng::seeded(seed);
         let update = dispatch_next(game, GameCommand::Move { direction });
         assert!(
             !game.player_is_dead(),

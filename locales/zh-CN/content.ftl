@@ -9786,3 +9786,10 @@ item-demo-morlok-description = 莫洛克大祭司的生锈的链甲
 item-demo-soulkeeper-name = 『守魂者』精金板甲
 item-demo-soulkeeper-description = 一套不朽的精金盔甲，具有不可战胜的力量来抵挡邪恶和破坏性魔法，它能像任何其他东西都无法做到的那样保护佩戴者的生命力。
 item-activation-demo-soulkeeper-heal-name = 治疗
+
+item-demo-scythe-name = 长柄大镰刀
+item-demo-scythe-description = 长长的新月形刀刃从这把长柄武器的握柄处伸出，可以用双手挥舞它来收割谷物或鲜血。
+item-demo-avavir-name = 『阿瓦维尔』长柄大镰刀
+item-demo-avavir-description = 这把闪耀的收割者蕴含着元素力量的冲突，使其交替呈现出红色和最纯洁的白色。它的内部蕴含着一种向前冲锋和返回的力量。
+item-demo-eonwe-name = 伊昂威的巨斧
+item-demo-eonwe-description = 这是西方大军领袖伊昂威在安格班（Thangorodrim）门前所用的斧头，它以冰冷的愤怒打击不死生物，一句话就能驱散邪恶的大军，并赋予佩戴者迈雅般的肉体与心智力量。

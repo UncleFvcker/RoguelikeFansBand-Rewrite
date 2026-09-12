@@ -3322,6 +3322,10 @@ fn life_fourth_book_annihilate_undead_filters_targets_and_changes_virtues_on_suc
         kind: VirtueKindDto::Chance,
         value: 0,
     };
+    game.virtues[2] = VirtueDto {
+        kind: VirtueKindDto::Vitality,
+        value: 0,
+    };
     let seed = (0..1_000)
         .find(|seed| {
             let mut rng = RfbRng::seeded(*seed);
@@ -3349,6 +3353,7 @@ fn life_fourth_book_annihilate_undead_filters_targets_and_changes_virtues_on_suc
     );
     assert_eq!(game.virtue_current(VirtueKindDto::Unlife), -2);
     assert_eq!(game.virtue_current(VirtueKindDto::Chance), -1);
+    assert_eq!(game.virtue_current(VirtueKindDto::Vitality), 0);
 }
 
 #[test]

@@ -13028,7 +13028,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 377);
+    assert_eq!(base_items.entries.len(), 397);
     // Source kind 245 retains its 1/255 allocation as integer weight zero.
     assert_eq!(
         base_items
@@ -13117,6 +13117,26 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
             "demo.item.great-hammer",
             "demo.item.jewel-encrusted-crown",
             "demo.item.t-shirt",
+            "demo.item.haramakido",
+            "demo.item.full-plate-armour",
+            "demo.item.o-yoroi",
+            "demo.item.mithril-chain-mail",
+            "demo.item.naginata",
+            "demo.item.lajatang",
+            "demo.item.great-axe",
+            "demo.item.lochaber-axe",
+            "demo.item.tetsubo",
+            "demo.item.two-handed-flail",
+            "demo.item.mace-of-disruption",
+            "demo.item.shadow-cloak",
+            "demo.item.steel-helm",
+            "demo.item.mithril-helm",
+            "demo.item.golden-crown",
+            "demo.item.set-of-caestus",
+            "demo.item.knights-shield",
+            "demo.item.rusty-chain-mail",
+            "demo.item.adamantite-plate-mail",
+            "demo.item.scythe",
         ])
         .collect::<BTreeSet<_>>();
     let actual_item_ids = base_items
@@ -13124,7 +13144,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 343);
+    assert_eq!(expected_item_ids.len(), 363);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.

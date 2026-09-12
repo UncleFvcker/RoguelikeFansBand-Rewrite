@@ -235,7 +235,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 125;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 126;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -2917,123 +2917,6 @@ impl Game {
             .iter()
             .find(|floor| floor.id == floor_id)
             .map_or(0, |floor| floor.depth)
-    }
-
-    fn resolve_genocide_candidates(
-        &mut self,
-        candidate_ids: Vec<String>,
-        scope: AbilityGenocideScopeDefinition,
-        power: u16,
-        applies_fatigue: bool,
-        changed: &mut BTreeSet<Position>,
-        removed_entities: &mut Vec<String>,
-    ) -> GenocideResolution {
-        let mut removed_entity_ids = Vec::new();
-        let mut resisted_entity_ids = Vec::new();
-        let mut fatigue_damage = 0_i32;
-        for entity_id in candidate_ids {
-            let Some(entity) = self.entities.iter().find(|entity| entity.id == entity_id) else {
-                continue;
-            };
-            let definition = self
-                .content
-                .actor(&entity.kind_id)
-                .expect("genocide target definition must remain available");
-            let target_level = definition.level;
-            let protected = definition
-                .tags
-                .iter()
-                .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian"));
-            let fatigue_sides = match scope {
-                AbilityGenocideScopeDefinition::Single => target_level.div_ceil(2),
-                AbilityGenocideScopeDefinition::Glyph => 4,
-                AbilityGenocideScopeDefinition::Nearby => 3,
-            }
-            .max(1);
-            if applies_fatigue {
-                fatigue_damage = fatigue_damage.saturating_add(
-                    i32::try_from(self.rng.bounded(u64::from(fatigue_sides)) + 1)
-                        .expect("genocide fatigue roll must fit i32"),
-                );
-            }
-            if protected {
-                resisted_entity_ids.push(entity_id);
-                continue;
-            }
-            let roll = u32::try_from(self.rng.bounded(u64::from(power)))
-                .expect("validated genocide power roll must fit u32");
-            if target_level > roll {
-                resisted_entity_ids.push(entity_id);
-            } else {
-                removed_entity_ids.push(entity_id);
-            }
-        }
-        for entity_id in &removed_entity_ids {
-            let Some(index) = self
-                .entities
-                .iter()
-                .position(|entity| &entity.id == entity_id)
-            else {
-                continue;
-            };
-            let removed = self.entities.remove(index);
-            self.clear_duelist_challenge_for(&removed.id);
-            if self.riding_actor_id.as_deref() == Some(removed.id.as_str()) {
-                self.riding_actor_id = None;
-            }
-            self.clear_riding_bond_for(&removed.id);
-            if let Some(pack_id) = removed
-                .pack
-                .as_ref()
-                .and_then(|pack| (pack.role == MonsterPackRoleDto::Leader).then(|| pack.id.clone()))
-            {
-                for entity in &mut self.entities {
-                    if entity.pack.as_ref().is_some_and(|pack| pack.id == pack_id) {
-                        entity.pack = None;
-                    }
-                }
-            }
-            let carried_item_ids = self
-                .items
-                .iter()
-                .filter_map(|item| match &item.location {
-                    ItemLocation::CarriedBy { actor_id } if actor_id == entity_id => {
-                        Some(item.id.clone())
-                    }
-                    _ => None,
-                })
-                .collect::<Vec<_>>();
-            self.items.retain(|item| {
-                !matches!(&item.location, ItemLocation::CarriedBy { actor_id } if actor_id == entity_id)
-            });
-            for item_id in carried_item_ids {
-                self.item_property_knowledge.remove(&item_id);
-            }
-            changed.insert(removed.position);
-            removed_entities.push(removed.id);
-        }
-        fatigue_damage = i32::try_from(
-            i64::from(fatigue_damage)
-                .saturating_mul(i64::from(self.player_incoming_damage_percent()))
-                .saturating_add(99)
-                .saturating_div(100),
-        )
-        .unwrap_or(i32::MAX);
-        let fatigue_damage = self
-            .apply_final_player_damage(
-                resolve_damage(
-                    DamagePacket::new(fatigue_damage, DamageType::Physical),
-                    ResistanceLevel::Normal,
-                ),
-                FatalityPolicy::BelowZero,
-            )
-            .damage
-            .applied;
-        GenocideResolution {
-            removed_entity_ids,
-            resisted_entity_ids,
-            fatigue_damage,
-        }
     }
 
     fn summon_category_candidate_kind_ids(

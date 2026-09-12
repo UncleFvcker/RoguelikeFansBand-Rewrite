@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.253";
+pub const PROTOCOL_VERSION: &str = "1.254";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 20;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 21;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -5647,6 +5647,7 @@ pub struct ActorSaveDto {
     pub anger: u8,
     pub friendly: bool,
     pub no_pet: bool,
+    pub no_genocide: bool,
     #[serde(default)]
     pub casting_cooldown_remaining: u16,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -6852,6 +6853,7 @@ mod tests {
         current["entities"][0]["anger"] = serde_json::json!(0);
         current["entities"][0]["friendly"] = serde_json::json!(false);
         current["entities"][0]["noPet"] = serde_json::json!(false);
+        current["entities"][0]["noGenocide"] = serde_json::json!(false);
         current["entities"][0]["minorSlow"] = serde_json::json!(0);
         current["items"][0]["permanentDestructionImmunities"] = serde_json::json!([]);
         current["inventory"][0]["permanentDestructionImmunities"] = serde_json::json!([]);

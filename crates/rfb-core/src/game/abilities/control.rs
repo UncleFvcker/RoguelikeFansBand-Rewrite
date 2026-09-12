@@ -11,10 +11,11 @@ use crate::game::item_use::VisibleBanishmentOutcome;
 use crate::game::projectile_geometry::{has_line_of_effect, rfb_distance};
 use crate::game::status_effects::{apply_ability_status_effect, remove_ability_status_effect};
 use crate::game::{
-    CRUSADE_ARREST_ABILITY_ID, Game, ability_genocide_scope_dto, actor_matches_category,
-    chebyshev_distance,
+    CRUSADE_ARREST_ABILITY_ID, Game, GenocideResolution, ability_genocide_scope_dto,
+    actor_matches_category,
 };
 use crate::resistance::{DamageType, ResistanceLevel, ResistanceProfile};
+use crate::state::ItemLocation;
 use rfb_content::{
     AbilityDefinition, AbilityEffectDefinition, AbilityGenocideScopeDefinition,
     AbilityStatusStackingDefinition, EquipmentBonuses, StatModifiers,
@@ -27,6 +28,151 @@ use rfb_protocol::{
 use std::collections::{BTreeMap, BTreeSet};
 
 impl Game {
+    pub(in crate::game) fn resolve_genocide_candidates(
+        &mut self,
+        candidate_ids: Vec<String>,
+        scope: AbilityGenocideScopeDefinition,
+        power: u16,
+        player_cast: bool,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> GenocideResolution {
+        let mut removed_entity_ids = Vec::new();
+        let mut resisted_entity_ids = Vec::new();
+        let mut fatigue_damage = 0_i32;
+        // Current dedicated quest floors correspond to source QF_GENERATE.
+        // Arena-room dungeons are not the unavailable source town arena/battle mode.
+        let quest_floor = self.current_floor_task_id().is_some();
+        if quest_floor && scope != AbilityGenocideScopeDefinition::Single {
+            return GenocideResolution {
+                removed_entity_ids,
+                resisted_entity_ids,
+                fatigue_damage,
+            };
+        }
+        for entity_id in candidate_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id)
+            else {
+                continue;
+            };
+            let entity = &self.entities[index];
+            // Non-player genocide leaves pets alone; player-cast genocide protects the current mount.
+            if !player_cast && entity.controller_id.as_deref() == Some(self.player.id.as_str()) {
+                continue;
+            }
+            let definition = self
+                .actor_runtime_definition(entity)
+                .expect("genocide target must exist");
+            let target_level = definition.level;
+            let protected = quest_floor
+                || self.riding_actor_id.as_deref() == Some(entity_id.as_str())
+                || definition.tags.iter().any(|tag| {
+                    matches!(tag.as_str(), "unique" | "unique2" | "guardian" | "questor")
+                })
+                || definition
+                    .allocation
+                    .as_ref()
+                    .is_some_and(|allocation| allocation.task_id.is_some());
+            // Source tests level before the learned NOGENO flag, retaining that RNG draw.
+            let resisted = protected
+                || (player_cast
+                    && (u64::from(target_level) > self.rng.bounded(u64::from(power))
+                        || self.entities[index].no_genocide));
+            if resisted {
+                resisted_entity_ids.push(entity_id);
+                if player_cast {
+                    let entity = &mut self.entities[index];
+                    entity.alerted = true;
+                    entity
+                        .statuses
+                        .retain(|status| status.kind_id != STATUS_SLEEP);
+                    if entity.controller_id.is_none() {
+                        entity.friendly = false;
+                    }
+                    if self.rng.bounded(13) == 0 {
+                        entity.no_genocide = true;
+                    }
+                    changed.insert(entity.position);
+                }
+            } else {
+                removed_entity_ids.push(entity_id);
+            }
+            if player_cast {
+                let sides = match scope {
+                    AbilityGenocideScopeDefinition::Single => target_level.div_ceil(2),
+                    AbilityGenocideScopeDefinition::Glyph => 4,
+                    AbilityGenocideScopeDefinition::Nearby => 3,
+                }
+                .max(1);
+                let raw = (self.rng.bounded(u64::from(sides)) + 1) as i32;
+                let percent = self.player_spell_damage_percent(DamageType::Physical, raw);
+                let damage = (raw * i32::from(percent) + 99) / 100;
+                fatigue_damage += self
+                    .apply_final_player_damage(
+                        resolve_damage(
+                            DamagePacket::new(damage, DamageType::Physical),
+                            ResistanceLevel::Normal,
+                        ),
+                        FatalityPolicy::Nonlethal,
+                    )
+                    .damage
+                    .applied;
+            }
+        }
+        for entity_id in &removed_entity_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| &entity.id == entity_id)
+            else {
+                continue;
+            };
+            let removed = self.entities.remove(index);
+            self.clear_duelist_challenge_for(&removed.id);
+            if self.riding_actor_id.as_deref() == Some(removed.id.as_str()) {
+                self.riding_actor_id = None;
+            }
+            self.clear_riding_bond_for(&removed.id);
+            if let Some(pack_id) = removed
+                .pack
+                .as_ref()
+                .and_then(|pack| (pack.role == MonsterPackRoleDto::Leader).then(|| pack.id.clone()))
+            {
+                for entity in &mut self.entities {
+                    if entity.pack.as_ref().is_some_and(|pack| pack.id == pack_id) {
+                        entity.pack = None;
+                    }
+                }
+            }
+            let carried_item_ids = self
+                .items
+                .iter()
+                .filter_map(|item| match &item.location {
+                    ItemLocation::CarriedBy { actor_id } if actor_id == entity_id => {
+                        Some(item.id.clone())
+                    }
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
+            self.items.retain(|item| {
+                !matches!(&item.location, ItemLocation::CarriedBy { actor_id } if actor_id == entity_id)
+            });
+            for item_id in carried_item_ids {
+                self.item_property_knowledge.remove(&item_id);
+            }
+            changed.insert(removed.position);
+            removed_entities.push(removed.id);
+        }
+        GenocideResolution {
+            removed_entity_ids,
+            resisted_entity_ids,
+            fatigue_damage,
+        }
+    }
+
     pub(in crate::game) fn resolve_ability_control(
         &mut self,
         target_index: usize,
@@ -1244,7 +1390,7 @@ impl Game {
                             .zip(glyph.as_ref())
                             .is_some_and(|(definition, glyph)| &definition.glyph == glyph),
                         AbilityGenocideScopeDefinition::Nearby => {
-                            chebyshev_distance(self.player.position, entity.position)
+                            rfb_distance(self.player.position, entity.position)
                                 <= u32::from(*radius)
                         }
                     }
@@ -1261,6 +1407,12 @@ impl Game {
             removed_entities,
         );
         if !resolution.removed_entity_ids.is_empty() {
+            // mass_genocide_undead has its own Unlife/Chance changes, while
+            // ordinary genocide changes Vitality/Chance at the caller boundary.
+            if *scope != AbilityGenocideScopeDefinition::Single && target_category.is_none() {
+                self.add_virtue(VirtueKindDto::Vitality, -2);
+                self.add_virtue(VirtueKindDto::Chance, -1);
+            }
             self.add_virtue(VirtueKindDto::Unlife, i16::from(*unlife_change_on_success));
             self.add_virtue(VirtueKindDto::Chance, i16::from(*chance_change_on_success));
         }
