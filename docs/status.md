@@ -4,20 +4,20 @@
 
 祖尔导入：[Z1–Z6 计划](../design/zul-town-import-plan-20260912.md)中的 Z1–Z6 已完成本计划范围的实现与验收。已注册 (77,6) 的 94×57 山地模板与九家独立商店，保留 2,158 个显式格、3,200 个荒野继承格；祖尔不使用普通城镇的刷怪排除。珠宝店与龙皮百货已接随机装备生成、专属估值／交易规则和库存保存；补十种龙鳞甲及喷吐激活，14 种源龙鳞甲与五种龙皮部位均有正式定义，高等级源门槛保持。三塔已接主／当前副领域身份、兽化人会员、全部鉴定、突变治疗和平衡仪式；仪式复用美德生成器重建八项零值美德，出生 RNG 顺序保持。没有旅店／Home／博物馆，物理到访尚不开放祖尔传送。Z4 已接完整漩涡任务、两件等级 85 蝙蝠披风、三个固定神器奖励及仅成功领奖开放的传送；塔与旅店／法术共用目的地资格，祖尔抵达巫术塔 (65,16)。Z5 已接三节点完整地图、会员接取与领奖、任务 10 的漩涡终态前置、源书奖励、战熊同伴及任务内水／熔岩伤害；新增 `[末日巨著]` 实体，Chaos 施法体系仍未交付。Z6 已生成 Schema／绑定／分配审计／内容锁，完成相关核心／内容／本地化检查及 26 条未刷新契约。Windows Tauri standalone 与专用 WebDriver 构建通过，桌面覆盖三类商店、三塔服务与领域切换、四任务源奖励、滚动及跨城往返；15 次原生保存恢复、30 张主流程截图和四张完整地图截图通过。测试使用等级／保护状态／清场准备，不代表自然战斗通关或 Android 验收。新游戏及选中存档加载已移除额外全列表刷新，后端日志验证未扫描其他槽位。商店与美德生成的保留适配见计划 Z2／Z3／Z4／Z5。
 
-阿斯加德：[AS1–AS7 计划](../design/asgard-dungeon-plan-20260912.md)已完成 AS1 来源与依赖核对。21 个北欧成员的专属死亡分支核对后，神器依赖由 12 件补齐为 15 件；已明确号角颈槽激活、持续钓鱼、弗丽嘉大木箱和竖井连接的现有消费者与后续缺口。当前仅更新计划及来源清单，正式入口仍关闭，AS2–AS7 尚未实施。按用户要求，中途不编译、不运行测试，AS7 实现与来源收口结束后统一验证。
+阿斯加德：[AS1–AS7 计划](../design/asgard-dungeon-plan-20260912.md)已完成 AS1 来源核对及 AS2 神器使用链实现。十五件固定神器及钓鱼竿／大号角底材已定义；号角召回、纯震慑践踏、持续钓鱼与保存／取消、雷神之锤回返及手套联动、乌勒尔射击专属命伤已有 Rust 消费者和前端入口。普通神器资格保留六件可抽取、九件 QUESTITEM 排除；专属死亡掉落与地牢入口尚待 AS3–AS6。新增专项测试已编写，未执行。按用户要求，中途不编译、不运行测试，AS7 实现与来源收口结束后统一生成并验证；当前不能视为编译通过或实际验收完成。
 
 ## 版本与源内容
 
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.258 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | 127 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload / 容器 | 14 / 22 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.437.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 协议源码 | 1.259；绑定待 AS7 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | 128；契约待 AS7 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload / 容器 | 14 / 23 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
+| 内容包源码 | 1.438.0；lock 暂留已验证的 1.437.0，待 AS7 编译生成 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v328，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 13 个 Class、109 个 Build、57 个 Race、36 本能力书、1,907 个 ability、549 个 item、1,409 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon；城镇有 7 个 town、69 个 shop、67 个 townFacility。基础分配池为 408 行，固定神器映射 134/392；创角开放 102 个 Build。这些是定义与入口数量，行为验收范围见下文。
+正式源目录含 13 个 Class、109 个 Build、57 个 Race、36 本能力书、1,907 个 ability、566 个 item、1,409 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon；城镇有 7 个 town、69 个 shop、67 个 townFacility。基础分配池为 408 行，固定神器定义映射 149/392；创角开放 102 个 Build。AS2 新增定义尚待 AS7 验证；这些是定义与入口数量，行为验收范围见下文。
 
 战法师已完成[七步计划](warrior-mage-class-plan.md)：8个固定主奥秘Build、288项参数、双书出生/成长、INT法力/负重/近战/感知及双领域自主学习、重复研习、84点支出、遗忘/改换/保存已接入。25级双向转换保留真实失败、内部支付、满池代价、低HP死亡及公共伤害/治疗修正；旧城堡1:4/重复替代、两件神器/秘银链甲、实际激活/冷却、盗贼长剑、两塔会员与Mage/20卷轴消费者通过。正式入口为“混合 → 战法师 → 第二领域”，含工艺；当前13职业、102个Build，8个新增Build的40项生成责任与来源报告已验收，0个可玩范围证据gap。
 

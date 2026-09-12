@@ -217,3 +217,12 @@ src/xtra1.c, src/tables.c, src/equip.c and src/spells1.c at that commit.
 Source parameters and retained boundaries are recorded in docs/artifact-import-plan.md
 and design/remaining-item-coverage-review.json; upstream terms and
 LICENSES/RFB-UPSTREAM-NOTICE.txt continue to apply.
+
+Asgard AS2 item definitions (artifacts 5, 97, 136, 251, 369-379; kinds 109/708)
+and their use rules adapt RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c.
+Sources include lib/edit/a_info.txt, lib/edit/k_info.txt, src/artifact_name_zh.inc,
+src/kind_name_zh.inc, src/devices.c, src/dungeon.c, src/monster2.c, src/gf.c,
+src/spells3.c, src/py_throw.c, src/obj_kind.c, src/xtra1.c, src/equip.c and
+src/object3.c. Existing upstream notices and license terms remain applicable.
+Implementation scope and pending AS7 verification are recorded in
+design/asgard-dungeon-plan-20260912.md.
