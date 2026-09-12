@@ -847,6 +847,7 @@ pub(crate) enum DomainEvent {
         severity: ItemCurseSeverityDto,
     },
     MoveBlocked,
+    LocalTravelLeftDetectionArea,
     PlayerMeleeBlocked,
     WildernessAmbushed,
     WildernessInterestingDiscovery,
@@ -3778,6 +3779,10 @@ impl DomainEvent {
                 ],
             ),
             Self::MoveBlocked => dto_without_args("move.blocked", "game-move-blocked"),
+            Self::LocalTravelLeftDetectionArea => dto_without_args(
+                "travel.left-detection-area",
+                "game-travel-left-detection-area",
+            ),
             Self::PlayerMeleeBlocked => {
                 dto_without_args("player.melee-blocked", "player-melee-blocked")
             }

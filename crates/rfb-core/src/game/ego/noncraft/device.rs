@@ -222,8 +222,7 @@ fn attempt(
         })
         .unwrap();
     let difficulty = difficulty(rng, profile, row, power);
-    // This first source table contains power-independent detection/identification
-    // effects only; their SPELL_COST_EXTRA is zero (validated at import).
+    // Supported source profiles (utility and Frost Bolt) have zero SPELL_COST_EXTRA.
     let cost = normal(rng, profile.charges.cost as i32, 5).clamp(1, 1000) as u32;
     let minimum = profile.charges.minimum / profile.charges.cost * cost;
     let maximum = (normal(rng, 3 * i32::from(power) / if rod { 2 } else { 1 }, 15) as i64)

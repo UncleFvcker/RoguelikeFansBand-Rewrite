@@ -16,7 +16,9 @@ use super::{
 };
 
 const SLOTS_PER_CATEGORY: u8 = 10;
+mod automatic;
 mod usage;
+pub(super) use automatic::AutoDeviceEffect;
 const CATEGORIES: [(AbsorbedDeviceCategoryDto, &str); 3] = [
     (AbsorbedDeviceCategoryDto::Wand, "wand"),
     (AbsorbedDeviceCategoryDto::Staff, "staff"),

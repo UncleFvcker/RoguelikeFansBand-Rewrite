@@ -21,7 +21,7 @@ fn context(game: &Game, depth: u16) -> LootContext {
     }
 }
 
-fn pick_utility(game: &mut Game, profile: &str) -> String {
+pub(super) fn pick_utility(game: &mut Game, profile: &str) -> String {
     let depth = game
         .content
         .item_definitions()
@@ -59,13 +59,21 @@ fn natural_utility_devices_preserve_instances_and_replay_after_save() {
     let mut remaining = game
         .content
         .item_definitions()
+        .filter(|item| {
+            game.content
+                .loot_table("demo.loot-table.base-items")
+                .unwrap()
+                .entries
+                .iter()
+                .any(|entry| entry.item_kind_id == item.id)
+        })
         .filter_map(|item| item.device_generation.as_ref())
         .filter(|generation| generation.rfb_device.is_some())
         .flat_map(|generation| generation.activations.iter().map(|p| p.id.clone()))
         .collect::<BTreeSet<_>>();
-    assert_eq!(remaining.len(), 12);
+    assert_eq!(remaining.len(), 13);
     // Controlled depths and repeated production allocation; no pool or weight edits.
-    for depth in [10, 20, 40] {
+    for depth in [10, 20, 40, 60] {
         let context = context(&game, depth);
         for _ in 0..4_000 {
             let generated = game

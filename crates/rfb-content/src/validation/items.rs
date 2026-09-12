@@ -2,9 +2,21 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-fn source_utility_device_effect(effect: &crate::ItemUseEffectDefinition) -> bool {
+fn source_device_effect(profile: &crate::ItemDeviceActivationDefinition) -> bool {
     use crate::ItemUseEffectDefinition as Effect;
-    match effect {
+    // Frost Bolt uses the shared source SP generator and scales dice with stored power in core.
+    if profile.id == "rfb.device-activation.wand.bolt-cold" {
+        return matches!(
+            profile.effect,
+            Effect::Damage {
+                damage_dice: 6,
+                damage_sides: 8,
+                damage_bonus: 0,
+                damage_type: crate::ActorDamageType::Cold,
+            }
+        );
+    }
+    match &profile.effect {
         Effect::Detect { .. } | Effect::IdentifyItem { .. } => true,
         Effect::Sequence { effects } => {
             effects
@@ -1280,7 +1292,7 @@ pub(super) fn validate_items(
                             && profile.charges.cost <= 250
                             && profile.charges.minimum == capacity_multiplier * profile.charges.cost
                             && profile.charges.maximum == 1000
-                            && source_utility_device_effect(&profile.effect)
+                            && source_device_effect(profile)
                     });
                 if !valid {
                     return Err(ContentError::InvalidItemUseAction(item.id.clone()));

@@ -1037,6 +1037,7 @@ impl Game {
             gold_piles: std::mem::take(&mut self.gold_piles),
             explored: std::mem::take(&mut self.explored),
             revealed_terrain: std::mem::take(&mut self.revealed_terrain),
+            detection_coverage: std::mem::take(&mut self.detection_coverage),
             connections: std::mem::take(&mut self.floor_connections),
             regions: std::mem::take(&mut self.floor_regions),
         };
@@ -1442,6 +1443,7 @@ impl Game {
         self.gold_piles = floor.gold_piles;
         self.explored = floor.explored;
         self.revealed_terrain = floor.revealed_terrain;
+        self.detection_coverage = floor.detection_coverage;
         self.floor_connections = floor.connections;
         self.floor_regions = floor.regions;
         self.mark_current_town_visited();

@@ -197,6 +197,9 @@ pub(crate) enum GameAction {
     SetInterfaceLocale {
         locale: LocaleDto,
     },
+    ConfigureTravel {
+        options: rfb_protocol::TravelOptionsDto,
+    },
     ForgetAbility {
         ability_id: String,
     },
@@ -306,7 +309,8 @@ impl GameAction {
             | Self::ResolveDuelistChoice { .. }
             | Self::InscribeItem { .. }
             | Self::SwapAbsorbedDevices { .. }
-            | Self::SetInterfaceLocale { .. } => 0,
+            | Self::SetInterfaceLocale { .. }
+            | Self::ConfigureTravel { .. } => 0,
             Self::TravelLocal { .. } => 0,
             Self::RefuelLight { .. } => STANDARD_ACTION_COST / 2,
             _ => STANDARD_ACTION_COST,
@@ -553,6 +557,7 @@ impl From<GameCommand> for GameAction {
             },
             GameCommand::SetSummonCommand { mode } => Self::SetSummonCommand { mode },
             GameCommand::SetInterfaceLocale { locale } => Self::SetInterfaceLocale { locale },
+            GameCommand::ConfigureTravel { options } => Self::ConfigureTravel { options },
             GameCommand::ForgetAbility { ability_id } => Self::ForgetAbility { ability_id },
             GameCommand::StudyAbility {
                 book_item_id,

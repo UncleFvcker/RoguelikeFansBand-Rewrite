@@ -241,6 +241,7 @@ impl Game {
                 SettledItemUse {
                     kind_id: item.kind_id.clone(),
                     profile_id: Some(activation.profile_id.clone()),
+                    activation_power: Some(activation.power),
                     effect: profile.effect.clone(),
                     plan,
                     device_power_bonus: power,

@@ -2279,6 +2279,7 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
 
 pub(crate) fn floor_to_save(floor: &FloorState) -> FloorSaveDto {
     FloorSaveDto {
+        detection_coverage: floor.detection_coverage.to_save(),
         id: floor.id.clone(),
         dungeon_instance_id: floor.dungeon_instance_id.clone(),
         reproduction_suppressed: floor.reproduction_suppressed,
@@ -2315,6 +2316,11 @@ pub(crate) fn floor_from_save(
     {
         return Err(CoreError::InvalidSave("terrain dimensions are invalid"));
     }
+    let detection_coverage = crate::state::DetectionCoverage::from_save(
+        floor.detection_coverage,
+        floor.terrain.width,
+        floor.terrain.height,
+    )?;
     let revealed_terrain = revealed_terrain_from_save(
         floor.revealed_terrain,
         &floor.terrain.terrain_ids,
@@ -2363,6 +2369,7 @@ pub(crate) fn floor_from_save(
         gold_piles: gold_piles_from_save(floor.gold_piles),
         explored: floor.explored,
         revealed_terrain,
+        detection_coverage,
         connections,
         regions,
     })

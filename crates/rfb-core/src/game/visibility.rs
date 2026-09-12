@@ -91,6 +91,7 @@ impl Game {
         }
         cleared_cells += u32::try_from(self.revealed_terrain.len()).unwrap_or(0);
         self.revealed_terrain.clear();
+        self.detection_coverage.traps.clear();
         cleared_cells
     }
 

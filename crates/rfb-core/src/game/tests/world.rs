@@ -4944,6 +4944,8 @@ fn world_map_round_trip_preserves_the_visible_town_surface() {
     game.terrain[remembered_index] = "demo.terrain.created-trap".to_owned();
     game.explored[remembered_index] = true;
     game.revealed_terrain.insert(remembered);
+    game.detection_coverage.traps.insert(remembered);
+    game.detection_coverage.mapping.insert(remembered);
 
     dispatch_next(&mut game, enter_world_map_command());
 
@@ -4952,12 +4954,17 @@ fn world_map_round_trip_preserves_the_visible_town_surface() {
     assert_eq!(backing.terrain[backing_index], "demo.terrain.created-trap");
     assert!(backing.explored[backing_index]);
     assert!(backing.revealed_terrain.contains(&local));
+    assert!(backing.detection_coverage.traps.contains(&local));
+    assert!(backing.detection_coverage.mapping.contains(&local));
+    game = Game::from_save(game.to_save()).unwrap();
 
     dispatch_next(&mut game, GameCommand::LeaveWorldMap);
 
     assert_eq!(game.terrain[remembered_index], "demo.terrain.created-trap");
     assert!(game.explored[remembered_index]);
     assert!(game.revealed_terrain.contains(&remembered));
+    assert!(game.detection_coverage.traps.contains(&remembered));
+    assert!(game.detection_coverage.mapping.contains(&remembered));
 }
 
 #[test]
@@ -5321,6 +5328,8 @@ fn wilderness_scroll_translates_overlap_and_crops_entities_items_gold_and_packs(
         guard_position: Some(remembered),
     };
     game.player.position = Position { x: 131, y: 33 };
+    game.detection_coverage.traps.insert(remembered);
+    game.detection_coverage.mapping.insert(remembered);
     let mut removed = Vec::new();
 
     let transition = game
@@ -5346,6 +5355,8 @@ fn wilderness_scroll_translates_overlap_and_crops_entities_items_gold_and_packs(
     assert!(game.daylight_suppressed[translated_index]);
     assert!(game.explored[translated_index]);
     assert!(game.revealed_terrain.contains(&translated));
+    assert!(game.detection_coverage.traps.contains(&translated));
+    assert!(game.detection_coverage.mapping.contains(&translated));
     assert_eq!(game.summon_command.guard_position, Some(translated));
     assert_eq!(
         game.entities

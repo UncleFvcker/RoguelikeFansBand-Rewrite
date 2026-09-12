@@ -585,6 +585,31 @@ impl Game {
             return None;
         }
 
+        if let Some(index) =
+            self.magic_eater_auto_device(super::magic_eater::AutoDeviceEffect::Identify)
+        {
+            let source_kind_id = self.items[index].kind_id.clone();
+            let cost = self.items[index]
+                .activation
+                .as_ref()
+                .expect("selected auto-identify device")
+                .cost;
+            let outcome =
+                self.identify_item_instance(target_item_id, ItemIdentificationRequest::new(false));
+            self.items[index]
+                .charges
+                .as_mut()
+                .expect("selected auto-identify SP")
+                .current -= cost;
+            return Some(MogaminatorItemResolution::Identified {
+                source_kind_id,
+                target_item_id: outcome.item_id,
+                target_kind_id: outcome.item_kind_id,
+                full: outcome.full,
+                changed: outcome.changed,
+            });
+        }
+
         let mut sources = self
             .items
             .iter()

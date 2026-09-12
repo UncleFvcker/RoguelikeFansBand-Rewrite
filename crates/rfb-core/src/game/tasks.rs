@@ -1013,6 +1013,7 @@ impl Game {
                     | "demo.class.ranger"
                     | "demo.class.priest"
                     | "demo.class.warrior-mage"
+                    | "demo.class.magic-eater"
             )
         });
         let fixed_task_reward = task_id == "demo.task.zul-eddies"

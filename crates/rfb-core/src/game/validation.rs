@@ -37,6 +37,7 @@ impl Game {
                     | GameAction::LeaveWorldMap
                     | GameAction::TravelWorld { .. }
                     | GameAction::ConfigureMogaminator { .. }
+                    | GameAction::ConfigureTravel { .. }
                     | GameAction::ChooseRaceMutation { .. }
                     | GameAction::InscribeItem { .. }
                     | GameAction::SwapAbsorbedDevices { .. }
@@ -832,6 +833,9 @@ impl Game {
                 "terrain state dimensions are invalid",
             ));
         }
+        if !self.detection_coverage.is_valid(self.width, self.height) {
+            return Err(CoreError::InvalidSave("detection coverage is invalid"));
+        }
         if !revealed_terrain_is_valid(
             &self.revealed_terrain,
             &self.terrain,
@@ -1163,6 +1167,7 @@ impl Game {
         for floor in self.stored_floors.values() {
             let expected_len = usize::from(floor.width) * usize::from(floor.height);
             if floor.terrain.len() != expected_len
+                || !floor.detection_coverage.is_valid(floor.width, floor.height)
                 || floor.explored.len() != expected_len
                 || floor.glow.len() != expected_len
                 || floor.daylight_suppressed.len() != expected_len

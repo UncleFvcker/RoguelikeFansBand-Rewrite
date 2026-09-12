@@ -87,6 +87,17 @@
           "range": 0,
           "requiresLineOfEffect": false
         }
+      },
+      {
+        "id": "rfb.device-activation.rod.enlightenment",
+        "nameKey": "device-activation-demo-enlightenment-name",
+        "weight": 1,
+        "minDepth": 50,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 50,
+        "charges": {"cost": 33, "minimum": 66, "maximum": 1000},
+        "effectProgramId": "demo.effect.enlightenment-staff",
+        "target": {"modes": ["self"], "range": 0, "requiresLineOfEffect": false}
       }
     ],
     "recovery": {
@@ -125,6 +136,13 @@
           "flags": [
             "common"
           ]
+        },
+        {
+          "activationId": "rfb.device-activation.rod.enlightenment",
+          "rarity": 2,
+          "difficultyBase": 10,
+          "difficultyExtra": 0,
+          "flags": ["common"]
         }
       ]
     }

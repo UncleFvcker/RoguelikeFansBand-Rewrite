@@ -12060,6 +12060,7 @@ fn artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name()
     let priest_builds = super::support::priest_build_ids();
     let warrior_mage_builds = super::support::warrior_mage_build_ids();
     for (build, equipped) in [
+        "magic-eater",
         "warrior",
         "archer",
         "sniper",
@@ -12152,6 +12153,12 @@ fn artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name()
             |event| event.kind == "item.artifact-creation" && event.args["succeeded"] == "true"
         ));
         let saved_target = target.clone();
+        if build == "magic-eater" {
+            assert!(
+                game.absorbed_device_category(&saved_target).is_none(),
+                "generated weapon is not a device"
+            );
+        }
         let mut restored = Game::from_save(game.to_save()).unwrap();
         assert_eq!(
             restored

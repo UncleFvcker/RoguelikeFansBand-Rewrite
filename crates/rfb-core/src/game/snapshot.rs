@@ -1230,6 +1230,7 @@ impl Game {
         let visual_cells = self.visual_cells();
         let world_map = self.map_scale == MapScaleDto::World;
         GameSnapshot {
+            travel_options: self.travel_options,
             protocol_version: PROTOCOL_VERSION.to_owned(),
             revision: self.revision,
             turn: self.turn,

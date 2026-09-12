@@ -210,6 +210,7 @@ pub(crate) struct GoldPile {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct FloorState {
+    pub(crate) detection_coverage: DetectionCoverage,
     pub(crate) id: String,
     pub(crate) dungeon_instance_id: Option<String>,
     pub(crate) reproduction_suppressed: bool,
@@ -227,6 +228,48 @@ pub(crate) struct FloorState {
     pub(crate) revealed_terrain: BTreeSet<Position>,
     pub(crate) connections: Vec<FloorConnectionState>,
     pub(crate) regions: Vec<FloorRegionState>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct DetectionCoverage {
+    pub(crate) traps: BTreeSet<Position>,
+    pub(crate) mapping: BTreeSet<Position>,
+}
+
+impl DetectionCoverage {
+    pub(crate) fn to_save(&self) -> rfb_protocol::DetectionCoverageSaveDto {
+        rfb_protocol::DetectionCoverageSaveDto {
+            traps: self.traps.iter().copied().collect(),
+            mapping: self.mapping.iter().copied().collect(),
+        }
+    }
+
+    pub(crate) fn is_valid(&self, width: u16, height: u16) -> bool {
+        self.traps
+            .iter()
+            .chain(&self.mapping)
+            .all(|p| p.x >= 0 && p.y >= 0 && p.x < i32::from(width) && p.y < i32::from(height))
+    }
+
+    pub(crate) fn from_save(
+        saved: rfb_protocol::DetectionCoverageSaveDto,
+        width: u16,
+        height: u16,
+    ) -> Result<Self, crate::CoreError> {
+        let counts = (saved.traps.len(), saved.mapping.len());
+        let coverage = Self {
+            traps: saved.traps.into_iter().collect(),
+            mapping: saved.mapping.into_iter().collect(),
+        };
+        if (coverage.traps.len(), coverage.mapping.len()) != counts
+            || !coverage.is_valid(width, height)
+        {
+            return Err(crate::CoreError::InvalidSave(
+                "detection coverage is invalid",
+            ));
+        }
+        Ok(coverage)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

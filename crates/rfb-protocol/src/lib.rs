@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.260";
+pub const PROTOCOL_VERSION: &str = "1.261";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 23;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 24;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -517,6 +517,9 @@ pub enum GameCommand {
     },
     SetInterfaceLocale {
         locale: LocaleDto,
+    },
+    ConfigureTravel {
+        options: TravelOptionsDto,
     },
     SetSummonCommand {
         mode: SummonCommandModeDto,
@@ -5059,6 +5062,7 @@ pub struct FacilityServiceDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct GameSnapshot {
+    pub travel_options: TravelOptionsDto,
     pub protocol_version: String,
     pub revision: u32,
     pub turn: u32,
@@ -5112,6 +5116,7 @@ pub struct GameSnapshot {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct GameUpdate {
+    pub travel_options: TravelOptionsDto,
     pub base_revision: u32,
     pub revision: u32,
     pub turn: u32,
@@ -5998,6 +6003,7 @@ pub struct FloorRegionSaveDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FloorSaveDto {
+    pub detection_coverage: DetectionCoverageSaveDto,
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dungeon_instance_id: Option<String>,
@@ -6019,6 +6025,32 @@ pub struct FloorSaveDto {
     pub connections: Vec<FloorConnectionSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub regions: Vec<FloorRegionSaveDto>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TravelOptionsDto {
+    pub auto_detect_traps: bool,
+    pub auto_map_area: bool,
+    pub disturb_trap_detect: bool,
+}
+
+impl Default for TravelOptionsDto {
+    fn default() -> Self {
+        Self {
+            auto_detect_traps: false,
+            auto_map_area: false,
+            disturb_trap_detect: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DetectionCoverageSaveDto {
+    pub traps: Vec<Position>,
+    pub mapping: Vec<Position>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -6175,6 +6207,8 @@ fn is_zero_u8(value: &u8) -> bool {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SavePayloadV1 {
+    pub travel_options: TravelOptionsDto,
+    pub detection_coverage: DetectionCoverageSaveDto,
     pub absorbed_devices: Vec<AbsorbedDeviceSaveDto>,
     pub pending_magic_absorption: Option<PendingMagicAbsorptionDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -6826,6 +6860,9 @@ mod tests {
             "pre-v190 actor saves without nice must be rejected"
         );
         let mut current = serde_json::to_value(&legacy).expect("fixture should serialize");
+        current["travelOptions"] = serde_json::to_value(TravelOptionsDto::default()).unwrap();
+        current["detectionCoverage"] =
+            serde_json::to_value(DetectionCoverageSaveDto::default()).unwrap();
         current["absorbedDevices"] = serde_json::json!([]);
         current["pendingMagicAbsorption"] = serde_json::Value::Null;
         current["randomArtifactNames"] = serde_json::json!([]);

@@ -402,6 +402,7 @@ fn random_artifact_negative_power_reaches_a_cursed_equippable_instance() {
     let warrior_mage_builds = crate::game::tests::support::warrior_mage_build_ids();
     let artifact = source();
     for build in [
+        "magic-eater",
         "warrior",
         "berserker",
         "mindcrafter",

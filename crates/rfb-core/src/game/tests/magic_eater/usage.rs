@@ -2,7 +2,7 @@
 use super::*;
 use crate::game::tests::support::{command, dispatch_next, replace_terrain, rest_resolution};
 
-fn body(game: &mut Game, id: &str, kind: &str, slot: u8) {
+pub(super) fn body(game: &mut Game, id: &str, kind: &str, slot: u8) {
     give_inventory_item(game, id, kind);
     let category = game
         .absorbed_device_category(game.items.last().unwrap())
@@ -14,11 +14,11 @@ fn body(game: &mut Game, id: &str, kind: &str, slot: u8) {
     charges.current = charges.maximum;
 }
 
-fn item<'a>(game: &'a Game, id: &str) -> &'a ItemInstance {
+pub(super) fn item<'a>(game: &'a Game, id: &str) -> &'a ItemInstance {
     game.items.iter().find(|item| item.id == id).unwrap()
 }
 
-fn sp(game: &mut Game, id: &str, current: u32) {
+pub(super) fn sp(game: &mut Game, id: &str, current: u32) {
     game.items
         .iter_mut()
         .find(|item| item.id == id)
@@ -29,7 +29,7 @@ fn sp(game: &mut Game, id: &str, current: u32) {
         .current = current;
 }
 
-fn check_seed(game: &Game, id: &str, succeeds: bool) -> (RfbRng, RfbRng) {
+pub(super) fn check_seed(game: &Game, id: &str, succeeds: bool) -> (RfbRng, RfbRng) {
     let item = item(game, id);
     let activation = item.activation.as_ref().unwrap();
     let definition = game.content.item(&item.kind_id).unwrap();
@@ -61,7 +61,11 @@ fn check_seed(game: &Game, id: &str, succeeds: bool) -> (RfbRng, RfbRng) {
         .unwrap()
 }
 
-fn use_body(game: &mut Game, id: &str, targets: &[TargetSelection]) -> (i32, Vec<DomainEvent>) {
+pub(super) fn use_body(
+    game: &mut Game,
+    id: &str,
+    targets: &[TargetSelection],
+) -> (i32, Vec<DomainEvent>) {
     let mut events = Vec::new();
     let energy = game
         .use_absorbed_device(

@@ -1049,6 +1049,7 @@ impl Game {
             gold_piles: Vec::new(),
             explored: vec![false; usize::from(width) * usize::from(height)],
             revealed_terrain: BTreeSet::new(),
+            detection_coverage: crate::state::DetectionCoverage::default(),
             connections: Vec::new(),
             regions: Vec::new(),
         })
@@ -3031,6 +3032,7 @@ impl Game {
             gold_piles,
             explored: vec![false; usize::from(width) * usize::from(height)],
             revealed_terrain: BTreeSet::new(),
+            detection_coverage: crate::state::DetectionCoverage::default(),
             connections: floor_connections,
             regions: generated_regions
                 .into_iter()

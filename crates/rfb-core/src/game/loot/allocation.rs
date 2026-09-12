@@ -260,7 +260,10 @@ fn tailored_candidate(game: &Game, item: &ItemDefinition) -> bool {
                             .is_some_and(|value| value.flags.contains("BLESSED"))))
                 && (class != Some("demo.class.cavalry") || item.riding_weapon_kind.is_some())
         }
-        55 | 65 | 66 => matches!(class, Some("demo.class.mage" | "demo.class.high-mage")),
+        55 | 65 | 66 => matches!(
+            class,
+            Some("demo.class.mage" | "demo.class.high-mage" | "demo.class.magic-eater")
+        ),
         90..=95 | 97..=101 | 104..=109 => {
             base.sval >= 2
                 && item
@@ -282,6 +285,9 @@ fn tailored_candidate(game: &Game, item: &ItemDefinition) -> bool {
 fn tailored_category(game: &mut Game) -> Option<Category> {
     let class = game.build.as_ref().map(|build| build.class_id.as_str());
     match class {
+        Some("demo.class.magic-eater") if game.rng.bounded(5) == 0 => {
+            return Some(Category::Device);
+        }
         Some("demo.class.archer" | "demo.class.sniper") if game.rng.bounded(5) == 0 => {
             return Some(Category::BowQuiver);
         }
@@ -290,8 +296,10 @@ fn tailored_category(game: &mut Game) -> Option<Category> {
     }
     if needs_book(game) && game.rng.bounded(10) == 0 {
         Some(Category::Book)
-    } else if matches!(class, Some("demo.class.mage" | "demo.class.high-mage"))
-        && game.rng.bounded(7) == 0
+    } else if matches!(
+        class,
+        Some("demo.class.mage" | "demo.class.high-mage" | "demo.class.magic-eater")
+    ) && game.rng.bounded(7) == 0
     {
         Some(Category::Device)
     } else {
@@ -887,6 +895,39 @@ mod tests {
     #[test]
     fn tailored_preference_draws_follow_class_then_book_then_device() {
         use crate::rng::RfbRng;
+        let mut eater = Game::new_with_build(422, "demo.build.magic-eater").unwrap();
+        assert!(!needs_book(&eater));
+        let mut branches = [false; 3];
+        for seed in 0..128 {
+            eater.rng = RfbRng::seeded(seed);
+            let mut expected = eater.rng.clone();
+            let category = if expected.bounded(5) == 0 {
+                branches[0] = true;
+                Some(Category::Device)
+            } else if expected.bounded(7) == 0 {
+                branches[1] = true;
+                Some(Category::Device)
+            } else {
+                branches[2] = true;
+                None
+            };
+            assert_eq!(tailored_category(&mut eater), category);
+            assert_eq!(
+                eater.rng, expected,
+                "no book draw between the 1/5 and 1/7 checks"
+            );
+        }
+        assert!(branches.into_iter().all(|seen| seen));
+        for kind in [
+            "magic-missile-wand",
+            "detect-objects-staff",
+            "resonance-rod",
+        ] {
+            assert!(tailored_candidate(
+                &eater,
+                eater.content.item(&format!("demo.item.{kind}")).unwrap()
+            ));
+        }
         for build in ["warrior", "berserker", "mindcrafter"] {
             let mut game = Game::new_with_build(422, &format!("demo.build.{build}")).unwrap();
             let before = game.rng.clone();

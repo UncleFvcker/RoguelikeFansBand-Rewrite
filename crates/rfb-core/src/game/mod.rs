@@ -236,7 +236,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 128;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 129;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -831,6 +831,7 @@ pub struct Game {
     wilderness_terrain_cache: BTreeMap<Position, Vec<String>>,
     world_travel_destination: Option<Position>,
     interface_locale: LocaleDto,
+    travel_options: rfb_protocol::TravelOptionsDto,
     mogaminator: MogaminatorState,
     current_floor_id: String,
     current_dungeon_instance_id: Option<String>,
@@ -899,6 +900,7 @@ pub struct Game {
     next_gold_pile_serial: u64,
     explored: Vec<bool>,
     revealed_terrain: BTreeSet<Position>,
+    detection_coverage: crate::state::DetectionCoverage,
     floor_connections: Vec<FloorConnectionState>,
     floor_regions: Vec<FloorRegionState>,
     rng: RfbRng,
@@ -1029,6 +1031,7 @@ impl Game {
         // Preflight choice commands before any time, cooldown or RNG mutation.
         let magic_absorption_advances_world = self.magic_absorption_action_time(&action)?;
         let absorbed_device_action = matches!(&action, GameAction::UseAbsorbedDevice { .. });
+        let configuring_travel = matches!(&action, GameAction::ConfigureTravel { .. });
         let reevaluate_all_mogaminator_items = matches!(
             &action,
             GameAction::ConfigureMogaminator { .. } | GameAction::SetInterfaceLocale { .. }
@@ -1054,7 +1057,10 @@ impl Game {
             .collect::<BTreeSet<_>>();
         self.command_actor_deaths.clear();
         self.validate_runtime_invariants(&action)?;
-        if magic_absorption_advances_world != Some(false) && !absorbed_device_action {
+        if magic_absorption_advances_world != Some(false)
+            && !absorbed_device_action
+            && !configuring_travel
+        {
             self.refresh_daily_bounty_target();
         }
         let base_revision = self.revision;
@@ -1156,9 +1162,12 @@ impl Game {
         let unavailable_world_travel =
             matches!(&action, GameAction::TravelWorld { .. }) && world_travel_direction.is_none();
         let local_travel_direction = match &action {
-            GameAction::TravelLocal { destination } => {
-                self.next_local_travel_direction(*destination)
-            }
+            GameAction::TravelLocal { destination } => self.prepare_local_travel(
+                *destination,
+                &mut events,
+                &mut changed,
+                &mut removed_entities,
+            )?,
             _ => None,
         };
         let unavailable_local_travel =
@@ -1237,6 +1246,7 @@ impl Game {
                     | GameAction::CancelAbilityDirection
                     | GameAction::InscribeItem { .. }
                     | GameAction::SetInterfaceLocale { .. }
+                    | GameAction::ConfigureTravel { .. }
             );
         // Paralysis wastes any world-advancing action: the substituted idle
         // still spends the turn (energy, monster actions, status ticks) but
@@ -1309,7 +1319,11 @@ impl Game {
                     matches!(ability.effect, AbilityEffectDefinition::SmashTrap)));
         let recover_after_wait = matches!(&action, GameAction::Wait);
         let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
-        let mut turn_advance = u32::from(magic_absorption_advances_world != Some(false));
+        let mut turn_advance = u32::from(
+            magic_absorption_advances_world != Some(false)
+                && !configuring_travel
+                && !unavailable_local_travel,
+        );
         let mut player_moved = false;
         let deferred_item_turn = matches!(
             &action,
@@ -1934,7 +1948,14 @@ impl Game {
                     events.push(DomainEvent::MoveBlocked);
                 }
             }
-            GameAction::TravelLocal { .. } => events.push(DomainEvent::MoveBlocked),
+            GameAction::TravelLocal { .. } => {
+                if !matches!(
+                    events.last(),
+                    Some(DomainEvent::LocalTravelLeftDetectionArea)
+                ) {
+                    events.push(DomainEvent::MoveBlocked);
+                }
+            }
             GameAction::Throw { item_id, direction } => {
                 self.throw_inventory_item(
                     &item_id,
@@ -2322,6 +2343,7 @@ impl Game {
                     upkeep_percent: self.pet_upkeep().percent,
                 });
             }
+            GameAction::ConfigureTravel { options } => self.travel_options = options,
             GameAction::SetInterfaceLocale { locale } => {
                 self.interface_locale = locale;
             }
@@ -2412,6 +2434,8 @@ impl Game {
         // Do not trigger sensing, automatic consumers or visibility RNG while choosing.
         if magic_absorption_advances_world != Some(false)
             && (!absorbed_device_action || advances_world)
+            && !configuring_travel
+            && !unavailable_local_travel
         {
             self.process_chaos_patron_level_rewards(
                 &mut events,
@@ -2714,6 +2738,7 @@ impl Game {
         let world_map = self.map_scale == MapScaleDto::World;
 
         Ok(GameUpdate {
+            travel_options: self.travel_options,
             base_revision,
             revision: self.revision,
             turn: self.turn,
@@ -3261,6 +3286,9 @@ impl Game {
         let radius = self.dungeon_detection_radius(radius);
         let origin = self.player.position;
         let radius_distance = u32::from(radius);
+        if persistent && matches!(category, "trap" | "map") {
+            self.record_detection_coverage(category, radius, through_walls);
+        }
         let radius_offset = i32::from(radius);
         let mut candidates = Vec::new();
         for y in origin.y.saturating_sub(radius_offset)..=origin.y.saturating_add(radius_offset) {

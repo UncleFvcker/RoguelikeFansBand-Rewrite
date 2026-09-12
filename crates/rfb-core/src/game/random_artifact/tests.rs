@@ -504,6 +504,7 @@ fn real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary() {
         ("mindcrafter", Bias::Priestly, 20),
         ("mage-death-sorcery", Bias::Mage, 20),
         ("warrior-mage-arcane-sorcery", Bias::Mage, 20),
+        ("magic-eater", Bias::Mage, 20),
         ("ranger-nature-sorcery", Bias::Ranger, 30),
         ("priest-life-sorcery", Bias::Priestly, 30),
         ("priest-death-sorcery", Bias::Priestly, 30),

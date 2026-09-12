@@ -5,6 +5,8 @@ use super::*;
 const BUILD: &str = "demo.build.magic-eater";
 
 mod absorption;
+mod consumers;
+mod generation;
 mod usage;
 
 fn at_level(level: u16) -> Game {

@@ -2184,7 +2184,10 @@ impl Game {
             pool.current = pool.maximum;
         }
         for item in &mut self.items {
-            if item.location != ItemLocation::Inventory {
+            if !matches!(
+                item.location,
+                ItemLocation::Inventory | ItemLocation::Absorbed { .. }
+            ) {
                 continue;
             }
             if let Some(charges) = item.charges.as_mut() {

@@ -456,6 +456,8 @@ export function createPresentationFormatter(
         return localization.format("message-game-wait");
       case "game-move-blocked":
         return localization.format("message-move-blocked");
+      case "game-travel-left-detection-area":
+        return localization.format("message-travel-left-detection-area");
       case "wilderness-ambushed":
         return localization.format("message-wilderness-ambushed");
       case "floor-transition":

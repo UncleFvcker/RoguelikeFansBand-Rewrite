@@ -169,6 +169,8 @@ mod tests {
             museum_binding: None,
         };
         let payload = SavePayloadV1 {
+            travel_options: rfb_protocol::TravelOptionsDto::default(),
+            detection_coverage: rfb_protocol::DetectionCoverageSaveDto::default(),
             absorbed_devices: Vec::new(),
             pending_magic_absorption: None,
             casino: None,

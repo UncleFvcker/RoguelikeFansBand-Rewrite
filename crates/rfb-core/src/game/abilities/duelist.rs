@@ -41,6 +41,7 @@ impl Game {
         self.pending_duelist = None;
         self.terrain.fill("demo.terrain.floor".to_owned());
         self.revealed_terrain.clear();
+        self.detection_coverage = crate::state::DetectionCoverage::default();
         self.glow.fill(true);
         self.player.position = Position { x: 40, y: 20 };
         let experience = self

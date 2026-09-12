@@ -59,6 +59,7 @@ message-door-bash-unavailable = There is nothing there you can bash open.
 message-door-closed = You close the door.
 message-door-close-unavailable = There is no unobstructed open door in that direction.
 message-move-blocked = The structure ahead blocks your path. Try another direction; if it is a door, press O and then its direction.
+message-travel-left-detection-area = You are about to leave the trap-detected area.
 message-wilderness-ambushed = You are ambushed in the wilderness!
 message-riding-mounted = You mount { $target }.
 message-riding-bond-maxed = Your riding bond with { $target } has reached its peak.

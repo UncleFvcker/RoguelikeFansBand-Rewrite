@@ -21,7 +21,7 @@ fn resolve(confirm: bool, inherit_inscription: bool) -> GameCommand {
     }
 }
 
-fn absorb(game: &mut Game, id: &str, slot: u8) {
+pub(super) fn absorb(game: &mut Game, id: &str, slot: u8) {
     dispatch_next(game, begin(id));
     dispatch_next(game, GameCommand::SelectMagicAbsorptionSlot { slot });
 }

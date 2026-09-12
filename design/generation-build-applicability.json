@@ -5,7 +5,7 @@
   "reviewedAt": "2026-09-12",
   "codeBaseline": "6fa5fa17c + e2a1b0f8b + e2c9a780d integration",
   "entrySource": "web/src/character-creation.ts CREATION_BUILDS / PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
-  "scope": "Covers the 102 currently open builds and five generation areas per build. Branch acceptance is documented in the Priest and Warrior-Mage source audits; integrated checks are recorded in docs/status.md. The audit CLI does not execute gameplay tests.",
+  "scope": "Covers the 102 currently open builds plus the preregistered Magic-Eater build and five generation areas per build. Magic-Eater creation is step 6; its linked acceptance gap remains pending until step 7. The audit CLI does not execute gameplay tests.",
   "recordSemantics": {
     "implemented": "Reachable implementation exists; gapIds still block acceptance completion.",
     "no-special-difference": "Source and indirect consumers reviewed; shared path applies without an additional class generation branch.",
@@ -28,7 +28,7 @@
         "base-harp-bard"
       ],
       "entry": "Natural floor/monster allocation and existing Acquirement service; ordinary modes retain non-tailored kinds.",
-      "reason": "All 102 default builds resolve to the human standard body; race selection supplies real body slots and Tomte birth-headgear rules. Source object_is_favorite defaults to all melee weapons for Warrior, Berserker, Sniper, High Mage, Mage, Paladin and Mindcrafter; Archer and Cavalry have explicit filters. Source device-class membership is independent of ability to use devices. Completed-item rejection follows caster glove encumbrance, not general usability. Duelist uses source base weapon proficiency caps above Beginner for melee favorites; tailored body armor has the fixed 200 weight limit and shields are excluded. The ordinary pool remains unchanged. Mage and High Mage are the current device classes. Mage's current secondary realm, not its birth Build, participates in book eligibility and needs-book; changing realms preserves discovery history. Ranger excludes ordinary melee favorites without an Archer/Sniper 1/5 bow draw or device preference. Current primary/secondary books and found counts drive the shared 1/10 needs-book branch; changes preserve discovery counts. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. Warrior-Mage: Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. Step-7 branch acceptance is recorded in docs/warrior-mage-source-audit.md; integrated regression results are recorded in docs/status.md.",
+      "reason": "All 102 default builds resolve to the human standard body; race selection supplies real body slots and Tomte birth-headgear rules. Source object_is_favorite defaults to all melee weapons for Warrior, Berserker, Sniper, High Mage, Mage, Paladin and Mindcrafter; Archer and Cavalry have explicit filters. Source device-class membership is independent of ability to use devices. Completed-item rejection follows caster glove encumbrance, not general usability. Duelist uses source base weapon proficiency caps above Beginner for melee favorites; tailored body armor has the fixed 200 weight limit and shields are excluded. The ordinary pool remains unchanged. Mage, High Mage and preregistered Magic-Eater are device classes; Magic-Eater adds the source first 1/5 Tailored preference before the shared 1/7. Mage's current secondary realm, not its birth Build, participates in book eligibility and needs-book; changing realms preserves discovery history. Ranger excludes ordinary melee favorites without an Archer/Sniper 1/5 bow draw or device preference. Current primary/secondary books and found counts drive the shared 1/10 needs-book branch; changes preserve discovery counts. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. Warrior-Mage: Default melee and bow favorites, no extra bow draw and no device-class preference. Current Arcane/secondary books and discovery counts drive needs-book; Arcane is excluded from good/tailored book pools. Completed glove rejection follows the casting profile. Step-7 branch acceptance is recorded in docs/warrior-mage-source-audit.md; integrated regression results are recorded in docs/status.md.",
       "sourceEvidence": [
         "src/obj_kind.c:97-162 object_is_favorite",
         "src/autopick.c:848-868 object_is_icky",
@@ -108,7 +108,7 @@
         "bad-luck-randart"
       ],
       "entry": "Natural/themed scheduler passes real class and theme with scroll=false; the Arena reward and ordinary pool now expose the artifact creation scroll to classes that can read scrolls.",
-      "reason": "Theme supplies initial bias. Without a theme there is no class initial bias in natural mode. Only scroll mode with no prior bias and the 1/4 gate applies class bias; later Warrior conversion depends on mode. Non-Bard harp value and shared value/curse retries apply. Berserker alone changes random_misc case 31 among current classes. Mage and High Mage use Mage scroll bias with the source 20% Warrior conversion. Ranger bias and 30% Warrior conversion apply only to the no-theme artifact scroll branch after the 1/4 gate. Natural and explicit-theme generation retain shared biases, names and saved RNG. All four builds exercise real scroll commands and generation continuation. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. Warrior-Mage: The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. Step-7 branch acceptance is recorded in docs/warrior-mage-source-audit.md; integrated regression results are recorded in docs/status.md.",
+      "reason": "Theme supplies initial bias. Without a theme there is no class initial bias in natural mode. Only scroll mode with no prior bias and the 1/4 gate applies class bias; later Warrior conversion depends on mode. Non-Bard harp value and shared value/curse retries apply. Berserker alone changes random_misc case 31 among current classes. Mage, High Mage and preregistered Magic-Eater use Mage scroll bias with the source 20% Warrior conversion. Ranger bias and 30% Warrior conversion apply only to the no-theme artifact scroll branch after the 1/4 gate. Natural and explicit-theme generation retain shared biases, names and saved RNG. All four builds exercise real scroll commands and generation continuation. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. Warrior-Mage: The player no-theme artifact scroll branch uses Mage bias and 20% Warrior conversion after the shared one-in-four gate. Natural and monster-theme branches remain separate. Eight builds exercise actual carried/equipped scroll use and saved name/RNG continuation. Step-7 branch acceptance is recorded in docs/warrior-mage-source-audit.md; integrated regression results are recorded in docs/status.md.",
       "implementation": [
         "crates/rfb-core/src/game/random_artifact.rs#initial_bias",
         "crates/rfb-core/src/game/random_artifact/scheduling.rs#materialize_random_artifact_draft",
@@ -774,7 +774,24 @@
       "prerequisite": "Import the applicable content and actual identity/consumer together; review ordinary branches as well."
     }
   ],
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "magic-eater-step7-acceptance",
+      "status": "pending",
+      "buildIds": [
+        "demo.build.magic-eater"
+      ],
+      "areas": [
+        "base-allocation-tailored",
+        "ego-negative",
+        "random-artifact",
+        "fixed-artifact-reward",
+        "use-save"
+      ],
+      "reason": "Implementation and test cases exist; normal creation/UI remain step 6 and no Magic-Eater tests or compilation have run.",
+      "requiredEvidence": "After step 7 implementation, execute the scoped core/content/frontend and global contracts, generate bindings/schema/lock/audits, and complete natural level-1 plus explicitly prepared 30-slot, automatic consumer, inn and save/next-generation desktop acceptance."
+    }
+  ],
   "builds": [
     {
       "buildId": "demo.build.warrior",
@@ -4425,6 +4442,84 @@
             "crates/rfb-core/src/game/tests/warrior_mage/generation.rs#realm_change_updates_book_inscriptions_and_realm_services_but_keeps_class_membership",
             "crates/rfb-core/src/game/tests/warrior_mage/powers.rs#melee_conversion_book_cast_and_healing_continue_identically_after_loading",
             "web/e2e/warrior-mage.e2e.mjs#runWarriorMageUiScenario"
+          ]
+        }
+      ]
+    },
+    {
+      "buildId": "demo.build.magic-eater",
+      "gapIds": [
+        "magic-eater-step7-acceptance"
+      ],
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Device class; Tailored checks 1/5 first, then the shared 1/7 after the non-applicable needs-book branch. Ordinary allocation weights are unchanged. Tests are written but not executed; acceptance remains in the linked step-7 gap.",
+          "implementation": [
+            "crates/rfb-core/src/game/loot/allocation.rs"
+          ],
+          "tests": [
+            "crates/rfb-core/src/game/loot/allocation.rs#tailored_preference_draws_follow_class_then_book_then_device",
+            "crates/rfb-core/src/game/tests/magic_eater/generation.rs#natural_three_device_categories_pick_up_absorb_use_recover_and_replay_generation"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No class Ego generation branch. Existing device Ego instance properties survive absorption; body items grant no equipment passives. Negative random-artifact curses and the actual Impotence mutation use shared consumers. Tests are written but not executed; acceptance remains in the linked step-7 gap.",
+          "implementation": [
+            "crates/rfb-core/src/game/magic_eater/usage.rs",
+            "crates/rfb-core/src/game/ego/noncraft.rs"
+          ],
+          "tests": [
+            "crates/rfb-core/src/game/tests/magic_eater/absorption.rs",
+            "crates/rfb-core/src/game/tests/magic_eater/usage.rs",
+            "crates/rfb-core/src/game/tests/magic_eater/consumers.rs#impotence_penalty_reaches_body_use_and_failure_projection_after_loading",
+            "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_negative_power_reaches_a_cursed_equippable_instance"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "The no-theme scroll branch uses Mage bias and 20-percent Warrior conversion after the shared 1/4 gate. Natural and explicit themes keep shared behavior. Activated non-device armor, jewelry and weapons cannot be absorbed. Tests are written but not executed; acceptance remains in the linked step-7 gap.",
+          "implementation": [
+            "crates/rfb-core/src/game/random_artifact.rs#initial_bias"
+          ],
+          "tests": [
+            "crates/rfb-core/src/game/random_artifact/tests.rs#real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary",
+            "crates/rfb-core/src/game/tests/items.rs#artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name",
+            "crates/rfb-core/src/game/tests/magic_eater/generation.rs#castle_one_to_four_choice_is_birth_seeded_and_duplicate_replacement_is_atomic"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Long Sword, normal Orc Camp Frost Ball and Wargs Frost Bolt use actual rewards. Old Castle birth selection is Lohengrin/Charmed Pendant at 1:4, with unique-ledger replacement and full-inventory atomicity. Tests are written but not executed; acceptance remains in the linked step-7 gap.",
+          "implementation": [
+            "crates/rfb-core/src/game/tasks.rs",
+            "packs/rfb-demo-original/worlds/middle-earth.json",
+            "packs/rfb-demo-original/items/frost-bolt-wand.json"
+          ],
+          "tests": [
+            "crates/rfb-core/src/game/tests/magic_eater/generation.rs#thieves_wargs_and_orc_rewards_use_real_items_and_remain_single_claims",
+            "crates/rfb-core/src/game/tests/magic_eater/generation.rs#castle_one_to_four_choice_is_birth_seeded_and_duplicate_replacement_is_atomic"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Body-first Mogaminator and TravelLocal detection preserve source strict SP and slot order. Saved options/coverage govern boundary triggers; inn fills body SP and two towers retain ordinary Visitor prices. Saves resume instance SP/fractions, effects and next generation. Tests are written but not executed; acceptance remains in the linked step-7 gap.",
+          "implementation": [
+            "crates/rfb-core/src/game/magic_eater/automatic.rs",
+            "crates/rfb-core/src/game/mogaminator.rs",
+            "crates/rfb-core/src/game/travel.rs",
+            "crates/rfb-core/src/game/town.rs",
+            "crates/rfb-core/src/game/persistence.rs"
+          ],
+          "tests": [
+            "crates/rfb-core/src/game/tests/magic_eater/consumers.rs",
+            "crates/rfb-core/src/game/tests/magic_eater/generation.rs"
           ]
         }
       ]

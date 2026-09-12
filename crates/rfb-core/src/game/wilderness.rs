@@ -1115,6 +1115,15 @@ impl Game {
             .filter_map(|position| translate_wilderness_position(position, translation))
             .collect();
 
+        for coverage in [
+            &mut self.detection_coverage.traps,
+            &mut self.detection_coverage.mapping,
+        ] {
+            *coverage = std::mem::take(coverage)
+                .into_iter()
+                .filter_map(|position| translate_wilderness_position(position, translation))
+                .collect();
+        }
         self.player.position = translated_player;
         for entity in &mut self.entities {
             entity.position = Position {
@@ -1290,6 +1299,7 @@ impl Game {
                 gold_piles: std::mem::take(&mut self.gold_piles),
                 explored: std::mem::take(&mut self.explored),
                 revealed_terrain: std::mem::take(&mut self.revealed_terrain),
+                detection_coverage: std::mem::take(&mut self.detection_coverage),
                 connections: std::mem::take(&mut self.floor_connections),
                 regions: std::mem::take(&mut self.floor_regions),
             },
@@ -1539,6 +1549,25 @@ impl Game {
                 }
             }
             self.revealed_terrain = remaining_revealed;
+            for (active, stored) in [
+                (
+                    &mut self.detection_coverage.traps,
+                    &mut floor.detection_coverage.traps,
+                ),
+                (
+                    &mut self.detection_coverage.mapping,
+                    &mut floor.detection_coverage.mapping,
+                ),
+            ] {
+                active.retain(|position| {
+                    if let Some(local) = town.view_to_local(*position) {
+                        stored.insert(local);
+                        false
+                    } else {
+                        true
+                    }
+                });
+            }
 
             let riding_actor_id = self.riding_actor_id.clone();
             let player_id = self.player.id.clone();
@@ -1717,6 +1746,25 @@ impl Game {
                 }
             }
             floor.revealed_terrain = stored_revealed;
+            for (active, stored) in [
+                (
+                    &mut self.detection_coverage.traps,
+                    &mut floor.detection_coverage.traps,
+                ),
+                (
+                    &mut self.detection_coverage.mapping,
+                    &mut floor.detection_coverage.mapping,
+                ),
+            ] {
+                stored.retain(|position| {
+                    if let Some(view) = town.local_to_view(*position) {
+                        active.insert(view);
+                        false
+                    } else {
+                        true
+                    }
+                });
+            }
 
             let pack_ids = floor
                 .entities
@@ -2287,6 +2335,7 @@ impl Game {
             gold_piles: Vec::new(),
             explored: vec![false; usize::from(width) * usize::from(height)],
             revealed_terrain: BTreeSet::new(),
+            detection_coverage: crate::state::DetectionCoverage::default(),
             connections: Vec::new(),
             regions: Vec::new(),
         }

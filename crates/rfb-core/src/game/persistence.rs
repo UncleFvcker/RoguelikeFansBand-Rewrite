@@ -647,6 +647,8 @@ fn item_property_knowledge_from_save(
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct StateHashPayloadV98<'a> {
+    travel_options: rfb_protocol::TravelOptionsDto,
+    detection_coverage: rfb_protocol::DetectionCoverageSaveDto,
     absorbed_devices: Vec<rfb_protocol::AbsorbedDeviceSaveDto>,
     pending_magic_absorption: &'a Option<rfb_protocol::PendingMagicAbsorptionDto>,
     casino: &'a Option<rfb_protocol::CasinoStateSaveDto>,
@@ -730,6 +732,7 @@ struct TerrainSaveRef<'a> {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct FloorSaveForHash<'a> {
+    detection_coverage: rfb_protocol::DetectionCoverageSaveDto,
     id: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
     dungeon_instance_id: Option<&'a str>,
@@ -752,6 +755,7 @@ struct FloorSaveForHash<'a> {
 
 fn floor_save_for_hash(floor: &FloorState) -> FloorSaveForHash<'_> {
     FloorSaveForHash {
+        detection_coverage: floor.detection_coverage.to_save(),
         id: &floor.id,
         dungeon_instance_id: floor.dungeon_instance_id.as_deref(),
         reproduction_suppressed: floor.reproduction_suppressed,
@@ -1308,6 +1312,11 @@ impl Game {
                 "exploration memory dimensions are invalid",
             ));
         }
+        let detection_coverage = crate::state::DetectionCoverage::from_save(
+            payload.detection_coverage,
+            payload.terrain.width,
+            payload.terrain.height,
+        )?;
         let revealed_terrain = revealed_terrain_from_save(
             payload.revealed_terrain,
             &terrain,
@@ -1446,6 +1455,7 @@ impl Game {
             wilderness_terrain_cache: BTreeMap::new(),
             world_travel_destination: payload.world_travel_destination,
             interface_locale: payload.interface_locale,
+            travel_options: payload.travel_options,
             mogaminator,
             current_floor_id,
             current_dungeon_instance_id,
@@ -1513,6 +1523,7 @@ impl Game {
             next_gold_pile_serial,
             explored,
             revealed_terrain,
+            detection_coverage,
             floor_connections,
             floor_regions,
             rng: RfbRng::from_save(&payload.rng)?,
@@ -1554,6 +1565,8 @@ impl Game {
     #[must_use]
     pub fn to_save(&self) -> SavePayloadV1 {
         SavePayloadV1 {
+            travel_options: self.travel_options,
+            detection_coverage: self.detection_coverage.to_save(),
             absorbed_devices: crate::save::absorbed_devices_to_save(&self.items),
             pending_magic_absorption: self.pending_magic_absorption.clone(),
             casino: self.casino.clone(),
@@ -1640,6 +1653,8 @@ impl Game {
     #[must_use]
     pub fn state_hash(&self) -> String {
         let payload = StateHashPayloadV98 {
+            travel_options: self.travel_options,
+            detection_coverage: self.detection_coverage.to_save(),
             absorbed_devices: crate::save::absorbed_devices_to_save(&self.items),
             pending_magic_absorption: &self.pending_magic_absorption,
             casino: &self.casino,

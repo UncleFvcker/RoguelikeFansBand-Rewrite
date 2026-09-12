@@ -1825,6 +1825,23 @@ fn restorative_item_sequences_require_bounded_effects_and_known_resources() {
 #[test]
 fn dynamic_devices_require_stable_profiles_depth_coverage_and_capacity() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let mut invalid = artifact.content.clone();
+    let frost = invalid
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.frost-bolt-wand")
+        .unwrap();
+    frost.device_generation.as_mut().unwrap().activations[0].effect =
+        ItemUseEffectDefinition::Damage {
+            damage_dice: 6,
+            damage_sides: 8,
+            damage_bonus: 0,
+            damage_type: crate::ActorDamageType::Fire,
+        };
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidItemUseAction(_))
+    ));
     for defect in 0..4 {
         let mut invalid = artifact.content.clone();
         let generation = invalid

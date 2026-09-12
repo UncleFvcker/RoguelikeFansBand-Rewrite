@@ -59,6 +59,7 @@ message-door-bash-unavailable = 那个方向没有可以撞开的东西。
 message-door-closed = 你关上了门。
 message-door-close-unavailable = 那个方向没有未被占用的开启门。
 message-move-blocked = 前方的结构阻挡了道路。请换一个方向；如果是门，先按 O 再按门所在方向。
+message-travel-left-detection-area = 你即将离开已探测陷阱的区域。
 message-wilderness-ambushed = 你在荒野中遭到了伏击！
 message-riding-mounted = 你骑上了{ $target }。
 message-riding-bond-maxed = 你与{ $target }的骑乘羁绊已达到顶点。

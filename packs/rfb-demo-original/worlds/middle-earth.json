@@ -2023,6 +2023,7 @@
         ],
         "classOverrides": [
           {"classId": "demo.class.warrior-mage", "entries": [{"itemKindId": "demo.item.lohengrin", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.charmed-pendant", "quantity": 1, "weight": 4}]},
+          {"classId": "demo.class.magic-eater", "entries": [{"itemKindId": "demo.item.lohengrin", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.charmed-pendant", "quantity": 1, "weight": 4}]},
           {"classId": "demo.class.duelist", "entries": [{"itemKindId": "demo.item.duelist", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.quickthorn", "quantity": 1, "weight": 4}]},
           {"classId": "demo.class.ranger", "entries": [{"itemKindId": "demo.item.belthronding", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.yoichi", "quantity": 1, "weight": 4}]},
           {"classId": "demo.class.priest", "entries": [{"itemKindId": "demo.item.aule", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.palantir-of-westernesse", "quantity": 1, "weight": 4}]},
@@ -2070,6 +2071,7 @@
       "reward": {
         "itemInstanceId": "demo.task.thieves-hideout.reward.1",
         "classOverrides": [
+          {"classId": "demo.class.magic-eater", "entries": [{"itemKindId": "demo.item.long-sword", "quantity": 1, "weight": 1}]},
           {"classId": "demo.class.warrior-mage", "entries": [{"itemKindId": "demo.item.long-sword", "quantity": 1, "weight": 1}]},{"classId": "demo.class.duelist", "entries": [{"itemKindId": "demo.item.rapier", "quantity": 1, "weight": 1}]}, {"classId": "demo.class.mage", "entries": [{"itemKindId": "demo.item.long-sword", "quantity": 1, "weight": 1}]}, {"classId": "demo.class.ranger", "entries": [{"itemKindId": "demo.item.long-sword", "quantity": 1, "weight": 1}]}, {"classId": "demo.class.priest", "entries": [{"itemKindId": "demo.item.war-hammer", "quantity": 1, "weight": 1}]}],
         "entries": [
           { "itemKindId": "demo.item.broad-sword", "quantity": 1, "weight": 1 }
@@ -2105,6 +2107,9 @@
       "completionExitTerrainId": "demo.terrain.stairs-down",
       "reward": {
         "itemInstanceId": "demo.task.pest-control.reward.1",
+        "classOverrides": [
+          {"classId": "demo.class.magic-eater", "entries": [{"itemKindId": "demo.item.frost-bolt-wand", "quantity": 1, "weight": 1}]}
+        ],
         "entries": [
           { "itemKindId": "demo.item.fur-cloak", "quantity": 1, "weight": 1 }
         ]

@@ -114,6 +114,7 @@ pub(super) enum VisibleBanishmentOutcome {
 pub(super) struct SettledItemUse {
     pub(super) kind_id: String,
     pub(super) profile_id: Option<String>,
+    pub(super) activation_power: Option<u16>,
     pub(super) effect: ItemUseEffectDefinition,
     pub(super) plan: ItemUsePlan,
     pub(super) device_power_bonus: i32,
@@ -2986,6 +2987,7 @@ impl Game {
             SettledItemUse {
                 kind_id,
                 profile_id,
+                activation_power: activation.as_ref().map(|activation| activation.power),
                 effect,
                 plan,
                 device_power_bonus,
@@ -3094,10 +3096,17 @@ impl Game {
         let SettledItemUse {
             kind_id,
             profile_id,
-            effect,
+            activation_power,
+            mut effect,
             plan,
             device_power_bonus,
         } = settled;
+        // RFB devices.c EFFECT_BOLT_COLD scales its dice with the stored device power.
+        if profile_id.as_deref() == Some("rfb.device-activation.wand.bolt-cold")
+            && let ItemUseEffectDefinition::Damage { damage_dice, .. } = &mut effect
+        {
+            *damage_dice = 5 + activation_power.expect("source wand activation power") / 8;
+        }
         let mut noticed = false;
         match (effect, plan) {
             (
