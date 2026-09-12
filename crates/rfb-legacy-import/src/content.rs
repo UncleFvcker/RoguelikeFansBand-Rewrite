@@ -3792,7 +3792,12 @@ fn item_json_with_terrain(
         "glyph": entry.glyph.map_or_else(|| "?".to_owned(), |glyph| glyph.to_string()),
         "generationLevel": entry.level,
         "mogaminatorRare": mogaminator_kind_is_rare(entry),
-        "weightTenthsPound": entry.weight_tenths_pound.max(1),
+        // RFB's ordinary Ethereal Cloak is explicitly weightless.
+        "weightTenthsPound": if (entry.tval, entry.sval) == (35, 5) {
+            entry.weight_tenths_pound
+        } else {
+            entry.weight_tenths_pound.max(1)
+        },
         "maxStack": shape.max_stack,
         "baseValue": entry.base_value,
         "resistsEnchantment": resists_enchantment,
@@ -24501,6 +24506,23 @@ A:1/1
         assert_eq!(item, formal);
         assert_eq!(item["tunnelingPval"], 3);
         assert!(item["equipmentBonuses"]["diggingSkill"].is_null());
+    }
+
+    #[test]
+    fn ethereal_cloak_import_preserves_zero_weight_and_fixed_enchantment() {
+        // master a0d92b6378: lib/edit/k_info.txt, source 198.
+        let entries = parse_k_info(
+            "N:198:& Ethereal Cloak~\nG:(:w\nI:35:5:0\nW:50:0:0:0:2500\nA:70/4\nP:0:0d0:0:0:10\nF:IGNORE_ACID | IGNORE_ELEC | IGNORE_FIRE | IGNORE_COLD\n",
+        ).unwrap();
+        let item =
+            demo_item_json(&entries[0], "ethereal-cloak", &LauncherAmmoIndex::default()).unwrap();
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../packs/rfb-demo-original/items/ethereal-cloak.json");
+        let formal: serde_json::Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
+        assert_eq!(item, formal);
+        assert_eq!(item["weightTenthsPound"], 0);
+        assert_eq!(item["modifiers"]["defense"], 10);
+        assert_eq!(item["rfbValue"]["toArmor"], 10);
     }
 
     #[test]

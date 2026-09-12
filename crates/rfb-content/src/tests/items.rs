@@ -2,6 +2,31 @@ use super::*;
 use std::collections::BTreeSet;
 
 #[test]
+fn zero_weight_ordinary_armor_is_limited_to_the_ethereal_cloak_base() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let cloak = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.ethereal-cloak")
+        .unwrap();
+    assert_eq!(cloak.weight_tenths_pound, 0);
+    for (sval, weight) in [(4, 0), (5, 10_001)] {
+        let mut invalid = artifact.content.clone();
+        let cloak = invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.ethereal-cloak")
+            .unwrap();
+        cloak.rfb_base_kind.as_mut().unwrap().sval = sval;
+        cloak.weight_tenths_pound = weight;
+        assert!(
+            matches!(validate_and_normalize(&mut invalid), Err(ContentError::InvalidItemWeight(id)) if id == "demo.item.ethereal-cloak")
+        );
+    }
+}
+
+#[test]
 fn source_allocation_references_are_exclusive_and_preserve_source_rows() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let mut content = artifact.content.clone();

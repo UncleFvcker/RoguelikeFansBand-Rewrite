@@ -10124,3 +10124,7 @@ item-demo-jarngreipr-name = Set Of Caestus 'Jarngreipr'
 item-demo-jarngreipr-description = Set Of Caestus 'Jarngreipr'
 item-demo-large-wooden-chest-name = Large wooden chest
 item-demo-large-wooden-chest-description = Large wooden chest
+item-demo-ethereal-cloak-name = Ethereal Cloak
+item-demo-ethereal-cloak-description = Ethereal Cloak
+item-demo-mithril-gauntlets-name = Set of Mithril Gauntlets
+item-demo-mithril-gauntlets-description = Set of Mithril Gauntlets

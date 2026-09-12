@@ -10155,3 +10155,7 @@ item-demo-jarngreipr-name = 搏击拳套『雅恩格利佩尔』
 item-demo-jarngreipr-description = 搏击拳套『雅恩格利佩尔』
 item-demo-large-wooden-chest-name = 大木箱
 item-demo-large-wooden-chest-description = 大木箱
+item-demo-ethereal-cloak-name = 空灵披风
+item-demo-ethereal-cloak-description = 空灵披风
+item-demo-mithril-gauntlets-name = 秘银护手
+item-demo-mithril-gauntlets-description = 秘银护手

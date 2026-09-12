@@ -2041,6 +2041,7 @@ fn b6_soulkeeper_heals_1000_only_cures_bleeding_and_restores_cooldown() {
 fn b5_gloves_and_shields_generate_equip_and_preserve_combat_bonuses_after_save() {
     let cases = [
         ("set-of-caestus", 2, 10, 3, 5),
+        ("mithril-gauntlets", 15, 15, 1, 1),
         ("knights-shield", 10, 160, 0, 0),
         ("fingolfin", 25, 40, 10, 12),
         ("earendil-shield", 30, 160, 0, 0),
@@ -2946,7 +2947,7 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
             actor_id: "test.b3-drop".into(),
         },
     };
-    let mut remaining = BTreeSet::from(["shadow-cloak", "luthien", "tuor"]);
+    let mut remaining = BTreeSet::from(["shadow-cloak", "ethereal-cloak", "luthien", "tuor"]);
     // Full formal pool, quality and rarity draws; select an unmodified base.
     for _ in 0..20_000 {
         for item in game
@@ -2955,7 +2956,7 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
         {
             let slug = item.kind_id.strip_prefix("demo.item.").unwrap();
             if !remaining.contains(slug)
-                || (slug == "shadow-cloak"
+                || (matches!(slug, "shadow-cloak" | "ethereal-cloak")
                     && (item.quality != ItemQualityDto::Ordinary
                         || item.enchantments != Default::default()
                         || item.artifact_name.is_some()))
@@ -2966,7 +2967,7 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
             assert!(item.curse.is_none());
             assert_eq!(
                 item.rolled_affixes.len(),
-                usize::from(slug != "shadow-cloak")
+                usize::from(!matches!(slug, "shadow-cloak" | "ethereal-cloak"))
             );
             assert_eq!(item.activation.is_some(), slug == "luthien");
             let id = item.id.clone();
@@ -2988,6 +2989,7 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
         }
     }
     assert!(!remaining.contains("shadow-cloak"));
+    assert!(!remaining.contains("ethereal-cloak"));
     // Condition rare artifact selection on the base reached above, retaining
     // source depth/rarity gates and the complete fixed-artifact candidate set.
     for slug in remaining {
@@ -3013,7 +3015,12 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
     let unknown = Game::from_save(game.to_save()).unwrap();
     assert_eq!(unknown.state_hash(), game.state_hash());
     assert_eq!(unknown.rng, game.rng);
-    for (slug, defense, stealth) in [("shadow-cloak", 10, 0), ("luthien", 26, 2), ("tuor", 18, 4)] {
+    for (slug, defense, stealth) in [
+        ("shadow-cloak", 10, 0),
+        ("ethereal-cloak", 10, 0),
+        ("luthien", 26, 2),
+        ("tuor", 18, 4),
+    ] {
         let mut equipped = unknown.clone();
         let kind = format!("demo.item.{slug}");
         equipped.items.retain(|item| item.kind_id == kind);
@@ -3024,7 +3031,10 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
         assert_eq!(equipped.rng, rng);
         let before = equipped.player_derived_stats().armor_class.value;
         equipped.equip_inventory_item(&id, None).unwrap();
-        assert_eq!(equipped.carried_weight_tenths_pound(), 5);
+        assert_eq!(
+            equipped.carried_weight_tenths_pound(),
+            if slug == "ethereal-cloak" { 0 } else { 5 }
+        );
         assert_eq!(
             equipped.player_derived_stats().armor_class.value,
             before + defense * 10
@@ -3033,8 +3043,28 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
         for element in [DamageType::Light, DamageType::Dark] {
             assert_eq!(
                 equipped.effective_player_resistances().level(element),
-                ResistanceLevel::Resistant
+                if slug == "ethereal-cloak" {
+                    ResistanceLevel::Normal
+                } else {
+                    ResistanceLevel::Resistant
+                }
             );
+        }
+        if slug == "ethereal-cloak" {
+            let mut corroded = equipped.clone();
+            assert!(corroded.corrode_player_armor(&mut Vec::new()));
+            assert_eq!(corroded.items[0].enchantments.to_armor, 0);
+            for element in [
+                DamageType::Acid,
+                DamageType::Electricity,
+                DamageType::Fire,
+                DamageType::Cold,
+            ] {
+                assert_eq!(
+                    equipped.effective_player_resistances().level(element),
+                    ResistanceLevel::Normal
+                );
+            }
         }
         if let Some(affix) = rolled.first() {
             let (&element, _) = affix.properties.resistances.iter().next().unwrap();
@@ -3089,7 +3119,7 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
                 .unwrap()
         );
         assert_eq!(restored.rng, equipped.rng);
-        if slug != "shadow-cloak" {
+        if !matches!(slug, "shadow-cloak" | "ethereal-cloak") {
             assert!(restored.generated_artifact_ids.contains(&kind));
             assert_ne!(
                 restored.roll_fixed_artifact_kind_id(

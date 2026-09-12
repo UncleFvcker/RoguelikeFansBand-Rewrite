@@ -2396,6 +2396,13 @@
       "weight": 33
     },
     {
+      "itemKindId": "demo.item.mithril-gauntlets",
+      "maxDepth": 65535,
+      "minDepth": 50,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
       "itemKindId": "demo.item.mithril-shield",
       "maxDepth": 65535,
       "minDepth": 50,
@@ -2674,6 +2681,13 @@
       "minDepth": 70,
       "quantity": 1,
       "weight": 50
+    },
+    {
+      "itemKindId": "demo.item.ethereal-cloak",
+      "maxDepth": 65535,
+      "minDepth": 70,
+      "quantity": 1,
+      "weight": 25
     },
     {
       "itemKindId": "demo.item.mirror-shield",
