@@ -608,6 +608,10 @@ fn item_property_knowledge_from_save(
         let identified = entry.identified || (!known_affix_ids.is_empty() && all_affixes_known);
         let appraised = entry.appraised || identified;
         if !entry.discovered
+            || (entry.known_blessed
+                && !item
+                    .intrinsic_weapon_traits
+                    .contains(&rfb_protocol::WeaponTraitDto::Blessed))
             || (entry.feeling.is_some()
                 && (identified
                     || !content
@@ -627,6 +631,7 @@ fn item_property_knowledge_from_save(
                         identified,
                         feeling: entry.feeling,
                         known_affix_ids,
+                        known_blessed: entry.known_blessed,
                     },
                 )
                 .is_some()
@@ -1865,6 +1870,7 @@ impl Game {
                     known_affix_ids: knowledge
                         .map(|knowledge| knowledge.known_affix_ids.iter().cloned().collect())
                         .unwrap_or_default(),
+                    known_blessed: knowledge.is_some_and(|knowledge| knowledge.known_blessed),
                 }
             })
             .collect()

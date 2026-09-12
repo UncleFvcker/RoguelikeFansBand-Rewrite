@@ -716,6 +716,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         payload
             .item_property_knowledge
             .push(ItemPropertyKnowledgeSaveDto {
+                known_blessed: false,
                 item_id: item.id.clone(),
                 discovered: true,
                 appraised: true,

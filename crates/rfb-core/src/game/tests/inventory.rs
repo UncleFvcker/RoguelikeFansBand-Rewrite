@@ -934,6 +934,7 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
     game.item_property_knowledge.insert(
         item_id.clone(),
         ItemPropertyKnowledgeState {
+            known_blessed: false,
             discovered: true,
             appraised: true,
             identified: true,

@@ -78,7 +78,17 @@ fn resolve_weapon_proficiency(
         },
     );
     // RFB master a0d92b6378: skills.c::skills_weapon_max uses the native race (prace).
-    if build.race_id == "rfb-legacy.race.tonberry" && base_item_id == "demo.item.sabre" {
+    if build.class_id == "demo.class.priest"
+        && base_item
+            .rfb_base_kind
+            .is_some_and(|base| matches!(base.tval, 22 | 23))
+    {
+        bounds.maximum = if matches!(build.first_realm_id.as_deref(), Some("life" | "crusade")) {
+            WEAPON_EXP_BEGINNER
+        } else {
+            6_000
+        };
+    } else if build.race_id == "rfb-legacy.race.tonberry" && base_item_id == "demo.item.sabre" {
         bounds.maximum = WEAPON_EXP_MASTER;
     }
     if let Some(maximum) = content

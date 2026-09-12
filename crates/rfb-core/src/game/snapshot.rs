@@ -319,6 +319,7 @@ impl Game {
                 class
                     .abilities
                     .iter()
+                    .filter(|activation| self.class_power_matches_realm(&activation.ability_id))
                     .map(|activation| (activation.ability_id.clone(), activation.clone()))
                     .collect::<BTreeMap<_, _>>()
             })

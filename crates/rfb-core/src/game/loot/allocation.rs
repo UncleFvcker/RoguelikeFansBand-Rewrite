@@ -247,6 +247,13 @@ fn tailored_candidate(game: &Game, item: &ItemDefinition) -> bool {
             can_equip()
                 && !matches!(class, Some("demo.class.archer" | "demo.class.ranger"))
                 && (class != Some("demo.class.duelist") || game.duelist_favorite_weapon(item))
+                && (class != Some("demo.class.priest")
+                    || base.tval == 21
+                    || (game.item_knowledge_dto(&item.id) == rfb_protocol::ItemKnowledgeDto::Aware
+                        && item
+                            .rfb_value
+                            .as_ref()
+                            .is_some_and(|value| value.flags.contains("BLESSED"))))
                 && (class != Some("demo.class.cavalry") || item.riding_weapon_kind.is_some())
         }
         55 | 65 | 66 => matches!(class, Some("demo.class.mage" | "demo.class.high-mage")),
@@ -663,14 +670,44 @@ mod tests {
     }
 
     #[test]
-    fn ranger_tailored_books_follow_current_realms_without_bow_or_device_preference_draws() {
+    fn ranger_and_priest_tailored_books_follow_current_realms_without_extra_preference_draws() {
         use crate::game::tests::support::{
             choose_human_talent_if_pending, dispatch_next, give_inventory_item,
         };
         use rfb_protocol::GameCommand;
-        for realm in ["sorcery", "death", "arcane", "daemon"] {
-            let mut game =
-                Game::new_with_build(925, &format!("demo.build.ranger-nature-{realm}")).unwrap();
+        let builds = ["sorcery", "death", "arcane", "daemon"]
+            .map(|realm| format!("demo.build.ranger-nature-{realm}"));
+        for build in builds
+            .into_iter()
+            .chain(crate::game::tests::support::priest_build_ids())
+        {
+            let mut game = Game::new_with_build(925, &build).unwrap();
+            let first = game
+                .character_definitions()
+                .unwrap()
+                .0
+                .first_realm_id
+                .clone()
+                .unwrap();
+            let realm = game.current_second_realm_id().unwrap().to_owned();
+            if game.player_is_priest() {
+                for (kind, eligible) in [
+                    ("mace", true),
+                    ("dagger", false),
+                    ("lance", false),
+                    ("short-bow", true),
+                    ("magic-missile-wand", false),
+                ] {
+                    assert_eq!(
+                        tailored_candidate(
+                            &game,
+                            game.content.item(&format!("demo.item.{kind}")).unwrap()
+                        ),
+                        eligible,
+                        "{build}: {kind}"
+                    );
+                }
+            }
             let book_kind = |game: &Game, realm: &str, rank| {
                 game.content
                     .item_definitions()
@@ -687,7 +724,7 @@ mod tests {
                     .clone()
             };
             for needs in [true, false] {
-                for current in ["nature", realm] {
+                for current in [first.as_str(), realm.as_str()] {
                     for rank in [3, 4] {
                         let id = book_kind(&game, current, rank);
                         game.item_knowledge.entry(id).or_default().found_count =
@@ -703,8 +740,12 @@ mod tests {
                     assert_eq!(game.rng, expected, "no bow or device preference draws");
                 }
             }
-            let old = book_kind(&game, realm, 4);
-            let next = if realm == "death" { "sorcery" } else { "death" };
+            let old = book_kind(&game, &realm, 4);
+            let next = if realm == "arcane" {
+                "sorcery"
+            } else {
+                "arcane"
+            };
             let new = book_kind(&game, next, 4);
             let first = book_kind(&game, next, 1);
             let found = game.item_knowledge.clone();

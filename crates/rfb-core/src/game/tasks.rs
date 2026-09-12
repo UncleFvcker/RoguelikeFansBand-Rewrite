@@ -902,6 +902,7 @@ impl Game {
                     | "demo.class.mage"
                     | "demo.class.high-mage"
                     | "demo.class.ranger"
+                    | "demo.class.priest"
             )
         });
         if fixed_castle_reward

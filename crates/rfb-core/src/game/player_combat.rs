@@ -1276,13 +1276,19 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<DamageOutcome, CoreError> {
+        // Evocation uses GF_DISP_ALL, whose damage ignores elemental resistance.
+        let resistance = self
+            .content
+            .ability(ability_id)
+            .is_some_and(|ability| matches!(ability.effect, AbilityEffectDefinition::Evocation))
+            .then_some(ResistanceLevel::Normal);
         self.resolve_ability_damage_to_entity_with_resistance(
             index,
             ability_id,
             damage_type,
             raw_damage,
             trace,
-            None,
+            resistance,
             true,
             events,
             changed,

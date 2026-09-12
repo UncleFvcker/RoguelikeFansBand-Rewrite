@@ -59,6 +59,7 @@ pub(super) struct ItemPropertyKnowledgeState {
     pub(super) identified: bool,
     pub(super) feeling: Option<ItemFeelingDto>,
     pub(super) known_affix_ids: BTreeSet<String>,
+    pub(super) known_blessed: bool,
 }
 
 pub(super) fn item_properties_match(
@@ -72,6 +73,7 @@ pub(super) fn item_properties_match(
         && left.identified == right.identified
         && left.feeling == right.feeling
         && left.known_affix_ids == right.known_affix_ids
+        && left.known_blessed == right.known_blessed
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -827,7 +829,7 @@ fn plan_equip(
     })
 }
 
-fn clear_item_curse(item: &mut ItemInstance) {
+pub(super) fn clear_item_curse(item: &mut ItemInstance) {
     item.curse = None;
     item.intrinsic_properties.rfb_heavy_curse = false;
     item.intrinsic_curse_effects.clear();
@@ -1977,6 +1979,7 @@ impl Game {
             .entry(item.id.clone())
             .or_default();
         knowledge.known_affix_ids = item.affix_ids.iter().cloned().collect();
+        knowledge.known_blessed = false;
     }
 
     pub(super) fn remove_equipped_curses(

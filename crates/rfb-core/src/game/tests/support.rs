@@ -3,6 +3,16 @@ use std::sync::OnceLock;
 
 use super::*;
 
+pub(in crate::game) fn priest_build_ids() -> Vec<String> {
+    Game::new_with_build(925, "demo.build.priest-life-sorcery")
+        .unwrap()
+        .content
+        .builds()
+        .filter(|build| build.class_id == "demo.class.priest")
+        .map(|build| build.id.clone())
+        .collect()
+}
+
 pub(super) fn reward_ready(seed: u64, build: &str, task: &str) -> (Game, String, String, String) {
     let mut game = Game::new_with_build(seed, build).unwrap();
     clear_monsters(&mut game);

@@ -9670,6 +9670,10 @@ item-demo-amun-name = Dagger of Amun
 item-demo-amun-description = An ancient steel dagger once carried by Amun, with a golden hilt and a razor-sharp blade.
 
 class-demo-priest-name = Priest
+ability-demo-priest-bless-weapon-name = Bless Weapon
+ability-demo-priest-bless-weapon-description = Bless a weapon in your pack, equipment, or at your feet. May remove curses; resisting evil weapons lose enchantments. A blessing removes a good priest's edged weapon penalties.
+ability-demo-priest-evocation-name = Evocation
+ability-demo-priest-evocation-description = Damage, frighten, then teleport all monsters in sight.
 class-demo-priest-description = Priests serve a higher power, learning prayers randomly from two realms through Wisdom. Their primary realm determines whether they follow a good or evil path.
 actor-demo-priest-player-name = Priest
 actor-demo-priest-player-description = A priest carrying a mace, a robe, a potion of Healing and books from two realms.

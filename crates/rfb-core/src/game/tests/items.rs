@@ -3963,6 +3963,7 @@ fn dr_jones_game() -> (Game, String) {
     game.item_property_knowledge.insert(
         id.clone(),
         ItemPropertyKnowledgeState {
+            known_blessed: false,
             discovered: true,
             appraised: true,
             identified: true,
@@ -5087,6 +5088,7 @@ fn p100e_soulsword_rolls_and_persists_one_extra_power_and_increases_life() {
     game.item_property_knowledge.insert(
         item_id.clone(),
         ItemPropertyKnowledgeState {
+            known_blessed: false,
             discovered: true,
             appraised: true,
             identified: true,
@@ -7438,6 +7440,27 @@ fn b4_pick_up_tailored_kind(game: &mut Game, kind: &str) -> String {
 }
 
 #[test]
+fn all_priest_builds_generate_tailored_hafted_weapons_equip_and_resume_generation() {
+    let builds = super::support::priest_build_ids();
+    assert_eq!(builds.len(), 24);
+    for build in builds {
+        let mut game = Game::new_with_build(427, &build).unwrap();
+        clear_monsters(&mut game);
+        choose_human_talent_if_pending(&mut game);
+        game.items.clear();
+        let id = b4_pick_up_tailored_kind(&mut game, "demo.item.mace");
+        assert!(game.equip_inventory_item(&id, None).is_some());
+        assert!(!game.item_is_icky(&game.items[0], false));
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(
+            b4_pick_up_tailored_kind(&mut game, "demo.item.mace"),
+            b4_pick_up_tailored_kind(&mut restored, "demo.item.mace")
+        );
+        assert_eq!(game.to_save(), restored.to_save());
+    }
+}
+
+#[test]
 fn tailored_duelist_weapon_equips_and_preserves_continued_generation_after_save() {
     let mut game = Game::new_with_build(427, "demo.build.duelist").unwrap();
     clear_monsters(&mut game);
@@ -7890,6 +7913,7 @@ fn artifact_creation_command(quantity: u32, name: Option<&str>) -> GameCommand {
 
 #[test]
 fn artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name() {
+    let priest_builds = super::support::priest_build_ids();
     for (build, equipped) in [
         "warrior",
         "archer",
@@ -7906,6 +7930,11 @@ fn artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name()
         "ranger-nature-daemon",
     ]
     .into_iter()
+    .chain(
+        priest_builds
+            .iter()
+            .map(|id| id.strip_prefix("demo.build.").unwrap()),
+    )
     .flat_map(|build| [false, true].map(|equipped| (build, equipped)))
     {
         let mut game = Game::new_with_build(637, &format!("demo.build.{build}")).unwrap();

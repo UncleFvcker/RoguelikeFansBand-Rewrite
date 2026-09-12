@@ -397,6 +397,7 @@ impl Generator<'_, '_> {
             let (bias, chance) = match self.class_id {
                 "demo.class.mage" | "demo.class.high-mage" => (Mage, 20),
                 "demo.class.mindcrafter" => (Priestly, 20),
+                "demo.class.priest" => (Priestly, 30),
                 "demo.class.sniper" | "demo.class.ranger" => (Ranger, 30),
                 "demo.class.paladin" => (Priestly, 60),
                 _ => (Warrior, 0),

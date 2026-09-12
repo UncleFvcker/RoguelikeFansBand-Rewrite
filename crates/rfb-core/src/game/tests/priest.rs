@@ -2,7 +2,9 @@
 use super::support::{choose_human_talent_if_pending, clear_monsters, give_inventory_item};
 use super::*;
 
+mod generation;
 mod learning;
+mod powers;
 mod realm_change;
 
 const BUILD: &str = "demo.build.priest-life-sorcery";

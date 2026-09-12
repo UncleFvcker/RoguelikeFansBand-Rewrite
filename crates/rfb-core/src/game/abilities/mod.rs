@@ -56,6 +56,7 @@ impl Game {
             }
             (
                 AbilityEffectDefinition::CraftEnchant { .. }
+                | AbilityEffectDefinition::BlessWeapon
                 | AbilityEffectDefinition::CraftItem
                 | AbilityEffectDefinition::PolishShield
                 | AbilityEffectDefinition::Mundanity,
@@ -391,6 +392,9 @@ impl Game {
             }
             (AbilityEffectDefinition::BanishEvil, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_banish_evil_effect(&ability, events, changed);
+            }
+            (AbilityEffectDefinition::Evocation, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_evocation_effect(&ability, events, changed, removed_entities)?;
             }
             (
                 AbilityEffectDefinition::WrathOfGod { .. },

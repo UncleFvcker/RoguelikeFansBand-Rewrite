@@ -99,7 +99,7 @@ impl Game {
         }
         if !matches!(
             ability.effect,
-            E::CraftEnchant { .. } | E::CraftItem | E::PolishShield | E::Mundanity
+            E::CraftEnchant { .. } | E::CraftItem | E::PolishShield | E::Mundanity | E::BlessWeapon
         ) {
             return None;
         }
@@ -162,6 +162,9 @@ impl Game {
         })?;
         let definition = self.content.item(&item.kind_id)?;
         let valid = match ability.effect {
+            E::BlessWeapon => definition
+                .rfb_base_kind
+                .is_some_and(|base| (19..=23).contains(&base.tval)),
             E::CraftEnchant { .. } => {
                 definition.rfb_base_kind.is_some_and(|base| {
                     matches!(base.tval, 16..=23 | 30..=38) && (base.tval, base.sval) != (23, 32)
@@ -185,6 +188,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> Result<(), CoreError> {
         let succeeded = match ability.effect {
+            AbilityEffectDefinition::BlessWeapon => self.bless_weapon(item_id),
             AbilityEffectDefinition::CraftItem => self.craft_item(item_id).is_some(),
             AbilityEffectDefinition::Mundanity => self.mundanify_item(item_id),
             AbilityEffectDefinition::CraftEnchant {
@@ -207,6 +211,83 @@ impl Game {
             trace: None,
         });
         Ok(())
+    }
+
+    fn bless_weapon(&mut self, item_id: &str) -> bool {
+        let index = self
+            .items
+            .iter()
+            .position(|item| item.id == item_id)
+            .unwrap();
+        let item = &self.items[index];
+        // RFB master a0d92b6378, spells3.c::bless_weapon: clear curses before
+        // checking an existing blessing. A resisted blessing still spends the power.
+        if let Some(curse) = item.curse {
+            let heavy = curse == ItemCurseSeverityDto::Heavy
+                || item.intrinsic_properties.rfb_heavy_curse
+                || item
+                    .rolled_affixes
+                    .iter()
+                    .any(|roll| roll.properties.rfb_heavy_curse);
+            if (heavy && self.rng.bounded(100) < 32) || curse == ItemCurseSeverityDto::Permanent {
+                return false;
+            }
+            crate::game::inventory::clear_item_curse(&mut self.items[index]);
+            let knowledge = self
+                .item_property_knowledge
+                .entry(item_id.to_owned())
+                .or_default();
+            knowledge.discovered = true;
+            knowledge.appraised = true;
+            knowledge.feeling = None;
+        }
+        let item = &self.items[index];
+        if self.item_has_weapon_trait(item, rfb_protocol::WeaponTraitDto::Blessed) {
+            return true;
+        }
+        let object = crate::game::item_value::instance::value_object(&self.content, item)
+            .expect("blessable formal weapon retains its authoritative properties");
+        let mut chance = if object.flags.contains("KILL_GOOD") {
+            5
+        } else if object.flags.contains("SLAY_GOOD") {
+            3
+        } else {
+            1
+        };
+        if object.flags.contains("SLAY_EVIL") || object.flags.contains("KILL_EVIL") {
+            chance = 1;
+        }
+        // Source artifact indices, read from authoritative artifact metadata.
+        if matches!(object.fixed_artifact, 139 | 334) {
+            chance = 10;
+        }
+        if crate::game::ego::one_in(&mut self.rng, chance) {
+            let item = &mut self.items[index];
+            item.intrinsic_weapon_traits
+                .insert(rfb_protocol::WeaponTraitDto::Blessed);
+            item.discount_percent = 99;
+            let knowledge = self
+                .item_property_knowledge
+                .entry(item_id.to_owned())
+                .or_default();
+            knowledge.discovered = true;
+            knowledge.known_blessed = true;
+            return true;
+        }
+        let item = &mut self.items[index];
+        for (total, delta) in [
+            (object.to_h, &mut item.enchantments.to_hit),
+            (object.to_d, &mut item.enchantments.to_damage),
+            (object.to_a, &mut item.enchantments.to_armor),
+        ] {
+            if total > 0 {
+                *delta -= 1;
+            }
+            if total - 1 > 5 && self.rng.bounded(100) < 33 {
+                *delta -= 1;
+            }
+        }
+        false
     }
 
     fn craft_enchant_item(&mut self, item_id: &str, maximum: u16, increment: u16) -> bool {

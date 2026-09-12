@@ -222,6 +222,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::DemonSummoning
                     | AbilityEffectDefinition::AngelSummoning
                     | AbilityEffectDefinition::BanishEvil
+                    | AbilityEffectDefinition::Evocation
                     | AbilityEffectDefinition::DivineIntervention
                     | AbilityEffectDefinition::Crusade
                     | AbilityEffectDefinition::InsanityCircle { .. }
@@ -371,6 +372,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::BrandWeapon { .. }
                     | AbilityEffectDefinition::ProtectFromCorrosion
                     | AbilityEffectDefinition::CraftEnchant { .. }
+                    | AbilityEffectDefinition::BlessWeapon
                     | AbilityEffectDefinition::CraftItem
                     | AbilityEffectDefinition::PolishShield
                     | AbilityEffectDefinition::Mundanity

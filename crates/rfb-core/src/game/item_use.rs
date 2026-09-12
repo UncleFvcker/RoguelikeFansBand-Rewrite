@@ -2181,6 +2181,9 @@ impl Game {
         let mundane = self.mundane_item(&self.items[index]);
         let changed = mundane != self.items[index];
         self.items[index] = mundane;
+        if let Some(knowledge) = self.item_property_knowledge.get_mut(item_id) {
+            knowledge.known_blessed = false;
+        }
         self.identify_item_instance(item_id, ItemIdentificationRequest::new(false));
         changed
     }

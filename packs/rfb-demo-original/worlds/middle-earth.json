@@ -1613,6 +1613,128 @@
               {"itemKindId": "demo.item.war-hammer", "quantity": 1, "weight": 100, "affixIds": ["rfb-legacy.affix.slaying"], "generationDepth": 20},
               {"itemKindId": "demo.item.whip", "quantity": 1, "weight": 100, "affixIds": ["rfb-legacy.affix.slaying"], "generationDepth": 20}
             ]
+          },
+          {
+            "classId": "demo.class.priest",
+            "entries": [
+              {
+                "itemKindId": "demo.item.ball-and-chain",
+                "quantity": 1,
+                "weight": 100,
+                "affixIds": [
+                  "rfb-legacy.affix.slaying"
+                ],
+                "generationDepth": 20
+              },
+              {
+                "itemKindId": "demo.item.bo-staff",
+                "quantity": 1,
+                "weight": 100,
+                "affixIds": [
+                  "rfb-legacy.affix.slaying"
+                ],
+                "generationDepth": 20
+              },
+              {
+                "itemKindId": "demo.item.club",
+                "quantity": 1,
+                "weight": 100,
+                "affixIds": [
+                  "rfb-legacy.affix.slaying"
+                ],
+                "generationDepth": 20
+              },
+              {
+                "itemKindId": "demo.item.flail",
+                "quantity": 1,
+                "weight": 100,
+                "affixIds": [
+                  "rfb-legacy.affix.slaying"
+                ],
+                "generationDepth": 20
+              },
+              {
+                "itemKindId": "demo.item.jo-staff",
+                "quantity": 1,
+                "weight": 50,
+                "affixIds": [
+                  "rfb-legacy.affix.slaying"
+                ],
+                "generationDepth": 20
+              },
+              {
+                "itemKindId": "demo.item.lead-filled-mace",
+                "quantity": 1,
+                "weight": 100,
+                "affixIds": [
+                  "rfb-legacy.affix.slaying"
+                ],
+                "generationDepth": 20
+              },
+              {
+                "itemKindId": "demo.item.mace",
+                "quantity": 1,
+                "weight": 100,
+                "affixIds": [
+                  "rfb-legacy.affix.slaying"
+                ],
+                "generationDepth": 20
+              },
+              {
+                "itemKindId": "demo.item.morning-star",
+                "quantity": 1,
+                "weight": 100,
+                "affixIds": [
+                  "rfb-legacy.affix.slaying"
+                ],
+                "generationDepth": 20
+              },
+              {
+                "itemKindId": "demo.item.nunchaku",
+                "quantity": 1,
+                "weight": 50,
+                "affixIds": [
+                  "rfb-legacy.affix.slaying"
+                ],
+                "generationDepth": 20
+              },
+              {
+                "itemKindId": "demo.item.quarterstaff",
+                "quantity": 1,
+                "weight": 100,
+                "affixIds": [
+                  "rfb-legacy.affix.slaying"
+                ],
+                "generationDepth": 20
+              },
+              {
+                "itemKindId": "demo.item.three-piece-rod",
+                "quantity": 1,
+                "weight": 33,
+                "affixIds": [
+                  "rfb-legacy.affix.slaying"
+                ],
+                "generationDepth": 20
+              },
+              {
+                "itemKindId": "demo.item.war-hammer",
+                "quantity": 1,
+                "weight": 100,
+                "affixIds": [
+                  "rfb-legacy.affix.slaying"
+                ],
+                "generationDepth": 20
+              },
+              {
+                "itemKindId": "demo.item.whip",
+                "quantity": 1,
+                "weight": 100,
+                "affixIds": [
+                  "rfb-legacy.affix.slaying"
+                ],
+                "generationDepth": 20
+              }
+            ]
           }
         ]
       }
@@ -1942,6 +2064,7 @@
         "classOverrides": [
           {"classId": "demo.class.duelist", "entries": [{"itemKindId": "demo.item.duelist", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.quickthorn", "quantity": 1, "weight": 4}]},
           {"classId": "demo.class.ranger", "entries": [{"itemKindId": "demo.item.belthronding", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.yoichi", "quantity": 1, "weight": 4}]},
+          {"classId": "demo.class.priest", "entries": [{"itemKindId": "demo.item.aule", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.palantir-of-westernesse", "quantity": 1, "weight": 4}]},
           {"classId": "demo.class.mage", "entries": [{"itemKindId": "demo.item.gandalf", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.saruman", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.indra", "quantity": 1, "weight": 8}]},
           {"classId": "demo.class.high-mage", "entries": [{"itemKindId": "demo.item.gandalf", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.saruman", "quantity": 1, "weight": 1}, {"itemKindId": "demo.item.indra", "quantity": 1, "weight": 8}]},
           {
@@ -1985,7 +2108,7 @@
       ],
       "reward": {
         "itemInstanceId": "demo.task.thieves-hideout.reward.1",
-        "classOverrides": [{"classId": "demo.class.duelist", "entries": [{"itemKindId": "demo.item.rapier", "quantity": 1, "weight": 1}]}, {"classId": "demo.class.mage", "entries": [{"itemKindId": "demo.item.long-sword", "quantity": 1, "weight": 1}]}, {"classId": "demo.class.ranger", "entries": [{"itemKindId": "demo.item.long-sword", "quantity": 1, "weight": 1}]}],
+        "classOverrides": [{"classId": "demo.class.duelist", "entries": [{"itemKindId": "demo.item.rapier", "quantity": 1, "weight": 1}]}, {"classId": "demo.class.mage", "entries": [{"itemKindId": "demo.item.long-sword", "quantity": 1, "weight": 1}]}, {"classId": "demo.class.ranger", "entries": [{"itemKindId": "demo.item.long-sword", "quantity": 1, "weight": 1}]}, {"classId": "demo.class.priest", "entries": [{"itemKindId": "demo.item.war-hammer", "quantity": 1, "weight": 1}]}],
         "entries": [
           { "itemKindId": "demo.item.broad-sword", "quantity": 1, "weight": 1 }
         ]

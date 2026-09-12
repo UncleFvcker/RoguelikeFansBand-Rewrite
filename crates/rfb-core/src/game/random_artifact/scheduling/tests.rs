@@ -299,6 +299,7 @@ fn random_artifact_forced_base_pipeline_covers_slots_and_special_robe_and_light(
 
 #[test]
 fn random_artifact_save_preserves_rejected_names_and_continued_generation() {
+    let priest_builds = crate::game::tests::support::priest_build_ids();
     for build in [
         "warrior",
         "berserker",
@@ -309,7 +310,13 @@ fn random_artifact_save_preserves_rejected_names_and_continued_generation() {
         "ranger-nature-death",
         "ranger-nature-arcane",
         "ranger-nature-daemon",
-    ] {
+    ]
+    .into_iter()
+    .chain(
+        priest_builds
+            .iter()
+            .map(|id| id.strip_prefix("demo.build.").unwrap()),
+    ) {
         let mut game = Game::new_with_build(85, &format!("demo.build.{build}")).unwrap();
         game.items.clear();
         game.entities.clear();
@@ -389,6 +396,7 @@ fn random_artifact_save_preserves_rejected_names_and_continued_generation() {
 
 #[test]
 fn random_artifact_negative_power_reaches_a_cursed_equippable_instance() {
+    let priest_builds = crate::game::tests::support::priest_build_ids();
     let artifact = source();
     for build in [
         "warrior",
@@ -399,7 +407,13 @@ fn random_artifact_negative_power_reaches_a_cursed_equippable_instance() {
         "ranger-nature-death",
         "ranger-nature-arcane",
         "ranger-nature-daemon",
-    ] {
+    ]
+    .into_iter()
+    .chain(
+        priest_builds
+            .iter()
+            .map(|id| id.strip_prefix("demo.build.").unwrap()),
+    ) {
         let mut game = Game::new_with_build(85, &format!("demo.build.{build}")).unwrap();
         game.items.clear();
         game.entities.clear();

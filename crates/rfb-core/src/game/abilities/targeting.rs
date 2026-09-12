@@ -127,6 +127,7 @@ impl Game {
                     .then_some(AbilityTargetPlan::Element { element: *element })
             }
             AbilityEffectDefinition::CraftEnchant { .. }
+            | AbilityEffectDefinition::BlessWeapon
             | AbilityEffectDefinition::CraftItem
             | AbilityEffectDefinition::PolishShield
             | AbilityEffectDefinition::Mundanity => self
@@ -911,6 +912,7 @@ impl Game {
             | AbilityEffectDefinition::DemonSummoning
             | AbilityEffectDefinition::AngelSummoning
             | AbilityEffectDefinition::BanishEvil
+            | AbilityEffectDefinition::Evocation
             | AbilityEffectDefinition::DivineIntervention
             | AbilityEffectDefinition::Crusade
             | AbilityEffectDefinition::InsanityCircle { .. }

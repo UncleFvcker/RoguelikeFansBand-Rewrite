@@ -727,6 +727,7 @@ impl Game {
                 self.item_property_knowledge.insert(
                     item.id.clone(),
                     ItemPropertyKnowledgeState {
+                        known_blessed: false,
                         discovered: true,
                         appraised: true,
                         identified: true,

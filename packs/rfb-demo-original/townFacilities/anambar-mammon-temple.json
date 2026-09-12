@@ -8,6 +8,7 @@
   "category": "service",
   "ownerNameKey": "town-facility-demo-anambar-mammon-temple-owner-name",
   "memberClassIds": ["demo.class.paladin"],
+  "ownerClassIds": ["demo.class.priest"],
   "serviceActions": [
     { "kind": "heal", "ownerCost": 0, "otherCost": 500 },
     { "kind": "restore-vitality", "ownerCost": 500, "otherCost": 2500 },

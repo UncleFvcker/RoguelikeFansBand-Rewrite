@@ -156,6 +156,59 @@ fn tomte_scales_weapon_and_innate_damage_after_criticals_without_changing_rng() 
 }
 
 #[test]
+fn priest_scales_actual_weapon_and_innate_hits_after_criticals_without_extra_rng() {
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+    let mut content = rfb_content::compile_pack_dir(&path).unwrap().content;
+    // 107 * 94 / 100 = 100: neutralize only the final multiplier, keeping
+    // the real Priest class, weapon proficiency, hit rolls and criticals.
+    content
+        .races
+        .iter_mut()
+        .find(|race| race.id == "demo.race.rfb-human")
+        .unwrap()
+        .melee_damage_percent = 107;
+    let neutral = Arc::new(ContentCatalog::from_artifact(
+        rfb_content::encode_content(content).unwrap(),
+    ));
+    for build in [
+        "demo.build.priest-life-sorcery",
+        "demo.build.priest-death-sorcery",
+    ] {
+        let mut base = melee_game(0, build);
+        assert!(base.gain_mutation("rfb.mutation.horns", &mut Vec::new()));
+        let hits = |events: Vec<DomainEvent>| {
+            events
+                .into_iter()
+                .filter_map(|event| match event {
+                    DomainEvent::PlayerMeleeHit { damage, .. } => Some((false, damage.raw)),
+                    DomainEvent::MutationMeleeHit { damage, .. } => Some((true, damage.raw)),
+                    _ => None,
+                })
+                .collect::<Vec<_>>()
+        };
+        let mut seen = [false; 2];
+        for seed in 0..128 {
+            let mut actual = base.clone();
+            actual.rng = RfbRng::seeded(seed);
+            let mut control = actual.clone();
+            control.content = neutral.clone();
+            assert_eq!(control.player_melee_damage_percent(), 100);
+            let scaled = hits(resolve_melee(&mut actual));
+            let unscaled = hits(resolve_melee(&mut control));
+            assert_eq!(scaled.len(), unscaled.len());
+            for ((innate, damage), (control_innate, original)) in scaled.into_iter().zip(unscaled) {
+                assert_eq!(innate, control_innate);
+                assert_eq!(damage, (original * 94 + 50) / 100, "{build}: {seed}");
+                seen[usize::from(innate)] = true;
+            }
+            assert_eq!(actual.rng, control.rng);
+        }
+        assert_eq!(seen, [true, true]);
+    }
+}
+
+#[test]
 fn tomte_melee_preview_uses_the_damage_rule_and_hides_unidentified_equipment() {
     let mut game = melee_game(0, "demo.build.warrior");
     tomte_form(&mut game);

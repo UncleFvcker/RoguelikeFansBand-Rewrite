@@ -1598,6 +1598,10 @@ impl Game {
                             self.player.position,
                             entity.position,
                         )
+                    } else if self.content.ability(source_id).is_some_and(|ability| {
+                        matches!(ability.effect, AbilityEffectDefinition::Evocation)
+                    }) {
+                        self.evocation_target_in_sight(entity.position)
                     } else {
                         self.entity_is_visible_to_player(entity)
                     }

@@ -128,7 +128,12 @@ impl Game {
     }
 
     pub(super) fn item_is_icky(&self, item: &ItemInstance, assume_identified: bool) -> bool {
-        // Current playable classes have no source known_icky_object callback.
+        if self.priest_weapon_is_unblessed_blade(item)
+            && (assume_identified
+                || self.item_identification(item) == ItemIdentificationDto::Identified)
+        {
+            return true;
+        }
         (assume_identified
             || self.item_identification(item) != ItemIdentificationDto::Unexamined
             || self
@@ -207,11 +212,39 @@ impl Game {
         ability_id: &str,
     ) -> Option<&ClassAbilityDefinition> {
         self.character_definitions().and_then(|(_, _, class, _)| {
-            class
-                .abilities
-                .iter()
-                .find(|activation| activation.ability_id == ability_id)
+            class.abilities.iter().find(|activation| {
+                activation.ability_id == ability_id && self.class_power_matches_realm(ability_id)
+            })
         })
+    }
+
+    pub(super) fn player_is_good_priest(&self) -> bool {
+        self.player_is_priest()
+            && self.build.as_ref().is_some_and(|build| {
+                matches!(build.first_realm_id.as_deref(), Some("life" | "crusade"))
+            })
+    }
+
+    pub(super) fn class_power_matches_realm(&self, ability_id: &str) -> bool {
+        match ability_id {
+            "demo.ability.priest-bless-weapon" => self.player_is_good_priest(),
+            "demo.ability.priest-evocation" => {
+                self.player_is_priest() && !self.player_is_good_priest()
+            }
+            _ => true,
+        }
+    }
+
+    pub(super) fn priest_weapon_is_unblessed_blade(&self, item: &ItemInstance) -> bool {
+        super::player_stats::good_priest_weapon_penalty(
+            self.player_is_priest(),
+            self.player_is_good_priest(),
+            self.content
+                .item(&item.kind_id)
+                .and_then(|kind| kind.rfb_base_kind)
+                .map(|base| base.tval),
+            self.item_has_weapon_trait(item, rfb_protocol::WeaponTraitDto::Blessed),
+        )
     }
 
     pub(super) fn race_ability_activation(
@@ -615,6 +648,14 @@ impl Game {
                     })
                     .saturating_add(modifier_percent)
                     .saturating_add(i32::try_from(resource_penalty).unwrap_or(i32::MAX))
+                    .saturating_add(
+                        25 * self
+                            .equipped_melee_weapons()
+                            .into_iter()
+                            .take(2)
+                            .filter(|item| self.priest_weapon_is_unblessed_blade(item))
+                            .count() as i32,
+                    )
                     .saturating_sub(4 * easy_spell)
                     .max(i32::from(minimum_failure_percent))
                     .saturating_add(if self.player_uses_dual_realm_learning() {
@@ -760,7 +801,12 @@ impl Game {
     ) -> bool {
         matches!(source, AbilitySourceDto::Mutation | AbilitySourceDto::Race)
             || (source == AbilitySourceDto::Class
-                && ability_id == "demo.ability.ranger-probe-monsters")
+                && matches!(
+                    ability_id,
+                    "demo.ability.ranger-probe-monsters"
+                        | "demo.ability.priest-bless-weapon"
+                        | "demo.ability.priest-evocation"
+                ))
     }
 
     pub(super) fn innate_power_failure_percent(&self, activation: &InnatePowerDefinition) -> u8 {
@@ -818,18 +864,28 @@ impl Game {
             )
             .saturating_sub((i32::from(RFB_MAGIC_STAT_ADJUSTMENT[index]) - 1).saturating_mul(3))
             .saturating_add(self.player_spell_failure_modifier_percent())
-            .saturating_sub(if self.player_has_mindcraft_stone() {
-                4
-            } else {
-                0
-            })
+            .saturating_sub(
+                if self.player_has_mindcraft_stone()
+                    || (self.player_is_priest()
+                        && self
+                            .player_equipment_passives()
+                            .contains(&EquipmentPassive::EasySpell))
+                {
+                    4
+                } else {
+                    0
+                },
+            )
             .max(i32::from(
                 activation
                     .minimum_failure_percent
                     .max(RFB_MAGIC_FAILURE_MINIMUM[index]),
             ))
             .saturating_add(
-                if self.player_is_mindcrafter() || self.player_is_berserker() {
+                if self.player_is_mindcrafter()
+                    || self.player_is_berserker()
+                    || self.player_is_priest()
+                {
                     self.player
                         .statuses
                         .iter()
@@ -842,11 +898,18 @@ impl Game {
                 },
             )
             .min(95)
-            .saturating_sub(if self.player_has_mindcraft_stone() {
-                1
-            } else {
-                0
-            });
+            .saturating_sub(
+                if self.player_has_mindcraft_stone()
+                    || (self.player_is_priest()
+                        && self
+                            .player_equipment_passives()
+                            .contains(&EquipmentPassive::EasySpell))
+                {
+                    1
+                } else {
+                    0
+                },
+            );
         u8::try_from(chance.max(self.player_spell_failure_minimum_percent()))
             .expect("bounded class ability failure chance must fit u8")
     }

@@ -645,6 +645,7 @@ pub enum AbilityEffectDefinition {
     DemonSummoning,
     AngelSummoning,
     BanishEvil,
+    Evocation,
     WrathOfGod {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         damage: Option<u16>,
@@ -906,6 +907,7 @@ pub enum AbilityEffectDefinition {
         level_divisor: u16,
     },
     CraftItem,
+    BlessWeapon,
     PolishShield,
     Mundanity,
     ElementalBrand,

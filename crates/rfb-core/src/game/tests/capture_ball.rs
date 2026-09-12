@@ -16,6 +16,7 @@ fn equipped_capture_ball(game: &mut Game) -> usize {
     game.item_property_knowledge.insert(
         "test.capture-ball".to_owned(),
         ItemPropertyKnowledgeState {
+            known_blessed: false,
             discovered: true,
             appraised: true,
             identified: true,

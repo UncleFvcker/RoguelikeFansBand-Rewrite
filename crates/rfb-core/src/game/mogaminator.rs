@@ -1168,6 +1168,12 @@ impl Game {
             MogaminatorPredicate::MoreValueThan(value) => aware && definition.base_value > value,
             MogaminatorPredicate::Weapons => slot == Some("weapon") || tagged("weapon"),
             MogaminatorPredicate::FavoriteWeapons => class.is_some_and(|class| {
+                if class.id == "demo.class.priest" {
+                    return definition.rfb_base_kind.is_some_and(|base| {
+                        matches!(base.tval, 19 | 21..=23)
+                            && (base.tval == 21 || self.known_item_blessed(item))
+                    });
+                }
                 if class.id == "demo.class.duelist" {
                     return self.duelist_favorite_weapon(definition);
                 }
@@ -1303,6 +1309,66 @@ fn compare_values(left: &str, right: &str) -> std::cmp::Ordering {
 mod tests {
     use super::*;
     use rfb_protocol::GameCommand;
+
+    #[test]
+    fn priest_favorites_require_known_blessing_even_for_evil_primary_realms() {
+        for build in [
+            "demo.build.priest-life-sorcery",
+            "demo.build.priest-death-sorcery",
+        ] {
+            let mut game = Game::new_with_build(421, build).unwrap();
+            crate::game::tests::support::give_inventory_item(
+                &mut game,
+                "test.favorite",
+                "demo.item.dagger",
+            );
+            let index = game
+                .items
+                .iter()
+                .position(|item| item.id == "test.favorite")
+                .unwrap();
+            game.items[index]
+                .intrinsic_weapon_traits
+                .insert(WeaponTraitDto::Blessed);
+            assert!(!game.mogaminator_predicate_matches(
+                MogaminatorPredicate::FavoriteWeapons,
+                &game.items[index]
+            ));
+            let knowledge = game
+                .item_property_knowledge
+                .entry("test.favorite".to_owned())
+                .or_default();
+            knowledge.discovered = true;
+            knowledge.known_blessed = true;
+            assert!(game.mogaminator_predicate_matches(
+                MogaminatorPredicate::FavoriteWeapons,
+                &game.items[index]
+            ));
+            let restored = Game::from_save(game.to_save()).unwrap();
+            assert!(restored.mogaminator_predicate_matches(
+                MogaminatorPredicate::FavoriteWeapons,
+                &restored.items[index]
+            ));
+            assert_ne!(
+                game.item_identification(&game.items[index]),
+                ItemIdentificationDto::Identified
+            );
+            game.mundanify_item("test.favorite");
+            assert!(!game.mogaminator_predicate_matches(
+                MogaminatorPredicate::FavoriteWeapons,
+                &game.items[index]
+            ));
+            crate::game::tests::support::give_inventory_item(
+                &mut game,
+                "test.hafted",
+                "demo.item.mace",
+            );
+            assert!(game.mogaminator_predicate_matches(
+                MogaminatorPredicate::FavoriteWeapons,
+                game.items.last().unwrap()
+            ));
+        }
+    }
 
     #[test]
     fn duelist_favorites_use_base_weapon_cap_including_fixed_artifact_aliases() {
@@ -1696,6 +1762,7 @@ mod tests {
                         (
                             item.id.clone(),
                             inventory::ItemPropertyKnowledgeState {
+                                known_blessed: false,
                                 discovered: true,
                                 appraised,
                                 identified,

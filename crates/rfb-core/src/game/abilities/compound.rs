@@ -810,12 +810,146 @@ impl Game {
         });
     }
 
-    fn divine_intervention_targets(&self) -> Vec<String> {
+    pub(super) fn evocation_target_in_sight(&self, position: Position) -> bool {
+        // project_hack requires LOS and projectability, independent of lighting
+        // or whether the monster has been detected/identified.
+        crate::game::visibility::has_line_of_sight(self, self.player.position, position)
+            && crate::game::projectile_geometry::has_line_of_effect(
+                self,
+                self.player.position,
+                position,
+            )
+    }
+
+    fn compound_effect_targets(&self, ability: &AbilityDefinition) -> Vec<String> {
         self.entities
             .iter()
-            .filter(|entity| entity.hp > 0 && self.entity_is_visible_to_player(entity))
+            .filter(|entity| {
+                entity.hp > 0
+                    && if matches!(ability.effect, AbilityEffectDefinition::Evocation) {
+                        self.evocation_target_in_sight(entity.position)
+                    } else {
+                        self.entity_is_visible_to_player(entity)
+                    }
+            })
             .map(|entity| entity.id.clone())
             .collect()
+    }
+
+    fn resolve_visible_fear(
+        &mut self,
+        ability: &AbilityDefinition,
+        power: u16,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let level = self.progress.level;
+        const CHARISMA_SAVE_ADJUSTMENT: [i32; 38] = [
+            -25, -15, -10, -7, -6, -5, -4, -3, -2, -2, -1, -1, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8,
+            9, 10, 12, 14, 16, 18, 20, 23, 26, 29, 33, 37, 42, 50,
+        ];
+        let charisma_index = usize::from(
+            self.effective_player_attributes()
+                .index(AttributeKind::Charisma),
+        )
+        .min(CHARISMA_SAVE_ADJUSTMENT.len() - 1);
+        let fear_power = i32::from(level)
+            .saturating_add(CHARISMA_SAVE_ADJUSTMENT[charisma_index])
+            .max(1) as u16;
+        for target_id in self.compound_effect_targets(ability) {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_id)
+            else {
+                continue;
+            };
+            let definition = self
+                .actor_runtime_definition(&self.entities[index])
+                .expect("visible fear target definition must remain available");
+            let target_level = definition.level;
+            let resist_all = definition.tags.iter().any(|tag| tag == "resist-all");
+            // GF_TURN_ALL skips RES_ALL before rolling duration or a save.
+            if resist_all {
+                continue;
+            }
+            let duration_sides = u64::from((power / 2).max(1));
+            let duration = (0..3).fold(1_u32, |total, _| {
+                total.saturating_add(
+                    u32::try_from(self.rng.bounded(duration_sides) + 1)
+                        .expect("fear duration must fit u32"),
+                )
+            });
+            let immune = self.actor_has_status_immunity(index, STATUS_FEAR);
+            let power_roll = (!immune && target_level > 1).then(|| {
+                u16::try_from(self.rng.bounded(u64::from(fear_power)) + 1)
+                    .expect("fear power roll must fit u16")
+            });
+            let target_roll = power_roll.map(|_| {
+                u32::try_from(self.rng.bounded(u64::from(target_level.max(1))) + 1)
+                    .expect("fear target roll must fit u32")
+            });
+            let resisted = target_level <= 1
+                || power_roll
+                    .zip(target_roll)
+                    .is_some_and(|(left, right)| u32::from(left) <= right);
+            let resolution = self.apply_crusade_actor_status(
+                index,
+                &ability.id,
+                STATUS_FEAR,
+                duration,
+                AbilityStatusStackingDefinition::Extend,
+                power,
+                power_roll,
+                target_roll,
+                if immune {
+                    Some(AbilityStatusChangeDto::Immune)
+                } else if resisted {
+                    Some(AbilityStatusChangeDto::Resisted)
+                } else {
+                    None
+                },
+            );
+            changed.insert(self.entities[index].position);
+            self.push_actor_effect_resolution(&ability.id, index, resolution, events);
+        }
+    }
+
+    pub(super) fn resolve_player_evocation_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let base = u64::from(self.progress.level) * 4;
+        let power =
+            spell_power_value(base, ability.spell_power_bonus).min(u64::from(u16::MAX)) as u16;
+        let damage = spell_power_value(
+            base + u64::from(self.casting_spell_damage_bonus()),
+            ability.spell_power_bonus,
+        )
+        .min(u64::from(u16::MAX)) as i32;
+        self.resolve_player_visible_damage_with_base(
+            &ability.id,
+            DamageType::Mana,
+            None,
+            damage,
+            events,
+            changed,
+            removed_entities,
+        )?;
+        self.resolve_visible_fear(ability, power, events, changed);
+        for target_id in self.compound_effect_targets(ability) {
+            let index = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_id)
+                .unwrap();
+            let resolution = self.resolve_teleport_away_target(index, 2, 0, power, changed);
+            self.push_actor_effect_resolution(&ability.id, index, resolution, events);
+        }
+        Ok(())
     }
 
     #[allow(clippy::too_many_lines)]
@@ -867,7 +1001,7 @@ impl Game {
             removed_entities,
         )?;
 
-        for target_id in self.divine_intervention_targets() {
+        for target_id in self.compound_effect_targets(ability) {
             let Some(index) = self
                 .entities
                 .iter()
@@ -908,7 +1042,7 @@ impl Game {
             self.push_actor_effect_resolution(&ability.id, index, resolution, events);
         }
 
-        for target_id in self.divine_intervention_targets() {
+        for target_id in self.compound_effect_targets(ability) {
             let Some(index) = self
                 .entities
                 .iter()
@@ -932,7 +1066,7 @@ impl Game {
             self.push_actor_effect_resolution(&ability.id, index, resolution, events);
         }
 
-        for target_id in self.divine_intervention_targets() {
+        for target_id in self.compound_effect_targets(ability) {
             let Some(index) = self
                 .entities
                 .iter()
@@ -993,73 +1127,9 @@ impl Game {
             self.push_actor_effect_resolution(&ability.id, index, resolution, events);
         }
 
-        const CHARISMA_SAVE_ADJUSTMENT: [i32; 38] = [
-            -25, -15, -10, -7, -6, -5, -4, -3, -2, -2, -1, -1, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8,
-            9, 10, 12, 14, 16, 18, 20, 23, 26, 29, 33, 37, 42, 50,
-        ];
-        let charisma_index = usize::from(
-            self.effective_player_attributes()
-                .index(AttributeKind::Charisma),
-        )
-        .min(CHARISMA_SAVE_ADJUSTMENT.len() - 1);
-        let fear_power = i32::from(level)
-            .saturating_add(CHARISMA_SAVE_ADJUSTMENT[charisma_index])
-            .max(1) as u16;
-        for target_id in self.divine_intervention_targets() {
-            let Some(index) = self
-                .entities
-                .iter()
-                .position(|entity| entity.id == target_id)
-            else {
-                continue;
-            };
-            let definition = self
-                .actor_runtime_definition(&self.entities[index])
-                .expect("Divine Intervention target definition must remain available");
-            let target_level = definition.level;
-            let resist_all = definition.tags.iter().any(|tag| tag == "resist-all");
-            let duration_sides = u64::from((power / 2).max(1));
-            let duration = (0..3).fold(1_u32, |total, _| {
-                total.saturating_add(
-                    u32::try_from(self.rng.bounded(duration_sides) + 1)
-                        .expect("fear duration must fit u32"),
-                )
-            });
-            let immune = resist_all || self.actor_has_status_immunity(index, STATUS_FEAR);
-            let power_roll = (!immune && target_level > 1).then(|| {
-                u16::try_from(self.rng.bounded(u64::from(fear_power)) + 1)
-                    .expect("fear power roll must fit u16")
-            });
-            let target_roll = power_roll.map(|_| {
-                u32::try_from(self.rng.bounded(u64::from(target_level.max(1))) + 1)
-                    .expect("fear target roll must fit u32")
-            });
-            let resisted = target_level <= 1
-                || power_roll
-                    .zip(target_roll)
-                    .is_some_and(|(left, right)| u32::from(left) <= right);
-            let resolution = self.apply_crusade_actor_status(
-                index,
-                &ability.id,
-                STATUS_FEAR,
-                duration,
-                AbilityStatusStackingDefinition::Extend,
-                power,
-                power_roll,
-                target_roll,
-                if immune {
-                    Some(AbilityStatusChangeDto::Immune)
-                } else if resisted {
-                    Some(AbilityStatusChangeDto::Resisted)
-                } else {
-                    None
-                },
-            );
-            changed.insert(self.entities[index].position);
-            self.push_actor_effect_resolution(&ability.id, index, resolution, events);
-        }
+        self.resolve_visible_fear(ability, power, events, changed);
 
-        for target_id in self.divine_intervention_targets() {
+        for target_id in self.compound_effect_targets(ability) {
             let Some(index) = self
                 .entities
                 .iter()

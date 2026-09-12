@@ -541,7 +541,10 @@
     "firstSpellLevel": 1,
     "studyMode": "divine-random"
   },
-  "abilities": [],
+  "abilities": [
+    {"abilityId": "demo.ability.priest-bless-weapon", "minimumLevel": 35, "governingAttribute": "wisdom", "resourceId": "demo.resource.mana", "resourceCost": 70, "baseFailurePercent": 90, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.priest-evocation", "minimumLevel": 42, "governingAttribute": "wisdom", "resourceId": "demo.resource.mana", "resourceCost": 40, "baseFailurePercent": 80, "minimumFailurePercent": 0}
+  ],
   "startingItems": [
     {
       "itemKindId": "demo.item.mace",

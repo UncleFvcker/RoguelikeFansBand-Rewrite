@@ -1899,8 +1899,10 @@ impl Game {
     }
 
     pub(super) fn player_melee_damage_percent(&self) -> u16 {
-        self.character_definitions()
-            .map_or(100, |(_, race, _, _)| race.melee_damage_percent)
+        self.character_definitions().map_or(100, |(_, race, _, _)| {
+            (u32::from(race.melee_damage_percent) * if self.player_is_priest() { 94 } else { 100 }
+                / 100) as u16
+        })
     }
 
     pub(super) fn scale_player_melee_damage(&self, damage: i32) -> i32 {
@@ -2066,21 +2068,6 @@ impl Game {
                 .item(&item.kind_id)
                 .and_then(|item_definition| {
                     item_definition.melee_profile.as_ref().map(|profile| {
-                        let (priest_class, good_realm) = self.character_definitions().map_or(
-                            (false, false),
-                            |(build, _, class, _)| {
-                                (
-                                    class.tags.iter().any(|tag| tag == "priest"),
-                                    [
-                                        build.first_realm_id.as_deref(),
-                                        build.second_realm_id.as_deref(),
-                                    ]
-                                    .into_iter()
-                                    .flatten()
-                                    .any(|realm| matches!(realm, "life" | "crusade")),
-                                )
-                            },
-                        );
                         (
                             item.id.clone(),
                             item.kind_id.clone(),
@@ -2095,12 +2082,7 @@ impl Game {
                                     15,
                                 ),
                             item.melee_damage_dice(),
-                            good_priest_weapon_penalty(
-                                priest_class,
-                                good_realm,
-                                item_definition.rfb_base_kind.map(|kind| kind.tval),
-                                self.item_has_weapon_trait(item, WeaponTraitDto::Blessed),
-                            ),
+                            self.priest_weapon_is_unblessed_blade(item),
                         )
                     })
                 })

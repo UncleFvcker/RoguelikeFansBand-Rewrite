@@ -77,6 +77,7 @@ impl Game {
                     knowledge.appraised = false;
                     knowledge.feeling = None;
                     knowledge.known_affix_ids.clear();
+                    knowledge.known_blessed = false;
                 }
                 if self.player_is_berserker()
                     || self.player_is_duelist()
@@ -545,6 +546,17 @@ impl Game {
         }
     }
 
+    pub(super) fn known_item_blessed(&self, item: &ItemInstance) -> bool {
+        self.item_property_knowledge
+            .get(&item.id)
+            .is_some_and(|knowledge| knowledge.known_blessed)
+            || (self.item_base_properties_known(item)
+                && self.item_has_weapon_trait(
+                    &self.visible_item_combat_state(item),
+                    rfb_protocol::WeaponTraitDto::Blessed,
+                ))
+    }
+
     fn visible_item_combat_state(&self, item: &ItemInstance) -> ItemInstance {
         let mut visible = item.clone();
         if self.item_identification(item) != ItemIdentificationDto::Identified {
@@ -553,6 +565,11 @@ impl Game {
             visible.intrinsic_melee_damage_dice = None;
             visible.intrinsic_weapon_traits.clear();
             let known = self.item_property_knowledge.get(&item.id);
+            if known.is_some_and(|knowledge| knowledge.known_blessed) {
+                visible
+                    .intrinsic_weapon_traits
+                    .insert(rfb_protocol::WeaponTraitDto::Blessed);
+            }
             visible
                 .affix_ids
                 .retain(|id| known.is_some_and(|knowledge| knowledge.known_affix_ids.contains(id)));

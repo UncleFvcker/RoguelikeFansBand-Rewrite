@@ -143,6 +143,27 @@
 
 当前conditionScopes没有Priest专属 `deferred-unavailable-build` 条目；现有 `implemented-current-builds` 的范围仍是70个已开放入口。新增Priest时扩展真实覆盖，不将不存在的豁免“直接关闭”。Mauler/Bard/Disciple等无关未开放身份依赖保留。第五步准备证据、第六步与普通入口一起登记并由工具重生成；每个Build的共同依据可复用，但其first/second身份和合法领域必须明确。
 
+### 第五步准备记录（代码已写，全部待第七步运行）
+
+以下后续记录对应同一来源提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。测试从正式Class枚举24个Build并断言数量；每个真实身份都执行下列共同用例，不把怪物掉落主题等同玩家Class。正式审计输入/报告尚未将牧师标为implemented。
+
+| 第一领域 | 完整Build ID（每项均关联下表五类） |
+| --- | --- |
+| life | `demo.build.priest-life-sorcery`、`demo.build.priest-life-nature`、`demo.build.priest-life-arcane`、`demo.build.priest-life-craft`、`demo.build.priest-life-crusade`、`demo.build.priest-life-armageddon` |
+| crusade | `demo.build.priest-crusade-life`、`demo.build.priest-crusade-sorcery`、`demo.build.priest-crusade-nature`、`demo.build.priest-crusade-arcane`、`demo.build.priest-crusade-craft`、`demo.build.priest-crusade-armageddon` |
+| death | `demo.build.priest-death-sorcery`、`demo.build.priest-death-nature`、`demo.build.priest-death-arcane`、`demo.build.priest-death-craft`、`demo.build.priest-death-daemon`、`demo.build.priest-death-armageddon` |
+| daemon | `demo.build.priest-daemon-sorcery`、`demo.build.priest-daemon-nature`、`demo.build.priest-daemon-death`、`demo.build.priest-daemon-arcane`、`demo.build.priest-daemon-craft`、`demo.build.priest-daemon-armageddon` |
+
+| area ID | 已准备的真实消费者与用例 |
+| --- | --- |
+| `base-allocation-tailored` | [allocation.rs](../crates/rfb-core/src/game/loot/allocation.rs)的`ranger_and_priest_tailored_books_follow_current_realms_without_extra_preference_draws`覆盖全部24身份的钝器/刃器/弓/装置候选、当前高阶书发现数、类别RNG及改换后实际行选择/保存；[items.rs](../crates/rfb-core/src/game/tests/items.rs)的`all_priest_builds_generate_tailored_hafted_weapons_equip_and_resume_generation`实际生成、拾取、装备并保存后继续生成。善恶祝福知识边界由[mogaminator.rs](../crates/rfb-core/src/game/mogaminator.rs)专项覆盖 |
+| `ego-negative` | 全部24身份扩展[scheduling/tests.rs](../crates/rfb-core/src/game/random_artifact/scheduling/tests.rs)的`random_artifact_negative_power_reaches_a_cursed_equippable_instance`，实际负向生成、装备/诅咒拒绝和保存续演；兽人营地奖励实际物化slaying Ego并装备。既有主题、Tomte槽位与坏运算法沿公共测试，无新增牧师主题副本 |
+| `random-artifact` | 全部24身份扩展`random_artifact_save_preserves_rejected_names_and_continued_generation`及[items.rs](../crates/rfb-core/src/game/tests/items.rs)的`artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name`，覆盖自然/主题、名称排除与后续RNG、背包/已装备真实卷轴；[random_artifact/tests.rs](../crates/rfb-core/src/game/random_artifact/tests.rs)的职业bias边界用例新增善恶Priestly/30，源PriestEvil怪物主题仍为Necromantic |
+| `fixed-artifact-reward` | [priest/generation.rs](../crates/rfb-core/src/game/tests/priest/generation.rs)的全24身份盗贼/兽人营地领取和保存；四主领域旧城堡出生1:4、领取前推进RNG不重抽、两种实物装备/晶球激活、唯一性、重复替代、满背包原子性及重复领取拒绝 |
+| `use-save` | 上述全24身份生成/装备/保存实际链路；[priest/generation.rs](../crates/rfb-core/src/game/tests/priest/generation.rs)的两寺庙全24身份Owner、实际治疗/恢复/净化突变费用及读档，领域改换后真实铭刻/服务资格；[priest/powers.rs](../crates/rfb-core/src/game/tests/priest/powers.rs)补祝福知识、费用和驱散传送/保存。领域间不同战斗行为按善恶代表及四主领域资格覆盖 |
+
+第四/五步补充：`project_hack`（`spells2.c:1850–1880`）要求LOS及projectable，并不要求看见怪物；驱散三阶段按此筛选，RES_ALL免伤和提前跳过恐惧，放逐沿既有唯一/抗传送规则。装备仍沿公共“穿戴即鉴定”适配；祝福动作本身只揭示Blessed，不额外鉴定其他词缀。部分知识新增保存字段，失忆/平凡化清除，伪造无实际祝福的记录拒绝载入。源神器139/334成功率分支已按正式source metadata索引接入，但两身份未导入，因此没有其实际使用验收。
+
 ## 8. 适配、排除项与后续验证
 
 **沿用的公共适配：** 当前生命/经验/基础属性模型，统一背包的感知抽样、离散恢复/回合能量，现有技能/双持/骑乘和法术目标模型，任务类别分配与持久选择。没有完整源武术、疲劳、全部怪物身体/伪职业或全部神器身份；`monspell.c:5002–5016`的Priest身体治疗费用75%只属于怪物身体体系，不给玩家所有治疗减耗25%。

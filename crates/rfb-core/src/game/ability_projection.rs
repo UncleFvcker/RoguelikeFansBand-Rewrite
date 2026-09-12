@@ -473,6 +473,11 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
         AbilityEffectDefinition::DemonSummoning => AbilityEffectSpecDto::DemonSummoning,
         AbilityEffectDefinition::AngelSummoning => AbilityEffectSpecDto::AngelSummoning,
         AbilityEffectDefinition::BanishEvil => AbilityEffectSpecDto::BanishEvil { power: 0 },
+        AbilityEffectDefinition::Evocation => AbilityEffectSpecDto::Evocation {
+            damage: 0,
+            power: 0,
+        },
+        AbilityEffectDefinition::BlessWeapon => AbilityEffectSpecDto::BlessWeapon,
         AbilityEffectDefinition::WrathOfGod { damage } => AbilityEffectSpecDto::WrathOfGod {
             damage: damage.unwrap_or(0),
             radius: 2,
@@ -943,6 +948,15 @@ pub(super) fn player_ability_effect_spec_dto(
         ability.spell_power_bonus,
     );
     match &mut spec {
+        AbilityEffectSpecDto::Evocation { damage, power } => {
+            *power = spell_power_value(u64::from(level) * 4, ability.spell_power_bonus)
+                .min(u64::from(u16::MAX)) as u16;
+            *damage = spell_power_value(
+                u64::from(level) * 4 + u64::from(spell_damage_bonus),
+                ability.spell_power_bonus,
+            )
+            .min(u64::from(u16::MAX)) as u16;
+        }
         AbilityEffectSpecDto::ClearMind { amount } => {
             *amount = super::player_abilities::clear_mind_recovery_amount(level);
         }

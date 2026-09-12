@@ -1,21 +1,23 @@
 # 状态快照
 
-核对日期：2026-09-12。集成基线包含种族职业 `edfcac5fb`、法术道具 `886d8da89` 和地牢城镇 `1ef1b7261`，合入游侠、A1–A10 神器与金字塔土丘；随后接入牧师第二步内容/成长与第三步双领域代码，尚未编译验收。本页区分当前代码/配置与各批注明范围的验收证据。
+核对日期：2026-09-12。集成基线包含种族职业 `edfcac5fb`、法术道具 `886d8da89` 和地牢城镇 `1ef1b7261`，合入游侠、A1–A10 神器与金字塔土丘；随后接入牧师第二至第五步代码，尚未编译验收。本页区分当前代码/配置与各批注明范围的验收证据。
 
 ## 版本与源内容
 
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.253 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | 125 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload / 容器 | 14 / 20 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 源1.428.0；lock仍为1.427.0，待统一编译后重生成 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 协议 | 1.254（生成绑定待第七步同步） | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | 126 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload / 容器 | 14 / 21 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
+| 内容包 | 源1.429.0；lock仍为1.427.0，待统一编译后重生成 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v326，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 12 个 Class、101 个 Build、57 个 Race、36 本能力书、1,903 个 ability 文件、469 个 item、1,408 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、64 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 12 个 Class、101 个 Build、57 个 Race、36 本能力书、1,905 个 ability 文件、469 个 item、1,408 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、64 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
-牧师已完成[计划](priest-class-plan.md)第一步来源审计及第二、三步代码：24个善恶双领域Build、九领域288项参数、出生/成长、美德/感知/负重已接入；出生、改换和保存共用领域资格，复用现有双领域历史、随机学习支出、主副1600/1400练习、遗忘恢复与96历史容量校验。副领域失败率增加5，确认改换后立即随机学习；无候选仍保留改换。共享WIS阵营惩罚上限按源修正为10，影响牧师及游侠，法师保持5。普通创角仍开放此前70个Build；牧师尚未开放，两项职业能力、刃器完整规则及生成/设施仍在后续步骤。按用户要求，全部职业步骤结束后统一编译测试；新增回归用例尚未运行。内容参数及保存/协议格式在第三步没有变化；现有内容工具无法读取合并基线的新神器定义，旧lock保留为未验收基线，最终重新构建工具后必须同步，不能作为当前源内容可加载的证明。
+牧师已完成[计划](priest-class-plan.md)第一步来源审计及第二至第五步代码：24个善恶双领域Build、288项参数、出生/成长、美德/感知/负重、随机学习/改换/保存已接入。善恶刃器熟练度上限、善良每手战斗/祈祷惩罚、94%普通与天赋近战倍率，以及35级祝福武器、42级驱散敕令和MP→HP费用已实现。祝福保存部分知识与折扣；驱散按视线/弹道处理伤害、恐吓和真实传送。Tailored/已知祝福偏好、卷轴Priestly/30、旧城堡1:4及重复替代、盗贼/兽人营地奖励、两寺庙Owner和改换后的书本/铭刻/设施消费者已接入。24个Build的五类生成记录已准备用例映射，正式登记随第六步入口开放完成。普通创角仍为70个Build，牧师尚未开放。
+
+本批只做代码、内容、文档和静态核对；按用户要求，第七步统一编译测试，新增及扩展回归用例均尚未运行。协议/保存新增部分祝福知识和两种效果，源常量已更新；Schema、TypeScript绑定、内容lock与全局契约仍待同步检查，fixture未刷新。现有内容工具无法读取合并基线的新神器定义，旧lock不能证明当前源内容可加载。共享回归包括WIS阵营惩罚上限10对游侠的影响，以及神圣干涉RES_ALL恐惧过滤。完整范围和缺失源神器139/334见[来源审计](priest-source-audit.md)。
 
 A1–A10 新增三十八件固定神器与五种底材；连同游侠两把弓与阿蒙专属神器，当前固定神器映射为 86/392。A10 的 Greater Hell-Beast 192 专属奖励保留零稀有度与已生成时跳过的源规则。法术道具方向的 235 项核心、36 项内容、39 项本地化、66 构筑审计与 8 项工具测试、相关 Clippy 和 26 条未刷新契约为该批证据；本次合并后的数量已由 `rfb-contentc inspect-source` 核对，集成检查见下文。范围与保留缺口见[神器计划](artifact-import-plan.md#a10-统一验证结果)：145／322 仅当前身份普通分支，萨鲁曼额外掉落、未开放身份／领域／地点消费者仍保留。没有新增自然练级、桌面或 Android 验收。
 

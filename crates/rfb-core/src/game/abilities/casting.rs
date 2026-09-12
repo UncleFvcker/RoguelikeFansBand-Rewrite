@@ -96,6 +96,13 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<Option<Position>, CoreError> {
         let ability = self.content.ability(ability_id).cloned();
+        if !self.class_power_matches_realm(ability_id) {
+            events.push(DomainEvent::AbilityCastUnavailable {
+                ability_id: ability_id.to_owned(),
+                reason: "realm-unavailable".to_owned(),
+            });
+            return Ok(None);
+        }
         if self.player_has_status_kind(STATUS_CONFUSION)
             && ability.as_ref().is_none_or(|ability| {
                 !ability

@@ -9678,6 +9678,10 @@ item-demo-amun-name = 阿蒙的匕首
 item-demo-amun-description = 一把古老而平衡感极佳的钢制剑刃，金色的剑柄上有着美丽的装饰，曾由永生者阿蒙持有。尽管年代久远，这把匕首依然闪亮且锋利如剃刀。
 
 class-demo-priest-name = 牧师
+ability-demo-priest-bless-weapon-name = 祝福武器
+ability-demo-priest-bless-weapon-description = 祝福背包、装备或脚下的一把武器。可能解除诅咒；邪恶武器抵抗时会降低附魔。成功祝福可免除善良牧师的刃器惩罚。
+ability-demo-priest-evocation-name = 驱散敕令
+ability-demo-priest-evocation-description = 依次伤害、恐吓并传送视线内的所有怪物。
 class-demo-priest-description = 牧师是致力于侍奉更高力量的角色。他们为了侍奉神明而探索地下城。他们对魔法装置相当熟悉，因为他们认为这些装置是神明干预自然秩序的焦点。
 
     牧师分为两种：善良和邪恶。如果牧师选择生命或圣战作为他们的第一领域，他们将走上善良的道路；因此，他们不能选择邪恶领域作为他们的第二领域。善良的牧师厌恶流血，所以不习惯使用带刃的武器，尽管他们最终会学会祝福这些武器，从而在不干扰祈祷的情况下使用它们。然而，如果牧师选择死亡或恶魔作为他们的第一领域，他们将侍奉邪神；邪恶的牧师实际上喜欢流血，并且不受这种武器限制。当然，邪恶的牧师厌恶善良的事物，无法选择生命或圣战作为他们的第二领域。

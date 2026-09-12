@@ -126,6 +126,7 @@ impl Game {
                             knowledge.appraised = false;
                             knowledge.identified = false;
                             knowledge.known_affix_ids.clear();
+                            knowledge.known_blessed = false;
                         }
                         if self.player_is_berserker() {
                             let item_ids = self
@@ -584,6 +585,7 @@ mod tests {
         game.item_property_knowledge.insert(
             game.items[0].id.clone(),
             inventory::ItemPropertyKnowledgeState {
+                known_blessed: false,
                 discovered: true,
                 appraised: true,
                 identified: true,

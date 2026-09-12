@@ -680,6 +680,7 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::DemonSummoning
                 | AbilityEffectDefinition::AngelSummoning
                 | AbilityEffectDefinition::BanishEvil
+                | AbilityEffectDefinition::Evocation
                 | AbilityEffectDefinition::DivineIntervention
                 | AbilityEffectDefinition::Crusade => true,
                 AbilityEffectDefinition::WrathOfGod { damage } => {
@@ -1064,6 +1065,7 @@ pub(super) fn validate_abilities(
                     (1..=10_000).contains(duration_base)
                 }
                 AbilityEffectDefinition::CraftItem
+                | AbilityEffectDefinition::BlessWeapon
                 | AbilityEffectDefinition::PolishShield
                 | AbilityEffectDefinition::Mundanity
                 | AbilityEffectDefinition::ElementalBrand
@@ -1324,6 +1326,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::BrandWeapon { .. }
             | AbilityEffectDefinition::ProtectFromCorrosion
             | AbilityEffectDefinition::CraftEnchant { .. }
+            | AbilityEffectDefinition::BlessWeapon
             | AbilityEffectDefinition::CraftItem
             | AbilityEffectDefinition::PolishShield
             | AbilityEffectDefinition::Mundanity
@@ -1367,6 +1370,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::DemonSummoning
             | AbilityEffectDefinition::AngelSummoning
             | AbilityEffectDefinition::BanishEvil
+            | AbilityEffectDefinition::Evocation
             | AbilityEffectDefinition::DivineIntervention
             | AbilityEffectDefinition::Crusade
             | AbilityEffectDefinition::AnimateDead { .. } => {

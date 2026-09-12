@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.253";
+pub const PROTOCOL_VERSION: &str = "1.254";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 20;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 21;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -1824,6 +1824,11 @@ pub enum AbilityEffectSpecDto {
     CraftEnchant {
         maximum: u16,
         increment: u16,
+    },
+    BlessWeapon,
+    Evocation {
+        damage: u16,
+        power: u16,
     },
     CraftItem,
     PolishShield,
@@ -6041,6 +6046,8 @@ pub struct ItemPropertyKnowledgeSaveDto {
     pub feeling: Option<ItemFeelingDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub known_affix_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub known_blessed: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
