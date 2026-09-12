@@ -12,6 +12,116 @@ const TORCH_KIND_ID: &str = "demo.item.wooden-torch";
 const LANTERN_KIND_ID: &str = "demo.item.brass-lantern";
 const OIL_KIND_ID: &str = "demo.item.flask-of-oil";
 
+#[test]
+fn c2_gae_bulg_ball_uses_los_falloff_and_saved_glow_except_in_darkness() {
+    for darkness in [false, true] {
+        let mut game = if darkness {
+            dark_cave_game()
+        } else {
+            let mut game = Game::new_with_build(486, "demo.build.warrior").unwrap();
+            descend_one_floor(&mut game);
+            game
+        };
+        choose_human_talent_if_pending(&mut game);
+        clear_monsters(&mut game);
+        game.items.clear();
+        game.player.position = Position { x: 10, y: 10 };
+        for y in 5..=15 {
+            for x in 9..=20 {
+                replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+            }
+        }
+        game.glow.fill(false);
+        let context = LootContext {
+            table_id: "demo.loot-table.base-items".into(),
+            floor_id: "test.c2-light".into(),
+            depth: 75,
+            source: LootSource::ItemUse {
+                item_id: "test.c2-light".into(),
+            },
+        };
+        let draft = game.fixed_item_draft(&context, "demo.item.gae-bulg".into());
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Inventory)
+            .unwrap();
+        let id = item.id.clone();
+        game.items.push(item);
+        game.equip_inventory_item(&id, Some("right-hand")).unwrap();
+        // The incoming ball stops at the first monster. Its light expands
+        // through a transparent wall, but not the opaque wall to the north.
+        replace_terrain(
+            &mut game,
+            Position { x: 15, y: 10 },
+            "demo.terrain.glass-wall",
+        );
+        replace_terrain(&mut game, Position { x: 14, y: 9 }, "demo.terrain.wall");
+        for (name, position) in [
+            ("center", Position { x: 14, y: 10 }),
+            ("edge", Position { x: 18, y: 10 }),
+            ("outside", Position { x: 19, y: 10 }),
+            ("blocked", Position { x: 14, y: 8 }),
+        ] {
+            game.push_generated_actor(
+                format!("test.c2-{name}"),
+                "demo.actor.great-hell-wyrm",
+                position,
+            );
+        }
+        let hp_before = game
+            .entities
+            .iter()
+            .map(|actor| (actor.id.clone(), actor.hp))
+            .collect::<BTreeMap<_, _>>();
+        let seed = (0..1000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+            .unwrap();
+        game.rng = RfbRng::seeded(seed);
+        game.reveal_current_visibility();
+        let mut restored =
+            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let activate = |g: &mut Game| {
+            let mut events = Vec::new();
+            g.use_inventory_item(
+                &id,
+                Some(&TargetSelection::Direction {
+                    direction: Direction::East,
+                }),
+                None,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
+            events
+        };
+        let events = activate(&mut game);
+        assert_eq!(activate(&mut restored), events);
+        assert!(events.iter().any(|event| matches!(event, DomainEvent::AbilityAreaDamage { resolution, .. } if resolution.radius == 4 && resolution.base_raw_damage == 200 && resolution.center == (Position { x: 14, y: 10 }))));
+        for (name, damage) in [
+            ("center", 200),
+            ("edge", 40),
+            ("outside", 0),
+            ("blocked", 0),
+        ] {
+            let actor = game
+                .entities
+                .iter()
+                .find(|actor| actor.id == format!("test.c2-{name}"))
+                .unwrap();
+            assert_eq!(hp_before[&actor.id] - actor.hp, damage, "{darkness}/{name}");
+            if matches!(name, "center" | "edge") {
+                assert_eq!(game.glow[game.index(actor.position).unwrap()], !darkness);
+            } else {
+                assert!(!game.glow[game.index(actor.position).unwrap()]);
+            }
+        }
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.rng, game.rng);
+        let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        assert_eq!(restored.glow, game.glow);
+    }
+}
+
 fn dark_cave_game() -> Game {
     static CONTENT: std::sync::OnceLock<Arc<ContentCatalog>> = std::sync::OnceLock::new();
     let content = CONTENT.get_or_init(|| {

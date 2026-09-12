@@ -55,6 +55,16 @@ impl Game {
         damage_type: DamageType,
         changed: &mut BTreeSet<Position>,
     ) {
+        if damage_type == DamageType::Light && !self.dungeon_has_darkness() {
+            for position in affected_positions {
+                if let Some(index) = self.index(*position)
+                    && !self.glow[index]
+                {
+                    self.glow[index] = true;
+                    changed.insert(*position);
+                }
+            }
+        }
         if damage_type == DamageType::Disintegrate {
             for position in affected_positions.iter().copied().collect::<BTreeSet<_>>() {
                 let Some(index) = self.index(position) else {

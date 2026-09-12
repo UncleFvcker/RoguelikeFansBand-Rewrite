@@ -1,0 +1,64 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.grimtooth",
+  "nameKey": "item-demo-grimtooth-name",
+  "descriptionKey": "item-demo-grimtooth-description",
+  "glyph": "|",
+  "generationLevel": 7,
+  "weightTenthsPound": 12,
+  "baseValue": 25000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 196,
+    "baseItemKindId": "demo.item.dagger",
+    "instant": false,
+    "rarityOneIn": 8
+  },
+  "rfbValue": {
+    "flags": [
+      "BLOWS",
+      "BRAND_POIS",
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SHOW_MODS",
+      "THROWING"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "weaponProficiencyBaseItemId": "demo.item.dagger",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 5,
+    "toHit": 5,
+    "toDamage": 5
+  },
+  "modifiers": {
+    "dexterity": 3
+  },
+  "equipmentBonuses": {
+    "meleeAttacksDeltaPercent": 150
+  },
+  "brands": [
+    "poison"
+  ]
+}

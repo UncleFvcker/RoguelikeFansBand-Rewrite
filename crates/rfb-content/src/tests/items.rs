@@ -1141,6 +1141,7 @@ fn equipment_and_ego_identities_match_source() {
         assert_eq!(
             actual,
             [
+                "demo.item.aeglos",
                 "demo.item.athena",
                 "demo.item.ball-and-chain",
                 "demo.item.broad-spear",
@@ -1149,11 +1150,14 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.diamond-edge",
                 "demo.item.dragonlance",
                 "demo.item.eorlingas",
+                "demo.item.excalipur",
                 "demo.item.falchion",
                 "demo.item.fauchard",
                 "demo.item.flail",
+                "demo.item.gae-bulg",
                 "demo.item.glaive",
                 "demo.item.glamdring",
+                "demo.item.hagen",
                 "demo.item.heavy-lance",
                 "demo.item.lance",
                 "demo.item.long-sword",

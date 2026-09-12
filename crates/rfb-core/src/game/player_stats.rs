@@ -1607,8 +1607,7 @@ impl Game {
     }
 
     pub(super) fn item_throw_profile(&self, item: &ItemInstance) -> Option<ThrowProfileDto> {
-        if self.item_has_rfb_flag(item, "THROWING") {
-            let profile = self.item_melee_profile(item)?;
+        if let Some(profile) = self.item_melee_profile(item) {
             return Some(ThrowProfileDto {
                 range: self.item_throw_parameters(item).0,
                 to_hit: profile.to_hit,
@@ -1645,9 +1644,7 @@ impl Game {
     pub(super) fn item_throw_parameters(&self, item: &ItemInstance) -> (u16, i32) {
         let weight = self.item_instance_weight(item);
         let mighty = self.player_has_mighty_throw();
-        if !self.item_has_rfb_flag(item, "THROWING") {
-            return (throw_range(weight, mighty), if mighty { 200 } else { 100 });
-        }
+        let throwing = self.item_has_rfb_flag(item, "THROWING");
         // RFB py_throw.c: THROWING adds 100 to the multiplier and halves the
         // effective weight for range; mighty throw adds another 100.
         const STRENGTH_DAMAGE: [i32; 38] = [
@@ -1659,11 +1656,55 @@ impl Game {
                 .index(AttributeKind::Strength)
                 .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP),
         );
-        let multiplier = (200 + i32::from(mighty) * 100) * (100 + STRENGTH_DAMAGE[index]) / 100;
+        let multiplier = (100 + i32::from(throwing) * 100 + i32::from(mighty) * 100)
+            * (100 + STRENGTH_DAMAGE[index])
+            / 100;
         let limit = 10 + 2 * (multiplier - 100) / 100;
-        let range =
-            (i32::from(RFB_STRENGTH_BLOW[index]) + 20) * limit / i32::from(weight.max(10) / 2);
+        let divisor = weight.max(10) / if throwing { 2 } else { 1 };
+        let range = (i32::from(RFB_STRENGTH_BLOW[index]) + 20) * limit / i32::from(divisor);
         (range.min(limit).clamp(5, 18) as u16, multiplier)
+    }
+
+    pub(super) fn player_throw_to_hit_bonus(&self) -> i32 {
+        // xtra1.c shooter_info.to_h: attributes and nonweapon equipment, not
+        // the equipped bow's enchantment or the shooting skill rating.
+        const DEX: [i32; 38] = [
+            -3, -2, -2, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 6, 7,
+            8, 9, 9, 10, 11, 12, 13, 14, 15, 15, 16,
+        ];
+        const STR: [i32; 38] = [
+            -3, -2, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7,
+            8, 9, 10, 11, 12, 13, 14, 15, 15, 16,
+        ];
+        let attributes = self.effective_player_attributes();
+        let index = |kind| {
+            usize::from(
+                attributes
+                    .index(kind)
+                    .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP),
+            )
+        };
+        let equipment = self.items.iter()
+            .filter(|item| matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool")))
+            .map(|item| self.armor_combat_enchantments(item, true).0).sum::<i32>();
+        let hold = i32::from(crate::stats::strength_hold_pounds(attributes.strength));
+        let heavy_bow = self
+            .items
+            .iter()
+            .find(|item| {
+                matches!(&item.location,
+            ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) == Some("launcher"))
+            })
+            .map_or(0, |item| {
+                2 * (hold - i32::from(self.item_instance_weight(item) / 10)).min(0)
+            });
+        DEX[index(AttributeKind::Dexterity)]
+            + STR[index(AttributeKind::Strength)]
+            + equipment
+            + heavy_bow
+            + i32::from(self.player_has_status_kind("rfb.status.blessed")) * 10
+            + i32::from(self.player_has_status_kind("rfb.status.hero")) * 12
+            - i32::from(self.player_has_status_kind(STATUS_BERSERK)) * 12
     }
 
     pub(super) fn body_slot_type(&self, slot_id: &str) -> Option<&str> {
@@ -3548,15 +3589,6 @@ impl Game {
             if status.kind_id == STATUS_STUN {
                 pipeline.add_with_origin(
                     StatKind::MeleeSkill,
-                    StatLayer::Status,
-                    &status.kind_id,
-                    status.source_id.clone(),
-                    i32::from(status.intensity)
-                        .saturating_mul(10)
-                        .saturating_neg(),
-                );
-                pipeline.add_with_origin(
-                    StatKind::ThrowingSkill,
                     StatLayer::Status,
                     &status.kind_id,
                     status.source_id.clone(),

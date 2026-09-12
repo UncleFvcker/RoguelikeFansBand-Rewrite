@@ -611,7 +611,9 @@ fn random_artifact_throwing_flag_changes_real_throw_range_damage_and_instance_di
         &mut Vec::new(),
     )
     .unwrap();
-    assert!(events.iter().any(|event|matches!(event,DomainEvent::ItemThrowHit {damage,..} if damage.raw==2*throwing.1/100)),"{events:?}");
+    // Seed85 now reaches the source 150% throwing critical: 2d1 becomes3
+    // before applying the object's THROWING multiplier.
+    assert!(events.iter().any(|event|matches!(event,DomainEvent::ItemThrowHit {damage,..} if damage.raw==3*throwing.1/100)),"{events:?}");
 }
 
 fn give_activation(game: &mut Game, token: &str) {

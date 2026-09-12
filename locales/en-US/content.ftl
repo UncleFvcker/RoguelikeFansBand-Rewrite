@@ -9796,3 +9796,27 @@ item-demo-totila-description = 这把连枷，当你在周围挥舞它时，它�
 
 item-demo-tuber-name = Long Bow of Tuber
 item-demo-tuber-description = 百发百中的图伯——英雄布博的儿子——的弓。它充满了曾经囚禁过他的冰霜精灵的力量。
+
+item-demo-grimtooth-name = 『冷酷之牙』
+item-demo-grimtooth-description = 『冷酷之牙』
+
+item-demo-rilia-name = 蕾莉亚的
+item-demo-rilia-description = 一把闪烁着无味毒液的大型细刺匕首，佩戴者似乎对其出奇地免疫。
+
+item-demo-aeglos-name = 『艾格洛斯』
+item-demo-aeglos-description = 吉尔-加拉德的强大长矛，在精灵的歌谣中被称为“雪点”，索伦所有邪恶的腐化物在它面前都如同螳臂当车。
+
+item-demo-excalipur-name = 『伪·王者之剑』
+item-demo-excalipur-description = 『伪·王者之剑』
+
+item-demo-caine-name = 该隐的
+item-demo-caine-description = 该隐的
+
+item-demo-fiona-name = 菲奥娜的
+item-demo-fiona-description = 菲奥娜的
+
+item-demo-hagen-name = 哈根的
+item-demo-hagen-description = 哈根的
+
+item-demo-gae-bulg-name = 『盖伯尔加之矛』
+item-demo-gae-bulg-description = 『盖伯尔加之矛』

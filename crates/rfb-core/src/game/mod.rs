@@ -238,9 +238,6 @@ const BUILT_IN_CONTENT_BYTES: &[u8] =
 pub const STATE_HASH_SCHEMA_VERSION: u16 = 126;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
-const BASE_THROW_RANGE_BUDGET: u16 = 50;
-const MIN_THROW_RANGE: u16 = 2;
-const MAX_THROW_RANGE: u16 = 10;
 const MAX_REST_TURNS: u16 = 9_999;
 const NATURAL_HP_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const NATURAL_HP_REGENERATION_FACTOR: u64 = 197;
@@ -4834,20 +4831,6 @@ fn merge_equipment_bonuses(total: &mut EquipmentBonuses, addition: &EquipmentBon
     total.digging_skill = total.digging_skill.saturating_add(addition.digging_skill);
     total.infravision = total.infravision.saturating_add(addition.infravision);
     total.light_radius = total.light_radius.saturating_add(addition.light_radius);
-}
-
-fn throw_range(weight_tenths_pound: u16, mighty: bool) -> u16 {
-    let budget = if mighty {
-        BASE_THROW_RANGE_BUDGET.saturating_mul(6) / 5
-    } else {
-        BASE_THROW_RANGE_BUDGET
-    };
-    let maximum = if mighty {
-        MAX_THROW_RANGE.saturating_add(2)
-    } else {
-        MAX_THROW_RANGE
-    };
-    (budget / weight_tenths_pound.max(1)).clamp(MIN_THROW_RANGE, maximum)
 }
 
 fn item_target_spec() -> TargetSpecDto {

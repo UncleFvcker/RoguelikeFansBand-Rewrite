@@ -1,0 +1,117 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.aeglos",
+  "nameKey": "item-demo-aeglos-name",
+  "descriptionKey": "item-demo-aeglos-description",
+  "glyph": "/",
+  "generationLevel": 35,
+  "weightTenthsPound": 80,
+  "baseValue": 140000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 187,
+    "baseItemKindId": "demo.item.spear",
+    "instant": false,
+    "rarityOneIn": 45
+  },
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "BRAND_COLD",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_COLD",
+      "RIDING",
+      "SHOW_MODS",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "SLOW_DIGEST",
+      "THROWING",
+      "WIS"
+    ],
+    "pval": 4,
+    "toArmor": 10
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "weaponProficiencyBaseItemId": "demo.item.spear",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 8,
+    "toHit": 15,
+    "toDamage": 25
+  },
+  "modifiers": {
+    "wisdom": 4,
+    "defense": 10
+  },
+  "resistances": {
+    "cold": "resistant"
+  },
+  "passives": [
+    "slow-digestion",
+    "blessed"
+  ],
+  "brands": [
+    "cold"
+  ],
+  "slays": {
+    "troll": "slay",
+    "orc": "slay"
+  },
+  "ridingWeaponKind": "compatible",
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.aeglos",
+        "nameKey": "device-activation-e5-ball-cold-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 15,
+        "rfbValue": 3000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.aeglos"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 2000
+    }
+  }
+}
