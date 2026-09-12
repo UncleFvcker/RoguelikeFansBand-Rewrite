@@ -934,11 +934,11 @@ impl Game {
                 } else {
                     spawn.position
                 };
-                items.extend(self.generate_loot_instances(
+                items.extend(self.generate_inline_loot(
                     &LootContext {
                         table_id: spawn.loot_table_id.clone(),
                         floor_id: definition.id.clone(),
-                        depth: definition.depth,
+                        depth: spawn.generation_depth.unwrap_or(definition.depth),
                         source: LootSource::FloorRoom {
                             room_id: "inline-map".to_owned(),
                             spawn_id: spawn.id.clone(),
@@ -948,15 +948,16 @@ impl Game {
                         x: i32::from(position.x),
                         y: i32::from(position.y),
                     }),
+                    spawn.forced_ego.as_ref(),
                 )?);
             }
         }
         for spawn in &inline_map.loot_spawns {
-            items.extend(self.generate_loot_instances(
+            items.extend(self.generate_inline_loot(
                 &LootContext {
                     table_id: spawn.loot_table_id.clone(),
                     floor_id: definition.id.clone(),
-                    depth: definition.depth,
+                    depth: spawn.generation_depth.unwrap_or(definition.depth),
                     source: LootSource::FloorRoom {
                         room_id: "inline-map".to_owned(),
                         spawn_id: spawn.id.clone(),
@@ -966,6 +967,7 @@ impl Game {
                     x: i32::from(spawn.position.x),
                     y: i32::from(spawn.position.y),
                 }),
+                spawn.forced_ego.as_ref(),
             )?);
         }
 
@@ -978,7 +980,13 @@ impl Game {
             terrain,
             glow: vec![false; usize::from(width) * usize::from(height)],
             daylight_suppressed: vec![false; usize::from(width) * usize::from(height)],
-            vault_cells: vec![false; usize::from(width) * usize::from(height)],
+            vault_cells: {
+                let mut cells = vec![false; usize::from(width) * usize::from(height)];
+                for position in &inline_map.vault_positions {
+                    cells[usize::from(position.y) * usize::from(width) + usize::from(position.x)] = true;
+                }
+                cells
+            },
             player_position: Position {
                 x: i32::from(inline_map.player_position.x),
                 y: i32::from(inline_map.player_position.y),

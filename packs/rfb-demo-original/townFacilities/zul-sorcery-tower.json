@@ -18,5 +18,15 @@
   "identifyAllItemsCost": {
     "ownerCost": 100,
     "otherCost": 800
+  },
+  "taskIds": [
+    "demo.task.zul-eddies"
+  ],
+  "townTeleport": {
+    "requiredCompletedTaskId": "demo.task.zul-eddies",
+    "price": {
+      "ownerCost": 200,
+      "otherCost": 500
+    }
   }
 }

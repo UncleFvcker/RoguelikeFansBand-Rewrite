@@ -148,6 +148,7 @@ pub(super) struct WorldValidationRefs<'a> {
     pub(super) ability_books: &'a [AbilityBookDefinition],
     pub(super) builds: &'a [CharacterBuildDefinition],
     pub(super) affix_ids: &'a BTreeSet<String>,
+    pub(super) affixes: &'a [AffixDefinition],
     pub(super) encounter_tables: &'a BTreeMap<String, EncounterTableDefinition>,
     pub(super) loot_table_ids: &'a BTreeSet<String>,
     pub(super) loot_tables: &'a BTreeMap<String, LootTableDefinition>,
@@ -575,6 +576,7 @@ pub(super) fn validate_world(
         ability_books,
         builds,
         affix_ids,
+        affixes,
         encounter_tables,
         loot_table_ids,
         loot_tables,
@@ -2269,6 +2271,10 @@ pub(super) fn validate_world(
                 }
             }
 
+            // Source room templates can put a ground object under a fixed monster.
+            // Keep actor overlap checks and object overlap checks independently.
+            let actor_positions = occupied;
+            let mut occupied = BTreeSet::from([inline_map.player_position]);
             inline_map
                 .item_spawns
                 .sort_by(|left, right| left.instance_id.cmp(&right.instance_id));
@@ -2323,6 +2329,9 @@ pub(super) fn validate_world(
             } else {
                 &[]
             };
+            for position in &inline_map.vault_positions {
+                validate_position(*position, procedural.width, procedural.height, &procedural.id)?;
+            }
             for spawn in inline_map.loot_spawns.iter().chain(scrambled_loot_spawns) {
                 validate_id(&spawn.id)?;
                 validate_position(
@@ -2341,8 +2350,29 @@ pub(super) fn validate_world(
                     return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
                 }
                 require_reference(loot_table_ids, &spawn.loot_table_id, &procedural.id)?;
+                if spawn.generation_depth == Some(0) || spawn.generation_depth.is_some_and(|depth| depth > 255) {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                if let Some(forced) = &spawn.forced_ego {
+                    require_reference(affix_ids, &forced.affix_id, &procedural.id)?;
+                    let table = &loot_tables[&spawn.loot_table_id];
+                    let affix = affixes.iter().find(|affix| affix.id == forced.affix_id).unwrap();
+                    let bases = table.entries.iter().filter_map(|entry| items.iter().find(|item|
+                        item.id == entry.item_kind_id && item.rfb_base_kind.is_some_and(|base| base.tval == forced.tval)))
+                        .collect::<Vec<_>>();
+                    if !matches!(table.kind_selection, Some(LootKindSelectionDefinition::RfbBase))
+                        || table.rfb_ego_policy != Some(LootRfbEgoPolicyDefinition::WeaponDigger)
+                        || !matches!(forced.tval, 16..=23 | 30..=38)
+                        || bases.is_empty()
+                        || bases.iter().any(|item| !affix_is_compatible_with_item(
+                            affix, item, spawn.generation_depth.unwrap_or(procedural.depth)))
+                    {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                }
             }
 
+            occupied.extend(actor_positions);
             if let Some(formation) = &mut inline_map.monster_formation {
                 formation.candidate_actor_kind_ids.sort();
                 formation.candidate_actor_kind_ids.dedup();
@@ -2648,7 +2678,7 @@ pub(super) fn validate_world(
             let facility = town_facilities
                 .get(facility_id)
                 .ok_or_else(|| ContentError::InvalidTask(task.id.clone()))?;
-            if facility.category != TownFacilityCategory::QuestGiver
+            if facility.category == TownFacilityCategory::Home
                 || !world_town_ids.contains(facility.town_id.as_str())
                 || !facility.task_ids.contains(&task.id)
             {
@@ -2992,9 +3022,19 @@ pub(super) fn validate_world(
         }
     }
     for town_id in &world_town_ids {
+        if town_facilities.values().filter(|facility| facility.town_id == *town_id && facility.town_teleport.is_some()).count() > 1 {
+            return Err(ContentError::InvalidTown((*town_id).to_owned()));
+        }
         for facility in town_facilities.values().filter(|facility| {
-            facility.town_id == *town_id && facility.category == TownFacilityCategory::QuestGiver
+            facility.town_id == *town_id && facility.category != TownFacilityCategory::Home
         }) {
+            if let Some(teleport) = &facility.town_teleport
+                && (!facility.task_ids.contains(&teleport.required_completed_task_id)
+                    || !task_ids.contains(&teleport.required_completed_task_id)
+                )
+            {
+                return Err(ContentError::InvalidTownFacility(facility.id.clone()));
+            }
             if facility.task_ids.iter().any(|task_id| {
                 world
                     .tasks

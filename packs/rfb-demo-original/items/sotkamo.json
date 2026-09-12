@@ -1,0 +1,112 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "glyph": "\\",
+  "equipmentSlot": "weapon",
+  "maxStack": 1,
+  "id": "demo.item.sotkamo",
+  "nameKey": "item-demo-sotkamo-name",
+  "descriptionKey": "item-demo-sotkamo-description",
+  "generationLevel": 60,
+  "weightTenthsPound": 15,
+  "baseValue": 50000,
+  "tags": [
+    "artifact",
+    "equipment",
+    "rfb-compatibility",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 343,
+    "baseItemKindId": "demo.item.baseball-bat",
+    "instant": true,
+    "rarityOneIn": 1
+  },
+  "weaponProficiencyBaseItemId": "demo.item.baseball-bat",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 4,
+    "toHit": 21,
+    "toDamage": 7
+  },
+  "modifiers": {
+    "dexterity": 4,
+    "speed": 4
+  },
+  "passives": [
+    "reflects-bolts",
+    "sustain-dexterity",
+    "regeneration",
+    "hold-life"
+  ],
+  "resistances": {
+    "nexus": "resistant",
+    "time": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "equipmentBonuses": {},
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "FREE_ACT",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INSTA_ART",
+      "QUESTITEM",
+      "REFLECT",
+      "REGEN",
+      "RES_NEXUS",
+      "RES_TIME",
+      "SHOW_MODS",
+      "SPEED",
+      "SUST_DEX"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.sotkamo",
+        "nameKey": "item-activation-demo-sotkamo-name",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "effectProgramId": "demo.effect.hades",
+        "deviceCheckDifficulty": 40,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "rfbValue": 6000
+      }
+    ],
+    "recovery": {
+      "intervalTicks": 750,
+      "energyPerMille": 1000
+    }
+  }
+}

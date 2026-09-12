@@ -148,6 +148,7 @@ pub(super) fn validate_towns_and_shops(
                 .chain(facility.inn_stay_cost)
                 .chain(facility.research_monster_cost)
                 .chain(facility.teleport_level_cost)
+                .chain(facility.town_teleport.as_ref().map(|teleport| teleport.price))
                 .any(|price| price.owner_cost > 999_999_999 || price.other_cost > 999_999_999)
             || facility.legal_name_change_cost == Some(0)
             || facility.service_actions.iter().any(|service| {
@@ -160,7 +161,7 @@ pub(super) fn validate_towns_and_shops(
                         && refs.items.iter().any(|item| item.id == *item_id)
                 })
         });
-        let has_service = facility.casino
+        let has_service = facility.town_teleport.is_some() || facility.casino
             || facility.identify_item_cost.is_some()
             || facility.teleport_level_cost.is_some()
             || facility.research_monster_cost.is_some()
@@ -188,6 +189,7 @@ pub(super) fn validate_towns_and_shops(
                 || facility.research_item_cost.is_some()
                 || facility.research_monster_cost.is_some()
                 || facility.teleport_level_cost.is_some()
+                || facility.town_teleport.is_some()
                 || facility.identify_all_items_cost.is_some()
                 || facility.inn_stay_cost.is_some()
                 || facility.overview_message_key.is_some()
@@ -204,9 +206,8 @@ pub(super) fn validate_towns_and_shops(
             || (facility.category == TownFacilityCategory::Service
                 && (facility.storage_id.is_some()
                     || facility.owner_name_key.is_none()
-                    || !facility.task_ids.is_empty()
                     || facility.bounty_office.is_some()
-                    || !has_service))
+                    || (!has_service && facility.task_ids.is_empty())))
             || (facility.reject_artifact_deposits
                 && facility.category != TownFacilityCategory::Home)
             || (facility.casino && facility.category != TownFacilityCategory::Service)

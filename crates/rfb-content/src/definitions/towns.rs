@@ -53,6 +53,8 @@ pub struct TownFacilityDefinition {
     #[serde(default)]
     pub teleport_level_cost: Option<TownFacilityPrice>,
     #[serde(default)]
+    pub town_teleport: Option<TownFacilityTeleportDefinition>,
+    #[serde(default)]
     pub identify_all_items_cost: Option<TownFacilityPrice>,
     #[serde(default)]
     pub inn_stay_cost: Option<TownFacilityPrice>,
@@ -95,6 +97,14 @@ impl TownFacilityDefinition {
 pub struct TownFacilityPrice {
     pub owner_cost: u32,
     pub other_cost: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TownFacilityTeleportDefinition {
+    pub required_completed_task_id: String,
+    pub price: TownFacilityPrice,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

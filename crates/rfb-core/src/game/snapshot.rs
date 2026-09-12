@@ -1688,6 +1688,7 @@ impl Game {
                     Vec::new()
                 };
                 TaskServiceDto {
+                    inn_travel_destinations: self.facility_town_travel_destinations(&facility.id),
                     casino: facility.casino.then(|| self.casino_dto(&facility.id)),
                     id: facility.id.clone(),
                     name_key: facility.name_key.clone(),

@@ -662,7 +662,7 @@ fn task_service_accessible(game: &Game, facility_id: &str) -> bool {
     let Some(facility) = game.content.town_facility(facility_id) else {
         return false;
     };
-    facility.category == TownFacilityCategory::QuestGiver
+    matches!(facility.category, TownFacilityCategory::QuestGiver | TownFacilityCategory::Service)
         && game.town_facility_accessible(facility_id)
 }
 
@@ -973,7 +973,7 @@ impl Game {
         {
             return Err("reward-unavailable");
         }
-        // q_old_castle's RANDOM27 is a birth-time choice. Use the existing durable
+        // q_old_castle RANDOM27 and q_eddies RANDOM77 are birth-time choices. Use the existing durable
         // selection seed, so intervening commands and failed claims cannot reroll it.
         let fixed_castle_reward = self.build.as_ref().is_some_and(|build| {
             matches!(
@@ -984,8 +984,9 @@ impl Game {
                     | "demo.class.ranger"
             )
         });
-        if fixed_castle_reward
-            && task_id == "demo.task.old-castle"
+        let fixed_task_reward = task_id == "demo.task.zul-eddies"
+            || (fixed_castle_reward && task_id == "demo.task.old-castle");
+        if fixed_task_reward
             && let Some(reward) = task.reward.as_mut()
         {
             let mut selection =
@@ -1046,15 +1047,14 @@ impl Game {
             ItemLocation::Inventory,
             &mut self.rng,
         );
-        if fixed_castle_reward
-            && task_id == "demo.task.old-castle"
+        if fixed_task_reward
             && self.generated_artifact_ids.contains(&reward.kind_id)
         {
             reward = super::random_artifact::materialize_replacement(
                 &self.content,
                 &mut self.rng,
                 &reward,
-                class_id.expect("reward class"),
+                class_id.unwrap_or(""),
                 &mut self.random_artifact_names,
             )
             .expect("validated class reward has an RFB base and random artifact data");

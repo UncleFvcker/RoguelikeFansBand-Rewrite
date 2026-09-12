@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.255";
+pub const PROTOCOL_VERSION: &str = "1.256";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 20;
 
@@ -4737,6 +4737,8 @@ pub struct HomeDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TaskServiceDto {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inn_travel_destinations: Vec<InnTravelDestinationDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub casino: Option<CasinoDto>,
     pub id: String,

@@ -67,7 +67,13 @@ fn zul_towers_project_realm_owners_beastman_members_and_public_prices() {
             let snapshot = game.snapshot();
             let service = snapshot.task_services.iter().find(|service| service.id == id).unwrap();
             assert!(service.player_at_entrance);
-            assert!(service.tasks.is_empty());
+            if id == sorcery_id {
+                assert_eq!(service.tasks.len(), 1);
+                assert_eq!(service.tasks[0].task_id, "demo.task.zul-eddies");
+                assert_eq!(service.tasks[0].status, TaskStatusKindDto::Available);
+            } else {
+                assert!(service.tasks.is_empty());
+            }
             let expected = if realm_owner && id != chaos_id {
                 FacilityMembershipDto::Owner
             } else if chaos_member && id == chaos_id {
@@ -1007,6 +1013,147 @@ fn prepare_thalos_completed_tasks(game: &mut Game, slugs: &[&str]) {
             game.task_states.insert(id, state);
         }
     }
+}
+
+#[test]
+fn zul_eddies_entry_loot_return_reward_and_town_travel_survive_save() {
+    let tower = "demo.town-facility.zul-sorcery-tower";
+    let task = "demo.task.zul-eddies";
+    let mut game = town_facility_game(42, "demo.build.mage-sorcery-nature", tower);
+    support::clear_monsters(&mut game);
+    let entry = game.town_local_to_active_position("demo.town.zul", Position { x: 91, y: 32 }).unwrap();
+    assert_eq!(game.terrain_at(entry), "demo.terrain.surface-grass");
+    assert!(game.facility_town_travel_destinations(tower).is_empty());
+    dispatch_next(&mut game, GameCommand::AcceptTask { facility_id: tower.into(), task_id: task.into() });
+    assert_eq!(game.terrain_at(entry), "demo.terrain.zul-eddies-entry");
+    game.player.position = entry;
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, "demo.floor.zul-eddies");
+    assert_eq!((game.width, game.height), (29, 37));
+    assert_eq!(game.entities.len(), 25);
+    assert_eq!(game.vault_cells.iter().filter(|cell| **cell).count(), 7);
+    let ground = game.items.iter().filter(|item| matches!(item.location, ItemLocation::Ground(_))).cloned().collect::<Vec<_>>();
+    assert_eq!(ground.len(), 2);
+    for item in &ground {
+        assert_eq!(item.affix_ids, ["rfb-legacy.affix.the-bat"]);
+        assert_eq!(game.content.item(&item.kind_id).unwrap().rfb_base_kind.unwrap().tval, 35);
+        assert!(matches!(item.location, ItemLocation::Ground(Position { x: 6 | 22, y: 32 })));
+        assert!(item.artifact_name.is_none());
+        assert!(!item.rolled_affixes.is_empty());
+    }
+    game = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(game.items.iter().filter(|item| matches!(item.location, ItemLocation::Ground(_))).cloned().collect::<Vec<_>>(), ground);
+    // Prepare the result explicitly: this tests lifecycle/settlement, not natural combat.
+    game.entities.clear();
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.task_states[task].status, TaskStatusKindDto::RewardAvailable);
+    let ItemLocation::Ground(cloak_position) = ground[0].location else { panic!("ground cloak"); };
+    game.player.position = cloak_position;
+    dispatch_next(&mut game, GameCommand::PickUp);
+    game.player.position = Position { x: 14, y: 35 };
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_town().unwrap().id, "demo.town.zul");
+    assert_eq!(game.player.position, entry);
+    assert_eq!(game.terrain_at(entry), "demo.terrain.surface-grass");
+    assert!(!game.stored_floors.contains_key("demo.floor.zul-eddies"));
+    assert!(game.items.iter().any(|item| item.id == ground[0].id && item.location == ItemLocation::Inventory));
+    assert!(!game.items.iter().any(|item| item.id == ground[1].id));
+    game.player.position = game.town_local_to_active_position("demo.town.zul", Position { x: 65, y: 16 }).unwrap();
+    assert!(game.facility_town_travel_destinations(tower).is_empty());
+    dispatch_next(&mut game, GameCommand::ClaimTaskReward { facility_id: tower.into(), task_id: task.into() });
+    assert_eq!(game.task_states[task].status, TaskStatusKindDto::Completed);
+    let reward = game.items.iter().find(|item| item.id == "demo.task.zul-eddies.reward.1").unwrap();
+    assert!(game.generated_artifact_ids.contains(&reward.kind_id));
+    let destinations = game.facility_town_travel_destinations(tower);
+    let outpost = destinations.iter().find(|destination| destination.town_id == "demo.town.outpost").unwrap();
+    assert_eq!(outpost.cost, game.town_service_price(200));
+    game.gold = outpost.cost - 1;
+    let before = game.to_save();
+    assert_eq!(game.inn_travel_unavailable_reason(tower, "demo.town.outpost"), Some("insufficient-gold"));
+    assert_eq!(game.to_save(), before);
+    game.gold = 10_000;
+    dispatch_next(&mut game, GameCommand::TravelFromInn { facility_id: tower.into(), destination_town_id: "demo.town.outpost".into() });
+    assert!(projected_shop(&game.snapshot().shops, WHITE_HORSE_INN_ID).player_at_entrance);
+    assert!(game.teleport_town_target_available("demo.town.zul"));
+    let snapshot = game.snapshot();
+    assert!(projected_shop(&snapshot.shops, WHITE_HORSE_INN_ID).inn_travel_destinations.iter().any(|destination| destination.town_id == "demo.town.zul"));
+    game = Game::from_save(game.to_save()).unwrap();
+    dispatch_next(&mut game, GameCommand::TravelFromInn { facility_id: WHITE_HORSE_INN_ID.into(), destination_town_id: "demo.town.zul".into() });
+    assert_eq!(game.player.position, game.town_local_to_active_position("demo.town.zul", Position { x: 65, y: 16 }).unwrap());
+    assert!(game.current_task_service_dtos().iter().any(|service| service.id == tower && service.player_at_entrance));
+    let before = game.to_save();
+    assert_eq!(game.claim_task_reward(tower, task), Err("reward-unavailable"));
+    assert_eq!(game.to_save(), before);
+}
+
+#[test]
+fn zul_eddies_failure_and_abandonment_never_unlock_town_teleport() {
+    let tower = "demo.town-facility.zul-sorcery-tower";
+    let task = "demo.task.zul-eddies";
+    for abandon in [false, true] {
+        let mut game = town_facility_game(42, "demo.build.warrior", tower);
+        support::clear_monsters(&mut game);
+        dispatch_next(&mut game, GameCommand::AcceptTask { facility_id: tower.into(), task_id: task.into() });
+        let entry = game.town_local_to_active_position("demo.town.zul", Position { x: 91, y: 32 }).unwrap();
+        game.player.position = entry;
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        support::clear_monsters(&mut game);
+        dispatch_next(&mut game, if abandon { GameCommand::AbandonTask } else { GameCommand::TraverseStairs });
+        assert_eq!(game.task_states[task].status, if abandon { TaskStatusKindDto::Abandoned } else { TaskStatusKindDto::Failed });
+        assert_eq!(game.player.position, entry);
+        assert_eq!(game.terrain_at(entry), "demo.terrain.surface-grass");
+        game = Game::from_save(game.to_save()).unwrap();
+        game.player.position = game.town_local_to_active_position("demo.town.zul", Position { x: 65, y: 16 }).unwrap();
+        assert!(game.facility_town_travel_destinations(tower).is_empty());
+        assert_eq!(game.accept_task(tower, task), Err("task-unavailable"));
+        game.teleport_to_town("demo.town.outpost").unwrap();
+        assert!(!game.teleport_town_target_available("demo.town.zul"));
+        assert_eq!(game.inn_travel_unavailable_reason(WHITE_HORSE_INN_ID, "demo.town.zul"), Some("town-unvisited"));
+    }
+}
+
+#[test]
+fn zul_eddies_reward_choice_is_durable_and_generated_artifacts_are_replaced() {
+    let tower = "demo.town-facility.zul-sorcery-tower";
+    let task = "demo.task.zul-eddies";
+    let mut seen = BTreeSet::new();
+    for seed in 0..24 {
+        let mut game = town_facility_game(seed, "demo.build.warrior", tower);
+        support::clear_monsters(&mut game);
+        game.task_states.insert(task.into(), TaskState { status: TaskStatusKindDto::RewardAvailable,
+            stage_index: 0, current: 1, required: 1, active_floor_id: None, retakes_used: 0 });
+        game.reveal_current_visibility();
+        let save = game.to_save();
+        game.claim_task_reward(tower, task).unwrap();
+        let kind = game.items.iter().find(|item| item.id == "demo.task.zul-eddies.reward.1").unwrap().kind_id.clone();
+        if kind == "demo.item.visiting-team" {
+            let reward = game.items.iter().find(|item| item.id == "demo.task.zul-eddies.reward.1").unwrap();
+            assert!(game.item_has_weapon_trait(reward, rfb_protocol::WeaponTraitDto::Stun));
+        }
+        seen.insert(kind.clone());
+        assert_eq!(game.facility_town_travel_destinations(tower)[0].cost, game.town_service_price(500));
+        let mut restored = Game::from_save(save.clone()).unwrap();
+        let original_items = restored.items.clone();
+        for index in 0..restored.inventory_slot_capacity() {
+            support::give_inventory_item(&mut restored, &format!("test.zul.full.{index}"), "demo.item.dagger");
+        }
+        let full = restored.to_save();
+        assert_eq!(restored.claim_task_reward(tower, task), Err("inventory-full"));
+        assert_eq!(restored.to_save(), full);
+        restored.items = original_items;
+        for _ in 0..10 { restored.rng.bounded(100); }
+        restored.claim_task_reward(tower, task).unwrap();
+        assert_eq!(restored.items.iter().find(|item| item.id == "demo.task.zul-eddies.reward.1").unwrap().kind_id, kind);
+        let mut duplicate = Game::from_save(save).unwrap();
+        duplicate.generated_artifact_ids.insert(kind);
+        duplicate.claim_task_reward(tower, task).unwrap();
+        let replacement = duplicate.items.iter().find(|item| item.id == "demo.task.zul-eddies.reward.1").unwrap();
+        assert_eq!(replacement.kind_id, "demo.item.baseball-bat");
+        assert!(replacement.artifact_name.is_some());
+        assert!(duplicate.content.item(&replacement.kind_id).unwrap().artifact_generation.is_none());
+        if seen.len() == 3 { break; }
+    }
+    assert_eq!(seen, BTreeSet::from(["demo.item.sotkamo".to_owned(), "demo.item.visiting-team".to_owned(), "demo.item.superbat".to_owned()]));
 }
 
 fn enter_town(game: &mut Game, town_id: &str, position: Position) {

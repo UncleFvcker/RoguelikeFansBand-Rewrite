@@ -9741,3 +9741,40 @@ town-facility-demo-zul-chaos-tower-owner-name = 泽诺
 town-facility-demo-zul-nature-tower-name = 自然之塔
 town-facility-demo-zul-nature-tower-description = 举行平衡仪式，按当前身份与领域重新生成八项美德，并将数值归零。
 town-facility-demo-zul-nature-tower-owner-name = 乔什
+
+# Zul quest 77 and rewards, RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c.
+item-demo-baseball-bat-name = 棒球棒
+item-demo-baseball-bat-description = 棒球棒
+item-activation-demo-sotkamo-name = 恢复
+item-demo-sotkamo-name = 索特卡莫的
+item-demo-sotkamo-description = 当你握住并挥舞这根古老的木棒时，你感觉自己非常敏捷，
+    而且不受时间流逝的影响。不过，如果它当初被设计成是用来敲碎
+    你敌人的脑袋就好了……
+item-demo-visiting-team-name = 客队的
+item-demo-visiting-team-description = 这是你在祖尔（Zul）冒险的纪念品，你猜它要么是属于某个
+    奇怪法师的，要么是从时空洞里掉出来的。
+item-demo-superbat-name = 『超级球棒』
+item-demo-superbat-description = 它是用被坠落陨石砸断的树枝雕刻而成的。
+    （你不确定这是否赋予了它任何神秘的超能力，但你确实
+    希望如此。）
+floor-demo-zul-eddies-name = 时空连续体中的漩涡 (祖尔)
+task-demo-zul-eddies-name = 时空连续体中的漩涡 (祖尔)
+terrain-demo-zul-eddies-entry-name = 时空连续体中的漩涡 (祖尔)
+terrain-demo-zul-eddies-entry-description = 时空连续体中的漩涡 (祖尔)
+
+task-demo-zul-eddies-description = 不幸的是，由于一群在不久前搬来的奇怪时间法师，祖尔（Zul）
+    和外界之间可靠的传送变得不可能了。他们的实验扭曲了我们
+    城镇周围的时空连续体。我们或许可以用咒术修复它，但按目前
+    的情况来看，这毫无意义——明天它只会再次被搞得一团糟。
+    那些时间法师既拒绝离开，也拒绝老实守规矩，
+    而且他们人数太多，我们无法用武力把他们赶出城镇。
+    我们需要像你这样伟大英雄的帮助，我希望你能
+    在他们打盹的时候抓住他们。
+    （时空连续体里的漩涡致敬了银河系漫游指南）
+task-demo-zul-eddies-completed-description = 是的，我听说了你的成功；这里的消息传得很快。感谢你的
+    帮助，现在我们可以再次传送到其他城镇了，而不必担心降落
+    在错误的星球或错误的世纪。当我们出去欣赏你的工作成果并
+    抚平时空连续体时，我发现了这个奇怪的物体；
+    我不确定它是什么，但它看起来像某种木棒。我们用不上它，
+    请把它作为纪念品和感谢的礼物收下。
+task-demo-zul-eddies-failed-description = 太糟糕了，全镇的人都指望你呢。

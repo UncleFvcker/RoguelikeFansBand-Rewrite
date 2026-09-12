@@ -129,7 +129,7 @@ fn allocation_level(game: &mut Game, context: &LootContext, mode: ItemGeneration
     level
 }
 
-fn quality_candidate(game: &Game, mode: ItemGenerationMode, item: &ItemDefinition) -> bool {
+pub(super) fn quality_candidate(game: &Game, mode: ItemGenerationMode, item: &ItemDefinition) -> bool {
     if !is_good(mode) && !is_great(mode) {
         return true;
     }
@@ -335,8 +335,8 @@ pub(super) fn select_entry(
     select_prepared_entry(game, context, mode, entries, weights)
 }
 
-/// shop.c::_get_k_idx uses its stock hook directly, without _choose_obj_kind.
-pub(in crate::game) fn select_shop_entry(
+/// Shops and scripted room objects use their kind hook without _choose_obj_kind.
+pub(in crate::game) fn select_filtered_entry(
     game: &mut Game,
     context: &LootContext,
     entries: &[LootEntryDefinition],

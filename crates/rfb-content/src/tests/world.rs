@@ -3,6 +3,30 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn zul_eddies_references_validate_forced_ego_and_task_gated_town_arrival() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let world = &artifact.content.worlds[0];
+    let floor = world.procedural_floors.iter().find(|floor| floor.id == "demo.floor.zul-eddies").unwrap();
+    let map = floor.inline_map.as_ref().unwrap();
+    assert_eq!(map.terrain_overrides.iter().map(|terrain| terrain.positions.len()).sum::<usize>(), 29 * 37);
+    assert_eq!(map.loot_spawns.len(), 2);
+    assert!(map.loot_spawns.iter().all(|loot| map.actor_spawns.iter().any(|actor| actor.position == loot.position)));
+    for invalid in 0..3 {
+        let mut content = artifact.content.clone();
+        if invalid == 2 {
+            content.town_facilities.iter_mut().find(|facility| facility.id == "demo.town-facility.zul-sorcery-tower")
+                .unwrap().town_teleport.as_mut().unwrap().required_completed_task_id = "demo.task.old-castle".into();
+        } else {
+            let map = content.worlds[0].procedural_floors.iter_mut().find(|floor| floor.id == "demo.floor.zul-eddies")
+                .unwrap().inline_map.as_mut().unwrap();
+            if invalid == 0 { map.loot_spawns[0].forced_ego.as_mut().unwrap().tval = 21; }
+            else { map.vault_positions[0].x = 29; }
+        }
+        assert!(validate_and_normalize(&mut content).is_err());
+    }
+}
+
+#[test]
 fn water_river_depth_policy_requires_water_without_an_alternate() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     for case in 0..4 {
@@ -13896,6 +13920,7 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
     floor.abandoned_entry_terrain_id = None;
     floor.task_id = None;
     floor.inline_map = Some(InlineFloorMapDefinition {
+        vault_positions: Vec::new(),
         task_terrain_overrides: Vec::new(),
         inherit_wilderness_terrain: false,
         player_position: ContentPosition { x: 1, y: 1 },

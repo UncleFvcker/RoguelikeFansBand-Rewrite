@@ -131,6 +131,27 @@ test("paid facility selection and closing are free; only confirmation dispatches
     service: "balance-ritual", itemId: undefined, enchantmentSteps: undefined }]);
   commands.length = 0;
   const casino = { maximumWager: 200 };
+  snapshot.taskServices = [{ id: "sorcery-tower", playerAtEntrance: true, membership: "visitor", tasks: [],
+    innTravelDestinations: [{ townId: "outpost", townNameKey: "outpost-name", cost: 700 }],
+  }];
+  panel.render(snapshot);
+  const travel = list.children[0].children[0];
+  assert.match(travel.textContent, /"cost":700/);
+  elements.get("task-service-dialog").close();
+  assert.deepEqual(commands, []);
+  const travelClick = new Event("click");
+  Object.defineProperty(travelClick, "target", { value: travel });
+  state.busy = true;
+  list.dispatchEvent(travelClick);
+  assert.deepEqual(commands, []);
+  state.busy = false;
+  list.dispatchEvent(travelClick);
+  assert.deepEqual(commands, [{ type: "travel-from-inn", facilityId: "sorcery-tower", destinationTownId: "outpost" }]);
+  commands.length = 0;
+  snapshot.taskServices[0].innTravelDestinations = [];
+  panel.render(snapshot);
+  list.dispatchEvent(travelClick);
+  assert.deepEqual(commands, []);
   snapshot.taskServices = [{ id: "casino", playerAtEntrance: true, tasks: [], casino }];
   panel.render(snapshot);
   const row = list.children[0];

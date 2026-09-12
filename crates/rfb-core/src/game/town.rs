@@ -14,7 +14,7 @@ use rfb_protocol::{
     FacilityServiceTargetDto, HomeDto, HomeItemDto, HomeStateSaveDto, InnTravelDestinationDto,
     ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto, ItemEnchantmentsDto,
     ItemIdentifyResolutionDto, ItemQualityDto, MapScaleDto, Position, ShopCategoryDto, ShopDto,
-    ShopOwnerDto, ShopSellQuoteDto, ShopStateSaveDto, ShopStockItemDto, TownDto, TownStateSaveDto,
+    ShopOwnerDto, ShopSellQuoteDto, ShopStateSaveDto, ShopStockItemDto, TownDto, TownStateSaveDto, TaskStatusKindDto,
 };
 
 use crate::{
@@ -2201,39 +2201,62 @@ impl Game {
         })
     }
 
+    fn town_teleport_facility(&self, town: &TownDefinition) -> Option<&TownFacilityDefinition> {
+        town.facility_ids.iter().filter_map(|id| self.content.town_facility(id))
+            .find(|facility| facility.town_teleport.is_some())
+    }
+
+    fn town_teleport_unlocked(&self, facility: &TownFacilityDefinition) -> bool {
+        facility.town_teleport.as_ref().is_some_and(|teleport| {
+            self.task_states.get(&teleport.required_completed_task_id)
+                .is_some_and(|state| state.status == TaskStatusKindDto::Completed)
+        })
+    }
+
+    fn town_teleport_arrival(&self, town: &TownDefinition) -> Option<Position> {
+        if let Some(facility) = self.town_teleport_facility(town) {
+            return self.town_teleport_unlocked(facility)
+                .then(|| position_from_content(facility.entrance_position));
+        }
+        town_inn(town, &self.content).map(|inn| position_from_content(inn.entrance_position))
+    }
+
+    fn town_travel_origin(&self, facility_id: &str) -> Option<(&str, u32)> {
+        if let Some(inn) = self.content.shop(facility_id) {
+            return (inn.inn_stay_cost.is_some() && shop_accessible(self, inn))
+                .then(|| (inn.town_id.as_str(), self.town_service_price(INN_TRAVEL_COST)));
+        }
+        let facility = self.content.town_facility(facility_id)?;
+        let teleport = facility.town_teleport.as_ref()?;
+        (self.town_facility_accessible(facility_id) && self.town_teleport_unlocked(facility))
+            .then(|| (facility.town_id.as_str(), self.town_facility_price(facility, teleport.price)))
+    }
+
+    pub(super) fn facility_town_travel_destinations(&self, facility_id: &str) -> Vec<InnTravelDestinationDto> {
+        let Some((_, cost)) = self.town_travel_origin(facility_id) else { return Vec::new(); };
+        self.teleport_town_targets().into_iter().map(|target| InnTravelDestinationDto {
+            town_id: target.town_id, town_name_key: target.town_name_key, cost,
+        }).collect()
+    }
+
     pub(super) fn inn_travel_unavailable_reason(
         &self,
         facility_id: &str,
         destination_town_id: &str,
     ) -> Option<&'static str> {
-        let Some(inn) = self.content.shop(facility_id) else {
-            return Some("unknown-inn");
-        };
-        if inn.inn_stay_cost.is_none() {
-            return Some("unknown-inn");
-        }
-        if !shop_accessible(self, inn) {
-            return Some("inn-unreachable");
-        }
-        if inn.town_id == destination_town_id {
-            return Some("already-here");
-        }
-        let Some(world) = self.content.world(&self.world_id) else {
-            return Some("town-unvisited");
-        };
-        let Some(destination) = self.content.town(destination_town_id) else {
-            return Some("town-unvisited");
-        };
-        if world_town_position(world, destination_town_id).is_none()
-            || !self
-                .town_states
-                .get(destination_town_id)
-                .is_some_and(|state| state.visited)
-            || town_inn(destination, &self.content).is_none()
+        if self.content.shop(facility_id).is_none_or(|shop| shop.inn_stay_cost.is_none())
+            && self.content.town_facility(facility_id).is_none_or(|facility| facility.town_teleport.is_none())
         {
+            return Some("unknown-inn");
+        }
+        let Some((origin_town_id, cost)) = self.town_travel_origin(facility_id) else {
+            return Some("inn-unreachable");
+        };
+        if origin_town_id == destination_town_id { return Some("already-here"); }
+        if !self.teleport_town_target_available(destination_town_id) {
             return Some("town-unvisited");
         }
-        (self.gold < self.town_service_price(INN_TRAVEL_COST)).then_some("insufficient-gold")
+        (self.gold < cost).then_some("insufficient-gold")
     }
 
     pub(super) fn travel_from_inn(
@@ -2245,7 +2268,7 @@ impl Game {
             self.inn_travel_unavailable_reason(facility_id, destination_town_id)
                 .is_none()
         );
-        let cost = self.town_service_price(INN_TRAVEL_COST);
+        let (_, cost) = self.town_travel_origin(facility_id).expect("preflighted travel origin");
         self.relocate_to_town(destination_town_id)?;
         self.gold -= cost;
 
@@ -2275,7 +2298,7 @@ impl Game {
             .filter_map(|town_id| {
                 let town = self.content.town(town_id)?;
                 (world_town_position(world, town_id).is_some()
-                    && town_inn(town, &self.content).is_some())
+                    && self.town_teleport_arrival(town).is_some())
                 .then(|| AbilityTownTargetDto {
                     town_id: town.id.clone(),
                     town_name_key: town.name_key.clone(),
@@ -2326,9 +2349,8 @@ impl Game {
             .content
             .town(destination_town_id)
             .expect("validated destination town must remain available");
-        let destination_inn = town_inn(destination_town, &self.content)
-            .expect("validated destination town must retain an inn");
-        let destination_inn_position = position_from_content(destination_inn.entrance_position);
+        let destination_inn_position = self.town_teleport_arrival(destination_town)
+            .expect("validated destination town must retain a teleport arrival");
 
         let player_id = self.player.id.clone();
         let riding_actor_id = self.riding_actor_id.as_deref();
@@ -2928,29 +2950,7 @@ impl Game {
                     .shop_entrance_position(shop)
                     .expect("current town shop must retain an active position");
                 let player_at_entrance = self.player.position == entrance_position;
-                let inn_travel_destinations = if player_at_entrance && shop.inn_stay_cost.is_some()
-                {
-                    self.content
-                        .world(&self.world_id)
-                        .into_iter()
-                        .flat_map(world_town_ids)
-                        .filter(|town_id| *town_id != town.id)
-                        .filter(|town_id| {
-                            self.town_states
-                                .get(*town_id)
-                                .is_some_and(|state| state.visited)
-                        })
-                        .filter_map(|town_id| self.content.town(town_id))
-                        .filter(|destination| town_inn(destination, &self.content).is_some())
-                        .map(|destination| InnTravelDestinationDto {
-                            town_id: destination.id.clone(),
-                            town_name_key: destination.name_key.clone(),
-                            cost: self.town_service_price(INN_TRAVEL_COST),
-                        })
-                        .collect()
-                } else {
-                    Vec::new()
-                };
+                let inn_travel_destinations = self.facility_town_travel_destinations(&shop.id);
                 let factor = shop_price_factor(self, shop);
                 let state = self.shop_states.get(&shop.id);
                 let mut stock = if player_at_entrance {

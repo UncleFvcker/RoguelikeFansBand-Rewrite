@@ -164,7 +164,7 @@ impl Game {
             depth: kind_level,
             source: LootSource::Shop { shop_id: shop.id.clone() },
         };
-        let index = allocation::select_shop_entry(self, &context, &entries)?;
+        let index = allocation::select_filtered_entry(self, &context, &entries)?;
         // _dragon_create rolls its magic level after kind selection; the jeweler rolls both first.
         context.depth = magic_level.unwrap_or_else(|| 1 + self.rng.bounded(25) as u16);
         let draft = self.generate_shop_loot_draft(&context, &entries[index])?;

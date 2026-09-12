@@ -465,6 +465,8 @@ pub struct ProceduralFloorDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InlineFloorMapDefinition {
+    #[serde(default)]
+    pub vault_positions: Vec<ContentPosition>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub inherit_wilderness_terrain: bool,
     pub player_position: ContentPosition,
@@ -535,6 +537,18 @@ pub struct InlineFloorLootSpawnDefinition {
     pub id: String,
     pub position: ContentPosition,
     pub loot_table_id: String,
+    #[serde(default)]
+    pub generation_depth: Option<u16>,
+    #[serde(default)]
+    pub forced_ego: Option<InlineForcedEgoDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct InlineForcedEgoDefinition {
+    pub tval: u16,
+    pub affix_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

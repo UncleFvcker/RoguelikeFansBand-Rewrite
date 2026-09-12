@@ -139,8 +139,8 @@ default content license; no permission statement from another town is
 attributed to Zul. The encounter exception follows src/wild.c at that commit.
 Source selection, reused ordinary-shop adaptations and staged service limits
 are recorded in packs/rfb-demo-original/legacy-wilderness-selection.json and
-design/zul-town-import-plan-20260912.md. The four quest maps are not included
-in this initial town import.
+design/zul-town-import-plan-20260912.md. Quest 77 is added below; the three
+node quests remain a later implementation stage.
 
 Zul's Jeweler and Dragonskin stock hooks, owners and prices are adapted from
 src/shop.c, src/xtra1.c and src/object2.c at the same master commit. The ten
@@ -156,8 +156,18 @@ derive from lib/edit/t_zul.txt at that same commit. All-item identification,
 mutation treatment and the Ritual of Balance follow src/bldg.c; the ritual
 reuses this project's src/virtue.c adaptation with the player's current
 secondary realm. Existing birth virtue selection remains unchanged. Tower
-quests and town teleport are reserved for the following Zul implementation
-stages; this service batch has no execution acceptance yet.
+quest 77 and town teleport are implemented in the following batch; the three
+node quests remain pending. These batches have no execution acceptance yet.
+
+Zul quest 77 uses the complete lib/edit/q_eddies.txt map and Chinese dialogue,
+retaining its credit "New quest for FrogComposband 7.0.peppermint". The task
+name comes from src/quest_name_zh.inc; source kind 139 and artifacts 343-345
+come from k_info.txt/a_info.txt and their corresponding Chinese name tables
+at the same master commit. The forced bat cloak, quest reward and teleport
+adaptations follow rooms.c, quest.c, bldg.c and wild.c; RESTORING follows
+devices.c. These materials retain their applicable upstream terms. Exact
+selection, local RNG/alertness adaptations and deferred validation are recorded
+in legacy-wilderness-selection.json and the Zul plan.
 
 The generated Android Gradle/Kotlin scaffold under web/src-tauri/gen/android is derived
 from Tauri CLI templates. Tauri is available under the Apache License 2.0 or MIT License:
