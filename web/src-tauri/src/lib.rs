@@ -394,6 +394,17 @@ impl AppState {
     }
 
     #[cfg(feature = "webdriver")]
+    fn prepare_magic_eater_e2e(&self) -> Result<GameSnapshot, String> {
+        let mut session = self.lock_session()?;
+        let session = session.as_mut().ok_or("game session is not initialized")?;
+        let mut game = session.recorder.game().clone();
+        game.debug_prepare_magic_eater_e2e()
+            .map_err(|error| error.to_string())?;
+        session.recorder = ReplayRecorder::new(game);
+        Ok(session.recorder.game().snapshot())
+    }
+
+    #[cfg(feature = "webdriver")]
     fn prepare_stairs_e2e(&self, position: rfb_protocol::Position) -> Result<GameSnapshot, String> {
         let mut session = self.lock_session()?;
         let session = session.as_mut().ok_or("game session is not initialized")?;
@@ -721,6 +732,19 @@ fn prepare_stairs_e2e(
 }
 
 #[tauri::command]
+fn prepare_magic_eater_e2e(state: tauri::State<'_, AppState>) -> Result<GameSnapshot, String> {
+    #[cfg(feature = "webdriver")]
+    {
+        state.prepare_magic_eater_e2e()
+    }
+    #[cfg(not(feature = "webdriver"))]
+    {
+        let _ = state;
+        Err("Magic-Eater E2E fixture is unavailable".to_owned())
+    }
+}
+
+#[tauri::command]
 fn prepare_town_map_e2e(
     state: tauri::State<'_, AppState>,
     town_id: String,
@@ -1005,6 +1029,7 @@ pub fn run() {
             prepare_berserker_e2e,
             prepare_duelist_e2e,
             prepare_spell_learning_e2e,
+            prepare_magic_eater_e2e,
             prepare_stairs_e2e,
             prepare_town_map_e2e,
             prepare_zul_e2e,

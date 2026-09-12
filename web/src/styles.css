@@ -4893,3 +4893,17 @@ kbd {
     grid-column: 1 / -1;
   }
 }
+/* The device menu follows the existing modal surface and wraps at narrow widths. */
+.magic-eater-dialog { width: min(48rem, calc(100vw - 2rem)); max-width: calc(100vw - 2rem); max-height: calc(100dvh - 2rem); overflow: auto; box-sizing: border-box; }
+.magic-eater-dialog label, #travel-options label { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.magic-eater-dialog select { max-width: 100%; }
+.magic-eater-dialog input[type="checkbox"], #travel-options input { width: auto; flex-shrink: 0; }
+.magic-eater-editor { max-height: calc(100dvh - 2rem); overflow: auto; }
+.magic-eater-editor select[multiple] { max-height: 40dvh; }
+.magic-eater-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-block: .5rem; }
+.magic-eater-actions button { white-space: normal; max-width: 100%; }
+.magic-eater-slots { list-style: none; padding: 0; display: grid; gap: .65rem; }
+.magic-eater-slots li { border: 1px solid #45505a; padding: .65rem; min-width: 0; overflow-wrap: anywhere; }
+.magic-eater-slots p { margin-block: .35rem; }
+#magic-eater-replacement { border: 1px solid #b77b54; padding: .65rem; overflow-wrap: anywhere; }
+#travel-options { grid-column: 1 / -1; min-width: 0; }

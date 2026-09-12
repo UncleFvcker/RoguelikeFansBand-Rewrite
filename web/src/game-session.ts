@@ -32,12 +32,15 @@ export class GameSession {
         command.type !== "resolve-ability-direction" &&
         command.type !== "cancel-ability-direction" &&
         command.type !== "resolve-realm-change" &&
-        command.type !== "resolve-duelist-choice") ||
+        command.type !== "resolve-duelist-choice" &&
+        !(this.#state.status?.player.magicEater?.pendingAbsorption &&
+          ["select-magic-absorption-slot", "resolve-magic-absorption", "set-interface-locale"].includes(command.type))) ||
       (this.#state.worldMap &&
         command.type !== "move" &&
         command.type !== "travel-world" &&
         command.type !== "leave-world-map" &&
         command.type !== "configure-mogaminator" &&
+        command.type !== "configure-travel" &&
         command.type !== "set-interface-locale")
     ) return;
     this.#state.busy = true;

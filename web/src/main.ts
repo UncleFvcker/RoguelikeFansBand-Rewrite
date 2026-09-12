@@ -28,6 +28,7 @@ import type { NewSessionRequest } from "./core-transport";
 import { InputController } from "./input-controller";
 import { GameSession } from "./game-session";
 import { DuelistPanel } from "./duelist-panel";
+import { MagicEaterPanel } from "./magic-eater-panel";
 import { SpellRealmsPanel } from "./spell-realms-panel";
 import {
   SettingsPanel,
@@ -180,6 +181,7 @@ const settingsPanel = new SettingsPanel({
     mogaminatorEditor?.localize();
     messagePanel.render();
     combatSummaryPanel.localize();
+    magicEaterPanel.render();
   },
   onLocaleChange: (locale) => dispatch({ type: "set-interface-locale", locale }),
   refreshBusyControls: () => inventoryPanel.updateActions(),
@@ -225,6 +227,8 @@ function refreshBusyControls(): void {
   inputController.render();
   duelistPanel.render();
   spellRealmsPanel.render();
+  magicEaterPanel.render();
+  renderTravelOptions();
   statusPanel.updateAbilityActions();
 }
 
@@ -268,6 +272,7 @@ const inputController = new InputController({
   describeLook: describeLookPosition,
   openObjectList: () => objectListPanel.open(),
   openMogaminator: () => mogaminatorEditor?.open(),
+  openDeviceCommand: key => magicEaterPanel.openDeviceCommand(key),
   onLookFocusChange: (position) => renderer.setCameraFocus(position),
   announce: addLocalizedMessage,
 });
@@ -300,6 +305,31 @@ const duelistPanel = new DuelistPanel({
   },
   beforePrompt: () => playerUiLayout.closePage(),
 });
+const magicEaterPanel = new MagicEaterPanel({
+  document, state: appState, localization, dispatch, visibleItemName,
+  inspectItem: id => inventoryPanel.openDetail(id),
+  selectItemTarget: (ids, select) => inventoryPanel.selectItemTarget(undefined, select, undefined, ids),
+  startTargeting: (spec, intent) => { playerUiLayout.closePage(); inputController.startTargetingWithSpec(spec, intent); },
+  beforeOpen: () => { playerUiLayout.closePage(); inputController.cancelTargeting(false); },
+  exportSave,
+  importSave: () => loadInput.click(),
+});
+const travelControls = {
+  autoDetectTraps: document.getElementById("travel-auto-detect") as HTMLInputElement,
+  autoMapArea: document.getElementById("travel-auto-map") as HTMLInputElement,
+  disturbTrapDetect: document.getElementById("travel-disturb-detect") as HTMLInputElement,
+};
+for (const [key, control] of Object.entries(travelControls)) control.addEventListener("change", () => {
+  const options = appState.status?.travelOptions;
+  if (options && !appState.busy && !appState.commandBlocked) void dispatch({ type: "configure-travel", options: { ...options, [key]: control.checked } });
+});
+function renderTravelOptions(): void {
+  const options = appState.status?.travelOptions;
+  for (const [key, control] of Object.entries(travelControls)) {
+    control.disabled = appState.busy || appState.commandBlocked || !options;
+    if (options) control.checked = options[key as keyof typeof options];
+  }
+}
 const spellRealmsPanel = new SpellRealmsPanel({
   document, state: appState, localization, dispatch,
   afterPrompt: () => playerUiLayout.open("ability"),
@@ -321,6 +351,8 @@ const statusPanel = new StatusPanel({
     inputController.reconcileStatus(state);
     duelistPanel.render();
     spellRealmsPanel.render();
+    magicEaterPanel.render();
+    renderTravelOptions();
   },
   renderTargeting: () => inputController.render(),
   refreshInventoryActions: () => inventoryPanel.updateActions(),
@@ -573,12 +605,18 @@ function announceCrashDiagnosticError(context: string, error: unknown): void {
 }
 
 async function exportSave(): Promise<void> {
+  if (appState.busy) return;
+  appState.busy = true;
+  refreshBusyControls();
   try {
     const bytes = await core.save();
     downloadBytes(bytes, "rfb-rewrite-demo.rfbsave");
     addLocalizedMessage("message-save-exported", undefined, "system");
   } catch (error) {
     showError(error);
+  } finally {
+    appState.busy = false;
+    refreshBusyControls();
   }
 }
 
@@ -611,6 +649,7 @@ async function importSave(): Promise<void> {
 }
 
 function applyLoadedSnapshot(snapshot: GameSnapshot): void {
+  magicEaterPanel.reset();
   inputController.cancelTargeting(false);
   inputController.resetLocalTravel();
   combatSummaryPanel.clear();
@@ -660,6 +699,7 @@ async function startNewSession(request: NewSessionRequest): Promise<GameSnapshot
 }
 
 async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
+  magicEaterPanel.reset();
   inputController.cancelTargeting(false);
   inputController.resetLocalTravel();
   combatSummaryPanel.clear();

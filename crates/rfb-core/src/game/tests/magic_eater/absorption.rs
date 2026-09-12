@@ -277,6 +277,22 @@ fn all_thirty_slots_swap_inscribe_and_round_trip_without_pack_capacity_or_weight
     assert_eq!(game.inventory_used_slots(), pack_slots);
     assert_eq!(game.carried_weight_tenths_pound(), carried_weight);
     assert_eq!(game.to_save().absorbed_devices.len(), 30);
+    let ordinary = game.snapshot().player.magic_eater.unwrap().device_commands;
+    assert_eq!(
+        ordinary.iter().flat_map(|command| &command.items).count(),
+        1,
+        "only the unabsorbed birth wand remains in the ordinary command"
+    );
+    assert!(
+        ordinary
+            .iter()
+            .flat_map(|command| &command.items)
+            .all(|item| game
+                .items
+                .iter()
+                .any(|instance| instance.id == item.id
+                    && instance.location == ItemLocation::Inventory))
+    );
     let before = (game.turn, game.world_tick, game.rng.clone());
     dispatch_next(
         &mut game,
@@ -298,7 +314,49 @@ fn all_thirty_slots_swap_inscribe_and_round_trip_without_pack_capacity_or_weight
         },
     );
     assert_eq!((game.turn, game.world_tick, game.rng.clone()), before);
+    for (id, inscription) in [
+        ("test.detection-rod.1", "@ma @zB"),
+        ("test.detection-rod.2", "@ma @zR"),
+        ("test.detection-rod.3", "@8"),
+    ] {
+        dispatch_next(
+            &mut game,
+            GameCommand::InscribeItem {
+                item_id: id.to_owned(),
+                inscription: Some(inscription.to_owned()),
+            },
+        );
+    }
+    let projection = game.snapshot().player.magic_eater.unwrap();
+    let rods = projection
+        .slots
+        .iter()
+        .filter(|slot| slot.category == Category::Rod)
+        .collect::<Vec<_>>();
+    assert_eq!(rods[2].use_label, "a");
+    assert_ne!(rods[1].use_label, "a");
+    assert_ne!(rods[0].use_label, "a");
+    assert_eq!(rods[1].device_label, "B");
+    assert_eq!(rods[2].device_label, "r");
+    assert_eq!(rods[3].use_label, "8");
+    assert_eq!(rods[3].device_label, "8");
+    assert_eq!(
+        rods.iter()
+            .map(|slot| &slot.use_label)
+            .collect::<std::collections::BTreeSet<_>>()
+            .len(),
+        10
+    );
+    assert_eq!(
+        rods.iter()
+            .map(|slot| &slot.device_label)
+            .collect::<std::collections::BTreeSet<_>>()
+            .len(),
+        10
+    );
+    assert_eq!((game.turn, game.world_tick, game.rng.clone()), before);
     let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.snapshot().player.magic_eater, Some(projection));
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(
         dispatch_next(&mut game, GameCommand::Wait),

@@ -38,6 +38,7 @@ test("new character creation exposes all formal class slices", () => {
     "demo.build.cavalry",
     "demo.build.sniper",
     "demo.build.mindcrafter",
+    "demo.build.magic-eater",
     "demo.build.berserker",
     "demo.build.duelist",
     ...MAGE_REALMS.flatMap(first => MAGE_REALMS.filter(second => second !== first).map(second => `demo.build.mage-${first}-${second}`)),
@@ -121,8 +122,9 @@ test("random session seeds combine two entropy words without truncation", () => 
 });
 
 test("career leaves retain the existing class and realm mapping", () => {
-  assert.equal(CAREER_GROUPS.length, 7);
-  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 102);
+  assert.equal(CAREER_GROUPS.length, 8);
+  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 103);
+  assert.equal(CAREER_GROUPS.find(group => group.id === "device").options[0].id, "demo.build.magic-eater");
   assert.deepEqual(CAREER_GROUPS.find(group => group.id === "melee").options.map(entry => entry.id), ["demo.build.warrior", "demo.build.berserker", "demo.build.duelist"]);
   assert.equal(CAREER_GROUPS.find(group => group.id === "mind").options[0].id, "demo.build.mindcrafter");
   assert.deepEqual(createNewSessionRequest("83", "demo.build.mindcrafter", "demo.race.rfb-human", "心灵术士"), {

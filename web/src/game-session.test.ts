@@ -63,6 +63,7 @@ test("world map accepts travel and zero-time character configuration", async () 
   await session.dispatch({ type: "move", direction: "east" });
   await session.dispatch({ type: "travel-world", destination: { x: 30, y: 52 } });
   await session.dispatch({ type: "set-interface-locale", locale: "zh-CN" });
+  await session.dispatch({ type: "configure-travel", options: { autoDetectTraps: true, autoMapArea: true, disturbTrapDetect: false } });
   await session.dispatch({
     type: "configure-mogaminator",
     enabled: true,
@@ -77,6 +78,7 @@ test("world map accepts travel and zero-time character configuration", async () 
     "move",
     "travel-world",
     "set-interface-locale",
+    "configure-travel",
     "configure-mogaminator",
     "leave-world-map",
   ]);

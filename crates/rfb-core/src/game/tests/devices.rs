@@ -300,3 +300,86 @@ fn source_identification_cancel_refunds_time_after_successful_check_and_berserke
     assert_eq!(berserker.items, before);
     assert_eq!(berserker.rng, rng);
 }
+
+#[test]
+fn ordinary_floor_device_uses_shared_sp_check_and_effect_but_only_at_player_feet() {
+    let mut base = utility_game();
+    give_inventory_item(&mut base, "test.floor-device", "demo.item.detection-rod");
+    let mut seen = BTreeSet::new();
+    for seed in 0..128 {
+        let mut carried = base.clone();
+        carried.rng = RfbRng::seeded(seed);
+        let mut ground = carried.clone();
+        ground.items[0].location = ItemLocation::Ground(ground.player.position);
+        let (mut carried_events, mut ground_events) = (Vec::new(), Vec::new());
+        for (game, events) in [
+            (&mut carried, &mut carried_events),
+            (&mut ground, &mut ground_events),
+        ] {
+            game.use_inventory_item(
+                "test.floor-device",
+                Some(&TargetSelection::SelfTarget),
+                None,
+                events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
+        }
+        assert_eq!(ground_events, carried_events);
+        assert_eq!(ground.items[0].charges, carried.items[0].charges);
+        assert_eq!(ground.rng, carried.rng);
+        let succeeded = ground_events
+            .iter()
+            .find_map(|event| match event {
+                DomainEvent::DeviceSkillChecked { succeeded, .. } => Some(*succeeded),
+                _ => None,
+            })
+            .unwrap();
+        seen.insert(succeeded);
+        assert_eq!(
+            ground.items[0].location,
+            ItemLocation::Ground(ground.player.position)
+        );
+        if seen.len() == 2 {
+            break;
+        }
+    }
+    assert_eq!(seen, BTreeSet::from([false, true]));
+    base.items[0].location = ItemLocation::Ground(base.player.position);
+    base.items[0].charges.as_mut().unwrap().current = 0;
+    let before = (base.turn, base.world_tick, base.rng.clone());
+    dispatch_next(
+        &mut base,
+        GameCommand::UseItem {
+            item_id: "test.floor-device".to_owned(),
+            target: Some(TargetSelection::SelfTarget),
+        },
+    );
+    assert_eq!((base.turn, base.world_tick, base.rng.clone()), before);
+    base.player.position.x += 1;
+    let mut events = Vec::new();
+    base.use_inventory_item(
+        "test.floor-device",
+        None,
+        None,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .unwrap();
+    assert_eq!(events, [DomainEvent::ItemUseUnavailable]);
+    assert_eq!(base.rng, before.2);
+    give_inventory_item(
+        &mut base,
+        "test.floor-scroll",
+        "demo.item.trapfinding-scroll",
+    );
+    base.items.last_mut().unwrap().location = ItemLocation::Ground(base.player.position);
+    assert!(
+        base.inventory_item_use_context("test.floor-scroll")
+            .unwrap()
+            .is_none(),
+        "non-device floor use remains outside this command"
+    );
+}

@@ -286,6 +286,23 @@ test("authoritative race and level changes clear unavailable ability targeting",
   }
 });
 
+test("absorbed aiming follows instance identity across slots and distinguishes user cancellation from load reconciliation", () => {
+  const state = new AppState(), commands = [];
+  const controller = new InputController({ state, dom: {}, localization: {}, window: {}, getInputPreset: () => "numpad", getZoom: () => 1,
+    dispatch: async command => commands.push(command), describeLook: () => "", openObjectList() {}, openMogaminator() {}, onLookFocusChange() {}, announce() {},
+  });
+  controller.render = () => {};
+  const spec = { modes: ["direction"], range: 8, requiresLineOfEffect: true };
+  const aim = () => { state.targeting = { origin: { x: 1, y: 1 }, cursor: { x: 2, y: 1 }, spec }; state.targetingIntent = { type: "absorbed-device", itemId: "body.instance" }; };
+  const projected = slot => ({ mapScale: "local", floorId: "test.floor", width: 10, height: 10, player: { position: { x: 1, y: 1 }, magicEater: { slots: [slot] } } });
+  aim(); controller.reconcileStatus(projected({ slot: 9, item: { id: "body.instance", usable: true, useTargetSpec: spec } }));
+  assert.ok(state.targeting, "moving a slot does not substitute another instance");
+  controller.cancelTargeting(); assert.deepEqual(commands, [{ type: "use-absorbed-device", itemId: "body.instance", targets: [] }]);
+  aim(); controller.reconcileStatus(projected({ slot: 9, item: { id: "replacement", usable: true, useTargetSpec: spec } }));
+  assert.equal(state.targeting, undefined); assert.equal(commands.length, 1, "reconciliation never sends stale use");
+  aim(); controller.cancelTargeting(false); assert.equal(commands.length, 1, "loading/reset is not a use cancellation");
+});
+
 test("a pending Produce Mana effect opens mandatory direction targeting", () => {
   const state = new AppState();
   const announcements = [];

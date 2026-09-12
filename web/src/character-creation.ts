@@ -114,6 +114,7 @@ export const CAREER_GROUPS = [
     { id: "demo.build.high-mage-death", nameKey: "session-career-death-name", descriptionKey: "build-demo-high-mage-death-description", notes: ["session-high-mage-available-realms"] },
     { id: "demo.build.high-mage-craft", nameKey: "session-career-craft-name", descriptionKey: "build-demo-high-mage-craft-description", notes: ["session-high-mage-available-realms"] },
   ] }] },
+  { id: "device", options: [career("magic-eater")] },
   { id: "prayer", options: [PRIEST] },
   { id: "hybrid", options: [deathCaster("paladin"), WARRIOR_MAGE] },
   { id: "riding", options: [career("cavalry")] },

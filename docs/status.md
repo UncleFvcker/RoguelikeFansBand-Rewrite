@@ -9,15 +9,15 @@
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 源1.261；绑定/Schema待食魔者第七步生成 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| 协议 | 源1.262；绑定/Schema待食魔者第七步生成 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 源129；契约待食魔者第七步核验 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 24 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
 | 内容包 | 源1.440.0；lock仍1.437.0，待食魔者第七步统一核验 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v328，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 14 个 Class、110 个 Build、57 个 Race、36 本能力书、1,908 个 ability、550 个 item、1,410 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon；城镇有 7 个 town、69 个 shop、67 个 townFacility。基础分配池为 408 行，固定神器映射 134/392；创角仍开放13职业、102个Build。这些是定义与入口数量，行为验收范围见下文。
+正式源目录含 14 个 Class、110 个 Build、57 个 Race、36 本能力书、1,908 个 ability、550 个 item、1,410 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon；城镇有 7 个 town、69 个 shop、67 个 townFacility。基础分配池为 408 行，固定神器映射 134/392；创角入口源码开放14职业、103个Build。这些是定义与入口数量，行为验收范围见下文。
 
-食魔者[接入计划](magic-eater-class-plan.md)前五步实现已完成：单一无领域Build、出生/成长/无公共MP、三类各10体内槽、吸收/覆盖确认/铭刻继承/换位、实际使用/失败/费用/恢复及保存已接入。第五步接Mogaminator体内优先鉴定、TravelLocal自动探陷阱/地图及其零时间设置命令，按原版默认开关和已探测范围边界触发；覆盖状态随楼层/荒野转换保存，失败停步不花行动。加入Tailored先1/5后1/7、Mage/20卷轴、座狼冰霜之矢、长剑/普通兽人奖励、旧城堡1:4及重复替代、旅店充满和两塔普通资格。新增普通冰霜之矢魔杖及启示魔棒profile；15种装置、26个profile覆盖24条源行，其余97条保留缺口。五类生成责任已预登记，关联一个待验收gap；当前生成审计要求创角入口，留到第六步开放后、第七步执行。新增/扩展行为用例尚未执行；本步只做格式、JSON/引用和diff静态检查。创角菜单及设置UI未开放。按用户安排，编译、测试、Schema/绑定、内容锁、来源报告及全局契约核验留到第七步实现结束后。
+食魔者[接入计划](magic-eater-class-plan.md)前六步实现已完成：无领域Build、出生/成长/无公共MP、三类各10体内槽、吸收/覆盖/铭刻继承/换位、真实使用/失败/费用/恢复与保存已接入。Mogaminator体内优先鉴定、TravelLocal自动探陷阱/地图及保存覆盖范围、Tailored先1/5后1/7、Mage/20卷轴、任务奖励/旧城堡1:4及重复替代、旅店恢复和两塔普通资格均已实现。15种装置、26个profile覆盖24条源行，其余97条保留缺口。创角新增“魔法装置 → 食魔者”，能力页接体内装置菜单及普通装置后备入口、核心铭刻标签、目标/取消、焦点/忙碌锁；确认窗口接正常存档导出/载入，设置页接三个随存档保存的自动行走选项。新增中英文前端与桌面场景，覆盖390px/200%、正常出生吸收、明确准备30槽、满槽覆盖/铭刻/换位、设置及待选择/已吸收保存续用；均未执行。五类生成责任保留一个待验收gap。当前仅完成格式、引用和diff静态检查；按用户安排，编译、测试、Schema/绑定、内容锁、来源报告、桌面实战及全局契约核验留到第七步实现结束后。
 
 战法师已完成[七步计划](warrior-mage-class-plan.md)：8个固定主奥秘Build、288项参数、双书出生/成长、INT法力/负重/近战/感知及双领域自主学习、重复研习、84点支出、遗忘/改换/保存已接入。25级双向转换保留真实失败、内部支付、满池代价、低HP死亡及公共伤害/治疗修正；旧城堡1:4/重复替代、两件神器/秘银链甲、实际激活/冷却、盗贼长剑、两塔会员与Mage/20卷轴消费者通过。正式入口为“混合 → 战法师 → 第二领域”，含工艺；当前13职业、102个Build，8个新增Build的40项生成责任与来源报告已验收，0个可玩范围证据gap。
 

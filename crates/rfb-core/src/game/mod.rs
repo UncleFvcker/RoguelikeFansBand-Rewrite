@@ -3688,7 +3688,9 @@ impl Game {
 
     fn item_charge_is_insufficient(&self, item_id: &str) -> bool {
         let Some(item) = self.items.iter().find(|item| {
-            item.id == item_id && item.location == ItemLocation::Inventory && item.quantity > 0
+            item.id == item_id
+                && (item.location == ItemLocation::Inventory || self.item_is_device_at_feet(item))
+                && item.quantity > 0
         }) else {
             return false;
         };
@@ -3740,6 +3742,7 @@ impl Game {
             return Ok(None);
         }
         if item.location != ItemLocation::Inventory
+            && !self.item_is_device_at_feet(item)
             && !(matches!(item.location, ItemLocation::Equipped { .. })
                 && (definition.capture_ball || item.activation.is_some()))
         {
@@ -3778,6 +3781,7 @@ impl Game {
         let item = self.items.iter().find(|item| {
             item.id == source_item_id
                 && (item.location == ItemLocation::Inventory
+                    || self.item_is_device_at_feet(item)
                     || (matches!(item.location, ItemLocation::Equipped { .. })
                         && item.activation.is_some()))
                 && item.quantity > 0

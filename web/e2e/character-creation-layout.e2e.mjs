@@ -35,6 +35,10 @@ export async function connectKeyboard(profile) {
   const keys = { Tab: ["Tab", 9], Enter: ["Enter", 13], Escape: ["Escape", 27], " ": ["Space", 32], Home: ["Home", 36], End: ["End", 35], ArrowLeft: ["ArrowLeft", 37], ArrowUp: ["ArrowUp", 38], ArrowRight: ["ArrowRight", 39], ArrowDown: ["ArrowDown", 40], a: ["KeyA", 65], "2": ["Numpad2", 98], "5": ["Numpad5", 101], "6": ["Numpad6", 102] };
   for (const digit of ["1", "3", "4", "7", "8", "9"]) keys[digit] = [`Numpad${digit}`, 96 + Number(digit)];
   keys.g = ["KeyG", 71];
+  for (const letter of "abcdefghijklmnopqrstuvwxyz") {
+    keys[letter] = [`Key${letter.toUpperCase()}`, letter.toUpperCase().charCodeAt(0)];
+    keys[letter.toUpperCase()] = keys[letter];
+  }
   const errors = [];
   socket.addEventListener("message", event => {
     const message = JSON.parse(event.data);

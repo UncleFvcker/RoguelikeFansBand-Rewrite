@@ -408,6 +408,7 @@
             <fieldset id="ability-actions-lock">
               <ul id="ability-list" class="ability-list" aria-live="polite"></ul>
             </fieldset>
+            <button id="magic-eater-open" type="button" data-l10n-id="magic-eater-open" hidden></button>
           </section>
 
           <section id="summon-command-panel" class="status-panel summon-command-panel" aria-labelledby="summon-command-title">
@@ -882,7 +883,14 @@
         </header>
         <div class="settings-section">
           <h3 data-l10n-id="settings-gameplay-title"></h3>
-          <div id="gameplay-settings-host" class="settings-grid gameplay-settings-host"></div>
+          <div id="gameplay-settings-host" class="settings-grid gameplay-settings-host">
+            <fieldset id="travel-options">
+              <legend data-l10n-id="travel-options-title"></legend>
+              <label><input id="travel-auto-detect" type="checkbox" /><span data-l10n-id="travel-auto-detect"></span></label>
+              <label><input id="travel-auto-map" type="checkbox" /><span data-l10n-id="travel-auto-map"></span></label>
+              <label><input id="travel-disturb-detect" type="checkbox" /><span data-l10n-id="travel-disturb-detect"></span></label>
+            </fieldset>
+          </div>
         </div>
         <details class="run-details">
           <summary data-l10n-id="status-technical-details"></summary>
@@ -912,6 +920,32 @@
       <div class="realm-change-actions">
         <button id="realm-change-decline" type="button" data-l10n-id="realm-change-decline"></button>
         <button id="realm-change-accept" type="button" data-l10n-id="realm-change-accept"></button>
+      </div>
+    </dialog>
+    <dialog id="magic-eater-dialog" class="item-target-dialog magic-eater-dialog" aria-labelledby="magic-eater-title" aria-describedby="magic-eater-help">
+      <h2 id="magic-eater-title" data-l10n-id="class-demo-magic-eater-name"></h2>
+      <p id="magic-eater-help" data-l10n-id="magic-eater-help"></p>
+      <p id="magic-eater-prompt" aria-live="polite"></p>
+      <label><span data-l10n-id="magic-eater-category"></span><select id="magic-eater-category">
+        <option value="wand" data-l10n-id="magic-eater-wand"></option>
+        <option value="staff" data-l10n-id="magic-eater-staff"></option>
+        <option value="rod" data-l10n-id="magic-eater-rod"></option>
+      </select></label>
+      <div class="magic-eater-actions">
+        <button id="magic-eater-body" type="button" data-l10n-id="magic-eater-body"></button>
+        <button id="magic-eater-ordinary" type="button" data-l10n-id="magic-eater-ordinary"></button>
+        <button id="magic-eater-absorb" type="button" data-l10n-id="ability-demo-magic-eater-absorb-magic-name"></button>
+      </div>
+      <ol id="magic-eater-slots" class="magic-eater-slots" tabindex="-1"></ol>
+      <div id="magic-eater-replacement" hidden>
+        <p id="magic-eater-replacement-description"></p>
+        <label><input id="magic-eater-inherit" type="checkbox" /><span data-l10n-id="magic-eater-inherit"></span></label>
+        <button id="magic-eater-confirm" type="button" data-l10n-id="magic-eater-confirm"></button>
+      </div>
+      <div class="magic-eater-actions">
+        <button id="magic-eater-save" type="button" data-l10n-id="action-export-save"></button>
+        <button id="magic-eater-load" type="button" data-l10n-id="action-load-save"></button>
+        <button id="magic-eater-close" type="button" data-l10n-id="action-dialog-cancel"></button>
       </div>
     </dialog>
   </body>

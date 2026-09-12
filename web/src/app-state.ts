@@ -23,7 +23,8 @@ export type TargetingIntent =
   | { type: "mutation-direction" }
   | { type: "ability-direction" }
   | { type: "ability"; abilityId: string }
-  | { type: "item"; itemId: string };
+  | { type: "item"; itemId: string }
+  | { type: "absorbed-device"; itemId: string };
 
 export class AppState {
   busy = false;
@@ -54,7 +55,8 @@ export class AppState {
       (this.status?.player.pendingMutationDirection != null ||
         this.status?.player.pendingAbilityDirection != null ||
         this.status?.player.abilityLearning?.realms?.pendingChange != null ||
-        this.status?.player.pendingDuelist != null)
+        this.status?.player.pendingDuelist != null ||
+        this.status?.player.magicEater?.pendingAbsorption != null)
     );
   }
 

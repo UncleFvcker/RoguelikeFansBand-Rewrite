@@ -2080,6 +2080,10 @@ impl Game {
             || item.location == ItemLocation::Ground(self.player.position)
     }
 
+    pub(super) fn item_is_device_at_feet(&self, item: &ItemInstance) -> bool {
+        item.location == ItemLocation::Ground(self.player.position) && self.item_is_device(item)
+    }
+
     pub(super) fn item_is_device(&self, item: &ItemInstance) -> bool {
         self.content
             .item(&item.kind_id)

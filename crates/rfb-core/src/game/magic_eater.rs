@@ -26,6 +26,71 @@ const CATEGORIES: [(AbsorbedDeviceCategoryDto, &str); 3] = [
 ];
 
 impl Game {
+    /// Explicit desktop preparation: thirty generated/absorbed devices and a floor replacement.
+    /// This is not a claim of natural acquisition; the UI performs subsequent replacement/use.
+    #[doc(hidden)]
+    pub fn debug_prepare_magic_eater_e2e(&mut self) -> Result<(), CoreError> {
+        if !self.player_is_magic_eater() || self.map_scale != MapScaleDto::Local {
+            return Err(CoreError::InvalidSave(
+                "Magic-Eater E2E requires a local Magic-Eater",
+            ));
+        }
+        self.pending_magic_absorption = None;
+        self.entities.clear();
+        self.items.retain(|item| {
+            !matches!(
+                item.location,
+                ItemLocation::CarriedBy { .. } | ItemLocation::Absorbed { .. }
+            ) && !item.id.starts_with("e2e.magic-eater.")
+        });
+        self.player.statuses.clear();
+        self.player.position = super::Position {
+            x: i32::from(self.width / 2),
+            y: i32::from(self.height / 2),
+        };
+        for dy in -1..=1 {
+            for dx in -1..=1 {
+                let pos = super::Position {
+                    x: self.player.position.x + dx,
+                    y: self.player.position.y + dy,
+                };
+                let index = self.index(pos).expect("centered E2E fixture");
+                self.terrain[index] = "demo.terrain.floor".to_owned();
+            }
+        }
+        self.glow.fill(true);
+        self.apply_player_experience(
+            self.experience_required_for_level(25)
+                .saturating_sub(self.progress.experience),
+            &mut Vec::new(),
+        );
+        self.player.hp = self.effective_player_max_hp();
+        for (category, kind) in [
+            ("wand", "demo.item.magic-missile-wand"),
+            ("staff", "demo.item.identify-staff"),
+            ("rod", "demo.item.detection-rod"),
+        ] {
+            for slot in 0..SLOTS_PER_CATEGORY {
+                let id = format!("e2e.magic-eater.{category}.{slot}");
+                self.debug_add_generated_inventory_item(&id, kind, 1)?;
+                self.begin_magic_absorption(&id, &mut Vec::new())?;
+                self.select_magic_absorption_slot(slot, &mut Vec::new());
+            }
+        }
+        self.debug_add_generated_inventory_item(
+            "e2e.magic-eater.replacement",
+            "demo.item.magic-missile-wand",
+            1,
+        )?;
+        self.items
+            .iter_mut()
+            .find(|item| item.id == "e2e.magic-eater.replacement")
+            .expect("fixture replacement")
+            .location = ItemLocation::Ground(self.player.position);
+        self.reveal_current_visibility();
+        Ok(())
+    }
+
     pub(super) fn absorbed_device_category(
         &self,
         item: &ItemInstance,
@@ -321,7 +386,78 @@ impl Game {
                 })
                 .collect(),
             pending_absorption: self.pending_magic_absorption.clone(),
+            device_commands: CATEGORIES
+                .iter()
+                .map(|(category, _)| {
+                    let mut items = self
+                        .items
+                        .iter()
+                        .filter(|item| {
+                            self.item_is_in_pack_or_at_feet(item)
+                                && self.absorbed_device_category(item) == Some(*category)
+                        })
+                        .map(|item| self.inventory_item_dto(item))
+                        .collect::<Vec<_>>();
+                    items.sort_by(|left, right| left.id.cmp(&right.id));
+                    rfb_protocol::DeviceCommandDto {
+                        category: *category,
+                        items,
+                    }
+                })
+                .collect(),
         })
+    }
+
+    // RFB magic_eater.c::_magic_eater_calculate_labels and obj.c::obj_label.
+    fn absorbed_device_labels(
+        &self,
+        category: AbsorbedDeviceCategoryDto,
+        command: u8,
+    ) -> [char; 10] {
+        let mut labels = std::array::from_fn(|slot| char::from(b'a' + slot as u8));
+        for slot in 0..SLOTS_PER_CATEGORY {
+            let Some(inscription) = self
+                .absorbed_device(category, slot)
+                .and_then(|item| item.inscription.as_deref())
+            else {
+                continue;
+            };
+            let bytes = inscription.as_bytes();
+            let label = bytes
+                .iter()
+                .enumerate()
+                .filter(|(_, byte)| **byte == b'@')
+                .find_map(|(index, _)| {
+                    let next = *bytes.get(index + 1)?;
+                    if next == command {
+                        bytes
+                            .get(index + 2)
+                            .copied()
+                            .filter(u8::is_ascii_alphanumeric)
+                    } else {
+                        next.is_ascii_digit().then_some(next)
+                    }
+                });
+            if let Some(label) = label {
+                let label = char::from(if b"XWSRZ".contains(&label) {
+                    label.to_ascii_lowercase()
+                } else {
+                    label
+                });
+                if let Some(previous) = labels.iter().position(|value| *value == label) {
+                    labels[previous] = ' ';
+                }
+                labels[usize::from(slot)] = label;
+            }
+        }
+        for slot in 0..labels.len() {
+            if labels[slot] == ' ' {
+                labels[slot] = ('a'..='z')
+                    .find(|label| !labels.contains(label))
+                    .expect("ten slots fit alphabet");
+            }
+        }
+        labels
     }
 
     pub(super) fn magic_absorption_item_targets(&self) -> Vec<rfb_protocol::AbilityItemTargetDto> {

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.261";
+pub const PROTOCOL_VERSION: &str = "1.262";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 24;
 
@@ -274,6 +274,9 @@ pub struct PendingMagicAbsorptionDto {
 pub struct AbsorbedDeviceSlotDto {
     pub category: AbsorbedDeviceCategoryDto,
     pub slot: u8,
+    pub use_label: String,
+    pub device_label: String,
+    pub allows_multiple_targets: bool,
     pub item: Option<InventoryItemDto>,
     pub failure_per_mille: Option<u16>,
     pub energy_cost: Option<i32>,
@@ -285,7 +288,16 @@ pub struct AbsorbedDeviceSlotDto {
 #[serde(rename_all = "camelCase")]
 pub struct MagicEaterDto {
     pub slots: Vec<AbsorbedDeviceSlotDto>,
+    pub device_commands: Vec<DeviceCommandDto>,
     pub pending_absorption: Option<PendingMagicAbsorptionDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct DeviceCommandDto {
+    pub category: AbsorbedDeviceCategoryDto,
+    pub items: Vec<InventoryItemDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -5208,6 +5220,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(PendingMagicAbsorptionDto);
     push_declaration!(AbsorbedDeviceSlotDto);
     push_declaration!(MagicEaterDto);
+    push_declaration!(DeviceCommandDto);
     push_declaration!(LocaleDto);
     push_declaration!(AutoGetModeDto);
     push_declaration!(MogaminatorDispositionDto);

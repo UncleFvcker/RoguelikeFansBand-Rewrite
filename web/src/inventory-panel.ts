@@ -578,7 +578,9 @@ export class InventoryPanel {
   #renderDetail(): void {
     const homeItems = (this.#state.status?.homes ?? []).flatMap((home) => [...home.storedItems, ...home.depositItems])
       .flatMap((item) => item.details ? [item.details] : []);
-    const item = [...this.#state.inventory, ...this.#state.equipment, ...homeItems].find((entry) => entry.id === this.#detailItemId);
+    const absorbed = this.#state.status?.player.magicEater?.slots.flatMap(slot => slot.item ? [slot.item] : []) ?? [];
+    const ordinaryDevices = this.#state.status?.player.magicEater?.deviceCommands.flatMap(command => command.items) ?? [];
+    const item = [...this.#state.inventory, ...this.#state.equipment, ...homeItems, ...absorbed, ...ordinaryDevices].find((entry) => entry.id === this.#detailItemId);
     if (!item) { this.#closeDetail(); return; }
     this.#dom.inventoryDetailTitle.textContent = this.#itemName(item);
     const body = this.#dom.inventoryDetailBody;

@@ -18,6 +18,7 @@ import { runMageUiScenario } from "./mage.e2e.mjs";
 import { runRangerUiScenario } from "./ranger.e2e.mjs";
 import { runPriestUiScenario } from "./priest.e2e.mjs";
 import { runWarriorMageUiScenario } from "./warrior-mage.e2e.mjs";
+import { runMagicEaterUiScenario } from "./magic-eater.e2e.mjs";
 import { runCraftScenario } from "./craft.e2e.mjs";
 import { runTownMapScenario } from "./town-maps.e2e.mjs";
 
@@ -78,7 +79,7 @@ async function main() {
     await rm(diagnosticDirectory, { recursive: true, force: true });
     await rm(desktopLogPath, { force: true });
     const port = await reservePort();
-    const creationLayout = process.argv.includes("--zul") || process.argv.includes("--town-maps") || process.argv.includes("--warrior-mage-play") || process.argv.includes("--warrior-mage-ui") || process.argv.includes("--character-creation") || process.argv.includes("--creation-layout") || process.argv.includes("--mindcrafter") || process.argv.includes("--berserker") || process.argv.includes("--duelist-ui") || process.argv.includes("--mage-ui") || process.argv.includes("--mage-play") || process.argv.includes("--ranger-ui") || process.argv.includes("--ranger-play") || process.argv.includes("--priest-ui") || process.argv.includes("--priest-play");
+    const creationLayout = process.argv.includes("--magic-eater-ui") || process.argv.includes("--zul") || process.argv.includes("--town-maps") || process.argv.includes("--warrior-mage-play") || process.argv.includes("--warrior-mage-ui") || process.argv.includes("--character-creation") || process.argv.includes("--creation-layout") || process.argv.includes("--mindcrafter") || process.argv.includes("--berserker") || process.argv.includes("--duelist-ui") || process.argv.includes("--mage-ui") || process.argv.includes("--mage-play") || process.argv.includes("--ranger-ui") || process.argv.includes("--ranger-play") || process.argv.includes("--priest-ui") || process.argv.includes("--priest-play");
     const debugProfile = path.join(repositoryDirectory, "target", "e2e", "creation-webview");
     child = spawn(executable, [], {
       cwd: repositoryDirectory,
@@ -129,6 +130,8 @@ async function main() {
       await runMageUiScenario(client, path.join(artifactDirectory, "mage-ui"), debugProfile);
     } else if (process.argv.includes("--ranger-ui")) {
       await runRangerUiScenario(client, path.join(artifactDirectory, "ranger-ui"), debugProfile);
+    } else if (process.argv.includes("--magic-eater-ui")) {
+      await runMagicEaterUiScenario(client, path.join(artifactDirectory, "magic-eater-ui"), debugProfile);
     } else if (process.argv.includes("--warrior-mage-play")) {
       await runWarriorMageUiScenario(client, path.join(artifactDirectory, "warrior-mage-play"), debugProfile, true);
     } else if (process.argv.includes("--warrior-mage-ui")) {

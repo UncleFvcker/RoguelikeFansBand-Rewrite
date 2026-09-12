@@ -96,6 +96,24 @@ impl Game {
         AbsorbedDeviceSlotDto {
             category,
             slot,
+            use_label: self.absorbed_device_labels(category, b'm')[usize::from(slot)].to_string(),
+            device_label: self.absorbed_device_labels(
+                category,
+                match category {
+                    AbsorbedDeviceCategoryDto::Wand => b'a',
+                    AbsorbedDeviceCategoryDto::Staff => b'u',
+                    AbsorbedDeviceCategoryDto::Rod => b'z',
+                },
+            )[usize::from(slot)]
+            .to_string(),
+            allows_multiple_targets: item
+                .and_then(|item| self.absorbed_device_profile(item))
+                .is_some_and(|profile| {
+                    matches!(
+                        profile.effect,
+                        ItemUseEffectDefinition::IdentifyItem { full: false }
+                    )
+                }),
             failure_per_mille: item.and_then(|item| {
                 let profile = self.absorbed_device_profile(item)?;
                 let activation = item.activation.as_ref()?;

@@ -55,6 +55,7 @@ export class InputController {
   readonly #describeLook: (position: { readonly x: number; readonly y: number }) => string;
   readonly #openObjectList: () => void;
   readonly #openMogaminator: () => void;
+  readonly #openDeviceCommand: (key: string) => boolean;
   readonly #onLookFocusChange: (position: Position | undefined) => void;
   readonly #announce: (
     key: MessageKey,
@@ -78,6 +79,7 @@ export class InputController {
     describeLook: (position: { readonly x: number; readonly y: number }) => string;
     openObjectList: () => void;
     openMogaminator: () => void;
+    openDeviceCommand?: (key: string) => boolean;
     onLookFocusChange: (position: Position | undefined) => void;
     announce: (
       key: MessageKey,
@@ -95,6 +97,7 @@ export class InputController {
     this.#describeLook = options.describeLook;
     this.#openObjectList = options.openObjectList;
     this.#openMogaminator = options.openMogaminator;
+    this.#openDeviceCommand = options.openDeviceCommand ?? (() => false);
     this.#onLookFocusChange = options.onLookFocusChange;
     this.#announce = options.announce;
   }
@@ -224,6 +227,8 @@ export class InputController {
 
   cancelTargeting(announce = true): void {
     if (!this.#state.targeting) return;
+    const cancelledDevice = announce && this.#state.targetingIntent?.type === "absorbed-device"
+      ? this.#state.targetingIntent.itemId : undefined;
     const wasMapCursor =
       this.#state.targetingIntent?.type === "look" ||
       this.#state.targetingIntent?.type === "local-travel";
@@ -234,6 +239,7 @@ export class InputController {
       this.#announce("message-target-mode-cancelled", undefined, "system");
     }
     this.render();
+    if (cancelledDevice) void this.#dispatch({ type: "use-absorbed-device", itemId: cancelledDevice, targets: [] });
   }
 
   reconcileStatus(state: GameSnapshot | GameUpdate): void {
@@ -481,6 +487,12 @@ export class InputController {
     }
 
     const key = event.key.toLowerCase();
+    if (!this.#state.worldMap && !event.ctrlKey && !event.metaKey &&
+        (event.altKey || !directionForKeyboardInput(event, this.#getInputPreset())) &&
+        this.#openDeviceCommand(key)) {
+      event.preventDefault();
+      return;
+    }
     if (key === "x") {
       event.preventDefault();
       this.startLookMode();
@@ -731,6 +743,8 @@ export class InputController {
         ? { type: "cast-ability", abilityId: intent.abilityId, target }
         : intent.type === "item"
           ? { type: "use-item", itemId: intent.itemId, target }
+          : intent.type === "absorbed-device"
+            ? { type: "use-absorbed-device", itemId: intent.itemId, targets: [target] }
           : { type: "fire-target", target },
     );
   }
@@ -1017,9 +1031,12 @@ function targetSpecForIntent(
   }
   if (intent.type === "projectile") return state.player.projectileProfile?.targetSpec;
   if (intent.type === "item") {
-    return state.inventory.find(
+    return [...state.inventory, ...(state.player.magicEater?.deviceCommands.flatMap(command => command.items) ?? [])].find(
       (item) => item.id === intent.itemId && item.usable,
     )?.useTargetSpec;
+  }
+  if (intent.type === "absorbed-device") {
+    return state.player.magicEater?.slots.find(slot => slot.item?.id === intent.itemId && slot.item.usable)?.item?.useTargetSpec;
   }
   return (state.player.abilities ?? []).find(
     (ability) => ability.id === intent.abilityId && ability.canCast,
