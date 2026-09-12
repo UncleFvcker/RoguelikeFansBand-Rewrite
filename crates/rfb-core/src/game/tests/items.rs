@@ -14,8 +14,249 @@ fn artifact_loot_context(depth: u16) -> LootContext {
 }
 
 #[test]
+fn heavy_base_artifacts_generate_with_source_overrides_and_saved_random_properties() {
+    let mut game = Game::new_with_build(463, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-70".into(),
+        depth: 70,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.ordinary-drop".into(),
+        },
+    };
+    let mut remaining = BTreeSet::from(["isildur", "yositsune", "bando-musha", "bilbo"]);
+    // New bases and artifacts both pass through the unchanged complete source
+    // allocation, quality and rarity pools; only the depth is controlled.
+    for _ in 0..50_000 {
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            if !remaining.remove(item.kind_id.strip_prefix("demo.item.").unwrap()) {
+                continue;
+            }
+            assert!(item.activation.is_none() && item.curse.is_none());
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            assert!(
+                !game
+                    .item_property_knowledge
+                    .get(&id)
+                    .is_some_and(|k| k.appraised)
+            );
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "artifacts never generated: {remaining:?}"
+    );
+    game.reveal_current_visibility();
+    let unknown = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(unknown.state_hash(), game.state_hash());
+    assert_eq!(unknown.rng, game.rng);
+    for (slug, base, defense, weight, hit, damage) in [
+        ("isildur", "full-plate-armour", 50, 300, 0, 0),
+        ("yositsune", "haramakido", 45, 200, 0, 0),
+        ("bando-musha", "o-yoroi", 44, 320, 5, 5),
+        ("bilbo", "mithril-chain-mail", 35, 70, 2, 2),
+    ] {
+        let mut equipped = unknown.clone();
+        let kind = format!("demo.item.{slug}");
+        equipped.items.retain(|item| item.kind_id == kind);
+        let id = equipped.items[0].id.clone();
+        let rolled = equipped.items[0].rolled_affixes.clone();
+        assert_eq!(equipped.carried_weight_tenths_pound(), weight);
+        assert_eq!(rolled.len(), usize::from(slug != "yositsune"));
+        assert!(
+            equipped
+                .visible_item_resistances(&equipped.items[0])
+                .is_empty()
+        );
+        let rng = equipped.rng.clone();
+        equipped.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        assert_eq!(equipped.rng, rng);
+        equipped.equip_inventory_item(&id, Some("body")).unwrap();
+        assert_eq!(equipped.equipment_modifiers().defense, defense);
+        let bonuses = equipped.player_equipment_bonuses();
+        assert_eq!((bonuses.melee_skill, bonuses.melee_damage), (hit, damage));
+        for affix in &rolled {
+            assert_eq!(affix.properties.resistances.len(), 1);
+            assert!(
+                equipped.item_property_knowledge[&id]
+                    .known_affix_ids
+                    .contains(&affix.affix_id)
+            );
+            let (&element, _) = affix.properties.resistances.iter().next().unwrap();
+            assert_eq!(
+                equipped
+                    .effective_player_resistances()
+                    .level(element.into()),
+                ResistanceLevel::Resistant
+            );
+        }
+        match slug {
+            "isildur" => {
+                assert_eq!(equipped.equipment_modifiers().constitution, 2);
+                for element in [
+                    DamageType::Acid,
+                    DamageType::Fire,
+                    DamageType::Cold,
+                    DamageType::Sound,
+                    DamageType::Confusion,
+                    DamageType::Nexus,
+                ] {
+                    assert_eq!(
+                        equipped.effective_player_resistances().level(element),
+                        ResistanceLevel::Resistant
+                    );
+                }
+            }
+            "yositsune" => {
+                assert!(
+                    equipped
+                        .player_status_immunities()
+                        .contains(STATUS_PARALYSIS)
+                );
+                assert!(
+                    equipped
+                        .player_equipment_passives()
+                        .contains(&EquipmentPassive::SlowDigestion)
+                );
+                assert!(
+                    equipped
+                        .player_equipment_passives()
+                        .contains(&EquipmentPassive::Regeneration)
+                );
+                assert_eq!(
+                    (
+                        equipped.equipment_modifiers().dexterity,
+                        equipped.equipment_modifiers().speed,
+                        bonuses.stealth_skill
+                    ),
+                    (2, 2, 2)
+                );
+                for element in [
+                    DamageType::Acid,
+                    DamageType::Electricity,
+                    DamageType::Fire,
+                    DamageType::Cold,
+                    DamageType::Confusion,
+                    DamageType::Chaos,
+                    DamageType::Nexus,
+                ] {
+                    assert_eq!(
+                        equipped.effective_player_resistances().level(element),
+                        ResistanceLevel::Resistant
+                    );
+                }
+            }
+            "bando-musha" => {
+                let m = equipped.equipment_modifiers();
+                assert_eq!((m.strength, m.constitution, m.charisma), (2, 2, 2));
+                for element in [
+                    DamageType::Acid,
+                    DamageType::Electricity,
+                    DamageType::Cold,
+                    DamageType::Blindness,
+                    DamageType::Disenchant,
+                    DamageType::Fear,
+                ] {
+                    assert_eq!(
+                        equipped.effective_player_resistances().level(element),
+                        ResistanceLevel::Resistant
+                    );
+                }
+            }
+            "bilbo" => {
+                assert_eq!(
+                    (
+                        equipped.equipment_modifiers().dexterity,
+                        equipped.equipment_modifiers().speed,
+                        bonuses.stealth_skill
+                    ),
+                    (2, 2, 2)
+                );
+                assert_eq!(equipped.player_see_invisible_sources(), 1);
+                for element in [
+                    DamageType::Acid,
+                    DamageType::Electricity,
+                    DamageType::Fire,
+                    DamageType::Cold,
+                    DamageType::Poison,
+                    DamageType::Dark,
+                ] {
+                    assert_eq!(
+                        equipped.effective_player_resistances().level(element),
+                        ResistanceLevel::Resistant
+                    );
+                }
+            }
+            _ => unreachable!(),
+        }
+        give_inventory_item(&mut equipped, "test.heavy-bow", "demo.item.short-bow");
+        equipped
+            .equip_inventory_item("test.heavy-bow", None)
+            .unwrap();
+        let with = equipped.player_projectile_profile().unwrap();
+        let mut without = equipped.clone();
+        without.unequip_slot("body").unwrap();
+        let without = without.player_projectile_profile().unwrap();
+        assert_eq!(
+            (
+                with.to_hit - without.to_hit,
+                with.launcher_to_damage - without.launcher_to_damage
+            ),
+            (hit, damage)
+        );
+        equipped.refresh_player_resource_maxima();
+        equipped.reveal_current_visibility();
+        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), equipped.state_hash());
+        assert_eq!(
+            restored
+                .items
+                .iter()
+                .find(|item| item.id == id)
+                .unwrap()
+                .rolled_affixes,
+            rolled
+        );
+        assert_eq!(
+            restored.player_projectile_profile().unwrap().to_hit,
+            with.to_hit
+        );
+        let next = equipped
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap();
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            next
+        );
+        assert_eq!(restored.rng, equipped.rng);
+        assert!(restored.generated_artifact_ids.contains(&kind));
+        assert_ne!(
+            restored.roll_fixed_artifact_kind_id(
+                &context,
+                Some(&format!("demo.item.{base}")),
+                false
+            ),
+            Some(kind)
+        );
+    }
+}
+
+#[test]
 fn ready_armor_group_generates_equips_and_preserves_consumers_after_save() {
-    let mut game = Game::new_with_build(462, "demo.build.warrior").unwrap();
+    let mut game = Game::new_with_build(464, "demo.build.warrior").unwrap();
     choose_human_talent_if_pending(&mut game);
     clear_monsters(&mut game);
     game.items.clear();
@@ -355,74 +596,87 @@ fn a10_hell_beast_natural_entry_drops_zero_rarity_artifact_once_after_save() {
 
 #[test]
 fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
-    let mut game = Game::new_with_build(409, "demo.build.warrior").unwrap();
-    clear_monsters(&mut game);
-    choose_human_talent_if_pending(&mut game);
-    game.items.clear();
-    let context = LootContext {
-        table_id: "demo.loot-table.base-items".into(),
-        floor_id: game.current_floor_id.clone(),
-        depth: 35,
-        source: LootSource::MonsterDeath {
-            actor_id: "test.ordinary-drop".into(),
-        },
-    };
-    // Controlled depth and repeated drops; the formal pool, weights, quality
-    // rolls and materialization remain intact. This is not a leveling test.
-    let mut remaining = BTreeSet::from([272, 274, 276, 277, 278, 279]);
-    for _ in 0..10_000 {
-        let generated = game
-            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
-            .unwrap();
-        for item in generated {
-            let definition = game.content.item(&item.kind_id).unwrap();
-            let Some(base) = definition.rfb_base_kind else {
-                continue;
-            };
-            if item.quality != ItemQualityDto::Ordinary || !remaining.remove(&base.source_index) {
-                continue;
+    for (depth, indices) in [
+        (35, &[272, 274, 276, 277, 278, 279][..]),
+        (55, &[283, 284, 285, 287][..]),
+    ] {
+        let mut game = Game::new_with_build(409, "demo.build.warrior").unwrap();
+        clear_monsters(&mut game);
+        choose_human_talent_if_pending(&mut game);
+        game.items.clear();
+        let context = LootContext {
+            table_id: "demo.loot-table.base-items".into(),
+            floor_id: format!("test.floor.depth-{depth}"),
+            depth,
+            source: LootSource::MonsterDeath {
+                actor_id: "test.ordinary-drop".into(),
+            },
+        };
+        // Controlled depth and repeated drops; the formal pool, weights, quality
+        // rolls and materialization remain intact. This is not a leveling test.
+        let mut remaining = indices.iter().copied().collect::<BTreeSet<_>>();
+        for _ in 0..10_000 {
+            let generated = game
+                .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+                .unwrap();
+            for item in generated {
+                let definition = game.content.item(&item.kind_id).unwrap();
+                let Some(base) = definition.rfb_base_kind else {
+                    continue;
+                };
+                // Ordinary quality can still carry negative enchantments.
+                // Check the unenchanted base's own AC and hit penalty here.
+                if item.quality != ItemQualityDto::Ordinary
+                    || item.enchantments != Default::default()
+                    || !remaining.remove(&base.source_index)
+                {
+                    continue;
+                }
+                let defense = definition.modifiers.defense;
+                let hit = definition.equipment_bonuses.melee_skill;
+                let weight = u32::from(definition.weight_tenths_pound);
+                let baseline = game.player_derived_stats();
+                let id = item.id.clone();
+                game.items.push(item);
+                game.pick_up_item_at_player(Some(&id)).unwrap();
+                assert_eq!(game.carried_weight_tenths_pound(), weight);
+                game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+                assert!(game.item_property_knowledge[&id].identified);
+                game.equip_inventory_item(&id, Some("body")).unwrap();
+                let equipped = game.player_derived_stats();
+                assert_eq!(
+                    equipped.armor_class.value - baseline.armor_class.value,
+                    defense * 10
+                );
+                assert_eq!(equipped.melee_skill.value - baseline.melee_skill.value, hit);
+                game.reveal_current_visibility();
+                let mut restored = Game::from_save(game.to_save()).unwrap();
+                assert_eq!(restored.state_hash(), game.state_hash());
+                assert_eq!(restored.rng, game.rng);
+                assert_eq!(
+                    restored.player_derived_stats().armor_class,
+                    equipped.armor_class
+                );
+                assert_eq!(restored.carried_weight_tenths_pound(), weight);
+                let next = game
+                    .generate_loot_instances(&context, ItemLocation::Inventory)
+                    .unwrap();
+                let replay = restored
+                    .generate_loot_instances(&context, ItemLocation::Inventory)
+                    .unwrap();
+                assert_eq!(next, replay);
+                assert_eq!(restored.rng, game.rng);
+                game.items.clear();
             }
-            let defense = definition.modifiers.defense;
-            let hit = definition.equipment_bonuses.melee_skill;
-            let weight = u32::from(definition.weight_tenths_pound);
-            let baseline = game.player_derived_stats();
-            let id = item.id.clone();
-            game.items.push(item);
-            game.pick_up_item_at_player(Some(&id)).unwrap();
-            assert_eq!(game.carried_weight_tenths_pound(), weight);
-            game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
-            assert!(game.item_property_knowledge[&id].identified);
-            game.equip_inventory_item(&id, Some("body")).unwrap();
-            let equipped = game.player_derived_stats();
-            assert_eq!(
-                equipped.armor_class.value - baseline.armor_class.value,
-                defense * 10
-            );
-            assert_eq!(equipped.melee_skill.value - baseline.melee_skill.value, hit);
-            game.reveal_current_visibility();
-            let mut restored = Game::from_save(game.to_save()).unwrap();
-            assert_eq!(restored.state_hash(), game.state_hash());
-            assert_eq!(restored.rng, game.rng);
-            assert_eq!(
-                restored.player_derived_stats().armor_class,
-                equipped.armor_class
-            );
-            assert_eq!(restored.carried_weight_tenths_pound(), weight);
-            let next = game
-                .generate_loot_instances(&context, ItemLocation::Inventory)
-                .unwrap();
-            let replay = restored
-                .generate_loot_instances(&context, ItemLocation::Inventory)
-                .unwrap();
-            assert_eq!(next, replay);
-            assert_eq!(restored.rng, game.rng);
-            game.items.clear();
+            if remaining.is_empty() {
+                break;
+            }
         }
-        if remaining.is_empty() {
-            return;
-        }
+        assert!(
+            remaining.is_empty(),
+            "ordinary heavy armor was not generated: {remaining:?}"
+        );
     }
-    panic!("ordinary heavy armor was not generated: {remaining:?}");
 }
 
 #[test]
@@ -3112,7 +3366,16 @@ fn fixed_high_resistance_uses_one_source_roll_without_retrying_duplicates() {
         ActorDamageType::Disenchant,
         ActorDamageType::Fear,
     ];
-    for kind in ["rohirrim", "thorin", "celegorm", "anarion", "thror"] {
+    for kind in [
+        "rohirrim",
+        "thorin",
+        "celegorm",
+        "anarion",
+        "thror",
+        "isildur",
+        "bando-musha",
+        "bilbo",
+    ] {
         for (index, element) in source_order.into_iter().enumerate() {
             let seed = (0..10_000)
                 .find(|seed| RfbRng::seeded(*seed).bounded(12) == index as u64)
@@ -4089,35 +4352,24 @@ fn razorback_star_ball_and_full_10000_tick_cooldown_survive_save() {
 
 #[test]
 fn razorback_guardian_reward_shares_natural_generation_uniqueness() {
-    let pack =
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
-    let mut artifact = rfb_content::compile_pack_dir(&pack).unwrap();
-    let world = artifact
+    let (mut game, _) = razorback_game();
+    // Exercise the real Rlyeh replacement table at a controlled final floor.
+    let floor = game
         .content
-        .worlds
-        .iter_mut()
-        .find(|world| world.id == DEFAULT_WORLD_ID)
-        .unwrap();
-    // Exercise the shared reward consumer without opening the Rlyeh dungeon in R2.
-    let floor = world
+        .world(DEFAULT_WORLD_ID)
+        .unwrap()
         .procedural_floors
-        .iter_mut()
+        .iter()
         .find(|floor| {
             floor.guardian.as_ref().is_some_and(|guardian| {
-                guardian.reward_artifact_item_kind_id.as_deref() == Some("demo.item.lotharang")
+                guardian.reward_artifact_item_kind_id.as_deref() == Some("demo.item.razorback")
             })
         })
-        .unwrap();
+        .unwrap()
+        .clone();
     let floor_id = floor.id.clone();
     let dungeon_id = floor.dungeon_id.clone().unwrap();
-    let guardian = floor.guardian.as_mut().unwrap();
-    guardian.reward_artifact_item_kind_id = Some("demo.item.razorback".to_owned());
-    let guardian = guardian.clone();
-    let content = Arc::new(rfb_content::ContentCatalog::from_artifact(
-        rfb_content::encode_content(artifact.content).unwrap(),
-    ));
-    let (mut game, _) = razorback_game();
-    game.content = content;
+    let guardian = floor.guardian.as_ref().unwrap().clone();
     game.current_floor_id = floor_id;
     game.dungeon_states.get_mut(&dungeon_id).unwrap().suppressed = false;
     let mut actor = game.player.clone();
@@ -4129,12 +4381,10 @@ fn razorback_guardian_reward_shares_natural_generation_uniqueness() {
             .iter()
             .all(|item| item.kind_id != "demo.item.razorback")
     );
-    // The shared Artifact mode now materializes the replacement artifact.
-    assert!(
-        replacement
-            .last()
-            .is_some_and(|item| item.is_artifact(&game.content))
-    );
+    // A named random artifact must be produced, not a lucky fixed-artifact roll.
+    assert!(replacement.last().is_some_and(|item| item.kind_id
+        == "demo.item.multi-hued-dragon-scale-mail"
+        && item.artifact_name.is_some()));
     game.generated_artifact_ids.remove("demo.item.razorback");
     game.items
         .retain(|item| item.kind_id != "demo.item.razorback");
@@ -7638,7 +7888,7 @@ fn b4_pick_up_tailored_kind(game: &mut Game, kind: &str) -> String {
         .item_knowledge
         .get(kind)
         .map_or(0, |state| state.found_count);
-    let draft = (0..512)
+    let draft = (0..2048)
         .find_map(|_| {
             game.generate_one_loot_draft(&context, ItemGenerationMode::TailoredGreat)
                 .filter(|draft| draft.kind_id == kind)

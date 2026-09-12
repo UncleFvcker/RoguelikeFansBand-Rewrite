@@ -1822,6 +1822,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.haramakido",
+      "maxDepth": 65535,
+      "minDepth": 32,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
       "itemKindId": "demo.item.no-dachi",
       "maxDepth": 65535,
       "minDepth": 35,
@@ -2109,6 +2116,20 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.full-plate-armour",
+      "maxDepth": 65535,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.o-yoroi",
+      "maxDepth": 65535,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
       "itemKindId": "demo.item.inventory-protection-scroll",
       "maxDepth": 65535,
       "minDepth": 45,
@@ -2282,6 +2303,13 @@
       "minDepth": 50,
       "quantity": 1,
       "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.mithril-chain-mail",
+      "maxDepth": 65535,
+      "minDepth": 55,
+      "quantity": 1,
+      "weight": 25
     },
     {
       "itemKindId": "demo.item.mortal-draught",

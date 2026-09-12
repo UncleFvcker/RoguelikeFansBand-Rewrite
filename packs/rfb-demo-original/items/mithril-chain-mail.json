@@ -1,0 +1,50 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 7000,
+  "descriptionKey": "item-demo-mithril-chain-mail-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -1
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 55,
+  "glyph": "[",
+  "id": "demo.item.mithril-chain-mail",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 35
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-mithril-chain-mail-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 287,
+    "sval": 20,
+    "tval": 37
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IGNORE_COLD"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 150
+}

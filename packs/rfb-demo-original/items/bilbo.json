@@ -1,0 +1,77 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.bilbo",
+  "nameKey": "item-demo-bilbo-name",
+  "descriptionKey": "item-demo-bilbo-description",
+  "glyph": "[",
+  "generationLevel": 60,
+  "weightTenthsPound": 70,
+  "maxStack": 1,
+  "baseValue": 200000,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 242,
+    "baseItemKindId": "demo.item.mithril-chain-mail",
+    "instant": false,
+    "rarityOneIn": 4,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "modifiers": {
+    "defense": 35,
+    "dexterity": 2,
+    "speed": 2
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 2,
+    "meleeDamage": 2,
+    "stealthSkill": 2
+  },
+  "passives": [
+    "see-invisible"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant",
+    "poison": "resistant",
+    "dark": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_DARK",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_POIS",
+      "SEE_INVIS",
+      "SPEED",
+      "STEALTH",
+      "XTRA_H_RES"
+    ],
+    "pval": 2,
+    "toArmor": 7
+  }
+}

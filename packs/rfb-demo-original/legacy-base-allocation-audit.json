@@ -1,6 +1,6 @@
 {
   "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits",
-  "allocationRowCount": 377,
+  "allocationRowCount": 381,
   "explicitItems": [
     {
       "itemId": "demo.item.amun",
@@ -75,6 +75,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.bando-musha",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.bard",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -88,6 +94,12 @@
     },
     {
       "itemId": "demo.item.belthronding",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.bilbo",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -328,6 +340,12 @@
     },
     {
       "itemId": "demo.item.indra",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.isildur",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -664,6 +682,12 @@
     },
     {
       "itemId": "demo.item.yoichi",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.yositsune",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -4710,12 +4734,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.haramakido",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 283,
       "sourceName": "Haramakido",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 14,
       "tval": 37
     },
@@ -4729,12 +4753,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.full-plate-armour",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 284,
       "sourceName": "Full Plate Armour",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 15,
       "tval": 37
     },
@@ -4748,12 +4772,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.o-yoroi",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 285,
       "sourceName": "O-yoroi",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 16,
       "tval": 37
     },
@@ -4786,12 +4810,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.mithril-chain-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 287,
       "sourceName": "Mithril Chain Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 20,
       "tval": 37
     },

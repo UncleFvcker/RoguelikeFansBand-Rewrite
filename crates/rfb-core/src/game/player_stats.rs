@@ -952,11 +952,14 @@ impl Game {
     }
 
     fn armor_combat_enchantments(&self, item: &ItemInstance, ranged: bool) -> (i32, i32) {
-        // master:equip.c also grants these gauntlets', Aragorn's and Stone of War's
+        // master:equip.c also grants these artifacts' nonweapon equipment
         // hit/damage to archery. Melee already receives their equipment bonuses.
         if let Some(kind) = self.content.item(&item.kind_id)
             && kind.artifact_generation.as_ref().is_some_and(|artifact| {
-                matches!(artifact.source_index, 54 | 56 | 57 | 185 | 238 | 291)
+                matches!(
+                    artifact.source_index,
+                    54 | 56 | 57 | 185 | 236 | 238 | 242 | 291
+                )
             })
         {
             return (

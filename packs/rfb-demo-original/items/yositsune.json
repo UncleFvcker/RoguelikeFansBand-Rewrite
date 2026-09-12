@@ -1,0 +1,80 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.yositsune",
+  "nameKey": "item-demo-yositsune-name",
+  "descriptionKey": "item-demo-yositsune-description",
+  "glyph": "[",
+  "generationLevel": 50,
+  "weightTenthsPound": 200,
+  "maxStack": 1,
+  "baseValue": 40000,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 235,
+    "baseItemKindId": "demo.item.haramakido",
+    "instant": false,
+    "rarityOneIn": 20
+  },
+  "modifiers": {
+    "defense": 45,
+    "dexterity": 2,
+    "speed": 2
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 2
+  },
+  "passives": [
+    "regeneration",
+    "slow-digestion"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "fire": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "confusion": "resistant",
+    "chaos": "resistant",
+    "nexus": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "REGEN",
+      "RES_ACID",
+      "RES_CHAOS",
+      "RES_COLD",
+      "RES_CONF",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_NEXUS",
+      "SLOW_DIGEST",
+      "SPEED",
+      "STEALTH"
+    ],
+    "pval": 2,
+    "toArmor": 28
+  }
+}

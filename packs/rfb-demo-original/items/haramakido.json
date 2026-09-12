@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 920,
+  "descriptionKey": "item-demo-haramakido-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -2
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 32,
+  "glyph": "[",
+  "id": "demo.item.haramakido",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 17
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-haramakido-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 283,
+    "sval": 14,
+    "tval": 37
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 280
+}

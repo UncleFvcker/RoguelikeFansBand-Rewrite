@@ -3073,7 +3073,7 @@
           "good-luck-fixed-retry"
         ],
         "entry": "Imported fixed artifacts, explicitly configured class rewards and named monster death drops.",
-        "reason": "Terror Mask (41) is generated in the ordinary iron-helm pool for every current build. Warrior/Cavalry/Berserker receive one ability then one high resistance; all other current classes receive intrinsic AGGRAVATE/TY_CURSE, a heavy curse and get_curse(2). These are saved generation properties. Dr Jones (162) retains its ordinary non-Archaeologist branch. Configured rewards keep their existing entry contracts. Mage/High-Mage Old Castle rewards now preselect Gandalf/Saruman/Indra at 1:1:8 using the durable selection seed and replace a previously generated fixed artifact through the existing named random-artifact path. Ordinary Mage thieves reward is a long sword. These three artifacts are not the ten identity-specific construction exceptions. Belthronding/Yoichi naturally allocate and keep source launcher properties and uniqueness. Old Castle selects 1:4 through the durable birth seed; duplicates become named random-artifact long bows and failed claims are atomic. Ordinary thieves reward is a long sword. Xiaolong (145) and Dragonlance (322) now use their ordinary branches on current classes: no Monk BLOWS or Dragon-pact Warlock slays. GHB (39) drops artifact 192 at 100% through the existing named-drop path; rarity 0 / QUESTITEM excludes it from ordinary selection. Source xtra2.c skips an already-generated named drop rather than making a replacement. Ordinary armor 132/238/357/380 shares existing base/quality/rarity/uniqueness selection without a class-specific construction branch; Aragorn uses the existing nonweapon melee/archery consumer.",
+        "reason": "Terror Mask (41) is generated in the ordinary iron-helm pool for every current build. Warrior/Cavalry/Berserker receive one ability then one high resistance; all other current classes receive intrinsic AGGRAVATE/TY_CURSE, a heavy curse and get_curse(2). These are saved generation properties. Dr Jones (162) retains its ordinary non-Archaeologist branch. Configured rewards keep their existing entry contracts. Mage/High-Mage Old Castle rewards now preselect Gandalf/Saruman/Indra at 1:1:8 using the durable selection seed and replace a previously generated fixed artifact through the existing named random-artifact path. Ordinary Mage thieves reward is a long sword. These three artifacts are not the ten identity-specific construction exceptions. Belthronding/Yoichi naturally allocate and keep source launcher properties and uniqueness. Old Castle selects 1:4 through the durable birth seed; duplicates become named random-artifact long bows and failed claims are atomic. Ordinary thieves reward is a long sword. Xiaolong (145) and Dragonlance (322) now use their ordinary branches on current classes: no Monk BLOWS or Dragon-pact Warlock slays. GHB (39) drops artifact 192 at 100% through the existing named-drop path; rarity 0 / QUESTITEM excludes it from ordinary selection. Source xtra2.c skips an already-generated named drop rather than making a replacement. Ordinary armor 132/238/357/380 shares existing base/quality/rarity/uniqueness selection without a class-specific construction branch; Aragorn uses the existing nonweapon melee/archery consumer. Body armor bases 283/284/285/287 and artifacts 20/235/236/242 now use the same ordinary allocation and existing high-resistance rolls; Bando Musha and Bilbo use the source nonweapon melee/archery bonus path. Explicit guardian replacement tables also enter the random-artifact factory in Artifact mode even without a natural Ego policy; real Man Cave and Rlyeh reward tables cover this boundary.",
         "implementation": [
           "crates/rfb-core/src/game/loot.rs",
           "crates/rfb-core/src/game/tasks.rs",
@@ -3097,7 +3097,11 @@
           "crates/rfb-core/src/game/tests/ranger/generation.rs#fixed_bows_generate_equip_fire_and_keep_uniqueness_after_loading",
           "crates/rfb-core/src/game/tests/items.rs#a9_ordinary_identity_artifacts_generate_fight_and_preserve_their_scope_after_save",
           "crates/rfb-core/src/game/tests/items.rs#a10_hell_beast_natural_entry_drops_zero_rarity_artifact_once_after_save",
-          "crates/rfb-core/src/game/tests/items.rs#ready_armor_group_generates_equips_and_preserves_consumers_after_save"
+          "crates/rfb-core/src/game/tests/items.rs#ready_armor_group_generates_equips_and_preserves_consumers_after_save",
+          "crates/rfb-core/src/game/tests/items.rs#ordinary_heavy_armor_allocation_reaches_equipment_and_save",
+          "crates/rfb-core/src/game/tests/items.rs#heavy_base_artifacts_generate_with_source_overrides_and_saved_random_properties",
+          "crates/rfb-core/src/game/tests/items.rs#razorback_guardian_reward_shares_natural_generation_uniqueness",
+          "crates/rfb-core/src/game/tests/world.rs#p89f_man_cave_conquest_lotharang_activation_and_replacement_are_one_shot"
         ],
         "limits": "Six other identity-sensitive construction exceptions, two fixed harps, Archaeologist Dr Jones, Monk Xiaolong, Dragon-pact Warlock Dragonlance, and Mauler / monster Hydra/Troll/Jelly Terror Mask branches remain deferred until their actual identities/content are available. Named GHB acquisition uses the formal Warrens ecology with prepared combat, not natural leveling. Old Castle tests prepare task completion and do not claim natural quest completion. Random-artifacts game mode replacement is unavailable; ordinary named drops skip an already-generated artifact.",
         "sourceEvidence": [
@@ -3108,7 +3112,8 @@
           "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
           "src/artifact.c:3391-3405 Xiaolong Monk and Dragonlance Dragon-pact branches",
           "src/xtra2.c:1897-1900,2335-2353 MON_GHB 100% drop and generated guard",
-          "lib/edit/r_info.txt N:39; lib/edit/k_info.txt N:245; lib/edit/a_info.txt N:192"
+          "lib/edit/r_info.txt N:39; lib/edit/k_info.txt N:245; lib/edit/a_info.txt N:192",
+          "src/quest.c create_replacement_art branch for already-generated guardian artifacts; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
         ]
       },
       {
@@ -5484,6 +5489,13 @@
       "tval": 37
     },
     {
+      "itemId": "demo.item.haramakido",
+      "status": "source-type-verified",
+      "sourceIndex": 283,
+      "sval": 14,
+      "tval": 37
+    },
+    {
       "itemId": "demo.item.no-dachi",
       "status": "source-type-verified",
       "sourceIndex": 70,
@@ -5624,6 +5636,20 @@
       "tval": 37
     },
     {
+      "itemId": "demo.item.full-plate-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 284,
+      "sval": 15,
+      "tval": 37
+    },
+    {
+      "itemId": "demo.item.o-yoroi",
+      "status": "source-type-verified",
+      "sourceIndex": 285,
+      "sval": 16,
+      "tval": 37
+    },
+    {
       "itemId": "demo.item.mattock",
       "status": "source-type-verified",
       "sourceIndex": 156,
@@ -5657,6 +5683,13 @@
       "sourceIndex": 723,
       "tval": 46,
       "sval": 1
+    },
+    {
+      "itemId": "demo.item.mithril-chain-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 287,
+      "sval": 20,
+      "tval": 37
     },
     {
       "itemId": "demo.item.mithril-bolt",

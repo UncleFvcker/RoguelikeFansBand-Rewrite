@@ -983,21 +983,26 @@ impl Game {
                 self.content.item(&entry.item_kind_id).unwrap(),
                 generation_depth,
             );
-        let random_artifact =
-            if rfb_generation && !rfb_jewelry && !special_robe && (!rfb_weapon || allow_weapon_ego)
-            {
-                base_kind.and_then(|base| {
-                    super::random_artifact::scheduling::select(
-                        &mut self.rng,
-                        base,
-                        i32::from(generation_depth),
-                        power,
-                        mode,
-                    )
-                })
-            } else {
-                None
-            };
+        // Explicit guardian replacement tables have no natural Ego policy.
+        // Artifact mode still sends their canonical base through the factory.
+        let random_artifact = if (rfb_generation
+            || matches!(mode, ItemGenerationMode::Artifact { .. }))
+            && !rfb_jewelry
+            && !special_robe
+            && (!rfb_weapon || allow_weapon_ego)
+        {
+            base_kind.and_then(|base| {
+                super::random_artifact::scheduling::select(
+                    &mut self.rng,
+                    base,
+                    i32::from(generation_depth),
+                    power,
+                    mode,
+                )
+            })
+        } else {
+            None
+        };
         if (rfb_jewelry && power != 0) || random_artifact.is_some() {
             // obj_get_effect retains the base kind activation on random
             // artifacts (notably dragon scale mail), including its value.
