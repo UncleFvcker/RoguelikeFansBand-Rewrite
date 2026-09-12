@@ -2,6 +2,7 @@
 use super::support::{choose_human_talent_if_pending, clear_monsters, give_inventory_item};
 use super::*;
 
+mod generation;
 mod learning;
 mod powers;
 

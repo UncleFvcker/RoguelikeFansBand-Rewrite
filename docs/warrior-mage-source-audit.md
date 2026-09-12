@@ -117,28 +117,30 @@ T四项为最低等级/MP/基础失败率/首用经验乘数；写入 `firstSucc
 | `object2.c:2456–2557,3441–3495,3654–3661` | Tailored沿身体槽位、当前双方领域的高阶书、发现次数与1/10 needs-book；Arcane不在优质/Tailored高阶书候选中，不能为主奥秘改写源名单。主奥秘仍参与源needs-book判断，候选过滤与类别意图分别验证；改换副领域保留发现记录并切换当前书本消费者 |
 | `autopick.c:848–868`、`object2.c:3747–3752` | 手套的FREE_ACT/MAGIC_MASTERY/正DEX豁免由现有`item_has_glove_encumbrance`承接，Tailored成品及已知不适用提示需复验。未知属性不可被UI预先揭露；不能把不适用物品从普通池删掉 |
 | `ego.c`、`artifact.c`及共享身体/幸运/主题条件 | 未查到额外战法师Ego材质或重量分支；保留真正影响结果的种族槽位、坏运/好运、Chance、美德、诅咒与主题。不存在“所有生成都等同Mage”的结论 |
-| `artifact.c:2265–2269`神器卷轴 | Mage bias，后续Warrior转换20；[random_artifact.rs](../crates/rfb-core/src/game/random_artifact.rs)当前职业名单需补战法师。怪物掉落主题与玩家Class偏向仍是两条调用路径 |
-| `q_thieves.txt:39`普通盗贼任务 | 源默认长剑。当前世界任务默认阔剑，只对Mage/Ranger覆盖长剑；战法师须新增 `demo.item.long-sword` 职业奖励，不能误领 `broad-sword` |
+| `artifact.c:2265–2269`神器卷轴 | Mage bias，后续Warrior转换20；[random_artifact.rs](../crates/rfb-core/src/game/random_artifact.rs)第五步已将战法师补入职业名单。怪物掉落主题与玩家Class偏向仍是两条调用路径 |
+| `q_thieves.txt:39`普通盗贼任务 | 源默认长剑。当前世界任务默认阔剑，只对Mage/Ranger覆盖长剑；第五步已增加战法师的 `demo.item.long-sword` 职业奖励，保留其他职业的默认覆盖 |
 | `q_orcs.txt:55–73`兽人营地 | 战法师没有专属覆盖，当前有荒野模式沿 `demo.item.frost-ball-wand`；不复制Priest/Berserker钝器奖励。源无荒野替代不是本批模式 |
-| `q_old_castle.txt:406–410` | 出生持久选择神器22/219，权重1:4。[tasks.rs](../crates/rfb-core/src/game/tasks.rs)需将战法师加入持久选择与已生成神器替代条件，世界Class override配置两件正式实物；失败领取/读档/推进其他RNG不重抽 |
-| `t_angwil.txt:127–137`、`t_thalos.txt:196–206` | [安格维尔法师塔](../packs/rfb-demo-original/townFacilities/angwil-mage-tower.json)、[萨洛斯巫术之塔](../packs/rfb-demo-original/townFacilities/thalos-sorcery-tower.json)新增Warrior-Mage Member。源鉴定价格Owner200、其他1000；Member不是Owner，不因此获得200价格 |
+| `q_old_castle.txt:406–410` | 出生持久选择神器22/219，权重1:4。[tasks.rs](../crates/rfb-core/src/game/tasks.rs)第五步已将战法师加入持久选择与已生成神器替代条件，并在世界Class override配置两件正式实物；失败领取/读档/推进其他RNG不重抽 |
+| `t_angwil.txt:127–137`、`t_thalos.txt:196–206` | [安格维尔法师塔](../packs/rfb-demo-original/townFacilities/angwil-mage-tower.json)、[萨洛斯巫术之塔](../packs/rfb-demo-original/townFacilities/thalos-sorcery-tower.json)第五步已配置Warrior-Mage Member。源鉴定价格Owner200、其他1000；Member不是Owner，不因此获得200价格 |
 | 按领域资格的其他设施 | [town.rs](../crates/rfb-core/src/game/town.rs)已消费主领域和`current_second_realm_id`；生命副领域影响现有生命寺庙，咒术副领域影响Morivant塔，改换后重新投影。两座Class Member塔不随副领域丢失资格 |
 
 ### 两件必要奖励的身份和依赖
 
-本步按正式item的 `artifactGeneration.sourceIndex` 全目录核对：22与219均缺失；底材37/20也缺失，40/0已存在。所有名称均有权威中文来源，无需自行翻译。
+第一步按正式item的 `artifactGeneration.sourceIndex` 全目录核对时，22与219以及底材37/20缺失，40/0已存在。第五步已加入下列三件正式物品；所有显示名按同一master的中文表与已有组合规则落地。
 
 | 项目 | 原版身份、数值与正式接入要求 |
 | --- | --- |
-| 神器22 `of Lohengrin` | `a_info.txt:300–308`；中文表`artifact_name_zh.inc:29`为“罗恩格林的”，底材中文为“秘银链甲”（`kind_name_zh.inc:294`）。源37/20、pval4，等级80/稀有度9、重量150、价值135000；基础AC28、命中-1、附加AC20，INT/WIS/潜行、看隐形、持久生命与酸电火冷毒/冥界/黑暗/恐惧抗性。拟用`demo.item.lohengrin`，显示名按源底材/神器名称组合规则生成 |
-| 底材287 `Mithril Chain Mail` | `k_info.txt:2053–2058`，37/20，中文“秘银链甲”；等级55、重量150、价值7000、AC35、命中-1，分配55/4、四元素忽略破坏。拟用`demo.item.mithril-chain-mail`。保留底材和神器各自AC，不用已有其他重甲替代 |
-| 神器219 `Charmed Pendant` | `a_info.txt:2360–2367`，中文表226行为“魅力吊坠”；40/0、pval2，等级50/稀有度50、重量2、价值100000、AC+5。INT/CHR/红外/搜索、看隐形/自由行动/慢消化/再生/光/警告、三元素光环、EasySpell/MagicMastery；FULL_NAME。拟用`demo.item.charmed-pendant`，复用已存在底材`demo.item.amulet`（kind311） |
+| 神器22 `of Lohengrin` | `a_info.txt:300–308`；中文表`artifact_name_zh.inc:29`为“罗恩格林的”，底材中文为“秘银链甲”（`kind_name_zh.inc:294`）。源37/20、pval4，等级80/稀有度9、重量150、价值135000；基础AC28、命中-1、附加AC20，INT/WIS/潜行、看隐形、持久生命与酸电火冷毒/冥界/黑暗/恐惧抗性。现用`demo.item.lohengrin`，显示名按源底材/神器名称组合规则生成 |
+| 底材287 `Mithril Chain Mail` | `k_info.txt:2053–2058`，37/20，中文“秘银链甲”；等级55、重量150、价值7000、AC35、命中-1，分配55/4、四元素忽略破坏。现用`demo.item.mithril-chain-mail`。保留底材和神器各自AC，不用已有其他重甲替代 |
+| 神器219 `Charmed Pendant` | `a_info.txt:2360–2367`，中文表226行为“魅力吊坠”；40/0、pval2，等级50/稀有度50、重量2、价值100000、AC+5。INT/CHR/红外/搜索、看隐形/自由行动/慢消化/再生/光/警告、三元素光环、EasySpell/MagicMastery；FULL_NAME。现用`demo.item.charmed-pendant`，复用已存在底材`demo.item.amulet`（kind311） |
 
 神器22激活为 `HEAL_CURING_HERO:50:300:777`；经 `devices.c:2466–2488 effect_parse`核对，格式是**效果:等级:冷却:额外量**，所以power/难度50、源冷却300、治疗额外量777。这里的777覆盖默认治疗公式，不是加在默认300之上。神器219为 `RESTORE_MANA:50:777`，power/难度50、冷却777。`devices.c:4933–4970`已有准确效果来源，项目已有Ego/随机神器的天使治愈组合以及 `RestoreResourceFull`。复用原语并保留本神器参数，不复制Ego的900冷却/80难度；按现有源回合到tick约定分别表达300和777冷却。
 
-天使治愈还涉及清理失明/流血/混乱/震慑、减毒、解除狂暴、英雄状态和minislow减少1；恢复法力还给背包魔杖/法杖25%、魔棒50%充能，跳过恢复法力装置，并解除狂暴。当前[item_use.rs](../crates/rfb-core/src/game/item_use.rs)分别有资源满恢复与`RechargeCarriedDevices`原语，不能假设`RestoreResourceFull`自动执行后者。现有Ego天使治愈组合使用完全清毒、固定治疗公式且省略部分后果，也不能原样拷贝；第五步需按新神器的真实效果组装并记录公共未表达项，不能仅用“加血/加满蓝”验收。神器219的EasySpell需与两项职业能力实际失败率联动验证。
+天使治愈还涉及清理失明/流血/混乱/震慑、减毒、解除狂暴、英雄状态和minislow减少1；恢复法力还给背包魔杖/法杖25%、魔棒50%充能，跳过恢复法力装置，并解除狂暴。当前[item_use.rs](../crates/rfb-core/src/game/item_use.rs)分别有资源满恢复与`RechargeCarriedDevices`原语，不能假设`RestoreResourceFull`自动执行后者。现有Ego天使治愈组合使用完全清毒、固定治疗公式且省略部分后果，也不能原样拷贝；第五步已按新神器的效果组装，并补充下述实现/公共边界记录。神器219的EasySpell与职业能力失败率联动、两件激活的实际后果已写入测试，留待统一执行。
 
-首次导入遵循现有固定神器/底材来源、锁和许可流程；普通自然生成、任务领取、装备、激活冷却与保存唯一性均为第五步范围。没有新的上游授权判断或自动移交其他方向；若出现真实共享写入，再协调责任。
+第五步实现保留同一来源提交和上游许可，新增底材按55/4进入基础分配；神器属性由正式定义进入既有固定神器生成、装备、唯一性及激活管线。罗恩格林采用777基础治疗与3000-tick冷却；减毒使用当前毒状态的tick表示（最少3000或现有量的一半），显式英雄KeepStrongest保持较长已有时长，轻微减速减少1复用现有minor_slow。吊坠复用perfect-focus-restoration，冷却7770 ticks；INT/CHR、搜索/感知、红外、装置技能、三光环、警告与EasySpell写入现有字段/被动。英雄效果仍沿现有共用heroism计时、最大生命与恐惧免疫模型；未新增源no_slow独立状态。
+
+[第五步专项代码](../crates/rfb-core/src/game/tests/warrior_mage/generation.rs)包含普通奖励、固定1:4选择、失败领取事务、重复替代、自然神器生成/装备/实际激活/冷却、两塔实付价格和改换后的铭刻/资格。共享allocation、ego/applicability、random_artifact与items用例扩展到8个真实Build，覆盖非装置偏好、奥秘优质书排除、双方needs-book、手套成品/未知属性、负向生成、卷轴和保存后继续行动。这些是已写测试代码，尚未运行；按用户要求，编译、Schema/绑定、最终lock、基础分配审计与入口报告统一留到第七步结束后。
 
 ## 7. 每个Build的五类审计责任
 
@@ -156,7 +158,7 @@ T四项为最低等级/MP/基础失败率/首用经验乘数；写入 `firstSucc
 
 ## 8. 适配与第一步结果
 
-本批应直接补齐的遗漏：自主重复学习与84历史容量校验、25级内部转换支付、EasySpell/震慑的职业能力消费者、20/0智能怪物反魔法权重、三种法球5/4成长、长剑任务覆盖、两件神器与秘银链甲、两塔Member、40项生成记录和正式UI。不能因已有函数/配置就宣布这些已完成。
+第一步审计识别的本批区别：自主重复学习与84历史容量校验、25级内部转换支付、EasySpell/震慑的职业能力消费者、20/0智能怪物反魔法权重、三种法球5/4成长、长剑任务覆盖、两件神器与秘银链甲、两塔Member、40项生成记录和正式UI。不能因已有函数/配置就宣布这些已完成。
 
 继续沿用并明确记录的公共适配：固定Build基础属性和现有成长曲线、统一背包/装备知识和感知容器、已有回合/tick与怪物AI选择模型、尚未完整表达的普通过度施法/疲劳、武术熟练度、源特殊防护/未开放身份。源`hp_player_aux`还按Vitality美德修正治疗并增加低HP治疗的Temperance，当前共享`apply_player_healing`未表达这两项；本职业使用同一治疗原语并保留这个共同差异，不复制仅战法师生效的治疗公式。现有种族治疗比例、治疗突变、最大HP截断、Transcendence与实际死亡等已表达消费者必须验证，不能归入未实现豁免。
 

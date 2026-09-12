@@ -70,13 +70,20 @@ fn themed_ego_selection_filters_before_weighting_and_empty_pool_falls_back() {
 
 #[test]
 fn real_warrior_gets_mage_and_dwarf_themed_equipment_then_equips_and_restores() {
+    let warrior_mage_builds = crate::game::tests::support::warrior_mage_build_ids();
     for build in [
         "warrior",
         "ranger-nature-sorcery",
         "ranger-nature-death",
         "ranger-nature-arcane",
         "ranger-nature-daemon",
-    ] {
+    ]
+    .into_iter()
+    .chain(
+        warrior_mage_builds
+            .iter()
+            .map(|id| id.strip_prefix("demo.build.").unwrap()),
+    ) {
         let mut game = Game::new_with_build(87, &format!("demo.build.{build}")).unwrap();
 
         let mut seen = BTreeSet::new();

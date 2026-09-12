@@ -1,0 +1,48 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.lohengrin-healing",
+  "input": "self",
+  "steps": [
+    {
+      "type": "heal",
+      "amount": 777
+    },
+    {
+      "type": "remove-status",
+      "statusKindId": "rfb.status.blindness"
+    },
+    {
+      "type": "remove-status",
+      "statusKindId": "rfb.status.bleeding"
+    },
+    {
+      "type": "remove-status",
+      "statusKindId": "rfb.status.confusion"
+    },
+    {
+      "type": "reduce-status",
+      "statusKindId": "rfb.status.poison",
+      "minimumReduction": 3000,
+      "reductionDivisor": 2
+    },
+    {
+      "type": "remove-status",
+      "statusKindId": "rfb.status.stun"
+    },
+    {
+      "type": "remove-status",
+      "statusKindId": "rfb.status.berserk"
+    },
+    {
+      "type": "apply-heroism", "stacking": "keep-strongest",
+      "durationDice": 1,
+      "durationSides": 25,
+      "durationBonus": 25
+    },
+    {
+      "type": "reduce-minor-slow",
+      "amount": 1
+    }
+  ]
+}

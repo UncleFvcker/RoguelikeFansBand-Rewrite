@@ -3148,6 +3148,7 @@ fn fixed_consumable_use_action_with_terrain(
         }),
         (75, 32) => serde_json::json!({
             "type": "apply-heroism",
+            "stacking": "extend",
             "durationDice": 1,
             "durationSides": 25,
             "durationBonus": 25
@@ -28301,6 +28302,7 @@ static cptr _ego_name_zh[] =
             heroism["useAction"]["effect"],
             serde_json::json!({
                 "type": "apply-heroism",
+            "stacking": "extend",
                 "durationDice": 1,
                 "durationSides": 25,
                 "durationBonus": 25

@@ -7275,6 +7275,7 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
     let content = Arc::new(ContentCatalog::from_artifact(
         rfb_content::encode_content(source).unwrap(),
     ));
+    let warrior_mage_builds = super::support::warrior_mage_build_ids();
     for (build, ego) in [
         ("high-mage-death", "protection"),
         ("high-mage-death", "wizard-gloves"),
@@ -7284,7 +7285,12 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
         ("mage-death-sorcery", "free-action"),
         ("berserker", "protection"),
         ("mindcrafter", "protection"),
-    ] {
+    ]
+    .into_iter()
+    .chain(warrior_mage_builds.iter().flat_map(|id| {
+        ["protection", "wizard-gloves", "free-action"]
+            .map(|ego| (id.strip_prefix("demo.build.").unwrap(), ego))
+    })) {
         let mut game = Game::new_with_build(425, &format!("demo.build.{build}")).unwrap();
         game.content = content.clone();
         clear_monsters(&mut game);
@@ -7297,8 +7303,9 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
         let baseline_mana = game.resources.get("demo.resource.mana").map(|r| r.maximum);
         assert_eq!(baseline_mana.is_some(), build != "berserker");
         let baseline_armor = game.player_derived_stats().armor_class.value;
-        let encumbers =
-            matches!(build, "high-mage-death" | "mage-death-sorcery") && ego == "protection";
+        let encumbers = (matches!(build, "high-mage-death" | "mage-death-sorcery")
+            || build.starts_with("warrior-mage-"))
+            && ego == "protection";
         let context = LootContext {
             table_id: format!("test.loot-table.tailored-{ego}"),
             floor_id: game.current_floor_id.clone(),
@@ -7365,7 +7372,9 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
                 .map(|r| r.maximum),
             mana
         );
-        if !matches!(build, "high-mage-death" | "mage-death-sorcery") {
+        if !(matches!(build, "high-mage-death" | "mage-death-sorcery")
+            || build.starts_with("warrior-mage-"))
+        {
             let actual = game.generate_one_loot_draft(&context, ItemGenerationMode::TailoredGreat);
             let replay =
                 restored.generate_one_loot_draft(&context, ItemGenerationMode::TailoredGreat);
@@ -7443,20 +7452,28 @@ fn b4_pick_up_tailored_kind(game: &mut Game, kind: &str) -> String {
 fn all_priest_builds_generate_tailored_hafted_weapons_equip_and_resume_generation() {
     let builds = super::support::priest_build_ids();
     assert_eq!(builds.len(), 24);
-    for build in builds {
+    for build in builds
+        .into_iter()
+        .chain(super::support::warrior_mage_build_ids())
+    {
         let mut game = Game::new_with_build(427, &build).unwrap();
         clear_monsters(&mut game);
         choose_human_talent_if_pending(&mut game);
         game.items.clear();
-        let id = b4_pick_up_tailored_kind(&mut game, "demo.item.mace");
+        let kind = if game.player_is_warrior_mage() {
+            "demo.item.dagger"
+        } else {
+            "demo.item.mace"
+        };
+        let id = b4_pick_up_tailored_kind(&mut game, kind);
         assert!(game.equip_inventory_item(&id, None).is_some());
         game.refresh_player_resource_maxima();
         game.refresh_player_ability_state();
         assert!(!game.item_is_icky(&game.items[0], false));
         let mut restored = Game::from_save(game.to_save()).unwrap();
         assert_eq!(
-            b4_pick_up_tailored_kind(&mut game, "demo.item.mace"),
-            b4_pick_up_tailored_kind(&mut restored, "demo.item.mace")
+            b4_pick_up_tailored_kind(&mut game, kind),
+            b4_pick_up_tailored_kind(&mut restored, kind)
         );
         assert_eq!(game.to_save(), restored.to_save());
     }
@@ -7916,6 +7933,7 @@ fn artifact_creation_command(quantity: u32, name: Option<&str>) -> GameCommand {
 #[test]
 fn artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name() {
     let priest_builds = super::support::priest_build_ids();
+    let warrior_mage_builds = super::support::warrior_mage_build_ids();
     for (build, equipped) in [
         "warrior",
         "archer",
@@ -7935,6 +7953,7 @@ fn artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name()
     .chain(
         priest_builds
             .iter()
+            .chain(&warrior_mage_builds)
             .map(|id| id.strip_prefix("demo.build.").unwrap()),
     )
     .flat_map(|build| [false, true].map(|equipped| (build, equipped)))

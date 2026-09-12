@@ -9764,3 +9764,12 @@ ability-demo-warrior-mage-hp-to-sp-description = 消耗相当于等级的生命�
 
 ability-demo-warrior-mage-sp-to-hp-name = 法力转生命
 ability-demo-warrior-mage-sp-to-hp-description = 消耗等级除以五（向下取整）的法力，治疗相当于等级的生命。满生命仍耗法力；法力不足时转换失败并消耗一回合。
+
+item-demo-mithril-chain-mail-name = 秘银链甲
+item-demo-mithril-chain-mail-description = 由真银制成的链甲。
+
+item-demo-lohengrin-name = 罗恩格林的秘银链甲
+item-demo-lohengrin-description = 可激活天使治愈的秘银链甲，提供智力、感知、潜行和多种抗性。
+
+item-demo-charmed-pendant-name = 魅力吊坠
+item-demo-charmed-pendant-description = 帮助施法的吊坠，可激活恢复法力并为背包装置部分充能。

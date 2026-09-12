@@ -10,7 +10,9 @@ Third-party notices will be appended here as dependencies and assets are introdu
 
 The Warrior-Mage class definition, Chinese name and description, birth equipment,
 spell parameters, growth, melee, item sensing, virtues, dual-realm learning,
-saved realm changes and monster anti-magic
+saved realm changes, active HP/SP conversion, generation preferences, task
+rewards, tower membership, the Lohengrin and Charmed Pendant artifacts, Mithril
+Chain Mail, their Chinese names and activation effects, and monster anti-magic
 weights adapt RoguelikeFansBand master commit
 a0d92b6378d148c5262cc236b8fa6ed2ca06a54c. Source mappings and retained adaptation
 limits are recorded in docs/warrior-mage-source-audit.md. These upstream materials

@@ -2479,6 +2479,25 @@ impl Game {
                     let amount = device_power_value(u64::from(amount), device_power_bonus) as i32;
                     noticed |= self.resolve_item_healing(source_kind_id, amount, events);
                 }
+                ItemUseEffectDefinition::ApplyHeroism {
+                    duration_dice,
+                    duration_sides,
+                    duration_bonus,
+                    stacking,
+                } => {
+                    let duration = (0..duration_dice).fold(duration_bonus, |total, _| {
+                        total
+                            + if duration_sides == 0 {
+                                0
+                            } else {
+                                (self.rng.bounded(u64::from(duration_sides)) + 1) as u32
+                            }
+                    });
+                    let duration =
+                        device_power_value(u64::from(duration), device_power_bonus) as u32;
+                    noticed |=
+                        self.resolve_item_heroism(source_kind_id, 0, 0, duration, stacking, events);
+                }
                 effect @ ItemUseEffectDefinition::Detect { .. } => {
                     noticed |= self.resolve_item_detection(
                         source_kind_id.to_owned(),
@@ -3419,6 +3438,7 @@ impl Game {
                 | ItemUseEffectDefinition::ProtectionFromEvil
                 | ItemUseEffectDefinition::PrepareConfusingStrike
                 | ItemUseEffectDefinition::IncreaseSpellLearningCapacity
+                | ItemUseEffectDefinition::ReduceMinorSlow { .. }
                 | ItemUseEffectDefinition::RemoveStatus { .. }
                 | ItemUseEffectDefinition::ReduceStatus { .. }
                 | ItemUseEffectDefinition::RestoreResource { .. }
@@ -3905,6 +3925,7 @@ impl Game {
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::AggravateMonsters
             | ItemUseEffectDefinition::MassGenocide { .. }
+            | ItemUseEffectDefinition::ReduceMinorSlow { .. }
             | ItemUseEffectDefinition::RemoveStatus { .. }
             | ItemUseEffectDefinition::ReduceStatus { .. }
             | ItemUseEffectDefinition::RestoreResource { .. }
@@ -5192,6 +5213,7 @@ impl Game {
         duration_dice: u16,
         duration_sides: u32,
         duration_bonus: u32,
+        stacking: AbilityStatusStackingDefinition,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         let resolution = apply_ability_status_effect(
@@ -5203,7 +5225,7 @@ impl Game {
             duration_bonus,
             duration_dice,
             duration_sides,
-            AbilityStatusStackingDefinition::Extend,
+            stacking,
             None,
             None,
             &BTreeMap::new(),
@@ -5845,6 +5867,7 @@ impl Game {
                     0,
                     0,
                     duration.saturating_sub(existing),
+                    AbilityStatusStackingDefinition::Extend,
                     events,
                 );
                 if speed {
@@ -5874,11 +5897,13 @@ impl Game {
                 duration_dice,
                 duration_sides,
                 duration_bonus,
+                stacking,
             } => self.resolve_item_heroism(
                 source_kind_id,
                 *duration_dice,
                 *duration_sides,
                 *duration_bonus,
+                *stacking,
                 events,
             ),
             ItemUseEffectDefinition::ApplyBerserkStrength {
@@ -6144,6 +6169,17 @@ impl Game {
             }
             ItemUseEffectDefinition::IncreaseSpellLearningCapacity => {
                 self.resolve_item_spell_learning_capacity(source_kind_id, events)
+            }
+            ItemUseEffectDefinition::ReduceMinorSlow { amount } => {
+                let before = self.minor_slow;
+                if !self.player_is_dead() {
+                    self.minor_slow = self.minor_slow.saturating_sub(*amount);
+                }
+                let noticed = before != self.minor_slow;
+                if noticed {
+                    self.mark_item_aware(source_kind_id);
+                }
+                noticed
             }
             ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
                 self.resolve_item_status_removal(source_kind_id, status_kind_id, events)

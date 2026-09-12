@@ -1,0 +1,116 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.charmed-pendant",
+  "nameKey": "item-demo-charmed-pendant-name",
+  "descriptionKey": "item-demo-charmed-pendant-description",
+  "maxStack": 1,
+  "generationLevel": 50,
+  "weightTenthsPound": 2,
+  "baseValue": 100000,
+  "artifactGeneration": {
+    "sourceIndex": 219,
+    "baseItemKindId": "demo.item.amulet",
+    "instant": false,
+    "rarityOneIn": 50
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "AURA_COLD",
+      "AURA_ELEC",
+      "AURA_FIRE",
+      "CHR",
+      "EASY_SPELL",
+      "FREE_ACT",
+      "FULL_NAME",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INFRA",
+      "INT",
+      "LITE",
+      "MAGIC_MASTERY",
+      "REGEN",
+      "SEARCH",
+      "SEE_INVIS",
+      "SLOW_DIGEST",
+      "WARNING"
+    ],
+    "pval": 2,
+    "toArmor": 5
+  },
+  "glyph": "\"",
+  "equipmentSlot": "amulet",
+  "tags": [
+    "artifact",
+    "equipment",
+    "jewelry",
+    "activatable",
+    "rfb-compatibility"
+  ],
+  "modifiers": {
+    "defense": 5,
+    "intelligence": 2,
+    "charisma": 2
+  },
+  "equipmentBonuses": {
+    "infravision": 2,
+    "searchSkill": 10,
+    "perceptionSkill": 10,
+    "lightRadius": 1,
+    "deviceSkill": 16
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "passives": [
+    "see-invisible",
+    "slow-digestion",
+    "regeneration",
+    "warning",
+    "fire-aura",
+    "electricity-aura",
+    "cold-aura",
+    "easy-spell"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.charmed-pendant-restoration",
+        "nameKey": "device-activation-e5-restore-mana-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 10000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.perfect-focus-restoration"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 7770
+    }
+  }
+}

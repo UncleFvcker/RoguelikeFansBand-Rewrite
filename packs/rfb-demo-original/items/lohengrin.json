@@ -1,0 +1,110 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.lohengrin",
+  "nameKey": "item-demo-lohengrin-name",
+  "descriptionKey": "item-demo-lohengrin-description",
+  "maxStack": 1,
+  "generationLevel": 80,
+  "weightTenthsPound": 150,
+  "baseValue": 135000,
+  "artifactGeneration": {
+    "sourceIndex": 22,
+    "baseItemKindId": "demo.item.mithril-chain-mail",
+    "instant": false,
+    "rarityOneIn": 9
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_DARK",
+      "RES_ELEC",
+      "RES_FEAR",
+      "RES_FIRE",
+      "RES_NETHER",
+      "RES_POIS",
+      "SEE_INVIS",
+      "STEALTH",
+      "WIS"
+    ],
+    "pval": 4,
+    "toArmor": 20
+  },
+  "glyph": "[",
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment",
+    "activatable",
+    "rfb-compatibility"
+  ],
+  "modifiers": {
+    "defense": 48,
+    "intelligence": 4,
+    "wisdom": 4
+  },
+  "equipmentBonuses": {
+    "meleeSkill": -1,
+    "stealthSkill": 4
+  },
+  "passives": [
+    "see-invisible",
+    "hold-life"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant",
+    "poison": "resistant",
+    "nether": "resistant",
+    "dark": "resistant",
+    "fear": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.lohengrin-healing",
+        "nameKey": "device-activation-e5-heal-curing-hero-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 12405,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.lohengrin-healing"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 3000
+    }
+  }
+}

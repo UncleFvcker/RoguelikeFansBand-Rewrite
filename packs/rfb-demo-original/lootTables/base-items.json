@@ -2284,6 +2284,13 @@
       "weight": 33
     },
     {
+      "itemKindId": "demo.item.mithril-chain-mail",
+      "maxDepth": 65535,
+      "minDepth": 55,
+      "quantity": 1,
+      "weight": 25
+    },
+    {
       "itemKindId": "demo.item.mortal-draught",
       "maxDepth": 65535,
       "minDepth": 55,

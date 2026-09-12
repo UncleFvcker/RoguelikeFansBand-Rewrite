@@ -16,7 +16,7 @@
     "ownerCost": 200,
     "otherCost": 1000
   },
-  "memberClassIds": ["demo.class.ranger"],
+  "memberClassIds": ["demo.class.ranger", "demo.class.warrior-mage"],
   "ownerClassIds": [
     "demo.class.mage",
     "demo.class.high-mage"

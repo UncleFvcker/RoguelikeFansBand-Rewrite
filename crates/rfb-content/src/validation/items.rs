@@ -148,6 +148,7 @@ pub(crate) fn valid_item_effect(
             duration_dice,
             duration_sides,
             duration_bonus,
+            ..
         }
         | ItemUseEffectDefinition::ApplyBerserkStrength {
             duration_dice,
@@ -295,6 +296,7 @@ pub(crate) fn valid_item_effect(
                 .into_iter()
                 .all(|terrain_id| terrain_tags.contains_key(terrain_id))
         }
+        ItemUseEffectDefinition::ReduceMinorSlow { amount } => (1..=10).contains(amount),
         ItemUseEffectDefinition::RemoveStatus { status_kind_id } => {
             validate_id(status_kind_id).is_ok()
         }
@@ -432,6 +434,7 @@ pub(crate) fn valid_item_effect(
                             | ItemUseEffectDefinition::ApplyPoison { .. }
                             | ItemUseEffectDefinition::ApplyBlindness { .. }
                             | ItemUseEffectDefinition::ApplyStatus { .. }
+                            | ItemUseEffectDefinition::ApplyHeroism { .. }
                             | ItemUseEffectDefinition::ApplyGiantStrength { .. }
                             | ItemUseEffectDefinition::SelfDamage { .. }
                             | ItemUseEffectDefinition::LoseExperienceFraction { .. }
@@ -441,6 +444,7 @@ pub(crate) fn valid_item_effect(
                             | ItemUseEffectDefinition::DrainAttribute { .. }
                             | ItemUseEffectDefinition::RestoreAttribute { .. }
                             | ItemUseEffectDefinition::IncreaseAttribute { .. }
+                            | ItemUseEffectDefinition::ReduceMinorSlow { .. }
                             | ItemUseEffectDefinition::RemoveStatus { .. }
                             | ItemUseEffectDefinition::ReduceStatus { .. }
                             | ItemUseEffectDefinition::RestoreResource { .. }
@@ -740,6 +744,7 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::SetFloorGlow { .. }
                     | ItemUseEffectDefinition::AreaDestruction { .. }
                     | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
+                    | ItemUseEffectDefinition::ReduceMinorSlow { .. }
                     | ItemUseEffectDefinition::RemoveStatus { .. }
                     | ItemUseEffectDefinition::ReduceStatus { .. }
                     | ItemUseEffectDefinition::RestoreResource { .. }

@@ -9752,3 +9752,12 @@ ability-demo-warrior-mage-hp-to-sp-description = Spend life equal to your level 
 
 ability-demo-warrior-mage-sp-to-hp-name = Convert SP to HP
 ability-demo-warrior-mage-sp-to-hp-description = Spend mana equal to your level divided by five (rounded down) to heal life equal to your level. Full life still costs mana; insufficient mana fails the conversion but spends a turn.
+
+item-demo-mithril-chain-mail-name = Mithril Chain Mail
+item-demo-mithril-chain-mail-description = Chain mail made of true silver.
+
+item-demo-lohengrin-name = Mithril Chain Mail of Lohengrin
+item-demo-lohengrin-description = Mithril chain mail with intelligence, wisdom, stealth and multiple resistances. Activates for angelic healing.
+
+item-demo-charmed-pendant-name = Charmed Pendant
+item-demo-charmed-pendant-description = A pendant that aids spellcasting. Activates to restore mana and partially recharge carried devices.

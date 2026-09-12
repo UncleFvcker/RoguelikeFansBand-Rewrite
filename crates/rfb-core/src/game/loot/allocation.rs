@@ -680,6 +680,7 @@ mod tests {
         for build in builds
             .into_iter()
             .chain(crate::game::tests::support::priest_build_ids())
+            .chain(crate::game::tests::support::warrior_mage_build_ids())
         {
             let mut game = Game::new_with_build(925, &build).unwrap();
             let first = game
@@ -697,6 +698,25 @@ mod tests {
                     ("lance", false),
                     ("short-bow", true),
                     ("magic-missile-wand", false),
+                ] {
+                    assert_eq!(
+                        tailored_candidate(
+                            &game,
+                            game.content.item(&format!("demo.item.{kind}")).unwrap()
+                        ),
+                        eligible,
+                        "{build}: {kind}"
+                    );
+                }
+            }
+            if game.player_is_warrior_mage() {
+                for (kind, eligible) in [
+                    ("dagger", true),
+                    ("mace", true),
+                    ("lance", true),
+                    ("light-crossbow", true),
+                    ("magic-missile-wand", false),
+                    ("manual-of-mastery", false),
                 ] {
                     assert_eq!(
                         tailored_candidate(

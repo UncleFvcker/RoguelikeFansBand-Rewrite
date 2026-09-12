@@ -786,6 +786,7 @@ pub enum ItemUseEffectDefinition {
         duration_dice: u16,
         duration_sides: u32,
         duration_bonus: u32,
+        stacking: AbilityStatusStackingDefinition,
     },
     ApplyBerserkStrength {
         duration_dice: u16,
@@ -963,6 +964,9 @@ pub enum ItemUseEffectDefinition {
         operation: AbilityTerrainBeamOperationDefinition,
     },
     RidingCharge,
+    ReduceMinorSlow {
+        amount: u8,
+    },
     RemoveStatus {
         status_kind_id: String,
     },
