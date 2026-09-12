@@ -741,10 +741,13 @@ mod tests {
                 }
             }
             let old = book_kind(&game, &realm, 4);
-            let next = if realm == "arcane" {
+            // Mage-theme quality intentionally excludes Arcane (tval 96).
+            let next = if realm != "sorcery" {
                 "sorcery"
+            } else if game.player_is_priest() {
+                "nature"
             } else {
-                "arcane"
+                "death"
             };
             let new = book_kind(&game, next, 4);
             let first = book_kind(&game, next, 1);

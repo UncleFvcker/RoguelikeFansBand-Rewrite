@@ -7450,6 +7450,8 @@ fn all_priest_builds_generate_tailored_hafted_weapons_equip_and_resume_generatio
         game.items.clear();
         let id = b4_pick_up_tailored_kind(&mut game, "demo.item.mace");
         assert!(game.equip_inventory_item(&id, None).is_some());
+        game.refresh_player_resource_maxima();
+        game.refresh_player_ability_state();
         assert!(!game.item_is_icky(&game.items[0], false));
         let mut restored = Game::from_save(game.to_save()).unwrap();
         assert_eq!(

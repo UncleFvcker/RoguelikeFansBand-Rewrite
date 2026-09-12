@@ -121,6 +121,20 @@ fn castle_rewards_keep_one_to_four_birth_selection_and_duplicate_replacement_ato
                         game.items.iter().find(|item| item.id == id).unwrap()
                     ));
                 } else {
+                    let position = Position {
+                        x: game.player.position.x - 1,
+                        y: game.player.position.y,
+                    };
+                    super::super::support::replace_terrain(
+                        &mut game,
+                        position,
+                        "demo.terrain.floor",
+                    );
+                    game.push_generated_actor(
+                        "test.palantir-unique".to_owned(),
+                        "demo.actor.a-plain-gold-ring",
+                        position,
+                    );
                     game.rng = (0..1000)
                         .map(RfbRng::seeded)
                         .find(|rng| rng.clone().bounded(100) < 5)

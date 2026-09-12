@@ -220,9 +220,11 @@ impl Game {
 
     pub(super) fn player_is_good_priest(&self) -> bool {
         self.player_is_priest()
-            && self.build.as_ref().is_some_and(|build| {
-                matches!(build.first_realm_id.as_deref(), Some("life" | "crusade"))
-            })
+            && self
+                .character_definitions()
+                .is_some_and(|(build, _, _, _)| {
+                    matches!(build.first_realm_id.as_deref(), Some("life" | "crusade"))
+                })
     }
 
     pub(super) fn class_power_matches_realm(&self, ability_id: &str) -> bool {

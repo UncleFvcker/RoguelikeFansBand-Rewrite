@@ -96,6 +96,63 @@ impl Game {
         {
             self.debug_add_generated_inventory_item("e2e.priest-dagger", "demo.item.dagger", 1)?;
         }
+        if self.player_is_priest() && matches!(level, 35 | 42 | 50) {
+            // Explicit desktop preparation: current-realm high books and a melee/power target.
+            if level == 50 {
+                let first_realm = self
+                    .character_definitions()
+                    .expect("Priest build")
+                    .0
+                    .first_realm_id
+                    .as_deref();
+                let kinds: Vec<_> = self
+                    .content
+                    .item_definitions()
+                    .filter(|item| {
+                        item.ability_book_id
+                            .as_deref()
+                            .and_then(|id| self.content.ability_book(id))
+                            .is_some_and(|book| {
+                                book.rank == Some(4)
+                                    && (book.realm_id.as_deref() == first_realm
+                                        || book.realm_id.as_deref()
+                                            == self.current_second_realm_id())
+                            })
+                    })
+                    .map(|item| item.id.clone())
+                    .collect();
+                for kind in kinds {
+                    let id = format!("e2e.priest.{kind}");
+                    if !self.items.iter().any(|item| item.id == id) {
+                        self.debug_add_generated_inventory_item(&id, &kind, 1)?;
+                    }
+                }
+            }
+            let origin = self.player.position;
+            for dy in -1..=1 {
+                for dx in -1..=1 {
+                    self.replace_terrain_from_source(
+                        Position {
+                            x: origin.x + dx,
+                            y: origin.y + dy,
+                        },
+                        "demo.terrain.floor",
+                        terrain::TerrainChangeSource::Magic,
+                        &mut Vec::new(),
+                        &mut BTreeSet::new(),
+                    );
+                }
+            }
+            let actor = self.generated_actor(
+                "e2e.priest-power-target".to_owned(),
+                "demo.actor.sheep",
+                Position {
+                    x: origin.x - 1,
+                    y: origin.y,
+                },
+            );
+            self.entities.push(actor);
+        }
         if ranger && level == 50 {
             // Explicit desktop fixtures: high books and a small tree/probing scene.
             // Keep learned spells, attributes and RNG outcomes from actual play.

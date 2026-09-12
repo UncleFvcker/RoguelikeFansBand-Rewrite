@@ -1,23 +1,25 @@
 # 状态快照
 
-核对日期：2026-09-12。集成基线包含种族职业 `edfcac5fb`、法术道具 `886d8da89` 和地牢城镇 `1ef1b7261`，合入游侠、A1–A10 神器与金字塔土丘；随后接入牧师第二至第六步代码和24个正式创角入口，尚未编译验收。本页区分当前代码/配置与各批注明范围的验收证据。
+核对日期：2026-09-12。集成基线包含种族职业 `edfcac5fb`、法术道具 `886d8da89` 和地牢城镇 `1ef1b7261`，合入游侠、A1–A10 神器与金字塔土丘；随后完成牧师七步接入、24个正式入口及统一回归、善恶实战和桌面交付。本页区分当前代码/配置与各批注明范围的验收证据。
 
 ## 版本与源内容
 
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.254（生成绑定待第七步同步） | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| 协议 | 1.254 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 126 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 21 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 源1.429.0；lock仍为1.427.0，待统一编译后重生成 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
-| 契约政策 | contract-v326，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
+| 内容包 | 1.429.0，lock已同步并验证 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 契约政策 | contract-v327，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 12 个 Class、101 个 Build、57 个 Race、36 本能力书、1,905 个 ability 文件、469 个 item、1,408 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、64 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
-牧师已完成[计划](priest-class-plan.md)第一步来源审计及第二至第六步代码：24个善恶双领域Build、288项参数、出生/成长、美德/感知/负重、随机学习/改换/保存已接入。善恶刃器熟练度上限、善良每手战斗/祈祷惩罚、94%普通与天赋近战倍率，以及35级祝福武器、42级驱散敕令和MP→HP费用已实现。祝福保存部分知识与折扣；驱散按视线/弹道处理伤害、恐吓和真实传送。Tailored/已知祝福偏好、卷轴Priestly/30、旧城堡1:4及重复替代、盗贼/兽人营地奖励、两寺庙Owner和改换后的书本/铭刻/设施消费者已接入。普通创角已增加“祈祷 → 牧师 → 第一领域 → 第二领域”，共94个Build；书本页和角色详情显示核心刃器惩罚投影，能力页说明目标、威力、费用与取消后果。24个Build的120项生成记录已正式登记、完整来源报告已重生成，只读检查通过，保留`priest-step7-validation`待执行缺口。
+牧师已完成[七步计划](priest-class-plan.md)：24个善恶双领域Build、288项参数、出生/成长、美德/感知/负重、随机学习/改换/保存已接入。善恶刃器熟练度上限、善良每手战斗/祈祷惩罚、94%普通与天赋近战倍率，以及35级祝福武器、42级驱散敕令和MP→HP费用已通过实际动作与保存验证。祝福保存部分知识与折扣；驱散按视线/弹道处理伤害、恐吓和真实传送。Tailored/已知祝福偏好、卷轴Priestly/30、旧城堡1:4及重复替代、盗贼/兽人营地奖励、两寺庙Owner和改换后的书本/铭刻/设施消费者已接入。普通创角已增加“祈祷 → 牧师 → 第一领域 → 第二领域”，共94个Build；书本页和角色详情显示核心刃器惩罚投影，能力页说明目标、威力、费用与取消后果。24个Build的120项生成记录和实际消费者回归通过，完整来源报告已重生成，94入口/0个可玩范围gap检查通过；全原版未开放身份及内容缺口保留。
 
-本批只做代码、内容、文档和静态核对；按用户要求，第七步统一编译测试，新增及扩展回归用例均尚未运行。`--priest-ui`已写入两语言菜单、善恶正式出生、准备后的能力/改换/保存及390px/200%专项，尚无执行报告。协议/保存新增部分祝福知识和两种效果，源常量已更新；Schema、TypeScript绑定、内容lock与全局契约仍待同步检查，fixture未刷新。现有内容工具无法读取合并基线的新神器定义，旧lock不能证明当前源内容可加载。共享回归包括WIS阵营惩罚上限10对游侠的影响，以及神圣干涉RES_ALL恐惧过滤。完整范围和缺失源神器139/334见[来源审计](priest-source-audit.md)。
+第七步完成此前延后的统一检查：核心1552项（全量1549通过，3项修正后复验通过；另3项原有ignored）、内容162、Tauri23、前端212及其余workspace测试通过，Clippy、格式、Schema/协议绑定、内容锁和来源审计通过。26条契约的41处差异仅为状态/保存回环哈希，经工具刷新为v327并复验。群体伤害/复合效果目标改为稳定ID顺序，解决读档前后结算顺序差异；共享WIS阵营惩罚、神圣干涉及既有职业调用者随回归通过。完整范围和缺失源神器139/334见[来源审计](priest-source-audit.md#9-第七步验收2026-09-12)。
+
+`--priest-ui`通过中英文各24个组合、善恶正式出生、准备后的能力/改换/保存及390px/200%专项。`--priest-play --fast-entry`分别从人类1级生命/咒术、死亡/咒术开局，以出生装备进入真实兽穴、近战命中并存活；快速入口约1.5/1.3秒，仅跳过城镇步行。显式准备5级双方随机学习与施法、35级祝福后刃器战斗/祈祷、42级驱散和50级高阶书学习；保留原有感知与自然失败。改换为工艺后菜单导出/原生加载，继续相同两次施法和下一次随机学习，结果及状态哈希一致。报告、截图与标注准备条件的存档位于`test-results/priest-ui/`和`priest-play/`。优化EXE经Tauri standalone构建，原生进程定向控件接口完成普通牧师创角、1级投影及正常退出，证据为`test-results/priest-optimized/checks.json`。交付目录`release/RoguelikeFansBand-Rewrite_0.1.0_priest-20260912_windows-x64/`含程序、源码、许可和校验值；没有自然练至高等级、完整通关或Android验收声明。
 
 A1–A10 新增三十八件固定神器与五种底材；连同游侠两把弓与阿蒙专属神器，当前固定神器映射为 86/392。A10 的 Greater Hell-Beast 192 专属奖励保留零稀有度与已生成时跳过的源规则。法术道具方向的 235 项核心、36 项内容、39 项本地化、66 构筑审计与 8 项工具测试、相关 Clippy 和 26 条未刷新契约为该批证据；本次合并后的数量已由 `rfb-contentc inspect-source` 核对，集成检查见下文。范围与保留缺口见[神器计划](artifact-import-plan.md#a10-统一验证结果)：145／322 仅当前身份普通分支，萨鲁曼额外掉落、未开放身份／领域／地点消费者仍保留。没有新增自然练级、桌面或 Android 验收。
 
@@ -68,7 +70,7 @@ I6 首组已使现有物理合堆路径允许不同获取来源、单边铭文�
 | 法师（八领域双选） | `demo.build.mage-<first>-<second>`，主副不可相同 | 56 个有序组合已开放；双书学习、重复研习、遗忘恢复、副领域改换、自然新开局与保存继续专项通过，Windows 优化版已交付 |
 | 高阶法师（死亡） | `demo.build.high-mage-death` | 死亡领域书本与施法 |
 | 高阶法师（工艺） | `demo.build.high-mage-craft` | 四册、32 法术；物品处理、临时强化与元素选择 |
-| 牧师（善恶双领域） | `demo.build.priest-<first>-<second>` | 24个合法组合及规则/UI代码已接入；正式菜单位于“祈祷”。第七步统一编译验收，目前仅完成静态核对与审计登记 |
+| 牧师（善恶双领域） | `demo.build.priest-<first>-<second>` | 24个合法组合位于“祈祷”；规则/生成消费者回归、中英文UI、善恶开局和准备后的能力/领域改换/保存续演已通过，Windows优化版已交付 |
 | 弓箭手 | `demo.build.archer` | 制造弹药与射击 |
 | 圣骑士（死亡） | `demo.build.paladin-death` | 死亡领域与随机祈祷学习 |
 | 骑兵 | `demo.build.cavalry` | 骑乘相关行为 |

@@ -301,7 +301,11 @@ fn source_spell_parameters_keep_daemon_start_craft_sentinel_and_orb_scaling() {
     daemon.apply_player_experience(daemon.experience_required_for_level(2), &mut Vec::new());
     assert!(daemon.study_random_player_ability(&book).is_ok());
     for (build, ability, bonus) in [
-        (BUILD, "demo.ability.life-holy-orb", 45),
+        (
+            "demo.build.priest-crusade-sorcery",
+            "demo.ability.crusade-holy-orb",
+            45,
+        ),
         (
             "demo.build.priest-death-daemon",
             "demo.ability.death-entropy-orb",

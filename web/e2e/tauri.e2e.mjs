@@ -76,7 +76,7 @@ async function main() {
     await rm(diagnosticDirectory, { recursive: true, force: true });
     await rm(desktopLogPath, { force: true });
     const port = await reservePort();
-    const creationLayout = process.argv.includes("--character-creation") || process.argv.includes("--creation-layout") || process.argv.includes("--mindcrafter") || process.argv.includes("--berserker") || process.argv.includes("--duelist-ui") || process.argv.includes("--mage-ui") || process.argv.includes("--mage-play") || process.argv.includes("--ranger-ui") || process.argv.includes("--ranger-play") || process.argv.includes("--priest-ui");
+    const creationLayout = process.argv.includes("--character-creation") || process.argv.includes("--creation-layout") || process.argv.includes("--mindcrafter") || process.argv.includes("--berserker") || process.argv.includes("--duelist-ui") || process.argv.includes("--mage-ui") || process.argv.includes("--mage-play") || process.argv.includes("--ranger-ui") || process.argv.includes("--ranger-play") || process.argv.includes("--priest-ui") || process.argv.includes("--priest-play");
     const debugProfile = path.join(repositoryDirectory, "target", "e2e", "creation-webview");
     child = spawn(executable, [], {
       cwd: repositoryDirectory,
@@ -125,6 +125,8 @@ async function main() {
       await runRangerUiScenario(client, path.join(artifactDirectory, "ranger-ui"), debugProfile);
     } else if (process.argv.includes("--priest-ui")) {
       await runPriestUiScenario(client, path.join(artifactDirectory, "priest-ui"), debugProfile);
+    } else if (process.argv.includes("--priest-play")) {
+      await runPriestUiScenario(client, path.join(artifactDirectory, "priest-play"), debugProfile, true);
     } else if (process.argv.includes("--ranger-play")) {
       await runRangerUiScenario(client, path.join(artifactDirectory, "ranger-play"), debugProfile, true);
     } else if (process.argv.includes("--mage-play")) {

@@ -131,7 +131,7 @@
 
 ## 7. 每Build的五类审计责任
 
-24个Build各登记五类记录，复用下表共同条件/消费者证据，不复制120套行为测试。第一步只准备来源；第六步已随入口开放更新[正式审计输入](../design/generation-build-applicability.json)并由工具重生成[报告](../design/ego-contract-audit.json)。实现状态与实际验收分开，后者仍由`priest-step7-validation`阻止标记完成。
+24个Build各登记五类记录，复用下表共同条件/消费者证据，不复制120套行为测试。第一步只准备来源；第六步随入口开放更新[正式审计输入](../design/generation-build-applicability.json)。第七步运行下列消费者回归、中英文UI和善恶实战后移除`priest-step7-validation`，再由工具重生成[报告](../design/ego-contract-audit.json)；94个入口的只读检查通过，当前可玩范围没有待验收缺口，全原版范围的未开放身份/材料仍保留。
 
 | 正式area ID | 关联的现有condition ID | 本轮应交付的证据 |
 | --- | --- | --- |
@@ -143,9 +143,9 @@
 
 conditionScopes没有Priest专属 `deferred-unavailable-build` 条目；第六步将当前入口由70扩展到94。没有将不存在的豁免“直接关闭”，Mauler/Bard/Disciple等无关未开放身份依赖保留。每个Build的共同依据可复用，但其first/second身份和合法领域均从正式内容解析。
 
-### 第五步准备记录（代码已写，全部待第七步运行）
+### 第五步消费者记录（已在第七步运行通过）
 
-以下后续记录对应同一来源提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。测试从正式Class枚举24个Build并断言数量，为每个真实身份安排下列共同用例，不把怪物掉落主题等同玩家Class。第六步正式登记四类implemented及Ego的no-special-difference，全部关联待执行缺口；这些是测试位置，不是通过结果。
+以下记录对应同一来源提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。测试从正式Class枚举24个Build并断言数量，为每个真实身份执行下列共同用例，不把怪物掉落主题等同玩家Class。第六步登记四类implemented及Ego的no-special-difference，第七步完成实际验证；具体命令、修正与限制见第9节。
 
 | 第一领域 | 完整Build ID（每项均关联下表五类） |
 | --- | --- |
@@ -166,7 +166,7 @@ conditionScopes没有Priest专属 `deferred-unavailable-build` 条目；第六�
 
 第六步静态结果：使用`node scripts/audit-egos.mjs D:/codex/Frogcomposband/master target/debug/rfb-legacy-import.exe`复用已有导入器，完整读取同一Git来源并生成报告，没有触发Rust编译；160项Ego身份、157种装备底材、40类标志映射审计通过。随后`node scripts/audit-egos.mjs --check-applicability`核对94个真实入口与1项待验收缺口通过。菜单映射/本地化、脚本语法、Rust格式及diff做静态核对；未运行游戏、前端或工具单元测试。
 
-桌面复现（留到第七步）：在`web`执行`npm run e2e:build`，再运行`node e2e/tauri.e2e.mjs --priest-ui`。脚本位于[priest.e2e.mjs](../web/e2e/priest.e2e.mjs)，报告目标为`test-results/priest-ui/report.json`，当前尚未生成。脚本通过正常UI创建生命/咒术与死亡/咒术，两语言均检查24个菜单组合；高等级、工艺第一册和普通匕首是明确准备，保留自然失败，不能算作自然练级、物资获取或实战验收。善恶新开局地牢实战和优化EXE另属第七步。
+桌面复现：在`web`执行`npm run e2e:build`，再运行`node e2e/tauri.e2e.mjs --priest-ui`。脚本位于[priest.e2e.mjs](../web/e2e/priest.e2e.mjs)，已生成`test-results/priest-ui/report.json`。通过正常UI创建生命/咒术与死亡/咒术，两语言均检查24个菜单组合；高等级、工艺第一册、普通匕首和能力目标是明确准备，保留自然失败。另用`--priest-play --fast-entry`完成两条地牢实战，优化EXE原生烟测单独记录。
 
 ## 8. 适配、排除项与后续验证
 
@@ -176,7 +176,7 @@ conditionScopes没有Priest专属 `deferred-unavailable-build` 条目；第六�
 
 **名称：** 新增职业“牧师”、分组“祈祷”及“祝福武器”“驱散敕令”均有上述中文源字符串，本批新增名称没有unresolved。实体书、武器、药水和神器复用已有正式ID/权威中文键；不为未接入的139/334或缺失领域自译新名称。缺失身份是内容范围缺口，不与缺失中文混淆。
 
-后续按[七步计划](priest-class-plan.md)实施，优先补以下有效行为证据：
+以下原定行为证据已按[七步计划](priest-class-plan.md)落实，范围与准备条件仍分别记录：
 
 1. 第二步：24个真实Build新出生与参数引用；1级MP/容量及恶魔主书2级边界、真实升级、负重/手套、两类感知、武器/双持/骑乘、美德和保存。
 2. 第三步：善恶合法/非法领域、双方随机学习、96/额外容量、首用/练习、遗忘恢复、副领域5%、改换历史/待确认/伪造存档和相同随机学习续演。
@@ -184,4 +184,24 @@ conditionScopes没有Priest专属 `deferred-unavailable-build` 条目；第六�
 4. 第五/六步：三任务、两寺庙和动态领域服务；新Build五类生成记录及正式入口、源命名、中英文24组合、焦点/忙碌锁/取消、窄屏和缩放。共享学习/物品/近战改动按实际影响回归Mage/Ranger/Paladin/High-Mage等消费者。
 5. 第七步：善恶各一条正式出生实战，采用已授权的快速地牢入口；显式标注经验/物资准备和存档续演，同源WebDriver实战与优化EXE原生烟测分别记录。不使用Computer Use。
 
-本步实际验证仅为Git来源读取、288项映射/引用与顺序、320条W/3条S解析、24个合法组合、正式任务/物品/设施交叉核对、文档链接和diff检查。没有执行编译、游戏测试、桌面或Android，也没有导入内容、刷新生成报告或契约fixture。
+第一步实际验证仅为Git来源读取、288项映射/引用与顺序、320条W/3条S解析、24个合法组合、正式任务/物品/设施交叉核对、文档链接和diff检查；当时没有运行编译或游戏。后续完整验收如下。
+
+## 9. 第七步验收（2026-09-12）
+
+内容工具已重建，pack/lock为1.429.0，实际hash为`6be4daa04474b85f6732efc5c817f693ab606de31f5364f56bc9746c422fa096`。协议1.254、save14/21、State Hash Schema126；内容Schema和TypeScript/协议Schema经生成器同步并通过`--check`。26条active契约从v326刷新为v327：先比较全部预期与实际，41处差异仅为状态/保存回环哈希，事件、错误和其余状态字段不变；通过`rfb-contract refresh-all`生成，再`verify-all`通过。
+
+| 检查 | 实际结果 |
+| --- | --- |
+| `cargo test --workspace --exclude rfb-tauri`及聚焦修正复验 | 内容162项、核心1552项、契约库/CLI/集成常规检查通过；核心保留3项原有ignored。核心全量先1549通过、3失败，修正后3项单独复验通过；未重复全量冒充一次全绿 |
+| 剩余workspace及Tauri原生层 | Importer194、probe2、本地化39、协议7、回放9、save2、Tauri23通过；已通过的内容/核心/契约不重复运行 |
+| `npm test`、`npm run typecheck`、`npm run build:ui` | 前端212项、类型与构建通过；构建保留既有大chunk提示 |
+| Clippy、格式、生成物与来源审计 | workspace（除Tauri）及最终core/Tauri Clippy、`cargo fmt --all -- --check`、两生成器`--check`、内容锁、完整来源审计通过；160项Ego身份、157种底材、40类标志与94个入口/0个可玩范围gap核对通过；审计工具8项通过 |
+| `--priest-ui` | 中英文各24个合法菜单组合、两条普通人类1级出生、随机学习、等级门槛、真实装备/能力、取消/焦点/忙碌锁、改换/保存、390px及200%通过 |
+| `--priest-play --fast-entry` | 生命/咒术、死亡/咒术两条独立正式开局，真实兽穴近战、双方施法、高等级能力和书本、领域改换与保存续演通过 |
+| 优化standalone | `npm run build -- --no-bundle`构建成功；[原生脚本](../web/e2e/mage-optimized.e2e.ps1)的`-Class Priest`通过正常创角、1级法力9/9与学习容量1、正常退出；不以此代替WebDriver实战 |
+
+本轮编译修正两处从角色身份而非正式Build读取第一领域的问题，并补上既有桌面准备命令的Priest资格。保存测试发现共享群体能力按内存怪物顺序结算、而读档按ID排序，已将可见群体伤害和复合效果目标统一按ID结算；原有严格事件/状态/RNG断言保留，神圣干涉等实际调用者随完整回归通过。测试前置修正包括真实手部槽、圣战神圣法球ID、合法怪物生命上限、真知晶球场景中的真实唯一怪物、装备后资源刷新及Mage主题不接受奥秘书的既有质量规则；没有降低断言或改动概率使测试通过。原生脚本还改为等待已本地化的“新游戏”按钮，避免在事件绑定前点击原始空按钮。
+
+实战均从人类1级出生开始，以原有权杖和火把进入兽穴，命中自然生成的大棕蛇并存活；快速入口分别1465/1311毫秒，未授予经验或物资，只省略城镇路途。随后显式准备5级，生命线随机获得召唤光芒、死亡线获得臭气云，双方均随机获得咒术的相位门并实际施放。35级祝福保留感知16和自然失败，本次23次失败后成功，之后刃器近战和祈祷通过；42级驱散9次失败后成功击杀准备的绵羊。每次准备明确记录经验、HP/MP补满、地图照明、普通匕首/工艺书、3×3地板及绵羊，不声称自然练级或物资获取。50级各授予当前领域第四册并随机学习；驱散的多阶段存活过滤、恐惧、传送与抗性边界另由核心实际动作测试证明。
+
+双方改换副领域为工艺，正常菜单导出并经原生加载入口恢复，再执行相同两次施法及下一次随机学习；施法结果、随机学习结果和状态哈希一致。生命线续演hash为`4274df12f1315cb32b8b7dd2109254bc44408bda3d3af354f1b5a1b34e156efa`，死亡线为`c5e124bb05b4a97379e37a128750b49f8703a86ab064e621d64f664b1489a3ee`。证据分别在`test-results/priest-ui/`、`priest-play/`、`priest-optimized/checks.json`；正式交付目录`release/RoguelikeFansBand-Rewrite_0.1.0_priest-20260912_windows-x64/`包含优化EXE、对应源码、许可、校验值、报告、截图和标注准备条件的存档。原生烟测与WebDriver实战分别保留范围；未做Computer Use、自然高等级成长、完整通关或Android验收，缺失源神器139/334及第8节公共适配仍保留。

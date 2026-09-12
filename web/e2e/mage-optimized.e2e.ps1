@@ -2,7 +2,7 @@
 param(
   [Parameter(Mandatory = $true)][string]$Executable,
   [Parameter(Mandatory = $true)][string]$OutputDirectory,
-  [ValidateSet('Mage', 'Ranger')][string]$Class = 'Mage'
+  [ValidateSet('Mage', 'Ranger', 'Priest')][string]$Class = 'Mage'
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient
@@ -30,16 +30,18 @@ try {
   function ById([string]$id) { FindElement ([System.Windows.Automation.AutomationElement]::AutomationIdProperty) $id }
   function ByName([string]$name) { FindElement ([System.Windows.Automation.AutomationElement]::NameProperty) $name }
   function Invoke($element) { Write-Output "Invoking $($element.Current.Name)"; $element.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke() }
-  $className = if ($Class -eq 'Ranger') { '游侠' } else { '法师' }
-  $classGroup = if ($Class -eq 'Ranger') { '箭术' } else { '魔法' }
+  $className = switch ($Class) { 'Ranger' { '游侠' }; 'Priest' { '牧师' }; default { '法师' } }
+  $classGroup = switch ($Class) { 'Ranger' { '箭术' }; 'Priest' { '祈祷' }; default { '魔法' } }
   $capacity = if ($Class -eq 'Ranger') { 0 } else { 1 }
-  Invoke (ById 'session-new-game')
+  # The raw HTML button exists before localization and session handlers are ready.
+  Invoke (ByName '新游戏')
   (ById 'session-character-name').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue("$Class Smoke")
   (ById 'session-seed').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue('925')
   (ById 'session-tab-career').GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
   (ByName $classGroup).GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern).Toggle()
   Invoke (ByName "$className，进入领域选择")
   if ($Class -eq 'Mage') { Invoke (ByName '奥秘，进入领域选择') }
+  if ($Class -eq 'Priest') { Invoke (ByName '生命，进入领域选择') }
   (ByName '咒术').GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern).Toggle()
   $start = ById 'session-start-game'
   if (-not $start.Current.IsEnabled) { throw "$Class realm selection did not enable creation" }

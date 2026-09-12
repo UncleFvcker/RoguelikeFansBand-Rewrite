@@ -83,7 +83,10 @@ fn resolve_weapon_proficiency(
             .rfb_base_kind
             .is_some_and(|base| matches!(base.tval, 22 | 23))
     {
-        bounds.maximum = if matches!(build.first_realm_id.as_deref(), Some("life" | "crusade")) {
+        bounds.maximum = if matches!(
+            content.build(&build.build_id)?.first_realm_id.as_deref(),
+            Some("life" | "crusade")
+        ) {
             WEAPON_EXP_BEGINNER
         } else {
             6_000

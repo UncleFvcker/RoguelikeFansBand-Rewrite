@@ -822,7 +822,8 @@ impl Game {
     }
 
     fn compound_effect_targets(&self, ability: &AbilityDefinition) -> Vec<String> {
-        self.entities
+        let mut targets: Vec<_> = self
+            .entities
             .iter()
             .filter(|entity| {
                 entity.hp > 0
@@ -833,7 +834,9 @@ impl Game {
                     }
             })
             .map(|entity| entity.id.clone())
-            .collect()
+            .collect();
+        targets.sort();
+        targets
     }
 
     fn resolve_visible_fear(

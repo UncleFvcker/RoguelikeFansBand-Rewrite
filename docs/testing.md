@@ -31,6 +31,7 @@ git diff --check
 
 ```powershell
 node e2e/tauri.e2e.mjs --ranger-play --fast-entry
+node e2e/tauri.e2e.mjs --priest-play --fast-entry
 node e2e/tauri.e2e.mjs --mage-play --fast-entry
 node e2e/tauri.e2e.mjs --duelist-ui --fast-entry
 node e2e/tauri.e2e.mjs --berserker --fast-entry
@@ -38,7 +39,7 @@ node e2e/tauri.e2e.mjs --berserker --fast-entry
 
 `--fast-entry` 复用 [dungeon-entry.e2e.mjs](../web/e2e/dungeon-entry.e2e.mjs)：从核心快照找到当前地图的实际下楼梯，经 `prepare_stairs_e2e({ position })` 将角色放到入口，再由原脚本点击下楼。该命令只在 WebDriver 构建可用，普通 EXE 拒绝调用；不授予经验/装备、不推进回合，也不预造地牢。地牢生成、怪物、战斗和后续 RNG 仍走正式规则；跳过路上的行动会使后续 RNG 起点不同于完整步行。
 
-准备后的状态通过正常存档读取路径进入 UI，报告记录位置、前后哈希、耗时和跳过步行的说明。去掉 `--fast-entry` 即恢复完整步行；验收移动/城镇路途时保留默认流程。现行这四个脚本以兽穴为目标，不把该参数用于任意世界传送。
+准备后的状态通过正常存档读取路径进入 UI，报告记录位置、前后哈希、耗时和跳过步行的说明。去掉 `--fast-entry` 即恢复完整步行；验收移动/城镇路途时保留默认流程。现行这些脚本以兽穴为目标，不把该参数用于任意世界传送。
 
 新增实战脚本可在正式创角后调用 `await prepareDungeonEntry(driver)`，随后沿正常 UI 执行下楼；不要再复制城镇寻路循环。
 

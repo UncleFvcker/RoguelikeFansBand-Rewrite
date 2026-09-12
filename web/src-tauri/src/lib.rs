@@ -375,11 +375,11 @@ impl AppState {
             .is_none_or(|build| {
                 !matches!(
                     build.class_id.as_str(),
-                    "demo.class.mage" | "demo.class.ranger"
+                    "demo.class.mage" | "demo.class.ranger" | "demo.class.priest"
                 )
             })
         {
-            return Err("Spell learning E2E requires Mage or Ranger".to_owned());
+            return Err("Spell learning E2E requires Mage, Ranger or Priest".to_owned());
         }
         let mut game = session.recorder.game().clone();
         game.debug_prepare_spell_learning_e2e(level)

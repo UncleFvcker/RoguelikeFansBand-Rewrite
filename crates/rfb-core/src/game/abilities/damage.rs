@@ -1587,7 +1587,7 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<usize, CoreError> {
-        let target_ids = self
+        let mut target_ids = self
             .entities
             .iter()
             .filter(|entity| {
@@ -1613,6 +1613,8 @@ impl Game {
             })
             .map(|entity| entity.id.clone())
             .collect::<Vec<_>>();
+        // Save restoration canonicalizes actors by ID; RNG and events must use the same order.
+        target_ids.sort();
         let target_count = target_ids.len();
         let affected_positions = target_ids
             .iter()

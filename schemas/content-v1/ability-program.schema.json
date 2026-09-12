@@ -1861,6 +1861,19 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "evocation",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "damage": {
               "format": "uint16",
               "maximum": 65535,
@@ -3426,6 +3439,19 @@
           "properties": {
             "type": {
               "const": "craft-item",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "bless-weapon",
               "type": "string"
             }
           },

@@ -310,14 +310,14 @@ fn edged_weapon_penalties_are_per_hand_and_blessing_does_not_raise_proficiency_c
         game.progress.attributes.wisdom = 18;
         game.progress.maximum_attributes.wisdom = 18;
         for item in &mut game.items {
-            if matches!(item.location, ItemLocation::Equipped { ref slot_id } if slot_id == "weapon" || slot_id == "shield")
+            if matches!(item.location, ItemLocation::Equipped { ref slot_id } if slot_id == "right-hand" || slot_id == "left-hand")
             {
                 item.location = ItemLocation::Inventory;
             }
         }
         let a = weapon(&mut game, "demo.item.dagger");
         let b = weapon(&mut game, "demo.item.sabre");
-        for (id, slot) in [(&a, "weapon"), (&b, "shield")] {
+        for (id, slot) in [(&a, "right-hand"), (&b, "left-hand")] {
             let i = index(&game, id);
             game.items[i].location = ItemLocation::Equipped {
                 slot_id: slot.to_owned(),
@@ -436,9 +436,9 @@ fn evocation_damages_all_alignments_then_fears_and_teleports_only_survivors() {
         ),
         (
             "test.alive",
-            "demo.actor.orc-captain",
+            "demo.actor.stone-troll",
             Position { x: 12, y: 10 },
-            10000,
+            230,
         ),
     ] {
         game.push_generated_actor(id.to_owned(), kind, position);
@@ -448,7 +448,9 @@ fn evocation_damages_all_alignments_then_fears_and_teleports_only_survivors() {
             .find(|entity| entity.id == id)
             .unwrap();
         entity.hp = hp;
-        entity.max_hp = hp;
+        if id == "test.alive" {
+            entity.max_hp = hp;
+        }
     }
     game.reveal_current_visibility();
     assert!(
@@ -477,7 +479,7 @@ fn evocation_damages_all_alignments_then_fears_and_teleports_only_survivors() {
         .iter()
         .find(|entity| entity.id == "test.alive")
         .unwrap();
-    assert_eq!(alive.hp, 10000 - expected_damage);
+    assert_eq!(alive.hp, 230 - expected_damage);
     assert_ne!(alive.position, before);
     let effects: Vec<_> = events
         .iter()
