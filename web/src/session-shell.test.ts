@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { CREATION_RACES, DRACONIAN_RACES, RACE_GROUPS, CAREER_GROUPS, CREATION_BUILDS, MAGE_REALMS, PRIEST_SECOND_REALMS, RANGER_SECOND_REALMS, creationLeaves } from "./character-creation.ts";
+import { CREATION_RACES, DRACONIAN_RACES, RACE_GROUPS, CAREER_GROUPS, CREATION_BUILDS, MAGE_REALMS, PRIEST_SECOND_REALMS, RANGER_SECOND_REALMS, WARRIOR_MAGE_SECOND_REALMS, creationLeaves } from "./character-creation.ts";
 import test from "node:test";
 
 test("the main window explicitly permits the close command used by both exit buttons", () => {
@@ -42,6 +42,7 @@ test("new character creation exposes all formal class slices", () => {
     "demo.build.duelist",
     ...MAGE_REALMS.flatMap(first => MAGE_REALMS.filter(second => second !== first).map(second => `demo.build.mage-${first}-${second}`)),
     ...RANGER_SECOND_REALMS.map(second => `demo.build.ranger-nature-${second}`),
+    ...WARRIOR_MAGE_SECOND_REALMS.map(second => `demo.build.warrior-mage-arcane-${second}`),
     ...Object.entries(PRIEST_SECOND_REALMS).flatMap(([first, seconds]) => seconds.map(second => `demo.build.priest-${first}-${second}`)),
   ].sort());
   assert.equal(PLAYTEST_BUILD_IDS.some((id) => id.startsWith("rfb-legacy.")), false);
@@ -121,7 +122,7 @@ test("random session seeds combine two entropy words without truncation", () => 
 
 test("career leaves retain the existing class and realm mapping", () => {
   assert.equal(CAREER_GROUPS.length, 7);
-  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 94);
+  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 102);
   assert.deepEqual(CAREER_GROUPS.find(group => group.id === "melee").options.map(entry => entry.id), ["demo.build.warrior", "demo.build.berserker", "demo.build.duelist"]);
   assert.equal(CAREER_GROUPS.find(group => group.id === "mind").options[0].id, "demo.build.mindcrafter");
   assert.deepEqual(createNewSessionRequest("83", "demo.build.mindcrafter", "demo.race.rfb-human", "心灵术士"), {
@@ -136,7 +137,7 @@ test("career leaves retain the existing class and realm mapping", () => {
       assert.equal(entry.nameKey, cls.nameKey);
       assert.equal(entry.descriptionKey, cls.descriptionKey);
       if ("children" in entry) {
-        assert.equal(leaves.length, entry.id === "mage" ? 56 : entry.id === "priest" ? 24 : entry.id === "ranger" ? 4 : entry.id === "high-mage" ? 2 : 1);
+        assert.equal(leaves.length, entry.id === "mage" ? 56 : entry.id === "priest" ? 24 : entry.id === "warrior-mage" ? 8 : entry.id === "ranger" ? 4 : entry.id === "high-mage" ? 2 : 1);
         if (entry.id === "mage") {
           assert.ok(MAGE_REALMS.includes(build.firstRealmId));
           assert.ok(MAGE_REALMS.includes(build.secondRealmId));
@@ -144,6 +145,11 @@ test("career leaves retain the existing class and realm mapping", () => {
         } else if (entry.id === "priest") {
           assert.ok(PRIEST_SECOND_REALMS[build.firstRealmId].includes(build.secondRealmId));
           assert.equal(createNewSessionRequest("83", leaf.id, "rfb-legacy.race.tonberry", "牧师").buildId, leaf.id);
+        } else if (entry.id === "warrior-mage") {
+          assert.equal(build.firstRealmId, "arcane");
+          assert.ok(WARRIOR_MAGE_SECOND_REALMS.includes(build.secondRealmId));
+          assert.equal(entry.childLabelKey, "session-second-realm-label");
+          assert.equal(createNewSessionRequest("83", leaf.id, "rfb-legacy.race.tonberry", "战法师").buildId, leaf.id);
         } else if (entry.id === "ranger") {
           assert.equal(build.firstRealmId, "nature");
           assert.ok(RANGER_SECOND_REALMS.includes(build.secondRealmId));
@@ -155,6 +161,15 @@ test("career leaves retain the existing class and realm mapping", () => {
       } else assert.equal(build.firstRealmId, undefined);
     }
   }
+});
+
+test("Warrior-Mage hybrid menu matches all formal fixed-Arcane builds including Craft", () => {
+  const entry = CAREER_GROUPS.find(group => group.id === "hybrid").options.find(entry => entry.id === "warrior-mage");
+  const directory = new URL("../../packs/rfb-demo-original/builds/", import.meta.url);
+  const formal = readdirSync(directory).filter(file => file.startsWith("warrior-mage-")).map(file => JSON.parse(readFileSync(new URL(file, directory), "utf8")));
+  assert.equal(formal.length, 8);
+  assert.deepEqual(creationLeaves([entry]).map(leaf => leaf.id).sort(), formal.map(build => build.id).sort());
+  for (const second of ["arcane", "chaos", "trump", "law"]) assert.equal(PLAYTEST_BUILD_IDS.includes(`demo.build.warrior-mage-arcane-${second}`), false);
 });
 
 test("Priest menu exposes exactly the 24 formal pairs and excludes absent, repeated and opposing realms", () => {

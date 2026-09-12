@@ -1676,6 +1676,13 @@ export class StatusPanel {
       append("ability-hit-point-cost-summary", { cost: ability.hitPointCost });
     }
     for (const effect of ability.effects) {
+      if (effect.type === "health-to-mana") {
+        append("ability-health-to-mana-summary", { cost: effect.hitPointCost, divisor: effect.manaDivisor });
+        append("ability-resource-conversion-cost-help");
+      } else if (effect.type === "mana-to-health") {
+        append("ability-mana-to-health-summary", { cost: effect.manaCost, healing: effect.healing });
+        append("ability-resource-conversion-cost-help");
+      }
       if (effect.type === "bless-weapon" || effect.type === "evocation") {
         append("ability-priest-power-cost-help");
         if (effect.type === "bless-weapon") append("ability-bless-weapon-help");

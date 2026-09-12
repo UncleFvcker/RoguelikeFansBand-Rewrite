@@ -17,6 +17,7 @@ import { runDuelistUiScenario } from "./duelist.e2e.mjs";
 import { runMageUiScenario } from "./mage.e2e.mjs";
 import { runRangerUiScenario } from "./ranger.e2e.mjs";
 import { runPriestUiScenario } from "./priest.e2e.mjs";
+import { runWarriorMageUiScenario } from "./warrior-mage.e2e.mjs";
 import { runCraftScenario } from "./craft.e2e.mjs";
 
 const webDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -76,7 +77,7 @@ async function main() {
     await rm(diagnosticDirectory, { recursive: true, force: true });
     await rm(desktopLogPath, { force: true });
     const port = await reservePort();
-    const creationLayout = process.argv.includes("--character-creation") || process.argv.includes("--creation-layout") || process.argv.includes("--mindcrafter") || process.argv.includes("--berserker") || process.argv.includes("--duelist-ui") || process.argv.includes("--mage-ui") || process.argv.includes("--mage-play") || process.argv.includes("--ranger-ui") || process.argv.includes("--ranger-play") || process.argv.includes("--priest-ui") || process.argv.includes("--priest-play");
+    const creationLayout = process.argv.includes("--warrior-mage-ui") || process.argv.includes("--character-creation") || process.argv.includes("--creation-layout") || process.argv.includes("--mindcrafter") || process.argv.includes("--berserker") || process.argv.includes("--duelist-ui") || process.argv.includes("--mage-ui") || process.argv.includes("--mage-play") || process.argv.includes("--ranger-ui") || process.argv.includes("--ranger-play") || process.argv.includes("--priest-ui") || process.argv.includes("--priest-play");
     const debugProfile = path.join(repositoryDirectory, "target", "e2e", "creation-webview");
     child = spawn(executable, [], {
       cwd: repositoryDirectory,
@@ -123,6 +124,8 @@ async function main() {
       await runMageUiScenario(client, path.join(artifactDirectory, "mage-ui"), debugProfile);
     } else if (process.argv.includes("--ranger-ui")) {
       await runRangerUiScenario(client, path.join(artifactDirectory, "ranger-ui"), debugProfile);
+    } else if (process.argv.includes("--warrior-mage-ui")) {
+      await runWarriorMageUiScenario(client, path.join(artifactDirectory, "warrior-mage-ui"), debugProfile);
     } else if (process.argv.includes("--priest-ui")) {
       await runPriestUiScenario(client, path.join(artifactDirectory, "priest-ui"), debugProfile);
     } else if (process.argv.includes("--priest-play")) {

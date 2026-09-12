@@ -9,7 +9,7 @@ impl Game {
     pub fn debug_prepare_spell_learning_e2e(&mut self, level: u16) -> Result<(), CoreError> {
         if !matches!(
             level,
-            0 | 1 | 2 | 3 | 5 | 15 | 20 | 25 | 34 | 35 | 41 | 42 | 50
+            0 | 1 | 2 | 3 | 5 | 15 | 20 | 24 | 25 | 34 | 35 | 41 | 42 | 50
         ) {
             return Err(CoreError::InvalidSave(
                 "unsupported spell learning E2E level",
@@ -82,7 +82,7 @@ impl Game {
                 .clone();
             self.debug_add_generated_inventory_item(book_id, &kind, 1)?;
         }
-        if level == 25 {
+        if level == 25 && !self.player_is_warrior_mage() {
             self.debug_add_generated_inventory_item(
                 "e2e.mage-acquirement",
                 "demo.item.acquirement-scroll",

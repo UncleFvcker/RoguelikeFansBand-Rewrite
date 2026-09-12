@@ -76,6 +76,16 @@ const PRIEST = {
   })),
 } as const;
 export const RANGER_SECOND_REALMS = ["sorcery", "death", "arcane", "daemon"] as const;
+export const WARRIOR_MAGE_SECOND_REALMS = ["life", "sorcery", "nature", "death", "craft", "daemon", "crusade", "armageddon"] as const;
+const WARRIOR_MAGE = {
+  ...career("warrior-mage"), id: "warrior-mage", childLabelKey: "session-second-realm-label",
+  notes: ["session-warrior-mage-realms-help"],
+  children: WARRIOR_MAGE_SECOND_REALMS.map(second => ({
+    id: `demo.build.warrior-mage-arcane-${second}` as const, nameKey: `realm-${second}-name`,
+    descriptionKey: `build-demo-warrior-mage-arcane-${second}-description`,
+    notes: ["session-warrior-mage-realms-help", "session-mage-second-realm-help"],
+  })),
+} as const;
 const RANGER = {
   ...career("ranger"), id: "ranger", childLabelKey: "session-second-realm-label",
   notes: ["session-ranger-realms-help"],
@@ -105,7 +115,7 @@ export const CAREER_GROUPS = [
     { id: "demo.build.high-mage-craft", nameKey: "session-career-craft-name", descriptionKey: "build-demo-high-mage-craft-description", notes: ["session-high-mage-available-realms"] },
   ] }] },
   { id: "prayer", options: [PRIEST] },
-  { id: "hybrid", options: [deathCaster("paladin")] },
+  { id: "hybrid", options: [deathCaster("paladin"), WARRIOR_MAGE] },
   { id: "riding", options: [career("cavalry")] },
   { id: "mind", options: [career("mindcrafter")] },
 ] as const satisfies readonly CreationGroup[];
