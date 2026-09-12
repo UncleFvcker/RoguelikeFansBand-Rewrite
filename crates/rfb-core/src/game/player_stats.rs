@@ -958,7 +958,7 @@ impl Game {
             && kind.artifact_generation.as_ref().is_some_and(|artifact| {
                 matches!(
                     artifact.source_index,
-                    54 | 56 | 57 | 59 | 185 | 236 | 238 | 242 | 291
+                    54 | 56 | 57 | 59 | 143 | 185 | 236 | 238 | 242 | 291
                 )
             })
         {

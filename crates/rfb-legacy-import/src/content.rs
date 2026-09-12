@@ -5588,21 +5588,26 @@ fn legacy_device_item_effect(
             self_target,
             false,
         ),
-        "CONFUSE_MONSTERS" | "SCARE_MONSTERS" | "SLOW_MONSTERS" | "STASIS_MONSTERS" => {
-            let (status, power) = match candidate.token.as_str() {
-                "CONFUSE_MONSTERS" => ("rfb.status.confusion", level * 3),
-                "SCARE_MONSTERS" => ("rfb.status.fear", level * 3),
-                "SLOW_MONSTERS" => ("rfb.status.slow", level * 3),
-                _ => ("rfb.status.paralysis", level * 3),
+        "CONFUSE_MONSTERS" | "SCARE_MONSTERS" | "SLEEP_MONSTERS" | "STASIS_MONSTERS" => {
+            let projection = match candidate.token.as_str() {
+                "CONFUSE_MONSTERS" => "confusion",
+                "SCARE_MONSTERS" => "fear",
+                "SLEEP_MONSTERS" => "sleep",
+                _ => "stasis",
             };
             (
-                device_ability_effect(
-                    serde_json::json!({"type": "visible-apply-status", "statusKindId": status, "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": power}),
-                ),
+                serde_json::json!({"type": "project-monster-status", "projection": projection, "power": level * 3}),
                 self_target,
                 false,
             )
         }
+        "SLOW_MONSTERS" => (
+            device_ability_effect(
+                serde_json::json!({"type": "visible-apply-status", "statusKindId": "rfb.status.slow", "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": level * 3}),
+            ),
+            self_target,
+            false,
+        ),
         "CONFUSING_LITE" => (
             device_ability_effect(serde_json::json!({"type": "sequence", "effects": [
                 {"type": "visible-apply-status", "statusKindId": "rfb.status.slow", "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": level * 2},

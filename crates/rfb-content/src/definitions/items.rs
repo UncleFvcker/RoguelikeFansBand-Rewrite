@@ -16,6 +16,16 @@ const fn default_incoming_damage_percent() -> u8 {
     100
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum MonsterStatusProjectionDefinition {
+    Fear,
+    Sleep,
+    Confusion,
+    Stasis,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
@@ -742,6 +752,10 @@ pub enum ItemSummonSelectorDefinition {
     deny_unknown_fields
 )]
 pub enum ItemUseEffectDefinition {
+    ProjectMonsterStatus {
+        projection: MonsterStatusProjectionDefinition,
+        power: u16,
+    },
     AbilityEffect {
         effect: Box<AbilityEffectDefinition>,
         #[serde(default)]

@@ -454,6 +454,7 @@ pub(crate) fn valid_item_effect(
                             | ItemUseEffectDefinition::Detect { .. }
                             | ItemUseEffectDefinition::SetFloorGlow { .. }
                             | ItemUseEffectDefinition::VisibleApplyStatus { .. }
+                            | ItemUseEffectDefinition::ProjectMonsterStatus { .. }
                     ) && valid_item_effect(
                         effect,
                         terrain_tags,
@@ -492,6 +493,7 @@ pub(crate) fn valid_item_effect(
                 && *damage_bonus <= 10_000
                 && (1..=16).contains(radius)
         }
+        ItemUseEffectDefinition::ProjectMonsterStatus { power, .. } => (1..=1_000).contains(power),
         ItemUseEffectDefinition::VisibleApplyStatus {
             status_kind_id,
             intensity,
@@ -758,6 +760,7 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::SummonCategory { .. }
                     | ItemUseEffectDefinition::DispelCategory { .. }
                     | ItemUseEffectDefinition::BanishVisible { .. }
+                    | ItemUseEffectDefinition::ProjectMonsterStatus { .. }
                     | ItemUseEffectDefinition::VisibleApplyStatus { .. } => self_target,
                     ItemUseEffectDefinition::RechargeFromDevice { .. } => false,
                     ItemUseEffectDefinition::Damage { .. }

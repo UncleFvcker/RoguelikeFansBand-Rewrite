@@ -49,6 +49,7 @@ mod monster_doors;
 mod monster_ecology;
 mod monster_hit_points;
 mod monster_movement;
+mod monster_status_projection;
 mod mount_olympus;
 mod mutations;
 mod paladin;

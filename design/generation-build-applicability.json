@@ -3,7 +3,7 @@
   "sourceRef": "master",
   "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
   "reviewedAt": "2026-09-11",
-  "codeBaseline": "8d045dfb2 + Ranger creation/UI entry",
+  "codeBaseline": "6b0b733e7 + C1",
   "entrySource": "web/src/character-creation.ts CREATION_BUILDS / PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
   "scope": "Source and behavior applicability review of 70 real creation builds (ten previous non-Mage builds, 56 ordered Mage pairs and four Nature-first Ranger builds), five areas each, within the imported canonical pool. Shared evidence covers class and current-realm differences; this is not 70 playthroughs. Unavailable identities/content remain separate. The audit CLI does not execute gameplay tests.",
   "recordSemantics": {
@@ -119,7 +119,9 @@
         "crates/rfb-core/src/game/random_artifact/tests.rs#real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary",
         "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#real_berserker_generated_flags_and_activation_rejection_survive_save_and_continue",
         "crates/rfb-core/src/game/tests/items.rs#artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name",
-        "crates/rfb-core/src/game/tests/arena.rs"
+        "crates/rfb-core/src/game/tests/arena.rs",
+        "crates/rfb-core/src/game/random_artifact/tests.rs#random_artifact_group_control_uses_source_projection_profiles",
+        "crates/rfb-core/src/game/tests/monster_status_projection.rs#projection_immunities_have_distinct_rng_and_stasis_ignores_no_sleep"
       ],
       "limits": "Factory tests cover source probability boundaries, including Mage 19/20 conversion and natural/theme separation. Actual scroll commands cover prior class representatives and Mage, selected equipment, saved names, virtues and continued actions. Berserker scroll rejection remains a class consumer rule. Realm pairs share this class-only branch; entry enumeration is separate from desktop acceptance.",
       "sourceEvidence": [
@@ -146,7 +148,12 @@
         "crates/rfb-core/src/game/ego.rs#materialize_ego_with_rng",
         "packs/rfb-demo-original/items/gandalf.json",
         "packs/rfb-demo-original/items/saruman.json",
-        "packs/rfb-demo-original/items/indra.json"
+        "packs/rfb-demo-original/items/indra.json",
+        "crates/rfb-core/src/game/abilities/control.rs#resolve_projected_monster_status",
+        "packs/rfb-demo-original/items/boromir.json",
+        "packs/rfb-demo-original/items/holcolleth.json",
+        "packs/rfb-demo-original/items/totila.json",
+        "packs/rfb-demo-original/items/tuber.json"
       ],
       "tests": [
         "crates/rfb-core/src/game/tests/tasks.rs#old_castle_reward_is_forced_even_when_the_artifact_was_generated_before_claim",
@@ -181,7 +188,10 @@
         "crates/rfb-core/src/game/tests/items.rs#b1_dramborleg_fixed_stun_reaches_melee_and_respects_immunity",
         "crates/rfb-core/src/game/tests/items.rs#p107f_diamond_edge_vorpal_flag_multiplies_dice_before_flat_damage",
         "crates/rfb-core/src/game/tests/items.rs#razorback_guardian_reward_shares_natural_generation_uniqueness",
-        "crates/rfb-core/src/game/tests/world.rs#p89f_man_cave_conquest_lotharang_activation_and_replacement_are_one_shot"
+        "crates/rfb-core/src/game/tests/world.rs#p89f_man_cave_conquest_lotharang_activation_and_replacement_are_one_shot",
+        "crates/rfb-core/src/game/tests/items.rs#c1_boromir_generates_equips_scares_and_restores_cooldown_and_rng",
+        "crates/rfb-core/src/game/tests/items.rs#c1_group_artifacts_follow_ordinary_bases_and_activate_after_save",
+        "crates/rfb-core/src/game/tests/items.rs#c1_tuber_spends_ammunition_but_cannot_hit_source_birds_and_resumes_same_shot"
       ],
       "limits": "Six other identity-sensitive construction exceptions, two fixed harps, Archaeologist Dr Jones, Monk Xiaolong, Dragon-pact Warlock Dragonlance, and Mauler / monster Hydra/Troll/Jelly Terror Mask branches remain deferred until their actual identities/content are available. Named GHB acquisition uses the formal Warrens ecology with prepared combat, not natural leveling. Old Castle tests prepare task completion and do not claim natural quest completion. Random-artifacts game mode replacement is unavailable; ordinary named drops skip an already-generated artifact.",
       "sourceEvidence": [
@@ -226,7 +236,9 @@
         "crates/rfb-core/src/game/tests/mage/realm_change.rs#guild_membership_and_prices_follow_current_realms_without_changing_primary_or_birth_virtues",
         "crates/rfb-core/src/game/tests/ranger/generation.rs#guild_enchantments_and_tower_identification_use_ranger_roles_and_saved_continuation",
         "crates/rfb-core/src/game/tests/ranger/generation.rs#changing_realm_updates_autopick_and_realm_guild_but_keeps_class_membership",
-        "web/e2e/ranger.e2e.mjs#runRangerUiScenario"
+        "web/e2e/ranger.e2e.mjs#runRangerUiScenario",
+        "crates/rfb-core/src/game/random_artifact/tests.rs#random_artifact_group_control_uses_source_projection_profiles",
+        "crates/rfb-core/src/game/tests/monster_status_projection.rs#projection_immunities_have_distinct_rng_and_stasis_ignores_no_sleep"
       ],
       "limits": "Reuse existing item/activation/save evidence and the Mage step-5 real class consumers. Tests explicitly prepare levels, positions, books or rewards where needed. Step-6 UI acceptance covers creation and spellbook interactions; natural acquisition, progression and the playable desktop release remain step 7.",
       "sourceEvidence": [

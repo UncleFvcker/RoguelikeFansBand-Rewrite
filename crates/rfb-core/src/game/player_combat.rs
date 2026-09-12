@@ -968,6 +968,13 @@ impl Game {
                 difficulty: focused_armor_class,
             })
             .succeeded()
+            // cmd2.c: ART_TUBER cannot hit the source bird glyph, even after
+            // a successful normal hit check (which still consumes its RNG).
+            || (definition.glyph == "B"
+                && self.items.iter().find(|item| item.id == profile.source_item_id)
+                    .and_then(|item| self.content.item(&item.kind_id))
+                    .and_then(|item| item.artifact_generation.as_ref())
+                    .is_some_and(|artifact| artifact.source_index == 356))
         {
             events.push(DomainEvent::ProjectileMissed {
                 target_kind_id,

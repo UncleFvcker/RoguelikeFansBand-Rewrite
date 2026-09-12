@@ -4258,6 +4258,8 @@ actor-demo-shimmering-vortex-description = A strange luminous column whose shift
 actor-demo-weird-fume-name = Weird fume
 actor-demo-weird-fume-description = A rotating spiral cloud that continually changes its appearance.
 item-demo-amulet-name = Amulet
+item-demo-boromir-name = Amulet of Boromir
+item-demo-boromir-description = Amulet of Boromir
 item-demo-amulet-description = A plain amulet ready to receive magical properties.
 item-demo-detection-rod-name = Rod of Detection
 item-demo-detection-rod-description = Detects nearby traps, passages, treasure, objects, and monsters.
@@ -9785,3 +9787,12 @@ item-demo-avavir-name = Scythe 'Avavir'
 item-demo-avavir-description = Scythe 'Avavir'
 item-demo-eonwe-name = Great Axe of Eonwe
 item-demo-eonwe-description = Great Axe of Eonwe
+
+item-demo-holcolleth-name = Elven Cloak of Holcolleth
+item-demo-holcolleth-description = 这件精灵灰色的斗篷拥有极强的宁静与隐蔽力量，并赋予佩戴者辛达精灵的知识和理解力。
+
+item-demo-totila-name = Flail of Totila
+item-demo-totila-description = 这把连枷，当你在周围挥舞它时，它的头部会让盯着它看的人感到困惑；而当你将它砸下时，它会变成一颗燃烧的彗星。
+
+item-demo-tuber-name = Long Bow of Tuber
+item-demo-tuber-description = 百发百中的图伯——英雄布博的儿子——的弓。它充满了曾经囚禁过他的冰霜精灵的力量。

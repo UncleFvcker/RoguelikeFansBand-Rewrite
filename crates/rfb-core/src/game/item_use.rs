@@ -2479,6 +2479,15 @@ impl Game {
         let mut noticed = false;
         for effect in effects {
             match effect {
+                ItemUseEffectDefinition::ProjectMonsterStatus { projection, power } => {
+                    noticed |= self.resolve_projected_monster_status(
+                        profile_id.unwrap_or(source_kind_id),
+                        projection,
+                        device_power_value(u64::from(power), device_power_bonus) as u16,
+                        events,
+                        changed,
+                    );
+                }
                 ItemUseEffectDefinition::Heal { amount } => {
                     let amount = device_power_value(u64::from(amount), device_power_bonus) as i32;
                     noticed |= self.resolve_item_healing(source_kind_id, amount, events);
@@ -3093,6 +3102,18 @@ impl Game {
         } = settled;
         let mut noticed = false;
         match (effect, plan) {
+            (
+                ItemUseEffectDefinition::ProjectMonsterStatus { projection, power },
+                ItemUsePlan::SelfTarget,
+            ) => {
+                noticed = self.resolve_projected_monster_status(
+                    profile_id.as_deref().unwrap_or(&kind_id),
+                    projection,
+                    device_power_value(u64::from(power), device_power_bonus) as u16,
+                    events,
+                    changed,
+                );
+            }
             (
                 ItemUseEffectDefinition::ApplyStatus {
                     status_kind_id,
@@ -3933,7 +3954,8 @@ impl Game {
             | ItemUseEffectDefinition::ShowRumour { .. }
             | ItemUseEffectDefinition::Sequence { .. }
             | ItemUseEffectDefinition::CurseEquippedItem { .. }
-            | ItemUseEffectDefinition::RemoveEquippedCurses { .. } => {
+            | ItemUseEffectDefinition::RemoveEquippedCurses { .. }
+            | ItemUseEffectDefinition::ProjectMonsterStatus { .. } => {
                 self_target.then_some(ItemUsePlan::SelfTarget)
             }
             ItemUseEffectDefinition::Acquirement { loot_table_id, .. } => {
@@ -6300,6 +6322,7 @@ impl Game {
             | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
             | ItemUseEffectDefinition::DispelCategory { .. }
             | ItemUseEffectDefinition::BanishVisible { .. }
+            | ItemUseEffectDefinition::ProjectMonsterStatus { .. }
             | ItemUseEffectDefinition::VisibleApplyStatus { .. }
             | ItemUseEffectDefinition::Detect { .. }
             | ItemUseEffectDefinition::IdentifyItem { .. }

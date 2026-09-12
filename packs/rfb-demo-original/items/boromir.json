@@ -1,0 +1,46 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.boromir",
+  "nameKey": "item-demo-boromir-name",
+  "descriptionKey": "item-demo-boromir-description",
+  "glyph": "\"",
+  "generationLevel": 30,
+  "weightTenthsPound": 2,
+  "baseValue": 25000,
+  "maxStack": 1,
+  "equipmentSlot": "amulet",
+  "tags": ["artifact", "equipment", "jewelry", "activatable", "rfb-compatibility"],
+  "artifactGeneration": {
+    "sourceIndex": 143,
+    "baseItemKindId": "demo.item.amulet",
+    "instant": false,
+    "rarityOneIn": 30
+  },
+  "equipmentBonuses": {"meleeDamage": 8},
+  "passives": ["sustain-strength"],
+  "resistances": {"fear": "resistant"},
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "rfbValue": {
+    "flags": ["HIDE_TYPE", "IGNORE_ACID", "IGNORE_COLD", "IGNORE_ELEC", "IGNORE_FIRE", "RES_FEAR", "SHOW_MODS", "SUST_STR"],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "deviceGeneration": {
+    "activations": [{
+      "id": "demo.item-activation.boromir",
+      "nameKey": "device-activation-e5-scare-monsters-name",
+      "target": {"modes": ["self"], "range": 0, "requiresLineOfEffect": false},
+      "charges": {"minimum": 1, "maximum": 1, "cost": 1},
+      "effectProgramId": "demo.effect.boromir-scare",
+      "deviceCheckDifficulty": 30,
+      "weight": 1,
+      "minDepth": 1,
+      "maxDepth": 100,
+      "rfbValue": 900
+    }],
+    "recovery": {"intervalTicks": 600, "energyPerMille": 1000}
+  }
+}

@@ -4262,6 +4262,8 @@ actor-demo-shimmering-vortex-description = 一根会刺痛你眼睛的发光奇�
 actor-demo-weird-fume-name = 怪异烟雾
 actor-demo-weird-fume-description = 一团旋转的螺旋状雾气，不断改变着它的外观。
 item-demo-amulet-name = 护身符
+item-demo-boromir-name = 波罗莫的护身符
+item-demo-boromir-description = 一个巨大的金色项圈，由无数根金线和钢线交织而成，两端镶嵌着巨大的金色猎犬。
 item-demo-amulet-description = 一枚等待获得魔法属性的普通护身符。
 item-demo-detection-rod-name = 探测魔棒
 item-demo-detection-rod-description = 探测附近的陷阱、通道、财宝、物品和怪物。
@@ -9793,3 +9795,12 @@ item-demo-avavir-name = 『阿瓦维尔』长柄大镰刀
 item-demo-avavir-description = 这把闪耀的收割者蕴含着元素力量的冲突，使其交替呈现出红色和最纯洁的白色。它的内部蕴含着一种向前冲锋和返回的力量。
 item-demo-eonwe-name = 伊昂威的巨斧
 item-demo-eonwe-description = 这是西方大军领袖伊昂威在安格班（Thangorodrim）门前所用的斧头，它以冰冷的愤怒打击不死生物，一句话就能驱散邪恶的大军，并赋予佩戴者迈雅般的肉体与心智力量。
+
+item-demo-holcolleth-name = 精灵披风『霍尔科莱斯』
+item-demo-holcolleth-description = 这件精灵灰色的斗篷拥有极强的宁静与隐蔽力量，并赋予佩戴者辛达精灵的知识和理解力。
+
+item-demo-totila-name = 连枷『托提拉』
+item-demo-totila-description = 这把连枷，当你在周围挥舞它时，它的头部会让盯着它看的人感到困惑；而当你将它砸下时，它会变成一颗燃烧的彗星。
+
+item-demo-tuber-name = 图伯的长弓
+item-demo-tuber-description = 百发百中的图伯——英雄布博的儿子——的弓。它充满了曾经囚禁过他的冰霜精灵的力量。

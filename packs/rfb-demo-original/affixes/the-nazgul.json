@@ -702,15 +702,9 @@
         },
         "deviceCheckDifficulty": 20,
         "effect": {
-          "effect": {
-            "durationTicks": 3,
-            "intensity": 1,
-            "power": 60,
-            "stacking": "replace",
-            "statusKindId": "rfb.status.fear",
-            "type": "visible-apply-status"
-          },
-          "type": "ability-effect"
+          "power": 60,
+          "projection": "fear",
+          "type": "project-monster-status"
         },
         "id": "rfb.device-activation.ego-103-scare-monsters",
         "maxDepth": 62,

@@ -1,0 +1,92 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.holcolleth",
+  "nameKey": "item-demo-holcolleth-name",
+  "descriptionKey": "item-demo-holcolleth-description",
+  "glyph": "(",
+  "generationLevel": 40,
+  "weightTenthsPound": 5,
+  "baseValue": 43000,
+  "maxStack": 1,
+  "equipmentSlot": "cloak",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 45,
+    "baseItemKindId": "demo.item.elven-cloak",
+    "instant": false,
+    "rarityOneIn": 15
+  },
+  "rfbValue": {
+    "flags": [
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "RES_ACID",
+      "SEARCH",
+      "STEALTH",
+      "WIS"
+    ],
+    "pval": 3,
+    "toArmor": 15
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 19,
+    "intelligence": 3,
+    "wisdom": 3
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 3,
+    "searchSkill": 15,
+    "perceptionSkill": 15
+  },
+  "resistances": {
+    "acid": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.holcolleth",
+        "nameKey": "device-activation-e5-sleep-monsters-name",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "effectProgramId": "demo.effect.holcolleth-sleep",
+        "deviceCheckDifficulty": 20,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "rfbValue": 900
+      }
+    ],
+    "recovery": {
+      "intervalTicks": 550,
+      "energyPerMille": 1000
+    }
+  }
+}

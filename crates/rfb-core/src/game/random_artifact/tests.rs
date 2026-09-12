@@ -662,6 +662,48 @@ fn use_activation(game: &mut Game, target: Option<&TargetSelection>) -> Vec<Doma
 }
 
 #[test]
+fn random_artifact_group_control_uses_source_projection_profiles() {
+    use crate::game::tests::support::choose_human_talent_if_pending;
+    let mut template = Game::new_with_build(484, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut template);
+    template.entities.clear();
+    template.items.clear();
+    template.player.position = Position { x: 10, y: 10 };
+    template.terrain.fill("demo.terrain.floor".into());
+    // Darkness is deliberately retained: these source projections do not use visibility.
+    template.glow.fill(false);
+    template.push_generated_actor(
+        "test.control".into(),
+        "demo.actor.goblin",
+        Position { x: 13, y: 10 },
+    );
+    for (token, status) in [
+        ("scare-monsters", crate::effect::STATUS_FEAR),
+        ("confuse-monsters", crate::effect::STATUS_CONFUSION),
+        ("stasis-monsters", crate::effect::STATUS_PARALYSIS),
+    ] {
+        let mut game = template.clone();
+        give_activation(&mut game, token);
+        assert!(
+            (0..100).any(|seed| {
+                let mut attempt = game.clone();
+                attempt.rng = RfbRng::seeded(seed);
+                use_activation(&mut attempt, Some(&TargetSelection::SelfTarget));
+                let success = attempt.entities[0]
+                    .statuses
+                    .iter()
+                    .any(|s| s.kind_id == status && s.remaining_ticks > 3);
+                if success {
+                    assert_eq!(attempt.items[0].charges.unwrap().current, 0);
+                }
+                success
+            }),
+            "{token} must reach a dark target through its real item activation"
+        );
+    }
+}
+
+#[test]
 fn random_artifact_enchantment_activation_requires_target_and_caps_each_component() {
     let mut game = Game::new_with_build(85, "demo.build.warrior").unwrap();
     game.items.clear();

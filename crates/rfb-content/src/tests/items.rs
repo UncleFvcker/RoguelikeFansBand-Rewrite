@@ -1164,6 +1164,7 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.quickthorn",
                 "demo.item.sabre",
                 "demo.item.spear",
+                "demo.item.totila",
                 "demo.item.trident",
                 "demo.item.trifurcate-spear",
                 "demo.item.trifurcate-spear-of-wrath",

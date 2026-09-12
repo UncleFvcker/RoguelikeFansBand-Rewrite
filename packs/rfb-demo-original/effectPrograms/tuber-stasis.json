@@ -1,13 +1,13 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
   "formatVersion": 1,
-  "id": "demo.effect.terror-mask-scare",
+  "id": "demo.effect.tuber-stasis",
   "input": "self",
   "steps": [
     {
       "type": "project-monster-status",
-      "projection": "fear",
-      "power": 60
+      "projection": "stasis",
+      "power": 92
     }
   ]
 }

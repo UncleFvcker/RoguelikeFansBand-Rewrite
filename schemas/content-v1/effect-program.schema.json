@@ -4263,6 +4263,30 @@
         {
           "additionalProperties": false,
           "properties": {
+            "power": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "projection": {
+              "$ref": "#/$defs/MonsterStatusProjectionDefinition"
+            },
+            "type": {
+              "const": "project-monster-status",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "projection",
+            "power"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "affectsGroundItems": {
               "default": false,
               "type": "boolean"
@@ -6891,6 +6915,15 @@
     "LootRfbEgoPolicyDefinition": {
       "enum": [
         "weapon-digger"
+      ],
+      "type": "string"
+    },
+    "MonsterStatusProjectionDefinition": {
+      "enum": [
+        "fear",
+        "sleep",
+        "confusion",
+        "stasis"
       ],
       "type": "string"
     },
