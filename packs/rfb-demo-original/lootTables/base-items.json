@@ -1983,6 +1983,34 @@
       "weight": 25
     },
     {
+      "itemKindId": "demo.item.black-dragon-scale-mail",
+      "minDepth": 40,
+      "maxDepth": 65535,
+      "quantity": 1,
+      "weight": 20
+    },
+    {
+      "itemKindId": "demo.item.blue-dragon-scale-mail",
+      "minDepth": 40,
+      "maxDepth": 65535,
+      "quantity": 1,
+      "weight": 20
+    },
+    {
+      "itemKindId": "demo.item.white-dragon-scale-mail",
+      "minDepth": 40,
+      "maxDepth": 65535,
+      "quantity": 1,
+      "weight": 20
+    },
+    {
+      "itemKindId": "demo.item.red-dragon-scale-mail",
+      "minDepth": 40,
+      "maxDepth": 65535,
+      "quantity": 1,
+      "weight": 20
+    },
+    {
       "itemKindId": "demo.item.masterwork-armor-scroll",
       "maxDepth": 65535,
       "minDepth": 40,
@@ -2109,6 +2137,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.green-dragon-scale-mail",
+      "minDepth": 45,
+      "maxDepth": 65535,
+      "quantity": 1,
+      "weight": 20
+    },
+    {
       "itemKindId": "demo.item.inventory-protection-scroll",
       "maxDepth": 65535,
       "minDepth": 45,
@@ -2205,6 +2240,27 @@
       "minDepth": 50,
       "quantity": 1,
       "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.pseudo-dragon-scale-mail",
+      "minDepth": 50,
+      "maxDepth": 65535,
+      "quantity": 1,
+      "weight": 12
+    },
+    {
+      "itemKindId": "demo.item.bronze-dragon-scale-mail",
+      "minDepth": 50,
+      "maxDepth": 65535,
+      "quantity": 1,
+      "weight": 20
+    },
+    {
+      "itemKindId": "demo.item.silver-dragon-scale-mail",
+      "minDepth": 50,
+      "maxDepth": 65535,
+      "quantity": 1,
+      "weight": 20
     },
     {
       "itemKindId": "demo.item.gold-dragon-scale-mail",
@@ -2487,6 +2543,13 @@
       "weight": 50
     },
     {
+      "itemKindId": "demo.item.balance-dragon-scale-mail",
+      "minDepth": 80,
+      "maxDepth": 65535,
+      "quantity": 1,
+      "weight": 8
+    },
+    {
       "itemKindId": "demo.item.glyph-severance-scroll",
       "maxDepth": 65535,
       "minDepth": 80,
@@ -2639,6 +2702,13 @@
       "minDepth": 100,
       "quantity": 1,
       "weight": 25
+    },
+    {
+      "itemKindId": "demo.item.power-dragon-scale-mail",
+      "minDepth": 110,
+      "maxDepth": 65535,
+      "quantity": 1,
+      "weight": 1
     }
   ],
   "formatVersion": 1,

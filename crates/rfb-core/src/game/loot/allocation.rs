@@ -308,7 +308,7 @@ pub(super) fn select_entry(
         })
     });
     // get_obj_num_prep applies the hook before get_obj_num rolls its boost.
-    let mut weights = entries
+    let weights = entries
         .iter()
         .map(|entry| {
             let item = game
@@ -332,6 +332,31 @@ pub(super) fn select_entry(
             }
         })
         .collect::<Vec<_>>();
+    select_prepared_entry(game, context, mode, entries, weights)
+}
+
+/// shop.c::_get_k_idx uses its stock hook directly, without _choose_obj_kind.
+pub(in crate::game) fn select_shop_entry(
+    game: &mut Game,
+    context: &LootContext,
+    entries: &[LootEntryDefinition],
+) -> Option<usize> {
+    select_prepared_entry(
+        game,
+        context,
+        ItemGenerationMode::Ordinary,
+        entries,
+        entries.iter().map(|entry| entry.weight).collect(),
+    )
+}
+
+fn select_prepared_entry(
+    game: &mut Game,
+    context: &LootContext,
+    mode: ItemGenerationMode,
+    entries: &[LootEntryDefinition],
+    mut weights: Vec<u32>,
+) -> Option<usize> {
     let level = allocation_level(game, context, mode);
     let dungeon = game
         .content

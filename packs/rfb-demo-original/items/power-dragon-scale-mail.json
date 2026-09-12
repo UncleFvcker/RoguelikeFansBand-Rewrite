@@ -1,0 +1,111 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 350000,
+  "descriptionKey": "item-demo-power-dragon-scale-mail-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effectProgramId": "rfb.effect.dragon-breath-305",
+        "id": "rfb.device-activation.dragon-breath-305",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-breathe-elements-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbValue": 16500,
+        "target": {
+          "modes": [
+            "direction"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -3
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 110,
+  "glyph": "[",
+  "id": "demo.item.power-dragon-scale-mail",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 55
+  },
+  "mogaminatorRare": true,
+  "nameKey": "item-demo-power-dragon-scale-mail-name",
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "confusion": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "light": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "poison": "resistant",
+    "shards": "resistant",
+    "sound": "resistant"
+  },
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 305,
+    "tval": 38,
+    "sval": 30
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_CHAOS",
+      "RES_COLD",
+      "RES_CONF",
+      "RES_DARK",
+      "RES_DISEN",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_LITE",
+      "RES_NETHER",
+      "RES_NEXUS",
+      "RES_POIS",
+      "RES_SHARDS",
+      "RES_SOUND"
+    ],
+    "pval": 0,
+    "toArmor": 15
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility",
+    "activatable"
+  ],
+  "weightTenthsPound": 200
+}

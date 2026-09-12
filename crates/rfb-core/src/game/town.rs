@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
+mod stock;
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use rfb_content::{
@@ -590,6 +592,8 @@ fn category_dto(category: ShopCategory) -> ShopCategoryDto {
         ShopCategory::MagicShop => ShopCategoryDto::MagicShop,
         ShopCategory::BlackMarket => ShopCategoryDto::BlackMarket,
         ShopCategory::Bookstore => ShopCategoryDto::Bookstore,
+        ShopCategory::Jeweler => ShopCategoryDto::Jeweler,
+        ShopCategory::Dragon => ShopCategoryDto::Dragon,
     }
 }
 
@@ -635,6 +639,7 @@ pub(super) fn sell_unit_price(base_value: u32, factor: u16, cap: u32) -> u32 {
 
 fn discounted_item_base_value(
     content: &ContentCatalog,
+    shop: &ShopDefinition,
     item: &ItemInstance,
     base_value: u32,
 ) -> u32 {
@@ -645,9 +650,15 @@ fn discounted_item_base_value(
     {
         return 0;
     }
-    let base_value = if item.artifact_name.is_some() {
+    let source_equipment = content
+        .item(&item.kind_id)
+        .and_then(|definition| definition.rfb_base_kind)
+        .is_some_and(|base| matches!(base.tval, 16..=23 | 30..=40 | 45 | 46));
+    let base_value = if item.artifact_name.is_some()
+        || (stock::generates_equipment(shop.category) && source_equipment)
+    {
         super::item_value::obj_value_real(content, item)
-            .expect("random artifact must retain supported COST_REAL inputs")
+            .expect("source equipment must retain supported COST_REAL inputs")
             .max(0) as u32
     } else {
         base_value
@@ -661,6 +672,13 @@ fn player_purchase_unit_price(
     base_value: u32,
     factor: u16,
 ) -> u32 {
+    // shop.c applies the dragon surcharge before the normal price factor and rounding.
+    let base_value = if shop.category == ShopCategory::Dragon && base_value > 31_000 {
+        let excess = u64::from(base_value - 30_000);
+        u32::try_from(u64::from(base_value) + (excess / 200 * excess) / 15).unwrap_or(u32::MAX)
+    } else {
+        base_value
+    };
     let mut price = buy_unit_price(base_value, factor);
     if shop.category == ShopCategory::BlackMarket {
         if !game.player_has_black_market_standard_prices() {
@@ -671,6 +689,8 @@ fn player_purchase_unit_price(
             / 625)
             .try_into()
             .unwrap_or(u32::MAX);
+    } else if shop.category == ShopCategory::Jeweler {
+        price = price.saturating_mul(2);
     }
     price
 }
@@ -686,6 +706,8 @@ fn player_sale_unit_price(game: &Game, shop: &ShopDefinition, base_value: u32, f
             / 625)
             .try_into()
             .unwrap_or(u32::MAX);
+    } else if shop.category == ShopCategory::Jeweler {
+        price /= 2;
     }
     price.max(1).min(shop.owner.purchase_price_cap)
 }
@@ -725,6 +747,17 @@ fn item_is_legal_for_shop(game: &Game, item: &ItemInstance) -> bool {
                 .iter()
                 .any(|tag| matches!(tag.as_str(), "corpse" | "remains"))
     })
+}
+
+fn shop_accepts_item(game: &Game, shop: &ShopDefinition, item: &ItemInstance) -> bool {
+    item_is_legal_for_shop(game, item)
+        && (!stock::generates_equipment(shop.category)
+            || discounted_item_base_value(
+                &game.content,
+                shop,
+                item,
+                game.content.item(&item.kind_id).unwrap().base_value,
+            ) > 0)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -2490,7 +2523,7 @@ impl Game {
         let unit_price = player_purchase_unit_price(
             self,
             &shop,
-            discounted_item_base_value(&self.content, &item, definition.base_value),
+            discounted_item_base_value(&self.content, &shop, &item, definition.base_value),
             shop_price_factor(self, &shop),
         );
         let Some(total_price) = unit_price.checked_mul(quantity) else {
@@ -2595,7 +2628,7 @@ impl Game {
         if quantity > available_quantity {
             return Err("insufficient-quantity");
         }
-        if !item_is_legal_for_shop(self, &item) {
+        if !shop_accepts_item(self, &shop, &item) {
             return Err("item-illegal");
         }
         let item_kind_id = item.kind_id.clone();
@@ -2606,7 +2639,7 @@ impl Game {
         let unit_price = player_sale_unit_price(
             self,
             &shop,
-            discounted_item_base_value(&self.content, &item, definition.base_value),
+            discounted_item_base_value(&self.content, &shop, &item, definition.base_value),
             shop_price_factor(self, &shop),
         );
         let Some(total_price) = unit_price.checked_mul(quantity) else {
@@ -2687,7 +2720,16 @@ impl Game {
             .world_tick
             .saturating_sub(state.last_maintenance_world_tick)
             < shop.maintenance.interval_world_ticks
+            && (!stock::generates_equipment(shop.category) || !state.inventory.is_empty())
         {
+            return Ok(());
+        }
+        if stock::generates_equipment(shop.category) {
+            let count = state.inventory.len();
+            let additions = self.roll_special_shop_stock(&shop, count)?;
+            let state = self.shop_states.get_mut(&shop_id).unwrap();
+            state.inventory.extend(additions);
+            state.last_maintenance_world_tick = self.world_tick;
             return Ok(());
         }
         let mut additions = Vec::new();
@@ -2803,14 +2845,21 @@ impl Game {
             if self.shop_entrance_position(&shop) != Some(self.player.position) {
                 continue;
             }
-            if !self.shop_states.contains_key(shop_id) {
-                let inventory = roll_shop_stock(
-                    &shop,
-                    &self.content,
-                    &mut self.rng,
-                    &mut self.next_item_instance_serial,
-                    false,
-                )?;
+            if !self.shop_states.contains_key(shop_id)
+                || (stock::generates_equipment(shop.category)
+                    && self.shop_states[shop_id].inventory.is_empty())
+            {
+                let inventory = if stock::generates_equipment(shop.category) {
+                    self.roll_special_shop_stock(&shop, 0)?
+                } else {
+                    roll_shop_stock(
+                        &shop,
+                        &self.content,
+                        &mut self.rng,
+                        &mut self.next_item_instance_serial,
+                        false,
+                    )?
+                };
                 self.shop_states.insert(
                     shop_id.clone(),
                     ShopState {
@@ -2905,6 +2954,7 @@ impl Game {
                                 shop,
                                 discounted_item_base_value(
                                     &self.content,
+                                    shop,
                                     item,
                                     definition.base_value,
                                 ),
@@ -2917,6 +2967,11 @@ impl Game {
                                 kind_id: item.kind_id.clone(),
                                 display_name_key: definition.name_key.clone(),
                                 artifact_name: item.artifact_name.clone(),
+                                affix_name_keys: item.affix_ids.iter().map(|id| {
+                                    self.content.affix(id)
+                                        .expect("shop affix must remain available")
+                                        .name_key.clone()
+                                }).collect(),
                                 quantity,
                                 inscription: item.inscription.clone(),
                                 captured_actor: self.captured_actor_dto(item),
@@ -2950,7 +3005,7 @@ impl Game {
                                 .content
                                 .item(&item.kind_id)
                                 .expect("inventory item kind must remain available");
-                            let unavailable_reason = (!item_is_legal_for_shop(self, item))
+                            let unavailable_reason = (!shop_accepts_item(self, shop, item))
                                 .then(|| "item-illegal".to_owned());
                             ShopSellQuoteDto {
                                 item_id: item.id.clone(),
@@ -2962,6 +3017,7 @@ impl Game {
                                             shop,
                                             discounted_item_base_value(
                                                 &self.content,
+                                                shop,
                                                 item,
                                                 definition.base_value,
                                             ),

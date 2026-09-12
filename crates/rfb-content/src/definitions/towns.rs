@@ -162,6 +162,9 @@ pub struct ShopDefinition {
     pub inn_reputation_cost: Option<u32>,
     pub owner: ShopOwnerDefinition,
     pub stock: Vec<ShopStockDefinition>,
+    /// Source allocation pool for the two Zul shops that generate equipment instances.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stock_generation_table_id: Option<String>,
     pub maintenance: ShopMaintenanceDefinition,
 }
 
@@ -222,4 +225,6 @@ pub enum ShopCategory {
     MagicShop,
     BlackMarket,
     Bookstore,
+    Jeweler,
+    Dragon,
 }

@@ -142,6 +142,15 @@ are recorded in packs/rfb-demo-original/legacy-wilderness-selection.json and
 design/zul-town-import-plan-20260912.md. The four quest maps are not included
 in this initial town import.
 
+Zul's Jeweler and Dragonskin stock hooks, owners and prices are adapted from
+src/shop.c, src/xtra1.c and src/object2.c at the same master commit. The ten
+additional dragon scale mail kinds, Chinese names and breath effects derive
+from lib/edit/k_info.txt, src/kind_name_zh.inc and src/devices.c. These imported
+definitions and strings retain the applicable upstream terms documented above.
+The item selection/adaptation ledgers record each source kind; the Zul plan
+records the retained maintenance and equipment-engine adaptations. Execution
+validation of this batch is deferred until the Z1-Z6 implementation is complete.
+
 The generated Android Gradle/Kotlin scaffold under web/src-tauri/gen/android is derived
 from Tauri CLI templates. Tauri is available under the Apache License 2.0 or MIT License:
 https://github.com/tauri-apps/tauri

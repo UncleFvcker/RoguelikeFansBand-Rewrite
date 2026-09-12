@@ -666,9 +666,15 @@ town-demo-zul-name = 祖尔
 town-demo-zul-description = 山地中的城镇，商店散布在岩壁间，北方三塔被熔岩环绕。
 floor-demo-zul-name = 祖尔
 terrain-demo-jeweler-entrance-name = 珠宝店
-terrain-demo-jeweler-entrance-description = 岩壁间的珠宝店入口，目前尚未营业。
+terrain-demo-jeweler-entrance-description = 岩壁间的珠宝店入口。
 terrain-demo-dragonskin-entrance-name = 龙皮专卖店
-terrain-demo-dragonskin-entrance-description = 岩壁间的龙皮专卖店入口，目前尚未营业。
+terrain-demo-dragonskin-entrance-description = 岩壁间的龙皮专卖店入口。
+shop-demo-zul-jeweler-name = 珠宝店
+shop-demo-zul-jeweler-description = 甜美的达兰娜出售戒指与项链，也收购其他有价值的物品。
+shop-owner-demo-zul-dalana-name = 甜美的达兰娜
+shop-demo-zul-dragonskin-name = 龙皮百货
+shop-demo-zul-dragonskin-description = 贝奥武夫出售龙鳞甲与龙皮装备，也收购其他有价值的物品。
+shop-owner-demo-zul-beowulf-name = 贝奥武夫
 terrain-demo-chaos-tower-entrance-name = 混沌之塔
 terrain-demo-chaos-tower-entrance-description = 熔岩环绕的混沌之塔入口，目前尚未开放服务。
 terrain-demo-nature-tower-entrance-name = 自然之塔
@@ -9691,3 +9697,35 @@ item-demo-legendary-lost-treasure-name = T恤『我干掉了地狱看门犬，�
 item-demo-legendary-lost-treasure-description = T恤『我干掉了地狱看门犬，结果只得到了这件破T恤！』
 item-demo-amun-name = 阿蒙的匕首
 item-demo-amun-description = 一把古老而平衡感极佳的钢制剑刃，金色的剑柄上有着美丽的装饰，曾由永生者阿蒙持有。尽管年代久远，这把匕首依然闪亮且锋利如剃刀。
+
+item-demo-black-dragon-scale-mail-name = 黑龙鳞甲
+item-demo-black-dragon-scale-mail-description = 一套乌黑的鳞甲，任何金属或木材都无法穿透它。
+
+item-demo-blue-dragon-scale-mail-name = 蓝龙鳞甲
+item-demo-blue-dragon-scale-mail-description = 一套如蓝宝石般湛蓝的鳞甲，当你在其中活动时，它会散发出诡异的火花和闪光。
+
+item-demo-white-dragon-scale-mail-name = 白龙鳞甲
+item-demo-white-dragon-scale-mail-description = 一套鳞甲，闪烁着冰冷的霜白色光芒。即使只是看着它，你的脊背也会感到一阵战栗。
+
+item-demo-red-dragon-scale-mail-name = 红龙鳞甲
+item-demo-red-dragon-scale-mail-description = 一套鳞甲，蕴含着所有燃烧过的火焰的红色。当你穿上这套盔甲时，旧烧伤的疤痕组织会隐隐作痛。
+
+item-demo-green-dragon-scale-mail-name = 绿龙鳞甲
+item-demo-green-dragon-scale-mail-description = 一套在病态绿色中闪闪发光的鳞甲。
+
+item-demo-pseudo-dragon-scale-mail-name = 伪龙鳞甲
+item-demo-pseudo-dragon-scale-mail-description = 它能随机喷吐强光或暗黑。
+device-activation-e5-breathe-one-shining-name = 喷吐
+
+item-demo-bronze-dragon-scale-mail-name = 青铜龙鳞甲
+item-demo-bronze-dragon-scale-mail-description = 一套鳞甲，闪耀着华丽的青铜雕刻光芒。当你仔细观察其表面，越是端详那些如同迷宫般的螺纹和线条时，你就越无法理解它们。
+
+item-demo-silver-dragon-scale-mail-name = 银龙鳞甲
+item-demo-silver-dragon-scale-mail-description = 一套如镜面般银亮的鳞甲。当你注视这件物品的质量时，你会感到一种巨大的宁静降临在身上。
+
+item-demo-balance-dragon-scale-mail-name = 平衡龙鳞甲
+item-demo-balance-dragon-scale-mail-description = 一套鳞甲。粗看之下是毫无特征的灰色，但如果仔细观察，就会发现其虹彩中层层叠叠的图案，这些图案随着被坚固锁链束缚的能量而悸动着。
+device-activation-e5-breathe-one-balance-name = 喷吐
+
+item-demo-power-dragon-scale-mail-name = 力量龙鳞甲
+item-demo-power-dragon-scale-mail-description = 一套有着各种颜色鳞片的盔甲，被一团光环所环绕。那是完美的元素与空灵力量，它们不受羁绊却又不可分割地交织在一起，并被彻底掌控。元素与空灵。

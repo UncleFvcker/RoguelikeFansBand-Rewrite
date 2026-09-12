@@ -1,0 +1,91 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 100000,
+  "descriptionKey": "item-demo-balance-dragon-scale-mail-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effectProgramId": "rfb.effect.dragon-breath-304",
+        "id": "rfb.device-activation.dragon-breath-304",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-breathe-one-balance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbValue": 13750,
+        "target": {
+          "modes": [
+            "direction"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -2
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 80,
+  "glyph": "[",
+  "id": "demo.item.balance-dragon-scale-mail",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 50
+  },
+  "mogaminatorRare": true,
+  "nameKey": "item-demo-balance-dragon-scale-mail-name",
+  "resistances": {
+    "chaos": "resistant",
+    "disenchant": "resistant",
+    "shards": "resistant",
+    "sound": "resistant"
+  },
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 304,
+    "tval": 38,
+    "sval": 20
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_CHAOS",
+      "RES_DISEN",
+      "RES_SHARDS",
+      "RES_SOUND"
+    ],
+    "pval": 0,
+    "toArmor": 10
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility",
+    "activatable"
+  ],
+  "weightTenthsPound": 200
+}

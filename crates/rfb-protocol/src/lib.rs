@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.253";
+pub const PROTOCOL_VERSION: &str = "1.254";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 20;
 
@@ -4592,6 +4592,8 @@ pub enum ShopCategoryDto {
     MagicShop,
     BlackMarket,
     Bookstore,
+    Jeweler,
+    Dragon,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4610,6 +4612,8 @@ pub struct ShopOwnerDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ShopStockItemDto {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub affix_name_keys: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     pub id: String,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // Item generation, carried loot, and death drops.
 
-mod allocation;
+pub(super) mod allocation;
 mod placement;
 
 use rfb_content::{
@@ -196,6 +196,7 @@ pub(super) enum LootSource {
     Vault { vault_id: String, spawn_id: String },
     ItemUse { item_id: String },
     Rubble { position: Position },
+    Shop { shop_id: String },
 }
 
 impl Game {
@@ -678,6 +679,7 @@ impl Game {
                     context.depth > 0 && !vault_id.is_empty() && !spawn_id.is_empty()
                 }
                 LootSource::ItemUse { item_id } => !item_id.is_empty(),
+                LootSource::Shop { shop_id } => !shop_id.is_empty(),
                 LootSource::Rubble { position } => {
                     context.depth > 0 && self.index(*position).is_some()
                 }
@@ -707,7 +709,7 @@ impl Game {
                     .clone(),
                 Some(*theme),
             ),
-            _ => (table.entries, None),
+            _ => (table.entries.clone(), None),
         };
         let eligible_entries = entries
             .iter()
@@ -730,11 +732,6 @@ impl Game {
             })
             .collect::<Vec<_>>();
         let entry_weights = eligible_entries
-            .iter()
-            .map(|entry| entry.weight)
-            .collect::<Vec<_>>();
-        let quality_weights = table
-            .quality_weights
             .iter()
             .map(|entry| entry.weight)
             .collect::<Vec<_>>();
@@ -761,6 +758,36 @@ impl Game {
         } else {
             eligible_entries[self.roll_weighted_index(&entry_weights)]
         };
+        self.materialize_loot_entry(context, mode, &table, entry, theme, true)
+    }
+
+    /// shop.c::_create applies magic after a separate kind-level roll and forbids fixed artifacts.
+    pub(super) fn generate_shop_loot_draft(
+        &mut self,
+        context: &LootContext,
+        entry: &rfb_content::LootEntryDefinition,
+    ) -> Option<GeneratedItemDraft> {
+        let table = self.content.loot_table(&context.table_id)
+            .expect("validated shop generation table must remain available")
+            .clone();
+        self.materialize_loot_entry(
+            context, ItemGenerationMode::Ordinary, &table, entry, None, false,
+        )
+    }
+
+    fn materialize_loot_entry(
+        &mut self,
+        context: &LootContext,
+        mode: ItemGenerationMode,
+        table: &rfb_content::LootTableDefinition,
+        entry: &rfb_content::LootEntryDefinition,
+        theme: Option<rfb_content::RfbDropTheme>,
+        allow_fixed_artifacts: bool,
+    ) -> Option<GeneratedItemDraft> {
+        let rfb_generation = table.rfb_ego_policy.is_some();
+        let minimum_quality = mode.minimum_quality();
+        let quality_weights = table.quality_weights.iter()
+            .map(|entry| entry.weight).collect::<Vec<_>>();
         let staff = self
             .content
             .item(&entry.item_kind_id)
@@ -790,7 +817,7 @@ impl Game {
             })
             .max(mode.minimum_power()),
         };
-        let artifact_rolls = if matches!(
+        let artifact_rolls = if !allow_fixed_artifacts || matches!(
             mode,
             ItemGenerationMode::Artifact {
                 no_fixed_artifact: true

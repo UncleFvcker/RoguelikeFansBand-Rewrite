@@ -104,10 +104,10 @@ def main():
         assert not positions.get("l") and positions["!"] == [{"x": 22, "y": 39}]
     elif name == "zul":
         shop_symbols = {symbol: shop_symbols[symbol] for symbol in "1345679"}
+        shop_symbols.update({"A": "jeweler", "D": "dragonskin"})
         facility_symbols = {}
-        # Z1 preserves these source doors; their services are registered in Z2/Z3.
-        materials.update({"JEWELER": "jeweler-entrance", "DRAGONSKIN": "dragonskin-entrance",
-                          "BUILDING_8": "sorcery-tower-entrance", "BUILDING_14": "chaos-tower-entrance",
+        # Tower services are registered in Z3; shop doors already use their live definitions.
+        materials.update({"BUILDING_8": "sorcery-tower-entrance", "BUILDING_14": "chaos-tower-entrance",
                           "BUILDING_15": "nature-tower-entrance"})
     outputs = {}
     for directory, mapping in (("shops", shop_symbols), ("townFacilities", facility_symbols)):

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 40000,
+  "descriptionKey": "item-demo-silver-dragon-scale-mail-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effectProgramId": "rfb.effect.dragon-breath-301",
+        "id": "rfb.device-activation.dragon-breath-301",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-breathe-inertia-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 400
+        },
+        "rfbValue": 4550,
+        "target": {
+          "modes": [
+            "direction"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -2
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "[",
+  "id": "demo.item.silver-dragon-scale-mail",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 50
+  },
+  "mogaminatorRare": true,
+  "nameKey": "item-demo-silver-dragon-scale-mail-name",
+  "resistances": {},
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 301,
+    "tval": 38,
+    "sval": 15
+  },
+  "rfbValue": {
+    "flags": [
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE"
+    ],
+    "pval": 0,
+    "toArmor": 10
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility",
+    "activatable"
+  ],
+  "weightTenthsPound": 200,
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ]
+}

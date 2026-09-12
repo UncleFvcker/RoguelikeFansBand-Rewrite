@@ -572,6 +572,7 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
             items: &content.items,
             races: &content.races,
             classes: &content.classes,
+            loot_tables: &content.loot_tables,
         },
         &mut all_ids,
     )?;

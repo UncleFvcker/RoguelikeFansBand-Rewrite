@@ -47,6 +47,46 @@ fn at1_game(edit: impl FnOnce(&mut rfb_content::CompiledContentV1)) -> Game {
 }
 
 #[test]
+fn zul_special_shops_buy_sell_restore_restock_and_reject_without_mutation() {
+    let mut game = Game::new(42);
+    enter_town(&mut game, "demo.town.zul", Position { x: 77, y: 6 });
+    game.gold = 10_000_000;
+    for id in ["demo.shop.zul-jeweler", "demo.shop.zul-dragonskin"] {
+        let entrance = game.content.shop(id).unwrap().entrance_position;
+        game.player.position = game.town_local_to_active_position(
+            "demo.town.zul", position_from_content(entrance),
+        ).unwrap();
+        game.mark_shop_visited_at_player().unwrap();
+        let snapshot = game.snapshot();
+        let stock = projected_shop(&snapshot.shops, id).stock[0].clone();
+        let before = game.state_hash();
+        assert_eq!(game.buy_from_shop(id, &stock.id, 0), Err("invalid-quantity"));
+        assert_eq!(game.state_hash(), before);
+        let purchase = game.buy_from_shop(id, &stock.id, 1).unwrap();
+        assert_eq!(purchase.unit_price, stock.unit_price);
+        let acquired = game.items.iter().find(|item| item.id == purchase.item_id).unwrap().clone();
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        let sale = game.sell_to_shop(id, &acquired.id, 1).unwrap();
+        assert_eq!(restored.sell_to_shop(id, &acquired.id, 1).unwrap(), sale);
+        assert_eq!(restored.state_hash(), game.state_hash());
+        let stock = game.snapshot().shops.into_iter().find(|shop| shop.id == id).unwrap().stock[0].clone();
+        assert_eq!(game.buy_from_shop(id, &stock.id, 1).unwrap(), restored.buy_from_shop(id, &stock.id, 1).unwrap());
+        assert_eq!(restored.state_hash(), game.state_hash());
+        game.gold = 0;
+        let stock_id = game.shop_states[id].inventory[0].id.clone();
+        let before = game.state_hash();
+        assert_eq!(game.buy_from_shop(id, &stock_id, 1), Err("insufficient-gold"));
+        assert_eq!(game.state_hash(), before);
+        game.gold = 10_000_000;
+        game.shop_states.get_mut(id).unwrap().inventory.clear();
+        game.world_tick += 10_000;
+        game.maintain_shop_at_player().unwrap();
+        assert!(!game.shop_states[id].inventory.is_empty());
+    }
+}
+
+#[test]
 fn zul_ordinary_shops_trade_independently_and_save_without_unlocking_teleport() {
     let mut game = Game::new(42);
     enter_town(&mut game, "demo.town.zul", Position { x: 77, y: 6 });

@@ -662,9 +662,15 @@ town-demo-zul-name = Zul
 town-demo-zul-description = A mountain town with shops set into the rock and three northern towers surrounded by lava.
 floor-demo-zul-name = Zul
 terrain-demo-jeweler-entrance-name = Jeweler
-terrain-demo-jeweler-entrance-description = A jeweler's entrance in the rock, currently closed for business.
+terrain-demo-jeweler-entrance-description = A jeweler's entrance in the rock.
 terrain-demo-dragonskin-entrance-name = Dragonskin Store
-terrain-demo-dragonskin-entrance-description = A dragonskin store entrance in the rock, currently closed for business.
+terrain-demo-dragonskin-entrance-description = A dragonskin store entrance in the rock.
+shop-demo-zul-jeweler-name = Jeweler
+shop-demo-zul-jeweler-description = Dalana the Sweet sells rings and amulets and buys other valuable goods.
+shop-owner-demo-zul-dalana-name = Dalana the Sweet
+shop-demo-zul-dragonskin-name = Dragonskin Emporium
+shop-demo-zul-dragonskin-description = Beowulf sells dragon scale mail and dragonskin equipment and buys other valuable goods.
+shop-owner-demo-zul-beowulf-name = Beowulf
 terrain-demo-chaos-tower-entrance-name = Tower of Chaos
 terrain-demo-chaos-tower-entrance-description = The entrance to the lava-ringed Tower of Chaos. Services are currently unavailable.
 terrain-demo-nature-tower-entrance-name = Tower of Nature
@@ -9683,3 +9689,35 @@ item-demo-legendary-lost-treasure-name = T-shirt 'I killed the GHB and all I got
 item-demo-legendary-lost-treasure-description = T-shirt 'I killed the GHB and all I got was this lousy T-shirt!'
 item-demo-amun-name = Dagger of Amun
 item-demo-amun-description = An ancient steel dagger once carried by Amun, with a golden hilt and a razor-sharp blade.
+
+item-demo-black-dragon-scale-mail-name = Black Dragon Scale Mail
+item-demo-black-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+
+item-demo-blue-dragon-scale-mail-name = Blue Dragon Scale Mail
+item-demo-blue-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+
+item-demo-white-dragon-scale-mail-name = White Dragon Scale Mail
+item-demo-white-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+
+item-demo-red-dragon-scale-mail-name = Red Dragon Scale Mail
+item-demo-red-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+
+item-demo-green-dragon-scale-mail-name = Green Dragon Scale Mail
+item-demo-green-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+
+item-demo-pseudo-dragon-scale-mail-name = Pseudo Dragon Scale Mail
+item-demo-pseudo-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+device-activation-e5-breathe-one-shining-name = breathe one shining
+
+item-demo-bronze-dragon-scale-mail-name = Bronze Dragon Scale Mail
+item-demo-bronze-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+
+item-demo-silver-dragon-scale-mail-name = Silver Dragon Scale Mail
+item-demo-silver-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+
+item-demo-balance-dragon-scale-mail-name = Balance Dragon Scale Mail
+item-demo-balance-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+device-activation-e5-breathe-one-balance-name = breathe one balance
+
+item-demo-power-dragon-scale-mail-name = Power Dragon Scale Mail
+item-demo-power-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.

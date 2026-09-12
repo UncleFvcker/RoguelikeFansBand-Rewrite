@@ -13,6 +13,7 @@ pub(super) struct TownValidationRefs<'a> {
     pub(super) items: &'a [ItemDefinition],
     pub(super) races: &'a [RaceDefinition],
     pub(super) classes: &'a [ClassDefinition],
+    pub(super) loot_tables: &'a [LootTableDefinition],
 }
 
 pub(super) struct TownValidationOutputs {
@@ -238,6 +239,37 @@ pub(super) fn validate_towns_and_shops(
         validate_definition_id(&shop.owner.id, "shop-owner")?;
         validate_message_key(&shop.owner.name_key)?;
         validate_definition_id(&shop.owner.race_id, "race")?;
+        let generated_stock = matches!(shop.category, ShopCategory::Jeweler | ShopCategory::Dragon);
+        if generated_stock != shop.stock_generation_table_id.is_some()
+            || (generated_stock && !shop.stock.is_empty())
+        {
+            return Err(ContentError::InvalidShop(shop.id.clone()));
+        }
+        if let Some(table_id) = &shop.stock_generation_table_id {
+            let table = refs.loot_tables.iter().find(|table| &table.id == table_id)
+                .ok_or_else(|| ContentError::DanglingReference {
+                    owner: shop.id.clone(),
+                    target: table_id.clone(),
+                })?;
+            if table.kind_selection != Some(LootKindSelectionDefinition::RfbBase)
+                || table.rfb_ego_policy != Some(LootRfbEgoPolicyDefinition::WeaponDigger)
+                || table.quality_policy.is_none()
+            {
+                return Err(ContentError::InvalidShop(shop.id.clone()));
+            }
+            let has_kind = |tval| table.entries.iter().any(|entry| {
+                entry.weight > 0 && refs.items.iter().any(|item| {
+                    item.id == entry.item_kind_id
+                        && item.artifact_generation.is_none()
+                        && item.rfb_base_kind.is_some_and(|base| base.tval == tval)
+                })
+            });
+            if (shop.category == ShopCategory::Jeweler && (!has_kind(40) || !has_kind(45)))
+                || (shop.category == ShopCategory::Dragon && !has_kind(38))
+            {
+                return Err(ContentError::InvalidShop(shop.id.clone()));
+            }
+        }
         if !(100..=500).contains(&shop.owner.greed_percent)
             || !(1..=999_999_999).contains(&shop.owner.purchase_price_cap)
             || shop.inn_stay_cost.is_some_and(|cost| cost == 0)
