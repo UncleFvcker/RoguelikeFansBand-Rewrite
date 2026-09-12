@@ -135,8 +135,8 @@ export async function runMagicEaterUiScenario(driver, directory, profile) {
       const target = current.entities.filter(e => e.faction === "hostile").sort((a,b) => distance(a.position)-distance(b.position))[0];
       if (target && distance(target.position) <= 6 && current.player.magicEater.slots[0].item.usable) {
         const before = current; const used = await useDevice("W", 0, target.position); current = used.after;
-        const remaining = current.entities.find(e => e.id === target.id)?.hp ?? 0;
-        if (remaining < target.hp) hit = { target: target.kindId, hpBefore: target.hp, hpAfter: remaining, before: before.stateHash, after: current.stateHash, events: used.events };
+        const damage = used.events.find(event => event.kind === "item.activation-hit" && event.args.target === target.kindId && event.outcome?.resolution?.finalDamage > 0);
+        if (damage) hit = { target: target.kindId, hpBefore: target.hp, hpAfter: current.entities.find(e => e.id === target.id)?.hp ?? null, damage: damage.outcome.resolution.finalDamage, before: before.stateHash, after: current.stateHash, events: used.events };
       } else {
         await keyboard.key(nextWalk(current, visited, target?.position)); current = await changed(current.stateHash, "explore dungeon");
       }
