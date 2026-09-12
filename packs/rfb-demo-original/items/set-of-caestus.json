@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1100,
+  "descriptionKey": "item-demo-set-of-caestus-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentBonuses": {
+    "meleeDamage": 5,
+    "meleeSkill": 3
+  },
+  "equipmentSlot": "gloves",
+  "formatVersion": 1,
+  "generationLevel": 55,
+  "glyph": "]",
+  "id": "demo.item.set-of-caestus",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 2
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-set-of-caestus-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 233,
+    "sval": 7,
+    "tval": 31
+  },
+  "rfbValue": {
+    "flags": [],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 10
+}

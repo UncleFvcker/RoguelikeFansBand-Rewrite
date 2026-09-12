@@ -9756,3 +9756,15 @@ item-demo-amber-name = Golden Crown of Amber
 item-demo-amber-description = Golden Crown of Amber
 
 item-activation-demo-amber-heal-name = Healing
+
+item-demo-set-of-caestus-name = Set of Caestus
+item-demo-set-of-caestus-description = Ancient fighting gloves reinforced with layers of leather straps and fearsome spikes.
+
+item-demo-knights-shield-name = Knight's Shield
+item-demo-knights-shield-description = Knight's Shield
+
+item-demo-fingolfin-name = Set of Caestus of Fingolfin
+item-demo-fingolfin-description = The handgear of Fingolfin, the warrior king who gave Morgoth seven great wounds and lasting pain.
+
+item-demo-earendil-shield-name = Knight's Shield of Earendil
+item-demo-earendil-shield-description = A shining shield of the great mariner Earendil, inscribed with runes to ward away pain and harm.

@@ -9764,3 +9764,15 @@ item-demo-amber-name = 安珀的金王冠
 item-demo-amber-description = 安珀的金王冠
 
 item-activation-demo-amber-heal-name = 治疗
+
+item-demo-set-of-caestus-name = 搏击拳套
+item-demo-set-of-caestus-description = 一种专为近身肉搏战设计的古老战斗手套。其多层皮带通过看起来血腥的尖刺进行了增强，以利于战斗。
+
+item-demo-knights-shield-name = 骑士盾
+item-demo-knights-shield-description = 骑士盾
+
+item-demo-fingolfin-name = 芬国昐的搏击拳套
+item-demo-fingolfin-description = 精灵与人类的战士国王芬国昐的手部护具，他曾给魔苟斯留下了七道巨大的伤口和将持续到永远的痛苦。
+
+item-demo-earendil-shield-name = 埃兰迪尔的骑士盾
+item-demo-earendil-shield-description = 一面闪耀的盾牌，曾由伟大的航海家埃兰迪尔持有，“上面刻着让一切伤痛与伤害远离他的符文”。

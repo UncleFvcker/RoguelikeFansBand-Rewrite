@@ -5537,9 +5537,9 @@ fn legacy_device_item_effect(
             false,
         ),
         "ARROW" => (
-            device_damage_effect("damage", "physical", 0, 0, 150 + level * 3, 0),
+            device_damage_effect("damage", "physical", 0, 0, 70 + level, 0),
             projectile,
-            true,
+            false,
         ),
         "BANISH_ALL" => (
             device_ability_effect(serde_json::json!({"type": "banish", "maximumDistance": 100})),
@@ -5614,7 +5614,20 @@ fn legacy_device_item_effect(
             self_target,
             false,
         ),
-        "CURE_FEAR" | "CURE_FEAR_POIS" | "CURE_POIS" | "CURING" => {
+        "CURING" => (
+            device_ability_effect(serde_json::json!({"type":"sequence","effects":[
+                {"type":"remove-status","statusKindId":"rfb.status.blindness"},
+                {"type":"reduce-status","statusKindId":"rfb.status.poison","amount":1000,"currentDivisor":5},
+                {"type":"remove-status","statusKindId":"rfb.status.confusion"},
+                {"type":"remove-status","statusKindId":"rfb.status.stun"},
+                {"type":"remove-status","statusKindId":"rfb.status.bleeding"},
+                {"type":"remove-status","statusKindId":"rfb.status.hallucination"},
+                {"type":"remove-status","statusKindId":"rfb.status.berserk"}
+            ]})),
+            self_target,
+            false,
+        ),
+        "CURE_FEAR" | "CURE_FEAR_POIS" | "CURE_POIS" => {
             let mut effects = Vec::new();
             if candidate.token != "CURE_POIS" {
                 effects.push(
@@ -5623,17 +5636,6 @@ fn legacy_device_item_effect(
             }
             if candidate.token != "CURE_FEAR" {
                 effects.push(serde_json::json!({"type": "remove-status", "statusKindId": "rfb.status.poison"}));
-            }
-            if candidate.token == "CURING" {
-                for status in [
-                    "rfb.status.blindness",
-                    "rfb.status.confusion",
-                    "rfb.status.stun",
-                    "rfb.status.bleeding",
-                ] {
-                    effects
-                        .push(serde_json::json!({"type": "remove-status", "statusKindId": status}));
-                }
             }
             (
                 device_ability_effect(serde_json::json!({"type": "sequence", "effects": effects})),
@@ -27071,6 +27073,49 @@ static cptr _ego_name_zh[] =
                 .sum::<u32>(),
             expectation.total_weight
         );
+    }
+
+    #[test]
+    fn arrow_and_curing_activation_imports_preserve_source_parameters() {
+        let mut candidate = LegacyEgoActivationCandidate {
+            source_order: 0,
+            token: "ARROW".to_owned(),
+            level: 30,
+            recovery_turns: 50,
+            rarity: 1,
+            biases: Vec::new(),
+        };
+        let (effect, target, affects_ground) = legacy_device_item_effect(&candidate).unwrap();
+        // devices.c default 70 + power; Fingolfin overrides it with extra150.
+        assert_eq!(effect["effect"]["damageBonus"], 100);
+        assert_eq!(effect["effect"]["damageType"], "physical");
+        assert_eq!(effect["effect"]["type"], "damage");
+        assert_eq!(target, device_projectile_target());
+        assert!(!affects_ground); // fire_bolt has no PROJECT_ITEM.
+        candidate.token = "CURING".to_owned();
+        let (effect, target, _) = legacy_device_item_effect(&candidate).unwrap();
+        let effects = effect["effect"]["effects"].as_array().unwrap();
+        assert_eq!(
+            effects[1],
+            serde_json::json!({"type":"reduce-status","statusKindId":"rfb.status.poison","amount":1000,"currentDivisor":5})
+        );
+        assert_eq!(
+            effects
+                .iter()
+                .filter(|e| e["type"] == "remove-status")
+                .map(|e| e["statusKindId"].as_str().unwrap())
+                .collect::<Vec<_>>(),
+            [
+                "rfb.status.blindness",
+                "rfb.status.confusion",
+                "rfb.status.stun",
+                "rfb.status.bleeding",
+                "rfb.status.hallucination",
+                "rfb.status.berserk"
+            ]
+        );
+        assert_eq!(effects.len(), 7); // No HP healing or fear removal.
+        assert_eq!(target, device_self_target());
     }
 
     #[test]

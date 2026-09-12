@@ -14,6 +14,403 @@ fn artifact_loot_context(depth: u16) -> LootContext {
 }
 
 #[test]
+fn b5_gloves_and_shields_generate_equip_and_preserve_combat_bonuses_after_save() {
+    let cases = [
+        ("set-of-caestus", 2, 10, 3, 5),
+        ("knights-shield", 10, 160, 0, 0),
+        ("fingolfin", 25, 40, 10, 12),
+        ("earendil-shield", 30, 160, 0, 0),
+    ];
+    let mut game = Game::new_with_build(472, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-85".into(),
+        depth: 85,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.b5-drop".into(),
+        },
+    };
+    let mut remaining = cases.iter().map(|c| c.0).collect::<BTreeSet<_>>();
+    for _ in 0..200_000 {
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            let slug = item.kind_id.strip_prefix("demo.item.").unwrap();
+            if !remaining.contains(slug) {
+                continue;
+            }
+            let artifact = game
+                .content
+                .item(&item.kind_id)
+                .unwrap()
+                .artifact_generation
+                .is_some();
+            if !artifact
+                && (item.quality != ItemQualityDto::Ordinary
+                    || item.enchantments != Default::default()
+                    || item.artifact_name.is_some())
+            {
+                continue;
+            }
+            remaining.remove(slug);
+            assert!(item.rolled_affixes.is_empty() && item.curse.is_none());
+            assert_eq!(
+                item.intrinsic_properties != Default::default(),
+                slug == "fingolfin"
+            );
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            assert!(
+                !game
+                    .item_property_knowledge
+                    .get(&id)
+                    .is_some_and(|k| k.appraised)
+            );
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "B5 items never generated: {remaining:?}"
+    );
+    game.reveal_current_visibility();
+    let unknown = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(unknown.state_hash(), game.state_hash());
+    assert_eq!(unknown.rng, game.rng);
+    for (slug, defense, weight, hit, damage) in cases {
+        let mut equipped = unknown.clone();
+        let kind = format!("demo.item.{slug}");
+        equipped.items.retain(|i| i.kind_id == kind);
+        let id = equipped.items[0].id.clone();
+        let intrinsic = equipped.items[0].intrinsic_properties.clone();
+        assert_eq!(equipped.carried_weight_tenths_pound(), weight);
+        give_inventory_item(&mut equipped, "test.b5-bow", "demo.item.short-bow");
+        equipped.equip_inventory_item("test.b5-bow", None).unwrap();
+        let before = equipped.player_projectile_profile().unwrap();
+        let rng = equipped.rng.clone();
+        equipped.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        assert_eq!(equipped.rng, rng);
+        equipped.equip_inventory_item(&id, None).unwrap();
+        assert_eq!(equipped.equipment_modifiers().defense, defense);
+        let bonuses = equipped.player_equipment_bonuses();
+        assert_eq!((bonuses.melee_skill, bonuses.melee_damage), (hit, damage));
+        let after = equipped.player_projectile_profile().unwrap();
+        assert_eq!(
+            (
+                after.to_hit - before.to_hit,
+                after.launcher_to_damage - before.launcher_to_damage
+            ),
+            (hit, damage)
+        );
+        if slug == "fingolfin" {
+            assert_eq!(equipped.equipment_modifiers().dexterity, 4);
+            assert!(
+                equipped
+                    .player_status_immunities()
+                    .contains(STATUS_PARALYSIS)
+            );
+            assert_eq!(
+                equipped
+                    .effective_player_resistances()
+                    .level(DamageType::Acid),
+                ResistanceLevel::Resistant
+            );
+        }
+        if slug == "earendil-shield" {
+            assert_eq!(bonuses.light_radius, 1);
+            for element in [
+                DamageType::Blindness,
+                DamageType::Dark,
+                DamageType::Nether,
+                DamageType::Electricity,
+                DamageType::Fire,
+            ] {
+                assert_eq!(
+                    equipped.effective_player_resistances().level(element),
+                    ResistanceLevel::Resistant
+                );
+            }
+            equipped.player.position = Position { x: 10, y: 10 };
+            equipped.push_generated_actor(
+                "test.b5-good".into(),
+                "demo.actor.angel",
+                Position { x: 12, y: 10 },
+            );
+            equipped.push_generated_actor(
+                "test.b5-evil".into(),
+                "demo.actor.goblin",
+                Position { x: 12, y: 11 },
+            );
+            assert!(equipped.entity_is_visible_by_telepathy(&equipped.entities[0]));
+            assert!(!equipped.entity_is_visible_by_telepathy(&equipped.entities[1]));
+        }
+        equipped.reveal_current_visibility();
+        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), equipped.state_hash());
+        assert_eq!(restored.items[0].intrinsic_properties, intrinsic);
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            equipped
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+        );
+        assert_eq!(restored.rng, equipped.rng);
+        if let Some(a) = restored
+            .content
+            .item(&kind)
+            .unwrap()
+            .artifact_generation
+            .clone()
+        {
+            assert!(restored.generated_artifact_ids.contains(&kind));
+            assert_ne!(
+                restored.roll_fixed_artifact_kind_id(&context, Some(&a.base_item_kind_id), false),
+                Some(kind)
+            );
+        }
+    }
+    // The same native glove path already has one other combat-bearing caller.
+    let mut spiked = unknown.clone();
+    spiked.items.clear();
+    give_inventory_item(&mut spiked, "test.b5-bow", "demo.item.short-bow");
+    spiked.equip_inventory_item("test.b5-bow", None).unwrap();
+    let before = spiked.player_projectile_profile().unwrap();
+    give_inventory_item(
+        &mut spiked,
+        "test.b5-spiked",
+        "demo.item.set-of-spiked-gauntlets",
+    );
+    spiked.equip_inventory_item("test.b5-spiked", None).unwrap();
+    let after = spiked.player_projectile_profile().unwrap();
+    assert_eq!(
+        (
+            after.to_hit - before.to_hit,
+            after.launcher_to_damage - before.launcher_to_damage
+        ),
+        (1, 3)
+    );
+}
+
+#[test]
+fn b5_arrow_and_curing_activations_preserve_effect_boundaries_and_cooldowns() {
+    fn activate(game: &mut Game, id: &str, target: Option<&TargetSelection>) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.use_inventory_item(
+            id,
+            target,
+            None,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        events
+    }
+    for (slug, difficulty, cooldown) in [("fingolfin", 30, 500), ("earendil-shield", 25, 1000)] {
+        let mut game = Game::new_with_build(473, "demo.build.warrior").unwrap();
+        choose_human_talent_if_pending(&mut game);
+        clear_monsters(&mut game);
+        game.items.clear();
+        game.player.position = Position { x: 10, y: 10 };
+        game.terrain.fill("demo.terrain.floor".into());
+        game.glow.fill(true);
+        let context = artifact_loot_context(85);
+        let draft = game.fixed_item_draft(&context, format!("demo.item.{slug}"));
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Inventory)
+            .unwrap();
+        let id = item.id.clone();
+        assert_eq!(
+            item.activation.as_ref().unwrap().device_check_difficulty,
+            difficulty
+        );
+        game.items.push(item);
+        game.equip_inventory_item(&id, None).unwrap();
+        game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        let target = if slug == "fingolfin" {
+            TargetSelection::Direction {
+                direction: Direction::East,
+            }
+        } else {
+            TargetSelection::SelfTarget
+        };
+        if slug == "fingolfin" {
+            for (id, x) in [("test.b5-front", 12), ("test.b5-rear", 14)] {
+                game.push_generated_actor(id.into(), "demo.actor.sheep", Position { x, y: 10 });
+                let a = game.entities.last_mut().unwrap();
+                a.hp = 1000;
+                a.max_hp = 1000;
+            }
+        } else {
+            game.player.hp = 1;
+            for status in [
+                STATUS_BLINDNESS,
+                STATUS_CONFUSION,
+                STATUS_STUN,
+                STATUS_BLEEDING,
+                STATUS_HALLUCINATION,
+                STATUS_BERSERK,
+                STATUS_FEAR,
+                STATUS_POISON,
+            ] {
+                game.player.statuses.push(
+                    monster_combat::melee_status(
+                        status,
+                        if status == STATUS_POISON { 10_000 } else { 100 },
+                        "test.b5-status",
+                    )
+                    .status,
+                );
+            }
+        }
+        game.world_tick = 0;
+        game.reveal_current_visibility();
+        let mut success = None;
+        let mut failure = None;
+        for seed in 0..1000 {
+            let mut attempt = game.clone();
+            attempt.rng = RfbRng::seeded(seed);
+            activate(&mut attempt, &id, Some(&target));
+            if attempt.items[0].charges.unwrap().current == 0 {
+                success = Some(seed);
+            } else {
+                failure = Some(seed);
+            }
+            if success.is_some() && failure.is_some() {
+                break;
+            }
+        }
+        let success = success.expect("real activation success seed");
+        let mut failed = game.clone();
+        failed.rng = RfbRng::seeded(failure.expect("real activation failure seed"));
+        let statuses = failed.player.statuses.clone();
+        let hp = failed.player.hp;
+        let mut expected = failed.rng.clone();
+        expected.bounded(100);
+        activate(&mut failed, &id, Some(&target));
+        assert_eq!(failed.rng, expected);
+        assert_eq!(failed.player.statuses, statuses);
+        assert_eq!(failed.player.hp, hp);
+        assert_eq!(failed.items[0].charges.unwrap().current, 1);
+        assert_eq!(failed.items[0].device_recovery_progress, 0);
+        if slug == "fingolfin" {
+            let mut cancelled = game.clone();
+            cancelled.rng = RfbRng::seeded(success);
+            let mut expected = cancelled.rng.clone();
+            expected.bounded(100);
+            activate(&mut cancelled, &id, None);
+            assert_eq!(cancelled.rng, expected);
+            assert_eq!(cancelled.items[0].charges.unwrap().current, 1);
+            assert_eq!(cancelled.items[0].device_recovery_progress, 0);
+            let mut blocked = game.clone();
+            blocked.rng = RfbRng::seeded(success);
+            replace_terrain(&mut blocked, Position { x: 11, y: 10 }, "demo.terrain.wall");
+            activate(&mut blocked, &id, Some(&target));
+            assert!(blocked.entities.iter().all(|a| a.hp == 1000));
+        }
+        game.rng = RfbRng::seeded(success);
+        let events = activate(&mut game, &id, Some(&target));
+        if slug == "fingolfin" {
+            let hits = events
+                .iter()
+                .filter_map(|e| match e {
+                    DomainEvent::ItemActivationHit { damage, .. } => Some(damage),
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
+            assert_eq!(hits.len(), 1);
+            assert_eq!(hits[0].raw, 150);
+            assert_eq!(hits[0].damage_type, DamageType::Physical);
+            assert_eq!((game.entities[0].hp, game.entities[1].hp), (850, 1000));
+        } else {
+            assert_eq!(game.player.hp, 1);
+            assert!(game.player_has_status_kind(STATUS_FEAR));
+            assert_eq!(
+                game.player
+                    .statuses
+                    .iter()
+                    .find(|s| s.kind_id == STATUS_POISON)
+                    .unwrap()
+                    .remaining_ticks,
+                8000
+            );
+            for status in [
+                STATUS_BLINDNESS,
+                STATUS_CONFUSION,
+                STATUS_STUN,
+                STATUS_BLEEDING,
+                STATUS_HALLUCINATION,
+                STATUS_BERSERK,
+            ] {
+                assert!(!game.player_has_status_kind(status));
+            }
+        }
+        assert_eq!(game.items[0].charges.unwrap().current, 0);
+        let rng = game.rng.clone();
+        activate(&mut game, &id, Some(&target));
+        assert_eq!(game.rng, rng);
+        for tick in 1..=cooldown / 2 {
+            game.world_tick = tick;
+            game.process_inventory_device_recovery(&mut Vec::new());
+        }
+        game.reveal_current_visibility();
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(
+            u32::from(restored.items[0].device_recovery_progress),
+            cooldown / 2
+        );
+        for tick in cooldown / 2 + 1..cooldown {
+            restored.world_tick = tick;
+            restored.process_inventory_device_recovery(&mut Vec::new());
+        }
+        assert_eq!(restored.items[0].charges.unwrap().current, 0);
+        restored.world_tick = cooldown;
+        restored.process_inventory_device_recovery(&mut Vec::new());
+        assert_eq!(restored.items[0].charges.unwrap().current, 1);
+        if slug == "earendil-shield" {
+            restored
+                .player
+                .statuses
+                .iter_mut()
+                .find(|s| s.kind_id == STATUS_POISON)
+                .unwrap()
+                .remaining_ticks = 1500;
+        }
+        restored.rng = RfbRng::seeded(success);
+        restored.reveal_current_visibility();
+        let mut continued = Game::from_save(restored.to_save()).unwrap();
+        assert_eq!(
+            activate(&mut restored, &id, Some(&target)),
+            activate(&mut continued, &id, Some(&target))
+        );
+        assert_eq!(continued.state_hash(), restored.state_hash());
+        assert_eq!(continued.rng, restored.rng);
+        if slug == "earendil-shield" {
+            assert_eq!(
+                restored
+                    .player
+                    .statuses
+                    .iter()
+                    .find(|s| s.kind_id == STATUS_POISON)
+                    .unwrap()
+                    .remaining_ticks,
+                500
+            );
+        }
+    }
+}
+
+#[test]
 fn b4_headgear_activations_respect_targets_healing_and_saved_recovery() {
     fn activate(game: &mut Game, id: &str) -> Vec<DomainEvent> {
         let mut events = Vec::new();

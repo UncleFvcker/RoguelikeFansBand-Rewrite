@@ -2025,6 +2025,13 @@
       "weight": 33
     },
     {
+      "itemKindId": "demo.item.knights-shield",
+      "maxDepth": 65535,
+      "minDepth": 40,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
       "itemKindId": "demo.item.black-clothes",
       "maxDepth": 65535,
       "minDepth": 40,
@@ -2364,6 +2371,13 @@
       "itemKindId": "demo.item.leather-pouch",
       "maxDepth": 50,
       "minDepth": 50,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.set-of-caestus",
+      "maxDepth": 65535,
+      "minDepth": 55,
       "quantity": 1,
       "weight": 33
     },

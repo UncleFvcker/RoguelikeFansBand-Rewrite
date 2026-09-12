@@ -958,7 +958,7 @@ impl Game {
             && kind.artifact_generation.as_ref().is_some_and(|artifact| {
                 matches!(
                     artifact.source_index,
-                    54 | 56 | 57 | 185 | 236 | 238 | 242 | 291
+                    54 | 56 | 57 | 59 | 185 | 236 | 238 | 242 | 291
                 )
             })
         {
@@ -1009,9 +1009,17 @@ impl Game {
         {
             return (0, 0);
         }
+        // Caestus and spiked gauntlets carry native combat bonuses. After the
+        // source ego exclusions above, those also contribute to archery.
+        let glove = self
+            .content
+            .item(&item.kind_id)
+            .filter(|kind| ranged && kind.rfb_base_kind.is_some_and(|base| base.tval == 31));
         (
-            i32::from(item.enchantments.to_hit),
-            i32::from(item.enchantments.to_damage),
+            i32::from(item.enchantments.to_hit)
+                + glove.map_or(0, |kind| kind.equipment_bonuses.melee_skill),
+            i32::from(item.enchantments.to_damage)
+                + glove.map_or(0, |kind| kind.equipment_bonuses.melee_damage),
         )
     }
 

@@ -3272,16 +3272,14 @@
           "effect": {
             "effects": [
               {
-                "statusKindId": "rfb.status.fear",
-                "type": "remove-status"
-              },
-              {
-                "statusKindId": "rfb.status.poison",
-                "type": "remove-status"
-              },
-              {
                 "statusKindId": "rfb.status.blindness",
                 "type": "remove-status"
+              },
+              {
+                "amount": 1000,
+                "currentDivisor": 5,
+                "statusKindId": "rfb.status.poison",
+                "type": "reduce-status"
               },
               {
                 "statusKindId": "rfb.status.confusion",
@@ -3293,6 +3291,14 @@
               },
               {
                 "statusKindId": "rfb.status.bleeding",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.hallucination",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.berserk",
                 "type": "remove-status"
               }
             ],
@@ -6680,9 +6686,8 @@
         },
         "deviceCheckDifficulty": 30,
         "effect": {
-          "affectsGroundItems": true,
           "effect": {
-            "damageBonus": 240,
+            "damageBonus": 100,
             "damageDice": 0,
             "damageSides": 0,
             "damageType": "physical",

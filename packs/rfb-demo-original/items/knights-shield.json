@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 250,
+  "descriptionKey": "item-demo-knights-shield-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentSlot": "shield",
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "glyph": ")",
+  "id": "demo.item.knights-shield",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 10
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-knights-shield-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 240,
+    "sval": 7,
+    "tval": 34
+  },
+  "rfbValue": {
+    "flags": [],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 160
+}

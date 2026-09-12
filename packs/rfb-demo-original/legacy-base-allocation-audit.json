@@ -1,6 +1,6 @@
 {
   "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits",
-  "allocationRowCount": 392,
+  "allocationRowCount": 394,
   "explicitItems": [
     {
       "itemId": "demo.item.amber",
@@ -255,6 +255,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.earendil-shield",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.ember-edge",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -280,6 +286,12 @@
     },
     {
       "itemId": "demo.item.fell-rider",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.fingolfin",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -4023,12 +4035,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.set-of-caestus",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 233,
       "sourceName": "Set of Caestus",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 7,
       "tval": 31
     },
@@ -4149,12 +4161,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.knights-shield",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 240,
       "sourceName": "Knight's Shield",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 7,
       "tval": 34
     },

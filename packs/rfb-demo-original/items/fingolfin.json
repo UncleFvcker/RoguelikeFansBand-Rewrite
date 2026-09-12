@@ -1,0 +1,95 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.fingolfin",
+  "nameKey": "item-demo-fingolfin-name",
+  "descriptionKey": "item-demo-fingolfin-description",
+  "glyph": "]",
+  "generationLevel": 60,
+  "weightTenthsPound": 40,
+  "baseValue": 110000,
+  "maxStack": 1,
+  "equipmentSlot": "gloves",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 59,
+    "baseItemKindId": "demo.item.set-of-caestus",
+    "instant": false,
+    "rarityOneIn": 15
+  },
+  "modifiers": {
+    "defense": 25,
+    "dexterity": 4
+  },
+  "resistances": {
+    "acid": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "SHOW_MODS",
+      "XTRA_POWER"
+    ],
+    "pval": 4,
+    "toArmor": 20
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 10,
+    "meleeDamage": 12
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.fingolfin",
+        "nameKey": "device-activation-e5-arrow-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 30,
+        "rfbValue": 4500,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.fingolfin"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 500
+    }
+  }
+}
