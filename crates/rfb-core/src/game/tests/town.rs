@@ -47,6 +47,115 @@ fn at1_game(edit: impl FnOnce(&mut rfb_content::CompiledContentV1)) -> Game {
 }
 
 #[test]
+fn zul_towers_project_realm_owners_beastman_members_and_public_prices() {
+    let sorcery_id = "demo.town-facility.zul-sorcery-tower";
+    let chaos_id = "demo.town-facility.zul-chaos-tower";
+    let nature_id = "demo.town-facility.zul-nature-tower";
+    for (build, race, realm_owner, chaos_member) in [
+        ("demo.build.mage-sorcery-nature", "demo.race.rfb-human", true, false),
+        ("demo.build.mage-nature-sorcery", "demo.race.rfb-human", true, false),
+        ("demo.build.warrior", "rfb-legacy.race.beastman", false, true),
+        ("demo.build.warrior", "demo.race.rfb-human", false, false),
+    ] {
+        let mut game = Game::new_with_build_race_and_name(42, build, race, "Zul").unwrap();
+        enter_town(&mut game, "demo.town.zul", Position { x: 77, y: 6 });
+        for id in [sorcery_id, chaos_id, nature_id] {
+            let facility = game.content.town_facility(id).unwrap();
+            game.player.position = game.town_local_to_active_position(
+                "demo.town.zul", position_from_content(facility.entrance_position),
+            ).unwrap();
+            let snapshot = game.snapshot();
+            let service = snapshot.task_services.iter().find(|service| service.id == id).unwrap();
+            assert!(service.player_at_entrance);
+            assert!(service.tasks.is_empty());
+            let expected = if realm_owner && id != chaos_id {
+                FacilityMembershipDto::Owner
+            } else if chaos_member && id == chaos_id {
+                FacilityMembershipDto::Member
+            } else {
+                FacilityMembershipDto::Visitor
+            };
+            assert_eq!(service.membership, expected, "{build}/{race}/{id}");
+            let base = if id == sorcery_id {
+                if realm_owner { 100 } else { 800 }
+            } else if id == nature_id {
+                if realm_owner { 2_000 } else { 10_000 }
+            } else { 5_000 };
+            let cost = if id == sorcery_id {
+                service.identify_all_items_cost.unwrap()
+            } else {
+                service.service_actions[0].cost
+            };
+            assert_eq!(cost, game.town_service_price(base));
+        }
+        assert!(game.teleport_town_targets().iter().all(|target| target.town_id != "demo.town.zul"));
+    }
+}
+
+#[test]
+fn zul_sorcery_identifies_all_for_visitors_and_rejects_unpaid_or_empty_work() {
+    let id = "demo.town-facility.zul-sorcery-tower";
+    let mut game = Game::new_with_build(42, "demo.build.warrior").unwrap();
+    enter_town_facility(&mut game, id);
+    support::give_inventory_item(&mut game, "test.zul.identify", "demo.item.dagger");
+    let cost = game.town_service_price(800);
+    game.gold = cost - 1;
+    let before = game.to_save();
+    assert_eq!(game.identify_all_at_facility(id), Err("insufficient-gold"));
+    assert_eq!(game.to_save(), before);
+    game.gold = cost;
+    let outcome = game.identify_all_at_facility(id).unwrap();
+    assert!(outcome.identified_count > 0);
+    assert_eq!(game.gold, 0);
+    let knowledge = &game.item_property_knowledge["test.zul.identify"];
+    assert!(knowledge.appraised || knowledge.identified);
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    let before = restored.to_save();
+    assert_eq!(restored.identify_all_at_facility(id), Err("nothing-to-identify"));
+    assert_eq!(restored.to_save(), before);
+}
+
+#[test]
+fn zul_chaos_cures_only_unlocked_mutations_and_charges_members_the_public_price() {
+    let id = "demo.town-facility.zul-chaos-tower";
+    let mutation = "rfb.mutation.alcohol";
+    let mut game = Game::new_with_build_race_and_name(
+        42, "demo.build.warrior", "rfb-legacy.race.beastman", "Zul",
+    ).unwrap();
+    enter_town_facility(&mut game, id);
+    for mutation_id in game.progress.active_mutation_ids.clone() {
+        assert!(game.lose_mutation(&mutation_id, &mut Vec::new()));
+    }
+    game.gold = game.town_service_price(5_000);
+    for locked in [false, true] {
+        if locked {
+            assert!(game.gain_mutation(mutation, &mut Vec::new()));
+            game.progress.locked_mutation_ids.insert(mutation.to_owned());
+        }
+        let before = game.to_save();
+        assert_eq!(game.use_town_facility_service(
+            id, FacilityServiceKindDto::CureMutation, None, None, &mut Vec::new(),
+        ), Err("no-curable-mutation"));
+        assert_eq!(game.to_save(), before);
+    }
+    game.progress.locked_mutation_ids.clear();
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    for run in [&mut game, &mut restored] {
+        let update = dispatch_next(run, GameCommand::UseFacilityService {
+            facility_id: id.to_owned(), service: FacilityServiceKindDto::CureMutation,
+            item_id: None, enchantment_steps: None,
+        });
+        assert!(update.events.iter().any(|event| event.kind == "facility.mutation-cured"));
+        assert!(run.progress.active_mutation_ids.is_empty());
+        assert_eq!(run.gold, 0);
+    }
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
 fn zul_special_shops_buy_sell_restore_restock_and_reject_without_mutation() {
     let mut game = Game::new(42);
     enter_town(&mut game, "demo.town.zul", Position { x: 77, y: 6 });

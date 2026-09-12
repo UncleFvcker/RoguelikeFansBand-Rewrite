@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.254";
+pub const PROTOCOL_VERSION: &str = "1.255";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 20;
 
@@ -5026,6 +5026,7 @@ pub enum FacilityServiceKindDto {
     Heal,
     RestoreVitality,
     CureMutation,
+    BalanceRitual,
     EnchantWeapon,
     EnchantArmor,
     EnchantAmmunition,

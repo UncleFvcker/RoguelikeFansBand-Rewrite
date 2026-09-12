@@ -874,6 +874,7 @@ export function createPresentationFormatter(
         });
       case "facility-vitality-restored":
       case "facility-mutation-cured":
+      case "facility-balance-ritual-performed":
         return localization.format(event.messageKey as MessageKey, {
           cost: event.args.cost ?? "?",
           balance: event.args.balance ?? "?",

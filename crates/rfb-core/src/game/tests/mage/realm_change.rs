@@ -483,6 +483,65 @@ fn guild_membership_and_prices_follow_current_realms_without_changing_primary_or
 }
 
 #[test]
+fn zul_balance_ritual_rebuilds_current_realm_virtues_and_replays_after_save() {
+    use rfb_protocol::{FacilityServiceKindDto, VirtueKindDto};
+    let id = "demo.town-facility.zul-nature-tower";
+    let mut game = prepared(BUILD, 30);
+    let birth = game.virtues;
+    assert!(!birth.iter().any(|virtue| virtue.kind == VirtueKindDto::Nature));
+    let nature_book = give_book(&mut game, "nature");
+    begin(&mut game, &nature_book);
+    confirm(&mut game, true);
+    assert_eq!(game.virtues, birth);
+    crate::game::tests::town::enter_town_facility(&mut game, id);
+    assert_eq!(game.town_facility_membership(game.content.town_facility(id).unwrap()), FacilityMembershipDto::Owner);
+    for virtue in &mut game.virtues {
+        virtue.value = 51;
+    }
+    let cost = game.town_service_price(2_000);
+    game.gold = cost - 1;
+    let before = game.to_save();
+    assert_eq!(game.use_town_facility_service(
+        id, FacilityServiceKindDto::BalanceRitual, None, None, &mut Vec::new(),
+    ), Err("insufficient-gold"));
+    assert_eq!(game.to_save(), before);
+    game.gold = cost * 2;
+    let before = game.to_save();
+    assert_eq!(game.use_town_facility_service(
+        id, FacilityServiceKindDto::BalanceRitual, Some(&nature_book), None, &mut Vec::new(),
+    ), Err("unexpected-item"));
+    assert_eq!(game.to_save(), before);
+    game.player.hp = 1;
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let realms = game.mage_realms.clone();
+    let rng = game.rng_draw_counter();
+    for run in [&mut game, &mut restored] {
+        let update = dispatch_next(run, GameCommand::UseFacilityService {
+            facility_id: id.to_owned(), service: FacilityServiceKindDto::BalanceRitual,
+            item_id: None, enchantment_steps: None,
+        });
+        assert!(update.events.iter().any(|event| event.kind == "facility.balance-ritual-performed"));
+        assert_eq!(run.gold, cost);
+        assert_eq!(run.player.hp, 1);
+        assert_eq!(run.mage_realms, realms);
+        assert!(run.virtues.iter().all(|virtue| virtue.value == 0));
+        assert!(run.virtues.iter().any(|virtue| virtue.kind == VirtueKindDto::Nature));
+        assert!(run.virtues.iter().any(|virtue| virtue.kind == VirtueKindDto::Unlife));
+        assert!(crate::game::virtues::validate_virtues(&run.virtues));
+        assert!(run.rng_draw_counter() > rng);
+    }
+    assert_eq!(game.state_hash(), restored.state_hash());
+    let mut after = Game::from_save(game.to_save()).unwrap();
+    for run in [&mut game, &mut after] {
+        run.use_town_facility_service(
+            id, FacilityServiceKindDto::BalanceRitual, None, None, &mut Vec::new(),
+        ).unwrap();
+    }
+    assert_eq!(game.state_hash(), after.state_hash());
+}
+
+#[test]
 fn confirmation_applies_new_realm_autopick_inscription_without_pickup_or_destruction() {
     for action in ["", "!"] {
         let mut game = prepared(BUILD, 30);

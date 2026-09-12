@@ -610,6 +610,11 @@ export class TaskServicePanel {
     for (const facilityService of service.serviceActions ?? []) {
       const row = document.createElement("li");
       row.className = "task-service-row";
+      if (facilityService.kind === "balance-ritual") {
+        const description = document.createElement("p");
+        description.textContent = this.#localization.format("facility-balance-ritual-description");
+        row.append(description);
+      }
       if (facilityServiceUsesItem(facilityService.kind)) {
         const select = document.createElement("select");
         select.dataset.facilityService = facilityService.kind;
@@ -849,6 +854,7 @@ function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | 
       event?.kind === "facility.healed" ||
       event?.kind === "facility.vitality-restored" ||
       event?.kind === "facility.mutation-cured" ||
+      event?.kind === "facility.balance-ritual-performed" ||
       event?.kind === "facility.item-enchanted" ||
       event?.kind === "facility.armor-assessed" ||
       event?.kind === "facility.recall-started" ||

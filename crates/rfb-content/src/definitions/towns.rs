@@ -121,6 +121,7 @@ pub enum TownFacilityServiceKind {
     Heal,
     RestoreVitality,
     CureMutation,
+    BalanceRitual,
     EnchantWeapon,
     EnchantArmor,
     EnchantAmmunition,

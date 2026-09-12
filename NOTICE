@@ -151,6 +151,14 @@ The item selection/adaptation ledgers record each source kind; the Zul plan
 records the retained maintenance and equipment-engine adaptations. Execution
 validation of this batch is deferred until the Z1-Z6 implementation is complete.
 
+Zul's three tower names, owners, realm/race memberships and service prices
+derive from lib/edit/t_zul.txt at that same commit. All-item identification,
+mutation treatment and the Ritual of Balance follow src/bldg.c; the ritual
+reuses this project's src/virtue.c adaptation with the player's current
+secondary realm. Existing birth virtue selection remains unchanged. Tower
+quests and town teleport are reserved for the following Zul implementation
+stages; this service batch has no execution acceptance yet.
+
 The generated Android Gradle/Kotlin scaffold under web/src-tauri/gen/android is derived
 from Tauri CLI templates. Tauri is available under the Apache License 2.0 or MIT License:
 https://github.com/tauri-apps/tauri

@@ -672,9 +672,9 @@ shop-demo-zul-dragonskin-name = Dragonskin Emporium
 shop-demo-zul-dragonskin-description = Beowulf sells dragon scale mail and dragonskin equipment and buys other valuable goods.
 shop-owner-demo-zul-beowulf-name = Beowulf
 terrain-demo-chaos-tower-entrance-name = Tower of Chaos
-terrain-demo-chaos-tower-entrance-description = The entrance to the lava-ringed Tower of Chaos. Services are currently unavailable.
+terrain-demo-chaos-tower-entrance-description = The entrance to the lava-ringed Tower of Chaos, which offers mutation treatment.
 terrain-demo-nature-tower-entrance-name = Tower of Nature
-terrain-demo-nature-tower-entrance-description = The entrance to the lava-ringed Tower of Nature. Services are currently unavailable.
+terrain-demo-nature-tower-entrance-description = The entrance to the lava-ringed Tower of Nature, which offers the Ritual of Balance.
 town-demo-thalos-description = A southern city with shops and guilds inside its walls and the Icky Cave in the wilderness to the east.
 floor-demo-thalos-name = Thalos
 shop-demo-thalos-inn-name = Inn
@@ -9721,3 +9721,15 @@ device-activation-e5-breathe-one-balance-name = breathe one balance
 
 item-demo-power-dragon-scale-mail-name = Power Dragon Scale Mail
 item-demo-power-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+
+town-facility-demo-zul-sorcery-tower-name = Tower of Sorcery
+town-facility-demo-zul-sorcery-tower-description = Identifies all carried items, with a discount for Sorcery practitioners.
+town-facility-demo-zul-sorcery-tower-owner-name = Tanisthil
+
+town-facility-demo-zul-chaos-tower-name = Tower of Chaos
+town-facility-demo-zul-chaos-tower-description = Cures removable mutations. Beastmen are members; Chaos practitioners receive owner prices.
+town-facility-demo-zul-chaos-tower-owner-name = Zeno
+
+town-facility-demo-zul-nature-tower-name = Tower of Nature
+town-facility-demo-zul-nature-tower-description = The Ritual of Balance rebuilds eight virtues from your current identity and realms, resetting their values to zero.
+town-facility-demo-zul-nature-tower-owner-name = Josh

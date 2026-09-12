@@ -5,7 +5,11 @@
   "nameKey": "town-demo-zul-name",
   "descriptionKey": "town-demo-zul-description",
   "floorId": "demo.floor.zul",
-  "facilityIds": [],
+  "facilityIds": [
+    "demo.town-facility.zul-chaos-tower",
+    "demo.town-facility.zul-nature-tower",
+    "demo.town-facility.zul-sorcery-tower"
+  ],
   "shopIds": [
     "demo.shop.zul-alchemist",
     "demo.shop.zul-black-market",

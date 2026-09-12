@@ -105,10 +105,7 @@ def main():
     elif name == "zul":
         shop_symbols = {symbol: shop_symbols[symbol] for symbol in "1345679"}
         shop_symbols.update({"A": "jeweler", "D": "dragonskin"})
-        facility_symbols = {}
-        # Tower services are registered in Z3; shop doors already use their live definitions.
-        materials.update({"BUILDING_8": "sorcery-tower-entrance", "BUILDING_14": "chaos-tower-entrance",
-                          "BUILDING_15": "nature-tower-entrance"})
+        facility_symbols = {"i": "sorcery-tower", "o": "chaos-tower", "p": "nature-tower"}
     outputs = {}
     for directory, mapping in (("shops", shop_symbols), ("townFacilities", facility_symbols)):
         for symbol, facility in mapping.items():

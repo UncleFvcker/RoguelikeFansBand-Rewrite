@@ -676,9 +676,9 @@ shop-demo-zul-dragonskin-name = 龙皮百货
 shop-demo-zul-dragonskin-description = 贝奥武夫出售龙鳞甲与龙皮装备，也收购其他有价值的物品。
 shop-owner-demo-zul-beowulf-name = 贝奥武夫
 terrain-demo-chaos-tower-entrance-name = 混沌之塔
-terrain-demo-chaos-tower-entrance-description = 熔岩环绕的混沌之塔入口，目前尚未开放服务。
+terrain-demo-chaos-tower-entrance-description = 熔岩环绕的混沌之塔入口，可在塔内治疗突变。
 terrain-demo-nature-tower-entrance-name = 自然之塔
-terrain-demo-nature-tower-entrance-description = 熔岩环绕的自然之塔入口，目前尚未开放服务。
+terrain-demo-nature-tower-entrance-description = 熔岩环绕的自然之塔入口，可在塔内接受平衡仪式。
 town-demo-thalos-description = 一座南方城镇，围墙内分布着商店与公会，东侧荒野通向恶心洞穴。
 floor-demo-thalos-name = 萨洛斯
 shop-demo-thalos-inn-name = 旅店
@@ -9729,3 +9729,15 @@ device-activation-e5-breathe-one-balance-name = 喷吐
 
 item-demo-power-dragon-scale-mail-name = 力量龙鳞甲
 item-demo-power-dragon-scale-mail-description = 一套有着各种颜色鳞片的盔甲，被一团光环所环绕。那是完美的元素与空灵力量，它们不受羁绊却又不可分割地交织在一起，并被彻底掌控。元素与空灵。
+
+town-facility-demo-zul-sorcery-tower-name = 巫术之塔
+town-facility-demo-zul-sorcery-tower-description = 为旅人鉴定所有携带物品，咒术领域修习者享有优惠。
+town-facility-demo-zul-sorcery-tower-owner-name = 塔尼斯提尔
+
+town-facility-demo-zul-chaos-tower-name = 混沌之塔
+town-facility-demo-zul-chaos-tower-description = 治疗可移除的变异；兽化人为会员，混沌领域修习者享有塔主优惠。
+town-facility-demo-zul-chaos-tower-owner-name = 泽诺
+
+town-facility-demo-zul-nature-tower-name = 自然之塔
+town-facility-demo-zul-nature-tower-description = 举行平衡仪式，按当前身份与领域重新生成八项美德，并将数值归零。
+town-facility-demo-zul-nature-tower-owner-name = 乔什

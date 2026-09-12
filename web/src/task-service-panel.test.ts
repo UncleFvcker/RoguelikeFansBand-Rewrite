@@ -111,6 +111,25 @@ test("paid facility selection and closing are free; only confirmation dispatches
   assert.deepEqual(commands, [{ type: "use-facility-service", facilityId: "guild",
     service: "enchant-weapon", itemId: "sword", enchantmentSteps: 3 }]);
   commands.length = 0;
+  snapshot.taskServices = [{ id: "nature-tower", playerAtEntrance: true, membership: "visitor", tasks: [],
+    serviceActions: [{ kind: "balance-ritual", cost: 14000 }],
+  }];
+  panel.render(snapshot);
+  const [explanation, ritual] = list.children[0].children;
+  assert.match(explanation.textContent, /facility-balance-ritual-description/);
+  assert.match(ritual.textContent, /"cost":14000/);
+  elements.get("task-service-dialog").close();
+  assert.deepEqual(commands, []);
+  const ritualClick = new Event("click");
+  Object.defineProperty(ritualClick, "target", { value: ritual });
+  state.busy = true;
+  list.dispatchEvent(ritualClick);
+  assert.deepEqual(commands, []);
+  state.busy = false;
+  list.dispatchEvent(ritualClick);
+  assert.deepEqual(commands, [{ type: "use-facility-service", facilityId: "nature-tower",
+    service: "balance-ritual", itemId: undefined, enchantmentSteps: undefined }]);
+  commands.length = 0;
   const casino = { maximumWager: 200 };
   snapshot.taskServices = [{ id: "casino", playerAtEntrance: true, tasks: [], casino }];
   panel.render(snapshot);

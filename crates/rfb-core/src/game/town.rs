@@ -104,6 +104,11 @@ pub(crate) enum FacilityServiceOutcome {
         cost: u32,
         gold_balance: u32,
     },
+    BalanceRitualPerformed {
+        facility_id: String,
+        cost: u32,
+        gold_balance: u32,
+    },
     ItemEnchanted {
         facility_id: String,
         cost: u32,
@@ -1239,6 +1244,7 @@ const fn facility_service_kind_dto(kind: TownFacilityServiceKind) -> FacilitySer
         TownFacilityServiceKind::Heal => FacilityServiceKindDto::Heal,
         TownFacilityServiceKind::RestoreVitality => FacilityServiceKindDto::RestoreVitality,
         TownFacilityServiceKind::CureMutation => FacilityServiceKindDto::CureMutation,
+        TownFacilityServiceKind::BalanceRitual => FacilityServiceKindDto::BalanceRitual,
         TownFacilityServiceKind::EnchantWeapon => FacilityServiceKindDto::EnchantWeapon,
         TownFacilityServiceKind::EnchantArmor => FacilityServiceKindDto::EnchantArmor,
         TownFacilityServiceKind::EnchantAmmunition => FacilityServiceKindDto::EnchantAmmunition,
@@ -1761,6 +1767,14 @@ impl Game {
                 FacilityServiceOutcome::MutationCured {
                     facility_id: facility_id.to_owned(),
                     mutation_id,
+                    cost,
+                    gold_balance: self.gold - cost,
+                }
+            }
+            FacilityServiceKindDto::BalanceRitual => {
+                self.perform_balance_ritual();
+                FacilityServiceOutcome::BalanceRitualPerformed {
+                    facility_id: facility_id.to_owned(),
                     cost,
                     gold_balance: self.gold - cost,
                 }
