@@ -13,6 +13,7 @@ export class SpellRealmsPanel {
   readonly #value: HTMLElement;
   readonly #history: HTMLElement;
   readonly #studyHelp: HTMLElement;
+  readonly #weaponNote: HTMLElement;
   readonly #books: HTMLElement;
   readonly #dialog: HTMLDialogElement;
   readonly #title: HTMLElement;
@@ -36,6 +37,7 @@ export class SpellRealmsPanel {
     this.#value = element("spell-realms-value");
     this.#history = element("spell-realms-history");
     this.#studyHelp = element("spell-realms-study-help");
+    this.#weaponNote = element("spell-realms-weapon-note");
     this.#books = element("realm-change-books");
     this.#dialog = element("realm-change-dialog");
     this.#title = element("realm-change-title");
@@ -55,6 +57,10 @@ export class SpellRealmsPanel {
     if (realms) {
       this.#studyHelp.textContent = format(this.#state.status?.player.abilityLearning?.studyMode === "divine-random"
         ? "ability-random-study-help" : "ability-mage-study-help");
+      const penalty = this.#state.status?.player.traitDetails?.stats.find(stat => stat.id === "priest-blade-failure");
+      this.#weaponNote.hidden = !penalty;
+      this.#weaponNote.textContent = penalty ? format(penalty.value == null
+        ? "ability-priest-blade-unknown" : "ability-priest-blade-penalty", { value: penalty.value ?? 0 }) : "";
       this.#value.textContent = format("ability-realms-value", { first: name(realms.firstRealmId), second: name(realms.secondRealmId) });
       this.#history.hidden = realms.previousRealmIds.length === 0;
       this.#history.textContent = format("ability-realms-history", { realms: realms.previousRealmIds.map(name).join(" / ") });

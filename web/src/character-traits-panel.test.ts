@@ -47,4 +47,6 @@ test("trait values distinguish unknown, points, percentages and range without in
   assert.equal(traitStatSourceValue({ id: "melee-attacks-hundredths" }, -4, localization), "trait-unit-attacks:-0.04");
   assert.equal(value("ranged-energy", 50), "trait-unit-energy:50");
   assert.equal(value("ranged-base-shot", 150), "trait-unit-percent:150");
+  assert.equal(value("priest-blade-failure", 50), "trait-unit-percentage-points:50");
+  assert.equal(value("priest-blade-failure", null), "trait-value-unknown");
 });

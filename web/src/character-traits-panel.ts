@@ -17,7 +17,7 @@ export function traitActionProtection(data: CharacterTraitDetailsDto): boolean |
 
 export function traitStatValue(stat: CharacterStatDto, localization: Localization): string {
   if (stat.value == null) return localization.format("trait-value-unknown");
-  const unit = ["equipment-life", "natural-regeneration", "mutation-regeneration", "ranged-base-shot"].includes(stat.id)
+  const unit = stat.id === "priest-blade-failure" ? "percentage-points" : ["equipment-life", "natural-regeneration", "mutation-regeneration", "ranged-base-shot"].includes(stat.id)
     ? "percent" : stat.id === "infravision" ? "tiles" : stat.id === "melee-attacks-hundredths" ? "attacks" : stat.id === "ranged-energy" ? "energy" : "points";
   const value = stat.id === "melee-attacks-hundredths" ? (stat.value / 100).toFixed(2) : stat.value;
   return localization.format(`trait-unit-${unit}`, { value });
@@ -145,7 +145,7 @@ export function renderCharacterTraitsDetails(
     if (ATTACK_STATS.includes(stat.id)) continue;
     numeric.append(row(`stat-${stat.id}`, f(`trait-stat-${stat.id}`), traitStatValue(stat, localization),
       stat.sources.map((source) => `${sourceName(source.sourceId)}：${traitStatSourceValue(stat, source.amount, localization)}`),
-      f(stat.id === "equipment-life" ? "trait-life-rule" : stat.id === "mutation-regeneration" ? "trait-mutation-regeneration-rule"
+      f(stat.id === "priest-blade-failure" ? "trait-priest-blade-rule" : stat.id === "equipment-life" ? "trait-life-rule" : stat.id === "mutation-regeneration" ? "trait-mutation-regeneration-rule"
         : stat.id === "natural-regeneration" ? "trait-natural-regeneration-rule" : "trait-stat-rule")));
   }
   const grid = text("div", "", "trait-sections");

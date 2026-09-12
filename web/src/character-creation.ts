@@ -55,6 +55,26 @@ function deathCaster<const S extends string>(slug: S) {
 }
 
 export const MAGE_REALMS = ["life", "sorcery", "nature", "death", "arcane", "daemon", "crusade", "armageddon"] as const;
+export const PRIEST_SECOND_REALMS = {
+  life: ["sorcery", "nature", "arcane", "craft", "crusade", "armageddon"],
+  crusade: ["life", "sorcery", "nature", "arcane", "craft", "armageddon"],
+  death: ["sorcery", "nature", "arcane", "craft", "daemon", "armageddon"],
+  daemon: ["sorcery", "nature", "death", "arcane", "craft", "armageddon"],
+} as const;
+const PRIEST = {
+  ...career("priest"), id: "priest", childLabelKey: "session-first-realm-label",
+  notes: ["session-priest-realms-help"],
+  children: (Object.keys(PRIEST_SECOND_REALMS) as (keyof typeof PRIEST_SECOND_REALMS)[]).map(first => ({
+    id: `priest-${first}` as const, nameKey: `realm-${first}-name`,
+    descriptionKey: "session-priest-first-realm-help", childLabelKey: "session-second-realm-label",
+    notes: [first === "life" || first === "crusade" ? "session-priest-good-help" : "session-priest-evil-help"],
+    children: PRIEST_SECOND_REALMS[first].map(second => ({
+      id: `demo.build.priest-${first}-${second}` as const, nameKey: `realm-${second}-name`,
+      descriptionKey: `build-demo-priest-${first}-${second}-description`,
+      notes: ["session-priest-realms-help", "session-priest-second-realm-help", first === "life" || first === "crusade" ? "session-priest-good-help" : "session-priest-evil-help"],
+    })),
+  })),
+} as const;
 export const RANGER_SECOND_REALMS = ["sorcery", "death", "arcane", "daemon"] as const;
 const RANGER = {
   ...career("ranger"), id: "ranger", childLabelKey: "session-second-realm-label",
@@ -84,6 +104,7 @@ export const CAREER_GROUPS = [
     { id: "demo.build.high-mage-death", nameKey: "session-career-death-name", descriptionKey: "build-demo-high-mage-death-description", notes: ["session-high-mage-available-realms"] },
     { id: "demo.build.high-mage-craft", nameKey: "session-career-craft-name", descriptionKey: "build-demo-high-mage-craft-description", notes: ["session-high-mage-available-realms"] },
   ] }] },
+  { id: "prayer", options: [PRIEST] },
   { id: "hybrid", options: [deathCaster("paladin")] },
   { id: "riding", options: [career("cavalry")] },
   { id: "mind", options: [career("mindcrafter")] },

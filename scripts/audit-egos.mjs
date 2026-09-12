@@ -13,9 +13,13 @@ if (sourceRoot === "--check-applicability") {
   console.log(`Applicability check passed: ${reviewed.reviews.length} creation builds; ${reviewed.gaps.length} documented evidence gaps. Read-only; gameplay tests were not run.`);
   process.exit(0);
 }
-assert.ok(sourceRoot, "usage: node scripts/audit-egos.mjs <authoritative RFB repository> | --check-applicability");
+assert.ok(sourceRoot, "usage: node scripts/audit-egos.mjs <authoritative RFB repository> [built importer executable] | --check-applicability");
 const reviewed = await loadApplicability(root);
-const source = JSON.parse(execFileSync("cargo", ["run", "-q", "-p", "rfb-legacy-import", "--", "audit-egos", sourceRoot], { cwd: root, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 }));
+// A supplied importer runs the same source audit without rebuilding Rust.
+const importer = process.argv[3];
+const source = JSON.parse(execFileSync(importer ? path.resolve(importer) : "cargo", importer
+  ? ["audit-egos", sourceRoot]
+  : ["run", "-q", "-p", "rfb-legacy-import", "--", "audit-egos", sourceRoot], { cwd: root, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 }));
 const pack = path.join(root, "packs/rfb-demo-original");
 async function definitions(folder) {
   return Promise.all((await readdir(path.join(pack, folder))).filter(name => name.endsWith(".json")).map(async name => JSON.parse(await readFile(path.join(pack, folder, name), "utf8"))));

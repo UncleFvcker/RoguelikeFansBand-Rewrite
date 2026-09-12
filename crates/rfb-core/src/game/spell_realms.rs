@@ -7,7 +7,10 @@ impl Game {
     /// Level 0 drains XP; the other levels exercise learning and class power boundaries.
     #[doc(hidden)]
     pub fn debug_prepare_spell_learning_e2e(&mut self, level: u16) -> Result<(), CoreError> {
-        if !matches!(level, 0 | 1 | 2 | 3 | 5 | 15 | 20 | 25 | 50) {
+        if !matches!(
+            level,
+            0 | 1 | 2 | 3 | 5 | 15 | 20 | 25 | 34 | 35 | 41 | 42 | 50
+        ) {
             return Err(CoreError::InvalidSave(
                 "unsupported spell learning E2E level",
             ));
@@ -50,6 +53,15 @@ impl Game {
                     "death"
                 },
             )
+        } else if self.player_is_priest() {
+            (
+                "e2e.priest-change-book",
+                if self.current_second_realm_id() == Some("craft") {
+                    "arcane"
+                } else {
+                    "craft"
+                },
+            )
         } else {
             ("e2e.mage-life-book", "life")
         };
@@ -77,6 +89,12 @@ impl Game {
                 1,
             )?;
             self.mark_item_aware("demo.item.acquirement-scroll");
+        }
+        if self.player_is_priest()
+            && level >= 34
+            && !self.items.iter().any(|item| item.id == "e2e.priest-dagger")
+        {
+            self.debug_add_generated_inventory_item("e2e.priest-dagger", "demo.item.dagger", 1)?;
         }
         if ranger && level == 50 {
             // Explicit desktop fixtures: high books and a small tree/probing scene.

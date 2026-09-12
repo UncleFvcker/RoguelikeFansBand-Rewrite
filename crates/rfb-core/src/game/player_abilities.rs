@@ -247,6 +247,15 @@ impl Game {
         )
     }
 
+    pub(super) fn priest_blade_failure_penalty(&self) -> i32 {
+        25 * self
+            .equipped_melee_weapons()
+            .into_iter()
+            .take(2)
+            .filter(|item| self.priest_weapon_is_unblessed_blade(item))
+            .count() as i32
+    }
+
     pub(super) fn race_ability_activation(
         &self,
         ability_id: &str,
@@ -648,14 +657,7 @@ impl Game {
                     })
                     .saturating_add(modifier_percent)
                     .saturating_add(i32::try_from(resource_penalty).unwrap_or(i32::MAX))
-                    .saturating_add(
-                        25 * self
-                            .equipped_melee_weapons()
-                            .into_iter()
-                            .take(2)
-                            .filter(|item| self.priest_weapon_is_unblessed_blade(item))
-                            .count() as i32,
-                    )
+                    .saturating_add(self.priest_blade_failure_penalty())
                     .saturating_sub(4 * easy_spell)
                     .max(i32::from(minimum_failure_percent))
                     .saturating_add(if self.player_uses_dual_realm_learning() {

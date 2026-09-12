@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "sourceRef": "master",
   "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
-  "reviewedAt": "2026-09-11",
-  "codeBaseline": "8d045dfb2 + Ranger creation/UI entry",
+  "reviewedAt": "2026-09-12",
+  "codeBaseline": "f81687626 + Priest creation/UI entry",
   "entrySource": "web/src/character-creation.ts CREATION_BUILDS / PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
-  "scope": "Source and behavior applicability review of 70 real creation builds (ten previous non-Mage builds, 56 ordered Mage pairs and four Nature-first Ranger builds), five areas each, within the imported canonical pool. Shared evidence covers class and current-realm differences; this is not 70 playthroughs. Unavailable identities/content remain separate. The audit CLI does not execute gameplay tests.",
+  "scope": "Source and behavior applicability review of 94 real creation builds (70 prior entries and 24 ordered Priest pairs), five areas each, within the imported canonical pool. Shared evidence covers class and current-realm differences. Priest code and UI entries are present; execution remains pending in the explicit step-7 gap. The audit CLI does not execute gameplay tests.",
   "recordSemantics": {
     "implemented": "Reachable implementation exists; gapIds still block acceptance completion.",
     "no-special-difference": "Source and indirect consumers reviewed; shared path applies without an additional class generation branch.",
@@ -28,7 +28,7 @@
         "base-harp-bard"
       ],
       "entry": "Natural floor/monster allocation and existing Acquirement service; ordinary modes retain non-tailored kinds.",
-      "reason": "All 70 default builds resolve to the human standard body; race selection supplies real body slots and Tomte birth-headgear rules. Source object_is_favorite defaults to all melee weapons for Warrior, Berserker, Sniper, High Mage, Mage, Paladin and Mindcrafter; Archer and Cavalry have explicit filters. Source device-class membership is independent of ability to use devices. Completed-item rejection follows caster glove encumbrance, not general usability. Duelist uses source base weapon proficiency caps above Beginner for melee favorites; tailored body armor has the fixed 200 weight limit and shields are excluded. The ordinary pool remains unchanged. Mage and High Mage are the current device classes. Mage's current secondary realm, not its birth Build, participates in book eligibility and needs-book; changing realms preserves discovery history. Ranger excludes ordinary melee favorites without an Archer/Sniper 1/5 bow draw or device preference. Current primary/secondary books and found counts drive the shared 1/10 needs-book branch; changes preserve discovery counts.",
+      "reason": "All 94 default builds resolve to the human standard body; race selection supplies real body slots and Tomte birth-headgear rules. Source object_is_favorite defaults to all melee weapons for Warrior, Berserker, Sniper, High Mage, Mage, Paladin and Mindcrafter; Archer and Cavalry have explicit filters. Source device-class membership is independent of ability to use devices. Completed-item rejection follows caster glove encumbrance, not general usability. Duelist uses source base weapon proficiency caps above Beginner for melee favorites; tailored body armor has the fixed 200 weight limit and shields are excluded. The ordinary pool remains unchanged. Mage and High Mage are the current device classes. Mage's current secondary realm, not its birth Build, participates in book eligibility and needs-book; changing realms preserves discovery history. Ranger excludes ordinary melee favorites without an Archer/Sniper 1/5 bow draw or device preference. Current primary/secondary books and found counts drive the shared 1/10 needs-book branch; changes preserve discovery counts. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation.",
       "sourceEvidence": [
         "src/obj_kind.c:97-162 object_is_favorite",
         "src/autopick.c:848-868 object_is_icky",
@@ -36,7 +36,8 @@
         "src/equip.c:372 slot compatibility",
         "src/mindcrafter.c:629-644 caster info without glove flag",
         "src/berserker.c:161-172 HP caster without glove flag",
-        "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
+        "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+        "docs/priest-source-audit.md sections 6 and 7; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
       ],
       "implementation": [
         "crates/rfb-core/src/game/loot/allocation.rs",
@@ -55,9 +56,11 @@
         "crates/rfb-core/src/game/tests/items.rs#tailored_duelist_weapon_equips_and_preserves_continued_generation_after_save",
         "crates/rfb-core/src/game/loot/allocation.rs#mage_tailored_draws_book_before_device_and_skips_satisfied_book_draw",
         "crates/rfb-core/src/game/loot/allocation.rs#mage_realm_change_updates_book_need_and_actual_allocation_without_resetting_discovery",
-        "crates/rfb-core/src/game/loot/allocation.rs#ranger_tailored_books_follow_current_realms_without_bow_or_device_preference_draws"
+        "crates/rfb-core/src/game/loot/allocation.rs#ranger_and_priest_tailored_books_follow_current_realms_without_extra_preference_draws",
+        "crates/rfb-core/src/game/tests/items.rs#all_priest_builds_generate_tailored_hafted_weapons_equip_and_resume_generation",
+        "crates/rfb-core/src/game/mogaminator.rs#priest_favorites_require_known_blessing_even_for_evil_primary_realms"
       ],
-      "limits": "Real class/body representatives share the source allocation loop; all 56 Mage ordered births have formal/core/UI mapping evidence. Good/Great advanced-book limits and Tailored found<3 remain distinct; book instances retain B1 quantity-one representation. No 56-fold duplicate generation walkthrough is claimed."
+      "limits": "Real class/body representatives share the source allocation loop; all 56 Mage ordered births have formal/core/UI mapping evidence. Good/Great advanced-book limits and Tailored found<3 remain distinct; book instances retain B1 quantity-one representation. No 56-fold duplicate generation walkthrough is claimed. Priest additions are written but not executed; see priest-step7-validation. Existing acceptance remains limited to its recorded prior scope."
     },
     {
       "id": "ego-negative",
@@ -71,7 +74,7 @@
         "theme-reset"
       ],
       "entry": "Shared natural/Ego materialization, existing configured rewards and the opened High Mage Craft consumer.",
-      "reason": "No current-class-specific Ego materializer appears in reviewed source: weight adjustment belongs to unavailable Mauler. Existing luck mutations, Chance virtue, themes, race/body properties and curse consumers still apply and can differ by real character state; no-special-difference means no additional class branch, not identical output. Ranger has no additional source Ego weight/materializer branch. Caster gloves, body slots, themes and curses use shared paths; four real builds generate, equip, reject cursed removal and continue generation after loading.",
+      "reason": "No current-class-specific Ego materializer appears in reviewed source: weight adjustment belongs to unavailable Mauler. Existing luck mutations, Chance virtue, themes, race/body properties and curse consumers still apply and can differ by real character state; no-special-difference means no additional class branch, not identical output. Ranger has no additional source Ego weight/materializer branch. Caster gloves, body slots, themes and curses use shared paths; four real builds generate, equip, reject cursed removal and continue generation after loading. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base.",
       "implementation": [
         "crates/rfb-core/src/game/ego.rs",
         "crates/rfb-core/src/game/ego/armor.rs",
@@ -85,11 +88,13 @@
         "crates/rfb-core/src/game/ego/applicability.rs",
         "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_negative_power_reaches_a_cursed_equippable_instance",
         "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
-        "crates/rfb-core/src/game/ego/applicability.rs#real_warrior_gets_mage_and_dwarf_themed_equipment_then_equips_and_restores"
+        "crates/rfb-core/src/game/ego/applicability.rs#real_warrior_gets_mage_and_dwarf_themed_equipment_then_equips_and_restores",
+        "crates/rfb-core/src/game/tests/priest/generation.rs#every_priest_build_claims_the_source_thieves_and_orc_rewards_and_resumes"
       ],
-      "limits": "Shared Ego/E8.8 evidence is reused. Mage protection, wizard and free-action gloves exercise real caster encumbrance; Mage natural negative random artifacts preserve curse handling, equipment and continued generation after save. No extra Mage-specific Ego weight branch exists.",
+      "limits": "Shared Ego/E8.8 evidence is reused. Mage protection, wizard and free-action gloves exercise real caster encumbrance; Mage natural negative random artifacts preserve curse handling, equipment and continued generation after save. No extra Mage-specific Ego weight branch exists. Priest additions are written but not executed; see priest-step7-validation. Existing acceptance remains limited to its recorded prior scope.",
       "sourceEvidence": [
-        "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
+        "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+        "docs/priest-source-audit.md sections 6 and 7; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
       ]
     },
     {
@@ -103,7 +108,7 @@
         "bad-luck-randart"
       ],
       "entry": "Natural/themed scheduler passes real class and theme with scroll=false; the Arena reward and ordinary pool now expose the artifact creation scroll to classes that can read scrolls.",
-      "reason": "Theme supplies initial bias. Without a theme there is no class initial bias in natural mode. Only scroll mode with no prior bias and the 1/4 gate applies class bias; later Warrior conversion depends on mode. Non-Bard harp value and shared value/curse retries apply. Berserker alone changes random_misc case 31 among current classes. Mage and High Mage use Mage scroll bias with the source 20% Warrior conversion. Ranger bias and 30% Warrior conversion apply only to the no-theme artifact scroll branch after the 1/4 gate. Natural and explicit-theme generation retain shared biases, names and saved RNG. All four builds exercise real scroll commands and generation continuation.",
+      "reason": "Theme supplies initial bias. Without a theme there is no class initial bias in natural mode. Only scroll mode with no prior bias and the 1/4 gate applies class bias; later Warrior conversion depends on mode. Non-Bard harp value and shared value/curse retries apply. Berserker alone changes random_misc case 31 among current classes. Mage and High Mage use Mage scroll bias with the source 20% Warrior conversion. Ranger bias and 30% Warrior conversion apply only to the no-theme artifact scroll branch after the 1/4 gate. Natural and explicit-theme generation retain shared biases, names and saved RNG. All four builds exercise real scroll commands and generation continuation. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation.",
       "implementation": [
         "crates/rfb-core/src/game/random_artifact.rs#initial_bias",
         "crates/rfb-core/src/game/random_artifact/scheduling.rs#materialize_random_artifact_draft",
@@ -121,9 +126,10 @@
         "crates/rfb-core/src/game/tests/items.rs#artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name",
         "crates/rfb-core/src/game/tests/arena.rs"
       ],
-      "limits": "Factory tests cover source probability boundaries, including Mage 19/20 conversion and natural/theme separation. Actual scroll commands cover prior class representatives and Mage, selected equipment, saved names, virtues and continued actions. Berserker scroll rejection remains a class consumer rule. Realm pairs share this class-only branch; entry enumeration is separate from desktop acceptance.",
+      "limits": "Factory tests cover source probability boundaries, including Mage 19/20 conversion and natural/theme separation. Actual scroll commands cover prior class representatives and Mage, selected equipment, saved names, virtues and continued actions. Berserker scroll rejection remains a class consumer rule. Realm pairs share this class-only branch; entry enumeration is separate from desktop acceptance. Priest additions are written but not executed; see priest-step7-validation. Existing acceptance remains limited to its recorded prior scope.",
       "sourceEvidence": [
-        "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
+        "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+        "docs/priest-source-audit.md sections 6 and 7; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
       ]
     },
     {
@@ -137,7 +143,7 @@
         "good-luck-fixed-retry"
       ],
       "entry": "Imported fixed artifacts, explicitly configured class rewards and named monster death drops.",
-      "reason": "Terror Mask (41) is generated in the ordinary iron-helm pool for every current build. Warrior/Cavalry/Berserker receive one ability then one high resistance; all other current classes receive intrinsic AGGRAVATE/TY_CURSE, a heavy curse and get_curse(2). These are saved generation properties. Dr Jones (162) retains its ordinary non-Archaeologist branch. Configured rewards keep their existing entry contracts. Mage/High-Mage Old Castle rewards now preselect Gandalf/Saruman/Indra at 1:1:8 using the durable selection seed and replace a previously generated fixed artifact through the existing named random-artifact path. Ordinary Mage thieves reward is a long sword. These three artifacts are not the ten identity-specific construction exceptions. Belthronding/Yoichi naturally allocate and keep source launcher properties and uniqueness. Old Castle selects 1:4 through the durable birth seed; duplicates become named random-artifact long bows and failed claims are atomic. Ordinary thieves reward is a long sword. Xiaolong (145) and Dragonlance (322) now use their ordinary branches on current classes: no Monk BLOWS or Dragon-pact Warlock slays. GHB (39) drops artifact 192 at 100% through the existing named-drop path; rarity 0 / QUESTITEM excludes it from ordinary selection. Source xtra2.c skips an already-generated named drop rather than making a replacement.",
+      "reason": "Terror Mask (41) is generated in the ordinary iron-helm pool for every current build. Warrior/Cavalry/Berserker receive one ability then one high resistance; all other current classes receive intrinsic AGGRAVATE/TY_CURSE, a heavy curse and get_curse(2). These are saved generation properties. Dr Jones (162) retains its ordinary non-Archaeologist branch. Configured rewards keep their existing entry contracts. Mage/High-Mage Old Castle rewards now preselect Gandalf/Saruman/Indra at 1:1:8 using the durable selection seed and replace a previously generated fixed artifact through the existing named random-artifact path. Ordinary Mage thieves reward is a long sword. These three artifacts are not the ten identity-specific construction exceptions. Belthronding/Yoichi naturally allocate and keep source launcher properties and uniqueness. Old Castle selects 1:4 through the durable birth seed; duplicates become named random-artifact long bows and failed claims are atomic. Ordinary thieves reward is a long sword. Xiaolong (145) and Dragonlance (322) now use their ordinary branches on current classes: no Monk BLOWS or Dragon-pact Warlock slays. GHB (39) drops artifact 192 at 100% through the existing named-drop path; rarity 0 / QUESTITEM excludes it from ordinary selection. Source xtra2.c skips an already-generated named drop rather than making a replacement. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards.",
       "implementation": [
         "crates/rfb-core/src/game/loot.rs",
         "crates/rfb-core/src/game/tasks.rs",
@@ -160,9 +166,11 @@
         "crates/rfb-core/src/game/tests/ranger/generation.rs#rewards_keep_birth_selection_replace_unique_bows_and_fail_atomically",
         "crates/rfb-core/src/game/tests/ranger/generation.rs#fixed_bows_generate_equip_fire_and_keep_uniqueness_after_loading",
         "crates/rfb-core/src/game/tests/items.rs#a9_ordinary_identity_artifacts_generate_fight_and_preserve_their_scope_after_save",
-        "crates/rfb-core/src/game/tests/items.rs#a10_hell_beast_natural_entry_drops_zero_rarity_artifact_once_after_save"
+        "crates/rfb-core/src/game/tests/items.rs#a10_hell_beast_natural_entry_drops_zero_rarity_artifact_once_after_save",
+        "crates/rfb-core/src/game/tests/priest/generation.rs#castle_rewards_keep_one_to_four_birth_selection_and_duplicate_replacement_atomic",
+        "crates/rfb-core/src/game/tests/priest/generation.rs#every_priest_build_claims_the_source_thieves_and_orc_rewards_and_resumes"
       ],
-      "limits": "Six other identity-sensitive construction exceptions, two fixed harps, Archaeologist Dr Jones, Monk Xiaolong, Dragon-pact Warlock Dragonlance, and Mauler / monster Hydra/Troll/Jelly Terror Mask branches remain deferred until their actual identities/content are available. Named GHB acquisition uses the formal Warrens ecology with prepared combat, not natural leveling. Old Castle tests prepare task completion and do not claim natural quest completion. Random-artifacts game mode replacement is unavailable; ordinary named drops skip an already-generated artifact.",
+      "limits": "Six other identity-sensitive construction exceptions, two fixed harps, Archaeologist Dr Jones, Monk Xiaolong, Dragon-pact Warlock Dragonlance, and Mauler / monster Hydra/Troll/Jelly Terror Mask branches remain deferred until their actual identities/content are available. Named GHB acquisition uses the formal Warrens ecology with prepared combat, not natural leveling. Old Castle tests prepare task completion and do not claim natural quest completion. Random-artifacts game mode replacement is unavailable; ordinary named drops skip an already-generated artifact. Priest additions are written but not executed; see priest-step7-validation. Existing acceptance remains limited to its recorded prior scope.",
       "sourceEvidence": [
         "lib/edit/q_old_castle.txt:343-349 Mage and High-Mage",
         "lib/edit/q_thieves.txt ordinary versus SPEED=2 reward",
@@ -171,7 +179,8 @@
         "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
         "src/artifact.c:3391-3405 Xiaolong Monk and Dragonlance Dragon-pact branches",
         "src/xtra2.c:1897-1900,2335-2353 MON_GHB 100% drop and generated guard",
-        "lib/edit/r_info.txt N:39; lib/edit/k_info.txt N:245; lib/edit/a_info.txt N:192"
+        "lib/edit/r_info.txt N:39; lib/edit/k_info.txt N:245; lib/edit/a_info.txt N:192",
+        "docs/priest-source-audit.md sections 6 and 7; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
       ]
     },
     {
@@ -182,7 +191,7 @@
         "theme-reset"
       ],
       "entry": "Equip/use/reject generated instances, identify/sense, combat or attributes, native save/load and continued actions.",
-      "reason": "Generation eligibility and item usability remain separate. Real new-build generated equipment/device/activation consumers preserve costs, charges, curses and properties across save/load; subsequent generation compares instances/drafts, RNG and random-artifact names. Mage staff mana brand, spell capacity, extra power, actual activations/cooldowns and the two class towers use the shared consumers. Changed secondary realms alter actual guild services immediately. Five archer guilds grant class Owner; Thalos/Angwil towers grant Member at non-Owner prices. Current realms update book allocation, Mogaminator inscriptions and Morivant Sorcery Tower roles. Real fixed-bow firing, generated equipment/scroll use and saved continuation share existing consumers.",
+      "reason": "Generation eligibility and item usability remain separate. Real new-build generated equipment/device/activation consumers preserve costs, charges, curses and properties across save/load; subsequent generation compares instances/drafts, RNG and random-artifact names. Mage staff mana brand, spell capacity, extra power, actual activations/cooldowns and the two class towers use the shared consumers. Changed secondary realms alter actual guild services immediately. Five archer guilds grant class Owner; Thalos/Angwil towers grant Member at non-Owner prices. Current realms update book allocation, Mogaminator inscriptions and Morivant Sorcery Tower roles. Real fixed-bow firing, generated equipment/scroll use and saved continuation share existing consumers. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries.",
       "implementation": [
         "crates/rfb-core/src/game/inventory.rs",
         "crates/rfb-core/src/game/item_use.rs",
@@ -204,11 +213,17 @@
         "crates/rfb-core/src/game/tests/mage/realm_change.rs#guild_membership_and_prices_follow_current_realms_without_changing_primary_or_birth_virtues",
         "crates/rfb-core/src/game/tests/ranger/generation.rs#guild_enchantments_and_tower_identification_use_ranger_roles_and_saved_continuation",
         "crates/rfb-core/src/game/tests/ranger/generation.rs#changing_realm_updates_autopick_and_realm_guild_but_keeps_class_membership",
-        "web/e2e/ranger.e2e.mjs#runRangerUiScenario"
+        "web/e2e/ranger.e2e.mjs#runRangerUiScenario",
+        "crates/rfb-core/src/game/tests/priest/generation.rs#all_priests_receive_both_temple_owner_services_at_projected_prices",
+        "crates/rfb-core/src/game/tests/priest/generation.rs#realm_changes_update_inscriptions_and_realm_services_without_extra_guild_membership",
+        "crates/rfb-core/src/game/tests/priest/powers.rs",
+        "web/e2e/priest.e2e.mjs#runPriestUiScenario",
+        "web/src/session-shell.test.ts"
       ],
-      "limits": "Reuse existing item/activation/save evidence and the Mage step-5 real class consumers. Tests explicitly prepare levels, positions, books or rewards where needed. Step-6 UI acceptance covers creation and spellbook interactions; natural acquisition, progression and the playable desktop release remain step 7.",
+      "limits": "Reuse existing item/activation/save evidence and the Mage step-5 real class consumers. Tests explicitly prepare levels, positions, books or rewards where needed. Step-6 UI acceptance covers creation and spellbook interactions; natural acquisition, progression and the playable desktop release remain step 7. Priest additions are written but not executed; see priest-step7-validation. Existing acceptance remains limited to its recorded prior scope.",
       "sourceEvidence": [
-        "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
+        "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+        "docs/priest-source-audit.md sections 6 and 7; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
       ]
     }
   ],
@@ -691,7 +706,47 @@
       "prerequisite": "Import the applicable content and actual identity/consumer together; review ordinary branches as well."
     }
   ],
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "priest-step7-validation",
+      "status": "pending",
+      "buildIds": [
+        "demo.build.priest-crusade-arcane",
+        "demo.build.priest-crusade-armageddon",
+        "demo.build.priest-crusade-craft",
+        "demo.build.priest-crusade-life",
+        "demo.build.priest-crusade-nature",
+        "demo.build.priest-crusade-sorcery",
+        "demo.build.priest-daemon-arcane",
+        "demo.build.priest-daemon-armageddon",
+        "demo.build.priest-daemon-craft",
+        "demo.build.priest-daemon-death",
+        "demo.build.priest-daemon-nature",
+        "demo.build.priest-daemon-sorcery",
+        "demo.build.priest-death-arcane",
+        "demo.build.priest-death-armageddon",
+        "demo.build.priest-death-craft",
+        "demo.build.priest-death-daemon",
+        "demo.build.priest-death-nature",
+        "demo.build.priest-death-sorcery",
+        "demo.build.priest-life-arcane",
+        "demo.build.priest-life-armageddon",
+        "demo.build.priest-life-craft",
+        "demo.build.priest-life-crusade",
+        "demo.build.priest-life-nature",
+        "demo.build.priest-life-sorcery"
+      ],
+      "areas": [
+        "base-allocation-tailored",
+        "ego-negative",
+        "random-artifact",
+        "fixed-artifact-reward",
+        "use-save"
+      ],
+      "reason": "User requested all Priest compilation and test execution after implementation steps finish. The 24 real entries and consumers are implemented, but the new regression/UI checks have not run and content lock, schemas and protocol bindings still need synchronization.",
+      "requiredEvidence": "Step 7 must rebuild the content tool, generate and check lock/schema/bindings, run Priest and affected shared regressions plus global contracts, run --priest-ui and good/evil new-game standalone acceptance with explicit preparation, and record results before removing this gap."
+    }
+  ],
   "builds": [
     {
       "buildId": "demo.build.warrior",
@@ -2969,6 +3024,798 @@
         }
       ],
       "gapIds": []
+    },
+    {
+      "buildId": "demo.build.priest-crusade-arcane",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with crusade/arcane; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with crusade/arcane; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with crusade/arcane; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with crusade/arcane; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with crusade/arcane; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-crusade-armageddon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with crusade/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with crusade/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with crusade/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with crusade/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with crusade/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-crusade-craft",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with crusade/craft; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with crusade/craft; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with crusade/craft; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with crusade/craft; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with crusade/craft; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-crusade-life",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with crusade/life; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with crusade/life; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with crusade/life; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with crusade/life; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with crusade/life; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-crusade-nature",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with crusade/nature; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with crusade/nature; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with crusade/nature; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with crusade/nature; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with crusade/nature; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-crusade-sorcery",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with crusade/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with crusade/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with crusade/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with crusade/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with crusade/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-daemon-arcane",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with daemon/arcane; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with daemon/arcane; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with daemon/arcane; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with daemon/arcane; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with daemon/arcane; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-daemon-armageddon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with daemon/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with daemon/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with daemon/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with daemon/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with daemon/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-daemon-craft",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with daemon/craft; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with daemon/craft; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with daemon/craft; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with daemon/craft; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with daemon/craft; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-daemon-death",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with daemon/death; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with daemon/death; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with daemon/death; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with daemon/death; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with daemon/death; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-daemon-nature",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with daemon/nature; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with daemon/nature; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with daemon/nature; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with daemon/nature; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with daemon/nature; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-daemon-sorcery",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with daemon/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with daemon/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with daemon/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with daemon/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with daemon/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-death-arcane",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with death/arcane; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with death/arcane; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with death/arcane; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with death/arcane; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with death/arcane; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-death-armageddon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with death/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with death/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with death/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with death/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with death/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-death-craft",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with death/craft; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with death/craft; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with death/craft; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with death/craft; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with death/craft; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-death-daemon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with death/daemon; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with death/daemon; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with death/daemon; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with death/daemon; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with death/daemon; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-death-nature",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with death/nature; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with death/nature; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with death/nature; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with death/nature; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with death/nature; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-death-sorcery",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with death/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with death/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with death/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with death/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with death/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-life-arcane",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with life/arcane; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with life/arcane; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with life/arcane; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with life/arcane; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with life/arcane; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-life-armageddon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with life/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with life/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with life/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with life/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with life/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-life-craft",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with life/craft; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with life/craft; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with life/craft; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with life/craft; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with life/craft; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-life-crusade",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with life/crusade; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with life/crusade; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with life/crusade; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with life/crusade; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with life/crusade; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-life-nature",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with life/nature; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with life/nature; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with life/nature; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with life/nature; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with life/nature; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
+    },
+    {
+      "buildId": "demo.build.priest-life-sorcery",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Born with life/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. Priest favors hafted or known-blessed weapons in good and evil builds, retains ordinary bows without an extra bow draw and has no device preference. Current primary/secondary books and discovery counts drive the shared needs-book branch. Real realm changes preserve counts and alter actual allocation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Born with life/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. No additional source Priest Ego materializer or weight branch exists. Real builds share body-slot, theme, luck and curse handling; all 24 participate in negative random-artifact generation, equipping, cursed removal rejection and saved continuation. Orc Camp materializes the configured slaying Ego on a hafted base. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Born with life/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. The player scroll-only no-theme branch uses Priestly with 30% Warrior conversion after the existing one-in-four gate for both good and evil Priests. PriestEvil monster themes remain Necromantic. All 24 builds participate in real pack/equipped scroll use and natural/themed name and RNG continuation. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Born with life/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Born with life/sorcery; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. References are prepared checks, not execution results; see docs/priest-source-audit.md section 7."
+        }
+      ],
+      "gapIds": [
+        "priest-step7-validation"
+      ]
     }
   ]
 }

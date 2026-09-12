@@ -569,6 +569,31 @@ impl Game {
             sources: Vec::new(),
         });
         let melee = self.player_melee_profile(stats);
+        if self.player_is_priest() {
+            let weapons = self.equipped_melee_weapons();
+            let known = !self.player_is_good_priest()
+                || weapons.iter().take(2).all(|item| {
+                    self.item_identification(item) == ItemIdentificationDto::Identified
+                        || self.known_item_blessed(item)
+                });
+            numeric.push(CharacterStatDto {
+                id: "priest-blade-failure".to_owned(),
+                value: known.then(|| self.priest_blade_failure_penalty()),
+                sources: if known {
+                    weapons
+                        .into_iter()
+                        .take(2)
+                        .filter(|item| self.priest_weapon_is_unblessed_blade(item))
+                        .map(|item| CharacterStatSourceDto {
+                            source_id: item.id.clone(),
+                            amount: 25,
+                        })
+                        .collect()
+                } else {
+                    Vec::new()
+                },
+            });
+        }
         let active_weapon_id = (!self.player_has_draconian_metamorphosis())
             .then(|| melee.source_item_id.clone())
             .flatten();

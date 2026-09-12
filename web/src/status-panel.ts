@@ -1675,6 +1675,13 @@ export class StatusPanel {
     if (ability.resourceId && ability.hitPointCost > 0) {
       append("ability-hit-point-cost-summary", { cost: ability.hitPointCost });
     }
+    for (const effect of ability.effects) {
+      if (effect.type === "bless-weapon" || effect.type === "evocation") {
+        append("ability-priest-power-cost-help");
+        if (effect.type === "bless-weapon") append("ability-bless-weapon-help");
+        else append("ability-evocation-summary", { damage: effect.damage, power: effect.power });
+      }
+    }
     if (ability.areaRadius != null) append("ability-area-summary", { radius: ability.areaRadius });
     if (ability.beamDamage) append("ability-beam-summary");
     if (ability.coneRadius != null) append("ability-cone-summary", { radius: ability.coneRadius });

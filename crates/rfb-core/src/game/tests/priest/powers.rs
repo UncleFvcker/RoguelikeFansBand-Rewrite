@@ -362,6 +362,33 @@ fn edged_weapon_penalties_are_per_hand_and_blessing_does_not_raise_proficiency_c
         }
         assert_eq!(game.player_melee_damage_percent(), 94);
         assert_eq!(game.scale_player_melee_damage(25), 24);
+        let penalty = |g: &Game| {
+            g.snapshot()
+                .player
+                .trait_details
+                .stats
+                .into_iter()
+                .find(|stat| stat.id == "priest-blade-failure")
+                .unwrap()
+        };
+        assert_eq!(
+            penalty(&game).value,
+            if build == BUILD { None } else { Some(0) }
+        );
+        for g in [&mut game, &mut blessed] {
+            for id in [&a, &b] {
+                g.identify_item_instance(id, ItemIdentificationRequest::new(true));
+            }
+        }
+        assert_eq!(
+            penalty(&game).value,
+            Some(if build == BUILD { 50 } else { 0 })
+        );
+        assert_eq!(penalty(&blessed).value, Some(0));
+        assert_eq!(
+            penalty(&game).sources.len(),
+            if build == BUILD { 2 } else { 0 }
+        );
         let mut tonberry =
             Game::new_with_build_race_and_name(925, build, "rfb-legacy.race.tonberry", "Priest")
                 .unwrap();

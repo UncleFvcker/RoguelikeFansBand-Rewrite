@@ -131,7 +131,7 @@
 
 ## 7. 每Build的五类审计责任
 
-24个Build都要登记五类记录，复用下表共同条件/消费者证据，不复制120套行为测试。本步不修改[正式审计输入](../design/generation-build-applicability.json)或[生成报告](../design/ego-contract-audit.json)，也不将尚未开放身份标成implemented。
+24个Build各登记五类记录，复用下表共同条件/消费者证据，不复制120套行为测试。第一步只准备来源；第六步已随入口开放更新[正式审计输入](../design/generation-build-applicability.json)并由工具重生成[报告](../design/ego-contract-audit.json)。实现状态与实际验收分开，后者仍由`priest-step7-validation`阻止标记完成。
 
 | 正式area ID | 关联的现有condition ID | 本轮应交付的证据 |
 | --- | --- | --- |
@@ -141,11 +141,11 @@
 | `fixed-artifact-reward` | `fixed-artifact-identity`, `bad-luck-fixed-special`, `bad-luck-fixed-normal` | 旧城堡1:4、两件奖励的使用/唯一性/替代、失败原子性；盗贼战锤与兽人营地杀戮钝器的真实领取 |
 | `use-save` | 上述生成条件的实际消费者 | 祝福前后武器、费用与失败、双领域改换后的铭刻/书本/寺庙服务、生成/装备与读档后相同行动和RNG |
 
-当前conditionScopes没有Priest专属 `deferred-unavailable-build` 条目；现有 `implemented-current-builds` 的范围仍是70个已开放入口。新增Priest时扩展真实覆盖，不将不存在的豁免“直接关闭”。Mauler/Bard/Disciple等无关未开放身份依赖保留。第五步准备证据、第六步与普通入口一起登记并由工具重生成；每个Build的共同依据可复用，但其first/second身份和合法领域必须明确。
+conditionScopes没有Priest专属 `deferred-unavailable-build` 条目；第六步将当前入口由70扩展到94。没有将不存在的豁免“直接关闭”，Mauler/Bard/Disciple等无关未开放身份依赖保留。每个Build的共同依据可复用，但其first/second身份和合法领域均从正式内容解析。
 
 ### 第五步准备记录（代码已写，全部待第七步运行）
 
-以下后续记录对应同一来源提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。测试从正式Class枚举24个Build并断言数量；每个真实身份都执行下列共同用例，不把怪物掉落主题等同玩家Class。正式审计输入/报告尚未将牧师标为implemented。
+以下后续记录对应同一来源提交 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。测试从正式Class枚举24个Build并断言数量，为每个真实身份安排下列共同用例，不把怪物掉落主题等同玩家Class。第六步正式登记四类implemented及Ego的no-special-difference，全部关联待执行缺口；这些是测试位置，不是通过结果。
 
 | 第一领域 | 完整Build ID（每项均关联下表五类） |
 | --- | --- |
@@ -163,6 +163,10 @@
 | `use-save` | 上述全24身份生成/装备/保存实际链路；[priest/generation.rs](../crates/rfb-core/src/game/tests/priest/generation.rs)的两寺庙全24身份Owner、实际治疗/恢复/净化突变费用及读档，领域改换后真实铭刻/服务资格；[priest/powers.rs](../crates/rfb-core/src/game/tests/priest/powers.rs)补祝福知识、费用和驱散传送/保存。领域间不同战斗行为按善恶代表及四主领域资格覆盖 |
 
 第四/五步补充：`project_hack`（`spells2.c:1850–1880`）要求LOS及projectable，并不要求看见怪物；驱散三阶段按此筛选，RES_ALL免伤和提前跳过恐惧，放逐沿既有唯一/抗传送规则。装备仍沿公共“穿戴即鉴定”适配；祝福动作本身只揭示Blessed，不额外鉴定其他词缀。部分知识新增保存字段，失忆/平凡化清除，伪造无实际祝福的记录拒绝载入。源神器139/334成功率分支已按正式source metadata索引接入，但两身份未导入，因此没有其实际使用验收。
+
+第六步静态结果：使用`node scripts/audit-egos.mjs D:/codex/Frogcomposband/master target/debug/rfb-legacy-import.exe`复用已有导入器，完整读取同一Git来源并生成报告，没有触发Rust编译；160项Ego身份、157种装备底材、40类标志映射审计通过。随后`node scripts/audit-egos.mjs --check-applicability`核对94个真实入口与1项待验收缺口通过。菜单映射/本地化、脚本语法、Rust格式及diff做静态核对；未运行游戏、前端或工具单元测试。
+
+桌面复现（留到第七步）：在`web`执行`npm run e2e:build`，再运行`node e2e/tauri.e2e.mjs --priest-ui`。脚本位于[priest.e2e.mjs](../web/e2e/priest.e2e.mjs)，报告目标为`test-results/priest-ui/report.json`，当前尚未生成。脚本通过正常UI创建生命/咒术与死亡/咒术，两语言均检查24个菜单组合；高等级、工艺第一册和普通匕首是明确准备，保留自然失败，不能算作自然练级、物资获取或实战验收。善恶新开局地牢实战和优化EXE另属第七步。
 
 ## 8. 适配、排除项与后续验证
 

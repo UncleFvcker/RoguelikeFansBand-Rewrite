@@ -57,6 +57,8 @@ git -C D:/codex/Frogcomposband/master grep -n '目标符号' master -- src lib
 ```powershell
 # 输入或来源审查结果变化后：需要 Rust 和原版 Git 仓库
 node scripts/audit-egos.mjs D:/codex/Frogcomposband/master
+# 已有导入器时可显式复用，不触发Rust编译；仍完整读取原版Git对象并生成报告
+node scripts/audit-egos.mjs D:/codex/Frogcomposband/master target/debug/rfb-legacy-import.exe
 # 日常检查与 CI 使用同一只读入口：不启动 Rust、不读取原版仓库、不写文件
 node scripts/audit-egos.mjs --check-applicability
 ```
