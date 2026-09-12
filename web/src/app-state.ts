@@ -20,6 +20,7 @@ export type TargetingIntent =
   | { type: "look" }
   | { type: "local-travel" }
   | { type: "projectile" }
+  | { type: "throw"; itemId: string }
   | { type: "mutation-direction" }
   | { type: "ability-direction" }
   | { type: "ability"; abilityId: string }

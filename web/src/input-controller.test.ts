@@ -18,6 +18,56 @@ import {
 } from "./input-controller.ts";
 import { AppState } from "./app-state.ts";
 
+test("saved fishing resumes one command at a time and input cancels after a busy command", async () => {
+  const state = new AppState();
+  state.mode = "playing";
+  state.status = { lastCommandSeq: 1, floorId: "floor", mapScale: "local",
+    player: { position: { x: 1, y: 1 }, fishingDirection: "east" }, entities: [] };
+  const timers = new Map();
+  const listeners = new Map();
+  let timerId = 0;
+  const window = {
+    addEventListener: (type, fn, capture) => listeners.set(`${type}:${Boolean(capture)}`, fn),
+    removeEventListener: (type, _fn, capture) => listeners.delete(`${type}:${Boolean(capture)}`),
+    setTimeout: fn => { timers.set(++timerId, fn); return timerId; },
+    clearTimeout: id => timers.delete(id),
+  };
+  const button = { addEventListener() {}, removeEventListener() {} };
+  const commands = [];
+  const controller = new InputController({ state, window,
+    dom: { traverseStairs: button, targetModeToggle: button, lookModeToggle: button },
+    localization: {}, getInputPreset: () => "vi", getZoom: () => 1,
+    dispatch: async command => {
+      commands.push(command);
+      state.status.lastCommandSeq++;
+      if (command.type === "cancel-fishing") state.status.player.fishingDirection = null;
+      controller.reconcileStatus(state.status);
+    },
+    describeLook: () => "", openObjectList() {}, openMogaminator() {},
+    onLookFocusChange() {}, announce() {},
+  });
+  const tick = async () => {
+    const [id, fn] = timers.entries().next().value;
+    timers.delete(id);
+    fn();
+    await Promise.resolve();
+  };
+  controller.install();
+  controller.reconcileStatus(state.status);
+  await tick();
+  assert.deepEqual(commands, [{ type: "continue-fishing" }]);
+  state.busy = true;
+  listeners.get("keydown:true")();
+  await tick();
+  assert.equal(commands.length, 1);
+  state.busy = false;
+  await tick();
+  assert.deepEqual(commands[1], { type: "cancel-fishing" });
+  assert.equal(timers.size, 0);
+  controller.dispose();
+  assert.equal(listeners.size, 0);
+});
+
 test("input presets preserve their movement and wait command mappings", () => {
   assert.deepEqual(
     commandForKeyboardInput({ key: "8", code: "Numpad8" }, "numpad"),
