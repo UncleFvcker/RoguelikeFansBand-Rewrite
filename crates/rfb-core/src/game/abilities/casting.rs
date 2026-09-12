@@ -286,7 +286,7 @@ impl Game {
         // Blocked vampirism reaches its source failure check without needing a target.
         let vampirism_blocked = self.dungeon_blocks_vampirism(ability_id);
         let target_plan = self.ability_target_plan(&ability, &target);
-        let unavailable_mage_glyph = self.player_is_mage()
+        let unavailable_glyph = (self.player_is_mage() || self.player_is_warrior_mage())
             && ability.effect.ordered_effects().iter().any(|effect| {
                 if let AbilityEffectDefinition::CreateCurrentTerrain {
                     source_terrain_ids,
@@ -299,7 +299,7 @@ impl Game {
                     false
                 }
             });
-        if (target_plan.is_none() || unavailable_mage_glyph) && !vampirism_blocked {
+        if (target_plan.is_none() || unavailable_glyph) && !vampirism_blocked {
             events.push(DomainEvent::AbilityTargetUnavailable {
                 ability_id: ability.id,
             });

@@ -688,6 +688,7 @@ fn glyph_limit_rejects_secondary_life_atomically_and_exempts_primary_life() {
     for (build, success) in [
         ("demo.build.mage-sorcery-life", false),
         ("demo.build.mage-life-sorcery", true),
+        ("demo.build.warrior-mage-arcane-life", false),
     ] {
         let mut game = prepared(build, 50);
         learn(&mut game, glyph);

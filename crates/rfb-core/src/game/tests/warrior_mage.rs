@@ -2,6 +2,8 @@
 use super::support::{choose_human_talent_if_pending, clear_monsters, give_inventory_item};
 use super::*;
 
+mod learning;
+
 const BUILD: &str = "demo.build.warrior-mage-arcane-sorcery";
 const MANA: &str = "demo.resource.mana";
 

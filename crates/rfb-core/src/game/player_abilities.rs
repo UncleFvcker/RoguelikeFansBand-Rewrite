@@ -1065,7 +1065,7 @@ impl Game {
             .ability_learning_order
             .iter()
             .any(|id| id == ability_id);
-        if studied && !self.player_is_mage() {
+        if studied && !(self.player_is_mage() || self.player_is_warrior_mage()) {
             return Err("already-learned");
         }
         if self.progress.level < Self::player_ability_parameters(&ability).minimum_level {
@@ -1113,9 +1113,9 @@ impl Game {
             self.learned_abilities.insert(ability_id.to_owned());
             self.ability_learning_order.push(ability_id.to_owned());
         }
-        if self.player_is_mage() {
+        if self.player_is_mage() || self.player_is_warrior_mage() {
             self.spent_spell_learning += 1;
-            // cmd5.c uses the class spell_book (Mage: sorcery), not the studied realm.
+            // cmd5.c uses the class spell_book (Mage/Warrior-Mage: SORCERY), not the realm.
             self.add_virtue(VirtueKindDto::Knowledge, 1);
         }
         Ok(())
@@ -1290,6 +1290,8 @@ impl Game {
                 (3 * u32::from(self.progress.max_level.saturating_sub(2))).min(80)
             } else if self.player_is_priest() {
                 (3 * u32::from(self.progress.max_level)).min(96)
+            } else if self.player_is_warrior_mage() {
+                (3 * u32::from(self.progress.max_level)).min(84)
             } else {
                 (3 * u32::from(self.progress.max_level)).min(100)
             } + u32::from(self.bonus_spell_learning_capacity);
@@ -1301,7 +1303,7 @@ impl Game {
             // counter survives replacement; at most 64 forgotten slots can augment capacity.
             self.spent_spell_learning >= self.ability_learning_order.len() as u32
                 && (has_replaced_realm
-                    || if self.player_is_mage() {
+                    || if self.player_is_mage() || self.player_is_warrior_mage() {
                         self.spent_spell_learning <= maximum_studies
                     } else {
                         self.spent_spell_learning == self.ability_learning_order.len() as u32

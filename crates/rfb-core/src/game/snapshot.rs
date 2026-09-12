@@ -710,7 +710,7 @@ impl Game {
                     book_item_id: book_item_id.clone(),
                     can_study: source == AbilitySourceDto::Learned
                         && (!self.ability_learning_order.contains(&ability_id)
-                            || (self.player_is_mage()
+                            || ((self.player_is_mage() || self.player_is_warrior_mage())
                                 && learned
                                 && progress.proficiency < progress.proficiency_cap))
                         && level_available
