@@ -640,7 +640,12 @@ shop-owner-demo-anambar-otto-name = 奥托
 town-facility-demo-anambar-library-name = 图书馆
 town-facility-demo-anambar-library-description = 托妮卡在这里研究物品、鉴定物品，并提供城镇商店纵览。
 town-facility-demo-anambar-library-owner-name = 托妮卡
-town-facility-demo-anambar-library-overview = 阿南巴设有杂货店、护甲店、武器店、神殿、炼金店、魔法店、黑市、家、书店与蘑菇店；其他特殊建筑另行提供任务或服务。
+town-facility-demo-anambar-library-overview = 阿南巴设有十家商店、图书馆、公会、镇长办公室、警察局及共享馆藏的博物馆。家在完成警察首项任务并结算后开放；赌场、驯兽师、记者公会、盗贼巢穴和银行目前仅保留建筑入口。
+
+terrain-demo-reporters-guild-entrance-name = 记者公会
+terrain-demo-reporters-guild-entrance-description = 记者公会的入口，目前未开放服务。
+terrain-demo-cornucopia-bank-entrance-name = 聚宝盆银行
+terrain-demo-cornucopia-bank-entrance-description = 聚宝盆银行的入口，目前未开放服务。
 town-facility-demo-anambar-weapon-master-name = 武器大师
 town-facility-demo-anambar-weapon-master-description = 锤趾汤姆泰克按当前护甲等级评估防护能力。
 town-facility-demo-anambar-weapon-master-owner-name = 锤趾汤姆泰克
@@ -657,7 +662,24 @@ town-facility-demo-anambar-trump-tower-name = 王牌之塔
 town-facility-demo-anambar-trump-tower-description = 伊万·叶克尼亚兹可将你召回上次探索的地下城。
 town-facility-demo-anambar-trump-tower-owner-name = 伊万·叶克尼亚兹
 town-demo-thalos-name = 萨洛斯
-town-demo-thalos-description = 一座南方城镇，中央街道连接各类商店、公会与恶心洞穴入口。
+town-demo-zul-name = 祖尔
+town-demo-zul-description = 山地中的城镇，商店散布在岩壁间，北方三塔被熔岩环绕。
+floor-demo-zul-name = 祖尔
+terrain-demo-jeweler-entrance-name = 珠宝店
+terrain-demo-jeweler-entrance-description = 岩壁间的珠宝店入口。
+terrain-demo-dragonskin-entrance-name = 龙皮专卖店
+terrain-demo-dragonskin-entrance-description = 岩壁间的龙皮专卖店入口。
+shop-demo-zul-jeweler-name = 珠宝店
+shop-demo-zul-jeweler-description = 甜美的达兰娜出售戒指与项链，也收购其他有价值的物品。
+shop-owner-demo-zul-dalana-name = 甜美的达兰娜
+shop-demo-zul-dragonskin-name = 龙皮百货
+shop-demo-zul-dragonskin-description = 贝奥武夫出售龙鳞甲与龙皮装备，也收购其他有价值的物品。
+shop-owner-demo-zul-beowulf-name = 贝奥武夫
+terrain-demo-chaos-tower-entrance-name = 混沌之塔
+terrain-demo-chaos-tower-entrance-description = 熔岩环绕的混沌之塔入口，可在塔内治疗突变。
+terrain-demo-nature-tower-entrance-name = 自然之塔
+terrain-demo-nature-tower-entrance-description = 熔岩环绕的自然之塔入口，可在塔内接受平衡仪式。
+town-demo-thalos-description = 一座南方城镇，围墙内分布着商店与公会，东侧荒野通向恶心洞穴。
 floor-demo-thalos-name = 萨洛斯
 shop-demo-thalos-inn-name = 旅店
 shop-demo-thalos-inn-description = 巴尔萨泽在这里出售食物和饮料，提供住宿，并安排前往已访问城镇的传送。
@@ -667,7 +689,7 @@ town-facility-demo-thalos-museum-description = 单独陈列普通藏品的博物
 town-facility-demo-thalos-library-name = 图书馆
 town-facility-demo-thalos-library-description = 伊本·赫勒敦在这里研究和鉴定物品，并提供城镇商店纵览。
 town-facility-demo-thalos-library-owner-name = 伊本·赫勒敦
-town-facility-demo-thalos-library-overview = 萨洛斯设有十种标准商店、共享的家、博物馆、图书馆、赏金事务所、武器大师、四座职业或领域设施、宫殿与皇家书院；恶心洞穴入口位于城内。
+town-facility-demo-thalos-library-overview = 萨洛斯设有十家商店、共享的家、博物馆、图书馆、赏金事务所、武器大师、战士公会、巫术之塔、生命神殿、圣武士公会、宫殿与皇家书院。黑暗学院任务会暂时封闭博物馆；恶心洞穴入口位于东侧荒野。
 town-facility-demo-thalos-bounty-office-name = 赏金事务所
 town-facility-demo-thalos-bounty-office-description = 公布今日通缉与独特怪名单，接收目标遗骸，并委派地下城悬赏任务。
 town-facility-demo-thalos-bounty-office-owner-name = 卡利尔
@@ -680,9 +702,8 @@ town-facility-demo-thalos-warrior-guild-owner-name = 阿拉肖
 town-facility-demo-thalos-life-temple-name = 生命神殿
 town-facility-demo-thalos-life-temple-description = 雷德尔·菲纳希尔提供治疗与属性恢复，并为生命领域使用者提供优惠。
 town-facility-demo-thalos-life-temple-owner-name = 雷德尔·菲纳希尔
-town-facility-demo-thalos-archer-guild-name = 弓箭手公会
-town-facility-demo-thalos-archer-guild-description = 伊克兰为弓箭手强化弹药与弓。
-town-facility-demo-thalos-archer-guild-owner-name = 伊克兰
+terrain-demo-town-arena-entrance-name = 竞技场
+terrain-demo-town-arena-entrance-description = 竞技场的大门；当前没有开放服务。
 town-facility-demo-thalos-paladin-guild-name = 圣武士公会
 town-facility-demo-thalos-paladin-guild-description = 基亚拉为圣武士强化护甲并提供治疗。
 town-facility-demo-thalos-paladin-guild-owner-name = 基亚拉
@@ -9934,3 +9955,107 @@ item-demo-bloodrip-name = 『嗜血裂杀』
 item-demo-bloodrip-description = 这把武器注入了第一代鲜血骑士的灵魂。当心！它渴望鲜血，甚至是挥舞者的鲜血！但对于那些走在血色之路上的人来说，没有比这更好的武器了。
 device-activation-c3-piercing-shot-name = 穿透射击
 device-activation-c3-charge-name = 冲锋
+item-demo-black-dragon-scale-mail-name = 黑龙鳞甲
+item-demo-black-dragon-scale-mail-description = 一套乌黑的鳞甲，任何金属或木材都无法穿透它。
+
+item-demo-blue-dragon-scale-mail-name = 蓝龙鳞甲
+item-demo-blue-dragon-scale-mail-description = 一套如蓝宝石般湛蓝的鳞甲，当你在其中活动时，它会散发出诡异的火花和闪光。
+
+item-demo-white-dragon-scale-mail-name = 白龙鳞甲
+item-demo-white-dragon-scale-mail-description = 一套鳞甲，闪烁着冰冷的霜白色光芒。即使只是看着它，你的脊背也会感到一阵战栗。
+
+item-demo-red-dragon-scale-mail-name = 红龙鳞甲
+item-demo-red-dragon-scale-mail-description = 一套鳞甲，蕴含着所有燃烧过的火焰的红色。当你穿上这套盔甲时，旧烧伤的疤痕组织会隐隐作痛。
+
+item-demo-green-dragon-scale-mail-name = 绿龙鳞甲
+item-demo-green-dragon-scale-mail-description = 一套在病态绿色中闪闪发光的鳞甲。
+
+item-demo-pseudo-dragon-scale-mail-name = 伪龙鳞甲
+item-demo-pseudo-dragon-scale-mail-description = 它能随机喷吐强光或暗黑。
+device-activation-e5-breathe-one-shining-name = 喷吐
+
+item-demo-bronze-dragon-scale-mail-name = 青铜龙鳞甲
+item-demo-bronze-dragon-scale-mail-description = 一套鳞甲，闪耀着华丽的青铜雕刻光芒。当你仔细观察其表面，越是端详那些如同迷宫般的螺纹和线条时，你就越无法理解它们。
+
+item-demo-silver-dragon-scale-mail-name = 银龙鳞甲
+item-demo-silver-dragon-scale-mail-description = 一套如镜面般银亮的鳞甲。当你注视这件物品的质量时，你会感到一种巨大的宁静降临在身上。
+
+item-demo-balance-dragon-scale-mail-name = 平衡龙鳞甲
+item-demo-balance-dragon-scale-mail-description = 一套鳞甲。粗看之下是毫无特征的灰色，但如果仔细观察，就会发现其虹彩中层层叠叠的图案，这些图案随着被坚固锁链束缚的能量而悸动着。
+device-activation-e5-breathe-one-balance-name = 喷吐
+
+item-demo-power-dragon-scale-mail-name = 力量龙鳞甲
+item-demo-power-dragon-scale-mail-description = 一套有着各种颜色鳞片的盔甲，被一团光环所环绕。那是完美的元素与空灵力量，它们不受羁绊却又不可分割地交织在一起，并被彻底掌控。元素与空灵。
+
+town-facility-demo-zul-sorcery-tower-name = 巫术之塔
+town-facility-demo-zul-sorcery-tower-description = 为旅人鉴定所有携带物品，咒术领域修习者享有优惠。
+town-facility-demo-zul-sorcery-tower-owner-name = 塔尼斯提尔
+
+town-facility-demo-zul-chaos-tower-name = 混沌之塔
+town-facility-demo-zul-chaos-tower-description = 治疗可移除的变异；兽化人为会员，混沌领域修习者享有塔主优惠。
+town-facility-demo-zul-chaos-tower-owner-name = 泽诺
+
+town-facility-demo-zul-nature-tower-name = 自然之塔
+town-facility-demo-zul-nature-tower-description = 举行平衡仪式，按当前身份与领域重新生成八项美德，并将数值归零。
+town-facility-demo-zul-nature-tower-owner-name = 乔什
+
+# Zul quest 77 and rewards, RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c.
+item-demo-baseball-bat-name = 棒球棒
+item-demo-baseball-bat-description = 棒球棒
+item-activation-demo-sotkamo-name = 恢复
+item-demo-sotkamo-name = 索特卡莫的
+item-demo-sotkamo-description = 当你握住并挥舞这根古老的木棒时，你感觉自己非常敏捷，
+    而且不受时间流逝的影响。不过，如果它当初被设计成是用来敲碎
+    你敌人的脑袋就好了……
+item-demo-visiting-team-name = 客队的
+item-demo-visiting-team-description = 这是你在祖尔（Zul）冒险的纪念品，你猜它要么是属于某个
+    奇怪法师的，要么是从时空洞里掉出来的。
+item-demo-superbat-name = 『超级球棒』
+item-demo-superbat-description = 它是用被坠落陨石砸断的树枝雕刻而成的。
+    （你不确定这是否赋予了它任何神秘的超能力，但你确实
+    希望如此。）
+floor-demo-zul-eddies-name = 时空连续体中的漩涡 (祖尔)
+task-demo-zul-eddies-name = 时空连续体中的漩涡 (祖尔)
+terrain-demo-zul-eddies-entry-name = 时空连续体中的漩涡 (祖尔)
+terrain-demo-zul-eddies-entry-description = 时空连续体中的漩涡 (祖尔)
+
+task-demo-zul-eddies-description = 不幸的是，由于一群在不久前搬来的奇怪时间法师，祖尔（Zul）
+    和外界之间可靠的传送变得不可能了。他们的实验扭曲了我们
+    城镇周围的时空连续体。我们或许可以用咒术修复它，但按目前
+    的情况来看，这毫无意义——明天它只会再次被搞得一团糟。
+    那些时间法师既拒绝离开，也拒绝老实守规矩，
+    而且他们人数太多，我们无法用武力把他们赶出城镇。
+    我们需要像你这样伟大英雄的帮助，我希望你能
+    在他们打盹的时候抓住他们。
+    （时空连续体里的漩涡致敬了银河系漫游指南）
+task-demo-zul-eddies-completed-description = 是的，我听说了你的成功；这里的消息传得很快。感谢你的
+    帮助，现在我们可以再次传送到其他城镇了，而不必担心降落
+    在错误的星球或错误的世纪。当我们出去欣赏你的工作成果并
+    抚平时空连续体时，我发现了这个奇怪的物体；
+    我不确定它是什么，但它看起来像某种木棒。我们用不上它，
+    请把它作为纪念品和感谢的礼物收下。
+task-demo-zul-eddies-failed-description = 太糟糕了，全镇的人都指望你呢。
+
+task-demo-zul-sorcery-node-name = 咒术节点 (祖尔)
+floor-demo-zul-sorcery-node-name = 咒术节点 (祖尔)
+terrain-demo-zul-sorcery-node-entry-name = 咒术节点 (祖尔)
+task-demo-zul-sorcery-node-description = 咒术法师们在附近的一片潮湿区域发现了一个神奇的咒术节点。你必须去寻找那个节点并消灭它的守卫，这样咒术之塔就能夺取节点的神秘能量。
+task-demo-zul-sorcery-node-completed-description = 你做得很好。
+task-demo-zul-sorcery-node-failed-description = 滚吧，无能的蠢货！神秘节点的维度能量已经消散，永远失去了！你本有机会，却把差事搞砸了。
+terrain-demo-zul-sorcery-node-entry-description = 咒术法师们在附近的一片潮湿区域发现了一个神奇的咒术节点。你必须去寻找那个节点并消灭它的守卫，这样咒术之塔就能夺取节点的神秘能量。
+task-demo-zul-chaos-node-name = 混沌节点 (祖尔)
+floor-demo-zul-chaos-node-name = 混沌节点 (祖尔)
+terrain-demo-zul-chaos-node-entry-name = 混沌节点 (祖尔)
+task-demo-zul-chaos-node-description = 混沌法师们在附近的一座火山里发现了一个神奇的混沌节点。你必须去寻找那个节点并消灭它的守卫，这样混沌塔就能夺取节点的神秘能量。
+task-demo-zul-chaos-node-completed-description = 你做得很好。
+task-demo-zul-chaos-node-failed-description = 滚吧，无能的蠢货！神秘节点的维度能量已经消散，永远失去了！你本有机会，却把差事搞砸了。
+terrain-demo-zul-chaos-node-entry-description = 混沌法师们在附近的一座火山里发现了一个神奇的混沌节点。你必须去寻找那个节点并消灭它的守卫，这样混沌塔就能夺取节点的神秘能量。
+task-demo-zul-nature-node-name = 自然节点 (祖尔)
+floor-demo-zul-nature-node-name = 自然节点 (祖尔)
+terrain-demo-zul-nature-node-entry-name = 自然节点 (祖尔)
+task-demo-zul-nature-node-description = 自然法师们在附近的一片森林里发现了一个神奇的自然节点。你必须去寻找那个节点并消灭它的守卫，这样自然之塔就能夺取节点的神秘能量。
+task-demo-zul-nature-node-completed-description = 你做得很好。一本强大的法术书正在外面等着你。
+task-demo-zul-nature-node-failed-description = 滚吧，无能的蠢货！神秘节点的维度能量已经消散，永远失去了！你本有机会，却把差事搞砸了。
+terrain-demo-zul-nature-node-entry-description = 自然法师们在附近的一片森林里发现了一个神奇的自然节点。你必须去寻找那个节点并消灭它的守卫，这样自然之塔就能夺取节点的神秘能量。
+item-demo-armageddon-tome-name = [末日巨著]
+item-demo-armageddon-tome-description = [末日巨著]

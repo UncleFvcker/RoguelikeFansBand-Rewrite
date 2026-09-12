@@ -132,10 +132,12 @@ test("instance artifact names retain their source text in either locale", () => 
   localization.setLocale("en-US");
 });
 
-test("Fast Recovery uses the localized regeneration status name", () => {
+test("regeneration and levitation use localized status names", () => {
   assert.equal(formatter.statusName("rfb.status.regeneration"), "regeneration");
+  assert.equal(formatter.statusName("rfb.status.levitation"), "Levitation");
   localization.setLocale("zh-CN");
   assert.equal(formatter.statusName("rfb.status.regeneration"), "再生");
+  assert.equal(formatter.statusName("rfb.status.levitation"), "悬浮");
   localization.setLocale("en-US");
 });
 
@@ -905,7 +907,7 @@ test("inn meals, stays and travel use focused bilingual messages", () => {
       messageKey: "inn-travel-unavailable",
       args: { reason: "town-unvisited" },
     }),
-    "无法从旅店出发：只能前往亲自到访过且设有旅店的城镇。",
+    "无法传送到城镇：只能前往亲自到访过且已开放传送的城镇。",
   );
   localization.setLocale("en-US");
   assert.equal(
@@ -914,7 +916,7 @@ test("inn meals, stays and travel use focused bilingual messages", () => {
       messageKey: "inn-travel-completed",
       args: { cost: "500", balance: "125" },
     }),
-    "You depart from the inn and arrive at your destination. Paid 500 gold; balance 125.",
+    "You arrive at your destination. Paid 500 gold; balance 125.",
   );
 });
 

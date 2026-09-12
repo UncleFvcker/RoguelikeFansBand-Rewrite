@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/shop.schema.json",
+  "formatVersion": 1,
+  "id": "demo.shop.zul-dragonskin",
+  "nameKey": "shop-demo-zul-dragonskin-name",
+  "descriptionKey": "shop-demo-zul-dragonskin-description",
+  "townId": "demo.town.zul",
+  "category": "dragon",
+  "entrancePosition": {"x":58,"y":30},
+  "entranceTerrainId": "demo.terrain.dragonskin-entrance",
+  "owner": {
+    "id": "demo.shop-owner.zul-beowulf",
+    "nameKey": "shop-owner-demo-zul-beowulf-name",
+    "raceId": "demo.race.rfb-human",
+    "greedPercent": 110,
+    "purchasePriceCap": 50000
+  },
+  "stock": [],
+  "stockGenerationTableId": "demo.loot-table.base-items",
+  "maintenance": {"intervalWorldTicks":10000}
+}

@@ -248,7 +248,11 @@ export type TerrainInteractionDto = { kind: TerrainInteractionKindDto, direction
 
 export type TaskStatusKindDto = "abandoned" | "available" | "active" | "completed" | "failed" | "locked" | "paused" | "reward-available" | "taken";
 
-export type TaskStatusDto = { taskId: string, floorId: string, nameKey: string, descriptionKey?: string | null, sourceFacilityId?: string | null, hasItemReward: boolean, status: TaskStatusKindDto, current: number, required: number, stage: number, stages: number, retakesUsed: number, maxRetakes?: number | null, };
+export type TaskStatusDto = { taskId: string, floorId: string, nameKey: string, descriptionKey?: string | null, sourceFacilityId?: string | null, hasItemReward: boolean,
+/**
+ * Current membership restriction on accepting or claiming this task.
+ */
+unavailableReason?: string | null, status: TaskStatusKindDto, current: number, required: number, stage: number, stages: number, retakesUsed: number, maxRetakes?: number | null, };
 
 export type CellDto = { position: Position, terrainId: string, itemId: string | null, actorId: string | null, dangerLevel?: number | null, locations?: Array<WildernessLocationDto>, };
 
@@ -440,11 +444,11 @@ export type CampaignStateDto = { status: CampaignStatusDto, score: bigint, conqu
 
 export type TownDto = { id: string, nameKey: string, descriptionKey: string, floorId: string, visited: boolean, };
 
-export type ShopCategoryDto = "shroomery" | "general-store" | "armoury" | "weaponsmith" | "temple" | "alchemist" | "magic-shop" | "black-market" | "bookstore";
+export type ShopCategoryDto = "shroomery" | "general-store" | "armoury" | "weaponsmith" | "temple" | "alchemist" | "magic-shop" | "black-market" | "bookstore" | "jeweler" | "dragon";
 
 export type ShopOwnerDto = { id: string, nameKey: string, raceId: string, greedPercent: number, purchasePriceCap: number, priceFactorPercent: number, };
 
-export type ShopStockItemDto = { artifactName?: string | null, id: string, kindId: string, displayNameKey: string, quantity: number, inscription?: string | null, capturedActor?: CapturedActorDto | null, maximumQuantity: number, unitPrice: number, weightTenthsPound: number, fuel?: ItemFuelDto | null, charges?: ItemChargesDto | null, activation?: ItemActivationDto | null, enchantments?: ItemEnchantmentsDto, curse?: ItemCurseSeverityDto | null, permanentDestructionImmunities?: Array<ItemDestructionElementDto>, quality: ItemQualityDto, };
+export type ShopStockItemDto = { affixNameKeys?: Array<string>, artifactName?: string | null, id: string, kindId: string, displayNameKey: string, quantity: number, inscription?: string | null, capturedActor?: CapturedActorDto | null, maximumQuantity: number, unitPrice: number, weightTenthsPound: number, fuel?: ItemFuelDto | null, charges?: ItemChargesDto | null, activation?: ItemActivationDto | null, enchantments?: ItemEnchantmentsDto, curse?: ItemCurseSeverityDto | null, permanentDestructionImmunities?: Array<ItemDestructionElementDto>, quality: ItemQualityDto, };
 
 export type ShopSellQuoteDto = { itemId: string, kindId: string, unitPrice: number, maximumQuantity: number, unavailableReason?: string | null, };
 
@@ -458,7 +462,7 @@ export type HomeDto = { id: string, museum?: boolean, nameKey: string, descripti
 
 export type FacilityMembershipDto = "visitor" | "member" | "owner";
 
-export type FacilityServiceKindDto = "heal" | "restore-vitality" | "cure-mutation" | "enchant-weapon" | "enchant-armor" | "enchant-ammunition" | "enchant-bow" | "assess-armor" | "recall";
+export type FacilityServiceKindDto = "heal" | "restore-vitality" | "cure-mutation" | "balance-ritual" | "enchant-weapon" | "enchant-armor" | "enchant-ammunition" | "enchant-bow" | "assess-armor" | "recall";
 
 export type FacilityServiceTargetDto = { itemId: string, choices: Array<FacilityEnchantmentChoiceDto>, };
 
@@ -492,7 +496,7 @@ export type CasinoSessionDto = { game: CasinoGameDto, wager: number, startingGol
 
 export type CasinoRoundDto = { "type": "poker", cards: Array<number>, } | { "type": "craps", point: number, dice: [number, number], } | { "type": "finished", values: Array<number>, odds: number, payout: number, resultKey: string, };
 
-export type TaskServiceDto = { casino?: CasinoDto | null, id: string, nameKey: string, descriptionKey: string, ownerNameKey: string, entrancePosition: Position, entranceTerrainId: string, playerAtEntrance: boolean, identifyItemCost?: number | null, researchItemCost?: number | null, researchMonsterCost?: number | null, researchMonsters?: Array<ResearchMonsterDto>, teleportLevelCost?: number | null, teleportDungeons?: Array<TeleportDungeonDto>, identifyAllItemsCost?: number | null, innStayCost?: number | null, overviewMessageKey?: string | null, legalNameChangeCost?: number | null, membership: FacilityMembershipDto, serviceActions?: Array<FacilityServiceDto>, bountyOffice?: BountyOfficeDto | null, tasks: Array<TaskStatusDto>, };
+export type TaskServiceDto = { innTravelDestinations?: Array<InnTravelDestinationDto>, casino?: CasinoDto | null, id: string, nameKey: string, descriptionKey: string, ownerNameKey: string, entrancePosition: Position, entranceTerrainId: string, playerAtEntrance: boolean, identifyItemCost?: number | null, researchItemCost?: number | null, researchMonsterCost?: number | null, researchMonsters?: Array<ResearchMonsterDto>, teleportLevelCost?: number | null, teleportDungeons?: Array<TeleportDungeonDto>, identifyAllItemsCost?: number | null, innStayCost?: number | null, overviewMessageKey?: string | null, legalNameChangeCost?: number | null, membership: FacilityMembershipDto, serviceActions?: Array<FacilityServiceDto>, bountyOffice?: BountyOfficeDto | null, tasks: Array<TaskStatusDto>, };
 
 export type ResearchMonsterDto = { kindId: string, nameKey: string, glyph: string, level: number, unique: boolean, knowledge?: MonsterKindKnowledgeDto | null, };
 

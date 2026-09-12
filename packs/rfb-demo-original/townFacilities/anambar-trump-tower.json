@@ -12,6 +12,7 @@
   "serviceActions": [
     { "kind": "recall", "ownerCost": 0, "otherCost": 150 }
   ],
-  "entrancePosition": { "x": 8, "y": 9 },
-  "entranceTerrainId": "demo.terrain.trump-tower-entrance"
+  "entrancePosition": {"x":45,"y":46},
+  "entranceTerrainId": "demo.terrain.trump-tower-entrance",
+  "additionalEntrancePositions": [{"x":45,"y":47}]
 }

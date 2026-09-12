@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "items": [
+    {"sourceIndex": 139, "sourceId": "baseball-bat", "id": "baseball-bat"},
     {"sourceIndex": 75, "id": "poison-needle"},
     {"sourceIndex": 272, "sourceId": "metal-scale-mail", "id": "metal-scale-mail"},
     {"sourceIndex": 274, "sourceId": "double-ring-mail", "id": "double-ring-mail"},
@@ -142,6 +143,17 @@
     {"id":"gold-dragon-scale-mail","sourceId":"gold-dragon-scale-mail","sourceIndex":302},
     {"id":"chaos-dragon-scale-mail","sourceId":"chaos-dragon-scale-mail","sourceIndex":303},
     {"id":"mithril-shod-boots","sourceId":"pair-of-mithril-shod-boots","sourceIndex":209},
-    {"id":"iron-crown","sourceId":"iron-crown","sourceIndex":220}
+    {"id":"iron-crown","sourceId":"iron-crown","sourceIndex":220},
+    {"sourceIndex":292,"sourceId":"black-dragon-scale-mail","id":"black-dragon-scale-mail"},
+    {"sourceIndex":293,"sourceId":"blue-dragon-scale-mail","id":"blue-dragon-scale-mail"},
+    {"sourceIndex":294,"sourceId":"white-dragon-scale-mail","id":"white-dragon-scale-mail"},
+    {"sourceIndex":295,"sourceId":"red-dragon-scale-mail","id":"red-dragon-scale-mail"},
+    {"sourceIndex":296,"sourceId":"green-dragon-scale-mail","id":"green-dragon-scale-mail"},
+    {"sourceIndex":298,"sourceId":"pseudo-dragon-scale-mail","id":"pseudo-dragon-scale-mail"},
+    {"sourceIndex":300,"sourceId":"bronze-dragon-scale-mail","id":"bronze-dragon-scale-mail"},
+    {"sourceIndex":301,"sourceId":"silver-dragon-scale-mail","id":"silver-dragon-scale-mail"},
+    {"sourceIndex":304,"sourceId":"balance-dragon-scale-mail","id":"balance-dragon-scale-mail"},
+    {"sourceIndex":305,"sourceId":"power-dragon-scale-mail","id":"power-dragon-scale-mail"},
+    {"sourceIndex":515,"sourceId":"armageddon-tome","id":"armageddon-tome"}
   ]
 }

@@ -129,7 +129,11 @@ fn allocation_level(game: &mut Game, context: &LootContext, mode: ItemGeneration
     level
 }
 
-fn quality_candidate(game: &Game, mode: ItemGenerationMode, item: &ItemDefinition) -> bool {
+pub(super) fn quality_candidate(
+    game: &Game,
+    mode: ItemGenerationMode,
+    item: &ItemDefinition,
+) -> bool {
     if !is_good(mode) && !is_great(mode) {
         return true;
     }
@@ -315,7 +319,7 @@ pub(super) fn select_entry(
         })
     });
     // get_obj_num_prep applies the hook before get_obj_num rolls its boost.
-    let mut weights = entries
+    let weights = entries
         .iter()
         .map(|entry| {
             let item = game
@@ -339,6 +343,31 @@ pub(super) fn select_entry(
             }
         })
         .collect::<Vec<_>>();
+    select_prepared_entry(game, context, mode, entries, weights)
+}
+
+/// Shops and scripted room objects use their kind hook without _choose_obj_kind.
+pub(in crate::game) fn select_filtered_entry(
+    game: &mut Game,
+    context: &LootContext,
+    entries: &[LootEntryDefinition],
+) -> Option<usize> {
+    select_prepared_entry(
+        game,
+        context,
+        ItemGenerationMode::Ordinary,
+        entries,
+        entries.iter().map(|entry| entry.weight).collect(),
+    )
+}
+
+fn select_prepared_entry(
+    game: &mut Game,
+    context: &LootContext,
+    mode: ItemGenerationMode,
+    entries: &[LootEntryDefinition],
+    mut weights: Vec<u32>,
+) -> Option<usize> {
     let level = allocation_level(game, context, mode);
     let dungeon = game
         .content
@@ -1543,6 +1572,7 @@ mod tests {
         let path =
             std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
         let mut content = rfb_content::compile_pack_dir(&path).unwrap().content;
+        crate::game::tests::support::preserve_authored_loot_pool(&mut content);
         let base = content
             .loot_tables
             .iter_mut()

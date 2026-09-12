@@ -1379,6 +1379,8 @@ impl Game {
             .filter(|position| {
                 towns
                     .iter()
+                    // RFB wild.c excludes Zul from ordinary town encounter suppression.
+                    .filter(|town| town.town_id != "demo.town.zul")
                     .all(|town| town.view_to_local(*position).is_none())
             })
             .collect()
@@ -1856,6 +1858,105 @@ impl Game {
         }
     }
 
+    fn town_task_terrain_id<'a>(
+        &self,
+        rule: &'a rfb_content::TownTaskTerrainOverrideDefinition,
+    ) -> &'a str {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world exists");
+        rule.cases
+            .iter()
+            .find(|case| {
+                super::tasks::projected_task_state(world, &self.task_states, &case.task_id)
+                    .is_some_and(|state| {
+                        case.statuses
+                            .iter()
+                            .any(|status| super::tasks::task_status_matches(state.status, *status))
+                    })
+            })
+            .map_or(&rule.default_terrain_id, |case| &case.terrain_id)
+    }
+
+    pub(super) fn apply_initial_town_task_terrain(
+        &self,
+        floor: &ProceduralFloorDefinition,
+        terrain: &mut [String],
+    ) {
+        for rule in floor
+            .inline_map
+            .iter()
+            .flat_map(|map| &map.task_terrain_overrides)
+        {
+            let terrain_id = self.town_task_terrain_id(rule);
+            for position in &rule.positions {
+                terrain[usize::from(position.y) * usize::from(floor.width)
+                    + usize::from(position.x)] = terrain_id.to_owned();
+            }
+        }
+    }
+
+    pub(super) fn refresh_town_task_terrain(&mut self, changed: &mut BTreeSet<Position>) -> bool {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world exists");
+        let mut updates = Vec::new();
+        for floor in &world.procedural_floors {
+            for rule in floor
+                .inline_map
+                .iter()
+                .flat_map(|map| &map.task_terrain_overrides)
+            {
+                let terrain_id = self.town_task_terrain_id(rule);
+                for position in &rule.positions {
+                    updates.push((
+                        floor.id.clone(),
+                        floor.width,
+                        *position,
+                        terrain_id.to_owned(),
+                        floor.floor_terrain_id.clone(),
+                    ));
+                }
+            }
+        }
+        let mut visible_changed = false;
+        for (floor_id, width, local, mut terrain_id, floor_terrain_id) in updates {
+            let town_id = self
+                .town_for_floor(&floor_id)
+                .expect("task terrain belongs to a town")
+                .id
+                .clone();
+            let visible = self
+                .town_local_to_active_position(&town_id, position_from_content(local))
+                .and_then(|position| self.index(position).map(|index| (position, index)));
+            // A blocked return square uses ordinary floor until the player leaves.
+            // Do not preserve an old service entrance while its task condition is closed.
+            if visible.is_some_and(|(position, _)| position == self.player.position)
+                && !self
+                    .content
+                    .terrain(&terrain_id)
+                    .expect("validated task terrain")
+                    .walkable
+            {
+                terrain_id = floor_terrain_id;
+            }
+            if let Some(stored) = self.stored_floors.get_mut(&floor_id) {
+                stored.terrain[usize::from(local.y) * usize::from(width) + usize::from(local.x)] =
+                    terrain_id.clone();
+            }
+            if let Some((position, index)) = visible
+                && self.terrain[index] != terrain_id
+            {
+                self.terrain[index] = terrain_id;
+                changed.insert(position);
+                visible_changed = true;
+            }
+        }
+        visible_changed
+    }
+
     fn town_template_terrain(&self, town_id: &str) -> (u16, u16, Vec<String>) {
         let world = self
             .content
@@ -1890,6 +1991,7 @@ impl Game {
                     + usize::from(position.x)] = terrain_override.terrain_id.clone();
             }
         }
+        self.apply_initial_town_task_terrain(floor, &mut terrain);
         (floor.width, floor.height, terrain)
     }
 
@@ -2575,17 +2677,36 @@ mod tests {
         let mut game =
             Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
         game.wilderness_position = Some(Position { x: 26, y: 39 });
-        game.wilderness_view_offset = Position::default();
+        game.wilderness_view_offset = Position { x: 1, y: 0 };
         let view = wilderness_view_positions();
         let view_cell_count = view.len();
 
         let allowed = game.wilderness_positions_outside_visible_towns(view);
 
-        assert_eq!(allowed.len(), view_cell_count - 23 * 11);
-        assert!(!allowed.contains(&Position { x: 78, y: 23 }));
-        assert!(!allowed.contains(&Position { x: 100, y: 33 }));
-        assert!(allowed.contains(&Position { x: 77, y: 23 }));
-        assert!(allowed.contains(&Position { x: 101, y: 33 }));
+        assert_eq!(allowed.len(), view_cell_count - 132 * 66);
+        assert!(!allowed.contains(&Position { x: 0, y: 0 }));
+        assert!(!allowed.contains(&Position { x: 131, y: 65 }));
+        assert!(allowed.contains(&Position { x: 132, y: 0 }));
+        assert!(allowed.contains(&Position { x: 197, y: 65 }));
+    }
+
+    #[test]
+    fn zul_remains_exposed_to_wilderness_monsters_including_scrolled_views() {
+        let mut game = Game::new_with_build(42, "demo.build.warrior").unwrap();
+        game.wilderness_position = Some(Position { x: 77, y: 6 });
+        assert_eq!(game.wilderness_danger_level(Position { x: 77, y: 6 }), 20);
+        assert_eq!(
+            game.wilderness_initial_monster_rolls_at(Position { x: 77, y: 6 }),
+            10
+        );
+        for offset in [Position { x: 0, y: 0 }, Position { x: 1, y: 1 }] {
+            game.wilderness_view_offset = offset;
+            let view = wilderness_view_positions();
+            assert_eq!(
+                game.wilderness_positions_outside_visible_towns(view.clone()),
+                view
+            );
+        }
     }
 
     #[test]
@@ -2641,18 +2762,34 @@ mod tests {
         let evolved = game.cached_wilderness_view_terrain(anambar);
 
         let width = usize::from(WILDERNESS_VIEW_WIDTH);
+        let fixed = game
+            .content
+            .world(&game.world_id)
+            .unwrap()
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.anambar")
+            .unwrap()
+            .inline_map
+            .as_ref()
+            .unwrap()
+            .terrain_overrides
+            .iter()
+            .flat_map(|group| &group.positions)
+            .map(|position| (usize::from(position.x), usize::from(position.y)))
+            .collect::<BTreeSet<_>>();
         let mut outside_changed = false;
         for y in 0..usize::from(WILDERNESS_VIEW_HEIGHT) {
             for x in 0..width {
                 let index = y * width + x;
-                if (78..101).contains(&x) && (23..34).contains(&y) {
+                if fixed.contains(&(x, y)) {
                     assert_eq!(evolved[index], initial[index]);
                 } else if evolved[index] != initial[index] {
                     outside_changed = true;
                 }
             }
         }
-        assert_eq!(initial[33 * width + 99], "demo.terrain.outpost-gate");
+        assert_eq!(initial[33 * width + 99], "demo.terrain.floor");
         assert!(outside_changed);
     }
 
@@ -2697,7 +2834,7 @@ mod tests {
             assert!(
                 after
                     .iter()
-                    .any(|terrain_id| terrain_id == "demo.terrain.outpost-wall")
+                    .any(|terrain_id| terrain_id == "demo.terrain.permanent-wall")
             );
 
             for y in 0..i32::from(WILDERNESS_VIEW_HEIGHT) {
@@ -3048,10 +3185,10 @@ mod tests {
             .expect("visible Anambar slice should initialize");
 
         let anambar = &game.stored_floors["demo.floor.anambar"];
-        assert_eq!((anambar.width, anambar.height), (23, 11));
+        assert_eq!((anambar.width, anambar.height), (198, 66));
         assert_eq!(
-            game.terrain_at(Position { x: 144, y: 23 }),
-            "demo.terrain.outpost-wall"
+            game.terrain_at(Position { x: 138, y: 45 }),
+            "demo.terrain.library-entrance"
         );
     }
 

@@ -1,0 +1,85 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 30000,
+  "descriptionKey": "item-demo-black-dragon-scale-mail-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effectProgramId": "rfb.effect.dragon-breath-292",
+        "id": "rfb.device-activation.dragon-breath-292",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-breathe-acid-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 300
+        },
+        "rfbValue": 6000,
+        "target": {
+          "modes": [
+            "direction"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -2
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "glyph": "[",
+  "id": "demo.item.black-dragon-scale-mail",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 50
+  },
+  "mogaminatorRare": true,
+  "nameKey": "item-demo-black-dragon-scale-mail-name",
+  "resistances": {
+    "acid": "resistant"
+  },
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 292,
+    "tval": 38,
+    "sval": 1
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID"
+    ],
+    "pval": 0,
+    "toArmor": 10
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility",
+    "activatable"
+  ],
+  "weightTenthsPound": 200
+}

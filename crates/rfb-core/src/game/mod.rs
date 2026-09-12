@@ -235,7 +235,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 126;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 127;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -2545,9 +2545,11 @@ impl Game {
             self.bind_external_tasks_to_floor_transitions(&events);
         }
 
-        let full_visibility_refresh = duelist_completion
-            .as_ref()
-            .is_some_and(|completion| completion.refresh_visibility)
+        let task_terrain_changed = self.refresh_town_task_terrain(&mut changed);
+        let full_visibility_refresh = task_terrain_changed
+            || duelist_completion
+                .as_ref()
+                .is_some_and(|completion| completion.refresh_visibility)
             || self.player.position != player_position_before_command
             || self.current_floor_id != floor_before_command
             || self.player_light_radius() != light_radius_before_command

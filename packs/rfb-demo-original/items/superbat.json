@@ -1,0 +1,86 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "glyph": "\\",
+  "equipmentSlot": "weapon",
+  "maxStack": 1,
+  "id": "demo.item.superbat",
+  "nameKey": "item-demo-superbat-name",
+  "descriptionKey": "item-demo-superbat-description",
+  "generationLevel": 60,
+  "weightTenthsPound": 20,
+  "baseValue": 40000,
+  "tags": [
+    "artifact",
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 345,
+    "baseItemKindId": "demo.item.baseball-bat",
+    "instant": true,
+    "rarityOneIn": 1
+  },
+  "weaponProficiencyBaseItemId": "demo.item.baseball-bat",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 4,
+    "toHit": 14,
+    "toDamage": 16
+  },
+  "modifiers": {
+    "strength": 3,
+    "dexterity": 3,
+    "charisma": 3,
+    "intelligence": -3
+  },
+  "passives": [
+    "reflects-bolts",
+    "regeneration",
+    "telepathy"
+  ],
+  "resistances": {
+    "nexus": "resistant",
+    "fear": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "equipmentBonuses": {
+    "lifePercent": 9
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "DEC_INT",
+      "DEX",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INSTA_ART",
+      "LIFE",
+      "QUESTITEM",
+      "REFLECT",
+      "REGEN",
+      "RES_FEAR",
+      "RES_NEXUS",
+      "SHOW_MODS",
+      "STR",
+      "TELEPATHY"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  }
+}

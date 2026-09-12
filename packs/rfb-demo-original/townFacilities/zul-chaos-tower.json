@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.zul-chaos-tower",
+  "nameKey": "town-facility-demo-zul-chaos-tower-name",
+  "descriptionKey": "town-facility-demo-zul-chaos-tower-description",
+  "townId": "demo.town.zul",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-zul-chaos-tower-owner-name",
+  "ownerRealmIds": [
+    "chaos"
+  ],
+  "entrancePosition": {
+    "x": 57,
+    "y": 16
+  },
+  "entranceTerrainId": "demo.terrain.chaos-tower-entrance",
+  "memberRaceIds": [
+    "rfb-legacy.race.beastman"
+  ],
+  "serviceActions": [
+    {
+      "kind": "cure-mutation",
+      "ownerCost": 1000,
+      "otherCost": 5000
+    }
+  ],
+  "taskIds": [
+    "demo.task.zul-chaos-node"
+  ]
+}

@@ -201,6 +201,17 @@
     { "sourceIndex": 601, "sourceName": "Brass Lantern", "sourceId": "brass-lantern", "itemId": "demo.item.brass-lantern", "status": "active", "contract": "contract-v159-fuel-light" },
     { "sourceIndex": 602, "sourceName": "Flask of oil", "sourceId": "flask-of-oil", "itemId": "demo.item.flask-of-oil", "status": "active", "contract": "contract-v159-fuel-light" },
     { "sourceIndex": 702, "sourceName": "Shard of Pottery", "sourceId": "shard-of-pottery", "itemId": "demo.item.shard-of-pottery", "status": "active", "contract": "class-archer-ammunition-crafting" },
-    { "sourceIndex": 703, "sourceName": "Broken Stick", "sourceId": "broken-stick", "itemId": "demo.item.broken-stick", "status": "active", "contract": "class-archer-ammunition-crafting" }
+    { "sourceIndex": 703, "sourceName": "Broken Stick", "sourceId": "broken-stick", "itemId": "demo.item.broken-stick", "status": "active", "contract": "class-archer-ammunition-crafting" },
+    {"sourceIndex":292,"sourceName":"Black Dragon Scale Mail~","sourceId":"black-dragon-scale-mail","itemId":"demo.item.black-dragon-scale-mail","status":"active","contract":"zul-z2-implementation-pending-validation"},
+    {"sourceIndex":293,"sourceName":"Blue Dragon Scale Mail~","sourceId":"blue-dragon-scale-mail","itemId":"demo.item.blue-dragon-scale-mail","status":"active","contract":"zul-z2-implementation-pending-validation"},
+    {"sourceIndex":294,"sourceName":"White Dragon Scale Mail~","sourceId":"white-dragon-scale-mail","itemId":"demo.item.white-dragon-scale-mail","status":"active","contract":"zul-z2-implementation-pending-validation"},
+    {"sourceIndex":295,"sourceName":"Red Dragon Scale Mail~","sourceId":"red-dragon-scale-mail","itemId":"demo.item.red-dragon-scale-mail","status":"active","contract":"zul-z2-implementation-pending-validation"},
+    {"sourceIndex":296,"sourceName":"Green Dragon Scale Mail~","sourceId":"green-dragon-scale-mail","itemId":"demo.item.green-dragon-scale-mail","status":"active","contract":"zul-z2-implementation-pending-validation"},
+    {"sourceIndex":298,"sourceName":"Pseudo Dragon Scale Mail~","sourceId":"pseudo-dragon-scale-mail","itemId":"demo.item.pseudo-dragon-scale-mail","status":"active","contract":"zul-z2-implementation-pending-validation"},
+    {"sourceIndex":300,"sourceName":"Bronze Dragon Scale Mail~","sourceId":"bronze-dragon-scale-mail","itemId":"demo.item.bronze-dragon-scale-mail","status":"active","contract":"zul-z2-implementation-pending-validation"},
+    {"sourceIndex":301,"sourceName":"Silver Dragon Scale Mail~","sourceId":"silver-dragon-scale-mail","itemId":"demo.item.silver-dragon-scale-mail","status":"active","contract":"zul-z2-implementation-pending-validation"},
+    {"sourceIndex":304,"sourceName":"Balance Dragon Scale Mail~","sourceId":"balance-dragon-scale-mail","itemId":"demo.item.balance-dragon-scale-mail","status":"active","contract":"zul-z2-implementation-pending-validation"},
+    {"sourceIndex":305,"sourceName":"Power Dragon Scale Mail~","sourceId":"power-dragon-scale-mail","itemId":"demo.item.power-dragon-scale-mail","status":"active","contract":"zul-z2-implementation-pending-validation"},
+    {"sourceIndex":515,"sourceName":"[Armageddon Tome]","sourceId":"armageddon-tome","itemId":"demo.item.armageddon-tome","status":"active","contract":"zul-z5-implementation-pending-validation"}
   ]
 }

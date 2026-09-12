@@ -95,6 +95,7 @@
         "heal",
         "restore-vitality",
         "cure-mutation",
+        "balance-ritual",
         "enchant-weapon",
         "enchant-armor",
         "enchant-ammunition",
@@ -103,6 +104,22 @@
         "recall"
       ],
       "type": "string"
+    },
+    "TownFacilityTeleportDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "price": {
+          "$ref": "#/$defs/TownFacilityPrice"
+        },
+        "requiredCompletedTaskId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "requiredCompletedTaskId",
+        "price"
+      ],
+      "type": "object"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
@@ -312,6 +329,17 @@
     },
     "townId": {
       "type": "string"
+    },
+    "townTeleport": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TownFacilityTeleportDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     }
   },
   "required": [

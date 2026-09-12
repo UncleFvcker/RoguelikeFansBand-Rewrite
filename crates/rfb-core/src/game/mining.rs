@@ -498,6 +498,19 @@ mod tests {
             game.rng = RfbRng::seeded(seed);
             let context = artifact_context(&game);
             let serial_before = game.next_item_instance_serial;
+            let mut expected = game.clone();
+            for _ in 0..20 {
+                let draft = expected.generate_one_loot_draft(
+                    &context,
+                    ItemGenerationMode::Artifact {
+                        no_fixed_artifact: false,
+                    },
+                );
+                assert!(draft.is_none_or(|draft| !formal_artifact(&expected, &draft)));
+            }
+            let expected_draft = expected
+                .generate_one_loot_draft(&context, ItemGenerationMode::Great)
+                .unwrap();
             let draft = game
                 .generate_mining_item_draft(
                     &context,
@@ -512,7 +525,9 @@ mod tests {
                     .item(&draft.kind_id)
                     .is_some_and(|item| !item.tags.iter().any(|tag| tag == "artifact"))
             );
-            assert_eq!(draft.quality, ItemQualityDto::Exceptional);
+            // The themed fallback may legitimately select a consumable without equipment quality.
+            assert_eq!(draft, expected_draft);
+            assert_eq!(game.rng, expected.rng);
             assert_eq!(game.next_item_instance_serial, serial_before);
             let position = game.player.position;
             let item = game

@@ -753,6 +753,9 @@ action-facility-overview = 城镇纵览
 action-facility-heal = 付钱治疗（{ $cost } 金币）
 action-facility-restore-vitality = 属性恢复（{ $cost } 金币）
 action-facility-cure-mutation = 治疗突变（{ $cost } 金币）
+action-facility-balance-ritual = 平衡仪式（{ $cost } 金币）
+facility-balance-ritual-description = 重新生成八项美德类型，并将所有美德数值归零。使用你当前的职业、种族和领域。
+facility-balance-ritual-performed = 你接受了平衡仪式。支付 { $cost } 金币，余额 { $balance }。
 action-facility-enchant-weapon = 强化武器
 action-facility-enchant-armor = 强化护甲
 action-facility-enchant-ammunition = 强化弹药
@@ -1394,3 +1397,5 @@ ability-target-element = 元素
 ability-element-target = 选择元素
 item-crafting-quantity-confirm = 这叠弹药数量超过 30，工艺有可能失败并消耗本次施法。继续吗？
 item-mundanity-resistance-confirm = 该物品上的所有抗性都将丢失。确定要继续吗？
+
+task-membership-required = 这项任务需要本塔会员或塔主资格。

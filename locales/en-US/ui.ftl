@@ -757,6 +757,9 @@ action-facility-overview = Town overview
 action-facility-heal = Pay for healing ({ $cost } gold)
 action-facility-restore-vitality = Restore vitality ({ $cost } gold)
 action-facility-cure-mutation = Cure mutation ({ $cost } gold)
+action-facility-balance-ritual = Ritual of Balance ({ $cost } gold)
+facility-balance-ritual-description = Rebuild all eight virtue types and reset their values to zero, using your current class, race, and realms.
+facility-balance-ritual-performed = You undergo the Ritual of Balance. Paid { $cost } gold; balance { $balance }.
 action-facility-enchant-weapon = Enchant weapon
 action-facility-enchant-armor = Enchant armor
 action-facility-enchant-ammunition = Enchant ammunition
@@ -1398,3 +1401,5 @@ ability-target-element = Element
 ability-element-target = Choose an element
 item-crafting-quantity-confirm = This stack has more than 30 missiles. Crafting can fail and consume the cast. Continue?
 item-mundanity-resistance-confirm = All resistances on this item will be lost. Continue?
+
+task-membership-required = This task requires membership or ownership of this tower.

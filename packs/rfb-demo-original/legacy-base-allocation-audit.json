@@ -1,7 +1,13 @@
 {
   "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits",
-  "allocationRowCount": 397,
+  "allocationRowCount": 408,
   "explicitItems": [
+    {
+      "itemId": "demo.item.aeglos",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
     {
       "itemId": "demo.item.amber",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
@@ -87,6 +93,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.ballista",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.bando-musha",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -123,13 +135,31 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.bloodrip",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.bloodspike",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.boromir",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.burdened-mail",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.caine",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -303,6 +333,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.excalipur",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.fell-rider",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -310,6 +346,12 @@
     },
     {
       "itemId": "demo.item.fingolfin",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.fiona",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -328,6 +370,12 @@
     },
     {
       "itemId": "demo.item.frost-ball-wand",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.gae-bulg",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -363,6 +411,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.grimtooth",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.gurthang",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -370,6 +424,12 @@
     },
     {
       "itemId": "demo.item.hades",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.hagen",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -405,6 +465,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.holcolleth",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.human-skeleton",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -414,6 +480,12 @@
       "itemId": "demo.item.identify-staff",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": 313,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.impaler",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
       "status": "explicit-only"
     },
     {
@@ -609,6 +681,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.rilia",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.rohirrim",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -669,6 +747,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.sotkamo",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.soulkeeper",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -706,6 +790,12 @@
     },
     {
       "itemId": "demo.item.stone-of-war",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.superbat",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -771,6 +861,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.totila",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.trifurcate-spear-of-wrath",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -783,6 +879,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.tuber",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.tuor",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -790,6 +892,12 @@
     },
     {
       "itemId": "demo.item.vagabond",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.visiting-team",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -2886,12 +2994,12 @@
     {
       "allocations": [],
       "hasNaturalAllocationRows": false,
-      "itemId": null,
+      "itemId": "demo.item.baseball-bat",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "INSTA_ART base; explicit artifact creation only",
       "sourceIndex": 139,
       "sourceName": "Baseball Bat",
-      "status": "not-imported",
+      "status": "explicit-only",
       "sval": 51,
       "tval": 21
     },
@@ -4999,12 +5107,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.black-dragon-scale-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 292,
       "sourceName": "Black Dragon Scale Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 1,
       "tval": 38
     },
@@ -5018,12 +5126,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.blue-dragon-scale-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 293,
       "sourceName": "Blue Dragon Scale Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 2,
       "tval": 38
     },
@@ -5037,12 +5145,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.white-dragon-scale-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 294,
       "sourceName": "White Dragon Scale Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 3,
       "tval": 38
     },
@@ -5056,12 +5164,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.red-dragon-scale-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 295,
       "sourceName": "Red Dragon Scale Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 4,
       "tval": 38
     },
@@ -5075,12 +5183,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.green-dragon-scale-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 296,
       "sourceName": "Green Dragon Scale Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 5,
       "tval": 38
     },
@@ -5113,12 +5221,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.pseudo-dragon-scale-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 298,
       "sourceName": "Pseudo Dragon Scale Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 10,
       "tval": 38
     },
@@ -5151,12 +5259,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.bronze-dragon-scale-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 300,
       "sourceName": "Bronze Dragon Scale Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 14,
       "tval": 38
     },
@@ -5170,12 +5278,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.silver-dragon-scale-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 301,
       "sourceName": "Silver Dragon Scale Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 15,
       "tval": 38
     },
@@ -5227,12 +5335,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.balance-dragon-scale-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 304,
       "sourceName": "Balance Dragon Scale Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 20,
       "tval": 38
     },
@@ -5246,12 +5354,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.power-dragon-scale-mail",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 305,
       "sourceName": "Power Dragon Scale Mail",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 30,
       "tval": 38
     },
@@ -8179,12 +8287,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.armageddon-tome",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 515,
       "sourceName": "[Armageddon Tome]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 3,
       "tval": 93
     },

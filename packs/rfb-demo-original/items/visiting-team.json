@@ -1,0 +1,80 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "glyph": "\\",
+  "equipmentSlot": "weapon",
+  "maxStack": 1,
+  "id": "demo.item.visiting-team",
+  "nameKey": "item-demo-visiting-team-name",
+  "descriptionKey": "item-demo-visiting-team-description",
+  "generationLevel": 60,
+  "weightTenthsPound": 20,
+  "baseValue": 50000,
+  "tags": [
+    "artifact",
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 344,
+    "baseItemKindId": "demo.item.baseball-bat",
+    "instant": true,
+    "rarityOneIn": 1
+  },
+  "weaponProficiencyBaseItemId": "demo.item.baseball-bat",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 4,
+    "toHit": 8,
+    "toDamage": 24
+  },
+  "modifiers": {
+    "dexterity": 2,
+    "speed": 2,
+    "charisma": -2
+  },
+  "passives": [
+    "reflects-bolts",
+    "sustain-dexterity"
+  ],
+  "resistances": {
+    "nexus": "resistant",
+    "sound": "resistant"
+  },
+  "statusImmunities": [],
+  "equipmentBonuses": {
+    "deviceSkill": 16
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "DEC_CHR",
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INSTA_ART",
+      "MAGIC_MASTERY",
+      "QUESTITEM",
+      "REFLECT",
+      "RES_NEXUS",
+      "RES_SOUND",
+      "SHOW_MODS",
+      "SPEED",
+      "STUN",
+      "SUST_DEX"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  }
+}

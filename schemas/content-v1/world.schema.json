@@ -259,9 +259,12 @@
     },
     "DungeonEntryTaskStatus": {
       "enum": [
+        "locked",
         "available",
+        "taken",
         "active",
         "paused",
+        "reward-available",
         "completed",
         "failed",
         "abandoned"
@@ -397,6 +400,27 @@
     "InlineFloorLootSpawnDefinition": {
       "additionalProperties": false,
       "properties": {
+        "forcedEgo": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InlineForcedEgoDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "generationDepth": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "id": {
           "type": "string"
         },
@@ -421,6 +445,13 @@
           "default": [],
           "items": {
             "$ref": "#/$defs/ActorSpawn"
+          },
+          "type": "array"
+        },
+        "friendGroupLeaderIds": {
+          "default": [],
+          "items": {
+            "type": "string"
           },
           "type": "array"
         },
@@ -478,9 +509,23 @@
             "null"
           ]
         },
+        "taskTerrainOverrides": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TownTaskTerrainOverrideDefinition"
+          },
+          "type": "array"
+        },
         "terrainOverrides": {
           "items": {
             "$ref": "#/$defs/InlineTerrainOverrideDefinition"
+          },
+          "type": "array"
+        },
+        "vaultPositions": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ContentPosition"
           },
           "type": "array"
         }
@@ -488,6 +533,25 @@
       "required": [
         "playerPosition",
         "terrainOverrides"
+      ],
+      "type": "object"
+    },
+    "InlineForcedEgoDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "affixId": {
+          "type": "string"
+        },
+        "tval": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "tval",
+        "affixId"
       ],
       "type": "object"
     },
@@ -1954,6 +2018,16 @@
             "null"
           ]
         },
+        "failureReturnSpawn": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TaskFailureReturnSpawnDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "id": {
           "type": "string"
         },
@@ -1975,6 +2049,10 @@
             "string",
             "null"
           ]
+        },
+        "requiresFacilityMembership": {
+          "default": false,
+          "type": "boolean"
         },
         "reward": {
           "anyOf": [
@@ -2012,6 +2090,10 @@
           },
           "type": "array"
         },
+        "unlockWhenPrerequisiteAbandoned": {
+          "default": false,
+          "type": "boolean"
+        },
         "unlockWhenPrerequisiteFailed": {
           "default": false,
           "type": "boolean"
@@ -2023,6 +2105,30 @@
         "descriptionKey",
         "location",
         "objectives"
+      ],
+      "type": "object"
+    },
+    "TaskFailureReturnSpawnDefinition": {
+      "additionalProperties": false,
+      "description": "One attempt when a non-retakeable task fails or is abandoned, on its town return floor.",
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "chancePercent": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "position": {
+          "$ref": "#/$defs/ContentPosition"
+        }
+      },
+      "required": [
+        "actorKindId",
+        "position",
+        "chancePercent"
       ],
       "type": "object"
     },
@@ -2279,6 +2385,56 @@
       "required": [
         "terrainId",
         "positions"
+      ],
+      "type": "object"
+    },
+    "TownTaskTerrainCaseDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "statuses": {
+          "items": {
+            "$ref": "#/$defs/DungeonEntryTaskStatus"
+          },
+          "type": "array"
+        },
+        "taskId": {
+          "type": "string"
+        },
+        "terrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "taskId",
+        "statuses",
+        "terrainId"
+      ],
+      "type": "object"
+    },
+    "TownTaskTerrainOverrideDefinition": {
+      "additionalProperties": false,
+      "description": "Town cells controlled by task state. The first matching case wins.",
+      "properties": {
+        "cases": {
+          "items": {
+            "$ref": "#/$defs/TownTaskTerrainCaseDefinition"
+          },
+          "type": "array"
+        },
+        "defaultTerrainId": {
+          "type": "string"
+        },
+        "positions": {
+          "items": {
+            "$ref": "#/$defs/ContentPosition"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "positions",
+        "defaultTerrainId",
+        "cases"
       ],
       "type": "object"
     },

@@ -197,6 +197,11 @@ export class TaskServicePanel {
           type: "identify-all-at-facility",
           facilityId: service.id,
         });
+      } else if (action === "travel-town") {
+        const destinationTownId = facilityButton.dataset.townId;
+        if (destinationTownId && service.innTravelDestinations?.some((entry) => entry.townId === destinationTownId)) {
+          void this.#dispatch({ type: "travel-from-inn", facilityId: service.id, destinationTownId });
+        }
       } else if (action === "stay") {
         void this.#dispatch({ type: "stay-at-inn", facilityId: service.id });
       } else if (action === "overview") {
@@ -529,6 +534,21 @@ export class TaskServicePanel {
     this.#renderBountyOffice();
     this.#renderMonsterResearch();
     this.#renderTeleportLevel();
+    for (const destination of service.innTravelDestinations ?? []) {
+      const row = document.createElement("li");
+      row.className = "task-service-row";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "primary-button task-service-action";
+      button.dataset.facilityAction = "travel-town";
+      button.dataset.townId = destination.townId;
+      button.disabled = this.#state.busy;
+      button.textContent = this.#localization.format("inn-travel-destination", {
+        town: this.#localization.format(destination.townNameKey), cost: destination.cost,
+      });
+      row.append(button);
+      this.#dom.list.append(row);
+    }
     const renderItemAction = (
       action: "identify" | "research",
       cost: number | null | undefined,
@@ -610,6 +630,11 @@ export class TaskServicePanel {
     for (const facilityService of service.serviceActions ?? []) {
       const row = document.createElement("li");
       row.className = "task-service-row";
+      if (facilityService.kind === "balance-ritual") {
+        const description = document.createElement("p");
+        description.textContent = this.#localization.format("facility-balance-ritual-description");
+        row.append(description);
+      }
       if (facilityServiceUsesItem(facilityService.kind)) {
         const select = document.createElement("select");
         select.dataset.facilityService = facilityService.kind;
@@ -791,12 +816,17 @@ export class TaskServicePanel {
     row.append(copy);
     const action = taskActionForStatus(task.status);
     if (action) {
+      if (task.unavailableReason) {
+        const reason = document.createElement("p");
+        reason.textContent = this.#localization.format(task.unavailableReason);
+        copy.append(reason);
+      }
       const button = document.createElement("button");
       button.type = "button";
       button.className = "primary-button task-service-action";
       button.dataset.taskAction = action;
       button.dataset.taskId = task.taskId;
-      button.disabled = this.#state.busy;
+      button.disabled = this.#state.busy || Boolean(task.unavailableReason);
       button.textContent = this.#localization.format(
         taskActionLabelKey(action, task.hasItemReward),
       );
@@ -849,6 +879,7 @@ function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | 
       event?.kind === "facility.healed" ||
       event?.kind === "facility.vitality-restored" ||
       event?.kind === "facility.mutation-cured" ||
+      event?.kind === "facility.balance-ritual-performed" ||
       event?.kind === "facility.item-enchanted" ||
       event?.kind === "facility.armor-assessed" ||
       event?.kind === "facility.recall-started" ||
@@ -856,6 +887,7 @@ function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | 
       event?.kind === "facility.renamed" ||
       event?.kind === "inn.stay" ||
       event?.kind === "inn.stay-unavailable" ||
+      event?.kind === "inn.travel-unavailable" ||
       event?.kind.startsWith("facility.casino-") ||
       event?.kind.startsWith("bounty.")
     ) {

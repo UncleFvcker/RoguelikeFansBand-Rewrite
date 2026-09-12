@@ -636,7 +636,12 @@ shop-owner-demo-anambar-otto-name = Otto
 town-facility-demo-anambar-library-name = Library
 town-facility-demo-anambar-library-description = Tonika researches and identifies items and provides an overview of the town shops.
 town-facility-demo-anambar-library-owner-name = Tonika
-town-facility-demo-anambar-library-overview = Anambar has a General Store, Armoury, Weaponsmith, Temple, Alchemist, Magic Shop, Black Market, Home, Bookstore, and Shroomery; other special buildings offer separate services or quests.
+town-facility-demo-anambar-library-overview = Anambar has ten shops, a library, guilds, the Mayor's Office, the Police Station, and a museum sharing the collection. Home opens after completing and concluding the first police quest. The casino, beastmaster, reporters' guild, thieves' den, and bank currently retain entrances only.
+
+terrain-demo-reporters-guild-entrance-name = Reporters' Guild
+terrain-demo-reporters-guild-entrance-description = The guild entrance; services are not open.
+terrain-demo-cornucopia-bank-entrance-name = Cornucopia Bank
+terrain-demo-cornucopia-bank-entrance-description = The bank entrance; services are not open.
 town-facility-demo-anambar-weapon-master-name = Weaponmaster
 town-facility-demo-anambar-weapon-master-description = Hammer-Toe Tomtech assesses your protection from your current armor class.
 town-facility-demo-anambar-weapon-master-owner-name = Hammer-Toe Tomtech
@@ -653,7 +658,24 @@ town-facility-demo-anambar-trump-tower-name = Trump Tower
 town-facility-demo-anambar-trump-tower-description = Ivan Yeknizhaz recalls you to the last dungeon you explored.
 town-facility-demo-anambar-trump-tower-owner-name = Ivan Yeknizhaz
 town-demo-thalos-name = Thalos
-town-demo-thalos-description = A southern city whose central streets connect its shops, guilds, and the entrance to the Icky Cave.
+town-demo-zul-name = Zul
+town-demo-zul-description = A mountain town with shops set into the rock and three northern towers surrounded by lava.
+floor-demo-zul-name = Zul
+terrain-demo-jeweler-entrance-name = Jeweler
+terrain-demo-jeweler-entrance-description = A jeweler's entrance in the rock.
+terrain-demo-dragonskin-entrance-name = Dragonskin Store
+terrain-demo-dragonskin-entrance-description = A dragonskin store entrance in the rock.
+shop-demo-zul-jeweler-name = Jeweler
+shop-demo-zul-jeweler-description = Dalana the Sweet sells rings and amulets and buys other valuable goods.
+shop-owner-demo-zul-dalana-name = Dalana the Sweet
+shop-demo-zul-dragonskin-name = Dragonskin Emporium
+shop-demo-zul-dragonskin-description = Beowulf sells dragon scale mail and dragonskin equipment and buys other valuable goods.
+shop-owner-demo-zul-beowulf-name = Beowulf
+terrain-demo-chaos-tower-entrance-name = Tower of Chaos
+terrain-demo-chaos-tower-entrance-description = The entrance to the lava-ringed Tower of Chaos, which offers mutation treatment.
+terrain-demo-nature-tower-entrance-name = Tower of Nature
+terrain-demo-nature-tower-entrance-description = The entrance to the lava-ringed Tower of Nature, which offers the Ritual of Balance.
+town-demo-thalos-description = A southern city with shops and guilds inside its walls and the Icky Cave in the wilderness to the east.
 floor-demo-thalos-name = Thalos
 shop-demo-thalos-inn-name = Inn
 shop-demo-thalos-inn-description = Balthazar sells food and drink, provides lodging, and arranges travel to visited towns.
@@ -663,7 +685,7 @@ town-facility-demo-thalos-museum-description = A separate collection where ordin
 town-facility-demo-thalos-library-name = Library
 town-facility-demo-thalos-library-description = Ibn Khaldun researches and identifies items and provides an overview of the town shops.
 town-facility-demo-thalos-library-owner-name = Ibn Khaldun
-town-facility-demo-thalos-library-overview = Thalos has the ten standard shops, a shared Home, a Museum, a Library, a Bounty Office, a Weaponmaster, four class or realm guild facilities, the Palace, and the Royal Academy; the Icky Cave opens inside the town.
+town-facility-demo-thalos-library-overview = Thalos has ten shops, a shared Home, a Museum, a Library, a Bounty Office, a Weaponmaster, a Warriors' Guild, a Sorcery Tower, a Temple of Life, a Paladins' Guild, the Palace, and the Royal Academy. The Dark Academy quest temporarily closes the Museum; the Icky Cave opens in the wilderness to the east.
 town-facility-demo-thalos-bounty-office-name = Bounty Office
 town-facility-demo-thalos-bounty-office-description = Posts today's target and wanted uniques, accepts remains, and issues dungeon bounty missions.
 town-facility-demo-thalos-bounty-office-owner-name = Khalil
@@ -676,9 +698,8 @@ town-facility-demo-thalos-warrior-guild-owner-name = Arasho
 town-facility-demo-thalos-life-temple-name = Temple of Life
 town-facility-demo-thalos-life-temple-description = Redel Finathiel offers healing and restoration, with reduced prices for Life-realm practitioners.
 town-facility-demo-thalos-life-temple-owner-name = Redel Finathiel
-town-facility-demo-thalos-archer-guild-name = Archers' Guild
-town-facility-demo-thalos-archer-guild-description = Iklan improves ammunition and bows for archers.
-town-facility-demo-thalos-archer-guild-owner-name = Iklan
+terrain-demo-town-arena-entrance-name = Arena
+terrain-demo-town-arena-entrance-description = The arena doors; services are not currently available.
 town-facility-demo-thalos-paladin-guild-name = Paladins' Guild
 town-facility-demo-thalos-paladin-guild-description = Kiara improves armor and offers healing to paladins.
 town-facility-demo-thalos-paladin-guild-owner-name = Kiara
@@ -9922,3 +9943,88 @@ item-demo-bloodrip-name = 『嗜血裂杀』
 item-demo-bloodrip-description = 这把武器注入了第一代鲜血骑士的灵魂。当心！它渴望鲜血，甚至是挥舞者的鲜血！但对于那些走在血色之路上的人来说，没有比这更好的武器了。
 device-activation-c3-piercing-shot-name = 穿透射击
 device-activation-c3-charge-name = 冲锋
+item-demo-black-dragon-scale-mail-name = Black Dragon Scale Mail
+item-demo-black-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+
+item-demo-blue-dragon-scale-mail-name = Blue Dragon Scale Mail
+item-demo-blue-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+
+item-demo-white-dragon-scale-mail-name = White Dragon Scale Mail
+item-demo-white-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+
+item-demo-red-dragon-scale-mail-name = Red Dragon Scale Mail
+item-demo-red-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+
+item-demo-green-dragon-scale-mail-name = Green Dragon Scale Mail
+item-demo-green-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+
+item-demo-pseudo-dragon-scale-mail-name = Pseudo Dragon Scale Mail
+item-demo-pseudo-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+device-activation-e5-breathe-one-shining-name = breathe one shining
+
+item-demo-bronze-dragon-scale-mail-name = Bronze Dragon Scale Mail
+item-demo-bronze-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+
+item-demo-silver-dragon-scale-mail-name = Silver Dragon Scale Mail
+item-demo-silver-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+
+item-demo-balance-dragon-scale-mail-name = Balance Dragon Scale Mail
+item-demo-balance-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+device-activation-e5-breathe-one-balance-name = breathe one balance
+
+item-demo-power-dragon-scale-mail-name = Power Dragon Scale Mail
+item-demo-power-dragon-scale-mail-description = Dragon scale mail with an innate breath activation.
+
+town-facility-demo-zul-sorcery-tower-name = Tower of Sorcery
+town-facility-demo-zul-sorcery-tower-description = Identifies all carried items, with a discount for Sorcery practitioners.
+town-facility-demo-zul-sorcery-tower-owner-name = Tanisthil
+
+town-facility-demo-zul-chaos-tower-name = Tower of Chaos
+town-facility-demo-zul-chaos-tower-description = Cures removable mutations. Beastmen are members; Chaos practitioners receive owner prices.
+town-facility-demo-zul-chaos-tower-owner-name = Zeno
+
+town-facility-demo-zul-nature-tower-name = Tower of Nature
+town-facility-demo-zul-nature-tower-description = The Ritual of Balance rebuilds eight virtues from your current identity and realms, resetting their values to zero.
+town-facility-demo-zul-nature-tower-owner-name = Josh
+
+task-demo-zul-sorcery-node-name = The Node of Sorcery (Zul)
+floor-demo-zul-sorcery-node-name = The Node of Sorcery (Zul)
+terrain-demo-zul-sorcery-node-entry-name = The Node of Sorcery (Zul)
+task-demo-zul-sorcery-node-description = The sorcery tower has found a magical node. Defeat its guardians so the tower can claim its power.
+task-demo-zul-sorcery-node-completed-description = You have done well.
+task-demo-zul-sorcery-node-failed-description = The dimensional energy of the mystical node is lost forever. You have failed.
+terrain-demo-zul-sorcery-node-entry-description = The sorcery tower has found a magical node. Defeat its guardians so the tower can claim its power.
+task-demo-zul-chaos-node-name = The Node of Chaos (Zul)
+floor-demo-zul-chaos-node-name = The Node of Chaos (Zul)
+terrain-demo-zul-chaos-node-entry-name = The Node of Chaos (Zul)
+task-demo-zul-chaos-node-description = The chaos tower has found a magical node. Defeat its guardians so the tower can claim its power.
+task-demo-zul-chaos-node-completed-description = You have done well.
+task-demo-zul-chaos-node-failed-description = The dimensional energy of the mystical node is lost forever. You have failed.
+terrain-demo-zul-chaos-node-entry-description = The chaos tower has found a magical node. Defeat its guardians so the tower can claim its power.
+task-demo-zul-nature-node-name = The Node of Nature (Zul)
+floor-demo-zul-nature-node-name = The Node of Nature (Zul)
+terrain-demo-zul-nature-node-entry-name = The Node of Nature (Zul)
+task-demo-zul-nature-node-description = The nature tower has found a magical node. Defeat its guardians so the tower can claim its power.
+task-demo-zul-nature-node-completed-description = You have done well. A powerful spellbook awaits you outside.
+task-demo-zul-nature-node-failed-description = The dimensional energy of the mystical node is lost forever. You have failed.
+terrain-demo-zul-nature-node-entry-description = The nature tower has found a magical node. Defeat its guardians so the tower can claim its power.
+item-demo-armageddon-tome-name = [Armageddon Tome]
+item-demo-armageddon-tome-description = [Armageddon Tome]
+
+# Zul quest 77 and rewards, RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c.
+item-demo-baseball-bat-name = Baseball Bat
+item-demo-baseball-bat-description = Baseball Bat
+item-activation-demo-sotkamo-name = Restoring
+item-demo-sotkamo-name = of Sotkamo
+item-demo-sotkamo-description = This old wooden bat makes its wielder nimble and resistant to the passage of time.
+item-demo-visiting-team-name = of the Visiting Team
+item-demo-visiting-team-description = A souvenir from Zul, perhaps left by a strange mage or dropped through a hole in time.
+item-demo-superbat-name = 'Superbat'
+item-demo-superbat-description = Carved from a branch broken by a falling meteorite, with powers its wielder can only hope to discover.
+floor-demo-zul-eddies-name = The Eddies in the Space-Time Continuum (Zul)
+task-demo-zul-eddies-name = The Eddies in the Space-Time Continuum (Zul)
+terrain-demo-zul-eddies-entry-name = The Eddies in the Space-Time Continuum (Zul)
+terrain-demo-zul-eddies-entry-description = The Eddies in the Space-Time Continuum (Zul)
+task-demo-zul-eddies-description = The time mages' experiments have distorted space and time around Zul, making reliable teleportation impossible. Defeat them so the tower can restore the town's links to the outside world.
+task-demo-zul-eddies-completed-description = Thank you for your help. We can teleport safely again. While repairing the continuum, we found this strange wooden bat; please accept it as a souvenir and a token of our gratitude.
+task-demo-zul-eddies-failed-description = Too bad. The whole town was counting on you.

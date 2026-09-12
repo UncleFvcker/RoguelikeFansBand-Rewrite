@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1000,
+  "descriptionKey": "item-demo-baseball-bat-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 15,
+  "glyph": "\\",
+  "id": "demo.item.baseball-bat",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 4,
+    "toHit": 0,
+    "toDamage": 0
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-baseball-bat-name",
+  "rfbBaseKind": {
+    "sourceIndex": 139,
+    "tval": 21,
+    "sval": 51
+  },
+  "rfbValue": {
+    "flags": [
+      "SHOW_MODS",
+      "INSTA_ART"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "weightTenthsPound": 15
+}

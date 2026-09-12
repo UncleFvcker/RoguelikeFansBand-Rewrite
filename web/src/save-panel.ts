@@ -141,8 +141,6 @@ export class NativeSavePanel {
       const result = await this.#storage.load(summary.slotId);
       this.#applySnapshot(result.snapshot);
       this.#announceLoad(summary, result);
-      this.#saves = await this.#storage.list();
-      this.#render();
     } catch (error) {
       this.#showError(error);
     } finally {

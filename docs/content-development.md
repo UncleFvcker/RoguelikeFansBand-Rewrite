@@ -69,6 +69,8 @@ node scripts/audit-egos.mjs --check-applicability
 
 ## 内容锁与生成文件
 
+城镇多门商店使用 `additionalEntrancePositions`，所有门共用一个 shop ID 和库存，`entrancePosition` 仍是默认落点。任务条件地形放在城镇 `inlineMap.taskTerrainOverrides`：每组列出 `positions`、`defaultTerrainId` 和有序 `cases`（`taskId`、`statuses`、`terrainId`），按已选任务的当前状态采用首个匹配项。组间不得重叠，普通出生点的所有分支都必须可走。静态底图仍登记设施门格；实际地形与设施入口类型一致时才开放服务。运行时只更新受控格，保存沿用现有城镇地形和任务状态；不可走的玩家返回格暂用普通地面，离开后恢复条件地形。
+
 基础分配的定向同步只更新当前正式物品的 source kind 身份、权威中文显示名、基础分配行和主题引用，保留现有物品效果/装置适配。中文词干来自 `kind_name_zh.inc`；药水、卷轴和蘑菇类别后缀沿用 `flavor.c` 的已知无外观显示格式。基础池按层级、source kind 和原分配行顺序排列，零权重及重复行保留。覆盖报告位于包根目录 `legacy-base-allocation-audit.json`，不属于运行时内容。
 
 ```powershell

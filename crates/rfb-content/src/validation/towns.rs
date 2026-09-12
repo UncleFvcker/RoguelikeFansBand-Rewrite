@@ -13,6 +13,7 @@ pub(super) struct TownValidationRefs<'a> {
     pub(super) items: &'a [ItemDefinition],
     pub(super) races: &'a [RaceDefinition],
     pub(super) classes: &'a [ClassDefinition],
+    pub(super) loot_tables: &'a [LootTableDefinition],
 }
 
 pub(super) struct TownValidationOutputs {
@@ -147,6 +148,12 @@ pub(super) fn validate_towns_and_shops(
                 .chain(facility.inn_stay_cost)
                 .chain(facility.research_monster_cost)
                 .chain(facility.teleport_level_cost)
+                .chain(
+                    facility
+                        .town_teleport
+                        .as_ref()
+                        .map(|teleport| teleport.price),
+                )
                 .any(|price| price.owner_cost > 999_999_999 || price.other_cost > 999_999_999)
             || facility.legal_name_change_cost == Some(0)
             || facility.service_actions.iter().any(|service| {
@@ -159,7 +166,8 @@ pub(super) fn validate_towns_and_shops(
                         && refs.items.iter().any(|item| item.id == *item_id)
                 })
         });
-        let has_service = facility.casino
+        let has_service = facility.town_teleport.is_some()
+            || facility.casino
             || facility.identify_item_cost.is_some()
             || facility.teleport_level_cost.is_some()
             || facility.research_monster_cost.is_some()
@@ -174,7 +182,9 @@ pub(super) fn validate_towns_and_shops(
             || facility.bounty_office.is_some()
             || shops.iter().any(|shop| {
                 shop.town_id == facility.town_id
-                    && shop.entrance_position == facility.entrance_position
+                    && shop.entrance_positions().any(|position| {
+                        facility.entrance_positions().any(|other| other == position)
+                    })
                     && shop.entrance_terrain_id == facility.entrance_terrain_id
             });
         if (facility.category == TownFacilityCategory::Home
@@ -185,6 +195,7 @@ pub(super) fn validate_towns_and_shops(
                 || facility.research_item_cost.is_some()
                 || facility.research_monster_cost.is_some()
                 || facility.teleport_level_cost.is_some()
+                || facility.town_teleport.is_some()
                 || facility.identify_all_items_cost.is_some()
                 || facility.inn_stay_cost.is_some()
                 || facility.overview_message_key.is_some()
@@ -201,9 +212,8 @@ pub(super) fn validate_towns_and_shops(
             || (facility.category == TownFacilityCategory::Service
                 && (facility.storage_id.is_some()
                     || facility.owner_name_key.is_none()
-                    || !facility.task_ids.is_empty()
                     || facility.bounty_office.is_some()
-                    || !has_service))
+                    || (!has_service && facility.task_ids.is_empty())))
             || (facility.reject_artifact_deposits
                 && facility.category != TownFacilityCategory::Home)
             || (facility.casino && facility.category != TownFacilityCategory::Service)
@@ -236,6 +246,43 @@ pub(super) fn validate_towns_and_shops(
         validate_definition_id(&shop.owner.id, "shop-owner")?;
         validate_message_key(&shop.owner.name_key)?;
         validate_definition_id(&shop.owner.race_id, "race")?;
+        let generated_stock = matches!(shop.category, ShopCategory::Jeweler | ShopCategory::Dragon);
+        if generated_stock != shop.stock_generation_table_id.is_some()
+            || (generated_stock && !shop.stock.is_empty())
+        {
+            return Err(ContentError::InvalidShop(shop.id.clone()));
+        }
+        if let Some(table_id) = &shop.stock_generation_table_id {
+            let table = refs
+                .loot_tables
+                .iter()
+                .find(|table| &table.id == table_id)
+                .ok_or_else(|| ContentError::DanglingReference {
+                    owner: shop.id.clone(),
+                    target: table_id.clone(),
+                })?;
+            if table.kind_selection != Some(LootKindSelectionDefinition::RfbBase)
+                || table.rfb_ego_policy != Some(LootRfbEgoPolicyDefinition::WeaponDigger)
+                || table.quality_policy.is_none()
+            {
+                return Err(ContentError::InvalidShop(shop.id.clone()));
+            }
+            let has_kind = |tval| {
+                table.entries.iter().any(|entry| {
+                    entry.weight > 0
+                        && refs.items.iter().any(|item| {
+                            item.id == entry.item_kind_id
+                                && item.artifact_generation.is_none()
+                                && item.rfb_base_kind.is_some_and(|base| base.tval == tval)
+                        })
+                })
+            };
+            if (shop.category == ShopCategory::Jeweler && (!has_kind(40) || !has_kind(45)))
+                || (shop.category == ShopCategory::Dragon && !has_kind(38))
+            {
+                return Err(ContentError::InvalidShop(shop.id.clone()));
+            }
+        }
         if !(100..=500).contains(&shop.owner.greed_percent)
             || !(1..=999_999_999).contains(&shop.owner.purchase_price_cap)
             || shop.inn_stay_cost.is_some_and(|cost| cost == 0)

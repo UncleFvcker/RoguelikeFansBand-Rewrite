@@ -58,6 +58,10 @@ type Feedback =
   | { readonly source: "event"; readonly event: GameEventDto; readonly kind: string };
 
 interface ShopSelection {
+  readonly affixNameKeys?: ShopStockItemDto["affixNameKeys"];
+  readonly quality?: ShopStockItemDto["quality"];
+  readonly enchantments?: ShopStockItemDto["enchantments"];
+  readonly activation?: ShopStockItemDto["activation"];
   readonly id: string;
   readonly kindId: string;
   readonly displayNameKey: string;
@@ -492,7 +496,7 @@ export class ShopPanel {
     }
   }
 
-  #renderTransaction(): void {
+  readonly #renderTransaction = (): void => {
     const status = this.#state.status;
     const selection = this.#selection();
     const maximum = selection?.maximumQuantity ?? 0;
@@ -562,13 +566,17 @@ export class ShopPanel {
       this.#dom.feedback.replaceChildren();
     }
     this.#dom.feedback.dataset.kind = feedback?.kind ?? "none";
-  }
+  };
 
   #selections(): ShopSelection[] {
     const shop = this.#shop;
     if (!shop) return [];
     if (this.#mode === "buy") {
       return shop.stock.map((item) => ({
+        affixNameKeys: item.affixNameKeys,
+        quality: item.quality,
+        enchantments: item.enchantments,
+        activation: item.activation,
         id: item.id,
         kindId: item.kindId,
         displayNameKey: item.displayNameKey,
@@ -599,6 +607,27 @@ export class ShopPanel {
         weight: formatTenthsPound(selection.weightTenthsPound),
       }),
     ];
+    for (const key of selection.affixNameKeys ?? []) {
+      details.push(this.#localization.format(key as MessageKey));
+    }
+    if (selection.quality && selection.quality !== "ordinary") {
+      details.push(this.#localization.format("item-quality-label", {
+        quality: this.#localization.format(`item-quality-${selection.quality}` as MessageKey),
+      }));
+    }
+    if (selection.enchantments) {
+      const { toHit, toDamage, toArmor } = selection.enchantments;
+      for (const [key, value] of [["item-enchantment-to-hit", toHit], ["item-enchantment-to-damage", toDamage], ["item-enchantment-to-armor", toArmor]] as const) {
+        if (value) details.push(this.#localization.format(key, { value: value > 0 ? `+${value}` : String(value) }));
+      }
+    }
+    if (selection.activation) {
+      details.push(this.#localization.format("inventory-activation", {
+        activation: this.#localization.format(selection.activation.nameKey as MessageKey),
+        power: selection.activation.power,
+        cost: selection.activation.cost,
+      }));
+    }
     if (selection.fuel) {
       details.push(
         this.#localization.format("inventory-fuel", {

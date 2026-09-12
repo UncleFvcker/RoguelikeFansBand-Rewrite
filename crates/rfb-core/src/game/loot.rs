@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // Item generation, carried loot, and death drops.
 
-mod allocation;
+pub(super) mod allocation;
 mod placement;
 
 use rfb_content::{
@@ -196,6 +196,7 @@ pub(super) enum LootSource {
     Vault { vault_id: String, spawn_id: String },
     ItemUse { item_id: String },
     Rubble { position: Position },
+    Shop { shop_id: String },
 }
 
 impl Game {
@@ -678,6 +679,7 @@ impl Game {
                     context.depth > 0 && !vault_id.is_empty() && !spawn_id.is_empty()
                 }
                 LootSource::ItemUse { item_id } => !item_id.is_empty(),
+                LootSource::Shop { shop_id } => !shop_id.is_empty(),
                 LootSource::Rubble { position } => {
                     context.depth > 0 && self.index(*position).is_some()
                 }
@@ -707,7 +709,7 @@ impl Game {
                     .clone(),
                 Some(*theme),
             ),
-            _ => (table.entries, None),
+            _ => (table.entries.clone(), None),
         };
         let eligible_entries = entries
             .iter()
@@ -730,11 +732,6 @@ impl Game {
             })
             .collect::<Vec<_>>();
         let entry_weights = eligible_entries
-            .iter()
-            .map(|entry| entry.weight)
-            .collect::<Vec<_>>();
-        let quality_weights = table
-            .quality_weights
             .iter()
             .map(|entry| entry.weight)
             .collect::<Vec<_>>();
@@ -761,6 +758,93 @@ impl Game {
         } else {
             eligible_entries[self.roll_weighted_index(&entry_weights)]
         };
+        self.materialize_loot_entry(context, mode, &table, entry, theme, None)
+    }
+
+    /// shop.c::_create applies magic after a separate kind-level roll and forbids fixed artifacts.
+    pub(super) fn generate_shop_loot_draft(
+        &mut self,
+        context: &LootContext,
+        entry: &rfb_content::LootEntryDefinition,
+    ) -> Option<GeneratedItemDraft> {
+        let table = self
+            .content
+            .loot_table(&context.table_id)
+            .expect("validated shop generation table must remain available")
+            .clone();
+        self.materialize_loot_entry(
+            context,
+            ItemGenerationMode::Ordinary,
+            &table,
+            entry,
+            None,
+            None,
+        )
+    }
+
+    pub(super) fn generate_inline_loot(
+        &mut self,
+        context: &LootContext,
+        location: ItemLocation,
+        forced: Option<&rfb_content::InlineForcedEgoDefinition>,
+    ) -> Result<Vec<ItemInstance>, CoreError> {
+        let Some(forced) = forced else {
+            return self.generate_loot_instances(context, location);
+        };
+        self.next_item_instance_serial
+            .checked_add(1)
+            .ok_or(CoreError::ItemIdExhausted)?;
+        let table = self
+            .content
+            .loot_table(&context.table_id)
+            .expect("validated scripted source pool")
+            .clone();
+        let entries = table
+            .entries
+            .iter()
+            .filter(|entry| {
+                let item = self
+                    .content
+                    .item(&entry.item_kind_id)
+                    .expect("validated source item");
+                item.rfb_base_kind
+                    .is_some_and(|base| base.tval == forced.tval)
+                    && allocation::quality_candidate(self, ItemGenerationMode::Good, item)
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+        let Some(index) = allocation::select_filtered_entry(self, context, &entries) else {
+            return Ok(Vec::new());
+        };
+        let draft = self
+            .materialize_loot_entry(
+                context,
+                ItemGenerationMode::Great,
+                &table,
+                &entries[index],
+                None,
+                Some(&forced.affix_id),
+            )
+            .expect("validated forced ego supports its scripted base kind");
+        Ok(vec![self.commit_generated_item_draft(draft, location)?])
+    }
+
+    fn materialize_loot_entry(
+        &mut self,
+        context: &LootContext,
+        mode: ItemGenerationMode,
+        table: &rfb_content::LootTableDefinition,
+        entry: &rfb_content::LootEntryDefinition,
+        theme: Option<rfb_content::RfbDropTheme>,
+        forced_affix_id: Option<&str>,
+    ) -> Option<GeneratedItemDraft> {
+        let rfb_generation = table.rfb_ego_policy.is_some();
+        let minimum_quality = mode.minimum_quality();
+        let quality_weights = table
+            .quality_weights
+            .iter()
+            .map(|entry| entry.weight)
+            .collect::<Vec<_>>();
         let staff = self
             .content
             .item(&entry.item_kind_id)
@@ -790,12 +874,14 @@ impl Game {
             })
             .max(mode.minimum_power()),
         };
-        let artifact_rolls = if matches!(
-            mode,
-            ItemGenerationMode::Artifact {
-                no_fixed_artifact: true
-            }
-        ) {
+        let artifact_rolls = if forced_affix_id.is_some()
+            || matches!(context.source, LootSource::Shop { .. })
+            || matches!(
+                mode,
+                ItemGenerationMode::Artifact {
+                    no_fixed_artifact: true
+                }
+            ) {
             0
         } else if matches!(mode, ItemGenerationMode::Artifact { .. })
             || (rfb_generation
@@ -977,6 +1063,7 @@ impl Game {
         let rfb_jewelry = jewelry
             && table.rfb_ego_policy == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger);
         let special_robe = rfb_armor
+            && forced_affix_id.is_none()
             && power.abs() >= 2
             && super::ego::roll_special_robe(
                 &mut self.rng,
@@ -985,8 +1072,8 @@ impl Game {
             );
         // Explicit guardian replacement tables have no natural Ego policy.
         // Artifact mode still sends their canonical base through the factory.
-        let random_artifact = if (rfb_generation
-            || matches!(mode, ItemGenerationMode::Artifact { .. }))
+        let random_artifact = if forced_affix_id.is_none()
+            && (rfb_generation || matches!(mode, ItemGenerationMode::Artifact { .. }))
             && !rfb_jewelry
             && !special_robe
             && (!rfb_weapon || allow_weapon_ego)
@@ -1048,7 +1135,20 @@ impl Game {
             };
             return Some(draft);
         }
-        let rfb_materialization = if rfb_device {
+        let rfb_materialization = if let Some(affix_id) = forced_affix_id {
+            Some(materialize_ego_with_rng(
+                self.progress
+                    .active_mutation_ids
+                    .contains("rfb.mutation.bad-luck"),
+                &self.content,
+                &mut self.rng,
+                &entry.item_kind_id,
+                vec![affix_id.to_owned()],
+                |_| generation_depth,
+                generation_depth,
+                power,
+            ))
+        } else if rfb_device {
             self.content.item(&entry.item_kind_id).and_then(|item| {
                 super::ego::materialize_device(
                     &self.content,

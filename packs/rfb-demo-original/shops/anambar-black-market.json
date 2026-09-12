@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-anambar-black-market-description",
   "townId": "demo.town.anambar",
   "category": "black-market",
-  "entrancePosition": { "x": 6, "y": 9 },
+  "entrancePosition": {"x":47,"y":57},
   "entranceTerrainId": "demo.terrain.black-market-entrance",
   "owner": {
     "id": "demo.shop-owner.anambar-topi",

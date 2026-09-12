@@ -7,10 +7,7 @@
   "townId": "demo.town.thalos",
   "category": "service",
   "ownerNameKey": "town-facility-demo-thalos-sorcery-tower-owner-name",
-  "entrancePosition": {
-    "x": 10,
-    "y": 4
-  },
+  "entrancePosition": {"x":41,"y":31},
   "entranceTerrainId": "demo.terrain.sorcery-tower-entrance",
   "identifyAllItemsCost": {
     "ownerCost": 200,

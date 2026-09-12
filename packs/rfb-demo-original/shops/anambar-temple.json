@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-anambar-temple-description",
   "townId": "demo.town.anambar",
   "category": "temple",
-  "entrancePosition": { "x": 14, "y": 1 },
+  "entrancePosition": {"x":60,"y":33},
   "entranceTerrainId": "demo.terrain.temple-entrance",
   "owner": {
     "id": "demo.shop-owner.anambar-aldren-vale",
@@ -82,5 +82,6 @@
   ],
   "maintenance": {
     "intervalWorldTicks": 10000
-  }
+  },
+  "additionalEntrancePositions": [{"x":61,"y":33},{"x":60,"y":37},{"x":61,"y":37}]
 }

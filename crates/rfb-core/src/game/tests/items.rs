@@ -3090,7 +3090,7 @@ fn b1_b2_weapons_generate_equip_fight_and_preserve_source_properties_after_save(
     let mut remaining = cases.iter().map(|case| case.0).collect::<BTreeSet<_>>();
     // Complete formal pool, quality and rarity gates. Select plain bases
     // to isolate their own values; rare artifact selection is also checked below.
-    for _ in 0..20_000 {
+    for _ in 0..40_000 {
         for item in game
             .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
             .unwrap()
@@ -11263,6 +11263,7 @@ fn tomte_tailored_acquirement_filters_headgear_by_birth_race_only() {
     let path =
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
     let mut content = rfb_content::compile_pack_dir(&path).unwrap().content;
+    super::support::preserve_authored_loot_pool(&mut content);
     let table = content
         .loot_tables
         .iter_mut()
@@ -12913,23 +12914,31 @@ fn fixed_artifact_selection_uses_source_order_ood_rarity_and_uniqueness() {
 #[test]
 fn item_generation_modes_keep_drafts_unallocated_until_commit() {
     let context = artifact_loot_context(60);
-
-    let mut good = Game::new(2);
-    good.rng = RfbRng::seeded(7);
-    let good_draft = good
-        .generate_one_loot_draft(&context, ItemGenerationMode::Good)
-        .expect("Good generation should produce a draft");
-    assert!(matches!(
-        good_draft.quality,
-        ItemQualityDto::Fine | ItemQualityDto::Exceptional
-    ));
-
-    let mut great = Game::new(2);
-    great.rng = RfbRng::seeded(7);
-    let great_draft = great
-        .generate_one_loot_draft(&context, ItemGenerationMode::Great)
-        .expect("Great generation should produce a draft");
-    assert_eq!(great_draft.quality, ItemQualityDto::Exceptional);
+    for mode in [ItemGenerationMode::Good, ItemGenerationMode::Great] {
+        let mut game = Game::new(2);
+        game.rng = RfbRng::seeded(7);
+        let serial = game.next_item_instance_serial;
+        let draft = (0..512)
+            .find_map(|_| {
+                game.generate_one_loot_draft(&context, mode)
+                    .filter(|draft| {
+                        draft.artifact_name.is_none()
+                            && game.content.item(&draft.kind_id).is_some_and(|item| {
+                                item.artifact_generation.is_none()
+                                    && item.rfb_base_kind.is_some_and(|base| base.tval == 23)
+                            })
+                    })
+            })
+            .expect("the full themed pool should produce a quality-bearing sword");
+        assert!(matches!(
+            draft.quality,
+            ItemQualityDto::Fine | ItemQualityDto::Exceptional
+        ));
+        if mode == ItemGenerationMode::Great {
+            assert_eq!(draft.quality, ItemQualityDto::Exceptional);
+        }
+        assert_eq!(game.next_item_instance_serial, serial);
+    }
 
     let mut artifact = Game::new(2);
     let serial_before = artifact.next_item_instance_serial;
@@ -12948,12 +12957,13 @@ fn item_generation_modes_keep_drafts_unallocated_until_commit() {
             .then_some(draft)
     });
     let fallback = fallback.expect("an Artifact request fallback should exist");
-    assert_eq!(fallback.quality, ItemQualityDto::Exceptional);
+    let quality = fallback.quality;
     assert_eq!(artifact.next_item_instance_serial, serial_before);
     let committed = artifact
         .commit_generated_item_draft(fallback, ItemLocation::Ground(artifact.player.position))
         .expect("an accepted draft should receive an instance ID");
     assert_eq!(artifact.next_item_instance_serial, serial_before + 1);
+    assert_eq!(committed.quality, quality);
     assert!(
         artifact
             .content

@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-anambar-shroomery-description",
   "townId": "demo.town.thalos",
   "category": "shroomery",
-  "entrancePosition": { "x": 18, "y": 1 },
+  "entrancePosition": {"x":63,"y":50},
   "entranceTerrainId": "demo.terrain.shroomery-entrance",
   "owner": {
     "id": "demo.shop-owner.thalos-martin",

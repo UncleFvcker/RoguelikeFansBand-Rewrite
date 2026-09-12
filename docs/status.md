@@ -1,20 +1,21 @@
 # 状态快照
 
-核对日期：2026-09-12。集成基线包含种族职业 `edfcac5fb`、法术道具 `886d8da89` 和地牢城镇 `1ef1b7261`，合入游侠、A1–A10 神器与金字塔土丘；随后完成牧师和战法师七步接入、正式入口、统一回归、代表实战和桌面交付。本页区分当前代码/配置与各批注明范围的验收证据。
-核对日期：2026-09-12。当前物品分支已完成C3注明范围的核心实现；最近集成包含种族职业 `edfcac5fb`、法术道具 `886d8da89` 和地牢城镇 `1ef1b7261`，合入游侠、A1–A10 神器与金字塔土丘。本页区分当前代码/配置与各批注明范围的验收证据。
+核对日期：2026-09-12。本轮集成种族职业 `6fa5fa17c`、法术道具 `e2a1b0f8b`、地牢城镇 `e2c9a780d`：牧师与战法师、B1–B7／C1–C3 神器机制、Anambar／Thalos 地图与 Zul。本页区分当前代码配置和各批注明范围的验收证据。
+
+祖尔导入：[Z1–Z6 计划](../design/zul-town-import-plan-20260912.md)中的 Z1–Z6 已完成本计划范围的实现与验收。已注册 (77,6) 的 94×57 山地模板与九家独立商店，保留 2,158 个显式格、3,200 个荒野继承格；祖尔不使用普通城镇的刷怪排除。珠宝店与龙皮百货已接随机装备生成、专属估值／交易规则和库存保存；补十种龙鳞甲及喷吐激活，14 种源龙鳞甲与五种龙皮部位均有正式定义，高等级源门槛保持。三塔已接主／当前副领域身份、兽化人会员、全部鉴定、突变治疗和平衡仪式；仪式复用美德生成器重建八项零值美德，出生 RNG 顺序保持。没有旅店／Home／博物馆，物理到访尚不开放祖尔传送。Z4 已接完整漩涡任务、两件等级 85 蝙蝠披风、三个固定神器奖励及仅成功领奖开放的传送；塔与旅店／法术共用目的地资格，祖尔抵达巫术塔 (65,16)。Z5 已接三节点完整地图、会员接取与领奖、任务 10 的漩涡终态前置、源书奖励、战熊同伴及任务内水／熔岩伤害；新增 `[末日巨著]` 实体，Chaos 施法体系仍未交付。Z6 已生成 Schema／绑定／分配审计／内容锁，完成相关核心／内容／本地化检查及 26 条未刷新契约。Windows Tauri standalone 与专用 WebDriver 构建通过，桌面覆盖三类商店、三塔服务与领域切换、四任务源奖励、滚动及跨城往返；15 次原生保存恢复、30 张主流程截图和四张完整地图截图通过。测试使用等级／保护状态／清场准备，不代表自然战斗通关或 Android 验收。新游戏及选中存档加载已移除额外全列表刷新，后端日志验证未扫描其他槽位。商店与美德生成的保留适配见计划 Z2／Z3／Z4／Z5。
 
 ## 版本与源内容
 
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.255；生成绑定/Schema已同步并通过检查 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | 126 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload / 容器 | 14 / 21 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.433.0；lock已同步并通过verify-source | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
-| 契约政策 | contract-v327，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
+| 协议 | 1.258 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | 127 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload / 容器 | 14 / 22 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
+| 内容包 | 1.437.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 契约政策 | contract-v328，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 13 个 Class、109 个 Build、57 个 Race、36 本能力书、1,907 个 ability 文件、472 个 item、1,409 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、64 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 13 个 Class、109 个 Build、57 个 Race、36 本能力书、1,907 个 ability、549 个 item、1,409 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon；城镇有 7 个 town、69 个 shop、67 个 townFacility。基础分配池为 408 行，固定神器映射 134/392；创角开放 102 个 Build。这些是定义与入口数量，行为验收范围见下文。
 
 战法师已完成[七步计划](warrior-mage-class-plan.md)：8个固定主奥秘Build、288项参数、双书出生/成长、INT法力/负重/近战/感知及双领域自主学习、重复研习、84点支出、遗忘/改换/保存已接入。25级双向转换保留真实失败、内部支付、满池代价、低HP死亡及公共伤害/治疗修正；旧城堡1:4/重复替代、两件神器/秘银链甲、实际激活/冷却、盗贼长剑、两塔会员与Mage/20卷轴消费者通过。正式入口为“混合 → 战法师 → 第二领域”，含工艺；当前13职业、102个Build，8个新增Build的40项生成责任与来源报告已验收，0个可玩范围证据gap。
 
@@ -28,14 +29,9 @@
 
 `--priest-ui`通过中英文各24个组合、善恶正式出生、准备后的能力/改换/保存及390px/200%专项。`--priest-play --fast-entry`分别从人类1级生命/咒术、死亡/咒术开局，以出生装备进入真实兽穴、近战命中并存活；快速入口约1.5/1.3秒，仅跳过城镇步行。显式准备5级双方随机学习与施法、35级祝福后刃器战斗/祈祷、42级驱散和50级高阶书学习；保留原有感知与自然失败。改换为工艺后菜单导出/原生加载，继续相同两次施法和下一次随机学习，结果及状态哈希一致。报告、截图与标注准备条件的存档位于`test-results/priest-ui/`和`priest-play/`。优化EXE经Tauri standalone构建，原生进程定向控件接口完成普通牧师创角、1级投影及正常退出，证据为`test-results/priest-optimized/checks.json`。交付目录`release/RoguelikeFansBand-Rewrite_0.1.0_priest-20260912_windows-x64/`含程序、源码、许可和校验值；没有自然练至高等级、完整通关或Android验收声明。
 
-A1–A10 新增三十八件固定神器与五种底材；连同游侠两把弓与阿蒙专属神器，连同战法师两件奖励，当前固定神器映射为 88/392。A10 的 Greater Hell-Beast 192 专属奖励保留零稀有度与已生成时跳过的源规则。法术道具方向的 235 项核心、36 项内容、39 项本地化、66 构筑审计与 8 项工具测试、相关 Clippy 和 26 条未刷新契约为该批证据；本次合并后的数量已由 `rfb-contentc inspect-source` 核对，集成检查见下文。范围与保留缺口见[神器计划](artifact-import-plan.md#a10-统一验证结果)：145／322 仅当前身份普通分支，萨鲁曼额外掉落、未开放身份／领域／地点消费者仍保留。没有新增自然练级、桌面或 Android 验收。
-| 协议 | 1.254 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | 126 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload / 容器 | 14 / 21 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 最近验证内容包 | 1.433.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
-| 契约政策 | contract-v326，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
+A1–A10 新增三十八件固定神器与五种底材；该批与游侠、阿蒙、战法师奖励的历史范围共 88 件，后续 B／C 和 Zul 增量已计入上表。A10 的 Greater Hell-Beast 192 专属奖励保留零稀有度与已生成时跳过的源规则。法术道具方向的 235 项核心、36 项内容、39 项本地化、66 构筑审计与 8 项工具测试、相关 Clippy 和 26 条未刷新契约为该批证据；本次合并后的数量已由 `rfb-contentc inspect-source` 核对，集成检查见下文。范围与保留缺口见[神器计划](artifact-import-plan.md#a10-统一验证结果)：145／322 仅当前身份普通分支，萨鲁曼额外掉落、未开放身份／领域／地点消费者仍保留。没有新增自然练级、桌面或 Android 验收。
 
-正式源目录含 11 个 Class、77 个 Build、57 个 Race、36 本能力书、1,903 个 ability 文件、532 个 item、1,407 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon 条目；城镇源目录有 6 个 town、60 个 shop、64 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+[两城地图恢复 AT1–AT5](../design/anambar-thalos-map-restoration-plan-20260912.md)已完成。阿南巴为 198×66（7,671 个显式格、5,397 个继承格），十家商店、十个设施和九处条件任务入口使用源坐标；两门博物馆共用馆藏，Home 在警察首任务成功结算后开放。三角龙失败场景适配为返回时单次 33% 抽选，不因快照／往返重抽。萨洛斯为 198×66（13,068 格全覆盖），十家商店、十一个设施及十二个副本入口／返回链已迁移；无源弓箭手门已移除，黑暗学院控制博物馆门禁，巫师塔十二格随任务变化，恶心洞穴唯一入口为 (164,47)。真实入口、条件存取、偏移视图返回及保存／传送通过；核心测试显式准备任务前置和清场／击杀结果。AT4 专用 Tauri WebDriver 已验收两城原生键盘滚动、购物与丢物、任务放弃返回、世界地图／旅店往返、六次原生保存恢复，并检查 12 张实际截图；准备仅到访／揭示城镇并提供路费。旅店目的地下拉回调异常已修复，最终前端异常为零。证据在 `test-results/town-maps/`，复现见[验证指南](testing.md#两城地图桌面验收)。AT5 已汇总五类证据、`master@a0d92b6378d148c5262cc236b8fa6ed2ca06a54c` 来源与 NOTICE 声明；阿南巴五类、萨洛斯三类外观设施仍未开放，现有业务和地下图的适配边界见计划 AT5。没有自然通关、新优化发行包或 Android 验收；本次收口只改文档。
 
 B1–B7 共16种普通底材、20件固定神器的普通生成分支已接入并完成统一核心验证。B7 新增101长柄大镰刀与109『阿瓦维尔』、102伊昂威的巨斧。阿瓦维尔使用15–35回合召回、1000 tick冷却；伊昂威使用强度200、范围20的群体灭绝、10000 tick冷却。共享灭绝按源距离、任务层／独特怪物／坐骑保护、抵抗后觉醒与持久免疫、逐目标疲劳及不致死下限执行；普通灭绝与湮灭死灵各自保留源德行变化。 B7验收时固定神器定义映射114/392；数量不代表全部原版消费者或专属入口均已完成。范围与保留依赖见[神器计划](artifact-import-plan.md#第二步普通底材与依赖神器分组)。
 
@@ -183,7 +179,9 @@ Dr. Jones 的鞭子使用原版神器 162、隔空取物与 300 tick 冷却；�
 
 ## 已有验收证据
 
-本轮集成核心全量初测 1,516 项通过、1 项失败、3 项原有 ignored；阿蒙稀有度测试补齐“其他匕首神器已生成”的合法前置后单项复验通过，保留原有概率、RNG 和保存唯一性断言。恐惧面具现有生成／保存测试加入游侠并通过。内容初测 160 项通过、1 项失败；基础池断言补入 source kind 245 的第 377 行及零权重后复验通过，没有提高其随机获取权重。本地化 39、回放 9、相关前端 84、生成审计工具 8 项通过；70 个开放构筑的审计、相关 Clippy、内容 Schema、内容锁、类型和格式检查通过。26 条 active 契约直接通过，沿用地牢城镇已验证的 contract-v326 预期，本轮未额外刷新 fixture。协议、save 与 State Hash Schema 保持 1.253、14/20、125。各方向已有 standalone 交付与桌面证据仍保留原范围，本轮未重新运行桌面 E2E／Android 或构建可玩产物。
+本轮集成（`6fa5fa17c`／`e2a1b0f8b`／`e2c9a780d`）：核心全量初测 1,645 项通过、3 项失败、3 项原有 ignored；三个失败均已修正测试前提并精确复验通过。品质测试从全池选择可带品质的普通剑；挖掘回退直接比较 20 次神器尝试后一次 Great 的完整草稿与 RNG，允许源池中的药水；B1/B2 全池抽样上限由 20,000 调至 40,000，保留稀有底材实际出现、装备、战斗及保存断言。内容 169、本地化 39、协议 7、保存容器 2、回放 9、Tauri 原生层 23、相关前端 92、审计工具 8 项通过；102 个创角入口的生成审计、相关 Clippy、格式、类型、绑定／Schema 与 source/lock 检查通过。合并了共享恐惧状态消费者、守卫随机神器替代与强制 Ego 分支，秘银链甲复用单一来源身份。协议 1.258、payload 22、State Hash Schema 127 区分部分祝福知识与怪物 NOGENO 的联合状态格式；26 条契约的 41 处差异全部为状态或保存回环哈希，行为与事件断言不变，刷新为 contract-v328 后全部通过。各方向原有桌面证据保留原范围，本轮没有重新构建可玩产物或运行桌面 E2E／Android。
+
+上一轮集成（`6d028028b`）的历史证据：核心全量初测 1,516 项通过、1 项失败、3 项原有 ignored；阿蒙稀有度测试补齐“其他匕首神器已生成”的合法前置后单项复验通过，保留原有概率、RNG 和保存唯一性断言。恐惧面具现有生成／保存测试加入游侠并通过。内容初测 160 项通过、1 项失败；基础池断言补入 source kind 245 的第 377 行及零权重后复验通过，没有提高其随机获取权重。本地化 39、回放 9、相关前端 84、生成审计工具 8 项通过；70 个开放构筑的审计、相关 Clippy、内容 Schema、内容锁、类型和格式检查通过。26 条 active 契约直接通过，沿用地牢城镇已验证的 contract-v326 预期，本轮未额外刷新 fixture。协议、save 与 State Hash Schema 保持 1.253、14/20、125。各方向已有 standalone 交付与桌面证据仍保留原范围，本轮未重新运行桌面 E2E／Android 或构建可玩产物。
 
 | 记录 | 能证明的范围 | 不扩展到 |
 | --- | --- | --- |
@@ -197,7 +195,7 @@ Dr. Jones 的鞭子使用原版神器 162、隔空取物与 300 tick 冷却；�
 
 E8.8 已完成 Windows Tauri standalone 的负向 Ego、随机神器、龙系装备和动态背包四类获取、鉴定、装备及保存恢复流程，并在恢复后继续行动。负向速度与诅咒阻止卸装、神器激活耗能、龙系基础抗性和 Ego 护甲、额外背包槽位与重量/溢出均有 UI 断言。Nature 四册错误的 Chaos 源身份已修正，内容包升级至 1.405.0；契约仍为 v320，26 条断言无需刷新。范围与复现见[E8.8 验收](../design/ego-integration-audit.md#e88-当前桌面验收)。当时六职业范围的共享生成契约完成，全原版范围的未开放身份、未导入底材和对象表示限制仍保留。
 
-当前 70 个开放构筑的生成审计覆盖来源条件与每构筑五个范围：[审计输入](../design/generation-build-applicability.json)记录实际入口、实现和测试引用，[生成矩阵](../design/ego-contract-audit.json)由完整来源审计生成并接受只读 CI 检查。本次保留法师与高阶法师工艺，加入游侠四个领域组合与 A1–A10 的生成证据；职业限制、奖励与重复神器替代均保留，恐惧面具的现有保存测试补入游侠。当前可达的文档证据缺口为零；缺失身份／内容、重铸入口和对象表示限制仍单列，全原版完成标记为 false。审计引用存在不代表执行过测试，本轮实际结果见上文。后续按[内容开发](content-development.md#职业与领域-build-的生成接入)维护审计，交接按[并行协作](parallel-development.md#职业与领域生成审计的交接)执行。
+当前 102 个开放构筑的生成审计覆盖来源条件与每构筑五个范围：[审计输入](../design/generation-build-applicability.json)记录实际入口、实现和测试引用，[生成矩阵](../design/ego-contract-audit.json)由完整来源审计生成并接受只读 CI 检查。本轮保留此前构筑，合入牧师、战法师及 B／C 神器的来源与消费者证据；职业限制、奖励与重复神器替代均保留，恐惧面具的现有保存测试补入游侠。当前可达的文档证据缺口为零；缺失身份／内容、重铸入口和对象表示限制仍单列，全原版完成标记为 false。审计引用存在不代表执行过测试，本轮实际结果见上文。后续按[内容开发](content-development.md#职业与领域-build-的生成接入)维护审计，交接按[并行协作](parallel-development.md#职业与领域生成审计的交接)执行。
 
 ## 更新口径
 

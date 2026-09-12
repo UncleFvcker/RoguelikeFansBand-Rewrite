@@ -710,7 +710,6 @@ async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   if (snapshot.mogaminator.locale !== localization.locale) {
     await dispatch({ type: "set-interface-locale", locale: localization.locale });
   }
-  await nativeSavePanel.refresh();
 }
 
 async function restartSameSetup(): Promise<void> {

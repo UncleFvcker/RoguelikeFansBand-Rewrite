@@ -902,6 +902,19 @@ fn validate_item_creation_state(
                 .iter()
                 .any(|tag| matches!(tag.as_str(), "weapon" | "launcher" | "ammunition" | "armor")));
     let origin_is_valid = match origin_kind {
+        Some(ItemOriginKindDto::Shop) => {
+            discount_percent == 0
+                || discounted_equipment
+                || (matches!(discount_percent, 25 | 50 | 75 | 90)
+                    && definition.artifact_generation.is_none()
+                    && definition.rfb_base_kind.is_some_and(|base| {
+                        matches!(base.tval, 40 | 45)
+                            || matches!(
+                                (base.tval, base.sval),
+                                (35, 7) | (32, 8) | (30, 4) | (31, 6) | (34, 6)
+                            )
+                    }))
+        }
         Some(ItemOriginKindDto::ArtifactCreation) => matches!(discount_percent, 0 | 99),
         None => discount_percent == 0 || discounted_equipment,
         Some(ItemOriginKindDto::Mixed) => {

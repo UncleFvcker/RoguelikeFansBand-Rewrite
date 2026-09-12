@@ -364,9 +364,12 @@ pub enum DungeonEntryRequirementDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum DungeonEntryTaskStatus {
+    Locked,
     Available,
+    Taken,
     Active,
     Paused,
+    RewardAvailable,
     Completed,
     Failed,
     Abandoned,
@@ -462,12 +465,18 @@ pub struct ProceduralFloorDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InlineFloorMapDefinition {
+    #[serde(default)]
+    pub vault_positions: Vec<ContentPosition>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub inherit_wilderness_terrain: bool,
     pub player_position: ContentPosition,
     pub terrain_overrides: Vec<InlineTerrainOverrideDefinition>,
     #[serde(default)]
+    pub task_terrain_overrides: Vec<TownTaskTerrainOverrideDefinition>,
+    #[serde(default)]
     pub actor_spawns: Vec<ActorSpawn>,
+    #[serde(default)]
+    pub friend_group_leader_ids: Vec<String>,
     #[serde(default)]
     pub item_spawns: Vec<ItemSpawn>,
     #[serde(default)]
@@ -478,6 +487,25 @@ pub struct InlineFloorMapDefinition {
     pub loot_spawns: Vec<InlineFloorLootSpawnDefinition>,
     #[serde(default)]
     pub monster_formation: Option<InlineMonsterFormationDefinition>,
+}
+
+/// Town cells controlled by task state. The first matching case wins.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TownTaskTerrainOverrideDefinition {
+    pub positions: Vec<ContentPosition>,
+    pub default_terrain_id: String,
+    pub cases: Vec<TownTaskTerrainCaseDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TownTaskTerrainCaseDefinition {
+    pub task_id: String,
+    pub statuses: Vec<DungeonEntryTaskStatus>,
+    pub terrain_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -511,6 +539,18 @@ pub struct InlineFloorLootSpawnDefinition {
     pub id: String,
     pub position: ContentPosition,
     pub loot_table_id: String,
+    #[serde(default)]
+    pub generation_depth: Option<u16>,
+    #[serde(default)]
+    pub forced_ego: Option<InlineForcedEgoDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct InlineForcedEgoDefinition {
+    pub tval: u16,
+    pub affix_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -670,6 +710,10 @@ pub struct TaskDefinition {
     #[serde(default)]
     pub unlock_when_prerequisite_failed: bool,
     #[serde(default)]
+    pub unlock_when_prerequisite_abandoned: bool,
+    #[serde(default)]
+    pub requires_facility_membership: bool,
+    #[serde(default)]
     pub substitution: Option<TaskSubstitutionDefinition>,
     pub location: TaskLocationDefinition,
     pub objectives: Vec<TaskObjectiveDefinition>,
@@ -677,8 +721,20 @@ pub struct TaskDefinition {
     pub target_placements: Vec<TaskTargetPlacementDefinition>,
     #[serde(default)]
     pub completion_exit_terrain_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub failure_return_spawn: Option<TaskFailureReturnSpawnDefinition>,
     #[serde(default)]
     pub reward: Option<TaskRewardDefinition>,
+}
+
+/// One attempt when a non-retakeable task fails or is abandoned, on its town return floor.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TaskFailureReturnSpawnDefinition {
+    pub actor_kind_id: String,
+    pub position: ContentPosition,
+    pub chance_percent: u8,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

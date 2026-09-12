@@ -14,6 +14,7 @@
     { "kind": "restore-vitality", "ownerCost": 500, "otherCost": 2500 },
     { "kind": "cure-mutation", "ownerCost": 10000, "otherCost": 100000 }
   ],
-  "entrancePosition": { "x": 12, "y": 1 },
-  "entranceTerrainId": "demo.terrain.mammon-temple-entrance"
+  "entrancePosition": {"x":51,"y":27},
+  "entranceTerrainId": "demo.terrain.mammon-temple-entrance",
+  "additionalEntrancePositions": [{"x":60,"y":28},{"x":45,"y":29},{"x":46,"y":34}]
 }

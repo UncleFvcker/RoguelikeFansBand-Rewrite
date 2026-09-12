@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.zul-nature-tower",
+  "nameKey": "town-facility-demo-zul-nature-tower-name",
+  "descriptionKey": "town-facility-demo-zul-nature-tower-description",
+  "townId": "demo.town.zul",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-zul-nature-tower-owner-name",
+  "ownerRealmIds": [
+    "nature"
+  ],
+  "entrancePosition": {
+    "x": 72,
+    "y": 16
+  },
+  "entranceTerrainId": "demo.terrain.nature-tower-entrance",
+  "serviceActions": [
+    {
+      "kind": "balance-ritual",
+      "ownerCost": 2000,
+      "otherCost": 10000
+    }
+  ],
+  "taskIds": [
+    "demo.task.zul-nature-node"
+  ]
+}

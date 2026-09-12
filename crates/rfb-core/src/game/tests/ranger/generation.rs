@@ -188,7 +188,8 @@ fn fixed_bows_generate_equip_fire_and_keep_uniqueness_after_loading() {
 fn guild_enchantments_and_tower_identification_use_ranger_roles_and_saved_continuation() {
     for realm in ["sorcery", "death", "arcane", "daemon"] {
         let build = format!("demo.build.ranger-nature-{realm}");
-        for town in ["anambar", "angwil", "morivant", "telmora", "thalos"] {
+        // Thalos defines building 11 in the source but has no corresponding map door.
+        for town in ["anambar", "angwil", "morivant", "telmora"] {
             let mut game = at_level(&build, 3);
             let facility = format!("demo.town-facility.{town}-archer-guild");
             enter_town_facility(&mut game, &facility);

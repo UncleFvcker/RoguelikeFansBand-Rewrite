@@ -53,6 +53,8 @@ pub struct TownFacilityDefinition {
     #[serde(default)]
     pub teleport_level_cost: Option<TownFacilityPrice>,
     #[serde(default)]
+    pub town_teleport: Option<TownFacilityTeleportDefinition>,
+    #[serde(default)]
     pub identify_all_items_cost: Option<TownFacilityPrice>,
     #[serde(default)]
     pub inn_stay_cost: Option<TownFacilityPrice>,
@@ -100,6 +102,14 @@ pub struct TownFacilityPrice {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TownFacilityTeleportDefinition {
+    pub required_completed_task_id: String,
+    pub price: TownFacilityPrice,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TownFacilityBountyDefinition {
     /// The twenty source-ordered prizes for the character's wanted uniques.
     pub wanted_reward_item_kind_ids: Vec<String>,
@@ -121,6 +131,7 @@ pub enum TownFacilityServiceKind {
     Heal,
     RestoreVitality,
     CureMutation,
+    BalanceRitual,
     EnchantWeapon,
     EnchantArmor,
     EnchantAmmunition,
@@ -151,6 +162,8 @@ pub struct ShopDefinition {
     pub town_id: String,
     pub category: ShopCategory,
     pub entrance_position: ContentPosition,
+    #[serde(default)]
+    pub additional_entrance_positions: Vec<ContentPosition>,
     pub entrance_terrain_id: String,
     #[serde(default)]
     pub inn_stay_cost: Option<u32>,
@@ -160,7 +173,17 @@ pub struct ShopDefinition {
     pub inn_reputation_cost: Option<u32>,
     pub owner: ShopOwnerDefinition,
     pub stock: Vec<ShopStockDefinition>,
+    /// Source allocation pool for the two Zul shops that generate equipment instances.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stock_generation_table_id: Option<String>,
     pub maintenance: ShopMaintenanceDefinition,
+}
+
+impl ShopDefinition {
+    pub fn entrance_positions(&self) -> impl Iterator<Item = ContentPosition> + '_ {
+        std::iter::once(self.entrance_position)
+            .chain(self.additional_entrance_positions.iter().copied())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -213,4 +236,6 @@ pub enum ShopCategory {
     MagicShop,
     BlackMarket,
     Bookstore,
+    Jeweler,
+    Dragon,
 }

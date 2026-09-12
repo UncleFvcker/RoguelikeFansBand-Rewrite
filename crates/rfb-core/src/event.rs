@@ -30,6 +30,7 @@ const fn facility_service_key(service: FacilityServiceKindDto) -> &'static str {
         FacilityServiceKindDto::Heal => "heal",
         FacilityServiceKindDto::RestoreVitality => "restore-vitality",
         FacilityServiceKindDto::CureMutation => "cure-mutation",
+        FacilityServiceKindDto::BalanceRitual => "balance-ritual",
         FacilityServiceKindDto::EnchantWeapon => "enchant-weapon",
         FacilityServiceKindDto::EnchantArmor => "enchant-armor",
         FacilityServiceKindDto::EnchantAmmunition => "enchant-ammunition",
@@ -3333,6 +3334,19 @@ impl DomainEvent {
                     [
                         ("facility", facility_id.clone()),
                         ("mutation", mutation_id.clone()),
+                        ("cost", cost.to_string()),
+                        ("balance", gold_balance.to_string()),
+                    ],
+                ),
+                FacilityServiceOutcome::BalanceRitualPerformed {
+                    facility_id,
+                    cost,
+                    gold_balance,
+                } => dto(
+                    "facility.balance-ritual-performed",
+                    "facility-balance-ritual-performed",
+                    [
+                        ("facility", facility_id.clone()),
                         ("cost", cost.to_string()),
                         ("balance", gold_balance.to_string()),
                     ],

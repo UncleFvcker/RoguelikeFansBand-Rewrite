@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/shop.schema.json",
+  "formatVersion": 1,
+  "id": "demo.shop.zul-jeweler",
+  "nameKey": "shop-demo-zul-jeweler-name",
+  "descriptionKey": "shop-demo-zul-jeweler-description",
+  "townId": "demo.town.zul",
+  "category": "jeweler",
+  "entrancePosition": {"x":16,"y":29},
+  "entranceTerrainId": "demo.terrain.jeweler-entrance",
+  "owner": {
+    "id": "demo.shop-owner.zul-dalana",
+    "nameKey": "shop-owner-demo-zul-dalana-name",
+    "raceId": "demo.race.rfb-human",
+    "greedPercent": 108,
+    "purchasePriceCap": 20000
+  },
+  "stock": [],
+  "stockGenerationTableId": "demo.loot-table.base-items",
+  "maintenance": {"intervalWorldTicks":10000}
+}

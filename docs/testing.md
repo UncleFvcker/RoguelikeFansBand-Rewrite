@@ -44,6 +44,22 @@ node e2e/tauri.e2e.mjs --berserker --fast-entry
 
 新增实战脚本可在正式创角后调用 `await prepareDungeonEntry(driver)`，随后沿正常 UI 执行下楼；不要再复制城镇寻路循环。
 
+## 两城地图桌面验收
+
+在 `web` 先执行 `npm run e2e:build`，再执行 `node e2e/tauri.e2e.mjs --town-maps`。使用 Tauri 专用 WebDriver 构建，独立应用标识 `io.github.unclefvcker.rfb-rewrite.e2e` 隔离日常存档和共享馆藏；地图不是浏览器模拟数据。
+
+[场景脚本](../web/e2e/town-maps.e2e.mjs)从正常人类战士创角开始。WebDriver 准备接口仅负责到访阿南巴／萨洛斯并揭示当前地表，既有补给接口放置 10000 测试金币，再由原生拾取键取得。普通 EXE 拒绝准备接口。没有修改地形、授予经验、预设任务结果或清除沿途怪物；不把这段准备称为自然抵达城镇。
+
+后续逐步发送原生数字键移动，覆盖城区商店、阿南巴双门共享库存、城门和远端任务入口；通过 UI 购买、丢物、接取／进入／放弃任务、世界地图往返、旅店往返，以及每城三次原生保存／加载。断言跨荒野滚动后的坐标、完整保存哈希和往返后的地面物品身份。`test-results/town-maps/report.json` 记录路线、视图偏移及画布诊断，同目录保存城区／城门／入口／返回画面；失败细节使用既有 `test-results` 日志和截图。该场景不代替任务成功结算与条件设施的核心专项，也不代表自然练级通关或 Android 验收。
+
+## 祖尔桌面验收
+
+在 `web` 执行 `npm run e2e:build`，随后执行 `node e2e/tauri.e2e.mjs --zul`。[祖尔场景](../web/e2e/zul.e2e.mjs)复用两城脚本的原生键盘、滚动坐标、截图和保存／加载助手，使用同一独立 WebDriver 应用标识。普通可玩产物另用 `npm run build:standalone:debug`，输出 `target/debug/rfb-tauri.exe`。
+
+场景从兽化人、巫术／自然法师正常创角开始；该组合仅用于三塔身份与副领域切换，后续通用路线／战斗验收使用近战角色。准备接口物理到访并揭示祖尔，授予 50 级、一册生命书、长时浮空／无敌、八项非零美德和地面测试金币；玩家用拾取键取得金币。首次等级准备会清除当前怪物，后续祖尔继续按正式荒野规则刷怪；路线每段开始按核心实际实体数（包含视野外怪物）检查，发现实体时使用同一专用清怪入口，记录数量与位置。路线起点和门口使用原生键盘，长距离按当前地图预先规划最多 16 步，顺序调用正式 Rust 移动命令；卷屏或实际落点偏离预期即停止该段，段末原生保存恢复并核对完整状态哈希，不逐格等待界面重绘。四个任务分别先进入、截图和原生保存，再显式移除敌人及其携带物，保留地图地形和源地面物，由正常等待触发目标检查。普通 EXE 拒绝准备接口。
+
+实际 UI 流程覆盖普通／珠宝／龙皮购物、丢物、三塔身份和服务、生命／自然副领域切换、两个方向的视野滚动、四图进出与源奖励、巫术塔和旧城旅店往返。荒野位置／视图偏移来自核心专用检查响应，不把边缘攻击的滚动误算成移动。原生保存／加载逐次核对完整状态哈希；最终往返核对巫术塔落点及原地物品身份。报告和截图在 `test-results/zul/`；失败细节沿用 `test-results` 诊断。完整流程通过后可执行 `node e2e/tauri.e2e.mjs --zul --zul-map-review`：读取四个任务内原生检查点，显式清场／揭示并用 45% WebView 缩放查看完整地图，另写 `map-review-report.json`，结束时恢复最终跨城检查点及原缩放，不覆盖主流程报告。整图落在视窗内仅是这四张截图的完整性检查，不限制正常游戏地图尺寸或镜头滚动。此模式显式刷新一次原生存档列表，并用后端日志断言新游戏和各次选中槽位加载不触发额外列表扫描。无敌和任务清场属于显式测试准备，不代表自然战斗、练级通关、Chaos 施法或 Android 验收。祖尔的失败／放弃、价格拒绝、地形伤害和来源随机边界由核心专项覆盖，见[计划 Z6](../design/zul-town-import-plan-20260912.md#z6聚焦桌面验收与来源收口)。
+
 ## Contract fixture
 
 当前集位于 [tests/fixtures/active/scenarios](../tests/fixtures/active/scenarios/)，分类和最低数量等政策来自 [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)。`rfb-contract` 的 [CLI](../crates/rfb-contract/src/main.rs)和[断言实现](../crates/rfb-contract/src/lib.rs)是精确语义依据。

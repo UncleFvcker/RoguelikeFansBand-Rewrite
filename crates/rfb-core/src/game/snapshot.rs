@@ -1632,6 +1632,9 @@ impl Game {
                     description_key: Some(task_description_key(task, &state).to_owned()),
                     source_facility_id: task.source_facility_id.clone(),
                     has_item_reward: task.reward.is_some(),
+                    unavailable_reason: self
+                        .task_membership_unavailable_reason(task)
+                        .map(str::to_owned),
                     status: state.status,
                     current: state.current,
                     required: state.required,
@@ -1664,7 +1667,7 @@ impl Game {
                 let entrance_position = self
                     .town_facility_entrance_position(facility)
                     .expect("current town task service must retain an active position");
-                let player_at_entrance = self.player.position == entrance_position;
+                let player_at_entrance = self.town_facility_accessible(&facility.id);
                 let tasks = if player_at_entrance {
                     facility
                         .task_ids
@@ -1683,6 +1686,9 @@ impl Game {
                                 ),
                                 source_facility_id: task.source_facility_id.clone(),
                                 has_item_reward: task.reward.is_some(),
+                                unavailable_reason: self
+                                    .task_membership_unavailable_reason(task)
+                                    .map(str::to_owned),
                                 status: state.status,
                                 current: state.current,
                                 required: state.required,
@@ -1697,6 +1703,7 @@ impl Game {
                     Vec::new()
                 };
                 TaskServiceDto {
+                    inn_travel_destinations: self.facility_town_travel_destinations(&facility.id),
                     casino: facility.casino.then(|| self.casino_dto(&facility.id)),
                     id: facility.id.clone(),
                     name_key: facility.name_key.clone(),

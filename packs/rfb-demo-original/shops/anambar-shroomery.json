@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-anambar-shroomery-description",
   "townId": "demo.town.anambar",
   "category": "shroomery",
-  "entrancePosition": { "x": 4, "y": 9 },
+  "entrancePosition": {"x":47,"y":54},
   "entranceTerrainId": "demo.terrain.shroomery-entrance",
   "owner": {
     "id": "demo.shop-owner.anambar-martin",

@@ -46,6 +46,18 @@ pub(super) fn initial_virtues(
     identity: Option<&CharacterBuildIdentity>,
     rng: &mut RfbRng,
 ) -> [VirtueDto; VIRTUE_SLOT_COUNT] {
+    let second_realm = identity
+        .and_then(|identity| content.build(&identity.build_id))
+        .and_then(|build| build.second_realm_id.as_deref());
+    roll_virtues(content, identity, second_realm, rng)
+}
+
+fn roll_virtues(
+    content: &ContentCatalog,
+    identity: Option<&CharacterBuildIdentity>,
+    second_realm: Option<&str>,
+    rng: &mut RfbRng,
+) -> [VirtueDto; VIRTUE_SLOT_COUNT] {
     let mut kinds = Vec::with_capacity(VIRTUE_SLOT_COUNT);
     if let Some(identity) = identity {
         let build = content
@@ -142,12 +154,9 @@ pub(super) fn initial_virtues(
             _ => {}
         }
 
-        for realm in [
-            build.first_realm_id.as_deref(),
-            build.second_realm_id.as_deref(),
-        ]
-        .into_iter()
-        .flatten()
+        for realm in [build.first_realm_id.as_deref(), second_realm]
+            .into_iter()
+            .flatten()
         {
             if let Some(kind) = realm_virtue(realm, &kinds) {
                 kinds.push(kind);
@@ -169,6 +178,19 @@ pub(super) fn initial_virtues(
         kind: kinds[index],
         value: 0,
     })
+}
+
+impl Game {
+    pub(super) fn perform_balance_ritual(&mut self) {
+        // bldg.c::BACT_HEIKOUKA calls virtue_init with the player's current realms.
+        let second_realm = self.current_second_realm_id().map(str::to_owned);
+        self.virtues = roll_virtues(
+            &self.content,
+            self.build.as_ref(),
+            second_realm.as_deref(),
+            &mut self.rng,
+        );
+    }
 }
 
 fn realm_virtue(realm: &str, present: &[VirtueKindDto]) -> Option<VirtueKindDto> {

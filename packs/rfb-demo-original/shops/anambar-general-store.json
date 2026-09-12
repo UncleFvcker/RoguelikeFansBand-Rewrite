@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-anambar-general-store-description",
   "townId": "demo.town.anambar",
   "category": "general-store",
-  "entrancePosition": { "x": 2, "y": 1 },
+  "entrancePosition": {"x":92,"y":45},
   "entranceTerrainId": "demo.terrain.general-store-entrance",
   "owner": {
     "id": "demo.shop-owner.anambar-mara-venn",
@@ -139,5 +139,6 @@
   ],
   "maintenance": {
     "intervalWorldTicks": 10000
-  }
+  },
+  "additionalEntrancePositions": [{"x":92,"y":46}]
 }

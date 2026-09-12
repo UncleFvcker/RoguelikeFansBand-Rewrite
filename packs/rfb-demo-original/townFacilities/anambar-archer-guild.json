@@ -12,6 +12,6 @@
     { "kind": "enchant-ammunition", "ownerCost": 22, "otherCost": 44 },
     { "kind": "enchant-bow", "ownerCost": 0, "otherCost": 0 }
   ],
-  "entrancePosition": { "x": 20, "y": 1 },
+  "entrancePosition": {"x":17,"y":54},
   "entranceTerrainId": "demo.terrain.archer-guild-entrance"
 }

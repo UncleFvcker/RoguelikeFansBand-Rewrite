@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-anambar-bookstore-description",
   "townId": "demo.town.anambar",
   "category": "bookstore",
-  "entrancePosition": { "x": 14, "y": 9 },
+  "entrancePosition": {"x":30,"y":44},
   "entranceTerrainId": "demo.terrain.bookstore-entrance",
   "owner": {
     "id": "demo.shop-owner.anambar-doraf",
@@ -35,5 +35,6 @@
     { "itemKindId": "demo.item.book-of-elements", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
     { "itemKindId": "demo.item.earth-wind-and-fire", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 }
   ],
-  "maintenance": { "intervalWorldTicks": 10000 }
+  "maintenance": { "intervalWorldTicks": 10000 },
+  "additionalEntrancePositions": [{"x":30,"y":46}]
 }

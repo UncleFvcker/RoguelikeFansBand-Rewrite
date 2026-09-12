@@ -404,6 +404,28 @@ impl AppState {
         Ok(session.recorder.game().snapshot())
     }
 
+    #[cfg(feature = "webdriver")]
+    fn prepare_town_map_e2e(&self, town_id: &str) -> Result<GameSnapshot, String> {
+        let mut session = self.lock_session()?;
+        let session = session.as_mut().ok_or("game session is not initialized")?;
+        let mut game = session.recorder.game().clone();
+        game.debug_prepare_town_map_e2e(town_id)
+            .map_err(|error| error.to_string())?;
+        session.recorder = ReplayRecorder::new(game);
+        Ok(session.recorder.game().snapshot())
+    }
+
+    #[cfg(feature = "webdriver")]
+    fn prepare_zul_e2e(&self, clear_enemies: bool) -> Result<GameSnapshot, String> {
+        let mut session = self.lock_session()?;
+        let session = session.as_mut().ok_or("game session is not initialized")?;
+        let mut game = session.recorder.game().clone();
+        game.debug_prepare_zul_e2e(clear_enemies)
+            .map_err(|error| error.to_string())?;
+        session.recorder = ReplayRecorder::new(game);
+        Ok(session.recorder.game().snapshot())
+    }
+
     fn lock_session(&self) -> Result<std::sync::MutexGuard<'_, Option<GameSession>>, String> {
         self.session
             .lock()
@@ -699,16 +721,64 @@ fn prepare_stairs_e2e(
 }
 
 #[tauri::command]
-fn inspect_game_e2e(state: tauri::State<'_, AppState>) -> Result<GameSnapshot, String> {
+fn prepare_town_map_e2e(
+    state: tauri::State<'_, AppState>,
+    town_id: String,
+) -> Result<GameSnapshot, String> {
+    #[cfg(feature = "webdriver")]
+    {
+        state.prepare_town_map_e2e(&town_id)
+    }
+    #[cfg(not(feature = "webdriver"))]
+    {
+        let _ = (state, town_id);
+        Err("Town map E2E fixture is unavailable".to_owned())
+    }
+}
+
+#[tauri::command]
+fn prepare_zul_e2e(
+    state: tauri::State<'_, AppState>,
+    clear_enemies: bool,
+) -> Result<GameSnapshot, String> {
+    #[cfg(feature = "webdriver")]
+    {
+        state.prepare_zul_e2e(clear_enemies)
+    }
+    #[cfg(not(feature = "webdriver"))]
+    {
+        let _ = (state, clear_enemies);
+        Err("Zul E2E fixture is unavailable".to_owned())
+    }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct E2eInspection {
+    #[serde(flatten)]
+    snapshot: GameSnapshot,
+    wilderness_position: Option<rfb_protocol::Position>,
+    wilderness_view_offset: rfb_protocol::Position,
+    active_actor_count: usize,
+}
+
+#[tauri::command]
+fn inspect_game_e2e(state: tauri::State<'_, AppState>) -> Result<E2eInspection, String> {
     #[cfg(feature = "webdriver")]
     {
         let session = state.lock_session()?;
-        Ok(session
+        let game = session
             .as_ref()
             .ok_or("game session is not initialized")?
             .recorder
-            .game()
-            .snapshot())
+            .game();
+        let save = game.to_save();
+        Ok(E2eInspection {
+            snapshot: game.snapshot(),
+            wilderness_position: save.wilderness_position,
+            wilderness_view_offset: save.wilderness_view_offset,
+            active_actor_count: save.entities.len(),
+        })
     }
     #[cfg(not(feature = "webdriver"))]
     {
@@ -757,6 +827,7 @@ fn list_native_saves(
     app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
 ) -> DesktopResult<Vec<NativeSaveSummary>> {
+    log_event(&app, "native-save-list-started", "");
     let _storage = state.lock_storage()?;
     let result: DesktopResult<Vec<NativeSaveSummary>> = (|| {
         let mut summaries = native_store(&app)?.list()?;
@@ -935,6 +1006,8 @@ pub fn run() {
             prepare_duelist_e2e,
             prepare_spell_learning_e2e,
             prepare_stairs_e2e,
+            prepare_town_map_e2e,
+            prepare_zul_e2e,
             inspect_game_e2e,
             save_game,
             load_game,

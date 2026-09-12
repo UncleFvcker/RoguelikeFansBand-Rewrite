@@ -7,7 +7,7 @@ use rfb_content::{
     TaskLocationDefinition, TaskObjectiveDefinition, TaskObjectiveKind, TaskRewardDefinition,
     TaskRewardEntryDefinition, TownFacilityCategory, WorldDefinition,
 };
-use rfb_protocol::{CampaignStatusDto, ItemQualityDto, TaskStatusKindDto};
+use rfb_protocol::{CampaignStatusDto, FacilityMembershipDto, ItemQualityDto, TaskStatusKindDto};
 
 use crate::{
     error::CoreError,
@@ -159,6 +159,8 @@ fn task_initial_status(
                 state.status == TaskStatusKindDto::Completed
                     || (task.unlock_when_prerequisite_failed
                         && state.status == TaskStatusKindDto::Failed)
+                    || (task.unlock_when_prerequisite_abandoned
+                        && state.status == TaskStatusKindDto::Abandoned)
             })
         })
     {
@@ -206,6 +208,25 @@ pub(super) fn projected_task_state(
         state.status = task_initial_status(world, task, states);
     }
     Some(state)
+}
+
+pub(super) fn task_status_matches(
+    actual: TaskStatusKindDto,
+    expected: rfb_content::DungeonEntryTaskStatus,
+) -> bool {
+    use rfb_content::DungeonEntryTaskStatus as Status;
+    actual
+        == match expected {
+            Status::Locked => TaskStatusKindDto::Locked,
+            Status::Available => TaskStatusKindDto::Available,
+            Status::Taken => TaskStatusKindDto::Taken,
+            Status::Active => TaskStatusKindDto::Active,
+            Status::Paused => TaskStatusKindDto::Paused,
+            Status::RewardAvailable => TaskStatusKindDto::RewardAvailable,
+            Status::Completed => TaskStatusKindDto::Completed,
+            Status::Failed => TaskStatusKindDto::Failed,
+            Status::Abandoned => TaskStatusKindDto::Abandoned,
+        }
 }
 
 pub(super) fn task_applies_to_floor(
@@ -643,8 +664,10 @@ fn task_service_accessible(game: &Game, facility_id: &str) -> bool {
     let Some(facility) = game.content.town_facility(facility_id) else {
         return false;
     };
-    facility.category == TownFacilityCategory::QuestGiver
-        && game.town_facility_accessible(facility_id)
+    matches!(
+        facility.category,
+        TownFacilityCategory::QuestGiver | TownFacilityCategory::Service
+    ) && game.town_facility_accessible(facility_id)
 }
 
 fn selected_reward_entry<'a>(
@@ -745,6 +768,25 @@ impl Game {
     pub(super) fn fame_on_failure(&mut self) {
         self.fame -= (self.fame / 2).min(30);
     }
+    pub(super) fn task_membership_unavailable_reason(
+        &self,
+        task: &TaskDefinition,
+    ) -> Option<&'static str> {
+        if !task.requires_facility_membership {
+            return None;
+        }
+        let facility = self
+            .content
+            .town_facility(
+                task.source_facility_id
+                    .as_deref()
+                    .expect("member task must have a source facility"),
+            )
+            .expect("task source facility must exist");
+        (self.town_facility_membership(facility) == FacilityMembershipDto::Visitor)
+            .then_some("task-membership-required")
+    }
+
     pub(super) fn accept_task(
         &mut self,
         facility_id: &str,
@@ -767,6 +809,9 @@ impl Game {
         };
         if task.source_facility_id.as_deref() != Some(facility_id) {
             return Err("task-source-mismatch");
+        }
+        if let Some(reason) = self.task_membership_unavailable_reason(&task) {
+            return Err(reason);
         }
         if !task_is_selected(world, &self.task_states, task_id) {
             return Err("task-unavailable");
@@ -799,6 +844,24 @@ impl Game {
         }
         let entry_changes = task_floors(world, task_id)
             .filter_map(|floor| {
+                // Conditional town cells derive their entrance from the new task state.
+                // Ordinary terrain (water, mountain, Home's wall) has no available marker.
+                if world.procedural_floors.iter().any(|town| {
+                    town.id == floor.return_floor_id
+                        && town.inline_map.as_ref().is_some_and(|map| {
+                            map.task_terrain_overrides.iter().any(|rule| {
+                                rule.cases.iter().any(|case| {
+                                    case.task_id == task_id
+                                        && Some(&case.terrain_id) == floor.entry_terrain_id.as_ref()
+                                        && case
+                                            .statuses
+                                            .contains(&rfb_content::DungeonEntryTaskStatus::Taken)
+                                })
+                            })
+                        })
+                }) {
+                    return None;
+                }
                 Some((
                     floor.available_entry_terrain_id.as_ref()?.clone(),
                     floor.entry_terrain_id.as_ref()?.clone(),
@@ -862,6 +925,49 @@ impl Game {
         Ok(changed)
     }
 
+    pub(super) fn spawn_task_failure_return(&mut self, task_id: &str) {
+        let Some(spawn) = self
+            .content
+            .world(&self.world_id)
+            .and_then(|world| task_definition(world, task_id))
+            .and_then(|task| task.failure_return_spawn.as_ref())
+            .cloned()
+        else {
+            return;
+        };
+        // The source rolls while rebuilding this town tile. Persistent towns instead
+        // roll once on failure return; the resulting actor remains ordinary saved town state.
+        if self.rng.bounded(100) >= u64::from(spawn.chance_percent) {
+            return;
+        }
+        let position = crate::save::position_from_content(spawn.position);
+        let definition = self
+            .content
+            .actor(&spawn.actor_kind_id)
+            .expect("validated failure actor");
+        if position == self.player.position
+            || self.entities.iter().any(|actor| actor.position == position)
+            || !super::movement::actor_can_cross_terrain(
+                definition,
+                self.content
+                    .terrain(self.terrain_at(position))
+                    .expect("return terrain exists"),
+            )
+        {
+            return;
+        }
+        let actor = super::spawn_actor_from_definition(
+            &mut self.rng,
+            definition,
+            &format!("{task_id}.failure-return"),
+            position,
+            super::INITIAL_MONSTER_ENERGY_NEED,
+            super::actor_starts_alerted(definition),
+        );
+        self.entities.push(actor);
+        self.entities.sort_by(|left, right| left.id.cmp(&right.id));
+    }
+
     pub(super) fn claim_task_reward(
         &mut self,
         facility_id: &str,
@@ -886,6 +992,9 @@ impl Game {
         if task.source_facility_id.as_deref() != Some(facility_id) {
             return Err("task-source-mismatch");
         }
+        if let Some(reason) = self.task_membership_unavailable_reason(&task) {
+            return Err(reason);
+        }
         if self
             .task_states
             .get(task_id)
@@ -893,7 +1002,7 @@ impl Game {
         {
             return Err("reward-unavailable");
         }
-        // q_old_castle's RANDOM27 is a birth-time choice. Use the existing durable
+        // q_old_castle RANDOM27 and q_eddies RANDOM77 are birth-time choices. Use the existing durable
         // selection seed, so intervening commands and failed claims cannot reroll it.
         let fixed_castle_reward = self.build.as_ref().is_some_and(|build| {
             matches!(
@@ -906,10 +1015,9 @@ impl Game {
                     | "demo.class.warrior-mage"
             )
         });
-        if fixed_castle_reward
-            && task_id == "demo.task.old-castle"
-            && let Some(reward) = task.reward.as_mut()
-        {
+        let fixed_task_reward = task_id == "demo.task.zul-eddies"
+            || (fixed_castle_reward && task_id == "demo.task.old-castle");
+        if fixed_task_reward && let Some(reward) = task.reward.as_mut() {
             let mut selection =
                 crate::rng::RfbRng::seeded(task_selection_seed(task_id, self.wilderness_seed));
             let entry = selected_reward_entry(
@@ -968,15 +1076,12 @@ impl Game {
             ItemLocation::Inventory,
             &mut self.rng,
         );
-        if fixed_castle_reward
-            && task_id == "demo.task.old-castle"
-            && self.generated_artifact_ids.contains(&reward.kind_id)
-        {
+        if fixed_task_reward && self.generated_artifact_ids.contains(&reward.kind_id) {
             reward = super::random_artifact::materialize_replacement(
                 &self.content,
                 &mut self.rng,
                 &reward,
-                class_id.expect("reward class"),
+                class_id.unwrap_or(""),
                 &mut self.random_artifact_names,
             )
             .expect("validated class reward has an RFB base and random artifact data");

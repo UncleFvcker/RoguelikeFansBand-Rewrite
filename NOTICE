@@ -114,6 +114,83 @@ selection and adaptation scope are recorded in
 packs/rfb-demo-original/legacy-wilderness-selection.json and
 design/outpost-map-plan-20260910.md.
 
+The Anambar town layout and conditional surface cells in
+packs/rfb-demo-original/worlds/middle-earth.json are adapted from
+lib/edit/t_ana.txt and lib/edit/t_pref.txt at RoguelikeFansBand master commit
+a0d92b6378d148c5262cc236b8fa6ed2ca06a54c. The source explicitly states
+"Town: Anambar", "(adapted from Frogspawn)", and describes the area west and
+southwest of the big open square as a tribute to a different game. These
+attributions are retained without assigning an unidentified author or game.
+This imported material is an exception to the statement above that legacy
+content is not included; its upstream terms remain applicable rather than
+this repository's default content license. No permission statement from
+another town map is attributed to Anambar. Source selection and adaptation
+limits, including the one-time failure-return triceratops roll for persistent
+town state, are recorded in packs/rfb-demo-original/legacy-wilderness-selection.json
+and design/anambar-thalos-map-restoration-plan-20260912.md.
+
+The Thalos town layout and conditional Museum and sorcerer tower cells in
+packs/rfb-demo-original/worlds/middle-earth.json are adapted from
+lib/edit/t_thalos.txt and lib/edit/t_pref.txt at RoguelikeFansBand master commit
+a0d92b6378d148c5262cc236b8fa6ed2ca06a54c. The source states "New Thalos" and
+"Prettied up for FrogComposband"; it does not identify an individual author.
+This imported material is an exception to the statement above that legacy
+content is not included and retains its upstream terms rather than this
+repository's default content license. No permission statement from another
+town map is attributed to Thalos. Source selection and adaptation limits
+are recorded in packs/rfb-demo-original/legacy-wilderness-selection.json
+and design/anambar-thalos-map-restoration-plan-20260912.md.
+
+The Zul town layout, door names and wilderness location are adapted from
+lib/edit/t_zul.txt, t_pref.txt, f_info.txt, t_info.txt and w_info.txt at
+RoguelikeFansBand master commit a0d92b6378d148c5262cc236b8fa6ed2ca06a54c.
+The source town template does not identify an individual author. This
+imported material retains its upstream terms rather than this repository's
+default content license; no permission statement from another town is
+attributed to Zul. The encounter exception follows src/wild.c at that commit.
+Source selection, reused ordinary-shop adaptations and acceptance limits
+are recorded in packs/rfb-demo-original/legacy-wilderness-selection.json and
+design/zul-town-import-plan-20260912.md. Quest 77 and the three node quests
+are described below.
+
+Zul's Jeweler and Dragonskin stock hooks, owners and prices are adapted from
+src/shop.c, src/xtra1.c and src/object2.c at the same master commit. The ten
+additional dragon scale mail kinds, Chinese names and breath effects derive
+from lib/edit/k_info.txt, src/kind_name_zh.inc and src/devices.c. These imported
+definitions and strings retain the applicable upstream terms documented above.
+The item selection/adaptation ledgers record each source kind; the Zul plan
+records the retained maintenance and equipment-engine adaptations and the Z6
+source, runtime, save and desktop verification scope.
+
+Zul's three tower names, owners, realm/race memberships and service prices
+derive from lib/edit/t_zul.txt at that same commit. All-item identification,
+mutation treatment and the Ritual of Balance follow src/bldg.c; the ritual
+reuses this project's src/virtue.c adaptation with the player's current
+secondary realm. Existing birth virtue selection remains unchanged. Tower
+quest 77, town teleport and member node quests are described below.
+The Zul plan records acceptance evidence and explicit test preparation.
+
+Zul quest 77 uses the complete lib/edit/q_eddies.txt map and Chinese dialogue,
+retaining its credit "New quest for FrogComposband 7.0.peppermint". The task
+name comes from src/quest_name_zh.inc; source kind 139 and artifacts 343-345
+come from k_info.txt/a_info.txt and their corresponding Chinese name tables
+at the same master commit. The forced bat cloak, quest reward and teleport
+adaptations follow rooms.c, quest.c, bldg.c and wild.c; RESTORING follows
+devices.c. These materials retain their applicable upstream terms. Exact
+selection, local RNG/alertness adaptations and validation scope are recorded
+in legacy-wilderness-selection.json and the Zul plan.
+
+Zul node quests 10-12 use the complete lib/edit/q_sorcery.txt, q_chaos.txt and
+q_nature.txt maps and Chinese dialogue at that same master commit, retaining
+each source credit: "Created by Topi Ylinen". Monster name resolution follows
+src/init1.c; MON(hell hound) resolves to source 829 Hell hound of Julian, with
+NO_GROUP. Source kind 515 and its Chinese display name come from k_info.txt and
+kind_name_zh.inc. Member admission follows bldg.c/t_zul.txt; terrain inheritance,
+friend groups and periodic water/lava exposure follow rooms.c, monster2.c and
+dungeon.c through the existing local mechanics. Their applicable upstream
+terms remain in force; local adaptations and acceptance limits are recorded
+in the Zul source selection and plan. Chaos spellcasting is not included.
+
 The generated Android Gradle/Kotlin scaffold under web/src-tauri/gen/android is derived
 from Tauri CLI templates. Tauri is available under the Apache License 2.0 or MIT License:
 https://github.com/tauri-apps/tauri

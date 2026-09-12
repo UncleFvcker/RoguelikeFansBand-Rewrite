@@ -8,6 +8,6 @@
   "category": "home",
   "storageId": "demo.town-facility.thalos-museum",
   "rejectArtifactDeposits": true,
-  "entrancePosition": { "x": 20, "y": 9 },
+  "entrancePosition": {"x":86,"y":50},
   "entranceTerrainId": "demo.terrain.museum-entrance"
 }

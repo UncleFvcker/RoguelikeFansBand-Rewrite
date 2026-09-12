@@ -30312,7 +30312,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         assert_eq!(mayor.owner_name, "锆石·吉姆");
         assert_eq!(
             mayor.entrance_position,
-            DemoWildernessPosition { x: 16, y: 9 }
+            DemoWildernessPosition { x: 107, y: 28 }
         );
         assert_eq!(mayor.logical_source_task_indexes, [22, 60, 68, 67, 75]);
         let police = &plan.facilities[1];
@@ -30321,7 +30321,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         assert_eq!(police.owner_name, "瓦茨");
         assert_eq!(
             police.entrance_position,
-            DemoWildernessPosition { x: 12, y: 9 }
+            DemoWildernessPosition { x: 74, y: 33 }
         );
         assert_eq!(police.logical_source_task_indexes, [74, 73, 72]);
         assert!(

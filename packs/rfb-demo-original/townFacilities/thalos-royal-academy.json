@@ -16,6 +16,6 @@
     "demo.task.thalos-dark-academy",
     "demo.task.thalos-renegade-sorcerer"
   ],
-  "entrancePosition": { "x": 21, "y": 9 },
+  "entrancePosition": {"x":55,"y":31},
   "entranceTerrainId": "demo.terrain.royal-academy-entrance"
 }

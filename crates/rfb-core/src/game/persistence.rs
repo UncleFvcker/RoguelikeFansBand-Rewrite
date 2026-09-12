@@ -931,14 +931,7 @@ impl Game {
             &payload.town_states,
             &payload.shop_states,
         )?;
-        let home_states = restore_home_states(
-            world,
-            &content,
-            &town_states,
-            &current_floor_id,
-            payload.player.position,
-            &payload.home_states,
-        )?;
+        let home_states = restore_home_states(world, &content, &town_states, &payload.home_states)?;
         let expected_len = usize::from(payload.terrain.width) * usize::from(payload.terrain.height);
         if expected_len == 0
             || payload.terrain.terrain_ids.len() != expected_len

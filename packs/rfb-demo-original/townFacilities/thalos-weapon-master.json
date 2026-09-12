@@ -10,6 +10,6 @@
   "serviceActions": [
     { "kind": "assess-armor", "ownerCost": 100, "otherCost": 100 }
   ],
-  "entrancePosition": { "x": 8, "y": 9 },
+  "entrancePosition": {"x":15,"y":32},
   "entranceTerrainId": "demo.terrain.weapon-master-entrance"
 }

@@ -180,6 +180,20 @@ pub(super) fn item_creation_state_is_valid(
                 .iter()
                 .any(|tag| matches!(tag.as_str(), "weapon" | "launcher" | "ammunition" | "armor")));
     let player_made_state_is_valid = match item.origin_kind {
+        Some(ItemOriginKindDto::Shop) => {
+            item.discount_percent == 0
+                || discounted_equipment
+                || (matches!(item.discount_percent, 25 | 50 | 75 | 90)
+                    && item.artifact_name.is_none()
+                    && definition.artifact_generation.is_none()
+                    && definition.rfb_base_kind.is_some_and(|base| {
+                        matches!(base.tval, 40 | 45)
+                            || matches!(
+                                (base.tval, base.sval),
+                                (35, 7) | (32, 8) | (30, 4) | (31, 6) | (34, 6)
+                            )
+                    }))
+        }
         Some(ItemOriginKindDto::ArtifactCreation) => {
             item.artifact_name.is_some() && matches!(item.discount_percent, 0 | 99)
         }
@@ -702,10 +716,7 @@ impl Game {
                         .content
                         .shop(shop_id)
                         .expect("validated town shop must remain available");
-                    self.town_local_to_active_position(
-                        &town.id,
-                        position_from_content(shop.entrance_position),
-                    ) == Some(self.player.position)
+                    self.shop_entrance_position(shop) == Some(self.player.position)
                         && !self
                             .shop_states
                             .get(shop_id)
@@ -719,10 +730,7 @@ impl Game {
                         .town_facility(facility_id)
                         .expect("validated town facility must remain available");
                     facility.category == rfb_content::TownFacilityCategory::Home
-                        && self.town_local_to_active_position(
-                            &town.id,
-                            position_from_content(facility.entrance_position),
-                        ) == Some(self.player.position)
+                        && self.town_facility_accessible(&facility.id)
                         && !self
                             .home_states
                             .get(

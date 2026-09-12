@@ -6,7 +6,7 @@
   "descriptionKey": "shop-demo-anambar-bookstore-description",
   "townId": "demo.town.thalos",
   "category": "bookstore",
-  "entrancePosition": { "x": 16, "y": 1 },
+  "entrancePosition": {"x":112,"y":43},
   "entranceTerrainId": "demo.terrain.bookstore-entrance",
   "owner": {
     "id": "demo.shop-owner.thalos-doraf",

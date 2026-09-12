@@ -3,9 +3,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use rfb_content::{
-    DungeonDefinition, DungeonEntryRequirementDefinition, DungeonEntryTaskStatus,
-    DungeonInstanceLifecycle, FloorLifecycle, ProceduralFloorDefinition, RetakeFloorPolicy,
-    TerrainDefinition, WildernessLocationDefinition, WorldDefinition,
+    DungeonDefinition, DungeonEntryRequirementDefinition, DungeonInstanceLifecycle, FloorLifecycle,
+    ProceduralFloorDefinition, RetakeFloorPolicy, TerrainDefinition, WildernessLocationDefinition,
+    WorldDefinition,
 };
 use rfb_protocol::{Position, RecallStateDto, SummonCommandModeDto, TaskStatusKindDto};
 
@@ -157,27 +157,9 @@ fn dungeon_entry_requirements_met(
         .entry_requirements
         .iter()
         .all(|requirement| match requirement {
-            DungeonEntryRequirementDefinition::TaskStatus { task_id, status } => {
-                task_states.get(task_id).is_some_and(|state| {
-                    matches!(
-                        (state.status, status),
-                        (
-                            TaskStatusKindDto::Available,
-                            DungeonEntryTaskStatus::Available
-                        ) | (TaskStatusKindDto::Active, DungeonEntryTaskStatus::Active)
-                            | (TaskStatusKindDto::Paused, DungeonEntryTaskStatus::Paused)
-                            | (
-                                TaskStatusKindDto::Completed,
-                                DungeonEntryTaskStatus::Completed
-                            )
-                            | (TaskStatusKindDto::Failed, DungeonEntryTaskStatus::Failed)
-                            | (
-                                TaskStatusKindDto::Abandoned,
-                                DungeonEntryTaskStatus::Abandoned
-                            )
-                    )
-                })
-            }
+            DungeonEntryRequirementDefinition::TaskStatus { task_id, status } => task_states
+                .get(task_id)
+                .is_some_and(|state| super::tasks::task_status_matches(state.status, *status)),
             DungeonEntryRequirementDefinition::DungeonConquered { dungeon_id } => dungeon_states
                 .get(dungeon_id)
                 .is_some_and(|state| !state.suppressed && state.guardian_defeated),
@@ -1206,6 +1188,14 @@ impl Game {
         }
 
         self.activate_floor(destination, global_items);
+        if let Some(departure) = &plan.one_shot_departure
+            && matches!(
+                departure.resolution,
+                Some(TaskResolution::Failed | TaskResolution::Abandoned)
+            )
+        {
+            self.spawn_task_failure_return(&departure.task_id);
+        }
         if let Some(mut mount) = riding_actor {
             mount.position = self.player.position;
             self.entities.push(mount);

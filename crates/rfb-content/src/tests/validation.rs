@@ -3,56 +3,157 @@ use std::collections::BTreeMap;
 use super::*;
 
 #[test]
-fn warrior_mage_requires_arcane_and_a_distinct_supported_second_realm() {
-    let original = compile_pack_dir(&original_pack_path()).unwrap().content;
-    for (first, second) in [
-        (None, Some("life")),
-        (Some("arcane"), None),
-        (Some("life"), Some("death")),
-        (Some("arcane"), Some("arcane")),
-        (Some("arcane"), Some("chaos")),
-    ] {
-        let mut invalid = original.clone();
-        let build = invalid
-            .builds
+fn task_failure_return_spawn_rejects_invalid_actors_positions_probability_and_lifecycle() {
+    let content = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for fault in 0..6 {
+        let mut invalid = content.clone();
+        let world = &mut invalid.worlds[0];
+        let task = world
+            .tasks
             .iter_mut()
-            .find(|build| build.id == "demo.build.warrior-mage-arcane-life")
+            .find(|task| task.id == "demo.task.anambar-dinosaur-quest")
             .unwrap();
-        build.first_realm_id = first.map(str::to_owned);
-        build.second_realm_id = second.map(str::to_owned);
+        let spawn = task.failure_return_spawn.as_mut().unwrap();
+        match fault {
+            0 => spawn.actor_kind_id = "demo.actor.missing".into(),
+            1 => spawn.chance_percent = 101,
+            2 => spawn.position.x = 198,
+            3 => spawn.position = ContentPosition { x: 105, y: 57 }, // Conditional Home cell.
+            4 => {
+                world
+                    .procedural_floors
+                    .iter_mut()
+                    .find(|floor| floor.id == "demo.floor.anambar-dinosaur-quest")
+                    .unwrap()
+                    .retakeable = true
+            }
+            5 => {
+                world
+                    .procedural_floors
+                    .iter_mut()
+                    .find(|floor| floor.id == "demo.floor.anambar-dinosaur-quest")
+                    .unwrap()
+                    .return_floor_id = "demo.floor.surface".into()
+            }
+            _ => unreachable!(),
+        }
+        assert!(
+            validate_and_normalize(&mut invalid).is_err(),
+            "fault {fault}"
+        );
+    }
+}
+
+#[test]
+fn town_task_terrain_rejects_invalid_references_overlaps_and_non_town_usage() {
+    let mut valid = compile_pack_dir(&original_pack_path()).unwrap().content;
+    let floor = valid.worlds[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|floor| floor.id == "demo.floor.anambar")
+        .unwrap();
+    floor
+        .inline_map
+        .as_mut()
+        .unwrap()
+        .task_terrain_overrides
+        .push(TownTaskTerrainOverrideDefinition {
+            positions: vec![ContentPosition { x: 3, y: 5 }],
+            default_terrain_id: "demo.terrain.surface-grass".into(),
+            cases: vec![TownTaskTerrainCaseDefinition {
+                task_id: "demo.task.anambar-cop-quest".into(),
+                statuses: vec![DungeonEntryTaskStatus::Taken],
+                terrain_id: "demo.terrain.permanent-wall".into(),
+            }],
+        });
+    validate_and_normalize(&mut valid).unwrap();
+    for fault in 0..7 {
+        let mut invalid = valid.clone();
+        let floor = invalid.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.anambar")
+            .unwrap();
+        let rules = &mut floor.inline_map.as_mut().unwrap().task_terrain_overrides;
+        match fault {
+            0 => rules[0].cases[0].task_id = "demo.task.missing".into(),
+            1 => rules[0].cases[0].terrain_id = "demo.terrain.missing".into(),
+            2 => rules[0].cases[0].statuses.clear(),
+            3 => {
+                let position = rules[0].positions[0];
+                rules[0].positions.push(position);
+            }
+            4 => rules[0].positions[0].x = floor.width,
+            5 => {
+                let case = rules[0].cases[0].clone();
+                rules[0].cases.push(case);
+            }
+            6 => floor.lifecycle = FloorLifecycle::OneShot,
+            _ => unreachable!(),
+        }
+        assert!(
+            validate_and_normalize(&mut invalid).is_err(),
+            "fault {fault}"
+        );
+    }
+}
+
+#[test]
+fn shop_additional_doors_reject_duplicates_collisions_and_wrong_terrain() {
+    let original = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for fault in 0..3 {
+        let mut invalid = original.clone();
+        let shop = invalid
+            .shops
+            .iter_mut()
+            .find(|shop| shop.id == "demo.shop.anambar-general-store")
+            .unwrap();
+        shop.additional_entrance_positions.push(match fault {
+            0 => shop.entrance_position,
+            1 => ContentPosition { x: 105, y: 44 }, // Another shop.
+            _ => ContentPosition { x: 99, y: 33 },  // Ordinary floor.
+        });
         assert!(matches!(
             validate_and_normalize(&mut invalid),
-            Err(ContentError::InvalidCharacterBuild(_))
+            Err(ContentError::InvalidShop(_))
         ));
     }
 }
 
 #[test]
-fn priest_birth_requires_a_primary_alignment_and_distinct_non_opposing_second_realm() {
+fn generated_shops_require_a_source_pool_and_matching_kind_candidates() {
     let original = compile_pack_dir(&original_pack_path()).unwrap().content;
-    for (first, second) in [
-        (None, Some("life")),
-        (Some("sorcery"), Some("life")),
-        (Some("life"), None),
-        (Some("life"), Some("life")),
-        (Some("life"), Some("death")),
-        (Some("crusade"), Some("daemon")),
-        (Some("death"), Some("crusade")),
-        (Some("daemon"), Some("life")),
-        (Some("life"), Some("chaos")),
-    ] {
+    for fault in 0..4 {
         let mut invalid = original.clone();
-        let build = invalid
-            .builds
+        let shop = invalid
+            .shops
             .iter_mut()
-            .find(|build| build.id == "demo.build.priest-life-sorcery")
+            .find(|shop| shop.id == "demo.shop.zul-jeweler")
             .unwrap();
-        build.first_realm_id = first.map(str::to_owned);
-        build.second_realm_id = second.map(str::to_owned);
-        assert!(matches!(
-            validate_and_normalize(&mut invalid),
-            Err(ContentError::InvalidCharacterBuild(_))
-        ));
+        match fault {
+            0 => shop.stock_generation_table_id = None,
+            1 => shop.category = ShopCategory::GeneralStore,
+            2 => shop.stock_generation_table_id = Some("demo.loot-table.missing".into()),
+            3 => {
+                let table_id = shop.stock_generation_table_id.clone().unwrap();
+                let table = invalid
+                    .loot_tables
+                    .iter_mut()
+                    .find(|table| table.id == table_id)
+                    .unwrap();
+                table.entries.retain(|entry| {
+                    !invalid.items.iter().any(|item| {
+                        item.id == entry.item_kind_id
+                            && item.rfb_base_kind.is_some_and(|base| base.tval == 45)
+                    })
+                });
+            }
+            _ => unreachable!(),
+        }
+        assert!(
+            validate_and_normalize(&mut invalid).is_err(),
+            "fault {fault}"
+        );
     }
 }
 
@@ -695,4 +796,58 @@ fn human_level_mutation_rewards(
         .find(|race| race.id == "demo.race.rfb-human")
         .expect("Human race should exist")
         .level_mutation_rewards
+}
+
+#[test]
+fn warrior_mage_requires_arcane_and_a_distinct_supported_second_realm() {
+    let original = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for (first, second) in [
+        (None, Some("life")),
+        (Some("arcane"), None),
+        (Some("life"), Some("death")),
+        (Some("arcane"), Some("arcane")),
+        (Some("arcane"), Some("chaos")),
+    ] {
+        let mut invalid = original.clone();
+        let build = invalid
+            .builds
+            .iter_mut()
+            .find(|build| build.id == "demo.build.warrior-mage-arcane-life")
+            .unwrap();
+        build.first_realm_id = first.map(str::to_owned);
+        build.second_realm_id = second.map(str::to_owned);
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidCharacterBuild(_))
+        ));
+    }
+}
+
+#[test]
+fn priest_birth_requires_a_primary_alignment_and_distinct_non_opposing_second_realm() {
+    let original = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for (first, second) in [
+        (None, Some("life")),
+        (Some("sorcery"), Some("life")),
+        (Some("life"), None),
+        (Some("life"), Some("life")),
+        (Some("life"), Some("death")),
+        (Some("crusade"), Some("daemon")),
+        (Some("death"), Some("crusade")),
+        (Some("daemon"), Some("life")),
+        (Some("life"), Some("chaos")),
+    ] {
+        let mut invalid = original.clone();
+        let build = invalid
+            .builds
+            .iter_mut()
+            .find(|build| build.id == "demo.build.priest-life-sorcery")
+            .unwrap();
+        build.first_realm_id = first.map(str::to_owned);
+        build.second_realm_id = second.map(str::to_owned);
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidCharacterBuild(_))
+        ));
+    }
 }

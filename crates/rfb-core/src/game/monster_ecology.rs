@@ -1794,6 +1794,53 @@ impl Game {
     }
 
     #[allow(clippy::too_many_arguments)]
+    pub(super) fn plan_original_friends(
+        &mut self,
+        leader: &ActorDefinition,
+        leader_position: Position,
+        depth: u16,
+        terrain: &[String],
+        width: u16,
+        height: u16,
+        occupied: &mut BTreeSet<Position>,
+    ) -> Vec<OriginalGroupMember> {
+        let mut members = Vec::new();
+        let total = self.original_friend_total(leader, depth);
+        let mut placed = vec![leader_position];
+        let mut source_index = 0;
+        while source_index < placed.len() && placed.len() < usize::from(total) {
+            let origin = placed[source_index];
+            source_index += 1;
+            for _ in 0..8 {
+                if placed.len() >= usize::from(total) {
+                    break;
+                }
+                let position = self.original_scatter_position(terrain, width, height, origin, 4);
+                if occupied.contains(&position)
+                    || !terrain_at_generated_position(
+                        &self.content,
+                        terrain,
+                        width,
+                        height,
+                        position,
+                    )
+                    .is_some_and(|tile| actor_can_cross_terrain(leader, tile))
+                {
+                    continue;
+                }
+                occupied.insert(position);
+                placed.push(position);
+                members.push(OriginalGroupMember {
+                    kind_id: leader.id.clone(),
+                    position,
+                    role: OriginalGroupRole::Friend,
+                });
+            }
+        }
+        members
+    }
+
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn plan_original_group(
         &mut self,
         floor_id: &str,
@@ -1824,39 +1871,15 @@ impl Game {
             .clone();
         let mut members = Vec::new();
         if allocation.friends.is_some() {
-            let total = self.original_friend_total(&leader, depth);
-            let mut placed = vec![leader_position];
-            let mut source_index = 0;
-            while source_index < placed.len() && placed.len() < usize::from(total) {
-                let origin = placed[source_index];
-                source_index += 1;
-                for _ in 0..8 {
-                    if placed.len() >= usize::from(total) {
-                        break;
-                    }
-                    let position =
-                        self.original_scatter_position(terrain, width, height, origin, 4);
-                    if occupied.contains(&position)
-                        || !terrain_at_generated_position(
-                            &self.content,
-                            terrain,
-                            width,
-                            height,
-                            position,
-                        )
-                        .is_some_and(|tile| actor_can_cross_terrain(&leader, tile))
-                    {
-                        continue;
-                    }
-                    occupied.insert(position);
-                    placed.push(position);
-                    members.push(OriginalGroupMember {
-                        kind_id: leader_kind_id.to_owned(),
-                        position,
-                        role: OriginalGroupRole::Friend,
-                    });
-                }
-            }
+            members = self.plan_original_friends(
+                &leader,
+                leader_position,
+                depth,
+                terrain,
+                width,
+                height,
+                occupied,
+            );
         } else if allocation.escort {
             for _ in 0..ORIGINAL_ESCORT_ATTEMPTS {
                 let position =

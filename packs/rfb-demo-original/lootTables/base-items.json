@@ -2046,6 +2046,34 @@
       "weight": 25
     },
     {
+      "itemKindId": "demo.item.black-dragon-scale-mail",
+      "maxDepth": 65535,
+      "minDepth": 40,
+      "quantity": 1,
+      "weight": 20
+    },
+    {
+      "itemKindId": "demo.item.blue-dragon-scale-mail",
+      "maxDepth": 65535,
+      "minDepth": 40,
+      "quantity": 1,
+      "weight": 20
+    },
+    {
+      "itemKindId": "demo.item.white-dragon-scale-mail",
+      "maxDepth": 65535,
+      "minDepth": 40,
+      "quantity": 1,
+      "weight": 20
+    },
+    {
+      "itemKindId": "demo.item.red-dragon-scale-mail",
+      "maxDepth": 65535,
+      "minDepth": 40,
+      "quantity": 1,
+      "weight": 20
+    },
+    {
       "itemKindId": "demo.item.masterwork-armor-scroll",
       "maxDepth": 65535,
       "minDepth": 40,
@@ -2207,6 +2235,13 @@
       "weight": 50
     },
     {
+      "itemKindId": "demo.item.green-dragon-scale-mail",
+      "maxDepth": 65535,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 20
+    },
+    {
       "itemKindId": "demo.item.inventory-protection-scroll",
       "maxDepth": 65535,
       "minDepth": 45,
@@ -2310,6 +2345,27 @@
       "minDepth": 50,
       "quantity": 1,
       "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.pseudo-dragon-scale-mail",
+      "maxDepth": 65535,
+      "minDepth": 50,
+      "quantity": 1,
+      "weight": 12
+    },
+    {
+      "itemKindId": "demo.item.bronze-dragon-scale-mail",
+      "maxDepth": 65535,
+      "minDepth": 50,
+      "quantity": 1,
+      "weight": 20
+    },
+    {
+      "itemKindId": "demo.item.silver-dragon-scale-mail",
+      "maxDepth": 65535,
+      "minDepth": 50,
+      "quantity": 1,
+      "weight": 20
     },
     {
       "itemKindId": "demo.item.gold-dragon-scale-mail",
@@ -2627,6 +2683,13 @@
       "weight": 50
     },
     {
+      "itemKindId": "demo.item.balance-dragon-scale-mail",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 8
+    },
+    {
       "itemKindId": "demo.item.glyph-severance-scroll",
       "maxDepth": 65535,
       "minDepth": 80,
@@ -2693,6 +2756,13 @@
       "itemKindId": "demo.item.hellfire-tome",
       "maxDepth": 65535,
       "minDepth": 80,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.armageddon-tome",
+      "maxDepth": 65535,
+      "minDepth": 85,
       "quantity": 1,
       "weight": 33
     },
@@ -2779,6 +2849,13 @@
       "minDepth": 100,
       "quantity": 1,
       "weight": 25
+    },
+    {
+      "itemKindId": "demo.item.power-dragon-scale-mail",
+      "maxDepth": 65535,
+      "minDepth": 110,
+      "quantity": 1,
+      "weight": 1
     }
   ],
   "formatVersion": 1,

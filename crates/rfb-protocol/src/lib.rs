@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.255";
+pub const PROTOCOL_VERSION: &str = "1.258";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 21;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 22;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -842,47 +842,6 @@ pub enum EquipmentPassiveDto {
     SustainDexterity,
     SustainConstitution,
     SustainCharisma,
-}
-
-fn migrate_rolled_affix_passives<E>(passives: Vec<String>) -> Result<Vec<EquipmentPassiveDto>, E>
-where
-    E: serde::de::Error,
-{
-    passives
-        .into_iter()
-        .filter_map(|passive| match passive.as_str() {
-            "regeneration" => Some(Ok(EquipmentPassiveDto::Regeneration)),
-            "see-invisible" => Some(Ok(EquipmentPassiveDto::SeeInvisible)),
-            "vampiric" => Some(Ok(EquipmentPassiveDto::Vampiric)),
-            "hold-life" => Some(Ok(EquipmentPassiveDto::HoldLife)),
-            "levitation" => Some(Ok(EquipmentPassiveDto::Levitation)),
-            "warning" => Some(Ok(EquipmentPassiveDto::Warning)),
-            "slow-digestion" => Some(Ok(EquipmentPassiveDto::SlowDigestion)),
-            "esp-animal" => Some(Ok(EquipmentPassiveDto::EspAnimal)),
-            "esp-undead" => Some(Ok(EquipmentPassiveDto::EspUndead)),
-            "esp-demon" => Some(Ok(EquipmentPassiveDto::EspDemon)),
-            "esp-orc" => Some(Ok(EquipmentPassiveDto::EspOrc)),
-            "esp-troll" => Some(Ok(EquipmentPassiveDto::EspTroll)),
-            "esp-giant" => Some(Ok(EquipmentPassiveDto::EspGiant)),
-            "esp-dragon" => Some(Ok(EquipmentPassiveDto::EspDragon)),
-            "esp-human" => Some(Ok(EquipmentPassiveDto::EspHuman)),
-            "esp-good" => Some(Ok(EquipmentPassiveDto::EspGood)),
-            "esp-evil" => Some(Ok(EquipmentPassiveDto::EspEvil)),
-            "esp-living" => Some(Ok(EquipmentPassiveDto::EspLiving)),
-            "esp-nonliving" => Some(Ok(EquipmentPassiveDto::EspNonliving)),
-            "telepathy" => Some(Ok(EquipmentPassiveDto::Telepathy)),
-            "sustain-strength" => Some(Ok(EquipmentPassiveDto::SustainStrength)),
-            "sustain-intelligence" => Some(Ok(EquipmentPassiveDto::SustainIntelligence)),
-            "sustain-wisdom" => Some(Ok(EquipmentPassiveDto::SustainWisdom)),
-            "sustain-dexterity" => Some(Ok(EquipmentPassiveDto::SustainDexterity)),
-            "sustain-constitution" => Some(Ok(EquipmentPassiveDto::SustainConstitution)),
-            "sustain-charisma" => Some(Ok(EquipmentPassiveDto::SustainCharisma)),
-            "blessed" | "easy-spell" | "device-power" => None,
-            _ => Some(Err(serde::de::Error::custom(format!(
-                "unknown rolled affix passive `{passive}`"
-            )))),
-        })
-        .collect()
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -2503,6 +2462,9 @@ pub struct TaskStatusDto {
     pub source_facility_id: Option<String>,
     #[serde(default)]
     pub has_item_reward: bool,
+    /// Current membership restriction on accepting or claiming this task.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unavailable_reason: Option<String>,
     pub status: TaskStatusKindDto,
     #[serde(default)]
     pub current: u32,
@@ -2793,7 +2755,7 @@ impl ItemIntrinsicPropertiesSaveDto {
     }
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RolledAffixSaveDto {
@@ -2836,81 +2798,6 @@ pub struct RolledAffixSaveDto {
     pub weapon_traits: Vec<WeaponTraitDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub curse_effects: Vec<ItemCurseEffectDto>,
-}
-
-impl<'de> Deserialize<'de> for RolledAffixSaveDto {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        #[derive(Deserialize)]
-        #[serde(rename_all = "camelCase", deny_unknown_fields)]
-        struct Wire {
-            #[serde(default)]
-            bag_capacity: Option<u16>,
-            affix_id: String,
-            #[serde(default)]
-            rfb_flags: Vec<String>,
-            #[serde(default)]
-            rfb_heavy_curse: bool,
-            #[serde(default)]
-            rfb_pval: Option<RfbPvalSaveDto>,
-            #[serde(default)]
-            device_pval: Option<u16>,
-            #[serde(default)]
-            ammunition_capacity: Option<u16>,
-            #[serde(default)]
-            modifiers: StatModifiersDto,
-            #[serde(default)]
-            equipment_bonuses: EquipmentBonusesDto,
-            #[serde(default)]
-            resistances: Vec<ResistanceDto>,
-            #[serde(default)]
-            status_immunities: Vec<String>,
-            #[serde(default)]
-            slays: Vec<SlayDto>,
-            #[serde(default)]
-            brands: Vec<WeaponBrandDto>,
-            #[serde(default)]
-            passives: Vec<String>,
-            #[serde(default)]
-            enchantment_delta: ItemEnchantmentsDto,
-            #[serde(default)]
-            melee_damage_dice: Option<MeleeDamageDiceDto>,
-            #[serde(default)]
-            weight_tenths_pound: Option<u16>,
-            #[serde(default)]
-            elemental_destruction_immunities: Vec<ItemDestructionElementDto>,
-            #[serde(default)]
-            weapon_traits: Vec<WeaponTraitDto>,
-            #[serde(default)]
-            curse_effects: Vec<ItemCurseEffectDto>,
-        }
-
-        let wire = Wire::deserialize(deserializer)?;
-        Ok(Self {
-            bag_capacity: wire.bag_capacity,
-            affix_id: wire.affix_id,
-            rfb_flags: wire.rfb_flags,
-            rfb_heavy_curse: wire.rfb_heavy_curse,
-            rfb_pval: wire.rfb_pval,
-            device_pval: wire.device_pval,
-            ammunition_capacity: wire.ammunition_capacity,
-            modifiers: wire.modifiers,
-            equipment_bonuses: wire.equipment_bonuses,
-            resistances: wire.resistances,
-            status_immunities: wire.status_immunities,
-            slays: wire.slays,
-            brands: wire.brands,
-            passives: migrate_rolled_affix_passives(wire.passives)?,
-            enchantment_delta: wire.enchantment_delta,
-            melee_damage_dice: wire.melee_damage_dice,
-            weight_tenths_pound: wire.weight_tenths_pound,
-            elemental_destruction_immunities: wire.elemental_destruction_immunities,
-            weapon_traits: wire.weapon_traits,
-            curse_effects: wire.curse_effects,
-        })
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -4245,6 +4132,7 @@ pub enum ItemQualityDto {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ItemOriginKindDto {
+    Shop,
     Mixed,
     Mundanity,
     ArtifactCreation,
@@ -4621,6 +4509,8 @@ pub enum ShopCategoryDto {
     MagicShop,
     BlackMarket,
     Bookstore,
+    Jeweler,
+    Dragon,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4639,6 +4529,8 @@ pub struct ShopOwnerDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ShopStockItemDto {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub affix_name_keys: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     pub id: String,
@@ -4762,6 +4654,8 @@ pub struct HomeDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TaskServiceDto {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inn_travel_destinations: Vec<InnTravelDestinationDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub casino: Option<CasinoDto>,
     pub id: String,
@@ -5051,6 +4945,7 @@ pub enum FacilityServiceKindDto {
     Heal,
     RestoreVitality,
     CureMutation,
+    BalanceRitual,
     EnchantWeapon,
     EnchantArmor,
     EnchantAmmunition,
@@ -6569,64 +6464,35 @@ mod tests {
     }
 
     #[test]
-    fn rolled_affix_save_migrates_supported_passives_and_rejects_unknown_values() {
-        let migrated: RolledAffixSaveDto = serde_json::from_value(serde_json::json!({
-            "affixId": "demo.affix.regeneration",
-            "passives": [
-                "hold-life",
-                "regeneration",
-                "sustain-strength",
-                "sustain-intelligence",
-                "sustain-wisdom",
-                "sustain-dexterity",
-                "sustain-constitution",
-                "sustain-charisma",
-                "telepathy",
-                "vampiric"
-            ]
-        }))
-        .expect("known legacy passives should migrate");
-        assert_eq!(
-            migrated.passives,
-            [
-                EquipmentPassiveDto::HoldLife,
+    fn rolled_affix_save_round_trips_current_passives_and_rejects_unknown_values() {
+        let rolled = RolledAffixSaveDto {
+            affix_id: "demo.affix.test".to_owned(),
+            passives: vec![
+                EquipmentPassiveDto::AntiMagic,
+                EquipmentPassiveDto::ReflectsBolts,
+                EquipmentPassiveDto::Blessed,
+                EquipmentPassiveDto::EasySpell,
                 EquipmentPassiveDto::Regeneration,
-                EquipmentPassiveDto::SustainStrength,
-                EquipmentPassiveDto::SustainIntelligence,
-                EquipmentPassiveDto::SustainWisdom,
-                EquipmentPassiveDto::SustainDexterity,
-                EquipmentPassiveDto::SustainConstitution,
-                EquipmentPassiveDto::SustainCharisma,
-                EquipmentPassiveDto::Telepathy,
-                EquipmentPassiveDto::Vampiric
-            ]
+            ],
+            ..Default::default()
+        };
+        let json = serde_json::to_value(&rolled).unwrap();
+        assert_eq!(
+            serde_json::from_value::<RolledAffixSaveDto>(json).unwrap(),
+            rolled
         );
-
-        let encoded = to_msgpack(&serde_json::json!({
-            "affixId": "demo.affix.regeneration",
-            "passives": [
-                "hold-life",
-                "regeneration",
-                "sustain-strength",
-                "sustain-intelligence",
-                "sustain-wisdom",
-                "sustain-dexterity",
-                "sustain-constitution",
-                "sustain-charisma",
-                "telepathy",
-                "vampiric"
-            ]
-        }))
-        .expect("legacy rolled affix should encode");
-        let migrated_from_msgpack: RolledAffixSaveDto =
-            from_msgpack(&encoded).expect("legacy MessagePack should migrate");
-        assert_eq!(migrated_from_msgpack, migrated);
-
-        let unknown = serde_json::from_value::<RolledAffixSaveDto>(serde_json::json!({
-            "affixId": "demo.affix.regeneration",
-            "passives": ["unknown-passive"]
-        }));
-        assert!(unknown.is_err(), "unknown passives must remain load errors");
+        assert_eq!(
+            from_msgpack::<RolledAffixSaveDto>(&to_msgpack(&rolled).unwrap()).unwrap(),
+            rolled
+        );
+        for passive in ["unknown-passive", "device-power"] {
+            assert!(
+                serde_json::from_value::<RolledAffixSaveDto>(serde_json::json!({
+                    "affixId": "demo.affix.test", "passives": [passive]
+                }))
+                .is_err()
+            );
+        }
     }
 
     #[test]

@@ -572,6 +572,7 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
             items: &content.items,
             races: &content.races,
             classes: &content.classes,
+            loot_tables: &content.loot_tables,
         },
         &mut all_ids,
     )?;
@@ -601,6 +602,7 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
                 builds: &content.builds,
                 affix_ids: &affix_ids,
                 encounter_tables: &encounter_tables_by_id,
+                affixes: &content.affixes,
                 loot_table_ids: &loot_table_ids,
                 loot_tables: &loot_tables_by_id,
                 theme_tables: &theme_tables_by_id,

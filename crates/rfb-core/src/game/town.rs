@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
+mod stock;
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use rfb_content::{
@@ -12,7 +14,8 @@ use rfb_protocol::{
     FacilityServiceTargetDto, HomeDto, HomeItemDto, HomeStateSaveDto, InnTravelDestinationDto,
     ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto, ItemEnchantmentsDto,
     ItemIdentifyResolutionDto, ItemQualityDto, MapScaleDto, Position, ShopCategoryDto, ShopDto,
-    ShopOwnerDto, ShopSellQuoteDto, ShopStateSaveDto, ShopStockItemDto, TownDto, TownStateSaveDto,
+    ShopOwnerDto, ShopSellQuoteDto, ShopStateSaveDto, ShopStockItemDto, TaskStatusKindDto, TownDto,
+    TownStateSaveDto,
 };
 
 use crate::{
@@ -99,6 +102,11 @@ pub(crate) enum FacilityServiceOutcome {
     MutationCured {
         facility_id: String,
         mutation_id: String,
+        cost: u32,
+        gold_balance: u32,
+    },
+    BalanceRitualPerformed {
+        facility_id: String,
         cost: u32,
         gold_balance: u32,
     },
@@ -265,8 +273,6 @@ pub(super) fn restore_home_states(
     world: &WorldDefinition,
     content: &ContentCatalog,
     town_states: &BTreeMap<String, TownState>,
-    current_floor_id: &str,
-    player_position: Position,
     saved_homes: &[HomeStateSaveDto],
 ) -> Result<BTreeMap<String, HomeState>, CoreError> {
     let expected = world_town_ids(world)
@@ -291,19 +297,9 @@ pub(super) fn restore_home_states(
                 facility_id: saved.facility_id.clone(),
             };
         }
-        let player_at_shared_home = world_town_for_floor(world, content, current_floor_id)
-            .into_iter()
-            .flat_map(|town| home_facilities(town, content))
-            .any(|facility| {
-                facility.storage_id.as_deref() == Some(saved.facility_id.as_str())
-                    && facility
-                        .entrance_positions()
-                        .any(|position| player_position == position_from_content(position))
-            });
         if !expected.contains(&saved.facility_id)
             || storage.category != TownFacilityCategory::Home
             || storage.storage_id.as_deref() != Some(storage.id.as_str())
-            || (player_at_shared_home && !saved.visited)
             || states
                 .insert(
                     saved.facility_id.clone(),
@@ -428,7 +424,9 @@ pub(super) fn restore_town_and_shop_states(
             .expect("validated shop town must remain available");
         if state.owner_id != shop.owner.id
             || (current_floor_id == town.floor_id
-                && player_position == position_from_content(shop.entrance_position)
+                && shop
+                    .entrance_positions()
+                    .any(|position| player_position == position_from_content(position))
                 && !state.visited)
         {
             return Err(CoreError::InvalidSave("shop state is invalid"));
@@ -439,7 +437,8 @@ pub(super) fn restore_town_and_shop_states(
             let shop = content
                 .shop(shop_id)
                 .expect("validated town shop must remain available");
-            player_position == position_from_content(shop.entrance_position)
+            shop.entrance_positions()
+                .any(|position| player_position == position_from_content(position))
                 && !shop_states.get(shop_id).is_some_and(|state| state.visited)
         })
     {
@@ -599,6 +598,8 @@ fn category_dto(category: ShopCategory) -> ShopCategoryDto {
         ShopCategory::MagicShop => ShopCategoryDto::MagicShop,
         ShopCategory::BlackMarket => ShopCategoryDto::BlackMarket,
         ShopCategory::Bookstore => ShopCategoryDto::Bookstore,
+        ShopCategory::Jeweler => ShopCategoryDto::Jeweler,
+        ShopCategory::Dragon => ShopCategoryDto::Dragon,
     }
 }
 
@@ -644,6 +645,7 @@ pub(super) fn sell_unit_price(base_value: u32, factor: u16, cap: u32) -> u32 {
 
 fn discounted_item_base_value(
     content: &ContentCatalog,
+    shop: &ShopDefinition,
     item: &ItemInstance,
     base_value: u32,
 ) -> u32 {
@@ -654,9 +656,15 @@ fn discounted_item_base_value(
     {
         return 0;
     }
-    let base_value = if item.artifact_name.is_some() {
+    let source_equipment = content
+        .item(&item.kind_id)
+        .and_then(|definition| definition.rfb_base_kind)
+        .is_some_and(|base| matches!(base.tval, 16..=23 | 30..=40 | 45 | 46));
+    let base_value = if item.artifact_name.is_some()
+        || (stock::generates_equipment(shop.category) && source_equipment)
+    {
         super::item_value::obj_value_real(content, item)
-            .expect("random artifact must retain supported COST_REAL inputs")
+            .expect("source equipment must retain supported COST_REAL inputs")
             .max(0) as u32
     } else {
         base_value
@@ -670,6 +678,13 @@ fn player_purchase_unit_price(
     base_value: u32,
     factor: u16,
 ) -> u32 {
+    // shop.c applies the dragon surcharge before the normal price factor and rounding.
+    let base_value = if shop.category == ShopCategory::Dragon && base_value > 31_000 {
+        let excess = u64::from(base_value - 30_000);
+        u32::try_from(u64::from(base_value) + (excess / 200 * excess) / 15).unwrap_or(u32::MAX)
+    } else {
+        base_value
+    };
     let mut price = buy_unit_price(base_value, factor);
     if shop.category == ShopCategory::BlackMarket {
         if !game.player_has_black_market_standard_prices() {
@@ -680,6 +695,8 @@ fn player_purchase_unit_price(
             / 625)
             .try_into()
             .unwrap_or(u32::MAX);
+    } else if shop.category == ShopCategory::Jeweler {
+        price = price.saturating_mul(2);
     }
     price
 }
@@ -695,6 +712,8 @@ fn player_sale_unit_price(game: &Game, shop: &ShopDefinition, base_value: u32, f
             / 625)
             .try_into()
             .unwrap_or(u32::MAX);
+    } else if shop.category == ShopCategory::Jeweler {
+        price /= 2;
     }
     price.max(1).min(shop.owner.purchase_price_cap)
 }
@@ -734,6 +753,17 @@ fn item_is_legal_for_shop(game: &Game, item: &ItemInstance) -> bool {
                 .iter()
                 .any(|tag| matches!(tag.as_str(), "corpse" | "remains"))
     })
+}
+
+fn shop_accepts_item(game: &Game, shop: &ShopDefinition, item: &ItemInstance) -> bool {
+    item_is_legal_for_shop(game, item)
+        && (!stock::generates_equipment(shop.category)
+            || discounted_item_base_value(
+                &game.content,
+                shop,
+                item,
+                game.content.item(&item.kind_id).unwrap().base_value,
+            ) > 0)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -994,9 +1024,7 @@ fn shop_accessible(game: &Game, shop: &ShopDefinition) -> bool {
     game.current_town()
         .is_some_and(|current| current.id == town.id)
         && game.shop_states.contains_key(&shop.id)
-        && game
-            .town_local_to_active_position(&town.id, position_from_content(shop.entrance_position))
-            == Some(game.player.position)
+        && game.shop_entrance_position(shop) == Some(game.player.position)
 }
 
 fn shop_purchase_group(
@@ -1217,6 +1245,7 @@ const fn facility_service_kind_dto(kind: TownFacilityServiceKind) -> FacilitySer
         TownFacilityServiceKind::Heal => FacilityServiceKindDto::Heal,
         TownFacilityServiceKind::RestoreVitality => FacilityServiceKindDto::RestoreVitality,
         TownFacilityServiceKind::CureMutation => FacilityServiceKindDto::CureMutation,
+        TownFacilityServiceKind::BalanceRitual => FacilityServiceKindDto::BalanceRitual,
         TownFacilityServiceKind::EnchantWeapon => FacilityServiceKindDto::EnchantWeapon,
         TownFacilityServiceKind::EnchantArmor => FacilityServiceKindDto::EnchantArmor,
         TownFacilityServiceKind::EnchantAmmunition => FacilityServiceKindDto::EnchantAmmunition,
@@ -1485,6 +1514,17 @@ impl Game {
         facility.town_id == town.id
             && town.facility_ids.contains(&facility.id)
             && self.town_facility_entrance_position(facility) == Some(self.player.position)
+            && self.terrain_at(self.player.position) == facility.entrance_terrain_id
+    }
+
+    pub(super) fn shop_entrance_position(&self, shop: &ShopDefinition) -> Option<Position> {
+        let mut positions = shop.entrance_positions().filter_map(|position| {
+            self.town_local_to_active_position(&shop.town_id, position_from_content(position))
+        });
+        let primary = positions.next();
+        positions
+            .find(|position| *position == self.player.position)
+            .or(primary)
     }
 
     pub(super) fn town_facility_entrance_position(
@@ -1728,6 +1768,14 @@ impl Game {
                 FacilityServiceOutcome::MutationCured {
                     facility_id: facility_id.to_owned(),
                     mutation_id,
+                    cost,
+                    gold_balance: self.gold - cost,
+                }
+            }
+            FacilityServiceKindDto::BalanceRitual => {
+                self.perform_balance_ritual();
+                FacilityServiceOutcome::BalanceRitualPerformed {
+                    facility_id: facility_id.to_owned(),
                     cost,
                     gold_balance: self.gold - cost,
                 }
@@ -2154,39 +2202,94 @@ impl Game {
         })
     }
 
+    fn town_teleport_facility(&self, town: &TownDefinition) -> Option<&TownFacilityDefinition> {
+        town.facility_ids
+            .iter()
+            .filter_map(|id| self.content.town_facility(id))
+            .find(|facility| facility.town_teleport.is_some())
+    }
+
+    fn town_teleport_unlocked(&self, facility: &TownFacilityDefinition) -> bool {
+        facility.town_teleport.as_ref().is_some_and(|teleport| {
+            self.task_states
+                .get(&teleport.required_completed_task_id)
+                .is_some_and(|state| state.status == TaskStatusKindDto::Completed)
+        })
+    }
+
+    fn town_teleport_arrival(&self, town: &TownDefinition) -> Option<Position> {
+        if let Some(facility) = self.town_teleport_facility(town) {
+            return self
+                .town_teleport_unlocked(facility)
+                .then(|| position_from_content(facility.entrance_position));
+        }
+        town_inn(town, &self.content).map(|inn| position_from_content(inn.entrance_position))
+    }
+
+    fn town_travel_origin(&self, facility_id: &str) -> Option<(&str, u32)> {
+        if let Some(inn) = self.content.shop(facility_id) {
+            return (inn.inn_stay_cost.is_some() && shop_accessible(self, inn)).then(|| {
+                (
+                    inn.town_id.as_str(),
+                    self.town_service_price(INN_TRAVEL_COST),
+                )
+            });
+        }
+        let facility = self.content.town_facility(facility_id)?;
+        let teleport = facility.town_teleport.as_ref()?;
+        (self.town_facility_accessible(facility_id) && self.town_teleport_unlocked(facility)).then(
+            || {
+                (
+                    facility.town_id.as_str(),
+                    self.town_facility_price(facility, teleport.price),
+                )
+            },
+        )
+    }
+
+    pub(super) fn facility_town_travel_destinations(
+        &self,
+        facility_id: &str,
+    ) -> Vec<InnTravelDestinationDto> {
+        let Some((_, cost)) = self.town_travel_origin(facility_id) else {
+            return Vec::new();
+        };
+        self.teleport_town_targets()
+            .into_iter()
+            .map(|target| InnTravelDestinationDto {
+                town_id: target.town_id,
+                town_name_key: target.town_name_key,
+                cost,
+            })
+            .collect()
+    }
+
     pub(super) fn inn_travel_unavailable_reason(
         &self,
         facility_id: &str,
         destination_town_id: &str,
     ) -> Option<&'static str> {
-        let Some(inn) = self.content.shop(facility_id) else {
-            return Some("unknown-inn");
-        };
-        if inn.inn_stay_cost.is_none() {
+        if self
+            .content
+            .shop(facility_id)
+            .is_none_or(|shop| shop.inn_stay_cost.is_none())
+            && self
+                .content
+                .town_facility(facility_id)
+                .is_none_or(|facility| facility.town_teleport.is_none())
+        {
             return Some("unknown-inn");
         }
-        if !shop_accessible(self, inn) {
+        let Some((origin_town_id, cost)) = self.town_travel_origin(facility_id) else {
             return Some("inn-unreachable");
-        }
-        if inn.town_id == destination_town_id {
+        };
+        if origin_town_id == destination_town_id {
             return Some("already-here");
         }
-        let Some(world) = self.content.world(&self.world_id) else {
-            return Some("town-unvisited");
-        };
-        let Some(destination) = self.content.town(destination_town_id) else {
-            return Some("town-unvisited");
-        };
-        if world_town_position(world, destination_town_id).is_none()
-            || !self
-                .town_states
-                .get(destination_town_id)
-                .is_some_and(|state| state.visited)
-            || town_inn(destination, &self.content).is_none()
-        {
+        if !self.teleport_town_target_available(destination_town_id) {
             return Some("town-unvisited");
         }
-        (self.gold < self.town_service_price(INN_TRAVEL_COST)).then_some("insufficient-gold")
+        (self.gold < cost).then_some("insufficient-gold")
     }
 
     pub(super) fn travel_from_inn(
@@ -2198,7 +2301,9 @@ impl Game {
             self.inn_travel_unavailable_reason(facility_id, destination_town_id)
                 .is_none()
         );
-        let cost = self.town_service_price(INN_TRAVEL_COST);
+        let (_, cost) = self
+            .town_travel_origin(facility_id)
+            .expect("preflighted travel origin");
         self.relocate_to_town(destination_town_id)?;
         self.gold -= cost;
 
@@ -2228,7 +2333,7 @@ impl Game {
             .filter_map(|town_id| {
                 let town = self.content.town(town_id)?;
                 (world_town_position(world, town_id).is_some()
-                    && town_inn(town, &self.content).is_some())
+                    && self.town_teleport_arrival(town).is_some())
                 .then(|| AbilityTownTargetDto {
                     town_id: town.id.clone(),
                     town_name_key: town.name_key.clone(),
@@ -2250,6 +2355,99 @@ impl Game {
         self.relocate_to_town(town_id)
     }
 
+    /// Desktop map fixture: visit one restored town and reveal its current surface.
+    #[doc(hidden)]
+    pub fn debug_prepare_town_map_e2e(&mut self, town_id: &str) -> Result<(), CoreError> {
+        if !matches!(
+            town_id,
+            "demo.town.anambar" | "demo.town.thalos" | "demo.town.zul"
+        ) || self.world_id != "demo.world.middle-earth"
+            || self.map_scale != MapScaleDto::Local
+            || self.current_floor_id != super::wilderness::WILDERNESS_FLOOR_ID
+        {
+            return Err(CoreError::InvalidSave(
+                "town map fixture requires the Middle-earth surface",
+            ));
+        }
+        if town_id == "demo.town.zul" {
+            // Physical arrival must not borrow quest 77's still-locked teleport landing.
+            self.store_visible_town_states();
+            self.wilderness_position =
+                world_town_position(self.content.world(&self.world_id).unwrap(), town_id);
+            self.wilderness_view_offset = Position::default();
+            self.activate_wilderness_position(None, false)?;
+            self.mark_current_town_visited();
+        } else {
+            self.relocate_to_town(town_id)?;
+        }
+        self.explored.fill(true);
+        self.reveal_current_visibility();
+        Ok(())
+    }
+
+    /// Zul desktop acceptance preparation. The native app exposes this only with WebDriver.
+    #[doc(hidden)]
+    pub fn debug_prepare_zul_e2e(&mut self, clear_enemies: bool) -> Result<(), CoreError> {
+        if clear_enemies {
+            let visited_zul_wilderness = self.is_wilderness_floor()
+                && self
+                    .town_states
+                    .get("demo.town.zul")
+                    .is_some_and(|town| town.visited);
+            if !visited_zul_wilderness
+                && !matches!(
+                    self.current_floor_id.as_str(),
+                    "demo.floor.zul-eddies"
+                        | "demo.floor.zul-sorcery-node"
+                        | "demo.floor.zul-chaos-node"
+                        | "demo.floor.zul-nature-node"
+                )
+            {
+                return Err(CoreError::InvalidSave(
+                    "Zul clear fixture requires visited Zul wilderness or a node/eddies floor",
+                ));
+            }
+            // Prepare a clear route or task combat result; normal actions evaluate objectives.
+            self.entities.clear();
+            self.items
+                .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
+        } else {
+            if self
+                .current_town()
+                .is_none_or(|town| town.id != "demo.town.zul")
+                || self
+                    .build
+                    .as_ref()
+                    .is_none_or(|build| build.class_id != "demo.class.mage")
+            {
+                return Err(CoreError::InvalidSave(
+                    "Zul traversal fixture requires a Mage in Zul",
+                ));
+            }
+            // Reuse the existing level/realm-book fixture; no terrain is changed for Mage.
+            self.debug_prepare_spell_learning_e2e(50)?;
+            self.apply_player_melee_status(super::STATUS_LEVITATION, 200_000, "e2e.zul-traversal");
+            self.apply_player_melee_status(
+                super::STATUS_INVULNERABILITY,
+                200_000,
+                "e2e.zul-traversal",
+            );
+            // Match the existing spell's incoming-damage modifier, not just its status name.
+            self.player
+                .statuses
+                .iter_mut()
+                .find(|status| status.kind_id == super::STATUS_INVULNERABILITY)
+                .unwrap()
+                .incoming_damage_percent = 0;
+            for virtue in &mut self.virtues {
+                virtue.value = 51;
+            }
+        }
+        self.explored.fill(true);
+        self.reveal_current_visibility();
+        Ok(())
+    }
+
     fn relocate_to_town(&mut self, destination_town_id: &str) -> Result<(), CoreError> {
         let world = self
             .content
@@ -2261,9 +2459,9 @@ impl Game {
             .content
             .town(destination_town_id)
             .expect("validated destination town must remain available");
-        let destination_inn = town_inn(destination_town, &self.content)
-            .expect("validated destination town must retain an inn");
-        let destination_inn_position = position_from_content(destination_inn.entrance_position);
+        let destination_inn_position = self
+            .town_teleport_arrival(destination_town)
+            .expect("validated destination town must retain a teleport arrival");
 
         let player_id = self.player.id.clone();
         let riding_actor_id = self.riding_actor_id.as_deref();
@@ -2472,7 +2670,7 @@ impl Game {
         let unit_price = player_purchase_unit_price(
             self,
             &shop,
-            discounted_item_base_value(&self.content, &item, definition.base_value),
+            discounted_item_base_value(&self.content, &shop, &item, definition.base_value),
             shop_price_factor(self, &shop),
         );
         let Some(total_price) = unit_price.checked_mul(quantity) else {
@@ -2577,7 +2775,7 @@ impl Game {
         if quantity > available_quantity {
             return Err("insufficient-quantity");
         }
-        if !item_is_legal_for_shop(self, &item) {
+        if !shop_accepts_item(self, &shop, &item) {
             return Err("item-illegal");
         }
         let item_kind_id = item.kind_id.clone();
@@ -2588,7 +2786,7 @@ impl Game {
         let unit_price = player_sale_unit_price(
             self,
             &shop,
-            discounted_item_base_value(&self.content, &item, definition.base_value),
+            discounted_item_base_value(&self.content, &shop, &item, definition.base_value),
             shop_price_factor(self, &shop),
         );
         let Some(total_price) = unit_price.checked_mul(quantity) else {
@@ -2649,10 +2847,7 @@ impl Game {
             .iter()
             .find(|shop_id| {
                 self.content.shop(shop_id).is_some_and(|shop| {
-                    self.town_local_to_active_position(
-                        &town.id,
-                        position_from_content(shop.entrance_position),
-                    ) == Some(self.player.position)
+                    self.shop_entrance_position(shop) == Some(self.player.position)
                 })
             })
             .cloned()
@@ -2672,7 +2867,16 @@ impl Game {
             .world_tick
             .saturating_sub(state.last_maintenance_world_tick)
             < shop.maintenance.interval_world_ticks
+            && (!stock::generates_equipment(shop.category) || !state.inventory.is_empty())
         {
+            return Ok(());
+        }
+        if stock::generates_equipment(shop.category) {
+            let count = state.inventory.len();
+            let additions = self.roll_special_shop_stock(&shop, count)?;
+            let state = self.shop_states.get_mut(&shop_id).unwrap();
+            state.inventory.extend(additions);
+            state.last_maintenance_world_tick = self.world_tick;
             return Ok(());
         }
         let mut additions = Vec::new();
@@ -2785,21 +2989,24 @@ impl Game {
                 .shop(shop_id)
                 .expect("validated town shop must remain available")
                 .clone();
-            if self.town_local_to_active_position(
-                &town.id,
-                position_from_content(shop.entrance_position),
-            ) != Some(self.player.position)
-            {
+            if self.shop_entrance_position(&shop) != Some(self.player.position) {
                 continue;
             }
-            if !self.shop_states.contains_key(shop_id) {
-                let inventory = roll_shop_stock(
-                    &shop,
-                    &self.content,
-                    &mut self.rng,
-                    &mut self.next_item_instance_serial,
-                    false,
-                )?;
+            if !self.shop_states.contains_key(shop_id)
+                || (stock::generates_equipment(shop.category)
+                    && self.shop_states[shop_id].inventory.is_empty())
+            {
+                let inventory = if stock::generates_equipment(shop.category) {
+                    self.roll_special_shop_stock(&shop, 0)?
+                } else {
+                    roll_shop_stock(
+                        &shop,
+                        &self.content,
+                        &mut self.rng,
+                        &mut self.next_item_instance_serial,
+                        false,
+                    )?
+                };
                 self.shop_states.insert(
                     shop_id.clone(),
                     ShopState {
@@ -2814,7 +3021,7 @@ impl Game {
             }
         }
         for facility in home_facilities(&town, &self.content) {
-            if self.town_facility_entrance_position(facility) == Some(self.player.position)
+            if self.town_facility_accessible(&facility.id)
                 && let Some(state) = self.home_states.get_mut(
                     facility
                         .storage_id
@@ -2851,35 +3058,10 @@ impl Game {
             .filter_map(|shop_id| self.content.shop(shop_id))
             .map(|shop| {
                 let entrance_position = self
-                    .town_local_to_active_position(
-                        &town.id,
-                        position_from_content(shop.entrance_position),
-                    )
+                    .shop_entrance_position(shop)
                     .expect("current town shop must retain an active position");
                 let player_at_entrance = self.player.position == entrance_position;
-                let inn_travel_destinations = if player_at_entrance && shop.inn_stay_cost.is_some()
-                {
-                    self.content
-                        .world(&self.world_id)
-                        .into_iter()
-                        .flat_map(world_town_ids)
-                        .filter(|town_id| *town_id != town.id)
-                        .filter(|town_id| {
-                            self.town_states
-                                .get(*town_id)
-                                .is_some_and(|state| state.visited)
-                        })
-                        .filter_map(|town_id| self.content.town(town_id))
-                        .filter(|destination| town_inn(destination, &self.content).is_some())
-                        .map(|destination| InnTravelDestinationDto {
-                            town_id: destination.id.clone(),
-                            town_name_key: destination.name_key.clone(),
-                            cost: self.town_service_price(INN_TRAVEL_COST),
-                        })
-                        .collect()
-                } else {
-                    Vec::new()
-                };
+                let inn_travel_destinations = self.facility_town_travel_destinations(&shop.id);
                 let factor = shop_price_factor(self, shop);
                 let state = self.shop_states.get(&shop.id);
                 let mut stock = if player_at_entrance {
@@ -2897,6 +3079,7 @@ impl Game {
                                 shop,
                                 discounted_item_base_value(
                                     &self.content,
+                                    shop,
                                     item,
                                     definition.base_value,
                                 ),
@@ -2909,6 +3092,17 @@ impl Game {
                                 kind_id: item.kind_id.clone(),
                                 display_name_key: definition.name_key.clone(),
                                 artifact_name: item.artifact_name.clone(),
+                                affix_name_keys: item
+                                    .affix_ids
+                                    .iter()
+                                    .map(|id| {
+                                        self.content
+                                            .affix(id)
+                                            .expect("shop affix must remain available")
+                                            .name_key
+                                            .clone()
+                                    })
+                                    .collect(),
                                 quantity,
                                 inscription: item.inscription.clone(),
                                 captured_actor: self.captured_actor_dto(item),
@@ -2942,7 +3136,7 @@ impl Game {
                                 .content
                                 .item(&item.kind_id)
                                 .expect("inventory item kind must remain available");
-                            let unavailable_reason = (!item_is_legal_for_shop(self, item))
+                            let unavailable_reason = (!shop_accepts_item(self, shop, item))
                                 .then(|| "item-illegal".to_owned());
                             ShopSellQuoteDto {
                                 item_id: item.id.clone(),
@@ -2954,6 +3148,7 @@ impl Game {
                                             shop,
                                             discounted_item_base_value(
                                                 &self.content,
+                                                shop,
                                                 item,
                                                 definition.base_value,
                                             ),
@@ -3020,7 +3215,7 @@ impl Game {
                 let entrance_position = self
                     .town_facility_entrance_position(facility)
                     .expect("current town Home must retain an active position");
-                let player_at_entrance = self.player.position == entrance_position;
+                let player_at_entrance = self.town_facility_accessible(&facility.id);
                 let state = facility
                     .storage_id
                     .as_deref()
