@@ -323,6 +323,7 @@ pub enum ItemAttributeDefinition {
     deny_unknown_fields
 )]
 pub enum AbilityEffectDefinition {
+    MagicEaterAbsorb,
     Damage {
         damage_dice: u16,
         damage_sides: u16,

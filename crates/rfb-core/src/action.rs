@@ -107,6 +107,18 @@ pub(crate) enum GameAction {
         item_id: String,
         inscription: Option<String>,
     },
+    SelectMagicAbsorptionSlot {
+        slot: u8,
+    },
+    ResolveMagicAbsorption {
+        confirm: bool,
+        inherit_inscription: bool,
+    },
+    SwapAbsorbedDevices {
+        category: rfb_protocol::AbsorbedDeviceCategoryDto,
+        first_slot: u8,
+        second_slot: u8,
+    },
     /// Internal action substituted when paralysis wastes the player's turn.
     /// No command maps to it; it advances world time at standard cost.
     ParalyzedIdle,
@@ -289,6 +301,7 @@ impl GameAction {
             | Self::ClearDuelistChallenge
             | Self::ResolveDuelistChoice { .. }
             | Self::InscribeItem { .. }
+            | Self::SwapAbsorbedDevices { .. }
             | Self::SetInterfaceLocale { .. } => 0,
             Self::TravelLocal { .. } => 0,
             Self::RefuelLight { .. } => STANDARD_ACTION_COST / 2,
@@ -300,6 +313,25 @@ impl GameAction {
 impl From<GameCommand> for GameAction {
     fn from(command: GameCommand) -> Self {
         match command {
+            GameCommand::SelectMagicAbsorptionSlot { slot } => {
+                Self::SelectMagicAbsorptionSlot { slot }
+            }
+            GameCommand::ResolveMagicAbsorption {
+                confirm,
+                inherit_inscription,
+            } => Self::ResolveMagicAbsorption {
+                confirm,
+                inherit_inscription,
+            },
+            GameCommand::SwapAbsorbedDevices {
+                category,
+                first_slot,
+                second_slot,
+            } => Self::SwapAbsorbedDevices {
+                category,
+                first_slot,
+                second_slot,
+            },
             GameCommand::AbsorbDevice { item_id } => Self::AbsorbDevice { item_id },
             GameCommand::AcceptTask {
                 facility_id,

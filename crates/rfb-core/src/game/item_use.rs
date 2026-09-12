@@ -1118,7 +1118,8 @@ impl Game {
                 | ItemLocation::Equipped { .. }
                 | ItemLocation::CarriedBy { .. }
                 | ItemLocation::Shop { .. }
-                | ItemLocation::Home { .. } => None,
+                | ItemLocation::Home { .. }
+                | ItemLocation::Absorbed { .. } => None,
             }))
             .chain(self.gold_piles.iter().map(|pile| pile.position))
             .collect::<BTreeSet<_>>();
@@ -1431,7 +1432,8 @@ impl Game {
                 ItemLocation::Inventory
                 | ItemLocation::Equipped { .. }
                 | ItemLocation::Shop { .. }
-                | ItemLocation::Home { .. } => false,
+                | ItemLocation::Home { .. }
+                | ItemLocation::Absorbed { .. } => false,
             })
             .map(|item| item.id.clone())
             .collect::<BTreeSet<_>>();
@@ -2362,7 +2364,8 @@ impl Game {
                         ItemLocation::Ground(position) => *position == self.player.position,
                         ItemLocation::CarriedBy { .. }
                         | ItemLocation::Shop { .. }
-                        | ItemLocation::Home { .. } => false,
+                        | ItemLocation::Home { .. }
+                        | ItemLocation::Absorbed { .. } => false,
                     }
             })
     }

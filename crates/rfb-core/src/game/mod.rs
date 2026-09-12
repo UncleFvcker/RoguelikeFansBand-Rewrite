@@ -132,6 +132,7 @@ mod item_use;
 mod item_value;
 mod lighting;
 mod loot;
+mod magic_eater;
 mod mining;
 mod mogaminator;
 mod monster_abilities;
@@ -235,7 +236,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 127;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 128;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -893,6 +894,7 @@ pub struct Game {
     pending_ability_direction: Option<PendingAbilityDirectionDto>,
     duelist_target_id: Option<String>,
     pending_duelist: Option<rfb_protocol::PendingDuelistDto>,
+    pending_magic_absorption: Option<rfb_protocol::PendingMagicAbsorptionDto>,
     next_item_instance_serial: u64,
     next_gold_pile_serial: u64,
     explored: Vec<bool>,
@@ -1024,6 +1026,8 @@ impl Game {
         {
             return Err(CoreError::RaceMutationChoiceUnavailable);
         }
+        // Preflight choice commands before any time, cooldown or RNG mutation.
+        let magic_absorption_advances_world = self.magic_absorption_action_time(&action)?;
         let reevaluate_all_mogaminator_items = matches!(
             &action,
             GameAction::ConfigureMogaminator { .. } | GameAction::SetInterfaceLocale { .. }
@@ -1049,7 +1053,9 @@ impl Game {
             .collect::<BTreeSet<_>>();
         self.command_actor_deaths.clear();
         self.validate_runtime_invariants(&action)?;
-        self.refresh_daily_bounty_target();
+        if magic_absorption_advances_world != Some(false) {
+            self.refresh_daily_bounty_target();
+        }
         let base_revision = self.revision;
         let mut world_tick_before_command = self.world_tick;
         let player_position_before_command = self.player.position;
@@ -1179,7 +1185,8 @@ impl Game {
         }) {
             action = GameAction::Move { direction };
         }
-        let mut advances_world = !depleted_device_use
+        let mut advances_world = magic_absorption_advances_world.unwrap_or(true)
+            && !depleted_device_use
             && !zero_time_unavailable_item_use
             && !cursed_unequip
             && !cursed_equip_replacement
@@ -1301,7 +1308,7 @@ impl Game {
                     matches!(ability.effect, AbilityEffectDefinition::SmashTrap)));
         let recover_after_wait = matches!(&action, GameAction::Wait);
         let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
-        let mut turn_advance = 1_u32;
+        let mut turn_advance = u32::from(magic_absorption_advances_world != Some(false));
         let mut player_moved = false;
         let deferred_item_turn = matches!(
             &action,
@@ -1343,6 +1350,22 @@ impl Game {
         }
 
         match action {
+            GameAction::SelectMagicAbsorptionSlot { slot } => {
+                self.select_magic_absorption_slot(slot, &mut events);
+            }
+            GameAction::ResolveMagicAbsorption {
+                confirm,
+                inherit_inscription,
+            } => {
+                self.resolve_magic_absorption(confirm, inherit_inscription, &mut events);
+            }
+            GameAction::SwapAbsorbedDevices {
+                category,
+                first_slot,
+                second_slot,
+            } => {
+                self.swap_absorbed_devices(category, first_slot, second_slot, &mut events);
+            }
             GameAction::ResolveDuelistChoice { choice } => {
                 turn_advance = 0;
                 duelist_completion = self.resolve_duelist_choice(
@@ -2369,254 +2392,262 @@ impl Game {
             action_cost = self.player_wall_movement_action_cost(action_cost);
         }
 
-        self.process_chaos_patron_level_rewards(
-            &mut events,
-            &mut chaos_patron_event_cursor,
-            &mut changed,
-            &mut removed_entities,
-        )?;
-
-        if self.pending_duelist.is_none() {
-            self.resolve_newly_visible_monster_auras(
-                &visible_monster_auras_before_action,
+        // Body selection, cancellation and rearrangement only edit UI/slot state.
+        // Do not trigger sensing, automatic consumers or visibility RNG while choosing.
+        if magic_absorption_advances_world != Some(false) {
+            self.process_chaos_patron_level_rewards(
                 &mut events,
+                &mut chaos_patron_event_cursor,
                 &mut changed,
-            );
-        }
+                &mut removed_entities,
+            )?;
 
-        self.apply_player_floor_item_knowledge();
-        if automatic_pickup_after_move
-            && map_scale_before_command == MapScaleDto::Local
-            && self.map_scale == MapScaleDto::Local
-            && self.player.position != player_position_before_command
-            && !self.player_is_dead()
-        {
-            let resolutions = self.apply_mogaminator_at_player()?;
-            self.record_mogaminator_resolutions(resolutions, &mut events, &mut changed);
-        }
-
-        if self.player_has_status_kind(STATUS_UNDERSTANDING) || self.player_auto_identifies_items()
-        {
-            let count = self.identify_carried_items();
-            if count > 0 {
-                events.push(DomainEvent::ItemAutoIdentified { count });
+            if self.pending_duelist.is_none() {
+                self.resolve_newly_visible_monster_auras(
+                    &visible_monster_auras_before_action,
+                    &mut events,
+                    &mut changed,
+                );
             }
-        }
 
-        // Realm confirmation already alters its selected book with destruction disabled.
-        // Do not turn auto-identification into a second, destructive carried-item pass.
-        if self.mogaminator.enabled && !realm_change_action {
-            let reevaluate_all = reevaluate_all_mogaminator_items
-                && (!configuring_mogaminator || mogaminator_diagnostics.is_empty());
-            let item_ids = self
-                .items
-                .iter()
-                .filter(|item| item.location == ItemLocation::Inventory)
-                .filter(|item| {
-                    reevaluate_all
-                        || item_property_knowledge_before
-                            .as_ref()
-                            .is_some_and(|before| {
-                                before.get(&item.id) != self.item_property_knowledge.get(&item.id)
+            self.apply_player_floor_item_knowledge();
+            if automatic_pickup_after_move
+                && map_scale_before_command == MapScaleDto::Local
+                && self.map_scale == MapScaleDto::Local
+                && self.player.position != player_position_before_command
+                && !self.player_is_dead()
+            {
+                let resolutions = self.apply_mogaminator_at_player()?;
+                self.record_mogaminator_resolutions(resolutions, &mut events, &mut changed);
+            }
+
+            if self.player_has_status_kind(STATUS_UNDERSTANDING)
+                || self.player_auto_identifies_items()
+            {
+                let count = self.identify_carried_items();
+                if count > 0 {
+                    events.push(DomainEvent::ItemAutoIdentified { count });
+                }
+            }
+
+            // Realm confirmation already alters its selected book with destruction disabled.
+            // Do not turn auto-identification into a second, destructive carried-item pass.
+            if self.mogaminator.enabled && !realm_change_action {
+                let reevaluate_all = reevaluate_all_mogaminator_items
+                    && (!configuring_mogaminator || mogaminator_diagnostics.is_empty());
+                let item_ids = self
+                    .items
+                    .iter()
+                    .filter(|item| item.location == ItemLocation::Inventory)
+                    .filter(|item| {
+                        reevaluate_all
+                            || item_property_knowledge_before
+                                .as_ref()
+                                .is_some_and(|before| {
+                                    before.get(&item.id)
+                                        != self.item_property_knowledge.get(&item.id)
+                                })
+                            || item_knowledge_before.as_ref().is_some_and(|before| {
+                                before.get(&item.kind_id) != self.item_knowledge.get(&item.kind_id)
                             })
-                        || item_knowledge_before.as_ref().is_some_and(|before| {
-                            before.get(&item.kind_id) != self.item_knowledge.get(&item.kind_id)
-                        })
-                })
-                .map(|item| item.id.clone())
-                .collect::<Vec<_>>();
-            let resolutions = self.apply_mogaminator_to_carried_items(item_ids)?;
-            self.record_mogaminator_resolutions(resolutions, &mut events, &mut changed);
-        }
+                    })
+                    .map(|item| item.id.clone())
+                    .collect::<Vec<_>>();
+                let resolutions = self.apply_mogaminator_to_carried_items(item_ids)?;
+                self.record_mogaminator_resolutions(resolutions, &mut events, &mut changed);
+            }
 
-        self.refresh_duelist_challenge();
-        if advances_world && self.pending_duelist.is_none() && !self.player_is_dead() {
-            events.extend(self.resolve_wilderness_terrain_hazard(self.player.position));
-        }
-        if advances_world {
-            if astral_guide_blink.as_ref().is_some_and(|ability_id| {
-                events.iter().any(|event| {
-                    matches!(
-                        event,
-                        DomainEvent::AbilityCastSucceeded { resolution }
-                            if resolution.ability_id == *ability_id
-                    )
-                })
-            }) {
-                action_cost = if astral_guide_blink.as_ref().is_some_and(|id| {
-                    self.content.ability(id).is_some_and(|ability| {
-                        matches!(ability.effect, AbilityEffectDefinition::Strafing)
+            self.refresh_duelist_challenge();
+            if advances_world && self.pending_duelist.is_none() && !self.player_is_dead() {
+                events.extend(self.resolve_wilderness_terrain_hazard(self.player.position));
+            }
+            if advances_world {
+                if astral_guide_blink.as_ref().is_some_and(|ability_id| {
+                    events.iter().any(|event| {
+                        matches!(
+                            event,
+                            DomainEvent::AbilityCastSucceeded { resolution }
+                                if resolution.ability_id == *ability_id
+                        )
                     })
                 }) {
-                    30
-                } else {
-                    action_cost / 3
-                };
-            }
-            if let Some(ability_id) = dimension_door {
-                let failed = events.iter().find_map(|event| match event {
-                    DomainEvent::AbilityEffectsResolved {
-                        ability_id: resolved_id,
-                        resolution,
-                        ..
-                    } if *resolved_id == ability_id => {
+                    action_cost = if astral_guide_blink.as_ref().is_some_and(|id| {
+                        self.content.ability(id).is_some_and(|ability| {
+                            matches!(ability.effect, AbilityEffectDefinition::Strafing)
+                        })
+                    }) {
+                        30
+                    } else {
+                        action_cost / 3
+                    };
+                }
+                if let Some(ability_id) = dimension_door {
+                    let failed = events.iter().find_map(|event| match event {
+                        DomainEvent::AbilityEffectsResolved {
+                            ability_id: resolved_id,
+                            resolution,
+                            ..
+                        } if *resolved_id == ability_id => {
+                            resolution.effects.iter().find_map(|effect| match effect {
+                                AbilityEffectResolutionDto::DimensionDoor { failed, .. } => {
+                                    Some(*failed)
+                                }
+                                _ => None,
+                            })
+                        }
+                        _ => None,
+                    });
+                    if let Some(failed) = failed {
+                        let extra = STANDARD_ACTION_COST
+                            .saturating_mul(i32::from(60_u16.saturating_sub(self.progress.level)))
+                            / 100;
+                        action_cost = action_cost.saturating_add(extra).saturating_add(if failed {
+                            extra
+                        } else {
+                            0
+                        });
+                    }
+                }
+                let ability_extra_energy = events.iter().find_map(|event| match event {
+                    DomainEvent::AbilityEffectsResolved { resolution, .. } => {
                         resolution.effects.iter().find_map(|effect| match effect {
-                            AbilityEffectResolutionDto::DimensionDoor { failed, .. } => {
-                                Some(*failed)
-                            }
+                            AbilityEffectResolutionDto::Vomit {
+                                extra_energy_cost, ..
+                            } => Some(*extra_energy_cost),
+                            AbilityEffectResolutionDto::ExtraEnergy { amount, .. } => Some(*amount),
                             _ => None,
                         })
                     }
                     _ => None,
                 });
-                if let Some(failed) = failed {
-                    let extra = STANDARD_ACTION_COST
-                        .saturating_mul(i32::from(60_u16.saturating_sub(self.progress.level)))
-                        / 100;
-                    action_cost = action_cost.saturating_add(extra).saturating_add(if failed {
-                        extra
-                    } else {
-                        0
-                    });
+                if let Some(extra_energy_cost) = ability_extra_energy {
+                    action_cost = action_cost.saturating_add(i32::from(extra_energy_cost));
                 }
-            }
-            let ability_extra_energy = events.iter().find_map(|event| match event {
-                DomainEvent::AbilityEffectsResolved { resolution, .. } => {
-                    resolution.effects.iter().find_map(|effect| match effect {
-                        AbilityEffectResolutionDto::Vomit {
-                            extra_energy_cost, ..
-                        } => Some(*extra_energy_cost),
-                        AbilityEffectResolutionDto::ExtraEnergy { amount, .. } => Some(*amount),
-                        _ => None,
-                    })
-                }
-                _ => None,
-            });
-            if let Some(extra_energy_cost) = ability_extra_energy {
-                action_cost = action_cost.saturating_add(i32::from(extra_energy_cost));
-            }
-            if self.duelist_prompt().is_some() {
-                self.continue_after_duelist_choice(
-                    rfb_protocol::DuelistContinuationDto::PlayerAction {
-                        energy_cost: action_cost,
-                        recover_after_wait,
-                        pet_neglect_allowed,
-                        visible_auras_before: visible_monster_auras_before_action
-                            .iter()
-                            .cloned()
-                            .collect(),
-                    },
-                );
-            } else {
-                spend_energy(&mut self.player.energy_need, action_cost);
-                self.advance_until_player_ready(
-                    false,
-                    self.map_scale != MapScaleDto::World,
-                    pet_neglect_allowed,
-                    &mut events,
-                    &mut changed,
-                    &mut removed_entities,
-                )?;
-                if self.pending_duelist.is_some() {
+                if self.duelist_prompt().is_some() {
                     self.continue_after_duelist_choice(
-                        rfb_protocol::DuelistContinuationDto::PlayerWorld { recover_after_wait },
+                        rfb_protocol::DuelistContinuationDto::PlayerAction {
+                            energy_cost: action_cost,
+                            recover_after_wait,
+                            pet_neglect_allowed,
+                            visible_auras_before: visible_monster_auras_before_action
+                                .iter()
+                                .cloned()
+                                .collect(),
+                        },
                     );
                 } else {
-                    self.finish_duelist_player_world(recover_after_wait, &mut events);
+                    spend_energy(&mut self.player.energy_need, action_cost);
+                    self.advance_until_player_ready(
+                        false,
+                        self.map_scale != MapScaleDto::World,
+                        pet_neglect_allowed,
+                        &mut events,
+                        &mut changed,
+                        &mut removed_entities,
+                    )?;
+                    if self.pending_duelist.is_some() {
+                        self.continue_after_duelist_choice(
+                            rfb_protocol::DuelistContinuationDto::PlayerWorld {
+                                recover_after_wait,
+                            },
+                        );
+                    } else {
+                        self.finish_duelist_player_world(recover_after_wait, &mut events);
+                    }
                 }
             }
-        }
-        if self.pending_duelist.is_none() {
-            self.refresh_daily_bounty_target();
-            if let Some(actor_kind_id) = self.apply_bounty_deaths() {
-                events.push(DomainEvent::BountyMissionCompleted { actor_kind_id });
+            if self.pending_duelist.is_none() {
+                self.refresh_daily_bounty_target();
+                if let Some(actor_kind_id) = self.apply_bounty_deaths() {
+                    events.push(DomainEvent::BountyMissionCompleted { actor_kind_id });
+                }
+                self.apply_deferred_task_events(duelist_completion.as_ref(), &mut events)?;
+                self.apply_campaign_events(&mut events);
             }
-            self.apply_deferred_task_events(duelist_completion.as_ref(), &mut events)?;
-            self.apply_campaign_events(&mut events);
-        }
-        self.process_chaos_patron_level_rewards(
-            &mut events,
-            &mut chaos_patron_event_cursor,
-            &mut changed,
-            &mut removed_entities,
-        )?;
-        self.clear_stale_mogaminator_query();
-        if self.pending_duelist.is_some() {
-            self.bind_external_tasks_to_floor_transitions(&events);
-        }
-
-        let task_terrain_changed = self.refresh_town_task_terrain(&mut changed);
-        let full_visibility_refresh = task_terrain_changed
-            || duelist_completion
-                .as_ref()
-                .is_some_and(|completion| completion.refresh_visibility)
-            || self.player.position != player_position_before_command
-            || self.current_floor_id != floor_before_command
-            || self.player_light_radius() != light_radius_before_command
-            || self.player_see_invisible_sources() != see_invisible_sources_before_command
-            || self.player_has_telepathy() != telepathy_before_command;
-        let visible_monster_auras_before_invisible_refresh = self.visible_monster_aura_entity_ids();
-        if self.pending_duelist.is_none() {
-            self.refresh_invisible_visibility(
-                full_visibility_refresh,
-                &entity_positions_before_command,
-            );
-            self.refresh_weird_mind_visibility(
-                full_visibility_refresh,
-                &entity_positions_before_command,
-            );
-            self.resolve_newly_visible_monster_auras(
-                &visible_monster_auras_before_invisible_refresh,
+            self.process_chaos_patron_level_rewards(
                 &mut events,
+                &mut chaos_patron_event_cursor,
                 &mut changed,
-            );
-        }
-        self.refresh_duelist_challenge();
+                &mut removed_entities,
+            )?;
+            self.clear_stale_mogaminator_query();
+            if self.pending_duelist.is_some() {
+                self.bind_external_tasks_to_floor_transitions(&events);
+            }
 
-        if let Some(pending) = self.pending_duelist.as_mut() {
-            let completion = pending.command_completion.get_or_insert(
-                rfb_protocol::DuelistCommandCompletionDto {
-                    turn_advance,
-                    world_tick_before: world_tick_before_command,
-                    nice_entity_ids: nice_entities_at_command_start.iter().cloned().collect(),
-                    refresh_visibility: false,
-                    actor_deaths: Vec::new(),
-                    picked_up_kind_ids: Vec::new(),
-                    entered_floor_ids: Vec::new(),
-                },
-            );
-            completion
-                .actor_deaths
-                .append(&mut self.command_actor_deaths);
-            for event in &events {
-                match event {
-                    DomainEvent::ItemPickedUp { target_kind_id, .. } => {
-                        completion.picked_up_kind_ids.push(target_kind_id.clone())
+            let task_terrain_changed = self.refresh_town_task_terrain(&mut changed);
+            let full_visibility_refresh = task_terrain_changed
+                || duelist_completion
+                    .as_ref()
+                    .is_some_and(|completion| completion.refresh_visibility)
+                || self.player.position != player_position_before_command
+                || self.current_floor_id != floor_before_command
+                || self.player_light_radius() != light_radius_before_command
+                || self.player_see_invisible_sources() != see_invisible_sources_before_command
+                || self.player_has_telepathy() != telepathy_before_command;
+            let visible_monster_auras_before_invisible_refresh =
+                self.visible_monster_aura_entity_ids();
+            if self.pending_duelist.is_none() {
+                self.refresh_invisible_visibility(
+                    full_visibility_refresh,
+                    &entity_positions_before_command,
+                );
+                self.refresh_weird_mind_visibility(
+                    full_visibility_refresh,
+                    &entity_positions_before_command,
+                );
+                self.resolve_newly_visible_monster_auras(
+                    &visible_monster_auras_before_invisible_refresh,
+                    &mut events,
+                    &mut changed,
+                );
+            }
+            self.refresh_duelist_challenge();
+
+            if let Some(pending) = self.pending_duelist.as_mut() {
+                let completion = pending.command_completion.get_or_insert(
+                    rfb_protocol::DuelistCommandCompletionDto {
+                        turn_advance,
+                        world_tick_before: world_tick_before_command,
+                        nice_entity_ids: nice_entities_at_command_start.iter().cloned().collect(),
+                        refresh_visibility: false,
+                        actor_deaths: Vec::new(),
+                        picked_up_kind_ids: Vec::new(),
+                        entered_floor_ids: Vec::new(),
+                    },
+                );
+                completion
+                    .actor_deaths
+                    .append(&mut self.command_actor_deaths);
+                for event in &events {
+                    match event {
+                        DomainEvent::ItemPickedUp { target_kind_id, .. } => {
+                            completion.picked_up_kind_ids.push(target_kind_id.clone())
+                        }
+                        DomainEvent::FloorTransitioned { to_floor_id, .. } => {
+                            completion.entered_floor_ids.push(to_floor_id.clone())
+                        }
+                        _ => {}
                     }
-                    DomainEvent::FloorTransitioned { to_floor_id, .. } => {
-                        completion.entered_floor_ids.push(to_floor_id.clone())
+                }
+                completion.refresh_visibility |= full_visibility_refresh;
+                turn_advance = 0;
+            }
+
+            if self.pending_duelist.is_none()
+                && self.world_tick != world_tick_before_command
+                && self.map_scale == MapScaleDto::Local
+            {
+                // Clear only the grace windows that existed before this command.
+                // Monsters generated while entering a floor keep their grace for
+                // the player's first action on that floor.
+                for entity in &mut self.entities {
+                    if nice_entities_at_command_start.contains(&entity.id) {
+                        entity.nice = false;
                     }
-                    _ => {}
                 }
             }
-            completion.refresh_visibility |= full_visibility_refresh;
-            turn_advance = 0;
         }
-
-        if self.pending_duelist.is_none()
-            && self.world_tick != world_tick_before_command
-            && self.map_scale == MapScaleDto::Local
-        {
-            // Clear only the grace windows that existed before this command.
-            // Monsters generated while entering a floor keep their grace for
-            // the player's first action on that floor.
-            for entity in &mut self.entities {
-                if nice_entities_at_command_start.contains(&entity.id) {
-                    entity.nice = false;
-                }
-            }
-        }
-
         self.last_command_seq = envelope.command_seq;
         self.turn = self.turn.saturating_add(turn_advance);
         self.revision = self.revision.saturating_add(1);
@@ -3174,7 +3205,8 @@ impl Game {
                 | ItemLocation::Equipped { .. }
                 | ItemLocation::CarriedBy { .. }
                 | ItemLocation::Shop { .. }
-                | ItemLocation::Home { .. } => None,
+                | ItemLocation::Home { .. }
+                | ItemLocation::Absorbed { .. } => None,
             }))
             .collect::<BTreeSet<_>>();
         let mut candidates = Vec::new();
@@ -3480,7 +3512,8 @@ impl Game {
                 | ItemLocation::Equipped { .. }
                 | ItemLocation::CarriedBy { .. }
                 | ItemLocation::Shop { .. }
-                | ItemLocation::Home { .. } => None,
+                | ItemLocation::Home { .. }
+                | ItemLocation::Absorbed { .. } => None,
             }))
             .collect::<BTreeSet<_>>();
         let connections = self

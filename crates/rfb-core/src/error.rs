@@ -5,6 +5,8 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum CoreError {
+    #[error("magic absorption is unavailable: {0}")]
+    MagicAbsorptionUnavailable(&'static str),
     #[error("finish the pending realm change first")]
     RealmChangeRequired,
     #[error("realm change is unavailable: {0}")]

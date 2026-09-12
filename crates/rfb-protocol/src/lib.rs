@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.258";
+pub const PROTOCOL_VERSION: &str = "1.259";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 22;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 23;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -242,6 +242,57 @@ pub struct PendingDuelistDto {
     pub command_completion: Option<DuelistCommandCompletionDto>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbsorbedDeviceCategoryDto {
+    Wand,
+    Staff,
+    Rod,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MagicAbsorptionReplacementDto {
+    pub slot: u8,
+    pub item_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PendingMagicAbsorptionDto {
+    pub source_item_id: String,
+    pub category: AbsorbedDeviceCategoryDto,
+    pub replacement: Option<MagicAbsorptionReplacementDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbsorbedDeviceSlotDto {
+    pub category: AbsorbedDeviceCategoryDto,
+    pub slot: u8,
+    pub item: Option<InventoryItemDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MagicEaterDto {
+    pub slots: Vec<AbsorbedDeviceSlotDto>,
+    pub pending_absorption: Option<PendingMagicAbsorptionDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AbsorbedDeviceSaveDto {
+    pub category: AbsorbedDeviceCategoryDto,
+    pub slot: u8,
+    pub item: InventoryItemSaveDto,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(
@@ -348,6 +399,18 @@ pub enum GameCommand {
         item_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         inscription: Option<String>,
+    },
+    SelectMagicAbsorptionSlot {
+        slot: u8,
+    },
+    ResolveMagicAbsorption {
+        confirm: bool,
+        inherit_inscription: bool,
+    },
+    SwapAbsorbedDevices {
+        category: AbsorbedDeviceCategoryDto,
+        first_slot: u8,
+        second_slot: u8,
     },
     Fire {
         direction: Direction,
@@ -1232,6 +1295,7 @@ pub enum SniperShotModeDto {
     rename_all_fields = "camelCase"
 )]
 pub enum AbilityEffectSpecDto {
+    MagicEaterAbsorb,
     Damage {
         damage_dice: u16,
         damage_sides: u16,
@@ -3806,6 +3870,7 @@ pub struct SniperConcentrationDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PlayerDto {
+    pub magic_eater: Option<MagicEaterDto>,
     pub trait_details: CharacterTraitDetailsDto,
     pub id: String,
     pub name: String,
@@ -5124,6 +5189,11 @@ pub fn generated_typescript() -> String {
     push_declaration!(DuelistCommandCompletionDto);
     push_declaration!(DuelistActorDeathDto);
     push_declaration!(PendingDuelistDto);
+    push_declaration!(AbsorbedDeviceCategoryDto);
+    push_declaration!(MagicAbsorptionReplacementDto);
+    push_declaration!(PendingMagicAbsorptionDto);
+    push_declaration!(AbsorbedDeviceSlotDto);
+    push_declaration!(MagicEaterDto);
     push_declaration!(LocaleDto);
     push_declaration!(AutoGetModeDto);
     push_declaration!(MogaminatorDispositionDto);
@@ -6096,6 +6166,8 @@ fn is_zero_u8(value: &u8) -> bool {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SavePayloadV1 {
+    pub absorbed_devices: Vec<AbsorbedDeviceSaveDto>,
+    pub pending_magic_absorption: Option<PendingMagicAbsorptionDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub casino: Option<CasinoStateSaveDto>,
     pub schema_version: u16,
@@ -6523,6 +6595,7 @@ mod tests {
                 vault_cells: vec![false],
             },
             player: PlayerDto {
+                magic_eater: None,
                 trait_details: CharacterTraitDetailsDto::default(),
                 id: "demo.player".to_owned(),
                 kind_id: "demo.actor.explorer".to_owned(),
@@ -6744,6 +6817,8 @@ mod tests {
             "pre-v190 actor saves without nice must be rejected"
         );
         let mut current = serde_json::to_value(&legacy).expect("fixture should serialize");
+        current["absorbedDevices"] = serde_json::json!([]);
+        current["pendingMagicAbsorption"] = serde_json::Value::Null;
         current["randomArtifactNames"] = serde_json::json!([]);
         current["activePantheons"] = serde_json::json!(2 | 8);
         current["entities"][0]["nice"] = serde_json::json!(false);

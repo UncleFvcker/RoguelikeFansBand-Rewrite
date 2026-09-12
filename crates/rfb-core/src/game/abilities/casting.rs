@@ -306,6 +306,16 @@ impl Game {
             return Ok(None);
         }
 
+        // Selecting a body slot is a pending transaction, not a cast attempt.
+        // In particular, the source's zero-failure power must not draw failure RNG.
+        if matches!(ability.effect, AbilityEffectDefinition::MagicEaterAbsorb) {
+            let Some(AbilityTargetPlan::Item { item_id }) = target_plan else {
+                unreachable!("validated absorption target");
+            };
+            self.begin_magic_absorption(&item_id, events)?;
+            return Ok(None);
+        }
+
         let mutation_progress = AbilityProgress {
             proficiency: 0,
             proficiency_cap: 0,

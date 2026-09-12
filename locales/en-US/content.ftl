@@ -10031,6 +10031,8 @@ task-demo-zul-eddies-failed-description = Too bad. The whole town was counting o
 
 # RFB master a0d92b6378: magic_eater.c::magic_eater_get_class.
 class-demo-magic-eater-name = Magic-Eater
+ability-demo-magic-eater-absorb-magic-name = Absorb Magic
+ability-demo-magic-eater-absorb-magic-description = Absorb a magic device and store its power within your body for later use.
 class-demo-magic-eater-description = Magic-Eaters absorb devices into ten slots for each of wands, staves and rods. Each device retains its own charges and properties. Absorbed devices cannot be drained or destroyed and recover charges over time, aided by regeneration.
 actor-demo-magic-eater-player-name = Magic-Eater
 actor-demo-magic-eater-player-description = A Magic-Eater carrying a magic missile wand, short sword and soft leather armour.

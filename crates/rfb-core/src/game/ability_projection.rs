@@ -324,6 +324,7 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
             value_divisor: *value_divisor,
             unit_value_cap: *unit_value_cap,
         },
+        AbilityEffectDefinition::MagicEaterAbsorb => AbilityEffectSpecDto::MagicEaterAbsorb,
         AbilityEffectDefinition::DrainItemMagic {
             base_power,
             level_multiplier,

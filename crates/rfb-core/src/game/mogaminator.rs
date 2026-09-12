@@ -789,7 +789,8 @@ impl Game {
                 .is_some_and(|knowledge| knowledge.discovered),
             ItemLocation::CarriedBy { .. }
             | ItemLocation::Shop { .. }
-            | ItemLocation::Home { .. } => false,
+            | ItemLocation::Home { .. }
+            | ItemLocation::Absorbed { .. } => false,
         }
     }
 

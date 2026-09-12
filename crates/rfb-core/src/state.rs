@@ -79,10 +79,22 @@ pub(crate) struct SummonIdentity {
 pub(crate) enum ItemLocation {
     Ground(Position),
     Inventory,
-    Equipped { slot_id: String },
-    CarriedBy { actor_id: String },
-    Shop { shop_id: String },
-    Home { facility_id: String },
+    Absorbed {
+        category: rfb_protocol::AbsorbedDeviceCategoryDto,
+        slot: u8,
+    },
+    Equipped {
+        slot_id: String,
+    },
+    CarriedBy {
+        actor_id: String,
+    },
+    Shop {
+        shop_id: String,
+    },
+    Home {
+        facility_id: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

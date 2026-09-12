@@ -169,6 +169,8 @@ mod tests {
             museum_binding: None,
         };
         let payload = SavePayloadV1 {
+            absorbed_devices: Vec::new(),
+            pending_magic_absorption: None,
             casino: None,
             schema_version: rfb_protocol::SAVE_PAYLOAD_SCHEMA_VERSION,
             revision: 0,

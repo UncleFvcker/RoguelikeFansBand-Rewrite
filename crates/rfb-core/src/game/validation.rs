@@ -39,6 +39,7 @@ impl Game {
                     | GameAction::ConfigureMogaminator { .. }
                     | GameAction::ChooseRaceMutation { .. }
                     | GameAction::InscribeItem { .. }
+                    | GameAction::SwapAbsorbedDevices { .. }
                     | GameAction::SetInterfaceLocale { .. }
             )
         {
@@ -375,7 +376,9 @@ pub(super) fn floor_regions_are_valid(
             .iter()
             .find(|entity| &entity.id == actor_id)
             .is_some_and(|entity| cells.contains(&entity.position)),
-        ItemLocation::Inventory | ItemLocation::Equipped { .. } => true,
+        ItemLocation::Inventory | ItemLocation::Equipped { .. } | ItemLocation::Absorbed { .. } => {
+            true
+        }
         ItemLocation::Shop { .. } | ItemLocation::Home { .. } => false,
     })
 }
@@ -517,6 +520,9 @@ impl Game {
         }
         if !self.pending_duelist_is_valid() {
             return Err(CoreError::InvalidSave("pending duelist choice is invalid"));
+        }
+        if !self.magic_eater_state_is_valid() {
+            return Err(CoreError::InvalidSave("magic eater state is invalid"));
         }
         let world = self
             .content
@@ -1019,6 +1025,11 @@ impl Game {
                         return Err(CoreError::InvalidSave("inventory item state is invalid"));
                     }
                 }
+                ItemLocation::Absorbed { .. } => {
+                    if !common_valid {
+                        return Err(CoreError::InvalidSave("absorbed item state is invalid"));
+                    }
+                }
                 ItemLocation::Equipped { slot_id } => {
                     let fully_identified =
                         self.item_property_knowledge
@@ -1260,7 +1271,8 @@ impl Game {
                     ItemLocation::Inventory
                     | ItemLocation::Equipped { .. }
                     | ItemLocation::Shop { .. }
-                    | ItemLocation::Home { .. } => false,
+                    | ItemLocation::Home { .. }
+                    | ItemLocation::Absorbed { .. } => false,
                 };
                 if !instance_ids.insert(item.id.clone())
                     || item.quantity == 0

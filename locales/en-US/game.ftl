@@ -731,3 +731,8 @@ message-monster-phoenix-reborn = The Phoenix rises from its ashes!
 
 message-ability-resource-converted = { $ability }: life { $hpBefore } → { $hpAfter }, mana { $manaBefore } → { $manaAfter }.
 message-ability-resource-conversion-failed = { $ability }: conversion failed. Life { $hpBefore } → { $hpAfter }, mana { $manaBefore } → { $manaAfter }.
+# Magic-Eater body devices
+magic-eater-absorption-pending = Choose a body slot. Replacing an occupied slot requires confirmation.
+magic-eater-absorption-cancelled = Absorption cancelled.
+magic-eater-absorbed = You absorb the device's magic.
+magic-eater-slots-swapped = The body slots have been exchanged.

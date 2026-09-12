@@ -106,6 +106,20 @@ pub(crate) enum BoltReflectionOutcome {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum DomainEvent {
+    MagicAbsorptionPending {
+        item_id: String,
+    },
+    MagicAbsorptionCancelled,
+    MagicDeviceAbsorbed {
+        item_id: String,
+        kind_id: String,
+        slot: u8,
+        replaced_item_id: Option<String>,
+    },
+    AbsorbedDevicesSwapped {
+        first_slot: u8,
+        second_slot: u8,
+    },
     PlayerLifeForceExhausted,
     PlayerRaceChanged {
         previous_race_id: String,
@@ -2500,6 +2514,42 @@ impl DomainEvent {
                     ("item", item_id),
                     ("reason", reason),
                     ("ruleLine", rule_line.unwrap_or(0).to_string()),
+                ],
+            ),
+            Self::MagicAbsorptionPending { item_id } => dto(
+                "magic-eater.absorption.pending",
+                "magic-eater-absorption-pending",
+                [("item", item_id)],
+            ),
+            Self::MagicAbsorptionCancelled => dto(
+                "magic-eater.absorption.cancelled",
+                "magic-eater-absorption-cancelled",
+                [],
+            ),
+            Self::MagicDeviceAbsorbed {
+                item_id,
+                kind_id,
+                slot,
+                replaced_item_id,
+            } => dto(
+                "magic-eater.absorbed",
+                "magic-eater-absorbed",
+                [
+                    ("item", item_id),
+                    ("kind", kind_id),
+                    ("slot", slot.to_string()),
+                    ("replaced", replaced_item_id.unwrap_or_default()),
+                ],
+            ),
+            Self::AbsorbedDevicesSwapped {
+                first_slot,
+                second_slot,
+            } => dto(
+                "magic-eater.slots-swapped",
+                "magic-eater-slots-swapped",
+                [
+                    ("first", first_slot.to_string()),
+                    ("second", second_slot.to_string()),
                 ],
             ),
             Self::ItemInscribed {

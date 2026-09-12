@@ -451,6 +451,16 @@ impl Game {
                         item_id: item_id.clone(),
                     })
             }
+            AbilityEffectDefinition::MagicEaterAbsorb => {
+                let TargetSelection::Item { item_id } = target else {
+                    return None;
+                };
+                self.magic_absorption_source(item_id)
+                    .ok()
+                    .map(|_| AbilityTargetPlan::Item {
+                        item_id: item_id.clone(),
+                    })
+            }
             AbilityEffectDefinition::DrainItemMagic { .. } => {
                 let TargetSelection::Item { item_id } = target else {
                     return None;
@@ -763,7 +773,8 @@ impl Game {
                                 ItemLocation::Ground(position) => *position == self.player.position,
                                 ItemLocation::CarriedBy { .. }
                                 | ItemLocation::Shop { .. }
-                                | ItemLocation::Home { .. } => false,
+                                | ItemLocation::Home { .. }
+                                | ItemLocation::Absorbed { .. } => false,
                             }
                     }))
                 .then(|| AbilityTargetPlan::Item {
@@ -795,7 +806,8 @@ impl Game {
                                     }
                                     ItemLocation::CarriedBy { .. }
                                     | ItemLocation::Shop { .. }
-                                    | ItemLocation::Home { .. } => false,
+                                    | ItemLocation::Home { .. }
+                                    | ItemLocation::Absorbed { .. } => false,
                                 }
                         }))
                     .then(|| AbilityTargetPlan::Item {

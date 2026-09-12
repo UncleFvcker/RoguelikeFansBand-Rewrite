@@ -716,3 +716,8 @@ message-monster-phoenix-reborn = 凤凰浴火重生！
 
 message-ability-resource-converted = { $ability }：生命 { $hpBefore } → { $hpAfter }，法力 { $manaBefore } → { $manaAfter }。
 message-ability-resource-conversion-failed = { $ability }：你转换失败了。生命 { $hpBefore } → { $hpAfter }，法力 { $manaBefore } → { $manaAfter }。
+# 食魔者体内装置
+magic-eater-absorption-pending = 选择体内槽位；覆盖已有装置需要确认。
+magic-eater-absorption-cancelled = 已取消吸收。
+magic-eater-absorbed = 你吸收了装置的魔法。
+magic-eater-slots-swapped = 已交换体内槽位。

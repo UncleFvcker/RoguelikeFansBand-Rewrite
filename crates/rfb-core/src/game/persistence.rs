@@ -647,6 +647,8 @@ fn item_property_knowledge_from_save(
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct StateHashPayloadV98<'a> {
+    absorbed_devices: Vec<rfb_protocol::AbsorbedDeviceSaveDto>,
+    pending_magic_absorption: &'a Option<rfb_protocol::PendingMagicAbsorptionDto>,
     casino: &'a Option<rfb_protocol::CasinoStateSaveDto>,
     schema_version: u16,
     revision: u32,
@@ -1138,6 +1140,13 @@ impl Game {
                 .map(|item| inventory_item_from_dto(item, &content))
                 .collect::<Result<Vec<_>, CoreError>>()?,
         );
+        items.extend(
+            payload
+                .absorbed_devices
+                .into_iter()
+                .map(|item| crate::save::absorbed_item_from_dto(item, &content))
+                .collect::<Result<Vec<_>, CoreError>>()?,
+        );
         let gold_piles = gold_piles_from_save(payload.gold_piles);
         items.extend(
             payload
@@ -1499,6 +1508,7 @@ impl Game {
             pending_ability_direction,
             duelist_target_id,
             pending_duelist,
+            pending_magic_absorption: payload.pending_magic_absorption,
             next_item_instance_serial,
             next_gold_pile_serial,
             explored,
@@ -1544,6 +1554,8 @@ impl Game {
     #[must_use]
     pub fn to_save(&self) -> SavePayloadV1 {
         SavePayloadV1 {
+            absorbed_devices: crate::save::absorbed_devices_to_save(&self.items),
+            pending_magic_absorption: self.pending_magic_absorption.clone(),
             casino: self.casino.clone(),
             schema_version: SAVE_PAYLOAD_SCHEMA_VERSION,
             revision: self.revision,
@@ -1628,6 +1640,8 @@ impl Game {
     #[must_use]
     pub fn state_hash(&self) -> String {
         let payload = StateHashPayloadV98 {
+            absorbed_devices: crate::save::absorbed_devices_to_save(&self.items),
+            pending_magic_absorption: &self.pending_magic_absorption,
             casino: &self.casino,
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,

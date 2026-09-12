@@ -208,7 +208,9 @@ pub(super) fn validate_abilities(
                         && (1..=16).contains(radius)
                         && validate_id(target_terrain_id).is_ok()
                 }
-                AbilityEffectDefinition::DoomHand => true,
+                AbilityEffectDefinition::DoomHand | AbilityEffectDefinition::MagicEaterAbsorb => {
+                    true
+                }
                 AbilityEffectDefinition::Sanctuary { power, radius } => {
                     (1..=1_000).contains(power) && (1..=8).contains(radius)
                 }
@@ -1334,6 +1336,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::Mundanity
             | AbilityEffectDefinition::TransmuteItemToGold { .. }
             | AbilityEffectDefinition::DrainItemMagic { .. }
+            | AbilityEffectDefinition::MagicEaterAbsorb
             | AbilityEffectDefinition::RechargeFromPlayer { .. } => item_target_rule,
             AbilityEffectDefinition::AreaDamage { .. } => {
                 self_target_rule || projectile_target_rule

@@ -62,7 +62,8 @@ impl Game {
                 ItemLocation::Ground(_)
                 | ItemLocation::CarriedBy { .. }
                 | ItemLocation::Shop { .. }
-                | ItemLocation::Home { .. } => None,
+                | ItemLocation::Home { .. }
+                | ItemLocation::Absorbed { .. } => None,
             })
             .collect::<Vec<_>>();
         self.mark_item_instances_discovered(&discovered_item_ids);

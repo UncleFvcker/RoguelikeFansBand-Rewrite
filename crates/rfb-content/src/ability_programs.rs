@@ -380,6 +380,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::Mundanity
                     | AbilityEffectDefinition::TransmuteItemToGold { .. }
                     | AbilityEffectDefinition::DrainItemMagic { .. }
+                    | AbilityEffectDefinition::MagicEaterAbsorb
                     | AbilityEffectDefinition::RechargeFromPlayer { .. }
             ) || matches!(
                 effect,

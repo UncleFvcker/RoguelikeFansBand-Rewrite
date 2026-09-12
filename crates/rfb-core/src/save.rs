@@ -381,6 +381,7 @@ pub(crate) fn item_from_dto(
         item.enchantments,
         saved_device_ego(content, &item.affix_ids, &item.rolled_affixes),
         item.origin_kind == Some(ItemOriginKindDto::Mundanity),
+        false,
     )?;
     validate_item_creation_state(
         definition,
@@ -431,6 +432,28 @@ pub(crate) fn inventory_item_from_dto(
     item: InventoryItemSaveDto,
     content: &ContentCatalog,
 ) -> Result<ItemInstance, CoreError> {
+    inventory_item_from_dto_at(item, content, ItemLocation::Inventory)
+}
+
+pub(crate) fn absorbed_item_from_dto(
+    saved: rfb_protocol::AbsorbedDeviceSaveDto,
+    content: &ContentCatalog,
+) -> Result<ItemInstance, CoreError> {
+    inventory_item_from_dto_at(
+        saved.item,
+        content,
+        ItemLocation::Absorbed {
+            category: saved.category,
+            slot: saved.slot,
+        },
+    )
+}
+
+fn inventory_item_from_dto_at(
+    item: InventoryItemSaveDto,
+    content: &ContentCatalog,
+    location: ItemLocation,
+) -> Result<ItemInstance, CoreError> {
     let definition = content
         .item(&item.kind_id)
         .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
@@ -454,6 +477,7 @@ pub(crate) fn inventory_item_from_dto(
         item.enchantments,
         saved_device_ego(content, &item.affix_ids, &item.rolled_affixes),
         item.origin_kind == Some(ItemOriginKindDto::Mundanity),
+        matches!(location, ItemLocation::Absorbed { .. }),
     )?;
     validate_item_creation_state(
         definition,
@@ -496,7 +520,7 @@ pub(crate) fn inventory_item_from_dto(
         fuel,
         device_recovery_progress: item.device_recovery_progress,
         captured_actor,
-        location: ItemLocation::Inventory,
+        location,
     })
 }
 
@@ -532,6 +556,7 @@ pub(crate) fn equipment_item_from_dto(
         item.enchantments,
         saved_device_ego(content, &item.affix_ids, &item.rolled_affixes),
         item.origin_kind == Some(ItemOriginKindDto::Mundanity),
+        false,
     )?;
     validate_item_creation_state(
         definition,
@@ -607,6 +632,7 @@ pub(crate) fn carried_item_from_dto(
         item.enchantments,
         saved_device_ego(content, &item.affix_ids, &item.rolled_affixes),
         item.origin_kind == Some(ItemOriginKindDto::Mundanity),
+        false,
     )?;
     validate_item_creation_state(
         definition,
@@ -727,6 +753,7 @@ fn validate_item_runtime_state(
     enchantments: ItemEnchantmentsDto,
     device_ego: Option<(u32, u16)>,
     mundanity: bool,
+    absorbed: bool,
 ) -> Result<(), CoreError> {
     if device_ego.is_some_and(|(index, pval)| {
         !definition.tags.iter().any(|tag| tag == "device")
@@ -835,7 +862,12 @@ fn validate_item_runtime_state(
             _ => false,
         }
     };
-    let valid_recovery_progress = if artifact_mushroom {
+    let valid_recovery_progress = if absorbed {
+        charges.map_or(device_recovery_progress == 0, |charges| {
+            device_recovery_progress < 1_000
+                && (charges.current < charges.maximum || device_recovery_progress == 0)
+        })
+    } else if artifact_mushroom {
         device_recovery_progress <= crate::state::ARTIFACT_MUSHROOM_COOLDOWN_TICKS
             && activation.is_none()
             && charges.is_none()
@@ -2077,48 +2109,68 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
 pub(crate) fn inventory_to_save(items: &[ItemInstance]) -> Vec<InventoryItemSaveDto> {
     let mut inventory = items
         .iter()
-        .filter_map(|item| {
-            if item.location != ItemLocation::Inventory {
-                return None;
-            }
-            Some(InventoryItemSaveDto {
-                previously_worn: item.previously_worn,
-                book_counted: item.book_counted,
-                id: item.id.clone(),
-                kind_id: item.kind_id.clone(),
-                quantity: item.quantity,
-                inscription: item.inscription.clone(),
-                origin_actor_kind_id: item.origin_actor_kind_id.clone(),
-                origin_kind: item.origin_kind,
-                damage_dice_override: item.damage_dice_override,
-                discount_percent: item.discount_percent,
-                quality: item.quality,
-                affix_ids: item.affix_ids.clone(),
-                rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
-                intrinsic_properties: intrinsic_properties_to_save(&item.intrinsic_properties),
-                artifact_name: item.artifact_name.clone(),
-                intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
-                intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
-                intrinsic_weapon_traits: item.intrinsic_weapon_traits.iter().copied().collect(),
-                intrinsic_curse_effects: item.intrinsic_curse_effects.iter().copied().collect(),
-                enchantments: item.enchantments,
-                curse: item.curse,
-                permanent_destruction_immunities: item
-                    .permanent_destruction_immunities
-                    .iter()
-                    .copied()
-                    .map(item_destruction_element_to_dto)
-                    .collect(),
-                activation: item.activation.clone(),
-                charges: item.charges,
-                fuel: item.fuel,
-                device_recovery_progress: item.device_recovery_progress,
-                captured_actor: item.captured_actor.as_ref().map(captured_actor_to_save),
-            })
-        })
+        .filter(|item| item.location == ItemLocation::Inventory)
+        .map(inventory_item_to_save)
         .collect::<Vec<_>>();
     inventory.sort_by(|left, right| left.id.cmp(&right.id));
     inventory
+}
+
+pub(crate) fn absorbed_devices_to_save(
+    items: &[ItemInstance],
+) -> Vec<rfb_protocol::AbsorbedDeviceSaveDto> {
+    let mut absorbed = items
+        .iter()
+        .filter_map(|item| {
+            let ItemLocation::Absorbed { category, slot } = item.location else {
+                return None;
+            };
+            Some(rfb_protocol::AbsorbedDeviceSaveDto {
+                category,
+                slot,
+                item: inventory_item_to_save(item),
+            })
+        })
+        .collect::<Vec<_>>();
+    absorbed.sort_by_key(|saved| (saved.category, saved.slot));
+    absorbed
+}
+
+fn inventory_item_to_save(item: &ItemInstance) -> InventoryItemSaveDto {
+    InventoryItemSaveDto {
+        previously_worn: item.previously_worn,
+        book_counted: item.book_counted,
+        id: item.id.clone(),
+        kind_id: item.kind_id.clone(),
+        quantity: item.quantity,
+        inscription: item.inscription.clone(),
+        origin_actor_kind_id: item.origin_actor_kind_id.clone(),
+        origin_kind: item.origin_kind,
+        damage_dice_override: item.damage_dice_override,
+        discount_percent: item.discount_percent,
+        quality: item.quality,
+        affix_ids: item.affix_ids.clone(),
+        rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+        intrinsic_properties: intrinsic_properties_to_save(&item.intrinsic_properties),
+        artifact_name: item.artifact_name.clone(),
+        intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+        intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+        intrinsic_weapon_traits: item.intrinsic_weapon_traits.iter().copied().collect(),
+        intrinsic_curse_effects: item.intrinsic_curse_effects.iter().copied().collect(),
+        enchantments: item.enchantments,
+        curse: item.curse,
+        permanent_destruction_immunities: item
+            .permanent_destruction_immunities
+            .iter()
+            .copied()
+            .map(item_destruction_element_to_dto)
+            .collect(),
+        activation: item.activation.clone(),
+        charges: item.charges,
+        fuel: item.fuel,
+        device_recovery_progress: item.device_recovery_progress,
+        captured_actor: item.captured_actor.as_ref().map(captured_actor_to_save),
+    }
 }
 
 pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSaveDto> {

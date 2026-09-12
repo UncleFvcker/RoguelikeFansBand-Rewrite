@@ -1366,7 +1366,7 @@ impl Game {
             .ok_or("not-found")?;
         if !matches!(
             item.location,
-            ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            ItemLocation::Inventory | ItemLocation::Equipped { .. } | ItemLocation::Absorbed { .. }
         ) && item.location != ItemLocation::Ground(self.player.position)
         {
             return Err("not-owned");

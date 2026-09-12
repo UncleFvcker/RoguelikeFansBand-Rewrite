@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.magic-eater-absorb-magic",
+  "nameKey": "ability-demo-magic-eater-absorb-magic-name",
+  "descriptionKey": "ability-demo-magic-eater-absorb-magic-description",
+  "target": {
+    "modes": ["item"],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "abilityProgramId": "demo.ability-program.magic-eater-absorb-magic",
+  "tags": ["class-power", "magic-eater"]
+}

@@ -638,6 +638,7 @@ impl Game {
             pending_ability_direction: None,
             duelist_target_id: None,
             pending_duelist: None,
+            pending_magic_absorption: None,
             next_item_instance_serial,
             next_gold_pile_serial: 1,
             explored: vec![false; usize::from(width) * usize::from(height)],

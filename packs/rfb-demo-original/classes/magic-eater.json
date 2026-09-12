@@ -133,6 +133,16 @@
   "dualWieldingMaximum": 4000,
   "petUpkeepDivisor": 30,
   "usesSpellScrolls": false,
+  "abilities": [
+    {
+      "abilityId": "demo.ability.magic-eater-absorb-magic",
+      "minimumLevel": 1,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0,
+      "blockedByDungeonAntiMagic": false
+    }
+  ],
   "startingItems": [
     {
       "itemKindId": "demo.item.magic-missile-wand",

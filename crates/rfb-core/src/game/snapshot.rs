@@ -102,6 +102,7 @@ impl Game {
             .actor(&self.player.kind_id)
             .expect("player actor definition must remain available");
         PlayerDto {
+            magic_eater: self.magic_eater_dto(),
             trait_details: self.character_trait_details(&stats),
             id: self.player.id.clone(),
             name: self.player_name.clone(),
@@ -699,7 +700,14 @@ impl Game {
                         .collect(),
                     target_spec,
                     element_targets: self.ability_element_targets(&effective_ability),
-                    item_targets: self.craft_ability_item_targets(&effective_ability),
+                    item_targets: if matches!(
+                        effective_ability.effect,
+                        AbilityEffectDefinition::MagicEaterAbsorb
+                    ) {
+                        Some(self.magic_absorption_item_targets())
+                    } else {
+                        self.craft_ability_item_targets(&effective_ability)
+                    },
                     town_targets: matches!(ability.effect, AbilityEffectDefinition::TeleportTown)
                         .then(|| self.teleport_town_targets())
                         .unwrap_or_default(),
