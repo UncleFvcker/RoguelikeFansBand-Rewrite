@@ -1,0 +1,46 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 78000,
+  "descriptionKey": "item-demo-sexy-swimsuit-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "glyph": "(",
+  "id": "demo.item.sexy-swimsuit",
+  "maxStack": 1,
+  "mogaminatorRare": true,
+  "nameKey": "item-demo-sexy-swimsuit-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 260,
+    "sval": 50,
+    "tval": 36
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IGNORE_COLD",
+      "AGGRAVATE"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 2
+}

@@ -1752,6 +1752,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.sexy-swimsuit",
+      "maxDepth": 65535,
+      "minDepth": 30,
+      "quantity": 1,
+      "weight": 1
+    },
+    {
       "itemKindId": "demo.item.augmented-chain-mail",
       "maxDepth": 65535,
       "minDepth": 30,

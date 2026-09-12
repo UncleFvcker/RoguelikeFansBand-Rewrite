@@ -3980,6 +3980,8 @@ fn item_json_with_terrain(
             flag.as_str(),
             "NO_ENCHANT" | "NO_REMOVE" | "RIDING" | "REFLECT"
         ) || item_destruction_flag_is_mapped(flag)
+            // Intrinsic aggravation is consumed directly from equipped RFB flags.
+            || (flag == "AGGRAVATE" && shape.slot.is_some() && value.get("rfbValue").is_some())
         {
             continue;
         }
@@ -24523,6 +24525,30 @@ A:1/1
         assert_eq!(item["weightTenthsPound"], 0);
         assert_eq!(item["modifiers"]["defense"], 10);
         assert_eq!(item["rfbValue"]["toArmor"], 10);
+    }
+
+    #[test]
+    fn sexy_swimsuit_import_keeps_intrinsic_aggravation_without_identity_bonuses() {
+        // master a0d92b6378: k_info source260; object2.c adds identity bonuses later.
+        let entries = parse_k_info(
+            "N:260:Sexy Swimsuit~\nG:(:v\nI:36:50:0\nW:30:0:0:2:78000\nA:30/64\nP:0:0d0:0:0:0\nF:IGNORE_ACID | IGNORE_ELEC | IGNORE_FIRE | IGNORE_COLD | AGGRAVATE\n",
+        ).unwrap();
+        let item =
+            demo_item_json(&entries[0], "sexy-swimsuit", &LauncherAmmoIndex::default()).unwrap();
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../packs/rfb-demo-original/items/sexy-swimsuit.json");
+        let formal: serde_json::Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
+        assert_eq!(item, formal);
+        assert_eq!(item["rfbValue"]["pval"], 0);
+        assert!(
+            item["rfbValue"]["flags"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|flag| flag == "AGGRAVATE")
+        );
+        assert!(item["modifiers"].is_null());
+        assert!(item["initialCurse"].is_null());
     }
 
     #[test]

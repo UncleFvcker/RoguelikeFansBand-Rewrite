@@ -1,6 +1,6 @@
 {
   "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits",
-  "allocationRowCount": 422,
+  "allocationRowCount": 423,
   "explicitItems": [
     {
       "itemId": "demo.item.aegir",
@@ -4815,12 +4815,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.sexy-swimsuit",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 260,
       "sourceName": "Sexy Swimsuit",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 50,
       "tval": 36
     },

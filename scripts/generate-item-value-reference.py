@@ -268,6 +268,10 @@ def reference_cases(flags):
     }
     def add(name, base, **updates):
         cases.append({"name":name,"object":base | updates})
+    swimsuit = {"tval":36,"sval":50,"weight":2,"flags":["IGNORE_ACID","IGNORE_ELEC","IGNORE_FIRE","IGNORE_COLD","AGGRAVATE"]}
+    add("swimsuit-minimum-value",swimsuit)
+    add("swimsuit-aggravation-discount",swimsuit,toD=1)
+    add("swimsuit-negative-enchantment-minimum",swimsuit,toA=-1)
     for name, base in bases.items():
         add(name+"-plain",base)
         add(name+"-enchanted",base,pval=3,toH=8,toD=11,toA=7,ego=1,flags=["STR","SPEED","RES_FIRE","FREE_ACT"])

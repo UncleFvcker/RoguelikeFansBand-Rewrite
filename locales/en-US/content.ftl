@@ -10128,3 +10128,5 @@ item-demo-ethereal-cloak-name = Ethereal Cloak
 item-demo-ethereal-cloak-description = Ethereal Cloak
 item-demo-mithril-gauntlets-name = Set of Mithril Gauntlets
 item-demo-mithril-gauntlets-description = Set of Mithril Gauntlets
+item-demo-sexy-swimsuit-name = Sexy Swimsuit
+item-demo-sexy-swimsuit-description = Sexy Swimsuit

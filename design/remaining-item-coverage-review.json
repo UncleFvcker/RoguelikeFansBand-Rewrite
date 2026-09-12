@@ -17,13 +17,13 @@
   "summary": {
     "sourceKindRecords": 545,
     "validSourceKinds": 544,
-    "mappedCanonicalKinds": 409,
-    "remainingValidKinds": 135,
+    "mappedCanonicalKinds": 410,
+    "remainingValidKinds": 134,
     "excludedPlaceholderKinds": 1,
     "importerMechanicsReady": 1,
-    "importerBlocked": 134,
-    "formalItems": 588,
-    "baseAllocationRows": 422,
+    "importerBlocked": 133,
+    "formalItems": 589,
+    "baseAllocationRows": 423,
     "fixedArtifactRecords": 392,
     "formalFixedArtifacts": 156,
     "missingFixedArtifacts": 236,
@@ -151,7 +151,7 @@
     "swimsuit": {
       "batch": "I1",
       "classification": "dependent-identity-branch",
-      "gap": "缺正式底材及普通 AGGRAVATE 消费；Sexy/Aphrodite 等未开放身份的附加规则继续单列。",
+      "gap": "普通底材、源分配及既有激怒／估值消费者已接入，待五步后统一验证；Sexy/Aphrodite、Android、Politician及元素／破布怪物种族分支仍待身份开放。",
       "acquisition": "按源 A 行；普通分支不等待未开放身份。",
       "consumer": "crates/rfb-core/src/game/item_curses.rs; design/generation-build-applicability.json",
       "sourceConsumer": "src/object2.c; src/ego.c"
@@ -383,7 +383,7 @@
     }
   },
   "ordinaryEquipmentCompletion": {
-    "status": "i1-a-b-c-implemented-awaiting-five-step-validation",
+    "status": "i1-a-b-c-d-implemented-awaiting-five-step-validation",
     "sourceIndices": [
       100,
       108,
@@ -397,7 +397,8 @@
       286,
       288,
       198,
-      231
+      231,
+      260
     ],
     "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
     "sourceEvidence": [
@@ -409,9 +410,12 @@
       "lib/edit/k_info.txt:219/241/259/280/281/286/288",
       "src/kind_name_zh.inc:226/248/266/287/288/293/295",
       "lib/edit/k_info.txt:198/231",
-      "src/kind_name_zh.inc:205/238"
+      "src/kind_name_zh.inc:205/238",
+      "lib/edit/k_info.txt:260; src/kind_name_zh.inc:267",
+      "src/object2.c:2376-2387; src/object3.c:411-414,1209-1211",
+      "src/polly.c:744-746; src/races_a.c:74-86; src/r_elem.c:766; src/r_rag.c:656,870-878"
     ],
-    "implementation": "Four plain bases use existing weapon/digger generation, riding and tunneling. Explicit source exceptions: Warrior-Mage polearm caps 7000, Mindcrafter digger caps 4000, Cavalry slicing-scythe cap 8000, Duelist initial 0/cap 4000; the other ten classes use source-equivalent defaults. Allocation rows are 21/1, 60/4, 40/1 and 50/1. No fixed artifact added. I1-B adds seven plain armor bases: source AC/hit/weight, physical head/shield/body slots, four-element item destruction immunity on Mithril Shield and Mithril Plate Mail, and the existing Dwarf theme for Mithril Plate Mail. These IGNORE flags do not grant player resistance. Allocation rows are 50/3, 50/2, 35/7, 40/2, 45/1, 50/1 and 60/4; no new rules, class profiles or artifacts. I1-C adds Ethereal Cloak (weight0, AC0 plus fixed to-A10, A70/4) and Mithril Gauntlets (weight15, AC5 plus fixed to-A10, hit1/damage1, A50/2), both with four-element item destruction immunity. Importer and content validation preserve the weightless cloak base; existing equipment, Ego and random-artifact paths separate fixed bonuses from instance changes. Artifact233/316/320 base references are resolved, but the artifacts remain undefined.",
+    "implementation": "Four plain bases use existing weapon/digger generation, riding and tunneling. Explicit source exceptions: Warrior-Mage polearm caps 7000, Mindcrafter digger caps 4000, Cavalry slicing-scythe cap 8000, Duelist initial 0/cap 4000; the other ten classes use source-equivalent defaults. Allocation rows are 21/1, 60/4, 40/1 and 50/1. No fixed artifact added. I1-B adds seven plain armor bases: source AC/hit/weight, physical head/shield/body slots, four-element item destruction immunity on Mithril Shield and Mithril Plate Mail, and the existing Dwarf theme for Mithril Plate Mail. These IGNORE flags do not grant player resistance. Allocation rows are 50/3, 50/2, 35/7, 40/2, 45/1, 50/1 and 60/4; no new rules, class profiles or artifacts. I1-C adds Ethereal Cloak (weight0, AC0 plus fixed to-A10, A70/4) and Mithril Gauntlets (weight15, AC5 plus fixed to-A10, hit1/damage1, A50/2), both with four-element item destruction immunity. Importer and content validation preserve the weightless cloak base; existing equipment, Ego and random-artifact paths separate fixed bonuses from instance changes. Artifact233/316/320 base references are resolved, but the artifacts remain undefined. I1-D adds ordinary Sexy Swimsuit: weight2, AC0, four IGNORE flags plus intrinsic AGGRAVATE, A30/64 with integer weight1. The importer recognizes equipped AGGRAVATE already consumed from rfbValue; no new runtime rule or saved field. Existing valuation uses the 5/6 aggravation multiplier and minimum1, not source baseValue78000. Formal content and test source are implemented; behavioral acceptance remains pending.",
     "pendingValidation": [
       "game::tests::items::i1_a_ordinary_weapons_and_diggers_generate_and_act_after_save",
       "game::tests::inventory::original_diggers_use_weight_and_tunneling_pval_without_stacking_with_weapons",
@@ -421,9 +425,17 @@
       "game::tests::items::ordinary_heavy_armor_allocation_reaches_equipment_and_save (extended with I1-B seven bases, head/shield slots, unknown save, corrosion, no player elemental resistance, unequip and continued generation)",
       "Existing caster armor encumbrance, armor Ego/random artifact generation and equipped armor corruption consumers.",
       "Importer zero-weight/fixed-enchantment and content zero-weight boundary tests; extended B3 cloak and B5 glove equipment/save flows.",
-      "Extended armor Ego pool reachability and random-artifact materialization/save coverage for kinds198/231."
+      "Extended armor Ego pool reachability and random-artifact materialization/save coverage for kinds198/231.",
+      "game::tests::items::i1_d_swimsuit_generates_aggravates_and_keeps_its_value_after_save; importer sexy_swimsuit_import_keeps_intrinsic_aggravation_without_identity_bonuses.",
+      "scripts/generate-item-value-reference.py adds swimsuit minimum/positive/negative-enchantment C cases, not yet executed. Refresh source-instances and reference after step5; reuse current Shadow Fairy aggravation and shared armor Ego/random-artifact regressions."
     ],
-    "evidence": "Implementation and test source only for I1-A, I1-B and I1-C. No compilation or test execution; all five ordinary-equipment steps must be implemented before unified compilation, checks and report refresh. Existing acceptance does not cover these additions."
+    "evidence": "Implementation and test source only for I1-A through I1-D. No compilation or test execution; all five ordinary-equipment steps must be implemented before unified compilation, checks and report refresh. Existing acceptance does not cover these additions.",
+    "deferredSwimsuitIdentityBranches": [
+      "web/src/character-creation.ts currently has no Sexy personality, Aphrodite demigod parent, Android, Politician, Water Elemental or 破布 entry. Android formal race definition alone is not a playable entry; the existing Aphrodite artifact does not grant that demigod identity.",
+      "object2.c:2376-2387: Sexy personality or Aphrodite demigod generation sets pval3 and STR/INT/WIS/DEX/CON/CHR. Ordinary currently playable identities receive none; no identity model is added by this item batch.",
+      "polly.c:744-746: Politician without realm1 sets uimapuku while equipped; races_a.c:74-86: Android equipment value divides by32 unless Sexy or Politician. These identity consumers remain unimplemented.",
+      "r_elem.c:766: Water Elemental slippery armor and Sexy swimsuit bonus; r_rag.c:656,870-878 (source name 破布 at1025): intrinsic aggravation and swimsuit evolution/essences remain outside current playable identities."
+    ]
   },
   "remainingKinds": [
     {"sourceIndex": 0, "sourceName": "something", "sourceNameZh": "某物", "reviewGroup": "placeholder", "hasNaturalAllocationRows": false, "sourceFlags": [], "sourceActivation": null, "importerBlockers": []},
@@ -440,7 +452,6 @@
     {"sourceIndex": 234, "sourceName": "Hand :Decrepit", "sourceNameZh": "& 只~手", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["INSTA_ART", "FIXED_FLAVOR"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART"]},
     {"sourceIndex": 243, "sourceName": "Mirror", "sourceNameZh": "& 面~镜子", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["IGNORE_ACID", "REFLECT", "INSTA_ART"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART"]},
     {"sourceIndex": 244, "sourceName": "Card", "sourceNameZh": "& 张~纸牌", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["INSTA_ART"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART"]},
-    {"sourceIndex": 260, "sourceName": "Sexy Swimsuit", "sourceNameZh": "性感泳装~", "reviewGroup": "swimsuit", "hasNaturalAllocationRows": true, "sourceFlags": ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD", "AGGRAVATE"], "sourceActivation": null, "importerBlockers": ["item-flag:AGGRAVATE"]},
     {"sourceIndex": 262, "sourceName": "Costume", "sourceNameZh": "戏服~", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["INSTA_ART"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART"]},
     {"sourceIndex": 368, "sourceName": "Madness:mumblus incognitus", "sourceNameZh": "疯狂", "reviewGroup": "madness-scroll", "hasNaturalAllocationRows": true, "sourceFlags": ["FIXED_FLAVOR"], "sourceActivation": null, "importerBlockers": ["scroll-effect"]},
     {"sourceIndex": 465, "sourceName": "Liquid Logrus:Murky Brown", "sourceNameZh": "液态洛格鲁斯", "reviewGroup": "liquid-logrus", "hasNaturalAllocationRows": true, "sourceFlags": ["NO_SHUFFLE"], "sourceActivation": null, "importerBlockers": ["consumable-effect", "potion-shatter-effect"]},

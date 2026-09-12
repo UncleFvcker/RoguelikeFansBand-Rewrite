@@ -10159,3 +10159,5 @@ item-demo-ethereal-cloak-name = 空灵披风
 item-demo-ethereal-cloak-description = 空灵披风
 item-demo-mithril-gauntlets-name = 秘银护手
 item-demo-mithril-gauntlets-description = 秘银护手
+item-demo-sexy-swimsuit-name = 性感泳装
+item-demo-sexy-swimsuit-description = 性感泳装
