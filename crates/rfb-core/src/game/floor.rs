@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
+mod asgard_e2e;
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use rfb_content::{

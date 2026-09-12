@@ -222,9 +222,13 @@ fn asgard_early_odin_death_keeps_conquest_scroll_artifact_and_avenger_independen
             .count(),
         1
     );
-    // Keep the avenger alive but delay it while isolating reward use.
+    // Keep the avenger alive in a saved sleep preparation while isolating
+    // reward use; full-HP combat is exercised separately by AS6.
     for actor in &mut game.entities {
-        actor.energy_need = 100_000;
+        apply_status(
+            &mut actor.statuses,
+            monster_combat::melee_status(STATUS_SLEEP, 200_000, "test.asgard.reward"),
+        );
     }
     let scroll = game
         .items

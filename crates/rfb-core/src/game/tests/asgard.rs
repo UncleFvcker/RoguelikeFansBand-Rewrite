@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 use super::support::*;
 use super::*;
+mod acceptance;
 mod deaths;
 mod floors;
 mod integration;

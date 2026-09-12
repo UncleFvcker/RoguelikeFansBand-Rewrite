@@ -60,6 +60,34 @@ node e2e/tauri.e2e.mjs --berserker --fast-entry
 
 实际 UI 流程覆盖普通／珠宝／龙皮购物、丢物、三塔身份和服务、生命／自然副领域切换、两个方向的视野滚动、四图进出与源奖励、巫术塔和旧城旅店往返。荒野位置／视图偏移来自核心专用检查响应，不把边缘攻击的滚动误算成移动。原生保存／加载逐次核对完整状态哈希；最终往返核对巫术塔落点及原地物品身份。报告和截图在 `test-results/zul/`；失败细节沿用 `test-results` 诊断。完整流程通过后可执行 `node e2e/tauri.e2e.mjs --zul --zul-map-review`：读取四个任务内原生检查点，显式清场／揭示并用 45% WebView 缩放查看完整地图，另写 `map-review-report.json`，结束时恢复最终跨城检查点及原缩放，不覆盖主流程报告。整图落在视窗内仅是这四张截图的完整性检查，不限制正常游戏地图尺寸或镜头滚动。此模式显式刷新一次原生存档列表，并用后端日志断言新游戏和各次选中槽位加载不触发额外列表扫描。无敌和任务清场属于显式测试准备，不代表自然战斗、练级通关、Chaos 施法或 Android 验收。祖尔的失败／放弃、价格拒绝、地形伤害和来源随机边界由核心专项覆盖，见[计划 Z6](../design/zul-town-import-plan-20260912.md#z6聚焦桌面验收与来源收口)。
 
+## 阿斯加德验收准备
+
+AS6 已编写场景，尚未执行。按本批约定，以下命令仅在 AS7 完成实现／来源收口及必要生成物同步后运行；不能把本节当成通过记录。
+
+仓库根目录先执行核心专项与普通 Tauri 准备接口拒绝分支；AS2–AS5 其余相关回归和全局契约范围见[计划](../design/asgard-dungeon-plan-20260912.md)。
+
+```powershell
+cargo test -p rfb-core --lib game::tests::asgard::
+cargo test -p rfb-tauri --lib tests::ordinary_native_app_rejects_asgard_preparation_before_session_access -- --exact
+```
+
+在 `web` 执行专用桌面场景，并用正常 standalone 构建产物检查真实 IPC 拒绝：
+
+```powershell
+npm run e2e:build
+node e2e/tauri.e2e.mjs --asgard
+npm run build:standalone:debug
+node e2e/asgard-standalone.e2e.mjs
+```
+
+[核心流程](../crates/rfb-core/src/game/tests/asgard/acceptance.rs)和[桌面场景](../web/e2e/asgard.e2e.mjs)共用受限的 [Rust 准备](../crates/rfb-core/src/game/floor/asgard_e2e.rs)：正常新战士出生选出北欧激活的种子，物理放到 (94,11)，给予 50 级、+100／+100 阔剑、两张召回之语卷轴、满玩家 HP 和 200000 tick 浮空／无敌／看见隐形，揭示地图／隐藏门／陷阱。沿途清场按实际实体列表，保留海姆达尔、奥丁、维达及其携带物、能量和状态；战前仅将玩家放到既有目标旁并补满玩家 HP，不改三者 HP／最大 HP、种类或定义。三场战斗由生产攻击命令结算；这是准备后的攻击／流程验证，不是自然练级／难度通关；敌方仍使用正常 AI，目标离开相邻位置时再次记录玩家位置准备。独立核心用例另去掉玩家保护并检查三者源近战消费者。
+
+场景覆盖正式入口、九深度路线、64／76／80／88 画面、64／80 正常镜头滚动、三者死亡、奥丁死后维达仍存活的原生检查点、阔刃长矛『符文长矛』与获得物品卷轴的拾取／详情／实际用卷轴、返回和召回。原生键盘处理门、楼梯、拾取及路线／战斗起点；长段最多 16 次生产 Rust 命令，目标死亡或位移异常即停止，段末经真实保存恢复同步 UI。每次准备写明前后哈希、玩家参数、移除与保留实体；每次选中原生加载断言没有全列表读取。普通镜头维持 100%，不要求整张 96×33 地图装入视窗。
+
+桌面报告、截图及失败记录预定在 `test-results/asgard/`。`report.json` 保存逐段准备、实际攻击轨迹、楼层跳转、奖励与原生恢复哈希以及前端异常；失败时也保留已完成记录。`standalone-guard-report.json` 由[普通产物脚本](../web/e2e/asgard-standalone.e2e.mjs)启动 `target/debug/rfb-tauri.exe` 后生成，包含 EXE 的 SHA-256 和三种准备阶段的真实拒绝结果。该脚本仅为普通 WebView 开启本机 CDP 并使用新的 WebView 配置目录，不创建游戏或原生存档。专用 E2E 仍使用独立应用标识；普通可玩 EXE 不能用 Cargo build 代替 Tauri standalone 构建。
+
+共享 Z6 路线／保存助手与原生键盘在本批有直接变化，统一验证时覆盖其实际调用者；不因普通最后收口再重复已通过且未改变的检查。本阶段没有生成上述报告或截图。
+
 ## Contract fixture
 
 当前集位于 [tests/fixtures/active/scenarios](../tests/fixtures/active/scenarios/)，分类和最低数量等政策来自 [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)。`rfb-contract` 的 [CLI](../crates/rfb-contract/src/main.rs)和[断言实现](../crates/rfb-contract/src/lib.rs)是精确语义依据。

@@ -35,6 +35,9 @@ export async function connectKeyboard(profile) {
   const keys = { Tab: ["Tab", 9], Enter: ["Enter", 13], Escape: ["Escape", 27], " ": ["Space", 32], Home: ["Home", 36], End: ["End", 35], ArrowLeft: ["ArrowLeft", 37], ArrowUp: ["ArrowUp", 38], ArrowRight: ["ArrowRight", 39], ArrowDown: ["ArrowDown", 40], a: ["KeyA", 65], "2": ["Numpad2", 98], "5": ["Numpad5", 101], "6": ["Numpad6", 102] };
   for (const digit of ["1", "3", "4", "7", "8", "9"]) keys[digit] = [`Numpad${digit}`, 96 + Number(digit)];
   keys.g = ["KeyG", 71];
+  keys.o = ["KeyO", 79];
+  keys.B = ["KeyB", 66, 8];
+  keys[">"] = ["Period", 190, 8];
   const errors = [];
   socket.addEventListener("message", event => {
     const message = JSON.parse(event.data);
@@ -44,12 +47,17 @@ export async function connectKeyboard(profile) {
   return {
     errors,
     async key(key, modifiers = 0) {
-      const [code, windowsVirtualKeyCode] = keys[key];
-      const params = { key, code, windowsVirtualKeyCode, modifiers };
+      const [code, windowsVirtualKeyCode, implicitModifiers = 0] = keys[key];
+      const params = { key, code, windowsVirtualKeyCode, modifiers: modifiers | implicitModifiers };
       await send("Input.dispatchKeyEvent", { type: "keyDown", ...params, ...(key === " " ? { text: " " } : key === "Enter" ? { text: "\r" } : {}) });
       await send("Input.dispatchKeyEvent", { type: "keyUp", ...params });
     },
     async text(text) { await send("Input.insertText", { text }); },
+    async evaluate(expression) {
+      const result = await send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true });
+      if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? result.exceptionDetails.text);
+      return result.result.value;
+    },
     async reload() {
       await send("Page.enable", {});
       const loaded = new Promise((resolve, reject) => {

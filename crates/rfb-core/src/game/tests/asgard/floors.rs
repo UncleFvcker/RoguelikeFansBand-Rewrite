@@ -40,7 +40,10 @@ fn clear_route_monsters(game: &mut Game) {
         _ => true,
     });
     for actor in &mut game.entities {
-        actor.energy_need = 100_000;
+        apply_status(
+            &mut actor.statuses,
+            monster_combat::melee_status(STATUS_SLEEP, 200_000, "test.asgard.route"),
+        );
     }
 }
 
