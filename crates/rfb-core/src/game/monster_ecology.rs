@@ -1815,8 +1815,7 @@ impl Game {
                 if placed.len() >= usize::from(total) {
                     break;
                 }
-                let position =
-                    self.original_scatter_position(terrain, width, height, origin, 4);
+                let position = self.original_scatter_position(terrain, width, height, origin, 4);
                 if occupied.contains(&position)
                     || !terrain_at_generated_position(
                         &self.content,
@@ -1872,7 +1871,15 @@ impl Game {
             .clone();
         let mut members = Vec::new();
         if allocation.friends.is_some() {
-            members = self.plan_original_friends(&leader, leader_position, depth, terrain, width, height, occupied);
+            members = self.plan_original_friends(
+                &leader,
+                leader_position,
+                depth,
+                terrain,
+                width,
+                height,
+                occupied,
+            );
         } else if allocation.escort {
             for _ in 0..ORIGINAL_ESCORT_ATTEMPTS {
                 let position =

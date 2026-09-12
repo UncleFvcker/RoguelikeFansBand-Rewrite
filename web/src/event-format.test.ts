@@ -116,10 +116,12 @@ test("instance artifact names retain their source text in either locale", () => 
   localization.setLocale("en-US");
 });
 
-test("Fast Recovery uses the localized regeneration status name", () => {
+test("regeneration and levitation use localized status names", () => {
   assert.equal(formatter.statusName("rfb.status.regeneration"), "regeneration");
+  assert.equal(formatter.statusName("rfb.status.levitation"), "Levitation");
   localization.setLocale("zh-CN");
   assert.equal(formatter.statusName("rfb.status.regeneration"), "再生");
+  assert.equal(formatter.statusName("rfb.status.levitation"), "悬浮");
   localization.setLocale("en-US");
 });
 

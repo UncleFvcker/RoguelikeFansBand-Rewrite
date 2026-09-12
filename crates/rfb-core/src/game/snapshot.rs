@@ -1623,7 +1623,9 @@ impl Game {
                     description_key: Some(task_description_key(task, &state).to_owned()),
                     source_facility_id: task.source_facility_id.clone(),
                     has_item_reward: task.reward.is_some(),
-                    unavailable_reason: self.task_membership_unavailable_reason(task).map(str::to_owned),
+                    unavailable_reason: self
+                        .task_membership_unavailable_reason(task)
+                        .map(str::to_owned),
                     status: state.status,
                     current: state.current,
                     required: state.required,
@@ -1675,7 +1677,9 @@ impl Game {
                                 ),
                                 source_facility_id: task.source_facility_id.clone(),
                                 has_item_reward: task.reward.is_some(),
-                                unavailable_reason: self.task_membership_unavailable_reason(task).map(str::to_owned),
+                                unavailable_reason: self
+                                    .task_membership_unavailable_reason(task)
+                                    .map(str::to_owned),
                                 status: state.status,
                                 current: state.current,
                                 required: state.required,

@@ -50,17 +50,33 @@ fn zul_node_acceptance_and_claim_follow_the_changed_secondary_realm() {
     state.current = state.required;
     begin(&mut game, &sorcery);
     confirm(&mut game, true);
-    let projected = game.snapshot().task_services.into_iter().find(|service| service.id == tower).unwrap();
+    let projected = game
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == tower)
+        .unwrap();
     assert_eq!(projected.membership, FacilityMembershipDto::Visitor);
-    assert_eq!(projected.tasks[0].unavailable_reason.as_deref(), Some("task-membership-required"));
+    assert_eq!(
+        projected.tasks[0].unavailable_reason.as_deref(),
+        Some("task-membership-required")
+    );
     let before = game.to_save();
-    assert_eq!(game.claim_task_reward(tower, task), Err("task-membership-required"));
+    assert_eq!(
+        game.claim_task_reward(tower, task),
+        Err("task-membership-required")
+    );
     assert_eq!(game.to_save(), before);
     game = Game::from_save(before).unwrap();
     begin(&mut game, &nature);
     confirm(&mut game, true);
     assert!(game.claim_task_reward(tower, task).is_ok());
-    assert!(game.items.iter().any(|item| item.kind_id == "demo.item.natures-wrath" && item.location == ItemLocation::Inventory));
+    assert!(
+        game.items
+            .iter()
+            .any(|item| item.kind_id == "demo.item.natures-wrath"
+                && item.location == ItemLocation::Inventory)
+    );
 }
 
 fn begin(game: &mut Game, book: &str) {
@@ -519,28 +535,49 @@ fn zul_balance_ritual_rebuilds_current_realm_virtues_and_replays_after_save() {
     let id = "demo.town-facility.zul-nature-tower";
     let mut game = prepared(BUILD, 30);
     let birth = game.virtues;
-    assert!(!birth.iter().any(|virtue| virtue.kind == VirtueKindDto::Nature));
+    assert!(
+        !birth
+            .iter()
+            .any(|virtue| virtue.kind == VirtueKindDto::Nature)
+    );
     let nature_book = give_book(&mut game, "nature");
     begin(&mut game, &nature_book);
     confirm(&mut game, true);
     assert_eq!(game.virtues, birth);
     crate::game::tests::town::enter_town_facility(&mut game, id);
-    assert_eq!(game.town_facility_membership(game.content.town_facility(id).unwrap()), FacilityMembershipDto::Owner);
+    assert_eq!(
+        game.town_facility_membership(game.content.town_facility(id).unwrap()),
+        FacilityMembershipDto::Owner
+    );
     for virtue in &mut game.virtues {
         virtue.value = 51;
     }
     let cost = game.town_service_price(2_000);
     game.gold = cost - 1;
     let before = game.to_save();
-    assert_eq!(game.use_town_facility_service(
-        id, FacilityServiceKindDto::BalanceRitual, None, None, &mut Vec::new(),
-    ), Err("insufficient-gold"));
+    assert_eq!(
+        game.use_town_facility_service(
+            id,
+            FacilityServiceKindDto::BalanceRitual,
+            None,
+            None,
+            &mut Vec::new(),
+        ),
+        Err("insufficient-gold")
+    );
     assert_eq!(game.to_save(), before);
     game.gold = cost * 2;
     let before = game.to_save();
-    assert_eq!(game.use_town_facility_service(
-        id, FacilityServiceKindDto::BalanceRitual, Some(&nature_book), None, &mut Vec::new(),
-    ), Err("unexpected-item"));
+    assert_eq!(
+        game.use_town_facility_service(
+            id,
+            FacilityServiceKindDto::BalanceRitual,
+            Some(&nature_book),
+            None,
+            &mut Vec::new(),
+        ),
+        Err("unexpected-item")
+    );
     assert_eq!(game.to_save(), before);
     game.player.hp = 1;
     game.reveal_current_visibility();
@@ -548,17 +585,35 @@ fn zul_balance_ritual_rebuilds_current_realm_virtues_and_replays_after_save() {
     let realms = game.mage_realms.clone();
     let rng = game.rng_draw_counter();
     for run in [&mut game, &mut restored] {
-        let update = dispatch_next(run, GameCommand::UseFacilityService {
-            facility_id: id.to_owned(), service: FacilityServiceKindDto::BalanceRitual,
-            item_id: None, enchantment_steps: None,
-        });
-        assert!(update.events.iter().any(|event| event.kind == "facility.balance-ritual-performed"));
+        let update = dispatch_next(
+            run,
+            GameCommand::UseFacilityService {
+                facility_id: id.to_owned(),
+                service: FacilityServiceKindDto::BalanceRitual,
+                item_id: None,
+                enchantment_steps: None,
+            },
+        );
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.kind == "facility.balance-ritual-performed")
+        );
         assert_eq!(run.gold, cost);
         assert_eq!(run.player.hp, 1);
         assert_eq!(run.mage_realms, realms);
         assert!(run.virtues.iter().all(|virtue| virtue.value == 0));
-        assert!(run.virtues.iter().any(|virtue| virtue.kind == VirtueKindDto::Nature));
-        assert!(run.virtues.iter().any(|virtue| virtue.kind == VirtueKindDto::Unlife));
+        assert!(
+            run.virtues
+                .iter()
+                .any(|virtue| virtue.kind == VirtueKindDto::Nature)
+        );
+        assert!(
+            run.virtues
+                .iter()
+                .any(|virtue| virtue.kind == VirtueKindDto::Unlife)
+        );
         assert!(crate::game::virtues::validate_virtues(&run.virtues));
         assert!(run.rng_draw_counter() > rng);
     }
@@ -566,8 +621,13 @@ fn zul_balance_ritual_rebuilds_current_realm_virtues_and_replays_after_save() {
     let mut after = Game::from_save(game.to_save()).unwrap();
     for run in [&mut game, &mut after] {
         run.use_town_facility_service(
-            id, FacilityServiceKindDto::BalanceRitual, None, None, &mut Vec::new(),
-        ).unwrap();
+            id,
+            FacilityServiceKindDto::BalanceRitual,
+            None,
+            None,
+            &mut Vec::new(),
+        )
+        .unwrap();
     }
     assert_eq!(game.state_hash(), after.state_hash());
 }

@@ -154,8 +154,8 @@ impl Game {
             if self.player_is_dead() {
                 break;
             }
-            let water_lava_exposure = local_floor_active
-                && self.process_player_interior_water_lava_damage(events);
+            let water_lava_exposure =
+                local_floor_active && self.process_player_interior_water_lava_damage(events);
             if self.player_is_dead() {
                 break;
             }
@@ -172,8 +172,10 @@ impl Game {
             if self.player_is_dead() {
                 break;
             }
-            if !wall_blocks_regeneration && !light_blocks_regeneration
-                && waste_exposure.is_none() && !water_lava_exposure
+            if !wall_blocks_regeneration
+                && !light_blocks_regeneration
+                && waste_exposure.is_none()
+                && !water_lava_exposure
             {
                 self.process_natural_hp_regeneration(resting);
                 self.process_equipment_regeneration(events);
@@ -473,13 +475,22 @@ impl Game {
     ) -> bool {
         // Keep wilderness's existing action-time exposure. Interior floors use the
         // same ten-tick world interval as wall/waste damage, including while resting.
-        if self.map_scale != MapScaleDto::Local || self.is_wilderness_floor()
-            || !self.world_tick.is_multiple_of(NATURAL_HP_REGENERATION_INTERVAL_TICKS)
+        if self.map_scale != MapScaleDto::Local
+            || self.is_wilderness_floor()
+            || !self
+                .world_tick
+                .is_multiple_of(NATURAL_HP_REGENERATION_INTERVAL_TICKS)
         {
             return false;
         }
-        let terrain = self.content.terrain(&self.terrain[self.index(self.player.position)
-            .expect("player position must remain in bounds")]).expect("player terrain must exist");
+        let terrain = self
+            .content
+            .terrain(
+                &self.terrain[self
+                    .index(self.player.position)
+                    .expect("player position must remain in bounds")],
+            )
+            .expect("player terrain must exist");
         let lava = terrain.tags.iter().any(|tag| tag == "lava");
         let water = terrain.tags.iter().any(|tag| tag == "water");
         let deep = terrain.tags.iter().any(|tag| tag == "deep");
@@ -496,15 +507,21 @@ impl Game {
                 return false;
             };
             // dungeon.c FF_LAVA resists hundredths of HP before levitation and rounding.
-            let resisted = self.resist_player_damage(resolve_damage(
-                DamagePacket::new(base, DamageType::Fire),
-                self.effective_player_resistances().level(DamageType::Fire),
-            )).applied;
+            let resisted = self
+                .resist_player_damage(resolve_damage(
+                    DamagePacket::new(base, DamageType::Fire),
+                    self.effective_player_resistances().level(DamageType::Fire),
+                ))
+                .applied;
             let resisted = if flying { resisted / 5 } else { resisted };
-            if resisted == 0 { return false; }
+            if resisted == 0 {
+                return false;
+            }
             amount = resisted / 100 + i32::from(self.rng.bounded(100) < (resisted % 100) as u64);
             damage_type = DamageType::Fire;
-        } else if water && deep && !flying
+        } else if water
+            && deep
+            && !flying
             && !self.active_traveler_has_mode(rfb_content::ActorMovementMode::Swim)
             && !self.active_traveler_has_mode(rfb_content::ActorMovementMode::Aquatic)
             && self.carried_weight_tenths_pound() > self.player_carry_capacity_tenths_pound()
@@ -515,15 +532,21 @@ impl Game {
             return false;
         }
         let application = self.apply_final_player_damage(
-            resolve_damage(DamagePacket::new(amount, damage_type), ResistanceLevel::Normal),
+            resolve_damage(
+                DamagePacket::new(amount, damage_type),
+                ResistanceLevel::Normal,
+            ),
             FatalityPolicy::BelowZero,
         );
         events.push(DomainEvent::WildernessTerrainDamaged {
-            terrain_id: terrain_id.clone(), damage: application.damage,
+            terrain_id: terrain_id.clone(),
+            damage: application.damage,
         });
         if application.fatal {
             events.push(DomainEvent::PlayerDied {
-                source_kind_id: terrain_id, method_id: None, damage: application.damage,
+                source_kind_id: terrain_id,
+                method_id: None,
+                damage: application.damage,
             });
         }
         true

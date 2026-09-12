@@ -125,21 +125,35 @@ fn generated_shops_require_a_source_pool_and_matching_kind_candidates() {
     let original = compile_pack_dir(&original_pack_path()).unwrap().content;
     for fault in 0..4 {
         let mut invalid = original.clone();
-        let shop = invalid.shops.iter_mut().find(|shop| shop.id == "demo.shop.zul-jeweler").unwrap();
+        let shop = invalid
+            .shops
+            .iter_mut()
+            .find(|shop| shop.id == "demo.shop.zul-jeweler")
+            .unwrap();
         match fault {
             0 => shop.stock_generation_table_id = None,
             1 => shop.category = ShopCategory::GeneralStore,
             2 => shop.stock_generation_table_id = Some("demo.loot-table.missing".into()),
             3 => {
                 let table_id = shop.stock_generation_table_id.clone().unwrap();
-                let table = invalid.loot_tables.iter_mut().find(|table| table.id == table_id).unwrap();
-                table.entries.retain(|entry| !invalid.items.iter().any(|item| {
-                    item.id == entry.item_kind_id && item.rfb_base_kind.is_some_and(|base| base.tval == 45)
-                }));
+                let table = invalid
+                    .loot_tables
+                    .iter_mut()
+                    .find(|table| table.id == table_id)
+                    .unwrap();
+                table.entries.retain(|entry| {
+                    !invalid.items.iter().any(|item| {
+                        item.id == entry.item_kind_id
+                            && item.rfb_base_kind.is_some_and(|base| base.tval == 45)
+                    })
+                });
             }
             _ => unreachable!(),
         }
-        assert!(validate_and_normalize(&mut invalid).is_err(), "fault {fault}");
+        assert!(
+            validate_and_normalize(&mut invalid).is_err(),
+            "fault {fault}"
+        );
     }
 }
 

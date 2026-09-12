@@ -400,6 +400,27 @@
     "InlineFloorLootSpawnDefinition": {
       "additionalProperties": false,
       "properties": {
+        "forcedEgo": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InlineForcedEgoDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "generationDepth": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "id": {
           "type": "string"
         },
@@ -424,6 +445,13 @@
           "default": [],
           "items": {
             "$ref": "#/$defs/ActorSpawn"
+          },
+          "type": "array"
+        },
+        "friendGroupLeaderIds": {
+          "default": [],
+          "items": {
+            "type": "string"
           },
           "type": "array"
         },
@@ -493,11 +521,37 @@
             "$ref": "#/$defs/InlineTerrainOverrideDefinition"
           },
           "type": "array"
+        },
+        "vaultPositions": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ContentPosition"
+          },
+          "type": "array"
         }
       },
       "required": [
         "playerPosition",
         "terrainOverrides"
+      ],
+      "type": "object"
+    },
+    "InlineForcedEgoDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "affixId": {
+          "type": "string"
+        },
+        "tval": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "tval",
+        "affixId"
       ],
       "type": "object"
     },
@@ -1996,6 +2050,10 @@
             "null"
           ]
         },
+        "requiresFacilityMembership": {
+          "default": false,
+          "type": "boolean"
+        },
         "reward": {
           "anyOf": [
             {
@@ -2031,6 +2089,10 @@
             "$ref": "#/$defs/TaskTargetPlacementDefinition"
           },
           "type": "array"
+        },
+        "unlockWhenPrerequisiteAbandoned": {
+          "default": false,
+          "type": "boolean"
         },
         "unlockWhenPrerequisiteFailed": {
           "default": false,

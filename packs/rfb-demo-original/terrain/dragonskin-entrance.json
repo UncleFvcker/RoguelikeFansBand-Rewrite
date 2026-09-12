@@ -4,7 +4,7 @@
   "id": "demo.terrain.dragonskin-entrance",
   "nameKey": "terrain-demo-dragonskin-entrance-name",
   "descriptionKey": "terrain-demo-dragonskin-entrance-description",
-  "glyph": "D",
+  "glyph": "2",
   "walkable": true,
   "blocksSight": false,
   "tags": [

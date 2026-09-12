@@ -32,7 +32,9 @@
         "alchemist",
         "magic-shop",
         "black-market",
-        "bookstore"
+        "bookstore",
+        "jeweler",
+        "dragon"
       ],
       "type": "string"
     },
@@ -204,6 +206,13 @@
         "$ref": "#/$defs/ShopStockDefinition"
       },
       "type": "array"
+    },
+    "stockGenerationTableId": {
+      "description": "Source allocation pool for the two Zul shops that generate equipment instances.",
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "townId": {
       "type": "string"

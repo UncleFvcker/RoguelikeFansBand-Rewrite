@@ -2963,6 +2963,25 @@ fn p94c_mine_guardians_and_star_healing_reward_are_one_shot() {
     assert_eq!(root.floor_id, "demo.floor.mine-depth-75");
 
     enter_guardian_floor_from_penultimate(&mut game, "mine", 80);
+    // Ordinary drops may also contain *Healing*. Compare the same death after conquest.
+    let mut already_conquered = game.clone();
+    already_conquered
+        .dungeon_states
+        .get_mut("demo.dungeon.mine")
+        .unwrap()
+        .guardian_defeated = true;
+    let (_, comparison_position) =
+        p89_defeat_guardian(&mut already_conquered, "demo.guardian.mine.1");
+    let ordinary_potions = already_conquered
+        .items
+        .iter()
+        .filter(|item| {
+            item.location == ItemLocation::Ground(comparison_position)
+                && item.kind_id == "demo.item.star-healing-potion"
+                && item.quality == ItemQualityDto::Ordinary
+                && item.affix_ids.is_empty()
+        })
+        .count();
     let (update, guardian_position) = p89_defeat_guardian(&mut game, "demo.guardian.mine.1");
     assert_eq!(update.campaign.conquered_dungeons, 1);
     assert!(game.dungeon_states["demo.dungeon.mine"].guardian_defeated);
@@ -2976,9 +2995,15 @@ fn p94c_mine_guardians_and_star_healing_reward_are_one_shot() {
                     && item.affix_ids.is_empty()
             })
             .count(),
-        1
+        ordinary_potions + 1
     );
 
+    let potions = game
+        .items
+        .iter()
+        .filter(|item| item.kind_id == "demo.item.star-healing-potion")
+        .cloned()
+        .collect::<Vec<_>>();
     clear_monsters(&mut game);
     choose_human_talent_if_pending(&mut game);
     dispatch_next(&mut game, GameCommand::Wait);
@@ -2986,8 +3011,9 @@ fn p94c_mine_guardians_and_star_healing_reward_are_one_shot() {
         game.items
             .iter()
             .filter(|item| item.kind_id == "demo.item.star-healing-potion")
-            .count(),
-        1
+            .cloned()
+            .collect::<Vec<_>>(),
+        potions
     );
     let hash = game.state_hash();
     let restored = Game::from_save(game.to_save()).expect("Mine conquest should restore");

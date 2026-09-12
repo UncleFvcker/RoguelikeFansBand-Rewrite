@@ -129,7 +129,11 @@ fn allocation_level(game: &mut Game, context: &LootContext, mode: ItemGeneration
     level
 }
 
-pub(super) fn quality_candidate(game: &Game, mode: ItemGenerationMode, item: &ItemDefinition) -> bool {
+pub(super) fn quality_candidate(
+    game: &Game,
+    mode: ItemGenerationMode,
+    item: &ItemDefinition,
+) -> bool {
     if !is_good(mode) && !is_great(mode) {
         return true;
     }
@@ -1504,6 +1508,7 @@ mod tests {
         let path =
             std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
         let mut content = rfb_content::compile_pack_dir(&path).unwrap().content;
+        crate::game::tests::support::preserve_authored_loot_pool(&mut content);
         let base = content
             .loot_tables
             .iter_mut()

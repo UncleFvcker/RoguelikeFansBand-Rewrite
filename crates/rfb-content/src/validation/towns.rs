@@ -148,7 +148,12 @@ pub(super) fn validate_towns_and_shops(
                 .chain(facility.inn_stay_cost)
                 .chain(facility.research_monster_cost)
                 .chain(facility.teleport_level_cost)
-                .chain(facility.town_teleport.as_ref().map(|teleport| teleport.price))
+                .chain(
+                    facility
+                        .town_teleport
+                        .as_ref()
+                        .map(|teleport| teleport.price),
+                )
                 .any(|price| price.owner_cost > 999_999_999 || price.other_cost > 999_999_999)
             || facility.legal_name_change_cost == Some(0)
             || facility.service_actions.iter().any(|service| {
@@ -161,7 +166,8 @@ pub(super) fn validate_towns_and_shops(
                         && refs.items.iter().any(|item| item.id == *item_id)
                 })
         });
-        let has_service = facility.town_teleport.is_some() || facility.casino
+        let has_service = facility.town_teleport.is_some()
+            || facility.casino
             || facility.identify_item_cost.is_some()
             || facility.teleport_level_cost.is_some()
             || facility.research_monster_cost.is_some()
@@ -247,7 +253,10 @@ pub(super) fn validate_towns_and_shops(
             return Err(ContentError::InvalidShop(shop.id.clone()));
         }
         if let Some(table_id) = &shop.stock_generation_table_id {
-            let table = refs.loot_tables.iter().find(|table| &table.id == table_id)
+            let table = refs
+                .loot_tables
+                .iter()
+                .find(|table| &table.id == table_id)
                 .ok_or_else(|| ContentError::DanglingReference {
                     owner: shop.id.clone(),
                     target: table_id.clone(),
@@ -258,13 +267,16 @@ pub(super) fn validate_towns_and_shops(
             {
                 return Err(ContentError::InvalidShop(shop.id.clone()));
             }
-            let has_kind = |tval| table.entries.iter().any(|entry| {
-                entry.weight > 0 && refs.items.iter().any(|item| {
-                    item.id == entry.item_kind_id
-                        && item.artifact_generation.is_none()
-                        && item.rfb_base_kind.is_some_and(|base| base.tval == tval)
+            let has_kind = |tval| {
+                table.entries.iter().any(|entry| {
+                    entry.weight > 0
+                        && refs.items.iter().any(|item| {
+                            item.id == entry.item_kind_id
+                                && item.artifact_generation.is_none()
+                                && item.rfb_base_kind.is_some_and(|base| base.tval == tval)
+                        })
                 })
-            });
+            };
             if (shop.category == ShopCategory::Jeweler && (!has_kind(40) || !has_kind(45)))
                 || (shop.category == ShopCategory::Dragon && !has_kind(38))
             {

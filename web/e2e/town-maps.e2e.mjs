@@ -5,20 +5,22 @@ import path from "node:path";
 import { connectKeyboard } from "./character-creation-layout.e2e.mjs";
 import { selectCreationBuild, selectCreationRace } from "./character-creation.e2e.mjs";
 import { nextWalk } from "./berserker.e2e.mjs";
+import { runZulScenario } from "./zul.e2e.mjs";
 
-export async function runTownMapScenario(driver, directory, profile) {
+export async function runTownMapScenario(driver, directory, profile, zulOnly = false) {
   await mkdir(directory, { recursive: true });
   const keyboard = await connectKeyboard(profile);
   const terrainDirectory = new URL("../../packs/rfb-demo-original/terrain/", import.meta.url);
   const terrain = await Promise.all((await readdir(terrainDirectory)).filter(name => name.endsWith(".json"))
     .map(async name => JSON.parse(await readFile(new URL(name, terrainDirectory), "utf8"))));
-  // Navigation only proposes steps over content's ordinary walkable cells; Rust executes each key.
-  const walkable = new Set(terrain.filter(row => row.walkable).map(row => row.id));
+  // Rust executes each key; the Zul fixture can fly and explicitly clear route blockers.
+  const walkable = new Set(terrain.filter(row => row.walkable || zulOnly && row.movementModes?.includes("fly")).map(row => row.id));
   const directions = { "1": [-1,1], "2": [0,1], "3": [1,1], "4": [-1,0], "6": [1,0], "7": [-1,-1], "8": [0,-1], "9": [1,-1] };
   const report = { fixture: "New level-one Warrior; visited town and revealed its surface with the WebDriver-only fixture; 10000 test gold. No altered terrain, task states, XP, combat results or granted items. All route steps use native keyboard input; transactions, tasks, travel and saves use the application UI.", checks: [], screenshots: [] };
   let shift = { x: 0, y: 0 };
   const click = selector => driver.execute('document.querySelector(arguments[0]).click(); return true;', [selector]);
   const ready = () => driver.waitFor('return document.querySelector("#connection-status").classList.contains("ready")', "town UI ready");
+  const saveListCount = async () => (await readFile(new URL("../../test-results/e2e-rfb-desktop.log",import.meta.url),"utf8")).split("native-save-list-started").length-1;
   async function invoke(command, args = {}) {
     await driver.execute(`window.__townReply=undefined; window.__townError=null;
       window.__TAURI_INTERNALS__.invoke(arguments[0],arguments[1]).then(value=>window.__townReply=value,error=>window.__townError=String(error));return true;`, [command,args]);
@@ -33,7 +35,14 @@ export async function runTownMapScenario(driver, directory, profile) {
     } document.activeElement?.blur(); return true;`);
   }
   async function changed(before, label) {
-    await driver.waitFor('return document.querySelector("#hash-value").title!==arguments[0] && document.querySelector("#connection-status").classList.contains("ready")', label, 15_000, [before]);
+    try {
+      await driver.waitFor('return document.querySelector("#hash-value").title!==arguments[0] && document.querySelector("#connection-status").classList.contains("ready")', label, 15_000, [before]);
+    } catch(error) {
+      const state=await snapshot();
+      const ui=await driver.execute('return {keys:window.__townKeys,active:{tag:document.activeElement?.tagName,id:document.activeElement?.id},dialogs:[...document.querySelectorAll("dialog[open]")].map(row=>row.id),map:{...document.querySelector("#map-host").dataset}}');
+      await writeFile(path.join(directory,"input-failure.json"),JSON.stringify({label,before,state,ui},null,2));
+      throw error;
+    }
   }
   async function reloadPrepared() {
     const before = await snapshot();
@@ -55,43 +64,87 @@ export async function runTownMapScenario(driver, directory, profile) {
     report.screenshots.push({ name, ...layout });
   }
   async function walkTo(local) {
-    let state = await snapshot();
-    const start = { x: state.player.position.x + shift.x, y: state.player.position.y + shift.y };
-    for(let steps=0;steps<500;steps++) {
-      const target = { x: local.x-shift.x, y: local.y-shift.y };
+    let state=await snapshot();
+    const start={x:state.player.position.x+shift.x,y:state.player.position.y+shift.y};
+    let steps=0;
+    while(steps<500) {
+      if(zulOnly && state.floorId==="core.floor.wilderness") shift={
+        x:(state.wildernessPosition.x-77)*state.width+state.wildernessViewOffset.x*state.width/3,
+        y:(state.wildernessPosition.y-6)*state.height+state.wildernessViewOffset.y*state.height/3,
+      };
+      const target={x:local.x-shift.x,y:local.y-shift.y};
       const {x,y}=state.player.position;
       if(x===target.x && y===target.y) {
-        report.checks.push({ type:"walk", town:state.town?.id, start, destination:local, steps, shift:{...shift} });
+        report.checks.push({type:"walk",town:state.town?.id,start,destination:local,steps,shift:{...shift}});
         process.stdout.write(`${state.town?.id}: walked ${steps} steps to ${local.x},${local.y}; shift ${shift.x},${shift.y}.\n`);
-        return snapshot();
+        return state;
       }
-      const navigation = { ...state, cells:state.cells.filter(cell=>walkable.has(cell.terrainId) && (!cell.actorId || cell.actorId===state.player.id))
-        .map(cell=>({...cell,terrainId:"demo.terrain.floor"})) };
-      // A distant destination may be outside the current three-tile wilderness view.
-      // Walk toward its nearest visible walkable cell until Rust scrolls the view.
+      if(zulOnly && state.activeActorCount>0) {
+        const count=state.activeActorCount;
+        await invoke("prepare_zul_e2e",{clearEnemies:true});state=await reloadPrepared();
+        report.checks.push({type:"route-clear",enemies:count,position:state.player.position});
+      }
+      await closeDialogs();
+      await driver.waitFor('return !document.querySelector("#look-mode-toggle").disabled',"town input idle");
+      const navigation={...state,player:{...state.player,position:{...state.player.position}},
+        cells:state.cells.filter(cell=>walkable.has(cell.terrainId) && (!cell.actorId || cell.actorId===state.player.id))
+          .map(cell=>({...cell,terrainId:"demo.terrain.floor"}))};
       const destination=target.x<0 || target.x>=state.width || target.y<0 || target.y>=state.height
         ? navigation.cells.reduce((best,cell)=>Math.hypot(cell.position.x-target.x,cell.position.y-target.y)<Math.hypot(best.x-target.x,best.y-target.y)?cell.position:best,navigation.cells[0].position)
         : target;
-      const key=nextWalk(navigation,new Set(),destination), [dx,dy]=directions[key];
-      await closeDialogs();
-      await keyboard.key(key);
-      await changed(state.stateHash,`walk ${key} toward ${local.x},${local.y}`);
-      const moved=await driver.execute('return {position:document.querySelector("#position-value").textContent,hash:document.querySelector("#hash-value").title}');
-      const [nextX,nextY]=moved.position.split(",").map(Number);
-      if(Math.abs(nextX-x)>1 || Math.abs(nextY-y)>1) {
-        shift={x:shift.x+x+dx-nextX,y:shift.y+y+dy-nextY};
-        state=await snapshot();
-      } else if(nextX!==x+dx || nextY!==y+dy) state=await snapshot();
-      else {state.player.position={x:nextX,y:nextY};state.stateHash=moved.hash;}
+      // Keep native input at route starts and entrances; batch long stretches through production Rust commands.
+      const native=!zulOnly || steps===0 || Math.max(Math.abs(target.x-x),Math.abs(target.y-y))<=2;
+      const keys=[];
+      for(let i=0;i<(native?1:16);i++) {
+        if(navigation.player.position.x===destination.x && navigation.player.position.y===destination.y) break;
+        const key=nextWalk(navigation,new Set(),destination),[dx,dy]=directions[key];keys.push(key);
+        navigation.player.position={x:navigation.player.position.x+dx,y:navigation.player.position.y+dy};
+      }
+      assert.ok(keys.length,"route must propose a step");
+      let moved;
+      if(native) {
+        await keyboard.key(keys[0]);await changed(state.stateHash,`walk ${keys[0]} toward ${local.x},${local.y}`);
+        steps++;
+      } else {
+        await driver.execute(`window.__townBatch=undefined;window.__townBatchError=null;
+          (async()=>{const trace=[];let previous={...arguments[1]},seq=arguments[3],revision=arguments[4];
+            const names={'1':'south-west','2':'south','3':'south-east','4':'west','6':'east','7':'north-west','8':'north','9':'north-east'};
+            for(const key of arguments[0]) {
+              const update=await window.__TAURI_INTERNALS__.invoke('dispatch_game_command',{commandSeq:++seq,expectedRevision:revision,command:{type:'move',direction:names[key]}});
+              revision=update.revision;
+              const {x,y}=update.player.position,[dx,dy]=arguments[2][key];
+              trace.push({key,position:{x,y},hash:update.stateHash});
+              if(x!==previous.x+dx || y!==previous.y+dy) break;
+              previous={x,y};
+            } return trace;
+          })().then(value=>window.__townBatch=value,error=>window.__townBatchError=String(error));return true;`,[keys,state.player.position,directions,state.lastCommandSeq,state.revision]);
+        await driver.waitFor('return window.__townBatch!==undefined || window.__townBatchError',"planned route segment",60_000);
+        assert.equal(await driver.execute('return window.__townBatchError'),null);
+        const trace=await driver.execute('return window.__townBatch');steps+=trace.length;
+        report.checks.push({type:"route-batch",input:"production Rust movement commands",trace});
+        await reloadPrepared();
+      }
+      moved=await snapshot();
+      if(!zulOnly && (Math.abs(moved.player.position.x-x)>1 || Math.abs(moved.player.position.y-y)>1)) {
+        const [dx,dy]=directions[keys[0]];shift={x:shift.x+x+dx-moved.player.position.x,y:shift.y+y+dy-moved.player.position.y};
+      }
+      state=moved;
     }
     throw new Error(`Town walk did not reach ${JSON.stringify(local)}`);
   }
   async function nativeSaveRoundTrip(name) {
     await closeDialogs();
     const before=await snapshot();
-    const saveName=`AT4 ${name} ${Date.now()}`;
+    const saveName=`${zulOnly ? "Z6" : "AT4"} ${name} ${Date.now()}`;
     await driver.execute('const input=document.querySelector("#native-save-name");input.value=arguments[0];input.dispatchEvent(new Event("input",{bubbles:true}));document.querySelector("#native-save-create").click();return true;', [saveName]);
-    await driver.waitFor('return [...document.querySelectorAll(".native-save-name")].some(row=>row.textContent===arguments[0])', "town native save", 15_000,[saveName]);
+    try {
+      await driver.waitFor('return [...document.querySelectorAll(".native-save-name")].some(row=>row.textContent===arguments[0])', "town native save", 15_000,[saveName]);
+    } catch(error) {
+      const bytes=await invoke("save_game",{savedAt:"2026-09-12T12:00:00Z"});
+      await writeFile(path.join(directory,`${name}-invalid.rfbsave`),new Uint8Array(bytes));
+      await writeFile(path.join(directory,`${name}-invalid.json`),JSON.stringify(before,null,2));
+      throw error;
+    }
     await keyboard.key("5");
     await changed(before.stateHash,"post-save wait");
     await driver.execute('const row=[...document.querySelectorAll(".native-save-item")].find(row=>row.querySelector(".native-save-name")?.textContent===arguments[0]);row.querySelector(\'[data-native-save-action="load"]\').click();return true;',[saveName]);
@@ -113,15 +166,29 @@ export async function runTownMapScenario(driver, directory, profile) {
     await driver.execute('window.__townReload=true;localStorage.setItem("rfb.locale","zh-CN");localStorage.setItem("rfb.input-preset","numpad");setTimeout(()=>location.reload(),50);return true;');
     await driver.waitFor('return !window.__townReload && document.documentElement.dataset.appMode==="title"',"Chinese town title",60_000);
     await click("#session-new-game");
-    await selectCreationRace(driver,"demo.race.rfb-human");
-    await selectCreationBuild(driver,"demo.build.warrior");
+    await selectCreationRace(driver,zulOnly ? "rfb-legacy.race.beastman" : "demo.race.rfb-human");
+    await selectCreationBuild(driver,zulOnly ? "demo.build.mage-sorcery-nature" : "demo.build.warrior");
     await driver.execute('document.querySelector("#session-seed").value="42";document.querySelector("#session-seed").dispatchEvent(new Event("input",{bubbles:true}));return true;');
+    const listsBeforeBirth=zulOnly ? await saveListCount() : 0;
     await click("#session-start-game");
     await driver.waitFor('return document.documentElement.dataset.appMode==="playing"',"town character",60_000);
     await ready();
     const born=await snapshot();
+    if(zulOnly) {
+      assert.equal(await saveListCount(),listsBeforeBirth,"new game must not list unrelated saves");
+      report.checks.push({type:"save-scope",action:"new-game",listCalls:0});
+    }
+    await driver.execute('window.__townKeys=[];window.addEventListener("keydown",event=>queueMicrotask(()=>{window.__townKeys.push({key:event.key,code:event.code,prevented:event.defaultPrevented,target:event.target?.tagName,lookDisabled:document.querySelector("#look-mode-toggle").disabled});window.__townKeys=window.__townKeys.slice(-8);}));return true;');
     report.contentHash=born.contentHash;
     report.protocolVersion=born.protocolVersion;
+    if(zulOnly) {
+      await runZulScenario({driver,keyboard,report,invoke,snapshot,click,changed,closeDialogs,reloadPrepared,capture,walkTo,nativeSaveRoundTrip,travelFromInn,saveListCount,
+        setShift:value=>{shift=value;},getShift:()=>({...shift})});
+      assert.deepEqual(keyboard.errors,[]);
+      report.errors=keyboard.errors;
+      await writeFile(path.join(directory,process.argv.includes("--zul-map-review") ? "map-review-report.json" : "report.json"),JSON.stringify(report,null,2)+"\n");
+      return;
+    }
     for(const town of [
       {name:"anambar",shop:{x:92,y:45},second:{x:92,y:46},giver:{x:110,y:28},task:"orc-camp",gate:{x:131,y:41},entry:{x:183,y:62},inn:{x:60,y:54}},
       {name:"thalos",shop:{x:76,y:42},giver:{x:21,y:41},task:"shadow-fairies",gate:{x:131,y:39},entry:{x:141,y:23},inn:{x:24,y:49}},

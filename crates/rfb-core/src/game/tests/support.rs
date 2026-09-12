@@ -341,6 +341,36 @@ pub(in crate::game) fn choose_human_talent_if_pending(game: &mut Game) {
     );
 }
 
+// Tests that replace the shared allocation pool keep authored stock/loot inputs intact.
+pub(in crate::game) fn preserve_authored_loot_pool(content: &mut rfb_content::CompiledContentV1) {
+    let mut stock = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .unwrap()
+        .clone();
+    stock.id = "test.loot-table.shop-stock".into();
+    for shop in &mut content.shops {
+        if shop.stock_generation_table_id.is_some() {
+            shop.stock_generation_table_id = Some(stock.id.clone());
+        }
+    }
+    for world in &mut content.worlds {
+        for floor in &mut world.procedural_floors {
+            if let Some(map) = &mut floor.inline_map {
+                for spawn in &mut map.loot_spawns {
+                    if spawn.forced_ego.is_some()
+                        && spawn.loot_table_id == "demo.loot-table.base-items"
+                    {
+                        spawn.loot_table_id = stock.id.clone();
+                    }
+                }
+            }
+        }
+    }
+    content.loot_tables.push(stock);
+}
+
 pub(super) fn descend_one_floor(game: &mut Game) {
     let down_index = game
         .terrain

@@ -137,7 +137,7 @@ The source town template does not identify an individual author. This
 imported material retains its upstream terms rather than this repository's
 default content license; no permission statement from another town is
 attributed to Zul. The encounter exception follows src/wild.c at that commit.
-Source selection, reused ordinary-shop adaptations and staged service limits
+Source selection, reused ordinary-shop adaptations and acceptance limits
 are recorded in packs/rfb-demo-original/legacy-wilderness-selection.json and
 design/zul-town-import-plan-20260912.md. Quest 77 and the three node quests
 are described below.
@@ -148,8 +148,8 @@ additional dragon scale mail kinds, Chinese names and breath effects derive
 from lib/edit/k_info.txt, src/kind_name_zh.inc and src/devices.c. These imported
 definitions and strings retain the applicable upstream terms documented above.
 The item selection/adaptation ledgers record each source kind; the Zul plan
-records the retained maintenance and equipment-engine adaptations. Execution
-validation of this batch is deferred until the Z1-Z6 implementation is complete.
+records the retained maintenance and equipment-engine adaptations and the Z6
+source, runtime, save and desktop verification scope.
 
 Zul's three tower names, owners, realm/race memberships and service prices
 derive from lib/edit/t_zul.txt at that same commit. All-item identification,
@@ -157,7 +157,7 @@ mutation treatment and the Ritual of Balance follow src/bldg.c; the ritual
 reuses this project's src/virtue.c adaptation with the player's current
 secondary realm. Existing birth virtue selection remains unchanged. Tower
 quest 77, town teleport and member node quests are described below.
-These batches have no execution acceptance yet.
+The Zul plan records acceptance evidence and explicit test preparation.
 
 Zul quest 77 uses the complete lib/edit/q_eddies.txt map and Chinese dialogue,
 retaining its credit "New quest for FrogComposband 7.0.peppermint". The task
@@ -166,7 +166,7 @@ come from k_info.txt/a_info.txt and their corresponding Chinese name tables
 at the same master commit. The forced bat cloak, quest reward and teleport
 adaptations follow rooms.c, quest.c, bldg.c and wild.c; RESTORING follows
 devices.c. These materials retain their applicable upstream terms. Exact
-selection, local RNG/alertness adaptations and deferred validation are recorded
+selection, local RNG/alertness adaptations and validation scope are recorded
 in legacy-wilderness-selection.json and the Zul plan.
 
 Zul node quests 10-12 use the complete lib/edit/q_sorcery.txt, q_chaos.txt and
@@ -177,7 +177,7 @@ NO_GROUP. Source kind 515 and its Chinese display name come from k_info.txt and
 kind_name_zh.inc. Member admission follows bldg.c/t_zul.txt; terrain inheritance,
 friend groups and periodic water/lava exposure follow rooms.c, monster2.c and
 dungeon.c through the existing local mechanics. Their applicable upstream
-terms remain in force; local adaptations and deferred acceptance are recorded
+terms remain in force; local adaptations and acceptance limits are recorded
 in the Zul source selection and plan. Chaos spellcasting is not included.
 
 The generated Android Gradle/Kotlin scaffold under web/src-tauri/gen/android is derived

@@ -664,8 +664,10 @@ fn task_service_accessible(game: &Game, facility_id: &str) -> bool {
     let Some(facility) = game.content.town_facility(facility_id) else {
         return false;
     };
-    matches!(facility.category, TownFacilityCategory::QuestGiver | TownFacilityCategory::Service)
-        && game.town_facility_accessible(facility_id)
+    matches!(
+        facility.category,
+        TownFacilityCategory::QuestGiver | TownFacilityCategory::Service
+    ) && game.town_facility_accessible(facility_id)
 }
 
 fn selected_reward_entry<'a>(
@@ -766,13 +768,21 @@ impl Game {
     pub(super) fn fame_on_failure(&mut self) {
         self.fame -= (self.fame / 2).min(30);
     }
-    pub(super) fn task_membership_unavailable_reason(&self, task: &TaskDefinition) -> Option<&'static str> {
+    pub(super) fn task_membership_unavailable_reason(
+        &self,
+        task: &TaskDefinition,
+    ) -> Option<&'static str> {
         if !task.requires_facility_membership {
             return None;
         }
-        let facility = self.content.town_facility(
-            task.source_facility_id.as_deref().expect("member task must have a source facility"),
-        ).expect("task source facility must exist");
+        let facility = self
+            .content
+            .town_facility(
+                task.source_facility_id
+                    .as_deref()
+                    .expect("member task must have a source facility"),
+            )
+            .expect("task source facility must exist");
         (self.town_facility_membership(facility) == FacilityMembershipDto::Visitor)
             .then_some("task-membership-required")
     }
@@ -1005,9 +1015,7 @@ impl Game {
         });
         let fixed_task_reward = task_id == "demo.task.zul-eddies"
             || (fixed_castle_reward && task_id == "demo.task.old-castle");
-        if fixed_task_reward
-            && let Some(reward) = task.reward.as_mut()
-        {
+        if fixed_task_reward && let Some(reward) = task.reward.as_mut() {
             let mut selection =
                 crate::rng::RfbRng::seeded(task_selection_seed(task_id, self.wilderness_seed));
             let entry = selected_reward_entry(
@@ -1066,9 +1074,7 @@ impl Game {
             ItemLocation::Inventory,
             &mut self.rng,
         );
-        if fixed_task_reward
-            && self.generated_artifact_ids.contains(&reward.kind_id)
-        {
+        if fixed_task_reward && self.generated_artifact_ids.contains(&reward.kind_id) {
             reward = super::random_artifact::materialize_replacement(
                 &self.content,
                 &mut self.rng,

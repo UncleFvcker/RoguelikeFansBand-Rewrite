@@ -6,45 +6,122 @@ use super::*;
 fn zul_node_maps_rewards_and_admission_references_match_source() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let world = &artifact.content.worlds[0];
-    for (realm, width, height, count, book) in [("sorcery",31,25,85,"grimoire-of-power"),
-        ("chaos",31,25,97,"armageddon-tome"), ("nature",33,27,88,"natures-wrath")]
-    {
-        let task = world.tasks.iter().find(|task| task.id == format!("demo.task.zul-{realm}-node")).unwrap();
+    for (realm, width, height, count, book) in [
+        ("sorcery", 31, 25, 85, "grimoire-of-power"),
+        ("chaos", 31, 25, 97, "armageddon-tome"),
+        ("nature", 33, 27, 88, "natures-wrath"),
+    ] {
+        let task = world
+            .tasks
+            .iter()
+            .find(|task| task.id == format!("demo.task.zul-{realm}-node"))
+            .unwrap();
         assert!(task.requires_facility_membership);
-        assert_eq!(task.prerequisite_task_id.as_deref(), (realm == "sorcery").then_some("demo.task.zul-eddies"));
+        assert_eq!(
+            task.prerequisite_task_id.as_deref(),
+            (realm == "sorcery").then_some("demo.task.zul-eddies")
+        );
         assert_eq!(task.unlock_when_prerequisite_failed, realm == "sorcery");
         assert_eq!(task.unlock_when_prerequisite_abandoned, realm == "sorcery");
-        assert_eq!(task.reward.as_ref().unwrap().entries[0].item_kind_id, format!("demo.item.{book}"));
-        let floor = world.procedural_floors.iter().find(|floor| floor.task_id.as_ref() == Some(&task.id)).unwrap();
-        assert_eq!((floor.width, floor.height, floor.depth), (width,height,65));
+        assert_eq!(
+            task.reward.as_ref().unwrap().entries[0].item_kind_id,
+            format!("demo.item.{book}")
+        );
+        let floor = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.task_id.as_ref() == Some(&task.id))
+            .unwrap();
+        assert_eq!(
+            (floor.width, floor.height, floor.depth),
+            (width, height, 65)
+        );
         let map = floor.inline_map.as_ref().unwrap();
         assert_eq!(map.actor_spawns.len(), count);
-        assert_eq!(map.terrain_overrides.iter().map(|group| group.positions.len()).sum::<usize>(), usize::from(width)*usize::from(height));
-        let at = |x,y| map.terrain_overrides.iter().find(|group| group.positions.contains(&ContentPosition{x,y})).unwrap().terrain_id.as_str();
+        assert_eq!(
+            map.terrain_overrides
+                .iter()
+                .map(|group| group.positions.len())
+                .sum::<usize>(),
+            usize::from(width) * usize::from(height)
+        );
+        let at = |x, y| {
+            map.terrain_overrides
+                .iter()
+                .find(|group| group.positions.contains(&ContentPosition { x, y }))
+                .unwrap()
+                .terrain_id
+                .as_str()
+        };
         if realm == "chaos" {
-            assert_eq!(at(0,0), "demo.terrain.mountain-wall");
-            assert_eq!(map.actor_spawns.iter().filter(|spawn| spawn.kind_id == "demo.actor.hell-hound-of-julian").count(),16);
+            assert_eq!(at(0, 0), "demo.terrain.mountain-wall");
+            assert_eq!(
+                map.actor_spawns
+                    .iter()
+                    .filter(|spawn| spawn.kind_id == "demo.actor.hell-hound-of-julian")
+                    .count(),
+                16
+            );
             assert!(map.friend_group_leader_ids.is_empty());
         } else if realm == "nature" {
-            assert_eq!(at(6,4), "demo.terrain.surface-grass", "monster-only cells inherit dot GRASS");
-            assert_eq!(map.friend_group_leader_ids.len(),16);
+            assert_eq!(
+                at(6, 4),
+                "demo.terrain.surface-grass",
+                "monster-only cells inherit dot GRASS"
+            );
+            assert_eq!(map.friend_group_leader_ids.len(), 16);
         } else {
-            assert_eq!(at(14,2), "demo.terrain.surface-water-shallow");
+            assert_eq!(at(14, 2), "demo.terrain.surface-water-shallow");
             assert!(map.friend_group_leader_ids.is_empty());
         }
-        let book = artifact.content.items.iter().find(|item| item.id == format!("demo.item.{book}")).unwrap();
-        assert_eq!(book.elemental_destruction_immunities.len(),4);
-        assert_eq!(book.ability_book_id.is_some(),realm != "chaos");
+        let book = artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == format!("demo.item.{book}"))
+            .unwrap();
+        assert_eq!(book.elemental_destruction_immunities.len(), 4);
+        assert_eq!(book.ability_book_id.is_some(), realm != "chaos");
     }
-    for invalid in ["no-facility", "no-prerequisite", "missing-friend", "duplicate-friend"] {
+    for invalid in [
+        "no-facility",
+        "no-prerequisite",
+        "missing-friend",
+        "duplicate-friend",
+    ] {
         let mut content = artifact.content.clone();
         let world = &mut content.worlds[0];
         match invalid {
-            "no-facility" => world.tasks.iter_mut().find(|task| task.id == "demo.task.zul-chaos-node").unwrap().source_facility_id = None,
-            "no-prerequisite" => world.tasks.iter_mut().find(|task| task.id == "demo.task.zul-chaos-node").unwrap().unlock_when_prerequisite_abandoned = true,
+            "no-facility" => {
+                world
+                    .tasks
+                    .iter_mut()
+                    .find(|task| task.id == "demo.task.zul-chaos-node")
+                    .unwrap()
+                    .source_facility_id = None
+            }
+            "no-prerequisite" => {
+                world
+                    .tasks
+                    .iter_mut()
+                    .find(|task| task.id == "demo.task.zul-chaos-node")
+                    .unwrap()
+                    .unlock_when_prerequisite_abandoned = true
+            }
             _ => {
-                let map = world.procedural_floors.iter_mut().find(|floor| floor.id == "demo.floor.zul-nature-node").unwrap().inline_map.as_mut().unwrap();
-                let id = if invalid == "missing-friend" { "test.missing".into() } else { map.friend_group_leader_ids[0].clone() };
+                let map = world
+                    .procedural_floors
+                    .iter_mut()
+                    .find(|floor| floor.id == "demo.floor.zul-nature-node")
+                    .unwrap()
+                    .inline_map
+                    .as_mut()
+                    .unwrap();
+                let id = if invalid == "missing-friend" {
+                    "test.missing".into()
+                } else {
+                    map.friend_group_leader_ids[0].clone()
+                };
                 map.friend_group_leader_ids.push(id);
             }
         }
@@ -56,21 +133,51 @@ fn zul_node_maps_rewards_and_admission_references_match_source() {
 fn zul_eddies_references_validate_forced_ego_and_task_gated_town_arrival() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let world = &artifact.content.worlds[0];
-    let floor = world.procedural_floors.iter().find(|floor| floor.id == "demo.floor.zul-eddies").unwrap();
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.zul-eddies")
+        .unwrap();
     let map = floor.inline_map.as_ref().unwrap();
-    assert_eq!(map.terrain_overrides.iter().map(|terrain| terrain.positions.len()).sum::<usize>(), 29 * 37);
+    assert_eq!(
+        map.terrain_overrides
+            .iter()
+            .map(|terrain| terrain.positions.len())
+            .sum::<usize>(),
+        29 * 37
+    );
     assert_eq!(map.loot_spawns.len(), 2);
-    assert!(map.loot_spawns.iter().all(|loot| map.actor_spawns.iter().any(|actor| actor.position == loot.position)));
+    assert!(map.loot_spawns.iter().all(|loot| {
+        map.actor_spawns
+            .iter()
+            .any(|actor| actor.position == loot.position)
+    }));
     for invalid in 0..3 {
         let mut content = artifact.content.clone();
         if invalid == 2 {
-            content.town_facilities.iter_mut().find(|facility| facility.id == "demo.town-facility.zul-sorcery-tower")
-                .unwrap().town_teleport.as_mut().unwrap().required_completed_task_id = "demo.task.old-castle".into();
+            content
+                .town_facilities
+                .iter_mut()
+                .find(|facility| facility.id == "demo.town-facility.zul-sorcery-tower")
+                .unwrap()
+                .town_teleport
+                .as_mut()
+                .unwrap()
+                .required_completed_task_id = "demo.task.old-castle".into();
         } else {
-            let map = content.worlds[0].procedural_floors.iter_mut().find(|floor| floor.id == "demo.floor.zul-eddies")
-                .unwrap().inline_map.as_mut().unwrap();
-            if invalid == 0 { map.loot_spawns[0].forced_ego.as_mut().unwrap().tval = 21; }
-            else { map.vault_positions[0].x = 29; }
+            let map = content.worlds[0]
+                .procedural_floors
+                .iter_mut()
+                .find(|floor| floor.id == "demo.floor.zul-eddies")
+                .unwrap()
+                .inline_map
+                .as_mut()
+                .unwrap();
+            if invalid == 0 {
+                map.loot_spawns[0].forced_ego.as_mut().unwrap().tval = 21;
+            } else {
+                map.vault_positions[0].x = 29;
+            }
         }
         assert!(validate_and_normalize(&mut content).is_err());
     }
@@ -11089,6 +11196,11 @@ fn town_entrances_and_shared_facilities_match_source() {
                     town_id: "demo.town.angwil".to_owned(),
                 },
                 WildernessLocationDefinition::Town {
+                    position: ContentPosition { x: 77, y: 6 },
+                    map_origin: ContentPosition { x: 0, y: 0 },
+                    town_id: "demo.town.zul".to_owned(),
+                },
+                WildernessLocationDefinition::Town {
                     position: ContentPosition { x: 87, y: 49 },
                     map_origin: ContentPosition { x: 0, y: 0 },
                     town_id: "demo.town.telmora".to_owned(),
@@ -13114,7 +13226,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 377);
+    assert_eq!(base_items.entries.len(), 388);
     // Source kind 245 retains its 1/255 allocation as integer weight zero.
     assert_eq!(
         base_items
@@ -13181,10 +13293,10 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     .to_owned()
             });
     }
-    assert_eq!(active_source_items.len(), 341);
+    assert_eq!(active_source_items.len(), 353);
 
     let source_items_without_allocations =
-        BTreeSet::from([33, 34, 36, 37, 345, 346, 347, 400, 401, 460]);
+        BTreeSet::from([33, 34, 36, 37, 139, 345, 346, 347, 400, 401, 460]);
     let expected_item_ids = active_source_items
         .iter()
         .filter(|(source_index, _)| !source_items_without_allocations.contains(source_index))
@@ -13210,7 +13322,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 343);
+    assert_eq!(expected_item_ids.len(), 354);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.

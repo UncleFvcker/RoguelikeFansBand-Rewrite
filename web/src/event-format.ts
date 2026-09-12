@@ -2008,6 +2008,9 @@ export function createPresentationFormatter(
     if (statusId === "rfb.status.invulnerability") {
       return localization.format("status-invulnerability-name");
     }
+    if (statusId === "rfb.status.levitation") {
+      return localization.format("item-passive-levitation");
+    }
     if (statusId === "rfb.status.unwell") {
       return localization.format("status-unwell-name");
     }

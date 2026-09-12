@@ -9757,3 +9757,21 @@ task-demo-zul-nature-node-failed-description = The dimensional energy of the mys
 terrain-demo-zul-nature-node-entry-description = The nature tower has found a magical node. Defeat its guardians so the tower can claim its power.
 item-demo-armageddon-tome-name = [Armageddon Tome]
 item-demo-armageddon-tome-description = [Armageddon Tome]
+
+# Zul quest 77 and rewards, RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c.
+item-demo-baseball-bat-name = Baseball Bat
+item-demo-baseball-bat-description = Baseball Bat
+item-activation-demo-sotkamo-name = Restoring
+item-demo-sotkamo-name = of Sotkamo
+item-demo-sotkamo-description = This old wooden bat makes its wielder nimble and resistant to the passage of time.
+item-demo-visiting-team-name = of the Visiting Team
+item-demo-visiting-team-description = A souvenir from Zul, perhaps left by a strange mage or dropped through a hole in time.
+item-demo-superbat-name = 'Superbat'
+item-demo-superbat-description = Carved from a branch broken by a falling meteorite, with powers its wielder can only hope to discover.
+floor-demo-zul-eddies-name = The Eddies in the Space-Time Continuum (Zul)
+task-demo-zul-eddies-name = The Eddies in the Space-Time Continuum (Zul)
+terrain-demo-zul-eddies-entry-name = The Eddies in the Space-Time Continuum (Zul)
+terrain-demo-zul-eddies-entry-description = The Eddies in the Space-Time Continuum (Zul)
+task-demo-zul-eddies-description = The time mages' experiments have distorted space and time around Zul, making reliable teleportation impossible. Defeat them so the tower can restore the town's links to the outside world.
+task-demo-zul-eddies-completed-description = Thank you for your help. We can teleport safely again. While repairing the continuum, we found this strange wooden bat; please accept it as a souvenir and a token of our gratitude.
+task-demo-zul-eddies-failed-description = Too bad. The whole town was counting on you.

@@ -2272,12 +2272,18 @@ pub(super) fn validate_world(
             }
 
             inline_map.friend_group_leader_ids.sort();
-            if inline_map.friend_group_leader_ids.windows(2).any(|ids| ids[0] == ids[1])
+            if inline_map
+                .friend_group_leader_ids
+                .windows(2)
+                .any(|ids| ids[0] == ids[1])
                 || inline_map.friend_group_leader_ids.iter().any(|id| {
-                    !inline_map.actor_spawns.iter().find(|spawn| &spawn.instance_id == id)
+                    inline_map
+                        .actor_spawns
+                        .iter()
+                        .find(|spawn| &spawn.instance_id == id)
                         .and_then(|spawn| actors.iter().find(|actor| actor.id == spawn.kind_id))
                         .and_then(|actor| actor.allocation.as_ref())
-                        .is_some_and(|allocation| allocation.friends.is_some())
+                        .is_none_or(|allocation| allocation.friends.is_none())
                 })
             {
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
@@ -2342,7 +2348,12 @@ pub(super) fn validate_world(
                 &[]
             };
             for position in &inline_map.vault_positions {
-                validate_position(*position, procedural.width, procedural.height, &procedural.id)?;
+                validate_position(
+                    *position,
+                    procedural.width,
+                    procedural.height,
+                    &procedural.id,
+                )?;
             }
             for spawn in inline_map.loot_spawns.iter().chain(scrambled_loot_spawns) {
                 validate_id(&spawn.id)?;
@@ -2362,22 +2373,43 @@ pub(super) fn validate_world(
                     return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
                 }
                 require_reference(loot_table_ids, &spawn.loot_table_id, &procedural.id)?;
-                if spawn.generation_depth == Some(0) || spawn.generation_depth.is_some_and(|depth| depth > 255) {
+                if spawn.generation_depth == Some(0)
+                    || spawn.generation_depth.is_some_and(|depth| depth > 255)
+                {
                     return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
                 }
                 if let Some(forced) = &spawn.forced_ego {
                     require_reference(affix_ids, &forced.affix_id, &procedural.id)?;
                     let table = &loot_tables[&spawn.loot_table_id];
-                    let affix = affixes.iter().find(|affix| affix.id == forced.affix_id).unwrap();
-                    let bases = table.entries.iter().filter_map(|entry| items.iter().find(|item|
-                        item.id == entry.item_kind_id && item.rfb_base_kind.is_some_and(|base| base.tval == forced.tval)))
+                    let affix = affixes
+                        .iter()
+                        .find(|affix| affix.id == forced.affix_id)
+                        .unwrap();
+                    let bases = table
+                        .entries
+                        .iter()
+                        .filter_map(|entry| {
+                            items.iter().find(|item| {
+                                item.id == entry.item_kind_id
+                                    && item
+                                        .rfb_base_kind
+                                        .is_some_and(|base| base.tval == forced.tval)
+                            })
+                        })
                         .collect::<Vec<_>>();
-                    if !matches!(table.kind_selection, Some(LootKindSelectionDefinition::RfbBase))
-                        || table.rfb_ego_policy != Some(LootRfbEgoPolicyDefinition::WeaponDigger)
+                    if !matches!(
+                        table.kind_selection,
+                        Some(LootKindSelectionDefinition::RfbBase)
+                    ) || table.rfb_ego_policy != Some(LootRfbEgoPolicyDefinition::WeaponDigger)
                         || !matches!(forced.tval, 16..=23 | 30..=38)
                         || bases.is_empty()
-                        || bases.iter().any(|item| !affix_is_compatible_with_item(
-                            affix, item, spawn.generation_depth.unwrap_or(procedural.depth)))
+                        || bases.iter().any(|item| {
+                            !affix_is_compatible_with_item(
+                                affix,
+                                item,
+                                spawn.generation_depth.unwrap_or(procedural.depth),
+                            )
+                        })
                     {
                         return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
                     }
@@ -3039,16 +3071,22 @@ pub(super) fn validate_world(
         }
     }
     for town_id in &world_town_ids {
-        if town_facilities.values().filter(|facility| facility.town_id == *town_id && facility.town_teleport.is_some()).count() > 1 {
+        if town_facilities
+            .values()
+            .filter(|facility| facility.town_id == *town_id && facility.town_teleport.is_some())
+            .count()
+            > 1
+        {
             return Err(ContentError::InvalidTown((*town_id).to_owned()));
         }
         for facility in town_facilities.values().filter(|facility| {
             facility.town_id == *town_id && facility.category != TownFacilityCategory::Home
         }) {
             if let Some(teleport) = &facility.town_teleport
-                && (!facility.task_ids.contains(&teleport.required_completed_task_id)
-                    || !task_ids.contains(&teleport.required_completed_task_id)
-                )
+                && (!facility
+                    .task_ids
+                    .contains(&teleport.required_completed_task_id)
+                    || !task_ids.contains(&teleport.required_completed_task_id))
             {
                 return Err(ContentError::InvalidTownFacility(facility.id.clone()));
             }

@@ -9284,6 +9284,7 @@
         "heal",
         "restore-vitality",
         "cure-mutation",
+        "balance-ritual",
         "enchant-weapon",
         "enchant-armor",
         "enchant-ammunition",
@@ -14404,7 +14405,9 @@
         "alchemist",
         "magic-shop",
         "black-market",
-        "bookstore"
+        "bookstore",
+        "jeweler",
+        "dragon"
       ]
     },
     "ShopDto": {
@@ -14579,6 +14582,12 @@
               "type": "null"
             }
           ]
+        },
+        "affixNameKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "artifactName": {
           "type": [
@@ -15355,6 +15364,12 @@
           "format": "uint32",
           "minimum": 0
         },
+        "innTravelDestinations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/InnTravelDestinationDto"
+          }
+        },
         "legalNameChangeCost": {
           "type": [
             "integer",
@@ -15513,6 +15528,13 @@
         "taskId": {
           "type": "string",
           "default": ""
+        },
+        "unavailableReason": {
+          "description": "Current membership restriction on accepting or claiming this task.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [

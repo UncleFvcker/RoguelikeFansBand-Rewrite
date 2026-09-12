@@ -7135,6 +7135,7 @@ fn tomte_tailored_acquirement_filters_headgear_by_birth_race_only() {
     let path =
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
     let mut content = rfb_content::compile_pack_dir(&path).unwrap().content;
+    super::support::preserve_authored_loot_pool(&mut content);
     let table = content
         .loot_tables
         .iter_mut()

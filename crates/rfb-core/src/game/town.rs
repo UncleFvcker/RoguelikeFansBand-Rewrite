@@ -14,7 +14,8 @@ use rfb_protocol::{
     FacilityServiceTargetDto, HomeDto, HomeItemDto, HomeStateSaveDto, InnTravelDestinationDto,
     ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto, ItemEnchantmentsDto,
     ItemIdentifyResolutionDto, ItemQualityDto, MapScaleDto, Position, ShopCategoryDto, ShopDto,
-    ShopOwnerDto, ShopSellQuoteDto, ShopStateSaveDto, ShopStockItemDto, TownDto, TownStateSaveDto, TaskStatusKindDto,
+    ShopOwnerDto, ShopSellQuoteDto, ShopStateSaveDto, ShopStockItemDto, TaskStatusKindDto, TownDto,
+    TownStateSaveDto,
 };
 
 use crate::{
@@ -2202,20 +2203,24 @@ impl Game {
     }
 
     fn town_teleport_facility(&self, town: &TownDefinition) -> Option<&TownFacilityDefinition> {
-        town.facility_ids.iter().filter_map(|id| self.content.town_facility(id))
+        town.facility_ids
+            .iter()
+            .filter_map(|id| self.content.town_facility(id))
             .find(|facility| facility.town_teleport.is_some())
     }
 
     fn town_teleport_unlocked(&self, facility: &TownFacilityDefinition) -> bool {
         facility.town_teleport.as_ref().is_some_and(|teleport| {
-            self.task_states.get(&teleport.required_completed_task_id)
+            self.task_states
+                .get(&teleport.required_completed_task_id)
                 .is_some_and(|state| state.status == TaskStatusKindDto::Completed)
         })
     }
 
     fn town_teleport_arrival(&self, town: &TownDefinition) -> Option<Position> {
         if let Some(facility) = self.town_teleport_facility(town) {
-            return self.town_teleport_unlocked(facility)
+            return self
+                .town_teleport_unlocked(facility)
                 .then(|| position_from_content(facility.entrance_position));
         }
         town_inn(town, &self.content).map(|inn| position_from_content(inn.entrance_position))
@@ -2223,20 +2228,40 @@ impl Game {
 
     fn town_travel_origin(&self, facility_id: &str) -> Option<(&str, u32)> {
         if let Some(inn) = self.content.shop(facility_id) {
-            return (inn.inn_stay_cost.is_some() && shop_accessible(self, inn))
-                .then(|| (inn.town_id.as_str(), self.town_service_price(INN_TRAVEL_COST)));
+            return (inn.inn_stay_cost.is_some() && shop_accessible(self, inn)).then(|| {
+                (
+                    inn.town_id.as_str(),
+                    self.town_service_price(INN_TRAVEL_COST),
+                )
+            });
         }
         let facility = self.content.town_facility(facility_id)?;
         let teleport = facility.town_teleport.as_ref()?;
-        (self.town_facility_accessible(facility_id) && self.town_teleport_unlocked(facility))
-            .then(|| (facility.town_id.as_str(), self.town_facility_price(facility, teleport.price)))
+        (self.town_facility_accessible(facility_id) && self.town_teleport_unlocked(facility)).then(
+            || {
+                (
+                    facility.town_id.as_str(),
+                    self.town_facility_price(facility, teleport.price),
+                )
+            },
+        )
     }
 
-    pub(super) fn facility_town_travel_destinations(&self, facility_id: &str) -> Vec<InnTravelDestinationDto> {
-        let Some((_, cost)) = self.town_travel_origin(facility_id) else { return Vec::new(); };
-        self.teleport_town_targets().into_iter().map(|target| InnTravelDestinationDto {
-            town_id: target.town_id, town_name_key: target.town_name_key, cost,
-        }).collect()
+    pub(super) fn facility_town_travel_destinations(
+        &self,
+        facility_id: &str,
+    ) -> Vec<InnTravelDestinationDto> {
+        let Some((_, cost)) = self.town_travel_origin(facility_id) else {
+            return Vec::new();
+        };
+        self.teleport_town_targets()
+            .into_iter()
+            .map(|target| InnTravelDestinationDto {
+                town_id: target.town_id,
+                town_name_key: target.town_name_key,
+                cost,
+            })
+            .collect()
     }
 
     pub(super) fn inn_travel_unavailable_reason(
@@ -2244,15 +2269,23 @@ impl Game {
         facility_id: &str,
         destination_town_id: &str,
     ) -> Option<&'static str> {
-        if self.content.shop(facility_id).is_none_or(|shop| shop.inn_stay_cost.is_none())
-            && self.content.town_facility(facility_id).is_none_or(|facility| facility.town_teleport.is_none())
+        if self
+            .content
+            .shop(facility_id)
+            .is_none_or(|shop| shop.inn_stay_cost.is_none())
+            && self
+                .content
+                .town_facility(facility_id)
+                .is_none_or(|facility| facility.town_teleport.is_none())
         {
             return Some("unknown-inn");
         }
         let Some((origin_town_id, cost)) = self.town_travel_origin(facility_id) else {
             return Some("inn-unreachable");
         };
-        if origin_town_id == destination_town_id { return Some("already-here"); }
+        if origin_town_id == destination_town_id {
+            return Some("already-here");
+        }
         if !self.teleport_town_target_available(destination_town_id) {
             return Some("town-unvisited");
         }
@@ -2268,7 +2301,9 @@ impl Game {
             self.inn_travel_unavailable_reason(facility_id, destination_town_id)
                 .is_none()
         );
-        let (_, cost) = self.town_travel_origin(facility_id).expect("preflighted travel origin");
+        let (_, cost) = self
+            .town_travel_origin(facility_id)
+            .expect("preflighted travel origin");
         self.relocate_to_town(destination_town_id)?;
         self.gold -= cost;
 
@@ -2323,8 +2358,10 @@ impl Game {
     /// Desktop map fixture: visit one restored town and reveal its current surface.
     #[doc(hidden)]
     pub fn debug_prepare_town_map_e2e(&mut self, town_id: &str) -> Result<(), CoreError> {
-        if !matches!(town_id, "demo.town.anambar" | "demo.town.thalos")
-            || self.world_id != "demo.world.middle-earth"
+        if !matches!(
+            town_id,
+            "demo.town.anambar" | "demo.town.thalos" | "demo.town.zul"
+        ) || self.world_id != "demo.world.middle-earth"
             || self.map_scale != MapScaleDto::Local
             || self.current_floor_id != super::wilderness::WILDERNESS_FLOOR_ID
         {
@@ -2332,7 +2369,80 @@ impl Game {
                 "town map fixture requires the Middle-earth surface",
             ));
         }
-        self.relocate_to_town(town_id)?;
+        if town_id == "demo.town.zul" {
+            // Physical arrival must not borrow quest 77's still-locked teleport landing.
+            self.store_visible_town_states();
+            self.wilderness_position =
+                world_town_position(self.content.world(&self.world_id).unwrap(), town_id);
+            self.wilderness_view_offset = Position::default();
+            self.activate_wilderness_position(None, false)?;
+            self.mark_current_town_visited();
+        } else {
+            self.relocate_to_town(town_id)?;
+        }
+        self.explored.fill(true);
+        self.reveal_current_visibility();
+        Ok(())
+    }
+
+    /// Zul desktop acceptance preparation. The native app exposes this only with WebDriver.
+    #[doc(hidden)]
+    pub fn debug_prepare_zul_e2e(&mut self, clear_enemies: bool) -> Result<(), CoreError> {
+        if clear_enemies {
+            let visited_zul_wilderness = self.is_wilderness_floor()
+                && self
+                    .town_states
+                    .get("demo.town.zul")
+                    .is_some_and(|town| town.visited);
+            if !visited_zul_wilderness
+                && !matches!(
+                    self.current_floor_id.as_str(),
+                    "demo.floor.zul-eddies"
+                        | "demo.floor.zul-sorcery-node"
+                        | "demo.floor.zul-chaos-node"
+                        | "demo.floor.zul-nature-node"
+                )
+            {
+                return Err(CoreError::InvalidSave(
+                    "Zul clear fixture requires visited Zul wilderness or a node/eddies floor",
+                ));
+            }
+            // Prepare a clear route or task combat result; normal actions evaluate objectives.
+            self.entities.clear();
+            self.items
+                .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
+        } else {
+            if self
+                .current_town()
+                .is_none_or(|town| town.id != "demo.town.zul")
+                || self
+                    .build
+                    .as_ref()
+                    .is_none_or(|build| build.class_id != "demo.class.mage")
+            {
+                return Err(CoreError::InvalidSave(
+                    "Zul traversal fixture requires a Mage in Zul",
+                ));
+            }
+            // Reuse the existing level/realm-book fixture; no terrain is changed for Mage.
+            self.debug_prepare_spell_learning_e2e(50)?;
+            self.apply_player_melee_status(super::STATUS_LEVITATION, 200_000, "e2e.zul-traversal");
+            self.apply_player_melee_status(
+                super::STATUS_INVULNERABILITY,
+                200_000,
+                "e2e.zul-traversal",
+            );
+            // Match the existing spell's incoming-damage modifier, not just its status name.
+            self.player
+                .statuses
+                .iter_mut()
+                .find(|status| status.kind_id == super::STATUS_INVULNERABILITY)
+                .unwrap()
+                .incoming_damage_percent = 0;
+            for virtue in &mut self.virtues {
+                virtue.value = 51;
+            }
+        }
         self.explored.fill(true);
         self.reveal_current_visibility();
         Ok(())
@@ -2349,7 +2459,8 @@ impl Game {
             .content
             .town(destination_town_id)
             .expect("validated destination town must remain available");
-        let destination_inn_position = self.town_teleport_arrival(destination_town)
+        let destination_inn_position = self
+            .town_teleport_arrival(destination_town)
             .expect("validated destination town must retain a teleport arrival");
 
         let player_id = self.player.id.clone();
@@ -2981,11 +3092,17 @@ impl Game {
                                 kind_id: item.kind_id.clone(),
                                 display_name_key: definition.name_key.clone(),
                                 artifact_name: item.artifact_name.clone(),
-                                affix_name_keys: item.affix_ids.iter().map(|id| {
-                                    self.content.affix(id)
-                                        .expect("shop affix must remain available")
-                                        .name_key.clone()
-                                }).collect(),
+                                affix_name_keys: item
+                                    .affix_ids
+                                    .iter()
+                                    .map(|id| {
+                                        self.content
+                                            .affix(id)
+                                            .expect("shop affix must remain available")
+                                            .name_key
+                                            .clone()
+                                    })
+                                    .collect(),
                                 quantity,
                                 inscription: item.inscription.clone(),
                                 captured_actor: self.captured_actor_dto(item),

@@ -4,7 +4,7 @@
   "id": "demo.terrain.jeweler-entrance",
   "nameKey": "terrain-demo-jeweler-entrance-name",
   "descriptionKey": "terrain-demo-jeweler-entrance-description",
-  "glyph": "A",
+  "glyph": "\"",
   "walkable": true,
   "blocksSight": false,
   "tags": [
