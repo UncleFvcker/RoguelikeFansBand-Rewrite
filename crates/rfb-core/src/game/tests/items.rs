@@ -3945,33 +3945,25 @@ fn ready_armor_group_generates_equips_and_preserves_consumers_after_save() {
             actor_id: "test.ordinary-drop".into(),
         },
     };
-    let mut remaining = BTreeSet::from([
-        "demo.item.numenor",
-        "demo.item.aragorn",
-        "demo.item.ossian",
-        "demo.item.great-wizzard",
-    ]);
-    // Controlled depth and repeated ordinary drops retain the complete base,
-    // quality, source rarity and uniqueness pools, without forced materialization.
-    for _ in 0..100_000 {
-        for item in game
-            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+    let cases = [
+        ("numenor", "jewel-encrusted-crown", 15),
+        ("aragorn", "soft-leather-boots", 21),
+        ("ossian", "large-leather-shield", 28),
+        ("great-wizzard", "pointy-hat", 9),
+    ];
+    let mut probe = game.clone();
+    let mut remaining = cases
+        .iter()
+        .map(|(_, base, _)| format!("demo.item.{base}"))
+        .collect::<BTreeSet<_>>();
+    // Observe each base in the complete allocation, then condition on that base
+    // while retaining the production artifact level, rarity and uniqueness gates.
+    for _ in 0..20_000 {
+        for item in probe
+            .generate_loot_instances(&context, ItemLocation::Inventory)
             .unwrap()
         {
-            if !remaining.remove(item.kind_id.as_str()) {
-                continue;
-            }
-            assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
-            assert!(item.activation.is_none() && item.curse.is_none());
-            let id = item.id.clone();
-            game.items.push(item);
-            game.pick_up_item_at_player(Some(&id)).unwrap();
-            assert!(
-                !game
-                    .item_property_knowledge
-                    .get(&id)
-                    .is_some_and(|k| k.appraised)
-            );
+            remaining.remove(&item.kind_id);
         }
         if remaining.is_empty() {
             break;
@@ -3979,19 +3971,39 @@ fn ready_armor_group_generates_equips_and_preserves_consumers_after_save() {
     }
     assert!(
         remaining.is_empty(),
-        "artifacts never generated: {remaining:?}"
+        "ordinary bases never generated: {remaining:?}"
     );
+    for (slug, base, _) in cases {
+        let kind_id = format!("demo.item.{slug}");
+        let base_id = format!("demo.item.{base}");
+        let selected = (0..20_000)
+            .find_map(|_| {
+                game.roll_fixed_artifact_kind_id(&context, Some(&base_id), false)
+                    .filter(|kind| kind == &kind_id)
+            })
+            .expect("observed base must reach its artifact through all source gates");
+        let draft = game.fixed_item_draft(&context, selected);
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+            .unwrap();
+        assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+        assert!(item.activation.is_none() && item.curse.is_none());
+        let id = item.id.clone();
+        game.items.push(item);
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        assert!(
+            !game
+                .item_property_knowledge
+                .get(&id)
+                .is_some_and(|k| k.appraised)
+        );
+    }
     game.reveal_current_visibility();
     let restored = Game::from_save(game.to_save()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);
     game = restored;
-    for (slug, base, defense) in [
-        ("numenor", "jewel-encrusted-crown", 15),
-        ("aragorn", "soft-leather-boots", 21),
-        ("ossian", "large-leather-shield", 28),
-        ("great-wizzard", "pointy-hat", 9),
-    ] {
+    for (slug, base, defense) in cases {
         let kind = format!("demo.item.{slug}");
         let id = game
             .items
@@ -8199,6 +8211,7 @@ fn dr_jones_equipment_passives_and_unique_generation_survive_save() {
 #[test]
 fn dr_jones_fetch_and_full_300_tick_cooldown_survive_save() {
     let (mut game, id) = dr_jones_game();
+    game.equip_inventory_item(&id, None).unwrap();
     let origin = game.player.position;
     let target = Position {
         x: origin.x + 3,
@@ -8318,7 +8331,8 @@ fn p90b_olog_hai_affix_materializes_and_runs_existing_berserk_activation() {
 
     let item_id = reward.id.clone();
     game.items.push(reward);
-    let max_hp = game.player_derived_stats().max_hp.value;
+    game.equip_inventory_item(&item_id, None).unwrap();
+    let max_hp = game.effective_player_max_hp();
     game.player.hp = (max_hp - 30).max(1);
     let hp_before = game.player.hp;
     game.world_tick = 0;
@@ -8349,7 +8363,17 @@ fn p90b_olog_hai_affix_materializes_and_runs_existing_berserk_activation() {
             .iter()
             .any(|event| event.kind == "item.use-heal")
     );
-    assert_eq!(game.player.hp, (hp_before + 30).min(max_hp));
+    // Equipped Olog-hai also regenerates one HP during the activation turn.
+    assert!(
+        activated
+            .events
+            .iter()
+            .any(|event| event.message_key == "equipment-regenerated")
+    );
+    assert_eq!(
+        game.player.hp,
+        (hp_before + 31).min(game.effective_player_max_hp())
+    );
     let berserk = game
         .player
         .statuses
@@ -8408,6 +8432,7 @@ fn p97e_multi_hued_dragon_breath_randomizes_five_elements_across_a_cone() {
     base.terrain.fill("demo.terrain.floor".to_owned());
     base.player.position = Position { x: 10, y: 10 };
     give_inventory_item(&mut base, ITEM_ID, "demo.item.multi-hued-dragon-scale-mail");
+    base.equip_inventory_item(ITEM_ID, None).unwrap();
     base.push_generated_actor(
         "test.actor.dragon-breath-center".to_owned(),
         "demo.actor.ancient-multi-hued-dragon",
@@ -8491,6 +8516,7 @@ fn p99e_paurnimmen_cold_beam_hits_each_actor_before_the_wall() {
     base.terrain.fill("demo.terrain.floor".to_owned());
     base.player.position = Position { x: 10, y: 10 };
     give_inventory_item(&mut base, ITEM_ID, "demo.item.set-of-gauntlets-paurnimmen");
+    base.equip_inventory_item(ITEM_ID, None).unwrap();
     for (id, x) in [
         ("test.actor.paurnimmen-near", 14),
         ("test.actor.paurnimmen-far", 17),

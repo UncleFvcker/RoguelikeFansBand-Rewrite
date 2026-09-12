@@ -205,6 +205,9 @@ export function createPresentationFormatter(
         });
       case "ability-effects":
         if (event.outcome?.type === "ability-effects") {
+          if (event.outcome.resolution.effects.some(effect => effect.type === "ring-of-power-backlash")) {
+            return localization.format("message-ring-of-power-backlash");
+          }
           const itemMagic = event.outcome.resolution.effects.find(effect => effect.type === "item-magic");
           if (itemMagic?.type === "item-magic") return localization.format(
             itemMagic.succeeded ? "message-ability-item-magic-success" : "message-ability-item-magic-failed",

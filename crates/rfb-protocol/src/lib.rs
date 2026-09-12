@@ -1675,6 +1675,7 @@ pub enum AbilityEffectSpecDto {
     RestoreVitality {
         life_force: u16,
     },
+    RingOfPowerBacklash,
     HealthToMana {
         hit_point_cost: u32,
         mana_divisor: u32,
@@ -3454,6 +3455,9 @@ pub enum AbilityEffectResolutionDto {
         experience_after: u64,
         life_force_before: u16,
         life_force_after: u16,
+    },
+    RingOfPowerBacklash {
+        effect_index: u8,
     },
     AlterReality {
         effect_index: u8,

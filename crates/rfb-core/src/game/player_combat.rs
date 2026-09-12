@@ -1317,12 +1317,13 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<DamageOutcome, CoreError> {
-        // Evocation uses GF_DISP_ALL, whose damage ignores elemental resistance.
-        let resistance = self
-            .content
-            .ability(ability_id)
-            .is_some_and(|ability| matches!(ability.effect, AbilityEffectDefinition::Evocation))
-            .then_some(ResistanceLevel::Normal);
+        // GF_DISP_ALL ignores resistance, including the ring's dispel branch.
+        let resistance = ((ability_id == "demo.item-activation.one-ring"
+            && damage_type == DamageType::Physical)
+            || self.content.ability(ability_id).is_some_and(|ability| {
+                matches!(ability.effect, AbilityEffectDefinition::Evocation)
+            }))
+        .then_some(ResistanceLevel::Normal);
         self.resolve_ability_damage_to_entity_with_resistance(
             index,
             ability_id,
@@ -1331,7 +1332,7 @@ impl Game {
             trace,
             resistance,
             true,
-            false,
+            resistance.is_some(),
             events,
             changed,
             removed_entities,

@@ -19,6 +19,7 @@ pub(super) enum ItemUsePlan {
     AbilityEffect {
         ability: Box<AbilityDefinition>,
         target_plan: AbilityTargetPlan,
+        selection: TargetSelection,
     },
     SelfTarget,
     Acquirement {
@@ -2800,6 +2801,16 @@ impl Game {
         .then_some(STANDARD_ACTION_COST)
     }
 
+    pub(super) fn item_activation_location_is_valid(&self, item: &ItemInstance) -> bool {
+        // cmd6.c::_activate_p: wearable activations require an equipment slot.
+        item.activation.is_none()
+            || matches!(item.location, ItemLocation::Equipped { .. })
+            || self
+                .content
+                .item(&item.kind_id)
+                .is_some_and(|definition| definition.equipment_slot.is_none())
+    }
+
     /// Returns an energy override for refunded uses or an actual shooting action.
     pub(super) fn use_inventory_item(
         &mut self,
@@ -3238,6 +3249,7 @@ impl Game {
                 ItemUsePlan::AbilityEffect {
                     ability,
                     target_plan,
+                    ..
                 },
             ) => {
                 let duration = self.roll_damage(1, 75) + 75;
@@ -3291,6 +3303,7 @@ impl Game {
                 if let Some(ItemUsePlan::AbilityEffect {
                     ability,
                     target_plan,
+                    ..
                 }) = self.item_use_plan(
                     &kind_id,
                     &ItemUseEffectDefinition::AbilityEffect {
@@ -3423,10 +3436,27 @@ impl Game {
                 ItemUseEffectDefinition::AbilityEffect { .. },
                 ItemUsePlan::AbilityEffect {
                     mut ability,
-                    target_plan,
+                    mut target_plan,
+                    selection,
                 },
             ) => {
+                // ONE_RING's random branches use literal source amounts; boosting
+                // the outer RandomChoice deliberately leaves those amounts alone.
                 self.boost_item_ability_effect(&mut ability.effect, device_power_bonus);
+                if matches!(ability.effect, AbilityEffectDefinition::RandomChoice { .. }) {
+                    ability.id = profile_id.expect("random item activation must have a profile");
+                    self.select_player_random_choice_branch(
+                        &mut ability,
+                        &selection,
+                        &mut target_plan,
+                        events,
+                    );
+                    if ability.id == "demo.item-activation.one-ring" {
+                        // fire_ball includes PROJECT_ITEM; fire_bolt does not.
+                        ability.affects_ground_items =
+                            matches!(ability.effect, AbilityEffectDefinition::AreaDamage { .. });
+                    }
+                }
                 self.resolve_player_ability_effect(
                     *ability,
                     target_plan,
@@ -3924,6 +3954,7 @@ impl Game {
                         effect.as_ref(),
                         AbilityEffectDefinition::FetchItem { .. }
                             | AbilityEffectDefinition::ConeDamage { .. }
+                            | AbilityEffectDefinition::RandomChoice { .. }
                     )
                 {
                     return Some(ItemUsePlan::CancelledActivation);
@@ -3939,6 +3970,7 @@ impl Game {
                 Some(ItemUsePlan::AbilityEffect {
                     ability: Box::new(ability),
                     target_plan,
+                    selection,
                 })
             }
             ItemUseEffectDefinition::NoNumericEffect

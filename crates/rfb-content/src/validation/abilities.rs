@@ -926,7 +926,8 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::RestoreVitality { life_force, .. } => {
                     (1..=1_000).contains(life_force)
                 }
-                AbilityEffectDefinition::AlterReality
+                AbilityEffectDefinition::RingOfPowerBacklash
+                | AbilityEffectDefinition::AlterReality
                 | AbilityEffectDefinition::HealthToMana
                 | AbilityEffectDefinition::ManaToHealth
                 | AbilityEffectDefinition::ClearMind
@@ -1150,6 +1151,7 @@ pub(super) fn validate_abilities(
                                                         | AbilityEffectDefinition::VisibleApplyStatus { .. }
                                                         | AbilityEffectDefinition::Earthquake { .. }
                                                         | AbilityEffectDefinition::AreaDestruction { .. }
+                                                        | AbilityEffectDefinition::RingOfPowerBacklash
                                                         | AbilityEffectDefinition::NoOp { .. }
                                                 )
                                         }
@@ -1413,6 +1415,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::MassSleepOrStasis { .. }
             | AbilityEffectDefinition::SleepingDust { .. }
             | AbilityEffectDefinition::RestoreVitality { .. }
+            | AbilityEffectDefinition::RingOfPowerBacklash
             | AbilityEffectDefinition::HealthToMana
             | AbilityEffectDefinition::ManaToHealth
             | AbilityEffectDefinition::ClearMind

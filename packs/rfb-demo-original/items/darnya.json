@@ -1,0 +1,101 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.darnya",
+  "nameKey": "item-demo-darnya-name",
+  "descriptionKey": "item-demo-darnya-description",
+  "glyph": "=",
+  "generationLevel": 100,
+  "weightTenthsPound": 2,
+  "baseValue": 0,
+  "maxStack": 1,
+  "equipmentSlot": "ring",
+  "tags": [
+    "artifact",
+    "equipment",
+    "jewelry",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 14,
+    "baseItemKindId": "demo.item.ring",
+    "instant": false,
+    "rarityOneIn": 50
+  },
+  "modifiers": {
+    "strength": -5,
+    "intelligence": -5,
+    "wisdom": -5,
+    "dexterity": -5,
+    "constitution": -5,
+    "charisma": -5,
+    "speed": -5
+  },
+  "equipmentBonuses": {
+    "meleeSkill": -15,
+    "meleeDamage": -15
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "CURSED",
+      "DEC_CHR",
+      "DEC_CON",
+      "DEC_DEX",
+      "DEC_INT",
+      "DEC_SPEED",
+      "DEC_STR",
+      "DEC_WIS",
+      "DRAIN_EXP",
+      "HEAVY_CURSE",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "PERMA_CURSE",
+      "TY_CURSE"
+    ],
+    "pval": 5,
+    "toArmor": 0
+  },
+  "initialCurse": "permanent",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.one-ring",
+        "nameKey": "device-activation-one-ring-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 1000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.one-ring"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 5000
+    }
+  }
+}

@@ -1020,6 +1020,7 @@ impl Game {
                 .berserker_item_use_rejection_cost(item)
                 .map(|_| "berserker".to_owned()),
             usable: self.berserker_item_use_rejection_cost(item).is_none()
+                && self.item_activation_location_is_valid(item)
                 && !(item.is_artifact_mushroom(&self.content) && item.device_recovery_progress > 0)
                 && self.content.item(&item.kind_id).is_some_and(|definition| {
                     definition.use_action.as_ref().is_some_and(|action| {

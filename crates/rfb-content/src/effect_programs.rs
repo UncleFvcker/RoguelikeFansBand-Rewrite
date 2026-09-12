@@ -113,6 +113,7 @@ fn effect_program_input_for_step(
                 AbilityEffectDefinition::ConeDamage { .. }
                     | AbilityEffectDefinition::DrainLife { .. }
                     | AbilityEffectDefinition::FetchItem { .. }
+                    | AbilityEffectDefinition::RandomChoice { .. }
             ) =>
         {
             Some(EffectProgramInputDefinition::Actor)

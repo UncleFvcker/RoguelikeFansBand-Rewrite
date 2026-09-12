@@ -1616,6 +1616,14 @@ impl Game {
                             self.player.position,
                             entity.position,
                         )
+                    } else if source_id == "demo.item-activation.one-ring" {
+                        rfb_distance(self.player.position, entity.position) <= 18
+                            && self.evocation_target_in_sight(entity.position)
+                            && self
+                                .actor_runtime_definition(entity)
+                                .is_some_and(|definition| {
+                                    !definition.tags.iter().any(|tag| tag == "resist-all")
+                                })
                     } else if self.content.ability(source_id).is_some_and(|ability| {
                         matches!(ability.effect, AbilityEffectDefinition::Evocation)
                     }) {

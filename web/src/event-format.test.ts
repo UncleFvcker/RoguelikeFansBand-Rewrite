@@ -87,6 +87,21 @@ test("artifact listing displays the generated name or the localized fixed kind",
   }
 });
 
+test("ring of power backlash reports its malevolent aura in both languages", () => {
+  for (const [locale, expected] of [
+    ["en-US", "You are surrounded by a malevolent aura."],
+    ["zh-CN", "你被一股恶意的光环包围着。"],
+  ]) {
+    localization.setLocale(locale);
+    assert.equal(formatter.formatEvent({
+      kind: "ability.effects", messageKey: "ability-effects", args: {},
+      outcome: { type: "ability-effects", resolution: {
+        effects: [{ type: "ring-of-power-backlash", effectIndex: 0 }],
+      } },
+    }), expected);
+  }
+});
+
 test("life force exhaustion, permanent race change, recovery and death use localized events", () => {
   const event = (messageKey, args = {}) => ({ kind: "test", messageKey, args });
   for (const [locale, expected] of [

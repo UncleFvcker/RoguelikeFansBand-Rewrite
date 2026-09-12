@@ -836,7 +836,7 @@ impl CharacterProgress {
     }
 }
 
-fn drain_attribute_value(value: u16, amount: u8, rng: &mut RfbRng) -> u16 {
+pub(crate) fn drain_attribute_value(value: u16, amount: u8, rng: &mut RfbRng) -> u16 {
     if value <= 3 {
         return value;
     }

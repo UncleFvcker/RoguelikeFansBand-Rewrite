@@ -10071,4 +10071,7 @@ item-demo-bladeturner-description = 多彩龙鳞护甲，激活时发射飞弹�
 device-activation-bladeturner-name = 英雄气概、全抗性与元素吐息
 
 item-demo-spectral-dragon-scale-mail-name = 幽灵龙鳞甲
+item-demo-darnya-name = 懦弱之 (达雅)
+item-demo-darnya-description = 华丽、炫目的镀金，铭刻着用奇怪的“呵呵（Heheh）”语写成的符文，拥有极其强大的力量，不可避免地会扭曲并控制任何佩戴它的凡间生物。
+device-activation-one-ring-name = 怪异之物
 item-demo-spectral-dragon-scale-mail-description = 透明的白色龙鳞甲，能穿过墙壁而不受密度伤害，并继承白龙的寒冷吐息。

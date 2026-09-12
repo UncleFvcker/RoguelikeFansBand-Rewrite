@@ -10040,4 +10040,7 @@ item-demo-bladeturner-description = Multicoloured dragon-scale armour that fires
 device-activation-bladeturner-name = Heroism, Resistance and Breathe Elements
 
 item-demo-spectral-dragon-scale-mail-name = Spectral Dragon Scale Mail
+item-demo-darnya-name = of Cower (Darnya)
+item-demo-darnya-description = A dazzling gold-plated ring bearing strange Heheh runes. Its unpredictable power can permanently drain all six attributes and experience.
+device-activation-one-ring-name = Bizarre Things
 item-demo-spectral-dragon-scale-mail-description = Translucent white dragon scales that pass through walls without density damage and retain the white dragon's cold breath.

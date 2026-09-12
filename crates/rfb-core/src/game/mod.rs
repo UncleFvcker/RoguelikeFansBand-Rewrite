@@ -3651,6 +3651,9 @@ impl Game {
                 item.id, item.kind_id
             ))
         })?;
+        if !self.item_activation_location_is_valid(item) {
+            return Ok(None);
+        }
         if item.origin_kind == Some(ItemOriginKindDto::Mundanity)
             && self.item_is_device(item)
             && item.activation.is_none()
@@ -3695,6 +3698,7 @@ impl Game {
     ) -> Option<(&ItemUseEffectDefinition, Option<&AbilityTargetDefinition>)> {
         let item = self.items.iter().find(|item| {
             item.id == source_item_id
+                && self.item_activation_location_is_valid(item)
                 && (item.location == ItemLocation::Inventory
                     || (matches!(item.location, ItemLocation::Equipped { .. })
                         && item.activation.is_some()))

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.one-ring",
+  "input": "actor",
+  "steps": [
+    {
+      "type": "ability-effect",
+      "affectsGroundItems": true,
+      "effect": {
+        "type": "random-choice",
+        "rollSides": 10,
+        "branches": [
+          {
+            "maximumRoll": 2,
+            "target": "self-target",
+            "effect": {
+              "type": "ring-of-power-backlash"
+            }
+          },
+          {
+            "maximumRoll": 3,
+            "target": "self-target",
+            "effect": {
+              "type": "visible-damage",
+              "damageDice": 0,
+              "damageSides": 0,
+              "damageBonus": 1000,
+              "damageType": "physical"
+            }
+          },
+          {
+            "maximumRoll": 6,
+            "target": "cast-target",
+            "effect": {
+              "type": "area-damage",
+              "damageDice": 0,
+              "damageSides": 0,
+              "damageBonus": 600,
+              "damageType": "mana",
+              "radius": 3
+            }
+          },
+          {
+            "maximumRoll": 10,
+            "target": "cast-target",
+            "effect": {
+              "type": "damage",
+              "damageDice": 0,
+              "damageSides": 0,
+              "damageBonus": 500,
+              "damageType": "mana"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -14,7 +14,7 @@ use crate::game::damage::FatalityPolicy;
 use crate::game::progression::{LifeForceRestorationRequest, apply_experience_restoration};
 use crate::game::status_effects::apply_ability_status_effect;
 use crate::resistance::{DamageType, ResistanceLevel};
-use crate::stats::{AttributeKind, AttributeSet, CharacterProgress};
+use crate::stats::{AttributeKind, AttributeSet, CharacterProgress, drain_attribute_value};
 use rfb_content::{
     AbilityDefinition, AbilityEffectDefinition, AbilitySpellPowerField,
     AbilityStatusStackingDefinition, ActorDamageType, ActorResistanceLevel, EquipmentBonuses,
@@ -48,6 +48,78 @@ fn set_attribute_value(attributes: &mut AttributeSet, kind: AttributeKind, value
 }
 
 impl Game {
+    pub(super) fn resolve_player_ring_of_power_backlash(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::RingOfPowerBacklash { effect_index: 0 }],
+            },
+            trace: None,
+        });
+        // cmd6.c ring_of_power calls dec_stat directly, bypassing sustains.
+        // Keep effects.c's virtue rolls between the current and maximum rolls.
+        for attribute in [
+            AttributeKind::Strength,
+            AttributeKind::Intelligence,
+            AttributeKind::Wisdom,
+            AttributeKind::Dexterity,
+            AttributeKind::Constitution,
+            AttributeKind::Charisma,
+        ] {
+            let current = self.progress.attributes.value(attribute);
+            let maximum = self.progress.maximum_attributes.value(attribute);
+            let next = drain_attribute_value(current, 50, &mut self.rng);
+            if maximum > 3 {
+                self.add_virtue(rfb_protocol::VirtueKindDto::Sacrifice, 1);
+                if matches!(
+                    attribute,
+                    AttributeKind::Intelligence | AttributeKind::Wisdom
+                ) {
+                    self.add_virtue(rfb_protocol::VirtueKindDto::Enlightenment, -2);
+                }
+            }
+            let mut next_maximum = drain_attribute_value(maximum, 50, &mut self.rng);
+            if current == maximum || next_maximum < next {
+                next_maximum = next;
+            }
+            set_attribute_value(&mut self.progress.attributes, attribute, next);
+            set_attribute_value(
+                &mut self.progress.maximum_attributes,
+                attribute,
+                next_maximum,
+            );
+        }
+        let lost_experience = self.progress.experience / 4;
+        self.progress.experience -= lost_experience;
+        self.progress.maximum_experience -= self.progress.experience / 4;
+        let lost_levels = self.progress.lose_experience(
+            0,
+            self.character_experience_percent(),
+            self.victory_level_cap_unlocked(),
+        );
+        self.refresh_character_skills();
+        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        events.push(DomainEvent::ExperienceDrained {
+            source_kind_id: ability.id.clone(),
+            amount: lost_experience,
+            total: self.progress.experience,
+        });
+        for level in lost_levels {
+            events.push(DomainEvent::PlayerLevelLost {
+                level,
+                max_hp: self.player_max_hp_at_level(level),
+            });
+        }
+    }
+
     pub(super) fn resolve_player_resource_conversion(
         &mut self,
         ability: &AbilityDefinition,

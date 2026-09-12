@@ -67,6 +67,7 @@ mod race_attribute_sustains;
 mod ranger;
 mod riding;
 mod riding_bond;
+mod ring_of_power;
 mod snapshots;
 mod sniper;
 mod snow;

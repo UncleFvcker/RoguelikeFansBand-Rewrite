@@ -636,6 +636,7 @@ fn give_activation(game: &mut Game, token: &str) {
     item.artifact_name = Some("'验收'".to_owned());
     item.activation = Some(activation);
     item.charges = Some(charges);
+    game.equip_inventory_item("test.activation", None).unwrap();
 }
 
 fn use_activation(game: &mut Game, target: Option<&TargetSelection>) -> Vec<DomainEvent> {
@@ -759,6 +760,8 @@ fn random_artifact_list_activation_reports_ground_artifacts_without_identifying_
     give_inventory_item(&mut game, "test.ground", "demo.item.dagger");
     game.items[1].artifact_name = Some("'地面验收'".to_owned());
     game.items[1].location = ItemLocation::Ground(game.player.position);
+    give_inventory_item(&mut game, "test.carried", "demo.item.dagger");
+    game.items.last_mut().unwrap().artifact_name = Some("'背包验收'".to_owned());
     let events = use_activation(&mut game, None);
     let listed: Vec<_> = events
         .iter()

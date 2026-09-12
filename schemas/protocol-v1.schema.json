@@ -2889,6 +2889,25 @@
               "maximum": 255,
               "minimum": 0
             },
+            "type": {
+              "type": "string",
+              "const": "ring-of-power-backlash"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
             "ticksAfter": {
               "type": "integer",
               "format": "uint8",
@@ -5758,6 +5777,18 @@
           "required": [
             "type",
             "lifeForce"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "ring-of-power-backlash"
+            }
+          },
+          "required": [
+            "type"
           ]
         },
         {
