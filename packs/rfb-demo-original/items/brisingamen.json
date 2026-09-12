@@ -1,0 +1,88 @@
+{
+  "glyph": "\"",
+  "generationLevel": 70,
+  "weightTenthsPound": 3,
+  "baseValue": 75000,
+  "maxStack": 1,
+  "equipmentSlot": "amulet",
+  "tags": [
+    "artifact",
+    "equipment",
+    "jewelry"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 374,
+    "baseItemKindId": "demo.item.amulet",
+    "instant": false,
+    "rarityOneIn": 210
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "CON",
+      "DEC_STEALTH",
+      "FREE_ACT",
+      "FULL_NAME",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INFRA",
+      "LITE",
+      "REGEN",
+      "RES_DARK",
+      "RES_FIRE",
+      "RES_LITE",
+      "SEE_INVIS",
+      "SUST_CHR",
+      "SUST_CON",
+      "SUST_DEX",
+      "SUST_INT",
+      "SUST_STR",
+      "SUST_WIS"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "constitution": 3,
+    "charisma": 3
+  },
+  "equipmentBonuses": {
+    "stealthSkill": -3,
+    "infravision": 3,
+    "lightRadius": 1
+  },
+  "resistances": {
+    "fire": "resistant",
+    "light": "resistant",
+    "dark": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "passives": [
+    "see-invisible",
+    "regeneration",
+    "sustain-strength",
+    "sustain-intelligence",
+    "sustain-wisdom",
+    "sustain-dexterity",
+    "sustain-constitution",
+    "sustain-charisma"
+  ],
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.brisingamen",
+  "nameKey": "item-demo-brisingamen-name",
+  "descriptionKey": "item-demo-brisingamen-description"
+}

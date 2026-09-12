@@ -1,0 +1,87 @@
+{
+  "glyph": "=",
+  "generationLevel": 80,
+  "weightTenthsPound": 2,
+  "baseValue": 10000,
+  "maxStack": 1,
+  "equipmentSlot": "ring",
+  "tags": [
+    "artifact",
+    "equipment",
+    "jewelry"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 378,
+    "baseItemKindId": "demo.item.ring",
+    "instant": false,
+    "rarityOneIn": 200
+  },
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "SPEED",
+      "STEALTH",
+      "XTRA_SHOTS"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "dexterity": 3,
+    "speed": 3
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 21,
+    "meleeDamage": 36,
+    "stealthSkill": 3,
+    "baseShotDeltaPercent": 45
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.ullur",
+        "nameKey": "device-activation-e5-speed-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 30,
+        "rfbValue": 3000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.ullur"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 2000
+    }
+  },
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.ullur",
+  "nameKey": "item-demo-ullur-name",
+  "descriptionKey": "item-demo-ullur-description"
+}

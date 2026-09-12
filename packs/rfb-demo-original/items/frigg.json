@@ -1,0 +1,59 @@
+{
+  "glyph": "(",
+  "generationLevel": 50,
+  "weightTenthsPound": 30,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "equipmentSlot": "cloak",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 376,
+    "baseItemKindId": "demo.item.fur-cloak",
+    "instant": false,
+    "rarityOneIn": 20
+  },
+  "rfbValue": {
+    "flags": [
+      "FULL_NAME",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION",
+      "QUESTITEM",
+      "RES_NEXUS",
+      "SPEED",
+      "TELEPATHY"
+    ],
+    "pval": 3,
+    "toArmor": 18
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 21,
+    "speed": 3
+  },
+  "resistances": {
+    "nexus": "resistant"
+  },
+  "passives": [
+    "levitation",
+    "telepathy"
+  ],
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.frigg",
+  "nameKey": "item-demo-frigg-name",
+  "descriptionKey": "item-demo-frigg-description"
+}

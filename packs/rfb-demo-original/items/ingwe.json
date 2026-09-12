@@ -1,0 +1,99 @@
+{
+  "glyph": "\"",
+  "generationLevel": 65,
+  "weightTenthsPound": 3,
+  "baseValue": 90000,
+  "maxStack": 1,
+  "equipmentSlot": "amulet",
+  "tags": [
+    "artifact",
+    "equipment",
+    "jewelry"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 5,
+    "baseItemKindId": "demo.item.amulet",
+    "instant": false,
+    "rarityOneIn": 25
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INFRA",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_ELEC",
+      "SEE_INVIS",
+      "WIS"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "wisdom": 3,
+    "charisma": 3
+  },
+  "equipmentBonuses": {
+    "infravision": 3
+  },
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "cold": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "passives": [
+    "see-invisible"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.ingwe",
+        "nameKey": "device-activation-e5-dispel-evil-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 7500,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.ingwe"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 3000
+    }
+  },
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.ingwe",
+  "nameKey": "item-demo-ingwe-name",
+  "descriptionKey": "item-demo-ingwe-description"
+}

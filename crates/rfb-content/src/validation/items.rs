@@ -117,7 +117,10 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::EnchantEquipment
         | ItemUseEffectDefinition::SummonOctopus
         | ItemUseEffectDefinition::SummonKraken
+        | ItemUseEffectDefinition::ReturnPets
+        | ItemUseEffectDefinition::Fishing
         | ItemUseEffectDefinition::Escape => true,
+        ItemUseEffectDefinition::StunningKick { power } => (1..=10_000).contains(power),
         ItemUseEffectDefinition::Starlight { damage_dice } => (1..=100).contains(damage_dice),
         ItemUseEffectDefinition::Starburst { damage } => (1..=10_000).contains(damage),
         ItemUseEffectDefinition::HealDice { dice, sides } => {
@@ -658,6 +661,14 @@ pub(super) fn validate_items(
             let projectile_target = actor_target && target.requires_line_of_effect;
             modes_are_unique
                 && match effect {
+                    ItemUseEffectDefinition::Fishing => {
+                        target.modes.as_slice() == [AbilityTargetModeDefinition::Direction]
+                            && target.range == 1
+                            && !target.requires_line_of_effect
+                    }
+                    ItemUseEffectDefinition::StunningKick { .. } => {
+                        actor_target && target.range == 1 && target.requires_line_of_effect
+                    }
                     ItemUseEffectDefinition::Hermes => {
                         target.modes.as_slice() == [AbilityTargetModeDefinition::Position]
                             && target.range == 35
@@ -718,6 +729,7 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::ListArtifacts
                     | ItemUseEffectDefinition::SummonOctopus
                     | ItemUseEffectDefinition::SummonKraken
+                    | ItemUseEffectDefinition::ReturnPets
                     | ItemUseEffectDefinition::Escape
                     | ItemUseEffectDefinition::Starburst { .. }
                     | ItemUseEffectDefinition::ShowRumour { .. }
@@ -1340,7 +1352,6 @@ pub(super) fn validate_items(
                                 | ItemUseEffectDefinition::ApplySlowness { .. }
                                 | ItemUseEffectDefinition::ApplySpeed { .. }
                                 | ItemUseEffectDefinition::ApplyHeroicSpeed { .. }
-                                | ItemUseEffectDefinition::ApplyHeroism { .. }
                                 | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
                                 | ItemUseEffectDefinition::ApplyStoneSkin { .. }
                                 | ItemUseEffectDefinition::RestoreAllAttributes

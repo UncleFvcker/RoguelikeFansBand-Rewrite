@@ -1,0 +1,94 @@
+{
+  "glyph": "~",
+  "generationLevel": 70,
+  "weightTenthsPound": 25,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "equipmentSlot": "amulet",
+  "tags": [
+    "artifact",
+    "equipment",
+    "whistle"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 370,
+    "baseItemKindId": "demo.item.great-horn",
+    "instant": false,
+    "rarityOneIn": 50
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "DEC_STEALTH",
+      "ESP_GIANT",
+      "ESP_UNDEAD",
+      "FIXED_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "RES_FEAR",
+      "SUST_CHR"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "charisma": 3
+  },
+  "equipmentBonuses": {
+    "stealthSkill": -3
+  },
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "passives": [
+    "esp-giant",
+    "esp-undead",
+    "sustain-charisma"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.gjallarhorn",
+        "nameKey": "device-activation-e5-return-pets-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 15,
+        "rfbValue": 500,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.return-pets"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 200
+    }
+  },
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.gjallarhorn",
+  "nameKey": "item-demo-gjallarhorn-name",
+  "descriptionKey": "item-demo-gjallarhorn-description"
+}

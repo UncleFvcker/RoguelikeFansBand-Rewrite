@@ -1,0 +1,36 @@
+{
+  "glyph": "/",
+  "generationLevel": 10,
+  "weightTenthsPound": 30,
+  "baseValue": 30,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "equipment",
+    "weapon"
+  ],
+  "rfbBaseKind": {
+    "sourceIndex": 109,
+    "tval": 22,
+    "sval": 40
+  },
+  "rfbValue": {
+    "flags": [
+      "INSTA_ART"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 1,
+    "toHit": 0,
+    "toDamage": 0
+  },
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.fishingpole",
+  "nameKey": "item-demo-fishingpole-name",
+  "descriptionKey": "item-demo-fishingpole-description"
+}

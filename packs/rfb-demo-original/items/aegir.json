@@ -1,0 +1,105 @@
+{
+  "glyph": "\\",
+  "generationLevel": 80,
+  "weightTenthsPound": 400,
+  "baseValue": 150000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 251,
+    "baseItemKindId": "demo.item.great-hammer",
+    "instant": false,
+    "rarityOneIn": 50
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_COLD",
+      "CHR",
+      "CON",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_COLD",
+      "SLAY_DEMON",
+      "SLAY_EVIL",
+      "SLAY_UNDEAD",
+      "STR"
+    ],
+    "pval": 4,
+    "toArmor": 10
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 7,
+    "toHit": 13,
+    "toDamage": 20
+  },
+  "weaponProficiencyBaseItemId": "demo.item.great-hammer",
+  "modifiers": {
+    "strength": 4,
+    "constitution": 4,
+    "charisma": 4,
+    "defense": 10
+  },
+  "resistances": {
+    "cold": "resistant"
+  },
+  "slays": {
+    "evil": "slay",
+    "demon": "slay",
+    "undead": "slay"
+  },
+  "brands": [
+    "cold"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.aegir",
+        "nameKey": "device-activation-e5-summon-kraken-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 5000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.aegir"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 5000
+    }
+  },
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.aegir",
+  "nameKey": "item-demo-aegir-name",
+  "descriptionKey": "item-demo-aegir-description"
+}
