@@ -10161,3 +10161,5 @@ item-demo-mithril-gauntlets-name = 秘银护手
 item-demo-mithril-gauntlets-description = 秘银护手
 item-demo-sexy-swimsuit-name = 性感泳装
 item-demo-sexy-swimsuit-description = 性感泳装
+item-demo-death-scythe-name = 死神镰刀
+item-demo-death-scythe-description = 死神镰刀

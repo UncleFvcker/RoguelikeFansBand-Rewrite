@@ -1090,7 +1090,7 @@ fn equipment_and_ego_identities_match_source() {
             .filter_map(|item| item.rfb_base_kind)
             .filter(|kind| matches!(kind.tval, 20..=23))
             .collect::<Vec<_>>();
-        assert_eq!(base_kinds.len(), 81);
+        assert_eq!(base_kinds.len(), 86);
         assert_eq!(
             base_kinds
                 .iter()
@@ -1171,6 +1171,7 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.ball-and-chain",
                 "demo.item.broad-spear",
                 "demo.item.broad-sword",
+                "demo.item.death-scythe",
                 "demo.item.deathwreaker",
                 "demo.item.diamond-edge",
                 "demo.item.dragonlance",
@@ -1195,6 +1196,7 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.quickthorn",
                 "demo.item.runespear",
                 "demo.item.sabre",
+                "demo.item.scythe-of-slicing",
                 "demo.item.spear",
                 "demo.item.totila",
                 "demo.item.trident",

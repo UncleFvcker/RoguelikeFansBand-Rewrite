@@ -3821,6 +3821,10 @@ fn item_json_with_terrain(
     if matches!((entry.tval, entry.sval), (23, 34)) {
         value["initialCurse"] = serde_json::json!("permanent");
     }
+    if (entry.tval, entry.sval) == (22, 50) {
+        value["initialCurse"] = serde_json::json!("heavy");
+        value["vorpal"] = serde_json::json!(true);
+    }
     if entry.tval == 11 {
         value["captureBall"] = serde_json::json!(true);
     }
@@ -3982,6 +3986,8 @@ fn item_json_with_terrain(
         ) || item_destruction_flag_is_mapped(flag)
             // Intrinsic aggravation is consumed directly from equipped RFB flags.
             || (flag == "AGGRAVATE" && shape.slot.is_some() && value.get("rfbValue").is_some())
+            || ((entry.tval, entry.sval) == (22, 50)
+                && matches!(flag.as_str(), "CURSED" | "HEAVY_CURSE" | "VORPAL"))
         {
             continue;
         }
@@ -24525,6 +24531,17 @@ A:1/1
         assert_eq!(item["weightTenthsPound"], 0);
         assert_eq!(item["modifiers"]["defense"], 10);
         assert_eq!(item["rfbValue"]["toArmor"], 10);
+    }
+
+    #[test]
+    fn death_scythe_import_preserves_all_source_properties() {
+        let entries = parse_k_info("N:110:& Death Scythe~\nG:/:R\nI:22:50:0\nW:70:0:0:350:10000\nA:70/6\nP:0:10d10:-50:30:0\nF:SHOW_MODS | VORPAL | CURSED | HEAVY_CURSE |\nF:SLAY_DRAGON | SLAY_ANIMAL | SLAY_EVIL | SLAY_HUMAN | BRAND_VAMP |\nF:SLAY_UNDEAD | SLAY_DEMON | SLAY_TROLL | SLAY_GIANT | SLAY_ORC |\nF:BRAND_FIRE | BRAND_ELEC | BRAND_COLD | BRAND_ACID | BRAND_POIS |\nF:IGNORE_ACID | IGNORE_ELEC | IGNORE_FIRE | IGNORE_COLD | RIDING\n").unwrap();
+        let item =
+            demo_item_json(&entries[0], "death-scythe", &LauncherAmmoIndex::default()).unwrap();
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../packs/rfb-demo-original/items/death-scythe.json");
+        let formal: serde_json::Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
+        assert_eq!(item, formal);
     }
 
     #[test]

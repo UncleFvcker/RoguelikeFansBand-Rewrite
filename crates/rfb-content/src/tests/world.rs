@@ -13368,7 +13368,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 409);
+    assert_eq!(base_items.entries.len(), 424);
     // Source kind 245 retains its 1/255 allocation as integer weight zero.
     assert_eq!(
         base_items
@@ -13435,7 +13435,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     .to_owned()
             });
     }
-    assert_eq!(active_source_items.len(), 356);
+    assert_eq!(active_source_items.len(), 371);
 
     let source_items_without_allocations =
         BTreeSet::from([33, 34, 36, 37, 109, 139, 345, 346, 347, 400, 401, 460, 708]);
@@ -13484,7 +13484,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 375);
+    assert_eq!(expected_item_ids.len(), 390);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.

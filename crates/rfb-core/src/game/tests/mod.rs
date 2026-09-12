@@ -29,6 +29,7 @@ mod capture_ball;
 mod cavalry;
 mod combat;
 mod craft;
+mod death_scythe;
 mod devices;
 mod disaster_area;
 mod dragon_scale_artifacts;

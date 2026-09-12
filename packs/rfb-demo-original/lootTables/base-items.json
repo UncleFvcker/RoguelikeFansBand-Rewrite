@@ -2683,6 +2683,13 @@
       "weight": 12
     },
     {
+      "itemKindId": "demo.item.death-scythe",
+      "maxDepth": 65535,
+      "minDepth": 70,
+      "quantity": 1,
+      "weight": 16
+    },
+    {
       "itemKindId": "demo.item.seeker-arrow",
       "maxDepth": 65535,
       "minDepth": 70,

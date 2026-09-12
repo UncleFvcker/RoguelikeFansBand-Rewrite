@@ -330,7 +330,7 @@ impl Game {
         }
     }
 
-    pub(super) fn book_spell_alignment_modifier(&self, ability_id: &str) -> i32 {
+    pub(super) fn player_alignment(&self) -> i32 {
         use VirtueKindDto::*;
         let mut alignment: i32 = self
             .entities
@@ -365,6 +365,11 @@ impl Game {
                 0
             };
         }
+        alignment
+    }
+
+    pub(super) fn book_spell_alignment_modifier(&self, ability_id: &str) -> i32 {
+        let alignment = self.player_alignment();
         // RFB virtue.c::virtue_mod_spell_fail: WIS casters have a 10% ceiling.
         let maximum = if self.casting_profile().is_some_and(|profile| {
             profile.casting_attribute == rfb_content::CastingAttribute::Wisdom

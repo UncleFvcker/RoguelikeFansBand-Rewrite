@@ -295,6 +295,9 @@
     {"name":"ring-combined-291","object":{"tval":45,"weight":2,"pval":3,"flags":["RES_ACID","RES_ELEC","RES_FIRE","RES_COLD","RES_POIS","RES_LITE","RES_DARK","RES_CONF","RES_NETHER","RES_NEXUS","RES_FEAR","IM_FIRE","VULN_SHARDS","SPEED","TELEPATHY"],"toD":10},"expected":109180},
     {"name":"sword-combined-292","object":{"tval":23,"sval":17,"dd":2,"ds":5,"baseDd":2,"baseDs":5,"weight":130,"pval":3,"flags":["RES_ACID","RES_ELEC","RES_FIRE","RES_COLD","RES_POIS","RES_LITE","RES_DARK","RES_CONF","RES_NETHER","RES_NEXUS","RES_FEAR","IM_FIRE","VULN_SHARDS","SPEED","TELEPATHY"],"toD":10},"expected":59513},
     {"name":"ring-combined-293","object":{"tval":45,"weight":2,"pval":3,"flags":["KILL_EVIL","KILL_DEMON","SLAY_EVIL","BRAND_FIRE","BRAND_COLD","BRAND_MANA","VORPAL2","BLOWS","STUN"],"toD":10},"expected":90221},
-    {"name":"sword-combined-294","object":{"tval":23,"sval":17,"dd":2,"ds":5,"baseDd":2,"baseDs":5,"weight":130,"pval":3,"flags":["KILL_EVIL","KILL_DEMON","SLAY_EVIL","BRAND_FIRE","BRAND_COLD","BRAND_MANA","VORPAL2","BLOWS","STUN"],"toD":10},"expected":142867}
+    {"name":"sword-combined-294","object":{"tval":23,"sval":17,"dd":2,"ds":5,"baseDd":2,"baseDs":5,"weight":130,"pval":3,"flags":["KILL_EVIL","KILL_DEMON","SLAY_EVIL","BRAND_FIRE","BRAND_COLD","BRAND_MANA","VORPAL2","BLOWS","STUN"],"toD":10},"expected":142867},
+    {"name":"swimsuit-minimum-value","object":{"tval":36,"sval":50,"weight":2,"flags":["IGNORE_ACID","IGNORE_ELEC","IGNORE_FIRE","IGNORE_COLD","AGGRAVATE"]},"expected":1},
+    {"name":"swimsuit-aggravation-discount","object":{"tval":36,"sval":50,"weight":2,"flags":["IGNORE_ACID","IGNORE_ELEC","IGNORE_FIRE","IGNORE_COLD","AGGRAVATE"],"toD":1},"expected":500},
+    {"name":"swimsuit-negative-enchantment-minimum","object":{"tval":36,"sval":50,"weight":2,"flags":["IGNORE_ACID","IGNORE_ELEC","IGNORE_FIRE","IGNORE_COLD","AGGRAVATE"],"toA":-1},"expected":1}
   ]
 }

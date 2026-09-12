@@ -1725,9 +1725,7 @@ impl Game {
         (range.min(limit).clamp(5, 18) as u16, multiplier)
     }
 
-    pub(super) fn player_throw_to_hit_bonus(&self) -> i32 {
-        // xtra1.c shooter_info.to_h: attributes and nonweapon equipment, not
-        // the equipped bow's enchantment or the shooting skill rating.
+    pub(super) fn player_attribute_to_hit(&self) -> i32 {
         const STR: [i32; 38] = [
             -3, -2, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7,
             8, 9, 10, 11, 12, 13, 14, 15, 15, 16,
@@ -1740,6 +1738,13 @@ impl Game {
                     .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP),
             )
         };
+        RFB_DEXTERITY_TO_HIT[index(AttributeKind::Dexterity)] + STR[index(AttributeKind::Strength)]
+    }
+
+    pub(super) fn player_throw_to_hit_bonus(&self) -> i32 {
+        // xtra1.c shooter_info.to_h: attributes and nonweapon equipment, not
+        // the equipped bow's enchantment or the shooting skill rating.
+        let attributes = self.effective_player_attributes();
         let equipment = self.items.iter()
             .filter(|item| matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool")))
             .map(|item| self.armor_combat_enchantments(item, true).0).sum::<i32>();
@@ -1754,8 +1759,7 @@ impl Game {
             .map_or(0, |item| {
                 2 * (hold - i32::from(self.item_instance_weight(item) / 10)).min(0)
             });
-        RFB_DEXTERITY_TO_HIT[index(AttributeKind::Dexterity)]
-            + STR[index(AttributeKind::Strength)]
+        self.player_attribute_to_hit()
             + equipment
             + heavy_bow
             + i32::from(self.player_has_status_kind("rfb.status.blessed")) * 10
@@ -2103,7 +2107,7 @@ impl Game {
             })
     }
 
-    fn weapon_uses_two_hands(&self, weapon: &ItemInstance) -> bool {
+    pub(super) fn weapon_uses_two_hands(&self, weapon: &ItemInstance) -> bool {
         // obj_kind.c: Mjollnir never receives the two-handed holding bonus.
         if self.item_is_fixed_artifact(weapon, 136) {
             return false;

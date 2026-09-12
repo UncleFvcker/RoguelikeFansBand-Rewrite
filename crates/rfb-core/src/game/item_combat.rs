@@ -6,6 +6,122 @@ use super::projectile_geometry::rfb_area_damage;
 use super::*;
 
 impl Game {
+    pub(super) fn item_is_death_scythe(&self, item: &ItemInstance) -> bool {
+        self.content
+            .item(&item.kind_id)
+            .and_then(|kind| kind.rfb_base_kind)
+            .is_some_and(|base| (base.tval, base.sval) == (22, 50))
+    }
+
+    /// master a0d92b6378, cmd1.c::death_scythe_miss. None is HAND_NONE on return.
+    pub(super) fn resolve_death_scythe_backlash(
+        &mut self,
+        item: &ItemInstance,
+        hand: Option<&super::player_stats::ResolvedAttackProfile>,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        if self.player_is_dead() {
+            return;
+        }
+        let weapon = self
+            .item_throw_profile(item)
+            .expect("death scythe weapon profile");
+        let (dice, sides, to_damage) = hand.map_or(
+            (weapon.damage.dice, weapon.damage.sides, weapon.to_damage),
+            |profile| (profile.damage_dice, profile.damage_sides, profile.to_damage),
+        );
+        let mut damage = self.roll_damage(dice, sides);
+        // Granted race identities already distinguish ordinary races from the
+        // source mimic forms (1000+); an arbitrary form is not its birth race.
+        let race = self
+            .character_definitions()
+            .and_then(|(_, race, _, _)| race.legacy_index);
+        let mut multiplier = match race {
+            Some(0 | 2 | 8 | 10 | 15 | 16 | 29 | 33 | 67) => 25,
+            Some(
+                1 | 6 | 7 | 11..=14 | 20 | 22 | 24..=27 | 32 | 40 | 41 | 57 | 63 | 1000..=1002,
+            ) => 30,
+            _ => 10,
+        };
+        if self.player_alignment() < 0 {
+            multiplier = multiplier.max(20);
+        }
+        for element in [
+            DamageType::Acid,
+            DamageType::Electricity,
+            DamageType::Fire,
+            DamageType::Cold,
+            DamageType::Poison,
+        ] {
+            // res_save_default draws first, including at multiplier >=25 and immunity.
+            let saved = (self.rng.bounded(55) as i32) < self.player_resistance_percent(element);
+            if !saved {
+                multiplier = multiplier.max(25);
+            }
+        }
+        if (self.item_has_weapon_trait(item, WeaponTraitDto::ManaBrand)
+            || self.player_has_status_kind(STATUS_MANA_BRAND))
+            && let Some(resource_id) = self
+                .casting_profile()
+                .map(|profile| profile.resource_id.clone())
+            && let Some(pool) = self.resources.get_mut(&resource_id)
+            && pool.current > pool.maximum / 30
+        {
+            pool.current -= 1 + pool.maximum / 30;
+            multiplier = multiplier * 3 / 2 + 15;
+        }
+        damage = damage.saturating_mul(multiplier) / 10;
+        let weight = self.item_instance_weight(item);
+        let hold = crate::stats::strength_hold_pounds(self.effective_player_attributes().strength)
+            * if self.weapon_uses_two_hands(item) {
+                2
+            } else {
+                1
+            };
+        let hand_hit = hand.map_or(0, |profile| {
+            profile.to_hit - weapon.to_hit
+                + self.player_attribute_to_hit()
+                + self
+                    .weapon_proficiency_hit_modifier(&item.kind_id)
+                    .map_or(0, |(_, bonus)| bonus / 3)
+                + 2 * (i32::from(hold) - i32::from(weight / 10)).min(0)
+                + i32::from(self.player_has_status_kind("rfb.status.blessed")) * 10
+                + i32::from(self.player_has_status_kind("rfb.status.hero")) * 12
+                + i32::from(self.player_has_status_kind(STATUS_BERSERK)) * 24
+        });
+        let two_hands = hand.is_some()
+            && self.weapon_uses_two_hands(item)
+            && !self.player_is_duelist()
+            && crate::stats::strength_hold_pounds(self.effective_player_attributes().strength) * 2
+                >= weight / 5;
+        let chance = i32::from(weight)
+            + hand_hit * 3
+            + weapon.to_hit * 5
+            + i32::from(self.progress.level) * 3;
+        if (self.rng.bounded(if two_hands { 4000 } else { 5000 }) + 1) as i32 <= chance {
+            let quality = u64::from(weight) + self.rng.bounded(650) + 1;
+            let critical = match quality {
+                0..=399 => 200,
+                400..=699 => 250,
+                700..=899 => 300,
+                900..=1299 => 350,
+                _ => 400,
+            };
+            damage = damage.saturating_mul(critical) / 100;
+        }
+        if self.rng.bounded(6) == 0 {
+            let mut vorpal = 2;
+            while self.rng.bounded(4) == 0 {
+                vorpal += 1;
+            }
+            damage = damage.saturating_mul(vorpal);
+        }
+        damage = damage.saturating_add(to_damage).max(0);
+        // DAMAGE_FORCE bypasses invulnerability/wraith reduction, but still
+        // uses the common transcendence, HP and below-zero death path.
+        self.resolve_item_life_loss(&item.kind_id, damage as u32, events);
+    }
+
     #[allow(clippy::too_many_arguments)]
     pub(super) fn resolve_item_bladeturner(
         &mut self,

@@ -10130,3 +10130,5 @@ item-demo-mithril-gauntlets-name = Set of Mithril Gauntlets
 item-demo-mithril-gauntlets-description = Set of Mithril Gauntlets
 item-demo-sexy-swimsuit-name = Sexy Swimsuit
 item-demo-sexy-swimsuit-description = Sexy Swimsuit
+item-demo-death-scythe-name = Death Scythe
+item-demo-death-scythe-description = Death Scythe

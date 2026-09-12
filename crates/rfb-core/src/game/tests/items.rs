@@ -27,7 +27,9 @@ fn i1_a_ordinary_weapons_and_diggers_generate_and_act_after_save() {
         events
     }
     // RFB master a0d92b6378: k_info 100/108/152/155. Controlled depth,
-    // complete ordinary pool and unchanged quality rolls; no natural leveling claim.
+    // complete source pools and unchanged quality rolls; no natural leveling claim.
+    // object2.c::kind_is_weapon excludes diggers from unthemed categories;
+    // the two tools are obtained through the real Dwarf drop theme instead.
     let cases = [
         ("guisarme", 2, 7, 165, false),
         ("scythe-of-slicing", 8, 4, 250, false),
@@ -40,7 +42,7 @@ fn i1_a_ordinary_weapons_and_diggers_generate_and_act_after_save() {
     game.items.clear();
     game.player.position = Position { x: 10, y: 10 };
     game.terrain.fill("demo.terrain.floor".into());
-    let context = LootContext {
+    let mut context = LootContext {
         table_id: "demo.loot-table.base-items".into(),
         floor_id: "test.floor.depth-85".into(),
         depth: 85,
@@ -50,6 +52,9 @@ fn i1_a_ordinary_weapons_and_diggers_generate_and_act_after_save() {
     };
     let mut remaining = cases.iter().map(|case| case.0).collect::<BTreeSet<_>>();
     for _ in 0..20_000 {
+        if remaining.iter().all(|slug| slug.starts_with("dwarven-")) {
+            context.table_id = "demo.loot-table.dwarf".into();
+        }
         for item in game
             .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
             .unwrap()
@@ -4681,7 +4686,7 @@ fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
         // Controlled depth and repeated drops; the formal pool, weights, quality
         // rolls and materialization remain intact. This is not a leveling test.
         let mut remaining = indices.iter().copied().collect::<BTreeSet<_>>();
-        for _ in 0..10_000 {
+        for _ in 0..30_000 {
             let generated = game
                 .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
                 .unwrap();

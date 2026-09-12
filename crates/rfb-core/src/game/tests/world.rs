@@ -2381,7 +2381,12 @@ fn lava_cavern_dungeons_share_lakes_destruction_stairs_and_guardian_placement() 
                     + actor.position.x as usize;
                 game.content
                     .terrain(&generated.terrain[index])
-                    .is_some_and(|terrain| terrain.walkable)
+                    .is_some_and(|terrain| {
+                        crate::game::movement::actor_can_cross_terrain(
+                            game.content.actor(&actor.kind_id).unwrap(),
+                            terrain,
+                        )
+                    })
             }));
             generated_lava += generated
                 .terrain

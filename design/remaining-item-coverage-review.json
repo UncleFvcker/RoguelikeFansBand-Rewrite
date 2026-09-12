@@ -17,13 +17,13 @@
   "summary": {
     "sourceKindRecords": 545,
     "validSourceKinds": 544,
-    "mappedCanonicalKinds": 410,
-    "remainingValidKinds": 134,
+    "mappedCanonicalKinds": 411,
+    "remainingValidKinds": 133,
     "excludedPlaceholderKinds": 1,
     "importerMechanicsReady": 1,
-    "importerBlocked": 133,
-    "formalItems": 589,
-    "baseAllocationRows": 423,
+    "importerBlocked": 132,
+    "formalItems": 590,
+    "baseAllocationRows": 424,
     "fixedArtifactRecords": 392,
     "formalFixedArtifacts": 156,
     "missingFixedArtifacts": 236,
@@ -69,7 +69,7 @@
     "sourceConsumers": "src/xtra1.c one blow; src/cmd1.c weapon-count hit and nested vital roll after damage reduction, unique/unique2 and MON_HAGURE2 exception, ordinary vampiric drain; src/combat.c/obj_info.c preview; src/object2.c no weapon magic; src/object3.c fixed 2500 value; src/duelist.c talent rejection; lib/edit/s_info.txt current class proficiency.",
     "acquisition": "Formal ordinary base-items allocation at depth 30, source rarity 6; existing Ego, enchantment, branding and artifact-scroll exclusions retained.",
     "evidence": "game::tests::poison_needle: controlled full-pool generation, pickup/identify/equip, crafting rejection, restored combat and next generation/RNG; single/dual weapons, extra blows, Tonberry, Berserker and Duelist; unique/unique2/Metal Babble, invulnerability, ordinary vampiric drain and no healing on vital kills. Existing Duelist and Death branding tests use the actual formal item. Source C value case is 2500.",
-    "limits": "Core acceptance with controlled level/generation/combat preconditions; no natural leveling or desktop acceptance. Death Scythe and other I4 families remain open. No saved state or protocol type added."
+    "limits": "Core acceptance with controlled level/generation/combat preconditions; no natural leveling or desktop acceptance. Death Scythe is completed in ordinaryEquipmentCompletion; other I4 families remain open. No saved state or protocol type added."
   },
   "firstI5Group": {
     "sourceIndices": [
@@ -133,12 +133,12 @@
       "sourceConsumer": "src/cmd1.c; src/xtra1.c; src/combat.c; src/object2.c; src/duelist.c"
     },
     "death-scythe": {
-      "batch": "I4",
-      "classification": "missing-mechanism",
-      "gap": "缺特殊反噬及攻击消费者；结合冬贝利、决斗者的实际分支审查，不能只导入 slay/brand/curse 数据。",
-      "acquisition": "110 按源 A 行；先完成反噬，再开放。",
-      "consumer": "crates/rfb-core/src/game/player_combat.rs; crates/rfb-core/src/game/item_curses.rs",
-      "sourceConsumer": "src/cmd1.c:2756; src/cmd1.c:3465; src/object2.c:2306"
+      "batch": "I4-B",
+      "classification": "implemented-entry",
+      "gap": "当前可玩近战、冬贝利及拟态反噬已实现，核心与聚焦standalone验证已通过。普通投掷不自动返回；返回反噬只接通共用返回阶段，以准备状态验证分支，当前未开放会返回镰刀的能力入口。Monster Sword/kind111、Weaponmaster增强暴击、Ninja/Mauler及其他未开放特殊攻击模式仍待对应身份开放。",
+      "acquisition": "source110 按 A:70/6（整数权重16）进入完整普通池；固有重诅咒。普通品质生成跳过武器强化/Ego/随机神器；Crafting禁止，普通附魔及神器创造卷轴分别保留源资格。",
+      "consumer": "crates/rfb-core/src/game/item_combat.rs; crates/rfb-core/src/game/player_combat.rs; crates/rfb-core/src/game/tests/death_scythe.rs",
+      "sourceConsumer": "master a0d92b6378: cmd1.c:251-375,2752-2759,3465; combat.c:1250; py_throw.c::_return; object2.c:2304-2307; artifact.c:2507; s_info W:3:50"
     },
     "death-scythe-internal": {
       "batch": "I4",
@@ -383,7 +383,7 @@
     }
   },
   "ordinaryEquipmentCompletion": {
-    "status": "i1-a-b-c-d-implemented-awaiting-five-step-validation",
+    "status": "completed-current-scope",
     "sourceIndices": [
       100,
       108,
@@ -398,7 +398,8 @@
       288,
       198,
       231,
-      260
+      260,
+      110
     ],
     "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
     "sourceEvidence": [
@@ -413,23 +414,18 @@
       "src/kind_name_zh.inc:205/238",
       "lib/edit/k_info.txt:260; src/kind_name_zh.inc:267",
       "src/object2.c:2376-2387; src/object3.c:411-414,1209-1211",
-      "src/polly.c:744-746; src/races_a.c:74-86; src/r_elem.c:766; src/r_rag.c:656,870-878"
+      "src/polly.c:744-746; src/races_a.c:74-86; src/r_elem.c:766; src/r_rag.c:656,870-878",
+      "lib/edit/k_info.txt:N110; lib/edit/s_info.txt:type3/subtype50; src/kind_name_zh.inc:117",
+      "src/object2.c:2304-2307; src/cmd1.c::death_scythe_miss and target invulnerability; src/py_throw.c::_return"
     ],
-    "implementation": "Four plain bases use existing weapon/digger generation, riding and tunneling. Explicit source exceptions: Warrior-Mage polearm caps 7000, Mindcrafter digger caps 4000, Cavalry slicing-scythe cap 8000, Duelist initial 0/cap 4000; the other ten classes use source-equivalent defaults. Allocation rows are 21/1, 60/4, 40/1 and 50/1. No fixed artifact added. I1-B adds seven plain armor bases: source AC/hit/weight, physical head/shield/body slots, four-element item destruction immunity on Mithril Shield and Mithril Plate Mail, and the existing Dwarf theme for Mithril Plate Mail. These IGNORE flags do not grant player resistance. Allocation rows are 50/3, 50/2, 35/7, 40/2, 45/1, 50/1 and 60/4; no new rules, class profiles or artifacts. I1-C adds Ethereal Cloak (weight0, AC0 plus fixed to-A10, A70/4) and Mithril Gauntlets (weight15, AC5 plus fixed to-A10, hit1/damage1, A50/2), both with four-element item destruction immunity. Importer and content validation preserve the weightless cloak base; existing equipment, Ego and random-artifact paths separate fixed bonuses from instance changes. Artifact233/316/320 base references are resolved, but the artifacts remain undefined. I1-D adds ordinary Sexy Swimsuit: weight2, AC0, four IGNORE flags plus intrinsic AGGRAVATE, A30/64 with integer weight1. The importer recognizes equipped AGGRAVATE already consumed from rfbValue; no new runtime rule or saved field. Existing valuation uses the 5/6 aggravation multiplier and minimum1, not source baseValue78000. Formal content and test source are implemented; behavioral acceptance remains pending.",
-    "pendingValidation": [
-      "game::tests::items::i1_a_ordinary_weapons_and_diggers_generate_and_act_after_save",
-      "game::tests::inventory::original_diggers_use_weight_and_tunneling_pval_without_stacking_with_weapons",
-      "game::tests::warrior_mage::proficiencies_virtues_and_racial_births_use_warrior_mage_rules",
-      "game::loot::allocation::tests::themes_read_source_identity_including_previously_missing_domains",
-      "Existing weapon proficiency, riding, ordinary/Good/Great/Tailored, Ego and random artifact consumers; source names, class proficiency audit, source C value references, content lock and generation applicability.",
-      "game::tests::items::ordinary_heavy_armor_allocation_reaches_equipment_and_save (extended with I1-B seven bases, head/shield slots, unknown save, corrosion, no player elemental resistance, unequip and continued generation)",
-      "Existing caster armor encumbrance, armor Ego/random artifact generation and equipped armor corruption consumers.",
-      "Importer zero-weight/fixed-enchantment and content zero-weight boundary tests; extended B3 cloak and B5 glove equipment/save flows.",
-      "Extended armor Ego pool reachability and random-artifact materialization/save coverage for kinds198/231.",
-      "game::tests::items::i1_d_swimsuit_generates_aggravates_and_keeps_its_value_after_save; importer sexy_swimsuit_import_keeps_intrinsic_aggravation_without_identity_bonuses.",
-      "scripts/generate-item-value-reference.py adds swimsuit minimum/positive/negative-enchantment C cases, not yet executed. Refresh source-instances and reference after step5; reuse current Shadow Fairy aggravation and shared armor Ego/random-artifact regressions."
+    "implementation": "Four plain bases use existing weapon/digger generation, riding and tunneling. Explicit source exceptions: Warrior-Mage polearm caps 7000, Mindcrafter digger caps 4000, Cavalry slicing-scythe cap 8000, Duelist initial 0/cap 4000; the other ten classes use source-equivalent defaults. Allocation rows are 21/1, 60/4, 40/1 and 50/1. No fixed artifact added. I1-B adds seven plain armor bases: source AC/hit/weight, physical head/shield/body slots, four-element item destruction immunity on Mithril Shield and Mithril Plate Mail, and the existing Dwarf theme for Mithril Plate Mail. These IGNORE flags do not grant player resistance. Allocation rows are 50/3, 50/2, 35/7, 40/2, 45/1, 50/1 and 60/4; no new rules, class profiles or artifacts. I1-C adds Ethereal Cloak (weight0, AC0 plus fixed to-A10, A70/4) and Mithril Gauntlets (weight15, AC5 plus fixed to-A10, hit1/damage1, A50/2), both with four-element item destruction immunity. Importer and content validation preserve the weightless cloak base; existing equipment, Ego and random-artifact paths separate fixed bonuses from instance changes. Artifact233/316/320 base references are resolved, but the artifacts remain undefined. I1-D adds ordinary Sexy Swimsuit: weight2, AC0, four IGNORE flags plus intrinsic AGGRAVATE, A30/64 with integer weight1. The importer recognizes equipped AGGRAVATE already consumed from rfbValue; no new runtime rule or saved field. Existing valuation uses the 5/6 aggravation multiplier and minimum1, not source baseValue78000. I4-B adds source110 Death Scythe: intrinsic heavy curse/slays/brands/vorpal/vampirism; missed 1/3 and surviving Duelist-hit 2/3 backlash, effective race/alignment/five resistance saves/mana cost/critical/vorpal/flat damage/force-death order, target invulnerability penetration and conditional return handling. No stored fields or public types changed. All five implementations passed unified validation. Diggers use the full Dwarf-themed pool; unthemed ordinary weapon/misc predicates exclude TV_DIGGING. Death Scythe proficiency overrides follow source Warrior/Cavalry2000:8000 and Duelist0:0. The swimsuit source value also feeds the existing finite-stock armoury consumer.",
+    "validationEvidence": [
+      "Core full suite1737 passed/7 failed; all7 corrections passed targeted rechecks, affected Asgard floors5 passed: effective1744 active cases. Full run6 ignored; desktop exporter then explicitly passed.",
+      "Content171 passed/2 outdated count failures; both corrected cases passed: effective173. Importer201 and localization39 passed.",
+      "298 source C value cases; pack/lock1.449.0 verified;103 playable Build applicability records without documented evidence gaps;26 active contracts passed without refresh; scoped Clippy and format passed.",
+      "Ordinary Tauri standalone:7 representative bases,11 equipment/action steps with native save/load and identical core hashes; test-results/ordinary-equipment/report.json. Granted items, prepared terrain/targets and nonfatal scythe backlash conditions; no natural acquisition or leveling claim."
     ],
-    "evidence": "Implementation and test source only for I1-A through I1-D. No compilation or test execution; all five ordinary-equipment steps must be implemented before unified compilation, checks and report refresh. Existing acceptance does not cover these additions.",
+    "evidence": "All five implementations preceded compilation as requested.411 canonical kinds/424 allocation rows; identity201/201, internal111 absent, kind245 weight0 preserved. See docs/ordinary-equipment-completion-plan.md for checks and remaining identity/return-entry limits.",
     "deferredSwimsuitIdentityBranches": [
       "web/src/character-creation.ts currently has no Sexy personality, Aphrodite demigod parent, Android, Politician, Water Elemental or 破布 entry. Android formal race definition alone is not a playable entry; the existing Aphrodite artifact does not grant that demigod identity.",
       "object2.c:2376-2387: Sexy personality or Aphrodite demigod generation sets pval3 and STR/INT/WIS/DEX/CON/CHR. Ordinary currently playable identities receive none; no identity model is added by this item batch.",
@@ -439,7 +435,6 @@
   },
   "remainingKinds": [
     {"sourceIndex": 0, "sourceName": "something", "sourceNameZh": "某物", "reviewGroup": "placeholder", "hasNaturalAllocationRows": false, "sourceFlags": [], "sourceActivation": null, "importerBlockers": []},
-    {"sourceIndex": 110, "sourceName": "Death Scythe", "sourceNameZh": "& 把~死神镰刀", "reviewGroup": "death-scythe", "hasNaturalAllocationRows": true, "sourceFlags": ["SHOW_MODS", "VORPAL", "CURSED", "HEAVY_CURSE", "SLAY_DRAGON", "SLAY_ANIMAL", "SLAY_EVIL", "SLAY_HUMAN", "BRAND_VAMP", "SLAY_UNDEAD", "SLAY_DEMON", "SLAY_TROLL", "SLAY_GIANT", "SLAY_ORC", "BRAND_FIRE", "BRAND_ELEC", "BRAND_COLD", "BRAND_ACID", "BRAND_POIS", "IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD", "RIDING"], "sourceActivation": null, "importerBlockers": ["item-flag:CURSED", "item-flag:HEAVY_CURSE", "item-flag:VORPAL"]},
     {"sourceIndex": 111, "sourceName": "Death Scythe", "sourceNameZh": "& 把~死神镰刀", "reviewGroup": "death-scythe-internal", "hasNaturalAllocationRows": false, "sourceFlags": ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"], "sourceActivation": null, "importerBlockers": []},
     {"sourceIndex": 138, "sourceName": "Mighty Hammer", "sourceNameZh": "& 把~神力之锤", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["SHOW_MODS", "INSTA_ART", "RIDING"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART"]},
     {"sourceIndex": 140, "sourceName": "Stick", "sourceNameZh": "& 根~树枝", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["INSTA_ART"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART"]},

@@ -879,9 +879,9 @@ pub(super) fn validate_items(
         // master:k_info Ethereal Cloak (TV_CLOAK/SV_ETHEREAL_CLOAK) has weight 0.
         if (item.weight_tenths_pound == 0
             && item.artifact_generation.is_none()
-            && !item
+            && item
                 .rfb_base_kind
-                .is_some_and(|base| (base.tval, base.sval) == (35, 5)))
+                .is_none_or(|base| (base.tval, base.sval) != (35, 5)))
             || item.weight_tenths_pound > 10_000
         {
             return Err(ContentError::InvalidItemWeight(item.id.clone()));

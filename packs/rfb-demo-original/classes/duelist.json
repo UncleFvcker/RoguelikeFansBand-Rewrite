@@ -20,6 +20,7 @@
     "defaultInitial": 0,
     "defaultMaximum": 6000,
     "overrides": {
+      "demo.item.death-scythe": { "initial": 0, "maximum": 0 },
       "demo.item.guisarme": { "initial": 0, "maximum": 4000 },
       "demo.item.scythe-of-slicing": { "initial": 0, "maximum": 4000 },
       "demo.item.dwarven-shovel": { "initial": 0, "maximum": 4000 },
