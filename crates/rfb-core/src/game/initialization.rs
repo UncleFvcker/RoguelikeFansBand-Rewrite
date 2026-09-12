@@ -629,6 +629,7 @@ impl Game {
             recall: None,
             confusing_strike_ready: false,
             sniper_concentration: 0,
+            fishing_direction: None,
             probed_actor_kind_ids: BTreeSet::new(),
             minor_slow: 0,
             minor_slow_energy: 0,

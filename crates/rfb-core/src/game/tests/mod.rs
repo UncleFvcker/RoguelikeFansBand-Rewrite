@@ -20,6 +20,7 @@ mod acquirement;
 mod archer;
 mod arena;
 mod artifact_identity;
+mod asgard;
 mod attribute_sources;
 mod berserker;
 

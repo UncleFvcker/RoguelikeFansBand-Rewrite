@@ -979,6 +979,7 @@ pub(crate) fn player_to_save(
             .collect(),
         confusing_strike_ready: false,
         sniper_concentration: 0,
+        fishing_direction: None,
         probed_actor_kind_ids: Vec::new(),
         resistances: player.resistances.to_save_dtos(),
         progress: Some(PlayerProgressSaveDto {

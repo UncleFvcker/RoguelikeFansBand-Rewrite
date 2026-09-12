@@ -8,6 +8,7 @@ use super::visibility::{VISIBILITY_RADIUS, has_line_of_sight};
 use super::{abilities::AbilityTargetPlan, *};
 mod artifact_activations;
 mod artifact_creation;
+mod asgard;
 
 const WAYBREAD_INTOLERANCE_MUTATION_ID: &str = "rfb.mutation.waybread-into";
 const SKELETON_RACE_ID: &str = "rfb-legacy.race.skeleton";
@@ -16,6 +17,12 @@ const SNOTLING_RACE_ID: &str = "rfb-legacy.race.snotling";
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum ItemUsePlan {
     CancelledActivation,
+    Fishing {
+        direction: Direction,
+    },
+    StunningKick {
+        target_entity_id: Option<String>,
+    },
     AbilityEffect {
         ability: Box<AbilityDefinition>,
         target_plan: AbilityTargetPlan,
@@ -120,6 +127,14 @@ pub(super) struct SettledItemUse {
 }
 
 impl Game {
+    pub(super) fn item_activation_needs_equipping(&self, item: &ItemInstance) -> bool {
+        !matches!(item.location, ItemLocation::Equipped { .. })
+            && self
+                .content
+                .item(&item.kind_id)
+                .is_some_and(|kind| kind.tags.iter().any(|tag| tag == "whistle"))
+    }
+
     fn player_is_skeleton(&self) -> bool {
         self.character_definitions()
             .is_some_and(|(_, race, _, _)| race.id == SKELETON_RACE_ID)
@@ -3013,6 +3028,17 @@ impl Game {
         }
         let energy_cost = match &plan {
             ItemUsePlan::PiercingShot { energy_cost, .. } => Some(*energy_cost),
+            ItemUsePlan::Fishing { direction }
+                if self
+                    .index(self.position_in_direction(*direction))
+                    .and_then(|index| self.content.terrain(&self.terrain[index]))
+                    .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "water"))
+                    && self.entities.iter().any(|actor| {
+                        actor.hp > 0 && actor.position == self.position_in_direction(*direction)
+                    }) =>
+            {
+                Some(0)
+            }
             _ => None,
         };
         let noticed = self.resolve_inventory_item_effect(
@@ -3133,6 +3159,41 @@ impl Game {
         } = settled;
         let mut noticed = false;
         match (effect, plan) {
+            (ItemUseEffectDefinition::ReturnPets, ItemUsePlan::SelfTarget) => {
+                noticed = self.return_pets(&kind_id, events, changed);
+            }
+            (ItemUseEffectDefinition::Fishing, ItemUsePlan::Fishing { direction }) => {
+                noticed = self.start_fishing(&kind_id, direction, events);
+            }
+            (
+                ItemUseEffectDefinition::StunningKick { power },
+                ItemUsePlan::StunningKick { target_entity_id },
+            ) => {
+                noticed = self.resolve_stunning_kick(
+                    &kind_id,
+                    power,
+                    target_entity_id.as_deref(),
+                    events,
+                    changed,
+                );
+            }
+            (
+                ItemUseEffectDefinition::ApplyHeroism {
+                    duration_dice,
+                    duration_sides,
+                    duration_bonus,
+                    stacking,
+                },
+                ItemUsePlan::SelfTarget,
+            ) if profile_id.is_some() => {
+                let turns =
+                    self.roll_damage(duration_dice, duration_sides as u16) as u32 + duration_bonus;
+                let ticks = (device_power_value(u64::from(turns), device_power_bonus).min(10_000)
+                    as u32
+                    + 1)
+                    * 10;
+                noticed = self.resolve_item_heroism(&kind_id, 0, 0, ticks, stacking, events);
+            }
             (
                 ItemUseEffectDefinition::ProjectMonsterStatus { projection, power },
                 ItemUsePlan::SelfTarget,
@@ -3888,6 +3949,42 @@ impl Game {
         }
         let self_target = target.is_none_or(|target| matches!(target, TargetSelection::SelfTarget));
         match effect {
+            ItemUseEffectDefinition::Fishing => match target {
+                None => Some(ItemUsePlan::CancelledActivation),
+                Some(TargetSelection::Direction { direction }) => Some(ItemUsePlan::Fishing {
+                    direction: *direction,
+                }),
+                _ => None,
+            },
+            ItemUseEffectDefinition::StunningKick { .. } => {
+                if self.dungeon_blocks_melee() || target.is_none() {
+                    return Some(ItemUsePlan::StunningKick {
+                        target_entity_id: None,
+                    });
+                }
+                let position = match target? {
+                    TargetSelection::Direction { direction } => {
+                        self.position_in_direction(*direction)
+                    }
+                    TargetSelection::Entity { entity_id } => {
+                        self.entities
+                            .iter()
+                            .find(|actor| actor.id == *entity_id && actor.hp > 0)?
+                            .position
+                    }
+                    _ => return None,
+                };
+                if rfb_distance(self.player.position, position) > 1 {
+                    return None;
+                }
+                Some(ItemUsePlan::StunningKick {
+                    target_entity_id: self
+                        .entities
+                        .iter()
+                        .find(|actor| actor.hp > 0 && actor.position == position)
+                        .map(|actor| actor.id.clone()),
+                })
+            }
             ItemUseEffectDefinition::Hermes => {
                 let range = self.hermes_range();
                 self.item_use_plan(
@@ -3992,6 +4089,7 @@ impl Game {
             | ItemUseEffectDefinition::ListArtifacts
             | ItemUseEffectDefinition::SummonOctopus
             | ItemUseEffectDefinition::SummonKraken
+            | ItemUseEffectDefinition::ReturnPets
             | ItemUseEffectDefinition::Escape
             | ItemUseEffectDefinition::Starburst { .. }
             | ItemUseEffectDefinition::ShowRumour { .. }
@@ -6424,6 +6522,9 @@ impl Game {
             | ItemUseEffectDefinition::EnchantEquipment
             | ItemUseEffectDefinition::SummonOctopus
             | ItemUseEffectDefinition::SummonKraken
+            | ItemUseEffectDefinition::ReturnPets
+            | ItemUseEffectDefinition::Fishing
+            | ItemUseEffectDefinition::StunningKick { .. }
             | ItemUseEffectDefinition::Escape
             | ItemUseEffectDefinition::Starburst { .. }
             | ItemUseEffectDefinition::AreaDestruction { .. }

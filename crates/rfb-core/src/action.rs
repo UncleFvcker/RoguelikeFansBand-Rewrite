@@ -111,6 +111,8 @@ pub(crate) enum GameAction {
     /// No command maps to it; it advances world time at standard cost.
     ParalyzedIdle,
     Wait,
+    ContinueFishing,
+    CancelFishing,
     PickUp,
     Retire,
     Rest {
@@ -286,6 +288,7 @@ impl GameAction {
             | Self::ResolveMogaminatorQuery { .. }
             | Self::ResolveMutationDirection { .. }
             | Self::CancelAbilityDirection
+            | Self::CancelFishing
             | Self::ClearDuelistChallenge
             | Self::ResolveDuelistChoice { .. }
             | Self::InscribeItem { .. }
@@ -411,6 +414,8 @@ impl From<GameCommand> for GameAction {
                 inscription,
             },
             GameCommand::Wait => Self::Wait,
+            GameCommand::ContinueFishing => Self::ContinueFishing,
+            GameCommand::CancelFishing => Self::CancelFishing,
             GameCommand::PickUp => Self::PickUp,
             GameCommand::Retire => Self::Retire,
             GameCommand::Rest { turns } => Self::Rest { turns },

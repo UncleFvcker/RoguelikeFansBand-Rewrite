@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.258";
+pub const PROTOCOL_VERSION: &str = "1.259";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 22;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 23;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -379,6 +379,8 @@ pub enum GameCommand {
     },
     PickUp,
     Retire,
+    ContinueFishing,
+    CancelFishing,
     Rest {
         #[cfg_attr(feature = "bindings", schemars(range(min = 1, max = 100)))]
         turns: u16,
@@ -3877,6 +3879,7 @@ pub struct PlayerDto {
     pub confusing_strike_ready: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sniper_concentration: Option<SniperConcentrationDto>,
+    pub fishing_direction: Option<Direction>,
     #[serde(default)]
     pub resistances: Vec<ResistanceDto>,
     #[serde(default, skip_serializing_if = "is_default_player_progress")]
@@ -4280,6 +4283,8 @@ pub struct CapturedActorDto {
 #[serde(rename_all = "camelCase")]
 pub struct InventoryItemDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub throw_target_spec: Option<TargetSpecDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bag_capacity: Option<u16>,
@@ -4381,6 +4386,8 @@ pub struct BodySlotDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct EquipmentItemDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub throw_target_spec: Option<TargetSpecDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5402,6 +5409,7 @@ pub struct PlayerSaveDto {
     #[serde(default, skip_serializing_if = "is_false")]
     pub confusing_strike_ready: bool,
     pub sniper_concentration: u8,
+    pub fishing_direction: Option<Direction>,
     pub probed_actor_kind_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resistances: Vec<ResistanceSaveDto>,
@@ -6572,6 +6580,7 @@ mod tests {
                 statuses: Vec::new(),
                 confusing_strike_ready: false,
                 sniper_concentration: None,
+                fishing_direction: None,
                 resistances: Vec::new(),
                 progress: PlayerProgressDto::default(),
                 build: None,
@@ -6683,6 +6692,7 @@ mod tests {
                 melee_profile: None,
                 projectile_profile: None,
                 throw_profile: None,
+                throw_target_spec: None,
             }],
             equipment: vec![EquipmentItemDto {
                 artifact_name: None,
@@ -6725,6 +6735,7 @@ mod tests {
                 melee_profile: None,
                 projectile_profile: None,
                 throw_profile: None,
+                throw_target_spec: None,
             }],
             next_item_instance_serial: 4,
             explored: vec![true],
@@ -6850,6 +6861,7 @@ mod tests {
             statuses: Vec::new(),
             confusing_strike_ready: false,
             sniper_concentration: 0,
+            fishing_direction: None,
             probed_actor_kind_ids: Vec::new(),
             resistances: Vec::new(),
             progress: None,

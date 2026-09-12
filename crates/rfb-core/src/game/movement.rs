@@ -545,6 +545,17 @@ impl Game {
         }
     }
 
+    pub(super) fn terrain_allows_passive_monster_displacement(
+        terrain: &rfb_content::TerrainDefinition,
+    ) -> bool {
+        !terrain.allows_wall_passage
+            && (terrain.walkable || !terrain.movement_modes.is_empty())
+            && !terrain
+                .tags
+                .iter()
+                .any(|tag| matches!(tag.as_str(), "warding-glyph" | "explosive-rune"))
+    }
+
     pub(super) fn actor_kind_can_enter_position(&self, kind_id: &str, position: Position) -> bool {
         let Some(index) = self.index(position) else {
             return false;

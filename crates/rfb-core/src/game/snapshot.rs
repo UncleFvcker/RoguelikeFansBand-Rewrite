@@ -152,6 +152,7 @@ impl Game {
                 .map(crate::effect::StatusInstance::to_dto)
                 .collect(),
             confusing_strike_ready: self.confusing_strike_ready,
+            fishing_direction: self.fishing_direction,
             sniper_concentration: self.sniper_max_concentration().map(|maximum| {
                 rfb_protocol::SniperConcentrationDto {
                     current: self.sniper_concentration,
@@ -1018,8 +1019,13 @@ impl Game {
             knowledge: self.item_knowledge_dto(&item.kind_id),
             use_unavailable_reason: self
                 .berserker_item_use_rejection_cost(item)
-                .map(|_| "berserker".to_owned()),
+                .map(|_| "berserker".to_owned())
+                .or_else(|| {
+                    self.item_activation_needs_equipping(item)
+                        .then(|| "equip-first".to_owned())
+                }),
             usable: self.berserker_item_use_rejection_cost(item).is_none()
+                && !self.item_activation_needs_equipping(item)
                 && !(item.is_artifact_mushroom(&self.content) && item.device_recovery_progress > 0)
                 && self.content.item(&item.kind_id).is_some_and(|definition| {
                     definition.use_action.as_ref().is_some_and(|action| {
@@ -1125,6 +1131,7 @@ impl Game {
             melee_profile: self.visible_item_melee_profile(item),
             projectile_profile: self.visible_item_projectile_profile(item),
             throw_profile: self.visible_item_throw_profile(item),
+            throw_target_spec: self.item_throw_target_spec(item),
         }
     }
 
@@ -1192,6 +1199,7 @@ impl Game {
                     melee_profile: self.visible_item_melee_profile(item),
                     projectile_profile: self.visible_item_projectile_profile(item),
                     throw_profile: self.visible_item_throw_profile(item),
+                    throw_target_spec: self.item_throw_target_spec(item),
                 })
             })
             .collect::<Vec<_>>();

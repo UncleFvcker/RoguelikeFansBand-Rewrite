@@ -1016,6 +1016,7 @@ impl Game {
         });
         let confusing_strike_ready = payload.player.confusing_strike_ready;
         let sniper_concentration = payload.player.sniper_concentration;
+        let fishing_direction = payload.player.fishing_direction;
         let saved_probed_actor_kind_ids = payload.player.probed_actor_kind_ids.clone();
         let probed_actor_kind_ids = saved_probed_actor_kind_ids
             .iter()
@@ -1490,6 +1491,7 @@ impl Game {
             recall,
             confusing_strike_ready,
             sniper_concentration,
+            fishing_direction,
             probed_actor_kind_ids,
             minor_slow,
             minor_slow_energy,
@@ -1535,6 +1537,9 @@ impl Game {
         game.reveal_current_visibility();
         game.clear_stale_mogaminator_query();
         game.validate_loaded_state()?;
+        if game.fishing_direction.is_some() && !game.fishing_state_is_valid() {
+            return Err(CoreError::InvalidSave("player fishing state is invalid"));
+        }
         if !game.casino_state_is_valid() {
             return Err(CoreError::InvalidSave("casino state is invalid"));
         }
@@ -1774,6 +1779,7 @@ impl Game {
                 });
         player.confusing_strike_ready = self.confusing_strike_ready;
         player.sniper_concentration = self.sniper_concentration;
+        player.fishing_direction = self.fishing_direction;
         player.probed_actor_kind_ids = self.probed_actor_kind_ids.iter().cloned().collect();
         player.minor_slow = self.minor_slow;
         player.minor_slow_energy = self.minor_slow_energy;

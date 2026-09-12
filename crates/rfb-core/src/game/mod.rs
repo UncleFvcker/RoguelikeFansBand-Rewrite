@@ -235,7 +235,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 127;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 128;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -884,6 +884,7 @@ pub struct Game {
     recall: Option<RecallStateDto>,
     confusing_strike_ready: bool,
     sniper_concentration: u8,
+    fishing_direction: Option<Direction>,
     probed_actor_kind_ids: BTreeSet<String>,
     minor_slow: u8,
     minor_slow_energy: u16,
@@ -1180,6 +1181,7 @@ impl Game {
             action = GameAction::Move { direction };
         }
         let mut advances_world = !depleted_device_use
+            && !(matches!(&action, GameAction::ContinueFishing) && !self.fishing_state_is_valid())
             && !zero_time_unavailable_item_use
             && !cursed_unequip
             && !cursed_equip_replacement
@@ -1227,6 +1229,7 @@ impl Game {
                     | GameAction::ResolveMogaminatorQuery { .. }
                     | GameAction::ResolveMutationDirection { .. }
                     | GameAction::CancelAbilityDirection
+                    | GameAction::CancelFishing
                     | GameAction::InscribeItem { .. }
                     | GameAction::SetInterfaceLocale { .. }
             );
@@ -1342,6 +1345,9 @@ impl Game {
             self.sniper_concentration = 0;
         }
 
+        if !matches!(&action, GameAction::ContinueFishing) {
+            self.fishing_direction = None;
+        }
         match action {
             GameAction::ResolveDuelistChoice { choice } => {
                 turn_advance = 0;
@@ -2093,6 +2099,15 @@ impl Game {
                 }
             }
             GameAction::Wait => events.push(DomainEvent::Waited),
+            GameAction::CancelFishing => {
+                turn_advance = 0;
+            }
+            GameAction::ContinueFishing => {
+                if !self.continue_fishing(&mut events, &mut changed) {
+                    advances_world = false;
+                    turn_advance = 0;
+                }
+            }
             GameAction::AutoGet { object_id } => {
                 self.apply_player_floor_item_knowledge();
                 let valid_target =
@@ -2546,6 +2561,13 @@ impl Game {
         }
 
         let task_terrain_changed = self.refresh_town_task_terrain(&mut changed);
+        if self.fishing_direction.is_some()
+            && (self.player.position != player_position_before_command
+                || self.current_floor_id != floor_before_command
+                || !self.fishing_state_is_valid())
+        {
+            self.fishing_direction = None;
+        }
         let full_visibility_refresh = task_terrain_changed
             || duelist_completion
                 .as_ref()
@@ -3645,6 +3667,9 @@ impl Game {
             return Ok(None);
         };
         let item = &self.items[index];
+        if self.item_activation_needs_equipping(item) {
+            return Ok(None);
+        }
         let definition = self.content.item(&item.kind_id).cloned().ok_or_else(|| {
             CoreError::Invariant(format!(
                 "inventory item {} references missing kind {}",

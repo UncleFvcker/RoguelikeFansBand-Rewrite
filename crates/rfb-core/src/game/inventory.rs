@@ -2300,7 +2300,7 @@ impl Game {
         self.player_is_berserker() && severity != ItemCurseSeverityDto::Permanent
     }
 
-    fn try_remove_equipment_curse(&mut self, index: usize) -> bool {
+    pub(super) fn try_remove_equipment_curse(&mut self, index: usize) -> bool {
         let Some(severity) = self.items[index].curse else {
             return true;
         };

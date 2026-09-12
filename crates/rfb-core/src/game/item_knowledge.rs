@@ -435,6 +435,10 @@ impl Game {
             .map_or_else(EquipmentBonuses::default, |definition| {
                 definition.equipment_bonuses.clone()
             });
+        if self.item_is_fixed_artifact(item, 378) {
+            bonuses.melee_skill = 0;
+            bonuses.melee_damage = 0;
+        }
         let known = self.item_property_knowledge.get(&item.id);
         for affix_id in &item.affix_ids {
             if known.is_some_and(|knowledge| knowledge.known_affix_ids.contains(affix_id))

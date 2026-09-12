@@ -945,6 +945,11 @@ impl Game {
                     self.actor_can_enter_position(index, entity.position)
                 } else {
                     self.actor_kind_can_enter_position(&entity.kind_id, entity.position)
+                        // Passive teleport can leave a monster on terrain it cannot
+                        // enter by walking. Bounds, walls and occupancy still apply.
+                        || self.index(entity.position)
+                            .and_then(|index| self.content.terrain(&self.terrain[index]))
+                            .is_some_and(Self::terrain_allows_passive_monster_displacement)
                 })
                 || (!positions.insert(entity.position) && !is_mount)
             {
@@ -1202,13 +1207,21 @@ impl Game {
             let mut floor_monster_ids = BTreeSet::new();
             for entity in &floor.entities {
                 self.validate_actor(entity, ActorRole::Monster)?;
+                let position = entity.position;
+                let passive_terrain = (position.x >= 0
+                    && position.y >= 0
+                    && position.x < i32::from(floor.width)
+                    && position.y < i32::from(floor.height))
+                .then(|| position.y as usize * usize::from(floor.width) + position.x as usize)
+                .and_then(|index| self.content.terrain(&floor.terrain[index]))
+                .is_some_and(Self::terrain_allows_passive_monster_displacement);
                 if !instance_ids.insert(entity.id.clone())
-                    || !floor_actor_position_is_enterable(
+                    || !(floor_actor_position_is_enterable(
                         floor,
                         &entity.kind_id,
                         entity.position,
                         &self.content,
-                    )
+                    ) || passive_terrain)
                     || !floor_positions.insert(entity.position)
                 {
                     return Err(CoreError::InvalidSave(

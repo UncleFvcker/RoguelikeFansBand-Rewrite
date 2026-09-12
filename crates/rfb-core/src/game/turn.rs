@@ -991,6 +991,9 @@ impl Game {
             .iter()
             .any(|status_kind_id| status_kind_id == STATUS_TSUYOSHI);
         for damage in player_tick.damage {
+            if damage.outcome.applied > 0 {
+                self.fishing_direction = None;
+            }
             events.push(DomainEvent::PlayerStatusDamaged {
                 status_kind_id: damage.status_kind_id,
                 damage: damage.outcome,
