@@ -13,6 +13,148 @@ fn artifact_loot_context(depth: u16) -> LootContext {
     }
 }
 
+#[test]
+fn i1_a_ordinary_weapons_and_diggers_generate_and_act_after_save() {
+    fn act(game: &mut Game, digger: bool) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        if digger {
+            game.dig_terrain(Direction::North, &mut events, &mut BTreeSet::new())
+                .unwrap();
+        } else {
+            game.resolve_player_melee(0, false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+                .unwrap();
+        }
+        events
+    }
+    // RFB master a0d92b6378: k_info 100/108/152/155. Controlled depth,
+    // complete ordinary pool and unchanged quality rolls; no natural leveling claim.
+    let cases = [
+        ("guisarme", 2, 7, 165, false),
+        ("scythe-of-slicing", 8, 4, 250, false),
+        ("dwarven-shovel", 1, 4, 120, true),
+        ("dwarven-pick", 1, 6, 200, true),
+    ];
+    let mut game = Game::new_with_build(471, "demo.build.high-mage-death").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.player.position = Position { x: 10, y: 10 };
+    game.terrain.fill("demo.terrain.floor".into());
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-85".into(),
+        depth: 85,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.i1-a-drop".into(),
+        },
+    };
+    let mut remaining = cases.iter().map(|case| case.0).collect::<BTreeSet<_>>();
+    for _ in 0..20_000 {
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            let slug = item.kind_id.strip_prefix("demo.item.").unwrap();
+            if item.quality != ItemQualityDto::Ordinary
+                || item.enchantments != Default::default()
+                || item.artifact_name.is_some()
+                || !remaining.remove(slug)
+            {
+                continue;
+            }
+            assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            assert!(
+                !game
+                    .item_property_knowledge
+                    .get(&id)
+                    .is_some_and(|k| k.appraised)
+            );
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "missing ordinary bases: {remaining:?}"
+    );
+    game.reveal_current_visibility();
+    let unknown = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(unknown.state_hash(), game.state_hash());
+    assert_eq!(unknown.rng, game.rng);
+    for (slug, dice, sides, weight, digger) in cases {
+        let mut equipped = unknown.clone();
+        equipped
+            .items
+            .retain(|item| item.kind_id == format!("demo.item.{slug}"));
+        let id = equipped.items[0].id.clone();
+        let profile = equipped.item_melee_profile(&equipped.items[0]).unwrap();
+        assert_eq!((profile.damage.dice, profile.damage.sides), (dice, sides));
+        assert_eq!(equipped.carried_weight_tenths_pound(), weight);
+        let mut bare = equipped.clone();
+        equipped.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        equipped
+            .equip_inventory_item(&id, Some(if digger { "tool" } else { "right-hand" }))
+            .unwrap();
+        equipped.refresh_player_resource_maxima();
+        let wall = equipped.position_in_direction(Direction::North);
+        let wall_index = equipped.index(wall).unwrap();
+        if digger {
+            assert!(bare.player_derived_stats().dig_skill.value <= 10);
+            replace_terrain(&mut bare, wall, "demo.terrain.magma-vein");
+            assert!(matches!(
+                bare.dig_terrain(Direction::North, &mut Vec::new(), &mut BTreeSet::new()),
+                Some(TerrainDigOutcome::Failed {
+                    retryable: false,
+                    ..
+                })
+            ));
+            replace_terrain(&mut equipped, wall, "demo.terrain.magma-vein");
+        } else {
+            equipped.push_generated_actor(
+                "test.i1-a-target".into(),
+                "demo.actor.blubbering-idiot",
+                Position { x: 11, y: 10 },
+            );
+            equipped.entities[0].hp = 1;
+        }
+        let seed = (0..1000)
+            .find(|seed| {
+                let mut trial = equipped.clone();
+                trial.rng = RfbRng::seeded(*seed);
+                act(&mut trial, digger);
+                if digger {
+                    trial.terrain[wall_index] != "demo.terrain.magma-vein"
+                } else {
+                    trial.entities.is_empty()
+                }
+            })
+            .expect("generated equipment must perform its actual action");
+        equipped.rng = RfbRng::seeded(seed);
+        equipped.reveal_current_visibility();
+        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        assert_eq!(act(&mut restored, digger), act(&mut equipped, digger));
+        if digger {
+            assert_ne!(equipped.terrain[wall_index], "demo.terrain.magma-vein");
+        } else {
+            assert!(equipped.entities.is_empty());
+        }
+        assert_eq!(restored.state_hash(), equipped.state_hash());
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            equipped
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+        );
+        assert_eq!(restored.rng, equipped.rng);
+    }
+}
+
 fn c2_throw(game: &mut Game, id: &str) -> Vec<DomainEvent> {
     let mut events = Vec::new();
     game.throw_inventory_item(

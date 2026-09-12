@@ -1,6 +1,6 @@
 {
   "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits",
-  "allocationRowCount": 409,
+  "allocationRowCount": 413,
   "explicitItems": [
     {
       "itemId": "demo.item.aegir",
@@ -141,6 +141,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.bladeturner",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.bloodrip",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -220,6 +226,12 @@
     },
     {
       "itemId": "demo.item.crisdurian",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.darnya",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -400,6 +412,12 @@
     },
     {
       "itemId": "demo.item.frost-ball-wand",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.frost-bolt-wand",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -597,6 +615,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.midnight-dragon-scale-mail",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.mjollnir",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -646,6 +670,12 @@
     },
     {
       "itemId": "demo.item.nyoi-bou",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.one-ring",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -783,6 +813,12 @@
       "status": "explicit-only"
     },
     {
+      "itemId": "demo.item.seiryu",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
       "itemId": "demo.item.set-of-gauntlets-paurnimmen",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
@@ -832,6 +868,12 @@
     },
     {
       "itemId": "demo.item.soulsword",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.spectral-dragon-scale-mail",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -892,6 +934,12 @@
     },
     {
       "itemId": "demo.item.thengel",
+      "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
+      "sourceIndex": null,
+      "status": "explicit-only"
+    },
+    {
+      "itemId": "demo.item.thingol",
       "reason": "fixed artifact, original content or adapted effect/device alias; no canonical source kind mapping",
       "sourceIndex": null,
       "status": "explicit-only"
@@ -2523,12 +2571,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.guisarme",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 100,
       "sourceName": "Guisarme",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 16,
       "tval": 22
     },
@@ -2675,12 +2723,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.scythe-of-slicing",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 108,
       "sourceName": "Scythe of Slicing",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 30,
       "tval": 22
     },
@@ -3153,12 +3201,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.dwarven-shovel",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 152,
       "sourceName": "Dwarven Shovel",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 3,
       "tval": 20
     },
@@ -3210,12 +3258,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.dwarven-pick",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 155,
       "sourceName": "Dwarven Pick",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 6,
       "tval": 20
     },

@@ -1447,6 +1447,10 @@ mod tests {
             "demo.item.book-of-common-prayer"
         ));
         assert!(accepts(RfbDropTheme::Dwarf, "demo.item.mattock"));
+        assert!(accepts(RfbDropTheme::Dwarf, "demo.item.dwarven-shovel"));
+        assert!(accepts(RfbDropTheme::Dwarf, "demo.item.dwarven-pick"));
+        assert!(!accepts(RfbDropTheme::Dwarf, "demo.item.guisarme"));
+        assert!(!accepts(RfbDropTheme::Dwarf, "demo.item.scythe-of-slicing"));
         assert!(accepts(RfbDropTheme::Hobbit, "demo.item.ration-of-food"));
         assert!(!accepts(RfbDropTheme::Hobbit, "demo.item.iron-shot"));
         let mut sword = content.item("demo.item.dagger").unwrap().clone();

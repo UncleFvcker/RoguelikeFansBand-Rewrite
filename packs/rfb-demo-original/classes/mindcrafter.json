@@ -13,6 +13,8 @@
     "defaultInitial": 2000,
     "defaultMaximum": 6000,
     "overrides": {
+      "demo.item.dwarven-shovel": { "initial": 2000, "maximum": 4000 },
+      "demo.item.dwarven-pick": { "initial": 2000, "maximum": 4000 },
       "demo.item.poison-needle": { "initial": 2000, "maximum": 8000 },
       "demo.item.gnomish-shovel": { "initial": 2000, "maximum": 4000 },
       "demo.item.mattock": { "initial": 2000, "maximum": 4000 },

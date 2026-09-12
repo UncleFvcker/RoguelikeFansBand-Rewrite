@@ -14,10 +14,12 @@
 | 协议 | 1.263；绑定/Schema已同步 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 130 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 25 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.444.0；pack/lock已同步 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.445.0实施版本；lock仍为已验收1.444.0，待底材五步后统一编译同步 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v330，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 14 个 Class、110 个 Build、57 个 Race、36 本能力书、1,908 个 ability、575 个 item、1,410 个 actor、169 个 affix、152 个 mutation。世界定义含 34 个 dungeon（阿斯加德入口受出生神系门控）；城镇有 7 个 town、69 个 shop、67 个 townFacility。基础分配池为 409 行，固定神器定义映射 156/392；创角开放14职业、103个Build。这些是定义与入口数量，行为验收范围见下文。
+正式源目录含 14 个 Class、110 个 Build、57 个 Race、36 本能力书、1,908 个 ability、579 个 item、1,410 个 actor、169 个 affix、152 个 mutation。世界定义含 34 个 dungeon（阿斯加德入口受出生神系门控）；城镇有 7 个 town、69 个 shop、67 个 townFacility。基础分配池为 413 行，固定神器定义映射 156/392；创角开放14职业、103个Build。这些是定义与入口数量，行为验收范围见下文；新增 I1-A 四件尚未编译测试。
+
+常规装备底材：[补完计划](ordinary-equipment-completion-plan.md) I1-A 已接入100／108／152／155四件，正式目录为579个item、400个canonical kind、413条基础分配；有源分配行且非神器专用的常规装备映射为 **190/201（94.5%）**，余11件。pack版本推进至1.445.0，lock仍保留上方已验收的1.444.0；按用户要求，五步实现结束后统一编译测试、更新lock、源C估值及生成审计，本批未运行任何编译或测试。201包含既有零整数权重分配行，映射率不表示全部自然可掉落或原版行为已完成，kind111内部镰刀不计入分母。后续顺序为护甲7件、固定附魔护具2件、性感泳装和死神镰刀。
 
 食魔者[七步计划](magic-eater-class-plan.md)已完成：无领域Build/无公共MP、三类各10体内槽、吸收/覆盖/铭刻继承/换位、真实使用/失败/费用/周期恢复及保存已开放。Mogaminator体内优先鉴定、TravelLocal自动探测/地图及保存覆盖、Tailored先1/5后1/7、Mage/20卷轴、任务奖励/旧城堡1:4及重复替代、旅店恢复和两塔普通资格通过核心验证。15种装置、26个profile覆盖24条源行，另97条仍为未开放范围。正式入口为“魔法装置 → 食魔者”，103个开放Build生成责任审计通过，0个可玩范围证据gap。
 

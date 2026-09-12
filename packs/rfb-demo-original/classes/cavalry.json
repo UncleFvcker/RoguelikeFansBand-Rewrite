@@ -21,6 +21,7 @@
     "defaultInitial": 2000,
     "defaultMaximum": 7000,
     "overrides": {
+      "demo.item.scythe-of-slicing": { "initial": 2000, "maximum": 8000 },
       "demo.item.poison-needle": { "initial": 2000, "maximum": 7000 },
       "demo.item.trifurcate-spear": { "initial": 2000, "maximum": 8000 },
       "demo.item.wizardstaff": { "initial": 0, "maximum": 0 },

@@ -17,17 +17,17 @@
   "summary": {
     "sourceKindRecords": 545,
     "validSourceKinds": 544,
-    "mappedCanonicalKinds": 396,
-    "remainingValidKinds": 148,
+    "mappedCanonicalKinds": 400,
+    "remainingValidKinds": 144,
     "excludedPlaceholderKinds": 1,
-    "importerMechanicsReady": 14,
+    "importerMechanicsReady": 10,
     "importerBlocked": 134,
-    "formalItems": 575,
-    "baseAllocationRows": 409,
+    "formalItems": 579,
+    "baseAllocationRows": 413,
     "fixedArtifactRecords": 392,
     "formalFixedArtifacts": 156,
     "missingFixedArtifacts": 236,
-    "missingArtifactsWithAbsentBase": 37,
+    "missingArtifactsWithAbsentBase": 36,
     "deviceTableRows": {
       "wand": 39,
       "rod": 35,
@@ -382,16 +382,38 @@
       "sourceConsumer": "src/devices.c staff_effect_table; src/devices.c::do_effect"
     }
   },
+  "ordinaryEquipmentCompletion": {
+    "status": "i1-a-implemented-awaiting-five-step-validation",
+    "sourceIndices": [
+      100,
+      108,
+      152,
+      155
+    ],
+    "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+    "sourceEvidence": [
+      "lib/edit/k_info.txt:100/108/152/155",
+      "src/kind_name_zh.inc:107/115/159/162",
+      "lib/edit/s_info.txt:weapon type/subtype 3:16, 3:30, 1:3, 1:6",
+      "src/object2.c:_kind_theme_dwarf",
+      "src/obj_kind.c:object_is_rare"
+    ],
+    "implementation": "Four plain bases use existing weapon/digger generation, riding and tunneling. Explicit source exceptions: Warrior-Mage polearm caps 7000, Mindcrafter digger caps 4000, Cavalry slicing-scythe cap 8000, Duelist initial 0/cap 4000; the other ten classes use source-equivalent defaults. Allocation rows are 21/1, 60/4, 40/1 and 50/1. No fixed artifact added.",
+    "pendingValidation": [
+      "game::tests::items::i1_a_ordinary_weapons_and_diggers_generate_and_act_after_save",
+      "game::tests::inventory::original_diggers_use_weight_and_tunneling_pval_without_stacking_with_weapons",
+      "game::tests::warrior_mage::proficiencies_virtues_and_racial_births_use_warrior_mage_rules",
+      "game::loot::allocation::tests::themes_read_source_identity_including_previously_missing_domains",
+      "Existing weapon proficiency, riding, ordinary/Good/Great/Tailored, Ego and random artifact consumers; source names, class proficiency audit, source C value references, content lock and generation applicability."
+    ],
+    "evidence": "Implementation and test source only. No compilation or test execution in I1-A; all five ordinary-equipment steps must be implemented before unified compilation, checks and report refresh. Existing acceptance does not cover these additions."
+  },
   "remainingKinds": [
     {"sourceIndex": 0, "sourceName": "something", "sourceNameZh": "某物", "reviewGroup": "placeholder", "hasNaturalAllocationRows": false, "sourceFlags": [], "sourceActivation": null, "importerBlockers": []},
-    {"sourceIndex": 100, "sourceName": "Guisarme", "sourceNameZh": "& 把~钩镰枪", "reviewGroup": "ordinary-weapon", "hasNaturalAllocationRows": true, "sourceFlags": ["SHOW_MODS", "TOWN"], "sourceActivation": null, "importerBlockers": []},
-    {"sourceIndex": 108, "sourceName": "Scythe of Slicing", "sourceNameZh": "& 把~切割大镰刀", "reviewGroup": "ordinary-weapon", "hasNaturalAllocationRows": true, "sourceFlags": ["SHOW_MODS", "RIDING"], "sourceActivation": null, "importerBlockers": []},
     {"sourceIndex": 110, "sourceName": "Death Scythe", "sourceNameZh": "& 把~死神镰刀", "reviewGroup": "death-scythe", "hasNaturalAllocationRows": true, "sourceFlags": ["SHOW_MODS", "VORPAL", "CURSED", "HEAVY_CURSE", "SLAY_DRAGON", "SLAY_ANIMAL", "SLAY_EVIL", "SLAY_HUMAN", "BRAND_VAMP", "SLAY_UNDEAD", "SLAY_DEMON", "SLAY_TROLL", "SLAY_GIANT", "SLAY_ORC", "BRAND_FIRE", "BRAND_ELEC", "BRAND_COLD", "BRAND_ACID", "BRAND_POIS", "IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD", "RIDING"], "sourceActivation": null, "importerBlockers": ["item-flag:CURSED", "item-flag:HEAVY_CURSE", "item-flag:VORPAL"]},
     {"sourceIndex": 111, "sourceName": "Death Scythe", "sourceNameZh": "& 把~死神镰刀", "reviewGroup": "death-scythe-internal", "hasNaturalAllocationRows": false, "sourceFlags": ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"], "sourceActivation": null, "importerBlockers": []},
     {"sourceIndex": 138, "sourceName": "Mighty Hammer", "sourceNameZh": "& 把~神力之锤", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["SHOW_MODS", "INSTA_ART", "RIDING"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART"]},
     {"sourceIndex": 140, "sourceName": "Stick", "sourceNameZh": "& 根~树枝", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["INSTA_ART"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART"]},
-    {"sourceIndex": 152, "sourceName": "Dwarven Shovel", "sourceNameZh": "& 把~矮人铁锹", "reviewGroup": "ordinary-weapon", "hasNaturalAllocationRows": true, "sourceFlags": ["SHOW_MODS", "TUNNEL"], "sourceActivation": null, "importerBlockers": []},
-    {"sourceIndex": 155, "sourceName": "Dwarven Pick", "sourceNameZh": "& 把~矮人镐", "reviewGroup": "ordinary-weapon", "hasNaturalAllocationRows": true, "sourceFlags": ["SHOW_MODS", "TUNNEL"], "sourceActivation": null, "importerBlockers": []},
     {"sourceIndex": 165, "sourceName": "Gun", "sourceNameZh": "& 把~枪", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["INSTA_ART"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART", "launcher-unpaired"]},
     {"sourceIndex": 166, "sourceName": "Gun", "sourceNameZh": "& 把~枪", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["INSTA_ART"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART", "launcher-unpaired"]},
     {"sourceIndex": 167, "sourceName": "Yumi", "sourceNameZh": "& 把~和弓", "reviewGroup": "artifact-base", "hasNaturalAllocationRows": false, "sourceFlags": ["INSTA_ART"], "sourceActivation": null, "importerBlockers": ["item-flag:INSTA_ART", "launcher-unpaired"]},
@@ -729,7 +751,31 @@
     {"sourceIndex": 196, "sourceName": "'Grimtooth'", "sourceNameZh": "『冷酷之牙』", "reviewGroup": "artifact-current", "formalItemId": "demo.item.grimtooth", "baseSourceIndices": [47], "baseItemId": "demo.item.dagger", "sourceLevel": 7, "sourceRarity": 8, "sourceFlags": ["DEX", "BLOWS", "BRAND_POIS", "SHOW_MODS", "THROWING"], "sourceActivation": null, "sourceDataNotes": ["C2 uses master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c Git objects: a_info.txt, artifact_name_zh.inc, kind_name_zh.inc, py_throw.c, combat.c::critical_throw, xtra1.c, tables.c and equip.c. Ordinary generation retains base/level/rarity/uniqueness. Throw hit uses object plus shooter bonuses times3, path distance, visibility and stun; critical chance is4*total_to_h+3*level out of5000 and weight only selects150/200/250 percent quality. Damage applies own brands/slays, force, vorpal, throw critical, object flat damage, STR/THROWING multiplier, stun and monster reduction. ORDER suppresses critical without maximizing dice. Misses do not wake; zero-damage hits wake. Existing deterministic artifact landing and knowledge/instance retention are preserved.", "I23:4:3 W7:8:12:25000 P0:1d5:5:5:0; DEX3, own-weapon extra150 blows percent, poison brand and THROWING. No activation or additional named drop.", "No open creation identity grants source ambush: Scout level20 with undisrupted equipment, Skillmaster stealth3 and POS_BACKSTAB possessed bodies remain identity dependencies; no fake build or universal sleeping-target double damage. Source pre-action fear/arena handling, specialized consumable breakage and boomerang/catch are outside this batch; source return mechanics136/383 remain in step5. Existing recovery, regeneration and fixed-artifact landing adaptations remain. Core controlled-precondition evidence, not natural leveling or desktop acceptance."], "sourceConsumerReferences": ["src/py_throw.c::_init_context/_hit_mon", "src/combat.c::critical_throw", "src/xtra1.c shooter_info.to_h", "src/equip.c object_calc_bonuses"], "contentReferences": ["packs/rfb-demo-original/items/grimtooth.json"], "evidence": "C2 core tests: items::c2_grimtooth_generates_equips_throws_and_preserves_unknown_instance_after_save (complete ordinary pool); items::c2_following_artifacts_generate_equip_throw_and_activate_with_saved_cooldowns (conditional real base with full artifact candidates/level/rarity/uniqueness); items::c2_throw_hit_uses_distance_visibility_stun_and_nonpositive_skill_before_rng; items::c2_thrown_artifact_finds_land_beyond_local_drop_radius; items::c2_thrown_weapon_traits_apply_force_vorpal_critical_then_flat_damage_and_survivor_healing; player_combat::tests::throwing_critical_weight_changes_quality_but_not_chance; lighting::c2_gae_bulg_ball_uses_los_falloff_and_saved_glow_except_in_darkness. Source C item valuation and pack1.432.0."},
     {"sourceIndex": 197, "sourceName": "of Perseus", "sourceNameZh": "珀耳修斯的", "reviewGroup": "artifact-current", "formalItemId": "demo.item.perseus", "baseSourceIndices": [236], "baseItemId": "demo.item.small-metal-shield", "sourceLevel": 30, "sourceRarity": 10, "sourceFlags": ["STR", "RES_ACID", "RES_COLD", "REFLECT", "SUST_STR"], "sourceActivation": null, "sourceDataNotes": ["RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: a_info 197 I34:3:2 W30:10:65:45000 P5:1d2:0:0:15; AC 20, STR +2, acid/cold resistance, strength sustain and REFLECT. Existing player_reflects_bolts and monster projectile resolver retain the three-of-four reflection gate, one reflection per projectile, and no reflection of beams/balls/breaths; resolve_monster_attribute_drain respects strength sustain. All six A2 artifacts use existing bases, no activation/QUESTITEM/INSTA_ART or extra generation draws, and four IGNORE flags added by init1.c. Source Chinese names from artifact_name_zh.inc and kind_name_zh.inc; source references and tests are static review only until A10."], "sourceConsumerReferences": [], "contentReferences": ["packs/rfb-demo-original/items/perseus.json"], "evidence": "PASSED in A10 unified validation: game::tests::items::a2_armor_generation_equipment_consumers_and_uniqueness_survive_save; controlled level 30 Mage and ordinary fixed candidate selector with real source rarity, production draft/unique commit, unknown pickup/save, equip consumers, restored derived stats, unique registry and next generated instances/RNG. No natural leveling or desktop acceptance. Existing game::tests::abilities::damage::p86e_mirror_shield_reflects_monster_bolts_once_with_exact_three_of_four_gate and mirror_shield_does_not_reflect_beams_balls_or_breaths now also exercise Perseus."},
     {"sourceIndex": 198, "sourceName": "of Kamui the Escapee", "sourceNameZh": "逃亡者卡姆依的", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [62], "baseItemId": "demo.item.ninjato", "sourceLevel": 20, "sourceRarity": 8, "sourceFlags": ["DEX", "STEALTH", "SEARCH", "RES_FIRE", "BRAND_POIS", "SEE_INVIS", "SHOW_MODS", "WARNING"], "sourceActivation": "TELEPORT:10:25", "sourceDataNotes": [], "sourceConsumerReferences": [], "contentReferences": []},
-    {"sourceIndex": 199, "sourceName": "'Bloody Moon'", "sourceNameZh": "『血月』", "reviewGroup": "artifact-missing-base", "formalItemId": null, "baseSourceIndices": [108], "baseItemId": null, "sourceLevel": 70, "sourceRarity": 12, "sourceFlags": [], "sourceActivation": "BLOODY_MOON:30:500", "sourceDataNotes": [], "sourceConsumerReferences": ["src/artifact.c:3407", "src/devices.c:7280"], "contentReferences": []},
+    {
+      "sourceIndex": 199,
+      "sourceName": "'Bloody Moon'",
+      "sourceNameZh": "『血月』",
+      "reviewGroup": "artifact-content",
+      "formalItemId": null,
+      "baseSourceIndices": [
+        108
+      ],
+      "baseItemId": "demo.item.scythe-of-slicing",
+      "sourceLevel": 70,
+      "sourceRarity": 12,
+      "sourceFlags": [],
+      "sourceActivation": "BLOODY_MOON:30:500",
+      "sourceDataNotes": [
+        "I1-A implements plain canonical kind108 only; compilation and behavior checks await five-step validation. Bloody Moon first-generation/activation reroll, property/knowledge clearing and saved RNG remain unimplemented; formalItemId remains null."
+      ],
+      "sourceConsumerReferences": [
+        "src/artifact.c:3407",
+        "src/devices.c:7280"
+      ],
+      "contentReferences": [
+        "packs/rfb-demo-original/items/scythe-of-slicing.json"
+      ]
+    },
     {"sourceIndex": 200, "sourceName": "'Dasai'", "sourceNameZh": "『打碎』", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [253], "baseItemId": "demo.item.rhino-hide-armour", "sourceLevel": 20, "sourceRarity": 3, "sourceFlags": ["AGGRAVATE", "SUST_CHR", "DEC_CHR"], "sourceActivation": null, "sourceDataNotes": [], "sourceConsumerReferences": [], "contentReferences": []},
     {"sourceIndex": 201, "sourceName": "'Elemental of Ching-Rong'", "sourceNameZh": "『青龙元素』", "reviewGroup": "artifact-current", "formalItemId": "demo.item.seiryu", "baseSourceIndices": [293], "baseItemId": "demo.item.blue-dragon-scale-mail", "sourceLevel": 80, "sourceRarity": 9, "sourceFlags": ["RES_ACID", "RES_FIRE", "RES_COLD", "RES_ELEC", "RES_DARK", "RES_CONF", "RES_POIS", "FREE_ACT", "SEE_INVIS"], "sourceActivation": "RESISTANCE:30:111", "sourceDataNotes": ["C4a source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, read Git objects only: a_info.txt, artifact_name_zh.inc, init1.c, devices.c, xtra1.c and resist.c. Ordinary base293, source level80/rarity9; no identity-specific construction or named-drop branch.", "I38:2:0 W80:9:300:200000 P40:2d4:-3:0:30. AC70, melee hit-3, weight300; acid/electricity/fire/cold/poison/dark/confusion resistance, FREE_ACT and SEE_INVIS. RESISTANCE power30 is check difficulty, default duration20+1d20 shared by five elements; activation value5500, cooldown1110 ticks. Reuses saruman-resistance.", "Permanent resistance plus temporary elemental opposition now reaches existing Strong65%; one tier is50%. Overlapping opposition statuses count once, vulnerability cancels one tier, immunity wins. Existing compact resistance scale still caps at Strong and omits source percentage jitter; permanent duplicate-source counting is unchanged. Shared status clock remains21..40 world ticks, not a claim of source-turn timing parity."], "sourceConsumerReferences": ["src/devices.c:EFFECT_RESISTANCE", "src/xtra1.c:4342", "src/resist.c:5/220", "src/devices.c:2010"], "contentReferences": ["packs/rfb-demo-original/items/seiryu.json", "packs/rfb-demo-original/effectPrograms/saruman-resistance.json"], "plannedBatch": "C4a", "evidence": "PASSED three C4a tests in crates/rfb-core/src/game/tests/dragon_scale_artifacts.rs: c4a_seiryu_full_pool_equipment_and_opposition_reduce_damage_after_save, c4a_midnight_brand_darkness_and_acid_cone_preserve_saved_cooldown, c4a_plain_and_ego_scales_keep_base_breath_and_replay_after_cancel. New-game controlled generation:201 uses the complete ordinary pool at depth85;332 conditions on a base observed in that pool, retaining all artifact gates. Actual pickup/equipment/activation, rejection, cooldown, save and continued RNG are covered."},
     {"sourceIndex": 202, "sourceName": "'Ama-no-NumaHoko'", "sourceNameZh": "『天沼矛』", "reviewGroup": "artifact-content", "formalItemId": null, "baseSourceIndices": [88], "baseItemId": "demo.item.awl-pike", "sourceLevel": 50, "sourceRarity": 40, "sourceFlags": ["WIS", "CHR", "SUST_WIS", "SUST_CHR", "HIDE_TYPE", "SLAY_EVIL", "SLAY_DEMON", "SLAY_UNDEAD", "RES_ACID", "RES_COLD", "RES_BLIND", "RES_CHAOS", "LITE", "BLESSED", "SEE_INVIS", "SHOW_MODS"], "sourceActivation": "BALL_WATER:50:250:200", "sourceDataNotes": [], "sourceConsumerReferences": [], "contentReferences": []},

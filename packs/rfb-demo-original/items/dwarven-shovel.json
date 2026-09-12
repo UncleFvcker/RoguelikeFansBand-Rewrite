@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 200,
+  "descriptionKey": "item-demo-dwarven-shovel-description",
+  "equipmentSlot": "tool",
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "glyph": "\\",
+  "id": "demo.item.dwarven-shovel",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 4,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-dwarven-shovel-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 152,
+    "sval": 3,
+    "tval": 20
+  },
+  "rfbValue": {
+    "flags": [
+      "SHOW_MODS",
+      "TUNNEL"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "tool",
+    "weapon"
+  ],
+  "tunnelingPval": 4,
+  "weightTenthsPound": 120
+}

@@ -1528,6 +1528,13 @@
       "weight": 33
     },
     {
+      "itemKindId": "demo.item.guisarme",
+      "maxDepth": 65535,
+      "minDepth": 21,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.naginata",
       "maxDepth": 65535,
       "minDepth": 25,
@@ -1990,6 +1997,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.dwarven-shovel",
+      "maxDepth": 65535,
+      "minDepth": 40,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.heavy-crossbow",
       "maxDepth": 65535,
       "minDepth": 40,
@@ -2319,6 +2333,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.dwarven-pick",
+      "maxDepth": 65535,
+      "minDepth": 50,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.mattock",
       "maxDepth": 65535,
       "minDepth": 50,
@@ -2469,6 +2490,13 @@
       "itemKindId": "demo.item.mortal-draught",
       "maxDepth": 65535,
       "minDepth": 55,
+      "quantity": 1,
+      "weight": 25
+    },
+    {
+      "itemKindId": "demo.item.scythe-of-slicing",
+      "maxDepth": 65535,
+      "minDepth": 60,
       "quantity": 1,
       "weight": 25
     },

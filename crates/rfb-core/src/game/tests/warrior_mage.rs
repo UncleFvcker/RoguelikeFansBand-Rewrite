@@ -151,6 +151,8 @@ fn proficiencies_virtues_and_racial_births_use_warrior_mage_rules() {
         ("demo.item.nunchaku", 2000, 4000),
         ("demo.item.long-sword", 2000, 6000),
         ("demo.item.short-bow", 2000, 4000),
+        ("demo.item.guisarme", 2000, 7000),
+        ("demo.item.scythe-of-slicing", 2000, 7000),
     ] {
         let entry = snapshot
             .player

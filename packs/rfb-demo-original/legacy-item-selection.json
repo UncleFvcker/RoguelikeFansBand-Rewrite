@@ -1,6 +1,10 @@
 {
   "schemaVersion": 1,
   "items": [
+    { "sourceIndex": 100, "id": "guisarme" },
+    { "sourceIndex": 108, "id": "scythe-of-slicing" },
+    { "sourceIndex": 152, "id": "dwarven-shovel" },
+    { "sourceIndex": 155, "id": "dwarven-pick" },
     {"sourceIndex": 139, "sourceId": "baseball-bat", "id": "baseball-bat"},
     {"sourceIndex": 75, "id": "poison-needle"},
     {"sourceIndex": 272, "sourceId": "metal-scale-mail", "id": "metal-scale-mail"},
