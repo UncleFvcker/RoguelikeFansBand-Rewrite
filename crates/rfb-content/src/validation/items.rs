@@ -771,7 +771,11 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::BanishVisible { .. }
                     | ItemUseEffectDefinition::ProjectMonsterStatus { .. }
                     | ItemUseEffectDefinition::VisibleApplyStatus { .. } => self_target,
-                    ItemUseEffectDefinition::RechargeFromDevice { .. } => false,
+                    ItemUseEffectDefinition::RechargeFromDevice { .. } => {
+                        target.modes == [AbilityTargetModeDefinition::Item]
+                            && target.range == 0
+                            && !target.requires_line_of_effect
+                    }
                     ItemUseEffectDefinition::Damage { .. }
                     | ItemUseEffectDefinition::Bladeturner
                     | ItemUseEffectDefinition::AreaDamage { .. }

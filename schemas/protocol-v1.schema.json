@@ -9226,6 +9226,9 @@
           "format": "uint32",
           "minimum": 0
         },
+        "requiresRechargeTargets": {
+          "type": "boolean"
+        },
         "resistances": {
           "type": "array",
           "items": {
@@ -12380,6 +12383,12 @@
             "null"
           ]
         },
+        "canReceiveRecharge": {
+          "type": "boolean"
+        },
+        "canSupplyRecharge": {
+          "type": "boolean"
+        },
         "curse": {
           "anyOf": [
             {
@@ -15276,6 +15285,26 @@
     },
     "TargetSelection": {
       "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "sourceItemId": {
+              "type": "string"
+            },
+            "targetItemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "recharge-items"
+            }
+          },
+          "required": [
+            "type",
+            "sourceItemId",
+            "targetItemId"
+          ]
+        },
         {
           "type": "object",
           "properties": {

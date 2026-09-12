@@ -232,11 +232,6 @@ pub(crate) enum GameAction {
         target: Option<TargetSelection>,
         target_glyph: Option<String>,
     },
-    UseItemForRecharge {
-        item_id: String,
-        source_item_id: String,
-        target_item_id: String,
-    },
     Unequip {
         slot_id: String,
     },
@@ -549,10 +544,13 @@ impl From<GameCommand> for GameAction {
                 item_id,
                 source_item_id,
                 target_item_id,
-            } => Self::UseItemForRecharge {
+            } => Self::UseItem {
                 item_id,
-                source_item_id,
-                target_item_id,
+                target: Some(TargetSelection::RechargeItems {
+                    source_item_id,
+                    target_item_id,
+                }),
+                target_glyph: None,
             },
             GameCommand::Unequip { slot_id } => Self::Unequip { slot_id },
             GameCommand::Drop { item_ids } => Self::Drop { item_ids },

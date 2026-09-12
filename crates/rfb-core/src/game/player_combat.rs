@@ -478,7 +478,8 @@ impl Game {
             | TargetSelection::CraftingItem { .. }
             | TargetSelection::Element { .. }
             | TargetSelection::MundanityItem { .. }
-            | TargetSelection::ArtifactCreationItem { .. } => None,
+            | TargetSelection::ArtifactCreationItem { .. }
+            | TargetSelection::RechargeItems { .. } => None,
         }
     }
 }

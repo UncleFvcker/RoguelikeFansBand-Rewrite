@@ -1405,3 +1405,5 @@ item-crafting-quantity-confirm = 这叠弹药数量超过 30，工艺有可能�
 item-mundanity-resistance-confirm = 该物品上的所有抗性都将丢失。确定要继续吗？
 
 task-membership-required = 这项任务需要本塔会员或塔主资格。
+inventory-recharge-source-title = 选择一个作为充能源的魔法装置？
+inventory-recharge-target-title = 要为哪件物品充能？

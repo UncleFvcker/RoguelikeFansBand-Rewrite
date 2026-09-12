@@ -1788,8 +1788,7 @@ impl Game {
             GameAction::Move { .. } | GameAction::TravelWorld { .. }
         );
         let item_tags = match action {
-            GameAction::UseItem { item_id, .. }
-            | GameAction::UseItemForRecharge { item_id, .. } => self
+            GameAction::UseItem { item_id, .. } => self
                 .items
                 .iter()
                 .find(|item| item.id == *item_id)

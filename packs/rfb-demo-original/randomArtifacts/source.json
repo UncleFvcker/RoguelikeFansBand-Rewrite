@@ -1097,11 +1097,8 @@
         },
         "deviceCheckDifficulty": 35,
         "effect": {
-          "effect": {
-            "power": 100,
-            "type": "recharge-from-player"
-          },
-          "type": "ability-effect"
+          "type": "recharge-from-device",
+          "power": 100
         },
         "id": "rfb.device-activation.random-artifact.recharge-from-device",
         "maxDepth": 100,

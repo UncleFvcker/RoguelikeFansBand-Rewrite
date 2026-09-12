@@ -412,6 +412,46 @@ test("using items starts map targeting only for map targets and preserves rechar
   assert.deepEqual(commands[1], { type: "use-item-for-recharge", itemId: "wand", sourceItemId: "source", targetItemId: "target" });
 });
 
+test("recharge activation selects distinct pack or ground devices and cancels either stage once", (t) => {
+  const { panel, dom, state, commands, document } = createInventoryFixture(t);
+  const cloak = item("cloak", { usable: true, requiresRechargeTargets: true, activation: {} });
+  const donor = item("donor", { canSupplyRecharge: true, canReceiveRecharge: true });
+  panel.render([cloak, donor], []);
+  state.status = { ...state.status, player: { ...state.status.player, position: { x: 1, y: 1 } }, items: [item("ground", { canReceiveRecharge: true }), item("full")] };
+  state.selectedInventoryIds.add("cloak");
+  panel.updateActions();
+  assert.equal(dom.inventoryUse.disabled, false);
+  const start = () => {
+    dom.inventoryUse.dispatchEvent(new Event("click"));
+    return document.body.children[0];
+  };
+  const selectDonor = () => {
+    const source = start();
+    const form = source.children[0];
+    assert.match(form.children[0].textContent, /^inventory-recharge-source-title/);
+    assert.deepEqual(form.children[1].children[1].children.map(option => option.value), ["donor"]);
+    form.children[1].children[1].value = "donor";
+    form.dispatchEvent(new Event("submit", { cancelable: true }));
+    return document.body.children[0];
+  };
+  start().close();
+  selectDonor().close();
+  assert.deepEqual(commands, [{ type: "use-item", itemId: "cloak" }, { type: "use-item", itemId: "cloak" }]);
+  const target = selectDonor().children[0];
+  assert.match(target.children[0].textContent, /^inventory-recharge-target-title/);
+  assert.deepEqual(target.children[1].children[1].children.map(option => option.value), ["ground"]);
+  target.children[1].children[1].value = "ground";
+  target.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.deepEqual(commands[2], { type: "use-item-for-recharge", itemId: "cloak", sourceItemId: "donor", targetItemId: "ground" });
+  panel.render([donor], [{ ...cloak, slotId: "cloak" }]);
+  dom.equipmentList.children[0].children[0].dispatchEvent(new Event("click"));
+  dom.inventoryDetailActions.querySelectorAll("button")[0].dispatchEvent(new Event("click"));
+  assert.equal(dom.inventoryDetailDialog.open, false);
+  assert.match(document.body.children[0].children[0].children[0].textContent, /^inventory-recharge-source-title/);
+  document.body.children[0].close();
+  assert.deepEqual(commands[3], { type: "use-item", itemId: "cloak" });
+});
+
 test("item-use target cancellation reaches core once, while a confirmed target does not cancel", (t) => {
   const { panel, dom, state, commands, document } = createInventoryFixture(t);
   const staff = item("staff", { usable: true, useTargetSpec: { modes: ["item"] } });

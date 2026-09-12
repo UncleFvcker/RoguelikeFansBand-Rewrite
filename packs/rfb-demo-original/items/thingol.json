@@ -1,0 +1,94 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.thingol",
+  "nameKey": "item-demo-thingol-name",
+  "descriptionKey": "item-demo-thingol-description",
+  "glyph": "(",
+  "generationLevel": 20,
+  "weightTenthsPound": 10,
+  "maxStack": 1,
+  "baseValue": 45000,
+  "equipmentSlot": "cloak",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 46,
+    "baseItemKindId": "demo.item.cloak",
+    "instant": false,
+    "rarityOneIn": 90
+  },
+  "modifiers": {
+    "defense": 19,
+    "dexterity": 3,
+    "charisma": 3
+  },
+  "resistances": {
+    "acid": "resistant",
+    "fire": "resistant",
+    "cold": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "DEX",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_FIRE",
+      "XTRA_POWER"
+    ],
+    "pval": 3,
+    "toArmor": 18
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.thingol",
+        "nameKey": "device-activation-e5-recharge-from-device-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 20,
+        "rfbValue": 3900,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "item"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.thingol-recharge"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 700
+    }
+  }
+}

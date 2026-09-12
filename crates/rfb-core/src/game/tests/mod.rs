@@ -75,6 +75,7 @@ mod spectre_rules;
 mod spectre_supplies;
 pub(crate) mod support;
 mod tasks;
+mod thingol;
 mod town;
 mod trait_details;
 mod vampire;

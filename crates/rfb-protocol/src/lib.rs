@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.259";
+pub const PROTOCOL_VERSION: &str = "1.260";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 22;
 
@@ -927,6 +927,10 @@ pub struct TargetSpecDto {
     rename_all_fields = "camelCase"
 )]
 pub enum TargetSelection {
+    RechargeItems {
+        source_item_id: String,
+        target_item_id: String,
+    },
     Direction {
         direction: Direction,
     },
@@ -4022,6 +4026,10 @@ pub struct SummonDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ItemDto {
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub can_supply_recharge: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub can_receive_recharge: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     pub id: String,
@@ -4391,6 +4399,8 @@ pub struct BodySlotDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct EquipmentItemDto {
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub requires_recharge_targets: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -6627,6 +6637,8 @@ mod tests {
                 summon: None,
             }],
             items: vec![ItemDto {
+                can_supply_recharge: false,
+                can_receive_recharge: false,
                 artifact_name: None,
                 id: "demo.item.ground.1".to_owned(),
                 kind_id: "demo.item.shard".to_owned(),
@@ -6697,6 +6709,7 @@ mod tests {
                 throw_profile: None,
             }],
             equipment: vec![EquipmentItemDto {
+                requires_recharge_targets: false,
                 artifact_name: None,
                 bag_capacity: None,
                 id: "demo.item.equipment.1".to_owned(),

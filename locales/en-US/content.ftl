@@ -10046,3 +10046,5 @@ item-demo-one-ring-description = Increases all six attributes and speed, grantin
 item-demo-darnya-description = A dazzling gold-plated ring bearing strange Heheh runes. Its unpredictable power can permanently drain all six attributes and experience.
 device-activation-one-ring-name = Bizarre Things
 item-demo-spectral-dragon-scale-mail-description = Translucent white dragon scales that pass through walls without density damage and retain the white dragon's cold breath.
+item-demo-thingol-name = of Thingol
+item-demo-thingol-description = A dark purple cloak with glowing Elvish runes that channel magic between devices.

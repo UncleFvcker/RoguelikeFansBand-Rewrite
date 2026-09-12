@@ -89,12 +89,14 @@
         "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_negative_power_reaches_a_cursed_equippable_instance",
         "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
         "crates/rfb-core/src/game/ego/applicability.rs#real_warrior_gets_mage_and_dwarf_themed_equipment_then_equips_and_restores",
-        "crates/rfb-core/src/game/tests/priest/generation.rs#every_priest_build_claims_the_source_thieves_and_orc_rewards_and_resumes"
+        "crates/rfb-core/src/game/tests/priest/generation.rs#every_priest_build_claims_the_source_thieves_and_orc_rewards_and_resumes",
+        "crates/rfb-core/src/game/tests/thingol.rs#scroll_ego_and_random_artifact_recharge_use_real_device_energy_and_restore_the_same_next_result"
       ],
       "limits": "Shared Ego/E8.8 evidence is reused. Mage protection, wizard and free-action gloves exercise real caster encumbrance; Mage natural negative random artifacts preserve curse handling, equipment and continued generation after save. No extra Mage-specific Ego weight branch exists. Priest step-7 core and consumer regressions passed for all 24 builds. Bilingual menu/UI and two representative good/evil desktop runs passed with explicit level, item and map preparation; no 24-fold campaign or natural high-level progression claim.",
       "sourceEvidence": [
         "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
-        "docs/priest-source-audit.md sections 6 and 7; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
+        "docs/priest-source-audit.md sections 6 and 7; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+        "src/spells3.c:2669-2870 RECHARGE_FROM_DEVICE donor/target eligibility, source destruction and target failure; src/devices.c EFFECT_RECHARGE_FROM_DEVICE; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
       ]
     },
     {
@@ -126,12 +128,14 @@
         "crates/rfb-core/src/game/tests/items.rs#artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name",
         "crates/rfb-core/src/game/tests/arena.rs",
         "crates/rfb-core/src/game/random_artifact/tests.rs#random_artifact_group_control_uses_source_projection_profiles",
-        "crates/rfb-core/src/game/tests/monster_status_projection.rs#projection_immunities_have_distinct_rng_and_stasis_ignores_no_sleep"
+        "crates/rfb-core/src/game/tests/monster_status_projection.rs#projection_immunities_have_distinct_rng_and_stasis_ignores_no_sleep",
+        "crates/rfb-core/src/game/tests/thingol.rs#scroll_ego_and_random_artifact_recharge_use_real_device_energy_and_restore_the_same_next_result"
       ],
       "limits": "Factory tests cover source probability boundaries, including Mage 19/20 conversion and natural/theme separation. Actual scroll commands cover prior class representatives and Mage, selected equipment, saved names, virtues and continued actions. Berserker scroll rejection remains a class consumer rule. Realm pairs share this class-only branch; entry enumeration is separate from desktop acceptance. Priest step-7 core and consumer regressions passed for all 24 builds. Bilingual menu/UI and two representative good/evil desktop runs passed with explicit level, item and map preparation; no 24-fold campaign or natural high-level progression claim.",
       "sourceEvidence": [
         "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
-        "docs/priest-source-audit.md sections 6 and 7; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
+        "docs/priest-source-audit.md sections 6 and 7; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+        "src/spells3.c:2669-2870 RECHARGE_FROM_DEVICE donor/target eligibility, source destruction and target failure; src/devices.c EFFECT_RECHARGE_FROM_DEVICE; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
       ]
     },
     {
@@ -255,9 +259,12 @@
         "crates/rfb-core/src/game/tests/ring_of_power.rs#c5a_backlash_recalculates_lost_levels_and_resources_once_and_respects_lower_bounds",
         "crates/rfb-core/src/game/tests/ring_of_power.rs#c5b_one_ring_ordinary_generation_permanent_properties_and_shared_activation_survive_save",
         "crates/rfb-core/src/game/tests/ring_of_power.rs#c5b_one_ring_reading_uses_pack_or_floor_and_reading_energy_without_activation",
-        "crates/rfb-core/src/game/tests/ring_of_power.rs#c5b_one_ring_mastery_and_brands_follow_weapon_hands_and_innate_attacks_after_save"
+        "crates/rfb-core/src/game/tests/ring_of_power.rs#c5b_one_ring_mastery_and_brands_follow_weapon_hands_and_innate_attacks_after_save",
+        "crates/rfb-core/src/game/tests/thingol.rs#ordinary_thingol_keeps_source_properties_unique_identity_and_cooldown_after_save",
+        "crates/rfb-core/src/game/tests/thingol.rs#cancellation_failed_skill_and_invalid_pairs_preserve_energy_and_only_valid_attempts_take_time",
+        "crates/rfb-core/src/game/tests/thingol.rs#transfer_spends_source_on_both_target_outcomes_and_limits_power_source_and_missing_capacity"
       ],
-      "limits": "Six other identity-sensitive construction exceptions, two fixed harps, Archaeologist Dr Jones, Monk Xiaolong, Dragon-pact Warlock Dragonlance, and Mauler / monster Hydra/Troll/Jelly Terror Mask branches remain deferred until their actual identities/content are available. Named GHB acquisition uses the formal Warrens ecology with prepared combat, not natural leveling. Old Castle tests prepare task completion and do not claim natural quest completion. Random-artifacts game mode replacement is unavailable; ordinary named drops skip an already-generated artifact. Priest step-7 core and consumer regressions passed for all 24 builds. Bilingual menu/UI and two representative good/evil desktop runs passed with explicit level, item and map preparation; no 24-fold campaign or natural high-level progression claim. No open creation identity grants source ambush: Scout level20 with undisrupted equipment, Skillmaster stealth3 and POS_BACKSTAB possessed bodies remain identity dependencies; no fake build or universal sleeping-target double damage. Source pre-action fear/arena handling, specialized consumable breakage and boomerang/catch are outside this batch; source return mechanics136/383 remain in step5. Existing recovery, regeneration and fixed-artifact landing adaptations remain. Core controlled-precondition evidence, not natural leveling or desktop acceptance. Caine799/Fiona791/Hagen383 additional50/50/66-percent drops remain named acquisition dependencies. Shooting retains the existing compatible-ammunition selection by instance ID, hit/critical/damage implementation and landing adaptations; no new manual ammunition selector. Shared bleeding intensity/recovery, friendly-target handling and melee proficiency behavior remain existing adaptations. Blood-Knight guaranteed Bloodrip backlash remains an unopened identity dependency; current classes use the source one-in-two branch.",
+      "limits": "Six other identity-sensitive construction exceptions, two fixed harps, Archaeologist Dr Jones, Monk Xiaolong, Dragon-pact Warlock Dragonlance, and Mauler / monster Hydra/Troll/Jelly Terror Mask branches remain deferred until their actual identities/content are available. Named GHB acquisition uses the formal Warrens ecology with prepared combat, not natural leveling. Old Castle tests prepare task completion and do not claim natural quest completion. Random-artifacts game mode replacement is unavailable; ordinary named drops skip an already-generated artifact. Priest step-7 core and consumer regressions passed for all 24 builds. Bilingual menu/UI and two representative good/evil desktop runs passed with explicit level, item and map preparation; no 24-fold campaign or natural high-level progression claim. No open creation identity grants source ambush: Scout level20 with undisrupted equipment, Skillmaster stealth3 and POS_BACKSTAB possessed bodies remain identity dependencies; no fake build or universal sleeping-target double damage. Source pre-action fear/arena handling, specialized consumable breakage and boomerang/catch are outside this batch; source return mechanics136/383 remain in step5. Existing recovery, regeneration and fixed-artifact landing adaptations remain. Core controlled-precondition evidence, not natural leveling or desktop acceptance. Caine799/Fiona791/Hagen383 additional50/50/66-percent drops remain named acquisition dependencies. Shooting retains the existing compatible-ammunition selection by instance ID, hit/critical/damage implementation and landing adaptations; no new manual ammunition selector. Shared bleeding intensity/recovery, friendly-target handling and melee proficiency behavior remain existing adaptations. Blood-Knight guaranteed Bloodrip backlash remains an unopened identity dependency; current classes use the source one-in-two branch. Thingol46 has ordinary entry and device-pair activation;141 remains unavailable behind its own base/QUESTITEM acquisition. Devicemaster recharge speciality and cosmetic source activation E messages remain outside current scope.",
       "sourceEvidence": [
         "lib/edit/q_old_castle.txt:343-349 Mage and High-Mage",
         "lib/edit/q_thieves.txt ordinary versus SPEED=2 reward",
@@ -276,7 +283,8 @@
         "C3 source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c Git objects: a_info.txt, artifact_name_zh.inc, kind_name_zh.inc, devices.c, cmd2.c, cmd6.c, cmd1.c, spells2.c and effects.c. Reuses current ordinary base/level/rarity/unique selection and real projectile/melee consumers. Source values and pack1.433.0 are synchronized.",
         "I19:24:3 W50:15:200:60000 P0:x5.00:10:30:0; STR3 and confusion resistance. PIERCING_SHOT power30 cooldown1000 ticks value1500. SHOOT_PIERCE continues only after a hit, at most five penetrations (six struck targets), subtracts60 hit skill per penetration and uses ordinary ammunition breakage. It is distinct from Sniper SP_PIERCE concentration expenditure. Exploding ammunition terminates at its first hit. Activation failure, cancellation or no compatible ammunition preserves cooldown; a successful shot uses one normal shooting energy cost. Existing Sniper focus applies during the shot and clears afterward.",
         "I22:29:0 W60:40:450:1000000 P0:5d10:17:23:0; poison brand, human/giant/troll slays and lance riding profile (+2 dice/+15 hit mounted). CHARGE power10 cooldown1000 ticks value5000. Reuses RidingCharge movement and real melee; seven-square limit, mount moves with player, terrain/first actor stop movement. rush_attack locks Duelist onto the current challenged opponent and requires LOS. Nonmounted/cancelled activation checks the device before rejecting without cooldown. Unopened Ninja HISSATSU_NYUSIN exception remains identity-dependent.",
-        "I23:21:2 W66:6:150:166666 P0:6d6:10:10:0; CON2, stealth-2, vorpal, vampiric, free action, see invisible, slay good, confusion/sound resistance. WHIRLWIND_ATTACK power40 cooldown660 ticks value5000 uses existing MeleeAdjacent and Duelist continuation. Source ddd order S/N/E/W/SE/SW/NE/NW, live adjacent targets visible or on projectile terrain, stops on player death/floor change. Bloodrip backlash is checked once after each hand even after misses or a kill: one-in-two adds2+2d3 cut, capped10000; dice precede immunity/death rejection."
+        "I23:21:2 W66:6:150:166666 P0:6d6:10:10:0; CON2, stealth-2, vorpal, vampiric, free action, see invisible, slay good, confusion/sound resistance. WHIRLWIND_ATTACK power40 cooldown660 ticks value5000 uses existing MeleeAdjacent and Duelist continuation. Source ddd order S/N/E/W/SE/SW/NE/NW, live adjacent targets visible or on projectile terrain, stops on player death/floor change. Bloodrip backlash is checked once after each hand even after misses or a kill: one-in-two adds2+2d3 cut, capped10000; dice precede immunity/death rejection.",
+        "lib/edit/a_info.txt N:46; src/spells3.c:2669-2870; src/devices.c EFFECT_RECHARGE_FROM_DEVICE; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
       ]
     },
     {
@@ -316,12 +324,14 @@
         "web/e2e/priest.e2e.mjs#runPriestUiScenario",
         "web/src/session-shell.test.ts",
         "crates/rfb-core/src/game/random_artifact/tests.rs#random_artifact_group_control_uses_source_projection_profiles",
-        "crates/rfb-core/src/game/tests/monster_status_projection.rs#projection_immunities_have_distinct_rng_and_stasis_ignores_no_sleep"
+        "crates/rfb-core/src/game/tests/monster_status_projection.rs#projection_immunities_have_distinct_rng_and_stasis_ignores_no_sleep",
+        "crates/rfb-core/src/game/tests/thingol.rs#scroll_ego_and_random_artifact_recharge_use_real_device_energy_and_restore_the_same_next_result"
       ],
       "limits": "Reuse existing item/activation/save evidence and the Mage step-5 real class consumers. Tests explicitly prepare levels, positions, books or rewards where needed. Step-6 UI acceptance covers creation and spellbook interactions; natural acquisition, progression and the playable desktop release remain step 7. Priest step-7 core and consumer regressions passed for all 24 builds. Bilingual menu/UI and two representative good/evil desktop runs passed with explicit level, item and map preparation; no 24-fold campaign or natural high-level progression claim.",
       "sourceEvidence": [
         "docs/ranger-source-audit.md sections 5 and 11; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
-        "docs/priest-source-audit.md sections 6 and 7; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
+        "docs/priest-source-audit.md sections 6 and 7; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+        "src/spells3.c:2669-2870 RECHARGE_FROM_DEVICE donor/target eligibility, source destruction and target failure; src/devices.c EFFECT_RECHARGE_FROM_DEVICE; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
       ]
     }
   ],

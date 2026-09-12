@@ -64,6 +64,10 @@ node e2e/tauri.e2e.mjs --berserker --fast-entry
 
 在 `web` 执行 `npm run e2e:build`，随后执行 `node e2e/tauri.e2e.mjs --one-ring`。[聚焦脚本](../web/e2e/one-ring.e2e.mjs)正常创建人类1级战士，再通过核心导出测试显式选择出生天赋、清怪、移到准备地格并授予零充能魔戒，保留真实博物馆绑定。准备存档经过正常加载入口后，由UI选择、取消、读取、丢到脚下再读取；核对四行中文消息、物品不消耗及原生保存恢复后的相同下一次读取哈希。报告、存档与两张截图在 `test-results/one-ring/`。该场景只验收读取交互；普通生成、装备战斗、激活、时间／状态边界沿核心戒指专项验证，不宣称自然获取或Android验收。
 
+## 辛葛的装置间充能桌面验收
+
+在 `web` 执行 `npm run e2e:build`，随后执行 `node e2e/tauri.e2e.mjs --thingol`。[聚焦脚本](../web/e2e/thingol.e2e.mjs)正常创建人类1级战士，核心导出测试显式选择出生天赋、清怪、授予并装备辛葛的披风、提供背包供能装置及脚下零能量装置，并选择一次成功且供能未损毁的种子。UI验证两个独立选择框、任一阶段取消的时间／能量边界、背包到脚下充能、冷却存档和原生加载后的同次充能哈希。报告、存档及截图在 `test-results/thingol/`。供能损毁／目标失败、普通生成与700 tick边界由核心专项覆盖；不宣称自然获取、练级或Android验收。
+
 ## Contract fixture
 
 当前集位于 [tests/fixtures/active/scenarios](../tests/fixtures/active/scenarios/)，分类和最低数量等政策来自 [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)。`rfb-contract` 的 [CLI](../crates/rfb-contract/src/main.rs)和[断言实现](../crates/rfb-contract/src/lib.rs)是精确语义依据。

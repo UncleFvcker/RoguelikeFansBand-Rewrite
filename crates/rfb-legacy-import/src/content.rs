@@ -5845,9 +5845,7 @@ fn legacy_device_item_effect(
             false,
         ),
         "RECHARGE_FROM_DEVICE" => (
-            device_ability_effect(
-                serde_json::json!({"type": "recharge-from-player", "power": 100}),
-            ),
+            serde_json::json!({"type": "recharge-from-device", "power": 100}),
             item_target,
             false,
         ),
@@ -27129,6 +27127,28 @@ static cptr _ego_name_zh[] =
             serde_json::json!({"type":"recall","delayDice":1,"delaySides":21,"delayBonus":14})
         );
         assert_eq!(target, device_self_target());
+    }
+
+    #[test]
+    fn device_recharge_activation_uses_another_device_instead_of_player_mana() {
+        let candidate = LegacyEgoActivationCandidate {
+            source_order: 0,
+            token: "RECHARGE_FROM_DEVICE".into(),
+            level: 35,
+            recovery_turns: 500,
+            rarity: 3,
+            biases: Vec::new(),
+        };
+        let (effect, target, affects_ground) = legacy_device_item_effect(&candidate).unwrap();
+        assert_eq!(
+            effect,
+            serde_json::json!({"type":"recharge-from-device","power":100})
+        );
+        assert_eq!(
+            target,
+            serde_json::json!({"modes":["item"],"range":0,"requiresLineOfEffect":false})
+        );
+        assert!(!affects_ground);
     }
 
     #[test]

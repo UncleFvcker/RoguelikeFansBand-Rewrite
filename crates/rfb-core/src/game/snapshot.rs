@@ -949,6 +949,8 @@ impl Game {
                     return None;
                 }
                 Some(ItemDto {
+                    can_supply_recharge: self.item_can_supply_recharge(item),
+                    can_receive_recharge: self.item_can_receive_recharge(item),
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
                     display_name_key: self.item_display_name_key(&item.kind_id),
@@ -1150,6 +1152,11 @@ impl Game {
                     return None;
                 };
                 Some(EquipmentItemDto {
+                    requires_recharge_targets: self
+                        .inventory_item_use_effect(&item.id)
+                        .is_some_and(|(effect, _)| {
+                            matches!(effect, ItemUseEffectDefinition::RechargeFromDevice { .. })
+                        }),
                     bag_capacity: self.visible_item_bag_capacity(item),
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),

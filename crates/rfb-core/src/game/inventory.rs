@@ -2021,7 +2021,7 @@ impl Game {
     }
 
     pub(super) fn item_can_receive_recharge(&self, item: &ItemInstance) -> bool {
-        item.location == ItemLocation::Inventory && self.item_has_recharge_capacity(item)
+        self.item_is_in_pack_or_at_feet(item) && self.item_has_recharge_capacity(item)
     }
 
     pub(super) fn item_can_receive_player_recharge(&self, item: &ItemInstance) -> bool {
@@ -2100,7 +2100,8 @@ impl Game {
     }
 
     fn item_has_recharge_capacity(&self, item: &ItemInstance) -> bool {
-        item.activation.is_some()
+        self.item_is_device(item)
+            && item.activation.is_some()
             && item_device_generation(
                 &self.content,
                 &item.kind_id,
@@ -2110,7 +2111,20 @@ impl Game {
                     .map(|activation| activation.profile_id.as_str()),
                 item.artifact_name.is_some(),
             )
-            .is_some()
+            .and_then(|generation| {
+                generation.activations.iter().find(|profile| {
+                    item.activation
+                        .as_ref()
+                        .is_some_and(|activation| activation.profile_id == profile.id)
+                })
+            })
+            .is_some_and(|profile| {
+                !matches!(
+                    &profile.effect,
+                    rfb_content::ItemUseEffectDefinition::RestoreResourceFull { resource_id }
+                        if resource_id == "demo.resource.mana"
+                )
+            })
             && item
                 .charges
                 .is_some_and(|charges| charges.current < charges.maximum)
@@ -2129,7 +2143,7 @@ impl Game {
     }
 
     pub(super) fn item_can_supply_recharge(&self, item: &ItemInstance) -> bool {
-        item.location == ItemLocation::Inventory
+        self.item_is_in_pack_or_at_feet(item)
             && self.item_is_device(item)
             && item.charges.is_some_and(|charges| charges.current > 0)
     }
@@ -2165,28 +2179,30 @@ impl Game {
                 .bounded(u64::from(request.source_destruction_one_in))
         });
         let destroy = destruction_roll == Some(0);
-        let artifact = self.items[source_index].is_artifact(&self.content);
-        let source_destroyed =
-            destroy && !artifact && !self.player_has_status_kind(STATUS_INVENTORY_PROTECTION);
-        if source_destroyed {
-            let removed = self.items.remove(source_index);
-            self.item_property_knowledge.remove(&removed.id);
-        } else {
-            let source = self
-                .items
-                .iter_mut()
-                .find(|item| item.id == source_item_id)
-                .expect("surviving recharge source must remain available");
-            source
-                .charges
-                .as_mut()
-                .expect("recharge source must carry energy")
-                .current -= attempted;
+        let fixed_artifact = self
+            .content
+            .item(&source_kind_id)
+            .is_some_and(|definition| {
+                definition.artifact_generation.is_some()
+                    || definition.tags.iter().any(|tag| tag == "artifact")
+            });
+        if !destroy {
+            self.decrease_item_charges(source_index, attempted);
         }
         let target = self.recharge_inventory_item_target(
             target_item_id,
             InventoryItemRechargeRequest::new(attempted, request.power),
         );
+        // spells3.c consumes the source even if charging fails; only a fixed
+        // artifact replaces destruction with energy loss. Pack protection does
+        // not prevent this deliberate consumption.
+        let source_destroyed = destroy && !fixed_artifact;
+        if source_destroyed {
+            let removed = self.items.remove(source_index);
+            self.item_property_knowledge.remove(&removed.id);
+        } else if destroy {
+            self.decrease_item_charges(source_index, attempted);
+        }
         DeviceRechargeOutcome {
             source_kind_id,
             source_destroyed,

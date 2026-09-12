@@ -10077,3 +10077,5 @@ item-demo-one-ring-description = 提升六项属性与速度，赋予四元素�
 item-demo-darnya-description = 华丽、炫目的镀金，铭刻着用奇怪的“呵呵（Heheh）”语写成的符文，拥有极其强大的力量，不可避免地会扭曲并控制任何佩戴它的凡间生物。
 device-activation-one-ring-name = 怪异之物
 item-demo-spectral-dragon-scale-mail-description = 透明的白色龙鳞甲，能穿过墙壁而不受密度伤害，并继承白龙的寒冷吐息。
+item-demo-thingol-name = 辛葛的
+item-demo-thingol-description = 一件黑紫色的披风，带有发光的精灵符文以恢复魔力，展现出如静水上的月光般平静与清澈。

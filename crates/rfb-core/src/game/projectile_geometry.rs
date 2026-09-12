@@ -28,7 +28,8 @@ impl Game {
             TargetSelection::CraftingItem { .. }
             | TargetSelection::Element { .. }
             | TargetSelection::MundanityItem { .. }
-            | TargetSelection::ArtifactCreationItem { .. } => {
+            | TargetSelection::ArtifactCreationItem { .. }
+            | TargetSelection::RechargeItems { .. } => {
                 return None;
             }
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
@@ -53,7 +54,8 @@ impl Game {
             TargetSelection::CraftingItem { .. }
             | TargetSelection::Element { .. }
             | TargetSelection::MundanityItem { .. }
-            | TargetSelection::ArtifactCreationItem { .. } => {
+            | TargetSelection::ArtifactCreationItem { .. }
+            | TargetSelection::RechargeItems { .. } => {
                 return None;
             }
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
@@ -82,7 +84,8 @@ impl Game {
             | TargetSelection::CraftingItem { .. }
             | TargetSelection::Element { .. }
             | TargetSelection::MundanityItem { .. }
-            | TargetSelection::ArtifactCreationItem { .. } => None,
+            | TargetSelection::ArtifactCreationItem { .. }
+            | TargetSelection::RechargeItems { .. } => None,
         }
     }
 
@@ -123,7 +126,8 @@ impl Game {
             | TargetSelection::CraftingItem { .. }
             | TargetSelection::Element { .. }
             | TargetSelection::MundanityItem { .. }
-            | TargetSelection::ArtifactCreationItem { .. } => None,
+            | TargetSelection::ArtifactCreationItem { .. }
+            | TargetSelection::RechargeItems { .. } => None,
         }
     }
 

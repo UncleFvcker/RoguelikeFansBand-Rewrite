@@ -1409,3 +1409,5 @@ item-crafting-quantity-confirm = This stack has more than 30 missiles. Crafting 
 item-mundanity-resistance-confirm = All resistances on this item will be lost. Continue?
 
 task-membership-required = This task requires membership or ownership of this tower.
+inventory-recharge-source-title = Choose a device to supply energy
+inventory-recharge-target-title = Choose a device to recharge

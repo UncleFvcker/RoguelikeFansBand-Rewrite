@@ -16,6 +16,10 @@ const SNOTLING_RACE_ID: &str = "rfb-legacy.race.snotling";
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum ItemUsePlan {
     CancelledActivation,
+    RechargeItems {
+        source_item_id: String,
+        target_item_id: String,
+    },
     AbilityEffect {
         ability: Box<AbilityDefinition>,
         target_plan: AbilityTargetPlan,
@@ -1715,105 +1719,30 @@ impl Game {
         noticed
     }
 
-    pub(super) fn recharging_item_unavailable_reason(
+    fn recharge_items_are_valid(
         &self,
         item_id: &str,
         source_item_id: &str,
         target_item_id: &str,
-    ) -> Option<&'static str> {
-        if self
-            .items
-            .iter()
-            .find(|item| item.id == item_id)
-            .is_some_and(|item| self.berserker_item_use_rejection_cost(item).is_some())
-        {
-            return Some("class-restriction");
-        }
+    ) -> bool {
         if item_id == source_item_id || item_id == target_item_id {
-            return Some("recharging-item-is-device");
+            return false;
         }
         if source_item_id == target_item_id {
-            return Some("source-is-target");
+            return false;
         }
-        if self.recharging_item_power(item_id).is_none() {
-            return Some("item-unavailable");
-        }
-        let source = self.items.iter().find(|item| {
-            item.id == source_item_id
-                && item.location == ItemLocation::Inventory
-                && item.quantity > 0
-        });
-        if source.is_none_or(|item| !self.item_can_supply_recharge(item)) {
-            return Some("source-unavailable");
-        }
-        let target = self.items.iter().find(|item| {
-            item.id == target_item_id
-                && item.location == ItemLocation::Inventory
-                && item.quantity > 0
-        });
-        if target.is_none_or(|item| !self.item_can_receive_recharge(item)) {
-            return Some("target-not-rechargeable");
-        }
-        None
-    }
-
-    pub(super) fn use_recharging_item(
-        &mut self,
-        item_id: &str,
-        source_item_id: &str,
-        target_item_id: &str,
-        events: &mut Vec<DomainEvent>,
-    ) {
-        if self
-            .recharging_item_unavailable_reason(item_id, source_item_id, target_item_id)
-            .is_some()
-        {
-            events.push(DomainEvent::ItemUseUnavailable);
-            return;
-        }
-        let power = u32::from(
-            self.recharging_item_power(item_id)
-                .expect("preflighted recharging item must retain its power"),
-        );
-        let index = self
+        let source = self
             .items
             .iter()
-            .position(|item| item.id == item_id)
-            .expect("preflighted recharging item must remain available");
-        let kind_id = self.items[index].kind_id.clone();
-        self.mark_item_tried(&kind_id);
-        if self.items[index].quantity == 1 {
-            let removed = self.items.remove(index);
-            self.item_property_knowledge.remove(&removed.id);
-        } else {
-            self.items[index].quantity -= 1;
+            .find(|item| item.id == source_item_id && item.quantity > 0);
+        if source.is_none_or(|item| !self.item_can_supply_recharge(item)) {
+            return false;
         }
-        let outcome = self.recharge_inventory_item_from_device(
-            target_item_id,
-            source_item_id,
-            DeviceRechargeRequest::new(power, RECHARGING_ITEM_SOURCE_DESTRUCTION_ONE_IN),
-        );
-        events.push(device_recharge_resolved_event(
-            outcome.target,
-            outcome.source_kind_id,
-            true,
-            outcome.source_destroyed,
-        ));
-        self.mark_item_aware(&kind_id);
-    }
-
-    fn recharging_item_power(&self, item_id: &str) -> Option<u16> {
-        let item = self.items.iter().find(|item| {
-            item.id == item_id
-                && item.location == ItemLocation::Inventory
-                && item.quantity > 0
-                && item.activation.is_none()
-        })?;
-        let action = self.content.item(&item.kind_id)?.use_action.as_ref()?;
-        match action.effect {
-            ItemUseEffectDefinition::RechargeFromDevice { power } => Some(power),
-            _ => None,
-        }
+        let target = self
+            .items
+            .iter()
+            .find(|item| item.id == target_item_id && item.quantity > 0);
+        target.is_some_and(|item| self.item_can_receive_recharge(item))
     }
 
     pub(super) fn resolve_item_curse(
@@ -3183,6 +3112,35 @@ impl Game {
         let mut noticed = false;
         match (effect, plan) {
             (
+                ItemUseEffectDefinition::RechargeFromDevice { power },
+                ItemUsePlan::RechargeItems {
+                    source_item_id,
+                    target_item_id,
+                },
+            ) => {
+                for item in &self.items {
+                    if (item.id == source_item_id || item.id == target_item_id)
+                        && let ItemLocation::Ground(position) = item.location
+                    {
+                        changed.insert(position);
+                    }
+                }
+                let power = device_power_value(u64::from(power), device_power_bonus) as u32;
+                let outcome = self.recharge_inventory_item_from_device(
+                    &target_item_id,
+                    &source_item_id,
+                    DeviceRechargeRequest::new(power, RECHARGING_ITEM_SOURCE_DESTRUCTION_ONE_IN),
+                );
+                events.push(device_recharge_resolved_event(
+                    outcome.target,
+                    outcome.source_kind_id,
+                    true,
+                    outcome.source_destroyed,
+                ));
+                self.mark_item_aware(&kind_id);
+                noticed = true;
+            }
+            (
                 ItemUseEffectDefinition::ProjectMonsterStatus { projection, power },
                 ItemUsePlan::SelfTarget,
             ) => {
@@ -4111,7 +4069,23 @@ impl Game {
                     }
                 })
             }
-            ItemUseEffectDefinition::RechargeFromDevice { .. } => None,
+            ItemUseEffectDefinition::RechargeFromDevice { .. } => {
+                let Some(target) = target else {
+                    return target_definition.map(|_| ItemUsePlan::CancelledActivation);
+                };
+                let TargetSelection::RechargeItems {
+                    source_item_id: donor,
+                    target_item_id,
+                } = target
+                else {
+                    return None;
+                };
+                self.recharge_items_are_valid(source_item_id, donor, target_item_id)
+                    .then(|| ItemUsePlan::RechargeItems {
+                        source_item_id: donor.clone(),
+                        target_item_id: target_item_id.clone(),
+                    })
+            }
             ItemUseEffectDefinition::CreateAdjacentTerrain {
                 source_terrain_ids,
                 target_terrain_id,

@@ -1127,19 +1127,6 @@ impl Game {
                 .refuel_light_unavailable_reason(target_item_id, source_item_id)
                 .is_some()
         );
-        let unavailable_recharging_item = matches!(
-            &action,
-            GameAction::UseItemForRecharge {
-                item_id,
-                source_item_id,
-                target_item_id,
-            } if self
-                .recharging_item_unavailable_reason(item_id, source_item_id, target_item_id)
-                .is_some()
-                && self.items.iter().find(|item| item.id == *item_id)
-                    .and_then(|item| self.berserker_item_use_rejection_cost(item))
-                    .is_none_or(|cost| cost == 0)
-        );
         let world_travel_direction = match &action {
             GameAction::TravelWorld { destination } => {
                 self.next_world_travel_direction(*destination)
@@ -1184,7 +1171,6 @@ impl Game {
             && !cursed_unequip
             && !cursed_equip_replacement
             && !unavailable_light_refuel
-            && !unavailable_recharging_item
             && !unavailable_world_travel
             && !unavailable_local_travel
             && !zero_time_unavailable_ability
@@ -1306,7 +1292,11 @@ impl Game {
         let deferred_item_turn = matches!(
             &action,
             GameAction::UseItem {
-                target: None | Some(TargetSelection::ArtifactCreationItem { .. }),
+                target: None
+                    | Some(
+                        TargetSelection::ArtifactCreationItem { .. }
+                            | TargetSelection::RechargeItems { .. }
+                    ),
                 ..
             }
         );
@@ -1988,13 +1978,6 @@ impl Game {
                         maximum: outcome.maximum,
                     });
                 }
-            }
-            GameAction::UseItemForRecharge {
-                item_id,
-                source_item_id,
-                target_item_id,
-            } => {
-                self.use_recharging_item(&item_id, &source_item_id, &target_item_id, &mut events);
             }
             GameAction::BeginRealmChange { book_item_id } => {
                 self.mage_realms
@@ -3802,7 +3785,9 @@ impl Game {
                 AbilityTargetModeDefinition::Item
             }
             TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
-            TargetSelection::CraftingItem { .. } | TargetSelection::ArtifactCreationItem { .. } => {
+            TargetSelection::CraftingItem { .. }
+            | TargetSelection::ArtifactCreationItem { .. }
+            | TargetSelection::RechargeItems { .. } => {
                 return None;
             }
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
