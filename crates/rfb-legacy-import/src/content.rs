@@ -17014,6 +17014,7 @@ pub fn audit_demo_weapon_proficiencies(
         ("mindcrafter.json", 9),
         ("high-mage.json", 10),
         ("archer.json", 15),
+        ("magic-eater.json", 16),
         ("cavalry.json", 22),
         ("sniper.json", 27),
     ] {
@@ -17098,7 +17099,7 @@ pub fn audit_demo_weapon_proficiencies(
     Ok(DemoWeaponProficiencyAuditReport {
         schema_version: 1,
         source_commit,
-        classes_checked: 7,
+        classes_checked: 8,
         base_weapons_checked: base_weapons.len(),
     })
 }

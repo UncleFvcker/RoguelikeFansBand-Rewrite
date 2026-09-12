@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/skill-set.schema.json",
+  "formatVersion": 1,
+  "id": "demo.skill-set.magic-eater",
+  "entries": [
+    {
+      "skillId": "demo.skill.device",
+      "base": 42,
+      "growthPerTenLevels": 16
+    },
+    {
+      "skillId": "demo.skill.disarming",
+      "base": 25,
+      "growthPerTenLevels": 7
+    },
+    {
+      "skillId": "demo.skill.melee",
+      "base": 48,
+      "growthPerTenLevels": 13
+    },
+    {
+      "skillId": "demo.skill.perception",
+      "base": 16
+    },
+    {
+      "skillId": "demo.skill.ranged",
+      "base": 35,
+      "growthPerTenLevels": 11
+    },
+    {
+      "skillId": "demo.skill.saving-throw",
+      "base": 36,
+      "growthPerTenLevels": 10
+    },
+    {
+      "skillId": "demo.skill.search",
+      "base": 20
+    },
+    {
+      "skillId": "demo.skill.stealth",
+      "base": 2
+    }
+  ]
+}

@@ -43,6 +43,7 @@ mod item_combat_activations;
 mod items;
 mod lighting;
 mod mage;
+mod magic_eater;
 mod mindcrafter;
 mod mining_progress;
 mod monster_ai;

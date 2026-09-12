@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "formatVersion": 1,
+  "id": "demo.actor.magic-eater-player",
+  "role": "player",
+  "nameKey": "actor-demo-magic-eater-player-name",
+  "descriptionKey": "actor-demo-magic-eater-player-description",
+  "glyph": "@",
+  "level": 1,
+  "maxHp": 10,
+  "speed": 110,
+  "attack": 2,
+  "defense": 1,
+  "doorSkill": 24,
+  "bashPower": 30,
+  "searchSkill": 24,
+  "disarmSkill": 24,
+  "digSkill": 24,
+  "damageDice": 1,
+  "damageSides": 2,
+  "damageType": "physical",
+  "inventorySlotCapacity": 26,
+  "tags": [
+    "magic-eater",
+    "player",
+    "rfb-compatibility"
+  ]
+}

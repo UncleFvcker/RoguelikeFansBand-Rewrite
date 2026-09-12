@@ -243,7 +243,8 @@ impl Game {
             || self.player_is_mage()
             || self.player_is_ranger()
             || self.player_is_priest()
-            || self.player_is_warrior_mage())
+            || self.player_is_warrior_mage()
+            || self.player_is_magic_eater())
             || self.player_has_status_kind(STATUS_CONFUSION)
             || !self.world_tick.is_multiple_of(10)
         {
@@ -257,7 +258,7 @@ impl Game {
         let knowledge = i32::from(self.virtue_current(VirtueKindDto::Knowledge));
         // ponytail: pack, quiver and bag share one inventory; use the pack's
         // 1-in-3 gate until items carry an actual container identity.
-        let frequencies = if self.player_is_mage() {
+        let frequencies = if self.player_is_mage() || self.player_is_magic_eater() {
             [(false, 20_000_u32), (true, 9_000)]
         } else if self.player_is_ranger() {
             [(false, 80_000_u32), (true, 80_000)]

@@ -12,10 +12,12 @@
 | 协议 | 1.258 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 127 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 22 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.437.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 源1.438.0；lock仍1.437.0，待食魔者第七步统一核验 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v328，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 13 个 Class、109 个 Build、57 个 Race、36 本能力书、1,907 个 ability、549 个 item、1,409 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon；城镇有 7 个 town、69 个 shop、67 个 townFacility。基础分配池为 408 行，固定神器映射 134/392；创角开放 102 个 Build。这些是定义与入口数量，行为验收范围见下文。
+正式源目录含 14 个 Class、110 个 Build、57 个 Race、36 本能力书、1,907 个 ability、549 个 item、1,410 个 actor、169 个 affix、152 个 mutation。世界定义含 33 个 dungeon；城镇有 7 个 town、69 个 shop、67 个 townFacility。基础分配池为 408 行，固定神器映射 134/392；创角仍开放13职业、102个Build。这些是定义与入口数量，行为验收范围见下文。
+
+食魔者[接入计划](magic-eater-class-plan.md)前两步已完成：单一无领域Build、飞弹魔杖/短剑/软皮甲出生、无公共MP、技能/熟练度/近战/感知/美德与智能反魔法权重已接入；六项新增用例及两项共享用例扩展尚未执行。三类槽位、吸收能力和保存从第三步继续，菜单未开放。按用户安排，测试、编译和内容锁核验留到第七步结束后。
 
 战法师已完成[七步计划](warrior-mage-class-plan.md)：8个固定主奥秘Build、288项参数、双书出生/成长、INT法力/负重/近战/感知及双领域自主学习、重复研习、84点支出、遗忘/改换/保存已接入。25级双向转换保留真实失败、内部支付、满池代价、低HP死亡及公共伤害/治疗修正；旧城堡1:4/重复替代、两件神器/秘银链甲、实际激活/冷却、盗贼长剑、两塔会员与Mage/20卷轴消费者通过。正式入口为“混合 → 战法师 → 第二领域”，含工艺；当前13职业、102个Build，8个新增Build的40项生成责任与来源报告已验收，0个可玩范围证据gap。
 

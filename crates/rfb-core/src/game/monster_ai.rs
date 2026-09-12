@@ -476,13 +476,15 @@ impl Game {
             .saturating_mul(target_multiplier)
             .saturating_mul(resistance_percent)
             / 100;
-        let class_anti_magic = (self.player_is_duelist() || self.player_is_warrior_mage())
+        let class_anti_magic = (self.player_is_duelist() || self.player_is_warrior_mage() || self.player_is_magic_eater())
             && monster_plan_target(&plan.target).is_some_and(MonsterHostileTarget::is_player)
             && self.actor_runtime_definition(&self.entities[index]).and_then(|actor| actor.monster_casting.as_ref()).is_some_and(|casting| casting.smart)
             && plan.ability.effect.ordered_effects().iter().any(|effect| matches!(effect, AbilityEffectDefinition::ApplyStatus { status_kind_id, .. } if status_kind_id == crate::effect::STATUS_ANTI_MAGIC));
         plan.effective_weight = if class_anti_magic {
             if self.player_has_anti_magic() {
                 0
+            } else if self.player_is_magic_eater() {
+                50
             } else if self.player_is_warrior_mage() {
                 20
             } else {

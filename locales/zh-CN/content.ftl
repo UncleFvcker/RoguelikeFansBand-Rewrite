@@ -10059,3 +10059,11 @@ task-demo-zul-nature-node-failed-description = 滚吧，无能的蠢货！神秘
 terrain-demo-zul-nature-node-entry-description = 自然法师们在附近的一片森林里发现了一个神奇的自然节点。你必须去寻找那个节点并消灭它的守卫，这样自然之塔就能夺取节点的神秘能量。
 item-demo-armageddon-tome-name = [末日巨著]
 item-demo-armageddon-tome-description = [末日巨著]
+
+# RFB master a0d92b6378: magic_eater.c::magic_eater_get_class.
+class-demo-magic-eater-name = 食魔者
+class-demo-magic-eater-description = 食魔者可以吸收魔法装置。一旦被吸收，这些装置将像普通物品一样发挥作用，并在有充能时随时可以使用。实际上，这就像食魔者拥有了用于存放装置的额外物品栏。然而，被吸收的魔法不能像普通装置那样被吸取法力，这些物品也不会被破坏。每种装置的槽位数量是有限的，一旦槽位用完，食魔者将需要选择替换哪个物品。被吸收的魔法不能通过卷轴、法术、药水或物品激活来充能；食魔者必须休息才能恢复充能。被吸收的装置恢复充能的速度受再生能力影响。
+actor-demo-magic-eater-player-name = 食魔者
+actor-demo-magic-eater-player-description = 携带魔法飞弹魔杖、短剑和软皮甲的食魔者。
+build-demo-magic-eater-name = 食魔者
+build-demo-magic-eater-description = 无需选择领域或学习法术书，依靠各个装置的充能使用魔法。

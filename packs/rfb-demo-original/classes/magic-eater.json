@@ -1,0 +1,156 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "id": "demo.class.magic-eater",
+  "nameKey": "class-demo-magic-eater-name",
+  "descriptionKey": "class-demo-magic-eater-description",
+  "modifiers": {
+    "strength": -1,
+    "intelligence": 2,
+    "wisdom": 1,
+    "dexterity": 2,
+    "constitution": -2,
+    "charisma": -2
+  },
+  "lifePercent": 103,
+  "baseHp": 6,
+  "experiencePercent": 130,
+  "skillSetId": "demo.skill-set.magic-eater",
+  "weaponProficiency": {
+    "defaultInitial": 2000,
+    "defaultMaximum": 4000,
+    "overrides": {
+      "demo.item.club": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.cutlass": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.dagger": {
+        "initial": 4000,
+        "maximum": 6000
+      },
+      "demo.item.katana": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.long-sword": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.mace": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.main-gauche": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.ninjato": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.nunchaku": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.poison-needle": {
+        "initial": 2000,
+        "maximum": 8000
+      },
+      "demo.item.quarterstaff": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.rapier": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.sabre": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.scimitar": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.short-sword": {
+        "initial": 4000,
+        "maximum": 6000
+      },
+      "demo.item.sickle": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.sling": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.small-sword": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.spear": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.tanto": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.trident": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.tulwar": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.wakizashi": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.war-hammer": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.whip": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.wizardstaff": {
+        "initial": 0,
+        "maximum": 0
+      }
+    }
+  },
+  "ridingProficiency": {
+    "initial": 0,
+    "maximum": 0
+  },
+  "dualWieldingMaximum": 4000,
+  "petUpkeepDivisor": 30,
+  "usesSpellScrolls": false,
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.magic-missile-wand",
+      "quantity": 1
+    },
+    {
+      "itemKindId": "demo.item.short-sword",
+      "quantity": 1,
+      "equipped": true
+    },
+    {
+      "itemKindId": "demo.item.soft-leather-armour",
+      "quantity": 1,
+      "equipped": true
+    }
+  ],
+  "tags": [
+    "magic-eater",
+    "rfb-compatibility"
+  ]
+}

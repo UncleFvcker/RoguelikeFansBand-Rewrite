@@ -1300,6 +1300,12 @@ impl Game {
             .is_some_and(|build| build.class_id == "demo.class.berserker")
     }
 
+    pub(super) fn player_is_magic_eater(&self) -> bool {
+        self.build
+            .as_ref()
+            .is_some_and(|build| build.class_id == "demo.class.magic-eater")
+    }
+
     pub(super) fn player_class_passives(&self) -> Vec<EquipmentPassive> {
         if self.player_is_berserker() {
             let mut passives = vec![
@@ -2389,7 +2395,8 @@ impl Game {
             || self.player_is_mage()
             || self.player_is_ranger()
             || self.player_is_priest()
-            || self.player_is_warrior_mage())
+            || self.player_is_warrior_mage()
+            || self.player_is_magic_eater())
             && let Some(weapon) = self
                 .items
                 .iter()
@@ -2429,6 +2436,8 @@ impl Game {
                 (
                     if self.player_is_priest() {
                         "demo.class.priest"
+                    } else if self.player_is_magic_eater() {
+                        "demo.class.magic-eater"
                     } else {
                         "demo.class.mindcrafter"
                     },

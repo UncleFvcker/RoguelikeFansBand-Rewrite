@@ -10028,3 +10028,11 @@ terrain-demo-zul-eddies-entry-description = The Eddies in the Space-Time Continu
 task-demo-zul-eddies-description = The time mages' experiments have distorted space and time around Zul, making reliable teleportation impossible. Defeat them so the tower can restore the town's links to the outside world.
 task-demo-zul-eddies-completed-description = Thank you for your help. We can teleport safely again. While repairing the continuum, we found this strange wooden bat; please accept it as a souvenir and a token of our gratitude.
 task-demo-zul-eddies-failed-description = Too bad. The whole town was counting on you.
+
+# RFB master a0d92b6378: magic_eater.c::magic_eater_get_class.
+class-demo-magic-eater-name = Magic-Eater
+class-demo-magic-eater-description = Magic-Eaters absorb devices into ten slots for each of wands, staves and rods. Each device retains its own charges and properties. Absorbed devices cannot be drained or destroyed and recover charges over time, aided by regeneration.
+actor-demo-magic-eater-player-name = Magic-Eater
+actor-demo-magic-eater-player-description = A Magic-Eater carrying a magic missile wand, short sword and soft leather armour.
+build-demo-magic-eater-name = Magic-Eater
+build-demo-magic-eater-description = Uses each device's own charges without selecting realms or studying spellbooks.

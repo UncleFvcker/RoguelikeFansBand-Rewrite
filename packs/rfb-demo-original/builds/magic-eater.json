@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json",
+  "formatVersion": 1,
+  "id": "demo.build.magic-eater",
+  "nameKey": "build-demo-magic-eater-name",
+  "descriptionKey": "build-demo-magic-eater-description",
+  "raceId": "demo.race.rfb-human",
+  "classId": "demo.class.magic-eater",
+  "personalityId": "demo.personality.ordinary",
+  "playerActorId": "demo.actor.magic-eater-player",
+  "attributes": {
+    "strength": 13,
+    "intelligence": 13,
+    "wisdom": 13,
+    "dexterity": 13,
+    "constitution": 13,
+    "charisma": 13
+  },
+  "tags": [
+    "magic-eater",
+    "rfb-compatibility"
+  ]
+}

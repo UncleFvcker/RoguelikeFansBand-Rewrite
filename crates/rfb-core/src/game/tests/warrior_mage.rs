@@ -270,49 +270,51 @@ fn melee_uses_source_blows_and_heavy_weapon_limit() {
 }
 
 #[test]
-fn medium_sensing_uses_weak_first_group_and_strong_second_group() {
-    let mut game = at_level(BUILD, 1);
-    game.progress.attributes.wisdom = 14;
-    game.items.clear();
-    game.item_property_knowledge.clear();
-    give_inventory_item(&mut game, "test.sword", "demo.item.small-sword");
-    game.items[0].location = ItemLocation::Equipped {
-        slot_id: "weapon".to_owned(),
-    };
-    game.items[0].curse = Some(ItemCurseSeverityDto::Heavy);
-    give_inventory_item(&mut game, "test.wand", "demo.item.magic-missile-wand");
-    game.items[1].curse = Some(ItemCurseSeverityDto::Heavy);
-    assert_eq!(game.effective_player_attributes().wisdom, 13);
-    assert_eq!(game.virtue_current(VirtueKindDto::Knowledge), 0);
-    // Source L1/WIS13: both medium groups use 20000*105/100/161 = 130.
-    game.rng = (0..1_000_000)
-        .map(RfbRng::seeded)
-        .find(|rng| {
-            let mut rng = rng.clone();
-            rng.bounded(130) == 0 && rng.bounded(130) == 0 && rng.bounded(3) == 0
-        })
-        .unwrap();
-    game.world_tick = 9;
-    let rng = game.rng.clone();
-    game.process_class_item_sensing();
-    assert_eq!(game.rng, rng);
-    assert!(game.item_property_knowledge.is_empty());
-    game.world_tick = 10;
-    game.process_class_item_sensing();
-    assert_eq!(
-        game.item_feeling(&game.items[0]),
-        Some(rfb_protocol::ItemFeelingDto::Cursed)
-    );
-    assert_eq!(
-        game.item_feeling(&game.items[1]),
-        Some(rfb_protocol::ItemFeelingDto::Bad)
-    );
-    game.item_property_knowledge.clear();
-    game.apply_player_mental_status(STATUS_CONFUSION, 10, "test");
-    let rng = game.rng.clone();
-    game.process_class_item_sensing();
-    assert!(game.item_property_knowledge.is_empty());
-    assert_eq!(game.rng, rng);
+fn class_sensing_uses_weak_first_group_and_strong_second_group() {
+    for (build, wisdom, second_chance) in [(BUILD, 14, 130), ("demo.build.magic-eater", 12, 58)] {
+        let mut game = at_level(build, 1);
+        game.progress.attributes.wisdom = wisdom;
+        game.items.clear();
+        game.item_property_knowledge.clear();
+        give_inventory_item(&mut game, "test.sword", "demo.item.small-sword");
+        game.items[0].location = ItemLocation::Equipped {
+            slot_id: "weapon".to_owned(),
+        };
+        game.items[0].curse = Some(ItemCurseSeverityDto::Heavy);
+        give_inventory_item(&mut game, "test.wand", "demo.item.magic-missile-wand");
+        game.items[1].curse = Some(ItemCurseSeverityDto::Heavy);
+        assert_eq!(game.effective_player_attributes().wisdom, 13);
+        assert_eq!(game.virtue_current(VirtueKindDto::Knowledge), 0);
+        // Source L1/WIS13: MED = 20000*105/100/161 = 130; FAST = 58.
+        game.rng = (0..1_000_000)
+            .map(RfbRng::seeded)
+            .find(|rng| {
+                let mut rng = rng.clone();
+                rng.bounded(130) == 0 && rng.bounded(second_chance) == 0 && rng.bounded(3) == 0
+            })
+            .unwrap();
+        game.world_tick = 9;
+        let rng = game.rng.clone();
+        game.process_class_item_sensing();
+        assert_eq!(game.rng, rng);
+        assert!(game.item_property_knowledge.is_empty());
+        game.world_tick = 10;
+        game.process_class_item_sensing();
+        assert_eq!(
+            game.item_feeling(&game.items[0]),
+            Some(rfb_protocol::ItemFeelingDto::Cursed)
+        );
+        assert_eq!(
+            game.item_feeling(&game.items[1]),
+            Some(rfb_protocol::ItemFeelingDto::Bad)
+        );
+        game.item_property_knowledge.clear();
+        game.apply_player_mental_status(STATUS_CONFUSION, 10, "test");
+        let rng = game.rng.clone();
+        game.process_class_item_sensing();
+        assert!(game.item_property_knowledge.is_empty());
+        assert_eq!(game.rng, rng);
+    }
 }
 
 #[test]
@@ -351,7 +353,11 @@ fn spell_projection_keeps_three_orbs_and_unreachable_spells() {
 #[test]
 fn smart_monster_anti_magic_weight_targets_the_player_class_and_existing_anti_magic() {
     use super::support::replace_terrain;
-    for (build, weight) in [(BUILD, 20), ("demo.build.duelist", 10)] {
+    for (build, weight) in [
+        (BUILD, 20),
+        ("demo.build.duelist", 10),
+        ("demo.build.magic-eater", 50),
+    ] {
         let mut game = at_level(build, 25);
         game.player.position = Position { x: 10, y: 10 };
         for x in 10..=13 {
