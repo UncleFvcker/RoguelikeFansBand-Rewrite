@@ -21,6 +21,7 @@ const { app } = JSON.parse(readFileSync(path.join(webDirectory, "src-tauri", "ta
 const child = spawn(
   process.execPath,
   [tauriCli, "build", "--debug", "--no-bundle", "--features", "webdriver", "--config", JSON.stringify({
+    identifier: "io.github.unclefvcker.rfb-rewrite.e2e",
     app: {
       windows: app.windows.map(window => ({ ...window, additionalBrowserArgs: "--disable-gpu --remote-debugging-port=0" })),
       security: { capabilities: ["default", {

@@ -42,6 +42,14 @@ node e2e/tauri.e2e.mjs --berserker --fast-entry
 
 新增实战脚本可在正式创角后调用 `await prepareDungeonEntry(driver)`，随后沿正常 UI 执行下楼；不要再复制城镇寻路循环。
 
+## 两城地图桌面验收
+
+在 `web` 先执行 `npm run e2e:build`，再执行 `node e2e/tauri.e2e.mjs --town-maps`。使用 Tauri 专用 WebDriver 构建，独立应用标识 `io.github.unclefvcker.rfb-rewrite.e2e` 隔离日常存档和共享馆藏；地图不是浏览器模拟数据。
+
+[场景脚本](../web/e2e/town-maps.e2e.mjs)从正常人类战士创角开始。WebDriver 准备接口仅负责到访阿南巴／萨洛斯并揭示当前地表，既有补给接口放置 10000 测试金币，再由原生拾取键取得。普通 EXE 拒绝准备接口。没有修改地形、授予经验、预设任务结果或清除沿途怪物；不把这段准备称为自然抵达城镇。
+
+后续逐步发送原生数字键移动，覆盖城区商店、阿南巴双门共享库存、城门和远端任务入口；通过 UI 购买、丢物、接取／进入／放弃任务、世界地图往返、旅店往返，以及每城三次原生保存／加载。断言跨荒野滚动后的坐标、完整保存哈希和往返后的地面物品身份。`test-results/town-maps/report.json` 记录路线、视图偏移及画布诊断，同目录保存城区／城门／入口／返回画面；失败细节使用既有 `test-results` 日志和截图。该场景不代替任务成功结算与条件设施的核心专项，也不代表自然练级通关或 Android 验收。
+
 ## Contract fixture
 
 当前集位于 [tests/fixtures/active/scenarios](../tests/fixtures/active/scenarios/)，分类和最低数量等政策来自 [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)。`rfb-contract` 的 [CLI](../crates/rfb-contract/src/main.rs)和[断言实现](../crates/rfb-contract/src/lib.rs)是精确语义依据。

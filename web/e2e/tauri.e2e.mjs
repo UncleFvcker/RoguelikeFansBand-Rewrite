@@ -17,6 +17,7 @@ import { runDuelistUiScenario } from "./duelist.e2e.mjs";
 import { runMageUiScenario } from "./mage.e2e.mjs";
 import { runRangerUiScenario } from "./ranger.e2e.mjs";
 import { runCraftScenario } from "./craft.e2e.mjs";
+import { runTownMapScenario } from "./town-maps.e2e.mjs";
 
 const webDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryDirectory = path.resolve(webDirectory, "..");
@@ -75,7 +76,7 @@ async function main() {
     await rm(diagnosticDirectory, { recursive: true, force: true });
     await rm(desktopLogPath, { force: true });
     const port = await reservePort();
-    const creationLayout = process.argv.includes("--character-creation") || process.argv.includes("--creation-layout") || process.argv.includes("--mindcrafter") || process.argv.includes("--berserker") || process.argv.includes("--duelist-ui") || process.argv.includes("--mage-ui") || process.argv.includes("--mage-play") || process.argv.includes("--ranger-ui") || process.argv.includes("--ranger-play");
+    const creationLayout = process.argv.includes("--town-maps") || process.argv.includes("--character-creation") || process.argv.includes("--creation-layout") || process.argv.includes("--mindcrafter") || process.argv.includes("--berserker") || process.argv.includes("--duelist-ui") || process.argv.includes("--mage-ui") || process.argv.includes("--mage-play") || process.argv.includes("--ranger-ui") || process.argv.includes("--ranger-play");
     const debugProfile = path.join(repositoryDirectory, "target", "e2e", "creation-webview");
     child = spawn(executable, [], {
       cwd: repositoryDirectory,
@@ -105,6 +106,8 @@ async function main() {
     client = await WebDriverClient.create(port, child);
     if (renderProfileOnly) {
       await runRendererProfile(client, artifactDirectory);
+    } else if (process.argv.includes("--town-maps")) {
+      await runTownMapScenario(client, path.join(artifactDirectory, "town-maps"), debugProfile);
     } else if (process.argv.includes("--character-creation")) {
       await runCharacterCreationScenario(client, artifactDirectory);
       await runCreationLayoutScenario(client, artifactDirectory, debugProfile);

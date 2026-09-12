@@ -399,6 +399,17 @@ impl AppState {
         Ok(session.recorder.game().snapshot())
     }
 
+    #[cfg(feature = "webdriver")]
+    fn prepare_town_map_e2e(&self, town_id: &str) -> Result<GameSnapshot, String> {
+        let mut session = self.lock_session()?;
+        let session = session.as_mut().ok_or("game session is not initialized")?;
+        let mut game = session.recorder.game().clone();
+        game.debug_prepare_town_map_e2e(town_id)
+            .map_err(|error| error.to_string())?;
+        session.recorder = ReplayRecorder::new(game);
+        Ok(session.recorder.game().snapshot())
+    }
+
     fn lock_session(&self) -> Result<std::sync::MutexGuard<'_, Option<GameSession>>, String> {
         self.session
             .lock()
@@ -694,6 +705,22 @@ fn prepare_stairs_e2e(
 }
 
 #[tauri::command]
+fn prepare_town_map_e2e(
+    state: tauri::State<'_, AppState>,
+    town_id: String,
+) -> Result<GameSnapshot, String> {
+    #[cfg(feature = "webdriver")]
+    {
+        state.prepare_town_map_e2e(&town_id)
+    }
+    #[cfg(not(feature = "webdriver"))]
+    {
+        let _ = (state, town_id);
+        Err("Town map E2E fixture is unavailable".to_owned())
+    }
+}
+
+#[tauri::command]
 fn inspect_game_e2e(state: tauri::State<'_, AppState>) -> Result<GameSnapshot, String> {
     #[cfg(feature = "webdriver")]
     {
@@ -930,6 +957,7 @@ pub fn run() {
             prepare_duelist_e2e,
             prepare_spell_learning_e2e,
             prepare_stairs_e2e,
+            prepare_town_map_e2e,
             inspect_game_e2e,
             save_game,
             load_game,

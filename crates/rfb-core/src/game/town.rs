@@ -2250,6 +2250,24 @@ impl Game {
         self.relocate_to_town(town_id)
     }
 
+    /// Desktop map fixture: visit one restored town and reveal its current surface.
+    #[doc(hidden)]
+    pub fn debug_prepare_town_map_e2e(&mut self, town_id: &str) -> Result<(), CoreError> {
+        if !matches!(town_id, "demo.town.anambar" | "demo.town.thalos")
+            || self.world_id != "demo.world.middle-earth"
+            || self.map_scale != MapScaleDto::Local
+            || self.current_floor_id != super::wilderness::WILDERNESS_FLOOR_ID
+        {
+            return Err(CoreError::InvalidSave(
+                "town map fixture requires the Middle-earth surface",
+            ));
+        }
+        self.relocate_to_town(town_id)?;
+        self.explored.fill(true);
+        self.reveal_current_visibility();
+        Ok(())
+    }
+
     fn relocate_to_town(&mut self, destination_town_id: &str) -> Result<(), CoreError> {
         let world = self
             .content

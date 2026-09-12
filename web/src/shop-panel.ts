@@ -492,7 +492,7 @@ export class ShopPanel {
     }
   }
 
-  #renderTransaction(): void {
+  readonly #renderTransaction = (): void => {
     const status = this.#state.status;
     const selection = this.#selection();
     const maximum = selection?.maximumQuantity ?? 0;
@@ -562,7 +562,7 @@ export class ShopPanel {
       this.#dom.feedback.replaceChildren();
     }
     this.#dom.feedback.dataset.kind = feedback?.kind ?? "none";
-  }
+  };
 
   #selections(): ShopSelection[] {
     const shop = this.#shop;
