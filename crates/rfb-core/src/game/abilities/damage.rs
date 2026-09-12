@@ -705,6 +705,7 @@ impl Game {
             base_raw_damage,
             affects_ground_items,
             true,
+            false,
             events,
             changed,
             removed_entities,
@@ -723,6 +724,7 @@ impl Game {
         base_raw_damage: i32,
         affects_ground_items: bool,
         affects_terrain: bool,
+        missile: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -767,16 +769,32 @@ impl Game {
                 continue;
             };
             let falloff_damage = rfb_area_damage(base_raw_damage, distance);
-            self.resolve_ability_damage_to_entity(
-                index,
-                source_id,
-                damage_type,
-                falloff_damage,
-                trace.clone(),
-                events,
-                changed,
-                removed_entities,
-            )?;
+            if missile {
+                self.resolve_ability_damage_to_entity_with_resistance(
+                    index,
+                    source_id,
+                    damage_type,
+                    falloff_damage,
+                    trace.clone(),
+                    None,
+                    true,
+                    true,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            } else {
+                self.resolve_ability_damage_to_entity(
+                    index,
+                    source_id,
+                    damage_type,
+                    falloff_damage,
+                    trace.clone(),
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
         }
         Ok(())
     }
@@ -1598,6 +1616,14 @@ impl Game {
                             self.player.position,
                             entity.position,
                         )
+                    } else if source_id == "demo.item-activation.one-ring" {
+                        rfb_distance(self.player.position, entity.position) <= 18
+                            && self.evocation_target_in_sight(entity.position)
+                            && self
+                                .actor_runtime_definition(entity)
+                                .is_some_and(|definition| {
+                                    !definition.tags.iter().any(|tag| tag == "resist-all")
+                                })
                     } else if self.content.ability(source_id).is_some_and(|ability| {
                         matches!(ability.effect, AbilityEffectDefinition::Evocation)
                     }) {

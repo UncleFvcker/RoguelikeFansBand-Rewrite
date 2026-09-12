@@ -327,6 +327,29 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
             }
         }
     }
+    // Item random choices use the same branch/target validation as spells.
+    for item in &content.items {
+        if let Some(generation) = &item.device_generation {
+            for profile in &generation.activations {
+                if let ItemUseEffectDefinition::AbilityEffect {
+                    effect,
+                    affects_ground_items,
+                } = &profile.effect
+                    && matches!(
+                        effect.as_ref(),
+                        AbilityEffectDefinition::RandomChoice { .. }
+                    )
+                {
+                    activation_abilities.push(AbilityDefinition::item_activation(
+                        format!("rfb.ability.{}.{}", item.id, profile.id),
+                        profile.target.clone(),
+                        (**effect).clone(),
+                        *affects_ground_items,
+                    ));
+                }
+            }
+        }
+    }
     if !activation_abilities.is_empty() {
         let embedded = validate_abilities(
             AbilityDefinitions {

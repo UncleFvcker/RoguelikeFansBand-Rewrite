@@ -891,6 +891,8 @@ pub enum EquipmentPassiveDto {
     Vampiric,
     HoldLife,
     Levitation,
+    PassWall,
+    NoPasswallDamage,
     Warning,
     SlowDigestion,
     ReflectsBolts,
@@ -1012,6 +1014,10 @@ pub struct TargetSpecDto {
     rename_all_fields = "camelCase"
 )]
 pub enum TargetSelection {
+    RechargeItems {
+        source_item_id: String,
+        target_item_id: String,
+    },
     Direction {
         direction: Direction,
     },
@@ -1761,6 +1767,7 @@ pub enum AbilityEffectSpecDto {
     RestoreVitality {
         life_force: u16,
     },
+    RingOfPowerBacklash,
     HealthToMana {
         hit_point_cost: u32,
         mana_divisor: u32,
@@ -3541,6 +3548,9 @@ pub enum AbilityEffectResolutionDto {
         life_force_before: u16,
         life_force_after: u16,
     },
+    RingOfPowerBacklash {
+        effect_index: u8,
+    },
     AlterReality {
         effect_index: u8,
         ticks_before: u8,
@@ -4105,6 +4115,10 @@ pub struct SummonDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ItemDto {
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub can_supply_recharge: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub can_receive_recharge: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     pub id: String,
@@ -4117,6 +4131,8 @@ pub struct ItemDto {
     pub feeling: Option<ItemFeelingDto>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub absorbable: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub readable: bool,
     pub position: Position,
     pub quantity: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4384,6 +4400,8 @@ pub struct InventoryItemDto {
     pub use_unavailable_reason: Option<String>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub absorbable: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub readable: bool,
     #[serde(default)]
     pub mount_usable: bool,
     #[serde(default)]
@@ -4470,6 +4488,8 @@ pub struct BodySlotDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct EquipmentItemDto {
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub requires_recharge_targets: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -6747,12 +6767,15 @@ mod tests {
                 summon: None,
             }],
             items: vec![ItemDto {
+                can_supply_recharge: false,
+                can_receive_recharge: false,
                 artifact_name: None,
                 id: "demo.item.ground.1".to_owned(),
                 kind_id: "demo.item.shard".to_owned(),
                 display_name_key: "item-demo-shard-name".to_owned(),
                 knowledge: ItemKnowledgeDto::Aware,
                 absorbable: false,
+                readable: false,
                 position: Position { x: 0, y: 0 },
                 feeling: None,
                 quantity: 2,
@@ -6773,6 +6796,7 @@ mod tests {
                 usable: false,
                 use_unavailable_reason: None,
                 absorbable: false,
+                readable: false,
                 mount_usable: false,
                 capture_ball: false,
                 captured_actor: None,
@@ -6815,6 +6839,7 @@ mod tests {
                 throw_profile: None,
             }],
             equipment: vec![EquipmentItemDto {
+                requires_recharge_targets: false,
                 artifact_name: None,
                 bag_capacity: None,
                 id: "demo.item.equipment.1".to_owned(),

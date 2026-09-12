@@ -534,10 +534,12 @@ impl Game {
     /// Combines resistance tiers from every defensive source the player
     /// carries: the actor's own profile, the build's race, and each equipped
     /// item plus its affixes. Deterministic merge: immune anywhere wins, then
-    /// strong; a resistant source is cancelled back to normal by any
-    /// vulnerable source; lone vulnerability stays vulnerable.
+    /// strong. Temporary elemental opposition adds one tier to permanent
+    /// resistance, capped at strong by the current compact scale; vulnerability
+    /// cancels one resistant tier. Overlapping opposition statuses do not stack.
     pub(super) fn effective_player_resistances(&self) -> ResistanceProfile {
         let mut sources: BTreeMap<DamageType, (bool, bool, bool, bool)> = BTreeMap::new();
+        let mut opposition = BTreeSet::new();
         let mut record = |damage_type: DamageType, level: ResistanceLevel| {
             let entry = sources.entry(damage_type).or_default();
             match level {
@@ -553,7 +555,22 @@ impl Game {
         }
         for status in &self.player.statuses {
             for (damage_type, level) in &status.granted_resistances {
-                record(*damage_type, *level);
+                if *level == ResistanceLevel::Resistant
+                    && matches!(
+                        damage_type,
+                        DamageType::Acid
+                            | DamageType::Electricity
+                            | DamageType::Fire
+                            | DamageType::Cold
+                            | DamageType::Poison
+                    )
+                {
+                    // RFB xtra1.c IS_OPPOSE_* contributes once via res_add.
+                    opposition.insert(*damage_type);
+                    record(*damage_type, ResistanceLevel::Normal);
+                } else {
+                    record(*damage_type, *level);
+                }
             }
         }
         if let Some((_, race, class, _)) = self.character_definitions() {
@@ -663,16 +680,15 @@ impl Game {
                 ResistanceLevel::Immune
             } else if strong {
                 ResistanceLevel::Strong
-            } else if resistant {
-                if vulnerable {
-                    ResistanceLevel::Normal
-                } else {
-                    ResistanceLevel::Resistant
-                }
-            } else if vulnerable {
-                ResistanceLevel::Vulnerable
             } else {
-                ResistanceLevel::Normal
+                match i32::from(resistant) + i32::from(opposition.contains(&damage_type))
+                    - i32::from(vulnerable)
+                {
+                    -1 => ResistanceLevel::Vulnerable,
+                    0 => ResistanceLevel::Normal,
+                    1 => ResistanceLevel::Resistant,
+                    _ => ResistanceLevel::Strong,
+                }
             };
             profile.set(damage_type, level);
         }
@@ -693,6 +709,9 @@ impl Game {
                 .statuses
                 .iter()
                 .any(|status| status.grants_wall_passage)
+            || self
+                .player_equipment_passives()
+                .contains(&EquipmentPassive::PassWall)
     }
 
     pub(super) fn player_reflects_bolts(&self) -> bool {
@@ -2605,6 +2624,30 @@ impl Game {
                 profile.attacks = (blows / 100) as u16;
                 profile.extra_attack_chance_percent = (blows % 100) as u8;
             }
+        }
+        // equip.c::_weaponmastery sends a ring's bonus to innate attacks when
+        // neither its own hand nor the other hand's two-handed weapon uses it.
+        let weapons = self.equipped_melee_weapons();
+        let mastery: i32 = self
+            .items
+            .iter()
+            .filter(|item| {
+                let ItemLocation::Equipped { slot_id } = &item.location else {
+                    return false;
+                };
+                match self.body_slot_type(slot_id) {
+                    Some("tool") => false,
+                    Some("ring") => !weapons
+                        .iter()
+                        .any(|weapon| self.ring_affects_weapon(slot_id, Some(&weapon.id))),
+                    _ => weapons.is_empty(),
+                }
+            })
+            .map(|item| self.item_equipment_bonuses(item).weapon_dice_bonus)
+            .sum();
+        for profile in &mut profiles {
+            profile.damage_dice =
+                (i32::from(profile.damage_dice) + mastery).clamp(0, i32::from(u16::MAX)) as u16;
         }
         profiles
     }

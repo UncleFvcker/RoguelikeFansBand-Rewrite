@@ -47,6 +47,7 @@ type InventoryDom = Pick<
   | "inventorySelectionCount"
   | "inventoryUse"
   | "inventoryAbsorb"
+  | "inventoryRead"
   | "inventoryUseOnMount"
   | "inventoryAppraise"
   | "inventoryEquip"
@@ -139,6 +140,7 @@ export class InventoryPanel {
     this.#dom.inventoryFilterReset.addEventListener("click", this.#handleFilterReset);
     this.#dom.inventoryUse.addEventListener("click", this.#handleUse);
     this.#dom.inventoryAbsorb.addEventListener("click", this.#handleAbsorb);
+    this.#dom.inventoryRead.addEventListener("click", this.#handleRead);
     this.#dom.inventoryUseOnMount.addEventListener("click", this.#handleUseOnMount);
     this.#dom.inventoryAppraise.addEventListener("click", this.#handleAppraise);
     this.#dom.inventoryEquip.addEventListener("click", this.#handleEquip);
@@ -165,6 +167,7 @@ export class InventoryPanel {
     this.#dom.inventoryFilterReset.removeEventListener("click", this.#handleFilterReset);
     this.#dom.inventoryUse.removeEventListener("click", this.#handleUse);
     this.#dom.inventoryAbsorb.removeEventListener("click", this.#handleAbsorb);
+    this.#dom.inventoryRead.removeEventListener("click", this.#handleRead);
     this.#dom.inventoryUseOnMount.removeEventListener("click", this.#handleUseOnMount);
     this.#dom.inventoryAppraise.removeEventListener("click", this.#handleAppraise);
     this.#dom.inventoryEquip.removeEventListener("click", this.#handleEquip);
@@ -224,9 +227,10 @@ export class InventoryPanel {
     const item = selected.length === 1 ? selected[0] : undefined;
     const actions: [HTMLButtonElement, boolean][] = [
       [this.#dom.inventoryEquip, Boolean(item?.equipmentSlot)],
-      [this.#dom.inventoryUse, Boolean((item?.usable && !item.requiresRechargeTargets) || selectedRechargingItems(selected))],
+      [this.#dom.inventoryUse, Boolean(item?.usable || selectedRechargingItems(selected))],
       [this.#dom.inventoryAbsorb, absorbableItemCandidates(this.#state,
         (key, kindId, artifactName) => this.#formatter.visibleItemName(key, kindId, artifactName)).length > 0],
+      [this.#dom.inventoryRead, this.#readableItems().length > 0],
       [this.#dom.inventoryUseOnMount, Boolean(item?.mountUsable && this.#state.status?.player.ridingActorId)],
       [this.#dom.inventoryAppraise, item?.identification === "unexamined"],
       [this.#dom.inventoryDrop, selected.length > 0],
@@ -238,7 +242,7 @@ export class InventoryPanel {
       button.disabled = blocked || !available;
     }
     this.#dom.inventoryMore.hidden = [
-      this.#dom.inventoryAbsorb, this.#dom.inventoryUseOnMount, this.#dom.inventoryAppraise,
+      this.#dom.inventoryAbsorb, this.#dom.inventoryRead, this.#dom.inventoryUseOnMount, this.#dom.inventoryAppraise,
       this.#dom.inventoryInscribe, this.#dom.inventoryDestroy,
     ].every((button) => button.hidden);
     this.#dom.inventoryMore.disabled = blocked;
@@ -287,6 +291,19 @@ export class InventoryPanel {
 
   readonly #handleUse = (): void => {
     void this.#useSelectedItem();
+  };
+
+  #readableItems(): Array<{ id: string; label: string }> {
+    return [...this.#state.inventory, ...(this.#state.status?.items ?? [])]
+      .filter(item => item.readable)
+      .map(item => ({ id: item.id, label: this.#formatter.visibleItemName(item.displayNameKey, item.kindId, item.artifactName) }));
+  }
+
+  readonly #handleRead = (): void => {
+    this.#closeMore();
+    if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
+    this.#onInventoryInteraction();
+    this.#selectItemTargetFrom(this.#readableItems(), itemId => this.#dispatch({ type: "use-item", itemId }));
   };
 
   readonly #handleAbsorb = (): void => {
@@ -605,7 +622,10 @@ export class InventoryPanel {
       activate.disabled = this.#state.busy || Boolean(item.useUnavailableReason) || (Boolean(item.activation) && !item.usable);
       activate.addEventListener("click", () => {
         if (this.#state.busy || this.#state.playerDead || this.#state.worldMap || item.useUnavailableReason || (item.activation && !item.usable)) return;
-        if (item.useTargetSpec?.modes.includes("self")) {
+        if (item.requiresRechargeTargets) {
+          this.#closeDetail();
+          this.#selectRechargeSource(item.id, true);
+        } else if (item.useTargetSpec?.modes.includes("self")) {
           void this.#dispatch({ type: "use-item", itemId: item.id, target: { type: "self" } });
         } else if (item.useTargetSpec) {
           this.#closeDetail();
@@ -832,12 +852,16 @@ export class InventoryPanel {
     if (this.#state.busy) return;
     const recharge = selectedRechargingItems(selected);
     if (recharge) {
-      this.#selectRechargeTarget(recharge.item.id, recharge.source.id);
+      this.#selectRechargeTarget(recharge.item.id, recharge.source.id,
+        recharge.item.activation ? () => this.#dispatch({ type: "use-item", itemId: recharge.item.id }) : undefined);
       return;
     }
     if (selected.length !== 1 || !selected[0]?.usable) return;
     const item = selected[0];
-    if (item.requiresRechargeTargets) return;
+    if (item.requiresRechargeTargets) {
+      this.#selectRechargeSource(item.id, Boolean(item.activation));
+      return;
+    }
     if (item.mundanityTargets) {
       this.selectItemTarget(item.id, async (itemId) => {
         const option = item.mundanityTargets?.find(option => option.itemId === itemId);
@@ -971,8 +995,18 @@ export class InventoryPanel {
     return this.#state.inventory.filter((item) => this.#state.selectedInventoryIds.has(item.id));
   }
 
-  #selectRechargeTarget(itemId: string, sourceItemId: string): void {
-    const candidates = this.#state.inventory
+  #selectRechargeSource(itemId: string, activation: boolean): void {
+    const onCancel = activation ? () => this.#dispatch({ type: "use-item", itemId }) : undefined;
+    const candidates = [...this.#state.inventory, ...(this.#state.status?.items ?? [])]
+      .filter(item => item.id !== itemId && item.canSupplyRecharge)
+      .map(item => ({ id: item.id, label: this.#formatter.visibleItemName(item.displayNameKey, item.kindId, item.artifactName) }));
+    this.#selectItemTargetFrom(candidates, async sourceItemId => {
+      this.#selectRechargeTarget(itemId, sourceItemId, onCancel);
+    }, onCancel, "inventory-recharge-source-title");
+  }
+
+  #selectRechargeTarget(itemId: string, sourceItemId: string, onCancel?: () => Promise<void>): void {
+    const candidates = [...this.#state.inventory, ...(this.#state.status?.items ?? [])]
       .filter(
         (item) => item.id !== itemId && item.id !== sourceItemId && item.canReceiveRecharge,
       )
@@ -986,7 +1020,7 @@ export class InventoryPanel {
         itemId,
         sourceItemId,
         targetItemId,
-      }),
+      }), onCancel, "inventory-recharge-target-title",
     );
   }
 
@@ -994,6 +1028,7 @@ export class InventoryPanel {
     candidates: Array<{ id: string; label: string }>,
     onSelect: (itemId: string) => Promise<void>,
     onCancel?: () => Promise<void>,
+    titleKey: MessageKey = "item-target-title",
   ): void {
     if (candidates.length === 0) {
       this.#announce("message-target-mode-unavailable", undefined, "system");
@@ -1006,7 +1041,7 @@ export class InventoryPanel {
     const form = document.createElement("form");
     form.method = "dialog";
     const title = document.createElement("h2");
-    title.textContent = this.#localization.format("item-target-title");
+    title.textContent = this.#localization.format(titleKey);
     const label = document.createElement("label");
     const labelText = document.createElement("span");
     labelText.textContent = this.#localization.format("item-target-label");

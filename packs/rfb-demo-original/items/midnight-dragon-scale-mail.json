@@ -1,0 +1,93 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.midnight-dragon-scale-mail",
+  "nameKey": "item-demo-midnight-dragon-scale-mail-name",
+  "descriptionKey": "item-demo-midnight-dragon-scale-mail-description",
+  "glyph": "[",
+  "generationLevel": 60,
+  "weightTenthsPound": 0,
+  "baseValue": 200,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 332,
+    "baseItemKindId": "demo.item.black-dragon-scale-mail",
+    "instant": false,
+    "rarityOneIn": 8
+  },
+  "modifiers": {
+    "defense": 60
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 4,
+    "meleeDamage": 4,
+    "lightRadius": -1
+  },
+  "resistances": {
+    "acid": "resistant",
+    "dark": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "BRAND_ACID",
+      "DARKNESS",
+      "FULL_NAME",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_DARK"
+    ],
+    "pval": 2,
+    "toArmor": 20
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.midnight-dragon-scale-mail",
+        "nameKey": "device-activation-e5-breathe-acid-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 4800,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.midnight-dragon-breath"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 400
+    }
+  },
+  "brands": [
+    "acid"
+  ]
+}

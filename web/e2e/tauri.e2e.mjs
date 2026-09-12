@@ -21,6 +21,8 @@ import { runWarriorMageUiScenario } from "./warrior-mage.e2e.mjs";
 import { runMagicEaterUiScenario } from "./magic-eater.e2e.mjs";
 import { runCraftScenario } from "./craft.e2e.mjs";
 import { runTownMapScenario } from "./town-maps.e2e.mjs";
+import { runOneRingScenario } from "./one-ring.e2e.mjs";
+import { runThingolScenario } from "./thingol.e2e.mjs";
 
 const webDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryDirectory = path.resolve(webDirectory, "..");
@@ -109,6 +111,10 @@ async function main() {
     client = await WebDriverClient.create(port, child);
     if (renderProfileOnly) {
       await runRendererProfile(client, artifactDirectory);
+    } else if (process.argv.includes("--thingol")) {
+      await runThingolScenario(client, path.join(artifactDirectory, "thingol"));
+    } else if (process.argv.includes("--one-ring")) {
+      await runOneRingScenario(client, path.join(artifactDirectory, "one-ring"));
     } else if (process.argv.includes("--town-maps")) {
       await runTownMapScenario(client, path.join(artifactDirectory, "town-maps"), debugProfile);
     } else if (process.argv.includes("--zul")) {

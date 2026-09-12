@@ -2780,6 +2780,19 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "ring-of-power-backlash",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "clear-mind",
               "type": "string"
             }
@@ -6472,6 +6485,19 @@
           "properties": {
             "type": {
               "const": "hermes",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "bladeturner",
               "type": "string"
             }
           },

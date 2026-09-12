@@ -87,6 +87,21 @@ test("artifact listing displays the generated name or the localized fixed kind",
   }
 });
 
+test("ring of power backlash reports its malevolent aura in both languages", () => {
+  for (const [locale, expected] of [
+    ["en-US", "You are surrounded by a malevolent aura."],
+    ["zh-CN", "你被一股恶意的光环包围着。"],
+  ]) {
+    localization.setLocale(locale);
+    assert.equal(formatter.formatEvent({
+      kind: "ability.effects", messageKey: "ability-effects", args: {},
+      outcome: { type: "ability-effects", resolution: {
+        effects: [{ type: "ring-of-power-backlash", effectIndex: 0 }],
+      } },
+    }), expected);
+  }
+});
+
 test("life force exhaustion, permanent race change, recovery and death use localized events", () => {
   const event = (messageKey, args = {}) => ({ kind: "test", messageKey, args });
   for (const [locale, expected] of [
@@ -940,6 +955,14 @@ test("Warrens transitions name the Outpost and stairs without legacy Echo text",
   assert.equal(formatter.formatEvent(event), "你离开了前哨站，进入兽穴。");
   assert.equal(formatter.contentName("demo.terrain.stairs-up"), "向上楼梯");
   localization.setLocale("en-US");
+});
+
+test("One Ring reading displays all four inscription lines in both locales", () => {
+  const event = { kind: "item.one-ring-inscription-read", messageKey: "item-one-ring-inscription-read", args: {} };
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "‘至尊戒，驭众戒；\n至尊戒，寻众戒；\n至尊戒，引众戒；\n禁锢众戒黑暗中。’");
+  localization.setLocale("en-US");
+  assert.equal(formatter.formatEvent(event), "One Ring to rule them all,\nOne Ring to find them,\nOne Ring to bring them all,\nAnd in the darkness bind them.");
 });
 
 function readLocale(locale: "en-US" | "zh-CN"): string[] {

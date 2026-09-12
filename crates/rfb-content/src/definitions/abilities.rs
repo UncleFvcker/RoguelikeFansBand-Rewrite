@@ -793,6 +793,7 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         restore_attributes: bool,
     },
+    RingOfPowerBacklash,
     ClearMind,
     HealthToMana,
     ManaToHealth,

@@ -10041,3 +10041,22 @@ actor-demo-magic-eater-player-name = Magic-Eater
 actor-demo-magic-eater-player-description = A Magic-Eater carrying a magic missile wand, short sword and soft leather armour.
 build-demo-magic-eater-name = Magic-Eater
 build-demo-magic-eater-description = Uses each device's own charges without selecting realms or studying spellbooks.
+item-demo-seiryu-name = 'Elemental of Ching-Rong'
+item-demo-seiryu-description = Blue dragon-scale armour that activates temporary resistance to five elements.
+
+item-demo-midnight-dragon-scale-mail-name = Midnight Dragon Scale Mail
+item-demo-midnight-dragon-scale-mail-description = Black dragon-scale armour that dims nearby light and breathes acid.
+
+item-demo-bladeturner-name = 'Bladeturner'
+item-demo-bladeturner-description = Multicoloured dragon-scale armour that fires a missile ball, then grants heroism, blessing and resistance to five elements.
+device-activation-bladeturner-name = Heroism, Resistance and Breathe Elements
+
+item-demo-spectral-dragon-scale-mail-name = Spectral Dragon Scale Mail
+item-demo-darnya-name = of Cower (Darnya)
+item-demo-one-ring-name = of Power (The One Ring)
+item-demo-one-ring-description = Increases all six attributes and speed, granting four elemental immunities, sustains, weapon mastery and elemental brands. Permanently cursed. Read its inscription before equipping; activation can permanently drain attributes and experience.
+item-demo-darnya-description = A dazzling gold-plated ring bearing strange Heheh runes. Its unpredictable power can permanently drain all six attributes and experience.
+device-activation-one-ring-name = Bizarre Things
+item-demo-spectral-dragon-scale-mail-description = Translucent white dragon scales that pass through walls without density damage and retain the white dragon's cold breath.
+item-demo-thingol-name = of Thingol
+item-demo-thingol-description = A dark purple cloak with glowing Elvish runes that channel magic between devices.

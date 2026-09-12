@@ -3,6 +3,54 @@ use std::collections::BTreeMap;
 use super::*;
 
 #[test]
+fn item_random_activation_rejects_uncovered_rolls_invalid_targets_and_bad_effects() {
+    let valid = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for fault in 0..6 {
+        let mut invalid = valid.clone();
+        let item = invalid
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.darnya")
+            .unwrap();
+        let ItemUseEffectDefinition::AbilityEffect { effect, .. } =
+            &mut item.device_generation.as_mut().unwrap().activations[0].effect
+        else {
+            unreachable!()
+        };
+        let AbilityEffectDefinition::RandomChoice {
+            roll_sides,
+            branches,
+            ..
+        } = effect.as_mut()
+        else {
+            unreachable!()
+        };
+        match fault {
+            0 => *roll_sides = 0,
+            1 => branches.last_mut().unwrap().maximum_roll = 9,
+            2 => branches[1].maximum_roll = 2,
+            3 => branches[0].target = AbilityRandomTargetDefinition::CastTarget,
+            4 => {
+                *branches[2].effect = AbilityEffectDefinition::AreaDamage {
+                    damage_dice: 0,
+                    damage_sides: 0,
+                    damage_bonus: 0,
+                    damage_type: ActorDamageType::Mana,
+                    radius: 3,
+                    target_category: None,
+                }
+            }
+            5 => branches.clear(),
+            _ => unreachable!(),
+        }
+        assert!(
+            validate_and_normalize(&mut invalid).is_err(),
+            "fault {fault}"
+        );
+    }
+}
+
+#[test]
 fn task_failure_return_spawn_rejects_invalid_actors_positions_probability_and_lifecycle() {
     let content = compile_pack_dir(&original_pack_path()).unwrap().content;
     for fault in 0..6 {

@@ -318,7 +318,9 @@ pub(super) fn apply_roll(
         SustainConstitution,
         SustainCharisma,
     ] {
-        if flags.contains(crate::game::item_value::instance::passive_flag(passive)) {
+        if crate::game::item_value::instance::passive_flag(passive)
+            .is_some_and(|flag| flags.contains(flag))
+        {
             properties.passives.insert(passive);
         }
     }

@@ -2780,6 +2780,19 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "ring-of-power-backlash",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "clear-mind",
               "type": "string"
             }
@@ -4634,6 +4647,8 @@
         "vampiric",
         "hold-life",
         "levitation",
+        "pass-wall",
+        "no-passwall-damage",
         "warning",
         "slow-digestion",
         "reflects-bolts",
@@ -6906,6 +6921,19 @@
           "properties": {
             "type": {
               "const": "hermes",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "bladeturner",
               "type": "string"
             }
           },

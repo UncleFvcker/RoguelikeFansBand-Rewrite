@@ -1,0 +1,149 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.one-ring",
+  "nameKey": "item-demo-one-ring-name",
+  "descriptionKey": "item-demo-one-ring-description",
+  "glyph": "=",
+  "generationLevel": 100,
+  "weightTenthsPound": 2,
+  "baseValue": 5000000,
+  "maxStack": 1,
+  "equipmentSlot": "ring",
+  "tags": [
+    "artifact",
+    "equipment",
+    "jewelry",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 13,
+    "baseItemKindId": "demo.item.ring",
+    "instant": false,
+    "rarityOneIn": 127,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "modifiers": {
+    "strength": 5,
+    "intelligence": 5,
+    "wisdom": 5,
+    "dexterity": 5,
+    "constitution": 5,
+    "charisma": 5,
+    "speed": 5
+  },
+  "equipmentBonuses": {
+    "weaponDiceBonus": 5
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "BRAND_ACID",
+      "BRAND_COLD",
+      "BRAND_ELEC",
+      "BRAND_FIRE",
+      "CHR",
+      "CON",
+      "CURSED",
+      "DEX",
+      "DRAIN_EXP",
+      "ESP_DEMON",
+      "ESP_UNDEAD",
+      "FIXED_ART",
+      "HEAVY_CURSE",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_ACID",
+      "IM_COLD",
+      "IM_ELEC",
+      "IM_FIRE",
+      "INT",
+      "PERMA_CURSE",
+      "REGEN",
+      "SEE_INVIS",
+      "SPEED",
+      "STR",
+      "SUST_CHR",
+      "SUST_CON",
+      "SUST_DEX",
+      "SUST_INT",
+      "SUST_STR",
+      "SUST_WIS",
+      "TY_CURSE",
+      "WEAPONMASTERY",
+      "WIS",
+      "XTRA_H_RES",
+      "XTRA_POWER"
+    ],
+    "pval": 5,
+    "toArmor": 0
+  },
+  "initialCurse": "permanent",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.one-ring",
+        "nameKey": "device-activation-one-ring-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 1000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.one-ring"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 5000
+    }
+  },
+  "brands": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "resistances": {
+    "acid": "immune",
+    "electricity": "immune",
+    "fire": "immune",
+    "cold": "immune"
+  },
+  "passives": [
+    "see-invisible",
+    "regeneration",
+    "esp-demon",
+    "esp-undead",
+    "sustain-strength",
+    "sustain-intelligence",
+    "sustain-wisdom",
+    "sustain-dexterity",
+    "sustain-constitution",
+    "sustain-charisma"
+  ]
+}

@@ -16,9 +16,14 @@ const SNOTLING_RACE_ID: &str = "rfb-legacy.race.snotling";
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum ItemUsePlan {
     CancelledActivation,
+    RechargeItems {
+        source_item_id: String,
+        target_item_id: String,
+    },
     AbilityEffect {
         ability: Box<AbilityDefinition>,
         target_plan: AbilityTargetPlan,
+        selection: TargetSelection,
     },
     SelfTarget,
     Acquirement {
@@ -1717,105 +1722,30 @@ impl Game {
         noticed
     }
 
-    pub(super) fn recharging_item_unavailable_reason(
+    fn recharge_items_are_valid(
         &self,
         item_id: &str,
         source_item_id: &str,
         target_item_id: &str,
-    ) -> Option<&'static str> {
-        if self
-            .items
-            .iter()
-            .find(|item| item.id == item_id)
-            .is_some_and(|item| self.berserker_item_use_rejection_cost(item).is_some())
-        {
-            return Some("class-restriction");
-        }
+    ) -> bool {
         if item_id == source_item_id || item_id == target_item_id {
-            return Some("recharging-item-is-device");
+            return false;
         }
         if source_item_id == target_item_id {
-            return Some("source-is-target");
+            return false;
         }
-        if self.recharging_item_power(item_id).is_none() {
-            return Some("item-unavailable");
-        }
-        let source = self.items.iter().find(|item| {
-            item.id == source_item_id
-                && item.location == ItemLocation::Inventory
-                && item.quantity > 0
-        });
-        if source.is_none_or(|item| !self.item_can_supply_recharge(item)) {
-            return Some("source-unavailable");
-        }
-        let target = self.items.iter().find(|item| {
-            item.id == target_item_id
-                && item.location == ItemLocation::Inventory
-                && item.quantity > 0
-        });
-        if target.is_none_or(|item| !self.item_can_receive_recharge(item)) {
-            return Some("target-not-rechargeable");
-        }
-        None
-    }
-
-    pub(super) fn use_recharging_item(
-        &mut self,
-        item_id: &str,
-        source_item_id: &str,
-        target_item_id: &str,
-        events: &mut Vec<DomainEvent>,
-    ) {
-        if self
-            .recharging_item_unavailable_reason(item_id, source_item_id, target_item_id)
-            .is_some()
-        {
-            events.push(DomainEvent::ItemUseUnavailable);
-            return;
-        }
-        let power = u32::from(
-            self.recharging_item_power(item_id)
-                .expect("preflighted recharging item must retain its power"),
-        );
-        let index = self
+        let source = self
             .items
             .iter()
-            .position(|item| item.id == item_id)
-            .expect("preflighted recharging item must remain available");
-        let kind_id = self.items[index].kind_id.clone();
-        self.mark_item_tried(&kind_id);
-        if self.items[index].quantity == 1 {
-            let removed = self.items.remove(index);
-            self.item_property_knowledge.remove(&removed.id);
-        } else {
-            self.items[index].quantity -= 1;
+            .find(|item| item.id == source_item_id && item.quantity > 0);
+        if source.is_none_or(|item| !self.item_can_supply_recharge(item)) {
+            return false;
         }
-        let outcome = self.recharge_inventory_item_from_device(
-            target_item_id,
-            source_item_id,
-            DeviceRechargeRequest::new(power, RECHARGING_ITEM_SOURCE_DESTRUCTION_ONE_IN),
-        );
-        events.push(device_recharge_resolved_event(
-            outcome.target,
-            outcome.source_kind_id,
-            true,
-            outcome.source_destroyed,
-        ));
-        self.mark_item_aware(&kind_id);
-    }
-
-    fn recharging_item_power(&self, item_id: &str) -> Option<u16> {
-        let item = self.items.iter().find(|item| {
-            item.id == item_id
-                && item.location == ItemLocation::Inventory
-                && item.quantity > 0
-                && item.activation.is_none()
-        })?;
-        let action = self.content.item(&item.kind_id)?.use_action.as_ref()?;
-        match action.effect {
-            ItemUseEffectDefinition::RechargeFromDevice { power } => Some(power),
-            _ => None,
-        }
+        let target = self
+            .items
+            .iter()
+            .find(|item| item.id == target_item_id && item.quantity > 0);
+        target.is_some_and(|item| self.item_can_receive_recharge(item))
     }
 
     pub(super) fn resolve_item_curse(
@@ -2784,6 +2714,36 @@ impl Game {
         noticed
     }
 
+    pub(super) fn item_has_readable_inscription(&self, item: &ItemInstance) -> bool {
+        // cmd6.c::_can_read: the One Ring can be read from the pack or floor,
+        // while its equipped use is the separate ONE_RING activation.
+        item.kind_id == "demo.item.one-ring"
+            && item.quantity > 0
+            && (item.location == ItemLocation::Inventory
+                || item.location == ItemLocation::Ground(self.player.position))
+    }
+
+    pub(super) fn item_inscription_is_readable(&self, item: &ItemInstance) -> bool {
+        self.item_has_readable_inscription(item)
+            && self.ability_study_unavailable_reason().is_none()
+            && !self.player_is_berserker()
+    }
+
+    fn read_one_ring_inscription(&mut self, events: &mut Vec<DomainEvent>) {
+        // Reading has no device check, charge use, cooldown or identification.
+        if self.ability_study_unavailable_reason().is_some() || self.player_is_berserker() {
+            events.push(DomainEvent::ItemUseUnavailable);
+            return;
+        }
+        if self.item_knowledge_dto("demo.item.one-ring") != ItemKnowledgeDto::Aware {
+            self.add_virtue(VirtueKindDto::Patience, -1);
+            self.add_virtue(VirtueKindDto::Chance, 1);
+            self.add_virtue(VirtueKindDto::Knowledge, -1);
+        }
+        self.mark_item_tried("demo.item.one-ring");
+        events.push(DomainEvent::OneRingInscriptionRead);
+    }
+
     /// RFB cmd6/devices: forbidden scroll/activation attempts take a turn;
     /// wand, staff and rod failures do not. Scroll speed still uses the usual energy modifier.
     pub(super) fn berserker_item_use_rejection_cost(&self, item: &ItemInstance) -> Option<i32> {
@@ -2804,6 +2764,16 @@ impl Game {
         .then_some(STANDARD_ACTION_COST)
     }
 
+    pub(super) fn item_activation_location_is_valid(&self, item: &ItemInstance) -> bool {
+        // cmd6.c::_activate_p: wearable activations require an equipment slot.
+        item.activation.is_none()
+            || matches!(item.location, ItemLocation::Equipped { .. })
+            || self
+                .content
+                .item(&item.kind_id)
+                .is_some_and(|definition| definition.equipment_slot.is_none())
+    }
+
     /// Returns an energy override for refunded uses or an actual shooting action.
     pub(super) fn use_inventory_item(
         &mut self,
@@ -2814,6 +2784,14 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<Option<i32>, CoreError> {
+        if self
+            .items
+            .iter()
+            .any(|item| item.id == item_id && self.item_has_readable_inscription(item))
+        {
+            self.read_one_ring_inscription(events);
+            return Ok(None);
+        }
         let Some((index, definition)) = self.inventory_item_use_context(item_id)? else {
             events.push(DomainEvent::ItemUseUnavailable);
             return Ok(None);
@@ -3110,6 +3088,35 @@ impl Game {
         let mut noticed = false;
         match (effect, plan) {
             (
+                ItemUseEffectDefinition::RechargeFromDevice { power },
+                ItemUsePlan::RechargeItems {
+                    source_item_id,
+                    target_item_id,
+                },
+            ) => {
+                for item in &self.items {
+                    if (item.id == source_item_id || item.id == target_item_id)
+                        && let ItemLocation::Ground(position) = item.location
+                    {
+                        changed.insert(position);
+                    }
+                }
+                let power = device_power_value(u64::from(power), device_power_bonus) as u32;
+                let outcome = self.recharge_inventory_item_from_device(
+                    &target_item_id,
+                    &source_item_id,
+                    DeviceRechargeRequest::new(power, RECHARGING_ITEM_SOURCE_DESTRUCTION_ONE_IN),
+                );
+                events.push(device_recharge_resolved_event(
+                    outcome.target,
+                    outcome.source_kind_id,
+                    true,
+                    outcome.source_destroyed,
+                ));
+                self.mark_item_aware(&kind_id);
+                noticed = true;
+            }
+            (
                 ItemUseEffectDefinition::ProjectMonsterStatus { projection, power },
                 ItemUsePlan::SelfTarget,
             ) => {
@@ -3214,6 +3221,7 @@ impl Game {
                 ItemUsePlan::AbilityEffect {
                     ability,
                     target_plan,
+                    ..
                 },
             ) => {
                 let duration = self.roll_damage(1, 75) + 75;
@@ -3267,6 +3275,7 @@ impl Game {
                 if let Some(ItemUsePlan::AbilityEffect {
                     ability,
                     target_plan,
+                    ..
                 }) = self.item_use_plan(
                     &kind_id,
                     &ItemUseEffectDefinition::AbilityEffect {
@@ -3320,6 +3329,7 @@ impl Game {
                             damage,
                             true,
                             true,
+                            false,
                             events,
                             changed,
                             removed_entities,
@@ -3388,6 +3398,7 @@ impl Game {
                     device_power_value(u64::from(damage) * 2, device_power_bonus) as i32,
                     true,
                     true,
+                    false,
                     events,
                     changed,
                     removed_entities,
@@ -3397,10 +3408,27 @@ impl Game {
                 ItemUseEffectDefinition::AbilityEffect { .. },
                 ItemUsePlan::AbilityEffect {
                     mut ability,
-                    target_plan,
+                    mut target_plan,
+                    selection,
                 },
             ) => {
+                // ONE_RING's random branches use literal source amounts; boosting
+                // the outer RandomChoice deliberately leaves those amounts alone.
                 self.boost_item_ability_effect(&mut ability.effect, device_power_bonus);
+                if matches!(ability.effect, AbilityEffectDefinition::RandomChoice { .. }) {
+                    ability.id = profile_id.expect("random item activation must have a profile");
+                    self.select_player_random_choice_branch(
+                        &mut ability,
+                        &selection,
+                        &mut target_plan,
+                        events,
+                    );
+                    if ability.id == "demo.item-activation.one-ring" {
+                        // fire_ball includes PROJECT_ITEM; fire_bolt does not.
+                        ability.affects_ground_items =
+                            matches!(ability.effect, AbilityEffectDefinition::AreaDamage { .. });
+                    }
+                }
                 self.resolve_player_ability_effect(
                     *ability,
                     target_plan,
@@ -3672,6 +3700,17 @@ impl Game {
                 changed,
                 removed_entities,
             )?,
+            (ItemUseEffectDefinition::Bladeturner, plan @ ItemUsePlan::Projectile { .. }) => {
+                self.resolve_item_bladeturner(
+                    kind_id,
+                    profile_id,
+                    plan,
+                    device_power_bonus,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
             (
                 effect @ ItemUseEffectDefinition::BeamDamage { .. },
                 plan @ ItemUsePlan::Projectile { .. },
@@ -3937,7 +3976,12 @@ impl Game {
             } => {
                 let target_definition = target_definition?.clone();
                 if target.is_none()
-                    && matches!(effect.as_ref(), AbilityEffectDefinition::FetchItem { .. })
+                    && matches!(
+                        effect.as_ref(),
+                        AbilityEffectDefinition::FetchItem { .. }
+                            | AbilityEffectDefinition::ConeDamage { .. }
+                            | AbilityEffectDefinition::RandomChoice { .. }
+                    )
                 {
                     return Some(ItemUsePlan::CancelledActivation);
                 }
@@ -3952,6 +3996,7 @@ impl Game {
                 Some(ItemUsePlan::AbilityEffect {
                     ability: Box::new(ability),
                     target_plan,
+                    selection,
                 })
             }
             ItemUseEffectDefinition::NoNumericEffect
@@ -4054,7 +4099,23 @@ impl Game {
                     }
                 })
             }
-            ItemUseEffectDefinition::RechargeFromDevice { .. } => None,
+            ItemUseEffectDefinition::RechargeFromDevice { .. } => {
+                let Some(target) = target else {
+                    return target_definition.map(|_| ItemUsePlan::CancelledActivation);
+                };
+                let TargetSelection::RechargeItems {
+                    source_item_id: donor,
+                    target_item_id,
+                } = target
+                else {
+                    return None;
+                };
+                self.recharge_items_are_valid(source_item_id, donor, target_item_id)
+                    .then(|| ItemUsePlan::RechargeItems {
+                        source_item_id: donor.clone(),
+                        target_item_id: target_item_id.clone(),
+                    })
+            }
             ItemUseEffectDefinition::CreateAdjacentTerrain {
                 source_terrain_ids,
                 target_terrain_id,
@@ -4083,6 +4144,7 @@ impl Game {
                 })
             }
             ItemUseEffectDefinition::Damage { .. }
+            | ItemUseEffectDefinition::Bladeturner
             | ItemUseEffectDefinition::AreaDamage { .. }
             | ItemUseEffectDefinition::BeamDamage { .. } => {
                 if target.is_none()
@@ -5171,6 +5233,7 @@ impl Game {
         duration_dice: u16,
         duration_sides: u32,
         duration_bonus: u32,
+        stacking: AbilityStatusStackingDefinition,
         events: &mut Vec<DomainEvent>,
     ) {
         let resolution = apply_ability_status_effect(
@@ -5182,7 +5245,7 @@ impl Game {
             duration_bonus,
             duration_dice,
             duration_sides,
-            AbilityStatusStackingDefinition::Extend,
+            stacking,
             None,
             None,
             &BTreeMap::new(),
@@ -5933,6 +5996,7 @@ impl Game {
                     *duration_dice,
                     *duration_sides,
                     *duration_bonus,
+                    AbilityStatusStackingDefinition::Extend,
                     events,
                 );
                 true
@@ -6008,6 +6072,7 @@ impl Game {
                         0,
                         0,
                         duration.saturating_sub(existing),
+                        AbilityStatusStackingDefinition::Extend,
                         events,
                     );
                     existing < duration
@@ -6428,6 +6493,7 @@ impl Game {
                 self.resolve_item_self_knowledge(source_kind_id, events)
             }
             ItemUseEffectDefinition::Hermes
+            | ItemUseEffectDefinition::Bladeturner
             | ItemUseEffectDefinition::AbilityEffect { .. }
             | ItemUseEffectDefinition::Damage { .. }
             | ItemUseEffectDefinition::AreaDamage { .. }

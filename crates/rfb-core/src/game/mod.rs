@@ -1140,19 +1140,6 @@ impl Game {
                 .refuel_light_unavailable_reason(target_item_id, source_item_id)
                 .is_some()
         );
-        let unavailable_recharging_item = matches!(
-            &action,
-            GameAction::UseItemForRecharge {
-                item_id,
-                source_item_id,
-                target_item_id,
-            } if self
-                .recharging_item_unavailable_reason(item_id, source_item_id, target_item_id)
-                .is_some()
-                && self.items.iter().find(|item| item.id == *item_id)
-                    .and_then(|item| self.berserker_item_use_rejection_cost(item))
-                    .is_none_or(|cost| cost == 0)
-        );
         let world_travel_direction = match &action {
             GameAction::TravelWorld { destination } => {
                 self.next_world_travel_direction(*destination)
@@ -1201,7 +1188,6 @@ impl Game {
             && !cursed_unequip
             && !cursed_equip_replacement
             && !unavailable_light_refuel
-            && !unavailable_recharging_item
             && !unavailable_world_travel
             && !unavailable_local_travel
             && !zero_time_unavailable_ability
@@ -1327,11 +1313,14 @@ impl Game {
         let mut player_moved = false;
         let deferred_item_turn = matches!(
             &action,
-            GameAction::UseAbsorbedDevice { .. }
-                | GameAction::UseItem {
-                    target: None | Some(TargetSelection::ArtifactCreationItem { .. }),
-                    ..
-                }
+            GameAction::UseAbsorbedDevice { .. } | GameAction::UseItem {
+                target: None
+                    | Some(
+                        TargetSelection::ArtifactCreationItem { .. }
+                            | TargetSelection::RechargeItems { .. }
+                    ),
+                ..
+            }
         );
         let item_projectile_action = matches!(&action, GameAction::UseItem { item_id, .. }
             if matches!(self.inventory_item_use_effect(item_id), Some((ItemUseEffectDefinition::PiercingShot, _))));
@@ -2045,13 +2034,6 @@ impl Game {
                         maximum: outcome.maximum,
                     });
                 }
-            }
-            GameAction::UseItemForRecharge {
-                item_id,
-                source_item_id,
-                target_item_id,
-            } => {
-                self.use_recharging_item(&item_id, &source_item_id, &target_item_id, &mut events);
             }
             GameAction::BeginRealmChange { book_item_id } => {
                 self.mage_realms
@@ -3694,6 +3676,9 @@ impl Game {
         }) else {
             return false;
         };
+        if self.item_has_readable_inscription(item) {
+            return false;
+        }
         if item.is_artifact_mushroom(&self.content) {
             return item.device_recovery_progress > 0;
         }
@@ -3735,6 +3720,9 @@ impl Game {
                 item.id, item.kind_id
             ))
         })?;
+        if !self.item_activation_location_is_valid(item) {
+            return Ok(None);
+        }
         if item.origin_kind == Some(ItemOriginKindDto::Mundanity)
             && self.item_is_device(item)
             && item.activation.is_none()
@@ -3780,6 +3768,7 @@ impl Game {
     ) -> Option<(&ItemUseEffectDefinition, Option<&AbilityTargetDefinition>)> {
         let item = self.items.iter().find(|item| {
             item.id == source_item_id
+                && self.item_activation_location_is_valid(item)
                 && (item.location == ItemLocation::Inventory
                     || self.item_is_device_at_feet(item)
                     || (matches!(item.location, ItemLocation::Equipped { .. })
@@ -3815,6 +3804,15 @@ impl Game {
         target: Option<&TargetSelection>,
         target_glyph: Option<&str>,
     ) -> bool {
+        if self
+            .items
+            .iter()
+            .any(|item| item.id == source_item_id && self.item_has_readable_inscription(item))
+        {
+            // cmd6.c checks sight/light/confusion before taking reading energy;
+            // Berserker's illiteracy is checked after that energy is committed.
+            return self.ability_study_unavailable_reason().is_some();
+        }
         if let Some(cost) = self
             .items
             .iter()
@@ -3872,7 +3870,9 @@ impl Game {
                 AbilityTargetModeDefinition::Item
             }
             TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
-            TargetSelection::CraftingItem { .. } | TargetSelection::ArtifactCreationItem { .. } => {
+            TargetSelection::CraftingItem { .. }
+            | TargetSelection::ArtifactCreationItem { .. }
+            | TargetSelection::RechargeItems { .. } => {
                 return None;
             }
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
@@ -4828,6 +4828,8 @@ const fn equipment_passive_dto(passive: EquipmentPassive) -> EquipmentPassiveDto
         EquipmentPassive::Vampiric => EquipmentPassiveDto::Vampiric,
         EquipmentPassive::HoldLife => EquipmentPassiveDto::HoldLife,
         EquipmentPassive::Levitation => EquipmentPassiveDto::Levitation,
+        EquipmentPassive::PassWall => EquipmentPassiveDto::PassWall,
+        EquipmentPassive::NoPasswallDamage => EquipmentPassiveDto::NoPasswallDamage,
         EquipmentPassive::Warning => EquipmentPassiveDto::Warning,
         EquipmentPassive::SlowDigestion => EquipmentPassiveDto::SlowDigestion,
         EquipmentPassive::ReflectsBolts => EquipmentPassiveDto::ReflectsBolts,

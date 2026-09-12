@@ -1,0 +1,103 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.seiryu",
+  "nameKey": "item-demo-seiryu-name",
+  "descriptionKey": "item-demo-seiryu-description",
+  "glyph": "[",
+  "generationLevel": 80,
+  "weightTenthsPound": 300,
+  "baseValue": 200000,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 201,
+    "baseItemKindId": "demo.item.blue-dragon-scale-mail",
+    "instant": false,
+    "rarityOneIn": 9
+  },
+  "modifiers": {
+    "defense": 70
+  },
+  "equipmentBonuses": {
+    "meleeSkill": -3
+  },
+  "resistances": {
+    "acid": "resistant",
+    "fire": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "poison": "resistant",
+    "dark": "resistant",
+    "confusion": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_CONF",
+      "RES_DARK",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_POIS",
+      "SEE_INVIS"
+    ],
+    "pval": 0,
+    "toArmor": 30
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.seiryu",
+        "nameKey": "device-activation-e5-resistance-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 30,
+        "rfbValue": 5500,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.saruman-resistance"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1110
+    }
+  },
+  "passives": [
+    "see-invisible"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ]
+}

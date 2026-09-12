@@ -205,6 +205,9 @@ export function createPresentationFormatter(
         });
       case "ability-effects":
         if (event.outcome?.type === "ability-effects") {
+          if (event.outcome.resolution.effects.some(effect => effect.type === "ring-of-power-backlash")) {
+            return localization.format("message-ring-of-power-backlash");
+          }
           const itemMagic = event.outcome.resolution.effects.find(effect => effect.type === "item-magic");
           if (itemMagic?.type === "item-magic") return localization.format(
             itemMagic.succeeded ? "message-ability-item-magic-success" : "message-ability-item-magic-failed",
@@ -1521,6 +1524,8 @@ export function createPresentationFormatter(
         });
       case "item-use-unavailable":
         return localization.format("message-item-use-unavailable");
+      case "item-one-ring-inscription-read":
+        return localization.format("message-item-one-ring-inscription-read");
       case "device-energy-recovered":
         return localization.format("message-device-energy-recovered", {
           target: visibleItemNameForKind(event.args.target),

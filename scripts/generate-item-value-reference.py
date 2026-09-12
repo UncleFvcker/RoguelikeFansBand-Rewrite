@@ -232,12 +232,16 @@ def source_instances(read, exe, root, scoring_flags):
         ac, _, to_h, to_d, to_a = entry["parameters"]
         obj = dict(tval=tval, sval=sval, pval=pval, ac=int(ac), toH=int(to_h), toD=int(to_d), toA=int(to_a),
                    baseToH=int(base["parameters"][2]), dd=dd, ds=ds, baseDd=base_dd, baseDs=base_ds,
-                   mult=mult, baseMult=base_mult, weight=int(entry["allocation"][-2]),
+                   # a_info W is level:rarity:weight:cost (trailing fields ignored);
+                   # k_info W is level:extra:max_level:weight:cost.
+                   mult=mult, baseMult=base_mult, weight=int(entry["allocation"][2 if artifact else 3]),
                    flags=sorted(set(base["flags"] + entry["flags"])), capacity=(pval+1)*4 if (tval,sval)==(46,1) else 60 if tval==46 else 0,
                    artifact=bool(artifact), fixedArtifact=artifact["sourceIndex"] if artifact else 0,
                    permanentCurse="PERMA_CURSE" in entry["flags"] or (tval,sval)==(23,34))
-        if "effect" in entry:
-            effect = entry["effect"]
+        # devices.c::obj_get_effect falls through to the base kind if the
+        # fixed artifact has no activation of its own (e.g. spectral scales226).
+        effect = entry.get("effect", base.get("effect"))
+        if effect:
             extra = int(effect[3]) if len(effect)>3 else 0
             obj["activationValue"] = int(subprocess.check_output([str(exe)], input=f'E {effect[0]} {effect[1]} {extra} {effect[2]}\n', text=True))
             obj["activationTimeout"] = int(effect[2])

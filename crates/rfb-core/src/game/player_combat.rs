@@ -478,7 +478,8 @@ impl Game {
             | TargetSelection::CraftingItem { .. }
             | TargetSelection::Element { .. }
             | TargetSelection::MundanityItem { .. }
-            | TargetSelection::ArtifactCreationItem { .. } => None,
+            | TargetSelection::ArtifactCreationItem { .. }
+            | TargetSelection::RechargeItems { .. } => None,
         }
     }
 }
@@ -1317,12 +1318,13 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<DamageOutcome, CoreError> {
-        // Evocation uses GF_DISP_ALL, whose damage ignores elemental resistance.
-        let resistance = self
-            .content
-            .ability(ability_id)
-            .is_some_and(|ability| matches!(ability.effect, AbilityEffectDefinition::Evocation))
-            .then_some(ResistanceLevel::Normal);
+        // GF_DISP_ALL ignores resistance, including the ring's dispel branch.
+        let resistance = ((ability_id == "demo.item-activation.one-ring"
+            && damage_type == DamageType::Physical)
+            || self.content.ability(ability_id).is_some_and(|ability| {
+                matches!(ability.effect, AbilityEffectDefinition::Evocation)
+            }))
+        .then_some(ResistanceLevel::Normal);
         self.resolve_ability_damage_to_entity_with_resistance(
             index,
             ability_id,
@@ -1331,6 +1333,7 @@ impl Game {
             trace,
             resistance,
             true,
+            resistance.is_some(),
             events,
             changed,
             removed_entities,
@@ -1356,6 +1359,7 @@ impl Game {
             trace,
             Some(ResistanceLevel::Normal),
             true,
+            false,
             events,
             changed,
             removed_entities,
@@ -1381,6 +1385,7 @@ impl Game {
             trace,
             Some(ResistanceLevel::Normal),
             true,
+            false,
             events,
             changed,
             removed_entities,
@@ -1388,7 +1393,7 @@ impl Game {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn resolve_ability_damage_to_entity_with_resistance(
+    pub(super) fn resolve_ability_damage_to_entity_with_resistance(
         &mut self,
         index: usize,
         ability_id: &str,
@@ -1397,6 +1402,7 @@ impl Game {
         trace: ProjectileTrace,
         resistance_override: Option<ResistanceLevel>,
         award_player_kill: bool,
+        missile: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -1445,8 +1451,12 @@ impl Game {
         let damage = resolve_armored_damage(
             raw_damage,
             damage_type,
-            target.armor_class.value,
-            resistance,
+            if missile { 0 } else { target.armor_class.value },
+            if missile {
+                ResistanceLevel::Normal
+            } else {
+                resistance
+            },
         );
         let damage = crate::game::damage::scale_damage_outcome(
             damage,
@@ -1524,6 +1534,7 @@ impl Game {
             raw_damage,
             trace,
             None,
+            false,
             false,
             events,
             changed,

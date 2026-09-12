@@ -957,7 +957,8 @@ impl Game {
                         .contains(&AbilityTargetModeDefinition::SelfTarget))
                 .then_some(AbilityTargetPlan::SelfTarget)
             }
-            AbilityEffectDefinition::RestoreVitality { .. } => {
+            AbilityEffectDefinition::RestoreVitality { .. }
+            | AbilityEffectDefinition::RingOfPowerBacklash => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability
                         .target

@@ -60,6 +60,363 @@ fn tick(game: &mut Game) -> Vec<DomainEvent> {
 }
 
 #[test]
+fn c4c_spectral_ordinary_equipment_inherited_breath_and_wall_lifecycle_survive_save() {
+    let mut game = Game::new_with_build(509, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    prepare(&mut game, false);
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-80".into(),
+        depth: 80,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.c4c".into(),
+        },
+    };
+    let base = "demo.item.white-dragon-scale-mail";
+    (0..100_000)
+        .find_map(|_| {
+            game.generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+                .into_iter()
+                .find(|item| item.kind_id == base && item.artifact_name.is_none())
+        })
+        .expect("white scales must be reached through the complete ordinary pool");
+    let kind = (0..30_000)
+        .find_map(|_| {
+            game.roll_fixed_artifact_kind_id(&context, Some(base), false)
+                .filter(|id| id == "demo.item.spectral-dragon-scale-mail")
+        })
+        .expect("the observed base must reach spectral scales with all artifact gates intact");
+    let draft = game.fixed_item_draft(&context, kind);
+    let item = game
+        .commit_generated_item_draft(draft, ItemLocation::Ground(START))
+        .unwrap();
+    let id = item.id.clone();
+    game.items.push(item);
+    game.pick_up_item_at_player(Some(&id)).unwrap();
+    assert!(game.visible_item_passives(&game.items[0]).is_empty());
+    assert!(!game.player_has_wall_passage());
+    let original_max_hp = game.effective_player_max_hp();
+    game.equip_inventory_item(&id, None).unwrap();
+    game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    assert_eq!(game.items[0].curse, Some(ItemCurseSeverityDto::Heavy));
+    assert_eq!(game.carried_weight_tenths_pound(), 100);
+    let stats = game.item_base_modifiers("demo.item.spectral-dragon-scale-mail");
+    assert_eq!(
+        (
+            stats.defense,
+            stats.strength,
+            stats.dexterity,
+            stats.constitution
+        ),
+        (60, -3, -3, -3)
+    );
+    let bonuses = game.player_equipment_bonuses();
+    assert_eq!(
+        (
+            bonuses.melee_skill,
+            bonuses.stealth_skill,
+            bonuses.life_percent
+        ),
+        (-2, 3, -9)
+    );
+    assert!(game.effective_player_max_hp() < original_max_hp);
+    assert_eq!(game.player_hold_life_sources(), 1);
+    assert_eq!(game.player_see_invisible_sources(), 1);
+    assert!(
+        game.player_equipment_passives()
+            .contains(&EquipmentPassive::ColdAura)
+    );
+    assert!(game.player_levitates());
+    assert!(game.player_can_pass_walls());
+    assert_eq!(game.player_incoming_damage_percent(), 100);
+    let mut hit = game.clone();
+    let hp = hit.player.hp;
+    hit.resolve_monster_damage_to_player(
+        "test.fire",
+        "demo.actor.ogre",
+        "test.fire",
+        0,
+        10,
+        10,
+        DamageType::Fire,
+        &mut Vec::new(),
+    );
+    assert_eq!(
+        hp - hit.player.hp,
+        10,
+        "passwall armor must not grant Wraithform damage reduction"
+    );
+    let traits = game.character_trait_details(&game.player_derived_stats());
+    assert!(traits.passes_walls);
+    let source = traits.sources.iter().find(|s| s.source_id == id).unwrap();
+    assert!(source.passes_walls);
+    assert!(
+        source
+            .passives
+            .contains(&EquipmentPassiveDto::NoPasswallDamage)
+    );
+    let north = Position {
+        x: EAST.x,
+        y: EAST.y - 1,
+    };
+    replace_terrain(&mut game, EAST, WALL);
+    replace_terrain(&mut game, north, "demo.terrain.permanent-wall");
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(game.player.position, EAST);
+    assert_eq!(game.terrain[game.index(EAST).unwrap()], WALL);
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::North,
+        },
+    );
+    assert_eq!(game.player.position, EAST);
+    assert!(!game.player_can_enter_position(north));
+    // With no artifact E line, the profile and program are exactly the base's.
+    let base_profile = &game
+        .content
+        .item(base)
+        .unwrap()
+        .device_generation
+        .as_ref()
+        .unwrap()
+        .activations[0];
+    assert_eq!(
+        game.items[0].activation.as_ref().unwrap().profile_id,
+        base_profile.id
+    );
+    assert_eq!(
+        game.content
+            .item("demo.item.spectral-dragon-scale-mail")
+            .unwrap()
+            .device_generation,
+        game.content.item(base).unwrap().device_generation
+    );
+    game.push_generated_actor(
+        "test.breath-target".into(),
+        "demo.actor.great-hell-wyrm",
+        Position { x: 102, y: 33 },
+    );
+    let hp = game.entities[0].hp;
+    let seed = (0..1000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+        .unwrap();
+    game.rng = RfbRng::seeded(seed);
+    game.reveal_current_visibility();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let activate = |g: &mut Game| {
+        let mut events = Vec::new();
+        g.use_inventory_item(
+            &id,
+            Some(&TargetSelection::Direction {
+                direction: Direction::East,
+            }),
+            None,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+        events
+    };
+    let events = activate(&mut game);
+    assert_eq!(activate(&mut restored), events);
+    assert!(events.iter().any(|e| matches!(e, DomainEvent::AbilityConeDamage { resolution, .. }
+        if resolution.base_raw_damage == 150 && resolution.radius == 2 && resolution.damage_type == DamageTypeDto::Cold)));
+    assert_eq!(hp - game.entities[0].hp, 150);
+    assert_eq!(game.state_hash(), restored.state_hash());
+    assert_eq!(game.items[0].charges.unwrap().current, 0);
+    clear_monsters(&mut game);
+    // Wait/rest in a wall must neither damage the wearer nor interrupt recovery.
+    let hp = game.player.hp;
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert!(game.player.hp >= hp);
+    game.player.hp = game.effective_player_max_hp() / 2;
+    let rest = game
+        .resolve_player_rest(3, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .unwrap();
+    assert_eq!(rest.completed_turns, 3);
+    assert_ne!(rest.stop_reason, RestStopReasonDto::Damaged);
+    assert_eq!(game.player.position, EAST);
+    let slot = match &game.items[0].location {
+        ItemLocation::Equipped { slot_id } => slot_id.clone(),
+        _ => unreachable!(),
+    };
+    assert!(game.unequip_slot(&slot).is_none());
+    give_inventory_item(&mut game, "test.replacement", base);
+    assert!(
+        game.equip_inventory_item("test.replacement", None)
+            .is_none()
+    );
+    assert!(game.player_can_pass_walls());
+    give_inventory_item(
+        &mut game,
+        "test.remove-curse",
+        "demo.item.greater-cleansing-scroll",
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.remove-curse".into(),
+            target: None,
+        },
+    );
+    assert_eq!(game.items[0].curse, None);
+    let mut unequipped = game.clone();
+    assert!(unequipped.unequip_slot(&slot).is_some());
+    assert!(!unequipped.player_can_pass_walls());
+    assert_eq!(unequipped.player.position, EAST);
+    unequipped.player.statuses.push(form(SPECTRE, 100));
+    assert!(unequipped.player_can_pass_walls());
+    unequipped.world_tick = unequipped.world_tick.next_multiple_of(10);
+    let mut density = Vec::new();
+    assert!(unequipped.process_player_wall_damage(&mut density));
+    assert!(density.iter().any(|e| matches!(
+        e,
+        DomainEvent::PlayerWallDamaged {
+            crushing: false,
+            ..
+        }
+    )));
+    // A legal equipment replacement revokes the capability immediately in-wall.
+    game.equip_inventory_item("test.replacement", None).unwrap();
+    assert_eq!(game.player.position, EAST);
+    assert!(!game.player_can_pass_walls());
+    assert!(
+        !game
+            .character_trait_details(&game.player_derived_stats())
+            .passes_walls
+    );
+    game.reveal_current_visibility();
+    let recovery_progress = game.items[0].device_recovery_progress;
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    for run in [&mut game, &mut restored] {
+        let hp = run.player.hp;
+        while !run.world_tick.is_multiple_of(10) {
+            run.world_tick += 1;
+            run.process_inventory_device_recovery(&mut Vec::new());
+        }
+        let mut events = Vec::new();
+        assert!(run.process_player_wall_damage(&mut events));
+        assert!(run.player.hp < hp);
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, DomainEvent::PlayerWallDamaged { crushing: true, .. }))
+        );
+        dispatch_next(
+            run,
+            GameCommand::Move {
+                direction: Direction::West,
+            },
+        );
+        assert_eq!(run.player.position, START);
+        // Unworn equipment pauses its timeout, including after save/load.
+        let index = run.items.iter().position(|item| item.id == id).unwrap();
+        for _ in 0..300 {
+            run.world_tick += 1;
+            run.process_inventory_device_recovery(&mut Vec::new());
+        }
+        assert_eq!(run.items[index].device_recovery_progress, recovery_progress);
+        assert_eq!(run.items[index].charges.unwrap().current, 0);
+        run.equip_inventory_item(&id, None).unwrap();
+        let ready_tick = run.world_tick + 300 - u32::from(recovery_progress);
+        while run.world_tick < ready_tick - 1 {
+            run.world_tick += 1;
+            run.process_inventory_device_recovery(&mut Vec::new());
+        }
+        assert_eq!(run.items[index].charges.unwrap().current, 0);
+        run.world_tick += 1;
+        run.process_inventory_device_recovery(&mut Vec::new());
+        assert_eq!(run.items[index].charges.unwrap().current, 1);
+    }
+    assert_eq!(game.state_hash(), restored.state_hash());
+    assert_eq!(
+        game.generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap(),
+        restored
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap()
+    );
+    assert_eq!(game.rng, restored.rng);
+}
+
+#[test]
+fn c4c_spectral_rider_still_requires_a_wall_passing_mount() {
+    for mount_passes in [false, true] {
+        let content_game = game_with_actor_definition(510, "demo.actor.horse", |actor| {
+            actor.movement.modes = if mount_passes {
+                vec![ActorMovementMode::PassWall]
+            } else {
+                Vec::new()
+            };
+        });
+        let mut game = Game::from_content_with_build(
+            510,
+            content_game.content.clone(),
+            DEFAULT_WORLD_ID,
+            "demo.build.warrior",
+        )
+        .unwrap();
+        choose_human_talent_if_pending(&mut game);
+        prepare(&mut game, false);
+        let context = LootContext {
+            table_id: "demo.loot-table.base-items".into(),
+            floor_id: "test.c4c-mounted".into(),
+            depth: 80,
+            source: LootSource::ItemUse {
+                item_id: "test.acquirement".into(),
+            },
+        };
+        let draft = game.fixed_item_draft(&context, "demo.item.spectral-dragon-scale-mail".into());
+        let item = game
+            .commit_generated_item_draft(draft, ItemLocation::Inventory)
+            .unwrap();
+        let id = item.id.clone();
+        game.items.push(item);
+        game.equip_inventory_item(&id, None).unwrap();
+        game.push_generated_actor("test.mount".into(), "demo.actor.horse", START);
+        game.entities[0].controller_id = Some(game.player.id.clone());
+        game.riding_actor_id = Some("test.mount".into());
+        replace_terrain(&mut game, EAST, WALL);
+        assert_eq!(game.player_can_pass_walls(), mount_passes);
+        assert_eq!(game.actor_can_enter_position(0, EAST), mount_passes);
+        assert_eq!(
+            game.character_trait_details(&game.player_derived_stats())
+                .passes_walls,
+            mount_passes
+        );
+        game.reveal_current_visibility();
+        let mut restored =
+            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        for run in [&mut game, &mut restored] {
+            dispatch_next(
+                run,
+                GameCommand::Move {
+                    direction: Direction::East,
+                },
+            );
+            assert_eq!(run.player.position, if mount_passes { EAST } else { START });
+            // An ordinary mount remains vulnerable to crushing if displaced into a wall.
+            run.player.position = EAST;
+            run.entities[0].position = EAST;
+            run.world_tick = 10;
+            assert_eq!(
+                run.process_player_wall_damage(&mut Vec::new()),
+                !mount_passes
+            );
+        }
+        assert_eq!(game.state_hash(), restored.state_hash());
+    }
+}
+
+#[test]
 fn water_allows_player_and_monster_bolts_and_ammunition_stays_on_shore() {
     let mut game = game(false);
     let shallow = Position { x: 101, y: 33 };

@@ -1,0 +1,121 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.bladeturner",
+  "nameKey": "item-demo-bladeturner-name",
+  "descriptionKey": "item-demo-bladeturner-description",
+  "glyph": "[",
+  "generationLevel": 95,
+  "weightTenthsPound": 600,
+  "baseValue": 500000,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 130,
+    "baseItemKindId": "demo.item.power-dragon-scale-mail",
+    "instant": false,
+    "rarityOneIn": 3
+  },
+  "modifiers": {
+    "defense": 85
+  },
+  "equipmentBonuses": {
+    "meleeSkill": -8
+  },
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "confusion": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "light": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "poison": "resistant",
+    "shards": "resistant",
+    "sound": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION",
+      "REGEN",
+      "RES_ACID",
+      "RES_BLIND",
+      "RES_CHAOS",
+      "RES_COLD",
+      "RES_CONF",
+      "RES_DARK",
+      "RES_DISEN",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_LITE",
+      "RES_NETHER",
+      "RES_NEXUS",
+      "RES_POIS",
+      "RES_SHARDS",
+      "RES_SOUND"
+    ],
+    "pval": 0,
+    "toArmor": 35
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.bladeturner",
+        "nameKey": "device-activation-bladeturner-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 10000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.bladeturner"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 4000
+    }
+  },
+  "passives": [
+    "hold-life",
+    "regeneration",
+    "levitation"
+  ],
+  "statusImmunities": [
+    "rfb.status.blindness"
+  ]
+}

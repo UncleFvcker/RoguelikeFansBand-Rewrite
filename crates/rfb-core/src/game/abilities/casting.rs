@@ -623,7 +623,7 @@ impl Game {
         cost
     }
 
-    fn select_player_random_choice_branch(
+    pub(in crate::game) fn select_player_random_choice_branch(
         &mut self,
         ability: &mut AbilityDefinition,
         target: &TargetSelection,

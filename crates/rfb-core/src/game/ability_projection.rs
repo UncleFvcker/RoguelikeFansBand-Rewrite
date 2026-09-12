@@ -744,6 +744,7 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
                 life_force: *life_force,
             }
         }
+        AbilityEffectDefinition::RingOfPowerBacklash => AbilityEffectSpecDto::RingOfPowerBacklash,
         AbilityEffectDefinition::HealthToMana => AbilityEffectSpecDto::HealthToMana {
             hit_point_cost: 0,
             mana_divisor: 5,

@@ -715,6 +715,9 @@ impl Game {
             (AbilityEffectDefinition::RestoreVitality { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_restore_vitality_effect(&ability, events);
             }
+            (AbilityEffectDefinition::RingOfPowerBacklash, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_ring_of_power_backlash(&ability, events);
+            }
             (
                 AbilityEffectDefinition::HealthToMana | AbilityEffectDefinition::ManaToHealth,
                 AbilityTargetPlan::SelfTarget,

@@ -437,6 +437,13 @@ impl Game {
         }
         let terrain_id = terrain.id.clone();
         let crushing = !self.player_can_pass_walls();
+        if !crushing
+            && self
+                .player_equipment_passives()
+                .contains(&EquipmentPassive::NoPasswallDamage)
+        {
+            return false;
+        }
         let mut raw_damage = 1 + i32::from(self.progress.level / 5);
         if !crushing
             && self
@@ -791,6 +798,13 @@ impl Game {
                     | ItemLocation::Equipped { .. }
                     | ItemLocation::Absorbed { .. }
             ) {
+                continue;
+            }
+            // Equipment activation timeouts recover only while worn; absorbed devices use body rates.
+            if item.activation.is_some()
+                && item.location == ItemLocation::Inventory
+                && content.item(&item.kind_id).is_some_and(|kind| kind.equipment_slot.is_some())
+            {
                 continue;
             }
             let Some(recovery) = body_rate

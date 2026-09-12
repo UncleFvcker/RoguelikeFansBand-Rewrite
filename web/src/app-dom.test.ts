@@ -50,6 +50,7 @@ test("the application DOM registry is immutable and preserves stable element IDs
   assert.equal(dom.petList.id, "pet-list");
   assert.equal(dom.inventoryUseOnMount.id, "inventory-use-on-mount");
   assert.equal(dom.inventoryAbsorb.id, "inventory-absorb");
+  assert.equal(dom.inventoryRead.id, "inventory-read");
   assert.equal(dom.characterAttributeSources.id, "character-attribute-sources");
   assert.equal(dom.characterTraitDefenses.id, "character-trait-defenses");
   assert.equal(dom.characterTraitAttacks.id, "character-trait-attacks");

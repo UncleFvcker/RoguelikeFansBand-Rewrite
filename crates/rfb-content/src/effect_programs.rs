@@ -96,7 +96,9 @@ fn effect_program_input_for_step(
 ) -> Option<EffectProgramInputDefinition> {
     match effect {
         ItemUseEffectDefinition::Sequence { .. } => None,
-        ItemUseEffectDefinition::Hermes => Some(EffectProgramInputDefinition::Actor),
+        ItemUseEffectDefinition::Hermes | ItemUseEffectDefinition::Bladeturner => {
+            Some(EffectProgramInputDefinition::Actor)
+        }
         ItemUseEffectDefinition::AbilityEffect { effect, .. }
             if matches!(
                 effect.as_ref(),
@@ -111,6 +113,7 @@ fn effect_program_input_for_step(
                 AbilityEffectDefinition::ConeDamage { .. }
                     | AbilityEffectDefinition::DrainLife { .. }
                     | AbilityEffectDefinition::FetchItem { .. }
+                    | AbilityEffectDefinition::RandomChoice { .. }
             ) =>
         {
             Some(EffectProgramInputDefinition::Actor)
@@ -410,6 +413,32 @@ mod tests {
             range: 8,
             requires_line_of_effect: true,
         };
+        assert!(
+            compile_effect_program_catalog(vec![effect_program(
+                "demo.effect.bladeturner",
+                EffectProgramInputDefinition::SelfTarget,
+                vec![ItemUseEffectDefinition::Bladeturner],
+            )])
+            .is_err()
+        );
+        assert!(
+            compile_effect_program_catalog(vec![effect_program(
+                "demo.effect.bladeturner",
+                EffectProgramInputDefinition::Actor,
+                vec![ItemUseEffectDefinition::Bladeturner],
+            )])
+            .is_ok()
+        );
+        assert!(!effect_program_input_matches_device_target(
+            EffectProgramInputDefinition::Actor,
+            &self_target,
+            &ItemUseEffectDefinition::Bladeturner,
+        ));
+        assert!(effect_program_input_matches_device_target(
+            EffectProgramInputDefinition::Actor,
+            &actor_target,
+            &ItemUseEffectDefinition::Bladeturner,
+        ));
 
         assert!(effect_program_input_matches_device_target(
             EffectProgramInputDefinition::SelfTarget,
