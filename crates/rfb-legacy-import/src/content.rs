@@ -5538,9 +5538,9 @@ fn legacy_device_item_effect(
             false,
         ),
         "ARROW" => (
-            device_damage_effect("damage", "physical", 0, 0, 150 + level * 3, 0),
+            device_damage_effect("damage", "physical", 0, 0, 70 + level, 0),
             projectile,
-            true,
+            false,
         ),
         "BANISH_ALL" => (
             device_ability_effect(serde_json::json!({"type": "banish", "maximumDistance": 100})),
@@ -5589,21 +5589,26 @@ fn legacy_device_item_effect(
             self_target,
             false,
         ),
-        "CONFUSE_MONSTERS" | "SCARE_MONSTERS" | "SLOW_MONSTERS" | "STASIS_MONSTERS" => {
-            let (status, power) = match candidate.token.as_str() {
-                "CONFUSE_MONSTERS" => ("rfb.status.confusion", level * 3),
-                "SCARE_MONSTERS" => ("rfb.status.fear", level * 3),
-                "SLOW_MONSTERS" => ("rfb.status.slow", level * 3),
-                _ => ("rfb.status.paralysis", level * 3),
+        "CONFUSE_MONSTERS" | "SCARE_MONSTERS" | "SLEEP_MONSTERS" | "STASIS_MONSTERS" => {
+            let projection = match candidate.token.as_str() {
+                "CONFUSE_MONSTERS" => "confusion",
+                "SCARE_MONSTERS" => "fear",
+                "SLEEP_MONSTERS" => "sleep",
+                _ => "stasis",
             };
             (
-                device_ability_effect(
-                    serde_json::json!({"type": "visible-apply-status", "statusKindId": status, "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": power}),
-                ),
+                serde_json::json!({"type": "project-monster-status", "projection": projection, "power": level * 3}),
                 self_target,
                 false,
             )
         }
+        "SLOW_MONSTERS" => (
+            device_ability_effect(
+                serde_json::json!({"type": "visible-apply-status", "statusKindId": "rfb.status.slow", "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": level * 3}),
+            ),
+            self_target,
+            false,
+        ),
         "CONFUSING_LITE" => (
             device_ability_effect(serde_json::json!({"type": "sequence", "effects": [
                 {"type": "visible-apply-status", "statusKindId": "rfb.status.slow", "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": level * 2},
@@ -5615,7 +5620,20 @@ fn legacy_device_item_effect(
             self_target,
             false,
         ),
-        "CURE_FEAR" | "CURE_FEAR_POIS" | "CURE_POIS" | "CURING" => {
+        "CURING" => (
+            device_ability_effect(serde_json::json!({"type":"sequence","effects":[
+                {"type":"remove-status","statusKindId":"rfb.status.blindness"},
+                {"type":"reduce-status","statusKindId":"rfb.status.poison","amount":1000,"currentDivisor":5},
+                {"type":"remove-status","statusKindId":"rfb.status.confusion"},
+                {"type":"remove-status","statusKindId":"rfb.status.stun"},
+                {"type":"remove-status","statusKindId":"rfb.status.bleeding"},
+                {"type":"remove-status","statusKindId":"rfb.status.hallucination"},
+                {"type":"remove-status","statusKindId":"rfb.status.berserk"}
+            ]})),
+            self_target,
+            false,
+        ),
+        "CURE_FEAR" | "CURE_FEAR_POIS" | "CURE_POIS" => {
             let mut effects = Vec::new();
             if candidate.token != "CURE_POIS" {
                 effects.push(
@@ -5624,17 +5642,6 @@ fn legacy_device_item_effect(
             }
             if candidate.token != "CURE_FEAR" {
                 effects.push(serde_json::json!({"type": "remove-status", "statusKindId": "rfb.status.poison"}));
-            }
-            if candidate.token == "CURING" {
-                for status in [
-                    "rfb.status.blindness",
-                    "rfb.status.confusion",
-                    "rfb.status.stun",
-                    "rfb.status.bleeding",
-                ] {
-                    effects
-                        .push(serde_json::json!({"type": "remove-status", "statusKindId": status}));
-                }
             }
             (
                 device_ability_effect(serde_json::json!({"type": "sequence", "effects": effects})),
@@ -5832,7 +5839,7 @@ fn legacy_device_item_effect(
         ),
         "RECALL" => (
             device_ability_effect(
-                serde_json::json!({"type": "recall", "delayDice": 1, "delaySides": 20, "delayBonus": 15}),
+                serde_json::json!({"type": "recall", "delayDice": 1, "delaySides": 21, "delayBonus": 14}),
             ),
             self_target,
             false,
@@ -5884,7 +5891,7 @@ fn legacy_device_item_effect(
         "RESISTANCE" => (device_basic_resistance_effect(), self_target, false),
         "RESTORE_EXP" => (
             device_ability_effect(
-                serde_json::json!({"type": "restore-vitality", "lifeForce": 1000, "restoreAttributes": false}),
+                serde_json::json!({"type": "restore-vitality", "lifeForce": 150, "restoreAttributes": false}),
             ),
             self_target,
             false,
@@ -27072,6 +27079,80 @@ static cptr _ego_name_zh[] =
                 .sum::<u32>(),
             expectation.total_weight
         );
+    }
+
+    #[test]
+    fn arrow_and_curing_activation_imports_preserve_source_parameters() {
+        let mut candidate = LegacyEgoActivationCandidate {
+            source_order: 0,
+            token: "ARROW".to_owned(),
+            level: 30,
+            recovery_turns: 50,
+            rarity: 1,
+            biases: Vec::new(),
+        };
+        let (effect, target, affects_ground) = legacy_device_item_effect(&candidate).unwrap();
+        // devices.c default 70 + power; Fingolfin overrides it with extra150.
+        assert_eq!(effect["effect"]["damageBonus"], 100);
+        assert_eq!(effect["effect"]["damageType"], "physical");
+        assert_eq!(effect["effect"]["type"], "damage");
+        assert_eq!(target, device_projectile_target());
+        assert!(!affects_ground); // fire_bolt has no PROJECT_ITEM.
+        candidate.token = "CURING".to_owned();
+        let (effect, target, _) = legacy_device_item_effect(&candidate).unwrap();
+        let effects = effect["effect"]["effects"].as_array().unwrap();
+        assert_eq!(
+            effects[1],
+            serde_json::json!({"type":"reduce-status","statusKindId":"rfb.status.poison","amount":1000,"currentDivisor":5})
+        );
+        assert_eq!(
+            effects
+                .iter()
+                .filter(|e| e["type"] == "remove-status")
+                .map(|e| e["statusKindId"].as_str().unwrap())
+                .collect::<Vec<_>>(),
+            [
+                "rfb.status.blindness",
+                "rfb.status.confusion",
+                "rfb.status.stun",
+                "rfb.status.bleeding",
+                "rfb.status.hallucination",
+                "rfb.status.berserk"
+            ]
+        );
+        assert_eq!(effects.len(), 7); // No HP healing or fear removal.
+        assert_eq!(target, device_self_target());
+        candidate.token = "RECALL".to_owned();
+        let (effect, target, _) = legacy_device_item_effect(&candidate).unwrap();
+        assert_eq!(
+            effect["effect"],
+            serde_json::json!({"type":"recall","delayDice":1,"delaySides":21,"delayBonus":14})
+        );
+        assert_eq!(target, device_self_target());
+    }
+
+    #[test]
+    fn restore_exp_activation_preserves_source_life_force_and_attribute_boundary() {
+        // master devices.c EFFECT_RESTORE_EXP: restore_level(); lp_player(150).
+        // RESTORING is a separate effect that restores attributes and 1000 life force.
+        for (token, life_force, attributes) in
+            [("RESTORE_EXP", 150, false), ("RESTORING", 1000, true)]
+        {
+            let candidate = LegacyEgoActivationCandidate {
+                source_order: 0,
+                token: token.to_owned(),
+                level: 25,
+                recovery_turns: 450,
+                rarity: 1,
+                biases: Vec::new(),
+            };
+            let (effect, target, _) = legacy_device_item_effect(&candidate).unwrap();
+            assert_eq!(
+                effect["effect"],
+                serde_json::json!({"type":"restore-vitality", "lifeForce":life_force, "restoreAttributes":attributes})
+            );
+            assert_eq!(target, device_self_target());
+        }
     }
 
     #[test]

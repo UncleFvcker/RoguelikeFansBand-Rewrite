@@ -1,0 +1,93 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.ballista",
+  "nameKey": "item-demo-ballista-name",
+  "descriptionKey": "item-demo-ballista-description",
+  "glyph": "}",
+  "generationLevel": 50,
+  "weightTenthsPound": 200,
+  "baseValue": 60000,
+  "maxStack": 1,
+  "equipmentSlot": "launcher",
+  "tags": [
+    "artifact",
+    "equipment",
+    "launcher",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 271,
+    "baseItemKindId": "demo.item.heavy-crossbow",
+    "instant": false,
+    "rarityOneIn": 15
+  },
+  "rfbValue": {
+    "flags": [
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_CONF",
+      "SHOW_MODS",
+      "STR"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "projectileProfile": {
+    "ammunitionType": "bolt",
+    "damageMultiplierPercent": 500,
+    "range": 18,
+    "shotEnergy": 13333,
+    "toDamage": 30,
+    "toHit": 10
+  },
+  "modifiers": {
+    "strength": 3
+  },
+  "resistances": {
+    "confusion": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.ballista",
+        "nameKey": "device-activation-c3-piercing-shot-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 30,
+        "rfbValue": 1500,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.ballista"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1000
+    }
+  }
+}

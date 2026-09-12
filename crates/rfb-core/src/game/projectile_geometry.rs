@@ -322,6 +322,9 @@ impl Game {
                     || !self.index(position).is_some_and(|_| {
                         if damage_type == DamageType::Disintegrate {
                             has_disintegration_line_of_effect(self, center, position)
+                        } else if damage_type == DamageType::Light {
+                            // spells1.c: a light ball expands through LOS terrain.
+                            super::visibility::has_line_of_sight(self, center, position)
                         } else {
                             has_line_of_effect(self, center, position)
                         }

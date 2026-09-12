@@ -1,0 +1,65 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.nyoi-bou",
+  "nameKey": "item-demo-nyoi-bou-name",
+  "descriptionKey": "item-demo-nyoi-bou-description",
+  "glyph": "\\",
+  "generationLevel": 80,
+  "weightTenthsPound": 500,
+  "maxStack": 1,
+  "baseValue": 300000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 157,
+    "baseItemKindId": "demo.item.tetsubo",
+    "instant": false,
+    "rarityOneIn": 70
+  },
+  "weaponProficiencyBaseItemId": "demo.item.tetsubo",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 7,
+    "damageSides": 8,
+    "toHit": 5,
+    "toDamage": 25
+  },
+  "modifiers": {
+    "strength": 5,
+    "defense": 10
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RIDING",
+      "SEE_INVIS",
+      "SLAY_EVIL",
+      "STR"
+    ],
+    "pval": 5,
+    "toArmor": 10
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "ridingWeaponKind": "compatible",
+  "passives": [
+    "see-invisible"
+  ],
+  "slays": {
+    "evil": "slay"
+  }
+}

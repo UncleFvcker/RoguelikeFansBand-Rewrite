@@ -1,0 +1,83 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.durin",
+  "nameKey": "item-demo-durin-name",
+  "descriptionKey": "item-demo-durin-description",
+  "glyph": "/",
+  "generationLevel": 50,
+  "weightTenthsPound": 230,
+  "maxStack": 1,
+  "baseValue": 150000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 101,
+    "baseItemKindId": "demo.item.great-axe",
+    "instant": false,
+    "rarityOneIn": 90
+  },
+  "weaponProficiencyBaseItemId": "demo.item.great-axe",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 5,
+    "toHit": 10,
+    "toDamage": 20
+  },
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "KILL_DRAGON",
+      "RES_ACID",
+      "RES_CHAOS",
+      "RES_DARK",
+      "RES_FIRE",
+      "RES_LITE",
+      "SHOW_MODS",
+      "SLAY_DEMON",
+      "SLAY_ORC",
+      "SLAY_TROLL"
+    ],
+    "pval": 3,
+    "toArmor": 15
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "constitution": 3,
+    "defense": 15
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "demon": "slay",
+    "dragon": "kill",
+    "orc": "slay",
+    "troll": "slay"
+  },
+  "resistances": {
+    "acid": "resistant",
+    "fire": "resistant",
+    "light": "resistant",
+    "dark": "resistant",
+    "chaos": "resistant"
+  }
+}

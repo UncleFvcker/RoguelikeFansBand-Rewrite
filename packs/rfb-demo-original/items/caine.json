@@ -1,0 +1,93 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.caine",
+  "nameKey": "item-demo-caine-name",
+  "descriptionKey": "item-demo-caine-description",
+  "glyph": "|",
+  "generationLevel": 40,
+  "weightTenthsPound": 12,
+  "baseValue": 125000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 65,
+    "baseItemKindId": "demo.item.dagger",
+    "instant": false,
+    "rarityOneIn": 80
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_POIS",
+      "DEX",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_DARK",
+      "SEARCH",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_EVIL",
+      "SLAY_HUMAN",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "STEALTH",
+      "SUST_DEX",
+      "THROWING"
+    ],
+    "pval": 4,
+    "toArmor": 5
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "weaponProficiencyBaseItemId": "demo.item.dagger",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 5,
+    "toHit": 10,
+    "toDamage": 15
+  },
+  "modifiers": {
+    "dexterity": 4,
+    "defense": 5
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 4,
+    "searchSkill": 20,
+    "perceptionSkill": 20
+  },
+  "resistances": {
+    "dark": "resistant"
+  },
+  "passives": [
+    "see-invisible",
+    "sustain-dexterity"
+  ],
+  "brands": [
+    "poison"
+  ],
+  "slays": {
+    "evil": "slay",
+    "human": "slay",
+    "troll": "slay",
+    "orc": "slay"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ]
+}

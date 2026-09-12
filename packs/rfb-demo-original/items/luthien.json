@@ -1,0 +1,105 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.luthien",
+  "nameKey": "item-demo-luthien-name",
+  "descriptionKey": "item-demo-luthien-description",
+  "glyph": "(",
+  "generationLevel": 70,
+  "weightTenthsPound": 5,
+  "maxStack": 1,
+  "baseValue": 80000,
+  "equipmentSlot": "cloak",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 49,
+    "baseItemKindId": "demo.item.shadow-cloak",
+    "instant": false,
+    "rarityOneIn": 40,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "modifiers": {
+    "defense": 26,
+    "intelligence": 2,
+    "wisdom": 2,
+    "charisma": 2,
+    "speed": 2
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_DARK",
+      "RES_FIRE",
+      "RES_LITE",
+      "SPEED",
+      "STEALTH",
+      "WIS",
+      "XTRA_H_RES"
+    ],
+    "pval": 2,
+    "toArmor": 20
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 2
+  },
+  "resistances": {
+    "acid": "resistant",
+    "fire": "resistant",
+    "cold": "resistant",
+    "light": "resistant",
+    "dark": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.luthien",
+        "nameKey": "device-activation-e5-restore-exp-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 25,
+        "rfbValue": 1000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.restore-life-levels"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 4500
+    }
+  }
+}

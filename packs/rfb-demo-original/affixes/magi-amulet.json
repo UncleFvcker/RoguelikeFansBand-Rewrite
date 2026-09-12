@@ -1243,15 +1243,9 @@
         },
         "deviceCheckDifficulty": 50,
         "effect": {
-          "effect": {
-            "durationTicks": 3,
-            "intensity": 1,
-            "power": 150,
-            "stacking": "replace",
-            "statusKindId": "rfb.status.paralysis",
-            "type": "visible-apply-status"
-          },
-          "type": "ability-effect"
+          "power": 150,
+          "projection": "stasis",
+          "type": "project-monster-status"
         },
         "id": "rfb.device-activation.ego-224-stasis-monsters",
         "maxDepth": 100,

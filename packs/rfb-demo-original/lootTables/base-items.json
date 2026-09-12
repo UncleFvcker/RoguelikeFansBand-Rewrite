@@ -1521,11 +1521,32 @@
       "weight": 33
     },
     {
+      "itemKindId": "demo.item.naginata",
+      "maxDepth": 65535,
+      "minDepth": 25,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
+      "itemKindId": "demo.item.lajatang",
+      "maxDepth": 65535,
+      "minDepth": 25,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
       "itemKindId": "demo.item.halberd",
       "maxDepth": 65535,
       "minDepth": 25,
       "quantity": 1,
       "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.tetsubo",
+      "maxDepth": 65535,
+      "minDepth": 25,
+      "quantity": 1,
+      "weight": 50
     },
     {
       "itemKindId": "demo.item.wizardstaff",
@@ -1547,6 +1568,13 @@
       "minDepth": 25,
       "quantity": 1,
       "weight": 25
+    },
+    {
+      "itemKindId": "demo.item.rusty-chain-mail",
+      "maxDepth": 65535,
+      "minDepth": 25,
+      "quantity": 1,
+      "weight": 100
     },
     {
       "itemKindId": "demo.item.metal-scale-mail",
@@ -1822,6 +1850,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.haramakido",
+      "maxDepth": 65535,
+      "minDepth": 32,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
       "itemKindId": "demo.item.no-dachi",
       "maxDepth": 65535,
       "minDepth": 35,
@@ -1941,6 +1976,13 @@
       "weight": 6
     },
     {
+      "itemKindId": "demo.item.great-axe",
+      "maxDepth": 65535,
+      "minDepth": 40,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.heavy-crossbow",
       "maxDepth": 65535,
       "minDepth": 40,
@@ -1962,6 +2004,20 @@
       "weight": 50
     },
     {
+      "itemKindId": "demo.item.steel-helm",
+      "maxDepth": 65535,
+      "minDepth": 40,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.golden-crown",
+      "maxDepth": 65535,
+      "minDepth": 40,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.jewel-encrusted-crown",
       "maxDepth": 65535,
       "minDepth": 40,
@@ -1974,6 +2030,13 @@
       "minDepth": 40,
       "quantity": 1,
       "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.knights-shield",
+      "maxDepth": 65535,
+      "minDepth": 40,
+      "quantity": 1,
+      "weight": 50
     },
     {
       "itemKindId": "demo.item.black-clothes",
@@ -2095,6 +2158,27 @@
       "weight": 25
     },
     {
+      "itemKindId": "demo.item.scythe",
+      "maxDepth": 65535,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.lochaber-axe",
+      "maxDepth": 65535,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.two-handed-flail",
+      "maxDepth": 65535,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.great-hammer",
       "maxDepth": 65535,
       "minDepth": 45,
@@ -2107,6 +2191,20 @@
       "minDepth": 45,
       "quantity": 1,
       "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.full-plate-armour",
+      "maxDepth": 65535,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.o-yoroi",
+      "maxDepth": 65535,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 50
     },
     {
       "itemKindId": "demo.item.inventory-protection-scroll",
@@ -2200,6 +2298,13 @@
       "weight": 50
     },
     {
+      "itemKindId": "demo.item.mithril-helm",
+      "maxDepth": 65535,
+      "minDepth": 50,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
       "itemKindId": "demo.item.robe",
       "maxDepth": 65535,
       "minDepth": 50,
@@ -2280,6 +2385,13 @@
       "itemKindId": "demo.item.leather-pouch",
       "maxDepth": 50,
       "minDepth": 50,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.set-of-caestus",
+      "maxDepth": 65535,
+      "minDepth": 55,
       "quantity": 1,
       "weight": 33
     },
@@ -2459,6 +2571,20 @@
       "weight": 25
     },
     {
+      "itemKindId": "demo.item.shadow-cloak",
+      "maxDepth": 65535,
+      "minDepth": 75,
+      "quantity": 1,
+      "weight": 20
+    },
+    {
+      "itemKindId": "demo.item.adamantite-plate-mail",
+      "maxDepth": 65535,
+      "minDepth": 75,
+      "quantity": 1,
+      "weight": 12
+    },
+    {
       "itemKindId": "demo.item.multi-hued-dragon-scale-mail",
       "maxDepth": 65535,
       "minDepth": 75,
@@ -2485,6 +2611,13 @@
       "minDepth": 75,
       "quantity": 1,
       "weight": 16
+    },
+    {
+      "itemKindId": "demo.item.mace-of-disruption",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 12
     },
     {
       "itemKindId": "demo.item.seeker-bolt",

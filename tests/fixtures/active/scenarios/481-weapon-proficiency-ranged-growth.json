@@ -32,6 +32,7 @@
         "anger": 0,
         "friendly": false,
         "noPet": false,
+        "noGenocide": false,
         "castingCooldownRemaining": 0
       }
     ]
@@ -62,7 +63,7 @@
       },
       "revision": 1,
       "rngDrawCounter": 198,
-      "stateHash": "1c6a577260e5ab04b05f5d85fbafebc73a1c302dabdbe219c0eb5f3cb083e6e5",
+      "stateHash": "ef4bbf2d4acd90f9ee203c47e93dba23cd07abc569c64a855b9b4871981f7dbc",
       "turn": 1
     },
     "events": [

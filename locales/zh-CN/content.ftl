@@ -4262,6 +4262,8 @@ actor-demo-shimmering-vortex-description = 一根会刺痛你眼睛的发光奇�
 actor-demo-weird-fume-name = 怪异烟雾
 actor-demo-weird-fume-description = 一团旋转的螺旋状雾气，不断改变着它的外观。
 item-demo-amulet-name = 护身符
+item-demo-boromir-name = 波罗莫的护身符
+item-demo-boromir-description = 一个巨大的金色项圈，由无数根金线和钢线交织而成，两端镶嵌着巨大的金色猎犬。
 item-demo-amulet-description = 一枚等待获得魔法属性的普通护身符。
 item-demo-detection-rod-name = 探测魔棒
 item-demo-detection-rod-description = 探测附近的陷阱、通道、财宝、物品和怪物。
@@ -9765,11 +9767,170 @@ ability-demo-warrior-mage-hp-to-sp-description = 消耗相当于等级的生命�
 ability-demo-warrior-mage-sp-to-hp-name = 法力转生命
 ability-demo-warrior-mage-sp-to-hp-description = 消耗等级除以五（向下取整）的法力，治疗相当于等级的生命。满生命仍耗法力；法力不足时转换失败并消耗一回合。
 
-item-demo-mithril-chain-mail-name = 秘银链甲
-item-demo-mithril-chain-mail-description = 由真银制成的链甲。
 
 item-demo-lohengrin-name = 罗恩格林的秘银链甲
 item-demo-lohengrin-description = 可激活天使治愈的秘银链甲，提供智力、感知、潜行和多种抗性。
 
 item-demo-charmed-pendant-name = 魅力吊坠
 item-demo-charmed-pendant-description = 帮助施法的吊坠，可激活恢复法力并为背包装置部分充能。
+item-demo-numenor-name = 努曼诺尔的镶钻王冠
+item-demo-numenor-description = 一顶厚重的纯金王冠，镶嵌着蕴含思想与守护之力的神奇珠宝，曾由古代努曼诺尔的历代国王佩戴。
+item-demo-aragorn-name = 阿拉贡的软皮靴
+item-demo-aragorn-description = 阿拉贡的软皮靴
+item-demo-ossian-name = 莪相的大皮盾
+item-demo-ossian-description = 这面魔法盾曾保护过臂力过人的莪相，他从未在任何战斗中退缩。
+item-demo-great-wizzard-name = 伟大巫师的尖帽子
+item-demo-great-wizzard-description = 以前属于一位著名的巫师。
+item-demo-haramakido-name = 腹卷
+item-demo-haramakido-description = 腹卷
+item-demo-full-plate-armour-name = 全身板甲
+item-demo-full-plate-armour-description = 一整套精心贴合的板甲，铰接的关节处衬有链甲，下面有轻薄的垫料。
+item-demo-o-yoroi-name = 大铠
+item-demo-o-yoroi-description = 大铠
+item-demo-mithril-chain-mail-name = 秘银链甲
+item-demo-mithril-chain-mail-description = 由真银制成的链甲既罕见又奇妙，因为与其他任何盔甲相比，它在同等重量下提供了更好的保护。
+item-demo-isildur-name = 埃西铎的全身板甲
+item-demo-isildur-description = 一套闪闪发光的钢制盔甲，将佩戴者从头到脚覆盖起来，其表面深深刻有守护和稳定的符文。
+item-demo-yositsune-name = 义经的腹卷
+item-demo-yositsune-description = 这是源氏最勇敢的武将义经的腹卷（日式盔甲）。当你穿上它时，你可以感受到他那敏捷和灵巧的身手。
+item-demo-bando-musha-name = 坂东武者的大铠
+item-demo-bando-musha-description = 这是畠山重忠的大铠。他是一位勇敢、聪明而诚实的武将，因此被称为东国武士的最佳典范。这套大铠就像他一样威风凛凛。
+item-demo-bilbo-name = 比尔博的秘银链甲
+item-demo-bilbo-description = “还有这个！”比尔博说着，拿出一个相对于它的体积来说相当沉重的包裹。他解开了几层旧布，举起了一件小锁子甲。它由许多圆环紧密编织而成，几乎和亚麻一样柔软，像冰一样冷，比钢铁还要坚硬。它闪耀着如同月光下的白银般的光芒，上面镶嵌着白色的宝石。
+
+item-demo-benkei-name = 弁庆的薙刀
+item-demo-benkei-description = 弁庆的薙刀
+item-demo-sha-wujing-name = 沙悟净的月牙铲
+item-demo-sha-wujing-description = 这把月牙铲看起来像一根法杖，因为它只有一端是像半月一样的铲刃。沙悟净在唐三藏的漫长旅途中用它来帮忙。
+item-demo-durin-name = 都林的巨斧
+item-demo-durin-description = 这把让古老恶魔感到恐惧的武器，其巨大的双斧刃上闪烁着秘银镶嵌的光芒。它们诉说着坚忍的传说，唤起卡扎督姆的力量，以保护佩戴者并杀死地下发现的所有邪恶。
+item-demo-dwarves-name = 矮人的洛卡伯长柄斧
+item-demo-dwarves-description = 一把带有两面锋利斧刃的巨斧，它太大了，通常需要双手才能挥舞，斧面上用金子精细地刻有抵御元素和惩戒邪恶的法术。
+item-demo-dramborleg-name = 巨斧『德兰博雷格』
+item-demo-dramborleg-description = 这是图尔使用过的那把能在击伤敌人的同时震慑他们的巨斧。在贡多林之战中，图尔用这把斧头杀死了五只炎魔。人们一直认为它在努曼诺尔沉没时遗失了。
+
+item-demo-naginata-name = 薙刀
+item-demo-naginata-description = 薙刀
+item-demo-lajatang-name = 月牙铲
+item-demo-lajatang-description = 月牙铲
+item-demo-great-axe-name = 巨斧
+item-demo-great-axe-description = 巨斧
+item-demo-lochaber-axe-name = 洛卡伯长柄斧
+item-demo-lochaber-axe-description = 洛卡伯长柄斧
+
+item-demo-tetsubo-name = 铁碎棒
+item-demo-tetsubo-description = 铁碎棒
+item-demo-two-handed-flail-name = 双手连枷
+item-demo-two-handed-flail-description = 双手连枷
+item-demo-mace-of-disruption-name = 瓦解权杖
+item-demo-mace-of-disruption-description = 瓦解权杖
+item-demo-nyoi-bou-name = 铁碎棒『如意棒』
+item-demo-nyoi-bou-description = 铁碎棒『如意棒』
+item-demo-shuten-douji-name = 酒吞童子的铁碎棒
+item-demo-shuten-douji-description = 酒吞童子的铁碎棒
+item-demo-thunderfist-name = 双手连枷『雷霆之拳』
+item-demo-thunderfist-description = 远古贝莱格斯特的矮人冠军克祖林（Kzurin）失落已久的武器，它的握柄上刻有力量符文，火焰和火花在其巨大的头部周围咆哮、噼啪作响。
+item-demo-deathwreaker-name = 瓦解权杖『死亡收割者』
+item-demo-deathwreaker-description = 这把武器如此巨大，似乎超出了凡人的力量，然而当你掂量它时，你能感受到体内巨人的力量。当你握住它乌木和钢铁制成的手柄时，火焰的日冕会燃烧起来，强大的保护魔法也会在你周围激活。你挥舞着的，正是巨龙的恐惧和不死生物的绝望！
+
+item-demo-shadow-cloak-name = 暗影披风
+item-demo-shadow-cloak-description = 一件午夜色的披风，将穿戴者包裹在暗影的褶皱中。
+
+item-demo-luthien-name = 露西安的暗影披风
+item-demo-luthien-description = 这件披风镶嵌着无数细小的钻石，其不透明的午夜色褶皱在你周围盘旋，你感受到了一丝恢复知识与力量的暗示与片段，这股力量曾存在于露西安——这位曾经知晓死亡的最美丽的生灵之中。
+
+item-demo-tuor-name = 图尔的暗影披风
+item-demo-tuor-description = 图尔从贡多林的废墟中逃出，历经秘密的路径和艰辛，他的披风保护他免受无数敌对目光的注视。
+
+item-demo-steel-helm-name = 钢盔
+item-demo-steel-helm-description = 这顶巨大的头盔用钢板和锁子甲帘罩住头部和肩膀。
+
+item-demo-mithril-helm-name = 秘银头盔
+item-demo-mithril-helm-description = 一顶纯秘银制成的坚固头盔，完全包裹住头部。
+
+item-demo-golden-crown-name = 金王冠
+item-demo-golden-crown-description = 一个优雅的金色头冠，带有向上突出的细长尖刺。看起来它应该戴在国王的额头上。
+
+item-demo-hammerhand-name = 锤手的钢盔
+item-demo-hammerhand-description = 一顶如西部防线（Westdike）的英雄般稳固的巨盔。锤手海尔姆的打击是极其强大的！
+
+item-demo-dor-lomin-name = 多尔露明的秘银头盔
+item-demo-dor-lomin-description = 图林·图伦拔传说中的龙盔，令魔苟斯的仆从感到恐惧的物品。
+
+item-demo-amber-name = 安珀的金王冠
+item-demo-amber-description = 安珀的金王冠
+
+item-activation-demo-amber-heal-name = 治疗
+
+item-demo-set-of-caestus-name = 搏击拳套
+item-demo-set-of-caestus-description = 一种专为近身肉搏战设计的古老战斗手套。其多层皮带通过看起来血腥的尖刺进行了增强，以利于战斗。
+
+item-demo-knights-shield-name = 骑士盾
+item-demo-knights-shield-description = 骑士盾
+
+item-demo-fingolfin-name = 芬国昐的搏击拳套
+item-demo-fingolfin-description = 精灵与人类的战士国王芬国昐的手部护具，他曾给魔苟斯留下了七道巨大的伤口和将持续到永远的痛苦。
+
+item-demo-earendil-shield-name = 埃兰迪尔的骑士盾
+item-demo-earendil-shield-description = 一面闪耀的盾牌，曾由伟大的航海家埃兰迪尔持有，“上面刻着让一切伤痛与伤害远离他的符文”。
+
+item-demo-rusty-chain-mail-name = 生锈的链甲
+item-demo-rusty-chain-mail-description = 这套盔甲的每个链环都因生锈而变得脆弱，腐蚀的圆环僵硬且不结实。
+item-demo-adamantite-plate-mail-name = 精金板甲
+item-demo-adamantite-plate-mail-description = 像钻石一样坚硬的精金构成了这套精美的盔甲；在中土世界没有其他东西能提供如此强大的保护。
+item-demo-morlok-name = 莫洛克大祭司的生锈的链甲
+item-demo-morlok-description = 莫洛克大祭司的生锈的链甲
+item-demo-soulkeeper-name = 『守魂者』精金板甲
+item-demo-soulkeeper-description = 一套不朽的精金盔甲，具有不可战胜的力量来抵挡邪恶和破坏性魔法，它能像任何其他东西都无法做到的那样保护佩戴者的生命力。
+item-activation-demo-soulkeeper-heal-name = 治疗
+
+item-demo-scythe-name = 长柄大镰刀
+item-demo-scythe-description = 长长的新月形刀刃从这把长柄武器的握柄处伸出，可以用双手挥舞它来收割谷物或鲜血。
+item-demo-avavir-name = 『阿瓦维尔』长柄大镰刀
+item-demo-avavir-description = 这把闪耀的收割者蕴含着元素力量的冲突，使其交替呈现出红色和最纯洁的白色。它的内部蕴含着一种向前冲锋和返回的力量。
+item-demo-eonwe-name = 伊昂威的巨斧
+item-demo-eonwe-description = 这是西方大军领袖伊昂威在安格班（Thangorodrim）门前所用的斧头，它以冰冷的愤怒打击不死生物，一句话就能驱散邪恶的大军，并赋予佩戴者迈雅般的肉体与心智力量。
+
+item-demo-holcolleth-name = 精灵披风『霍尔科莱斯』
+item-demo-holcolleth-description = 这件精灵灰色的斗篷拥有极强的宁静与隐蔽力量，并赋予佩戴者辛达精灵的知识和理解力。
+
+item-demo-totila-name = 连枷『托提拉』
+item-demo-totila-description = 这把连枷，当你在周围挥舞它时，它的头部会让盯着它看的人感到困惑；而当你将它砸下时，它会变成一颗燃烧的彗星。
+
+item-demo-tuber-name = 图伯的长弓
+item-demo-tuber-description = 百发百中的图伯——英雄布博的儿子——的弓。它充满了曾经囚禁过他的冰霜精灵的力量。
+
+item-demo-grimtooth-name = 『冷酷之牙』
+item-demo-grimtooth-description = 『冷酷之牙』
+
+item-demo-rilia-name = 蕾莉亚的
+item-demo-rilia-description = 一把闪烁着无味毒液的大型细刺匕首，佩戴者似乎对其出奇地免疫。
+
+item-demo-aeglos-name = 『艾格洛斯』
+item-demo-aeglos-description = 吉尔-加拉德的强大长矛，在精灵的歌谣中被称为“雪点”，索伦所有邪恶的腐化物在它面前都如同螳臂当车。
+
+item-demo-excalipur-name = 『伪·王者之剑』
+item-demo-excalipur-description = 『伪·王者之剑』
+
+item-demo-caine-name = 该隐的
+item-demo-caine-description = 该隐的
+
+item-demo-fiona-name = 菲奥娜的
+item-demo-fiona-description = 菲奥娜的
+
+item-demo-hagen-name = 哈根的
+item-demo-hagen-description = 哈根的
+
+item-demo-gae-bulg-name = 『盖伯尔加之矛』
+item-demo-gae-bulg-description = 『盖伯尔加之矛』
+
+item-demo-ballista-name = 『弩炮』
+item-demo-ballista-description = 『弩炮』
+
+item-demo-impaler-name = 『穿刺者』
+item-demo-impaler-description = 『穿刺者』
+
+item-demo-bloodrip-name = 『嗜血裂杀』
+item-demo-bloodrip-description = 这把武器注入了第一代鲜血骑士的灵魂。当心！它渴望鲜血，甚至是挥舞者的鲜血！但对于那些走在血色之路上的人来说，没有比这更好的武器了。
+device-activation-c3-piercing-shot-name = 穿透射击
+device-activation-c3-charge-name = 冲锋

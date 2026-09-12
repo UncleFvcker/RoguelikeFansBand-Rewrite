@@ -715,7 +715,7 @@ impl Game {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn apply_crusade_actor_status(
+    pub(in crate::game) fn apply_monster_status_result(
         &mut self,
         index: usize,
         ability_id: &str,
@@ -792,7 +792,7 @@ impl Game {
         resolution
     }
 
-    fn push_actor_effect_resolution(
+    pub(in crate::game) fn push_actor_effect_resolution(
         &self,
         ability_id: &str,
         index: usize,
@@ -896,7 +896,7 @@ impl Game {
                 || power_roll
                     .zip(target_roll)
                     .is_some_and(|(left, right)| u32::from(left) <= right);
-            let resolution = self.apply_crusade_actor_status(
+            let resolution = self.apply_monster_status_result(
                 index,
                 &ability.id,
                 STATUS_FEAR,
@@ -1026,7 +1026,7 @@ impl Game {
                     .expect("slow threshold must fit u16")
             });
             let resisted = unique || threshold.is_some_and(|roll| target_level > u32::from(roll));
-            let resolution = self.apply_crusade_actor_status(
+            let resolution = self.apply_monster_status_result(
                 index,
                 &ability.id,
                 STATUS_SLOW,
@@ -1054,7 +1054,7 @@ impl Game {
                 continue;
             };
             let immune = self.actor_has_status_immunity(index, STATUS_STUN);
-            let resolution = self.apply_crusade_actor_status(
+            let resolution = self.apply_monster_status_result(
                 index,
                 &ability.id,
                 STATUS_STUN,
@@ -1109,7 +1109,7 @@ impl Game {
             let resisted = power_roll
                 .zip(target_roll)
                 .is_some_and(|(left, right)| right >= u32::from(left));
-            let resolution = self.apply_crusade_actor_status(
+            let resolution = self.apply_monster_status_result(
                 index,
                 &ability.id,
                 STATUS_CONFUSION,
@@ -1155,7 +1155,7 @@ impl Game {
             });
             let resisted = unique || threshold.is_some_and(|roll| target_level > u32::from(roll));
             let duration = 2 + u32::from(!resisted && self.rng.bounded(15) == 0);
-            let resolution = self.apply_crusade_actor_status(
+            let resolution = self.apply_monster_status_result(
                 index,
                 &ability.id,
                 STATUS_PARALYSIS,
@@ -1297,7 +1297,7 @@ impl Game {
                 outcome,
             }];
             if controlled {
-                effects.push(self.apply_crusade_actor_status(
+                effects.push(self.apply_monster_status_result(
                     index,
                     &ability.id,
                     STATUS_HASTE,
@@ -1314,7 +1314,7 @@ impl Game {
                         .expect("Crusade fear duration must fit u32"),
                 );
                 let immune = self.actor_has_status_immunity(index, STATUS_FEAR);
-                effects.push(self.apply_crusade_actor_status(
+                effects.push(self.apply_monster_status_result(
                     index,
                     &ability.id,
                     STATUS_FEAR,
@@ -1415,7 +1415,7 @@ impl Game {
                 else {
                     continue;
                 };
-                let status = self.apply_crusade_actor_status(
+                let status = self.apply_monster_status_result(
                     index,
                     &ability.id,
                     STATUS_HASTE,

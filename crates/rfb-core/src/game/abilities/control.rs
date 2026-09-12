@@ -1,23 +1,28 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::effect::{
-    DamagePacket, STATUS_FEAR, STATUS_PARALYSIS, STATUS_SLEEP, STATUS_SLOW, resolve_damage,
+    DamagePacket, STATUS_CONFUSION, STATUS_FEAR, STATUS_PARALYSIS, STATUS_SLEEP, STATUS_SLOW,
+    resolve_damage,
 };
 use crate::event::{DomainEvent, ProjectileTrace};
 use crate::game::abilities::AbilityTargetPlan;
 use crate::game::ability_scaling::spell_power_value;
 use crate::game::damage::FatalityPolicy;
 use crate::game::item_use::VisibleBanishmentOutcome;
-use crate::game::projectile_geometry::rfb_distance;
+use crate::game::projectile_geometry::{has_line_of_effect, rfb_distance};
 use crate::game::status_effects::{apply_ability_status_effect, remove_ability_status_effect};
+use crate::game::visibility::has_line_of_sight;
 use crate::game::{
-    CRUSADE_ARREST_ABILITY_ID, Game, ability_genocide_scope_dto, actor_matches_category,
-    chebyshev_distance,
+    CRUSADE_ARREST_ABILITY_ID, Game, GenocideResolution, ability_genocide_scope_dto,
+    actor_matches_category,
 };
 use crate::resistance::{DamageType, ResistanceLevel, ResistanceProfile};
+use crate::state::ItemLocation;
+use crate::stats::AttributeKind;
 use rfb_content::{
     AbilityDefinition, AbilityEffectDefinition, AbilityGenocideScopeDefinition,
-    AbilityStatusStackingDefinition, EquipmentBonuses, StatModifiers,
+    AbilityStatusStackingDefinition, EquipmentBonuses, MonsterStatusProjectionDefinition,
+    StatModifiers,
 };
 use rfb_protocol::{
     AbilityBanishTargetDto, AbilityControlOutcomeDto, AbilityEffectResolutionDto,
@@ -27,6 +32,371 @@ use rfb_protocol::{
 use std::collections::{BTreeMap, BTreeSet};
 
 impl Game {
+    pub(in crate::game) fn projected_monster_status_targets(&self) -> Vec<String> {
+        // spells2.c:project_hack requires geometric sight AND projectability,
+        // not monster visibility. Ordinary projectable() has MAX_RANGE 18.
+        let mut targets: Vec<_> = self
+            .entities
+            .iter()
+            .filter(|actor| {
+                actor.hp > 0
+                    && rfb_distance(self.player.position, actor.position) <= 18
+                    && has_line_of_sight(self, self.player.position, actor.position)
+                    && has_line_of_effect(self, self.player.position, actor.position)
+            })
+            .map(|actor| actor.id.clone())
+            .collect();
+        // Saves canonicalize actor order; keep effect RNG assigned to the same IDs.
+        targets.sort();
+        targets
+    }
+
+    #[allow(clippy::too_many_lines)]
+    pub(in crate::game) fn resolve_projected_monster_status(
+        &mut self,
+        source_id: &str,
+        projection: MonsterStatusProjectionDefinition,
+        power: u16,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> bool {
+        // ponytail: source initial counters use shared tick recovery; source
+        // noise/fear recovery belongs to the monster timing parity work.
+        use MonsterStatusProjectionDefinition::{Confusion, Fear, Sleep, Stasis};
+        let status_kind_id = match projection {
+            Fear => STATUS_FEAR,
+            Sleep => STATUS_SLEEP,
+            Confusion => STATUS_CONFUSION,
+            Stasis => STATUS_PARALYSIS,
+        };
+        let mut noticed = false;
+        for actor_id in self.projected_monster_status_targets() {
+            let index = self
+                .entities
+                .iter()
+                .position(|actor| actor.id == actor_id)
+                .unwrap();
+            let definition = self
+                .actor_runtime_definition(&self.entities[index])
+                .unwrap();
+            let level = definition.level;
+            let unique = definition.tags.iter().any(|tag| tag == "unique");
+            let resist_all = definition.tags.iter().any(|tag| tag == "resist-all");
+            let scarce = definition
+                .finite_lifetime_instance_limit()
+                .is_some_and(|limit| limit < 10)
+                || definition.tags.iter().any(|tag| tag == "unique2");
+            let status_immune =
+                projection != Stasis && self.actor_has_status_immunity(index, status_kind_id);
+            let immune =
+                resist_all || status_immune || (unique && matches!(projection, Sleep | Stasis));
+            let previous = self.entities[index]
+                .statuses
+                .iter()
+                .find(|status| status.kind_id == status_kind_id)
+                .map_or(0, |status| status.remaining_ticks);
+            let mut power_roll = None;
+            let mut target_roll = None;
+            let mut duration = 0;
+            let mut resisted = false;
+            if !resist_all {
+                match projection {
+                    Fear => {
+                        // GF_TURN_ALL rolls duration even for NO_FEAR. The save
+                        // uses fear.c:_plev and CHR, independently of effect power.
+                        duration = self.roll_damage(3, (power / 2).max(1)).max(0) as u32 + 1;
+                        if !immune {
+                            let mut player_level = i32::from(self.progress.level);
+                            if self
+                                .character_definitions()
+                                .is_some_and(|(_, _, _, personality)| {
+                                    personality.id.ends_with(".craven")
+                                })
+                            {
+                                player_level = (player_level - 5).max(1);
+                            }
+                            if self.player_has_mutation(crate::game::HUMAN_INT_MUTATION_ID) {
+                                player_level = (player_level - 10).max(1);
+                            }
+                            let will = if player_level <= 40 {
+                                5 + player_level
+                            } else {
+                                45 + (player_level - 40) * 2
+                            };
+                            let will = will
+                                + crate::stats::original_save_adjustment(
+                                    self.effective_player_attributes()
+                                        .index(AttributeKind::Charisma),
+                                );
+                            if will <= 1 {
+                                resisted = true;
+                            } else {
+                                power_roll = Some((self.rng.bounded(will as u64) + 1) as u16);
+                                target_roll = Some(
+                                    (self
+                                        .rng
+                                        .bounded(u64::from((level + u32::from(unique) * 3).max(1)))
+                                        + 1) as u32,
+                                );
+                                resisted = u32::from(power_roll.unwrap()) <= target_roll.unwrap();
+                            }
+                        }
+                        duration = previous.saturating_add(duration).min(200);
+                    }
+                    Sleep => {
+                        duration = 500;
+                        if !immune {
+                            target_roll =
+                                Some((self.rng.bounded(u64::from(level.max(1))) + 1) as u32);
+                            power_roll =
+                                Some((self.rng.bounded(u64::from(power.max(1))) + 1) as u16);
+                            resisted = target_roll.unwrap() >= u32::from(power_roll.unwrap());
+                        }
+                    }
+                    Confusion => {
+                        // gf.c uses spell_power(player level * 2) even for devices.
+                        let caster_level = spell_power_value(
+                            u64::from(self.progress.level) * 2,
+                            self.effective_player_spell_power_bonus(),
+                        );
+                        let strength = (caster_level / 2).max(u64::from(power.min(100))) as u16;
+                        duration = self.roll_damage(3, (strength / 2).max(1)).max(0) as u32 + 1;
+                        if !immune {
+                            target_roll = Some(
+                                (self
+                                    .rng
+                                    .bounded(u64::from((level + u32::from(unique) * 3).max(1)))
+                                    + 1) as u32,
+                            );
+                            power_roll =
+                                Some((self.rng.bounded(u64::from(strength.max(1))) + 1) as u16);
+                            resisted = target_roll.unwrap() >= u32::from(power_roll.unwrap());
+                        }
+                        duration = if previous > 0 {
+                            previous.saturating_add(duration / 2)
+                        } else {
+                            duration
+                        }
+                        .min(200);
+                    }
+                    Stasis => {
+                        if !immune {
+                            power_roll =
+                                Some((self.rng.bounded(u64::from(power.max(1))) + 1) as u16);
+                            target_roll = Some(level);
+                            resisted = level > u32::from(power_roll.unwrap());
+                            if !resisted {
+                                // Two (occasionally three) normal turns. Existing
+                                // paralysis is never refreshed by GF_STASIS.
+                                duration = if self.rng.bounded(15) == 0 { 30 } else { 20 };
+                            }
+                        }
+                    }
+                }
+            }
+            let rejection = if immune {
+                Some(AbilityStatusChangeDto::Immune)
+            } else if resisted {
+                Some(AbilityStatusChangeDto::Resisted)
+            } else if projection == Stasis && previous > 0 {
+                Some(AbilityStatusChangeDto::Unchanged)
+            } else {
+                None
+            };
+            // project_m still calls mon_take_hit(0): even a saved control wakes
+            // the target. A successful sleep immediately installs its new counter.
+            if !resist_all {
+                if projection != Sleep || rejection.is_some() {
+                    self.wake_entity(index, events);
+                }
+                self.entities[index].alerted = true;
+                changed.insert(self.entities[index].position);
+            }
+            // Successful GF_OLD_SLEEP also calls anger_monster. Even a common
+            // pet consumes the source one-in-three roll before the scarcity test.
+            if projection == Sleep
+                && rejection.is_none()
+                && (self.entities[index].friendly
+                    || (self.entities[index].controller_id.is_some()
+                        && self.rng.bounded(3) == 0
+                        && scarce
+                        && self.riding_actor_id.as_deref() != Some(actor_id.as_str())))
+            {
+                self.entities[index].friendly = false;
+                self.entities[index].controller_id = None;
+                self.clear_riding_bond_for(&actor_id);
+                for (virtue, amount) in [
+                    (VirtueKindDto::Individualism, 1),
+                    (VirtueKindDto::Honour, -1),
+                    (VirtueKindDto::Justice, -1),
+                    (VirtueKindDto::Compassion, -1),
+                ] {
+                    self.add_virtue(virtue, amount);
+                }
+            }
+            let resolution = self.apply_monster_status_result(
+                index,
+                source_id,
+                status_kind_id,
+                duration,
+                AbilityStatusStackingDefinition::Replace,
+                power,
+                power_roll,
+                target_roll,
+                rejection,
+            );
+            noticed |=
+                !immune && !resisted && self.entity_is_visible_to_player(&self.entities[index]);
+            self.push_actor_effect_resolution(source_id, index, resolution, events);
+        }
+        noticed
+    }
+
+    pub(in crate::game) fn resolve_genocide_candidates(
+        &mut self,
+        candidate_ids: Vec<String>,
+        scope: AbilityGenocideScopeDefinition,
+        power: u16,
+        player_cast: bool,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> GenocideResolution {
+        let mut removed_entity_ids = Vec::new();
+        let mut resisted_entity_ids = Vec::new();
+        let mut fatigue_damage = 0_i32;
+        // Current dedicated quest floors correspond to source QF_GENERATE.
+        // Arena-room dungeons are not the unavailable source town arena/battle mode.
+        let quest_floor = self.current_floor_task_id().is_some();
+        if quest_floor && scope != AbilityGenocideScopeDefinition::Single {
+            return GenocideResolution {
+                removed_entity_ids,
+                resisted_entity_ids,
+                fatigue_damage,
+            };
+        }
+        for entity_id in candidate_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id)
+            else {
+                continue;
+            };
+            let entity = &self.entities[index];
+            // Non-player genocide leaves pets alone; player-cast genocide protects the current mount.
+            if !player_cast && entity.controller_id.as_deref() == Some(self.player.id.as_str()) {
+                continue;
+            }
+            let definition = self
+                .actor_runtime_definition(entity)
+                .expect("genocide target must exist");
+            let target_level = definition.level;
+            let protected = quest_floor
+                || self.riding_actor_id.as_deref() == Some(entity_id.as_str())
+                || definition.tags.iter().any(|tag| {
+                    matches!(tag.as_str(), "unique" | "unique2" | "guardian" | "questor")
+                })
+                || definition
+                    .allocation
+                    .as_ref()
+                    .is_some_and(|allocation| allocation.task_id.is_some());
+            // Source tests level before the learned NOGENO flag, retaining that RNG draw.
+            let resisted = protected
+                || (player_cast
+                    && (u64::from(target_level) > self.rng.bounded(u64::from(power))
+                        || self.entities[index].no_genocide));
+            if resisted {
+                resisted_entity_ids.push(entity_id);
+                if player_cast {
+                    let entity = &mut self.entities[index];
+                    entity.alerted = true;
+                    entity
+                        .statuses
+                        .retain(|status| status.kind_id != STATUS_SLEEP);
+                    if entity.controller_id.is_none() {
+                        entity.friendly = false;
+                    }
+                    if self.rng.bounded(13) == 0 {
+                        entity.no_genocide = true;
+                    }
+                    changed.insert(entity.position);
+                }
+            } else {
+                removed_entity_ids.push(entity_id);
+            }
+            if player_cast {
+                let sides = match scope {
+                    AbilityGenocideScopeDefinition::Single => target_level.div_ceil(2),
+                    AbilityGenocideScopeDefinition::Glyph => 4,
+                    AbilityGenocideScopeDefinition::Nearby => 3,
+                }
+                .max(1);
+                let raw = (self.rng.bounded(u64::from(sides)) + 1) as i32;
+                let percent = self.player_spell_damage_percent(DamageType::Physical, raw);
+                let damage = (raw * i32::from(percent) + 99) / 100;
+                fatigue_damage += self
+                    .apply_final_player_damage(
+                        resolve_damage(
+                            DamagePacket::new(damage, DamageType::Physical),
+                            ResistanceLevel::Normal,
+                        ),
+                        FatalityPolicy::Nonlethal,
+                    )
+                    .damage
+                    .applied;
+            }
+        }
+        for entity_id in &removed_entity_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| &entity.id == entity_id)
+            else {
+                continue;
+            };
+            let removed = self.entities.remove(index);
+            self.clear_duelist_challenge_for(&removed.id);
+            if self.riding_actor_id.as_deref() == Some(removed.id.as_str()) {
+                self.riding_actor_id = None;
+            }
+            self.clear_riding_bond_for(&removed.id);
+            if let Some(pack_id) = removed
+                .pack
+                .as_ref()
+                .and_then(|pack| (pack.role == MonsterPackRoleDto::Leader).then(|| pack.id.clone()))
+            {
+                for entity in &mut self.entities {
+                    if entity.pack.as_ref().is_some_and(|pack| pack.id == pack_id) {
+                        entity.pack = None;
+                    }
+                }
+            }
+            let carried_item_ids = self
+                .items
+                .iter()
+                .filter_map(|item| match &item.location {
+                    ItemLocation::CarriedBy { actor_id } if actor_id == entity_id => {
+                        Some(item.id.clone())
+                    }
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
+            self.items.retain(|item| {
+                !matches!(&item.location, ItemLocation::CarriedBy { actor_id } if actor_id == entity_id)
+            });
+            for item_id in carried_item_ids {
+                self.item_property_knowledge.remove(&item_id);
+            }
+            changed.insert(removed.position);
+            removed_entities.push(removed.id);
+        }
+        GenocideResolution {
+            removed_entity_ids,
+            resisted_entity_ids,
+            fatigue_damage,
+        }
+    }
+
     pub(in crate::game) fn resolve_ability_control(
         &mut self,
         target_index: usize,
@@ -466,6 +836,7 @@ impl Game {
             .filter(|entity| {
                 entity.hp > 0
                     && self.entity_is_visible_to_player(entity)
+                    && has_line_of_effect(self, self.player.position, entity.position)
                     && target_category.as_ref().is_none_or(|category| {
                         self.content
                             .actor(&entity.kind_id)
@@ -490,6 +861,12 @@ impl Game {
                 .content
                 .actor(&target_kind_id)
                 .map(|definition| definition.level);
+            let resistances = self.entities[index].resistances.clone();
+            let status_immunities = if self.actor_has_status_immunity(index, status_kind_id) {
+                BTreeSet::from([status_kind_id.clone()])
+            } else {
+                BTreeSet::new()
+            };
             let resolution = apply_ability_status_effect(
                 &mut self.entities[index],
                 &ability.id,
@@ -511,7 +888,7 @@ impl Game {
                 false,
                 100,
                 target_level,
-                None,
+                Some((&resistances, &status_immunities, None)),
                 &mut self.rng,
             );
             changed.insert(self.entities[index].position);
@@ -1237,7 +1614,7 @@ impl Game {
                             .zip(glyph.as_ref())
                             .is_some_and(|(definition, glyph)| &definition.glyph == glyph),
                         AbilityGenocideScopeDefinition::Nearby => {
-                            chebyshev_distance(self.player.position, entity.position)
+                            rfb_distance(self.player.position, entity.position)
                                 <= u32::from(*radius)
                         }
                     }
@@ -1254,6 +1631,12 @@ impl Game {
             removed_entities,
         );
         if !resolution.removed_entity_ids.is_empty() {
+            // mass_genocide_undead has its own Unlife/Chance changes, while
+            // ordinary genocide changes Vitality/Chance at the caller boundary.
+            if *scope != AbilityGenocideScopeDefinition::Single && target_category.is_none() {
+                self.add_virtue(VirtueKindDto::Vitality, -2);
+                self.add_virtue(VirtueKindDto::Chance, -1);
+            }
             self.add_virtue(VirtueKindDto::Unlife, i16::from(*unlife_change_on_success));
             self.add_virtue(VirtueKindDto::Chance, i16::from(*chance_change_on_success));
         }

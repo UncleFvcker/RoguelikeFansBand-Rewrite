@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1000,
+  "descriptionKey": "item-demo-golden-crown-description",
+  "elementalDestructionImmunities": [
+    "acid"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentSlot": "head",
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "glyph": "]",
+  "id": "demo.item.golden-crown",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-golden-crown-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 221,
+    "sval": 11,
+    "tval": 33
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 30
+}

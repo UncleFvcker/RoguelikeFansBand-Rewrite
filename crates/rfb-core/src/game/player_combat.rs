@@ -325,6 +325,7 @@ fn sniper_alignment_slay_bonus(slays: &BTreeMap<SlayTarget, SlayLevel>, target: 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum ProjectileMode {
     Normal,
+    Piercing,
     Sniper(SniperShotModeDefinition),
 }
 
@@ -332,7 +333,10 @@ impl ProjectileMode {
     const fn continues_through_target(self) -> bool {
         matches!(
             self,
-            Self::Sniper(SniperShotModeDefinition::Knockback | SniperShotModeDefinition::Piercing)
+            Self::Piercing
+                | Self::Sniper(
+                    SniperShotModeDefinition::Knockback | SniperShotModeDefinition::Piercing
+                )
         )
     }
 
@@ -361,6 +365,7 @@ struct ProjectileShotOutcome {
 
 #[derive(Default)]
 struct ProjectileCollisionOutcome {
+    hit: bool,
     knockback_landing: Option<Position>,
     fatal: bool,
 }
@@ -775,6 +780,7 @@ impl Game {
     ) -> Result<ProjectileShotOutcome, CoreError> {
         let origin = self.player.position;
         let mut active_concentration = concentration;
+        let mut penetrations = 0;
         let mut impact = origin;
         let mut landing = origin;
         let mut traversed = Vec::new();
@@ -859,6 +865,7 @@ impl Game {
                 profile,
                 mode,
                 active_concentration,
+                -60 * penetrations,
                 trace,
                 &path[path_index.saturating_add(1)..],
                 events,
@@ -869,13 +876,25 @@ impl Game {
                 landing = knockback_landing;
             }
             fatal = outcome.fatal;
-            if mode != ProjectileMode::Sniper(SniperShotModeDefinition::Piercing) {
+            if self.player_is_dead()
+                || (outcome.hit
+                    && profile.ammunition_behavior == Some(AmmunitionBehaviorDefinition::Exploding))
+            {
                 break;
             }
-            if active_concentration == 0 {
-                break;
+            match mode {
+                ProjectileMode::Piercing if outcome.hit && penetrations < 5 => {
+                    // cmd2.c SHOOT_PIERCE: unlike SP_PIERCE, a miss stops the
+                    // shot; each penetration subtracts 20 * BTH_PLUS_ADJ.
+                    penetrations += 1;
+                }
+                ProjectileMode::Sniper(SniperShotModeDefinition::Piercing)
+                    if active_concentration > 0 =>
+                {
+                    active_concentration -= 1;
+                }
+                _ => break,
             }
-            active_concentration -= 1;
         }
         let trace = ProjectileTrace {
             origin,
@@ -902,6 +921,7 @@ impl Game {
         profile: &ResolvedProjectileProfile,
         mode: ProjectileMode,
         concentration: u8,
+        hit_modifier: i32,
         trace: ProjectileTrace,
         remaining_path: &[Position],
         events: &mut Vec<DomainEvent>,
@@ -945,6 +965,14 @@ impl Game {
                 StatBounds::NON_NEGATIVE,
             );
         }
+        if hit_modifier != 0 {
+            ranged_skill = ranged_skill.with_modifier(
+                StatLayer::Environment,
+                "piercing-shot",
+                hit_modifier,
+                StatBounds::NON_NEGATIVE,
+            );
+        }
         let target = self.actor_derived_stats(&self.entities[index], &definition, false);
         let concentration_bonus = self.sniper_concentration_bonus_percent(concentration);
         let focused_armor_class = if concentration == 0 {
@@ -968,6 +996,13 @@ impl Game {
                 difficulty: focused_armor_class,
             })
             .succeeded()
+            // cmd2.c: ART_TUBER cannot hit the source bird glyph, even after
+            // a successful normal hit check (which still consumes its RNG).
+            || (definition.glyph == "B"
+                && self.items.iter().find(|item| item.id == profile.source_item_id)
+                    .and_then(|item| self.content.item(&item.kind_id))
+                    .and_then(|item| item.artifact_generation.as_ref())
+                    .is_some_and(|artifact| artifact.source_index == 356))
         {
             events.push(DomainEvent::ProjectileMissed {
                 target_kind_id,
@@ -1137,6 +1172,7 @@ impl Game {
                 removed_entities,
             )?;
             return Ok(ProjectileCollisionOutcome {
+                hit: true,
                 fatal,
                 ..ProjectileCollisionOutcome::default()
             });
@@ -1147,6 +1183,7 @@ impl Game {
                     .expect("knockback distance must fit usize"),
             );
             return Ok(ProjectileCollisionOutcome {
+                hit: true,
                 knockback_landing: self.knockback_projectile_target(
                     &target_entity_id,
                     remaining_path,
@@ -1156,7 +1193,10 @@ impl Game {
                 fatal: false,
             });
         }
-        Ok(ProjectileCollisionOutcome::default())
+        Ok(ProjectileCollisionOutcome {
+            hit: true,
+            ..ProjectileCollisionOutcome::default()
+        })
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -1229,6 +1269,7 @@ impl Game {
             }
         }
         Ok(ProjectileCollisionOutcome {
+            hit: true,
             fatal: original_target_fatal,
             ..ProjectileCollisionOutcome::default()
         })
@@ -1531,27 +1572,39 @@ impl Game {
                 .expect("throw target definition must remain available")
                 .clone();
             let target_kind_id = target_definition.id.clone();
-            self.entities[index].alerted = true;
             let attacker = self.player_derived_stats();
             let target = self.actor_derived_stats(&self.entities[index], &target_definition, false);
+            let to_hit = profile.to_hit + self.player_throw_to_hit_bonus();
+            let stun = self
+                .player
+                .statuses
+                .iter()
+                .find(|status| status.kind_id == STATUS_STUN)
+                .map_or(0, |status| status.remaining_ticks.min(100) as i32);
+            let skill = attacker.throwing_skill.value + to_hit * 3;
+            let skill = skill - skill * stun / 150 - trace.traversed.len() as i32;
+            let skill = if self.entity_is_visible_to_player(&self.entities[index]) {
+                skill
+            } else {
+                (skill + 1) / 2
+            };
             let ability = attacker.throwing_skill.with_modifier(
                 StatLayer::Equipment,
                 &thrown.id,
-                profile.to_hit,
+                skill - attacker.throwing_skill.value,
                 StatBounds::NON_NEGATIVE,
             );
             changed.insert(self.entities[index].position);
-            if !resolve_check(
-                &mut self.rng,
-                CheckContext {
-                    kind: CheckKind::ThrowHit,
-                    actor_id: self.player.id.clone(),
-                    target_id: Some(self.entities[index].id.clone()),
-                    ability,
-                    difficulty: target.armor_class.clone(),
-                },
-            )
-            .succeeded()
+            if skill <= 0
+                || !self
+                    .resolve_player_hit_check(CheckContext {
+                        kind: CheckKind::ThrowHit,
+                        actor_id: self.player.id.clone(),
+                        target_id: Some(self.entities[index].id.clone()),
+                        ability,
+                        difficulty: target.armor_class.clone(),
+                    })
+                    .succeeded()
             {
                 events.push(DomainEvent::ItemThrowMissed {
                     source_kind_id: source_kind_id.clone(),
@@ -1559,24 +1612,65 @@ impl Game {
                     trace: trace.clone(),
                 });
             } else {
+                self.entities[index].alerted = true;
                 // py_throw.c applies only the thrown object's slays/brands to
                 // its dice, before flat damage and the throwing multiplier.
-                let item_multiplier =
+                let mut item_multiplier =
                     self.item_damage_multiplier(&thrown, &self.entities[index], &target_definition);
-                let raw_damage = self
-                    .roll_damage(profile.damage_dice, profile.damage_sides)
-                    .saturating_mul(item_multiplier)
-                    .saturating_div(10)
+                let dice = self.roll_damage(profile.damage_dice, profile.damage_sides);
+                if self.item_has_weapon_trait(&thrown, WeaponTraitDto::ManaBrand)
+                    && let Some(resource_id) = self
+                        .casting_profile()
+                        .map(|profile| profile.resource_id.clone())
+                    && let Some(pool) = self.resources.get_mut(&resource_id)
+                {
+                    let cost = mana_brand_cost(profile.damage_dice, profile.damage_sides);
+                    if pool.current >= cost {
+                        pool.current -= cost;
+                        item_multiplier = mana_brand_multiplier(item_multiplier);
+                    }
+                }
+                let mut dice_damage = dice.saturating_mul(item_multiplier) / 10;
+                let vorpal = if self.item_has_weapon_trait(&thrown, WeaponTraitDto::Vorpal2) {
+                    Some(2)
+                } else if self.item_has_weapon_trait(&thrown, WeaponTraitDto::Vorpal) {
+                    Some(4)
+                } else {
+                    None
+                };
+                if let Some(chance) = vorpal
+                    && self.rng.bounded(chance * 3 / 2) == 0
+                {
+                    let mut multiplier = 2;
+                    while self.rng.bounded(chance) == 0 {
+                        multiplier += 1;
+                    }
+                    dice_damage = dice_damage.saturating_mul(multiplier);
+                }
+                // Unlike melee, ORDER still rolls the thrown object's dice;
+                // it only suppresses the critical check in py_throw.c.
+                if !self.item_has_weapon_trait(&thrown, WeaponTraitDto::Order) {
+                    dice_damage = dice_damage.saturating_mul(self.roll_throw_critical_multiplier(
+                        self.item_instance_weight(&thrown),
+                        to_hit,
+                    )) / 100;
+                }
+                // No currently open build grants p_ptr->ambush (Scout,
+                // Skillmaster or POS_BACKSTAB body); sleep alone is not enough.
+                let raw_damage = dice_damage
                     .saturating_add(profile.to_damage)
                     .saturating_mul(damage_multiplier)
-                    .saturating_div(100)
-                    .max(0);
+                    .saturating_div(100);
+                let raw_damage = (raw_damage - raw_damage * stun / 150).max(0);
                 let resistance = self.entities[index].resistances.level(profile.damage_type);
-                let damage = resolve_armored_damage(
-                    raw_damage,
-                    profile.damage_type,
-                    target.armor_class.value,
+                let damage = resolve_damage(
+                    DamagePacket::new(raw_damage, profile.damage_type),
                     resistance,
+                );
+                let damage = self.apply_metal_monster_resistance(index, damage);
+                let damage = scale_damage_outcome(
+                    damage,
+                    self.actor_incoming_damage_percent(index, damage.applied, false),
                 );
                 let application = plan_damage_application(
                     &self.entities[index],
@@ -1590,8 +1684,28 @@ impl Game {
                     damage,
                     trace: trace.clone(),
                 });
-                self.wake_entity_after_damage(index, damage.applied, events);
+                self.wake_entity(index, events);
                 if !application.fatal {
+                    if self
+                        .item_passives(&thrown)
+                        .contains(&EquipmentPassive::Vampiric)
+                    {
+                        // py_throw.c uses hp_player_aux, not melee life-force drain,
+                        // and rolls only while the struck monster survives.
+                        let sides = (damage.applied / 8).clamp(0, i32::from(u16::MAX)) as u16;
+                        let heal = if sides <= 1 {
+                            3
+                        } else {
+                            self.roll_damage(3, sides).min(30)
+                        };
+                        let outcome = self.apply_player_healing(heal);
+                        events.push(DomainEvent::PlayerVampiricHealed {
+                            resolution: HealingResolutionDto {
+                                requested: outcome.requested,
+                                applied: outcome.applied,
+                            },
+                        });
+                    }
                     self.anger_monster_from_projectile_damage(index, damage.applied);
                     self.resolve_monster_fear_aura(index, "hurt", true, events);
                 }
@@ -1913,13 +2027,6 @@ impl Game {
             }
             let duelist_attack =
                 profile.source_item_id.is_some() && self.duelist_opponent(&target_entity_id);
-            let vorpal_weapon = profile.source_item_id.as_ref().is_some_and(|item_id| {
-                self.items
-                    .iter()
-                    .find(|item| &item.id == item_id)
-                    .and_then(|item| self.content.item(&item.kind_id))
-                    .is_some_and(|definition| definition.vorpal)
-            });
             let vampiric_weapon =
                 matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vampiric))
                     || (profile.source_item_id.is_some() && self.items.iter().any(|item| {
@@ -1943,6 +2050,7 @@ impl Game {
                 &definition,
                 strike_mode,
             );
+            let mut stop_attacking = false;
             for attack_number in 1..=profile_attacks {
                 attacks_used = attacks_used.saturating_add(1);
                 self.apply_easy_tiring_fatigue(50);
@@ -2049,6 +2157,8 @@ impl Game {
                         && self.rng.bounded(100) + 1
                             < u64::try_from(base_damage.max(0)).unwrap_or(u64::MAX);
                 let mut ordinary_drain = base_damage;
+                // cmd1.c applies VORPAL to the weapon dice before adding to_d.
+                // Fixed kinds and rolled weapon traits share this branch.
                 if let Some(chance) = vorpal_chance
                     && self.rng.bounded(chance.saturating_mul(3).saturating_div(2)) == 0
                 {
@@ -2060,8 +2170,7 @@ impl Game {
                     ordinary_drain = ordinary_drain.saturating_mul(3) / 2;
                 }
                 let mut rolled_damage = base_damage.saturating_add(profile.to_damage).max(0);
-                if (vorpal_weapon
-                    || matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vorpal)))
+                if matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vorpal))
                     && self.rng.bounded(6) == 0
                 {
                     let mut multiplier = 2;
@@ -2220,7 +2329,8 @@ impl Game {
                             removed_entities,
                         )?;
                     }
-                    break 'profiles;
+                    stop_attacking = true;
+                    break;
                 }
                 if vampiric_weapon
                     && (!profile.poison_needle || !application.fatal)
@@ -2275,10 +2385,17 @@ impl Game {
                     if duelist_attack {
                         self.begin_duelist_endless_challenge();
                     }
-                    break 'profiles;
+                    stop_attacking = true;
+                    break;
                 }
                 touched_surviving_target = true;
                 self.resolve_confusing_strike(index, &definition, events);
+            }
+            if let Some(source_item_id) = &profile.source_item_id {
+                self.resolve_bloodrip_backlash(source_item_id, events);
+            }
+            if stop_attacking {
+                break 'profiles;
             }
         }
         if touched_surviving_target
@@ -2312,6 +2429,49 @@ impl Game {
             killed,
             energy_cost_on_kill,
         })
+    }
+
+    fn resolve_bloodrip_backlash(&mut self, item_id: &str, events: &mut Vec<DomainEvent>) {
+        let Some(kind_id) = self
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .filter(|item| {
+                self.content
+                    .item(&item.kind_id)
+                    .and_then(|kind| kind.artifact_generation.as_ref())
+                    .is_some_and(|artifact| artifact.source_index == 243)
+            })
+            .map(|item| item.kind_id.clone())
+        else {
+            return;
+        };
+        // cmd1.c applies this once after this hand, even on a miss or kill.
+        // Blood-Knight's guaranteed branch requires that unopened identity.
+        if self.rng.bounded(2) != 0 {
+            return;
+        }
+        let amount = 2 + self.roll_damage(2, 3) as u32;
+        let before = self
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_BLEEDING)
+            .map_or(0, |status| status.remaining_ticks);
+        let amount = amount.min(10_000_u32.saturating_sub(before));
+        let noticed = amount > 0
+            && !self.player_is_dead()
+            && !self.player_status_immunities().contains(STATUS_BLEEDING);
+        if noticed {
+            self.apply_player_melee_status(STATUS_BLEEDING, amount as i32, &kind_id);
+        }
+        events.push(DomainEvent::ItemStatusResolved {
+            display_name_key: self.item_display_name_key(&kind_id),
+            source_kind_id: kind_id,
+            status_kind_id: STATUS_BLEEDING.to_owned(),
+            duration: noticed.then_some(amount),
+            noticed,
+        });
     }
 
     pub(super) fn resolve_monster_revenge_aura(
@@ -2366,6 +2526,19 @@ impl Game {
             .find(|entity| entity.id == source_entity_id)
             .is_some_and(|entity| adjacent(entity.position, self.player.position));
         Ok(Some(self.player_is_dead() || !source_still_adjacent))
+    }
+
+    fn roll_throw_critical_multiplier(&mut self, weight: u16, to_hit: i32) -> i32 {
+        // combat.c::critical_throw: weight affects quality, never probability.
+        let chance = i64::from(to_hit) * 4 + i64::from(self.progress.level) * 3;
+        if (self.rng.bounded(5000) + 1) as i64 > chance {
+            return 100;
+        }
+        match u64::from(weight) + self.rng.bounded(650) + 1 {
+            0..=399 => 150,
+            400..=699 => 200,
+            _ => 250,
+        }
     }
 
     pub(super) fn roll_projectile_critical_multiplier(
@@ -3083,6 +3256,34 @@ mod tests {
         projectile_raw_damage, roll_sniper_needle_vital_hit, sniper_explosion_radius,
         sniper_shot_damage_multiplier,
     };
+
+    #[test]
+    fn throwing_critical_weight_changes_quality_but_not_chance() {
+        let mut game = super::Game::new(17);
+        let seed = (0..10_000)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                rng.bounded(5000);
+                rng.bounded(650) == 0
+            })
+            .unwrap();
+        for (weight, multiplier) in [(398, 150), (399, 200), (698, 200), (699, 250)] {
+            game.rng = RfbRng::seeded(seed);
+            assert_eq!(
+                game.roll_throw_critical_multiplier(weight, 1250),
+                multiplier
+            );
+            let mut expected = RfbRng::seeded(seed);
+            expected.bounded(5000);
+            expected.bounded(650);
+            assert_eq!(game.rng, expected);
+        }
+        game.rng = RfbRng::seeded(seed);
+        assert_eq!(game.roll_throw_critical_multiplier(u16::MAX, -1000), 100);
+        let mut expected = RfbRng::seeded(seed);
+        expected.bounded(5000);
+        assert_eq!(game.rng, expected, "failed critical draws no quality");
+    }
 
     #[test]
     fn phoenix_projectile_rebirth_precedes_fatality_rewards_and_unique_accounting() {

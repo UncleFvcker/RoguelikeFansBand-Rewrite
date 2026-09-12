@@ -3320,7 +3320,8 @@ fn p89f_man_cave_conquest_lotharang_activation_and_replacement_are_one_shot() {
         .find(|item| {
             item.kind_id == "demo.item.battle-axe"
                 && item.quality == ItemQualityDto::Exceptional
-                && item.affix_ids == ["rfb-legacy.affix.slaying"]
+                && item.artifact_name.is_some()
+                && item.affix_ids.is_empty()
         })
         .expect("an already-generated Lotharang should use the artifact fallback reward");
     assert_eq!(fallback.location, ItemLocation::Ground(guardian_position));

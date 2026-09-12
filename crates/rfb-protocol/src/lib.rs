@@ -5677,6 +5677,7 @@ pub struct ActorSaveDto {
     pub anger: u8,
     pub friendly: bool,
     pub no_pet: bool,
+    pub no_genocide: bool,
     #[serde(default)]
     pub casting_cooldown_remaining: u16,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -6884,6 +6885,7 @@ mod tests {
         current["entities"][0]["anger"] = serde_json::json!(0);
         current["entities"][0]["friendly"] = serde_json::json!(false);
         current["entities"][0]["noPet"] = serde_json::json!(false);
+        current["entities"][0]["noGenocide"] = serde_json::json!(false);
         current["entities"][0]["minorSlow"] = serde_json::json!(0);
         current["items"][0]["permanentDestructionImmunities"] = serde_json::json!([]);
         current["inventory"][0]["permanentDestructionImmunities"] = serde_json::json!([]);

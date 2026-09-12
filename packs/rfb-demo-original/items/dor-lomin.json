@@ -1,0 +1,107 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.dor-lomin",
+  "nameKey": "item-demo-dor-lomin-name",
+  "descriptionKey": "item-demo-dor-lomin-description",
+  "glyph": "]",
+  "generationLevel": 70,
+  "weightTenthsPound": 75,
+  "baseValue": 300000,
+  "maxStack": 1,
+  "equipmentSlot": "head",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 39,
+    "baseItemKindId": "demo.item.mithril-helm",
+    "instant": false,
+    "rarityOneIn": 12
+  },
+  "modifiers": {
+    "defense": 28,
+    "strength": 4,
+    "dexterity": 4,
+    "constitution": 4
+  },
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant",
+    "light": "resistant",
+    "blindness": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "RES_ACID",
+      "RES_BLIND",
+      "RES_COLD",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_LITE",
+      "SEE_INVIS",
+      "STR",
+      "TELEPATHY"
+    ],
+    "pval": 4,
+    "toArmor": 20
+  },
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "passives": [
+    "see-invisible",
+    "telepathy"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "id": "demo.item-activation.dor-lomin",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-scare-monsters-name",
+        "rfbValue": 600,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1,
+        "effectProgramId": "demo.effect.terror-mask-scare"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1000
+    }
+  }
+}

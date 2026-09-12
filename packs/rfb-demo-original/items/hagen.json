@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.hagen",
+  "nameKey": "item-demo-hagen-name",
+  "descriptionKey": "item-demo-hagen-description",
+  "glyph": "/",
+  "generationLevel": 15,
+  "weightTenthsPound": 50,
+  "baseValue": 30000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 99,
+    "baseItemKindId": "demo.item.spear",
+    "instant": false,
+    "rarityOneIn": 12
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_COLD",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INFRA",
+      "RES_COLD",
+      "RES_DARK",
+      "RIDING",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_UNDEAD",
+      "SPEED",
+      "STEALTH",
+      "THROWING"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "weaponProficiencyBaseItemId": "demo.item.spear",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 8,
+    "toHit": 11,
+    "toDamage": 13
+  },
+  "modifiers": {
+    "speed": 3
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 3,
+    "infravision": 3
+  },
+  "resistances": {
+    "cold": "resistant",
+    "dark": "resistant"
+  },
+  "passives": [
+    "see-invisible"
+  ],
+  "brands": [
+    "cold"
+  ],
+  "slays": {
+    "undead": "slay"
+  },
+  "ridingWeaponKind": "compatible"
+}

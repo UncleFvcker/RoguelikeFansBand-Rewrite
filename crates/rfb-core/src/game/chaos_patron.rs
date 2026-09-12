@@ -581,7 +581,7 @@ impl Game {
                     .collect()
             }
         };
-        self.resolve_genocide_candidates(
+        let resolution = self.resolve_genocide_candidates(
             candidate_ids,
             if mass {
                 AbilityGenocideScopeDefinition::Nearby
@@ -593,6 +593,10 @@ impl Game {
             changed,
             removed_entities,
         );
+        if !resolution.removed_entity_ids.is_empty() {
+            self.add_virtue(VirtueKindDto::Vitality, -2);
+            self.add_virtue(VirtueKindDto::Chance, -1);
+        }
     }
 
     #[allow(clippy::too_many_arguments)]

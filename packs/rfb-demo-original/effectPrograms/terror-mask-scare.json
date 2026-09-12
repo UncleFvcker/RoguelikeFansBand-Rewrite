@@ -5,15 +5,9 @@
   "input": "self",
   "steps": [
     {
-      "effect": {
-        "durationTicks": 3,
-        "intensity": 1,
-        "power": 60,
-        "stacking": "replace",
-        "statusKindId": "rfb.status.fear",
-        "type": "visible-apply-status"
-      },
-      "type": "ability-effect"
+      "type": "project-monster-status",
+      "projection": "fear",
+      "power": 60
     }
   ]
 }

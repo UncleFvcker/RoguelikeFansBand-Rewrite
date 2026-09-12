@@ -1,0 +1,68 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.excalipur",
+  "nameKey": "item-demo-excalipur-name",
+  "descriptionKey": "item-demo-excalipur-description",
+  "glyph": "|",
+  "generationLevel": 50,
+  "weightTenthsPound": 130,
+  "baseValue": 0,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 177,
+    "baseItemKindId": "demo.item.long-sword",
+    "instant": false,
+    "rarityOneIn": 15
+  },
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "DEC_CHR",
+      "DEC_WIS",
+      "DRAIN_EXP",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RIDING",
+      "SHOW_MODS",
+      "THROWING",
+      "TY_CURSE",
+      "VULN_FEAR"
+    ],
+    "pval": 3,
+    "toArmor": -5
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "weaponProficiencyBaseItemId": "demo.item.long-sword",
+  "ridingWeaponKind": "compatible",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 5,
+    "damageSides": 6,
+    "toHit": -50,
+    "toDamage": -50
+  },
+  "modifiers": {
+    "wisdom": -3,
+    "charisma": -3,
+    "defense": -5
+  },
+  "resistances": {
+    "fear": "vulnerable"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.totila",
+  "nameKey": "item-demo-totila-name",
+  "descriptionKey": "item-demo-totila-description",
+  "glyph": "\\",
+  "generationLevel": 20,
+  "weightTenthsPound": 150,
+  "baseValue": 55000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 112,
+    "baseItemKindId": "demo.item.flail",
+    "instant": false,
+    "rarityOneIn": 8
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_FIRE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "RES_CONF",
+      "RES_FIRE",
+      "RIDING",
+      "SHOW_MODS",
+      "SLAY_EVIL",
+      "STEALTH"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "weaponProficiencyBaseItemId": "demo.item.flail",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 7,
+    "toHit": 6,
+    "toDamage": 8
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 2,
+    "lightRadius": 1
+  },
+  "resistances": {
+    "fire": "resistant",
+    "confusion": "resistant"
+  },
+  "brands": [
+    "fire"
+  ],
+  "slays": {
+    "evil": "slay"
+  },
+  "ridingWeaponKind": "compatible",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.totila",
+        "nameKey": "device-activation-e5-confuse-monsters-name",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "effectProgramId": "demo.effect.totila-confusion",
+        "deviceCheckDifficulty": 30,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "rfbValue": 1350
+      }
+    ],
+    "recovery": {
+      "intervalTicks": 500,
+      "energyPerMille": 1000
+    }
+  }
+}

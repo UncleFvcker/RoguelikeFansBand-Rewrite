@@ -422,15 +422,9 @@
         },
         "deviceCheckDifficulty": 25,
         "effect": {
-          "effect": {
-            "durationTicks": 3,
-            "intensity": 1,
-            "power": 75,
-            "stacking": "replace",
-            "statusKindId": "rfb.status.confusion",
-            "type": "visible-apply-status"
-          },
-          "type": "ability-effect"
+          "power": 75,
+          "projection": "confusion",
+          "type": "project-monster-status"
         },
         "id": "rfb.device-activation.ego-8-biased-confuse-monsters",
         "maxDepth": 77,

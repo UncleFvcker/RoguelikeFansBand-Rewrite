@@ -361,10 +361,12 @@ fn activation_effect_game(seed: u64, affix_id: &str, effect: &str, weight: u16) 
 }
 
 #[test]
-fn riding_charge_cancellation_preserves_charge_and_rng() {
+fn riding_charge_checks_activation_before_rejecting_an_unmounted_user() {
     let mut game = riding_charge_game(0xE3_6001);
     place_charge_target(&mut game);
-    let rng_before = game.rng.clone();
+    game.rng = fetch_check_rng(true);
+    let mut expected_rng = game.rng.clone();
+    expected_rng.bounded(100);
     let mut events = Vec::new();
     game.use_inventory_item(
         ITEM_ID,
@@ -378,7 +380,7 @@ fn riding_charge_cancellation_preserves_charge_and_rng() {
     )
     .expect("unmounted riding charge should be rejected cleanly");
 
-    assert_eq!(game.rng, rng_before);
+    assert_eq!(game.rng, expected_rng);
     assert_eq!(
         game.items
             .iter()
@@ -389,7 +391,7 @@ fn riding_charge_cancellation_preserves_charge_and_rng() {
     );
     assert!(matches!(
         events.as_slice(),
-        [DomainEvent::ItemUseUnavailable]
+        [DomainEvent::DeviceSkillChecked { .. }]
     ));
 }
 

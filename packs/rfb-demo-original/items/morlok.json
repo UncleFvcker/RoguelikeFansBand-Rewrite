@@ -1,0 +1,92 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.morlok",
+  "nameKey": "item-demo-morlok-name",
+  "descriptionKey": "item-demo-morlok-description",
+  "glyph": "[",
+  "generationLevel": 90,
+  "weightTenthsPound": 200,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 203,
+    "baseItemKindId": "demo.item.rusty-chain-mail",
+    "instant": false,
+    "rarityOneIn": 8
+  },
+  "modifiers": {
+    "defense": -26,
+    "strength": -2,
+    "intelligence": 2,
+    "wisdom": 2,
+    "dexterity": -2,
+    "constitution": -2,
+    "charisma": 2,
+    "spellPowerBonus": 2
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "chaos": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant",
+    "confusion": "resistant",
+    "light": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "CHR",
+      "CURSED",
+      "DEC_CON",
+      "DEC_DEX",
+      "DEC_STR",
+      "HEAVY_CURSE",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "RES_ACID",
+      "RES_CHAOS",
+      "RES_COLD",
+      "RES_CONF",
+      "RES_DARK",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_LITE",
+      "RES_NETHER",
+      "RES_NEXUS",
+      "RES_POIS",
+      "SPELL_POWER",
+      "TY_CURSE",
+      "WIS"
+    ],
+    "pval": 2,
+    "toArmor": -40
+  },
+  "equipmentBonuses": {
+    "meleeSkill": -5
+  },
+  "initialCurse": "heavy"
+}

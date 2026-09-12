@@ -44,10 +44,27 @@
   "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
   "rfbValue": {
     "flags": [
-      "BLESSED", "BRAND_FIRE", "BRAND_POIS", "FREE_ACT", "HIDE_TYPE",
-      "IGNORE_ACID", "IGNORE_COLD", "IGNORE_ELEC", "IGNORE_FIRE", "IM_FIRE",
-      "INT", "RES_ELEC", "RES_LITE", "RES_POIS", "RES_SOUND", "SEARCH",
-      "SEE_INVIS", "SHOW_MODS", "SLAY_TROLL", "SPEED", "STEALTH", "TOWN", "VORPAL"
+      "BLESSED",
+      "BRAND_FIRE",
+      "BRAND_POIS",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_FIRE",
+      "INT",
+      "RES_ELEC",
+      "RES_LITE",
+      "RES_POIS",
+      "RES_SOUND",
+      "SEARCH",
+      "SEE_INVIS",
+      "SLAY_TROLL",
+      "SPEED",
+      "STEALTH",
+      "VORPAL"
     ],
     "pval": 5,
     "toArmor": 0

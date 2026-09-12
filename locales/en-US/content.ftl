@@ -4258,6 +4258,8 @@ actor-demo-shimmering-vortex-description = A strange luminous column whose shift
 actor-demo-weird-fume-name = Weird fume
 actor-demo-weird-fume-description = A rotating spiral cloud that continually changes its appearance.
 item-demo-amulet-name = Amulet
+item-demo-boromir-name = Amulet of Boromir
+item-demo-boromir-description = Amulet of Boromir
 item-demo-amulet-description = A plain amulet ready to receive magical properties.
 item-demo-detection-rod-name = Rod of Detection
 item-demo-detection-rod-description = Detects nearby traps, passages, treasure, objects, and monsters.
@@ -9753,11 +9755,170 @@ ability-demo-warrior-mage-hp-to-sp-description = Spend life equal to your level 
 ability-demo-warrior-mage-sp-to-hp-name = Convert SP to HP
 ability-demo-warrior-mage-sp-to-hp-description = Spend mana equal to your level divided by five (rounded down) to heal life equal to your level. Full life still costs mana; insufficient mana fails the conversion but spends a turn.
 
-item-demo-mithril-chain-mail-name = Mithril Chain Mail
-item-demo-mithril-chain-mail-description = Chain mail made of true silver.
 
 item-demo-lohengrin-name = Mithril Chain Mail of Lohengrin
 item-demo-lohengrin-description = Mithril chain mail with intelligence, wisdom, stealth and multiple resistances. Activates for angelic healing.
 
 item-demo-charmed-pendant-name = Charmed Pendant
 item-demo-charmed-pendant-description = A pendant that aids spellcasting. Activates to restore mana and partially recharge carried devices.
+item-demo-numenor-name = Jewel Encrusted Crown of Numenor
+item-demo-numenor-description = A heavy crown of pure gold, set with magical jewels holding powers of thought and protection, worn by the ancient kings of Numenor.
+item-demo-aragorn-name = Pair of Soft Leather Boots of Aragorn
+item-demo-aragorn-description = Pair of Soft Leather Boots of Aragorn
+item-demo-ossian-name = Large Leather Shield of Ossian
+item-demo-ossian-description = This magical shield protected the mighty Ossian, who never retreated from battle.
+item-demo-great-wizzard-name = Pointy Hat of the Great Wizzard
+item-demo-great-wizzard-description = Formerly owned by a famous wizard.
+item-demo-haramakido-name = Haramakido
+item-demo-haramakido-description = Haramakido
+item-demo-full-plate-armour-name = Full Plate Armour
+item-demo-full-plate-armour-description = A complete suit of fitted plate with mail at the articulated joints and light padding underneath.
+item-demo-o-yoroi-name = O-yoroi
+item-demo-o-yoroi-description = O-yoroi
+item-demo-mithril-chain-mail-name = Mithril Chain Mail
+item-demo-mithril-chain-mail-description = Rare chain mail of true silver, offering exceptional protection for its weight.
+item-demo-isildur-name = Full Plate Armour of Isildur
+item-demo-isildur-description = Gleaming steel armour covers its wearer from head to toe, deeply engraved with runes of protection and stability.
+item-demo-yositsune-name = Haramakido of Yositsune
+item-demo-yositsune-description = The armour of the brave Minamoto warrior Yositsune carries his speed and agility.
+item-demo-bando-musha-name = O-yoroi of the Bando Musha
+item-demo-bando-musha-description = The imposing armour of Hatakeyama Shigetada, a warrior renowned for courage, wisdom and honesty.
+item-demo-bilbo-name = Mithril Chain Mail of Bilbo
+item-demo-bilbo-description = A small coat of closely woven rings, supple as linen, cold as ice and harder than steel, shining like silver in moonlight and studded with white gems.
+
+item-demo-benkei-name = Naginata of Benkei
+item-demo-benkei-description = Naginata of Benkei
+item-demo-sha-wujing-name = Lajatang of Sha Wujing
+item-demo-sha-wujing-description = Lajatang of Sha Wujing
+item-demo-durin-name = Great Axe of Durin
+item-demo-durin-description = Great Axe of Durin
+item-demo-dwarves-name = Lochaber Axe of the Dwarves
+item-demo-dwarves-description = Lochaber Axe of the Dwarves
+item-demo-dramborleg-name = Great Axe 'Dramborleg'
+item-demo-dramborleg-description = Great Axe 'Dramborleg'
+
+item-demo-naginata-name = Naginata
+item-demo-naginata-description = Naginata
+item-demo-lajatang-name = Lajatang
+item-demo-lajatang-description = Lajatang
+item-demo-great-axe-name = Great Axe
+item-demo-great-axe-description = Great Axe
+item-demo-lochaber-axe-name = Lochaber Axe
+item-demo-lochaber-axe-description = Lochaber Axe
+
+item-demo-tetsubo-name = Tetsubo
+item-demo-tetsubo-description = Tetsubo
+item-demo-two-handed-flail-name = Two-Handed Flail
+item-demo-two-handed-flail-description = Two-Handed Flail
+item-demo-mace-of-disruption-name = Mace of Disruption
+item-demo-mace-of-disruption-description = Mace of Disruption
+item-demo-nyoi-bou-name = Tetsubo 'Nyoi-bou'
+item-demo-nyoi-bou-description = Tetsubo 'Nyoi-bou'
+item-demo-shuten-douji-name = Tetsubo of Shuten-douji
+item-demo-shuten-douji-description = Tetsubo of Shuten-douji
+item-demo-thunderfist-name = Two-Handed Flail 'Thunderfist'
+item-demo-thunderfist-description = Two-Handed Flail 'Thunderfist'
+item-demo-deathwreaker-name = Mace of Disruption 'Deathwreaker'
+item-demo-deathwreaker-description = Mace of Disruption 'Deathwreaker'
+
+item-demo-shadow-cloak-name = Shadow Cloak
+item-demo-shadow-cloak-description = A midnight cloak that wraps its wearer in folds of shadow.
+
+item-demo-luthien-name = Shadow Cloak of Luthien
+item-demo-luthien-description = A diamond-studded midnight cloak carrying hints of restored knowledge and strength.
+
+item-demo-tuor-name = Shadow Cloak of Tuor
+item-demo-tuor-description = A cloak that concealed Tuor from hostile eyes during his escape from Gondolin.
+
+item-demo-steel-helm-name = Steel Helm
+item-demo-steel-helm-description = A massive helmet of steel plates and a mail curtain covering the head and shoulders.
+
+item-demo-mithril-helm-name = Mithril Helm
+item-demo-mithril-helm-description = A sturdy helmet of pure mithril enclosing the head.
+
+item-demo-golden-crown-name = Golden Crown
+item-demo-golden-crown-description = An elegant golden crown with slender points, fit for a king.
+
+item-demo-hammerhand-name = Steel Helm of Hammerhand
+item-demo-hammerhand-description = A great helm as stalwart as the hero of the Westdike. Helm Hammerhand struck mighty blows!
+
+item-demo-dor-lomin-name = Mithril Helm of Dor-Lomin
+item-demo-dor-lomin-description = The legendary dragon helm of Turin Turambar, feared by the servants of Morgoth.
+
+item-demo-amber-name = Golden Crown of Amber
+item-demo-amber-description = Golden Crown of Amber
+
+item-activation-demo-amber-heal-name = Healing
+
+item-demo-set-of-caestus-name = Set of Caestus
+item-demo-set-of-caestus-description = Ancient fighting gloves reinforced with layers of leather straps and fearsome spikes.
+
+item-demo-knights-shield-name = Knight's Shield
+item-demo-knights-shield-description = Knight's Shield
+
+item-demo-fingolfin-name = Set of Caestus of Fingolfin
+item-demo-fingolfin-description = The handgear of Fingolfin, the warrior king who gave Morgoth seven great wounds and lasting pain.
+
+item-demo-earendil-shield-name = Knight's Shield of Earendil
+item-demo-earendil-shield-description = A shining shield of the great mariner Earendil, inscribed with runes to ward away pain and harm.
+
+item-demo-rusty-chain-mail-name = Rusty Chain Mail
+item-demo-rusty-chain-mail-description = Rusty Chain Mail
+item-demo-adamantite-plate-mail-name = Adamantite Plate Mail
+item-demo-adamantite-plate-mail-description = Adamantite Plate Mail
+item-demo-morlok-name = Rusty Chain Mail of The High Priest of Morlok
+item-demo-morlok-description = Rusty Chain Mail of The High Priest of Morlok
+item-demo-soulkeeper-name = Adamantite Plate Mail 'Soulkeeper'
+item-demo-soulkeeper-description = Adamantite Plate Mail 'Soulkeeper'
+item-activation-demo-soulkeeper-heal-name = Healing
+
+item-demo-scythe-name = Scythe
+item-demo-scythe-description = Scythe
+item-demo-avavir-name = Scythe 'Avavir'
+item-demo-avavir-description = Scythe 'Avavir'
+item-demo-eonwe-name = Great Axe of Eonwe
+item-demo-eonwe-description = Great Axe of Eonwe
+
+item-demo-holcolleth-name = Elven Cloak of Holcolleth
+item-demo-holcolleth-description = 这件精灵灰色的斗篷拥有极强的宁静与隐蔽力量，并赋予佩戴者辛达精灵的知识和理解力。
+
+item-demo-totila-name = Flail of Totila
+item-demo-totila-description = 这把连枷，当你在周围挥舞它时，它的头部会让盯着它看的人感到困惑；而当你将它砸下时，它会变成一颗燃烧的彗星。
+
+item-demo-tuber-name = Long Bow of Tuber
+item-demo-tuber-description = 百发百中的图伯——英雄布博的儿子——的弓。它充满了曾经囚禁过他的冰霜精灵的力量。
+
+item-demo-grimtooth-name = 『冷酷之牙』
+item-demo-grimtooth-description = 『冷酷之牙』
+
+item-demo-rilia-name = 蕾莉亚的
+item-demo-rilia-description = 一把闪烁着无味毒液的大型细刺匕首，佩戴者似乎对其出奇地免疫。
+
+item-demo-aeglos-name = 『艾格洛斯』
+item-demo-aeglos-description = 吉尔-加拉德的强大长矛，在精灵的歌谣中被称为“雪点”，索伦所有邪恶的腐化物在它面前都如同螳臂当车。
+
+item-demo-excalipur-name = 『伪·王者之剑』
+item-demo-excalipur-description = 『伪·王者之剑』
+
+item-demo-caine-name = 该隐的
+item-demo-caine-description = 该隐的
+
+item-demo-fiona-name = 菲奥娜的
+item-demo-fiona-description = 菲奥娜的
+
+item-demo-hagen-name = 哈根的
+item-demo-hagen-description = 哈根的
+
+item-demo-gae-bulg-name = 『盖伯尔加之矛』
+item-demo-gae-bulg-description = 『盖伯尔加之矛』
+
+item-demo-ballista-name = 『弩炮』
+item-demo-ballista-description = 『弩炮』
+
+item-demo-impaler-name = 『穿刺者』
+item-demo-impaler-description = 『穿刺者』
+
+item-demo-bloodrip-name = 『嗜血裂杀』
+item-demo-bloodrip-description = 这把武器注入了第一代鲜血骑士的灵魂。当心！它渴望鲜血，甚至是挥舞者的鲜血！但对于那些走在血色之路上的人来说，没有比这更好的武器了。
+device-activation-c3-piercing-shot-name = 穿透射击
+device-activation-c3-charge-name = 冲锋

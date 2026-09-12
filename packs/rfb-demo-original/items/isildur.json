@@ -1,0 +1,65 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.isildur",
+  "nameKey": "item-demo-isildur-name",
+  "descriptionKey": "item-demo-isildur-description",
+  "glyph": "[",
+  "generationLevel": 65,
+  "weightTenthsPound": 300,
+  "maxStack": 1,
+  "baseValue": 50000,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 20,
+    "baseItemKindId": "demo.item.full-plate-armour",
+    "instant": false,
+    "rarityOneIn": 3,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "modifiers": {
+    "defense": 50,
+    "constitution": 2
+  },
+  "resistances": {
+    "acid": "resistant",
+    "fire": "resistant",
+    "cold": "resistant",
+    "sound": "resistant",
+    "confusion": "resistant",
+    "nexus": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_CONF",
+      "RES_FIRE",
+      "RES_NEXUS",
+      "RES_SOUND",
+      "XTRA_H_RES"
+    ],
+    "pval": 2,
+    "toArmor": 25
+  }
+}

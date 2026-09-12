@@ -1,0 +1,97 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.tuber",
+  "nameKey": "item-demo-tuber-name",
+  "descriptionKey": "item-demo-tuber-description",
+  "glyph": "}",
+  "generationLevel": 48,
+  "weightTenthsPound": 40,
+  "baseValue": 30000,
+  "maxStack": 1,
+  "equipmentSlot": "launcher",
+  "tags": [
+    "artifact",
+    "equipment",
+    "launcher",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 356,
+    "baseItemKindId": "demo.item.long-bow",
+    "instant": false,
+    "rarityOneIn": 28
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_COLD",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_COLD",
+      "RES_FEAR",
+      "SHOW_MODS",
+      "WIS"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "projectileProfile": {
+    "ammunitionType": "arrow",
+    "damageMultiplierPercent": 350,
+    "range": 16,
+    "shotEnergy": 10000,
+    "toHit": 39,
+    "toDamage": 16
+  },
+  "modifiers": {
+    "wisdom": 3
+  },
+  "brands": [
+    "cold"
+  ],
+  "resistances": {
+    "cold": "resistant",
+    "fear": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.tuber",
+        "nameKey": "device-activation-e5-stasis-monsters-name",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "effectProgramId": "demo.effect.tuber-stasis",
+        "deviceCheckDifficulty": 66,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "rfbValue": 2760
+      }
+    ],
+    "recovery": {
+      "intervalTicks": 3000,
+      "energyPerMille": 1000
+    }
+  }
+}

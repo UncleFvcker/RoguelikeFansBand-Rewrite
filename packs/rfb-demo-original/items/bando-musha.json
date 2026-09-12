@@ -1,0 +1,75 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.bando-musha",
+  "nameKey": "item-demo-bando-musha-name",
+  "descriptionKey": "item-demo-bando-musha-description",
+  "glyph": "[",
+  "generationLevel": 70,
+  "weightTenthsPound": 320,
+  "maxStack": 1,
+  "baseValue": 50000,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 236,
+    "baseItemKindId": "demo.item.o-yoroi",
+    "instant": false,
+    "rarityOneIn": 15,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "modifiers": {
+    "defense": 44,
+    "strength": 2,
+    "constitution": 2,
+    "charisma": 2
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 5,
+    "meleeDamage": 5
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "blindness": "resistant",
+    "disenchant": "resistant",
+    "fear": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "CON",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_BLIND",
+      "RES_COLD",
+      "RES_DISEN",
+      "RES_ELEC",
+      "RES_FEAR",
+      "SHOW_MODS",
+      "STR",
+      "XTRA_H_RES"
+    ],
+    "pval": 2,
+    "toArmor": 20
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.numenor",
+  "nameKey": "item-demo-numenor-name",
+  "descriptionKey": "item-demo-numenor-description",
+  "glyph": "]",
+  "generationLevel": 60,
+  "weightTenthsPound": 40,
+  "maxStack": 1,
+  "baseValue": 50000,
+  "equipmentSlot": "head",
+  "tags": [
+    "artifact",
+    "armor",
+    "equipment"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 132,
+    "baseItemKindId": "demo.item.jewel-encrusted-crown",
+    "instant": false,
+    "rarityOneIn": 15
+  },
+  "modifiers": {
+    "defense": 15,
+    "intelligence": 3,
+    "dexterity": 3,
+    "charisma": 3
+  },
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "resistances": {
+    "shards": "resistant",
+    "sound": "resistant",
+    "light": "resistant"
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "LITE",
+      "RES_LITE",
+      "RES_SHARDS",
+      "RES_SOUND"
+    ],
+    "pval": 3,
+    "toArmor": 15
+  }
+}

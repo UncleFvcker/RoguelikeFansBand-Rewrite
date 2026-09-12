@@ -1,0 +1,84 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.sha-wujing",
+  "nameKey": "item-demo-sha-wujing-name",
+  "descriptionKey": "item-demo-sha-wujing-description",
+  "glyph": "/",
+  "generationLevel": 35,
+  "weightTenthsPound": 175,
+  "maxStack": 1,
+  "baseValue": 100000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 227,
+    "baseItemKindId": "demo.item.lajatang",
+    "instant": false,
+    "rarityOneIn": 30
+  },
+  "weaponProficiencyBaseItemId": "demo.item.lajatang",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 8,
+    "toHit": 12,
+    "toDamage": 10
+  },
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INFRA",
+      "KILL_DEMON",
+      "REGEN",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_DARK",
+      "SEE_INVIS",
+      "SLAY_EVIL",
+      "SLAY_UNDEAD",
+      "STR",
+      "WIS"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 2,
+    "wisdom": 2
+  },
+  "equipmentBonuses": {
+    "infravision": 2
+  },
+  "passives": [
+    "regeneration",
+    "see-invisible",
+    "blessed"
+  ],
+  "slays": {
+    "evil": "slay",
+    "undead": "slay",
+    "demon": "kill"
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "dark": "resistant"
+  }
+}

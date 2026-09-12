@@ -250,7 +250,8 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::IncreaseSpellLearningCapacity
         | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
         | ItemUseEffectDefinition::TerrainBeam { .. }
-        | ItemUseEffectDefinition::RidingCharge => true,
+        | ItemUseEffectDefinition::RidingCharge
+        | ItemUseEffectDefinition::PiercingShot => true,
         ItemUseEffectDefinition::MassGenocide { power, radius } => *power > 0 && *radius > 0,
         ItemUseEffectDefinition::Genocide { power } => (1..=1_000).contains(power),
         ItemUseEffectDefinition::RechargeFromDevice { power } => (1..=1_000).contains(power),
@@ -458,6 +459,7 @@ pub(crate) fn valid_item_effect(
                             | ItemUseEffectDefinition::Detect { .. }
                             | ItemUseEffectDefinition::SetFloorGlow { .. }
                             | ItemUseEffectDefinition::VisibleApplyStatus { .. }
+                            | ItemUseEffectDefinition::ProjectMonsterStatus { .. }
                     ) && valid_item_effect(
                         effect,
                         terrain_tags,
@@ -496,6 +498,7 @@ pub(crate) fn valid_item_effect(
                 && *damage_bonus <= 10_000
                 && (1..=16).contains(radius)
         }
+        ItemUseEffectDefinition::ProjectMonsterStatus { power, .. } => (1..=1_000).contains(power),
         ItemUseEffectDefinition::VisibleApplyStatus {
             status_kind_id,
             intensity,
@@ -763,12 +766,14 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::SummonCategory { .. }
                     | ItemUseEffectDefinition::DispelCategory { .. }
                     | ItemUseEffectDefinition::BanishVisible { .. }
+                    | ItemUseEffectDefinition::ProjectMonsterStatus { .. }
                     | ItemUseEffectDefinition::VisibleApplyStatus { .. } => self_target,
                     ItemUseEffectDefinition::RechargeFromDevice { .. } => false,
                     ItemUseEffectDefinition::Damage { .. }
                     | ItemUseEffectDefinition::AreaDamage { .. }
                     | ItemUseEffectDefinition::BeamDamage { .. }
-                    | ItemUseEffectDefinition::TerrainBeam { .. } => projectile_target,
+                    | ItemUseEffectDefinition::TerrainBeam { .. }
+                    | ItemUseEffectDefinition::PiercingShot => projectile_target,
                     ItemUseEffectDefinition::RidingCharge => {
                         target.modes.as_slice()
                             == [
@@ -1338,7 +1343,6 @@ pub(super) fn validate_items(
                                 | ItemUseEffectDefinition::ApplyHeroism { .. }
                                 | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
                                 | ItemUseEffectDefinition::ApplyStoneSkin { .. }
-                                | ItemUseEffectDefinition::RestoreLifeLevels { .. }
                                 | ItemUseEffectDefinition::RestoreAllAttributes
                                 | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
                                 | ItemUseEffectDefinition::ApplyLifeRestoration { .. }

@@ -1,0 +1,124 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.eonwe",
+  "nameKey": "item-demo-eonwe-name",
+  "descriptionKey": "item-demo-eonwe-description",
+  "glyph": "/",
+  "generationLevel": 50,
+  "weightTenthsPound": 230,
+  "maxStack": 1,
+  "baseValue": 200000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 102,
+    "baseItemKindId": "demo.item.great-axe",
+    "instant": false,
+    "rarityOneIn": 120
+  },
+  "weaponProficiencyBaseItemId": "demo.item.great-axe",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 5,
+    "toHit": 15,
+    "toDamage": 18
+  },
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "BRAND_COLD",
+      "CHR",
+      "CON",
+      "DEX",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_COLD",
+      "INT",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_EVIL",
+      "SLAY_ORC",
+      "SLAY_UNDEAD",
+      "STR",
+      "WIS"
+    ],
+    "pval": 2,
+    "toArmor": 8
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 8,
+    "strength": 2,
+    "intelligence": 2,
+    "wisdom": 2,
+    "dexterity": 2,
+    "constitution": 2,
+    "charisma": 2
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "evil": "slay",
+    "undead": "slay",
+    "orc": "slay"
+  },
+  "resistances": {
+    "cold": "immune"
+  },
+  "passives": [
+    "see-invisible",
+    "blessed"
+  ],
+  "brands": [
+    "cold"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "id": "demo.item-activation.eonwe",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-mass-genocide-name",
+        "rfbValue": 12000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1,
+        "effectProgramId": "demo.effect.eonwe-genocide"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 10000
+    }
+  }
+}

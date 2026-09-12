@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1350,
+  "descriptionKey": "item-demo-full-plate-armour-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -3
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 45,
+  "glyph": "[",
+  "id": "demo.item.full-plate-armour",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 25
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-full-plate-armour-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 284,
+    "sval": 15,
+    "tval": 37
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 380
+}

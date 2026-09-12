@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1300,
+  "descriptionKey": "item-demo-o-yoroi-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -2
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 45,
+  "glyph": "[",
+  "id": "demo.item.o-yoroi",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 24
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-o-yoroi-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 285,
+    "sval": 16,
+    "tval": 37
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 320
+}

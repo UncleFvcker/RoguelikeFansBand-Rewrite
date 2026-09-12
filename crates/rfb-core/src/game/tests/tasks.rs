@@ -551,7 +551,32 @@ fn warrior_shoot_monster_death_keeps_theme_through_pickup_equipment_and_save() {
         .iter()
         .map(|item| item.id.clone())
         .collect::<BTreeSet<_>>();
-    game.rng = RfbRng::seeded(30);
+    let seed = (0..1000)
+        .find(|seed| {
+            let mut probe = RfbRng::seeded(*seed);
+            if probe.bounded(100) >= 90 || probe.bounded(100) >= 50 || probe.bounded(100) < 20 {
+                return false;
+            }
+            let mut trial = game.clone();
+            trial.rng = RfbRng::seeded(*seed);
+            let actor = trial.entities[0].clone();
+            trial
+                .generate_death_loot(&actor)
+                .unwrap()
+                .0
+                .iter()
+                .any(|item| {
+                    !item.affix_ids.is_empty()
+                        && trial
+                            .content
+                            .item(&item.kind_id)
+                            .unwrap()
+                            .rfb_base_kind
+                            .is_some_and(|kind| matches!(kind.tval, 30..=38))
+                })
+        })
+        .expect("the full WarriorShoot pool must reach an armor Ego");
+    game.rng = RfbRng::seeded(seed);
     let mut probe = game.rng.clone();
     // Source DROP_90, then theme, then the gold/item choice.
     assert!(probe.bounded(100) < 90);

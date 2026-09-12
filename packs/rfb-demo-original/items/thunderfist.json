@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.thunderfist",
+  "nameKey": "item-demo-thunderfist-name",
+  "descriptionKey": "item-demo-thunderfist-description",
+  "glyph": "\\",
+  "generationLevel": 45,
+  "weightTenthsPound": 300,
+  "maxStack": 1,
+  "baseValue": 160000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 113,
+    "baseItemKindId": "demo.item.two-handed-flail",
+    "instant": false,
+    "rarityOneIn": 38
+  },
+  "weaponProficiencyBaseItemId": "demo.item.two-handed-flail",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 7,
+    "toHit": 5,
+    "toDamage": 18
+  },
+  "modifiers": {
+    "strength": 4
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_ELEC",
+      "BRAND_FIRE",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "RES_DARK",
+      "RES_ELEC",
+      "RES_FIRE",
+      "SHOW_MODS",
+      "SLAY_ANIMAL",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "STR"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "slays": {
+    "animal": "slay",
+    "troll": "slay",
+    "orc": "slay"
+  },
+  "brands": [
+    "fire",
+    "electricity"
+  ],
+  "resistances": {
+    "fire": "resistant",
+    "electricity": "resistant",
+    "dark": "resistant"
+  }
+}

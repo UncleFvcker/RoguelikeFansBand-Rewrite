@@ -1,31 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.mithril-chain-mail",
-  "nameKey": "item-demo-mithril-chain-mail-name",
-  "descriptionKey": "item-demo-mithril-chain-mail-description",
-  "maxStack": 1,
-  "glyph": "[",
-  "generationLevel": 55,
-  "weightTenthsPound": 150,
   "baseValue": 7000,
-  "equipmentSlot": "body",
-  "tags": [
-    "armor",
-    "equipment",
-    "rfb-compatibility"
-  ],
-  "rfbBaseKind": {
-    "sourceIndex": 287,
-    "tval": 37,
-    "sval": 20
-  },
-  "modifiers": {
-    "defense": 35
-  },
-  "equipmentBonuses": {
-    "meleeSkill": -1
-  },
+  "descriptionKey": "item-demo-mithril-chain-mail-description",
   "elementalDestructionImmunities": [
     "acid",
     "electricity",
@@ -33,18 +9,42 @@
     "cold"
   ],
   "elementalDestructionVulnerabilities": [
-    "acid",
-    "fire"
+    "acid"
   ],
+  "equipmentBonuses": {
+    "meleeSkill": -1
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 55,
+  "glyph": "[",
+  "id": "demo.item.mithril-chain-mail",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 35
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-mithril-chain-mail-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 287,
+    "sval": 20,
+    "tval": 37
+  },
   "rfbValue": {
     "flags": [
       "IGNORE_ACID",
-      "IGNORE_COLD",
       "IGNORE_ELEC",
-      "IGNORE_FIRE"
+      "IGNORE_FIRE",
+      "IGNORE_COLD"
     ],
     "pval": 0,
     "toArmor": 0
   },
-  "mogaminatorRare": false
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 150
 }

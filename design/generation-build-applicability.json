@@ -3,7 +3,7 @@
   "sourceRef": "master",
   "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
   "reviewedAt": "2026-09-12",
-  "codeBaseline": "896638a24 + Warrior-Mage step-6 UI and applicability registration",
+  "codeBaseline": "6fa5fa17c + e2a1b0f8b + town integration",
   "entrySource": "web/src/character-creation.ts CREATION_BUILDS / PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
   "scope": "Source and behavior applicability review of 102 real creation builds (94 prior entries and eight fixed-Arcane Warrior-Mage pairs), five areas each, within the imported canonical pool. Prior Priest acceptance remains recorded. Warrior-Mage implementation and test references exist, but execution, source report regeneration and acceptance are deferred until the end of step 7 by user request. The audit CLI does not execute gameplay tests.",
   "recordSemantics": {
@@ -124,7 +124,9 @@
         "crates/rfb-core/src/game/random_artifact/tests.rs#real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary",
         "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#real_berserker_generated_flags_and_activation_rejection_survive_save_and_continue",
         "crates/rfb-core/src/game/tests/items.rs#artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name",
-        "crates/rfb-core/src/game/tests/arena.rs"
+        "crates/rfb-core/src/game/tests/arena.rs",
+        "crates/rfb-core/src/game/random_artifact/tests.rs#random_artifact_group_control_uses_source_projection_profiles",
+        "crates/rfb-core/src/game/tests/monster_status_projection.rs#projection_immunities_have_distinct_rng_and_stasis_ignores_no_sleep"
       ],
       "limits": "Factory tests cover source probability boundaries, including Mage 19/20 conversion and natural/theme separation. Actual scroll commands cover prior class representatives and Mage, selected equipment, saved names, virtues and continued actions. Berserker scroll rejection remains a class consumer rule. Realm pairs share this class-only branch; entry enumeration is separate from desktop acceptance. Priest step-7 core and consumer regressions passed for all 24 builds. Bilingual menu/UI and two representative good/evil desktop runs passed with explicit level, item and map preparation; no 24-fold campaign or natural high-level progression claim.",
       "sourceEvidence": [
@@ -143,7 +145,7 @@
         "good-luck-fixed-retry"
       ],
       "entry": "Imported fixed artifacts, explicitly configured class rewards and named monster death drops.",
-      "reason": "Terror Mask (41) is generated in the ordinary iron-helm pool for every current build. Warrior/Cavalry/Berserker receive one ability then one high resistance; all other current classes receive intrinsic AGGRAVATE/TY_CURSE, a heavy curse and get_curse(2). These are saved generation properties. Dr Jones (162) retains its ordinary non-Archaeologist branch. Configured rewards keep their existing entry contracts. Mage/High-Mage Old Castle rewards now preselect Gandalf/Saruman/Indra at 1:1:8 using the durable selection seed and replace a previously generated fixed artifact through the existing named random-artifact path. Ordinary Mage thieves reward is a long sword. These three artifacts are not the ten identity-specific construction exceptions. Belthronding/Yoichi naturally allocate and keep source launcher properties and uniqueness. Old Castle selects 1:4 through the durable birth seed; duplicates become named random-artifact long bows and failed claims are atomic. Ordinary thieves reward is a long sword. Xiaolong (145) and Dragonlance (322) now use their ordinary branches on current classes: no Monk BLOWS or Dragon-pact Warlock slays. GHB (39) drops artifact 192 at 100% through the existing named-drop path; rarity 0 / QUESTITEM excludes it from ordinary selection. Source xtra2.c skips an already-generated named drop rather than making a replacement. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. Warrior-Mage: Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. Its acceptance remains blocked by the explicit step-7 gap; added references do not claim execution.",
+      "reason": "Terror Mask (41) is generated in the ordinary iron-helm pool for every current build. Warrior/Cavalry/Berserker receive one ability then one high resistance; all other current classes receive intrinsic AGGRAVATE/TY_CURSE, a heavy curse and get_curse(2). These are saved generation properties. Dr Jones (162) retains its ordinary non-Archaeologist branch. Configured rewards keep their existing entry contracts. Mage/High-Mage Old Castle rewards now preselect Gandalf/Saruman/Indra at 1:1:8 using the durable selection seed and replace a previously generated fixed artifact through the existing named random-artifact path. Ordinary Mage thieves reward is a long sword. These three artifacts are not the ten identity-specific construction exceptions. Belthronding/Yoichi naturally allocate and keep source launcher properties and uniqueness. Old Castle selects 1:4 through the durable birth seed; duplicates become named random-artifact long bows and failed claims are atomic. Ordinary thieves reward is a long sword. Xiaolong (145) and Dragonlance (322) now use their ordinary branches on current classes: no Monk BLOWS or Dragon-pact Warlock slays. GHB (39) drops artifact 192 at 100% through the existing named-drop path; rarity 0 / QUESTITEM excludes it from ordinary selection. Source xtra2.c skips an already-generated named drop rather than making a replacement. Old Castle durably chooses Aule or Palantir of Westernesse at birth in a 1:4 ratio, preserves uniqueness and uses named random-artifact base replacements for duplicates. Four primary realms cover both rewards, actual equipment/activation, full-inventory atomicity and saved continuation. All 24 claim Thieves War Hammer and Orc Camp slaying hafted rewards. Warrior-Mage: Old Castle uses durable birth selection of Lohengrin or Charmed Pendant at 1:4 with unique-ledger replacements and full-inventory atomicity. Thieves reward Long Sword; Orc Camp retains Frost Ball wand. New artifacts use natural generation, real equipment/activation, source cooldown and save consumers. Its acceptance remains blocked by the explicit step-7 gap; added references do not claim execution. Ordinary armor 132/238/357/380 shares existing base/quality/rarity/uniqueness selection without a class-specific construction branch; Aragorn uses the existing nonweapon melee/archery consumer. Body armor bases 283/284/285/287 and artifacts 20/235/236/242 now use the same ordinary allocation and existing high-resistance rolls; Bando Musha and Bilbo use the source nonweapon melee/archery bonus path. Explicit guardian replacement tables also enter the random-artifact factory in Artifact mode even without a natural Ego policy; real Man Cave and Rlyeh reward tables cover this boundary. B1-B7 now add sixteen bases and twenty ordinary fixed artifacts through existing allocation, rarity and uniqueness selection. Core generation/equipment/combat/activation/save checks passed in the unified run and focused repairs; source C values and pack1.430.0 lock synchronized. Rare weapon/cloak sampling conditions on a base already reached in the full formal pool, preserving actual artifact gates. Fixed STUN and Vorpal order, heavy-weapon drain/riding/anti-teleport, high-resistance duplicates, nonweapon archery exclusions, Morlok negative AC/spell power/curses and activation cooldowns have consumer evidence. Shared RESTORE_EXP150, ARROW/CURING, recall15..35 and per-monster NOGENO persistence are corrected; genocide uses source distance/protections/nonfatal fatigue and distinct undead virtues. Avavir and Eonwe use1000/10000 ticks with Eonwe power200. B4 fear initial/save/target rules were completed in C1; Shuten extra33-percent and Amber Oberon drops, crown QUESTITEMs300/301/317/319, artifacts379/397 and B8-B10 remain deferred. No new natural-leveling or desktop acceptance. C2 adds196/69/187/177/65/70/99/163 through ordinary artifact gates; common throw and light-ball consumers use existing item/actor state. No identity-specific generation exception applies to these eight. Artifact177 inherits base RIDING and its three intrinsic drawbacks,196/70 grant own-weapon extra blows. Source names/parameters/value and pack1.432.0 are synchronized. C3 adds271/324/243 via ordinary artifact gates. Ballista calls real compatible-ammunition shooting with SHOOT_PIERCE; Impaler reuses mounted charge including the open Duelist target branch; Bloodrip reuses adjacent melee and adds current-class one-in-two per-hand cut backlash. No new identity-specific generation exception applies. Source values and pack1.433.0 are synchronized.",
       "implementation": [
         "crates/rfb-core/src/game/loot.rs",
         "crates/rfb-core/src/game/tasks.rs",
@@ -152,7 +154,29 @@
         "crates/rfb-core/src/game/ego.rs#materialize_ego_with_rng",
         "packs/rfb-demo-original/items/gandalf.json",
         "packs/rfb-demo-original/items/saruman.json",
-        "packs/rfb-demo-original/items/indra.json"
+        "packs/rfb-demo-original/items/indra.json",
+        "crates/rfb-core/src/game/abilities/control.rs#resolve_projected_monster_status",
+        "packs/rfb-demo-original/items/boromir.json",
+        "packs/rfb-demo-original/items/holcolleth.json",
+        "packs/rfb-demo-original/items/totila.json",
+        "packs/rfb-demo-original/items/tuber.json",
+        "crates/rfb-core/src/game/player_combat.rs#throw_inventory_item",
+        "crates/rfb-core/src/game/player_stats.rs#item_throw_parameters",
+        "crates/rfb-core/src/game/ground_item_effects.rs#resolve_projectile_terrain_effects",
+        "packs/rfb-demo-original/items/grimtooth.json",
+        "packs/rfb-demo-original/items/rilia.json",
+        "packs/rfb-demo-original/items/aeglos.json",
+        "packs/rfb-demo-original/items/excalipur.json",
+        "packs/rfb-demo-original/items/caine.json",
+        "packs/rfb-demo-original/items/fiona.json",
+        "packs/rfb-demo-original/items/hagen.json",
+        "packs/rfb-demo-original/items/gae-bulg.json",
+        "packs/rfb-demo-original/items/ballista.json",
+        "packs/rfb-demo-original/items/impaler.json",
+        "packs/rfb-demo-original/items/bloodrip.json",
+        "crates/rfb-core/src/game/player_combat.rs#resolve_bloodrip_backlash",
+        "crates/rfb-core/src/game/item_use.rs#use_inventory_item",
+        "crates/rfb-core/src/game/abilities/damage.rs#continue_player_melee_adjacent_effect"
       ],
       "tests": [
         "crates/rfb-core/src/game/tests/tasks.rs#old_castle_reward_is_forced_even_when_the_artifact_was_generated_before_claim",
@@ -168,9 +192,42 @@
         "crates/rfb-core/src/game/tests/items.rs#a9_ordinary_identity_artifacts_generate_fight_and_preserve_their_scope_after_save",
         "crates/rfb-core/src/game/tests/items.rs#a10_hell_beast_natural_entry_drops_zero_rarity_artifact_once_after_save",
         "crates/rfb-core/src/game/tests/priest/generation.rs#castle_rewards_keep_one_to_four_birth_selection_and_duplicate_replacement_atomic",
-        "crates/rfb-core/src/game/tests/priest/generation.rs#every_priest_build_claims_the_source_thieves_and_orc_rewards_and_resumes"
+        "crates/rfb-core/src/game/tests/priest/generation.rs#every_priest_build_claims_the_source_thieves_and_orc_rewards_and_resumes",
+        "crates/rfb-core/src/game/tests/items.rs#ready_armor_group_generates_equips_and_preserves_consumers_after_save",
+        "crates/rfb-core/src/game/tests/items.rs#ordinary_heavy_armor_allocation_reaches_equipment_and_save",
+        "crates/rfb-core/src/game/tests/items.rs#heavy_base_artifacts_generate_with_source_overrides_and_saved_random_properties",
+        "crates/rfb-core/src/game/tests/items.rs#b1_b2_weapons_generate_equip_fight_and_preserve_source_properties_after_save",
+        "crates/rfb-core/src/game/tests/items.rs#b2_heavy_artifacts_preserve_riding_drain_and_teleport_boundaries",
+        "crates/rfb-core/src/game/tests/items.rs#b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save",
+        "crates/rfb-core/src/game/tests/items.rs#b3_luthien_restores_experience_and_150_life_force_with_saved_cooldown",
+        "crates/rfb-core/src/game/tests/items.rs#b4_headgear_generates_equips_and_preserves_source_properties_after_save",
+        "crates/rfb-core/src/game/tests/items.rs#b4_amber_rolls_power_before_high_resistance_without_retrying_duplicates",
+        "crates/rfb-core/src/game/tests/items.rs#b4_headgear_activations_respect_targets_healing_and_saved_recovery",
+        "crates/rfb-core/src/game/tests/items.rs#b5_gloves_and_shields_generate_equip_and_preserve_combat_bonuses_after_save",
+        "crates/rfb-core/src/game/tests/items.rs#b5_arrow_and_curing_activations_preserve_effect_boundaries_and_cooldowns",
+        "crates/rfb-core/src/game/tests/items.rs#b6_body_armor_generates_equips_and_preserves_negative_properties_after_save",
+        "crates/rfb-core/src/game/tests/items.rs#b6_morlok_spell_power_and_intrinsic_curses_survive_dispelling_until_unequipped",
+        "crates/rfb-core/src/game/tests/items.rs#b6_soulkeeper_heals_1000_only_cures_bleeding_and_restores_cooldown",
+        "crates/rfb-core/src/game/tests/items.rs#b7_avavir_recall_counts_down_returns_and_cancels_without_teleporting",
+        "crates/rfb-core/src/game/tests/items.rs#b7_eonwe_genocide_preserves_range_protection_fatigue_and_learned_immunity",
+        "crates/rfb-core/src/game/tests/items.rs#b1_dramborleg_fixed_stun_reaches_melee_and_respects_immunity",
+        "crates/rfb-core/src/game/tests/items.rs#p107f_diamond_edge_vorpal_flag_multiplies_dice_before_flat_damage",
+        "crates/rfb-core/src/game/tests/items.rs#razorback_guardian_reward_shares_natural_generation_uniqueness",
+        "crates/rfb-core/src/game/tests/world.rs#p89f_man_cave_conquest_lotharang_activation_and_replacement_are_one_shot",
+        "crates/rfb-core/src/game/tests/items.rs#c1_boromir_generates_equips_scares_and_restores_cooldown_and_rng",
+        "crates/rfb-core/src/game/tests/items.rs#c1_group_artifacts_follow_ordinary_bases_and_activate_after_save",
+        "crates/rfb-core/src/game/tests/items.rs#c1_tuber_spends_ammunition_but_cannot_hit_source_birds_and_resumes_same_shot",
+        "crates/rfb-core/src/game/tests/items.rs#c2_grimtooth_generates_equips_throws_and_preserves_unknown_instance_after_save",
+        "crates/rfb-core/src/game/tests/items.rs#c2_following_artifacts_generate_equip_throw_and_activate_with_saved_cooldowns",
+        "crates/rfb-core/src/game/tests/lighting.rs#c2_gae_bulg_ball_uses_los_falloff_and_saved_glow_except_in_darkness",
+        "crates/rfb-core/src/game/tests/item_combat_activations.rs#c3_ballista_full_pool_activation_uses_real_shot_and_saved_ammunition",
+        "crates/rfb-core/src/game/tests/item_combat_activations.rs#c3_piercing_stops_on_miss_or_wall_and_caps_five_penetrations_without_forced_breakage",
+        "crates/rfb-core/src/game/tests/item_combat_activations.rs#c3_ballista_cancel_failure_and_missing_ammo_keep_cooldown_and_success_uses_one_shot_energy",
+        "crates/rfb-core/src/game/tests/item_combat_activations.rs#c3_bloodrip_backlash_is_once_per_hand_after_misses_and_extends_cut_with_saved_rng",
+        "crates/rfb-core/src/game/tests/item_combat_activations.rs#c3_bloodrip_whirlwind_uses_sequential_melee_and_stops_after_lethal_contact",
+        "crates/rfb-core/src/game/tests/item_combat_activations.rs#c3_impaler_generates_charges_with_mount_and_locks_duelist_to_current_opponent"
       ],
-      "limits": "Six other identity-sensitive construction exceptions, two fixed harps, Archaeologist Dr Jones, Monk Xiaolong, Dragon-pact Warlock Dragonlance, and Mauler / monster Hydra/Troll/Jelly Terror Mask branches remain deferred until their actual identities/content are available. Named GHB acquisition uses the formal Warrens ecology with prepared combat, not natural leveling. Old Castle tests prepare task completion and do not claim natural quest completion. Random-artifacts game mode replacement is unavailable; ordinary named drops skip an already-generated artifact. Priest step-7 core and consumer regressions passed for all 24 builds. Bilingual menu/UI and two representative good/evil desktop runs passed with explicit level, item and map preparation; no 24-fold campaign or natural high-level progression claim.",
+      "limits": "Six other identity-sensitive construction exceptions, two fixed harps, Archaeologist Dr Jones, Monk Xiaolong, Dragon-pact Warlock Dragonlance, and Mauler / monster Hydra/Troll/Jelly Terror Mask branches remain deferred until their actual identities/content are available. Named GHB acquisition uses the formal Warrens ecology with prepared combat, not natural leveling. Old Castle tests prepare task completion and do not claim natural quest completion. Random-artifacts game mode replacement is unavailable; ordinary named drops skip an already-generated artifact. Priest step-7 core and consumer regressions passed for all 24 builds. Bilingual menu/UI and two representative good/evil desktop runs passed with explicit level, item and map preparation; no 24-fold campaign or natural high-level progression claim. No open creation identity grants source ambush: Scout level20 with undisrupted equipment, Skillmaster stealth3 and POS_BACKSTAB possessed bodies remain identity dependencies; no fake build or universal sleeping-target double damage. Source pre-action fear/arena handling, specialized consumable breakage and boomerang/catch are outside this batch; source return mechanics136/383 remain in step5. Existing recovery, regeneration and fixed-artifact landing adaptations remain. Core controlled-precondition evidence, not natural leveling or desktop acceptance. Caine799/Fiona791/Hagen383 additional50/50/66-percent drops remain named acquisition dependencies. Shooting retains the existing compatible-ammunition selection by instance ID, hit/critical/damage implementation and landing adaptations; no new manual ammunition selector. Shared bleeding intensity/recovery, friendly-target handling and melee proficiency behavior remain existing adaptations. Blood-Knight guaranteed Bloodrip backlash remains an unopened identity dependency; current classes use the source one-in-two branch.",
       "sourceEvidence": [
         "lib/edit/q_old_castle.txt:343-349 Mage and High-Mage",
         "lib/edit/q_thieves.txt ordinary versus SPEED=2 reward",
@@ -180,7 +237,16 @@
         "src/artifact.c:3391-3405 Xiaolong Monk and Dragonlance Dragon-pact branches",
         "src/xtra2.c:1897-1900,2335-2353 MON_GHB 100% drop and generated guard",
         "lib/edit/r_info.txt N:39; lib/edit/k_info.txt N:245; lib/edit/a_info.txt N:192",
-        "docs/priest-source-audit.md sections 6 and 7; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c"
+        "docs/priest-source-audit.md sections 6 and 7; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+        "src/quest.c create_replacement_art branch for already-generated guardian artifacts; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+        "src/py_throw.c _init_context/_hit_mon; src/combat.c critical_throw; src/xtra1.c and tables.c shooter/STR/DEX; master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+        "src/scout.c449, skillmaster.c1221, r_poss.c986 source ambush setters; unavailable identities",
+        "src/xtra2.c1787/1888/1893 MON_FIONA/MON_HAGEN/MON_CAINE extra drops",
+        "src/spells1.c1360 and3282 GF_LITE grid/ball behavior",
+        "C3 source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c Git objects: a_info.txt, artifact_name_zh.inc, kind_name_zh.inc, devices.c, cmd2.c, cmd6.c, cmd1.c, spells2.c and effects.c. Reuses current ordinary base/level/rarity/unique selection and real projectile/melee consumers. Source values and pack1.433.0 are synchronized.",
+        "I19:24:3 W50:15:200:60000 P0:x5.00:10:30:0; STR3 and confusion resistance. PIERCING_SHOT power30 cooldown1000 ticks value1500. SHOOT_PIERCE continues only after a hit, at most five penetrations (six struck targets), subtracts60 hit skill per penetration and uses ordinary ammunition breakage. It is distinct from Sniper SP_PIERCE concentration expenditure. Exploding ammunition terminates at its first hit. Activation failure, cancellation or no compatible ammunition preserves cooldown; a successful shot uses one normal shooting energy cost. Existing Sniper focus applies during the shot and clears afterward.",
+        "I22:29:0 W60:40:450:1000000 P0:5d10:17:23:0; poison brand, human/giant/troll slays and lance riding profile (+2 dice/+15 hit mounted). CHARGE power10 cooldown1000 ticks value5000. Reuses RidingCharge movement and real melee; seven-square limit, mount moves with player, terrain/first actor stop movement. rush_attack locks Duelist onto the current challenged opponent and requires LOS. Nonmounted/cancelled activation checks the device before rejecting without cooldown. Unopened Ninja HISSATSU_NYUSIN exception remains identity-dependent.",
+        "I23:21:2 W66:6:150:166666 P0:6d6:10:10:0; CON2, stealth-2, vorpal, vampiric, free action, see invisible, slay good, confusion/sound resistance. WHIRLWIND_ATTACK power40 cooldown660 ticks value5000 uses existing MeleeAdjacent and Duelist continuation. Source ddd order S/N/E/W/SE/SW/NE/NW, live adjacent targets visible or on projectile terrain, stops on player death/floor change. Bloodrip backlash is checked once after each hand even after misses or a kill: one-in-two adds2+2d3 cut, capped10000; dice precede immunity/death rejection."
       ]
     },
     {
@@ -218,7 +284,9 @@
         "crates/rfb-core/src/game/tests/priest/generation.rs#realm_changes_update_inscriptions_and_realm_services_without_extra_guild_membership",
         "crates/rfb-core/src/game/tests/priest/powers.rs",
         "web/e2e/priest.e2e.mjs#runPriestUiScenario",
-        "web/src/session-shell.test.ts"
+        "web/src/session-shell.test.ts",
+        "crates/rfb-core/src/game/random_artifact/tests.rs#random_artifact_group_control_uses_source_projection_profiles",
+        "crates/rfb-core/src/game/tests/monster_status_projection.rs#projection_immunities_have_distinct_rng_and_stasis_ignores_no_sleep"
       ],
       "limits": "Reuse existing item/activation/save evidence and the Mage step-5 real class consumers. Tests explicitly prepare levels, positions, books or rewards where needed. Step-6 UI acceptance covers creation and spellbook interactions; natural acquisition, progression and the playable desktop release remain step 7. Priest step-7 core and consumer regressions passed for all 24 builds. Bilingual menu/UI and two representative good/evil desktop runs passed with explicit level, item and map preparation; no 24-fold campaign or natural high-level progression claim.",
       "sourceEvidence": [
