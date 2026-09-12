@@ -14,6 +14,333 @@ fn artifact_loot_context(depth: u16) -> LootContext {
 }
 
 #[test]
+fn b1_polearms_generate_equip_fight_and_preserve_source_properties_after_save() {
+    fn strike(game: &mut Game) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.resolve_player_melee(0, false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+            .unwrap();
+        events
+    }
+    let cases = [
+        ("naginata", "naginata", 2, 7, 0, 0, 150, 0),
+        ("lajatang", "lajatang", 2, 8, 0, 0, 175, 0),
+        ("great-axe", "great-axe", 4, 5, 0, 0, 230, 0),
+        ("lochaber-axe", "lochaber-axe", 3, 9, 0, 0, 250, 0),
+        ("benkei", "naginata", 3, 7, 5, 23, 400, 5),
+        ("sha-wujing", "lajatang", 3, 8, 12, 10, 175, 0),
+        ("durin", "great-axe", 4, 5, 10, 20, 230, 15),
+        ("dwarves", "lochaber-axe", 3, 9, 12, 17, 250, 0),
+        ("dramborleg", "great-axe", 4, 5, 3, 12, 230, 0),
+    ];
+    let mut game = Game::new_with_build(465, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.player.position = Position { x: 10, y: 10 };
+    game.terrain.fill("demo.terrain.floor".into());
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "test.floor.depth-75".into(),
+        depth: 75,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.b1-drop".into(),
+        },
+    };
+    let mut remaining = cases.iter().map(|case| case.0).collect::<BTreeSet<_>>();
+    // Controlled depth and repeated drops, with the complete formal pool,
+    // quality and rarity gates. Select plain bases to isolate their own values.
+    for _ in 0..200_000 {
+        for item in game
+            .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
+            .unwrap()
+        {
+            let slug = item.kind_id.strip_prefix("demo.item.").unwrap();
+            if !remaining.contains(slug) {
+                continue;
+            }
+            if game
+                .content
+                .item(&item.kind_id)
+                .unwrap()
+                .artifact_generation
+                .is_none()
+                && (item.quality != ItemQualityDto::Ordinary
+                    || item.enchantments != Default::default()
+                    || item.artifact_name.is_some())
+            {
+                continue;
+            }
+            remaining.remove(slug);
+            assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+            assert!(item.activation.is_none() && item.curse.is_none());
+            let id = item.id.clone();
+            game.items.push(item);
+            game.pick_up_item_at_player(Some(&id)).unwrap();
+            assert!(
+                !game
+                    .item_property_knowledge
+                    .get(&id)
+                    .is_some_and(|k| k.appraised)
+            );
+        }
+        if remaining.is_empty() {
+            break;
+        }
+    }
+    assert!(
+        remaining.is_empty(),
+        "B1 items never generated: {remaining:?}"
+    );
+    game.reveal_current_visibility();
+    let unknown = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(unknown.state_hash(), game.state_hash());
+    assert_eq!(unknown.rng, game.rng);
+    for (slug, base, dice, sides, hit, damage, weight, defense) in cases {
+        let mut equipped = unknown.clone();
+        let kind = format!("demo.item.{slug}");
+        equipped.items.retain(|item| item.kind_id == kind);
+        let id = equipped.items[0].id.clone();
+        let dig_before = equipped.player_derived_stats().dig_skill.value;
+        let rng = equipped.rng.clone();
+        equipped.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        assert_eq!(equipped.rng, rng);
+        equipped
+            .equip_inventory_item(&id, Some("right-hand"))
+            .unwrap();
+        assert_eq!(equipped.carried_weight_tenths_pound(), weight);
+        assert_eq!(equipped.equipment_modifiers().defense, defense);
+        let item_profile = equipped.item_melee_profile(&equipped.items[0]).unwrap();
+        assert_eq!(
+            (
+                item_profile.damage.dice,
+                item_profile.damage.sides,
+                item_profile.to_hit,
+                item_profile.to_damage
+            ),
+            (dice, sides, hit, damage)
+        );
+        let profile = equipped.player_melee_profile(&equipped.player_derived_stats());
+        assert_eq!((profile.damage_dice, profile.damage_sides), (dice, sides));
+        let artifact = slug != base;
+        if artifact {
+            assert_eq!(
+                equipped
+                    .content
+                    .item(&kind)
+                    .unwrap()
+                    .weapon_proficiency_base_item_id
+                    .as_deref(),
+                Some(format!("demo.item.{base}").as_str())
+            );
+        }
+        match slug {
+            "benkei" => {
+                let m = equipped.equipment_modifiers();
+                assert_eq!((m.strength, m.constitution), (4, 4));
+                assert!(
+                    equipped
+                        .player_status_immunities()
+                        .contains(STATUS_PARALYSIS)
+                );
+                assert!(
+                    equipped
+                        .player_equipment_passives()
+                        .contains(&EquipmentPassive::Regeneration)
+                );
+            }
+            "sha-wujing" => {
+                let m = equipped.equipment_modifiers();
+                assert_eq!((m.strength, m.wisdom), (2, 2));
+                assert_eq!(equipped.player_equipment_bonuses().infravision, 2);
+                assert!(equipped.item_has_weapon_trait(
+                    &equipped.items[0],
+                    rfb_protocol::WeaponTraitDto::Blessed
+                ));
+                assert_eq!(equipped.player_see_invisible_sources(), 1);
+            }
+            "durin" => {
+                assert_eq!(equipped.equipment_modifiers().constitution, 3);
+                assert!(
+                    equipped
+                        .player_status_immunities()
+                        .contains(STATUS_PARALYSIS)
+                );
+            }
+            "dwarves" => {
+                let b = equipped.player_equipment_bonuses();
+                assert_eq!(
+                    (b.search_skill, b.perception_skill, b.infravision),
+                    (50, 50, 10)
+                );
+                assert_eq!(
+                    equipped.player_derived_stats().dig_skill.value - dig_before,
+                    225
+                );
+            }
+            "dramborleg" => {
+                let m = equipped.equipment_modifiers();
+                assert_eq!((m.strength, m.constitution), (1, 1));
+                assert!(
+                    equipped.item_has_weapon_trait(
+                        &equipped.items[0],
+                        rfb_protocol::WeaponTraitDto::Stun
+                    )
+                );
+                assert!(equipped.item_has_weapon_trait(
+                    &equipped.items[0],
+                    rfb_protocol::WeaponTraitDto::Vorpal
+                ));
+            }
+            _ => {}
+        }
+        equipped.refresh_player_resource_maxima();
+        equipped.reveal_current_visibility();
+        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), equipped.state_hash());
+        let next = equipped
+            .generate_loot_instances(&context, ItemLocation::Inventory)
+            .unwrap();
+        assert_eq!(
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            next
+        );
+        assert_eq!(restored.rng, equipped.rng);
+        if artifact {
+            assert!(restored.generated_artifact_ids.contains(&kind));
+            assert_ne!(
+                restored.roll_fixed_artifact_kind_id(
+                    &context,
+                    Some(&format!("demo.item.{base}")),
+                    false
+                ),
+                Some(kind.clone())
+            );
+        }
+        for (target_kind, expected) in [
+            (
+                "demo.actor.manes",
+                match slug {
+                    "sha-wujing" | "dramborleg" => 56,
+                    "durin" => 28,
+                    "benkei" | "dwarves" => 19,
+                    _ => 10,
+                },
+            ),
+            (
+                "demo.actor.baby-blue-dragon",
+                match slug {
+                    "durin" => 56,
+                    "benkei" | "sha-wujing" | "dwarves" => 19,
+                    _ => 10,
+                },
+            ),
+            ("demo.actor.blubbering-idiot", 10),
+        ] {
+            let mut combat = restored.clone();
+            combat.push_generated_actor(
+                "test.b1-target".into(),
+                target_kind,
+                Position { x: 11, y: 10 },
+            );
+            assert_eq!(
+                combat.player_melee_damage_multiplier(
+                    &profile,
+                    &combat.entities[0],
+                    combat.content.actor(target_kind).unwrap()
+                ),
+                expected
+            );
+            if !artifact {
+                continue;
+            }
+            combat.entities[0].hp = 1;
+            let seed = (0..1000)
+                .find(|seed| {
+                    let mut trial = combat.clone();
+                    trial.rng = RfbRng::seeded(*seed);
+                    strike(&mut trial);
+                    trial.entities.is_empty()
+                })
+                .expect("generated B1 artifact must land a real attack");
+            combat.rng = RfbRng::seeded(seed);
+            combat.reveal_current_visibility();
+            let mut replay = Game::from_save(combat.to_save()).unwrap();
+            assert_eq!(strike(&mut replay), strike(&mut combat));
+            assert!(combat.entities.is_empty());
+            assert_eq!(replay.state_hash(), combat.state_hash());
+        }
+    }
+}
+
+#[test]
+fn b1_dramborleg_fixed_stun_reaches_melee_and_respects_immunity() {
+    let mut base = Game::new_with_build(465, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut base);
+    clear_monsters(&mut base);
+    base.items.clear();
+    base.terrain.fill("demo.terrain.floor".into());
+    base.player.position = Position { x: 10, y: 10 };
+    give_inventory_item(&mut base, "test.b1-dramborleg", "demo.item.dramborleg");
+    base.equip_inventory_item("test.b1-dramborleg", Some("right-hand"))
+        .unwrap();
+    base.push_generated_actor(
+        "test.b1-stun".into(),
+        "demo.actor.blubbering-idiot",
+        Position { x: 11, y: 10 },
+    );
+    base.entities[0].hp = 100_000;
+    base.entities[0].max_hp = 100_000;
+    let strike = |game: &mut Game| {
+        game.resolve_player_melee(
+            0,
+            false,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+    };
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut trial = base.clone();
+            trial.rng = RfbRng::seeded(*seed);
+            strike(&mut trial);
+            trial.entities[0]
+                .statuses
+                .iter()
+                .any(|s| s.kind_id == STATUS_STUN)
+        })
+        .expect("fixed STUN must affect a surviving target without rolled affixes");
+    let mut stunned = base.clone();
+    stunned.rng = RfbRng::seeded(seed);
+    strike(&mut stunned);
+    let mut immune = base;
+    let mut immunity = monster_combat::melee_status(STATUS_STUN, 10, "test.b1-immunity").status;
+    immunity.kind_id = "test.b1-stun-immunity".into();
+    immunity
+        .granted_status_immunities
+        .insert(STATUS_STUN.into());
+    immune.entities[0].statuses.push(immunity);
+    immune.rng = RfbRng::seeded(seed);
+    strike(&mut immune);
+    assert!(
+        stunned.entities[0]
+            .statuses
+            .iter()
+            .any(|s| s.kind_id == STATUS_STUN)
+    );
+    assert!(
+        !immune.entities[0]
+            .statuses
+            .iter()
+            .any(|s| s.kind_id == STATUS_STUN)
+    );
+    assert_eq!(stunned.rng.draw_counter, immune.rng.draw_counter);
+}
+
+#[test]
 fn heavy_base_artifacts_generate_with_source_overrides_and_saved_random_properties() {
     let mut game = Game::new_with_build(463, "demo.build.warrior").unwrap();
     choose_human_talent_if_pending(&mut game);
@@ -9476,7 +9803,7 @@ fn p107e_frost_ball_and_confusing_light_reuse_area_and_status_resolvers() {
 }
 
 #[test]
-fn p107f_diamond_edge_vorpal_flag_multiplies_regular_melee_blows() {
+fn p107f_diamond_edge_vorpal_flag_multiplies_dice_before_flat_damage() {
     let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .and_then(std::path::Path::parent)
@@ -9546,6 +9873,9 @@ fn p107f_diamond_edge_vorpal_flag_multiplies_regular_melee_blows() {
                 _ => None,
             })
     };
+    let flat_bonus = vorpal
+        .player_melee_profile(&vorpal.player_derived_stats())
+        .to_damage;
     let observed = (0..10_000).find_map(|seed| {
         let mut vorpal_game = vorpal.clone();
         let mut plain_game = plain.clone();
@@ -9554,7 +9884,11 @@ fn p107f_diamond_edge_vorpal_flag_multiplies_regular_melee_blows() {
         (vorpal_damage > plain_damage).then_some((plain_damage, vorpal_damage))
     });
     let (plain_damage, vorpal_damage) = observed.expect("a Vorpal trigger seed should exist");
-    assert!(vorpal_damage >= plain_damage.saturating_mul(2));
+    let plain_dice = plain_damage - flat_bonus;
+    let vorpal_dice = vorpal_damage - flat_bonus;
+    assert!(plain_dice > 0);
+    assert!(vorpal_dice >= plain_dice.saturating_mul(2));
+    assert_eq!(vorpal_dice % plain_dice, 0);
 }
 
 fn crisdurian_seed_for_test() -> u64 {

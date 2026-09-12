@@ -9692,3 +9692,23 @@ item-demo-bando-musha-name = O-yoroi of the Bando Musha
 item-demo-bando-musha-description = The imposing armour of Hatakeyama Shigetada, a warrior renowned for courage, wisdom and honesty.
 item-demo-bilbo-name = Mithril Chain Mail of Bilbo
 item-demo-bilbo-description = A small coat of closely woven rings, supple as linen, cold as ice and harder than steel, shining like silver in moonlight and studded with white gems.
+
+item-demo-benkei-name = Naginata of Benkei
+item-demo-benkei-description = Naginata of Benkei
+item-demo-sha-wujing-name = Lajatang of Sha Wujing
+item-demo-sha-wujing-description = Lajatang of Sha Wujing
+item-demo-durin-name = Great Axe of Durin
+item-demo-durin-description = Great Axe of Durin
+item-demo-dwarves-name = Lochaber Axe of the Dwarves
+item-demo-dwarves-description = Lochaber Axe of the Dwarves
+item-demo-dramborleg-name = Great Axe 'Dramborleg'
+item-demo-dramborleg-description = Great Axe 'Dramborleg'
+
+item-demo-naginata-name = Naginata
+item-demo-naginata-description = Naginata
+item-demo-lajatang-name = Lajatang
+item-demo-lajatang-description = Lajatang
+item-demo-great-axe-name = Great Axe
+item-demo-great-axe-description = Great Axe
+item-demo-lochaber-axe-name = Lochaber Axe
+item-demo-lochaber-axe-description = Lochaber Axe

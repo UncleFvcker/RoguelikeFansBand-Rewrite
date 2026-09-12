@@ -1,0 +1,80 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.dramborleg",
+  "nameKey": "item-demo-dramborleg-name",
+  "descriptionKey": "item-demo-dramborleg-description",
+  "glyph": "/",
+  "generationLevel": 50,
+  "weightTenthsPound": 230,
+  "maxStack": 1,
+  "baseValue": 21000,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 326,
+    "baseItemKindId": "demo.item.great-axe",
+    "instant": false,
+    "rarityOneIn": 70
+  },
+  "weaponProficiencyBaseItemId": "demo.item.great-axe",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 5,
+    "toHit": 3,
+    "toDamage": 12
+  },
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INFRA",
+      "KILL_DEMON",
+      "REGEN",
+      "RES_BLIND",
+      "RES_DARK",
+      "RES_DISEN",
+      "STR",
+      "STUN",
+      "VORPAL"
+    ],
+    "pval": 1,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 1,
+    "constitution": 1
+  },
+  "equipmentBonuses": {
+    "infravision": 1
+  },
+  "passives": [
+    "regeneration"
+  ],
+  "slays": {
+    "demon": "kill"
+  },
+  "resistances": {
+    "dark": "resistant",
+    "blindness": "resistant",
+    "disenchant": "resistant"
+  },
+  "vorpal": true
+}

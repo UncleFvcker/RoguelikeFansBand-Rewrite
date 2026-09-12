@@ -1464,6 +1464,12 @@ impl Game {
             || item.intrinsic_weapon_traits.contains(&trait_)
             || (trait_ == WeaponTraitDto::Order && self.item_has_rfb_flag(item, "BRAND_ORDER"))
             || (trait_ == WeaponTraitDto::Blessed && self.item_has_rfb_flag(item, "BLESSED"))
+            || (trait_ == WeaponTraitDto::Stun && self.item_has_rfb_flag(item, "STUN"))
+            || (trait_ == WeaponTraitDto::Vorpal
+                && self
+                    .content
+                    .item(&item.kind_id)
+                    .is_some_and(|definition| definition.vorpal))
             || item
                 .rolled_affixes
                 .iter()

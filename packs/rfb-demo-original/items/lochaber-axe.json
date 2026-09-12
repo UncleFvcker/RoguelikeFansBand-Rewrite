@@ -1,0 +1,43 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 750,
+  "descriptionKey": "item-demo-lochaber-axe-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 45,
+  "glyph": "/",
+  "id": "demo.item.lochaber-axe",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 9,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-lochaber-axe-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 106,
+    "sval": 28,
+    "tval": 22
+  },
+  "rfbValue": {
+    "flags": [
+      "SHOW_MODS"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "weightTenthsPound": 250
+}

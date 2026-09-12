@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 330,
+  "descriptionKey": "item-demo-lajatang-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 25,
+  "glyph": "/",
+  "id": "demo.item.lajatang",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 8,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-lajatang-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 98,
+    "sval": 14,
+    "tval": 22
+  },
+  "rfbValue": {
+    "flags": [
+      "SHOW_MODS",
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "weapon"
+  ],
+  "weightTenthsPound": 175
+}

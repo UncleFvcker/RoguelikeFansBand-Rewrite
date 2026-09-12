@@ -1521,6 +1521,20 @@
       "weight": 33
     },
     {
+      "itemKindId": "demo.item.naginata",
+      "maxDepth": 65535,
+      "minDepth": 25,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
+      "itemKindId": "demo.item.lajatang",
+      "maxDepth": 65535,
+      "minDepth": 25,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
       "itemKindId": "demo.item.halberd",
       "maxDepth": 65535,
       "minDepth": 25,
@@ -1948,6 +1962,13 @@
       "weight": 6
     },
     {
+      "itemKindId": "demo.item.great-axe",
+      "maxDepth": 65535,
+      "minDepth": 40,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.heavy-crossbow",
       "maxDepth": 65535,
       "minDepth": 40,
@@ -2100,6 +2121,13 @@
       "minDepth": 43,
       "quantity": 1,
       "weight": 25
+    },
+    {
+      "itemKindId": "demo.item.lochaber-axe",
+      "maxDepth": 65535,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
     },
     {
       "itemKindId": "demo.item.great-hammer",

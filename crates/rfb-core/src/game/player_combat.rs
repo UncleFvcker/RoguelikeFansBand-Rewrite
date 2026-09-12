@@ -1907,13 +1907,6 @@ impl Game {
             }
             let duelist_attack =
                 profile.source_item_id.is_some() && self.duelist_opponent(&target_entity_id);
-            let vorpal_weapon = profile.source_item_id.as_ref().is_some_and(|item_id| {
-                self.items
-                    .iter()
-                    .find(|item| &item.id == item_id)
-                    .and_then(|item| self.content.item(&item.kind_id))
-                    .is_some_and(|definition| definition.vorpal)
-            });
             let vampiric_weapon =
                 matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vampiric))
                     || (profile.source_item_id.is_some() && self.items.iter().any(|item| {
@@ -2043,6 +2036,8 @@ impl Game {
                         && self.rng.bounded(100) + 1
                             < u64::try_from(base_damage.max(0)).unwrap_or(u64::MAX);
                 let mut ordinary_drain = base_damage;
+                // cmd1.c applies VORPAL to the weapon dice before adding to_d.
+                // Fixed kinds and rolled weapon traits share this branch.
                 if let Some(chance) = vorpal_chance
                     && self.rng.bounded(chance.saturating_mul(3).saturating_div(2)) == 0
                 {
@@ -2054,8 +2049,7 @@ impl Game {
                     ordinary_drain = ordinary_drain.saturating_mul(3) / 2;
                 }
                 let mut rolled_damage = base_damage.saturating_add(profile.to_damage).max(0);
-                if (vorpal_weapon
-                    || matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vorpal)))
+                if matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vorpal))
                     && self.rng.bounded(6) == 0
                 {
                     let mut multiplier = 2;

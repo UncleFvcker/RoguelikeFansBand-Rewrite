@@ -1195,9 +1195,7 @@ fn pyramidal_mound_amun_equips_senses_expires_and_recovers_across_save() {
     let melee = game.item_melee_profile(weapon).unwrap();
     assert_eq!((melee.damage.dice, melee.damage.sides), (3, 5));
     assert!(game.item_has_weapon_trait(weapon, WeaponTraitDto::Blessed));
-    // Fixed definitions use the vorpal flag; item_has_weapon_trait reads
-    // rolled/intrinsic traits instead (covered by the existing melee tests).
-    assert!(game.content.item(&weapon.kind_id).unwrap().vorpal);
+    assert!(game.item_has_weapon_trait(weapon, WeaponTraitDto::Vorpal));
     assert_eq!(
         weapon.activation.as_ref().unwrap().device_check_difficulty,
         60

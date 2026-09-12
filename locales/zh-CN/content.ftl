@@ -9700,3 +9700,23 @@ item-demo-bando-musha-name = 坂东武者的大铠
 item-demo-bando-musha-description = 这是畠山重忠的大铠。他是一位勇敢、聪明而诚实的武将，因此被称为东国武士的最佳典范。这套大铠就像他一样威风凛凛。
 item-demo-bilbo-name = 比尔博的秘银链甲
 item-demo-bilbo-description = “还有这个！”比尔博说着，拿出一个相对于它的体积来说相当沉重的包裹。他解开了几层旧布，举起了一件小锁子甲。它由许多圆环紧密编织而成，几乎和亚麻一样柔软，像冰一样冷，比钢铁还要坚硬。它闪耀着如同月光下的白银般的光芒，上面镶嵌着白色的宝石。
+
+item-demo-benkei-name = 弁庆的薙刀
+item-demo-benkei-description = 弁庆的薙刀
+item-demo-sha-wujing-name = 沙悟净的月牙铲
+item-demo-sha-wujing-description = 这把月牙铲看起来像一根法杖，因为它只有一端是像半月一样的铲刃。沙悟净在唐三藏的漫长旅途中用它来帮忙。
+item-demo-durin-name = 都林的巨斧
+item-demo-durin-description = 这把让古老恶魔感到恐惧的武器，其巨大的双斧刃上闪烁着秘银镶嵌的光芒。它们诉说着坚忍的传说，唤起卡扎督姆的力量，以保护佩戴者并杀死地下发现的所有邪恶。
+item-demo-dwarves-name = 矮人的洛卡伯长柄斧
+item-demo-dwarves-description = 一把带有两面锋利斧刃的巨斧，它太大了，通常需要双手才能挥舞，斧面上用金子精细地刻有抵御元素和惩戒邪恶的法术。
+item-demo-dramborleg-name = 巨斧『德兰博雷格』
+item-demo-dramborleg-description = 这是图尔使用过的那把能在击伤敌人的同时震慑他们的巨斧。在贡多林之战中，图尔用这把斧头杀死了五只炎魔。人们一直认为它在努曼诺尔沉没时遗失了。
+
+item-demo-naginata-name = 薙刀
+item-demo-naginata-description = 薙刀
+item-demo-lajatang-name = 月牙铲
+item-demo-lajatang-description = 月牙铲
+item-demo-great-axe-name = 巨斧
+item-demo-great-axe-description = 巨斧
+item-demo-lochaber-axe-name = 洛卡伯长柄斧
+item-demo-lochaber-axe-description = 洛卡伯长柄斧
