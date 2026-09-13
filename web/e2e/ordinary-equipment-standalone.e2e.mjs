@@ -13,8 +13,9 @@ import { selectCreationBuild, selectCreationRace } from "./character-creation.e2
 // Ordinary standalone binary and production UI/load/save commands. Preparation
 // is confined to the ignored core exporter; no WebDriver-only IPC is enabled.
 const root = fileURLToPath(new URL("../../", import.meta.url));
+const questItems = process.argv.includes("--quest-items");
 const executable = path.join(root, "target/debug/rfb-tauri.exe");
-const directory = path.join(root, "test-results/ordinary-equipment");
+const directory = path.join(root, questItems ? "test-results/quest-items-q1" : "test-results/ordinary-equipment");
 await mkdir(directory, { recursive: true });
 await mkdir(path.join(root, "target/e2e"), { recursive: true });
 const profile = await mkdtemp(path.join(root, "target/e2e/ordinary-equipment-"));
@@ -81,7 +82,8 @@ try {
   await driver.waitFor('return document.documentElement.dataset.appMode==="playing" && document.querySelector("#connection-status").classList.contains("ready")', "fresh warrior", 30000);
   const input = path.join(directory, "new-game.rfbsave");
   await writeFile(input, Buffer.from(await save()));
-  const preparation = await promisify(execFile)("cargo", ["test", "-p", "rfb-core", "--lib", "game::tests::death_scythe::export_ordinary_equipment_desktop_saves", "--", "--ignored", "--exact"], {
+  const exporter = questItems ? "game::tests::quest_items::export_q1_desktop_save" : "game::tests::death_scythe::export_ordinary_equipment_desktop_saves";
+  const preparation = await promisify(execFile)("cargo", ["test", "-p", "rfb-core", "--lib", exporter, "--", "--ignored", "--exact"], {
     cwd: root, env: { ...process.env, ORDINARY_EQUIPMENT_INPUT: input }, windowsHide: true, timeout: 240000,
   });
   await writeFile(path.join(directory, "preparation.log"), preparation.stdout + preparation.stderr);
@@ -103,7 +105,7 @@ try {
         await click("#player-page-close");
       } else {
         if (command.type === "dig-terrain") { await keyboard.key("T", 8); await keyboard.key("8"); }
-        else await keyboard.key(command.type === "move" ? "6" : "5");
+        else await keyboard.key(command.type === "move" ? "6" : command.type === "pick-up" ? "g" : "5");
         await readyHash(step.hash);
       }
       const bytes = await save();
@@ -117,7 +119,9 @@ try {
   assert.deepEqual(keyboard.errors, []);
   await writeFile(path.join(directory, "report.json"), JSON.stringify({
     executable, sha256: createHash("sha256").update(await readFile(executable)).digest("hex"),
-    preparation: "Fresh level-one human Warrior, chosen talent, cleared monsters, prepared small floor area and adjacent target/magma, granted and identified seven representative bases. Scythe uses legal -255 hit enchantment, a temporary +2000 HP status and a seed selected for nonfatal backlash. Weapon and swimsuit targets start asleep. No natural acquisition or leveling claim.",
+    preparation: questItems
+      ? "Fresh level-one human Warrior, chosen talent, cleared monsters/items and prepared adjacent Fang with1HP (original maxHP/rules), local floor tiles and a successful melee/drop seed. The collar is obtained by the real death reward, not granted. Core separately checks controlled complete-pool acquisition for all four actors. No natural leveling claim."
+      : "Fresh level-one human Warrior, chosen talent, cleared monsters, prepared small floor area and adjacent target/magma, granted and identified seven representative bases. Scythe uses legal -255 hit enchantment, a temporary +2000 HP status and a seed selected for nonfatal backlash. Weapon and swimsuit targets start asleep. No natural acquisition or leveling claim.",
     checks, errors: keyboard.errors,
   }, null, 2) + "\n");
   process.stdout.write(`Ordinary Tauri standalone: ${checks.length} equipment/action and save/load checks passed.\n`);

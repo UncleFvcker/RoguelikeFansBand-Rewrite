@@ -29915,6 +29915,49 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
     }
 
     #[test]
+    fn q1_named_artifacts_match_source_parameters_and_equipment_consumers() {
+        // master a0d92b6378: a_info308/309/310/327; init1 adds four IGNORE flags.
+        let source = "N:308:Dog Collar of Fang\nI:40:0:1\nW:5:70:30:5000\nP:0:0d0:2:3:0\nF:QUESTITEM | HIDE_TYPE | FULL_NAME | RES_FEAR | STR\nN:309:Dog Collar of Wolf\nI:40:0:1\nW:5:70:30:5000\nP:0:0d0:0:0:7\nF:QUESTITEM | HIDE_TYPE | FULL_NAME | FREE_ACT | CON\nN:310:Dog Collar of Grip\nI:40:0:1\nW:5:70:30:5000\nP:0:0d0:0:0:0\nF:QUESTITEM | HIDE_TYPE | FULL_NAME | SPEED | DEX\nN:327:of The Multi-hued Centipede\nI:30:2:1\nW:30:20:20:10000\nP:2:1d1:2:3:10\nF:QUESTITEM | STR | DEX | CON | SPEED | STEALTH | FREE_ACT | RES_ACID | RES_ELEC | RES_FIRE | RES_COLD | RES_POIS\n";
+        for (entry, (slug, base)) in parse_a_info(source).unwrap().iter().zip([
+            ("dog-collar-of-fang", "amulet"),
+            ("dog-collar-of-wolf", "amulet"),
+            ("dog-collar-of-grip", "amulet"),
+            ("multi-hued-centipede", "soft-leather-boots"),
+        ]) {
+            let mut entry = entry.clone();
+            entry.flags.extend(
+                ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"].map(str::to_owned),
+            );
+            entry.flags.sort();
+            let imported = artifact_json(
+                &entry,
+                slug,
+                Some(&format!("demo.item.{base}")),
+                &LauncherAmmoIndex::default(),
+                &mut ContentImportReport::default(),
+            );
+            let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join(format!("../../packs/rfb-demo-original/items/{slug}.json"));
+            let formal: serde_json::Value =
+                serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
+            for field in [
+                "generationLevel",
+                "weightTenthsPound",
+                "baseValue",
+                "equipmentSlot",
+                "artifactGeneration",
+                "rfbValue",
+                "modifiers",
+                "equipmentBonuses",
+                "resistances",
+                "statusImmunities",
+            ] {
+                assert_eq!(imported[field], formal[field], "{slug}: {field}");
+            }
+        }
+    }
+
+    #[test]
     fn mindcrafter_artifacts_keep_source_weights_attributes_and_activation_effects() {
         let source = "N:15:Palantir of Westernesse\nI:39:8:3\nW:60:50:10:60000\nP:0:1d1:0:0:0\nF:WIS | CHR | TELEPATHY | INSTA_ART | FULL_NAME | FIXED_ACT\nE:LIST_UNIQUES:60:200\nN:244:of Eternity\nI:36:2:3\nW:70:120:0:100000\nP:0:0d0:0:0:42\nF:CON | SUST_STR | SUST_INT | SUST_WIS | SUST_DEX | SUST_CON | SUST_CHR | FREE_ACT | LEVITATION | SEE_INVIS | HOLD_LIFE | RES_LITE | RES_DARK | RES_DISEN | RES_TIME\nN:328:& Meditation Stone\nI:39:23:2\nW:50:150:20:100000\nP:0:1d1:0:0:0\nF:FULL_NAME | WIS | INSTA_ART\nE:RESTORE_MANA:50:777\n";
         let entries = parse_a_info(source).unwrap();

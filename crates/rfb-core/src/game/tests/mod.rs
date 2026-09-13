@@ -70,6 +70,7 @@ mod prayer_study;
 mod priest;
 mod progression;
 mod pyramidal_mound;
+mod quest_items;
 mod race_attribute_sustains;
 mod random_dungeons;
 mod ranger;

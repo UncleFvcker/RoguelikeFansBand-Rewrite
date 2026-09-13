@@ -108,6 +108,8 @@ node e2e/asgard-standalone.e2e.mjs
 
 ## 常规装备底材桌面验收
 
+Q1命名奖励复用下述脚本的 `--quest-items` 模式：`node web/e2e/ordinary-equipment-standalone.e2e.mjs --quest-items`（仓库根目录）。它从正常1级人类战士出生存档准备局部场地、相邻当前HP1的Fang及真实击杀／掉落种子；物品由实际死亡掉落产生。UI攻击、移动、拾取、装备及等待，每步原生保存恢复并核对核心哈希。已有报告在`test-results/quest-items-q1/`。按Q1期间用户新约定，后续编译及验收等Q5完成后统一进行。
+
 在 `web` 执行 `npm run build:standalone:debug`，随后执行 `node e2e/ordinary-equipment-standalone.e2e.mjs`。[场景](../web/e2e/ordinary-equipment-standalone.e2e.mjs)使用普通 Tauri EXE、隔离的 WebView 配置目录和正式创角／装备／输入／保存加载路径，不启用 WebDriver 专用准备 IPC。
 
 正常创建人类1级战士并导出存档后，[核心导出用例](../crates/rfb-core/src/game/tests/death_scythe.rs)显式选择出生天赋、清怪、准备小片地格与相邻目标／岩浆矿脉，授予并鉴定七件代表底材。镰刀准备合法的 −255 命中附魔、临时 +2000 最大 HP、满有效 HP，并选择非致死反噬种子；钩镰枪及泳装目标起始睡眠。UI依次装备钩镰枪、矮人镐、秘银板甲／空灵披风／秘银护手、泳装和镰刀，并用原生按键攻击、挖掘或等待。每个动作后导出／正常加载，核对核心预演的完整状态哈希，再继续下一动作。

@@ -52,6 +52,7 @@
     "skeletonWeight": 0
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.dog-collar-of-wolf", "chancePercent": 10},
   "speed": 120,
   "statusImmunities": [
     "rfb.status.confusion",
