@@ -138,6 +138,7 @@
     "shards": "resistant"
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.quaker", "chancePercent": 5},
   "speed": 110,
   "statusImmunities": [
     "rfb.status.confusion",

@@ -10181,3 +10181,7 @@ item-demo-ariel-name = Ethereal Cloak of Ariel, Queen of Air
 item-demo-ariel-description = Ethereal Cloak of Ariel, Queen of Air
 item-demo-moire-name = Golden Crown of Moire, Queen of Rebma
 item-demo-moire-description = Golden Crown of Moire, Queen of Rebma
+item-demo-quaker-name = Set of Leather Gloves of Quaker, Master of Earth
+item-demo-quaker-description = Set of Leather Gloves of Quaker, Master of Earth
+item-demo-emperor-quylthulg-name = Golden Crown of the Emperor Quylthulg
+item-demo-emperor-quylthulg-description = Golden Crown of the Emperor Quylthulg

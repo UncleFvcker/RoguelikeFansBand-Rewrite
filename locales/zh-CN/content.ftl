@@ -10212,3 +10212,7 @@ item-demo-ariel-name = 空气女王，爱丽儿的空灵披风
 item-demo-ariel-description = 空气女王，爱丽儿的空灵披风
 item-demo-moire-name = 蕾布玛女王，墨伊蕾的金王冠
 item-demo-moire-description = 蕾布玛女王，墨伊蕾的金王冠
+item-demo-quaker-name = 大地大师，震地者的皮手套
+item-demo-quaker-description = 大地大师，震地者的皮手套
+item-demo-emperor-quylthulg-name = 克尔苏格皇帝的金王冠
+item-demo-emperor-quylthulg-description = 克尔苏格皇帝的金王冠

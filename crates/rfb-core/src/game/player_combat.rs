@@ -2232,7 +2232,15 @@ impl Game {
                     })
                 };
                 let order = has_trait(WeaponTraitDto::Order);
-                let impact = has_trait(WeaponTraitDto::Impact);
+                // master:equip.c::_weapon_info_flag grants Quaker's glove
+                // IMPACT to both wielded weapons, without altering the items.
+                let impact = has_trait(WeaponTraitDto::Impact)
+                    || (source_weapon_index.is_some()
+                        && self.items.iter().any(|item| {
+                            matches!(&item.location, ItemLocation::Equipped { slot_id }
+                                if self.body_slot_type(slot_id) == Some("gloves"))
+                                && self.item_has_rfb_flag(item, "IMPACT")
+                        }));
                 let stun = has_trait(WeaponTraitDto::Stun);
                 let wild = has_trait(WeaponTraitDto::Wild);
                 let vorpal_chance = if has_trait(WeaponTraitDto::Vorpal2) {

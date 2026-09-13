@@ -954,6 +954,48 @@ fn impact_weapon_reuses_earthquake_and_strong_hit_stun_without_extra_trigger_rng
 }
 
 #[test]
+fn q2_quaker_gloves_forward_impact_only_while_equipped() {
+    let mut base = melee_game(0, "demo.build.warrior");
+    let gloves = give_inventory_item(&mut base, "demo.item.quaker", 1);
+    base.equip_inventory_item(&gloves, None).unwrap();
+    // Force the strong-hit boundary through the existing test weapon fixture.
+    add_weapon_trait(&mut base, WeaponTraitDto::Order, 60, 1);
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(*seed);
+            resolve_melee(&mut game).iter().any(|event| {
+                matches!(event, DomainEvent::PlayerWeaponEarthquakeResolved { .. })
+            })
+        })
+        .expect("Quaker gloves must cause a real weapon earthquake");
+    let mut equipped = base.clone();
+    equipped.rng = RfbRng::seeded(seed);
+    let mut intrinsic = equipped.clone();
+    let weapon = weapon_index(&intrinsic);
+    intrinsic.items[weapon].intrinsic_weapon_traits.insert(WeaponTraitDto::Impact);
+    assert_eq!(resolve_melee(&mut equipped), resolve_melee(&mut intrinsic));
+    assert_eq!(equipped.rng, intrinsic.rng, "two IMPACT sources do not double-roll");
+
+    let mut removed = base.clone();
+    let slot = match &removed.items.iter().find(|item| item.id == gloves).unwrap().location {
+        ItemLocation::Equipped { slot_id } => slot_id.clone(),
+        _ => panic!("equipped gloves"),
+    };
+    removed.unequip_slot(&slot).unwrap();
+    removed.rng = RfbRng::seeded(seed);
+    assert!(!resolve_melee(&mut removed).iter().any(|event| {
+        matches!(event, DomainEvent::PlayerWeaponEarthquakeResolved { .. })
+    }));
+    force_melee_misses(&mut base);
+    let mut missed_intrinsic = base.clone();
+    let weapon = weapon_index(&missed_intrinsic);
+    missed_intrinsic.items[weapon].intrinsic_weapon_traits.insert(WeaponTraitDto::Impact);
+    assert_eq!(resolve_melee(&mut base), resolve_melee(&mut missed_intrinsic));
+    assert_eq!(base.rng, missed_intrinsic.rng);
+}
+
+#[test]
 fn stun_weapon_checks_post_critical_damage_and_respects_immunity() {
     let base = melee_game(0, "demo.build.warrior");
     let seed = (0..10_000)
