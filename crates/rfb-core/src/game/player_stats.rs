@@ -1617,6 +1617,7 @@ impl Game {
             || (trait_ == WeaponTraitDto::Order && self.item_has_rfb_flag(item, "BRAND_ORDER"))
             || (trait_ == WeaponTraitDto::Blessed && self.item_has_rfb_flag(item, "BLESSED"))
             || (trait_ == WeaponTraitDto::Stun && self.item_has_rfb_flag(item, "STUN"))
+            || (trait_ == WeaponTraitDto::Impact && self.item_has_rfb_flag(item, "IMPACT"))
             || (trait_ == WeaponTraitDto::Vorpal
                 && self
                     .content
@@ -2526,11 +2527,8 @@ impl Game {
             .iter()
             .map(|source| source.amount)
             .sum::<i32>();
-        let extra_blows = if self.player_is_berserker() || self.player_is_duelist() {
-            extra_blows
-        } else {
-            extra_blows.max(0)
-        };
+        // equip.c:1611-1655: DEC_BLOWS applies to every class; negative
+        // glove bonuses apply in full to each wielded hand.
         if extra_blows != 0 {
             attack_sources.extend(extra_sources);
         }

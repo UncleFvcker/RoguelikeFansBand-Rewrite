@@ -1,0 +1,61 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.atlas",
+  "nameKey": "item-demo-atlas-name",
+  "descriptionKey": "item-demo-atlas-description",
+  "glyph": "\\",
+  "generationLevel": 100,
+  "weightTenthsPound": 900,
+  "baseValue": 500000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 321,
+    "baseItemKindId": "demo.item.mighty-hammer",
+    "instant": false,
+    "rarityOneIn": 1
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IMPACT",
+      "QUESTITEM",
+      "STR",
+      "SUST_STR"
+    ],
+    "pval": 9,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 9
+  },
+  "weaponProficiencyBaseItemId": "demo.item.mighty-hammer",
+  "ridingWeaponKind": "compatible",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 9,
+    "damageSides": 9,
+    "toHit": 9,
+    "toDamage": 19
+  },
+  "passives": [
+    "sustain-strength"
+  ]
+}

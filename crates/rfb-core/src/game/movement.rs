@@ -83,7 +83,22 @@ impl Game {
             .position(|entity| entity.position == target)
         {
             changed.insert(target);
-            if self.actor_is_player_side(&self.entities[index]) && !self.player_is_berserker() {
+            // cmd1.c:4951-4971: only a clear-headed, visible ally reaches the
+            // displacement roll. An unrecognized ally is attacked directly.
+            let recognizes_ally = self.entity_is_visible_to_player(&self.entities[index])
+                && ![STATUS_CONFUSION, STATUS_HALLUCINATION, STATUS_STUN]
+                    .iter().any(|status| self.player_has_status_kind(status))
+                && !(self.player_has_mutation("rfb.mutation.bers-rage")
+                    && self.player_has_status_kind(STATUS_BERSERK));
+            let stormbringer_attack = self.actor_is_player_side(&self.entities[index])
+                && self.items.iter().any(|item| {
+                    matches!(&item.location, ItemLocation::Equipped { slot_id }
+                        if self.body_slot_type(slot_id) != Some("tool"))
+                        && self.item_is_fixed_artifact(item, 190)
+                })
+                && (!recognizes_ally || self.rng.bounded(1000) >= 666);
+            if self.actor_is_player_side(&self.entities[index])
+                && !stormbringer_attack && !self.player_is_berserker() {
                 events.push(DomainEvent::MoveBlocked);
             } else if self.player_fear_blocks_melee(index) {
                 events.push(DomainEvent::PlayerFearBlocked {

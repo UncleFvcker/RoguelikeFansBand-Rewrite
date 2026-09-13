@@ -30024,6 +30024,39 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
     }
 
     #[test]
+    fn q3_named_artifact_parameters_and_special_base_identities_match_source() {
+        let entries = parse_a_info(include_str!("testdata/q3-artifacts.txt")).unwrap();
+        for (mut entry, slug) in entries.into_iter().zip([
+            "twilight", "stormbringer", "gothmog", "master-tonberry", "devouring-darkness",
+            "typhoeus", "kronos", "eye-of-the-hydra", "mephistopheles", "atlas", "unlight-cloak-of-ungoliant",
+        ]) {
+            let directory = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original/items");
+            let formal: serde_json::Value = serde_json::from_slice(&fs::read(directory.join(format!("{slug}.json"))).unwrap()).unwrap();
+            let base_id = formal["artifactGeneration"]["baseItemKindId"].as_str().unwrap();
+            let base: serde_json::Value = serde_json::from_slice(&fs::read(directory.join(
+                format!("{}.json", base_id.strip_prefix("demo.item.").unwrap()))).unwrap()).unwrap();
+            assert_eq!(base["rfbBaseKind"]["tval"], entry.tval);
+            assert_eq!(base["rfbBaseKind"]["sval"], entry.sval);
+            entry.flags.extend(["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"].map(str::to_owned));
+            entry.flags.sort();
+            let imported = artifact_json(&entry, slug, Some(base_id), &LauncherAmmoIndex::default(),
+                &mut ContentImportReport::default());
+            for field in ["generationLevel", "weightTenthsPound", "baseValue", "equipmentSlot",
+                "artifactGeneration", "rfbValue", "meleeProfile"] {
+                assert_eq!(formal[field], imported[field], "{slug}: {field}");
+            }
+            if let Some(activation) = entry.activation {
+                let profile = &formal["deviceGeneration"]["activations"][0];
+                assert_eq!(profile["deviceCheckDifficulty"], activation.power);
+                assert_eq!(formal["deviceGeneration"]["recovery"]["intervalTicks"], u32::from(activation.recovery_turns) * 10);
+                let effect = &profile["effect"]["effect"];
+                assert_eq!(if entry.index == 307 { &effect["effects"][0]["amount"] } else { &effect["damageBonus"] },
+                    &serde_json::json!(activation.extra));
+            }
+        }
+    }
+
+    #[test]
     fn mindcrafter_artifacts_keep_source_weights_attributes_and_activation_effects() {
         let source = "N:15:Palantir of Westernesse\nI:39:8:3\nW:60:50:10:60000\nP:0:1d1:0:0:0\nF:WIS | CHR | TELEPATHY | INSTA_ART | FULL_NAME | FIXED_ACT\nE:LIST_UNIQUES:60:200\nN:244:of Eternity\nI:36:2:3\nW:70:120:0:100000\nP:0:0d0:0:0:42\nF:CON | SUST_STR | SUST_INT | SUST_WIS | SUST_DEX | SUST_CON | SUST_CHR | FREE_ACT | LEVITATION | SEE_INVIS | HOLD_LIFE | RES_LITE | RES_DARK | RES_DISEN | RES_TIME\nN:328:& Meditation Stone\nI:39:23:2\nW:50:150:20:100000\nP:0:1d1:0:0:0\nF:FULL_NAME | WIS | INSTA_ART\nE:RESTORE_MANA:50:777\n";
         let entries = parse_a_info(source).unwrap();

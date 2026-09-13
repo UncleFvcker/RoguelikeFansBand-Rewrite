@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.mephistopheles",
+  "nameKey": "item-demo-mephistopheles-name",
+  "descriptionKey": "item-demo-mephistopheles-description",
+  "glyph": "]",
+  "generationLevel": 90,
+  "weightTenthsPound": 5,
+  "baseValue": 36000,
+  "maxStack": 1,
+  "equipmentSlot": "gloves",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 313,
+    "baseItemKindId": "demo.item.leather-gloves",
+    "instant": false,
+    "rarityOneIn": 6
+  },
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "DUAL_WIELDING",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "SHOW_MODS",
+      "SPEED",
+      "STR"
+    ],
+    "pval": 2,
+    "toArmor": 16
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 2,
+    "dexterity": 2,
+    "defense": 17,
+    "speed": 2
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 16,
+    "meleeDamage": 6
+  },
+  "passives": [
+    "dual-wielding"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ]
+}

@@ -453,6 +453,11 @@ impl Game {
                 ItemLocation::Equipped { slot_id } => {
                     let bonus = self.item_equipment_bonuses(item).light_radius;
                     if slot_id == "light" {
+                        // xtra1.c: SV_LITE_EYE subtracts ten from the fixed
+                        // artifact's three light; it is not OF_DARKNESS (-3).
+                        if self.item_is_fixed_artifact(item, 307) {
+                            return Some(bonus);
+                        }
                         if self.item_has_darkness(item) {
                             return Some(
                                 match self
@@ -523,7 +528,13 @@ impl Game {
     pub(super) fn item_has_darkness(&self, item: &crate::state::ItemInstance) -> bool {
         self.content
             .item(&item.kind_id)
-            .is_some_and(|definition| definition.equipment_bonuses.light_radius < 0)
+            .is_some_and(|definition| {
+                definition.equipment_bonuses.light_radius < 0
+                    // The fixed eye's special subtraction is not OF_DARKNESS;
+                    // dungeon.c:1351 still lets this light burn a vampire.
+                    && definition.artifact_generation.as_ref()
+                        .is_none_or(|artifact| artifact.source_index != 307)
+            })
             || item
                 .affix_ids
                 .iter()

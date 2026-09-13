@@ -190,6 +190,7 @@
     "time": "resistant"
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.kronos", "chancePercent": 5},
   "speed": 125,
   "tags": [
     "attack-spell",

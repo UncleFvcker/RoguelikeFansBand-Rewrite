@@ -1,0 +1,141 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.gothmog",
+  "nameKey": "item-demo-gothmog-name",
+  "descriptionKey": "item-demo-gothmog-description",
+  "glyph": "\\",
+  "generationLevel": 60,
+  "weightTenthsPound": 90,
+  "baseValue": 66666,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 212,
+    "baseItemKindId": "demo.item.whip",
+    "instant": false,
+    "rarityOneIn": 35
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_FIRE",
+      "CHR",
+      "CON",
+      "DEC_STEALTH",
+      "DEC_WIS",
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_FIRE",
+      "LITE",
+      "QUESTITEM",
+      "RES_DARK",
+      "RES_ELEC",
+      "SHOW_MODS",
+      "SLAY_ANIMAL",
+      "SLAY_GIANT",
+      "SLAY_HUMAN",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "STR",
+      "VULN_COLD"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 3,
+    "wisdom": -3,
+    "dexterity": 3,
+    "constitution": 3,
+    "charisma": 3
+  },
+  "weaponProficiencyBaseItemId": "demo.item.whip",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 7,
+    "toHit": 13,
+    "toDamage": 15
+  },
+  "resistances": {
+    "cold": "vulnerable",
+    "electricity": "resistant",
+    "dark": "resistant",
+    "fire": "immune"
+  },
+  "slays": {
+    "human": "slay",
+    "animal": "slay",
+    "orc": "slay",
+    "troll": "slay",
+    "giant": "slay"
+  },
+  "brands": [
+    "fire"
+  ],
+  "equipmentBonuses": {
+    "stealthSkill": -3,
+    "lightRadius": 1
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.gothmog",
+        "nameKey": "device-activation-e5-ball-fire-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 9000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effect": {
+          "type": "ability-effect",
+          "affectsGroundItems": true,
+          "effect": {
+            "type": "area-damage",
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageBonus": 300,
+            "damageType": "fire",
+            "radius": 2
+          }
+        }
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 150
+    }
+  }
+}

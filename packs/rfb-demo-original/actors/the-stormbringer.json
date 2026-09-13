@@ -114,6 +114,7 @@
     "poison": "immune"
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.stormbringer", "chancePercent": 100},
   "speed": 120,
   "statusImmunities": [
     "rfb.status.confusion",

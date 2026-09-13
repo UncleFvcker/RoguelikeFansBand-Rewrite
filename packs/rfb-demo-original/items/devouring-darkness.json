@@ -1,0 +1,71 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.devouring-darkness",
+  "nameKey": "item-demo-devouring-darkness-name",
+  "descriptionKey": "item-demo-devouring-darkness-description",
+  "glyph": "=",
+  "generationLevel": 50,
+  "weightTenthsPound": 2,
+  "baseValue": 10000,
+  "maxStack": 1,
+  "equipmentSlot": "ring",
+  "tags": [
+    "artifact",
+    "equipment",
+    "jewelry"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 299,
+    "baseItemKindId": "demo.item.ring",
+    "instant": false,
+    "rarityOneIn": 40
+  },
+  "rfbValue": {
+    "flags": [
+      "FREE_ACT",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "RES_BLIND",
+      "RES_DARK",
+      "RES_NETHER",
+      "RES_POIS",
+      "SEE_INVIS",
+      "STEALTH",
+      "VULN_LITE"
+    ],
+    "pval": 5,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": 10,
+    "meleeDamage": 12,
+    "stealthSkill": 5
+  },
+  "passives": [
+    "hold-life",
+    "see-invisible"
+  ],
+  "resistances": {
+    "light": "vulnerable",
+    "poison": "resistant",
+    "dark": "resistant",
+    "nether": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.blindness",
+    "rfb.status.paralysis"
+  ]
+}

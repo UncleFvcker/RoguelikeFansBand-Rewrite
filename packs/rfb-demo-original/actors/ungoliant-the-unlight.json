@@ -191,6 +191,7 @@
     "poison": "immune"
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.devouring-darkness", "chancePercent": 5, "alternative": {"itemKindId": "demo.item.unlight-cloak-of-ungoliant", "chancePercent": 5}},
   "speed": 120,
   "statusImmunities": [
     "rfb.status.confusion",

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.unlight-cloak-of-ungoliant",
+  "nameKey": "item-demo-unlight-cloak-of-ungoliant-name",
+  "descriptionKey": "item-demo-unlight-cloak-of-ungoliant-description",
+  "glyph": "(",
+  "generationLevel": 70,
+  "weightTenthsPound": 0,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "equipmentSlot": "cloak",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 397,
+    "baseItemKindId": "demo.item.shadow-cloak",
+    "instant": false,
+    "rarityOneIn": 240
+  },
+  "rfbValue": {
+    "flags": [
+      "DARKNESS",
+      "ESP_ANIMAL",
+      "FULL_NAME",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INFRA",
+      "QUESTITEM",
+      "RES_BLIND",
+      "RES_DARK",
+      "RES_POIS",
+      "SEARCH",
+      "SEE_INVIS",
+      "STEALTH",
+      "VULN_LITE"
+    ],
+    "pval": 6,
+    "toArmor": 21
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 27
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 6,
+    "searchSkill": 30,
+    "perceptionSkill": 30,
+    "infravision": 6,
+    "lightRadius": -1
+  },
+  "passives": [
+    "esp-animal",
+    "hold-life",
+    "see-invisible"
+  ],
+  "resistances": {
+    "light": "vulnerable",
+    "poison": "resistant",
+    "dark": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.blindness"
+  ]
+}

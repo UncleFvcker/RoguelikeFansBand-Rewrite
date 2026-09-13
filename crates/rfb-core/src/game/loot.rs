@@ -353,6 +353,12 @@ impl Game {
         }
         if let Some(drop) = &actor_definition.special_artifact_drop
             && actor.controller_id.as_deref() != Some(self.player.id.as_str())
+            // xtra2.c:1806-1812 tests permanent prace, then one_in_(14),
+            // before the ordinary 99% / Bad Luck / uniqueness sequence.
+            && (actor.kind_id != "demo.actor.master-tonberry"
+                || (self.build.as_ref().is_some_and(|build| {
+                    build.race_id == "rfb-legacy.race.tonberry"
+                }) && self.rng.bounded(14) == 0))
         {
             let (item_kind_id, mut chance) = if let Some(alternative) = &drop.alternative
                 && self.rng.bounded(2) != 0
@@ -1597,6 +1603,24 @@ impl Game {
                     .intrinsic_curse_effects
                     .insert(super::ego::curses::get_curse(&mut self.rng, 2, 32));
             }
+        }
+        // artifact.c:3258-3311: all currently playable identities take the
+        // ordinary construction branches. These flags persist on the instance.
+        match self.content.item(&draft.kind_id)
+            .and_then(|item| item.artifact_generation.as_ref())
+            .map(|artifact| artifact.source_index)
+        {
+            Some(78) => {
+                draft.curse = Some(ItemCurseSeverityDto::Heavy);
+                draft.intrinsic_properties.rfb_flags.extend(["AGGRAVATE".into(), "TY_CURSE".into()]);
+                draft.intrinsic_curse_effects.insert(super::ego::curses::get_curse(&mut self.rng, 2, 23));
+            }
+            Some(190) => {
+                draft.curse = Some(ItemCurseSeverityDto::Heavy);
+                draft.intrinsic_properties.rfb_flags.extend(["AGGRAVATE".into(), "DRAIN_EXP".into()]);
+            }
+            Some(212) => draft.curse = Some(ItemCurseSeverityDto::Heavy),
+            _ => {}
         }
         draft
     }

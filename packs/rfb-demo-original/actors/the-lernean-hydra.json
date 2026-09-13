@@ -177,6 +177,7 @@
   },
   "rideable": true,
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.eye-of-the-hydra", "chancePercent": 5},
   "speed": 120,
   "statusImmunities": [
     "rfb.status.confusion",

@@ -2065,6 +2065,21 @@ impl Game {
             .actor_runtime_definition(&self.entities[index])
             .expect("monster actor definition must remain available")
             .clone();
+        // cmd1.c:3859-3873: Stormbringer's deliberate ally attack has the same
+        // virtue cost for movement and ability callers, after melee rejection.
+        if self.actor_is_player_side(&self.entities[index])
+            && self.entity_is_visible_to_player(&self.entities[index])
+            && ![STATUS_STUN, STATUS_CONFUSION, STATUS_HALLUCINATION, STATUS_BERSERK]
+                .iter().any(|status| self.player_has_status_kind(status))
+            && self.equipped_melee_weapons().iter()
+                .any(|item| self.item_is_fixed_artifact(item, 190))
+        {
+            self.add_virtue(rfb_protocol::VirtueKindDto::Individualism, 1);
+            for virtue in [rfb_protocol::VirtueKindDto::Honour,
+                rfb_protocol::VirtueKindDto::Justice, rfb_protocol::VirtueKindDto::Compassion] {
+                self.add_virtue(virtue, -1);
+            }
+        }
         let target_entity_id = self.entities[index].id.clone();
         let target_kind = self.entities[index].kind_id.clone();
         self.entities[index].alerted = true;
