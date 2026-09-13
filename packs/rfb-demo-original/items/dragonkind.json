@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.dragonkind",
+  "nameKey": "item-demo-dragonkind-name",
+  "descriptionKey": "item-demo-dragonkind-description",
+  "glyph": "]",
+  "generationLevel": 60,
+  "weightTenthsPound": 30,
+  "baseValue": 125000,
+  "maxStack": 1,
+  "equipmentSlot": "head",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 300,
+    "baseItemKindId": "demo.item.golden-crown",
+    "instant": false,
+    "rarityOneIn": 40,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "CON",
+      "DEX",
+      "HIDE_TYPE",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "QUESTITEM",
+      "REGEN",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_POIS",
+      "SPEED",
+      "STR",
+      "WIS",
+      "XTRA_H_RES"
+    ],
+    "pval": 2,
+    "toArmor": 15
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 2,
+    "intelligence": 2,
+    "wisdom": 2,
+    "dexterity": 2,
+    "constitution": 2,
+    "charisma": 2,
+    "defense": 15,
+    "speed": 2
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 5,
+    "meleeDamage": 5
+  },
+  "passives": [
+    "hold-life",
+    "regeneration"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant",
+    "poison": "resistant"
+  }
+}

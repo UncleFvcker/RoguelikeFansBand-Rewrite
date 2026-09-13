@@ -10167,3 +10167,7 @@ terrain-demo-random-mountain-entrance-description = 一条通向未知山脉的�
 floor-demo-random-sea-depth-name = Random Sea
 terrain-demo-random-sea-entrance-name = Random Sea
 terrain-demo-random-sea-entrance-description = 一条通往未知失落之地的水下道路
+item-demo-ubbo-sathla-name = Leather Jacket of Ubbo-Sathla
+item-demo-ubbo-sathla-description = Leather Jacket of Ubbo-Sathla
+item-demo-dragonkind-name = Golden Crown of Dragonkind
+item-demo-dragonkind-description = Golden Crown of Dragonkind

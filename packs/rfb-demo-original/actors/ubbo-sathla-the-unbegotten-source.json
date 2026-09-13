@@ -136,6 +136,7 @@
     "poison": "resistant"
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.ubbo-sathla", "chancePercent": 5},
   "speed": 120,
   "statusImmunities": [
     "rfb.status.confusion",

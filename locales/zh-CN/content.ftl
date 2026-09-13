@@ -10198,3 +10198,7 @@ terrain-demo-random-mountain-entrance-description = 一条通向未知山脉的�
 floor-demo-random-sea-depth-name = 随机海洋
 terrain-demo-random-sea-entrance-name = 随机海洋
 terrain-demo-random-sea-entrance-description = 一条通往未知失落之地的水下道路
+item-demo-ubbo-sathla-name = 乌波·萨斯拉的皮夹克
+item-demo-ubbo-sathla-description = 乌波·萨斯拉的皮夹克
+item-demo-dragonkind-name = 龙族的金王冠
+item-demo-dragonkind-description = 龙族的金王冠
