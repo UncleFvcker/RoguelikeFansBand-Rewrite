@@ -123,6 +123,7 @@
     "poison": "resistant"
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.ariel", "chancePercent": 5},
   "speed": 130,
   "statusImmunities": [
     "rfb.status.confusion",

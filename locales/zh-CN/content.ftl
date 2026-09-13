@@ -10208,3 +10208,7 @@ item-demo-dog-collar-of-carcharoth-name = 卡哈洛斯的狗项圈
 item-demo-dog-collar-of-carcharoth-description = 卡哈洛斯的狗项圈
 item-demo-ymir-name = 尤弥尔的双手剑
 item-demo-ymir-description = 尤弥尔的双手剑
+item-demo-ariel-name = 空气女王，爱丽儿的空灵披风
+item-demo-ariel-description = 空气女王，爱丽儿的空灵披风
+item-demo-moire-name = 蕾布玛女王，墨伊蕾的金王冠
+item-demo-moire-description = 蕾布玛女王，墨伊蕾的金王冠

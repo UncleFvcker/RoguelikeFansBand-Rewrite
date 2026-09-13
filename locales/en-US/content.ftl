@@ -10177,3 +10177,7 @@ item-demo-dog-collar-of-carcharoth-name = Dog Collar of Carcharoth
 item-demo-dog-collar-of-carcharoth-description = Dog Collar of Carcharoth
 item-demo-ymir-name = Two-Handed Sword of Ymir
 item-demo-ymir-description = Two-Handed Sword of Ymir
+item-demo-ariel-name = Ethereal Cloak of Ariel, Queen of Air
+item-demo-ariel-description = Ethereal Cloak of Ariel, Queen of Air
+item-demo-moire-name = Golden Crown of Moire, Queen of Rebma
+item-demo-moire-description = Golden Crown of Moire, Queen of Rebma
