@@ -10220,3 +10220,7 @@ item-demo-cyberdemon-lord-name = 赛博恶魔领主的全身板甲
 item-demo-cyberdemon-lord-description = 赛博恶魔领主的全身板甲
 item-demo-ulik-name = 乌里克的木棒
 item-demo-ulik-description = 乌里克的木棒
+item-demo-eyes-name = 百眼之镶钻王冠
+item-demo-eyes-description = 百眼之镶钻王冠
+item-demo-kundry-name = 孔德里的护身符
+item-demo-kundry-description = 孔德里的护身符

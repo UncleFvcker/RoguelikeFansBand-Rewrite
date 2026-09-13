@@ -10189,3 +10189,7 @@ item-demo-cyberdemon-lord-name = Full Plate Armour of the Cyberdemon Lord
 item-demo-cyberdemon-lord-description = Full Plate Armour of the Cyberdemon Lord
 item-demo-ulik-name = Club of Ulik
 item-demo-ulik-description = Club of Ulik
+item-demo-eyes-name = Jewel Encrusted Crown of Eyes
+item-demo-eyes-description = Jewel Encrusted Crown of Eyes
+item-demo-kundry-name = Amulet of Kundry
+item-demo-kundry-description = Amulet of Kundry

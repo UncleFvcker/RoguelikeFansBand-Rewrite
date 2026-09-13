@@ -1,0 +1,102 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.kundry",
+  "nameKey": "item-demo-kundry-name",
+  "descriptionKey": "item-demo-kundry-description",
+  "glyph": "\"",
+  "generationLevel": 70,
+  "weightTenthsPound": 2,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "equipmentSlot": "amulet",
+  "tags": [
+    "artifact",
+    "equipment",
+    "jewelry",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 348,
+    "baseItemKindId": "demo.item.amulet",
+    "instant": false,
+    "rarityOneIn": 40
+  },
+  "rfbValue": {
+    "flags": [
+      "HIDE_TYPE",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "MAGIC_MASTERY",
+      "MAGIC_RESISTANCE",
+      "QUESTITEM",
+      "RES_TIME",
+      "SEARCH",
+      "SUST_CHR",
+      "SUST_INT",
+      "SUST_WIS"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentBonuses": {
+    "searchSkill": 10,
+    "perceptionSkill": 10,
+    "deviceSkill": 16,
+    "magicResistancePercent": 10
+  },
+  "passives": [
+    "hold-life",
+    "sustain-charisma",
+    "sustain-intelligence",
+    "sustain-wisdom"
+  ],
+  "resistances": {
+    "time": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.kundry",
+        "nameKey": "device-activation-e5-clarity-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 70,
+        "rfbValue": 1750,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effect": {
+          "type": "restore-resource",
+          "resourceId": "demo.resource.mana",
+          "amount": 15
+        }
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 300
+    }
+  }
+}
