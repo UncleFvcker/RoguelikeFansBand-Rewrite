@@ -141,23 +141,11 @@ export function selectJourneyDungeonStatus(
   if (worldId !== "demo.world.middle-earth") {
     return { dungeonNameKey: "journey-dungeon-none" };
   }
-  if (state.floorId === "demo.floor.surface") {
-    return {
-      dungeonNameKey: "floor-demo-surface-name",
-      bossNameKey:
-        state.campaign.status === "active"
-          ? "actor-demo-warrens-keeper-name"
-          : undefined,
-    };
-  }
   return {
-    dungeonNameKey: "dungeon-demo-warrens-name",
-    currentDepth: warrensDepth(state.floorId) ?? 0,
-    maximumDepth: 9,
-    bossNameKey:
-      state.campaign.status === "active"
-        ? "actor-demo-warrens-keeper-name"
-        : undefined,
+    dungeonNameKey: state.dungeon?.nameKey ?? state.town?.nameKey ?? "floor-demo-surface-name",
+    currentDepth: state.dungeon?.currentDepth,
+    maximumDepth: state.dungeon?.maximumDepth,
+    bossNameKey: state.campaign.targetNameKey ?? undefined,
   };
 }
 
@@ -188,7 +176,7 @@ export function completedPromptsForUpdate(
     completed.add("pickup");
   }
   if (
-    (command.type === "equip" || command.type === "use-item") &&
+    (command.type === "equip" || command.type === "use-item" || command.type === "use-jewel") &&
     update.events.some((event) => successfulEquipmentOrUseEvent(event.messageKey))
   ) {
     completed.add("equipment");
@@ -395,10 +383,6 @@ function promptControlKey(prompt: OnboardingPrompt, preset: InputPreset): Messag
   return `onboarding-movement-control-${preset}`;
 }
 
-function warrensDepth(floorId: string): number | undefined {
-  const match = /^demo\.floor\.warrens-depth-(\d+)$/.exec(floorId);
-  return match ? Number(match[1]) : undefined;
-}
 
 function readCompletedPrompts(storage: GuidanceStorage): Set<OnboardingPromptId> {
   try {

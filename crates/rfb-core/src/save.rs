@@ -847,6 +847,11 @@ fn validate_item_runtime_state(
                             .find(|row| row.activation_id == profile.id)
                             .is_some_and(|row| {
                                 activation.name_key == profile.name_key
+                                    && activation.recall_choice
+                                        == matches!(
+                                            profile.effect,
+                                            rfb_content::ItemUseEffectDefinition::Jewel
+                                        )
                                     && activation.target_spec == target_spec
                                     && charges.current <= charges.maximum
                                     && device_recovery_progress.is_multiple_of(10)
@@ -861,6 +866,8 @@ fn validate_item_runtime_state(
                             });
                     }
                     activation.name_key == profile.name_key
+                        && activation.recall_choice
+                            == matches!(profile.effect, rfb_content::ItemUseEffectDefinition::Jewel)
                         && activation.cost == profile.charges.cost
                         && activation.device_check_difficulty == difficulty
                         && (profile.rfb_value.is_none()
@@ -991,6 +998,7 @@ fn validate_item_creation_state(
         }
         Some(
             ItemOriginKindDto::Chest
+            | ItemOriginKindDto::AngbandReward
             | ItemOriginKindDto::Acquire
             | ItemOriginKindDto::Mundanity
             | ItemOriginKindDto::Rubble

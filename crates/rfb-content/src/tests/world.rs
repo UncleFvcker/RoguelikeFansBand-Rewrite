@@ -11424,6 +11424,10 @@ fn town_entrances_and_shared_facilities_match_source() {
                     dungeon_id: "demo.dungeon.dark-cave".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 57, y: 40 },
+                    dungeon_id: "demo.dungeon.angband".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 63, y: 44 },
                     dungeon_id: "demo.dungeon.giants-hall".to_owned(),
                 },
@@ -13435,10 +13439,11 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     .to_owned()
             });
     }
-    assert_eq!(active_source_items.len(), 371);
+    assert_eq!(active_source_items.len(), 374);
 
-    let source_items_without_allocations =
-        BTreeSet::from([33, 34, 36, 37, 109, 139, 345, 346, 347, 400, 401, 460, 708]);
+    let source_items_without_allocations = BTreeSet::from([
+        33, 34, 36, 37, 109, 138, 139, 223, 345, 346, 347, 400, 401, 460, 607, 708,
+    ]);
     let expected_item_ids = active_source_items
         .iter()
         .filter(|(source_index, _)| !source_items_without_allocations.contains(source_index))

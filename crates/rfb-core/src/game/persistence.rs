@@ -157,6 +157,7 @@ fn restore_campaign_state(
 
 fn restore_task_states(
     world: &rfb_content::WorldDefinition,
+    content: &rfb_content::ContentCatalog,
     context: TaskRestoreContext<'_>,
 ) -> Result<BTreeMap<String, TaskState>, CoreError> {
     let mut states = initial_task_states(world, context.selection_seed);
@@ -211,7 +212,17 @@ fn restore_task_states(
             else {
                 return Err(CoreError::InvalidSave("task stage is invalid"));
             };
-            let members = task_floors(world, &saved.task_id).collect::<Vec<_>>();
+            let restored_state = TaskState {
+                status: saved.status,
+                stage_index: saved.stage_index,
+                current: saved.current,
+                required: saved.required,
+                active_floor_id: saved.active_floor_id.clone(),
+                retakes_used: saved.retakes_used,
+                random_assignment: saved.random_assignment.clone(),
+            };
+            let members =
+                task_floors(world, &saved.task_id, Some(&restored_state)).collect::<Vec<_>>();
             let active_floor_is_valid = saved.active_floor_id.as_ref().is_some_and(|floor_id| {
                 floor_id == context.current_floor_id
                     && members.iter().any(|floor| floor.id == *floor_id)
@@ -224,8 +235,17 @@ fn restore_task_states(
             });
             let max_retakes = members.first().and_then(|floor| floor.max_retakes);
             let status_is_valid = match saved.status {
+                TaskStatusKindDto::Skipped => {
+                    super::tasks::dungeon::automatic(task)
+                        && saved.active_floor_id.is_none()
+                        && saved.current == 0
+                        && saved.stage_index == 0
+                }
                 TaskStatusKindDto::Active => active_floor_is_valid,
-                TaskStatusKindDto::Paused => saved.active_floor_id.is_none() && paused_floor_exists,
+                TaskStatusKindDto::Paused => {
+                    saved.active_floor_id.is_none()
+                        && (paused_floor_exists || super::tasks::dungeon::automatic(task))
+                }
                 TaskStatusKindDto::Completed => {
                     saved.active_floor_id.is_none()
                         && usize::try_from(saved.stage_index)
@@ -235,6 +255,7 @@ fn restore_task_states(
                 }
                 TaskStatusKindDto::Available => {
                     saved.active_floor_id.is_none()
+                        && !super::tasks::task_is_birth_taken(task)
                         && (task.source_facility_id.is_none()
                             || expected.status == TaskStatusKindDto::Available)
                 }
@@ -258,8 +279,9 @@ fn restore_task_states(
                 }
                 TaskStatusKindDto::Taken => {
                     saved.active_floor_id.is_none()
-                        && task_definition(world, &saved.task_id)
-                            .is_some_and(|task| task.source_facility_id.is_some())
+                        && (task.source_facility_id.is_some()
+                            || super::tasks::task_is_birth_taken(task)
+                            || saved.random_assignment.is_some())
                 }
             };
             if (saved.stage_index == 0 && expected.required != objective.required)
@@ -268,17 +290,7 @@ fn restore_task_states(
                 || max_retakes.is_some_and(|maximum| saved.retakes_used > maximum)
                 || !status_is_valid
                 || restored
-                    .insert(
-                        saved.task_id.clone(),
-                        TaskState {
-                            status: saved.status,
-                            stage_index: saved.stage_index,
-                            current: saved.current,
-                            required: saved.required,
-                            active_floor_id: saved.active_floor_id.clone(),
-                            retakes_used: saved.retakes_used,
-                        },
-                    )
+                    .insert(saved.task_id.clone(), restored_state)
                     .is_some()
             {
                 return Err(CoreError::InvalidSave("task state is invalid"));
@@ -288,7 +300,18 @@ fn restore_task_states(
             return Err(CoreError::InvalidSave("task state set is incomplete"));
         }
         states.extend(restored);
+        super::tasks::validate_random_task_assignments(world, content, &states)?;
         return Ok(states);
+    }
+
+    if world.tasks.iter().any(|task| {
+        super::tasks::task_is_birth_taken(task)
+            || matches!(
+                task.location,
+                rfb_content::TaskLocationDefinition::RandomDungeonDepth { .. }
+            )
+    }) {
+        return Err(CoreError::InvalidSave("task state set is incomplete"));
     }
 
     let surface_terrain = if context.current_floor_id == world.initial_floor_id {
@@ -300,7 +323,7 @@ fn restore_task_states(
             .map(|floor| floor.terrain.as_slice())
     };
     for (task_id, state) in &mut states {
-        let members = task_floors(world, task_id).collect::<Vec<_>>();
+        let members = task_floors(world, task_id, None).collect::<Vec<_>>();
         let active = members
             .iter()
             .copied()
@@ -1369,6 +1392,7 @@ impl Game {
         }
         let task_states = restore_task_states(
             world,
+            &content,
             TaskRestoreContext {
                 selection_seed: payload.wilderness_seed,
                 current_floor_id: &current_floor_id,
@@ -1397,7 +1421,6 @@ impl Game {
                 state.next_instance_ordinal = state.next_instance_ordinal.max(ordinal);
             }
         }
-        let campaign_state_missing = payload.campaign_state.is_none();
         let campaign_state = restore_campaign_state(payload.campaign_state.as_ref())?;
         let defeated_limited_count = payload.defeated_limited_actor_counts.len();
         let defeated_limited_actor_counts = payload
@@ -1414,7 +1437,8 @@ impl Game {
                             definition
                                 .finite_lifetime_instance_limit()
                                 .is_some_and(|limit| *count <= limit)
-                                && !definition.tags.iter().any(|tag| tag == "guardian")
+                                && (!definition.tags.iter().any(|tag| tag == "guardian")
+                                    || definition.id == "demo.actor.the-serpent-of-chaos")
                         })
                 })
         {
@@ -1559,10 +1583,6 @@ impl Game {
             saved_spent_spell_learning,
             saved_ability_progress,
         )?;
-        if campaign_state_missing && game.campaign_victory_reached() {
-            game.campaign_state.status = CampaignStatusDto::Victorious;
-            game.campaign_state.victory_turn = Some(game.turn);
-        }
         game.reveal_current_visibility();
         game.clear_stale_mogaminator_query();
         game.validate_loaded_state()?;
@@ -1932,6 +1952,7 @@ impl Game {
                 required: state.required,
                 active_floor_id: state.active_floor_id.clone(),
                 retakes_used: state.retakes_used,
+                random_assignment: state.random_assignment.clone(),
             })
             .collect()
     }

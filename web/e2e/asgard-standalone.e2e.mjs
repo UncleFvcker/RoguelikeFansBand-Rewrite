@@ -7,13 +7,16 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 import { connectKeyboard } from "./character-creation-layout.e2e.mjs";
+import { selectCreationBuild, selectCreationRace } from "./character-creation.e2e.mjs";
 
 // Run only after build:standalone:debug. This uses the actual ordinary binary,
-// with a fresh WebView profile; no WebDriver server or in-game session is needed.
+// with a fresh WebView profile and no WebDriver server. Angband also creates a character.
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const executable = path.join(root,"target","debug","rfb-tauri.exe");
 const random = process.argv.includes("--random-dungeons");
-const directory = path.join(root,"test-results",random ? "random-dungeons" : "asgard");
+const angband = process.argv.includes("--angband");
+const label = angband ? "Angband" : random ? "Random dungeon" : "Asgard";
+const directory = path.join(root,"test-results",angband ? "angband" : random ? "random-dungeons" : "asgard");
 await mkdir(directory,{recursive:true});
 await mkdir(path.join(root,"target","e2e"),{recursive:true});
 const profile = await mkdtemp(path.join(root,"target","e2e","asgard-standalone-"));
@@ -44,20 +47,41 @@ try {
   }
   assert.ok(ready,"ordinary WebView debugging target");
   keyboard=await connectKeyboard(profile);
-  for(let attempt=0;attempt<100;attempt++) {
-    if(await keyboard.evaluate("Boolean(window.__TAURI_INTERNALS__ && document.documentElement.dataset.appMode)")) break;
-    await delay(100);
+  let appReady=false;
+  for(let attempt=0;attempt<300;attempt++) {
+    appReady=await keyboard.evaluate("Boolean(window.__TAURI_INTERNALS__ && document.documentElement.dataset.appMode)");
+    if(appReady) break;
+    await delay(200);
   }
+  assert.ok(appReady,"ordinary app initialized its IPC and title");
   const checks=await keyboard.evaluate(`(async()=>{
     const results=[];
-    for(const [phase,targetId] of ${JSON.stringify(random ? [["arrival",null],["route",null],["stairs",null]] : [["arrival",null],["route",null],["battle","demo.guardian.asgard.1"]])}) {
-      try { await window.__TAURI_INTERNALS__.invoke('${random ? "prepare_random_dungeon_e2e" : "prepare_asgard_e2e"}',${random ? "{phase,kind:'forest'}" : "{phase,targetId}"});results.push({phase,accepted:true}); }
+    for(const [phase,targetId] of ${JSON.stringify(angband ? [["arrival",null],["route",null],["battle",null],["stairs-up",null],["stairs-down",null]] : random ? [["arrival",null],["route",null],["stairs",null]] : [["arrival",null],["route",null],["battle","demo.guardian.asgard.1"]])}) {
+      try { await window.__TAURI_INTERNALS__.invoke('${angband ? "prepare_angband_e2e" : random ? "prepare_random_dungeon_e2e" : "prepare_asgard_e2e"}',${random ? "{phase,kind:'forest'}" : "{phase,targetId}"});results.push({phase,accepted:true}); }
       catch(error) { results.push({phase,error:String(error)}); }
     }
     return results;
   })()`);
-  assert.equal(checks.length,3);
-  for(const check of checks) assert.equal(check.error,`${random ? "Random dungeon" : "Asgard"} E2E fixture is unavailable`);
+  assert.equal(checks.length,angband ? 5 : 3);
+  for(const check of checks) assert.equal(check.error,`${label} E2E fixture is unavailable`);
+  let newGame;
+  if(angband) {
+    const driver={execute:(script,args=[])=>keyboard.evaluate(`(function(){${script}}).apply(null,${JSON.stringify(args)})`)};
+    await driver.execute('document.querySelector("#session-new-game").click();');
+    await selectCreationRace(driver,"demo.race.rfb-human");
+    await selectCreationBuild(driver,"demo.build.warrior");
+    await driver.execute('const seed=document.querySelector("#session-seed");seed.value="42";seed.dispatchEvent(new Event("input",{bubbles:true}));document.querySelector("#session-start-game").click();');
+    for(let attempt=0;attempt<150;attempt++) {
+      newGame=await driver.execute('return {mode:document.documentElement.dataset.appMode,ready:document.querySelector("#connection-status").classList.contains("ready"),hash:document.querySelector("#hash-value").title,canvas:!!document.querySelector("#map-host canvas"),metadata:{...document.querySelector("#map-host").dataset}}');
+      if(newGame.mode==="playing" && newGame.ready) break;
+      await delay(200);
+    }
+    assert.equal(newGame.mode,"playing",await driver.execute('return document.querySelector("#session-error").textContent'));assert.ok(newGame.ready && newGame.hash && newGame.canvas);
+    const lock=JSON.parse(await readFile(path.join(root,"packs/rfb-demo-original/content.lock.json"),"utf8"));
+    assert.equal(newGame.metadata.contentHash,lock.contentHash);
+    assert.equal(newGame.metadata.worldId,"demo.world.middle-earth");
+    await writeFile(path.join(directory,"standalone-new-game.png"),await keyboard.screenshot(),"base64");
+  }
   assert.deepEqual(keyboard.errors,[]);
   // Ask the native main window to close, then verify normal process termination.
   keyboard.close();keyboard=null;
@@ -68,8 +92,8 @@ try {
   for(let attempt=0;child.exitCode===null && attempt<100;attempt++) await delay(100);
   assert.equal(child.exitCode,0,"ordinary standalone must exit normally");
   await writeFile(path.join(directory,"standalone-guard-report.json"),JSON.stringify({executable,
-    sha256:createHash("sha256").update(await readFile(executable)).digest("hex"),checks,exitCode:child.exitCode,errors:[]},null,2)+"\n");
-  process.stdout.write(`Ordinary Tauri standalone rejected all ${random ? "random dungeon" : "Asgard"} preparation phases and exited normally.\n`);
+    sha256:createHash("sha256").update(await readFile(executable)).digest("hex"),checks,newGame,exitCode:child.exitCode,errors:[]},null,2)+"\n");
+  process.stdout.write(`Ordinary Tauri standalone rejected all ${label} preparation phases and exited normally.\n`);
 } finally {
   keyboard?.close();
   if(child.exitCode===null && child.signalCode===null) child.kill();

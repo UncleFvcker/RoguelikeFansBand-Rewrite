@@ -146,6 +146,23 @@ impl Game {
         {
             return Ok(());
         }
+        // dungeon.c: the Jewel's periodic life loss is independent of curses.
+        if self.items.iter().any(|item| {
+            item.kind_id == "demo.item.jewel-of-judgement"
+                && matches!(item.location, ItemLocation::Equipped { .. })
+        }) && !self.player_has_anti_magic()
+            && self.rng.bounded(999) == 0
+        {
+            self.resolve_item_life_loss(
+                "demo.item.jewel-of-judgement",
+                u32::from(self.progress.level.min(50)),
+                events,
+            );
+            changed.insert(self.player.position);
+            if self.player_is_dead() {
+                return Ok(());
+            }
+        }
         let intrinsic_teleport = self.items.iter().any(|item| {
             matches!(item.location, ItemLocation::Equipped { .. })
                 && item.curse.is_none()

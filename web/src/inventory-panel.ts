@@ -634,6 +634,11 @@ export class InventoryPanel {
       activate.disabled = this.#state.busy || Boolean(item.useUnavailableReason) || (Boolean(item.activation) && !item.usable);
       activate.addEventListener("click", () => {
         if (this.#state.busy || this.#state.playerDead || this.#state.worldMap || item.useUnavailableReason || (item.activation && !item.usable)) return;
+        if (item.activation?.recallChoice) {
+          this.#closeDetail();
+          this.#selectJewelRecall(item.id);
+          return;
+        }
         if (item.requiresRechargeTargets) {
           this.#closeDetail();
           this.#selectRechargeSource(item.id, true);
@@ -870,6 +875,10 @@ export class InventoryPanel {
     }
     if (selected.length !== 1 || !selected[0]?.usable) return;
     const item = selected[0];
+    if (item.activation?.recallChoice) {
+      this.#selectJewelRecall(item.id);
+      return;
+    }
     if (item.requiresRechargeTargets) {
       this.#selectRechargeSource(item.id, Boolean(item.activation));
       return;
@@ -1034,6 +1043,16 @@ export class InventoryPanel {
         targetItemId,
       }), onCancel, "inventory-recharge-target-title",
     );
+  }
+
+  #selectJewelRecall(itemId: string): void {
+    this.#selectItemTargetFrom([
+      { id: "no", label: this.#localization.format("jewel-activate-without-recall") },
+      { id: "yes", label: this.#localization.format("jewel-activate-with-recall") },
+    ], async (choice) => {
+      if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
+      await this.#dispatch({ type: "use-jewel", itemId, recall: choice === "yes" });
+    }, undefined, "jewel-recall-title");
   }
 
   #selectItemTargetFrom(

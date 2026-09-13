@@ -914,7 +914,7 @@ impl Game {
         }
     }
 
-    fn advance_summon_lifetimes(
+    pub(super) fn advance_summon_lifetimes(
         &mut self,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
@@ -923,7 +923,12 @@ impl Game {
         let mut entity_ids = self
             .entities
             .iter()
-            .filter(|entity| entity.summon.is_some())
+            .filter(|entity| {
+                entity
+                    .summon
+                    .as_ref()
+                    .is_some_and(|summon| summon.remaining_turns > 0)
+            })
             .map(|entity| entity.id.clone())
             .collect::<Vec<_>>();
         entity_ids.sort();

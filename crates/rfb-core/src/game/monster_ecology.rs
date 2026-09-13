@@ -10,6 +10,17 @@ use rfb_content::{
 
 const ORIGINAL_NASTY_MON_ONE_IN: u64 = 40;
 
+pub(super) fn original_nasty_allocation_level(rng: &mut crate::rng::RfbRng, mut level: u16) -> u16 {
+    if level > 0 {
+        for _ in 0..2 {
+            if rng.bounded(ORIGINAL_NASTY_MON_ONE_IN) == 0 {
+                level = level.saturating_add((level / 10).min(5) + 2);
+            }
+        }
+    }
+    level
+}
+
 pub(super) fn actor_matches_allocation_terrain(
     actor: &ActorDefinition,
     terrain: &rfb_content::TerrainDefinition,
@@ -609,6 +620,7 @@ impl Game {
                         && !definition.friendly
                         && !actor_is_unique(definition)
                         && !self.actor_kind_is_dungeon_guardian(&definition.id)
+                        && !self.actor_kind_is_reserved_task_target(&definition.id)
                         && !allocation.multiplies
                         && !definition.tags.iter().any(|tag| tag == "chameleon")
                         && !explodes
@@ -684,6 +696,9 @@ impl Game {
     }
 
     pub(super) fn apply_polymorph_form(&mut self, index: usize, form_kind_id: &str) {
+        if self.actor_kind_is_reserved_task_target(&self.entities[index].kind_id) {
+            return;
+        }
         self.apply_actor_form(index, form_kind_id, true);
     }
 
@@ -702,10 +717,11 @@ impl Game {
             .content
             .actor(&target_kind_id)
             .expect("polymorph target definition must remain available");
-        if target_definition
-            .tags
-            .iter()
-            .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian"))
+        if self.actor_kind_is_reserved_task_target(&target_kind_id)
+            || target_definition
+                .tags
+                .iter()
+                .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian"))
         {
             return AbilityEffectResolutionDto::Skipped {
                 effect_index,
@@ -761,6 +777,9 @@ impl Game {
     }
 
     pub(super) fn current_floor_task_id(&self) -> Option<&str> {
+        if let Some(id) = self.active_dungeon_task_id() {
+            return Some(id);
+        }
         self.content.world(&self.world_id).and_then(|world| {
             world
                 .procedural_floors
@@ -1173,6 +1192,7 @@ impl Game {
                 };
                 definition.role == ActorRole::Monster
                     && !self.actor_kind_is_dungeon_guardian(&definition.id)
+                    && !self.actor_kind_is_reserved_task_target(&definition.id)
                     && self.pantheon_allows_allocation("", definition)
                     && definition.level <= u32::from(level)
                     && (allocation.max_depth == 0 || allocation.max_depth >= level)
@@ -1488,17 +1508,8 @@ impl Game {
     }
 
     pub(super) fn original_allocation_level(&mut self, base_level: u16) -> u16 {
-        let mut level = self.curse_danger_level(base_level, false);
-        if level == 0 {
-            return level;
-        }
-        for _ in 0..2 {
-            if self.rng.bounded(ORIGINAL_NASTY_MON_ONE_IN) == 0 {
-                let bonus = level.saturating_div(10).min(5).saturating_add(2);
-                level = level.saturating_add(bonus);
-            }
-        }
-        level
+        let level = self.curse_danger_level(base_level, false);
+        original_nasty_allocation_level(&mut self.rng, level)
     }
 
     pub(super) fn original_dungeon_weight(
@@ -1712,6 +1723,7 @@ impl Game {
                     || !self.pantheon_allows_allocation(floor_id, definition)
                     || (!fishing && allocation.wild_only)
                     || self.actor_kind_is_dungeon_guardian(&definition.id)
+                    || self.actor_kind_is_reserved_task_target(&definition.id)
                     || definition.level > u32::from(selection_level)
                     || definition.level < u32::from(minimum_level)
                     || (allocation.max_depth != 0 && allocation.max_depth < selection_level)

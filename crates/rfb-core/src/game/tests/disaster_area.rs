@@ -607,8 +607,6 @@ fn guardian_content(kind: &str) -> Arc<ContentCatalog> {
     let world = &mut artifact.content.worlds[0];
     // This fixture reuses Warrens' short chain, but the two new bosses are not
     // the campaign's victory target.
-    world.campaign.as_mut().unwrap().victory_dungeon_ids =
-        vec!["demo.dungeon.witch-wood".to_owned()];
     let dungeon = world
         .dungeons
         .iter_mut()

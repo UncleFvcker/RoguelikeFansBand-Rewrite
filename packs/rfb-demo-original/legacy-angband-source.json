@@ -1,0 +1,449 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+  "sourceFile": "lib/edit/d_info.txt",
+  "sourceLine": 44,
+  "sourceIndex": 1,
+  "sourceName": "Angband",
+  "chineseName": "安格班",
+  "position": {
+    "x": 57,
+    "y": 40
+  },
+  "sourceFields": {
+    "D": [
+      "安格班地下城的入口"
+    ],
+    "P": [
+      "40:57"
+    ],
+    "W": [
+      "1:127:30:0:14:160:75:20:0xffff:0xffff"
+    ],
+    "L": [
+      "FLOOR:100:FLOOR:0:FLOOR:0:50"
+    ],
+    "A": [
+      "GRANITE:100:GRANITE:0:GRANITE:0:GRANITE:GRANITE:MAGMA_VEIN:QUARTZ_VEIN"
+    ],
+    "F": [
+      "MONSTER_DIV_64 | COFFEE"
+    ]
+  },
+  "dungeonId": "demo.dungeon.angband",
+  "depthCount": 127,
+  "tasks": [
+    {
+      "sourceIndex": 8,
+      "sourceLine": 46,
+      "sourceFields": {
+        "T": [
+          "RETAKE"
+        ],
+        "W": [
+          "angband"
+        ],
+        "G": [
+          "KILL(oberon)"
+        ],
+        "F": [
+          "q_oberon.txt"
+        ]
+      },
+      "taskId": "demo.task.angband-oberon",
+      "chineseName": "奥伯龙"
+    },
+    {
+      "sourceIndex": 9,
+      "sourceLine": 52,
+      "sourceFields": {
+        "T": [
+          "RETAKE"
+        ],
+        "W": [
+          "angband"
+        ],
+        "G": [
+          "KILL(serpent of chaos)"
+        ],
+        "F": [
+          "q_serpent_of_chaos.txt"
+        ]
+      },
+      "taskId": "demo.task.angband-serpent-of-chaos",
+      "chineseName": "混沌之蛇"
+    },
+    {
+      "sourceIndex": 40,
+      "sourceLine": 165,
+      "sourceFields": {
+        "T": [
+          "RANDOM | RETAKE"
+        ],
+        "W": [
+          "angband"
+        ],
+        "G": [
+          "KILL(*)"
+        ]
+      },
+      "taskId": "demo.task.angband-random-1",
+      "chineseName": "随机任务 1"
+    },
+    {
+      "sourceIndex": 41,
+      "sourceLine": 170,
+      "sourceFields": {
+        "T": [
+          "RANDOM | RETAKE"
+        ],
+        "W": [
+          "angband"
+        ],
+        "G": [
+          "KILL(*)"
+        ]
+      },
+      "taskId": "demo.task.angband-random-2",
+      "chineseName": "随机任务 2"
+    },
+    {
+      "sourceIndex": 42,
+      "sourceLine": 175,
+      "sourceFields": {
+        "T": [
+          "RANDOM | RETAKE"
+        ],
+        "W": [
+          "angband"
+        ],
+        "G": [
+          "KILL(*)"
+        ]
+      },
+      "taskId": "demo.task.angband-random-3",
+      "chineseName": "随机任务 3"
+    },
+    {
+      "sourceIndex": 43,
+      "sourceLine": 180,
+      "sourceFields": {
+        "T": [
+          "RANDOM | RETAKE"
+        ],
+        "W": [
+          "angband"
+        ],
+        "G": [
+          "KILL(*)"
+        ]
+      },
+      "taskId": "demo.task.angband-random-4",
+      "chineseName": "随机任务 4"
+    },
+    {
+      "sourceIndex": 44,
+      "sourceLine": 185,
+      "sourceFields": {
+        "T": [
+          "RANDOM | RETAKE"
+        ],
+        "W": [
+          "angband"
+        ],
+        "G": [
+          "KILL(*)"
+        ]
+      },
+      "taskId": "demo.task.angband-random-5",
+      "chineseName": "随机任务 5"
+    },
+    {
+      "sourceIndex": 45,
+      "sourceLine": 190,
+      "sourceFields": {
+        "T": [
+          "RANDOM | RETAKE"
+        ],
+        "W": [
+          "angband"
+        ],
+        "G": [
+          "KILL(*)"
+        ]
+      },
+      "taskId": "demo.task.angband-random-6",
+      "chineseName": "随机任务 6"
+    },
+    {
+      "sourceIndex": 46,
+      "sourceLine": 195,
+      "sourceFields": {
+        "T": [
+          "RANDOM | RETAKE"
+        ],
+        "W": [
+          "angband"
+        ],
+        "G": [
+          "KILL(*)"
+        ]
+      },
+      "taskId": "demo.task.angband-random-7",
+      "chineseName": "随机任务 7"
+    },
+    {
+      "sourceIndex": 47,
+      "sourceLine": 200,
+      "sourceFields": {
+        "T": [
+          "RANDOM | RETAKE"
+        ],
+        "W": [
+          "angband"
+        ],
+        "G": [
+          "KILL(*)"
+        ]
+      },
+      "taskId": "demo.task.angband-random-8",
+      "chineseName": "随机任务 8"
+    },
+    {
+      "sourceIndex": 48,
+      "sourceLine": 205,
+      "sourceFields": {
+        "T": [
+          "RANDOM | RETAKE"
+        ],
+        "W": [
+          "angband"
+        ],
+        "G": [
+          "KILL(*)"
+        ]
+      },
+      "taskId": "demo.task.angband-random-9",
+      "chineseName": "随机任务 9"
+    },
+    {
+      "sourceIndex": 49,
+      "sourceLine": 210,
+      "sourceFields": {
+        "T": [
+          "RANDOM | RETAKE"
+        ],
+        "W": [
+          "angband"
+        ],
+        "G": [
+          "KILL(*)"
+        ]
+      },
+      "taskId": "demo.task.angband-random-10",
+      "chineseName": "随机任务 10"
+    }
+  ],
+  "birthCandidateCount": 287,
+  "artifacts": [
+    {
+      "sourceFile": "lib/edit/a_info.txt",
+      "sourceIndex": 3,
+      "sourceLine": 72,
+      "sourceFields": {
+        "I": [
+          "39:6:3"
+        ],
+        "W": [
+          "70:90:5:150000"
+        ],
+        "P": [
+          "0:1d1:0:0:0"
+        ],
+        "F": [
+          "SEE_INVIS | HOLD_LIFE | RES_CONF | RES_CHAOS |",
+          "INSTA_ART | SPEED | WIS | INT"
+        ],
+        "E": [
+          "JEWEL:50:30",
+          "宝石闪烁着明亮的红光！"
+        ]
+      },
+      "itemKindId": "demo.item.jewel-of-judgement",
+      "chineseName": "审判之宝石",
+      "baseSourceFile": "lib/edit/k_info.txt",
+      "baseSourceIndex": 607,
+      "baseSourceFields": {
+        "G": [
+          "*:R"
+        ],
+        "I": [
+          "39:6:0"
+        ],
+        "W": [
+          "70:0:0:5:60000"
+        ],
+        "P": [
+          "0:1d1:0:0:0"
+        ],
+        "F": [
+          "INSTA_ART"
+        ]
+      }
+    },
+    {
+      "sourceFile": "lib/edit/a_info.txt",
+      "sourceIndex": 34,
+      "sourceLine": 424,
+      "sourceFields": {
+        "I": [
+          "33:50:125"
+        ],
+        "W": [
+          "100:1:20:10000000"
+        ],
+        "P": [
+          "0:1d1:0:0:0"
+        ],
+        "F": [
+          "STR | INT | WIS | DEX | CON | CHR | INFRA | HIDE_TYPE |",
+          "RES_ACID | RES_ELEC | RES_FIRE | RES_COLD | RES_POIS |",
+          "RES_LITE | RES_DARK | RES_CONF | RES_NEXUS |",
+          "LITE | SEE_INVIS | TELEPATHY |",
+          "CURSED | HEAVY_CURSE | PERMA_CURSE | NO_TELE | INSTA_ART | QUESTITEM | FIXED_ART"
+        ]
+      },
+      "itemKindId": "demo.item.crown-of-chaos",
+      "chineseName": "混沌之重铁王冠",
+      "baseSourceFile": "lib/edit/k_info.txt",
+      "baseSourceIndex": 223,
+      "baseSourceFields": {
+        "G": [
+          "]:D"
+        ],
+        "I": [
+          "33:50:0"
+        ],
+        "W": [
+          "44:0:0:20:1000"
+        ],
+        "P": [
+          "0:1d1:0:0:0"
+        ],
+        "F": [
+          "INSTA_ART"
+        ]
+      }
+    },
+    {
+      "sourceFile": "lib/edit/a_info.txt",
+      "sourceIndex": 111,
+      "sourceLine": 1356,
+      "sourceFields": {
+        "I": [
+          "21:50:0"
+        ],
+        "W": [
+          "100:1:1000:500000"
+        ],
+        "P": [
+          "0:9d9:5:25:10"
+        ],
+        "F": [
+          "KILL_DRAGON | SLAY_ANIMAL | SLAY_EVIL | IMPACT | SLAY_UNDEAD | NO_MAGIC |",
+          "SLAY_DEMON | SLAY_TROLL | SLAY_ORC | RES_ACID | RES_ELEC | RES_FIRE |",
+          "RES_COLD | SEE_INVIS | TELEPATHY | AGGRAVATE | SHOW_MODS | INSTA_ART |",
+          "SLAY_HUMAN | RIDING | QUESTITEM | FIXED_ART"
+        ],
+        "D": [
+          "强大的地狱之锤，被粉碎的厄运法术熏黑，",
+          "挥舞它的人将所有魔苟斯的仆从的生命掌握在自己手中。"
+        ]
+      },
+      "itemKindId": "demo.item.grond",
+      "chineseName": "神力之锤 『格龙德』",
+      "baseSourceFile": "lib/edit/k_info.txt",
+      "baseSourceIndex": 138,
+      "baseSourceFields": {
+        "G": [
+          "\\:D"
+        ],
+        "I": [
+          "21:50:0"
+        ],
+        "W": [
+          "15:0:0:200:1000"
+        ],
+        "P": [
+          "0:3d9:0:0:0"
+        ],
+        "F": [
+          "SHOW_MODS | INSTA_ART | RIDING"
+        ]
+      }
+    },
+    {
+      "sourceIndex": 42,
+      "itemKindId": "demo.item.amber",
+      "sourceFields": {
+        "I": [
+          "33:11:3"
+        ],
+        "W": [
+          "80:40:30:125000"
+        ],
+        "P": [
+          "0:1d1:0:0:15"
+        ],
+        "F": [
+          "STR | WIS | CON | HIDE_TYPE | SPEED |",
+          "RES_FIRE | RES_LITE | RES_BLIND | RES_ELEC | RES_CONF |",
+          "RES_CHAOS | LITE | SEE_INVIS | REGEN",
+          "XTRA_POWER | XTRA_H_RES"
+        ],
+        "E": [
+          "HEAL:40:250:700",
+          "你的王冠闪耀着深蓝色的光芒……你感到内心里有一阵温暖的刺痛。"
+        ]
+      },
+      "reused": true
+    }
+  ],
+  "campaignSourceFiles": [
+    "src/quest.c:quest_complete (MON_SERPENT victory and fame +50)",
+    "src/files.c:do_cmd_suicide (winner retirement)"
+  ],
+  "bossSourceFiles": [
+    "lib/edit/r_info.txt:860,862",
+    "src/xtra2.c:monster_death",
+    "src/monspell.c:_ball",
+    "src/devices.c:EFFECT_JEWEL",
+    "src/dungeon.c:process_world"
+  ],
+  "bossAdaptations": [
+    "Existing bounded monster combat, area geometry, speed/armor and resistance tiers remain in use; these are not a bit-identical upstream simulation.",
+    "ROCKET(600) retains its stable legacy ability ID but uses Rocket damage, creature collision, shards resistance and sound/shards status saves.",
+    "The twelve shared summon programs used by the bosses have no lifetime timeout. Existing bounded count/category/maximum-level selection and friendly-risk policy remain; source weighted summon_specific allocation and escorts are not newly reproduced here.",
+    "Fixed task targets are no_pet. Chosen drops reject current pets, player-owned summons and dead-unique resurrections. Source town arena/battle and clone modes are unavailable; there is no general WASPET history for arbitrary externally prepared actors.",
+    "Jewel recall choice is carried in UseJewel before activation; failed or declined recall preserves clairvoyance and life loss. Generic UseItem declines recall. Source superstealth is unavailable.",
+    "Jewel periodic drain is checked every ten local world ticks while equipped and outside anti-magic; the otherwise unused global one_in_999 draw is not consumed when it cannot affect the player."
+  ],
+  "birthAllocationSource": [
+    "lib/edit/r_info.txt",
+    "src/init2.c:d_info guardian initialization",
+    "src/quest.c:_get_questor/quests_on_birth",
+    "src/monster2.c:get_mon_num_prep/get_mon_num_aux",
+    "src/tables.c:quest_unique"
+  ],
+  "adaptations": [
+    "96x33 maps and six bounded rectangle rooms reuse existing finite geometry; full source room/pit/nest templates are not reproduced.",
+    "The source minimum allocation count is scaled from 198x66 to 96x33 (14 to 3 initial rolls), with a 14 actor-slot budget; source ambient chance and MONSTER_DIV_64 use existing global allocation.",
+    "Magma/quartz use the shared finite two-streamer budget and existing hidden/known treasure rates. Full source streamer length/density is not reproduced.",
+    "Ordinary stairs and explicit two-depth shafts use the existing saved return-connection system; source random shaft frequency is not reproduced.",
+    "min_plev=30 and COFFEE are retained as source metadata, not a new entry level gate or new game mode.",
+    "AG3 imports the unique-only birth pool including fixed-placement actors; NO_QUEST and Utgard-Loke stay weighted and are rejected after drawing. FORCE_DEPTH, guardian, wilderness, dungeon and pantheon birth exclusions follow source dungeon_type=dun_level=0.",
+    "Source draws use the shared RfbRng algorithm, not upstream's RNG bitstream. Ten random assignments precede fixed boss reservations.",
+    "Formal victory requires the completed Serpent quest and successful objective progress. Existing post-victory level/attribute extensions and surface/town-only retirement are retained adaptations; upstream allows winner retirement through its suicide command.",
+    "Upstream terms retained by NOTICE and LICENSES/RFB-UPSTREAM-NOTICE.txt."
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.grond",
+  "nameKey": "item-demo-grond-name",
+  "descriptionKey": "item-demo-grond-description",
+  "glyph": "\\",
+  "generationLevel": 100,
+  "weightTenthsPound": 1000,
+  "baseValue": 500000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "equipment",
+    "weapon",
+    "artifact"
+  ],
+  "rfbValue": {
+    "pval": 0,
+    "toArmor": 10,
+    "flags": [
+      "AGGRAVATE",
+      "FIXED_ART",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IMPACT",
+      "INSTA_ART",
+      "KILL_DRAGON",
+      "NO_MAGIC",
+      "QUESTITEM",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RIDING",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_ANIMAL",
+      "SLAY_DEMON",
+      "SLAY_EVIL",
+      "SLAY_HUMAN",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "SLAY_UNDEAD",
+      "TELEPATHY"
+    ]
+  },
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 9,
+    "damageSides": 9,
+    "toHit": 5,
+    "toDamage": 25
+  },
+  "ridingWeaponKind": "compatible",
+  "artifactGeneration": {
+    "sourceIndex": 111,
+    "baseItemKindId": "demo.item.mighty-hammer",
+    "instant": true,
+    "rarityOneIn": 1
+  },
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 10
+  },
+  "passives": [
+    "anti-magic",
+    "see-invisible",
+    "telepathy"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant"
+  },
+  "slays": {
+    "animal": "slay",
+    "evil": "slay",
+    "undead": "slay",
+    "demon": "slay",
+    "troll": "slay",
+    "orc": "slay",
+    "human": "slay",
+    "dragon": "kill"
+  }
+}

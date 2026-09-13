@@ -112,7 +112,8 @@ impl Game {
             .actor(&actor.kind_id)
             .expect("dying actor definition exists");
         if definition.finite_lifetime_instance_limit().is_some()
-            && !definition.tags.iter().any(|tag| tag == "guardian")
+            && (!definition.tags.iter().any(|tag| tag == "guardian")
+                || definition.id == "demo.actor.the-serpent-of-chaos")
             && !self.actor_is_dead_unique_resurrection(actor)
         {
             let defeated = self
@@ -753,6 +754,7 @@ impl Game {
         // bookkeeping. ART_SILVER_HAMMER (335) is not an available item yet.
         if credit_player
             && self.entities[index].kind_id == "demo.actor.the-phoenix"
+            && !self.actor_kind_is_reserved_task_target(&self.entities[index].kind_id)
             && self.rng.bounded(3) == 0
         {
             let actor = &mut self.entities[index];
@@ -786,6 +788,8 @@ impl Game {
                     dying_actor.id
                 ))
             })?;
+        // quest.c is called after death explosions, before chosen/ordinary loot.
+        self.progress_dungeon_task_on_death(&dying_actor, events, changed)?;
         let plan = self.plan_actor_death(index)?;
         let ActorDeathPlan {
             actor,

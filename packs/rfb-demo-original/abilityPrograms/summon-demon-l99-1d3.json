@@ -8,7 +8,7 @@
       "category": "demon",
       "countDice": 1,
       "countSides": 3,
-      "durationTurns": 10000,
+      "durationTurns": 0,
       "maximumLevel": 99,
       "radius": 2,
       "type": "summon-category"

@@ -560,6 +560,9 @@ pub(crate) enum DomainEvent {
     TaskCompleted {
         floor_id: String,
     },
+    TaskSkipped {
+        task_id: String,
+    },
     TaskRewardAvailable {
         floor_id: String,
     },
@@ -2876,6 +2879,9 @@ impl DomainEvent {
             ),
             Self::TaskCompleted { floor_id } => {
                 dto("task.completed", "task-completed", [("floor", floor_id)])
+            }
+            Self::TaskSkipped { task_id } => {
+                dto("task.skipped", "task-skipped", [("task", task_id)])
             }
             Self::TaskRewardAvailable { floor_id } => dto(
                 "task.reward-available",

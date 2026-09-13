@@ -753,6 +753,7 @@ fn c5b_one_ring_reading_uses_pack_or_floor_and_reading_energy_without_activation
         base.items[0].charges.as_mut().unwrap().current = 0;
         base.items[0].device_recovery_progress = 123;
         let action = GameAction::UseItem {
+            jewel_recall: None,
             item_id: id.clone(),
             target: None,
             target_glyph: None,

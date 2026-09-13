@@ -23,6 +23,7 @@
     {"sourceIndex":7,"sourceName":"祖尔","id":"demo.town.zul"}
   ],
   "dungeons": [
+    {"sourceIndex": 1, "sourceName": "Angband", "id": "demo.dungeon.angband"},
     {
       "sourceIndex": 30,
       "sourceName": "Warrens",

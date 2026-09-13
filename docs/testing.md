@@ -129,6 +129,26 @@ node e2e/asgard-standalone.e2e.mjs --random-dungeons
 
 证据保存在 `test-results/random-dungeons/`。失败后可用 `--random-resume=forest:entered` 之类的参数恢复该目录的原生存档检查点；类型为 forest／volcano／mountain／sea，阶段为 arrival／entered／ascended／reentered／recall-pending／returned。脚本核对内容身份和保存哈希，恢复后只继续未完成阶段；改变内容后应重新生成相应检查点。普通 standalone 分支实际检查三阶段准备 IPC 均被拒绝，并要求窗口正常关闭后进程退出码为 0。
 
+## 安格班桌面专项
+
+在 `web` 执行：
+
+```powershell
+npm run e2e:build
+node e2e/tauri.e2e.mjs --angband
+node e2e/tauri.e2e.mjs --angband --angband-resume=completed-54
+npm run build:standalone:debug
+node e2e/asgard-standalone.e2e.mjs --angband
+```
+
+续跑参数取 `test-results/angband/` 内已有检查点名，不含扩展名。包括入口、每个随机任务前后、首次撤退／重入、`oberon-before`、`serpent-before`、`victory`、`depth-101`、`depth-127`、`returned`、`retired`；脚本核对内容身份、协议及完整保存哈希。普通产物脚本会拒绝 arrival／route／battle／stairs-up／stairs-down 五种准备，再用正常人类战士创角进入地图并关闭窗口，要求退出码 0。
+
+专项从正常 1 级人类战士开始，明确准备正式 (57,40) 入口位置、51 级所需经验（胜前仍封顶 50）、阔剑、归返卷轴、长效悬浮／识破隐形／无敌、额外 HP 与近战能力、状态免疫。后续只定位实际楼梯或相邻战斗格、补玩家 HP、照明及清理非任务目标。十个随机目标、奥伯龙和混沌之蛇保持源 HP、防御和 AI，通过生产命令击杀；不写任务完成、掉落或胜利状态。每场首击走原生键盘，其余攻击保留命令事件，每最多 16 击及死亡后用真实保存加载同步 UI。入口、任务层及 99／100／101／127 深度边界走原生楼梯输入；其余中间层执行生产楼梯命令并记录事件，到下一任务层恢复同步界面。任务层下行限制、首次撤退重入、胜后深层探索、召回和隐退均保留证据。隐退按钮的取消／确认由测试控制浏览器确认回调，原生系统确认框外观不在该自动检查范围内。
+
+召回首轮 Rest 走原生键盘，其余轮使用生产 Rest 命令并记录事件，结束后才重新加载界面；避免每个饥饿打断回合都往返传输约 10 MB 的深层存档。
+
+这是明确准备后的流程验收，不代表自然练级、装备获取或难度通关。报告、截图、原生存档与普通产物 SHA-256 位于上述目录；实际批次结果见[安格班计划](../design/angband-dungeon-plan-20260913.md)。
+
 ## Contract fixture
 
 当前集位于 [tests/fixtures/active/scenarios](../tests/fixtures/active/scenarios/)，分类和最低数量等政策来自 [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)。`rfb-contract` 的 [CLI](../crates/rfb-contract/src/main.rs)和[断言实现](../crates/rfb-contract/src/lib.rs)是精确语义依据。

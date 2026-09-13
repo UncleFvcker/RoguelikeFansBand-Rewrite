@@ -189,6 +189,9 @@ pub struct WorldDefinition {
     pub campaign: Option<CampaignDefinition>,
     #[serde(default)]
     pub tasks: Vec<TaskDefinition>,
+    /// Source birth allocation pool, independent of ordinary floor allocation.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub random_task_candidates: Vec<RandomTaskCandidateDefinition>,
     pub procedural_floors: Vec<ProceduralFloorDefinition>,
 }
 
@@ -325,7 +328,7 @@ pub struct SurfaceActorAllocationDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CampaignDefinition {
-    pub victory_dungeon_ids: Vec<String>,
+    pub victory_task_ids: Vec<String>,
     pub dungeon_conquest_points: u32,
     pub task_completion_points: u32,
     pub victory_bonus: u32,
@@ -838,6 +841,19 @@ pub struct TaskSubstitutionDefinition {
 pub enum TaskLocationDefinition {
     DedicatedFloors { floor_ids: Vec<String> },
     DungeonDepth { dungeon_id: String, depth: u16 },
+    RandomDungeonDepth { dungeon_id: String, base_depth: u16 },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RandomTaskCandidateDefinition {
+    pub actor_kind_id: String,
+    pub legacy_index: u32,
+    pub rarity: u32,
+    pub max_depth: u16,
+    /// NO_QUEST and Utgard-Loke remain in the weighted pool, then are rejected.
+    pub can_be_target: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

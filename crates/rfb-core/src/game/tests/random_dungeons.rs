@@ -560,13 +560,24 @@ fn pending_random_item_and_spell_recall_replay_through_rest_and_next_entry() {
                 .is_none()
         );
         let mut restored = restore(&game);
-        let update = replay_command(&mut game, &mut restored, GameCommand::Rest { turns: 100 });
+        let mut update = replay_command(&mut game, &mut restored, GameCommand::Rest { turns: 100 });
         assert!(rest_resolution(&update).completed_turns > 0);
+        // Ambient spawning may interrupt rest before a long recall timer expires.
+        for _ in 0..4 {
+            if game.current_floor_id == wilderness::WILDERNESS_FLOOR_ID {
+                break;
+            }
+            clear_monsters(&mut game);
+            clear_monsters(&mut restored);
+            update = replay_command(&mut game, &mut restored, GameCommand::Rest { turns: 100 });
+        }
         assert!(
             update
                 .events
                 .iter()
-                .any(|event| event.kind == "item.recall-triggered")
+                .any(|event| event.kind == "item.recall-triggered"),
+            "{use_spell}: {:?}",
+            update.events
         );
         assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
         assert_eq!(game.player.position, departure);

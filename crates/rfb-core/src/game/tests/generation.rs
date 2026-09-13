@@ -286,6 +286,7 @@ fn ordinary_room_and_anywhere_allocations_reach_pickup_and_save() {
         .get_mut("demo.dungeon.warrens")
         .unwrap()
         .next_instance_ordinal = 1;
+    game.rng = RfbRng::seeded(1);
     let floor = game
         .generate_procedural_floor(&definition, Some("demo.dungeon.warrens.instance.1".into()))
         .unwrap();

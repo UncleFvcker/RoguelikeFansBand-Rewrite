@@ -999,6 +999,7 @@ fn palantir_lists_hidden_uniques_without_revealing_their_positions_and_old_castl
                 required: 1,
                 active_floor_id: None,
                 retakes_used: 0,
+                random_assignment: None,
             },
         );
         game.generated_artifact_ids.extend([

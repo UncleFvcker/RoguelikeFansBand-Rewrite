@@ -62,8 +62,8 @@
         "y": 33
       },
       "revision": 1,
-      "rngDrawCounter": 198,
-      "stateHash": "d6d6c979470da13f3b7639f1dd8888df774a64724acb08e34985cb73a7e199f1",
+      "rngDrawCounter": 508,
+      "stateHash": "692ac00df400bd216036746f8b4093a483a0dba2d6ad785f6243386d7b1ae8df",
       "turn": 1
     },
     "events": [
@@ -71,16 +71,16 @@
         "kind": "combat.projectile-hit",
         "messageKey": "projectile-hit",
         "args": {
-          "damage": "12",
+          "damage": "21",
           "target": "demo.actor.adobe-golem"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 15,
-            "armorReduction": 3,
+            "rawDamage": 27,
+            "armorReduction": 6,
             "resistanceAdjustment": 0,
-            "finalDamage": 12,
+            "finalDamage": 21,
             "damageType": "physical",
             "resistance": "normal"
           }

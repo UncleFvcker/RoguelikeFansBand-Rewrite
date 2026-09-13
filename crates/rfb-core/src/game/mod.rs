@@ -237,7 +237,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 133;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 134;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -804,6 +804,7 @@ fn initial_item_runtime_state(
     };
     (
         Some(ItemActivationDto {
+            recall_choice: matches!(selected.effect, rfb_content::ItemUseEffectDefinition::Jewel),
             profile_id: selected.id.clone(),
             name_key: selected.name_key.clone(),
             power,
@@ -1131,6 +1132,7 @@ impl Game {
                 item_id,
                 target,
                 target_glyph,
+                ..
             }
                 if self.item_use_is_zero_time_unavailable(
                     item_id,
@@ -2007,11 +2009,13 @@ impl Game {
                 item_id,
                 target,
                 target_glyph,
+                jewel_recall,
             } => {
-                if let Some(energy_cost) = self.use_inventory_item(
+                if let Some(energy_cost) = self.use_inventory_item_with_recall(
                     &item_id,
                     target.as_ref(),
                     target_glyph.as_deref(),
+                    jewel_recall,
                     &mut events,
                     &mut changed,
                     &mut removed_entities,
@@ -2783,6 +2787,7 @@ impl Game {
             height: current_dimensions.1,
             floor_id: self.current_floor_id.clone(),
             dungeon_instance_id: self.current_dungeon_instance_id.clone(),
+            dungeon: self.dungeon_status_dto(),
             town: (!world_map).then(|| self.current_town_dto()).flatten(),
             shops: if world_map {
                 Vec::new()
@@ -3056,6 +3061,7 @@ impl Game {
                     && excluded_category
                         .is_none_or(|category| !actor_matches_category(definition, category))
                     && !definition.tags.iter().any(|tag| tag == "guardian")
+                    && !self.actor_kind_is_reserved_task_target(&definition.id)
                     && actor_answers_summons(definition)
                     && self.dungeon_allows_monster(
                         &self.current_floor_id,
@@ -4566,23 +4572,16 @@ impl Game {
 
     fn abandon_paused_task(&mut self, task_id: &str) -> Option<Vec<Position>> {
         let world = self.content.world(&self.world_id)?;
-        if (self.current_floor_id != world.initial_floor_id && self.current_town().is_none())
-            || self
-                .task_states
-                .get(task_id)
-                .is_none_or(|state| state.status != TaskStatusKindDto::Paused)
-        {
+        let state = self.task_states.get(task_id)?;
+        let task = task_definition(world, task_id)?;
+        if state.status != TaskStatusKindDto::Paused || !self.task_abandon_available(task, state) {
             return None;
         }
-        let members = task_floors(world, task_id)
+        let members = task_floors(world, task_id, self.task_states.get(task_id))
             .filter(|floor| floor.lifecycle == FloorLifecycle::OneShot && floor.retakeable)
             .cloned()
             .collect::<Vec<_>>();
-        let initial_required =
-            task_initial_state(world, task_definition(world, task_id)?, &self.task_states).required;
-        if members.is_empty() {
-            return None;
-        }
+        let initial_required = task_initial_state(world, task, &self.task_states).required;
 
         self.discard_stored_task_floors(&members);
         let mut changed = BTreeSet::new();

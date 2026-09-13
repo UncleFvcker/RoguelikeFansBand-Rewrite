@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use rfb_content::{
-    CampaignDefinition, ContentCatalog, ProceduralFloorDefinition, TaskDefinition,
+    CampaignDefinition, ContentCatalog, FloorLifecycle, ProceduralFloorDefinition, TaskDefinition,
     TaskLocationDefinition, TaskObjectiveDefinition, TaskObjectiveKind, TaskRewardDefinition,
     TaskRewardEntryDefinition, TownFacilityCategory, WorldDefinition,
 };
@@ -22,6 +22,10 @@ use super::{
     inventory::item_instances_stack_compatible,
 };
 
+pub(super) mod dungeon;
+mod random;
+pub(super) use random::{assign_random_tasks, validate_random_task_assignments};
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct TaskState {
     pub(super) status: TaskStatusKindDto,
@@ -30,6 +34,7 @@ pub(super) struct TaskState {
     pub(super) required: u32,
     pub(super) active_floor_id: Option<String>,
     pub(super) retakes_used: u16,
+    pub(super) random_assignment: Option<rfb_protocol::RandomTaskAssignmentDto>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -152,7 +157,9 @@ fn task_initial_status(
     task: &TaskDefinition,
     states: &BTreeMap<String, TaskState>,
 ) -> TaskStatusKindDto {
-    if task.source_facility_id.is_some()
+    if task_is_birth_taken(task) {
+        TaskStatusKindDto::Taken
+    } else if task.source_facility_id.is_some()
         && task.prerequisite_task_id.as_ref().is_some_and(|id| {
             let prerequisite_id = selected_task_id(world, states, id).unwrap_or(id);
             !states.get(prerequisite_id).is_some_and(|state| {
@@ -185,6 +192,7 @@ pub(super) fn task_initial_state(
             .map_or(1, |objective| objective.required),
         active_floor_id: None,
         retakes_used: 0,
+        random_assignment: None,
     }
 }
 
@@ -232,11 +240,18 @@ pub(super) fn task_status_matches(
 pub(super) fn task_applies_to_floor(
     task: &TaskDefinition,
     floor: &ProceduralFloorDefinition,
+    state: Option<&TaskState>,
 ) -> bool {
     match &task.location {
         TaskLocationDefinition::DedicatedFloors { floor_ids } => floor_ids.contains(&floor.id),
         TaskLocationDefinition::DungeonDepth { dungeon_id, depth } => {
             floor.dungeon_id.as_deref() == Some(dungeon_id.as_str()) && floor.depth == *depth
+        }
+        TaskLocationDefinition::RandomDungeonDepth { dungeon_id, .. } => {
+            floor.dungeon_id.as_deref() == Some(dungeon_id.as_str())
+                && state
+                    .and_then(|state| state.random_assignment.as_ref())
+                    .is_some_and(|assignment| assignment.depth == floor.depth)
         }
     }
 }
@@ -244,12 +259,30 @@ pub(super) fn task_applies_to_floor(
 pub(super) fn task_floors<'a>(
     world: &'a WorldDefinition,
     task_id: &str,
+    state: Option<&'a TaskState>,
 ) -> impl Iterator<Item = &'a ProceduralFloorDefinition> {
     let task = task_definition(world, task_id);
     world
         .procedural_floors
         .iter()
-        .filter(move |floor| task.is_some_and(|task| task_applies_to_floor(task, floor)))
+        .filter(move |floor| task.is_some_and(|task| task_applies_to_floor(task, floor, state)))
+}
+
+pub(super) fn task_is_birth_taken(task: &TaskDefinition) -> bool {
+    task.source_facility_id.is_none()
+        && matches!(task.location, TaskLocationDefinition::DungeonDepth { .. })
+}
+
+pub(super) fn resolved_task_objective(
+    task: &TaskDefinition,
+    state: &TaskState,
+) -> Option<TaskObjectiveDefinition> {
+    let mut objective = task.objectives.get(state.stage_index as usize)?.clone();
+    if let Some(assignment) = &state.random_assignment {
+        objective.actor_kind_id = Some(assignment.actor_kind_id.clone());
+        objective.required = state.required;
+    }
+    Some(objective)
 }
 
 pub(super) fn task_objectives<'a>(
@@ -421,9 +454,9 @@ fn active_task_objective(
     };
     let objectives = task_objectives(world, task_id);
     let stage = usize::try_from(stage_index).ok();
-    let objective = stage
-        .and_then(|stage| objectives.get(stage))
-        .cloned()
+    let objective = task_definition(world, task_id)
+        .zip(task_states.get(task_id))
+        .and_then(|(task, state)| resolved_task_objective(task, state))
         .ok_or_else(|| {
             CoreError::Invariant(format!(
                 "active task {task_id} references missing objective stage {stage_index}"
@@ -452,6 +485,9 @@ fn plan_task_event_reduction(
     else {
         return Ok(None);
     };
+    if task_definition(world, &task_id).is_some_and(dungeon::automatic) {
+        return Ok(None); // Automatic kill progress is resolved before monster loot.
+    }
     let increment = match objective.kind {
         TaskObjectiveKind::ClearFloor => clear_floor_completed as u32,
         TaskObjectiveKind::CollectItem => {
@@ -556,14 +592,15 @@ fn plan_task_event_reduction(
 }
 
 fn campaign_victory_reached(
-    campaign: Option<&CampaignDefinition>,
-    dungeon_states: &BTreeMap<String, DungeonState>,
+    world: &WorldDefinition,
+    task_states: &BTreeMap<String, TaskState>,
 ) -> bool {
-    campaign.is_some_and(|campaign| {
-        campaign.victory_dungeon_ids.iter().all(|dungeon_id| {
-            dungeon_states
-                .get(dungeon_id)
-                .is_some_and(|state| !state.suppressed && state.guardian_defeated)
+    world.campaign.as_ref().is_some_and(|campaign| {
+        campaign.victory_task_ids.iter().all(|task_id| {
+            task_states.get(task_id).is_some_and(|state| {
+                state.status == TaskStatusKindDto::Completed
+                    && task_succeeded(world, task_id, state)
+            })
         })
     })
 }
@@ -613,22 +650,20 @@ fn campaign_score(
 }
 
 fn plan_campaign_victory(
-    campaign: Option<&CampaignDefinition>,
+    world: &WorldDefinition,
     state: &CampaignState,
     dungeon_states: &BTreeMap<String, DungeonState>,
     task_states: &BTreeMap<String, TaskState>,
     victory_turn: u32,
 ) -> Option<CampaignTransitionPlan> {
-    if state.status != CampaignStatusDto::Active
-        || !campaign_victory_reached(campaign, dungeon_states)
-    {
+    if state.status != CampaignStatusDto::Active || !campaign_victory_reached(world, task_states) {
         return None;
     }
     let mut state = *state;
     state.status = CampaignStatusDto::Victorious;
     state.victory_turn = Some(victory_turn);
     let score = campaign_score(
-        campaign,
+        world.campaign.as_ref(),
         &state,
         campaign_counts(dungeon_states, task_states),
         victory_turn,
@@ -843,7 +878,7 @@ impl Game {
         if state.status != TaskStatusKindDto::Available {
             return Err("task-unavailable");
         }
-        let entry_changes = task_floors(world, task_id)
+        let entry_changes = task_floors(world, task_id, self.task_states.get(task_id))
             .filter_map(|floor| {
                 // Conditional town cells derive their entrance from the new task state.
                 // Ordinary terrain (water, mountain, Home's wall) has no available marker.
@@ -985,7 +1020,10 @@ impl Game {
         }
         let Some((mut task, floor_id)) = self.content.world(&self.world_id).and_then(|world| {
             let task = task_definition(world, task_id)?;
-            let floor_id = task_floors(world, task_id).next()?.id.clone();
+            let floor_id = task_floors(world, task_id, self.task_states.get(task_id))
+                .next()?
+                .id
+                .clone();
             Some((task.clone(), floor_id))
         }) else {
             return Err("task-unavailable");
@@ -1157,6 +1195,9 @@ impl Game {
         else {
             let mut failed_floor_ids = Vec::new();
             for (task_id, state) in &mut self.task_states {
+                if task_definition(world, task_id).is_some_and(dungeon::automatic) {
+                    continue;
+                }
                 if state.status == TaskStatusKindDto::Active
                     && state.active_floor_id.as_deref() == Some(from_floor_id)
                 {
@@ -1187,7 +1228,12 @@ impl Game {
             .tasks
             .iter()
             .filter(|task| task.source_facility_id.is_some())
-            .map(|task| (task.id.clone(), task_applies_to_floor(task, target_floor)))
+            .map(|task| {
+                (
+                    task.id.clone(),
+                    task_applies_to_floor(task, target_floor, self.task_states.get(&task.id)),
+                )
+            })
             .collect::<Vec<_>>();
         let mut failed_floor_ids = Vec::new();
         for (task_id, applies_to_target) in bindings {
@@ -1259,6 +1305,7 @@ impl Game {
                     .entities
                     .iter()
                     .any(|entity| entity.hp > 0 && entity.position == position)
+                    && !self.floor_connections.iter().any(|connection| connection.position == position)
                     && !self.items.iter().any(|item| {
                         matches!(item.location, ItemLocation::Ground(ground) if ground == position)
                     })
@@ -1368,7 +1415,7 @@ impl Game {
             return false;
         };
         world.tasks.iter().any(|task| {
-            task_applies_to_floor(task, floor)
+            task_applies_to_floor(task, floor, self.task_states.get(&task.id))
                 && self.task_states.get(&task.id).is_some_and(|state| {
                     matches!(
                         state.status,
@@ -1385,7 +1432,9 @@ impl Game {
     }
 
     pub(super) fn campaign_victory_reached(&self) -> bool {
-        campaign_victory_reached(self.campaign_definition(), &self.dungeon_states)
+        self.content
+            .world(&self.world_id)
+            .is_some_and(|world| campaign_victory_reached(world, &self.task_states))
     }
 
     pub(super) fn campaign_counts(&self) -> (u32, u32) {
@@ -1404,7 +1453,9 @@ impl Game {
     pub(super) fn apply_campaign_events(&mut self, events: &mut Vec<DomainEvent>) {
         let victory_turn = self.turn.saturating_add(1);
         let Some(plan) = plan_campaign_victory(
-            self.campaign_definition(),
+            self.content
+                .world(&self.world_id)
+                .expect("active world must exist"),
             &self.campaign_state,
             &self.dungeon_states,
             &self.task_states,
@@ -1413,6 +1464,7 @@ impl Game {
             return;
         };
         self.campaign_state = plan.state;
+        self.fame = self.fame.saturating_add(50);
         events.push(DomainEvent::CampaignVictorious { score: plan.score });
         events.push(DomainEvent::PlayerLevelCapUnlocked {
             level_cap: CharacterProgress::level_cap(true),
@@ -1422,10 +1474,7 @@ impl Game {
     }
 
     pub(super) fn retire_campaign(&mut self) -> Option<u64> {
-        let on_surface = self.current_dungeon_instance_id.is_none()
-            && self.content.world(&self.world_id).is_some_and(|world| {
-                self.current_floor_id == world.initial_floor_id || self.current_town().is_some()
-            });
+        let on_surface = self.campaign_retirement_available();
         let retired_turn = self.turn.saturating_add(1);
         let plan = plan_campaign_retirement(
             self.campaign_definition(),
@@ -1437,6 +1486,39 @@ impl Game {
         )?;
         self.campaign_state = plan.state;
         Some(plan.score)
+    }
+
+    pub(super) fn campaign_retirement_available(&self) -> bool {
+        self.campaign_state.status == CampaignStatusDto::Victorious
+            && self.player.hp >= 0
+            && self.campaign_retirement_location()
+    }
+
+    pub(super) fn campaign_retirement_location(&self) -> bool {
+        self.current_dungeon_instance_id.is_none()
+            && self.content.world(&self.world_id).is_some_and(|world| {
+                self.is_wilderness_floor()
+                    || self.current_floor_id == world.initial_floor_id
+                    || self.current_town().is_some()
+            })
+    }
+
+    pub(super) fn task_abandon_available(&self, task: &TaskDefinition, state: &TaskState) -> bool {
+        let world = self.content.world(&self.world_id).expect("active world");
+        match state.status {
+            TaskStatusKindDto::Active if dungeon::automatic(task) => {
+                state.random_assignment.is_some() && self.active_dungeon_task_id() == Some(&task.id)
+            }
+            TaskStatusKindDto::Active => {
+                state.active_floor_id.as_deref() == Some(&self.current_floor_id)
+            }
+            TaskStatusKindDto::Paused => {
+                (self.current_floor_id == world.initial_floor_id || self.current_town().is_some())
+                    && task_floors(world, &task.id, Some(state))
+                        .any(|floor| floor.lifecycle == FloorLifecycle::OneShot && floor.retakeable)
+            }
+            _ => false,
+        }
     }
 }
 

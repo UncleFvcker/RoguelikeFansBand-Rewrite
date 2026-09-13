@@ -628,18 +628,19 @@ impl Game {
                         .target
                         .modes
                         .contains(&AbilityTargetModeDefinition::SelfTarget)
-                    && available_count > 0)
-                    .then(|| {
-                        self.summon_positions_around(
-                            self.player.position,
-                            u8::try_from(available_count)
-                                .expect("summon count is bounded by its u8 content field"),
-                            radius,
-                            actor_kind_id,
-                        )
-                    })
-                    .flatten()
-                    .map(|positions| AbilityTargetPlan::Summon { positions })
+                    && available_count > 0
+                    && !self.actor_kind_is_reserved_task_target(actor_kind_id))
+                .then(|| {
+                    self.summon_positions_around(
+                        self.player.position,
+                        u8::try_from(available_count)
+                            .expect("summon count is bounded by its u8 content field"),
+                        radius,
+                        actor_kind_id,
+                    )
+                })
+                .flatten()
+                .map(|positions| AbilityTargetPlan::Summon { positions })
             }
             AbilityEffectDefinition::SummonCategory {
                 ref category,

@@ -1993,6 +1993,9 @@ impl Game {
                     .procedural_floors
                     .iter()
                     .filter(|floor| floor.dungeon_id.as_ref() == Some(&dungeon.id))
+                    .filter(|floor| {
+                        self.dungeon_task_travel_allowed(&world.initial_floor_id, &floor.id)
+                    })
                     .map(|floor| floor.depth)
                     .collect::<Vec<_>>();
                 depths.sort_unstable();

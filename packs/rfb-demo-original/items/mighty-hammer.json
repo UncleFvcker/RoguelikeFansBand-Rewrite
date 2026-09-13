@@ -1,0 +1,40 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.mighty-hammer",
+  "nameKey": "item-demo-mighty-hammer-name",
+  "descriptionKey": "item-demo-mighty-hammer-description",
+  "glyph": "\\",
+  "generationLevel": 15,
+  "weightTenthsPound": 200,
+  "baseValue": 1000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "equipment",
+    "weapon",
+    "instant-artifact-base"
+  ],
+  "rfbValue": {
+    "pval": 0,
+    "toArmor": 0,
+    "flags": [
+      "INSTA_ART",
+      "RIDING",
+      "SHOW_MODS"
+    ]
+  },
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 9,
+    "toHit": 0,
+    "toDamage": 0
+  },
+  "ridingWeaponKind": "compatible",
+  "rfbBaseKind": {
+    "sourceIndex": 138,
+    "tval": 21,
+    "sval": 50
+  }
+}

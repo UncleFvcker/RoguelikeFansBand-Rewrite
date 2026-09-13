@@ -2,6 +2,8 @@
 
 核对日期：2026-09-13。本轮集成种族职业 `5c5f6f38b`、法术道具 `cbc851b8e`、地牢城镇 `d873743d6`：五族接入、十五件常规装备底材、随机荒野地牢 RD1–RD6。本页区分当前配置与各批注明范围的验收证据。
 
+安格班：[推进计划](../design/angband-dungeon-plan-20260913.md)的 AG1–AG7 已完成本计划范围的实现与验收：正式 (57,40) 入口、1–127 层、十个随机任务、撤退重入、楼层限制与奖励、两位首领及专属神器、宝石激活、混沌之蛇正式胜利、胜后探索和隐退。统一回归完成后修复并定向复验失败项；前端全量 233 项及后续消息格式化 43 项、普通 Tauri 26 项、Clippy、类型／Schema／绑定、来源／lock 与 103 构筑适用性检查通过。26 条契约先核对差异再刷新至 contract-v333 并全部复验。桌面以同一出生存档分段完成十个随机任务、完整 HP 奥伯龙及混沌之蛇实战、单次胜利、101／127 层探索、召回返回入口与取消／确认隐退，31 次原生保存恢复及最终终局保存通过。普通 `target/debug/rfb-tauri.exe` 由 Tauri standalone 构建，已通过正常创角／地图／关闭及五阶段准备 IPC 拒绝；源码包及 lock 1.454.0、协议 1.267、payload 29、状态哈希 134，header 14。桌面增强角色准备、五段续跑及曾失败断言均在计划记录，不代表自然练级／难度平衡、原生确认框外观或 Android 验收；召唤与有限地图等适配边界继续保留。
+
 在上述已验证基线上，[六种族接入](defined-races-integration-plan.md)的吸血鬼、半人马、炎魔、人造人、迈雅已完成源码修改及中英文创建入口。吸血鬼补出生/物资/美德；半人马补速度、躯干护甲折减、马蹄与熟练度保存、跳跃及骑兵禁配；炎魔补被动成长、出生尸体/脚下与背包献祭、阵营伤害和恶魔吐息；人造人补真实装备经验、独立曲线、换装升降级、油料、被动、五段武器及保存一致性核对；迈雅补20级道路选择、两分支成长、领域禁令、免食、照明、诅咒知识/脱装与保存。源码创建入口51项（主种族43）、能力1915项。按用户最新调整暂缓变形怪，前五族已完成编译与自动验证：核心有效1769项通过/5项原有ignored，前端230项、Tauri24项及其余workspace测试通过；Clippy、生成物、内容锁、103构筑适用性和26条active契约通过。首轮失败及定向修复范围见[验证记录](defined-races-integration-plan.md#五族编译与测试2026-09-13)。普通可玩 Tauri standalone 调试产物已构建至 `target/debug/rfb-tauri.exe`；各族桌面交互和Android未执行。
 
 祖尔导入：[Z1–Z6 计划](../design/zul-town-import-plan-20260912.md)中的 Z1–Z6 已完成本计划范围的实现与验收。已注册 (77,6) 的 94×57 山地模板与九家独立商店，保留 2,158 个显式格、3,200 个荒野继承格；祖尔不使用普通城镇的刷怪排除。珠宝店与龙皮百货已接随机装备生成、专属估值／交易规则和库存保存；补十种龙鳞甲及喷吐激活，14 种源龙鳞甲与五种龙皮部位均有正式定义，高等级源门槛保持。三塔已接主／当前副领域身份、兽化人会员、全部鉴定、突变治疗和平衡仪式；仪式复用美德生成器重建八项零值美德，出生 RNG 顺序保持。没有旅店／Home／博物馆，物理到访尚不开放祖尔传送。Z4 已接完整漩涡任务、两件等级 85 蝙蝠披风、三个固定神器奖励及仅成功领奖开放的传送；塔与旅店／法术共用目的地资格，祖尔抵达巫术塔 (65,16)。Z5 已接三节点完整地图、会员接取与领奖、任务 10 的漩涡终态前置、源书奖励、战熊同伴及任务内水／熔岩伤害；新增 `[末日巨著]` 实体，Chaos 施法体系仍未交付。Z6 已生成 Schema／绑定／分配审计／内容锁，完成相关核心／内容／本地化检查及 26 条未刷新契约。Windows Tauri standalone 与专用 WebDriver 构建通过，桌面覆盖三类商店、三塔服务与领域切换、四任务源奖励、滚动及跨城往返；15 次原生保存恢复、30 张主流程截图和四张完整地图截图通过。测试使用等级／保护状态／清场准备，不代表自然战斗通关或 Android 验收。新游戏及选中存档加载已移除额外全列表刷新，后端日志验证未扫描其他槽位。商店与美德生成的保留适配见计划 Z2／Z3／Z4／Z5。
@@ -15,13 +17,13 @@
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.266；绑定/Schema已同步 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | 133 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload / 容器 | 14 / 28 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.450.0；pack/lock已同步 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
-| 契约政策 | contract-v332，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
+| 协议 | 1.267，绑定／Schema 已同步并核对 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | 134 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload / 容器 | 14 / 29 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
+| 内容包 | 源码及 lock 1.454.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 契约政策 | contract-v333，26 条 active scenario 已复验 | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 14 个 Class、110 个 Build、57 个 Race、36 本能力书、1,915 个 ability、590 个 item、1,410 个 actor、169 个 affix、152 个 mutation。世界定义含 38 个 dungeon（四类随机地牢及北欧神系门控的阿斯加德）；城镇有 7 个 town、69 个 shop、67 个 townFacility。基础分配池为 424 行，固定神器定义映射 156/392；创角开放14职业、103个Build。这些是定义与入口数量，行为验收范围见下文。
+正式源目录含 14 个 Class、110 个 Build、57 个 Race、36 本能力书、1,915 个 ability、596 个 item、1,410 个 actor、169 个 affix、152 个 mutation。世界定义含 39 个 dungeon（包含安格班、四类随机地牢及北欧神系门控的阿斯加德）；城镇有 7 个 town、69 个 shop、67 个 townFacility。基础分配池为 424 行，固定神器定义映射 159/392；创角开放14职业、103个Build。这些是定义与入口数量，行为验收范围见下文。
 
 常规装备底材：[补完计划](ordinary-equipment-completion-plan.md)五步已完成，新增15件，canonical kind共411个；有源分配行且非神器专用的常规装备映射为 **201/201（100%）**。死神镰刀已接生成限制、穿透无敌、近战反噬及条件返回反噬；泳装旧护甲店交易已接特殊估值。五步实现结束后统一验证：核心首轮1737通过、7失败；修正泳装旧护甲店估值入口，以及池变化暴露的抽样、唯一神器保留和路线夹具后，7项定向复验全部通过，受清场准备影响的阿斯加德楼层5项亦通过，最终有效1744项通过（全量另6项ignored，其中桌面导出用例随后显式运行通过）。内容首轮171通过、2项旧数量断言失败，更新15件带来的正式数量后2项复验通过，最终有效173项；导入器201项、本地化39项、源C估值298例、26条未刷新active契约、相关Clippy及内容lock检查通过。103个开放Build的生成责任审计无记录缺口；这不是逐Build实战声明。普通Tauri standalone完成7件代表底材的11次装备／行动及原生保存恢复，完整状态哈希一致，截图／报告在 `test-results/ordinary-equipment/`。准备包括授予物品、局部地形与目标、镰刀临时HP及反噬种子，不代表自然取得、练级或Android验收。 kind111仍是未开放身份的内部表示，kind245整数权重0不变；挖掘工具通过完整矮人主题池取得，无主题普通分配按源排除它们。普通镰刀不会自动返回，返回规则只有准备状态的核心证据；泳装及镰刀的未开放身份继续单列，不表示原版全部行为完成。
 

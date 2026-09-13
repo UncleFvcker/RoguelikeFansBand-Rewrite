@@ -1617,6 +1617,7 @@ impl Game {
             || (trait_ == WeaponTraitDto::Order && self.item_has_rfb_flag(item, "BRAND_ORDER"))
             || (trait_ == WeaponTraitDto::Blessed && self.item_has_rfb_flag(item, "BLESSED"))
             || (trait_ == WeaponTraitDto::Stun && self.item_has_rfb_flag(item, "STUN"))
+            || (trait_ == WeaponTraitDto::Impact && self.item_has_rfb_flag(item, "IMPACT"))
             || (trait_ == WeaponTraitDto::Vorpal
                 && self
                     .content

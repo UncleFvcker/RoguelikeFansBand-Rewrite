@@ -53,6 +53,7 @@ pub(super) fn reward_ready(seed: u64, build: &str, task: &str) -> (Game, String,
             required,
             active_floor_id: None,
             retakes_used: 0,
+            random_assignment: None,
         },
     );
     (game, id, facility, task.reward.unwrap().item_instance_id)

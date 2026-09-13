@@ -951,19 +951,22 @@ fn warrens_monster_drops_follow_original_probability_and_remains_profiles() {
 #[test]
 fn campaign_victory_plan_commits_ordered_events_once_without_rng() {
     let mut game = Game::new(42);
-    let victory_dungeon_ids = game
+    let victory_task_ids = game
         .campaign_definition()
         .expect("demo world should define a campaign")
-        .victory_dungeon_ids
+        .victory_task_ids
         .clone();
-    for dungeon_id in victory_dungeon_ids {
-        game.dungeon_states
-            .get_mut(&dungeon_id)
-            .expect("victory dungeon state should exist")
-            .guardian_defeated = true;
+    for task_id in victory_task_ids {
+        let state = game
+            .task_states
+            .get_mut(&task_id)
+            .expect("victory task state should exist");
+        state.status = TaskStatusKindDto::Completed;
+        state.current = state.required;
     }
     let draws_before = game.rng_draw_counter();
     let victory_turn = game.turn.saturating_add(1);
+    let fame_before = game.fame;
     let mut events = Vec::new();
 
     game.apply_campaign_events(&mut events);
@@ -982,6 +985,60 @@ fn campaign_victory_plan_commits_ordered_events_once_without_rng() {
     game.apply_campaign_events(&mut events);
     assert_eq!(events.len(), 2);
     assert_eq!(game.rng_draw_counter(), draws_before);
+    assert_eq!(game.fame, fame_before + 50);
+}
+
+#[test]
+fn campaign_requires_completed_successful_serpent_task_and_consistent_save() {
+    let mut game = Game::new(42);
+    for state in game.dungeon_states.values_mut() {
+        state.guardian_defeated = true;
+    }
+    let task_id = "demo.task.angband-serpent-of-chaos";
+    for (status, current) in [
+        (TaskStatusKindDto::Taken, 1),
+        (TaskStatusKindDto::Skipped, 1),
+        (TaskStatusKindDto::Completed, 0),
+    ] {
+        let state = game.task_states.get_mut(task_id).unwrap();
+        state.status = status;
+        state.current = current;
+        let fame = game.fame;
+        let mut events = Vec::new();
+        game.apply_campaign_events(&mut events);
+        assert!(events.is_empty());
+        assert_eq!(game.campaign_state.status, CampaignStatusDto::Active);
+        assert_eq!(game.fame, fame);
+    }
+    let mut game = Game::new(42);
+    let state = game.task_states.get_mut(task_id).unwrap();
+    state.status = TaskStatusKindDto::Completed;
+    state.current = 1;
+    assert!(
+        Game::from_save(game.to_save()).is_err(),
+        "completed victory target cannot remain active"
+    );
+    game.apply_campaign_events(&mut Vec::new());
+    game.turn += 1;
+    let saved = game.to_save();
+    assert_eq!(
+        Game::from_save(saved.clone()).unwrap().state_hash(),
+        game.state_hash()
+    );
+    let mut invalid = saved.clone();
+    invalid.campaign_state = None;
+    assert!(
+        Game::from_save(invalid).is_err(),
+        "missing victory is not retroactively repaired"
+    );
+    let mut invalid = saved;
+    invalid
+        .task_states
+        .iter_mut()
+        .find(|state| state.task_id == task_id)
+        .unwrap()
+        .current = 0;
+    assert!(Game::from_save(invalid).is_err());
 }
 
 #[test]
@@ -1462,6 +1519,7 @@ fn task_rewards_use_one_weighted_default_choice_and_class_affix_overrides() {
                 required: 1,
                 active_floor_id: None,
                 retakes_used: 0,
+                random_assignment: None,
             },
         );
         let before_draws = game.rng_draw_counter();
@@ -1489,6 +1547,7 @@ fn task_rewards_use_one_weighted_default_choice_and_class_affix_overrides() {
             required: 1,
             active_floor_id: None,
             retakes_used: 0,
+            random_assignment: None,
         },
     );
     let reward = item_reward(
@@ -1690,6 +1749,7 @@ fn crows_nest_unlocks_after_trouble_at_home_clears_all_birds_and_rewards_a_staff
             required: 5,
             active_floor_id: None,
             retakes_used: 0,
+            random_assignment: None,
         },
     );
     dispatch_next(
@@ -1779,6 +1839,7 @@ fn old_man_willow_unlocks_after_crows_nest_and_rewards_an_elemental_ring() {
             required: 1,
             active_floor_id: None,
             retakes_used: 0,
+            random_assignment: None,
         },
     );
     dispatch_next(
@@ -1826,19 +1887,18 @@ fn old_man_willow_unlocks_after_crows_nest_and_rewards_an_elemental_ring() {
         "demo.terrain.old-man-willow-entry-completed"
     );
     game.player.position = Position { x: 124, y: 35 };
-    let before_draws = game.rng_draw_counter();
-    dispatch_next(
-        &mut game,
-        GameCommand::ClaimTaskReward {
-            facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
-            task_id: task_id.to_owned(),
-        },
-    );
+    let mut before_reward = game.clone();
+    let claim = GameCommand::ClaimTaskReward {
+        facility_id: "demo.town-facility.outpost-white-horse".to_owned(),
+        task_id: task_id.to_owned(),
+    };
+    let reward_update = dispatch_next(&mut game, claim.clone());
     assert_eq!(
         game.task_states[task_id].status,
         TaskStatusKindDto::Completed
     );
-    assert_eq!(game.rng_draw_counter(), before_draws + 10);
+    assert_eq!(dispatch_next(&mut before_reward, claim), reward_update);
+    assert_eq!(game.rng, before_reward.rng);
     let reward = game
         .items
         .iter()
@@ -1885,6 +1945,7 @@ fn vapor_quest_unlocks_after_old_man_willow_clears_the_cellar_and_rewards_detect
             required: 1,
             active_floor_id: None,
             retakes_used: 0,
+            random_assignment: None,
         },
     );
     dispatch_next(
@@ -1984,6 +2045,7 @@ fn old_castle_unlocks_after_vapor_quest_and_rewards_the_warrior_artifact_pool() 
             required: 1,
             active_floor_id: None,
             retakes_used: 0,
+            random_assignment: None,
         },
     );
     dispatch_next(
@@ -2070,6 +2132,7 @@ fn old_castle_reward_is_forced_even_when_the_artifact_was_generated_before_claim
             required: 1,
             active_floor_id: None,
             retakes_used: 0,
+            random_assignment: None,
         },
     );
     game.generated_artifact_ids
@@ -2185,6 +2248,7 @@ fn count_task_rewards_complete_only_on_claim_with_the_expected_inventory_item() 
                     required: 1,
                     active_floor_id: None,
                     retakes_used: 0,
+                    random_assignment: None,
                 },
             );
         }
@@ -2197,6 +2261,7 @@ fn count_task_rewards_complete_only_on_claim_with_the_expected_inventory_item() 
                 required,
                 active_floor_id: None,
                 retakes_used: 0,
+                random_assignment: None,
             },
         );
         let reward_id = format!("{task_id}.reward.1");
@@ -2236,6 +2301,7 @@ fn pest_control_state(status: TaskStatusKindDto, current: u32) -> TaskState {
         active_floor_id: (status == TaskStatusKindDto::Active)
             .then(|| "demo.floor.warrens-depth-5".to_owned()),
         retakes_used: 0,
+        random_assignment: None,
     }
 }
 
@@ -2282,6 +2348,7 @@ fn pest_control_unlocks_only_after_the_thieves_reward_is_claimed() {
             required: 1,
             active_floor_id: None,
             retakes_used: 0,
+            random_assignment: None,
         },
     );
     assert_eq!(
@@ -2313,6 +2380,7 @@ fn count_accepts_pest_control_without_advancing_rng() {
             required: 1,
             active_floor_id: None,
             retakes_used: 0,
+            random_assignment: None,
         },
     );
     let before_draws = game.rng_draw_counter();
@@ -2475,6 +2543,7 @@ fn count_follow_up_tasks_unlock_in_the_original_order() {
         required,
         active_floor_id: None,
         retakes_used: 0,
+        random_assignment: None,
     };
     let sequence = [
         ("demo.task.thieves-hideout", "demo.task.pest-control", 1),
@@ -2529,6 +2598,7 @@ fn royal_crypt_places_five_archliches_on_its_level_seventy_fixed_floor() {
             required: 1,
             active_floor_id: None,
             retakes_used: 0,
+            random_assignment: None,
         },
     );
     dispatch_next(
@@ -2557,7 +2627,7 @@ fn royal_crypt_places_five_archliches_on_its_level_seventy_fixed_floor() {
 }
 
 #[test]
-fn warrens_dungeon_conquest_returns_retires_and_round_trips() {
+fn warrens_conquest_returns_without_winning_or_retiring() {
     let mut game =
         Game::new_with_build(49, "demo.build.warrior").expect("Warrens journey should create");
     game.player
@@ -2607,20 +2677,21 @@ fn warrens_dungeon_conquest_returns_retires_and_round_trips() {
     }];
 
     let victory = dispatch_next(&mut game, GameCommand::Wait);
-    let guardian_event = victory
-        .events
-        .iter()
-        .position(|event| event.kind == "dungeon.guardian-defeated")
-        .expect("guardian death should conquer the Warrens");
-    let victory_event = victory
-        .events
-        .iter()
-        .position(|event| event.kind == "campaign.victorious")
-        .expect("Warrens conquest should win the journey");
-    assert!(guardian_event < victory_event);
-    assert_eq!(victory.campaign.status, CampaignStatusDto::Victorious);
+    assert!(
+        victory
+            .events
+            .iter()
+            .any(|event| event.kind == "dungeon.guardian-defeated")
+    );
+    assert!(
+        !victory
+            .events
+            .iter()
+            .any(|event| event.kind == "campaign.victorious")
+    );
+    assert_eq!(victory.campaign.status, CampaignStatusDto::Active);
     assert_eq!(victory.campaign.conquered_dungeons, 1);
-    assert_eq!(victory.campaign.score, 60_000);
+    assert_eq!(victory.campaign.score, 10_000);
     let guardian_drops = game
         .items
         .iter()
@@ -2678,7 +2749,7 @@ fn warrens_dungeon_conquest_returns_retires_and_round_trips() {
     }));
 
     let victorious_hash = game.state_hash();
-    let mut restored = Game::from_save(game.to_save()).expect("victory should round-trip");
+    let mut restored = Game::from_save(game.to_save()).expect("conquest should round-trip");
     assert_eq!(restored.world_id, DEFAULT_WORLD_ID);
     assert_eq!(restored.state_hash(), victorious_hash);
 
@@ -2689,28 +2760,23 @@ fn warrens_dungeon_conquest_returns_retires_and_round_trips() {
             update.floor_id,
             format!("demo.floor.warrens-depth-{expected_depth}")
         );
-        assert_eq!(update.campaign.status, CampaignStatusDto::Victorious);
+        assert_eq!(update.campaign.status, CampaignStatusDto::Active);
     }
     place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
     let surface = dispatch_next(&mut restored, GameCommand::TraverseStairs);
     assert_eq!(surface.floor_id, wilderness::WILDERNESS_FLOOR_ID);
-    assert_eq!(surface.campaign.status, CampaignStatusDto::Victorious);
+    assert_eq!(surface.campaign.status, CampaignStatusDto::Active);
 
     let retirement = dispatch_next(&mut restored, GameCommand::Retire);
-    assert_eq!(retirement.campaign.status, CampaignStatusDto::Retired);
+    assert_eq!(retirement.campaign.status, CampaignStatusDto::Active);
     assert!(
-        retirement
+        !retirement
             .events
             .iter()
             .any(|event| event.kind == "campaign.retired")
     );
-    let retired_hash = restored.state_hash();
-    let retired = Game::from_save(restored.to_save()).expect("retirement should round-trip");
-    assert_eq!(retired.state_hash(), retired_hash);
-    assert_eq!(
-        retired.snapshot().campaign.status,
-        CampaignStatusDto::Retired
-    );
+    let saved = Game::from_save(restored.to_save()).expect("conquest return should round-trip");
+    assert_eq!(saved.state_hash(), restored.state_hash());
 }
 
 #[test]

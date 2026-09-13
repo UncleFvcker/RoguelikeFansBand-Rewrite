@@ -525,6 +525,7 @@ fn demigod_passives_scale_player_healing_and_potion_energy() {
     assert_eq!(
         game.player_mutation_action_energy_cost(
             &GameAction::UseItem {
+                jewel_recall: None,
                 item_id: POTION_ID.to_owned(),
                 target: None,
                 target_glyph: None,

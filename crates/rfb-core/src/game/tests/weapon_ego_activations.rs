@@ -240,6 +240,7 @@ fn riding_charge_game(seed: u64) -> Game {
         .expect("test weapon should exist");
     item.affix_ids = vec![AFFIX_ID.to_owned()];
     item.activation = Some(ItemActivationDto {
+        recall_choice: false,
         profile_id: ACTIVATION_ID.to_owned(),
         name_key: "test-device-activation-riding-charge-name".to_owned(),
         power: 1,
@@ -348,6 +349,7 @@ fn activation_effect_game(seed: u64, affix_id: &str, effect: &str, weight: u16) 
     item.affix_ids = vec![ABILITY_EFFECT_AFFIX_ID.to_owned()];
     item.quality = ItemQualityDto::Fine;
     item.activation = Some(ItemActivationDto {
+        recall_choice: false,
         profile_id: activation.id,
         name_key: activation.name_key,
         power: 1,

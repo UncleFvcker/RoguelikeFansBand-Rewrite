@@ -15,6 +15,7 @@ fn original_pack_path() -> PathBuf {
 
 mod abilities;
 mod actors;
+mod angband;
 mod catalog;
 mod items;
 mod pipeline;

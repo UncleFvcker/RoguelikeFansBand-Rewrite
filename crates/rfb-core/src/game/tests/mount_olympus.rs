@@ -651,12 +651,13 @@ fn mount_olympus_artifacts_equip_activate_and_round_trip() {
         }
         game.player.hp = 1;
         game.nutrition = 1_000;
+        let charges_before = game.items.iter().find(|i| i.id == id).unwrap().charges;
         let events = ol3_activate(&mut game, &id, target.as_ref());
         match name {
             "zeus" => assert!(game.entities[0].hp < 10_000, "{events:?}"),
             "poseidon" => {
                 assert!(game.terrain.iter().any(|t| t != "demo.terrain.floor"));
-                assert_eq!(game.items.iter().find(|i| i.id == id).unwrap().charges.unwrap().current, 1);
+                assert_eq!(game.items.iter().find(|i| i.id == id).unwrap().charges, charges_before);
                 ol3_activate(&mut game, &id, None);
             }
             "hades" => assert_eq!(game.progress.attributes.strength, game.progress.maximum_attributes.strength),

@@ -4558,9 +4558,9 @@ fn ready_armor_group_generates_equips_and_preserves_consumers_after_save() {
 fn a10_hell_beast_natural_entry_drops_zero_rarity_artifact_once_after_save() {
     const BEAST: &str = "demo.actor.greater-hell-beast";
     const SHIRT: &str = "demo.item.legendary-lost-treasure";
-    // Seed 54 reaches GHB through the unmodified formal entrance/floor/ecology.
+    // Seed 29 reaches GHB through the unmodified formal entrance/floor/ecology.
     // Combat is shortened below; this is not a natural leveling test.
-    let mut game = Game::new_with_build(54, "demo.build.warrior").unwrap();
+    let mut game = Game::new_with_build(29, "demo.build.warrior").unwrap();
     choose_human_talent_if_pending(&mut game);
     place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
     dispatch_next(&mut game, GameCommand::TraverseStairs);

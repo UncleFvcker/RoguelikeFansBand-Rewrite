@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+mod angband_e2e;
 mod asgard_e2e;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -38,6 +39,7 @@ pub(super) struct FloorTransitionTarget {
 }
 
 pub(super) struct FloorTransitionOutcome {
+    pub(super) dungeon_task_events: Vec<DomainEvent>,
     pub(super) from_floor_id: String,
     pub(super) to_floor_id: String,
     pub(super) expedition_ended: bool,
@@ -99,6 +101,7 @@ struct OneShotArrivalPlan {
 }
 
 struct FloorTransitionPlan {
+    abandon_task: bool,
     from_floor_id: String,
     from_dungeon_instance_id: Option<String>,
     from_storage_key: String,
@@ -433,12 +436,13 @@ impl Game {
                         .dungeons
                         .iter()
                         .find(|dungeon| dungeon.id == recall.dungeon_id)?;
-                    self.dungeon_entry_requirements_met(dungeon)
-                        .then_some(FloorTransitionTarget {
-                            floor_id: floor.id.clone(),
-                            arrival_connection_id: None,
-                            departure_connection_id: None,
-                        })
+                    (self.dungeon_entry_requirements_met(dungeon)
+                        && self.dungeon_task_travel_allowed(&self.current_floor_id, &floor.id))
+                    .then_some(FloorTransitionTarget {
+                        floor_id: floor.id.clone(),
+                        arrival_connection_id: None,
+                        departure_connection_id: None,
+                    })
                 })
                 .into_iter()
                 .collect();
@@ -546,6 +550,9 @@ impl Game {
         upward.dedup();
         downward.sort();
         downward.dedup();
+        downward.retain(|target| {
+            self.dungeon_task_travel_allowed(&self.current_floor_id, &target.floor_id)
+        });
         (upward, downward)
     }
 
@@ -570,9 +577,9 @@ impl Game {
                 .dungeons
                 .iter()
                 .find(|dungeon| dungeon.id == recall.dungeon_id && !dungeon.random)?;
-            return self
-                .dungeon_entry_requirements_met(dungeon)
-                .then_some(RecallUseAction::Start);
+            return (self.dungeon_entry_requirements_met(dungeon)
+                && self.dungeon_task_travel_allowed(&self.current_floor_id, &recall.floor_id))
+            .then_some(RecallUseAction::Start);
         }
         floor_dungeon_id(world, &self.current_floor_id)
             .filter(|id| {
@@ -662,6 +669,15 @@ impl Game {
             .iter()
             .find(|floor| floor.id == target.floor_id);
         let logical_from_floor_id = source_floor_id.unwrap_or(&self.current_floor_id).to_owned();
+        if !self.dungeon_task_travel_allowed(&logical_from_floor_id, &target.floor_id) {
+            return Ok(None);
+        }
+        if abandon_task
+            && let Some(id) = self.active_dungeon_task_id()
+            && self.task_states[id].random_assignment.is_none()
+        {
+            return Ok(None);
+        }
         let source_definition = world
             .procedural_floors
             .iter()
@@ -670,6 +686,7 @@ impl Game {
             || logical_from_floor_id == *initial_floor_id
             || source_definition.is_some_and(|floor| floor.lifecycle == FloorLifecycle::Town);
         let target_is_surface = target.floor_id == *initial_floor_id
+            || target.floor_id == wilderness::WILDERNESS_FLOOR_ID
             || target_definition.is_some_and(|floor| floor.lifecycle == FloorLifecycle::Town);
         let continuous_wilderness_source = self.is_wilderness_floor()
             && logical_from_floor_id == *initial_floor_id
@@ -916,6 +933,7 @@ impl Game {
         following_summon_ids.sort();
 
         Ok(Some(FloorTransitionPlan {
+            abandon_task,
             from_floor_id,
             from_dungeon_instance_id,
             from_storage_key,
@@ -964,6 +982,25 @@ impl Game {
         &mut self,
         abandon_task: bool,
     ) -> Result<Option<FloorTransitionOutcome>, CoreError> {
+        if abandon_task && let Some(id) = self.active_dungeon_task_id() {
+            if self.task_states[id].random_assignment.is_none() {
+                return Ok(None);
+            }
+            let Some(target) = self
+                .teleport_level_targets()
+                .0
+                .into_iter()
+                .max_by_key(|target| self.floor_depth(&target.floor_id))
+            else {
+                return Ok(None);
+            };
+            return self.transition_floor(
+                target.floor_id,
+                target.arrival_connection_id,
+                target.departure_connection_id,
+                true,
+            );
+        }
         let terrain_id = self.terrain_at(self.player.position).to_owned();
         let terrain = self
             .content
@@ -1143,6 +1180,36 @@ impl Game {
         &mut self,
         plan: FloorTransitionPlan,
     ) -> Result<FloorTransitionOutcome, CoreError> {
+        let world = self.content.world(&self.world_id).expect("world");
+        let enters_task = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == plan.target_floor_id)
+            .is_some_and(|floor| {
+                world.tasks.iter().any(|task| {
+                    super::tasks::dungeon::automatic(task)
+                        && super::tasks::task_applies_to_floor(
+                            task,
+                            floor,
+                            self.task_states.get(&task.id),
+                        )
+                })
+            });
+        if enters_task || self.active_dungeon_task_id().is_some() {
+            let mut staged = self.clone();
+            let outcome = staged.commit_floor_transition_inner(plan)?;
+            *self = staged;
+            return Ok(outcome);
+        }
+        self.commit_floor_transition_inner(plan)
+    }
+
+    fn commit_floor_transition_inner(
+        &mut self,
+        plan: FloorTransitionPlan,
+    ) -> Result<FloorTransitionOutcome, CoreError> {
+        let mut dungeon_task_events = Vec::new();
+        self.dungeon_task_departure(plan.abandon_task, &mut dungeon_task_events);
         self.apply_retained_instance_action(&plan.retained_instance_action);
 
         let following_summon_ids = plan
@@ -1372,6 +1439,11 @@ impl Game {
         }
 
         Ok(FloorTransitionOutcome {
+            dungeon_task_events: {
+                self.activate_dungeon_task(&mut dungeon_task_events)?;
+                self.refresh_dungeon_task_stairs();
+                dungeon_task_events
+            },
             from_floor_id: plan.from_floor_id,
             to_floor_id: plan.target_floor_id,
             expedition_ended: plan.expedition_end.is_some(),
@@ -1412,6 +1484,7 @@ impl Game {
             from_floor_id: transition.from_floor_id,
             to_floor_id: transition.to_floor_id,
         });
+        events.extend(transition.dungeon_task_events);
         for (entity_id, target_kind_id) in transition.summons_followed {
             events.push(DomainEvent::SummonFollowedFloor {
                 entity_id,

@@ -48,7 +48,7 @@
           "minimum": 0,
           "type": "integer"
         },
-        "victoryDungeonIds": {
+        "victoryTaskIds": {
           "items": {
             "type": "string"
           },
@@ -56,7 +56,7 @@
         }
       },
       "required": [
-        "victoryDungeonIds",
+        "victoryTaskIds",
         "dungeonConquestPoints",
         "taskCompletionPoints",
         "victoryBonus",
@@ -2032,6 +2032,42 @@
       ],
       "type": "object"
     },
+    "RandomTaskCandidateDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "canBeTarget": {
+          "description": "NO_QUEST and Utgard-Loke remain in the weighted pool, then are rejected.",
+          "type": "boolean"
+        },
+        "legacyIndex": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maxDepth": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "rarity": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "actorKindId",
+        "legacyIndex",
+        "rarity",
+        "maxDepth",
+        "canBeTarget"
+      ],
+      "type": "object"
+    },
     "RetakeFloorPolicy": {
       "enum": [
         "preserve-floor",
@@ -2245,6 +2281,30 @@
             "kind",
             "dungeonId",
             "depth"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "baseDepth": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "dungeonId": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "random-dungeon-depth",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "dungeonId",
+            "baseDepth"
           ],
           "type": "object"
         }
@@ -2871,6 +2931,13 @@
     "proceduralFloors": {
       "items": {
         "$ref": "#/$defs/ProceduralFloorDefinition"
+      },
+      "type": "array"
+    },
+    "randomTaskCandidates": {
+      "description": "Source birth allocation pool, independent of ordinary floor allocation.",
+      "items": {
+        "$ref": "#/$defs/RandomTaskCandidateDefinition"
       },
       "type": "array"
     },

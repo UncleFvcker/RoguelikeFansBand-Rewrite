@@ -405,6 +405,12 @@ fn melee_conversion_book_cast_and_healing_continue_identically_after_loading() {
     game.debug_set_ability_casts_succeed(false);
     let mut restored = Game::from_save(game.to_save()).unwrap();
     for id in [spell, HP_TO_MP, MP_TO_HP] {
+        // Choose a successful percentile without disabling the production RNG check.
+        let seed = (0..100)
+            .find(|seed| RfbRng::seeded(*seed).bounded(100) >= 95)
+            .unwrap();
+        game.rng = RfbRng::seeded(seed);
+        restored.rng = game.rng.clone();
         let command = GameCommand::CastAbility {
             ability_id: id.to_owned(),
             target: TargetSelection::SelfTarget,
@@ -415,7 +421,9 @@ fn melee_conversion_book_cast_and_healing_continue_identically_after_loading() {
             update
                 .events
                 .iter()
-                .any(|e| e.kind == "ability.cast-success")
+                .any(|e| e.kind == "ability.cast-success"),
+            "{id}: {:?}",
+            update.events
         );
         assert_eq!(game.state_hash(), restored.state_hash());
         assert_eq!(game.rng, restored.rng);

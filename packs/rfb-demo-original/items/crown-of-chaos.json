@@ -1,0 +1,98 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.crown-of-chaos",
+  "nameKey": "item-demo-crown-of-chaos-name",
+  "descriptionKey": "item-demo-crown-of-chaos-description",
+  "glyph": "]",
+  "generationLevel": 100,
+  "weightTenthsPound": 20,
+  "baseValue": 10000000,
+  "maxStack": 1,
+  "equipmentSlot": "head",
+  "tags": [
+    "equipment",
+    "armor",
+    "artifact"
+  ],
+  "rfbValue": {
+    "pval": 125,
+    "toArmor": 0,
+    "flags": [
+      "CHR",
+      "CON",
+      "CURSED",
+      "DEX",
+      "FIXED_ART",
+      "HEAVY_CURSE",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INFRA",
+      "INSTA_ART",
+      "INT",
+      "LITE",
+      "NO_TELE",
+      "PERMA_CURSE",
+      "QUESTITEM",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_CONF",
+      "RES_DARK",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_LITE",
+      "RES_NEXUS",
+      "RES_POIS",
+      "SEE_INVIS",
+      "STR",
+      "TELEPATHY",
+      "WIS"
+    ]
+  },
+  "artifactGeneration": {
+    "sourceIndex": 34,
+    "baseItemKindId": "demo.item.massive-iron-crown",
+    "instant": true,
+    "rarityOneIn": 1
+  },
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 125,
+    "intelligence": 125,
+    "wisdom": 125,
+    "dexterity": 125,
+    "constitution": 125,
+    "charisma": 125
+  },
+  "equipmentBonuses": {
+    "infravision": 125,
+    "lightRadius": 1
+  },
+  "initialCurse": "permanent",
+  "passives": [
+    "see-invisible",
+    "telepathy",
+    "anti-teleport"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant",
+    "poison": "resistant",
+    "light": "resistant",
+    "dark": "resistant",
+    "confusion": "resistant",
+    "nexus": "resistant"
+  }
+}

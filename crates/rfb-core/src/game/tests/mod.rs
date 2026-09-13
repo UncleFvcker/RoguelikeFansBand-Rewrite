@@ -18,6 +18,7 @@ use super::*;
 mod abilities;
 mod acquirement;
 mod android;
+mod angband;
 mod archer;
 mod arena;
 mod artifact_identity;

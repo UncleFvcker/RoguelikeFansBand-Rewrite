@@ -240,6 +240,7 @@ pub(super) fn item_creation_state_is_valid(
         }
         Some(
             ItemOriginKindDto::Chest
+            | ItemOriginKindDto::AngbandReward
             | ItemOriginKindDto::Acquire
             | ItemOriginKindDto::Mundanity
             | ItemOriginKindDto::Rubble,
@@ -420,6 +421,7 @@ pub(super) fn floor_connections_are_valid(
     terrain: &[String],
     connections: &[FloorConnectionState],
     world: &rfb_content::WorldDefinition,
+    task_states: &BTreeMap<String, super::tasks::TaskState>,
 ) -> bool {
     if connections
         .iter()
@@ -470,7 +472,19 @@ pub(super) fn floor_connections_are_valid(
                 && position.y < i32::from(height)
                 && terrain
                     .get(position.y as usize * usize::from(width) + position.x as usize)
-                    .is_some_and(|terrain_id| terrain_id == &connection.terrain_id)
+                    .is_some_and(|terrain_id| {
+                        terrain_id
+                            == super::tasks::dungeon::connection_terrain(
+                                world,
+                                task_states,
+                                definition,
+                                connection,
+                                state
+                                    .target_floor_id
+                                    .as_deref()
+                                    .unwrap_or(&connection.target_floor_id),
+                            )
+                    })
                 && floor_connection_target_is_valid(floor_id, connection, state, world)
         })
 }
@@ -609,7 +623,8 @@ impl Game {
                         definition
                             .finite_lifetime_instance_limit()
                             .is_some_and(|limit| *count <= limit)
-                            && !definition.tags.iter().any(|tag| tag == "guardian")
+                            && (!definition.tags.iter().any(|tag| tag == "guardian")
+                                || definition.id == "demo.actor.the-serpent-of-chaos")
                     })
             })
         {
@@ -632,7 +647,9 @@ impl Game {
             let Some(definition) = self.content.actor(&actor.kind_id) else {
                 continue;
             };
-            if definition.tags.iter().any(|tag| tag == "guardian") {
+            if definition.tags.iter().any(|tag| tag == "guardian")
+                && definition.id != "demo.actor.the-serpent-of-chaos"
+            {
                 continue;
             }
             if self.actor_is_dead_unique_resurrection(actor) {
@@ -867,6 +884,7 @@ impl Game {
                 &self.terrain,
                 &self.floor_connections,
                 world,
+                &self.task_states,
             )
         }) {
             return Err(CoreError::InvalidSave(
@@ -1049,10 +1067,20 @@ impl Game {
                 .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
             if item.origin_actor_kind_id.as_ref().is_some_and(|actor_id| {
                 self.content.actor(actor_id).is_none()
-                    || !definition
+                    || (!definition
                         .tags
                         .iter()
                         .any(|tag| tag == "corpse" || tag == "skeleton")
+                        && !matches!(
+                            (item.kind_id.as_str(), actor_id.as_str()),
+                            (
+                                "demo.item.grond" | "demo.item.crown-of-chaos",
+                                "demo.actor.the-serpent-of-chaos"
+                            ) | (
+                                "demo.item.jewel-of-judgement" | "demo.item.amber",
+                                "demo.actor.oberon-king-of-amber"
+                            )
+                        ))
             }) {
                 return Err(CoreError::InvalidSave("item origin actor state is invalid"));
             }
@@ -1270,6 +1298,7 @@ impl Game {
                     &floor.terrain,
                     &floor.connections,
                     world,
+                    &self.task_states,
                 )
             }) {
                 return Err(CoreError::InvalidSave(
@@ -1393,6 +1422,7 @@ impl Game {
             .world(&self.world_id)
             .expect("active world must remain available");
         let mut expected_tasks = initial_task_states(world, self.wilderness_seed);
+        self.validate_dungeon_tasks()?;
         for primary in world
             .tasks
             .iter()
@@ -1418,6 +1448,7 @@ impl Game {
         {
             return Err(CoreError::InvalidSave("task state set is invalid"));
         }
+        super::tasks::validate_random_task_assignments(world, &self.content, &self.task_states)?;
         for (task_id, state) in &self.task_states {
             let Some(task) = task_definition(world, task_id) else {
                 return Err(CoreError::InvalidSave("task state ID is invalid"));
@@ -1425,7 +1456,7 @@ impl Game {
             let expected = expected_tasks.get(task_id).cloned().unwrap_or_else(|| {
                 super::tasks::task_initial_state(world, task, &self.task_states)
             });
-            let members = task_floors(world, task_id).collect::<Vec<_>>();
+            let members = task_floors(world, task_id, Some(state)).collect::<Vec<_>>();
             let objectives = task_objectives(world, task_id);
             let Some(objective) = usize::try_from(state.stage_index)
                 .ok()
@@ -1443,8 +1474,17 @@ impl Game {
                     .any(|stored| stored.id == floor.id)
             });
             let status_is_valid = match state.status {
+                TaskStatusKindDto::Skipped => {
+                    super::tasks::dungeon::automatic(task)
+                        && state.active_floor_id.is_none()
+                        && state.current == 0
+                        && state.stage_index == 0
+                }
                 TaskStatusKindDto::Active => active_is_valid,
-                TaskStatusKindDto::Paused => state.active_floor_id.is_none() && paused_is_valid,
+                TaskStatusKindDto::Paused => {
+                    state.active_floor_id.is_none()
+                        && (paused_is_valid || super::tasks::dungeon::automatic(task))
+                }
                 TaskStatusKindDto::Completed => {
                     state.active_floor_id.is_none()
                         && usize::try_from(state.stage_index)
@@ -1454,6 +1494,7 @@ impl Game {
                 }
                 TaskStatusKindDto::Available => {
                     state.active_floor_id.is_none()
+                        && !super::tasks::task_is_birth_taken(task)
                         && (task.source_facility_id.is_none()
                             || expected.status == TaskStatusKindDto::Available)
                 }
@@ -1483,8 +1524,9 @@ impl Game {
                 }
                 TaskStatusKindDto::Taken => {
                     state.active_floor_id.is_none()
-                        && task_definition(world, task_id)
-                            .is_some_and(|task| task.source_facility_id.is_some())
+                        && (task.source_facility_id.is_some()
+                            || super::tasks::task_is_birth_taken(task)
+                            || state.random_assignment.is_some())
                 }
             };
             if (state.stage_index == 0 && expected.required != objective.required)
@@ -1713,9 +1755,8 @@ impl Game {
                             .is_some_and(|turn| score == self.campaign_score_at(turn))
                     });
                     if !campaign_victory_reached
-                        || (self.current_floor_id != world.initial_floor_id
-                            && self.current_town().is_none())
-                        || self.current_dungeon_instance_id.is_some()
+                        || !self.campaign_retirement_location()
+                        || self.player.hp < 0
                         || !valid_turns
                         || !valid_score
                     {
@@ -2049,7 +2090,6 @@ impl Game {
         };
         valid_id(&summon.owner_id)
             && valid_id(&summon.source_ability_id)
-            && summon.remaining_turns > 0
             && self
                 .content
                 .ability(&summon.source_ability_id)
@@ -2064,6 +2104,17 @@ impl Game {
                     ability
                 })
                 .is_some_and(|ability| {
+                    if summon.remaining_turns == 0
+                        && !matches!(
+                            &ability.effect,
+                            AbilityEffectDefinition::SummonCategory {
+                                duration_turns: 0,
+                                ..
+                            }
+                        )
+                    {
+                        return false;
+                    }
                     if ability
                         .tags
                         .iter()

@@ -158,7 +158,7 @@ fn no_candidate_confirmation_commits_the_realm_without_a_learning_turn() {
         );
         assert_eq!(
             game.study_random_player_ability(&book_id).unwrap(),
-            "demo.ability.death-detect-unlife"
+            "demo.ability.death-malediction"
         );
     }
     assert_eq!(game.state_hash(), restored.state_hash());

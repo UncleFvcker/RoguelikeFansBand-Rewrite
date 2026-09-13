@@ -8,7 +8,7 @@
       "category": "dragon",
       "countDice": 1,
       "countSides": 3,
-      "durationTurns": 10000,
+      "durationTurns": 0,
       "maximumLevel": 100,
       "radius": 2,
       "type": "summon-category"
