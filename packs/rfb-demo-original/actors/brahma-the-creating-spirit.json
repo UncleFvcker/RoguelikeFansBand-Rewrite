@@ -238,5 +238,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.brahmastra",
+    "chancePercent": 3
   }
 }

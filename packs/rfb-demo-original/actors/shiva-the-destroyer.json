@@ -277,5 +277,9 @@
   ],
   "terrainInteraction": {
     "destroysWalls": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.shiva",
+    "chancePercent": 40
   }
 }

@@ -235,5 +235,13 @@
     "nonliving",
     "orc-cave",
     "unique"
-  ]
+  ],
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.kaumodaki",
+    "chancePercent": 20,
+    "alternative": {
+      "itemKindId": "demo.item.kaustubha",
+      "chancePercent": 20
+    }
+  }
 }

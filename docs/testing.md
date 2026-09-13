@@ -108,7 +108,9 @@ node e2e/asgard-standalone.e2e.mjs
 
 ## 常规装备底材桌面验收
 
-Q1命名奖励复用下述脚本的 `--quest-items` 模式：`node web/e2e/ordinary-equipment-standalone.e2e.mjs --quest-items`（仓库根目录）。它从正常1级人类战士出生存档准备局部场地、相邻当前HP1的Fang及真实击杀／掉落种子；物品由实际死亡掉落产生。UI攻击、移动、拾取、装备及等待，每步原生保存恢复并核对核心哈希。已有报告在`test-results/quest-items-q1/`。按Q1期间用户新约定，后续编译及验收等Q5完成后统一进行。
+Q1命名奖励复用下述脚本的 `--quest-items` 模式：`node web/e2e/ordinary-equipment-standalone.e2e.mjs --quest-items`（仓库根目录）。它从正常1级人类战士出生存档准备局部场地、相邻当前HP1的Fang及真实击杀／掉落种子；物品由实际死亡掉落产生。UI攻击、移动、拾取、装备及等待，每步原生保存恢复并核对核心哈希。已有报告在`test-results/quest-items-q1/`。Q5实现结束后统一执行此前延后的编译和验收。
+
+Q2–Q5代表流程使用 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --quest-items-all`。从正常新档显式准备50级、天赋与无敌；眼球／九头蛇之眼／罗摩由相邻源怪物的真实死亡掉落产生，刺针由接受金库任务、进入正式地图产生。之后清理场景并定位真实奖励，罗摩另给10支普通箭；UI拾取、装备、激活／射击与等待，每步保存恢复。准备逻辑在ignored核心导出测试中，普通产物没有测试准备IPC。证据在 `test-results/quest-items-q2-q5/`；这不代表自然练级、战斗难度、全部神祇的桌面遭遇或Q4完整任务路线验收。
 
 在 `web` 执行 `npm run build:standalone:debug`，随后执行 `node e2e/ordinary-equipment-standalone.e2e.mjs`。[场景](../web/e2e/ordinary-equipment-standalone.e2e.mjs)使用普通 Tauri EXE、隔离的 WebView 配置目录和正式创角／装备／输入／保存加载路径，不启用 WebDriver 专用准备 IPC。
 

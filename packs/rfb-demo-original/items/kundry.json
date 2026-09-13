@@ -87,11 +87,7 @@
           "range": 0,
           "requiresLineOfEffect": false
         },
-        "effect": {
-          "type": "restore-resource",
-          "resourceId": "demo.resource.mana",
-          "amount": 15
-        }
+        "effectProgramId": "demo.effect.kundry-activation"
       }
     ],
     "recovery": {

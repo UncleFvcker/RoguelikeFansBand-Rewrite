@@ -526,20 +526,17 @@ impl Game {
     }
 
     pub(super) fn item_has_darkness(&self, item: &crate::state::ItemInstance) -> bool {
-        self.content
-            .item(&item.kind_id)
-            .is_some_and(|definition| {
-                definition.equipment_bonuses.light_radius < 0
+        self.content.item(&item.kind_id).is_some_and(|definition| {
+            definition.equipment_bonuses.light_radius < 0
                     // The fixed eye's special subtraction is not OF_DARKNESS;
                     // dungeon.c:1351 still lets this light burn a vampire.
                     && definition.artifact_generation.as_ref()
                         .is_none_or(|artifact| artifact.source_index != 307)
-            })
-            || item
-                .affix_ids
-                .iter()
-                .filter_map(|id| self.content.affix(id))
-                .any(|affix| affix.equipment_bonuses.light_radius < 0)
+        }) || item
+            .affix_ids
+            .iter()
+            .filter_map(|id| self.content.affix(id))
+            .any(|affix| affix.equipment_bonuses.light_radius < 0)
             || item.intrinsic_properties.equipment_bonuses.light_radius < 0
             || item
                 .rolled_affixes

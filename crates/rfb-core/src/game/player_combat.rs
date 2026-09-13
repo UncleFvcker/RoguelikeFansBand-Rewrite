@@ -326,6 +326,7 @@ fn sniper_alignment_slay_bonus(slays: &BTreeMap<SlayTarget, SlayLevel>, target: 
 pub(super) enum ProjectileMode {
     Normal,
     Piercing,
+    Rama,
     Sniper(SniperShotModeDefinition),
 }
 
@@ -722,17 +723,21 @@ impl Game {
                 removed_entities,
             )?;
             if let Some(ammunition) = ammunition {
-                let break_chance_percent = mode.break_chance_override().unwrap_or_else(|| {
-                    if profile.ammunition_endurance {
-                        0
-                    } else if profile.ammunition_behavior
-                        == Some(AmmunitionBehaviorDefinition::Exploding)
-                    {
-                        100
-                    } else {
-                        profile.ammo_break_chance_percent
-                    }
-                });
+                let break_chance_percent = if ammunition.is_artifact(&self.content) {
+                    0
+                } else {
+                    mode.break_chance_override().unwrap_or_else(|| {
+                        if profile.ammunition_endurance {
+                            0
+                        } else if profile.ammunition_behavior
+                            == Some(AmmunitionBehaviorDefinition::Exploding)
+                        {
+                            100
+                        } else {
+                            profile.ammo_break_chance_percent
+                        }
+                    })
+                };
                 self.settle_projectile_ammunition(
                     ammunition,
                     outcome.trace.landing,
@@ -953,7 +958,7 @@ impl Game {
         let mut ranged_skill = attacker.ranged_skill.with_modifier(
             StatLayer::Equipment,
             profile.ammo_kind_id.clone(),
-            profile.to_hit,
+            profile.to_hit + if mode == ProjectileMode::Rama { 20 } else { 0 },
             StatBounds::NON_NEGATIVE,
         );
         if let Some((base_item_id, modifier)) = proficiency_modifier
@@ -1089,6 +1094,11 @@ impl Game {
             profile.launcher_to_damage,
         )
         .max(0);
+        let raw_damage = if mode == ProjectileMode::Rama {
+            raw_damage.saturating_mul(3)
+        } else {
+            raw_damage
+        };
         if mode == ProjectileMode::Sniper(SniperShotModeDefinition::Exploding) {
             return self.resolve_sniper_explosion(
                 self.entities[index].position,
@@ -2069,14 +2079,25 @@ impl Game {
         // virtue cost for movement and ability callers, after melee rejection.
         if self.actor_is_player_side(&self.entities[index])
             && self.entity_is_visible_to_player(&self.entities[index])
-            && ![STATUS_STUN, STATUS_CONFUSION, STATUS_HALLUCINATION, STATUS_BERSERK]
-                .iter().any(|status| self.player_has_status_kind(status))
-            && self.equipped_melee_weapons().iter()
+            && ![
+                STATUS_STUN,
+                STATUS_CONFUSION,
+                STATUS_HALLUCINATION,
+                STATUS_BERSERK,
+            ]
+            .iter()
+            .any(|status| self.player_has_status_kind(status))
+            && self
+                .equipped_melee_weapons()
+                .iter()
                 .any(|item| self.item_is_fixed_artifact(item, 190))
         {
             self.add_virtue(rfb_protocol::VirtueKindDto::Individualism, 1);
-            for virtue in [rfb_protocol::VirtueKindDto::Honour,
-                rfb_protocol::VirtueKindDto::Justice, rfb_protocol::VirtueKindDto::Compassion] {
+            for virtue in [
+                rfb_protocol::VirtueKindDto::Honour,
+                rfb_protocol::VirtueKindDto::Justice,
+                rfb_protocol::VirtueKindDto::Compassion,
+            ] {
                 self.add_virtue(virtue, -1);
             }
         }

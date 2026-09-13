@@ -9,7 +9,8 @@
   "ownerNameKey": "town-facility-demo-telmora-castle-owner-name",
   "taskIds": [
     "demo.task.telmora-vault",
-    "demo.task.telmora-volcano"
+    "demo.task.telmora-volcano",
+    "demo.task.telmora-thing-under-the-mountain"
   ],
   "entrancePosition": {
     "x": 41,

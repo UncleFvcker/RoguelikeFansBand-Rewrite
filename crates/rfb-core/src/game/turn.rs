@@ -657,6 +657,7 @@ impl Game {
 
     pub(super) fn process_natural_hp_regeneration(&mut self, resting: bool) {
         if self.wilderness_blocks_regeneration()
+            || (self.player_has_status_kind(STATUS_NO_AIR) && !self.player_ignores_suffocation())
             || !self
                 .world_tick
                 .is_multiple_of(NATURAL_HP_REGENERATION_INTERVAL_TICKS)
@@ -732,6 +733,7 @@ impl Game {
 
     fn process_equipment_regeneration(&mut self, events: &mut Vec<DomainEvent>) {
         if self.wilderness_blocks_regeneration()
+            || (self.player_has_status_kind(STATUS_NO_AIR) && !self.player_ignores_suffocation())
             || !self.world_tick.is_multiple_of(
                 EQUIPMENT_REGENERATION_INTERVAL_TICKS
                     * if self.player_has_equipped_curse_effect(ItemCurseEffectDto::SlowRegeneration)
@@ -1011,7 +1013,7 @@ impl Game {
                 status.kind_id == STATUS_INVULNERABILITY && status.remaining_ticks <= 1
             });
         let player_damage_percent = self.player_incoming_damage_percent();
-        let ignores_suffocation = self.player_is_nonliving();
+        let ignores_suffocation = self.player_ignores_suffocation();
         // The current status model recovers one wound tick per turn. Apply
         // dungeon.c's (recovery + game_turn % 3) / 3 without slowing its damage.
         if self.player_has_equipped_curse_effect(ItemCurseEffectDto::OpenWounds)

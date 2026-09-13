@@ -1452,6 +1452,18 @@ impl Game {
         .collect()
     }
 
+    pub(super) fn player_ignores_suffocation(&self) -> bool {
+        self.player_is_nonliving()
+            || self.items.iter().any(|item| {
+                matches!(item.location, ItemLocation::Equipped { .. })
+                    && self
+                        .content
+                        .item(&item.kind_id)
+                        .and_then(|kind| kind.artifact_generation.as_ref())
+                        .is_some_and(|artifact| artifact.source_index == 396)
+            })
+    }
+
     pub(super) fn player_regeneration_rate_percent(&self) -> u64 {
         let race_modifier = self
             .character_definitions()
@@ -1924,7 +1936,9 @@ impl Game {
                     let ammo_profile = ammo_definition.ammunition_profile.as_ref()?;
                     let mut ammunition_slays = ammo_definition.slays.clone();
                     let mut ammunition_brands = ammo_definition.brands.clone();
-                    let mut ammunition_behavior = None;
+                    let mut ammunition_behavior = ammo_definition.artifact_generation.as_ref()
+                        .filter(|artifact| artifact.source_index == 391)
+                        .map(|_| AmmunitionBehaviorDefinition::Returning);
                     let mut ammunition_endurance = false;
                     if let Some(ammunition) = ammunition {
                         for affix_id in &ammunition.affix_ids {

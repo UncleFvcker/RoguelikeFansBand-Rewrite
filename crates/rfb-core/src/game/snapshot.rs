@@ -1024,7 +1024,10 @@ impl Game {
         }
         if matches!(
             self.inventory_item_use_effect(&item.id),
-            Some((ItemUseEffectDefinition::PiercingShot, _))
+            Some((
+                ItemUseEffectDefinition::PiercingShot | ItemUseEffectDefinition::RamaArrow,
+                _
+            ))
         ) {
             target.range = self
                 .player_projectile_profile()

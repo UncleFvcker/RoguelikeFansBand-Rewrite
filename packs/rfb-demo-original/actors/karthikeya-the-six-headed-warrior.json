@@ -266,5 +266,9 @@
     "nonliving",
     "orc-cave",
     "unique"
-  ]
+  ],
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.murugan",
+    "chancePercent": 20
+  }
 }

@@ -268,7 +268,8 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
         | ItemUseEffectDefinition::TerrainBeam { .. }
         | ItemUseEffectDefinition::RidingCharge
-        | ItemUseEffectDefinition::PiercingShot => true,
+        | ItemUseEffectDefinition::PiercingShot
+        | ItemUseEffectDefinition::RamaArrow => true,
         ItemUseEffectDefinition::MassGenocide { power, radius } => *power > 0 && *radius > 0,
         ItemUseEffectDefinition::Genocide { power } => (1..=1_000).contains(power),
         ItemUseEffectDefinition::RechargeFromDevice { power } => (1..=1_000).contains(power),
@@ -805,7 +806,8 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::AreaDamage { .. }
                     | ItemUseEffectDefinition::BeamDamage { .. }
                     | ItemUseEffectDefinition::TerrainBeam { .. }
-                    | ItemUseEffectDefinition::PiercingShot => projectile_target,
+                    | ItemUseEffectDefinition::PiercingShot
+                    | ItemUseEffectDefinition::RamaArrow => projectile_target,
                     ItemUseEffectDefinition::RidingCharge => {
                         target.modes.as_slice()
                             == [
@@ -1053,8 +1055,8 @@ pub(super) fn validate_items(
         if item.equipment_slot.is_none()
             && (!item.resistances.is_empty()
                 || !item.status_immunities.is_empty()
-                || !item.slays.is_empty()
-                || !item.brands.is_empty()
+                || (item.ammunition_profile.is_none()
+                    && (!item.slays.is_empty() || !item.brands.is_empty()))
                 || !item.passives.is_empty()
                 || item.reflects_bolts)
         {
@@ -1094,7 +1096,7 @@ pub(super) fn validate_items(
         if is_ammunition != item.ammunition_profile.is_some()
             || item.ammunition_profile.as_ref().is_some_and(|profile| {
                 item.equipment_slot.is_some()
-                    || item.max_stack <= 1
+                    || (item.max_stack <= 1 && item.artifact_generation.is_none())
                     || profile.to_hit < -1_000_000
                     || profile.to_hit > 1_000_000
                     || profile.to_damage < -1_000_000
@@ -1383,7 +1385,6 @@ pub(super) fn validate_items(
                             ItemUseEffectDefinition::IncreaseSpellLearningCapacity
                                 | ItemUseEffectDefinition::ApplySlowness { .. }
                                 | ItemUseEffectDefinition::ApplySpeed { .. }
-                                | ItemUseEffectDefinition::ApplyHeroicSpeed { .. }
                                 | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
                                 | ItemUseEffectDefinition::ApplyStoneSkin { .. }
                                 | ItemUseEffectDefinition::RestoreAllAttributes

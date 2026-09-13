@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 500,
+  "descriptionKey": "item-demo-flute-description",
+  "equipmentSlot": "launcher",
+  "formatVersion": 1,
+  "generationLevel": 66,
+  "glyph": "}",
+  "id": "demo.item.flute",
+  "maxStack": 1,
+  "nameKey": "item-demo-flute-name",
+  "rfbBaseKind": {
+    "sourceIndex": 170,
+    "tval": 19,
+    "sval": 71
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "INSTA_ART",
+      "NO_ENCHANT"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "equipment",
+    "instant-artifact-base",
+    "launcher"
+  ],
+  "weightTenthsPound": 5,
+  "passives": [
+    "no-enchant"
+  ]
+}

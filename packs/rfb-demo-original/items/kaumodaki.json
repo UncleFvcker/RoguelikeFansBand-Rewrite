@@ -1,0 +1,127 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.kaumodaki",
+  "nameKey": "item-demo-kaumodaki-name",
+  "descriptionKey": "item-demo-kaumodaki-description",
+  "glyph": "\\",
+  "generationLevel": 90,
+  "weightTenthsPound": 200,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 386,
+    "baseItemKindId": "demo.item.mace",
+    "instant": false,
+    "rarityOneIn": 150
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_ACID",
+      "BRAND_ELEC",
+      "CON",
+      "FREE_ACT",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "RES_ACID",
+      "RES_CHAOS",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_SOUND",
+      "SEARCH",
+      "SHOW_MODS",
+      "SLAY_DEMON",
+      "STUN",
+      "SUST_CON",
+      "WIS"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentSlot": "weapon",
+  "modifiers": {
+    "wisdom": 3,
+    "constitution": 3
+  },
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 5,
+    "damageSides": 6,
+    "toHit": 18,
+    "toDamage": 18
+  },
+  "weaponProficiencyBaseItemId": "demo.item.mace",
+  "equipmentBonuses": {
+    "searchSkill": 15,
+    "perceptionSkill": 15
+  },
+  "passives": [
+    "hold-life",
+    "sustain-constitution"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "sound": "resistant",
+    "chaos": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "demon": "slay"
+  },
+  "brands": [
+    "acid",
+    "electricity"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.kaumodaki",
+        "nameKey": "device-activation-e5-speed-hero-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 25,
+        "rfbValue": 6000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.kaumodaki-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 2250
+    }
+  }
+}

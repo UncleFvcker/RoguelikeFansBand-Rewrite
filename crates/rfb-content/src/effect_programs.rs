@@ -126,7 +126,8 @@ fn effect_program_input_for_step(
         | ItemUseEffectDefinition::RidingCharge
         | ItemUseEffectDefinition::Fishing
         | ItemUseEffectDefinition::StunningKick { .. }
-        | ItemUseEffectDefinition::PiercingShot => Some(EffectProgramInputDefinition::Actor),
+        | ItemUseEffectDefinition::PiercingShot
+        | ItemUseEffectDefinition::RamaArrow => Some(EffectProgramInputDefinition::Actor),
         ItemUseEffectDefinition::VisibleApplyStatus { .. } => {
             Some(EffectProgramInputDefinition::SelfTarget)
         }

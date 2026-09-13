@@ -6197,6 +6197,19 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "rama-arrow",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "statusKindId": {
               "type": "string"
             },

@@ -177,5 +177,9 @@
     "orc-cave",
     "trump",
     "unique"
-  ]
+  ],
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.gada-of-hanuman",
+    "chancePercent": 5
+  }
 }

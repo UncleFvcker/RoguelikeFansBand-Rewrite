@@ -5,10 +5,19 @@ use super::*;
 #[test]
 fn telmora_symbol_groups_reject_invalid_content_and_duplicate_artifact_placement() {
     let base = compile_pack_dir(&original_pack_path()).unwrap().content;
-    for invalid in ["empty", "duplicate-cell", "duplicate-payload", "unknown-item", "actor-depth"] {
+    for invalid in [
+        "empty",
+        "duplicate-cell",
+        "duplicate-payload",
+        "unknown-item",
+        "actor-depth",
+    ] {
         let mut content = base.clone();
-        let floor = content.worlds[0].procedural_floors.iter_mut()
-            .find(|floor| floor.id == "demo.floor.telmora-vault").unwrap();
+        let floor = content.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.telmora-vault")
+            .unwrap();
         let group = &mut floor.inline_map.as_mut().unwrap().symbol_groups[0];
         match invalid {
             "empty" => group.clear(),
@@ -1061,7 +1070,7 @@ fn telmora_keeps_the_full_map_and_unopened_quest_terrain() {
         assert_eq!(tiles[&position], terrain);
     }
     for x in 41..=44 {
-        assert_eq!(tiles[&(x, 21)], "demo.terrain.permanent-wall");
+        assert_eq!(tiles[&(x, 21)], "demo.terrain.telmora-castle-entrance");
     }
     // Unassigned spaces leave the source TERRAIN_TOWN background (FLOOR).
     assert_eq!(tiles[&(130, 0)], "demo.terrain.floor");
@@ -11466,6 +11475,10 @@ fn town_entrances_and_shared_facilities_match_source() {
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 74, y: 28 },
                     dungeon_id: "demo.dungeon.dragon-lair".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 75, y: 51 },
+                    dungeon_id: "demo.dungeon.mount-meru".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 75, y: 57 },

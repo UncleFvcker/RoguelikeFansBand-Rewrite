@@ -14,8 +14,9 @@ import { selectCreationBuild, selectCreationRace } from "./character-creation.e2
 // is confined to the ignored core exporter; no WebDriver-only IPC is enabled.
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const questItems = process.argv.includes("--quest-items");
+const questItemsAll = process.argv.includes("--quest-items-all");
 const executable = path.join(root, "target/debug/rfb-tauri.exe");
-const directory = path.join(root, questItems ? "test-results/quest-items-q1" : "test-results/ordinary-equipment");
+const directory = path.join(root, questItemsAll ? "test-results/quest-items-q2-q5" : questItems ? "test-results/quest-items-q1" : "test-results/ordinary-equipment");
 await mkdir(directory, { recursive: true });
 await mkdir(path.join(root, "target/e2e"), { recursive: true });
 const profile = await mkdtemp(path.join(root, "target/e2e/ordinary-equipment-"));
@@ -82,7 +83,7 @@ try {
   await driver.waitFor('return document.documentElement.dataset.appMode==="playing" && document.querySelector("#connection-status").classList.contains("ready")', "fresh warrior", 30000);
   const input = path.join(directory, "new-game.rfbsave");
   await writeFile(input, Buffer.from(await save()));
-  const exporter = questItems ? "game::tests::quest_items::export_q1_desktop_save" : "game::tests::death_scythe::export_ordinary_equipment_desktop_saves";
+  const exporter = questItemsAll ? "game::tests::quest_items::desktop::export_quest_item_desktop_saves" : questItems ? "game::tests::quest_items::export_q1_desktop_save" : "game::tests::death_scythe::export_ordinary_equipment_desktop_saves";
   const preparation = await promisify(execFile)("cargo", ["test", "-p", "rfb-core", "--lib", exporter, "--", "--ignored", "--exact"], {
     cwd: root, env: { ...process.env, ORDINARY_EQUIPMENT_INPUT: input }, windowsHide: true, timeout: 240000,
   });
@@ -103,6 +104,17 @@ try {
         await readyHash(step.hash);
         await writeFile(path.join(directory, `${scenario.name}-${index}.png`), await keyboard.screenshot(), "base64");
         await click("#player-page-close");
+      } else if (command.type === "use-item") {
+        await click("#player-ui-inventory-open");
+        await click(`[data-slot-id="${step.activationSlot}"] > button`);
+        await click(".equipment-activate");
+        if (command.target?.type === "direction" || command.target?.type === "position") {
+          await keyboard.key("6");
+          await keyboard.key("Enter");
+        }
+        await readyHash(step.hash);
+        await writeFile(path.join(directory, `${scenario.name}-${index}.png`), await keyboard.screenshot(), "base64");
+        if (await driver.execute('return !document.querySelector("#player-page-close").hidden')) await click("#player-page-close");
       } else {
         if (command.type === "dig-terrain") { await keyboard.key("T", 8); await keyboard.key("8"); }
         else await keyboard.key(command.type === "move" ? "6" : command.type === "pick-up" ? "g" : "5");
@@ -119,7 +131,9 @@ try {
   assert.deepEqual(keyboard.errors, []);
   await writeFile(path.join(directory, "report.json"), JSON.stringify({
     executable, sha256: createHash("sha256").update(await readFile(executable)).digest("hex"),
-    preparation: questItems
+    preparation: questItemsAll
+      ? "Fresh human Warrior native save; explicit level50, talent, invulnerability and local scene preparation. Eyes/Hydra/Rama artifacts are produced by actual deaths of prepared adjacent source actors with1HP and successful RNG seeds; Sting is generated after actual Telmora castle acceptance and Vault entry. Scene starts on the real reward after other actors/items are cleared. Rama receives10 normal arrows. UI performs pickup, equipment, actual activation/shooting and save/load continuation. No natural leveling or difficulty claim."
+      : questItems
       ? "Fresh level-one human Warrior, chosen talent, cleared monsters/items and prepared adjacent Fang with1HP (original maxHP/rules), local floor tiles and a successful melee/drop seed. The collar is obtained by the real death reward, not granted. Core separately checks controlled complete-pool acquisition for all four actors. No natural leveling claim."
       : "Fresh level-one human Warrior, chosen talent, cleared monsters, prepared small floor area and adjacent target/magma, granted and identified seven representative bases. Scythe uses legal -255 hit enchantment, a temporary +2000 HP status and a seed selected for nonfatal backlash. Weapon and swimsuit targets start asleep. No natural acquisition or leveling claim.",
     checks, errors: keyboard.errors,

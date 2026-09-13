@@ -1,0 +1,71 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.space-suit-of-vayu",
+  "nameKey": "item-demo-space-suit-of-vayu-name",
+  "descriptionKey": "item-demo-space-suit-of-vayu-description",
+  "glyph": "(",
+  "generationLevel": 70,
+  "weightTenthsPound": 440,
+  "baseValue": 80000,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 396,
+    "baseItemKindId": "demo.item.leather-jacket",
+    "instant": false,
+    "rarityOneIn": 50
+  },
+  "rfbValue": {
+    "flags": [
+      "DEC_DEX",
+      "FULL_NAME",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION",
+      "QUESTITEM",
+      "RES_CHAOS",
+      "RES_COLD",
+      "RES_DARK",
+      "RES_ELEC",
+      "RES_SOUND",
+      "SEARCH"
+    ],
+    "pval": 3,
+    "toArmor": 21
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentSlot": "body",
+  "modifiers": {
+    "dexterity": -3,
+    "defense": 39
+  },
+  "equipmentBonuses": {
+    "searchSkill": 15,
+    "perceptionSkill": 15,
+    "meleeSkill": -6
+  },
+  "passives": [
+    "levitation"
+  ],
+  "resistances": {
+    "electricity": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "sound": "resistant",
+    "chaos": "resistant"
+  }
+}

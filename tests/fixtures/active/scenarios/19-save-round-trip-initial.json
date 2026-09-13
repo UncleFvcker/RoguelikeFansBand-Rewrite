@@ -13,8 +13,8 @@
   "assertions": {
     "finalState": {
       "lastCommandSeq": 0,
-      "stateHash": "e601a84bbdd88342d40d0ff9ca12c45a54d7a2365315563583c4008aebc030fa"
+      "stateHash": "6328f897fe85c49e667adab40ed7b52eefd22203d60375b3315fa45604bad3c2"
     },
-    "saveRoundTripStateHash": "e601a84bbdd88342d40d0ff9ca12c45a54d7a2365315563583c4008aebc030fa"
+    "saveRoundTripStateHash": "6328f897fe85c49e667adab40ed7b52eefd22203d60375b3315fa45604bad3c2"
   }
 }

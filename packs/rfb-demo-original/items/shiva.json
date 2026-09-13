@@ -1,0 +1,131 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.shiva",
+  "nameKey": "item-demo-shiva-name",
+  "descriptionKey": "item-demo-shiva-description",
+  "glyph": "/",
+  "generationLevel": 70,
+  "weightTenthsPound": 70,
+  "baseValue": 90000,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 387,
+    "baseItemKindId": "demo.item.trident",
+    "instant": false,
+    "rarityOneIn": 120
+  },
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "BRAND_ELEC",
+      "BRAND_FIRE",
+      "CHR",
+      "CON",
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "QUESTITEM",
+      "RIDING",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_EVIL",
+      "STR",
+      "SUST_CHR",
+      "SUST_CON",
+      "SUST_DEX",
+      "SUST_INT",
+      "SUST_STR",
+      "SUST_WIS",
+      "VORPAL",
+      "WIS"
+    ],
+    "pval": 2,
+    "toArmor": 10
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentSlot": "weapon",
+  "modifiers": {
+    "strength": 2,
+    "intelligence": 2,
+    "wisdom": 2,
+    "dexterity": 2,
+    "constitution": 2,
+    "charisma": 2,
+    "defense": 10
+  },
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 10,
+    "toHit": 18,
+    "toDamage": 21
+  },
+  "weaponProficiencyBaseItemId": "demo.item.trident",
+  "passives": [
+    "blessed",
+    "see-invisible",
+    "sustain-charisma",
+    "sustain-constitution",
+    "sustain-dexterity",
+    "sustain-intelligence",
+    "sustain-strength",
+    "sustain-wisdom"
+  ],
+  "vorpal": true,
+  "ridingWeaponKind": "compatible",
+  "slays": {
+    "evil": "slay"
+  },
+  "brands": [
+    "electricity",
+    "fire"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.shiva",
+        "nameKey": "device-activation-e5-dispel-evil-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 10890,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.shiva-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 2500
+    }
+  }
+}

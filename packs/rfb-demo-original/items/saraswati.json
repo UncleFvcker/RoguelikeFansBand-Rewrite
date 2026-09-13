@@ -1,0 +1,95 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.saraswati",
+  "nameKey": "item-demo-saraswati-name",
+  "descriptionKey": "item-demo-saraswati-description",
+  "glyph": "]",
+  "generationLevel": 70,
+  "weightTenthsPound": 15,
+  "baseValue": 10000,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 393,
+    "baseItemKindId": "demo.item.hard-leather-cap",
+    "instant": false,
+    "rarityOneIn": 100
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "LORE2",
+      "MAGIC_MASTERY",
+      "QUESTITEM",
+      "SPEED",
+      "SUST_INT",
+      "SUST_WIS",
+      "WIS"
+    ],
+    "pval": 3,
+    "toArmor": 10
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentSlot": "head",
+  "modifiers": {
+    "intelligence": 3,
+    "wisdom": 3,
+    "defense": 12,
+    "speed": 3
+  },
+  "equipmentBonuses": {
+    "deviceSkill": 24
+  },
+  "passives": [
+    "auto-identify",
+    "sustain-intelligence",
+    "sustain-wisdom"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.saraswati",
+        "nameKey": "device-activation-e5-probing-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 10,
+        "rfbValue": 1000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.saraswati-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 50
+    }
+  }
+}

@@ -29980,11 +29980,16 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
         assert_eq!(entries.len(), identities.len());
         for (mut entry, (index, slug, base)) in entries.into_iter().zip(identities) {
             assert_eq!(entry.index, index);
-            entry.flags.extend(["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"].map(str::to_owned));
+            entry.flags.extend(
+                ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"].map(str::to_owned),
+            );
             entry.flags.sort();
             let mut imported = artifact_json(
-                &entry, slug, Some(&format!("demo.item.{base}")),
-                &LauncherAmmoIndex::default(), &mut ContentImportReport::default(),
+                &entry,
+                slug,
+                Some(&format!("demo.item.{base}")),
+                &LauncherAmmoIndex::default(),
+                &mut ContentImportReport::default(),
             );
             // Formal adaptations use existing consumers beyond the generic importer.
             // artifact.c::random_artifact_resistance and equip.c:1582-1599,1741.
@@ -29998,27 +30003,131 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
             }
             if index == 348 {
                 imported["equipmentBonuses"]["deviceSkill"] = serde_json::json!(8 * entry.pval);
-                imported["equipmentBonuses"]["magicResistancePercent"] = serde_json::json!(5 * entry.pval);
+                imported["equipmentBonuses"]["magicResistancePercent"] =
+                    serde_json::json!(5 * entry.pval);
             }
             let path = Path::new(env!("CARGO_MANIFEST_DIR"))
                 .join(format!("../../packs/rfb-demo-original/items/{slug}.json"));
-            let formal: serde_json::Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
-            for field in ["generationLevel", "weightTenthsPound", "baseValue", "equipmentSlot",
-                "artifactGeneration", "rfbValue", "modifiers", "equipmentBonuses",
-                "resistances", "statusImmunities", "meleeProfile", "brands", "slays"] {
+            let formal: serde_json::Value =
+                serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
+            for field in [
+                "generationLevel",
+                "weightTenthsPound",
+                "baseValue",
+                "equipmentSlot",
+                "artifactGeneration",
+                "rfbValue",
+                "modifiers",
+                "equipmentBonuses",
+                "resistances",
+                "statusImmunities",
+                "meleeProfile",
+                "brands",
+                "slays",
+            ] {
                 assert_eq!(imported[field], formal[field], "{slug}: {field}");
             }
             if matches!(index, 306 | 348) {
                 let activation = entry.activation.unwrap();
                 let formal_activation = &formal["deviceGeneration"]["activations"][0];
                 assert_eq!(formal_activation["deviceCheckDifficulty"], activation.power);
-                assert_eq!(formal["deviceGeneration"]["recovery"]["intervalTicks"],
-                    u32::from(activation.recovery_turns) * 10);
+                assert_eq!(
+                    formal["deviceGeneration"]["recovery"]["intervalTicks"],
+                    u32::from(activation.recovery_turns) * 10
+                );
                 if index == 348 {
-                    assert_eq!(formal_activation["effect"]["amount"], activation.extra);
+                    let program_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(
+                        "../../packs/rfb-demo-original/effectPrograms/kundry-activation.json",
+                    );
+                    let program: serde_json::Value =
+                        serde_json::from_slice(&fs::read(program_path).unwrap()).unwrap();
+                    assert_eq!(program["steps"][0]["amount"], activation.extra);
                 } else {
-                    assert_eq!(formal_activation["effectProgramId"], "demo.effect.arkenstone-clairvoyance");
+                    assert_eq!(
+                        formal_activation["effectProgramId"],
+                        "demo.effect.arkenstone-clairvoyance"
+                    );
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn q5_god_rewards_match_source_parameters_and_activation_costs() {
+        let entries = parse_a_info(include_str!("testdata/q5-artifacts.txt")).unwrap();
+        for (mut entry, slug) in entries.into_iter().zip([
+            "gada-of-hanuman",
+            "murugan",
+            "rama",
+            "krishna",
+            "kaumodaki",
+            "shiva",
+            "kaustubha",
+            "kali",
+            "brahmastra",
+            "saraswati",
+            "lakshmi",
+            "space-suit-of-vayu",
+            "shiva-avatar-jacket",
+            "shiva-avatar-boots",
+        ]) {
+            let directory =
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original/items");
+            let formal: serde_json::Value =
+                serde_json::from_slice(&fs::read(directory.join(format!("{slug}.json"))).unwrap())
+                    .unwrap();
+            let base_id = formal["artifactGeneration"]["baseItemKindId"]
+                .as_str()
+                .unwrap();
+            let base: serde_json::Value = serde_json::from_slice(
+                &fs::read(directory.join(format!(
+                    "{}.json",
+                    base_id.strip_prefix("demo.item.").unwrap()
+                )))
+                .unwrap(),
+            )
+            .unwrap();
+            assert_eq!(base["rfbBaseKind"]["tval"], entry.tval);
+            assert_eq!(base["rfbBaseKind"]["sval"], entry.sval);
+            entry.flags.extend(
+                ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"].map(str::to_owned),
+            );
+            entry.flags.sort();
+            let imported = artifact_json(
+                &entry,
+                slug,
+                Some(base_id),
+                &LauncherAmmoIndex::default(),
+                &mut ContentImportReport::default(),
+            );
+            for field in [
+                "generationLevel",
+                "weightTenthsPound",
+                "baseValue",
+                "equipmentSlot",
+                "rfbValue",
+                "meleeProfile",
+            ] {
+                assert_eq!(formal[field], imported[field], "{slug}: {field}");
+            }
+            for field in ["sourceIndex", "baseItemKindId", "rarityOneIn", "instant"] {
+                assert_eq!(
+                    formal["artifactGeneration"][field], imported["artifactGeneration"][field],
+                    "{slug}: {field}"
+                );
+            }
+            if entry.flags.iter().any(|flag| flag == "PERMA_CURSE") {
+                assert_eq!(formal["initialCurse"], "permanent");
+            }
+            if let Some(activation) = entry.activation {
+                assert_eq!(
+                    formal["deviceGeneration"]["activations"][0]["deviceCheckDifficulty"],
+                    activation.power
+                );
+                assert_eq!(
+                    formal["deviceGeneration"]["recovery"]["intervalTicks"],
+                    u32::from(activation.recovery_turns) * 10
+                );
             }
         }
     }
@@ -30027,37 +30136,85 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
     fn q4_task_artifact_parameters_match_source() {
         let entries = parse_a_info(include_str!("testdata/q4-artifacts.txt")).unwrap();
         for (mut entry, slug) in entries.into_iter().zip(["sting", "lava-lamp-of-telmora"]) {
-            let directory = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original/items");
-            let formal: serde_json::Value = serde_json::from_slice(&fs::read(directory.join(format!("{slug}.json"))).unwrap()).unwrap();
-            let base_id = formal["artifactGeneration"]["baseItemKindId"].as_str().unwrap();
-            let base: serde_json::Value = serde_json::from_slice(&fs::read(directory.join(
-                format!("{}.json", base_id.strip_prefix("demo.item.").unwrap()))).unwrap()).unwrap();
+            let directory =
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original/items");
+            let formal: serde_json::Value =
+                serde_json::from_slice(&fs::read(directory.join(format!("{slug}.json"))).unwrap())
+                    .unwrap();
+            let base_id = formal["artifactGeneration"]["baseItemKindId"]
+                .as_str()
+                .unwrap();
+            let base: serde_json::Value = serde_json::from_slice(
+                &fs::read(directory.join(format!(
+                    "{}.json",
+                    base_id.strip_prefix("demo.item.").unwrap()
+                )))
+                .unwrap(),
+            )
+            .unwrap();
             assert_eq!(base["rfbBaseKind"]["tval"], entry.tval);
             assert_eq!(base["rfbBaseKind"]["sval"], entry.sval);
-            entry.flags.extend(["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"].map(str::to_owned));
+            entry.flags.extend(
+                ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"].map(str::to_owned),
+            );
             entry.flags.sort();
-            let imported = artifact_json(&entry, slug, Some(base_id), &LauncherAmmoIndex::default(),
-                &mut ContentImportReport::default());
-            for field in ["generationLevel", "weightTenthsPound", "baseValue", "equipmentSlot", "rfbValue", "meleeProfile"] {
+            let imported = artifact_json(
+                &entry,
+                slug,
+                Some(base_id),
+                &LauncherAmmoIndex::default(),
+                &mut ContentImportReport::default(),
+            );
+            for field in [
+                "generationLevel",
+                "weightTenthsPound",
+                "baseValue",
+                "equipmentSlot",
+                "rfbValue",
+                "meleeProfile",
+            ] {
                 assert_eq!(formal[field], imported[field], "{slug}: {field}");
             }
             for field in ["sourceIndex", "baseItemKindId", "rarityOneIn", "instant"] {
-                assert_eq!(formal["artifactGeneration"][field], imported["artifactGeneration"][field]);
+                assert_eq!(
+                    formal["artifactGeneration"][field],
+                    imported["artifactGeneration"][field]
+                );
             }
             if entry.index == 88 {
-                assert_eq!(formal["equipmentBonuses"]["meleeAttacksDeltaPercent"], entry.pval * 50);
-                assert_eq!(formal["artifactGeneration"]["affixIds"],
-                    serde_json::json!(["rfb-legacy.affix.artifact-extra-high-resistance"]));
+                assert_eq!(
+                    formal["equipmentBonuses"]["meleeAttacksDeltaPercent"],
+                    entry.pval * 50
+                );
+                assert_eq!(
+                    formal["artifactGeneration"]["affixIds"],
+                    serde_json::json!(["rfb-legacy.affix.artifact-extra-high-resistance"])
+                );
             } else {
                 let activation = entry.activation.unwrap();
                 let profile = &formal["deviceGeneration"]["activations"][0];
                 assert_eq!(profile["deviceCheckDifficulty"], activation.power);
                 assert_eq!(profile["rfbValue"], u32::from(activation.power) * 2 * 60);
-                assert_eq!(formal["deviceGeneration"]["recovery"]["intervalTicks"], u32::from(activation.recovery_turns) * 10);
-                let effects = profile["effect"]["effect"]["effects"].as_array().unwrap();
+                assert_eq!(
+                    formal["deviceGeneration"]["recovery"]["intervalTicks"],
+                    u32::from(activation.recovery_turns) * 10
+                );
+                let program: serde_json::Value = serde_json::from_slice(
+                    &fs::read(
+                        directory.join("../effectPrograms/lava-lamp-of-telmora-activation.json"),
+                    )
+                    .unwrap(),
+                )
+                .unwrap();
+                let effects = program["steps"][0]["effect"]["effects"].as_array().unwrap();
                 let power = u32::from(activation.power) * 2;
-                assert_eq!(effects.iter().map(|effect| effect["power"].as_u64().unwrap()).collect::<Vec<_>>(),
-                    [power, 5 + power / 10, power, power, power / 3].map(u64::from));
+                assert_eq!(
+                    effects
+                        .iter()
+                        .map(|effect| effect["power"].as_u64().unwrap())
+                        .collect::<Vec<_>>(),
+                    [power, 5 + power / 10, power, power, power / 3].map(u64::from)
+                );
                 assert_eq!(base["rfbBaseKind"]["sourceIndex"], 626);
             }
         }
@@ -30067,31 +30224,79 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
     fn q3_named_artifact_parameters_and_special_base_identities_match_source() {
         let entries = parse_a_info(include_str!("testdata/q3-artifacts.txt")).unwrap();
         for (mut entry, slug) in entries.into_iter().zip([
-            "twilight", "stormbringer", "gothmog", "master-tonberry", "devouring-darkness",
-            "typhoeus", "kronos", "eye-of-the-hydra", "mephistopheles", "atlas", "unlight-cloak-of-ungoliant",
+            "twilight",
+            "stormbringer",
+            "gothmog",
+            "master-tonberry",
+            "devouring-darkness",
+            "typhoeus",
+            "kronos",
+            "eye-of-the-hydra",
+            "mephistopheles",
+            "atlas",
+            "unlight-cloak-of-ungoliant",
         ]) {
-            let directory = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original/items");
-            let formal: serde_json::Value = serde_json::from_slice(&fs::read(directory.join(format!("{slug}.json"))).unwrap()).unwrap();
-            let base_id = formal["artifactGeneration"]["baseItemKindId"].as_str().unwrap();
-            let base: serde_json::Value = serde_json::from_slice(&fs::read(directory.join(
-                format!("{}.json", base_id.strip_prefix("demo.item.").unwrap()))).unwrap()).unwrap();
+            let directory =
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original/items");
+            let formal: serde_json::Value =
+                serde_json::from_slice(&fs::read(directory.join(format!("{slug}.json"))).unwrap())
+                    .unwrap();
+            let base_id = formal["artifactGeneration"]["baseItemKindId"]
+                .as_str()
+                .unwrap();
+            let base: serde_json::Value = serde_json::from_slice(
+                &fs::read(directory.join(format!(
+                    "{}.json",
+                    base_id.strip_prefix("demo.item.").unwrap()
+                )))
+                .unwrap(),
+            )
+            .unwrap();
             assert_eq!(base["rfbBaseKind"]["tval"], entry.tval);
             assert_eq!(base["rfbBaseKind"]["sval"], entry.sval);
-            entry.flags.extend(["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"].map(str::to_owned));
+            entry.flags.extend(
+                ["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"].map(str::to_owned),
+            );
             entry.flags.sort();
-            let imported = artifact_json(&entry, slug, Some(base_id), &LauncherAmmoIndex::default(),
-                &mut ContentImportReport::default());
-            for field in ["generationLevel", "weightTenthsPound", "baseValue", "equipmentSlot",
-                "artifactGeneration", "rfbValue", "meleeProfile"] {
+            let imported = artifact_json(
+                &entry,
+                slug,
+                Some(base_id),
+                &LauncherAmmoIndex::default(),
+                &mut ContentImportReport::default(),
+            );
+            for field in [
+                "generationLevel",
+                "weightTenthsPound",
+                "baseValue",
+                "equipmentSlot",
+                "artifactGeneration",
+                "rfbValue",
+                "meleeProfile",
+            ] {
                 assert_eq!(formal[field], imported[field], "{slug}: {field}");
             }
             if let Some(activation) = entry.activation {
                 let profile = &formal["deviceGeneration"]["activations"][0];
                 assert_eq!(profile["deviceCheckDifficulty"], activation.power);
-                assert_eq!(formal["deviceGeneration"]["recovery"]["intervalTicks"], u32::from(activation.recovery_turns) * 10);
-                let effect = &profile["effect"]["effect"];
-                assert_eq!(if entry.index == 307 { &effect["effects"][0]["amount"] } else { &effect["damageBonus"] },
-                    &serde_json::json!(activation.extra));
+                assert_eq!(
+                    formal["deviceGeneration"]["recovery"]["intervalTicks"],
+                    u32::from(activation.recovery_turns) * 10
+                );
+                let program: serde_json::Value = serde_json::from_slice(
+                    &fs::read(directory.join(format!("../effectPrograms/{slug}-activation.json")))
+                        .unwrap(),
+                )
+                .unwrap();
+                let effect = &program["steps"][0];
+                assert_eq!(
+                    if entry.index == 307 {
+                        &effect["effect"]["effects"][0]["amount"]
+                    } else {
+                        &effect["damageBonus"]
+                    },
+                    &serde_json::json!(activation.extra)
+                );
             }
         }
     }

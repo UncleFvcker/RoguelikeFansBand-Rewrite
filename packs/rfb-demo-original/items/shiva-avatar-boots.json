@@ -1,0 +1,67 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.shiva-avatar-boots",
+  "nameKey": "item-demo-shiva-avatar-boots-name",
+  "descriptionKey": "item-demo-shiva-avatar-boots-description",
+  "glyph": "]",
+  "generationLevel": 60,
+  "weightTenthsPound": 20,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 63,
+    "baseItemKindId": "demo.item.soft-leather-boots",
+    "instant": false,
+    "rarityOneIn": 20
+  },
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION",
+      "RES_NEXUS",
+      "SPEED",
+      "SUST_DEX"
+    ],
+    "pval": 4,
+    "toArmor": 16
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentSlot": "boots",
+  "modifiers": {
+    "dexterity": 4,
+    "defense": 20,
+    "speed": 4
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 5,
+    "meleeDamage": 5
+  },
+  "passives": [
+    "levitation",
+    "sustain-dexterity"
+  ],
+  "resistances": {
+    "nexus": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ]
+}

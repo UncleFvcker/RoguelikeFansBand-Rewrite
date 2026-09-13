@@ -410,7 +410,11 @@ fn vampire_daylight_and_lamps_burn_independently_even_without_fuel() {
     assert_eq!(game.player_light_radius(), None);
     let before_eye = game.player.hp;
     assert!(game.process_vampire_light_damage(&mut events));
-    assert_eq!(game.player.hp, before_eye - 1, "negative light without DARKNESS still burns");
+    assert_eq!(
+        game.player.hp,
+        before_eye - 1,
+        "negative light without DARKNESS still burns"
+    );
     game.items.retain(|item| item.id != "test.q3.eye");
     assert_eq!(game.player_light_radius(), Some(1));
     game.world_tick = 10;

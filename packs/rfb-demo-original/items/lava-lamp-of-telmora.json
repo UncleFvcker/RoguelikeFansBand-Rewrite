@@ -73,54 +73,6 @@
           "minimum": 1
         },
         "deviceCheckDifficulty": 64,
-        "effect": {
-          "effect": {
-            "effects": [
-              {
-                "durationTicks": 3,
-                "intensity": 1,
-                "power": 128,
-                "stacking": "replace",
-                "statusKindId": "rfb.status.slow",
-                "type": "visible-apply-status"
-              },
-              {
-                "durationTicks": 3,
-                "intensity": 1,
-                "power": 17,
-                "stacking": "replace",
-                "statusKindId": "rfb.status.stun",
-                "type": "visible-apply-status"
-              },
-              {
-                "durationTicks": 3,
-                "intensity": 1,
-                "power": 128,
-                "stacking": "replace",
-                "statusKindId": "rfb.status.confusion",
-                "type": "visible-apply-status"
-              },
-              {
-                "durationTicks": 3,
-                "intensity": 1,
-                "power": 128,
-                "stacking": "replace",
-                "statusKindId": "rfb.status.fear",
-                "type": "visible-apply-status"
-              },
-              {
-                "durationTicks": 500,
-                "intensity": 1,
-                "power": 42,
-                "stacking": "replace",
-                "statusKindId": "rfb.status.paralysis",
-                "type": "visible-apply-status"
-              }
-            ],
-            "type": "sequence"
-          },
-          "type": "ability-effect"
-        },
         "id": "demo.item-activation.lava-lamp-of-telmora",
         "maxDepth": 100,
         "minDepth": 1,
@@ -133,7 +85,8 @@
           "range": 0,
           "requiresLineOfEffect": false
         },
-        "weight": 1
+        "weight": 1,
+        "effectProgramId": "demo.effect.lava-lamp-of-telmora-activation"
       }
     ],
     "recovery": {

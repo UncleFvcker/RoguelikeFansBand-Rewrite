@@ -965,55 +965,95 @@ fn q2_quaker_gloves_forward_impact_only_while_equipped() {
         .find(|seed| {
             let mut game = base.clone();
             game.rng = RfbRng::seeded(*seed);
-            resolve_melee(&mut game).iter().any(|event| {
-                matches!(event, DomainEvent::PlayerWeaponEarthquakeResolved { .. })
-            })
+            resolve_melee(&mut game)
+                .iter()
+                .any(|event| matches!(event, DomainEvent::PlayerWeaponEarthquakeResolved { .. }))
         })
         .expect("Quaker gloves must cause a real weapon earthquake");
     let mut equipped = base.clone();
     equipped.rng = RfbRng::seeded(seed);
     let mut intrinsic = equipped.clone();
     let weapon = weapon_index(&intrinsic);
-    intrinsic.items[weapon].intrinsic_weapon_traits.insert(WeaponTraitDto::Impact);
+    intrinsic.items[weapon]
+        .intrinsic_weapon_traits
+        .insert(WeaponTraitDto::Impact);
     assert_eq!(resolve_melee(&mut equipped), resolve_melee(&mut intrinsic));
-    assert_eq!(equipped.rng, intrinsic.rng, "two IMPACT sources do not double-roll");
+    assert_eq!(
+        equipped.rng, intrinsic.rng,
+        "two IMPACT sources do not double-roll"
+    );
 
     let mut removed = base.clone();
-    let slot = match &removed.items.iter().find(|item| item.id == gloves).unwrap().location {
+    let slot = match &removed
+        .items
+        .iter()
+        .find(|item| item.id == gloves)
+        .unwrap()
+        .location
+    {
         ItemLocation::Equipped { slot_id } => slot_id.clone(),
         _ => panic!("equipped gloves"),
     };
     removed.unequip_slot(&slot).unwrap();
     removed.rng = RfbRng::seeded(seed);
-    assert!(!resolve_melee(&mut removed).iter().any(|event| {
-        matches!(event, DomainEvent::PlayerWeaponEarthquakeResolved { .. })
-    }));
+    assert!(
+        !resolve_melee(&mut removed)
+            .iter()
+            .any(|event| { matches!(event, DomainEvent::PlayerWeaponEarthquakeResolved { .. }) })
+    );
     force_melee_misses(&mut base);
     let mut missed_intrinsic = base.clone();
     let weapon = weapon_index(&missed_intrinsic);
-    missed_intrinsic.items[weapon].intrinsic_weapon_traits.insert(WeaponTraitDto::Impact);
-    assert_eq!(resolve_melee(&mut base), resolve_melee(&mut missed_intrinsic));
+    missed_intrinsic.items[weapon]
+        .intrinsic_weapon_traits
+        .insert(WeaponTraitDto::Impact);
+    assert_eq!(
+        resolve_melee(&mut base),
+        resolve_melee(&mut missed_intrinsic)
+    );
     assert_eq!(base.rng, missed_intrinsic.rng);
 }
 
 #[test]
 fn q3_master_tonberry_negative_blows_apply_in_full_to_both_hands() {
-    let mut game = melee_game(531, "demo.build.warrior");
-    let offhand = game.body_slots.iter().find(|slot| slot.slot_type == "shield").unwrap().id.clone();
+    let mut game = Game::new_with_build(531, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    let offhand = game
+        .body_slots
+        .iter()
+        .find(|slot| slot.slot_type == "shield")
+        .unwrap()
+        .id
+        .clone();
     give_inventory_item(&mut game, "test.q3.offhand", "demo.item.dagger");
-    game.equip_inventory_item("test.q3.offhand", Some(&offhand)).unwrap();
+    game.equip_inventory_item("test.q3.offhand", Some(&offhand))
+        .unwrap();
     give_inventory_item(&mut game, "test.q3.gloves", "demo.item.master-tonberry");
+    game.generated_artifact_ids
+        .insert("demo.item.master-tonberry".into());
     game.equip_inventory_item("test.q3.gloves", None).unwrap();
     // Keep both rates above the zero floor to expose the full per-hand penalty.
-    let weapons = game.equipped_melee_weapons().iter().map(|item| item.id.clone()).collect::<Vec<_>>();
+    let weapons = game
+        .equipped_melee_weapons()
+        .iter()
+        .map(|item| item.id.clone())
+        .collect::<Vec<_>>();
     for item in &mut game.items {
         if weapons.contains(&item.id) {
-            item.intrinsic_properties.equipment_bonuses.melee_attacks_delta_percent = 400;
+            item.intrinsic_properties
+                .equipment_bonuses
+                .melee_attacks_delta_percent = 400;
         }
     }
     let mut control = game.clone();
-    control.items.iter_mut().find(|item| item.id == "test.q3.gloves").unwrap()
-        .intrinsic_properties.equipment_bonuses.melee_attacks_delta_percent = 200;
+    control
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.q3.gloves")
+        .unwrap()
+        .intrinsic_properties
+        .equipment_bonuses
+        .melee_attacks_delta_percent = 200;
     let profiles = game.player_melee_profiles(&game.player_derived_stats());
     let controls = control.player_melee_profiles(&control.player_derived_stats());
     assert_eq!(profiles.len(), 2);
@@ -1025,8 +1065,14 @@ fn q3_master_tonberry_negative_blows_apply_in_full_to_both_hands() {
     }
     let loaded = Game::from_save(game.to_save()).unwrap();
     assert_eq!(game.state_hash(), loaded.state_hash());
-    assert_eq!(profiles.iter().map(rate).collect::<Vec<_>>(),
-        loaded.player_melee_profiles(&loaded.player_derived_stats()).iter().map(rate).collect::<Vec<_>>());
+    assert_eq!(
+        profiles.iter().map(rate).collect::<Vec<_>>(),
+        loaded
+            .player_melee_profiles(&loaded.player_derived_stats())
+            .iter()
+            .map(rate)
+            .collect::<Vec<_>>()
+    );
 }
 
 #[test]
@@ -1039,11 +1085,14 @@ fn q3_atlas_fixed_impact_reaches_the_existing_earthquake_consumer() {
     let successful = (0..10_000).any(|seed| {
         let mut game = base.clone();
         game.rng = RfbRng::seeded(seed);
-        resolve_melee(&mut game).iter().any(|event| {
-            matches!(event, DomainEvent::PlayerWeaponEarthquakeResolved { .. })
-        })
+        resolve_melee(&mut game)
+            .iter()
+            .any(|event| matches!(event, DomainEvent::PlayerWeaponEarthquakeResolved { .. }))
     });
-    assert!(successful, "Atlas must trigger the existing earthquake/stun path");
+    assert!(
+        successful,
+        "Atlas must trigger the existing earthquake/stun path"
+    );
 }
 
 #[test]

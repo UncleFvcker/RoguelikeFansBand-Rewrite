@@ -2908,7 +2908,7 @@ fn telmora_nine_shops_trade_and_save() {
         "demo.town.telmora",
         "demo.shop.telmora-inn",
         Position { x: 87, y: 49 },
-        9,
+        10,
     );
 }
 

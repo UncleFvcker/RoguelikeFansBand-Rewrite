@@ -1,0 +1,112 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.lakshmi",
+  "nameKey": "item-demo-lakshmi-name",
+  "descriptionKey": "item-demo-lakshmi-description",
+  "glyph": "\"",
+  "generationLevel": 65,
+  "weightTenthsPound": 3,
+  "baseValue": 90000,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "equipment",
+    "jewelry",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 394,
+    "baseItemKindId": "demo.item.amulet",
+    "instant": false,
+    "rarityOneIn": 150
+  },
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "CHR",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INFRA",
+      "LITE",
+      "QUESTITEM",
+      "REGEN",
+      "RES_CHAOS",
+      "RES_DARK",
+      "RES_LITE",
+      "SEARCH",
+      "SEE_INVIS",
+      "SUST_CHR"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentSlot": "amulet",
+  "modifiers": {
+    "charisma": 4
+  },
+  "equipmentBonuses": {
+    "searchSkill": 20,
+    "perceptionSkill": 20,
+    "infravision": 4,
+    "lightRadius": 1
+  },
+  "passives": [
+    "blessed",
+    "hold-life",
+    "regeneration",
+    "see-invisible",
+    "sustain-charisma"
+  ],
+  "resistances": {
+    "light": "resistant",
+    "dark": "resistant",
+    "chaos": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.lakshmi",
+        "nameKey": "device-activation-e5-satisfy-hunger-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 500,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.lakshmi-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 250
+    }
+  }
+}

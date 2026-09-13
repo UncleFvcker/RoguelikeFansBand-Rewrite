@@ -186,5 +186,9 @@
     "nonliving",
     "orc-cave",
     "unique"
-  ]
+  ],
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.space-suit-of-vayu",
+    "chancePercent": 10
+  }
 }

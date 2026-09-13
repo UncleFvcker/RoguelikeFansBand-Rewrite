@@ -360,12 +360,26 @@ impl Game {
                     build.race_id == "rfb-legacy.race.tonberry"
                 }) && self.rng.bounded(14) == 0))
         {
-            let (item_kind_id, mut chance) = if let Some(alternative) = &drop.alternative
+            // xtra2.c: Shiva makes two sequential one-in-four choices, then
+            // applies the common 40% / Bad Luck / uniqueness roll to that choice.
+            let (item_kind_id, mut chance) = if actor.kind_id == "demo.actor.shiva-the-destroyer" {
+                let kind = if self.rng.bounded(4) == 0 {
+                    drop.item_kind_id.as_str()
+                } else if self.rng.bounded(4) == 0 {
+                    "demo.item.shiva-avatar-jacket"
+                } else {
+                    "demo.item.shiva-avatar-boots"
+                };
+                (kind, drop.chance_percent)
+            } else if let Some(alternative) = &drop.alternative
                 && self.rng.bounded(2) != 0
             {
-                (&alternative.item_kind_id, alternative.chance_percent)
+                (
+                    alternative.item_kind_id.as_str(),
+                    alternative.chance_percent,
+                )
             } else {
-                (&drop.item_kind_id, drop.chance_percent)
+                (drop.item_kind_id.as_str(), drop.chance_percent)
             };
             if chance < 100
                 && self
@@ -388,7 +402,7 @@ impl Game {
                         actor_id: actor.id.clone(),
                     },
                 };
-                let draft = self.fixed_item_draft(&context, item_kind_id.clone());
+                let draft = self.fixed_item_draft(&context, item_kind_id.to_owned());
                 generated
                     .push(self.commit_generated_item_draft(draft, ItemLocation::Ground(position))?);
             }
@@ -1606,18 +1620,28 @@ impl Game {
         }
         // artifact.c:3258-3311: all currently playable identities take the
         // ordinary construction branches. These flags persist on the instance.
-        match self.content.item(&draft.kind_id)
+        match self
+            .content
+            .item(&draft.kind_id)
             .and_then(|item| item.artifact_generation.as_ref())
             .map(|artifact| artifact.source_index)
         {
             Some(78) => {
                 draft.curse = Some(ItemCurseSeverityDto::Heavy);
-                draft.intrinsic_properties.rfb_flags.extend(["AGGRAVATE".into(), "TY_CURSE".into()]);
-                draft.intrinsic_curse_effects.insert(super::ego::curses::get_curse(&mut self.rng, 2, 23));
+                draft
+                    .intrinsic_properties
+                    .rfb_flags
+                    .extend(["AGGRAVATE".into(), "TY_CURSE".into()]);
+                draft
+                    .intrinsic_curse_effects
+                    .insert(super::ego::curses::get_curse(&mut self.rng, 2, 23));
             }
             Some(190) => {
                 draft.curse = Some(ItemCurseSeverityDto::Heavy);
-                draft.intrinsic_properties.rfb_flags.extend(["AGGRAVATE".into(), "DRAIN_EXP".into()]);
+                draft
+                    .intrinsic_properties
+                    .rfb_flags
+                    .extend(["AGGRAVATE".into(), "DRAIN_EXP".into()]);
             }
             Some(212) => draft.curse = Some(ItemCurseSeverityDto::Heavy),
             _ => {}

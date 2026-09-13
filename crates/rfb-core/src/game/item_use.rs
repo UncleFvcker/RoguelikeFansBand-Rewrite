@@ -3827,10 +3827,18 @@ impl Game {
                 )?;
                 self.mark_item_aware(&kind_id);
             }
-            (ItemUseEffectDefinition::PiercingShot, ItemUsePlan::PiercingShot { target, .. }) => {
+            (
+                effect @ (ItemUseEffectDefinition::PiercingShot
+                | ItemUseEffectDefinition::RamaArrow),
+                ItemUsePlan::PiercingShot { target, .. },
+            ) => {
                 self.resolve_player_projectile(
                     target,
-                    ProjectileMode::Piercing,
+                    if matches!(effect, ItemUseEffectDefinition::RamaArrow) {
+                        ProjectileMode::Rama
+                    } else {
+                        ProjectileMode::Piercing
+                    },
                     events,
                     changed,
                     removed_entities,
@@ -4305,7 +4313,7 @@ impl Game {
                 })?;
                 Some(ItemUsePlan::Projectile { path })
             }
-            ItemUseEffectDefinition::PiercingShot => {
+            ItemUseEffectDefinition::PiercingShot | ItemUseEffectDefinition::RamaArrow => {
                 let Some(target) = target else {
                     return Some(ItemUsePlan::CancelledActivation);
                 };
@@ -4318,7 +4326,11 @@ impl Game {
                 self.player_projectile_path_for_mode(
                     target,
                     profile.range,
-                    ProjectileMode::Piercing,
+                    if matches!(effect, ItemUseEffectDefinition::RamaArrow) {
+                        ProjectileMode::Rama
+                    } else {
+                        ProjectileMode::Piercing
+                    },
                 )?;
                 Some(ItemUsePlan::PiercingShot {
                     target: target.clone(),
@@ -6660,6 +6672,7 @@ impl Game {
             | ItemUseEffectDefinition::TerrainBeam { .. }
             | ItemUseEffectDefinition::RidingCharge
             | ItemUseEffectDefinition::PiercingShot
+            | ItemUseEffectDefinition::RamaArrow
             | ItemUseEffectDefinition::RandomElementConeDamage { .. }
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::AggravateMonsters

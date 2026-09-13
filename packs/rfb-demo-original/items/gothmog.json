@@ -119,18 +119,7 @@
           "range": 18,
           "requiresLineOfEffect": true
         },
-        "effect": {
-          "type": "ability-effect",
-          "affectsGroundItems": true,
-          "effect": {
-            "type": "area-damage",
-            "damageDice": 0,
-            "damageSides": 0,
-            "damageBonus": 300,
-            "damageType": "fire",
-            "radius": 2
-          }
-        }
+        "effectProgramId": "demo.effect.gothmog-activation"
       }
     ],
     "recovery": {

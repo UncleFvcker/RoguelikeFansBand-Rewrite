@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 use super::support::*;
 use super::*;
+mod desktop;
+mod q5;
 
 const REWARDS: [(&str, &str, u16); 4] = [
     ("fang-farmer-maggots-dog", "dog-collar-of-fang", 2),
@@ -49,35 +51,82 @@ fn q2_q3_named_death_equipment_and_saved_continuation() {
         let kind = format!("demo.item.{slug}");
         let actor_kind = format!("demo.actor.{actor}");
         let mut game = if slug == "master-tonberry" {
-            Game::new_with_build_race_and_name(523, "demo.build.warrior",
-                "rfb-legacy.race.tonberry", Game::DEFAULT_PLAYER_NAME).unwrap()
-        } else { fresh.clone() };
+            Game::new_with_build_race_and_name(
+                523,
+                "demo.build.warrior",
+                "rfb-legacy.race.tonberry",
+                Game::DEFAULT_PLAYER_NAME,
+            )
+            .unwrap()
+        } else {
+            fresh.clone()
+        };
+        game.apply_player_experience(game.experience_required_for_level(50), &mut Vec::new());
+        choose_human_talent_if_pending(&mut game);
         if game.actor_kind_is_dungeon_guardian(&actor_kind) {
-            let floor = game.content.world(&game.world_id).unwrap().procedural_floors.iter()
-                .find(|floor| floor.guardian.as_ref().is_some_and(|guardian| guardian.actor_kind_id == actor_kind)
-                    && floor.dungeon_id.as_ref().is_some_and(|id| game.dungeon_is_active(id)))
-                .unwrap().id.clone();
+            let floor = game
+                .content
+                .world(&game.world_id)
+                .unwrap()
+                .procedural_floors
+                .iter()
+                .find(|floor| {
+                    floor
+                        .guardian
+                        .as_ref()
+                        .is_some_and(|guardian| guardian.actor_kind_id == actor_kind)
+                        && floor
+                            .dungeon_id
+                            .as_ref()
+                            .is_some_and(|id| game.dungeon_is_active(id))
+                })
+                .unwrap()
+                .id
+                .clone();
             // Prepare the actual active final floor, retaining its guardian reward.
-            assert!(game.transition_floor(floor, None, None, false).unwrap().is_some());
+            assert!(
+                game.transition_floor(floor, None, None, false)
+                    .unwrap()
+                    .is_some()
+            );
         }
         // Prepared adjacent source actor and successful seed, not natural leveling.
         prepare_combat(&mut game, &actor_kind);
         game = successful_kill_start(&game, &kind);
         let mut loaded = Game::from_save(game.to_save()).unwrap();
-        let attack = GameCommand::Move { direction: Direction::East };
-        assert_eq!(dispatch_next(&mut game, attack.clone()).events,
-            dispatch_next(&mut loaded, attack).events, "{slug}");
+        let attack = GameCommand::Move {
+            direction: Direction::East,
+        };
+        assert_eq!(
+            dispatch_next(&mut game, attack.clone()).events,
+            dispatch_next(&mut loaded, attack).events,
+            "{slug}"
+        );
         assert_eq!(game.state_hash(), loaded.state_hash(), "{slug}");
         assert_eq!(game.actor_kind_available_instance_count(&actor_kind), 0);
-        let reward = game.items.iter().find(|item| item.kind_id == kind).unwrap().clone();
+        choose_human_talent_if_pending(&mut game);
+        let reward = game
+            .items
+            .iter()
+            .find(|item| item.kind_id == kind)
+            .unwrap()
+            .clone();
         assert!(game.generated_artifact_ids.contains(&kind));
-        if let Some(guardian_reward) = game.dungeon_guardian_floor_for_actor(&actor_kind)
+        if let Some(guardian_reward) = game
+            .dungeon_guardian_floor_for_actor(&actor_kind)
             .and_then(|floor| floor.guardian.as_ref())
-            .and_then(|guardian| guardian.reward_artifact_item_kind_id.as_ref()) {
-            assert!(game.items.iter().any(|item| &item.kind_id == guardian_reward),
-                "named reward must supplement the existing dungeon reward");
+            .and_then(|guardian| guardian.reward_artifact_item_kind_id.as_ref())
+        {
+            assert!(
+                game.items
+                    .iter()
+                    .any(|item| &item.kind_id == guardian_reward),
+                "named reward must supplement the existing dungeon reward"
+            );
         }
-        let ItemLocation::Ground(position) = reward.location else { panic!("ground reward") };
+        let ItemLocation::Ground(position) = reward.location else {
+            panic!("ground reward")
+        };
         game.player.position = position;
         game.pick_up_item_at_player(Some(&reward.id)).unwrap();
         game.reveal_current_visibility();
@@ -88,10 +137,20 @@ fn q2_q3_named_death_equipment_and_saved_continuation() {
         let bonuses = game.player_equipment_bonuses();
         match slug {
             "ymir" => {
-                assert_eq!((properties.strength, properties.dexterity, properties.constitution), (3, -3, 3));
+                assert_eq!(
+                    (
+                        properties.strength,
+                        properties.dexterity,
+                        properties.constitution
+                    ),
+                    (3, -3, 3)
+                );
                 let resistances = game.effective_player_resistances();
                 assert_eq!(resistances.level(DamageType::Cold), ResistanceLevel::Immune);
-                assert_eq!(resistances.level(DamageType::Fire), ResistanceLevel::Vulnerable);
+                assert_eq!(
+                    resistances.level(DamageType::Fire),
+                    ResistanceLevel::Vulnerable
+                );
                 assert_eq!(reward.curse, None, "negative DEX does not invent a curse");
             }
             "cyberdemon-lord" => {
@@ -100,14 +159,23 @@ fn q2_q3_named_death_equipment_and_saved_continuation() {
             }
             "ariel" => {
                 assert_eq!((properties.speed, properties.dexterity), (5, 5));
-                assert!(game.player_equipment_passives().contains(&EquipmentPassive::Levitation));
+                assert!(
+                    game.player_equipment_passives()
+                        .contains(&EquipmentPassive::Levitation)
+                );
             }
             "eyes" => assert_eq!((bonuses.search_skill, bonuses.perception_skill), (15, 15)),
-            "kundry" => assert_eq!((bonuses.device_skill, bonuses.magic_resistance_percent), (16, 10)),
+            "kundry" => assert_eq!(
+                (bonuses.device_skill, bonuses.magic_resistance_percent),
+                (16, 10)
+            ),
             "pumpkin-lamp-of-jack-of-lanterns" => {
                 assert_eq!(game.player_light_radius(), Some(4));
                 assert_eq!(reward.fuel, None);
-                assert!(game.player_equipment_passives().contains(&EquipmentPassive::EspHuman));
+                assert!(
+                    game.player_equipment_passives()
+                        .contains(&EquipmentPassive::EspHuman)
+                );
             }
             "master-tonberry" => {
                 assert_eq!(bonuses.melee_attacks_delta_percent, -200);
@@ -130,7 +198,10 @@ fn q2_q3_named_death_equipment_and_saved_continuation() {
             "unlight-cloak-of-ungoliant" => {
                 assert_eq!(game.player_light_radius(), None);
                 assert_eq!((bonuses.search_skill, bonuses.perception_skill), (30, 30));
-                assert!(game.player_equipment_passives().contains(&EquipmentPassive::EspAnimal));
+                assert!(
+                    game.player_equipment_passives()
+                        .contains(&EquipmentPassive::EspAnimal)
+                );
             }
             "eye-of-the-hydra" => {
                 assert_eq!(game.player_light_radius(), None);
@@ -144,15 +215,26 @@ fn q2_q3_named_death_equipment_and_saved_continuation() {
         }
         let mut loaded = Game::from_save(game.to_save()).unwrap();
         assert_eq!(game.state_hash(), loaded.state_hash());
-        assert_eq!(dispatch_next(&mut game, GameCommand::Wait).events,
-            dispatch_next(&mut loaded, GameCommand::Wait).events);
+        assert_eq!(
+            dispatch_next(&mut game, GameCommand::Wait).events,
+            dispatch_next(&mut loaded, GameCommand::Wait).events
+        );
         assert_eq!(game.state_hash(), loaded.state_hash());
-        let slot = match &loaded.items.iter().find(|item| item.id == reward.id).unwrap().location {
+        let slot = match &loaded
+            .items
+            .iter()
+            .find(|item| item.id == reward.id)
+            .unwrap()
+            .location
+        {
             ItemLocation::Equipped { slot_id } => slot_id.clone(),
             _ => panic!("equipped reward"),
         };
         if reward.curse.is_some() {
-            assert!(loaded.unequip_slot(&slot).is_none(), "heavy curse survives loading");
+            assert!(
+                loaded.unequip_slot(&slot).is_none(),
+                "heavy curse survives loading"
+            );
             continue;
         }
         loaded.unequip_slot(&slot).unwrap();
@@ -167,25 +249,51 @@ fn q2_q3_dungeon_rewards_remain_in_complete_allocation() {
     // R'lyeh reaches depth96 and admits both preferred and other source actors.
     // Moire is wild-only; Vecna/Kundry retain their dedicated guardian floors.
     let floor = "demo.floor.rlyeh-depth-96";
-    let policy = game.content.encounter_table("demo.encounter-table.rlyeh")
-        .unwrap().global_allocation.clone().unwrap();
-    for actor in ["demo.actor.vecna-the-emperor-lich", "demo.actor.kundry-queen-of-the-lost-haven"] {
-        assert!(game.content.world(&game.world_id).unwrap().procedural_floors.iter()
-            .any(|floor| floor.guardian.as_ref().is_some_and(|guardian| guardian.actor_kind_id == actor)));
+    let policy = game
+        .content
+        .encounter_table("demo.encounter-table.rlyeh")
+        .unwrap()
+        .global_allocation
+        .clone()
+        .unwrap();
+    for actor in [
+        "demo.actor.vecna-the-emperor-lich",
+        "demo.actor.kundry-queen-of-the-lost-haven",
+    ] {
+        assert!(
+            game.content
+                .world(&game.world_id)
+                .unwrap()
+                .procedural_floors
+                .iter()
+                .any(|floor| floor
+                    .guardian
+                    .as_ref()
+                    .is_some_and(|guardian| guardian.actor_kind_id == actor))
+        );
     }
-    let mut remaining = Q2_REWARDS.iter().chain(Q3_REWARDS.iter())
-        .filter(|(actor, slug)| *slug != "moire"
-            && !game.actor_kind_is_dungeon_guardian(&format!("demo.actor.{actor}")))
-        .map(|(actor, _)| format!("demo.actor.{actor}")).collect::<BTreeSet<_>>();
+    let mut remaining = Q2_REWARDS
+        .iter()
+        .chain(Q3_REWARDS.iter())
+        .filter(|(actor, slug)| {
+            *slug != "moire" && !game.actor_kind_is_dungeon_guardian(&format!("demo.actor.{actor}"))
+        })
+        .map(|(actor, _)| format!("demo.actor.{actor}"))
+        .collect::<BTreeSet<_>>();
     for _ in 0..100_000 {
-        if let Some(actor) = game.select_original_allocated_monster(
-            floor, &policy, 96, 96, None, &[], None, None,
-        ) {
+        if let Some(actor) =
+            game.select_original_allocated_monster(floor, &policy, 96, 96, None, &[], None, None)
+        {
             remaining.remove(&actor);
         }
-        if remaining.is_empty() { break; }
+        if remaining.is_empty() {
+            break;
+        }
     }
-    assert!(remaining.is_empty(), "unreachable Q2/Q3 actors: {remaining:?}");
+    assert!(
+        remaining.is_empty(),
+        "unreachable Q2/Q3 actors: {remaining:?}"
+    );
 }
 
 #[test]
@@ -197,22 +305,38 @@ fn q2_eyes_and_kundry_activate_and_restore_partial_recovery() {
         dispatch_next(&mut game, GameCommand::TraverseStairs);
         clear_monsters(&mut game);
         game.items.clear();
-        game.progress.level = 30;
+        game.apply_player_experience(game.experience_required_for_level(30), &mut Vec::new());
+        choose_human_talent_if_pending(&mut game);
         game.refresh_player_resource_maxima();
         let id = "test.q2.activation";
         give_inventory_item(&mut game, id, &format!("demo.item.{slug}"));
+        game.generated_artifact_ids
+            .insert(format!("demo.item.{slug}"));
         game.identify_item_instance(id, ItemIdentificationRequest::new(true));
         game.equip_inventory_item(id, None).unwrap();
-        game.resources.get_mut("demo.resource.mana").unwrap().current = 0;
+        game.refresh_player_resource_maxima();
+        game.resources
+            .get_mut("demo.resource.mana")
+            .unwrap()
+            .current = 0;
         game.glow.fill(false);
         assert!(game.resources["demo.resource.mana"].maximum > 15);
         let activate = |game: &mut Game| {
             let mut events = Vec::new();
-            game.use_inventory_item(id, Some(&TargetSelection::SelfTarget), None,
-                &mut events, &mut BTreeSet::new(), &mut Vec::new()).unwrap();
+            game.use_inventory_item(
+                id,
+                Some(&TargetSelection::SelfTarget),
+                None,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
             events
         };
-        let seed = (0..1000).find(|seed| RfbRng::seeded(*seed).bounded(100) < 5).unwrap();
+        let seed = (0..1000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+            .unwrap();
         game.rng = RfbRng::seeded(seed);
         let mut loaded = Game::from_save(game.to_save()).unwrap();
         assert_eq!(activate(&mut game), activate(&mut loaded));
@@ -234,7 +358,10 @@ fn q2_eyes_and_kundry_activate_and_restore_partial_recovery() {
             for game in [&mut game, &mut loaded] {
                 game.world_tick = start + tick;
                 game.process_inventory_device_recovery(&mut Vec::new());
-                assert_eq!(game.items[0].charges.unwrap().current, u32::from(tick == 300));
+                assert_eq!(
+                    game.items[0].charges.unwrap().current,
+                    u32::from(tick == 300)
+                );
             }
         }
         assert_eq!(game.state_hash(), loaded.state_hash());
@@ -328,21 +455,35 @@ fn export_q1_desktop_save() {
 
 #[test]
 fn q3_tonberry_drop_tests_permanent_identity_before_both_probability_rolls() {
-    let mut base = Game::new_with_build_race_and_name(526, "demo.build.warrior",
-        "rfb-legacy.race.tonberry", Game::DEFAULT_PLAYER_NAME).unwrap();
+    let mut base = Game::new_with_build_race_and_name(
+        526,
+        "demo.build.warrior",
+        "rfb-legacy.race.tonberry",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .unwrap();
     prepare_combat(&mut base, "demo.actor.master-tonberry");
     let target = base.entities[0].clone();
     let kind = "demo.item.master-tonberry";
     for (gate, roll, bad_luck, expected) in [
-        (1, 0, false, false), (0, 98, false, true), (0, 99, false, false),
-        (0, 74, true, true), (0, 75, true, false),
+        (1, 0, false, false),
+        (0, 98, false, true),
+        (0, 99, false, false),
+        (0, 74, true, true),
+        (0, 75, true, false),
     ] {
-        let seed = (0..100_000).find(|seed| {
-            let mut rng = RfbRng::seeded(*seed);
-            rng.bounded(14) == gate && rng.bounded(100) == roll
-        }).unwrap();
+        let seed = (0..100_000)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                rng.bounded(14) == gate && rng.bounded(100) == roll
+            })
+            .unwrap();
         let mut game = base.clone();
-        if bad_luck { game.progress.active_mutation_ids.insert("rfb.mutation.bad-luck".into()); }
+        if bad_luck {
+            game.progress
+                .active_mutation_ids
+                .insert("rfb.mutation.bad-luck".into());
+        }
         game.rng = RfbRng::seeded(seed);
         let (drops, _) = game.generate_death_loot(&target).unwrap();
         assert_eq!(drops.iter().any(|item| item.kind_id == kind), expected);
@@ -351,11 +492,19 @@ fn q3_tonberry_drop_tests_permanent_identity_before_both_probability_rolls() {
             let mut human = Game::new_with_build(526, "demo.build.warrior").unwrap();
             choose_human_talent_if_pending(&mut human);
             prepare_combat(&mut human, "demo.actor.master-tonberry");
-            let mut form = monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.q3.form").status;
+            let mut form =
+                monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.q3.form").status;
             form.granted_race_id = Some("rfb-legacy.race.tonberry".into());
             human.player.statuses.push(form);
             human.rng = RfbRng::seeded(seed);
-            assert!(!human.generate_death_loot(&target).unwrap().0.iter().any(|item| item.kind_id == kind));
+            assert!(
+                !human
+                    .generate_death_loot(&target)
+                    .unwrap()
+                    .0
+                    .iter()
+                    .any(|item| item.kind_id == kind)
+            );
         }
     }
 }
@@ -366,21 +515,33 @@ fn q3_ungoliant_selects_once_before_chance_and_never_replaces_a_generated_choice
     choose_human_talent_if_pending(&mut base);
     prepare_combat(&mut base, "demo.actor.ungoliant-the-unlight");
     let target = base.entities[0].clone();
-    let kinds = ["demo.item.devouring-darkness", "demo.item.unlight-cloak-of-ungoliant"];
+    let kinds = [
+        "demo.item.devouring-darkness",
+        "demo.item.unlight-cloak-of-ungoliant",
+    ];
     for choice in 0..2 {
         for roll in [4, 5] {
-            let seed = (0..10_000).find(|seed| {
-                let mut rng = RfbRng::seeded(*seed);
-                rng.bounded(2) == choice as u64 && rng.bounded(100) == roll
-            }).unwrap();
+            let seed = (0..10_000)
+                .find(|seed| {
+                    let mut rng = RfbRng::seeded(*seed);
+                    rng.bounded(2) == choice as u64 && rng.bounded(100) == roll
+                })
+                .unwrap();
             for generated in [false, true] {
                 let mut game = base.clone();
-                if generated { game.generated_artifact_ids.insert(kinds[choice].into()); }
+                if generated {
+                    game.generated_artifact_ids.insert(kinds[choice].into());
+                }
                 game.rng = RfbRng::seeded(seed);
                 let drops = game.generate_death_loot(&target).unwrap().0;
-                let rewards = drops.iter().filter(|item| kinds.contains(&item.kind_id.as_str())).collect::<Vec<_>>();
+                let rewards = drops
+                    .iter()
+                    .filter(|item| kinds.contains(&item.kind_id.as_str()))
+                    .collect::<Vec<_>>();
                 assert_eq!(rewards.len(), usize::from(roll == 4 && !generated));
-                if let Some(reward) = rewards.first() { assert_eq!(reward.kind_id, kinds[choice]); }
+                if let Some(reward) = rewards.first() {
+                    assert_eq!(reward.kind_id, kinds[choice]);
+                }
                 assert!(!game.generated_artifact_ids.contains(kinds[1 - choice]));
             }
         }
@@ -389,14 +550,25 @@ fn q3_ungoliant_selects_once_before_chance_and_never_replaces_a_generated_choice
 
 #[test]
 fn q3_playable_balrog_keeps_ordinary_gothmog_construction() {
-    let mut game = Game::new_with_build_race_and_name(528, "demo.build.warrior",
-        "rfb-legacy.race.balrog", Game::DEFAULT_PLAYER_NAME).unwrap();
+    let mut game = Game::new_with_build_race_and_name(
+        528,
+        "demo.build.warrior",
+        "rfb-legacy.race.balrog",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .unwrap();
     let context = LootContext {
-        table_id: "demo.loot-table.base-items".into(), floor_id: game.current_floor_id.clone(), depth: 95,
-        source: LootSource::MonsterDeath { actor_id: "test.q3.gothmog".into() },
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: game.current_floor_id.clone(),
+        depth: 95,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.q3.gothmog".into(),
+        },
     };
     let draft = game.fixed_item_draft(&context, "demo.item.gothmog".into());
-    let item = game.commit_generated_item_draft(draft, ItemLocation::Inventory).unwrap();
+    let item = game
+        .commit_generated_item_draft(draft, ItemLocation::Inventory)
+        .unwrap();
     assert_eq!(item.curse, Some(ItemCurseSeverityDto::Heavy));
     game.items.push(item);
     let loaded = Game::from_save(game.to_save()).unwrap();
@@ -409,39 +581,88 @@ fn q3_hydra_eye_heals_cures_source_statuses_and_preserves_recovery() {
     choose_human_talent_if_pending(&mut game);
     clear_monsters(&mut game);
     game.items.clear();
-    game.progress.level = 50;
+    game.apply_player_experience(game.experience_required_for_level(50), &mut Vec::new());
+    choose_human_talent_if_pending(&mut game);
     game.refresh_player_resource_maxima();
     let id = "test.q3.eye";
     give_inventory_item(&mut game, id, "demo.item.eye-of-the-hydra");
+    game.generated_artifact_ids
+        .insert("demo.item.eye-of-the-hydra".into());
     game.identify_item_instance(id, ItemIdentificationRequest::new(true));
     game.equip_inventory_item(id, None).unwrap();
     assert_eq!(game.player_light_radius(), None);
     give_inventory_item(&mut game, "test.q3.glow", "demo.item.leather-gloves");
-    game.items.iter_mut().find(|item| item.id == "test.q3.glow").unwrap()
-        .intrinsic_properties.equipment_bonuses.light_radius = 8;
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.q3.glow")
+        .unwrap()
+        .intrinsic_properties
+        .equipment_bonuses
+        .light_radius = 8;
     game.equip_inventory_item("test.q3.glow", None).unwrap();
-    assert_eq!(game.player_light_radius(), Some(1), "eye subtracts seven, not generic DARKNESS three");
-    for status in [STATUS_BLINDNESS, STATUS_BLEEDING, STATUS_CONFUSION, STATUS_STUN, STATUS_BERSERK, STATUS_POISON] {
-        game.player.statuses.push(monster_combat::melee_status(status, 100, "test.q3.healing").status);
+    assert_eq!(
+        game.player_light_radius(),
+        Some(1),
+        "eye subtracts seven, not generic DARKNESS three"
+    );
+    for status in [
+        STATUS_BLINDNESS,
+        STATUS_BLEEDING,
+        STATUS_CONFUSION,
+        STATUS_STUN,
+        STATUS_BERSERK,
+        STATUS_POISON,
+    ] {
+        game.player
+            .statuses
+            .push(monster_combat::melee_status(status, 100, "test.q3.healing").status);
     }
+    game.refresh_player_resource_maxima();
     game.player.hp = 1;
-    let seed = (0..1000).find(|seed| RfbRng::seeded(*seed).bounded(100) < 5).unwrap();
+    let seed = (0..1000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+        .unwrap();
     game.rng = RfbRng::seeded(seed);
     let mut loaded = Game::from_save(game.to_save()).unwrap();
     let activate = |game: &mut Game| {
         let mut events = Vec::new();
-        game.use_inventory_item(id, Some(&TargetSelection::SelfTarget), None,
-            &mut events, &mut BTreeSet::new(), &mut Vec::new()).unwrap();
+        game.use_inventory_item(
+            id,
+            Some(&TargetSelection::SelfTarget),
+            None,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
         events
     };
     assert_eq!(activate(&mut game), activate(&mut loaded));
     assert_eq!(game.state_hash(), loaded.state_hash());
     assert_eq!(game.player.hp, 701.min(game.effective_player_max_hp()));
-    for status in [STATUS_BLINDNESS, STATUS_BLEEDING, STATUS_CONFUSION, STATUS_STUN, STATUS_BERSERK] {
+    for status in [
+        STATUS_BLINDNESS,
+        STATUS_BLEEDING,
+        STATUS_CONFUSION,
+        STATUS_STUN,
+        STATUS_BERSERK,
+    ] {
         assert!(!game.player_has_status_kind(status));
     }
-    assert!(game.player_has_status_kind(STATUS_POISON), "HEAL_CURING does not cure poison");
-    assert_eq!(game.items[0].charges.unwrap().current, 0);
+    assert!(
+        game.player_has_status_kind(STATUS_POISON),
+        "HEAL_CURING does not cure poison"
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == id)
+            .unwrap()
+            .charges
+            .unwrap()
+            .current,
+        0
+    );
     let start = game.world_tick;
     for tick in 1..=1500 {
         game.world_tick = start + tick;
@@ -452,7 +673,16 @@ fn q3_hydra_eye_heals_cures_source_statuses_and_preserves_recovery() {
         for game in [&mut game, &mut loaded] {
             game.world_tick = start + tick;
             game.process_inventory_device_recovery(&mut Vec::new());
-            assert_eq!(game.items[0].charges.unwrap().current, u32::from(tick == 3000));
+            assert_eq!(
+                game.items
+                    .iter()
+                    .find(|item| item.id == id)
+                    .unwrap()
+                    .charges
+                    .unwrap()
+                    .current,
+                u32::from(tick == 3000)
+            );
         }
     }
     assert_eq!(game.state_hash(), loaded.state_hash());
@@ -463,18 +693,29 @@ fn q3_stormbringer_ally_strike_boundary_and_hostile_rng_match_saved_continuation
     let mut base = Game::new_with_build(530, "demo.build.warrior").unwrap();
     choose_human_talent_if_pending(&mut base);
     prepare_combat(&mut base, "demo.actor.warrens-keeper");
-    base.entities[0].hp = 100_000;
-    base.entities[0].max_hp = 100_000;
+    base.entities[0].hp = base.entities[0].max_hp;
     give_inventory_item(&mut base, "test.q3.black-blade", "demo.item.stormbringer");
-    base.equip_inventory_item("test.q3.black-blade", None).unwrap();
+    base.generated_artifact_ids
+        .insert("demo.item.stormbringer".into());
+    base.equip_inventory_item("test.q3.black-blade", None)
+        .unwrap();
     let step = |game: &mut Game| {
         let mut events = Vec::new();
-        let outcome = game.resolve_local_player_step(Direction::East, false, &mut events,
-            &mut BTreeSet::new(), &mut Vec::new()).unwrap();
+        let outcome = game
+            .resolve_local_player_step(
+                Direction::East,
+                false,
+                &mut events,
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .unwrap();
         (outcome.melee.is_some(), events)
     };
     for roll in [665, 666] {
-        let seed = (0..10_000).find(|seed| RfbRng::seeded(*seed).bounded(1000) == roll).unwrap();
+        let seed = (0..10_000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(1000) == roll)
+            .unwrap();
         let mut game = base.clone();
         game.entities[0].controller_id = Some(game.player.id.clone());
         assert!(game.entity_is_visible_to_player(&game.entities[0]));
@@ -484,14 +725,18 @@ fn q3_stormbringer_ally_strike_boundary_and_hostile_rng_match_saved_continuation
         assert_eq!(result.0, roll == 666);
         assert_eq!(result, step(&mut loaded));
         assert_eq!(game.state_hash(), loaded.state_hash());
-        if roll == 665 { assert_eq!(game.rng.draw_counter, 1); }
+        if roll == 665 {
+            assert_eq!(game.rng.draw_counter, 1);
+        }
     }
     // Moving into a hostile actor must not consume the ally-selection draw.
     let mut moved = base.clone();
     let mut direct = base;
     let movement = step(&mut moved);
     let mut events = Vec::new();
-    direct.resolve_player_melee(0, true, &mut events, &mut BTreeSet::new(), &mut Vec::new()).unwrap();
+    direct
+        .resolve_player_melee(0, true, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .unwrap();
     assert_eq!(movement.1, events);
     assert_eq!(moved.rng, direct.rng);
 }

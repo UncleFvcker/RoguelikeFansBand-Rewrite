@@ -1018,9 +1018,12 @@ impl Game {
                     | "demo.class.magic-eater"
             )
         });
-        let fixed_task_reward = matches!(task_id, "demo.task.zul-eddies"
-            | "demo.task.telmora-volcano" | "demo.task.telmora-thing-under-the-mountain")
-            || (fixed_castle_reward && task_id == "demo.task.old-castle");
+        let fixed_task_reward = matches!(
+            task_id,
+            "demo.task.zul-eddies"
+                | "demo.task.telmora-volcano"
+                | "demo.task.telmora-thing-under-the-mountain"
+        ) || (fixed_castle_reward && task_id == "demo.task.old-castle");
         if fixed_task_reward && let Some(reward) = task.reward.as_mut() {
             let mut selection =
                 crate::rng::RfbRng::seeded(task_selection_seed(task_id, self.wilderness_seed));

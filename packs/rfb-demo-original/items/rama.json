@@ -1,0 +1,108 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.rama",
+  "nameKey": "item-demo-rama-name",
+  "descriptionKey": "item-demo-rama-description",
+  "glyph": "}",
+  "generationLevel": 60,
+  "weightTenthsPound": 40,
+  "baseValue": 40000,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "equipment",
+    "launcher",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 384,
+    "baseItemKindId": "demo.item.long-bow",
+    "instant": false,
+    "rarityOneIn": 200
+  },
+  "rfbValue": {
+    "flags": [
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "PERMA_CURSE",
+      "QUESTITEM",
+      "SHOW_MODS",
+      "SLAY_DEMON",
+      "SLAY_EVIL",
+      "SLOW_DIGEST",
+      "STEALTH",
+      "SUST_WIS",
+      "WIS"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentSlot": "launcher",
+  "modifiers": {
+    "wisdom": 3
+  },
+  "projectileProfile": {
+    "ammunitionType": "arrow",
+    "damageMultiplierPercent": 425,
+    "range": 16,
+    "shotEnergy": 10000,
+    "toDamage": 36,
+    "toHit": 21
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 3
+  },
+  "passives": [
+    "slow-digestion",
+    "sustain-wisdom"
+  ],
+  "slays": {
+    "demon": "slay",
+    "evil": "slay"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.rama",
+        "nameKey": "device-activation-e5-rama-arrow-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 65,
+        "rfbValue": 10000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.rama-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 200
+    }
+  },
+  "initialCurse": "permanent"
+}

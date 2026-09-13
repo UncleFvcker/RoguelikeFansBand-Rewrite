@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/encounter-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.encounter-table.mount-meru",
+  "rolls": 12,
+  "globalAllocation": {
+    "preferredGlyphs": [
+      "n"
+    ],
+    "preferredTags": [
+      "hindu",
+      "hindu2"
+    ],
+    "specialDiv": 4,
+    "ambientChanceOneIn": 160
+  },
+  "entries": []
+}

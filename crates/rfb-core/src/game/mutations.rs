@@ -1669,6 +1669,9 @@ impl Game {
     }
 
     pub(super) fn process_minor_slow_recovery(&mut self) {
+        if self.player_has_status_kind(STATUS_NO_AIR) && !self.player_ignores_suffocation() {
+            return;
+        }
         if self.minor_slow == 0 {
             self.minor_slow_energy = 0;
             return;

@@ -1345,7 +1345,7 @@ impl Game {
                 }
         );
         let item_projectile_action = matches!(&action, GameAction::UseItem { item_id, .. }
-            if matches!(self.inventory_item_use_effect(item_id), Some((ItemUseEffectDefinition::PiercingShot, _))));
+            if matches!(self.inventory_item_use_effect(item_id), Some((ItemUseEffectDefinition::PiercingShot | ItemUseEffectDefinition::RamaArrow, _))));
         let deferred_spell_study = self.player_uses_dual_realm_learning()
             && matches!(
                 &action,

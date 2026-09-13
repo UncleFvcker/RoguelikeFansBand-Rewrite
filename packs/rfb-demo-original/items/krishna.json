@@ -1,0 +1,106 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.krishna",
+  "nameKey": "item-demo-krishna-name",
+  "descriptionKey": "item-demo-krishna-description",
+  "glyph": "}",
+  "generationLevel": 70,
+  "weightTenthsPound": 5,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "equipment",
+    "launcher",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 385,
+    "baseItemKindId": "demo.item.flute",
+    "instant": false,
+    "rarityOneIn": 50
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "ESP_HUMAN",
+      "FIXED_ACT",
+      "FREE_ACT",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "REGEN",
+      "RES_ACID",
+      "SEE_INVIS",
+      "SLOW_DIGEST",
+      "SUST_CHR",
+      "SUST_WIS",
+      "WIS"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentSlot": "launcher",
+  "modifiers": {
+    "wisdom": 4,
+    "charisma": 4
+  },
+  "passives": [
+    "esp-human",
+    "hold-life",
+    "regeneration",
+    "see-invisible",
+    "slow-digestion",
+    "sustain-charisma",
+    "sustain-wisdom",
+    "no-enchant"
+  ],
+  "resistances": {
+    "acid": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.krishna",
+        "nameKey": "device-activation-e5-return-pets-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 15,
+        "rfbValue": 500,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.krishna-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 50
+    }
+  }
+}

@@ -158,5 +158,9 @@
   ],
   "terrainInteraction": {
     "picksUpItems": true
+  },
+  "specialArtifactDrop": {
+    "itemKindId": "demo.item.rama",
+    "chancePercent": 10
   }
 }
