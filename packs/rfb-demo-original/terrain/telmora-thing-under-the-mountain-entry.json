@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.telmora-thing-under-the-mountain-entry",
+  "nameKey": "task-demo-telmora-thing-under-the-mountain-name",
+  "descriptionKey": "task-demo-telmora-thing-under-the-mountain-description",
+  "glyph": ">",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": [
+    "building",
+    "outdoor",
+    "surface",
+    "task-entry"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.telmora-castle",
+  "nameKey": "town-facility-demo-telmora-castle-name",
+  "descriptionKey": "town-facility-demo-telmora-castle-description",
+  "townId": "demo.town.telmora",
+  "category": "quest-giver",
+  "ownerNameKey": "town-facility-demo-telmora-castle-owner-name",
+  "taskIds": [
+    "demo.task.telmora-vault",
+    "demo.task.telmora-volcano"
+  ],
+  "entrancePosition": {
+    "x": 41,
+    "y": 21
+  },
+  "entranceTerrainId": "demo.terrain.telmora-castle-entrance",
+  "additionalEntrancePositions": [
+    {
+      "x": 42,
+      "y": 21
+    },
+    {
+      "x": 43,
+      "y": 21
+    },
+    {
+      "x": 44,
+      "y": 21
+    }
+  ]
+}

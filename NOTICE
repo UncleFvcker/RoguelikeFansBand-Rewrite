@@ -264,3 +264,14 @@ Asgard AS7 rest-through-recall behavior follows the complete-rest condition
 in src/dungeon.c from the same RFB master
 a0d92b6378d148c5262cc236b8fa6ed2ca06a54c. Existing upstream notices and license
 terms remain applicable.
+
+QUESTITEM Q4 adapts the Sting and Lava Lamp artifacts, Phial base 626,
+Telmora castle/task entrances, quest maps and text, and legend scrambling from
+RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: lib/edit/{a_info,k_info,
+q_info,q_vault,q_volc,q_balrog,t_telmo}.txt and src/{artifact_name_zh,
+kind_name_zh,quest_name_zh}.inc, src/init1.c and src/devices.c. The Urog
+dependency review follows src/karrot.c. Source mappings, current entry scope
+and retained adaptations are in docs/quest-item-plan.md and
+design/remaining-item-coverage-review.json. These materials retain their
+upstream terms and LICENSES/RFB-UPSTREAM-NOTICE.txt; the default project
+content license does not replace them.

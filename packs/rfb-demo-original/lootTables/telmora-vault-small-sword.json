@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/loot-table.schema.json",
+  "entries": [
+    {
+      "itemKindId": "demo.item.small-sword",
+      "minDepth": 0,
+      "maxDepth": 65535,
+      "quantity": 1,
+      "weight": 1
+    }
+  ],
+  "formatVersion": 1,
+  "id": "demo.loot-table.telmora-vault-small-sword",
+  "qualityPolicy": {
+    "goodCapPercent": 75,
+    "greatCapPercent": 20,
+    "kind": "rfb-depth"
+  },
+  "rfbEgoPolicy": "weapon-digger",
+  "rolls": 1
+}

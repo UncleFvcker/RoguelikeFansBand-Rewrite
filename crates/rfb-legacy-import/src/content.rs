@@ -30024,6 +30024,46 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
     }
 
     #[test]
+    fn q4_task_artifact_parameters_match_source() {
+        let entries = parse_a_info(include_str!("testdata/q4-artifacts.txt")).unwrap();
+        for (mut entry, slug) in entries.into_iter().zip(["sting", "lava-lamp-of-telmora"]) {
+            let directory = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original/items");
+            let formal: serde_json::Value = serde_json::from_slice(&fs::read(directory.join(format!("{slug}.json"))).unwrap()).unwrap();
+            let base_id = formal["artifactGeneration"]["baseItemKindId"].as_str().unwrap();
+            let base: serde_json::Value = serde_json::from_slice(&fs::read(directory.join(
+                format!("{}.json", base_id.strip_prefix("demo.item.").unwrap()))).unwrap()).unwrap();
+            assert_eq!(base["rfbBaseKind"]["tval"], entry.tval);
+            assert_eq!(base["rfbBaseKind"]["sval"], entry.sval);
+            entry.flags.extend(["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"].map(str::to_owned));
+            entry.flags.sort();
+            let imported = artifact_json(&entry, slug, Some(base_id), &LauncherAmmoIndex::default(),
+                &mut ContentImportReport::default());
+            for field in ["generationLevel", "weightTenthsPound", "baseValue", "equipmentSlot", "rfbValue", "meleeProfile"] {
+                assert_eq!(formal[field], imported[field], "{slug}: {field}");
+            }
+            for field in ["sourceIndex", "baseItemKindId", "rarityOneIn", "instant"] {
+                assert_eq!(formal["artifactGeneration"][field], imported["artifactGeneration"][field]);
+            }
+            if entry.index == 88 {
+                assert_eq!(formal["equipmentBonuses"]["meleeAttacksDeltaPercent"], entry.pval * 50);
+                assert_eq!(formal["artifactGeneration"]["affixIds"],
+                    serde_json::json!(["rfb-legacy.affix.artifact-extra-high-resistance"]));
+            } else {
+                let activation = entry.activation.unwrap();
+                let profile = &formal["deviceGeneration"]["activations"][0];
+                assert_eq!(profile["deviceCheckDifficulty"], activation.power);
+                assert_eq!(profile["rfbValue"], u32::from(activation.power) * 2 * 60);
+                assert_eq!(formal["deviceGeneration"]["recovery"]["intervalTicks"], u32::from(activation.recovery_turns) * 10);
+                let effects = profile["effect"]["effect"]["effects"].as_array().unwrap();
+                let power = u32::from(activation.power) * 2;
+                assert_eq!(effects.iter().map(|effect| effect["power"].as_u64().unwrap()).collect::<Vec<_>>(),
+                    [power, 5 + power / 10, power, power, power / 3].map(u64::from));
+                assert_eq!(base["rfbBaseKind"]["sourceIndex"], 626);
+            }
+        }
+    }
+
+    #[test]
     fn q3_named_artifact_parameters_and_special_base_identities_match_source() {
         let entries = parse_a_info(include_str!("testdata/q3-artifacts.txt")).unwrap();
         for (mut entry, slug) in entries.into_iter().zip([

@@ -1,0 +1,96 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.sting",
+  "nameKey": "item-demo-sting-name",
+  "descriptionKey": "item-demo-sting-description",
+  "glyph": "|",
+  "generationLevel": 20,
+  "weightTenthsPound": 75,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 88,
+    "baseItemKindId": "demo.item.small-sword",
+    "instant": false,
+    "rarityOneIn": 15,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "rfbValue": {
+    "flags": [
+      "BLOWS",
+      "CON",
+      "DEX",
+      "ESP_GIANT",
+      "ESP_ORC",
+      "ESP_TROLL",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "QUESTITEM",
+      "RES_LITE",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_EVIL",
+      "SLAY_ORC",
+      "SLAY_UNDEAD",
+      "STR",
+      "XTRA_H_RES"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 2,
+    "dexterity": 2,
+    "constitution": 2
+  },
+  "equipmentBonuses": {
+    "meleeAttacksDeltaPercent": 100,
+    "lightRadius": 1
+  },
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 8,
+    "toHit": 7,
+    "toDamage": 8
+  },
+  "weaponProficiencyBaseItemId": "demo.item.small-sword",
+  "resistances": {
+    "light": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "evil": "slay",
+    "undead": "slay",
+    "orc": "slay"
+  },
+  "passives": [
+    "see-invisible",
+    "esp-orc",
+    "esp-troll",
+    "esp-giant"
+  ]
+}

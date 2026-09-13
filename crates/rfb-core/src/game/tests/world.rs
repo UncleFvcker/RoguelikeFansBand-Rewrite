@@ -902,6 +902,7 @@ fn game_with_second_town(seed: u64) -> (Game, Position) {
     floor.abandoned_entry_terrain_id = None;
     floor.task_id = None;
     floor.inline_map = Some(rfb_content::InlineFloorMapDefinition {
+        symbol_groups: Vec::new(),
         friend_group_leader_ids: Vec::new(),
         vault_positions: Vec::new(),
         task_terrain_overrides: Vec::new(),

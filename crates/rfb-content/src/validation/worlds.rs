@@ -2334,6 +2334,78 @@ pub(super) fn validate_world(
                     painted_terrain.insert(*position, terrain_override.terrain_id.as_str());
                 }
             }
+            let mut symbol_positions = BTreeSet::new();
+            let mut inline_loot_ids = BTreeSet::new();
+            for (group_index, group) in inline_map.symbol_groups.iter().enumerate() {
+                if group.is_empty() || group.len() > 8 {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                // Object/actor-bearing scrambles must not duplicate a payload by
+                // assigning it to a legend with several cells.
+                if group.len() > 1 && group.iter().any(|symbol| {
+                    symbol.actor_kind_id.is_some() || symbol.actor_depth.is_some()
+                        || symbol.item_kind_id.is_some() || symbol.loot_table_id.is_some()
+                }) && group.iter().any(|symbol| symbol.positions.len() != 1) {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+                for (symbol_index, symbol) in group.iter().enumerate() {
+                    require_reference(terrain_ids, &symbol.terrain_id, &procedural.id)?;
+                    if symbol.positions.is_empty()
+                        || symbol.actor_kind_id.is_some() && symbol.actor_depth.is_some()
+                        || symbol.item_kind_id.is_some() && symbol.loot_table_id.is_some()
+                        || symbol.item_depth.is_some() && symbol.loot_table_id.is_none()
+                        || [symbol.actor_depth, symbol.item_depth].into_iter().flatten()
+                            .any(|depth| depth == 0 || depth > 255)
+                    {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                    let symbol_terrain = terrain.iter().find(|entry| entry.id == symbol.terrain_id).unwrap();
+                    if let Some(id) = &symbol.actor_kind_id {
+                        require_actor_role(actor_roles, id, ActorRole::Monster, &procedural.id)?;
+                        if !actor_can_cross_terrain(actors.iter().find(|actor| &actor.id == id).unwrap(), symbol_terrain) {
+                            return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                        }
+                    }
+                    if symbol.actor_depth.is_some() && procedural.encounter_table_id.as_ref()
+                        .and_then(|id| encounter_tables.get(id))
+                        .and_then(|table| table.global_allocation.as_ref()).is_none()
+                    {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                    if let Some(id) = &symbol.item_kind_id {
+                        if !item_limits.contains_key(id)
+                            || (items.iter().any(|item| &item.id == id && item.artifact_generation.is_some())
+                                && symbol.positions.len() != 1)
+                        {
+                            return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                        }
+                    }
+                    if let Some(id) = &symbol.loot_table_id {
+                        require_reference(loot_table_ids, id, &procedural.id)?;
+                    }
+                    if (symbol.item_kind_id.is_some() || symbol.loot_table_id.is_some())
+                        && terrain_item_drop.get(&symbol.terrain_id) != Some(&true)
+                    {
+                        return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                    }
+                    for (ordinal, position) in symbol.positions.iter().enumerate() {
+                        validate_position(*position, procedural.width, procedural.height, &procedural.id)?;
+                        if *position == inline_map.player_position || !painted_positions.insert(*position) {
+                            return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                        }
+                        symbol_positions.insert(*position);
+                        painted_terrain.insert(*position, symbol.terrain_id.as_str());
+                        inline_loot_ids.insert(format!("{}.symbol.{group_index}.{symbol_index}.{ordinal}.loot", procedural.id));
+                        for suffix in ["actor", "item"] {
+                            let id = format!("{}.symbol.{group_index}.{symbol_index}.{ordinal}.{suffix}", procedural.id);
+                            validate_id(&id)?;
+                            if !procedural_actor_ids.insert(id) {
+                                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                            }
+                        }
+                    }
+                }
+            }
             let mut task_positions = BTreeSet::new();
             for rule in &mut inline_map.task_terrain_overrides {
                 if procedural.lifecycle != FloorLifecycle::Town
@@ -2401,6 +2473,7 @@ pub(super) fn validate_world(
                     &procedural.id,
                 )?;
                 if !procedural_actor_ids.insert(spawn.instance_id.clone())
+                    || symbol_positions.contains(&spawn.position)
                     || !occupied.insert(spawn.position)
                 {
                     return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
@@ -2445,7 +2518,7 @@ pub(super) fn validate_world(
 
             // Source room templates can put a ground object under a fixed monster.
             // Keep actor overlap checks and object overlap checks independently.
-            let actor_positions = occupied;
+            let actor_positions = occupied.union(&symbol_positions).copied().collect::<BTreeSet<_>>();
             let mut occupied = BTreeSet::from([inline_map.player_position]);
             inline_map
                 .item_spawns
@@ -2461,6 +2534,7 @@ pub(super) fn validate_world(
                         affix_ids,
                     )?;
                     if !procedural_actor_ids.insert(spawn.instance_id.clone())
+                        || symbol_positions.contains(&spawn.position)
                         || !occupied.insert(spawn.position)
                         || !terrain_item_drop
                             .get(terrain_at(spawn.position))
@@ -2490,7 +2564,6 @@ pub(super) fn validate_world(
             inline_map
                 .loot_spawns
                 .sort_by(|left, right| left.id.cmp(&right.id));
-            let mut inline_loot_ids = BTreeSet::new();
             let scrambled_loot_spawns = if let Some(pair) = &mut inline_map.scrambled_item_loot_pair
             {
                 if pair.item_spawns.is_empty() || pair.item_spawns.len() != pair.loot_spawns.len() {
@@ -2517,7 +2590,7 @@ pub(super) fn validate_world(
                     procedural.height,
                     &procedural.id,
                 )?;
-                if !inline_loot_ids.insert(spawn.id.clone())
+                if symbol_positions.contains(&spawn.position) || !inline_loot_ids.insert(spawn.id.clone())
                     || !occupied.insert(spawn.position)
                     || !terrain_item_drop
                         .get(terrain_at(spawn.position))

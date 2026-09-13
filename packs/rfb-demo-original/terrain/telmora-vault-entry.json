@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.telmora-vault-entry",
+  "nameKey": "task-demo-telmora-vault-name",
+  "descriptionKey": "task-demo-telmora-vault-description",
+  "glyph": ">",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": [
+    "building",
+    "outdoor",
+    "surface",
+    "task-entry"
+  ]
+}

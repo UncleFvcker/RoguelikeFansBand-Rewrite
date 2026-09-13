@@ -3,6 +3,26 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn telmora_symbol_groups_reject_invalid_content_and_duplicate_artifact_placement() {
+    let base = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for invalid in ["empty", "duplicate-cell", "duplicate-payload", "unknown-item", "actor-depth"] {
+        let mut content = base.clone();
+        let floor = content.worlds[0].procedural_floors.iter_mut()
+            .find(|floor| floor.id == "demo.floor.telmora-vault").unwrap();
+        let group = &mut floor.inline_map.as_mut().unwrap().symbol_groups[0];
+        match invalid {
+            "empty" => group.clear(),
+            "duplicate-cell" => group[1].positions = group[0].positions.clone(),
+            "duplicate-payload" => group[0].positions.push(ContentPosition { x: 1, y: 1 }),
+            "unknown-item" => group[0].item_kind_id = Some("demo.item.missing".into()),
+            "actor-depth" => group[0].actor_depth = Some(256),
+            _ => unreachable!(),
+        }
+        assert!(validate_and_normalize(&mut content).is_err(), "{invalid}");
+    }
+}
+
+#[test]
 fn asgard_depths_and_source_shafts_keep_direction_span_and_dungeon_boundaries() {
     let content = compile_pack_dir(&original_pack_path()).unwrap().content;
     let world = &content.worlds[0];
@@ -14244,6 +14264,7 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
     floor.abandoned_entry_terrain_id = None;
     floor.task_id = None;
     floor.inline_map = Some(InlineFloorMapDefinition {
+        symbol_groups: Vec::new(),
         friend_group_leader_ids: Vec::new(),
         vault_positions: Vec::new(),
         task_terrain_overrides: Vec::new(),

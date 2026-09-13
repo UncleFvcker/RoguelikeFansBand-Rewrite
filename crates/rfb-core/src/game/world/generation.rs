@@ -757,14 +757,75 @@ impl Game {
                     .iter()
                     .flat_map(|pair| &pair.item_spawns),
             )
-            .filter(|spawn| {
+            .map(|spawn| &spawn.kind_id)
+            .chain(map.symbol_groups.iter().flatten().filter_map(|symbol| symbol.item_kind_id.as_ref()))
+            .filter(|kind_id| {
                 self.content
-                    .item(&spawn.kind_id)
+                    .item(kind_id)
                     .is_some_and(|item| item.artifact_generation.is_some())
             })
-            .all(|spawn| {
-                !self.generated_artifact_ids.contains(&spawn.kind_id) && seen.insert(&spawn.kind_id)
+            .all(|kind_id| {
+                !self.generated_artifact_ids.contains(kind_id) && seen.insert(kind_id)
             })
+    }
+
+    fn expand_inline_symbols(
+        &mut self,
+        definition: &ProceduralFloorDefinition,
+        source: &InlineFloorMapDefinition,
+    ) -> InlineFloorMapDefinition {
+        let mut map = source.clone();
+        let mut placed = map.actor_spawns.iter().map(|actor| actor.kind_id.clone()).collect::<Vec<_>>();
+        // init1.c:4875: shuffle legend payloads, not the individual cells.
+        for (group_index, group) in source.symbol_groups.iter().enumerate() {
+            let mut order = (0..group.len()).collect::<Vec<_>>();
+            for index in 0..order.len() - 1 {
+                let other = index + self.rng.bounded((order.len() - index) as u64) as usize;
+                order.swap(index, other);
+            }
+            for (target_index, target) in group.iter().enumerate() {
+                let symbol = &group[order[target_index]];
+                map.terrain_overrides.push(rfb_content::InlineTerrainOverrideDefinition {
+                    terrain_id: symbol.terrain_id.clone(), positions: target.positions.clone(),
+                    chance_percent: 100, otherwise_terrain_id: None,
+                });
+                for (ordinal, position) in target.positions.iter().enumerate() {
+                    let id = format!("{}.symbol.{group_index}.{target_index}.{ordinal}", definition.id);
+                    let actor_kind = if let Some(depth) = symbol.actor_depth {
+                        let policy = self.content.encounter_table(definition.encounter_table_id.as_ref().unwrap())
+                            .unwrap().global_allocation.clone().unwrap();
+                        let terrain = self.content.terrain(&symbol.terrain_id).unwrap().clone();
+                        self.select_original_allocated_monster(&definition.id, &policy, depth,
+                            definition.depth, definition.task_id.as_deref(), &placed, None, Some(&terrain))
+                    } else { symbol.actor_kind_id.clone() };
+                    if let Some(kind_id) = actor_kind {
+                        let instance_id = format!("{id}.actor");
+                        if self.content.actor(&kind_id).and_then(|actor| actor.allocation.as_ref())
+                            .is_some_and(|allocation| allocation.friends.is_some()) {
+                            map.friend_group_leader_ids.push(instance_id.clone());
+                        }
+                        placed.push(kind_id.clone());
+                        map.actor_spawns.push(rfb_content::ActorSpawn { instance_id, kind_id, position: *position });
+                    }
+                    if let Some(kind_id) = &symbol.item_kind_id {
+                        let affix_ids = self.content.item(kind_id).unwrap().artifact_generation.as_ref()
+                            .map_or_else(Vec::new, |artifact| artifact.affix_ids.clone());
+                        map.item_spawns.push(ItemSpawn {
+                            instance_id: format!("{id}.item"), kind_id: kind_id.clone(), position: *position,
+                            quantity: 1, quality: rfb_content::ItemQuality::Ordinary, affix_ids,
+                        });
+                    }
+                    if let Some(loot_table_id) = &symbol.loot_table_id {
+                        map.loot_spawns.push(rfb_content::InlineFloorLootSpawnDefinition {
+                            id: format!("{id}.loot"), position: *position, loot_table_id: loot_table_id.clone(),
+                            generation_depth: symbol.item_depth, forced_ego: None,
+                        });
+                    }
+                }
+            }
+        }
+        map.symbol_groups.clear();
+        map
     }
 
     fn inline_item_instance(
@@ -837,6 +898,9 @@ impl Game {
                 "inline floor fixed artifact is already generated",
             ));
         }
+        let expanded = (!inline_map.symbol_groups.is_empty())
+            .then(|| self.expand_inline_symbols(definition, inline_map));
+        let inline_map = expanded.as_ref().unwrap_or(inline_map);
         let width = definition.width;
         let height = definition.height;
         let mut terrain = self.inline_floor_base_terrain(definition);
@@ -5457,6 +5521,52 @@ fn place_generated_floor_connections(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn telmora_scrambles_move_one_payload_and_preserve_source_symbol_cells() {
+        let base = Game::new_with_build(536, "demo.build.warrior").unwrap();
+        for slug in ["vault", "thing-under-the-mountain"] {
+            let definition = base.content.world(&base.world_id).unwrap().procedural_floors.iter()
+                .find(|floor| floor.id == format!("demo.floor.telmora-{slug}")).unwrap().clone();
+            let source = definition.inline_map.as_ref().unwrap();
+            let group = &source.symbol_groups[0];
+            for seed in [0, 1, 31] {
+                let mut game = base.clone();
+                game.rng = crate::rng::RfbRng::seeded(seed);
+                let mut expected_rng = game.rng.clone();
+                let mut order = (0..group.len()).collect::<Vec<_>>();
+                for index in 0..order.len() - 1 {
+                    let other = index + expected_rng.bounded((order.len() - index) as u64) as usize;
+                    order.swap(index, other);
+                }
+                let expanded = game.expand_inline_symbols(&definition, source);
+                assert!(expanded.symbol_groups.is_empty());
+                for (target, payload) in group.iter().zip(order.iter().map(|&index| &group[index])) {
+                    assert!(expanded.terrain_overrides.iter().any(|terrain| {
+                        terrain.positions == target.positions && terrain.terrain_id == payload.terrain_id
+                    }));
+                    if let Some(kind) = &payload.item_kind_id {
+                        assert!(expanded.item_spawns.iter().any(|item| &item.kind_id == kind
+                            && item.position == target.positions[0]));
+                    }
+                }
+                if slug == "vault" {
+                    assert_eq!(expanded.item_spawns.iter().filter(|item| item.kind_id == "demo.item.sting").count(), 1);
+                    assert_eq!(expanded.loot_spawns.iter().filter(|loot| {
+                        loot.loot_table_id == "demo.loot-table.telmora-vault-small-sword"
+                    }).count(), 3);
+                } else {
+                    let balrogs = expanded.actor_spawns.iter().filter(|actor| actor.kind_id == "demo.actor.greater-balrog")
+                        .collect::<Vec<_>>();
+                    assert_eq!(balrogs.len(), 1);
+                    let group = source.symbol_groups.iter().find(|group| {
+                        group.iter().any(|symbol| symbol.actor_kind_id.is_some())
+                    }).unwrap();
+                    assert!(group.iter().any(|symbol| symbol.positions.contains(&balrogs[0].position)));
+                }
+            }
+        }
+    }
 
     #[test]
     fn generated_vault_cells_survive_floor_serialization() {

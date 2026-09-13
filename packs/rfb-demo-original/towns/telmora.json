@@ -16,7 +16,8 @@
     "demo.town-facility.telmora-paladin-guild",
     "demo.town-facility.telmora-thieves-guild",
     "demo.town-facility.telmora-warrior-guild",
-    "demo.town-facility.telmora-weapon-master"
+    "demo.town-facility.telmora-weapon-master",
+    "demo.town-facility.telmora-castle"
   ],
   "shopIds": [
     "demo.shop.telmora-alchemist",

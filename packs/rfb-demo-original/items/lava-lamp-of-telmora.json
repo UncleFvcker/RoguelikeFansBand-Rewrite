@@ -1,0 +1,144 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.lava-lamp-of-telmora",
+  "nameKey": "item-demo-lava-lamp-of-telmora-name",
+  "descriptionKey": "item-demo-lava-lamp-of-telmora-description",
+  "glyph": "!",
+  "generationLevel": 50,
+  "weightTenthsPound": 5,
+  "baseValue": 70000,
+  "maxStack": 1,
+  "equipmentSlot": "light",
+  "tags": [
+    "artifact",
+    "equipment",
+    "light-source",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 342,
+    "baseItemKindId": "demo.item.phial-626",
+    "instant": true,
+    "rarityOneIn": 1
+  },
+  "rfbValue": {
+    "flags": [
+      "AURA_FIRE",
+      "BRAND_FIRE",
+      "CHR",
+      "FULL_NAME",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INSTA_ART",
+      "QUESTITEM",
+      "RES_FIRE",
+      "RES_SOUND"
+    ],
+    "pval": 1,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "charisma": 1
+  },
+  "equipmentBonuses": {
+    "lightRadius": 3
+  },
+  "resistances": {
+    "fire": "resistant",
+    "sound": "resistant"
+  },
+  "brands": [
+    "fire"
+  ],
+  "passives": [
+    "fire-aura"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 64,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "durationTicks": 3,
+                "intensity": 1,
+                "power": 128,
+                "stacking": "replace",
+                "statusKindId": "rfb.status.slow",
+                "type": "visible-apply-status"
+              },
+              {
+                "durationTicks": 3,
+                "intensity": 1,
+                "power": 17,
+                "stacking": "replace",
+                "statusKindId": "rfb.status.stun",
+                "type": "visible-apply-status"
+              },
+              {
+                "durationTicks": 3,
+                "intensity": 1,
+                "power": 128,
+                "stacking": "replace",
+                "statusKindId": "rfb.status.confusion",
+                "type": "visible-apply-status"
+              },
+              {
+                "durationTicks": 3,
+                "intensity": 1,
+                "power": 128,
+                "stacking": "replace",
+                "statusKindId": "rfb.status.fear",
+                "type": "visible-apply-status"
+              },
+              {
+                "durationTicks": 500,
+                "intensity": 1,
+                "power": 42,
+                "stacking": "replace",
+                "statusKindId": "rfb.status.paralysis",
+                "type": "visible-apply-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "demo.item-activation.lava-lamp-of-telmora",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-confusing-lite-name",
+        "rfbValue": 7680,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 500
+    }
+  }
+}

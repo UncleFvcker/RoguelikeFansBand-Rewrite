@@ -10,6 +10,198 @@ const SNAKES_FLOOR: &str = "demo.floor.morivant-snakes";
 const JONES_WHIP: &str = "demo.item.dr-jones-whip";
 const MORIVANT_CASTLE: &str = "demo.town-facility.morivant-castle";
 
+const TELMORA_CASTLE: &str = "demo.town-facility.telmora-castle";
+const VAULT_TASK: &str = "demo.task.telmora-vault";
+const STING: &str = "demo.item.sting";
+const LAVA_LAMP: &str = "demo.item.lava-lamp-of-telmora";
+
+fn telmora_position(game: &mut Game, position: Position) {
+    game.player.position = game
+        .town_local_to_wilderness_view_position("demo.town.telmora", position).unwrap();
+}
+
+fn telmora_game(seed: u64) -> Game {
+    let mut game = test_caster_game(seed);
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    dispatch_next(&mut game, GameCommand::EnterWorldMap { leave_pets: false, cancel_recall: false });
+    game.wilderness_position = Some(Position { x: 87, y: 49 });
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    clear_monsters(&mut game);
+    telmora_position(&mut game, Position { x: 41, y: 21 });
+    game
+}
+
+fn accept_telmora_vault(seed: u64) -> Game {
+    let mut game = telmora_game(seed);
+    dispatch_next(&mut game, GameCommand::AcceptTask {
+        facility_id: TELMORA_CASTLE.into(), task_id: VAULT_TASK.into(),
+    });
+    assert_eq!(game.task_states[VAULT_TASK].status, TaskStatusKindDto::Taken);
+    telmora_position(&mut game, Position { x: 133, y: 14 });
+    game
+}
+
+#[test]
+fn telmora_vault_requires_sting_pickup_and_preserves_equipped_reward_and_return() {
+    let mut game = accept_telmora_vault(531);
+    let entry = game.player.position;
+    let mut loaded = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    dispatch_next(&mut loaded, GameCommand::TraverseStairs);
+    assert_eq!(game.state_hash(), loaded.state_hash());
+    assert_eq!(game.current_floor_id, "demo.floor.telmora-vault");
+    let stairs = game.player.position;
+    let sting = game.items.iter().find(|item| item.kind_id == STING).unwrap().clone();
+    assert!(game.generated_artifact_ids.contains(STING));
+    assert_eq!(sting.rolled_affixes.len(), 1);
+    assert!(!sting.rolled_affixes[0].properties.resistances.is_empty());
+    clear_monsters(&mut game);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.task_states[VAULT_TASK].current, 0, "FIND is not a clear-floor goal");
+    give_inventory_item(&mut game, "test.vault.plain", "demo.item.small-sword");
+    dispatch_next(&mut game, GameCommand::Drop { item_ids: vec!["test.vault.plain".into()] });
+    dispatch_next(&mut game, GameCommand::PickUp);
+    assert_eq!(game.task_states[VAULT_TASK].current, 0);
+    let ItemLocation::Ground(position) = sting.location else { panic!("placed Sting") };
+    game.player.position = position;
+    let mut loaded = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    dispatch_next(&mut game, GameCommand::PickUp);
+    dispatch_next(&mut loaded, GameCommand::PickUp);
+    assert_eq!(game.state_hash(), loaded.state_hash());
+    assert_eq!(game.task_states[VAULT_TASK].current, 1);
+    game.equip_inventory_item(&sting.id, None).unwrap();
+    assert_eq!(game.player_equipment_bonuses().melee_attacks_delta_percent, 100);
+    game.player.position = stairs;
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.player.position, entry);
+    assert_eq!(game.wilderness_position, Some(Position { x: 87, y: 49 }));
+    telmora_position(&mut game, Position { x: 41, y: 21 });
+    let draws = game.rng_draw_counter();
+    dispatch_next(&mut game, GameCommand::ClaimTaskReward {
+        facility_id: TELMORA_CASTLE.into(), task_id: VAULT_TASK.into(),
+    });
+    assert_eq!(game.task_states[VAULT_TASK].status, TaskStatusKindDto::Completed);
+    assert_eq!(game.rng_draw_counter(), draws);
+    assert_eq!(game.claim_task_reward(TELMORA_CASTLE, VAULT_TASK), Err("reward-unavailable"));
+    assert_eq!(game.items.iter().filter(|item| item.kind_id == STING).count(), 1);
+    let loaded = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(game.state_hash(), loaded.state_hash());
+    assert_eq!(loaded.player_equipment_bonuses().melee_attacks_delta_percent, 100);
+}
+
+#[test]
+fn telmora_vault_failure_abandonment_and_existing_artifact_close_without_duplicate() {
+    for abandon in [false, true] {
+        let mut game = accept_telmora_vault(532);
+        let entry = game.player.position;
+        let mut duplicate = game.clone();
+        duplicate.generated_artifact_ids.insert(STING.into());
+        let before = duplicate.to_save();
+        assert!(duplicate.transition_floor("demo.floor.telmora-vault".into(), None, None, false)
+            .unwrap().is_none());
+        assert_eq!(duplicate.to_save(), before);
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        clear_monsters(&mut game);
+        dispatch_next(&mut game, if abandon { GameCommand::AbandonTask } else { GameCommand::TraverseStairs });
+        let expected = if abandon { TaskStatusKindDto::Abandoned } else { TaskStatusKindDto::Failed };
+        assert_eq!(game.task_states[VAULT_TASK].status, expected);
+        assert_eq!(game.player.position, entry);
+        let mut game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+        assert!(game.items.iter().all(|item| item.kind_id != STING));
+        telmora_position(&mut game, Position { x: 41, y: 21 });
+        assert_eq!(game.claim_task_reward(TELMORA_CASTLE, VAULT_TASK), Err("reward-unavailable"));
+        let service = game.snapshot().task_services.into_iter().find(|s| s.id == TELMORA_CASTLE).unwrap();
+        assert_eq!(service.tasks.iter().filter(|t| t.status == TaskStatusKindDto::Available).count(), 1);
+    }
+}
+
+#[test]
+fn telmora_alternative_real_kill_lamp_claim_full_inventory_and_saved_continuation() {
+    let mut seen = BTreeSet::new();
+    for seed in 533..565 {
+        let mut game = telmora_game(seed);
+        // Prepare the earlier quest's conclusion; this test owns the next battle/reward.
+        game.task_states.insert(VAULT_TASK.into(), TaskState {
+            status: TaskStatusKindDto::Completed, stage_index: 0, current: 1, required: 1,
+            active_floor_id: None, retakes_used: 0,
+        });
+        let service = game.snapshot().task_services.into_iter().find(|s| s.id == TELMORA_CASTLE).unwrap();
+        let available = service.tasks.iter().filter(|t| t.status == TaskStatusKindDto::Available).collect::<Vec<_>>();
+        assert_eq!(available.len(), 1, "birth substitution exposes one alternative");
+        let task_id = available[0].task_id.clone();
+        if !seen.insert(task_id.clone()) { continue; }
+        dispatch_next(&mut game, GameCommand::AcceptTask {
+            facility_id: TELMORA_CASTLE.into(), task_id: task_id.clone(),
+        });
+        telmora_position(&mut game, Position { x: 175, y: 18 });
+        let entry = game.player.position;
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        let floor_id = task_id.replace("demo.task.", "demo.floor.");
+        assert_eq!(game.current_floor_id, floor_id);
+        let stairs = game.player.position;
+        let target = if task_id.ends_with("thing-under-the-mountain") {
+            assert_eq!(game.entities.iter().filter(|e| e.kind_id == "demo.actor.greater-balrog").count(), 1);
+            game.entities.iter().find(|e| e.kind_id == "demo.actor.greater-balrog").unwrap().clone()
+        } else { game.entities[0].clone() };
+        // Shorten combat to the last real source monster. Keep its combat rules.
+        clear_monsters(&mut game);
+        game.entities.push(target);
+        game.player.position = Position { x: 2, y: 2 };
+        for x in 2..=3 { replace_terrain(&mut game, Position { x, y: 2 }, "demo.terrain.floor"); }
+        game.entities[0].position = Position { x: 3, y: 2 };
+        game.entities[0].hp = 1;
+        game.entities[0].nice = true;
+        game.entities[0].energy_need = STANDARD_ACTION_COST;
+        game.player.max_hp = 10_000;
+        game.player.hp = 10_000;
+        game.reveal_current_visibility();
+        assert_eq!(game.task_states[&task_id].current, 0);
+        let mut game = (0..1024).find_map(|seed| {
+            let mut candidate = game.clone();
+            candidate.rng = RfbRng::seeded(seed);
+            let before = candidate.clone();
+            dispatch_next(&mut candidate, GameCommand::Move { direction: Direction::East });
+            (candidate.task_states[&task_id].status == TaskStatusKindDto::RewardAvailable).then_some(before)
+        }).expect("a successful real melee kill");
+        let mut loaded = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        dispatch_next(&mut game, GameCommand::Move { direction: Direction::East });
+        dispatch_next(&mut loaded, GameCommand::Move { direction: Direction::East });
+        assert_eq!(game.state_hash(), loaded.state_hash());
+        assert_eq!(game.task_states[&task_id].status, TaskStatusKindDto::RewardAvailable);
+        game.player.position = stairs;
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(game.player.position, entry);
+        telmora_position(&mut game, Position { x: 41, y: 21 });
+        let mut full = game.clone();
+        while full.inventory_used_slots() < full.inventory_slot_capacity() {
+            let id = format!("test.telmora.filler.{}", full.items.len());
+            give_inventory_item(&mut full, &id, "demo.item.dagger");
+        }
+        let before = full.to_save();
+        assert_eq!(full.claim_task_reward(TELMORA_CASTLE, &task_id), Err("inventory-full"));
+        assert_eq!(full.to_save(), before);
+        let mut loaded = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        game.claim_task_reward(TELMORA_CASTLE, &task_id).unwrap();
+        loaded.claim_task_reward(TELMORA_CASTLE, &task_id).unwrap();
+        assert_eq!(game.state_hash(), loaded.state_hash());
+        assert_eq!(game.claim_task_reward(TELMORA_CASTLE, &task_id), Err("reward-unavailable"));
+        let lamps = game.items.iter().filter(|item| item.kind_id == LAVA_LAMP).collect::<Vec<_>>();
+        assert_eq!(lamps.len(), 1);
+        assert_eq!(lamps[0].fuel, None);
+        let lamp_id = lamps[0].id.clone();
+        game.equip_inventory_item(&lamp_id, None).unwrap();
+        assert_eq!(game.player_light_radius(), Some(3));
+        assert!(game.player_equipment_passives().contains(&EquipmentPassive::FireAura));
+        let loaded = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        assert_eq!(game.state_hash(), loaded.state_hash());
+        if seen.len() == 2 { break; }
+    }
+    assert_eq!(seen.len(), 2);
+}
+
 fn morivant_snakes_game() -> Game {
     let mut game = test_caster_game(51);
     clear_monsters(&mut game);

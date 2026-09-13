@@ -547,6 +547,10 @@ pub struct ProceduralFloorDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InlineFloorMapDefinition {
+    /// RFB legend payloads: each group permutes symbols, preserving each symbol's cells.
+    /// A singleton supplies an unshuffled random monster/object legend.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub symbol_groups: Vec<Vec<InlineFloorSymbolDefinition>>,
     #[serde(default)]
     pub vault_positions: Vec<ContentPosition>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -569,6 +573,24 @@ pub struct InlineFloorMapDefinition {
     pub loot_spawns: Vec<InlineFloorLootSpawnDefinition>,
     #[serde(default)]
     pub monster_formation: Option<InlineMonsterFormationDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct InlineFloorSymbolDefinition {
+    pub positions: Vec<ContentPosition>,
+    pub terrain_id: String,
+    #[serde(default)]
+    pub actor_kind_id: Option<String>,
+    #[serde(default)]
+    pub actor_depth: Option<u16>,
+    #[serde(default)]
+    pub item_kind_id: Option<String>,
+    #[serde(default)]
+    pub loot_table_id: Option<String>,
+    #[serde(default)]
+    pub item_depth: Option<u16>,
 }
 
 /// Town cells controlled by task state. The first matching case wins.
