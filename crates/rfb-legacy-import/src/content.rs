@@ -29968,6 +29968,22 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                     .unwrap()
                     .push(serde_json::json!("telepathy"));
             }
+            if entry.index == 198 {
+                imported["equipmentBonuses"]["searchSkill"] = serde_json::json!(20);
+                imported["passives"]
+                    .as_array_mut()
+                    .unwrap()
+                    .push(serde_json::json!("warning"));
+            }
+            if entry.index == 231 {
+                // equip.c:1611-1620: BLOWS adds 50*pval hundredths of an attack.
+                imported["equipmentBonuses"]
+                    .as_object_mut()
+                    .unwrap()
+                    .remove("meleeAttacks");
+                imported["equipmentBonuses"]["meleeAttacksDeltaPercent"] = serde_json::json!(150);
+                imported["vorpal"] = serde_json::json!(true);
+            }
             // Formal fixed artifacts preserve protection from monster destruction.
             imported["resistsMonsterDestruction"] = serde_json::json!(true);
             let path = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -29989,10 +30005,55 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                 "elementalDestructionImmunities",
                 "resistsProjectionDestruction",
                 "resistsMonsterDestruction",
+                "meleeProfile",
+                "slays",
+                "brands",
+                "vorpal",
             ] {
                 assert_eq!(imported[field], formal[field], "{slug}: {field}");
             }
+            if entry.index == 198 {
+                let activation = entry.activation.as_ref().unwrap();
+                assert_eq!(activation.token, "TELEPORT");
+                let device = &formal["deviceGeneration"];
+                let profile = &device["activations"][0];
+                assert_eq!(profile["deviceCheckDifficulty"], activation.power);
+                assert_eq!(
+                    device["recovery"]["intervalTicks"],
+                    u32::from(activation.recovery_turns) * 10
+                );
+                assert_eq!(profile["rfbValue"], 1500); // devices.c EFFECT_TELEPORT
+                assert_eq!(
+                    profile["effectProgramId"],
+                    "demo.effect.random-teleport-long"
+                );
+                assert_eq!(profile["target"], device_self_target());
+                assert_eq!(
+                    profile["charges"],
+                    serde_json::json!({"minimum":1,"maximum":1,"cost":1})
+                );
+                let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("../../packs/rfb-demo-original/effectPrograms/random-teleport-long.json");
+                let program: serde_json::Value =
+                    serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
+                assert_eq!(
+                    program["steps"][0],
+                    serde_json::json!({"type":"random-teleport","maximumDistance":100})
+                );
+            }
         }
+    }
+
+    #[test]
+    fn n1c_ordinary_artifacts_match_source_parameters_and_equipment_consumers() {
+        check_n1_passive_artifact_source_parameters(
+            include_str!("testdata/n1c-artifacts.txt"),
+            &[
+                (103, "balli-stonehand", "battle-axe"),
+                (198, "kamui", "ninjato"),
+                (231, "jing-ke", "tanto"),
+            ],
+        );
     }
 
     #[test]

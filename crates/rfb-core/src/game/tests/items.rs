@@ -7064,6 +7064,18 @@ fn a3_weapons_generate_fight_and_preserve_equipment_and_uniqueness_after_save() 
         ("nar-i-vagil", "quarterstaff", 1, 10, 10, 20, "sheep", 24),
         ("samson", "club", 3, 5, 8, 10, "skeleton-human", 28),
         ("vagabond", "morning-star", 2, 7, 16, 15, "sheep", 10),
+        (
+            "balli-stonehand",
+            "battle-axe",
+            3,
+            9,
+            8,
+            11,
+            "stone-troll",
+            28,
+        ),
+        ("kamui", "ninjato", 2, 10, 15, 2, "sheep", 24),
+        ("jing-ke", "tanto", 2, 6, -2, 13, "sheep", 24),
     ] {
         let mut game = Game::new_with_build(426, "demo.build.warrior").unwrap();
         choose_human_talent_if_pending(&mut game);
@@ -7075,7 +7087,12 @@ fn a3_weapons_generate_fight_and_preserve_equipment_and_uniqueness_after_save() 
         replace_terrain(&mut game, Position { x: 10, y: 10 }, "demo.terrain.floor");
         replace_terrain(&mut game, adjacent, "demo.terrain.floor");
         game.glow.fill(true);
-        let context = artifact_loot_context(35);
+        let context =
+            artifact_loot_context(if matches!(slug, "balli-stonehand" | "kamui" | "jing-ke") {
+                40
+            } else {
+                35
+            });
         let kind = format!("demo.item.{slug}");
         let base = format!("demo.item.{base}");
         // Controlled base/depth, unchanged source-ordered candidates and rarity.
@@ -7093,7 +7110,8 @@ fn a3_weapons_generate_fight_and_preserve_equipment_and_uniqueness_after_save() 
             .unwrap();
         assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
         assert_eq!(item.intrinsic_properties, Default::default());
-        assert!(item.activation.is_none() && item.curse.is_none());
+        assert!(item.curse.is_none());
+        assert_eq!(item.activation.is_some(), slug == "kamui");
         let id = item.id.clone();
         game.items.push(item);
         game.pick_up_item_at_player(Some(&id)).unwrap();
@@ -7144,6 +7162,64 @@ fn a3_weapons_generate_fight_and_preserve_equipment_and_uniqueness_after_save() 
                 );
             }
             "barukkheled" => assert_eq!(game.equipment_modifiers().constitution, 3),
+            "balli-stonehand" => {
+                let stats = game.equipment_modifiers();
+                assert_eq!(
+                    (stats.strength, stats.constitution, stats.defense),
+                    (3, 3, 5)
+                );
+                assert_eq!(game.player_equipment_bonuses().stealth_skill, 3);
+                assert!(game.player_levitates());
+                assert!(
+                    game.player_equipment_passives()
+                        .contains(&EquipmentPassive::Regeneration)
+                );
+                assert!(
+                    game.player_status_immunities()
+                        .contains("rfb.status.blindness")
+                );
+                assert!(
+                    game.player_status_immunities()
+                        .contains("rfb.status.paralysis")
+                );
+                for element in [
+                    DamageType::Acid,
+                    DamageType::Electricity,
+                    DamageType::Fire,
+                    DamageType::Cold,
+                ] {
+                    assert_eq!(
+                        game.effective_player_resistances().level(element),
+                        ResistanceLevel::Resistant
+                    );
+                }
+            }
+            "kamui" => {
+                assert_eq!(game.equipment_modifiers().dexterity, 4);
+                assert_eq!(game.player_equipment_bonuses().stealth_skill, 4);
+                assert_eq!(game.player_equipment_bonuses().search_skill, 20);
+                assert!(
+                    game.player_equipment_passives()
+                        .contains(&EquipmentPassive::Warning)
+                );
+                assert_eq!(
+                    game.effective_player_resistances().level(DamageType::Fire),
+                    ResistanceLevel::Resistant
+                );
+            }
+            "jing-ke" => {
+                assert_eq!(
+                    (
+                        game.equipment_modifiers().dexterity,
+                        game.equipment_modifiers().speed
+                    ),
+                    (3, 3)
+                );
+                assert_eq!(
+                    game.player_equipment_bonuses().melee_attacks_delta_percent,
+                    150
+                );
+            }
             "bloodspike" => {
                 assert_eq!(game.equipment_modifiers().strength, 4);
                 assert_eq!(
@@ -7228,6 +7304,45 @@ fn a3_weapons_generate_fight_and_preserve_equipment_and_uniqueness_after_save() 
             ),
             multiplier
         );
+        if matches!(slug, "kamui" | "jing-ke") {
+            // The same real melee must deal more damage while a brand can apply.
+            let observed = (0..1000).any(|seed| {
+                let mut branded = game.clone();
+                let mut immune = game.clone();
+                for element in [DamageType::Cold, DamageType::Poison] {
+                    immune.entities[0]
+                        .resistances
+                        .set(element, ResistanceLevel::Immune);
+                }
+                branded.rng = RfbRng::seeded(seed);
+                immune.rng = RfbRng::seeded(seed);
+                strike(&mut branded);
+                strike(&mut immune);
+                branded.entities[0].hp < immune.entities[0].hp
+            });
+            assert!(observed, "N1c brands must affect real melee damage");
+        }
+        if slug == "jing-ke" {
+            let mut ordinary = game.clone();
+            // Cancel only the +150 hundredths, keeping DEX, speed, brands and dice.
+            ordinary.items[0]
+                .intrinsic_properties
+                .equipment_bonuses
+                .melee_attacks_delta_percent = -150;
+            let attacks = |g: &mut Game| {
+                g.resolve_player_melee(
+                    0,
+                    false,
+                    &mut Vec::new(),
+                    &mut BTreeSet::new(),
+                    &mut Vec::new(),
+                )
+                .unwrap()
+                .attacks_used
+            };
+            let mut boosted = game.clone();
+            assert!(attacks(&mut boosted) > attacks(&mut ordinary));
+        }
         if slug == "til-i-arc" {
             // Dual brands do not stack. One remaining nonimmune element is
             // sufficient; both immunities leave only the target's slay tier.
@@ -7321,7 +7436,113 @@ fn a3_weapons_generate_fight_and_preserve_equipment_and_uniqueness_after_save() 
             restored.roll_fixed_artifact_kind_id(&context, Some(&base), false),
             Some(kind)
         );
+        if matches!(slug, "balli-stonehand" | "kamui" | "jing-ke") {
+            restored.unequip_slot("right-hand").unwrap();
+            restored.refresh_player_resource_maxima();
+            assert_eq!(restored.equipment_modifiers(), Default::default());
+            assert_eq!(
+                restored
+                    .player_equipment_bonuses()
+                    .melee_attacks_delta_percent,
+                0
+            );
+            assert!(
+                restored
+                    .player_melee_profile(&restored.player_derived_stats())
+                    .source_item_id
+                    .is_none()
+            );
+            assert!(
+                !restored
+                    .player_equipment_passives()
+                    .contains(&EquipmentPassive::Warning)
+            );
+        }
     }
+}
+
+#[test]
+fn n1c_kamui_teleports_and_preserves_failed_checks_and_equipped_cooldown() {
+    let mut game = Game::new_with_build(492, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    descend_one_floor(&mut game);
+    clear_monsters(&mut game);
+    game.items.clear();
+    // Ordinary base/rarity acquisition is exercised in the A3/N1c weapon test.
+    let draft = game.fixed_item_draft(&artifact_loot_context(40), "demo.item.kamui".into());
+    let item = game
+        .commit_generated_item_draft(draft, ItemLocation::Inventory)
+        .unwrap();
+    let id = item.id.clone();
+    game.items.push(item);
+    game.equip_inventory_item(&id, Some("right-hand")).unwrap();
+    let origin = game.player.position;
+    let failure = (0..1000)
+        .find(|seed| (5..10).contains(&RfbRng::seeded(*seed).bounded(100)))
+        .unwrap();
+    game.rng = RfbRng::seeded(failure);
+    let expected = rng_after_device_check(&game);
+    c1_activate(&mut game, &id);
+    assert_eq!(game.rng, expected);
+    assert_eq!(game.player.position, origin);
+    assert_eq!(game.items[0].charges.unwrap().current, 1);
+
+    let mut blocked = game.clone();
+    blocked.terrain.fill("demo.terrain.wall".into());
+    replace_terrain(&mut blocked, origin, "demo.terrain.floor");
+    let rng = blocked.rng.clone();
+    assert!(
+        c1_activate(&mut blocked, &id)
+            .iter()
+            .any(|event| matches!(event, DomainEvent::ItemUseUnavailable))
+    );
+    assert_eq!(
+        blocked.rng, rng,
+        "no destination rejects before the device check"
+    );
+    assert_eq!(blocked.items[0].charges.unwrap().current, 1);
+    assert_eq!(blocked.player.position, origin);
+
+    let success = (0..1000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+        .unwrap();
+    game.rng = RfbRng::seeded(success);
+    game.reveal_current_visibility();
+    let candidates = game.random_teleport_candidates(100);
+    assert!(!candidates.is_empty());
+    let mut expected = rng_after_device_check(&game);
+    let destination = candidates[expected.bounded(candidates.len() as u64) as usize];
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(c1_activate(&mut restored, &id), c1_activate(&mut game, &id));
+    assert_eq!(game.player.position, destination);
+    assert_ne!(destination, origin);
+    assert_eq!(game.rng, expected);
+    assert_eq!(game.items[0].charges.unwrap().current, 0);
+    let start = game.world_tick;
+    for offset in 1..=250 {
+        for g in [&mut game, &mut restored] {
+            g.world_tick = start + offset;
+            g.process_inventory_device_recovery(&mut Vec::new());
+        }
+        if offset == 125 {
+            restored.reveal_current_visibility();
+            restored = Game::from_save(restored.to_save()).unwrap();
+        }
+        if offset == 249 {
+            assert_eq!(game.items[0].charges.unwrap().current, 0);
+            assert_eq!(restored.items[0].charges.unwrap().current, 0);
+        }
+    }
+    assert_eq!(game.items[0].charges.unwrap().current, 1);
+    assert_eq!(restored.items[0].charges.unwrap().current, 1);
+    game.reveal_current_visibility();
+    restored.reveal_current_visibility();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.rng, game.rng);
+    assert!(matches!(
+        restored.items[0].location,
+        ItemLocation::Equipped { .. }
+    ));
 }
 
 #[test]
@@ -14007,91 +14228,93 @@ fn p107f_diamond_edge_vorpal_flag_multiplies_dice_before_flat_damage() {
         .expect("core crate should be inside the workspace")
         .join("packs/rfb-demo-original");
     let artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
-    let mut plain_content = artifact.content.clone();
-    plain_content
-        .items
-        .iter_mut()
-        .find(|item| item.id == "demo.item.diamond-edge")
-        .expect("Diamond Edge should exist")
-        .vorpal = false;
-    let catalog = |content| {
-        std::sync::Arc::new(rfb_content::ContentCatalog::from_artifact(
-            rfb_content::encode_content(content).expect("custom content should encode"),
-        ))
-    };
-    let mut vorpal = Game::from_content_with_build(
-        0,
-        catalog(artifact.content),
-        DEFAULT_WORLD_ID,
-        "demo.build.warrior",
-    )
-    .expect("Vorpal Diamond Edge game should create");
-    let mut plain = Game::from_content_with_build(
-        0,
-        catalog(plain_content),
-        DEFAULT_WORLD_ID,
-        "demo.build.warrior",
-    )
-    .expect("plain Diamond Edge game should create");
-    for game in [&mut vorpal, &mut plain] {
-        clear_monsters(game);
-        game.terrain.fill("demo.terrain.floor".to_owned());
-        game.player.position = Position { x: 10, y: 10 };
-        game.items
+    for kind in ["demo.item.diamond-edge", "demo.item.jing-ke"] {
+        let mut plain_content = artifact.content.clone();
+        plain_content
+            .items
             .iter_mut()
-            .find(|item| {
-                matches!(
-                    &item.location,
-                    ItemLocation::Equipped { slot_id } if slot_id == "right-hand"
-                )
-            })
-            .expect("warrior should have an equipped weapon")
-            .kind_id = "demo.item.diamond-edge".to_owned();
-        game.push_generated_actor(
-            "test.actor.diamond-edge".to_owned(),
-            "demo.actor.blubbering-idiot",
-            Position { x: 11, y: 10 },
-        );
-        let actor = game.entities.last_mut().expect("Diamond Edge target");
-        actor.hp = 100_000;
-        actor.max_hp = 100_000;
+            .find(|item| item.id == kind)
+            .expect("Diamond Edge should exist")
+            .vorpal = false;
+        let catalog = |content| {
+            std::sync::Arc::new(rfb_content::ContentCatalog::from_artifact(
+                rfb_content::encode_content(content).expect("custom content should encode"),
+            ))
+        };
+        let mut vorpal = Game::from_content_with_build(
+            0,
+            catalog(artifact.content.clone()),
+            DEFAULT_WORLD_ID,
+            "demo.build.warrior",
+        )
+        .expect("Vorpal Diamond Edge game should create");
+        let mut plain = Game::from_content_with_build(
+            0,
+            catalog(plain_content),
+            DEFAULT_WORLD_ID,
+            "demo.build.warrior",
+        )
+        .expect("plain Diamond Edge game should create");
+        for game in [&mut vorpal, &mut plain] {
+            clear_monsters(game);
+            game.terrain.fill("demo.terrain.floor".to_owned());
+            game.player.position = Position { x: 10, y: 10 };
+            game.items
+                .iter_mut()
+                .find(|item| {
+                    matches!(
+                        &item.location,
+                        ItemLocation::Equipped { slot_id } if slot_id == "right-hand"
+                    )
+                })
+                .expect("warrior should have an equipped weapon")
+                .kind_id = kind.to_owned();
+            game.push_generated_actor(
+                "test.actor.diamond-edge".to_owned(),
+                "demo.actor.blubbering-idiot",
+                Position { x: 11, y: 10 },
+            );
+            let actor = game.entities.last_mut().expect("Diamond Edge target");
+            actor.hp = 100_000;
+            actor.max_hp = 100_000;
+        }
+
+        let first_melee_damage = |game: &mut Game, seed| {
+            game.rng = RfbRng::seeded(seed);
+            let mut events = Vec::new();
+            game.resolve_player_melee(0, false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+                .expect("Diamond Edge melee should resolve");
+            events
+                .into_iter()
+                .map(DomainEvent::into_dto)
+                .find_map(|event| match event.outcome {
+                    Some(GameEventOutcomeDto::Damage { resolution }) => Some(resolution.raw_damage),
+                    _ => None,
+                })
+        };
+        let flat_bonus = vorpal
+            .player_melee_profile(&vorpal.player_derived_stats())
+            .to_damage;
+        let observed = (0..10_000).find_map(|seed| {
+            let mut vorpal_game = vorpal.clone();
+            let mut plain_game = plain.clone();
+            let vorpal_damage = first_melee_damage(&mut vorpal_game, seed)?;
+            let plain_damage = first_melee_damage(&mut plain_game, seed)?;
+            (vorpal_damage > plain_damage).then_some((plain_damage, vorpal_damage))
+        });
+        let (plain_damage, vorpal_damage) = observed.expect("a Vorpal trigger seed should exist");
+        let plain_dice = plain_damage - flat_bonus;
+        let vorpal_dice = vorpal_damage - flat_bonus;
+        assert!(plain_dice > 0);
+        assert!(vorpal_dice >= plain_dice.saturating_mul(2));
+        assert_eq!(vorpal_dice % plain_dice, 0);
     }
 
-    let first_melee_damage = |game: &mut Game, seed| {
-        game.rng = RfbRng::seeded(seed);
-        let mut events = Vec::new();
-        game.resolve_player_melee(0, false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
-            .expect("Diamond Edge melee should resolve");
-        events
-            .into_iter()
-            .map(DomainEvent::into_dto)
-            .find_map(|event| match event.outcome {
-                Some(GameEventOutcomeDto::Damage { resolution }) => Some(resolution.raw_damage),
-                _ => None,
-            })
-    };
-    let flat_bonus = vorpal
-        .player_melee_profile(&vorpal.player_derived_stats())
-        .to_damage;
-    let observed = (0..10_000).find_map(|seed| {
-        let mut vorpal_game = vorpal.clone();
-        let mut plain_game = plain.clone();
-        let vorpal_damage = first_melee_damage(&mut vorpal_game, seed)?;
-        let plain_damage = first_melee_damage(&mut plain_game, seed)?;
-        (vorpal_damage > plain_damage).then_some((plain_damage, vorpal_damage))
-    });
-    let (plain_damage, vorpal_damage) = observed.expect("a Vorpal trigger seed should exist");
-    let plain_dice = plain_damage - flat_bonus;
-    let vorpal_dice = vorpal_damage - flat_bonus;
-    assert!(plain_dice > 0);
-    assert!(vorpal_dice >= plain_dice.saturating_mul(2));
-    assert_eq!(vorpal_dice % plain_dice, 0);
-}
-
-fn crisdurian_seed_for_test() -> u64 {
-    (0..10_000)
-        .find(|seed| RfbRng::seeded(*seed).bounded(15) == 0)
-        .expect("a Crisdurian rarity seed should exist")
+    fn crisdurian_seed_for_test() -> u64 {
+        (0..10_000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(15) == 0)
+            .expect("a Crisdurian rarity seed should exist")
+    }
 }
 
 #[test]
