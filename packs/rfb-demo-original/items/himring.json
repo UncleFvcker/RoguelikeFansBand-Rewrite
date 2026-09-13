@@ -1,0 +1,88 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.himring",
+  "nameKey": "item-demo-himring-name",
+  "descriptionKey": "item-demo-himring-description",
+  "glyph": "(",
+  "generationLevel": 25,
+  "weightTenthsPound": 100,
+  "baseValue": 35000,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 127,
+    "baseItemKindId": "demo.item.hard-leather-armour",
+    "instant": false,
+    "rarityOneIn": 6
+  },
+  "rfbValue": {
+    "flags": [
+      "AURA_COLD",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_CHAOS",
+      "RES_NETHER",
+      "RES_POIS"
+    ],
+    "pval": 0,
+    "toArmor": 15
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 21
+  },
+  "passives": [
+    "cold-aura"
+  ],
+  "resistances": {
+    "poison": "resistant",
+    "nether": "resistant",
+    "chaos": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.himring",
+        "nameKey": "device-activation-e5-prot-evil-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 25,
+        "rfbValue": 3000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.carlammas-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 2000
+    }
+  }
+}

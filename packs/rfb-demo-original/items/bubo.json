@@ -1,0 +1,96 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.bubo",
+  "nameKey": "item-demo-bubo-name",
+  "descriptionKey": "item-demo-bubo-description",
+  "glyph": "]",
+  "generationLevel": 30,
+  "weightTenthsPound": 40,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "equipmentSlot": "boots",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 336,
+    "baseItemKindId": "demo.item.pair-of-hard-leather-boots",
+    "instant": false,
+    "rarityOneIn": 22
+  },
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "MAGIC_MASTERY",
+      "RES_COLD",
+      "RES_DARK",
+      "RES_FEAR",
+      "STR"
+    ],
+    "pval": 2,
+    "toArmor": 14
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 17,
+    "strength": 2,
+    "dexterity": 2,
+    "constitution": 2
+  },
+  "equipmentBonuses": {
+    "deviceSkill": 16
+  },
+  "resistances": {
+    "cold": "resistant",
+    "dark": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.bubo",
+        "nameKey": "device-activation-e5-speed-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 30,
+        "rfbValue": 3000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.bubo-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1000
+    }
+  }
+}

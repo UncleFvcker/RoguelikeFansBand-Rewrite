@@ -1885,12 +1885,18 @@ impl Game {
                 u64::try_from(raw_damage).expect("drain life damage must be non-negative"),
             ))
             .expect("spell-powered drain life damage must fit i32");
-            let damage = self.resolve_ability_damage_to_entity(
+            // devices.c EFFECT_DRAIN_LIFE projects GF_OLD_DRAIN: living targets
+            // do not resist it as nether, and vamp_player restores life first.
+            let item_drain = ability.tags.iter().any(|tag| tag == "item-activation");
+            let damage = self.resolve_ability_damage_to_entity_with_resistance(
                 target_index,
                 &ability.id,
                 DamageType::from(*damage_type),
                 raw_damage,
                 trace.clone(),
+                item_drain.then_some(ResistanceLevel::Normal),
+                true,
+                false,
                 events,
                 changed,
                 removed_entities,
@@ -1904,12 +1910,13 @@ impl Game {
             } else {
                 0
             };
-            let outcome = if matches!(
-                ability.id.as_str(),
-                "rfb.ability.race.vampirism"
-                    | "rfb.ability.mutation.vampirism"
-                    | DEATH_VAMPIRISM_TRUE_ABILITY_ID
-            ) {
+            let outcome = if item_drain
+                || matches!(
+                    ability.id.as_str(),
+                    "rfb.ability.race.vampirism"
+                        | "rfb.ability.mutation.vampirism"
+                        | DEATH_VAMPIRISM_TRUE_ABILITY_ID
+                ) {
                 self.apply_player_vampiric_healing(requested)
             } else {
                 self.apply_player_healing(requested)

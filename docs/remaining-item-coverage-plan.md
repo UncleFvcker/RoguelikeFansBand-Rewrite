@@ -1,6 +1,6 @@
 # 剩余物品覆盖计划
 
-固定神器按[非QUESTITEM计划](non-quest-artifact-plan.md)推进。N1全部65件已完成普通入口、行为与统一验证；非QUESTITEM已定义197/309、剩112件。正式物品706项、固定神器267/392，包／lock1.471.0。QUESTITEM仍为70/83，13件保留条件；19件非QUESTITEM仍缺底材。
+固定神器按[非QUESTITEM计划](non-quest-artifact-plan.md)推进。N1全部65件已验收，N2的47件已接入普通／instant生成与装备激活，阶段验证见非QUESTITEM计划；吸取生命的怪物最大HP削减和Escape跨层确认仍未实现。非QUESTITEM已定义244/309、剩65件。正式物品753项、固定神器314/392，包／lock1.472.0。QUESTITEM仍为70/83，13件保留条件；19件非QUESTITEM仍缺底材。
 
 用户要求每个大阶段完成后统一编译验证；N1现已通过该验收点。canonical kind416个、有效未映射128个（importer可表达1／受阻127）；以下旧阶段数量不作为当前余量。
 

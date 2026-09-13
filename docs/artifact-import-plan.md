@@ -1,6 +1,6 @@
 # 固定神器后续导入计划
 
-**当前优先级：**N1全部65件已完成普通入口、行为与统一验证；非QUESTITEM已定义197/309、剩112件。正式物品706项、固定神器267/392，包／lock1.471.0。QUESTITEM仍为70/83，13件保留条件；19件非QUESTITEM仍缺底材。 具体规则、验收与适配边界见[非QUESTITEM计划](non-quest-artifact-plan.md)，下文旧批次只表示当时范围。
+**当前优先级：**N1全部65件已验收，N2的47件已接入普通／instant生成与装备激活，阶段验证见非QUESTITEM计划；吸取生命的怪物最大HP削减和Escape跨层确认仍未实现。非QUESTITEM已定义244/309、剩65件。正式物品753项、固定神器314/392，包／lock1.472.0。QUESTITEM仍为70/83，13件保留条件；19件非QUESTITEM仍缺底材。 具体规则、验收与适配边界见[非QUESTITEM计划](non-quest-artifact-plan.md)，下文旧批次只表示当时范围。
 
 审查日期：2026-09-12；当前同步基线为 `091ef5160`，含三方向集成 `137287c30`。C4及后续按本次重排计划执行；A0、A1–A10、B1–B7、C1–C3保留各自提交中的验收范围。
 
@@ -232,7 +232,7 @@ C1来源仍为 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。`project_hack`要求
 
 ## 完整余量与后续队列
 
-以正式目录和[逐项清单](../design/remaining-item-coverage-review.json)共同核对：392条源固定神器、267件已定义、125件未定义，其中非QUESTITEM112件、QUESTITEM13件。N1统一验证已完成；`formalItemId`只表示定义，规则、入口和验收仍读各项证据。
+以正式目录和[逐项清单](../design/remaining-item-coverage-review.json)共同核对：392条源固定神器、314件已定义、78件未定义，其中非QUESTITEM65件、QUESTITEM13件。N1及N2的实际验证与源规则缺口见非QUESTITEM计划；`formalItemId`只表示定义，规则、入口和验收仍读各项证据。
 
 当前派工、互斥分组及首轮小组见[非QUESTITEM计划](non-quest-artifact-plan.md)；有条件的QUESTITEM见[Q计划](quest-item-plan.md)。旧A/B/C批次数字及已关闭成员不作为当前余量。
 

@@ -90,10 +90,19 @@ fn mattock_forced_base_disruption_activation_round_trips() {
     game.items.push(item);
     game.equip_inventory_item(&item_id, None).unwrap();
 
+    // Pick the source check's immediate-success branch, so cancellation
+    // has exactly one percentile draw and cannot fail before target selection.
+    game.rng = RfbRng::seeded(
+        (0..1000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+            .unwrap(),
+    );
     let save = game.to_save();
     let mut game = Game::from_save_with_content(save.clone(), game.content.clone())
         .expect("natural ego rolls and activation should survive a save round-trip");
     assert_eq!(game.to_save(), save);
+    let mut expected = game.clone();
+    expected.rng.bounded(100);
     game.use_inventory_item(
         &item_id,
         None,
@@ -105,8 +114,8 @@ fn mattock_forced_base_disruption_activation_round_trips() {
     .unwrap();
     assert_eq!(
         game.to_save(),
-        save,
-        "missing direction must preserve item, resources, and RNG"
+        expected.to_save(),
+        "missing direction only performs the device check; item and resources are preserved"
     );
 
     let target = Position {

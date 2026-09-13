@@ -16,8 +16,9 @@ const root = fileURLToPath(new URL("../../", import.meta.url));
 const questItems = process.argv.includes("--quest-items");
 const questItemsAll = process.argv.includes("--quest-items-all");
 const nonQuestN1 = process.argv.includes("--non-quest-n1");
+const nonQuestN2 = process.argv.includes("--non-quest-n2");
 const executable = path.join(process.env.CARGO_TARGET_DIR ?? path.join(root, "target"), "debug/rfb-tauri.exe");
-const directory = path.join(root, nonQuestN1 ? "test-results/non-quest-n1" : questItemsAll ? "test-results/quest-items-q2-q5" : questItems ? "test-results/quest-items-q1" : "test-results/ordinary-equipment");
+const directory = path.join(root, nonQuestN2 ? "test-results/non-quest-n2" : nonQuestN1 ? "test-results/non-quest-n1" : questItemsAll ? "test-results/quest-items-q2-q5" : questItems ? "test-results/quest-items-q1" : "test-results/ordinary-equipment");
 await mkdir(directory, { recursive: true });
 await mkdir(path.join(root, "target/e2e"), { recursive: true });
 const profile = await mkdtemp(path.join(root, "target/e2e/ordinary-equipment-"));
@@ -78,13 +79,13 @@ try {
   await driver.waitFor('return document.documentElement.lang==="zh-CN" && document.documentElement.dataset.appMode==="title" && !document.querySelector("#session-new-game").disabled', "Chinese title ready");
   await click("#session-new-game");
   await selectCreationRace(driver, "demo.race.rfb-human");
-  await selectCreationBuild(driver, nonQuestN1 ? "demo.build.mage-life-arcane" : "demo.build.warrior");
+  await selectCreationBuild(driver, nonQuestN1 || nonQuestN2 ? "demo.build.mage-life-arcane" : "demo.build.warrior");
   await driver.execute('for(const [id,value] of [["session-seed","511"],["session-character-name","常规装备验收"]]){const input=document.getElementById(id);input.value=value;input.dispatchEvent(new Event("input",{bubbles:true}));}return true;');
   await click("#session-start-game");
   await driver.waitFor('return document.documentElement.dataset.appMode==="playing" && document.querySelector("#connection-status").classList.contains("ready")', "fresh warrior", 30000);
   const input = path.join(directory, "new-game.rfbsave");
   await writeFile(input, Buffer.from(await save()));
-  const exporter = nonQuestN1 ? "game::tests::non_quest_artifacts::export_n1_desktop_saves" : questItemsAll ? "game::tests::quest_items::desktop::export_quest_item_desktop_saves" : questItems ? "game::tests::quest_items::export_q1_desktop_save" : "game::tests::death_scythe::export_ordinary_equipment_desktop_saves";
+  const exporter = nonQuestN2 ? "game::tests::non_quest_artifacts::n2::export_n2_desktop_saves" : nonQuestN1 ? "game::tests::non_quest_artifacts::export_n1_desktop_saves" : questItemsAll ? "game::tests::quest_items::desktop::export_quest_item_desktop_saves" : questItems ? "game::tests::quest_items::export_q1_desktop_save" : "game::tests::death_scythe::export_ordinary_equipment_desktop_saves";
   const preparation = await promisify(execFile)("cargo", ["test", "-p", "rfb-core", "--lib", exporter, "--", "--ignored", "--exact"], {
     cwd: root, env: { ...process.env, ORDINARY_EQUIPMENT_INPUT: input }, windowsHide: true, timeout: 240000,
   });
@@ -106,6 +107,9 @@ try {
         await writeFile(path.join(directory, `${scenario.name}-${index}.png`), await keyboard.screenshot(), "base64");
         await click("#player-page-close");
       } else if (command.type === "use-item") {
+        // Keep fishing's automatic 10ms continuation from racing the explicit
+        // save/load checkpoints; native commands and manual waits still run.
+        if (nonQuestN2 && scenario.name === "taikobo") await keyboard.pauseTimers();
         await click("#player-ui-inventory-open");
         await click(`[data-slot-id="${step.activationSlot}"] > button`);
         await click(".equipment-activate");
@@ -133,7 +137,9 @@ try {
   assert.deepEqual(keyboard.errors, []);
   await writeFile(path.join(directory, "report.json"), JSON.stringify({
     executable, sha256: createHash("sha256").update(await readFile(executable)).digest("hex"),
-    preparation: nonQuestN1
+    preparation: nonQuestN2
+      ? "Fresh human Mage native save, controlled level50, local floor, invulnerability and equipped torch. Five artifacts use real base/instant candidates and rarity at controlled depth100; unknown pickup, equip, activation and wait. Ball/drain targets are prepared adjacent sleeping source actors; fishing receives adjacent water. Successful activation seeds are selected through real checks. Browser timers are paused for the fishing activation/checkpoints, so automatic continuation cannot race explicit native save/load and manual wait. Every UI action is saved and restored through normal native commands. No natural acquisition or leveling claim."
+      : nonQuestN1
       ? "Fresh human Mage native save, controlled level50, local floor, invulnerability and cleared actors/items. Four artifacts generated with real base candidates and rarity at controlled depth100, initially unknown. Aglarang/Hellfire receive an adjacent source actor and a successful attack seed; Hellfire receives ordinary bolts and an equipped torch for visible UI targeting. UI pickup, equipment, melee/shooting/wait and save/load after every step. No natural acquisition or leveling claim."
       : questItemsAll
       ? "Fresh human Warrior native save; explicit level50, talent, invulnerability and local scene preparation. Eyes/Hydra/Rama artifacts are produced by actual deaths of prepared adjacent source actors with1HP and successful RNG seeds; Sting is generated after actual Telmora castle acceptance and Vault entry. Scene starts on the real reward after other actors/items are cleared. Rama receives10 normal arrows. UI performs pickup, equipment, actual activation/shooting and save/load continuation. No natural leveling or difficulty claim."

@@ -430,6 +430,9 @@ fn mount_olympus_guardians_use_real_melee_and_quest_artifacts_skip_normal_genera
             actor_id: "test.natural".into(),
         },
     };
+    // Ulmo is an ordinary trident candidate; exclude the already-created
+    // artifact so this assertion isolates Poseidon's QUESTITEM rejection.
+    game.generated_artifact_ids.insert("demo.item.ulmo".into());
     let draws = game.rng_draw_counter();
     assert!(
         game.roll_fixed_artifact_kind_id(&context, Some("demo.item.trident"), false)

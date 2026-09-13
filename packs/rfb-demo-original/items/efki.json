@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.efki",
+  "nameKey": "item-demo-efki-name",
+  "descriptionKey": "item-demo-efki-description",
+  "glyph": "\"",
+  "generationLevel": 65,
+  "weightTenthsPound": 3,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "equipmentSlot": "amulet",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 363,
+    "baseItemKindId": "demo.item.amulet",
+    "instant": false,
+    "rarityOneIn": 65
+  },
+  "rfbValue": {
+    "flags": [
+      "FULL_NAME",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_FEAR",
+      "SPEED"
+    ],
+    "pval": 3,
+    "toArmor": 5
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 5,
+    "speed": 3
+  },
+  "passives": [
+    "hold-life"
+  ],
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.efki",
+        "nameKey": "device-activation-e5-speed-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 60,
+        "rfbValue": 3250,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.efki-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1500
+    }
+  }
+}

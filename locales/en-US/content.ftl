@@ -10464,3 +10464,144 @@ item-demo-angrist-description = Fixed artifact 351 from RFB; dagger.
 
 item-demo-liweris-name = Mithril Spear of Liweris
 item-demo-liweris-description = Fixed artifact 352 from RFB; broad spear.
+
+item-demo-carlammas-name = Amulet of Carlammas
+item-demo-carlammas-description = Fixed artifact 4 from RFB; amulet.
+
+item-demo-frakir-name = Ring 'Frakir'
+item-demo-frakir-description = Fixed artifact 8 from RFB; ring.
+
+item-demo-tulkas-name = Ring of Tulkas
+item-demo-tulkas-description = Fixed artifact 9 from RFB; ring.
+
+item-demo-narya-name = Ring of Power (Narya)
+item-demo-narya-description = Fixed artifact 10 from RFB; ring.
+
+item-demo-nenya-name = Ring of Power (Nenya)
+item-demo-nenya-description = Fixed artifact 11 from RFB; ring.
+
+item-demo-vilya-name = Ring of Power (Vilya)
+item-demo-vilya-description = Fixed artifact 12 from RFB; ring.
+
+item-demo-faramir-name = Amulet of Faramir
+item-demo-faramir-description = Fixed artifact 18 from RFB; amulet.
+
+item-demo-julian-name = Metal Scale Mail of Julian
+item-demo-julian-description = Fixed artifact 23 from RFB; metal scale mail.
+
+item-demo-caspanion-name = Augmented Chain Mail of Caspanion
+item-demo-caspanion-description = Fixed artifact 25 from RFB; augmented chain mail.
+
+item-demo-holhenneth-name = Iron Helm 'Holhenneth'
+item-demo-holhenneth-description = Fixed artifact 40 from RFB; iron helm.
+
+item-demo-colluin-name = Cloak 'Colluin'
+item-demo-colluin-description = Fixed artifact 44 from RFB; cloak.
+
+item-demo-colannon-name = Cloak 'Colannon'
+item-demo-colannon-description = Fixed artifact 48 from RFB; cloak.
+
+item-demo-flora-name = Pair of Soft Leather Boots of Flora
+item-demo-flora-description = Fixed artifact 61 from RFB; soft leather boots.
+
+item-demo-ringil-name = Long Sword 'Ringil'
+item-demo-ringil-description = Fixed artifact 82 from RFB; long sword.
+
+item-demo-anduril-name = Long Sword 'Anduril'
+item-demo-anduril-description = Fixed artifact 83 from RFB; long sword.
+
+item-demo-werewindle-name = Long Sword 'Werewindle'
+item-demo-werewindle-description = Fixed artifact 84 from RFB; long sword.
+
+item-demo-theoden-name = Beaked Axe of Theoden
+item-demo-theoden-description = Fixed artifact 93 from RFB; beaked axe.
+
+item-demo-destiny-name = Broad Spear of Destiny
+item-demo-destiny-description = Fixed artifact 98 from RFB; broad spear.
+
+item-demo-ulmo-name = Trident of Ulmo
+item-demo-ulmo-description = Fixed artifact 108 from RFB; trident.
+
+item-demo-firestar-name = Morning Star 'Firestar'
+item-demo-firestar-description = Fixed artifact 115 from RFB; morning star.
+
+item-demo-taratol-name = Mace 'Taratol'
+item-demo-taratol-description = Fixed artifact 116 from RFB; mace.
+
+item-demo-eriril-name = Quarterstaff 'Eriril'
+item-demo-eriril-description = Fixed artifact 119 from RFB; quarterstaff.
+
+item-demo-turmil-name = Lucerne Hammer 'Turmil'
+item-demo-turmil-description = Fixed artifact 122 from RFB; lucerne hammer.
+
+item-demo-himring-name = Hard Leather Armour of Himring
+item-demo-himring-description = Fixed artifact 127 from RFB; hard leather armour.
+
+item-demo-kusanagi-no-tsurugi-name = Katana 'Kusanagi-no-tsurugi'
+item-demo-kusanagi-no-tsurugi-description = Fixed artifact 128 from RFB; katana.
+
+item-demo-incanus-name = Robe of Incanus
+item-demo-incanus-description = Fixed artifact 131 from RFB; robe.
+
+item-demo-hurin-name = Beaked Axe of Hurin
+item-demo-hurin-description = Fixed artifact 133 from RFB; beaked axe.
+
+item-demo-yasaka-no-magatama-name = Amulet 'Yasaka-no-Magatama'
+item-demo-yasaka-no-magatama-description = Fixed artifact 149 from RFB; amulet.
+
+item-demo-taikobo-name = Fishingpole of Taikobo
+item-demo-taikobo-description = Fixed artifact 159 from RFB; fishingpole.
+
+item-demo-matoi-name = Jo Staff 'Matoi'
+item-demo-matoi-description = Fixed artifact 170 from RFB; jo staff.
+
+item-demo-aranruth-name = Broad Sword 'Aranruth'
+item-demo-aranruth-description = Fixed artifact 184 from RFB; broad sword.
+
+item-demo-bolshoi-name = Whip of Bolshoi
+item-demo-bolshoi-description = Fixed artifact 188 from RFB; whip.
+
+item-demo-ama-no-numahoko-name = Awl-Pike 'Ama-no-NumaHoko'
+item-demo-ama-no-numahoko-description = Fixed artifact 202 from RFB; awl pike.
+
+item-demo-mook-name = Fur Cloak of Mook
+item-demo-mook-description = Fixed artifact 205 from RFB; fur cloak.
+
+item-demo-dragonic-sword-name = Two-Handed Sword 'Dragonic Sword'
+item-demo-dragonic-sword-description = Fixed artifact 207 from RFB; two handed sword.
+
+item-demo-hermits-purple-name = Whip 'hermit's purple'
+item-demo-hermits-purple-description = Fixed artifact 209 from RFB; whip.
+
+item-demo-nain-name = Mattock of Nain
+item-demo-nain-description = Fixed artifact 211 from RFB; mattock.
+
+item-demo-fundin-bluecloak-name = Ball-and-Chain of Fundin Bluecloak
+item-demo-fundin-bluecloak-description = Fixed artifact 214 from RFB; ball and chain.
+
+item-demo-harness-of-the-hell-name = Harness of the Hell
+item-demo-harness-of-the-hell-description = Fixed artifact 218 from RFB; amulet.
+
+item-demo-asclepius-name = Bo Staff of Asclepius
+item-demo-asclepius-description = Fixed artifact 225 from RFB; bo staff.
+
+item-demo-defender-of-the-crown-name = Ball-and-Chain of the Defender of the Crown
+item-demo-defender-of-the-crown-description = Fixed artifact 252 from RFB; ball and chain.
+
+item-demo-stomper-name = Pair of Mithril Shod Boots 'Stomper'
+item-demo-stomper-description = Fixed artifact 277 from RFB; mithril shod boots.
+
+item-demo-sword-of-tengri-name = Sword of Tengri
+item-demo-sword-of-tengri-description = Fixed artifact 333 from RFB; tulwar.
+
+item-demo-bubo-name = Pair of Hard Leather Boots of Bubo
+item-demo-bubo-description = Fixed artifact 336 from RFB; pair of hard leather boots.
+
+item-demo-barnaby-name = Bobble Hat of Barnaby
+item-demo-barnaby-description = Fixed artifact 361 from RFB; knit cap.
+
+item-demo-efki-name = Pendant 'Efki'
+item-demo-efki-description = Fixed artifact 363 from RFB; amulet.
+
+item-demo-surveillance-name = Amulet of Surveillance
+item-demo-surveillance-description = Fixed artifact 367 from RFB; amulet.

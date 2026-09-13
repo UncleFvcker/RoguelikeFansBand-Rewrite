@@ -1,0 +1,120 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.ulmo",
+  "nameKey": "item-demo-ulmo-name",
+  "descriptionKey": "item-demo-ulmo-description",
+  "glyph": "/",
+  "generationLevel": 70,
+  "weightTenthsPound": 70,
+  "baseValue": 120000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "blessed-weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 108,
+    "baseItemKindId": "demo.item.trident",
+    "instant": false,
+    "rarityOneIn": 90
+  },
+  "weaponProficiencyBaseItemId": "demo.item.trident",
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "DEX",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_ACID",
+      "REGEN",
+      "RES_NETHER",
+      "RIDING",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_ANIMAL",
+      "SLAY_DRAGON",
+      "SLOW_DIGEST",
+      "XTRA_POWER"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 10,
+    "toHit": 15,
+    "toDamage": 19
+  },
+  "modifiers": {
+    "dexterity": 4
+  },
+  "passives": [
+    "hold-life",
+    "regeneration",
+    "see-invisible",
+    "slow-digestion"
+  ],
+  "resistances": {
+    "acid": "immune",
+    "nether": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "animal": "slay",
+    "dragon": "slay"
+  },
+  "ridingWeaponKind": "compatible",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.ulmo",
+        "nameKey": "device-activation-e5-teleport-away-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 30,
+        "rfbValue": 1500,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.ulmo-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 500
+    }
+  }
+}

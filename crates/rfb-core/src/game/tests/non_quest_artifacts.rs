@@ -3,6 +3,7 @@ use super::support::*;
 use super::*;
 use crate::game::inventory::RemoveEquippedCursesRequest;
 use rfb_content::AmmunitionTypeDefinition;
+mod n2;
 
 const REMAINING_N1: &[u32] = &[
     35, 58, 71, 72, 77, 81, 87, 90, 91, 134, 137, 140, 142, 154, 155, 156, 158, 160, 161, 165, 167,
@@ -158,6 +159,14 @@ fn prepared_mage() -> Game {
 }
 
 fn generate(game: &mut Game, kind: &str) -> String {
+    let instant = game
+        .content
+        .item(kind)
+        .unwrap()
+        .artifact_generation
+        .as_ref()
+        .unwrap()
+        .instant;
     let base = game
         .content
         .item(kind)
@@ -169,7 +178,7 @@ fn generate(game: &mut Game, kind: &str) -> String {
         .clone();
     let selected = (0..30_000)
         .find_map(|_| {
-            game.roll_fixed_artifact_kind_id(&context(), Some(&base), false)
+            game.roll_fixed_artifact_kind_id(&context(), Some(&base), instant)
                 .filter(|id| id == kind)
         })
         .unwrap_or_else(|| panic!("ordinary source base/rarity must admit {kind}"));

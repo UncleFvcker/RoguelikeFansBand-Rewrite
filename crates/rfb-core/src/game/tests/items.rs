@@ -12456,6 +12456,19 @@ fn tomte_tailored_acquirement_filters_headgear_by_birth_race_only() {
     let mut template = Game::new_with_build(83, "demo.build.warrior").unwrap();
     clear_monsters(&mut template);
     template.content = content;
+    // This fixture isolates birth-race filtering of the four ordinary bases.
+    // Instant artifacts bypass that base table and have separate entry tests.
+    template.generated_artifact_ids.extend(
+        template
+            .content
+            .item_definitions()
+            .filter(|item| {
+                item.artifact_generation
+                    .as_ref()
+                    .is_some_and(|generation| generation.instant)
+            })
+            .map(|item| item.id.clone()),
+    );
     for birth_tomte in [false, true] {
         let mut base = template.clone();
         base.build.as_mut().unwrap().race_id = if birth_tomte {

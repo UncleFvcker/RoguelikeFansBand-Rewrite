@@ -36,6 +36,11 @@ export function createPresentationFormatter(
 
   function formatEvent(event: GameEventDto): string {
     switch (event.messageKey) {
+      case "skill-check-device-success":
+      case "skill-check-device-failure":
+        return localization.format(`message-${event.messageKey}`, {
+          target: visibleItemNameForKind(event.args.target),
+        });
       case "duelist-challenge-cleared":
         return localization.format(event.messageKey);
       case "duelist-challenge-issued":
@@ -1796,6 +1801,15 @@ export function createPresentationFormatter(
   }
 
   function contentName(id: string | undefined): string {
+    if (id) {
+      const itemId = id.startsWith("rfb.item-activation.")
+        ? id.slice("rfb.item-activation.".length) : undefined;
+      const { currentInventory, currentEquipment } = getState();
+      const item = currentInventory.find(item => (itemId !== undefined && item.id === itemId) || item.activation?.profileId === id) ??
+        currentEquipment.find(item => (itemId !== undefined && item.id === itemId) || item.activation?.profileId === id);
+      if (item) return visibleItemName(item.displayNameKey, item.kindId, item.artifactName);
+      if (itemId) return localization.format("item-unknown-name");
+    }
     const ability = getState().currentStatus?.player.abilities?.find(ability => ability.id === id);
     if (ability) return localization.format(ability.nameKey);
     if (id === "demo.resource.mana") {

@@ -1,0 +1,134 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.asclepius",
+  "nameKey": "item-demo-asclepius-name",
+  "descriptionKey": "item-demo-asclepius-description",
+  "glyph": "\\",
+  "generationLevel": 40,
+  "weightTenthsPound": 160,
+  "baseValue": 300000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "blessed-weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 225,
+    "baseItemKindId": "demo.item.bo-staff",
+    "instant": false,
+    "rarityOneIn": 45
+  },
+  "weaponProficiencyBaseItemId": "demo.item.bo-staff",
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "BRAND_VAMP",
+      "CHR",
+      "FREE_ACT",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LIFE",
+      "LITE",
+      "REGEN",
+      "RES_CHAOS",
+      "RES_CONF",
+      "RES_POIS",
+      "SEE_INVIS",
+      "SLAY_ANIMAL",
+      "SLAY_DRAGON",
+      "SLAY_GIANT",
+      "SLAY_HUMAN",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "SLOW_DIGEST",
+      "WIS"
+    ],
+    "pval": 3,
+    "toArmor": 5
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 12,
+    "toHit": 15,
+    "toDamage": 15
+  },
+  "modifiers": {
+    "defense": 5,
+    "wisdom": 3,
+    "charisma": 3
+  },
+  "equipmentBonuses": {
+    "lifePercent": 9,
+    "lightRadius": 1
+  },
+  "passives": [
+    "hold-life",
+    "regeneration",
+    "see-invisible",
+    "slow-digestion",
+    "vampiric"
+  ],
+  "resistances": {
+    "poison": "resistant",
+    "confusion": "resistant",
+    "chaos": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "animal": "slay",
+    "human": "slay",
+    "orc": "slay",
+    "troll": "slay",
+    "giant": "slay",
+    "dragon": "slay"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.asclepius",
+        "nameKey": "device-activation-e5-restoring-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 40,
+        "rfbValue": 6000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.hades"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 7500
+    }
+  }
+}

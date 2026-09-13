@@ -1,0 +1,99 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.firestar",
+  "nameKey": "item-demo-firestar-name",
+  "descriptionKey": "item-demo-firestar-description",
+  "glyph": "\\",
+  "generationLevel": 25,
+  "weightTenthsPound": 150,
+  "baseValue": 35000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 115,
+    "baseItemKindId": "demo.item.morning-star",
+    "instant": false,
+    "rarityOneIn": 8
+  },
+  "weaponProficiencyBaseItemId": "demo.item.morning-star",
+  "rfbValue": {
+    "flags": [
+      "BRAND_FIRE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "RES_FIRE",
+      "SHOW_MODS"
+    ],
+    "pval": 0,
+    "toArmor": 2
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 7,
+    "toHit": 5,
+    "toDamage": 7
+  },
+  "modifiers": {
+    "defense": 2
+  },
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "resistances": {
+    "fire": "resistant"
+  },
+  "brands": [
+    "fire"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.firestar",
+        "nameKey": "device-activation-e5-ball-fire-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 25,
+        "rfbValue": 2160,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.anduril-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 500
+    }
+  }
+}

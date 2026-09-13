@@ -49,6 +49,7 @@ export async function connectKeyboard(profile) {
   await send("Runtime.enable", {});
   return {
     errors,
+    async pauseTimers() { await send("Emulation.setVirtualTimePolicy", { policy: "pause" }); },
     async key(key, modifiers = 0) {
       const [code, windowsVirtualKeyCode, implicitModifiers = 0] = keys[key];
       const params = { key, code, windowsVirtualKeyCode, modifiers: modifiers | implicitModifiers };

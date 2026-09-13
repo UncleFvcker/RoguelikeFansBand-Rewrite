@@ -1,0 +1,94 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.hermits-purple",
+  "nameKey": "item-demo-hermits-purple-name",
+  "descriptionKey": "item-demo-hermits-purple-description",
+  "glyph": "\\",
+  "generationLevel": 40,
+  "weightTenthsPound": 30,
+  "baseValue": 40000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 209,
+    "baseItemKindId": "demo.item.whip",
+    "instant": false,
+    "rarityOneIn": 40
+  },
+  "weaponProficiencyBaseItemId": "demo.item.whip",
+  "rfbValue": {
+    "flags": [
+      "BRAND_MANA",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "SEE_INVIS",
+      "TELEPATHY",
+      "WIS"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 7,
+    "toHit": 10,
+    "toDamage": 5
+  },
+  "modifiers": {
+    "intelligence": 2,
+    "wisdom": 2
+  },
+  "passives": [
+    "see-invisible",
+    "telepathy"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.hermits-purple",
+        "nameKey": "device-activation-e5-prot-evil-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 35,
+        "rfbValue": 3000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.carlammas-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 2250
+    }
+  }
+}

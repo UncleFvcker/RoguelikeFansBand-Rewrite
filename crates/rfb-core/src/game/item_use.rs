@@ -3217,6 +3217,62 @@ impl Game {
                 );
             }
             (
+                mut effect @ (ItemUseEffectDefinition::ApplySpeed { .. }
+                | ItemUseEffectDefinition::ApplyHeroicSpeed { .. }
+                | ItemUseEffectDefinition::ApplyBasicResistance { .. }
+                | ItemUseEffectDefinition::ApplyStoneSkin { .. }),
+                ItemUsePlan::SelfTarget,
+            ) if profile_id.is_some() => {
+                // devices.c boosts the one rolled duration, then set_fast/hero/
+                // oppose_base/shield retain the stronger timer. Potions keep their
+                // own timing path. These executors accept world ticks.
+                let (dice, sides, bonus) = match &mut effect {
+                    ItemUseEffectDefinition::ApplySpeed {
+                        duration_dice,
+                        duration_sides,
+                        duration_bonus,
+                    }
+                    | ItemUseEffectDefinition::ApplyHeroicSpeed {
+                        duration_dice,
+                        duration_sides,
+                        duration_bonus,
+                        ..
+                    }
+                    | ItemUseEffectDefinition::ApplyBasicResistance {
+                        duration_dice,
+                        duration_sides,
+                        duration_bonus,
+                    }
+                    | ItemUseEffectDefinition::ApplyStoneSkin {
+                        duration_dice,
+                        duration_sides,
+                        duration_bonus,
+                    } => (duration_dice, duration_sides, duration_bonus),
+                    _ => unreachable!(),
+                };
+                let turns = self.roll_damage(*dice, *sides as u16) as u32 + *bonus;
+                let ticks = (device_power_value(u64::from(turns), device_power_bonus) as u32) * 10;
+                *dice = 0;
+                *sides = 0;
+                *bonus = ticks;
+                if matches!(effect, ItemUseEffectDefinition::ApplySpeed { .. }) {
+                    let mut haste =
+                        super::monster_combat::melee_status(STATUS_HASTE, ticks, &kind_id);
+                    haste.stacking = StatusStacking::KeepStrongest;
+                    noticed = !matches!(
+                        apply_status_application(&mut self.player.statuses, haste).change,
+                        StatusChange::Unchanged
+                    );
+                    events.push(DomainEvent::ItemSpeedResolved {
+                        source_kind_id: kind_id.clone(),
+                        display_name_key: self.item_display_name_key(&kind_id),
+                        duration: ticks,
+                    });
+                } else {
+                    noticed = self.resolve_item_self_effect(&kind_id, &effect, events);
+                }
+            }
+            (
                 ItemUseEffectDefinition::ApplyStatus {
                     status_kind_id,
                     duration_dice,
@@ -4124,6 +4180,9 @@ impl Game {
                         effect.as_ref(),
                         AbilityEffectDefinition::FetchItem { .. }
                             | AbilityEffectDefinition::ConeDamage { .. }
+                            | AbilityEffectDefinition::DrainLife { .. }
+                            | AbilityEffectDefinition::Control { .. }
+                            | AbilityEffectDefinition::TeleportAway { .. }
                             | AbilityEffectDefinition::RandomChoice { .. }
                     )
                 {
@@ -4235,7 +4294,9 @@ impl Game {
                 if target.is_some() {
                     return None;
                 }
-                let glyph = target_glyph?;
+                let Some(glyph) = target_glyph else {
+                    return target_definition.map(|_| ItemUsePlan::CancelledActivation);
+                };
                 let mut characters = glyph.chars();
                 let character = characters.next()?;
                 (!character.is_control() && characters.next().is_none()).then(|| {
@@ -4308,6 +4369,9 @@ impl Game {
                 Some(ItemUsePlan::Projectile { path })
             }
             ItemUseEffectDefinition::TerrainBeam { .. } => {
+                if target.is_none() {
+                    return Some(ItemUsePlan::CancelledActivation);
+                }
                 let path = target_definition.and_then(|definition| {
                     target.and_then(|target| self.item_effect_path(definition, target))
                 })?;
@@ -4425,7 +4489,7 @@ impl Game {
                         .find(|item| item.id == source_item_id)
                         .and_then(|item| self.content.item(&item.kind_id))
                         .and_then(|definition| definition.device_generation.as_ref())
-                        .is_some_and(|generation| generation.rfb_device.is_some())
+                        .is_some()
                 {
                     return Some(ItemUsePlan::CancelledActivation);
                 }

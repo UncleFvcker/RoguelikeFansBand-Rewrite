@@ -112,6 +112,8 @@ fn effect_program_input_for_step(
                 effect.as_ref(),
                 AbilityEffectDefinition::ConeDamage { .. }
                     | AbilityEffectDefinition::DrainLife { .. }
+                    | AbilityEffectDefinition::Control { .. }
+                    | AbilityEffectDefinition::TeleportAway { .. }
                     | AbilityEffectDefinition::FetchItem { .. }
                     | AbilityEffectDefinition::RandomChoice { .. }
             ) =>
@@ -213,7 +215,12 @@ pub(super) fn effect_program_input_matches_device_target(
                 && target.range == 0
                 && !target.requires_line_of_effect
         }
-        EffectProgramInputDefinition::Glyph => false,
+        EffectProgramInputDefinition::Glyph => {
+            matches!(effect, ItemUseEffectDefinition::Genocide { .. })
+                && target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
+                && target.range == 0
+                && !target.requires_line_of_effect
+        }
     }
 }
 
@@ -273,6 +280,71 @@ mod tests {
 
     use super::*;
     use crate::{CONTENT_FORMAT_VERSION, compile_pack_dir, source::SourceItemUseActionDefinition};
+
+    #[test]
+    fn n2_projectile_and_glyph_programs_preserve_their_target_boundaries() {
+        let projectile = AbilityTargetDefinition {
+            modes: vec![AbilityTargetModeDefinition::Direction],
+            range: 18,
+            requires_line_of_effect: true,
+        };
+        let self_target = AbilityTargetDefinition {
+            modes: vec![AbilityTargetModeDefinition::SelfTarget],
+            range: 0,
+            requires_line_of_effect: false,
+        };
+        for ability in [
+            AbilityEffectDefinition::Control {
+                category: "animal".into(),
+                power: 25,
+            },
+            AbilityEffectDefinition::TeleportAway {
+                minimum_distance: 100,
+                power: 100,
+                stop_at_actor: false,
+                target_category: None,
+            },
+        ] {
+            let effect = ItemUseEffectDefinition::AbilityEffect {
+                effect: Box::new(ability),
+                affects_ground_items: false,
+            };
+            assert!(effect_program_step_accepts_input(
+                &effect,
+                EffectProgramInputDefinition::Actor
+            ));
+            assert!(!effect_program_step_accepts_input(
+                &effect,
+                EffectProgramInputDefinition::SelfTarget
+            ));
+            assert!(effect_program_input_matches_device_target(
+                EffectProgramInputDefinition::Actor,
+                &projectile,
+                &effect
+            ));
+            assert!(!effect_program_input_matches_device_target(
+                EffectProgramInputDefinition::Actor,
+                &self_target,
+                &effect
+            ));
+        }
+        let genocide = ItemUseEffectDefinition::Genocide { power: 200 };
+        assert!(effect_program_input_matches_device_target(
+            EffectProgramInputDefinition::Glyph,
+            &self_target,
+            &genocide
+        ));
+        assert!(!effect_program_input_matches_device_target(
+            EffectProgramInputDefinition::Glyph,
+            &projectile,
+            &genocide
+        ));
+        assert!(!effect_program_input_matches_device_target(
+            EffectProgramInputDefinition::Glyph,
+            &self_target,
+            &ItemUseEffectDefinition::NoNumericEffect
+        ));
+    }
 
     fn original_pack_path() -> PathBuf {
         Path::new(env!("CARGO_MANIFEST_DIR"))

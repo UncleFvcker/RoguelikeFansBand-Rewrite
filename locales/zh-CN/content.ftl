@@ -10495,3 +10495,144 @@ item-demo-angrist-description = 由最伟大的矮人铁匠铁尔哈（Telchar�
 
 item-demo-liweris-name = 利维里斯的秘银长矛
 item-demo-liweris-description = 它是用偷来的秘银为邪恶的利维里斯国王锻造的，里面充满了黑暗力量，使其成为一切美好事物的死敌，并且对龙族来说是致命的。消息一传出，利维里斯城就立刻被巨龙夷为平地，国王也死于火海；但他的长矛却保存了下来。
+
+item-demo-carlammas-name = 卡拉马斯之护身符
+item-demo-carlammas-description = 一个燃烧的青铜圆环，带有驱逐邪恶的强大法术。
+
+item-demo-frakir-name = 『弗拉基尔』戒指
+item-demo-frakir-description = 原版固定神器。
+
+item-demo-tulkas-name = 托卡斯的戒指
+item-demo-tulkas-description = 维拉中最迅捷、最愤怒的托卡斯的宝物。
+
+item-demo-narya-name = 力量之 (纳雅)戒指
+item-demo-narya-description = 火之戒，镶嵌着一颗如火焰般发光的红宝石。纳雅是精灵所铸造并向索伦隐藏的三枚力量之戒之一。
+
+item-demo-nenya-name = 力量之 (南雅)戒指
+item-demo-nenya-description = 精金之戒，镶嵌着一颗纯白色的宝石。南雅是精灵所铸造并向索伦隐藏的三枚力量之戒之一。
+
+item-demo-vilya-name = 力量之 (维雅)戒指
+item-demo-vilya-description = 蓝宝石之戒，镶有一颗清澈如星光般闪耀的蓝宝石，无论魔苟斯造成怎样的破坏，它都闪耀着不可触犯的光芒。维雅是精灵所铸造并向索伦隐藏的三枚力量之戒之一。
+
+item-demo-faramir-name = 法拉米尔的护身符
+item-demo-faramir-description = 一条纤细的真银项链，附有伊西利安的宁静法术，用来援助和保护佩戴者。
+
+item-demo-julian-name = 朱利安的金属鳞甲
+item-demo-julian-description = 原版固定神器。
+
+item-demo-caspanion-name = 卡斯帕尼安的强化链甲
+item-demo-caspanion-description = 由相互锁合的钢环组成的锁子甲、护腿和袖子，在关键部位战略性地加固了第二层锁链。其内部蕴含着增强身心的魔法，并且没有任何门能阻挡佩戴者的去路。
+
+item-demo-holhenneth-name = 『霍尔亨尼斯』铁盔
+item-demo-holhenneth-description = 一顶著名的锻铁头盔，赋予佩戴者非凡的心智和感知能力。
+
+item-demo-colluin-name = 『科鲁因』披风
+item-demo-colluin-description = 由来自维林诺的英雄所穿戴的披风，那是一片完全超越了元素纷争的土地。
+
+item-demo-colannon-name = 『科兰农』披风
+item-demo-colannon-description = 一件水晶蓝色的精美丝绸披风，曾被律法势力的无声信使所穿戴。不知何故，它的佩戴者总能逃脱麻烦。
+
+item-demo-flora-name = 弗洛拉的软皮靴
+item-demo-flora-description = 原版固定神器。
+
+item-demo-ringil-name = 『凛吉尔』长剑
+item-demo-ringil-description = 诺多精灵至高王芬国昐的武器；它闪耀起来就像一根被不灭之光照亮的冰柱。魔苟斯曾极不情愿地去面对它；他那瘸了的脚会提醒他，如果再次遇到它，它的威力有多么可怕。
+
+item-demo-anduril-name = 『安都瑞尔』长剑
+item-demo-anduril-description = 著名的“西方之焰”，这把断折的剑被重新锻造。它闪烁着火焰的精华，其佩戴者在战斗中无比强大，没有哪个索伦的生物能抵挡它。即使在失败中，它也永远不会被玷污或折断。
+
+item-demo-werewindle-name = 『维尔温德尔』长剑
+item-demo-werewindle-description = 布兰德强大的“图案”剑，是科温的“灰杖（Grayswandir）”的双生剑。
+
+item-demo-theoden-name = 希优顿的鸟喙斧
+item-demo-theoden-description = 这把武器狭窄的斧头被一个像乌鸦嘴一样的尖头完美平衡，甚至能刺穿史矛革的盔甲，挥舞它的人能感知到敌人的思想。
+
+item-demo-destiny-name = 命运之阔刃长矛
+item-demo-destiny-description = 原版固定神器。
+
+item-demo-ulmo-name = 乌欧牟的三叉戟
+item-demo-ulmo-description = 水之主，维拉乌欧牟的可怕武器。作为除了曼威本人之外最强大的善良力量，乌欧牟嘲笑着不死生物可怕的力量，并且完全掌控着水元素。
+
+item-demo-firestar-name = 『火星』晨星锤
+item-demo-firestar-description = 古代著名的战斗领主，它那带有红色的头部，颜色如同还能在愤怒中重新燃起的余烬一样。
+
+item-demo-taratol-name = 『塔拉托尔』权杖
+item-demo-taratol-description = 一把巨大的脊状权杖，它会在你周围召唤出一圈活跃的闪电光环；即使粗大的火花在你手指和眉毛周围划过，你也完全不受影响。
+
+item-demo-eriril-name = 『艾利瑞尔』铁头木棍
+item-demo-eriril-description = 传奇伊斯塔（Istar）的耀眼金色法杖，这件巫师的伴侣赋予了敏锐的视觉和许多隐藏事物的知识。
+
+item-demo-turmil-name = 『图尔米尔』卢塞恩长戟
+item-demo-turmil-description = 曾被米涅尔塔玛（Meneltarma）大祭司所挥舞，这把巨大的权杖闪烁着如月光般冰冷的光芒，它在精神上和物理上都能发动极其强大的打击。
+
+item-demo-himring-name = 希姆林之硬皮甲
+item-demo-himring-description = 这件由柔韧皮革制成的镶钉胸甲中，蕴含着关于未被征服的希姆林的记忆，那是一座被魔苟斯军团包围却依然屹立不倒的堡垒。
+
+item-demo-kusanagi-no-tsurugi-name = 『草薙剑』打刀
+item-demo-kusanagi-no-tsurugi-description = 原版固定神器。
+
+item-demo-incanus-name = 因卡努斯的长袍
+item-demo-incanus-description = 伟大巫师甘道夫的长袍，他在南方也被称为因卡努斯。它是抵御元素的证明，因为无论是南方的酷热、北方的严寒，还是多尔哥多（Dol Guldur）的酸液坑，都无法阻挡这位无畏的迈雅去追求他的使命。
+
+item-demo-hurin-name = 胡林的鸟喙斧
+item-demo-hurin-description = “胡林[...]双手挥舞着斧头，据说那把斧头在勾斯魔格巨魔卫队的黑色鲜血中冒着烟，直到它枯萎，每次杀戮时，胡林都会高喊‘Aure entuluva！新的白昼必将来临！’。他喊了七十次，但在魔苟斯的命令下，他们最终还是活捉了他……”
+
+item-demo-yasaka-no-magatama-name = 『八尺琼勾玉』护身符
+item-demo-yasaka-no-magatama-description = 原版固定神器。
+
+item-demo-taikobo-name = 太公望的钓鱼竿
+item-demo-taikobo-description = 原版固定神器。
+
+item-demo-matoi-name = 『缠』短杖
+item-demo-matoi-description = 原版固定神器。
+
+item-demo-aranruth-name = 『雅兰露斯』阔剑
+item-demo-aranruth-description = 辛葛的美丽佩剑，正如其名“国王之怒”。它闪烁的光芒冰冷得足以冻结恶魔的心脏。当你紧握它那镶嵌着金银的剑柄时，你会感到身体柔软且步履轻盈。
+
+item-demo-bolshoi-name = 莫斯科大剧院的鞭子
+item-demo-bolshoi-description = 原版固定神器。
+
+item-demo-ama-no-numahoko-name = 『天沼矛』破甲锥
+item-demo-ama-no-numahoko-description = 原版固定神器。
+
+item-demo-mook-name = 慕克的毛皮披风
+item-demo-mook-description = 原版固定神器。
+
+item-demo-dragonic-sword-name = 『龙之剑』双手剑
+item-demo-dragonic-sword-description = 原版固定神器。
+
+item-demo-hermits-purple-name = 『隐者之紫』鞭子
+item-demo-hermits-purple-description = 原版固定神器。
+
+item-demo-nain-name = 内恩的鹤嘴锄
+item-demo-nain-description = 在阿扎努比扎（Azanulbizar）战役中，铁丘陵的内恩曾挥舞过这把巨大的鹤嘴锄，为矮人战胜阿索格的半兽人带来了胜利——尽管内恩自己最后倒下了，即使胜利已成定局。
+
+item-demo-fundin-bluecloak-name = 蓝袍富丁的流星锤
+item-demo-fundin-bluecloak-description = 伟大的矮人牧师之一的武器，拥有保护肉体和灵魂的力量，并且是那些在死后寻求生命者的克星。
+
+item-demo-harness-of-the-hell-name = 地狱挽具
+item-demo-harness-of-the-hell-description = 原版固定神器。
+
+item-demo-asclepius-name = 阿斯克勒庇俄斯的武术棍
+item-demo-asclepius-description = 这是希腊医神阿斯克勒庇俄斯的法杖。
+
+item-demo-defender-of-the-crown-name = 皇冠守卫者的流星锤
+item-demo-defender-of-the-crown-description = 一个相当笨拙但体积巨大的铁制流星锤。当你用它击打敌人时，它会发出一种奇怪的、沉闷的铃铛般的声音。
+
+item-demo-stomper-name = 『重踏者』秘银铁头靴
+item-demo-stomper-description = 原版固定神器。
+
+item-demo-sword-of-tengri-name = 腾格里之剑
+item-demo-sword-of-tengri-description = 这把剑是上天赐予一位注定要征服世界的战士的礼物。
+
+item-demo-bubo-name = 布博的硬皮靴
+item-demo-bubo-description = 一双旧皮靴，舒适却坚固耐穿，这是布博在前往北方冰冻之地的旅途中所穿戴的。
+
+item-demo-barnaby-name = 巴纳比的绒球帽
+item-demo-barnaby-description = 一顶用羊毛编织的迷彩绒球帽，曾被伟大的冒险家巴纳比戴过。
+
+item-demo-efki-name = 吊坠『埃夫基』
+item-demo-efki-description = 这件保护性的护身符上刻有强大的速度符文。当你脖子上挂着它令人安心的重量时，你会感到平静，不再畏惧危险，因为你知道几乎没有哪个敌人能跑得过你。
+
+item-demo-surveillance-name = 监视之护身符
+item-demo-surveillance-description = 这个护身符能揭示世界上所有的秘密。你很高兴它没有落入不太负责任的人手中……

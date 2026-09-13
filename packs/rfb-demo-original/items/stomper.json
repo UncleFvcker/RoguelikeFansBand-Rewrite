@@ -1,0 +1,93 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.stomper",
+  "nameKey": "item-demo-stomper-name",
+  "descriptionKey": "item-demo-stomper-description",
+  "glyph": "]",
+  "generationLevel": 30,
+  "weightTenthsPound": 80,
+  "baseValue": 85000,
+  "maxStack": 1,
+  "equipmentSlot": "boots",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 277,
+    "baseItemKindId": "demo.item.mithril-shod-boots",
+    "instant": false,
+    "rarityOneIn": 25
+  },
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "DEC_STEALTH",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_CONF",
+      "RES_NEXUS",
+      "RES_SHARDS",
+      "STR"
+    ],
+    "pval": 3,
+    "toArmor": 21
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 27,
+    "strength": 3,
+    "constitution": 3
+  },
+  "equipmentBonuses": {
+    "meleeDamage": 2,
+    "stealthSkill": -3
+  },
+  "resistances": {
+    "confusion": "resistant",
+    "nexus": "resistant",
+    "shards": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.stomper",
+        "nameKey": "device-activation-e5-earthquake-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 30,
+        "rfbValue": 1000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.poseidon"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 350
+    }
+  }
+}

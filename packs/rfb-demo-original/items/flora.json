@@ -1,0 +1,97 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.flora",
+  "nameKey": "item-demo-flora-name",
+  "descriptionKey": "item-demo-flora-description",
+  "glyph": "]",
+  "generationLevel": 40,
+  "weightTenthsPound": 20,
+  "baseValue": 70000,
+  "maxStack": 1,
+  "equipmentSlot": "boots",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 61,
+    "baseItemKindId": "demo.item.soft-leather-boots",
+    "instant": false,
+    "rarityOneIn": 25
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "DEX",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_CHAOS",
+      "RES_NETHER",
+      "SUST_CHR",
+      "SUST_CON"
+    ],
+    "pval": 5,
+    "toArmor": 15
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 17,
+    "dexterity": 5,
+    "charisma": 5
+  },
+  "passives": [
+    "sustain-charisma",
+    "sustain-constitution"
+  ],
+  "resistances": {
+    "nether": "resistant",
+    "chaos": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.flora",
+        "nameKey": "device-activation-e5-cure-fear-pois-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 10,
+        "rfbValue": 1250,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.flora-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 50
+    }
+  }
+}

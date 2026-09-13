@@ -1171,14 +1171,17 @@ fn equipment_and_ego_identities_match_source() {
             actual,
             [
                 "demo.item.aeglos",
+                "demo.item.anduril",
                 "demo.item.athena",
                 "demo.item.atlas",
                 "demo.item.ball-and-chain",
+                "demo.item.bolshoi",
                 "demo.item.broad-spear",
                 "demo.item.broad-sword",
                 "demo.item.careth-asdriag",
                 "demo.item.death-scythe",
                 "demo.item.deathwreaker",
+                "demo.item.destiny",
                 "demo.item.diamond-edge",
                 "demo.item.dragonlance",
                 "demo.item.eorlingas",
@@ -1206,6 +1209,7 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.pain",
                 "demo.item.poseidon",
                 "demo.item.quickthorn",
+                "demo.item.ringil",
                 "demo.item.runespear",
                 "demo.item.sabre",
                 "demo.item.scythe-of-slicing",
@@ -1219,6 +1223,7 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.trifurcate-spear-of-wrath",
                 "demo.item.tulwar",
                 "demo.item.tweutox",
+                "demo.item.ulmo",
                 "demo.item.war-hammer",
             ]
             .into_iter()

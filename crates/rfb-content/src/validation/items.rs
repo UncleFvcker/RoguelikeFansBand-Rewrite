@@ -1384,16 +1384,13 @@ pub(super) fn validate_items(
                             activation.effect,
                             ItemUseEffectDefinition::IncreaseSpellLearningCapacity
                                 | ItemUseEffectDefinition::ApplySlowness { .. }
-                                | ItemUseEffectDefinition::ApplySpeed { .. }
                                 | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
-                                | ItemUseEffectDefinition::ApplyStoneSkin { .. }
                                 | ItemUseEffectDefinition::RestoreAllAttributes
                                 | ItemUseEffectDefinition::ApplyRestorativeFeast { .. }
                                 | ItemUseEffectDefinition::ApplyLifeRestoration { .. }
                                 | ItemUseEffectDefinition::IncreaseAttribute { .. }
                                 | ItemUseEffectDefinition::AugmentAttributes
                                 | ItemUseEffectDefinition::ApplyThermalResistance { .. }
-                                | ItemUseEffectDefinition::ApplyBasicResistance { .. }
                                 | ItemUseEffectDefinition::ApplyPoison { .. }
                                 | ItemUseEffectDefinition::ApplyBlindness { .. }
                                 | ItemUseEffectDefinition::ApplyDetonation { .. }

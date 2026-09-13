@@ -1,0 +1,134 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.ringil",
+  "nameKey": "item-demo-ringil-name",
+  "descriptionKey": "item-demo-ringil-description",
+  "glyph": "|",
+  "generationLevel": 70,
+  "weightTenthsPound": 130,
+  "baseValue": 300000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 82,
+    "baseItemKindId": "demo.item.long-sword",
+    "instant": false,
+    "rarityOneIn": 100
+  },
+  "weaponProficiencyBaseItemId": "demo.item.long-sword",
+  "rfbValue": {
+    "flags": [
+      "BRAND_COLD",
+      "CHR",
+      "ESP_GIANT",
+      "ESP_ORC",
+      "ESP_TROLL",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "REGEN",
+      "RES_COLD",
+      "RES_LITE",
+      "RIDING",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_DEMON",
+      "SLAY_EVIL",
+      "SLAY_TROLL",
+      "SLAY_UNDEAD",
+      "SLOW_DIGEST",
+      "SPEED"
+    ],
+    "pval": 5,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 5,
+    "damageSides": 6,
+    "toHit": 22,
+    "toDamage": 25
+  },
+  "modifiers": {
+    "charisma": 5,
+    "speed": 5
+  },
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "passives": [
+    "esp-giant",
+    "esp-orc",
+    "esp-troll",
+    "regeneration",
+    "see-invisible",
+    "slow-digestion"
+  ],
+  "resistances": {
+    "cold": "resistant",
+    "light": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "evil": "slay",
+    "undead": "slay",
+    "demon": "slay",
+    "troll": "slay"
+  },
+  "brands": [
+    "cold"
+  ],
+  "ridingWeaponKind": "compatible",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.ringil",
+        "nameKey": "device-activation-e5-ball-cold-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 20,
+        "rfbValue": 3000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.aeglos"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 2000
+    }
+  }
+}

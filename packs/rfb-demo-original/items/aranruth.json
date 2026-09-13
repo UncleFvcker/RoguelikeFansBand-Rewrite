@@ -1,0 +1,117 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.aranruth",
+  "nameKey": "item-demo-aranruth-name",
+  "descriptionKey": "item-demo-aranruth-description",
+  "glyph": "|",
+  "generationLevel": 30,
+  "weightTenthsPound": 150,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 184,
+    "baseItemKindId": "demo.item.broad-sword",
+    "instant": false,
+    "rarityOneIn": 45
+  },
+  "weaponProficiencyBaseItemId": "demo.item.broad-sword",
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "ESP_DEMON",
+      "ESP_GIANT",
+      "ESP_ORC",
+      "ESP_TROLL",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION",
+      "RES_COLD",
+      "SHOW_MODS",
+      "SLAY_DEMON",
+      "SLAY_ORC",
+      "SLOW_DIGEST"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 6,
+    "toHit": 20,
+    "toDamage": 12
+  },
+  "modifiers": {
+    "dexterity": 4
+  },
+  "passives": [
+    "esp-demon",
+    "esp-giant",
+    "esp-orc",
+    "esp-troll",
+    "levitation",
+    "slow-digestion"
+  ],
+  "resistances": {
+    "cold": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "demon": "slay",
+    "orc": "slay"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.aranruth",
+        "nameKey": "device-activation-e5-bolt-cold-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 10,
+        "rfbValue": 1350,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.aranruth-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 500
+    }
+  }
+}

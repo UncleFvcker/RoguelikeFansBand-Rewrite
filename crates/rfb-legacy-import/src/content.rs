@@ -4420,7 +4420,7 @@ pub fn parse_a_info(text: &str) -> Result<Vec<LegacyArtifactEntry>, LegacyImport
                 .is_some_and(|token| token.bytes().all(|b| b.is_ascii()) && !token.is_empty())
             {
                 entry.has_activation = true;
-                if matches!(parts.len(), 3 | 4) {
+                if matches!(parts.len(), 2..=4) {
                     entry.activation = Some(LegacyArtifactActivation {
                         token: parts[0].to_owned(),
                         power: parse_number(
@@ -4433,7 +4433,7 @@ pub fn parse_a_info(text: &str) -> Result<Vec<LegacyArtifactEntry>, LegacyImport
                             A_INFO_SOURCE,
                             line_number,
                             "E.recoveryTurns",
-                            parts.get(2).copied(),
+                            parts.get(2).copied().or(Some("0")),
                         )?,
                         extra: parse_number(
                             A_INFO_SOURCE,
@@ -30013,6 +30013,186 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
         );
     }
 
+    #[test]
+    fn n2_artifacts_match_source_parameters_and_activations() {
+        let identities = &[
+            (4, "carlammas", "amulet"),
+            (8, "frakir", "ring"),
+            (9, "tulkas", "ring"),
+            (10, "narya", "ring"),
+            (11, "nenya", "ring"),
+            (12, "vilya", "ring"),
+            (18, "faramir", "amulet"),
+            (23, "julian", "metal-scale-mail"),
+            (25, "caspanion", "augmented-chain-mail"),
+            (40, "holhenneth", "iron-helm"),
+            (44, "colluin", "cloak"),
+            (48, "colannon", "cloak"),
+            (61, "flora", "soft-leather-boots"),
+            (82, "ringil", "long-sword"),
+            (83, "anduril", "long-sword"),
+            (84, "werewindle", "long-sword"),
+            (93, "theoden", "beaked-axe"),
+            (98, "destiny", "broad-spear"),
+            (108, "ulmo", "trident"),
+            (115, "firestar", "morning-star"),
+            (116, "taratol", "mace"),
+            (119, "eriril", "quarterstaff"),
+            (122, "turmil", "lucerne-hammer"),
+            (127, "himring", "hard-leather-armour"),
+            (128, "kusanagi-no-tsurugi", "katana"),
+            (131, "incanus", "robe"),
+            (133, "hurin", "beaked-axe"),
+            (149, "yasaka-no-magatama", "amulet"),
+            (159, "taikobo", "fishingpole"),
+            (170, "matoi", "jo-staff"),
+            (184, "aranruth", "broad-sword"),
+            (188, "bolshoi", "whip"),
+            (202, "ama-no-numahoko", "awl-pike"),
+            (205, "mook", "fur-cloak"),
+            (207, "dragonic-sword", "two-handed-sword"),
+            (209, "hermits-purple", "whip"),
+            (211, "nain", "mattock"),
+            (214, "fundin-bluecloak", "ball-and-chain"),
+            (218, "harness-of-the-hell", "amulet"),
+            (225, "asclepius", "bo-staff"),
+            (252, "defender-of-the-crown", "ball-and-chain"),
+            (277, "stomper", "mithril-shod-boots"),
+            (333, "sword-of-tengri", "tulwar"),
+            (336, "bubo", "pair-of-hard-leather-boots"),
+            (361, "barnaby", "knit-cap"),
+            (363, "efki", "amulet"),
+            (367, "surveillance", "amulet"),
+        ];
+        let source = include_str!("testdata/n2-artifacts.txt");
+        check_n1_passive_artifact_source_parameters(source, identities);
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+        let programs: Vec<serde_json::Value> = fs::read_dir(root.join("effectPrograms"))
+            .unwrap()
+            .map(|f| serde_json::from_slice(&fs::read(f.unwrap().path()).unwrap()).unwrap())
+            .collect();
+        for (entry, &(_, slug, _)) in parse_a_info(source).unwrap().iter().zip(identities) {
+            let formal: serde_json::Value =
+                serde_json::from_slice(&fs::read(root.join(format!("items/{slug}.json"))).unwrap())
+                    .unwrap();
+            let source = entry.activation.as_ref().unwrap();
+            let device = &formal["deviceGeneration"];
+            let profile = &device["activations"][0];
+            assert_eq!(profile["deviceCheckDifficulty"], source.power, "{slug}");
+            if source.recovery_turns > 0 {
+                assert_eq!(
+                    device["recovery"]["intervalTicks"],
+                    u32::from(source.recovery_turns) * 10,
+                    "{slug}"
+                );
+            } else {
+                assert!(device["recovery"].is_null());
+            }
+            assert_eq!(
+                profile["charges"]["cost"],
+                u8::from(source.recovery_turns > 0)
+            );
+            let program = programs
+                .iter()
+                .find(|p| p["id"] == profile["effectProgramId"])
+                .unwrap();
+            let step = &program["steps"][0];
+            match source.token.as_str() {
+                "BALL_FIRE" | "BALL_COLD" | "BALL_ELEC" | "BALL_WATER" | "BALL_DARK" => {
+                    assert_eq!(step["damageBonus"], source.extra, "{slug}");
+                    assert_eq!(
+                        step["radius"],
+                        if matches!(source.token.as_str(), "BALL_DARK" | "BALL_WATER") {
+                            4
+                        } else {
+                            2
+                        }
+                    );
+                    assert_eq!(
+                        profile["target"],
+                        serde_json::json!({"modes":["direction","position","entity"],"range":18,"requiresLineOfEffect":true})
+                    );
+                }
+                "BOLT_COLD" => {
+                    assert_eq!(step["damageDice"], source.extra);
+                    assert_eq!(step["damageSides"], 8);
+                }
+                "BOLT_MANA" => {
+                    assert_eq!(step["damageDice"], 1);
+                    assert_eq!(step["damageSides"], source.extra);
+                    assert_eq!(step["damageBonus"], 50);
+                }
+                "DRAIN_LIFE" => {
+                    assert_eq!(step["effect"]["damageBonus"], source.extra);
+                    assert_eq!(step["effect"]["targetCategory"], "living");
+                }
+                "PROT_EVIL" => {
+                    assert_eq!(step["statusKindId"], "rfb.status.protection-from-evil");
+                    assert_eq!(step["durationBonus"], 100);
+                    assert_eq!(step["durationSides"], 25);
+                }
+                "SPEED" | "SPEED_HERO" | "HEROISM" | "STONE_SKIN" | "RESISTANCE"
+                | "RESIST_COLD" => {
+                    let power = if source.extra > 0 {
+                        source.extra
+                    } else {
+                        match source.token.as_str() {
+                            "HEROISM" => 25,
+                            "SPEED_HERO" => u32::from(source.power / 2),
+                            _ => 20,
+                        }
+                    };
+                    assert_eq!(step["durationBonus"], power, "{slug}");
+                    assert_eq!(step["durationSides"], power, "{slug}");
+                    assert_eq!(step["durationDice"], 1);
+                }
+                "GENOCIDE" => {
+                    assert_eq!(program["input"], "glyph");
+                    assert_eq!(step["power"], source.extra);
+                }
+                "CHARM_ANIMAL" => {
+                    assert_eq!(step["effect"]["category"], "animal");
+                    assert_eq!(step["effect"]["power"], source.power);
+                }
+                "TELEPORT_AWAY" => {
+                    assert_eq!(step["effect"]["power"], 100);
+                    assert!(step["effect"]["stopAtActor"].is_null());
+                }
+                "DISPEL_EVIL" => {
+                    assert_eq!(step["effect"]["damageBonus"], source.extra);
+                    assert_eq!(step["effect"]["targetCategory"], "evil");
+                }
+                "FISHING" => {
+                    assert_eq!(step["type"], "fishing");
+                    assert_eq!(formal["artifactGeneration"]["instant"], true);
+                }
+                "CURE_FEAR_POIS" => {
+                    assert_eq!(step["minimumReduction"], 1000);
+                    assert_eq!(step["reductionDivisor"], 5);
+                }
+                "ESCAPE" => assert_eq!(step["type"], "escape"),
+                "RESTORING" => assert_eq!(
+                    step,
+                    &serde_json::json!({"type":"restore-all-vitality","lifeForceAmount":1000})
+                ),
+                "EARTHQUAKE" => assert_eq!(step["effect"]["radius"], 10),
+                "PESTICIDE" => assert_eq!(step["effect"]["damageBonus"], 4),
+                "DESTROY_TRAP" => assert_eq!(step["type"], "destroy-adjacent-traps-and-doors"),
+                "DETECT_ALL" => assert_eq!(step["radius"], 30),
+                "IDENTIFY" => assert_eq!(
+                    step,
+                    &serde_json::json!({"type":"identify-item","full":false})
+                ),
+                "PROBING" => assert_eq!(step["effect"]["type"], "probe-monsters"),
+                "STONE_TO_MUD" => assert_eq!(step["operation"], "stone-to-mud"),
+                "RECALL" => assert_eq!(step["type"], "recall"),
+                "TELEPORT" => assert_eq!(step["maximumDistance"], 100),
+                "PHASE_DOOR" => assert_eq!(step["maximumDistance"], 10),
+                other => panic!("unreviewed activation {other}"),
+            }
+        }
+    }
+
     fn check_n1_passive_artifact_source_parameters(source: &str, identities: &[(u32, &str, &str)]) {
         let entries = parse_a_info(source).unwrap();
         assert_eq!(entries.len(), identities.len());
@@ -30107,6 +30287,15 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                 if has("SEARCH") {
                     bonuses.insert("searchSkill".into(), serde_json::json!(5 * entry.pval));
                 }
+                for (flag, field, factor) in [
+                    ("MAGIC_MASTERY", "deviceSkill", 8),
+                    ("WEAPONMASTERY", "weaponDiceBonus", 1),
+                    ("XTRA_SHOTS", "baseShotDeltaPercent", 15),
+                ] {
+                    if has(flag) {
+                        bonuses.insert(field.into(), serde_json::json!(factor * entry.pval));
+                    }
+                }
                 if has("TUNNEL") {
                     bonuses.remove("diggingSkill");
                     imported["tunnelingPval"] = serde_json::json!(entry.pval);
@@ -30126,6 +30315,12 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                     ("NO_TELE", "anti-teleport"),
                     ("ESP_DEMON", "esp-demon"),
                     ("ESP_DRAGON", "esp-dragon"),
+                    ("ESP_ANIMAL", "esp-animal"),
+                    ("ESP_UNDEAD", "esp-undead"),
+                    ("ESP_ORC", "esp-orc"),
+                    ("ESP_TROLL", "esp-troll"),
+                    ("ESP_GIANT", "esp-giant"),
+                    ("ESP_NONLIVING", "esp-nonliving"),
                 ] {
                     if has(flag) {
                         passives.push(serde_json::json!(passive));
@@ -31257,7 +31452,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 11);
+        assert_eq!(selection.schema_version, 12);
         let anambar = selection
             .town_plans
             .iter()
@@ -31308,7 +31503,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 11);
+        assert_eq!(selection.schema_version, 12);
         let anambar = selection
             .town_plans
             .iter()
@@ -31405,7 +31600,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 11);
+        assert_eq!(selection.schema_version, 12);
         assert_eq!(selection.bounty_offices.len(), 3);
         let office = |town_id: &str| {
             selection
@@ -31456,7 +31651,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 11);
+        assert_eq!(selection.schema_version, 12);
         let plan = &selection.anambar_task_plan;
         assert_eq!(plan.town_id, "demo.town.anambar");
         assert_eq!(plan.town_source_file, "lib/edit/t_ana.txt");
@@ -31543,7 +31738,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 11);
+        assert_eq!(selection.schema_version, 12);
         assert!(selection.towns.iter().any(|town| {
             town.source_index == 6 && town.source_name == "萨洛斯" && town.id == "demo.town.thalos"
         }));
@@ -31612,7 +31807,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 11);
+        assert_eq!(selection.schema_version, 12);
         let thalos = selection
             .town_plans
             .iter()
@@ -31646,7 +31841,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 11);
+        assert_eq!(selection.schema_version, 12);
         let plan = &selection.thalos_task_plan;
         assert_eq!(plan.town_id, "demo.town.thalos");
         assert_eq!(plan.facilities.len(), 2);

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.faramir",
+  "nameKey": "item-demo-faramir-name",
+  "descriptionKey": "item-demo-faramir-description",
+  "glyph": "\"",
+  "generationLevel": 30,
+  "weightTenthsPound": 2,
+  "baseValue": 20000,
+  "maxStack": 1,
+  "equipmentSlot": "amulet",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 18,
+    "baseItemKindId": "demo.item.amulet",
+    "instant": false,
+    "rarityOneIn": 30
+  },
+  "rfbValue": {
+    "flags": [
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_CONF",
+      "SHOW_MODS",
+      "STEALTH",
+      "SUST_DEX"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": 12,
+    "stealthSkill": 3
+  },
+  "passives": [
+    "sustain-dexterity"
+  ],
+  "resistances": {
+    "confusion": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.faramir",
+        "nameKey": "device-activation-e5-pesticide-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 10,
+        "rfbValue": 250,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.faramir-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 50
+    }
+  }
+}

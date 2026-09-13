@@ -1,0 +1,106 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.julian",
+  "nameKey": "item-demo-julian-name",
+  "descriptionKey": "item-demo-julian-description",
+  "glyph": "[",
+  "generationLevel": 75,
+  "weightTenthsPound": 250,
+  "baseValue": 120000,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 23,
+    "baseItemKindId": "demo.item.metal-scale-mail",
+    "instant": false,
+    "rarityOneIn": 15,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "ESP_ANIMAL",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_DARK",
+      "RES_DISEN",
+      "RES_ELEC",
+      "RES_FIRE",
+      "STR",
+      "XTRA_H_RES"
+    ],
+    "pval": 4,
+    "toArmor": 40
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 55,
+    "strength": 4,
+    "charisma": 4
+  },
+  "equipmentBonuses": {
+    "meleeSkill": -2
+  },
+  "passives": [
+    "esp-animal"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.julian",
+        "nameKey": "device-activation-e5-genocide-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 40,
+        "rfbValue": 10000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.julian-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 5000
+    }
+  }
+}

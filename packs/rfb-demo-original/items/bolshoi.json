@@ -1,0 +1,104 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.bolshoi",
+  "nameKey": "item-demo-bolshoi-name",
+  "descriptionKey": "item-demo-bolshoi-description",
+  "glyph": "\\",
+  "generationLevel": 15,
+  "weightTenthsPound": 30,
+  "baseValue": 22500,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 188,
+    "baseItemKindId": "demo.item.whip",
+    "instant": false,
+    "rarityOneIn": 8
+  },
+  "weaponProficiencyBaseItemId": "demo.item.whip",
+  "rfbValue": {
+    "flags": [
+      "BRAND_FIRE",
+      "CHR",
+      "DEX",
+      "ESP_ANIMAL",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "KILL_ANIMAL",
+      "RIDING"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 8,
+    "toHit": 6,
+    "toDamage": 9
+  },
+  "modifiers": {
+    "dexterity": 4,
+    "charisma": 4
+  },
+  "passives": [
+    "esp-animal"
+  ],
+  "slays": {
+    "animal": "kill"
+  },
+  "brands": [
+    "fire"
+  ],
+  "ridingWeaponKind": "compatible",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.bolshoi",
+        "nameKey": "device-activation-e5-charm-animal-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 25,
+        "rfbValue": 500,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.bolshoi-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 2000
+    }
+  }
+}

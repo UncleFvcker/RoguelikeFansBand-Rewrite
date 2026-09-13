@@ -24,6 +24,25 @@ const helpers = {
 };
 const formatter = createPresentationFormatter(localization, () => state, helpers);
 
+test("equipment activation logs resolve the projected item without exposing unknown identity", () => {
+  const item = { id: "generated.item.208", kindId: "demo.item.narya", displayNameKey: "item-demo-narya-name", activation: { profileId: "demo.item-activation.narya" } };
+  const projected = createPresentationFormatter(localization, () => ({ ...state, currentEquipment: [item] }), helpers);
+  for (const locale of ["en-US", "zh-CN"]) {
+    localization.setLocale(locale);
+    const name = localization.format(item.displayNameKey);
+    assert.equal(projected.contentName(`rfb.item-activation.${item.id}`), name);
+    assert.equal(projected.contentName(item.activation.profileId), name);
+    for (const result of ["success", "failure"]) {
+      assert.equal(projected.formatEvent({ messageKey: `skill-check-device-${result}`, args: { target: item.kindId } }),
+        localization.format(`message-skill-check-device-${result}`, { target: name }));
+    }
+    item.displayNameKey = "item-unknown-name";
+    assert.equal(projected.contentName(`rfb.item-activation.${item.id}`), localization.format("item-unknown-name"));
+    assert.equal(projected.contentName(item.activation.profileId), localization.format("item-unknown-name"));
+    item.displayNameKey = "item-demo-narya-name";
+  }
+});
+
 test("resource conversion messages show actual life and mana changes in both languages", () => {
   for (const [locale, failed] of [["en-US", "conversion failed"], ["zh-CN", "你转换失败了"]]) {
     localization.setLocale(locale);
