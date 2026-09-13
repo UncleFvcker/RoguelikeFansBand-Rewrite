@@ -1,0 +1,70 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.elmi",
+  "nameKey": "item-demo-elmi-name",
+  "descriptionKey": "item-demo-elmi-description",
+  "glyph": "/",
+  "generationLevel": 15,
+  "weightTenthsPound": 60,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 228,
+    "baseItemKindId": "demo.item.hatchet",
+    "instant": false,
+    "rarityOneIn": 10
+  },
+  "weaponProficiencyBaseItemId": "demo.item.hatchet",
+  "rfbValue": {
+    "flags": [
+      "BRAND_MANA",
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "KILL_HUMAN",
+      "SEE_INVIS",
+      "STEALTH",
+      "VORPAL"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 6,
+    "toHit": 5,
+    "toDamage": 19
+  },
+  "modifiers": {
+    "dexterity": 2
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 2
+  },
+  "passives": [
+    "see-invisible"
+  ],
+  "slays": {
+    "human": "kill"
+  },
+  "vorpal": true
+}

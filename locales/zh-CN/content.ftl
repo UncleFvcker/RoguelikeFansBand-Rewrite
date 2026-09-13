@@ -10336,3 +10336,162 @@ device-activation-e5-rama-arrow-name = 强力之箭
 floor-demo-mount-meru-depth-name = 须弥山
 terrain-demo-mount-meru-entrance-name = 须弥山
 terrain-demo-mount-meru-entrance-description = 通向须弥山的小径
+
+item-demo-beruthiel-name = 贝露西尔的铁王冠
+item-demo-beruthiel-description = 巫师女王贝露西尔的午夜色钢铁头冠，它以可怕的肉体代价赋予了极其非凡的视觉和感知能力。
+
+item-demo-thanos-name = 灭霸的铁护手
+item-demo-thanos-description = 原版固定神器。
+
+item-demo-calris-name = 『卡尔利斯』一手半剑
+item-demo-calris-description = 这把剑的华丽剑柄上刻有力量符文，当你握住这把充满危险的强大武器时，它那唯一的一条血槽会闪烁着冰冷的蓝光。
+
+item-demo-grayswandir-name = 『灰杖』军刀
+item-demo-grayswandir-description = 科温的强大剑刃，装饰有部分“图案（Pattern）”，对混沌生物极其致命；它是布兰德的剑“维尔温德尔（Werewindle）”的双生剑。
+
+item-demo-zarcuthra-name = 『扎尔库斯拉』双手剑
+item-demo-zarcuthra-description = 黑暗而致命的符文在这把可怕武器裸露的钢铁上显得格外显眼，当你缓慢靠近时，你能感受到一股令人震惊的杀戮与撕裂的力量。
+
+item-demo-aglarang-name = 『阿格拉兰』打刀
+item-demo-aglarang-description = 一把极其完美、轮廓分明的剑，其锋利的边缘能毫不费力地切开岩石与骨头，还带有能让佩戴者变得轻盈敏捷的法术。它就是战斗的化身。
+
+item-demo-careth-asdriag-name = 『卡瑞斯·阿斯德里亚格』军刀
+item-demo-careth-asdriag-description = 远东鲁恩（Rhun）领主的传家宝，这个名字令所有自然与非自然的生物都感到恐慌。
+
+item-demo-merlin-name = 梅林的短剑
+item-demo-merlin-description = 原版固定神器。
+
+item-demo-doomcaller-name = 『末日召唤者』混沌之刃
+item-demo-doomcaller-description = 这把愤怒的武器，被狂暴的愤怒所诅咒，如饥似渴地刺入敌人的血肉之中。当它造成永远无法愈合的伤口时，它会将死亡的阴影汇聚到其主人身上。
+
+item-demo-buckland-name = 雄鹿地的投石索
+item-demo-buckland-description = 一把在黑暗和混乱中赋予非凡的头脑清晰度的投石索，它能以致命的速度投掷弹丸。
+
+item-demo-goln-nova-name = 『戈恩·诺瓦』阔剑
+item-demo-goln-nova-description = 原版固定神器。
+
+item-demo-silver-chariot-name = 『银色战车』细剑
+item-demo-silver-chariot-description = 原版固定神器。
+
+item-demo-worpal-blade-name = 『崭首剑』长剑
+item-demo-worpal-blade-description = 这把剑看起来很像那把最强的剑！
+
+item-demo-soulcrusher-name = 『灵魂粉碎者』混沌之刃
+item-demo-soulcrusher-description = 原版固定神器。
+
+item-demo-falis-name = 法利斯的长剑
+item-demo-falis-description = 原版固定神器。
+
+item-demo-hrunting-name = 『赫伦汀』双手剑
+item-demo-hrunting-description = 原版固定神器。
+
+item-demo-anubis-name = 阿努比斯的打刀
+item-demo-anubis-description = 原版固定神器。
+
+item-demo-gurenki-name = 『红莲骑』长剑
+item-demo-gurenki-description = 原版固定神器。
+
+item-demo-tonbo-giri-name = 『蜻蛉切』阔刃长矛
+item-demo-tonbo-giri-description = 原版固定神器。
+
+item-demo-glass-slippers-name = 水晶鞋
+item-demo-glass-slippers-description = 原版固定神器。
+
+item-demo-tailbiter-name = 『咬尾者』阔剑
+item-demo-tailbiter-description = 屠龙者贝洛马利乌斯（Bellomarius）的剑，后来属于吉尔斯。在它不起眼的剑刃中隐藏着探测和屠杀巨龙的强大魔法。
+
+item-demo-excalibur-name = 『王者之剑』长剑
+item-demo-excalibur-description = 原版固定神器。
+
+item-demo-destruction-name = 毁灭之猎鹰之剑
+item-demo-destruction-description = 原版固定神器。
+
+item-demo-narsil-name = 『纳西尔』断折的剑
+item-demo-narsil-description = 这是埃兰迪尔的剑，当他在巴拉督尔的台阶上与索伦战斗而倒下时，它被折断了。
+
+item-demo-guan-yu-name = 关羽的短弯刀
+item-demo-guan-yu-description = 原版固定神器。
+
+item-demo-dasai-name = 『打碎』犀牛皮甲
+item-demo-dasai-description = 原版固定神器。
+
+item-demo-tetsu-geta-of-flame-name = 『火焰铁下驮』秘银铁头靴
+item-demo-tetsu-geta-of-flame-description = 原版固定神器。
+
+item-demo-eowyn-name = 伊欧温的一手半剑
+item-demo-eowyn-description = 原版固定神器。
+
+item-demo-robin-hood-name = 罗宾汉的短弓
+item-demo-robin-hood-description = 这属于生活在密林深处的罗宾汉。
+
+item-demo-hellfire-name = 地狱火的轻弩
+item-demo-hellfire-description = 这把弩能赋予它发射的弩箭火焰能量。
+
+item-demo-wilhelm-tell-crossbow-name = 威廉·泰尔的轻弩
+item-demo-wilhelm-tell-crossbow-description = 瑞士英雄泰尔用这把弩精准地射中了一颗苹果，尽管那颗苹果放在他儿子的头上，之后他还击败了邪恶的行政官盖斯勒（Gessler）。
+
+item-demo-wilhelm-tell-bolt-name = 威廉·泰尔的弩箭
+item-demo-wilhelm-tell-bolt-description = 据说威廉·泰尔射出这支弩箭时，它刺穿了盖斯勒的心脏。
+
+item-demo-elmi-name = 杀人犯埃尔米的短斧
+item-demo-elmi-description = 这是拉夫诺（Raffnor）可怕的杀人犯，埃尔米（Elmi）的短斧。
+
+item-demo-taro-dachi-name = 『太郎太刀』野太刀
+item-demo-taro-dachi-description = 朝仓家的将领真柄直隆（Naotaka Magara）用这把大太刀击败了无数的士兵。
+
+item-demo-maggot-name = 马各特的镰刀
+item-demo-maggot-description = 这是农夫马各特的镰刀。他把它落在自己的农场里了。
+
+item-demo-kaschei-name = 科谢伊的巫师法杖
+item-demo-kaschei-description = 原版固定神器。
+
+item-demo-rygar-name = 阿尔戈斯战士的晨星锤
+item-demo-rygar-description = 这件有着超大头部的奇特武器似乎能极其轻松地向外猛击。事实上，不用你费力，它似乎就能自己跳出去攻击好几次。
+
+item-demo-big-punch-name = 『大锤』灌铅权杖
+item-demo-big-punch-description = 据说这把巨大、暗灰色的权杖是一位古代矮人国王赠送给一名冒险者的礼物，以感谢他从一个可怕的恶魔手中拯救了他的人民。
+
+item-demo-ages-name = 永恒岁月的戒指
+item-demo-ages-description = 你不知道它是什么时候锻造的，但这枚戒指似乎经受住了时间的考验。
+
+item-demo-ancalagon-name = 安卡拉刚的龙牙
+item-demo-ancalagon-description = 原版固定神器。
+
+item-demo-david-name = 大卫的铁弹丸
+item-demo-david-description = 原版固定神器。
+
+item-demo-khazad-dum-name = 卡扎督姆的鹤嘴锄
+item-demo-khazad-dum-description = “矮人们挖得太贪婪，也太深了。你知道他们在卡扎督姆的黑暗中唤醒了什么：暗影与火焰！”
+
+item-demo-undertaker-name = 送葬者的铁锹
+item-demo-undertaker-description = 原版固定神器。
+
+item-demo-kaladanda-name = 『卡拉丹达』巨锤
+item-demo-kaladanda-description = 死亡之杖，这把强大、致命的锤子曾被神明阎摩（Yama）使用，它是终极的武器。无人能抵挡它的愤怒！
+
+item-demo-heracles-name = 赫拉克勒斯的长弓
+item-demo-heracles-description = 这把弓曾属于最伟大的希腊英雄。它的箭矢上涂有勒拿九头蛇的毒液。
+
+item-demo-sword-of-the-winds-name = 风之剑
+item-demo-sword-of-the-winds-description = 这把剑轻如鸿毛。当你挥舞它时，空气都在呼啸。
+
+item-demo-vainglory-name = 『虚荣』晨星锤
+item-demo-vainglory-description = 当你挥舞这把带刺的钉头锤时，你充满了骄傲。
+
+item-demo-mr-shine-name = 闪耀先生的镜之盾
+item-demo-mr-shine-description = 你几乎能相信它是用钻石做的。
+
+item-demo-nogudil-name = 『诺古迪尔』卢塞恩长戟
+item-demo-nogudil-description = 当你举起这把巨锤时，你所有的疑虑都烟消云散了：是时候出发把你的敌人砸成肉酱了。
+
+item-demo-curiosity-name = 『好奇心』短剑
+item-demo-curiosity-description = 非常锋利，很适合把流浪猫切开来检查。
+
+item-demo-tweutox-name = 吐托克斯的长矛
+item-demo-tweutox-description = 提奥图洛，吐托克斯（Tweutox）的长矛，由斯普米斯树（Seepumis）的木头雕刻而成。当你握住它时，它似乎因为充满了能量而悸动。
+
+item-demo-angrist-name = 『安格瑞斯特』匕首
+item-demo-angrist-description = 由最伟大的矮人铁匠铁尔哈（Telchar）锻造，曾被贝伦用来从魔苟斯的王冠上剜出一颗精灵宝钻。这把适合劈砍的长匕首切开普通金属就像它的名字“斩铁剑”所暗示的那样容易。
+
+item-demo-liweris-name = 利维里斯的秘银长矛
+item-demo-liweris-description = 它是用偷来的秘银为邪恶的利维里斯国王锻造的，里面充满了黑暗力量，使其成为一切美好事物的死敌，并且对龙族来说是致命的。消息一传出，利维里斯城就立刻被巨龙夷为平地，国王也死于火海；但他的长矛却保存了下来。

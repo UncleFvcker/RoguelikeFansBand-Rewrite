@@ -1,0 +1,55 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.dasai",
+  "nameKey": "item-demo-dasai-name",
+  "descriptionKey": "item-demo-dasai-description",
+  "glyph": "(",
+  "generationLevel": 20,
+  "weightTenthsPound": 110,
+  "baseValue": 0,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 200,
+    "baseItemKindId": "demo.item.rhino-hide-armour",
+    "instant": false,
+    "rarityOneIn": 3
+  },
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "DEC_CHR",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SUST_CHR"
+    ],
+    "pval": 10,
+    "toArmor": 64
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 72,
+    "charisma": -10
+  },
+  "equipmentBonuses": {
+    "meleeSkill": -1
+  },
+  "passives": [
+    "sustain-charisma"
+  ]
+}

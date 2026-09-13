@@ -49,6 +49,7 @@ fn check_n1_passive_artifacts(identities: &[(&str, &str)]) {
         game.items.clear();
         // Controlled XP and loot depth, not a natural leveling scenario.
         game.apply_player_experience(game.experience_required_for_level(50), &mut Vec::new());
+        choose_human_talent_if_pending(&mut game);
         game.refresh_player_resource_maxima();
         let hp_before = game.effective_player_max_hp();
         let mana_before = game.resources["demo.resource.mana"].maximum;
@@ -377,7 +378,10 @@ fn check_n1_passive_artifacts(identities: &[(&str, &str)]) {
             assert!(ordinary.removed_item_ids.is_empty());
             assert_eq!(restored.items[0].curse, Some(ItemCurseSeverityDto::Heavy));
             let greater = restored.remove_equipped_curses(RemoveEquippedCursesRequest::new(true));
-            assert_eq!(greater.removed_item_ids, [id.clone()]);
+            assert_eq!(
+                greater.removed_item_ids.as_slice(),
+                std::slice::from_ref(&id)
+            );
             restored.refresh_player_resource_maxima();
             assert_eq!(restored.resources["demo.resource.mana"].maximum, mana);
             assert_eq!(restored.equipment_modifiers().intelligence, -3);
@@ -14365,7 +14369,11 @@ fn p107f_diamond_edge_vorpal_flag_multiplies_dice_before_flat_damage() {
         .expect("core crate should be inside the workspace")
         .join("packs/rfb-demo-original");
     let artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
-    for kind in ["demo.item.diamond-edge", "demo.item.jing-ke"] {
+    for kind in [
+        "demo.item.diamond-edge",
+        "demo.item.jing-ke",
+        "demo.item.aglarang",
+    ] {
         let mut plain_content = artifact.content.clone();
         plain_content
             .items
@@ -14373,6 +14381,16 @@ fn p107f_diamond_edge_vorpal_flag_multiplies_dice_before_flat_damage() {
             .find(|item| item.id == kind)
             .expect("Diamond Edge should exist")
             .vorpal = false;
+        plain_content
+            .items
+            .iter_mut()
+            .find(|item| item.id == kind)
+            .unwrap()
+            .rfb_value
+            .as_mut()
+            .unwrap()
+            .flags
+            .remove("VORPAL2");
         let catalog = |content| {
             std::sync::Arc::new(rfb_content::ContentCatalog::from_artifact(
                 rfb_content::encode_content(content).expect("custom content should encode"),
@@ -14446,12 +14464,12 @@ fn p107f_diamond_edge_vorpal_flag_multiplies_dice_before_flat_damage() {
         assert!(vorpal_dice >= plain_dice.saturating_mul(2));
         assert_eq!(vorpal_dice % plain_dice, 0);
     }
+}
 
-    fn crisdurian_seed_for_test() -> u64 {
-        (0..10_000)
-            .find(|seed| RfbRng::seeded(*seed).bounded(15) == 0)
-            .expect("a Crisdurian rarity seed should exist")
-    }
+fn crisdurian_seed_for_test() -> u64 {
+    (0..10_000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(15) == 0)
+        .expect("a Crisdurian rarity seed should exist")
 }
 
 #[test]

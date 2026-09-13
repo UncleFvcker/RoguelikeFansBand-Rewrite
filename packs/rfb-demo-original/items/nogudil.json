@@ -1,0 +1,77 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.nogudil",
+  "nameKey": "item-demo-nogudil-name",
+  "descriptionKey": "item-demo-nogudil-description",
+  "glyph": "/",
+  "generationLevel": 15,
+  "weightTenthsPound": 120,
+  "baseValue": 26000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 338,
+    "baseItemKindId": "demo.item.lucerne-hammer",
+    "instant": false,
+    "rarityOneIn": 15
+  },
+  "weaponProficiencyBaseItemId": "demo.item.lucerne-hammer",
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "DEC_INT",
+      "DEC_WIS",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_COLD",
+      "RES_FEAR",
+      "SLAY_EVIL",
+      "SLAY_GOOD",
+      "SPEED",
+      "VULN_LITE"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 6,
+    "toHit": 8,
+    "toDamage": 7
+  },
+  "modifiers": {
+    "intelligence": -3,
+    "wisdom": -3,
+    "speed": 3
+  },
+  "resistances": {
+    "cold": "immune",
+    "light": "vulnerable"
+  },
+  "statusImmunities": [
+    "rfb.status.fear",
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "evil": "slay",
+    "good": "slay"
+  }
+}

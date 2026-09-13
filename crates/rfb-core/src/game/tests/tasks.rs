@@ -852,7 +852,17 @@ fn monster_object_level_and_theme_reach_real_jewelry_generation() {
         &actor_kind,
         actual.player.position,
     );
-    actual.rng = RfbRng::seeded(81);
+    let seed = (0..1000)
+        .find(|seed| {
+            let mut trial = actual.clone();
+            trial.rng = RfbRng::seeded(*seed);
+            let (items, _) = trial.generate_death_loot(&actor).unwrap();
+            items.len() == 1
+                && items[0].kind_id == "demo.item.ring"
+                && !items[0].affix_ids.is_empty()
+        })
+        .expect("the real Mage theme must admit an ego ring");
+    actual.rng = RfbRng::seeded(seed);
     let mut expected = actual.clone();
     expected.rng.bounded(100); // The real monster theme gate precedes make_object.
     let context = LootContext {
@@ -3095,7 +3105,7 @@ fn orc_cave_guardian_conquest_reward_and_surface_return_round_trip() {
         );
         assert_eq!(update.campaign.status, CampaignStatusDto::Active);
         if depth < 32 {
-            game.entities.clear();
+            clear_monsters(&mut game);
             place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
         }
     }
@@ -3178,7 +3188,7 @@ fn orc_cave_guardian_conquest_reward_and_surface_return_round_trip() {
     assert_eq!(restored.state_hash(), conquered_hash);
     assert!(restored.dungeon_states["demo.dungeon.orc-cave"].guardian_defeated);
 
-    restored.entities.clear();
+    clear_monsters(&mut restored);
     for expected_depth in (15..=31).rev() {
         place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
         let update = dispatch_next(&mut restored, GameCommand::TraverseStairs);
@@ -3186,7 +3196,7 @@ fn orc_cave_guardian_conquest_reward_and_surface_return_round_trip() {
             update.floor_id,
             format!("demo.floor.orc-cave-depth-{expected_depth}")
         );
-        restored.entities.clear();
+        clear_monsters(&mut restored);
     }
     place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
     let surface = dispatch_next(&mut restored, GameCommand::TraverseStairs);

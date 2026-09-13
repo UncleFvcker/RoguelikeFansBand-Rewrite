@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.david",
+  "nameKey": "item-demo-david-name",
+  "descriptionKey": "item-demo-david-description",
+  "glyph": "{",
+  "generationLevel": 5,
+  "weightTenthsPound": 2,
+  "baseValue": 2000,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "ammunition"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 292,
+    "baseItemKindId": "demo.item.iron-shot",
+    "instant": false,
+    "rarityOneIn": 10
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "KILL_GIANT"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "ammunitionProfile": {
+    "ammunitionType": "shot",
+    "damageDice": 7,
+    "damageSides": 3,
+    "toDamage": 12,
+    "toHit": 20
+  },
+  "slays": {
+    "giant": "kill"
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.tonbo-giri",
+  "nameKey": "item-demo-tonbo-giri-name",
+  "descriptionKey": "item-demo-tonbo-giri-description",
+  "glyph": "/",
+  "generationLevel": 50,
+  "weightTenthsPound": 400,
+  "baseValue": 250000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 161,
+    "baseItemKindId": "demo.item.broad-spear",
+    "instant": false,
+    "rarityOneIn": 70
+  },
+  "weaponProficiencyBaseItemId": "demo.item.broad-spear",
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RIDING",
+      "SEARCH",
+      "SHOW_MODS",
+      "SLAY_ANIMAL",
+      "SLAY_GIANT",
+      "SLAY_HUMAN",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "STR"
+    ],
+    "pval": 3,
+    "toArmor": 10
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 11,
+    "toHit": 6,
+    "toDamage": 23
+  },
+  "modifiers": {
+    "defense": 10,
+    "strength": 3,
+    "dexterity": 3
+  },
+  "equipmentBonuses": {
+    "searchSkill": 15
+  },
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "animal": "slay",
+    "human": "slay",
+    "orc": "slay",
+    "troll": "slay",
+    "giant": "slay"
+  },
+  "ridingWeaponKind": "compatible"
+}

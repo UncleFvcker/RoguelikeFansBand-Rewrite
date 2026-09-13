@@ -49,11 +49,24 @@ fn mattock_forced_base_disruption_activation_round_trips() {
             actor_id: "test.loot-source".to_owned(),
         },
     };
-    // This seed reaches Disruption after the natural artifact gate.
-    game.rng = RfbRng::seeded(136);
-    let mut drops = game
-        .generate_loot_instances(&context, ItemLocation::Inventory)
-        .unwrap();
+    // Keep the natural artifact gate; choose a repeatable Disruption sample
+    // independently of how many fixed mattock candidates exist.
+    let (mut game, mut drops) = (0..5000)
+        .find_map(|seed| {
+            let mut trial = game.clone();
+            trial.rng = RfbRng::seeded(seed);
+            let drops = trial
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap();
+            (drops.len() == 1
+                && drops[0].kind_id == "demo.item.mattock"
+                && drops[0].affix_ids == ["rfb-legacy.affix.disruption"]
+                && drops[0].rolled_affixes[0].properties.modifiers.strength == 3
+                && drops[0].rolled_affixes[0].melee_damage_dice
+                    == Some(rfb_protocol::MeleeDamageDiceDto { dice: 3, sides: 9 }))
+            .then_some((trial, drops))
+        })
+        .expect("a natural Disruption sample with pval3 and 3d9 must exist");
     assert_eq!(drops.len(), 1);
     let item = drops.remove(0);
     assert_eq!(item.kind_id, "demo.item.mattock");

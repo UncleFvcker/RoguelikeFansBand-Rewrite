@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.robin-hood",
+  "nameKey": "item-demo-robin-hood-name",
+  "descriptionKey": "item-demo-robin-hood-description",
+  "glyph": "}",
+  "generationLevel": 20,
+  "weightTenthsPound": 30,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "equipmentSlot": "launcher",
+  "tags": [
+    "artifact",
+    "equipment",
+    "launcher"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 221,
+    "baseItemKindId": "demo.item.short-bow",
+    "instant": false,
+    "rarityOneIn": 15,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SHOW_MODS",
+      "STEALTH",
+      "XTRA_H_RES"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "projectileProfile": {
+    "ammunitionType": "arrow",
+    "damageMultiplierPercent": 325,
+    "range": 17,
+    "shotEnergy": 8888,
+    "toDamage": 17,
+    "toHit": 15
+  },
+  "modifiers": {
+    "dexterity": 2,
+    "charisma": 2
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 2
+  }
+}

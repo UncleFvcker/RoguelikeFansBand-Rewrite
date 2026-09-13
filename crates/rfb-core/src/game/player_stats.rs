@@ -1626,6 +1626,7 @@ impl Game {
                     .is_some_and(|value| value.flags.contains("BRAND_MANA"))
             }))
             || item.intrinsic_weapon_traits.contains(&trait_)
+            || (trait_ == WeaponTraitDto::Vorpal2 && self.item_has_rfb_flag(item, "VORPAL2"))
             || (trait_ == WeaponTraitDto::Order && self.item_has_rfb_flag(item, "BRAND_ORDER"))
             || (trait_ == WeaponTraitDto::Blessed && self.item_has_rfb_flag(item, "BLESSED"))
             || (trait_ == WeaponTraitDto::Stun && self.item_has_rfb_flag(item, "STUN"))
@@ -1651,10 +1652,11 @@ impl Game {
             .projectile_profile
             .as_ref()?;
         let ammunition = self.content.item_definitions().find(|definition| {
-            definition
-                .ammunition_profile
-                .as_ref()
-                .is_some_and(|ammo| ammo.ammunition_type == profile.ammunition_type)
+            definition.artifact_generation.is_none()
+                && definition
+                    .ammunition_profile
+                    .as_ref()
+                    .is_some_and(|ammo| ammo.ammunition_type == profile.ammunition_type)
         })?;
         let ammo = ammunition.ammunition_profile.as_ref()?;
         let bonuses = self.item_equipment_bonuses(item);
@@ -1928,7 +1930,7 @@ impl Game {
                         .and_then(|item| self.content.item(&item.kind_id))
                         .or_else(|| {
                             self.content.item_definitions().find(|definition| {
-                                definition.ammunition_profile.as_ref().is_some_and(|ammo| {
+                                definition.artifact_generation.is_none() && definition.ammunition_profile.as_ref().is_some_and(|ammo| {
                                     ammo.ammunition_type == profile.ammunition_type
                                 })
                             })
@@ -1975,6 +1977,20 @@ impl Game {
                             ammunition_brands.extend(rolled.properties.brands.iter().copied());
                         }
                     }
+                    // master object1.c::missile_flags unions the bow with the arrow.
+                    // A bow's SLAY must never overwrite the ammunition's KILL.
+                    let mut merge_launcher = |slays: &BTreeMap<SlayTarget, SlayLevel>, brands: &BTreeSet<WeaponBrand>| {
+                        for (&target, &level) in slays {
+                            ammunition_slays.entry(target).and_modify(|old| *old = (*old).max(level)).or_insert(level);
+                        }
+                        ammunition_brands.extend(brands);
+                    };
+                    merge_launcher(&launcher_definition.slays, &launcher_definition.brands);
+                    for id in &item.affix_ids {
+                        if let Some(affix) = self.content.affix(id) { merge_launcher(&affix.slays, &affix.brands); }
+                    }
+                    merge_launcher(&item.intrinsic_properties.slays, &item.intrinsic_properties.brands);
+                    for roll in &item.rolled_affixes { merge_launcher(&roll.properties.slays, &roll.properties.brands); }
                     let ranged_skill = self.player_derived_stats().ranged_skill.value;
                     let hold = crate::stats::strength_hold_pounds(
                         self.effective_player_attributes().strength,
@@ -3062,6 +3078,10 @@ impl Game {
                 continue;
             }
             if matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) == Some("ring") && !self.ring_affects_weapon(slot_id, profile.source_item_id.as_deref()))
+            {
+                continue;
+            }
+            if matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) == Some("launcher"))
             {
                 continue;
             }

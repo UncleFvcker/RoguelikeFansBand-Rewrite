@@ -1,0 +1,64 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.wilhelm-tell-crossbow",
+  "nameKey": "item-demo-wilhelm-tell-crossbow-name",
+  "descriptionKey": "item-demo-wilhelm-tell-crossbow-description",
+  "glyph": "}",
+  "generationLevel": 50,
+  "weightTenthsPound": 110,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "equipmentSlot": "launcher",
+  "tags": [
+    "artifact",
+    "equipment",
+    "launcher"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 223,
+    "baseItemKindId": "demo.item.light-crossbow",
+    "instant": false,
+    "rarityOneIn": 30
+  },
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_HUMAN"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "projectileProfile": {
+    "ammunitionType": "bolt",
+    "damageMultiplierPercent": 400,
+    "range": 18,
+    "shotEnergy": 12000,
+    "toDamage": 23,
+    "toHit": 40
+  },
+  "modifiers": {
+    "dexterity": 4
+  },
+  "passives": [
+    "see-invisible"
+  ],
+  "slays": {
+    "human": "slay"
+  }
+}

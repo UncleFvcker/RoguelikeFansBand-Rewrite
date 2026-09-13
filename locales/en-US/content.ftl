@@ -10305,3 +10305,162 @@ device-activation-e5-rama-arrow-name = Powerful Arrow
 floor-demo-mount-meru-depth-name = Mount Meru
 terrain-demo-mount-meru-entrance-name = Mount Meru
 terrain-demo-mount-meru-entrance-description = A rainbow bridge to Mount Meru.
+
+item-demo-beruthiel-name = Iron Crown of Beruthiel
+item-demo-beruthiel-description = Fixed artifact 35 from RFB; iron crown.
+
+item-demo-thanos-name = Set of Gauntlets of Thanos
+item-demo-thanos-description = Fixed artifact 58 from RFB; set of gauntlets.
+
+item-demo-calris-name = Bastard Sword 'Calris'
+item-demo-calris-description = Fixed artifact 71 from RFB; bastard sword.
+
+item-demo-grayswandir-name = Sabre 'Grayswandir'
+item-demo-grayswandir-description = Fixed artifact 72 from RFB; sabre.
+
+item-demo-zarcuthra-name = Two-Handed Sword 'Zarcuthra'
+item-demo-zarcuthra-description = Fixed artifact 77 from RFB; two handed sword.
+
+item-demo-aglarang-name = Katana 'Aglarang'
+item-demo-aglarang-description = Fixed artifact 81 from RFB; katana.
+
+item-demo-careth-asdriag-name = Sabre 'Careth Asdriag'
+item-demo-careth-asdriag-description = Fixed artifact 87 from RFB; sabre.
+
+item-demo-merlin-name = Short Sword of Merlin
+item-demo-merlin-description = Fixed artifact 90 from RFB; short sword.
+
+item-demo-doomcaller-name = Blade of Chaos 'Doomcaller'
+item-demo-doomcaller-description = Fixed artifact 91 from RFB; blade of chaos.
+
+item-demo-buckland-name = Sling of Buckland
+item-demo-buckland-description = Fixed artifact 134 from RFB; sling.
+
+item-demo-goln-nova-name = Broad Sword 'Goln Nova'
+item-demo-goln-nova-description = Fixed artifact 137 from RFB; broad sword.
+
+item-demo-silver-chariot-name = Rapier 'Silver Chariot'
+item-demo-silver-chariot-description = Fixed artifact 140 from RFB; rapier.
+
+item-demo-worpal-blade-name = Long Sword 'Worpal Blade'
+item-demo-worpal-blade-description = Fixed artifact 142 from RFB; long sword.
+
+item-demo-soulcrusher-name = Blade of Chaos 'Soulcrusher'
+item-demo-soulcrusher-description = Fixed artifact 154 from RFB; blade of chaos.
+
+item-demo-falis-name = Long Sword of Falis
+item-demo-falis-description = Fixed artifact 155 from RFB; long sword.
+
+item-demo-hrunting-name = Two-Handed Sword 'Hrunting'
+item-demo-hrunting-description = Fixed artifact 156 from RFB; two handed sword.
+
+item-demo-anubis-name = Katana of Anubis
+item-demo-anubis-description = Fixed artifact 158 from RFB; katana.
+
+item-demo-gurenki-name = Long Sword 'Gurenki'
+item-demo-gurenki-description = Fixed artifact 160 from RFB; long sword.
+
+item-demo-tonbo-giri-name = Broad Spear 'Tonbo giri'
+item-demo-tonbo-giri-description = Fixed artifact 161 from RFB; broad spear.
+
+item-demo-glass-slippers-name = Pair of Glass Slippers
+item-demo-glass-slippers-description = Fixed artifact 165 from RFB; soft leather boots.
+
+item-demo-tailbiter-name = Broad Sword 'Tailbiter'
+item-demo-tailbiter-description = Fixed artifact 167 from RFB; broad sword.
+
+item-demo-excalibur-name = Long Sword 'Excalibur'
+item-demo-excalibur-description = Fixed artifact 176 from RFB; long sword.
+
+item-demo-destruction-name = Falcon Sword of Destruction
+item-demo-destruction-description = Fixed artifact 189 from RFB; falcon sword.
+
+item-demo-narsil-name = Broken Sword 'Narsil'
+item-demo-narsil-description = Fixed artifact 191 from RFB; broken sword.
+
+item-demo-guan-yu-name = Falchion of Guan Yu
+item-demo-guan-yu-description = Fixed artifact 193 from RFB; falchion.
+
+item-demo-dasai-name = Rhino Hide Armour 'Dasai'
+item-demo-dasai-description = Fixed artifact 200 from RFB; rhino hide armour.
+
+item-demo-tetsu-geta-of-flame-name = Pair of Mithril Shod Boots 'Tetsu-geta of Flame'
+item-demo-tetsu-geta-of-flame-description = Fixed artifact 210 from RFB; mithril shod boots.
+
+item-demo-eowyn-name = Bastard Sword of Eowyn
+item-demo-eowyn-description = Fixed artifact 216 from RFB; bastard sword.
+
+item-demo-robin-hood-name = Short Bow of Robin Hood
+item-demo-robin-hood-description = Fixed artifact 221 from RFB; short bow.
+
+item-demo-hellfire-name = Light Crossbow of Hellfire
+item-demo-hellfire-description = Fixed artifact 222 from RFB; light crossbow.
+
+item-demo-wilhelm-tell-crossbow-name = Light Crossbow of Wilhelm Tell
+item-demo-wilhelm-tell-crossbow-description = Fixed artifact 223 from RFB; light crossbow.
+
+item-demo-wilhelm-tell-bolt-name = Bolt of Wilhelm Tell
+item-demo-wilhelm-tell-bolt-description = Fixed artifact 224 from RFB; bolt.
+
+item-demo-elmi-name = Hatchet of Elmi the Murderer
+item-demo-elmi-description = Fixed artifact 228 from RFB; hatchet.
+
+item-demo-taro-dachi-name = No-dachi 'Taro Dachi'
+item-demo-taro-dachi-description = Fixed artifact 229 from RFB; no dachi.
+
+item-demo-maggot-name = Sickle of Maggot
+item-demo-maggot-description = Fixed artifact 232 from RFB; sickle.
+
+item-demo-kaschei-name = Wizardstaff of Kaschei
+item-demo-kaschei-description = Fixed artifact 250 from RFB; wizardstaff.
+
+item-demo-rygar-name = Morning Star of Rygar
+item-demo-rygar-description = Fixed artifact 253 from RFB; morning star.
+
+item-demo-big-punch-name = Lead-Filled Mace 'Big Punch'
+item-demo-big-punch-description = Fixed artifact 254 from RFB; lead filled mace.
+
+item-demo-ages-name = Ring of the Ages
+item-demo-ages-description = Fixed artifact 274 from RFB; ring.
+
+item-demo-ancalagon-name = Dragon Fang of Ancalagon
+item-demo-ancalagon-description = Fixed artifact 281 from RFB; dragon fang.
+
+item-demo-david-name = Iron Shot of David
+item-demo-david-description = Fixed artifact 292 from RFB; iron shot.
+
+item-demo-khazad-dum-name = Mattock of Khazad-dum
+item-demo-khazad-dum-description = Fixed artifact 295 from RFB; mattock.
+
+item-demo-undertaker-name = Shovel of the Undertaker
+item-demo-undertaker-description = Fixed artifact 296 from RFB; shovel.
+
+item-demo-kaladanda-name = Great Hammer 'Kaladanda'
+item-demo-kaladanda-description = Fixed artifact 323 from RFB; great hammer.
+
+item-demo-heracles-name = Long Bow of Heracles
+item-demo-heracles-description = Fixed artifact 325 from RFB; long bow.
+
+item-demo-sword-of-the-winds-name = Sword of the Winds
+item-demo-sword-of-the-winds-description = Fixed artifact 330 from RFB; long sword.
+
+item-demo-vainglory-name = Morning Star 'VainGlory'
+item-demo-vainglory-description = Fixed artifact 331 from RFB; morning star.
+
+item-demo-mr-shine-name = Mirror Shield of Mr. Shine
+item-demo-mr-shine-description = Fixed artifact 337 from RFB; mirror shield.
+
+item-demo-nogudil-name = Lucerne Hammer 'Nogudil'
+item-demo-nogudil-description = Fixed artifact 338 from RFB; lucerne hammer.
+
+item-demo-curiosity-name = Short Sword 'Curiosity'
+item-demo-curiosity-description = Fixed artifact 339 from RFB; short sword.
+
+item-demo-tweutox-name = Spear of Tweutox
+item-demo-tweutox-description = Fixed artifact 349 from RFB; spear.
+
+item-demo-angrist-name = Dagger 'Angrist'
+item-demo-angrist-description = Fixed artifact 351 from RFB; dagger.
+
+item-demo-liweris-name = Mithril Spear of Liweris
+item-demo-liweris-description = Fixed artifact 352 from RFB; broad spear.

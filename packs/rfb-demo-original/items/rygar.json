@@ -1,0 +1,81 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.rygar",
+  "nameKey": "item-demo-rygar-name",
+  "descriptionKey": "item-demo-rygar-description",
+  "glyph": "\\",
+  "generationLevel": 70,
+  "weightTenthsPound": 150,
+  "baseValue": 150000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 253,
+    "baseItemKindId": "demo.item.morning-star",
+    "instant": false,
+    "rarityOneIn": 50
+  },
+  "weaponProficiencyBaseItemId": "demo.item.morning-star",
+  "rfbValue": {
+    "flags": [
+      "BLOWS",
+      "DEX",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_ANIMAL",
+      "SLAY_DRAGON",
+      "SLAY_EVIL",
+      "SLAY_HUMAN",
+      "STR"
+    ],
+    "pval": 1,
+    "toArmor": 5
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 9,
+    "toHit": 12,
+    "toDamage": 22
+  },
+  "modifiers": {
+    "defense": 5,
+    "strength": 1,
+    "dexterity": 1
+  },
+  "equipmentBonuses": {
+    "meleeAttacksDeltaPercent": 50
+  },
+  "passives": [
+    "see-invisible"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "animal": "slay",
+    "evil": "slay",
+    "human": "slay",
+    "dragon": "slay"
+  }
+}

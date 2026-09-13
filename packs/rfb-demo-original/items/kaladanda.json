@@ -1,0 +1,86 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.kaladanda",
+  "nameKey": "item-demo-kaladanda-name",
+  "descriptionKey": "item-demo-kaladanda-description",
+  "glyph": "\\",
+  "generationLevel": 70,
+  "weightTenthsPound": 500,
+  "baseValue": 150000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 323,
+    "baseItemKindId": "demo.item.great-hammer",
+    "instant": false,
+    "rarityOneIn": 100
+  },
+  "weaponProficiencyBaseItemId": "demo.item.great-hammer",
+  "rfbValue": {
+    "flags": [
+      "BRAND_COLD",
+      "BRAND_VAMP",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_COLD",
+      "SLAY_GOOD",
+      "SLAY_LIVING",
+      "STR",
+      "SUST_CHR",
+      "SUST_CON",
+      "SUST_DEX",
+      "SUST_INT",
+      "SUST_STR",
+      "SUST_WIS"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 7,
+    "damageSides": 8,
+    "toHit": 5,
+    "toDamage": 20
+  },
+  "modifiers": {
+    "strength": 4
+  },
+  "passives": [
+    "hold-life",
+    "sustain-charisma",
+    "sustain-constitution",
+    "sustain-dexterity",
+    "sustain-intelligence",
+    "sustain-strength",
+    "sustain-wisdom",
+    "vampiric"
+  ],
+  "resistances": {
+    "cold": "resistant"
+  },
+  "slays": {
+    "good": "slay",
+    "living": "slay"
+  },
+  "brands": [
+    "cold"
+  ]
+}

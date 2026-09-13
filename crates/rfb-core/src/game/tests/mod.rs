@@ -47,6 +47,7 @@ mod hunger;
 mod inventory;
 mod item_combat_activations;
 mod items;
+mod non_quest_artifacts;
 mod lighting;
 mod mage;
 mod magic_eater;

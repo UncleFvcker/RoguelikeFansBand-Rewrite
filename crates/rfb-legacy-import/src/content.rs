@@ -29951,6 +29951,68 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
         );
     }
 
+    #[test]
+    fn n1_remaining_artifacts_match_source_parameters() {
+        check_n1_passive_artifact_source_parameters(
+            include_str!("testdata/n1-remaining-artifacts.txt"),
+            &[
+                (35, "beruthiel", "iron-crown"),
+                (58, "thanos", "set-of-gauntlets"),
+                (71, "calris", "bastard-sword"),
+                (72, "grayswandir", "sabre"),
+                (77, "zarcuthra", "two-handed-sword"),
+                (81, "aglarang", "katana"),
+                (87, "careth-asdriag", "sabre"),
+                (90, "merlin", "short-sword"),
+                (91, "doomcaller", "blade-of-chaos"),
+                (134, "buckland", "sling"),
+                (137, "goln-nova", "broad-sword"),
+                (140, "silver-chariot", "rapier"),
+                (142, "worpal-blade", "long-sword"),
+                (154, "soulcrusher", "blade-of-chaos"),
+                (155, "falis", "long-sword"),
+                (156, "hrunting", "two-handed-sword"),
+                (158, "anubis", "katana"),
+                (160, "gurenki", "long-sword"),
+                (161, "tonbo-giri", "broad-spear"),
+                (165, "glass-slippers", "soft-leather-boots"),
+                (167, "tailbiter", "broad-sword"),
+                (176, "excalibur", "long-sword"),
+                (189, "destruction", "falcon-sword"),
+                (191, "narsil", "broken-sword"),
+                (193, "guan-yu", "falchion"),
+                (200, "dasai", "rhino-hide-armour"),
+                (210, "tetsu-geta-of-flame", "mithril-shod-boots"),
+                (216, "eowyn", "bastard-sword"),
+                (221, "robin-hood", "short-bow"),
+                (222, "hellfire", "light-crossbow"),
+                (223, "wilhelm-tell-crossbow", "light-crossbow"),
+                (224, "wilhelm-tell-bolt", "bolt"),
+                (228, "elmi", "hatchet"),
+                (229, "taro-dachi", "no-dachi"),
+                (232, "maggot", "sickle"),
+                (250, "kaschei", "wizardstaff"),
+                (253, "rygar", "morning-star"),
+                (254, "big-punch", "lead-filled-mace"),
+                (274, "ages", "ring"),
+                (281, "ancalagon", "dragon-fang"),
+                (292, "david", "iron-shot"),
+                (295, "khazad-dum", "mattock"),
+                (296, "undertaker", "shovel"),
+                (323, "kaladanda", "great-hammer"),
+                (325, "heracles", "long-bow"),
+                (330, "sword-of-the-winds", "long-sword"),
+                (331, "vainglory", "morning-star"),
+                (337, "mr-shine", "mirror-shield"),
+                (338, "nogudil", "lucerne-hammer"),
+                (339, "curiosity", "short-sword"),
+                (349, "tweutox", "spear"),
+                (351, "angrist", "dagger"),
+                (352, "liweris", "broad-spear"),
+            ],
+        );
+    }
+
     fn check_n1_passive_artifact_source_parameters(source: &str, identities: &[(u32, &str, &str)]) {
         let entries = parse_a_info(source).unwrap();
         assert_eq!(entries.len(), identities.len());
@@ -29968,6 +30030,11 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                 &LauncherAmmoIndex::default(),
                 &mut ContentImportReport::default(),
             );
+            // Source object flags are a bitset; repeated a_info tokens are idempotent.
+            imported["rfbValue"]["flags"]
+                .as_array_mut()
+                .unwrap()
+                .dedup();
             // xtra1.c:3754-3755: non-light-slot LITE is +1, independent of pval.
             if entry.flags.iter().any(|flag| flag == "LITE") {
                 imported["equipmentBonuses"]["lightRadius"] = serde_json::json!(1);
@@ -30015,6 +30082,126 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                 imported["equipmentBonuses"]["spellCapacityBonus"] = serde_json::json!(-3);
                 imported["initialCurse"] = serde_json::json!("heavy");
             }
+            if !matches!(
+                entry.index,
+                6 | 220 | 55 | 43 | 168 | 206 | 103 | 198 | 231 | 234 | 360 | 392
+            ) {
+                let has = |flag: &str| entry.flags.iter().any(|f| f == flag);
+                let root =
+                    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+                let base: serde_json::Value = serde_json::from_slice(
+                    &fs::read(root.join(format!("items/{base}.json"))).unwrap(),
+                )
+                .unwrap();
+                let mut bonuses = imported["equipmentBonuses"]
+                    .as_object()
+                    .cloned()
+                    .unwrap_or_default();
+                if has("BLOWS") {
+                    bonuses.remove("meleeAttacks");
+                    bonuses.insert(
+                        "meleeAttacksDeltaPercent".into(),
+                        serde_json::json!(50 * entry.pval),
+                    );
+                }
+                if has("SEARCH") {
+                    bonuses.insert("searchSkill".into(), serde_json::json!(5 * entry.pval));
+                }
+                if has("TUNNEL") {
+                    bonuses.remove("diggingSkill");
+                    imported["tunnelingPval"] = serde_json::json!(entry.pval);
+                }
+                if bonuses.is_empty() {
+                    imported.as_object_mut().unwrap().remove("equipmentBonuses");
+                } else {
+                    imported["equipmentBonuses"] = serde_json::json!(bonuses);
+                }
+                if has("DEC_SPEED") {
+                    imported["modifiers"]["speed"] = serde_json::json!(-entry.pval);
+                }
+                let mut passives = imported["passives"].as_array().cloned().unwrap_or_default();
+                for (flag, passive) in [
+                    ("TELEPATHY", "telepathy"),
+                    ("WARNING", "warning"),
+                    ("NO_TELE", "anti-teleport"),
+                    ("ESP_DEMON", "esp-demon"),
+                    ("ESP_DRAGON", "esp-dragon"),
+                ] {
+                    if has(flag) {
+                        passives.push(serde_json::json!(passive));
+                    }
+                }
+                passives.sort_by(|a, b| a.as_str().cmp(&b.as_str()));
+                if !passives.is_empty() {
+                    imported["passives"] = serde_json::json!(passives);
+                }
+                if has("VORPAL") {
+                    imported["vorpal"] = serde_json::json!(true);
+                }
+                for (flag, severity) in [
+                    ("CURSED", "normal"),
+                    ("HEAVY_CURSE", "heavy"),
+                    ("PERMA_CURSE", "permanent"),
+                ] {
+                    if has(flag) {
+                        imported["initialCurse"] = serde_json::json!(severity);
+                    }
+                }
+                let mut affixes = Vec::new();
+                for (flag, id) in [
+                    ("XTRA_H_RES", "artifact-extra-high-resistance"),
+                    ("XTRA_RES_OR_POWER", "artifact-extra-res-or-power"),
+                ] {
+                    if has(flag) {
+                        affixes.push(format!("rfb-legacy.affix.{id}"));
+                    }
+                }
+                if !affixes.is_empty() {
+                    imported["artifactGeneration"]["affixIds"] = serde_json::json!(affixes);
+                }
+                if entry.tval == 20 {
+                    let (dice, sides) = entry.damage_dice.unwrap();
+                    imported["meleeProfile"] = serde_json::json!({"attacks":1,"damageDice":dice,"damageSides":sides,"toHit":entry.to_hit,"toDamage":entry.to_damage});
+                    if let Some(bonuses) = imported["equipmentBonuses"].as_object_mut() {
+                        bonuses.remove("meleeSkill");
+                        bonuses.remove("meleeDamage");
+                        if bonuses.is_empty() {
+                            imported.as_object_mut().unwrap().remove("equipmentBonuses");
+                        }
+                    }
+                }
+                if entry.tval == 19 {
+                    let multiplier = entry.launcher_multiplier_percent.unwrap();
+                    let mut profile = base["projectileProfile"].clone();
+                    profile["damageMultiplierPercent"] = serde_json::json!(multiplier);
+                    profile["range"] = serde_json::json!(launcher_range(multiplier));
+                    profile["toHit"] = serde_json::json!(entry.to_hit);
+                    profile["toDamage"] = serde_json::json!(entry.to_damage);
+                    imported["projectileProfile"] = profile;
+                }
+                if matches!(entry.tval, 16..=18) {
+                    let (dice, sides) = entry.damage_dice.unwrap();
+                    let mut profile = base["ammunitionProfile"].clone();
+                    profile["damageDice"] = serde_json::json!(dice);
+                    profile["damageSides"] = serde_json::json!(sides);
+                    profile["toHit"] = serde_json::json!(entry.to_hit);
+                    profile["toDamage"] = serde_json::json!(entry.to_damage);
+                    imported["ammunitionProfile"] = profile;
+                    apply_offensive_fold(&mut imported, &offensive_fold(&entry.flags));
+                }
+                // init1 source order can place FREE_ACT after RES_FEAR; preserve both.
+                let statuses: Vec<_> = [
+                    ("RES_BLIND", "rfb.status.blindness"),
+                    ("RES_FEAR", "rfb.status.fear"),
+                    ("FREE_ACT", "rfb.status.paralysis"),
+                ]
+                .into_iter()
+                .filter_map(|(flag, status)| has(flag).then_some(status))
+                .collect();
+                if !statuses.is_empty() {
+                    imported["statusImmunities"] = serde_json::json!(statuses);
+                }
+            }
             // Formal fixed artifacts preserve protection from monster destruction.
             imported["resistsMonsterDestruction"] = serde_json::json!(true);
             let path = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -30037,6 +30224,10 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                 "resistsProjectionDestruction",
                 "resistsMonsterDestruction",
                 "meleeProfile",
+                "projectileProfile",
+                "ammunitionProfile",
+                "tunnelingPval",
+                "ridingWeaponKind",
                 "slays",
                 "brands",
                 "vorpal",

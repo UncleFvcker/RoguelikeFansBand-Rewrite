@@ -1,0 +1,68 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.heracles",
+  "nameKey": "item-demo-heracles-name",
+  "descriptionKey": "item-demo-heracles-description",
+  "glyph": "}",
+  "generationLevel": 40,
+  "weightTenthsPound": 40,
+  "baseValue": 60000,
+  "maxStack": 1,
+  "equipmentSlot": "launcher",
+  "tags": [
+    "artifact",
+    "equipment",
+    "launcher"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 325,
+    "baseItemKindId": "demo.item.long-bow",
+    "instant": false,
+    "rarityOneIn": 30
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_POIS",
+      "CHR",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "RES_FEAR",
+      "SPEED",
+      "STR"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "projectileProfile": {
+    "ammunitionType": "arrow",
+    "damageMultiplierPercent": 300,
+    "range": 16,
+    "shotEnergy": 10000,
+    "toDamage": 22,
+    "toHit": 12
+  },
+  "modifiers": {
+    "strength": 2,
+    "intelligence": 2,
+    "charisma": 2,
+    "speed": 2
+  },
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "brands": [
+    "poison"
+  ]
+}

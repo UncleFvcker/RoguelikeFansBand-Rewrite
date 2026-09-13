@@ -998,12 +998,16 @@ fn item_shape_validation_uses_current_rfb_content() {
     ));
 
     let mut invalid = artifact.content.clone();
-    invalid
+    let mut launcher = invalid
         .items
-        .iter_mut()
+        .iter()
         .find(|item| item.id == "demo.item.light-crossbow")
-        .expect("launcher without fixed-artifact dependents should exist")
-        .equipment_slot = Some("weapon".to_owned());
+        .expect("launcher should exist")
+        .clone();
+    launcher.id = "test.item.invalid-launcher".into();
+    launcher.rfb_base_kind = None;
+    launcher.equipment_slot = Some("weapon".into());
+    invalid.items.push(launcher);
     assert!(matches!(
         validate_and_normalize(&mut invalid),
         Err(ContentError::InvalidProjectileProfile(_))
@@ -1172,11 +1176,13 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.ball-and-chain",
                 "demo.item.broad-spear",
                 "demo.item.broad-sword",
+                "demo.item.careth-asdriag",
                 "demo.item.death-scythe",
                 "demo.item.deathwreaker",
                 "demo.item.diamond-edge",
                 "demo.item.dragonlance",
                 "demo.item.eorlingas",
+                "demo.item.excalibur",
                 "demo.item.excalipur",
                 "demo.item.falchion",
                 "demo.item.fauchard",
@@ -1185,10 +1191,13 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.gae-bulg",
                 "demo.item.glaive",
                 "demo.item.glamdring",
+                "demo.item.goln-nova",
+                "demo.item.grayswandir",
                 "demo.item.hagen",
                 "demo.item.heavy-lance",
                 "demo.item.impaler",
                 "demo.item.lance",
+                "demo.item.liweris",
                 "demo.item.long-sword",
                 "demo.item.mighty-hammer",
                 "demo.item.murugan",
@@ -1202,11 +1211,14 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.scythe-of-slicing",
                 "demo.item.shiva",
                 "demo.item.spear",
+                "demo.item.sword-of-the-winds",
+                "demo.item.tonbo-giri",
                 "demo.item.totila",
                 "demo.item.trident",
                 "demo.item.trifurcate-spear",
                 "demo.item.trifurcate-spear-of-wrath",
                 "demo.item.tulwar",
+                "demo.item.tweutox",
                 "demo.item.war-hammer",
             ]
             .into_iter()

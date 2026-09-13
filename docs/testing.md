@@ -108,6 +108,8 @@ node e2e/asgard-standalone.e2e.mjs
 
 ## 常规装备底材桌面验收
 
+N1使用 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --non-quest-n1`。普通Tauri新建人类Mage后，ignored核心导出用例准备50级、局部地格、无敌及通过真实底材／稀有度生成的四件神器；Hellfire另配普通弩矢／火把，两件武器保留相邻源怪物并选击杀种子。UI拾取、装备、近战／射击／等待，14次操作每次保存恢复并核对哈希，证据在`test-results/non-quest-n1/`。不是自然获取或练级证明。脚本尊重`CARGO_TARGET_DIR`，本次产物在`target/n1-validation/debug/rfb-tauri.exe`；构建和导出共用隔离的`CARGO_BUILD_BUILD_DIR=.../target/n1-validation-build`，避免共享工作树缓存。Windows上先结束同一路径的测试EXE，再重链接或执行导出。
+
 Q1命名奖励复用下述脚本的 `--quest-items` 模式：`node web/e2e/ordinary-equipment-standalone.e2e.mjs --quest-items`（仓库根目录）。它从正常1级人类战士出生存档准备局部场地、相邻当前HP1的Fang及真实击杀／掉落种子；物品由实际死亡掉落产生。UI攻击、移动、拾取、装备及等待，每步原生保存恢复并核对核心哈希。已有报告在`test-results/quest-items-q1/`。Q5实现结束后统一执行此前延后的编译和验收。
 
 Q2–Q5代表流程使用 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --quest-items-all`。从正常新档显式准备50级、天赋与无敌；眼球／九头蛇之眼／罗摩由相邻源怪物的真实死亡掉落产生，刺针由接受金库任务、进入正式地图产生。之后清理场景并定位真实奖励，罗摩另给10支普通箭；UI拾取、装备、激活／射击与等待，每步保存恢复。准备逻辑在ignored核心导出测试中，普通产物没有测试准备IPC。证据在 `test-results/quest-items-q2-q5/`；这不代表自然练级、战斗难度、全部神祇的桌面遭遇或Q4完整任务路线验收。

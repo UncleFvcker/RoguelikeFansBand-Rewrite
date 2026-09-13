@@ -664,6 +664,7 @@ fn p86e_mirror_shield_reflects_monster_bolts_once_with_exact_three_of_four_gate(
         "demo.item.perseus",
         "demo.item.ossian",
         "demo.item.padre",
+        "demo.item.mr-shine",
     ] {
         let mut equipment_check = make_game(0, kind);
         assert!(equipment_check.player_reflects_bolts());

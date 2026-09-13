@@ -1582,6 +1582,30 @@ impl Game {
             fuel: initial_item_fuel(&self.content, &kind_id),
             kind_id,
         };
+        // object2.c::apply_magic: fixed artifacts roll each requested curse
+        // after their ordinary construction. Persist the result, not the RNG recipe.
+        if let Some(definition) = self.content.item(&draft.kind_id)
+            && let Some(generation) = &definition.artifact_generation
+            && let Some(value) = &definition.rfb_value
+        {
+            for (power, flag) in [
+                (0, "RANDOM_CURSE0"),
+                (1, "RANDOM_CURSE1"),
+                (2, "RANDOM_CURSE2"),
+            ] {
+                if value.flags.contains(flag) {
+                    let tval = self
+                        .content
+                        .item(&generation.base_item_kind_id)
+                        .and_then(|base| base.rfb_base_kind)
+                        .expect("fixed artifact base must have its source kind")
+                        .tval;
+                    draft
+                        .intrinsic_curse_effects
+                        .insert(super::ego::curses::get_curse(&mut self.rng, power, tval));
+                }
+            }
+        }
         // master:artifact.c::random_artifact_resistance, ART_TERROR. These
         // properties belong to the generated instance, not its later wearer.
         if self

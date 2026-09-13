@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.kaschei",
+  "nameKey": "item-demo-kaschei-name",
+  "descriptionKey": "item-demo-kaschei-description",
+  "glyph": "\\",
+  "generationLevel": 90,
+  "weightTenthsPound": 40,
+  "baseValue": 300000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 250,
+    "baseItemKindId": "demo.item.wizardstaff",
+    "instant": false,
+    "rarityOneIn": 66
+  },
+  "weaponProficiencyBaseItemId": "demo.item.wizardstaff",
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "CURSED",
+      "DEC_CON",
+      "DEC_DEX",
+      "DEC_MANA",
+      "DEC_STR",
+      "DRAIN_EXP",
+      "HEAVY_CURSE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "PERMA_CURSE",
+      "RES_DARK",
+      "RES_DISEN",
+      "RES_NETHER",
+      "RES_POIS",
+      "SPELL_POWER"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 2,
+    "toHit": -6,
+    "toDamage": -6
+  },
+  "modifiers": {
+    "strength": -4,
+    "intelligence": 4,
+    "dexterity": -4,
+    "constitution": -4,
+    "spellPowerBonus": 4
+  },
+  "passives": [
+    "reduced-mana-cost"
+  ],
+  "resistances": {
+    "poison": "resistant",
+    "dark": "resistant",
+    "nether": "resistant",
+    "disenchant": "resistant"
+  },
+  "initialCurse": "permanent"
+}

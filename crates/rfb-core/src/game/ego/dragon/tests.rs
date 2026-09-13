@@ -299,7 +299,14 @@ fn forced_dragon_bases_keep_properties_when_great_power_is_suppressed_and_round_
                     assert!(protected.player.hp > plain.player.hp, "{kind} {element:?}");
                 }
                 if !properties.brands.is_empty() {
-                    let mut target = game.entities[0].clone();
+                    // This fixture tests brands, not incidental town actor generation.
+                    let mut combat = game.clone();
+                    combat.push_generated_actor(
+                        "test.dragon-brand-target".into(),
+                        "demo.actor.goblin",
+                        game.player.position,
+                    );
+                    let mut target = combat.entities.last().unwrap().clone();
                     target.resistances = Default::default();
                     let definition = game.content.actor(&target.kind_id).unwrap();
                     let profile = game.player_melee_profile(&game.player_derived_stats());

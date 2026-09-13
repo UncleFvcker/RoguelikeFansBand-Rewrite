@@ -1,0 +1,88 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.angrist",
+  "nameKey": "item-demo-angrist-name",
+  "descriptionKey": "item-demo-angrist-description",
+  "glyph": "|",
+  "generationLevel": 25,
+  "weightTenthsPound": 12,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 351,
+    "baseItemKindId": "demo.item.dagger",
+    "instant": false,
+    "rarityOneIn": 40
+  },
+  "weaponProficiencyBaseItemId": "demo.item.dagger",
+  "rfbValue": {
+    "flags": [
+      "BLOWS",
+      "BRAND_POIS",
+      "DEX",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_FEAR",
+      "SEE_INVIS",
+      "SLAY_EVIL",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "STEALTH",
+      "SUST_DEX",
+      "VORPAL"
+    ],
+    "pval": 2,
+    "toArmor": 6
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 5,
+    "toHit": 16,
+    "toDamage": 14
+  },
+  "modifiers": {
+    "defense": 6,
+    "dexterity": 2
+  },
+  "equipmentBonuses": {
+    "meleeAttacksDeltaPercent": 100,
+    "stealthSkill": 2
+  },
+  "passives": [
+    "see-invisible",
+    "sustain-dexterity"
+  ],
+  "statusImmunities": [
+    "rfb.status.fear",
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "evil": "slay",
+    "orc": "slay",
+    "troll": "slay"
+  },
+  "brands": [
+    "poison"
+  ],
+  "vorpal": true
+}

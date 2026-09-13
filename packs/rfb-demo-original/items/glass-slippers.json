@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.glass-slippers",
+  "nameKey": "item-demo-glass-slippers-name",
+  "descriptionKey": "item-demo-glass-slippers-description",
+  "glyph": "]",
+  "generationLevel": 40,
+  "weightTenthsPound": 20,
+  "baseValue": 40000,
+  "maxStack": 1,
+  "equipmentSlot": "boots",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 165,
+    "baseItemKindId": "demo.item.soft-leather-boots",
+    "instant": false,
+    "rarityOneIn": 40
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "DEC_DEX",
+      "DEC_SPEED",
+      "DEC_STEALTH",
+      "FULL_NAME",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "RES_CHAOS",
+      "RES_DARK",
+      "RES_LITE",
+      "RES_NETHER",
+      "RES_NEXUS",
+      "SUST_CHR",
+      "VULN_SHARDS"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "dexterity": -3,
+    "charisma": 3,
+    "speed": -3
+  },
+  "equipmentBonuses": {
+    "stealthSkill": -3,
+    "lightRadius": 1
+  },
+  "passives": [
+    "sustain-charisma"
+  ],
+  "resistances": {
+    "light": "resistant",
+    "dark": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "shards": "vulnerable",
+    "chaos": "resistant"
+  }
+}
