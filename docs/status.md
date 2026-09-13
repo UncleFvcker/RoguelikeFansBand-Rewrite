@@ -12,7 +12,7 @@ QUESTITEM Q1–Q5：已接入44件当前身份奖励，累计70/83，余13件保
 
 Q1–Q5统一验证已完成：核心有效1826项（初轮1821通过、5处修复后定向复验）、内容177、本地化39、源参数5项、C估值与生成审计通过；26条契约仅刷新已解释的41处哈希至v333并通过。相关Clippy、Schema／协议生成物和lock检查通过；普通Tauri standalone已构建，Q1–Q5代表UI共20步，每步保存恢复通过。实际准备与保留限制见推进计划，不包含自然练级、完整通关或Android验收。
 
-非QUESTITEM按[推进计划](non-quest-artifact-plan.md)已加入N1a–N1c九件定义、双语文本及待运行测试。N1c新增103石手巴林的／198逃亡者卡姆依的／231荆轲的，扩展实际近战、品牌免疫对照、额外攻次与锋锐测试，并补198漏记的传送激活及失败／冷却保存测试。当前141/309已定义，剩168件；正式物品650项、固定神器211/392。N1已加入9/65件定义，下一步N1d；按用户安排等整个N1完成后编译验证，本批只有静态核对。两条项链照明+1；REGEN沿用现有定期回复1 HP适配，不宣称原版百分比再生等价。198复用现有传送候选与普通道具耗时，未补原版150%耗时／Astral Guide调整和未开放Troika钩子。19件非QUESTITEM仍缺底材，科温与暗影杰克额外命名掉落继续单列。
+非QUESTITEM按[推进计划](non-quest-artifact-plan.md)已加入N1a–N1d首轮12件定义、双语文本及待运行测试。N1d新增234义经龙盔／360黑色贝雷帽／392笨蛋帽，补写目标感知、抗性／维持和真实法师负容量对照、重诅咒保存及解咒后固有负面属性检查；234独立ID保留已有235义经腹卷。当前144/309已定义，剩165件；正式物品653项、固定神器214/392。N1已加入12/65件定义，继续剩余53件，首轮结束不触发编译验证；按用户安排等整个N1完成后编译验证，本批只有静态核对。两条项链照明+1；REGEN沿用现有定期回复1 HP适配，不宣称原版百分比再生等价。198复用现有传送候选与普通道具耗时，未补原版150%耗时／Astral Guide调整和未开放Troika钩子。19件非QUESTITEM仍缺底材，科温、暗影杰克与黑色贝雷帽额外命名掉落继续单列。
 
 ## 版本与源内容
 
@@ -24,7 +24,7 @@ Q1–Q5统一验证已完成：核心有效1826项（初轮1821通过、5处修�
 | 协议 | 1.266；绑定/Schema已同步 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 133 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 28 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 正式包1.469.0；lock暂留已验证1.466.0，待N1完成统一刷新 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 正式包1.470.0；lock暂留已验证1.466.0，待N1完成统一刷新 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v333，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 14 个 Class、110 个 Build、57 个 Race、36 本能力书、1,915 个 ability、641 个 item、1,410 个 actor、169 个 affix、152 个 mutation。世界定义含 39 个 dungeon（含阿斯加德与须弥山神系入口）；城镇有 7 个 town、69 个 shop、68 个 townFacility。基础分配池为 424 行，固定神器定义映射 202/392；创角开放14职业、103个Build。这些是定义与入口数量，行为验收范围见下文。

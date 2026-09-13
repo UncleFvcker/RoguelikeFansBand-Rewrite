@@ -29939,6 +29939,18 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
         );
     }
 
+    #[test]
+    fn n1d_headgear_matches_source_parameters_and_mage_capacity() {
+        check_n1_passive_artifact_source_parameters(
+            include_str!("testdata/n1d-artifacts.txt"),
+            &[
+                (234, "yositsune-helm", "dragon-helm"),
+                (360, "black-belet", "knit-cap"),
+                (392, "dunce-cap", "pointy-hat"),
+            ],
+        );
+    }
+
     fn check_n1_passive_artifact_source_parameters(source: &str, identities: &[(u32, &str, &str)]) {
         let entries = parse_a_info(source).unwrap();
         assert_eq!(entries.len(), identities.len());
@@ -29984,6 +29996,25 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                 imported["equipmentBonuses"]["meleeAttacksDeltaPercent"] = serde_json::json!(150);
                 imported["vorpal"] = serde_json::json!(true);
             }
+            if entry.index == 234 {
+                // equip.c: SEARCH uses 5*pval; ESP and warning use existing passives.
+                imported["equipmentBonuses"]["searchSkill"] = serde_json::json!(10);
+                imported["passives"] = serde_json::json!(["esp-human", "warning"]);
+            }
+            if entry.index == 360 {
+                let passives = imported["passives"].as_array_mut().unwrap();
+                passives.extend([
+                    serde_json::json!("esp-animal"),
+                    serde_json::json!("esp-human"),
+                ]);
+                passives.sort_by(|a, b| a.as_str().cmp(&b.as_str()));
+            }
+            if entry.index == 392 {
+                // equip.c:1740: DEC_SPELL_CAP subtracts pval; ordinary curse removal
+                // releases the equipment but leaves these fixed negative attributes.
+                imported["equipmentBonuses"]["spellCapacityBonus"] = serde_json::json!(-3);
+                imported["initialCurse"] = serde_json::json!("heavy");
+            }
             // Formal fixed artifacts preserve protection from monster destruction.
             imported["resistsMonsterDestruction"] = serde_json::json!(true);
             let path = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -30009,6 +30040,7 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                 "slays",
                 "brands",
                 "vorpal",
+                "initialCurse",
             ] {
                 assert_eq!(imported[field], formal[field], "{slug}: {field}");
             }

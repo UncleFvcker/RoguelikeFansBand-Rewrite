@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.black-belet",
+  "nameKey": "item-demo-black-belet-name",
+  "descriptionKey": "item-demo-black-belet-description",
+  "glyph": "]",
+  "generationLevel": 56,
+  "weightTenthsPound": 8,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "equipmentSlot": "head",
+  "tags": ["artifact", "equipment", "armor"],
+  "artifactGeneration": {"sourceIndex": 360, "baseItemKindId": "demo.item.knit-cap", "instant": false, "rarityOneIn": 90},
+  "rfbValue": {"flags": ["ESP_ANIMAL", "ESP_HUMAN", "FREE_ACT", "HOLD_LIFE", "IGNORE_ACID", "IGNORE_COLD", "IGNORE_ELEC", "IGNORE_FIRE", "REGEN", "RES_CONF", "RES_DISEN", "RES_FEAR", "RES_FIRE", "RES_SOUND", "RES_TIME", "SEE_INVIS", "SUST_CHR", "SUST_CON", "SUST_DEX", "SUST_INT", "SUST_STR", "SUST_WIS"], "pval": 0, "toArmor": 18},
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "modifiers": {"defense": 19},
+  "passives": ["esp-animal", "esp-human", "hold-life", "regeneration", "see-invisible", "sustain-charisma", "sustain-constitution", "sustain-dexterity", "sustain-intelligence", "sustain-strength", "sustain-wisdom"],
+  "resistances": {"sound": "resistant", "time": "resistant", "fire": "resistant", "disenchant": "resistant", "confusion": "resistant"},
+  "statusImmunities": ["rfb.status.fear", "rfb.status.paralysis"]
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.dunce-cap",
+  "nameKey": "item-demo-dunce-cap-name",
+  "descriptionKey": "item-demo-dunce-cap-description",
+  "glyph": "]",
+  "generationLevel": 10,
+  "weightTenthsPound": 5,
+  "baseValue": 0,
+  "maxStack": 1,
+  "equipmentSlot": "head",
+  "tags": ["artifact", "equipment", "armor"],
+  "artifactGeneration": {"sourceIndex": 392, "baseItemKindId": "demo.item.pointy-hat", "instant": false, "rarityOneIn": 40},
+  "rfbValue": {"flags": ["DEC_INT", "DEC_SPELL_CAP", "DEC_WIS", "HEAVY_CURSE", "IGNORE_ACID", "IGNORE_COLD", "IGNORE_ELEC", "IGNORE_FIRE"], "pval": 3, "toArmor": -1},
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "modifiers": {"intelligence": -3, "wisdom": -3},
+  "equipmentBonuses": {"spellCapacityBonus": -3},
+  "initialCurse": "heavy"
+}

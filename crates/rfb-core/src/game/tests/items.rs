@@ -31,6 +31,15 @@ fn n1b_ordinary_artifacts_generate_equip_and_resume_after_save() {
     ]);
 }
 
+#[test]
+fn n1d_headgear_preserves_perception_curses_and_mage_capacity_after_save() {
+    check_n1_passive_artifacts(&[
+        ("yositsune-helm", "dragon-helm"),
+        ("black-belet", "knit-cap"),
+        ("dunce-cap", "pointy-hat"),
+    ]);
+}
+
 fn check_n1_passive_artifacts(identities: &[(&str, &str)]) {
     for &(slug, base) in identities {
         let mut game = Game::new_with_build(491, "demo.build.mage-life-arcane").unwrap();
@@ -79,7 +88,11 @@ fn check_n1_passive_artifacts(identities: &[(&str, &str)]) {
             game.commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
                 .unwrap()
         };
-        assert!(item.activation.is_none() && item.curse.is_none());
+        assert!(item.activation.is_none());
+        assert_eq!(
+            item.curse,
+            (slug == "dunce-cap").then_some(ItemCurseSeverityDto::Heavy)
+        );
         assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
         let id = item.id.clone();
         game.items.push(item);
@@ -206,7 +219,111 @@ fn check_n1_passive_artifacts(identities: &[(&str, &str)]) {
                     );
                 }
             }
+            "yositsune-helm" => {
+                assert_eq!(
+                    (
+                        modifiers.defense,
+                        modifiers.dexterity,
+                        modifiers.constitution,
+                        modifiers.charisma
+                    ),
+                    (15, 2, 2, 2)
+                );
+                assert_eq!(game.player_equipment_bonuses().search_skill, 10);
+                assert_eq!(game.player_equipment_bonuses().infravision, 2);
+                assert!(
+                    game.player_equipment_passives()
+                        .contains(&EquipmentPassive::Warning)
+                );
+                assert!(
+                    game.player_status_immunities()
+                        .contains("rfb.status.blindness")
+                );
+                assert!(game.player_status_immunities().contains("rfb.status.fear"));
+                assert_eq!(
+                    game.effective_player_resistances().level(DamageType::Sound),
+                    ResistanceLevel::Resistant
+                );
+            }
+            "black-belet" => {
+                assert_eq!(modifiers.defense, 19);
+                assert_eq!(game.player_hold_life_sources(), 1);
+                for element in [
+                    DamageType::Sound,
+                    DamageType::Time,
+                    DamageType::Fire,
+                    DamageType::Disenchant,
+                    DamageType::Confusion,
+                ] {
+                    assert_eq!(
+                        game.effective_player_resistances().level(element),
+                        ResistanceLevel::Resistant
+                    );
+                }
+                for attribute in [
+                    AttributeKind::Strength,
+                    AttributeKind::Intelligence,
+                    AttributeKind::Wisdom,
+                    AttributeKind::Dexterity,
+                    AttributeKind::Constitution,
+                    AttributeKind::Charisma,
+                ] {
+                    assert!(game.player_sustains_attribute(attribute));
+                }
+                let before = game.progress.attributes.intelligence;
+                let rng = game.rng.clone();
+                game.resolve_monster_attribute_drain(AttributeKind::Intelligence);
+                assert_eq!(game.progress.attributes.intelligence, before);
+                assert_eq!(game.rng, rng);
+            }
+            "dunce-cap" => {
+                assert_eq!((modifiers.intelligence, modifiers.wisdom), (-3, -3));
+                assert_eq!(game.player_equipment_bonuses().spell_capacity_bonus, -3);
+                assert!(game.resources["demo.resource.mana"].maximum < mana_before);
+                // Cancel capacity alone, retaining both negative attributes on the Mage.
+                let mut capacity_control = game.clone();
+                capacity_control.items[0]
+                    .intrinsic_properties
+                    .equipment_bonuses
+                    .spell_capacity_bonus = 3;
+                capacity_control.refresh_player_resource_maxima();
+                let unscaled = capacity_control.resources["demo.resource.mana"].maximum;
+                assert!(unscaled > 0);
+                assert_eq!(
+                    game.resources["demo.resource.mana"].maximum,
+                    unscaled * 85 / 100
+                );
+            }
             _ => unreachable!(),
+        }
+        if matches!(slug, "yositsune-helm" | "black-belet") {
+            // Targeted ESP must distinguish humans/animals from unrelated monsters.
+            game.player.position = Position { x: 10, y: 10 };
+            replace_terrain(&mut game, Position { x: 10, y: 10 }, "demo.terrain.floor");
+            for (index, actor) in ["blubbering-idiot", "sheep", "goblin"].iter().enumerate() {
+                let position = Position {
+                    x: 12,
+                    y: 10 + index as i32,
+                };
+                replace_terrain(&mut game, position, "demo.terrain.floor");
+                game.push_generated_actor(
+                    format!("test.n1d-esp-{index}"),
+                    &format!("demo.actor.{actor}"),
+                    position,
+                );
+            }
+            assert!(!game.player_has_telepathy());
+            assert!(game.entity_is_visible_by_telepathy(&game.entities[0]));
+            assert_eq!(
+                game.entity_is_visible_by_telepathy(&game.entities[1]),
+                slug == "black-belet"
+            );
+            assert!(!game.entity_is_visible_by_telepathy(&game.entities[2]));
+            let mut unequipped = game.clone();
+            unequipped.items[0].location = ItemLocation::Inventory;
+            assert!(!unequipped.entity_is_visible_by_telepathy(&unequipped.entities[0]));
+            assert!(!unequipped.entity_is_visible_by_telepathy(&unequipped.entities[1]));
+            clear_monsters(&mut game);
         }
         game.player.hp = 1;
         game.world_tick = 0;
@@ -225,7 +342,7 @@ fn check_n1_passive_artifacts(identities: &[(&str, &str)]) {
                 .events
                 .iter()
                 .any(|event| event.message_key == "equipment-regenerated"),
-            matches!(slug, "necklace-of-the-dwarves" | "corwin")
+            matches!(slug, "necklace-of-the-dwarves" | "corwin" | "black-belet")
         );
         assert!(restored.generated_artifact_ids.contains(&kind));
         assert_ne!(
@@ -252,6 +369,26 @@ fn check_n1_passive_artifacts(identities: &[(&str, &str)]) {
             ItemLocation::Equipped { slot_id } => slot_id.clone(),
             _ => panic!("N1 artifact must remain equipped"),
         };
+        if slug == "dunce-cap" {
+            let mana = restored.resources["demo.resource.mana"].maximum;
+            assert_eq!(restored.items[0].curse, Some(ItemCurseSeverityDto::Heavy));
+            assert!(restored.unequip_slot(&slot).is_none());
+            let ordinary = restored.remove_equipped_curses(RemoveEquippedCursesRequest::new(false));
+            assert!(ordinary.removed_item_ids.is_empty());
+            assert_eq!(restored.items[0].curse, Some(ItemCurseSeverityDto::Heavy));
+            let greater = restored.remove_equipped_curses(RemoveEquippedCursesRequest::new(true));
+            assert_eq!(greater.removed_item_ids, [id.clone()]);
+            restored.refresh_player_resource_maxima();
+            assert_eq!(restored.resources["demo.resource.mana"].maximum, mana);
+            assert_eq!(restored.equipment_modifiers().intelligence, -3);
+            assert_eq!(restored.equipment_modifiers().wisdom, -3);
+            assert_eq!(restored.player_equipment_bonuses().spell_capacity_bonus, -3);
+            restored.reveal_current_visibility();
+            let saved = Game::from_save(restored.to_save()).unwrap();
+            assert_eq!(saved.state_hash(), restored.state_hash());
+            assert_eq!(saved.items[0].curse, None);
+            restored = saved;
+        }
         restored.unequip_slot(&slot).unwrap();
         restored.refresh_player_resource_maxima();
         assert_eq!(restored.equipment_modifiers(), Default::default());
