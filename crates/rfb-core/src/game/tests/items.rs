@@ -14,6 +14,199 @@ fn artifact_loot_context(depth: u16) -> LootContext {
 }
 
 #[test]
+fn n1a_ordinary_artifacts_generate_equip_and_resume_after_save() {
+    for (slug, base) in [
+        ("necklace-of-the-dwarves", "amulet"),
+        ("gogo", "amulet"),
+        ("corwin", "set-of-gauntlets"),
+    ] {
+        let mut game = Game::new_with_build(491, "demo.build.mage-life-arcane").unwrap();
+        choose_human_talent_if_pending(&mut game);
+        descend_one_floor(&mut game);
+        clear_monsters(&mut game);
+        game.items.clear();
+        // Controlled XP and loot depth, not a natural leveling scenario.
+        game.apply_player_experience(game.experience_required_for_level(50), &mut Vec::new());
+        game.refresh_player_resource_maxima();
+        let hp_before = game.effective_player_max_hp();
+        let mana_before = game.resources["demo.resource.mana"].maximum;
+        let kind = format!("demo.item.{slug}");
+        let base = format!("demo.item.{base}");
+        let context = LootContext {
+            table_id: "demo.loot-table.base-items".into(),
+            floor_id: "test.floor.depth-70".into(),
+            depth: 70,
+            source: LootSource::MonsterDeath {
+                actor_id: "test.n1a-drop".into(),
+            },
+        };
+        let item = if slug == "necklace-of-the-dwarves" {
+            // Complete ordinary table and quality rolls: no forced base or artifact.
+            (0..200_000)
+                .find_map(|_| {
+                    game.generate_loot_instances(
+                        &context,
+                        ItemLocation::Ground(game.player.position),
+                    )
+                    .unwrap()
+                    .into_iter()
+                    .find(|item| item.kind_id == kind)
+                })
+                .expect("the Dwarves necklace must occur in the complete ordinary pool")
+        } else {
+            // Follow-ups control only the real base; retain all artifact candidates,
+            // source level/rarity gates and unique registration.
+            let selected = (0..20_000)
+                .find_map(|_| {
+                    game.roll_fixed_artifact_kind_id(&context, Some(&base), false)
+                        .filter(|candidate| candidate == &kind)
+                })
+                .expect("the source base and ordinary rarity gate must admit the artifact");
+            let draft = game.fixed_item_draft(&context, selected);
+            game.commit_generated_item_draft(draft, ItemLocation::Ground(game.player.position))
+                .unwrap()
+        };
+        assert!(item.activation.is_none() && item.curse.is_none());
+        assert!(item.affix_ids.is_empty() && item.rolled_affixes.is_empty());
+        let id = item.id.clone();
+        game.items.push(item);
+        game.pick_up_item_at_player(Some(&id)).unwrap();
+        assert!(
+            !game
+                .item_property_knowledge
+                .get(&id)
+                .is_some_and(|knowledge| knowledge.appraised)
+        );
+        game.reveal_current_visibility();
+        let restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.rng, game.rng);
+        game = restored;
+        game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+        game.equip_inventory_item(&id, None).unwrap();
+        game.refresh_player_resource_maxima();
+        let modifiers = game.equipment_modifiers();
+        match slug {
+            "necklace-of-the-dwarves" => {
+                assert_eq!((modifiers.strength, modifiers.constitution), (2, 2));
+                assert_eq!(game.player_equipment_life_percent(), 6);
+                assert!(game.effective_player_max_hp() > hp_before);
+                assert_eq!(game.player_equipment_bonuses().stealth_skill, -2);
+                assert_eq!(game.player_equipment_bonuses().infravision, 2);
+                assert_eq!(game.player_light_radius(), Some(1));
+                assert!(
+                    game.player_equipment_passives()
+                        .contains(&EquipmentPassive::SeeInvisible)
+                );
+                assert!(
+                    game.player_status_immunities()
+                        .contains("rfb.status.blindness")
+                );
+                assert!(
+                    game.player_status_immunities()
+                        .contains("rfb.status.paralysis")
+                );
+            }
+            "gogo" => {
+                assert_eq!(
+                    (
+                        modifiers.intelligence,
+                        modifiers.wisdom,
+                        modifiers.dexterity
+                    ),
+                    (4, 4, 4)
+                );
+                assert!(game.resources["demo.resource.mana"].maximum > mana_before);
+                assert_eq!(game.player_light_radius(), Some(1));
+                assert!(
+                    game.player_equipment_passives()
+                        .contains(&EquipmentPassive::SeeInvisible)
+                );
+            }
+            "corwin" => {
+                assert_eq!((modifiers.constitution, modifiers.defense), (4, 17));
+                assert_eq!(game.player_equipment_bonuses().melee_skill, 2);
+                assert_eq!(game.player_equipment_bonuses().melee_damage, 2);
+                assert_eq!(
+                    game.effective_player_resistances().level(DamageType::Cold),
+                    ResistanceLevel::Resistant
+                );
+                let before = game.progress.attributes.constitution;
+                let rng = game.rng.clone();
+                game.resolve_monster_attribute_drain(AttributeKind::Constitution);
+                assert_eq!(game.progress.attributes.constitution, before);
+                assert_eq!(game.rng, rng);
+            }
+            _ => unreachable!(),
+        }
+        game.player.hp = 1;
+        game.world_tick = 0;
+        game.reveal_current_visibility();
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        let update = dispatch_next(&mut game, GameCommand::Wait);
+        assert_eq!(
+            dispatch_next(&mut restored, GameCommand::Wait).events,
+            update.events
+        );
+        assert_eq!(restored.state_hash(), game.state_hash());
+        // Existing flat equipment recovery is an adaptation, not source percentage regen.
+        assert_eq!(
+            update
+                .events
+                .iter()
+                .any(|event| event.message_key == "equipment-regenerated"),
+            slug != "gogo"
+        );
+        assert!(restored.generated_artifact_ids.contains(&kind));
+        assert_ne!(
+            restored.roll_fixed_artifact_kind_id(&context, Some(&base), false),
+            Some(kind)
+        );
+        let mut continued = Game::from_save(restored.to_save()).unwrap();
+        assert_eq!(
+            continued
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap(),
+            restored
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap()
+        );
+        assert_eq!(continued.rng, restored.rng);
+        let slot = match &restored
+            .items
+            .iter()
+            .find(|item| item.id == id)
+            .unwrap()
+            .location
+        {
+            ItemLocation::Equipped { slot_id } => slot_id.clone(),
+            _ => panic!("N1a artifact must remain equipped"),
+        };
+        restored.unequip_slot(&slot).unwrap();
+        restored.refresh_player_resource_maxima();
+        assert_eq!(restored.equipment_modifiers(), Default::default());
+        assert_eq!(restored.effective_player_max_hp(), hp_before);
+        assert_eq!(
+            restored.resources["demo.resource.mana"].maximum,
+            mana_before
+        );
+        assert_eq!(restored.player_equipment_life_percent(), 0);
+        assert_eq!(restored.player_equipment_bonuses().light_radius, 0);
+        assert!(!restored.player_sustains_attribute(AttributeKind::Constitution));
+        restored.player.hp = 1;
+        restored.world_tick = 0;
+        let update = dispatch_next(&mut restored, GameCommand::Wait);
+        assert!(
+            !update
+                .events
+                .iter()
+                .any(|event| event.message_key == "equipment-regenerated")
+        );
+    }
+}
+
+#[test]
 fn i1_a_ordinary_weapons_and_diggers_generate_and_act_after_save() {
     fn act(game: &mut Game, digger: bool) -> Vec<DomainEvent> {
         let mut events = Vec::new();

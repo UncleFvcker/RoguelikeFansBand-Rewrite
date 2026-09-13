@@ -1,0 +1,23 @@
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: lib/edit/a_info.txt
+N:6:Necklace of the Dwarves
+I:40:0:2
+W:70:35:3:75000
+F:STR | CON | LIFE | INFRA | HIDE_TYPE | RES_BLIND | DEC_STEALTH
+F:SEE_INVIS | FREE_ACT | REGEN | LITE | FULL_NAME
+D:诺格莱迷尔；一条镶嵌着无数闪耀的维林诺宝石的金项链，
+D:更衬托出一颗光芒四射的精灵宝钻。曾在山脉铁匠铺中长期劳作的
+D:矮人工匠们坚韧的灵魂依然留存于其中，而
+D:它戴在佩戴者身上却轻如游丝。
+
+N:220:of Gogo
+I:40:0:4
+W:50:50:2:55555
+P:0:0d0:0:0:0
+F:INT | WIS | DEX |
+F:SEE_INVIS | LITE |
+
+N:55:of Corwin
+I:31:3:4
+W:50:40:25:43000
+P:2:1d1:2:2:15
+F:SUST_CON | CON | REGEN | RES_COLD

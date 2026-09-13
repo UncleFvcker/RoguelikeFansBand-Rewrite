@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.corwin",
+  "nameKey": "item-demo-corwin-name",
+  "descriptionKey": "item-demo-corwin-description",
+  "glyph": "]",
+  "generationLevel": 50,
+  "weightTenthsPound": 25,
+  "baseValue": 43000,
+  "maxStack": 1,
+  "equipmentSlot": "gloves",
+  "tags": ["artifact", "equipment", "armor"],
+  "artifactGeneration": {"sourceIndex": 55, "baseItemKindId": "demo.item.set-of-gauntlets", "instant": false, "rarityOneIn": 40},
+  "rfbValue": {"flags": ["CON", "IGNORE_ACID", "IGNORE_COLD", "IGNORE_ELEC", "IGNORE_FIRE", "REGEN", "RES_COLD", "SUST_CON"], "pval": 4, "toArmor": 15},
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "modifiers": {"constitution": 4, "defense": 17},
+  "equipmentBonuses": {"meleeSkill": 2, "meleeDamage": 2},
+  "passives": ["regeneration", "sustain-constitution"],
+  "resistances": {"cold": "resistant"}
+}
