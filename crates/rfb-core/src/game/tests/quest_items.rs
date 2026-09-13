@@ -9,6 +9,190 @@ const REWARDS: [(&str, &str, u16); 4] = [
     ("the-multi-hued-centipede", "multi-hued-centipede", 30),
 ];
 
+const Q2_REWARDS: [(&str, &str); 15] = [
+    ("ubbo-sathla-the-unbegotten-source", "ubbo-sathla"),
+    ("glaurung-father-of-the-dragons", "dragonkind"),
+    ("vecna-the-emperor-lich", "emperor-lich"),
+    ("carcharoth-the-jaws-of-thirst", "dog-collar-of-carcharoth"),
+    ("ymir-the-ice-giant", "ymir"),
+    ("ariel-queen-of-air", "ariel"),
+    ("moire-queen-of-rebma", "moire"),
+    ("quaker-master-of-earth", "quaker"),
+    ("the-emperor-quylthulg", "emperor-quylthulg"),
+    ("oremorj-the-cyberdemon-lord", "cyberdemon-lord"),
+    ("ulik-the-troll", "ulik"),
+    ("omarax-the-eye-tyrant", "eyes"),
+    ("kundry-queen-of-the-lost-haven", "kundry"),
+    ("loge-spirit-of-fire", "loge"),
+    ("jack-of-lanterns", "pumpkin-lamp-of-jack-of-lanterns"),
+];
+
+#[test]
+fn q2_named_death_equipment_and_saved_continuation() {
+    let mut fresh = Game::new_with_build(523, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut fresh);
+    for (actor, slug) in Q2_REWARDS {
+        let kind = format!("demo.item.{slug}");
+        let actor_kind = format!("demo.actor.{actor}");
+        let mut game = fresh.clone();
+        if game.actor_kind_is_dungeon_guardian(&actor_kind) {
+            let floor = game.content.world(&game.world_id).unwrap().procedural_floors.iter()
+                .find(|floor| floor.guardian.as_ref().is_some_and(|guardian| guardian.actor_kind_id == actor_kind)
+                    && floor.dungeon_id.as_ref().is_some_and(|id| game.dungeon_is_active(id)))
+                .unwrap().id.clone();
+            // Prepare the actual active final floor, retaining its guardian reward.
+            assert!(game.transition_floor(floor, None, None, false).unwrap().is_some());
+        }
+        // Prepared adjacent source actor and successful seed, not natural leveling.
+        prepare_combat(&mut game, &actor_kind);
+        game = successful_kill_start(&game, &kind);
+        let mut loaded = Game::from_save(game.to_save()).unwrap();
+        let attack = GameCommand::Move { direction: Direction::East };
+        assert_eq!(dispatch_next(&mut game, attack.clone()).events,
+            dispatch_next(&mut loaded, attack).events, "{slug}");
+        assert_eq!(game.state_hash(), loaded.state_hash(), "{slug}");
+        assert_eq!(game.actor_kind_available_instance_count(&actor_kind), 0);
+        let reward = game.items.iter().find(|item| item.kind_id == kind).unwrap().clone();
+        assert!(game.generated_artifact_ids.contains(&kind));
+        if let Some(guardian_reward) = game.dungeon_guardian_floor_for_actor(&actor_kind)
+            .and_then(|floor| floor.guardian.as_ref())
+            .and_then(|guardian| guardian.reward_artifact_item_kind_id.as_ref()) {
+            assert!(game.items.iter().any(|item| &item.kind_id == guardian_reward),
+                "named reward must supplement the existing dungeon reward");
+        }
+        let ItemLocation::Ground(position) = reward.location else { panic!("ground reward") };
+        game.player.position = position;
+        game.pick_up_item_at_player(Some(&reward.id)).unwrap();
+        game.reveal_current_visibility();
+        game = Game::from_save(game.to_save()).unwrap();
+        game.identify_item_instance(&reward.id, ItemIdentificationRequest::new(true));
+        game.equip_inventory_item(&reward.id, None).unwrap();
+        let properties = game.equipment_modifiers();
+        let bonuses = game.player_equipment_bonuses();
+        match slug {
+            "ymir" => {
+                assert_eq!((properties.strength, properties.dexterity, properties.constitution), (3, -3, 3));
+                let resistances = game.effective_player_resistances();
+                assert_eq!(resistances.level(DamageType::Cold), ResistanceLevel::Immune);
+                assert_eq!(resistances.level(DamageType::Fire), ResistanceLevel::Vulnerable);
+                assert_eq!(reward.curse, None, "negative DEX does not invent a curse");
+            }
+            "cyberdemon-lord" => {
+                assert_eq!(properties.defense, 90);
+                assert_eq!((bonuses.melee_skill, bonuses.melee_damage), (-5, 15));
+            }
+            "ariel" => {
+                assert_eq!((properties.speed, properties.dexterity), (5, 5));
+                assert!(game.player_equipment_passives().contains(&EquipmentPassive::Levitation));
+            }
+            "eyes" => assert_eq!((bonuses.search_skill, bonuses.perception_skill), (15, 15)),
+            "kundry" => assert_eq!((bonuses.device_skill, bonuses.magic_resistance_percent), (16, 10)),
+            "pumpkin-lamp-of-jack-of-lanterns" => {
+                assert_eq!(game.player_light_radius(), Some(4));
+                assert_eq!(reward.fuel, None);
+                assert!(game.player_equipment_passives().contains(&EquipmentPassive::EspHuman));
+            }
+            _ => {}
+        }
+        if matches!(slug, "dragonkind" | "emperor-lich" | "emperor-quylthulg") {
+            assert_eq!(reward.rolled_affixes.len(), 1);
+            assert!(!reward.rolled_affixes[0].properties.resistances.is_empty());
+        }
+        let mut loaded = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(game.state_hash(), loaded.state_hash());
+        assert_eq!(dispatch_next(&mut game, GameCommand::Wait).events,
+            dispatch_next(&mut loaded, GameCommand::Wait).events);
+        assert_eq!(game.state_hash(), loaded.state_hash());
+        let slot = match &loaded.items.iter().find(|item| item.id == reward.id).unwrap().location {
+            ItemLocation::Equipped { slot_id } => slot_id.clone(),
+            _ => panic!("equipped reward"),
+        };
+        loaded.unequip_slot(&slot).unwrap();
+        assert_eq!(loaded.equipment_modifiers(), Default::default());
+        assert_eq!(loaded.player_equipment_bonuses(), Default::default());
+    }
+}
+
+#[test]
+fn q2_dungeon_rewards_remain_in_complete_allocation() {
+    let mut game = Game::new_with_build(524, "demo.build.warrior").unwrap();
+    // R'lyeh reaches depth96 and admits both preferred and other source actors.
+    // Moire is wild-only; Vecna/Kundry retain their dedicated guardian floors.
+    let floor = "demo.floor.rlyeh-depth-96";
+    let policy = game.content.encounter_table("demo.encounter-table.rlyeh")
+        .unwrap().global_allocation.clone().unwrap();
+    for actor in ["demo.actor.vecna-the-emperor-lich", "demo.actor.kundry-queen-of-the-lost-haven"] {
+        assert!(game.content.world(&game.world_id).unwrap().procedural_floors.iter()
+            .any(|floor| floor.guardian.as_ref().is_some_and(|guardian| guardian.actor_kind_id == actor)));
+    }
+    let mut remaining = Q2_REWARDS.iter()
+        .filter(|(actor, slug)| *slug != "moire"
+            && !game.actor_kind_is_dungeon_guardian(&format!("demo.actor.{actor}")))
+        .map(|(actor, _)| format!("demo.actor.{actor}")).collect::<BTreeSet<_>>();
+    for _ in 0..100_000 {
+        if let Some(actor) = game.select_original_allocated_monster(
+            floor, &policy, 96, 96, None, &[], None, None,
+        ) {
+            remaining.remove(&actor);
+        }
+        if remaining.is_empty() { break; }
+    }
+    assert!(remaining.is_empty(), "unreachable Q2 actors: {remaining:?}");
+}
+
+#[test]
+fn q2_eyes_and_kundry_activate_and_restore_partial_recovery() {
+    for slug in ["eyes", "kundry"] {
+        let mut game = Game::new_with_build(525, "demo.build.mage-arcane-sorcery").unwrap();
+        choose_human_talent_if_pending(&mut game);
+        place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        clear_monsters(&mut game);
+        game.items.clear();
+        game.progress.level = 30;
+        game.refresh_player_resource_maxima();
+        let id = "test.q2.activation";
+        give_inventory_item(&mut game, id, &format!("demo.item.{slug}"));
+        game.identify_item_instance(id, ItemIdentificationRequest::new(true));
+        game.equip_inventory_item(id, None).unwrap();
+        game.resources.get_mut("demo.resource.mana").unwrap().current = 0;
+        game.glow.fill(false);
+        assert!(game.resources["demo.resource.mana"].maximum > 15);
+        let activate = |game: &mut Game| {
+            let mut events = Vec::new();
+            game.use_inventory_item(id, Some(&TargetSelection::SelfTarget), None,
+                &mut events, &mut BTreeSet::new(), &mut Vec::new()).unwrap();
+            events
+        };
+        let seed = (0..1000).find(|seed| RfbRng::seeded(*seed).bounded(100) < 5).unwrap();
+        game.rng = RfbRng::seeded(seed);
+        let mut loaded = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(activate(&mut game), activate(&mut loaded));
+        assert_eq!(game.state_hash(), loaded.state_hash());
+        assert_eq!(game.items[0].charges.unwrap().current, 0);
+        if slug == "kundry" {
+            assert_eq!(game.resources["demo.resource.mana"].current, 15);
+        } else {
+            assert!(game.glow.iter().all(|glow| *glow));
+            assert!(!game.player_has_status_kind("rfb.status.telepathy"));
+        }
+        let start = game.world_tick;
+        for tick in 1..=150 {
+            game.world_tick = start + tick;
+            game.process_inventory_device_recovery(&mut Vec::new());
+        }
+        let mut loaded = Game::from_save(game.to_save()).unwrap();
+        for tick in 151..=300 {
+            for game in [&mut game, &mut loaded] {
+                game.world_tick = start + tick;
+                game.process_inventory_device_recovery(&mut Vec::new());
+                assert_eq!(game.items[0].charges.unwrap().current, u32::from(tick == 300));
+            }
+        }
+        assert_eq!(game.state_hash(), loaded.state_hash());
+    }
+}
+
 #[test]
 #[ignore = "explicit Q1 combat preparation for ordinary Tauri standalone acceptance"]
 fn export_q1_desktop_save() {

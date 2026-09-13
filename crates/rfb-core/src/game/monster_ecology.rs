@@ -995,6 +995,24 @@ mod w3_tests {
     use super::*;
 
     #[test]
+    fn q2_moire_is_reachable_through_complete_ocean_allocation() {
+        let mut game = Game::new_with_build(526, "demo.build.warrior").unwrap();
+        let water = game.content.terrain("demo.terrain.surface-water-deep").unwrap().clone();
+        let kind = "demo.actor.moire-queen-of-rebma";
+        assert!(game.content.actor(kind).unwrap().allocation.as_ref().unwrap().wild_only);
+        assert!((0..10_000).any(|_| {
+            game.select_surface_allocated_monster(39, &water, Some(WildernessTerrain::DeepWater), &[])
+                .as_deref() == Some(kind)
+        }));
+        let occupied = vec![kind.to_owned()];
+        for _ in 0..100 {
+            assert_ne!(game.select_surface_allocated_monster(
+                39, &water, Some(WildernessTerrain::DeepWater), &occupied,
+            ).as_deref(), Some(kind));
+        }
+    }
+
+    #[test]
     fn daylight_excludes_light_vulnerable_wilderness_monsters() {
         let game =
             Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");

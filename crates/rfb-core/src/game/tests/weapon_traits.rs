@@ -956,8 +956,9 @@ fn impact_weapon_reuses_earthquake_and_strong_hit_stun_without_extra_trigger_rng
 #[test]
 fn q2_quaker_gloves_forward_impact_only_while_equipped() {
     let mut base = melee_game(0, "demo.build.warrior");
-    let gloves = give_inventory_item(&mut base, "demo.item.quaker", 1);
-    base.equip_inventory_item(&gloves, None).unwrap();
+    let gloves = "test.q2.quaker";
+    give_inventory_item(&mut base, gloves, "demo.item.quaker");
+    base.equip_inventory_item(gloves, None).unwrap();
     // Force the strong-hit boundary through the existing test weapon fixture.
     add_weapon_trait(&mut base, WeaponTraitDto::Order, 60, 1);
     let seed = (0..10_000)

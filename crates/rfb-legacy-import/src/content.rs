@@ -29958,6 +29958,72 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
     }
 
     #[test]
+    fn q2_named_artifacts_preserve_source_parameters_and_adapted_consumers() {
+        let entries = parse_a_info(include_str!("testdata/q2-artifacts.txt")).unwrap();
+        let identities = [
+            (298, "ubbo-sathla", "leather-jacket"),
+            (300, "dragonkind", "golden-crown"),
+            (301, "emperor-lich", "golden-crown"),
+            (302, "dog-collar-of-carcharoth", "amulet"),
+            (303, "ymir", "two-handed-sword"),
+            (306, "eyes", "jewel-encrusted-crown"),
+            (311, "cyberdemon-lord", "full-plate-armour"),
+            (314, "ulik", "club"),
+            (315, "quaker", "leather-gloves"),
+            (316, "ariel", "ethereal-cloak"),
+            (317, "moire", "golden-crown"),
+            (318, "loge", "long-sword"),
+            (319, "emperor-quylthulg", "golden-crown"),
+            (348, "kundry", "amulet"),
+            (368, "pumpkin-lamp-of-jack-of-lanterns", "feanorian-lamp"),
+        ];
+        assert_eq!(entries.len(), identities.len());
+        for (mut entry, (index, slug, base)) in entries.into_iter().zip(identities) {
+            assert_eq!(entry.index, index);
+            entry.flags.extend(["IGNORE_ACID", "IGNORE_ELEC", "IGNORE_FIRE", "IGNORE_COLD"].map(str::to_owned));
+            entry.flags.sort();
+            let mut imported = artifact_json(
+                &entry, slug, Some(&format!("demo.item.{base}")),
+                &LauncherAmmoIndex::default(), &mut ContentImportReport::default(),
+            );
+            // Formal adaptations use existing consumers beyond the generic importer.
+            // artifact.c::random_artifact_resistance and equip.c:1582-1599,1741.
+            if entry.flags.iter().any(|flag| flag == "XTRA_H_RES") {
+                imported["artifactGeneration"]["affixIds"] =
+                    serde_json::json!(["rfb-legacy.affix.artifact-extra-high-resistance"]);
+            }
+            if entry.flags.iter().any(|flag| flag == "SEARCH") {
+                imported["equipmentBonuses"]["searchSkill"] = serde_json::json!(5 * entry.pval);
+                imported["equipmentBonuses"]["perceptionSkill"] = serde_json::json!(5 * entry.pval);
+            }
+            if index == 348 {
+                imported["equipmentBonuses"]["deviceSkill"] = serde_json::json!(8 * entry.pval);
+                imported["equipmentBonuses"]["magicResistancePercent"] = serde_json::json!(5 * entry.pval);
+            }
+            let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join(format!("../../packs/rfb-demo-original/items/{slug}.json"));
+            let formal: serde_json::Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
+            for field in ["generationLevel", "weightTenthsPound", "baseValue", "equipmentSlot",
+                "artifactGeneration", "rfbValue", "modifiers", "equipmentBonuses",
+                "resistances", "statusImmunities", "meleeProfile", "brands", "slays"] {
+                assert_eq!(imported[field], formal[field], "{slug}: {field}");
+            }
+            if matches!(index, 306 | 348) {
+                let activation = entry.activation.unwrap();
+                let formal_activation = &formal["deviceGeneration"]["activations"][0];
+                assert_eq!(formal_activation["deviceCheckDifficulty"], activation.power);
+                assert_eq!(formal["deviceGeneration"]["recovery"]["intervalTicks"],
+                    u32::from(activation.recovery_turns) * 10);
+                if index == 348 {
+                    assert_eq!(formal_activation["effect"]["amount"], activation.extra);
+                } else {
+                    assert_eq!(formal_activation["effectProgramId"], "demo.effect.arkenstone-clairvoyance");
+                }
+            }
+        }
+    }
+
+    #[test]
     fn mindcrafter_artifacts_keep_source_weights_attributes_and_activation_effects() {
         let source = "N:15:Palantir of Westernesse\nI:39:8:3\nW:60:50:10:60000\nP:0:1d1:0:0:0\nF:WIS | CHR | TELEPATHY | INSTA_ART | FULL_NAME | FIXED_ACT\nE:LIST_UNIQUES:60:200\nN:244:of Eternity\nI:36:2:3\nW:70:120:0:100000\nP:0:0d0:0:0:42\nF:CON | SUST_STR | SUST_INT | SUST_WIS | SUST_DEX | SUST_CON | SUST_CHR | FREE_ACT | LEVITATION | SEE_INVIS | HOLD_LIFE | RES_LITE | RES_DARK | RES_DISEN | RES_TIME\nN:328:& Meditation Stone\nI:39:23:2\nW:50:150:20:100000\nP:0:1d1:0:0:0\nF:FULL_NAME | WIS | INSTA_ART\nE:RESTORE_MANA:50:777\n";
         let entries = parse_a_info(source).unwrap();
