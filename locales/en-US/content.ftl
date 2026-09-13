@@ -10185,3 +10185,7 @@ item-demo-quaker-name = Set of Leather Gloves of Quaker, Master of Earth
 item-demo-quaker-description = Set of Leather Gloves of Quaker, Master of Earth
 item-demo-emperor-quylthulg-name = Golden Crown of the Emperor Quylthulg
 item-demo-emperor-quylthulg-description = Golden Crown of the Emperor Quylthulg
+item-demo-cyberdemon-lord-name = Full Plate Armour of the Cyberdemon Lord
+item-demo-cyberdemon-lord-description = Full Plate Armour of the Cyberdemon Lord
+item-demo-ulik-name = Club of Ulik
+item-demo-ulik-description = Club of Ulik

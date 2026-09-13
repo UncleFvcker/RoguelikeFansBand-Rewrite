@@ -10216,3 +10216,7 @@ item-demo-quaker-name = 大地大师，震地者的皮手套
 item-demo-quaker-description = 大地大师，震地者的皮手套
 item-demo-emperor-quylthulg-name = 克尔苏格皇帝的金王冠
 item-demo-emperor-quylthulg-description = 克尔苏格皇帝的金王冠
+item-demo-cyberdemon-lord-name = 赛博恶魔领主的全身板甲
+item-demo-cyberdemon-lord-description = 赛博恶魔领主的全身板甲
+item-demo-ulik-name = 乌里克的木棒
+item-demo-ulik-description = 乌里克的木棒
