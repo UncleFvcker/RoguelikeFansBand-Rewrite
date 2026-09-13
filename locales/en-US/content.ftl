@@ -10193,3 +10193,7 @@ item-demo-eyes-name = Jewel Encrusted Crown of Eyes
 item-demo-eyes-description = Jewel Encrusted Crown of Eyes
 item-demo-kundry-name = Amulet of Kundry
 item-demo-kundry-description = Amulet of Kundry
+item-demo-loge-name = Long Sword of Loge, Spirit of Fire
+item-demo-loge-description = Long Sword of Loge, Spirit of Fire
+item-demo-pumpkin-lamp-of-jack-of-lanterns-name = Pumpkin Lamp of Jack of Lanterns
+item-demo-pumpkin-lamp-of-jack-of-lanterns-description = Pumpkin Lamp of Jack of Lanterns

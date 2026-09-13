@@ -157,6 +157,7 @@
     "skeletonWeight": 1
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.pumpkin-lamp-of-jack-of-lanterns", "chancePercent": 10},
   "speed": 128,
   "statusImmunities": [
     "rfb.status.confusion",

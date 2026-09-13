@@ -115,6 +115,7 @@
     "poison": "immune"
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.loge", "chancePercent": 5},
   "speed": 120,
   "statusImmunities": [
     "rfb.status.confusion",

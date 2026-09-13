@@ -10224,3 +10224,7 @@ item-demo-eyes-name = 百眼之镶钻王冠
 item-demo-eyes-description = 百眼之镶钻王冠
 item-demo-kundry-name = 孔德里的护身符
 item-demo-kundry-description = 孔德里的护身符
+item-demo-loge-name = 火之精灵，洛格的长剑
+item-demo-loge-description = 火之精灵，洛格的长剑
+item-demo-pumpkin-lamp-of-jack-of-lanterns-name = 杰克灯笼的南瓜灯
+item-demo-pumpkin-lamp-of-jack-of-lanterns-description = 杰克灯笼的南瓜灯
