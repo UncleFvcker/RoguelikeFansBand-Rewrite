@@ -604,7 +604,6 @@ fn p86e_mirror_shield_reflects_monster_bolts_once_with_exact_three_of_four_gate(
             *cell = "demo.terrain.wall".to_owned();
         }
         game.player.position = Position { x: 3, y: 3 };
-        game.player.hp = 100;
         for x in 3..=5 {
             replace_terrain(&mut game, Position { x, y: 3 }, "demo.terrain.floor");
         }
@@ -623,12 +622,10 @@ fn p86e_mirror_shield_reflects_monster_bolts_once_with_exact_three_of_four_gate(
             true,
         ));
         give_inventory_item(&mut game, "test.item.reflector", kind);
-        game.items
-            .last_mut()
-            .expect("Mirror Shield should be granted")
-            .location = ItemLocation::Equipped {
-            slot_id: "left-hand".to_owned(),
-        };
+        game.equip_inventory_item("test.item.reflector", None)
+            .unwrap();
+        // Controlled damage budget after equipping clamps HP; no save in this fixture.
+        game.player.hp = 100;
         game
     };
     let cast_bolt = |game: &mut Game| {
@@ -666,6 +663,7 @@ fn p86e_mirror_shield_reflects_monster_bolts_once_with_exact_three_of_four_gate(
         "demo.item.mirror-shield",
         "demo.item.perseus",
         "demo.item.ossian",
+        "demo.item.padre",
     ] {
         let mut equipment_check = make_game(0, kind);
         assert!(equipment_check.player_reflects_bolts());

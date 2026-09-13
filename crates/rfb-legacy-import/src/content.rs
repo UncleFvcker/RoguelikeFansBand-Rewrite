@@ -29917,13 +29917,32 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
     #[test]
     fn n1a_ordinary_artifacts_match_source_parameters_and_equipment_consumers() {
         // master a0d92b6378: a_info 6/220/55; init1 adds four IGNORE flags.
-        let entries = parse_a_info(include_str!("testdata/n1a-artifacts.txt")).unwrap();
-        assert_eq!(entries.len(), 3);
-        for (entry, (index, slug, base)) in entries.iter().zip([
-            (6, "necklace-of-the-dwarves", "amulet"),
-            (220, "gogo", "amulet"),
-            (55, "corwin", "set-of-gauntlets"),
-        ]) {
+        check_n1_passive_artifact_source_parameters(
+            include_str!("testdata/n1a-artifacts.txt"),
+            &[
+                (6, "necklace-of-the-dwarves", "amulet"),
+                (220, "gogo", "amulet"),
+                (55, "corwin", "set-of-gauntlets"),
+            ],
+        );
+    }
+
+    #[test]
+    fn n1b_ordinary_artifacts_match_source_parameters_and_equipment_consumers() {
+        check_n1_passive_artifact_source_parameters(
+            include_str!("testdata/n1b-artifacts.txt"),
+            &[
+                (43, "jack-of-shadows", "cloak"),
+                (168, "giles", "ring-mail"),
+                (206, "padre", "metal-lamellar-armour"),
+            ],
+        );
+    }
+
+    fn check_n1_passive_artifact_source_parameters(source: &str, identities: &[(u32, &str, &str)]) {
+        let entries = parse_a_info(source).unwrap();
+        assert_eq!(entries.len(), identities.len());
+        for (entry, &(index, slug, base)) in entries.iter().zip(identities) {
             assert_eq!(entry.index, index);
             let mut entry = entry.clone();
             entry.flags.extend(
@@ -29940,6 +29959,14 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
             // xtra1.c:3754-3755: non-light-slot LITE is +1, independent of pval.
             if entry.flags.iter().any(|flag| flag == "LITE") {
                 imported["equipmentBonuses"]["lightRadius"] = serde_json::json!(1);
+            }
+            // equip.c:1596-1600 scales SEARCH by 5; :1749 enables full telepathy.
+            if entry.index == 43 {
+                imported["equipmentBonuses"]["searchSkill"] = serde_json::json!(35);
+                imported["passives"]
+                    .as_array_mut()
+                    .unwrap()
+                    .push(serde_json::json!("telepathy"));
             }
             // Formal fixed artifacts preserve protection from monster destruction.
             imported["resistsMonsterDestruction"] = serde_json::json!(true);

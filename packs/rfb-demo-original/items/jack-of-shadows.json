@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.jack-of-shadows",
+  "nameKey": "item-demo-jack-of-shadows-name",
+  "descriptionKey": "item-demo-jack-of-shadows-description",
+  "glyph": "(",
+  "generationLevel": 50,
+  "weightTenthsPound": 10,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "equipmentSlot": "cloak",
+  "tags": ["artifact", "equipment", "armor"],
+  "artifactGeneration": {"sourceIndex": 43, "baseItemKindId": "demo.item.cloak", "instant": false, "rarityOneIn": 50},
+  "rfbValue": {"flags": ["FREE_ACT", "HOLD_LIFE", "IGNORE_ACID", "IGNORE_COLD", "IGNORE_ELEC", "IGNORE_FIRE", "SEARCH", "SEE_INVIS", "STEALTH", "TELEPATHY"], "pval": 7, "toArmor": 19},
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "modifiers": {"defense": 20},
+  "equipmentBonuses": {"stealthSkill": 7, "searchSkill": 35},
+  "passives": ["hold-life", "see-invisible", "telepathy"],
+  "statusImmunities": ["rfb.status.paralysis"]
+}

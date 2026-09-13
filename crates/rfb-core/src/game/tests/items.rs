@@ -15,11 +15,24 @@ fn artifact_loot_context(depth: u16) -> LootContext {
 
 #[test]
 fn n1a_ordinary_artifacts_generate_equip_and_resume_after_save() {
-    for (slug, base) in [
+    check_n1_passive_artifacts(&[
         ("necklace-of-the-dwarves", "amulet"),
         ("gogo", "amulet"),
         ("corwin", "set-of-gauntlets"),
-    ] {
+    ]);
+}
+
+#[test]
+fn n1b_ordinary_artifacts_generate_equip_and_resume_after_save() {
+    check_n1_passive_artifacts(&[
+        ("jack-of-shadows", "cloak"),
+        ("giles", "ring-mail"),
+        ("padre", "metal-lamellar-armour"),
+    ]);
+}
+
+fn check_n1_passive_artifacts(identities: &[(&str, &str)]) {
+    for &(slug, base) in identities {
         let mut game = Game::new_with_build(491, "demo.build.mage-life-arcane").unwrap();
         choose_human_talent_if_pending(&mut game);
         descend_one_floor(&mut game);
@@ -37,7 +50,7 @@ fn n1a_ordinary_artifacts_generate_equip_and_resume_after_save() {
             floor_id: "test.floor.depth-70".into(),
             depth: 70,
             source: LootSource::MonsterDeath {
-                actor_id: "test.n1a-drop".into(),
+                actor_id: "test.n1-drop".into(),
             },
         };
         let item = if slug == "necklace-of-the-dwarves" {
@@ -137,6 +150,62 @@ fn n1a_ordinary_artifacts_generate_equip_and_resume_after_save() {
                 assert_eq!(game.progress.attributes.constitution, before);
                 assert_eq!(game.rng, rng);
             }
+            "jack-of-shadows" => {
+                assert_eq!(modifiers.defense, 20);
+                assert_eq!(game.player_equipment_bonuses().stealth_skill, 7);
+                assert_eq!(game.player_equipment_bonuses().search_skill, 35);
+                assert_eq!(game.player_hold_life_sources(), 1);
+                assert!(
+                    game.player_status_immunities()
+                        .contains("rfb.status.paralysis")
+                );
+                assert!(game.player_has_telepathy());
+                // Perception must reach a real actor, not merely set a sheet flag.
+                game.player.position = Position { x: 10, y: 10 };
+                replace_terrain(&mut game, Position { x: 10, y: 10 }, "demo.terrain.floor");
+                let target = Position { x: 12, y: 10 };
+                replace_terrain(&mut game, target, "demo.terrain.floor");
+                game.push_generated_actor("test.n1b-mind".into(), "demo.actor.goblin", target);
+                assert!(game.entity_is_visible_by_telepathy(&game.entities[0]));
+                let mut unarmed = game.clone();
+                unarmed
+                    .items
+                    .iter_mut()
+                    .find(|item| item.id == id)
+                    .unwrap()
+                    .location = ItemLocation::Inventory;
+                assert!(!unarmed.entity_is_visible_by_telepathy(&unarmed.entities[0]));
+                clear_monsters(&mut game);
+            }
+            "giles" => {
+                assert_eq!(modifiers.defense, 30);
+                assert_eq!(game.player_equipment_bonuses().stealth_skill, -2);
+                assert_eq!(game.player_equipment_bonuses().melee_skill, -2);
+                for element in [
+                    DamageType::Fire,
+                    DamageType::Cold,
+                    DamageType::Chaos,
+                    DamageType::Nexus,
+                ] {
+                    assert_eq!(
+                        game.effective_player_resistances().level(element),
+                        ResistanceLevel::Resistant
+                    );
+                }
+            }
+            "padre" => {
+                assert_eq!((modifiers.defense, modifiers.charisma), (40, 2));
+                assert_eq!(game.player_equipment_bonuses().melee_skill, 5);
+                assert_eq!(game.player_equipment_bonuses().melee_damage, 5);
+                assert!(game.player_reflects_bolts());
+                assert_eq!(game.player_light_radius(), Some(1));
+                for element in [DamageType::Fire, DamageType::Chaos] {
+                    assert_eq!(
+                        game.effective_player_resistances().level(element),
+                        ResistanceLevel::Resistant
+                    );
+                }
+            }
             _ => unreachable!(),
         }
         game.player.hp = 1;
@@ -156,7 +225,7 @@ fn n1a_ordinary_artifacts_generate_equip_and_resume_after_save() {
                 .events
                 .iter()
                 .any(|event| event.message_key == "equipment-regenerated"),
-            slug != "gogo"
+            matches!(slug, "necklace-of-the-dwarves" | "corwin")
         );
         assert!(restored.generated_artifact_ids.contains(&kind));
         assert_ne!(
@@ -181,7 +250,7 @@ fn n1a_ordinary_artifacts_generate_equip_and_resume_after_save() {
             .location
         {
             ItemLocation::Equipped { slot_id } => slot_id.clone(),
-            _ => panic!("N1a artifact must remain equipped"),
+            _ => panic!("N1 artifact must remain equipped"),
         };
         restored.unequip_slot(&slot).unwrap();
         restored.refresh_player_resource_maxima();
@@ -193,6 +262,21 @@ fn n1a_ordinary_artifacts_generate_equip_and_resume_after_save() {
         );
         assert_eq!(restored.player_equipment_life_percent(), 0);
         assert_eq!(restored.player_equipment_bonuses().light_radius, 0);
+        assert_eq!(restored.player_equipment_bonuses().stealth_skill, 0);
+        assert_eq!(restored.player_equipment_bonuses().search_skill, 0);
+        assert!(!restored.player_has_telepathy());
+        assert!(!restored.player_reflects_bolts());
+        for element in [
+            DamageType::Fire,
+            DamageType::Cold,
+            DamageType::Chaos,
+            DamageType::Nexus,
+        ] {
+            assert_eq!(
+                restored.effective_player_resistances().level(element),
+                ResistanceLevel::Normal
+            );
+        }
         assert!(!restored.player_sustains_attribute(AttributeKind::Constitution));
         restored.player.hp = 1;
         restored.world_tick = 0;
