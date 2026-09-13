@@ -154,6 +154,7 @@
     "poison": "resistant"
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.dog-collar-of-carcharoth", "chancePercent": 5},
   "speed": 130,
   "statusImmunities": [
     "rfb.status.confusion",

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.ymir",
+  "nameKey": "item-demo-ymir-name",
+  "descriptionKey": "item-demo-ymir-description",
+  "glyph": "|",
+  "generationLevel": 70,
+  "weightTenthsPound": 400,
+  "baseValue": 0,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 303,
+    "baseItemKindId": "demo.item.two-handed-sword",
+    "instant": false,
+    "rarityOneIn": 15
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_COLD",
+      "CON",
+      "DEC_DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_COLD",
+      "QUESTITEM",
+      "RES_COLD",
+      "STR",
+      "VORPAL",
+      "VULN_FIRE"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 3,
+    "dexterity": -3,
+    "constitution": 3
+  },
+  "weaponProficiencyBaseItemId": "demo.item.two-handed-sword",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 5,
+    "damageSides": 10,
+    "toHit": 7,
+    "toDamage": 17
+  },
+  "resistances": {
+    "fire": "vulnerable",
+    "cold": "immune"
+  },
+  "vorpal": true,
+  "brands": [
+    "cold"
+  ]
+}

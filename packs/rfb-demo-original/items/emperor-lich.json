@@ -1,0 +1,81 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.emperor-lich",
+  "nameKey": "item-demo-emperor-lich-name",
+  "descriptionKey": "item-demo-emperor-lich-description",
+  "glyph": "]",
+  "generationLevel": 80,
+  "weightTenthsPound": 30,
+  "baseValue": 125000,
+  "maxStack": 1,
+  "equipmentSlot": "head",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 301,
+    "baseItemKindId": "demo.item.golden-crown",
+    "instant": false,
+    "rarityOneIn": 40,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "DEC_MANA",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "QUESTITEM",
+      "REGEN",
+      "RES_COLD",
+      "RES_DARK",
+      "RES_ELEC",
+      "RES_LITE",
+      "RES_NETHER",
+      "RES_POIS",
+      "SPEED",
+      "SPELL_CAP",
+      "XTRA_H_RES"
+    ],
+    "pval": 3,
+    "toArmor": 12
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "intelligence": 3,
+    "charisma": 3,
+    "defense": 12,
+    "speed": 3
+  },
+  "equipmentBonuses": {
+    "spellCapacityBonus": 3
+  },
+  "passives": [
+    "reduced-mana-cost",
+    "regeneration"
+  ],
+  "resistances": {
+    "electricity": "resistant",
+    "cold": "resistant",
+    "poison": "resistant",
+    "light": "resistant",
+    "dark": "resistant",
+    "nether": "resistant"
+  }
+}
