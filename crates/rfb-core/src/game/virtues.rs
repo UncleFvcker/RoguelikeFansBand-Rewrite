@@ -90,6 +90,12 @@ fn roll_virtues(
             "demo.class.priest" => {
                 kinds.extend([VirtueKindDto::Faith, VirtueKindDto::Temperance]);
             }
+            "demo.class.paladin" => kinds.extend([
+                VirtueKindDto::Justice,
+                VirtueKindDto::Valour,
+                VirtueKindDto::Honour,
+                VirtueKindDto::Faith,
+            ]),
             "demo.class.warrior-mage" => {
                 kinds.extend([VirtueKindDto::Enchantment, VirtueKindDto::Valour]);
             }

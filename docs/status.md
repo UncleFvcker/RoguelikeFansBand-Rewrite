@@ -12,7 +12,7 @@ QUESTITEM Q1–Q5：已接入44件当前身份奖励，累计70/83，余13件保
 
 Q1–Q5统一验证已完成：核心有效1826项（初轮1821通过、5处修复后定向复验）、内容177、本地化39、源参数5项、C估值与生成审计通过；26条契约仅刷新已解释的41处哈希至v333并通过。相关Clippy、Schema／协议生成物和lock检查通过；普通Tauri standalone已构建，Q1–Q5代表UI共20步，每步保存恢复通过。实际准备与保留限制见推进计划，不包含自然练级、完整通关或Android验收。
 
-非QUESTITEM按[推进计划](non-quest-artifact-plan.md)：N1全部65件已验收；N2的47件、N3的25件已接入并完成阶段验证。N3涵盖祝福／生成概率、双持与弓箭组合、特殊命中、金币诅咒及无敌穿透，新增黑箭专用底材；四件桌面代表15步操作均保存恢复并核对哈希。非QUESTITEM已定义269/309、剩40件。正式物品779项、固定神器339/392，包／lock1.473.0。QUESTITEM仍为70/83，13件保留条件；18件非QUESTITEM仍缺底材。N2吸取生命最大HP削减／Escape确认，以及N3未开放身份、双持力量伤害上限／黎明召唤适配差异仍单列；REGEN等既有适配和额外命名掉落队列不因此关闭。
+非QUESTITEM按[推进计划](non-quest-artifact-plan.md)：N1全部65件已验收；N2的47件、N3的25件已接入并完成阶段验证。N3涵盖祝福／生成概率、双持与弓箭组合、特殊命中、金币诅咒及无敌穿透，新增黑箭专用底材；四件桌面代表15步操作均保存恢复并核对哈希。非QUESTITEM已定义269/309、剩40件。正式物品779项、固定神器339/392，包／lock1.474.0。QUESTITEM仍为70/83，13件保留条件；18件非QUESTITEM仍缺底材。N2吸取生命最大HP削减／Escape确认，以及N3未开放身份、双持力量伤害上限／黎明召唤适配差异仍单列；REGEN等既有适配和额外命名掉落队列不因此关闭。
 
 ## 版本与源内容
 
@@ -24,7 +24,7 @@ Q1–Q5统一验证已完成：核心有效1826项（初轮1821通过、5处修�
 | 协议 | 1.266；绑定/Schema已同步 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 133 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 28 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 正式包／lock均为1.473.0，N3验收范围及未闭合源规则见非QUESTITEM计划 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 正式包／lock均为1.474.0；领域开放与N3验收范围见各专项计划 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v333，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 14 个 Class、110 个 Build、57 个 Race、36 本能力书、1,915 个 ability、641 个 item、1,410 个 actor、169 个 affix、152 个 mutation。世界定义含 39 个 dungeon（含阿斯加德与须弥山神系入口）；城镇有 7 个 town、69 个 shop、68 个 townFacility。基础分配池为 424 行，固定神器定义映射 202/392；创角开放14职业、103个Build。这些是定义与入口数量，行为验收范围见下文。
@@ -88,11 +88,13 @@ I5 工艺首组已接入四册和全部 32 法术，普通入口为高阶法师�
 
 I6 首组已使现有物理合堆路径允许不同获取来源、单边铭文和折扣；合并后保留混合来源、铭文和较高折扣，交易报价与独立储存分组保持精确元数据。核心专项验证部分合并/拆分/销毁、生成落地不多分配 ID、购买/卖回、满背包取回和保存后继续操作；范围及剩余表示差异见[物品计划 I6](remaining-item-coverage-plan.md#i6对象表示差异)。本批未新增物品、改动内容锁或刷新契约，也没有新增桌面/Android 验收。
 
+已有九领域的[开放与补验](existing-realms-opening.md)已补齐26个入口：高阶法师九系、法师九系72个有序组合、圣骑士生命／圣战／死亡／恶魔四系；牧师24、战法师8、游侠4组合保持。正式Build及创角入口均为129，正式能力1951项、包／lock1.474.0。工艺Mage和新增Paladin的128项源职业参数、神圣长枪及善恶选择、圣骑士出生美德已接入；统一验证结果见专项记录。现有36册／288个领域法术不重复导入，未实现领域及公共适配继续单列。
+
 ## 玩家入口
 
-职业与种族目录在 [character-creation.ts](../web/src/character-creation.ts)，提交入口在 [session-shell.ts](../web/src/session-shell.ts)，表单在 [web/index.html](../web/index.html)。当前源码入口目录提供14个职业、103个构筑、51个种族选项（43个主种族，龙人九分支）；新增吸血鬼、半人马、炎魔、人造人、迈雅通过本轮自动验证，半人马禁配骑兵；桌面交互验收仍待专项安排。能力定义为1,915个，内容lock已同步。其中法师占56个有序领域组合、牧师占24个、战法师占8个；战法师新增UI与代表实战已完成上述验收：
+职业与种族目录在 [character-creation.ts](../web/src/character-creation.ts)，提交入口在 [session-shell.ts](../web/src/session-shell.ts)，表单在 [web/index.html](../web/index.html)。当前源码入口目录提供14个职业、129个构筑、51个种族选项（43个主种族，龙人九分支）；新增吸血鬼、半人马、炎魔、人造人、迈雅通过本轮自动验证，半人马禁配骑兵；桌面交互验收仍待专项安排。能力定义为1,951个，内容lock已同步。其中法师占72个有序领域组合、牧师占24个、战法师占8个；战法师新增UI与代表实战已完成上述验收：
 
-创角界面已完成[四步面板改造](character-creation-ui-plan.md)：桌面固定为 `84vw × 84dvh`，提供概览、种族、职业标签页和常驻摘要/开始按钮。种族按八个原版分类显示，龙人进入九个亚种层；职业现按七个原版分类显示，牧师在“祈祷”下选择主副领域，战法师在“混合”下选择副领域；高阶法师进入死亡/工艺领域层，圣骑士进入死亡领域层，心灵术士在“心智”下直接选择。详情查看与确认选择分开，取消分支保留已选组合。窄屏提供选择/说明切换，支持原生缩放、短屏内部滚动及焦点恢复。原面板改造已验证中英文、多种桌面尺寸、390像素窄屏及200%缩放；当时46个种族、6个构筑、提交校验与失败重试均有覆盖。实际验收人类战士、红色龙人死亡高阶法师、骷髅死亡圣骑士开局及有效动作；结果页路由使用终局投影测试后创建真实新会话。心灵术士新增入口的验证范围见下文；系统输入法、屏幕阅读器和Android人工验收不在已验证范围内。
+创角界面已完成[四步面板改造](character-creation-ui-plan.md)：桌面固定为 `84vw × 84dvh`，提供概览、种族、职业标签页和常驻摘要/开始按钮。种族按八个原版分类显示，龙人进入九个亚种层；职业现按七个原版分类显示，牧师在“祈祷”下选择主副领域，战法师在“混合”下选择副领域；高阶法师进入九领域层，圣骑士进入生命/圣战/死亡/恶魔领域层，心灵术士在“心智”下直接选择。详情查看与确认选择分开，取消分支保留已选组合。窄屏提供选择/说明切换，支持原生缩放、短屏内部滚动及焦点恢复。原面板改造已验证中英文、多种桌面尺寸、390像素窄屏及200%缩放；当时46个种族、6个构筑、提交校验与失败重试均有覆盖。实际验收人类战士、红色龙人死亡高阶法师、骷髅死亡圣骑士开局及有效动作；结果页路由使用终局投影测试后创建真实新会话。心灵术士新增入口的验证范围见下文；系统输入法、屏幕阅读器和Android人工验收不在已验证范围内。
 
 | 构筑 | 稳定 Build ID | 范围 |
 | --- | --- | --- |
@@ -100,13 +102,13 @@ I6 首组已使现有物理合堆路径允许不同获取来源、单边铭文�
 | 战士 | `demo.build.warrior` | 非施法基线 |
 | 狂战士 | `demo.build.berserker` | 无 MP 的 HP 战技；正式开局、成长/能力、保存恢复和桌面交付专项通过 |
 | 决斗者 | `demo.build.duelist` | 单目标挑战与 HP 战技；正式新开局、规则/界面、保存继续和桌面交付专项通过，禁止冬贝利出生 |
-| 法师（八领域双选） | `demo.build.mage-<first>-<second>`，主副不可相同 | 56 个有序组合已开放；双书学习、重复研习、遗忘恢复、副领域改换、自然新开局与保存继续专项通过，Windows 优化版已交付 |
-| 高阶法师（死亡） | `demo.build.high-mage-death` | 死亡领域书本与施法 |
+| 法师（九领域双选） | `demo.build.mage-<first>-<second>`，主副不可相同 | 72 个有序组合已开放；双书学习、重复研习、遗忘恢复、副领域改换、自然新开局与保存继续专项通过，Windows 优化版已交付 |
+| 高阶法师（九领域） | `demo.build.high-mage-<realm>` | 九系书本、学习与施法；新增七系验收见领域专项 |
 | 高阶法师（工艺） | `demo.build.high-mage-craft` | 四册、32 法术；物品处理、临时强化与元素选择 |
 | 牧师（善恶双领域） | `demo.build.priest-<first>-<second>` | 24个合法组合位于“祈祷”；规则/生成消费者回归、中英文UI、善恶开局和准备后的能力/领域改换/保存续演已通过，Windows优化版已交付 |
 | 弓箭手 | `demo.build.archer` | 制造弹药与射击 |
 | 战法师（奥秘主领域） | `demo.build.warrior-mage-arcane-<second>` | “混合”下8个副领域入口，含工艺；核心/生成消费者、双语UI、代表出生实战与准备后的转换/高阶书/改换保存续演通过，Windows优化版已交付 |
-| 圣骑士（死亡） | `demo.build.paladin-death` | 死亡领域与随机祈祷学习 |
+| 圣骑士（四领域） | `demo.build.paladin-<realm>` | 生命／圣战／死亡／恶魔，随机祈祷学习与善恶长枪 |
 | 骑兵 | `demo.build.cavalry` | 骑乘相关行为 |
 | 狙击手 | `demo.build.sniper` | 专注与特殊射击 |
 | 心灵术士 | `demo.build.mindcrafter` | 无书心灵能力；正式开局、等级边界、能力 UI 和保存恢复专项通过 |
@@ -117,7 +119,7 @@ I6 首组已使现有物理合堆路径允许不同获取来源、单边铭文�
 
 优化 EXE 通过 `npm run build -- --no-bundle` 构建、实际启动到标题/创角页并正常退出；本机原生抓屏接口不受支持，完整交互与截图来自同源 WebDriver 包。交付目录为 `release/RoguelikeFansBand-Rewrite_0.1.0_mindcrafter-20260910_windows-x64/`，内含 EXE、校验值、许可、来源及验收证据。复现：在 `web` 执行 `npm run e2e:build` 和 `node e2e/tauri.e2e.mjs --mindcrafter`，报告及截图在本机 `test-results/mindcrafter-*`。未验收 Android，原版未实现关联仍见[来源记录](mindcrafter-source-audit.md)。
 
-Death、Arcane、Sorcery、Armageddon、Nature、Life、Daemon、Crusade 各有四册内容、领域 Build 和相关规则测试路径；法师入口已开放这八领域的 56 个有序组合，高阶法师已开放 Death 与 Craft，圣骑士仍只开放 Death。法师代表组合的实际游玩与测试准备范围见上文，不代表每个组合均已完整通关。
+Death、Arcane、Sorcery、Armageddon、Nature、Life、Daemon、Crusade、Craft各有四册／32项法术。法师九系72组、高阶法师九系、圣骑士善恶四系均已开放；验证范围见[领域专项](existing-realms-opening.md)，不表示每个组合或全部法术均已完整通关。
 
 托姆特（`rfb-legacy.race.tomte`）已进入正式新游戏白名单。六个当前职业的出生装备合并、知识美德及核心探测、头饰惩罚、39/40 级感知鉴定、拾取、保存恢复和继续行动已验证；桌面抽查战士、死亡高阶法师和弓箭手。其他 Race 仍按定义、入口与实际验收范围区分。
 
@@ -240,7 +242,7 @@ Dr. Jones 的鞭子使用原版神器 162、隔空取物与 300 tick 冷却；�
 
 E8.8 已完成 Windows Tauri standalone 的负向 Ego、随机神器、龙系装备和动态背包四类获取、鉴定、装备及保存恢复流程，并在恢复后继续行动。负向速度与诅咒阻止卸装、神器激活耗能、龙系基础抗性和 Ego 护甲、额外背包槽位与重量/溢出均有 UI 断言。Nature 四册错误的 Chaos 源身份已修正，内容包升级至 1.405.0；契约仍为 v320，26 条断言无需刷新。范围与复现见[E8.8 验收](../design/ego-integration-audit.md#e88-当前桌面验收)。当时六职业范围的共享生成契约完成，全原版范围的未开放身份、未导入底材和对象表示限制仍保留。
 
-当前 103 个开放构筑的生成审计覆盖来源条件与每构筑五个范围：[审计输入](../design/generation-build-applicability.json)记录实际入口、实现和测试引用，[生成矩阵](../design/ego-contract-audit.json)由完整来源审计生成并接受只读 CI 检查。本轮合入五族接入、十五件常规装备及随机荒野地牢的来源与消费者记录；职业限制、奖励与重复神器替代沿用实际规则。当前可达的文档证据缺口为零；缺失身份／内容、重铸入口和对象表示限制仍单列，全原版完成标记为 false。审计引用存在不代表执行过测试，本轮实际结果见上文。后续按[内容开发](content-development.md#职业与领域-build-的生成接入)维护审计，交接按[并行协作](parallel-development.md#职业与领域生成审计的交接)执行。
+当前 129 个开放构筑的生成审计覆盖来源条件与每构筑五个范围：[审计输入](../design/generation-build-applicability.json)记录实际入口、实现和测试引用，[生成矩阵](../design/ego-contract-audit.json)由完整来源审计生成并接受只读 CI 检查。本轮合入五族接入、十五件常规装备及随机荒野地牢的来源与消费者记录；职业限制、奖励与重复神器替代沿用实际规则。当前可达的文档证据缺口为零；缺失身份／内容、重铸入口和对象表示限制仍单列，全原版完成标记为 false。审计引用存在不代表执行过测试，本轮实际结果见上文。后续按[内容开发](content-development.md#职业与领域-build-的生成接入)维护审计，交接按[并行协作](parallel-development.md#职业与领域生成审计的交接)执行。
 
 ## 更新口径
 

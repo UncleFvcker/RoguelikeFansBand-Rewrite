@@ -249,6 +249,13 @@ impl Game {
 
     pub(super) fn class_power_matches_realm(&self, ability_id: &str) -> bool {
         match ability_id {
+            "demo.ability.paladin-holy-lance" | "demo.ability.paladin-hell-lance" => self
+                .character_definitions()
+                .is_some_and(|(build, _, class, _)| {
+                    class.id == "demo.class.paladin"
+                        && (ability_id == "demo.ability.paladin-holy-lance")
+                            == matches!(build.first_realm_id.as_deref(), Some("life" | "crusade"))
+                }),
             "demo.ability.priest-bless-weapon" => self.player_is_good_priest(),
             "demo.ability.priest-evocation" => {
                 self.player_is_priest() && !self.player_is_good_priest()

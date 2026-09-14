@@ -4,7 +4,7 @@
   "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
-  "seed": "0x424f57",
+  "seed": "0x424f59",
   "preconditions": {
     "world": "demo.world.middle-earth",
     "playerBuildId": "demo.build.warrior",
@@ -63,7 +63,7 @@
       },
       "revision": 1,
       "rngDrawCounter": 198,
-      "stateHash": "8ef2f7aded6ef6b8452cf05ca7902c5068dbab7fb39d27fd5a5277bbf63defc1",
+      "stateHash": "defe392c8e62b9358aa342c1fc053731cf8f8200dd99975262dfadfff1e3469b",
       "turn": 1
     },
     "events": [
@@ -71,16 +71,16 @@
         "kind": "combat.projectile-hit",
         "messageKey": "projectile-hit",
         "args": {
-          "damage": "12",
+          "damage": "20",
           "target": "demo.actor.adobe-golem"
         },
         "outcome": {
           "type": "damage",
           "resolution": {
-            "rawDamage": 15,
-            "armorReduction": 3,
+            "rawDamage": 25,
+            "armorReduction": 5,
             "resistanceAdjustment": 0,
-            "finalDamage": 12,
+            "finalDamage": 20,
             "damageType": "physical",
             "resistance": "normal"
           }

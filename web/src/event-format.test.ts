@@ -24,6 +24,16 @@ const helpers = {
 };
 const formatter = createPresentationFormatter(localization, () => state, helpers);
 
+test("Sorcery monster detection describes creatures without exposing the category ID", () => {
+  for (const locale of ["en-US", "zh-CN"]) {
+    localization.setLocale(locale);
+    const text = formatter.formatEvent({ messageKey: "ability-detect", args: { ability: "demo.ability.sorcery-detect-monsters", category: "normal-monster", count: "3" } });
+    assert.ok(text.includes("3"));
+    assert.ok(!text.includes("normal-monster"));
+    assert.ok(!text.includes("地形"));
+  }
+});
+
 test("Vice light speed has a localized name in the status panel and events", () => {
   for (const [locale, expected] of [["en-US", "light speed"], ["zh-CN", "光速"]]) {
     localization.setLocale(locale);

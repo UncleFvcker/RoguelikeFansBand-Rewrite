@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import test from "node:test";
+import { FluentResource } from "@fluent/bundle";
 
 import { Localization } from "./localization.ts";
 
@@ -197,19 +198,23 @@ function readLocale(locale: "en-US" | "zh-CN"): string[] {
 function extractMessages(resources: readonly string[]): Map<string, Set<string>> {
   const messages = new Map<string, Set<string>>();
   for (const resource of resources) {
-    let currentKey;
-    for (const line of resource.split(/\r?\n/)) {
-      const declaration = /^([a-z][a-z0-9-]*)\s*=/.exec(line);
-      if (declaration) {
-        currentKey = declaration[1];
-        if (messages.has(currentKey)) throw new Error(`duplicate Fluent key ${currentKey}`);
-        messages.set(currentKey, new Set());
+    for (const entry of new FluentResource(resource).body) {
+      if (messages.has(entry.id)) throw new Error(`duplicate Fluent key ${entry.id}`);
+      const variables = new Set<string>();
+      function visit(node: unknown) {
+        if (!node || typeof node !== "object") return;
+        if (node.type === "var") variables.add(node.name);
+        for (const value of Object.values(node)) visit(value);
       }
-      if (!currentKey) continue;
-      for (const variable of line.matchAll(/\$([a-z][a-z0-9-]*)/g)) {
-        messages.get(currentKey).add(variable[1]);
-      }
+      visit(entry);
+      messages.set(entry.id, variables);
     }
   }
   return messages;
 }
+
+test("variable auditing uses Fluent expressions and preserves literal dollar signs", () => {
+  const messages = extractMessages(["name = Micro$oft\ncount = { NUMBER($count) }\n"]);
+  assert.deepEqual([...messages.get("name")], []);
+  assert.deepEqual([...messages.get("count")], ["count"]);
+});

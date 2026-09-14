@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "demo.ability-program.paladin-holy-lance",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-demo-paladin-holy-lance-description",
+  "formatVersion": 1,
+  "id": "demo.ability.paladin-holy-lance",
+  "levelScaling": [
+    {
+      "divisor": 1,
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "levelOffset": 1,
+      "multiplier": 3
+    }
+  ],
+  "nameKey": "ability-demo-paladin-holy-lance-name",
+  "tags": [
+    "beam",
+    "class-power",
+    "holy-fire",
+    "paladin",
+    "requires-sight"
+  ],
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

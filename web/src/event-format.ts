@@ -197,7 +197,7 @@ export function createPresentationFormatter(
           count: event.args.count ?? "0",
         });
       case "ability-detect":
-        return localization.format(event.args.category === "mind" ? "message-ability-detect-mind" : "message-ability-detect", {
+        return localization.format(event.args.category === "mind" ? "message-ability-detect-mind" : event.args.category === "normal-monster" ? "message-ability-detect-monsters" : "message-ability-detect", {
           ability: contentName(event.args.target),
           category: event.args.category ?? "?",
           count: event.args.count ?? "0",

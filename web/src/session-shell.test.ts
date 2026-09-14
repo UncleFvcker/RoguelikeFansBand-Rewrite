@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { CREATION_RACES, DRACONIAN_RACES, RACE_GROUPS, CAREER_GROUPS, CREATION_BUILDS, MAGE_REALMS, PRIEST_SECOND_REALMS, RANGER_SECOND_REALMS, WARRIOR_MAGE_SECOND_REALMS, creationLeaves } from "./character-creation.ts";
+import { CREATION_RACES, DRACONIAN_RACES, RACE_GROUPS, CAREER_GROUPS, CREATION_BUILDS, MAGE_REALMS, PALADIN_REALMS, PRIEST_SECOND_REALMS, RANGER_SECOND_REALMS, WARRIOR_MAGE_SECOND_REALMS, creationLeaves } from "./character-creation.ts";
 import test from "node:test";
 
 test("the main window explicitly permits the close command used by both exit buttons", () => {
@@ -31,10 +31,9 @@ test("character names are trimmed and bounded", () => {
 test("new character creation exposes all formal class slices", () => {
   assert.deepEqual([...PLAYTEST_BUILD_IDS].sort(), [
     "demo.build.warrior",
-    "demo.build.high-mage-death",
-    "demo.build.high-mage-craft",
+    ...MAGE_REALMS.map(realm => `demo.build.high-mage-${realm}`),
     "demo.build.archer",
-    "demo.build.paladin-death",
+    ...PALADIN_REALMS.map(realm => `demo.build.paladin-${realm}`),
     "demo.build.cavalry",
     "demo.build.sniper",
     "demo.build.mindcrafter",
@@ -123,7 +122,7 @@ test("random session seeds combine two entropy words without truncation", () => 
 
 test("career leaves retain the existing class and realm mapping", () => {
   assert.equal(CAREER_GROUPS.length, 8);
-  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 103);
+  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 129);
   assert.equal(CAREER_GROUPS.find(group => group.id === "device").options[0].id, "demo.build.magic-eater");
   assert.deepEqual(CAREER_GROUPS.find(group => group.id === "melee").options.map(entry => entry.id), ["demo.build.warrior", "demo.build.berserker", "demo.build.duelist"]);
   assert.equal(CAREER_GROUPS.find(group => group.id === "mind").options[0].id, "demo.build.mindcrafter");
@@ -139,7 +138,7 @@ test("career leaves retain the existing class and realm mapping", () => {
       assert.equal(entry.nameKey, cls.nameKey);
       assert.equal(entry.descriptionKey, cls.descriptionKey);
       if ("children" in entry) {
-        assert.equal(leaves.length, entry.id === "mage" ? 56 : entry.id === "priest" ? 24 : entry.id === "warrior-mage" ? 8 : entry.id === "ranger" ? 4 : entry.id === "high-mage" ? 2 : 1);
+        assert.equal(leaves.length, entry.id === "mage" ? 72 : entry.id === "priest" ? 24 : entry.id === "warrior-mage" ? 8 : entry.id === "ranger" ? 4 : entry.id === "high-mage" ? 9 : entry.id === "paladin" ? 4 : 1);
         if (entry.id === "mage") {
           assert.ok(MAGE_REALMS.includes(build.firstRealmId));
           assert.ok(MAGE_REALMS.includes(build.secondRealmId));
@@ -157,7 +156,7 @@ test("career leaves retain the existing class and realm mapping", () => {
           assert.ok(RANGER_SECOND_REALMS.includes(build.secondRealmId));
           assert.equal(entry.childLabelKey, "session-second-realm-label");
           assert.equal(createNewSessionRequest("83", leaf.id, "rfb-legacy.race.tonberry", "游侠").buildId, leaf.id);
-        } else assert.equal(build.firstRealmId, leaf.id.endsWith("-craft") ? "craft" : "death");
+        } else assert.equal(build.firstRealmId, leaf.id.split("-").at(-1));
         assert.equal(leaf.descriptionKey, build.descriptionKey);
         assert.ok(!PLAYTEST_BUILD_IDS.includes(entry.id));
       } else assert.equal(build.firstRealmId, undefined);
@@ -196,9 +195,9 @@ test("Mage realm branches exclude repeats and match every formal ordered Build",
   const mage = CAREER_GROUPS.find(group => group.id === "magic").options.find(entry => entry.id === "mage");
   const sourceClass = JSON.parse(readFileSync(new URL("../../packs/rfb-demo-original/classes/mage.json", import.meta.url), "utf8"));
   assert.deepEqual([...MAGE_REALMS].sort(), sourceClass.castingProfile.realmProfiles.map(realm => realm.realmId).sort());
-  assert.equal(mage.children.length, 8);
+  assert.equal(mage.children.length, 9);
   for (const first of mage.children) {
-    assert.equal(first.children.length, 7);
+    assert.equal(first.children.length, 8);
     const firstId = first.id.slice("mage-".length);
     assert.deepEqual(first.children.map(second => second.id), MAGE_REALMS.filter(second => second !== firstId).map(second => `demo.build.mage-${firstId}-${second}`));
     for (const locale of ["en-US", "zh-CN"]) {

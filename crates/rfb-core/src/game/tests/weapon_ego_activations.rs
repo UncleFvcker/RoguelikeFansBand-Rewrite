@@ -440,6 +440,11 @@ fn riding_charge_moves_mount_attacks_and_uses_profile_recovery() {
         x: target.x - 1,
         y: target.y,
     };
+    // This fixture exercises charge movement/recovery after a real device success.
+    let seed = (0..1000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+        .unwrap();
+    game.rng = RfbRng::seeded(seed);
     let mut events = Vec::new();
     game.use_inventory_item(
         ITEM_ID,
@@ -516,6 +521,11 @@ fn dungeon_anti_melee_riding_charge_moves_and_spends_charge_without_attacking() 
     );
     game.entities[1].controller_id = Some(game.player.id.clone());
     game.riding_actor_id = Some("test.mount".to_owned());
+    // This fixture exercises charge movement/recovery after a real device success.
+    let seed = (0..1000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+        .unwrap();
+    game.rng = RfbRng::seeded(seed);
     let mut events = Vec::new();
     game.use_inventory_item(
         ITEM_ID,

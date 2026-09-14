@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "sourceRef": "master",
   "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
-  "reviewedAt": "2026-09-13",
+  "reviewedAt": "2026-09-14",
   "codeBaseline": "5c5f6f38b + cbc851b8e + d873743d6 integration",
   "entrySource": "web/src/character-creation.ts CREATION_BUILDS / PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
-  "scope": "Covers 103 creation builds and five generation areas per build. Magic-Eater creation and UI are implemented in step 6; its linked acceptance gap remains pending until step 7. The audit CLI does not execute gameplay tests.",
+  "scope": "Covers 129 creation builds and five generation areas per build. Existing nine realms now include seven High-Mage entries, sixteen Mage Craft pairs and three Paladin realms; source and acceptance scope: docs/existing-realms-opening.md. The audit CLI does not execute gameplay tests.",
   "recordSemantics": {
     "implemented": "Reachable implementation exists; gapIds still block acceptance completion.",
     "no-special-difference": "Source and indirect consumers reviewed; shared path applies without an additional class generation branch.",
@@ -4553,6 +4553,1243 @@
           ]
         }
       ]
+    },
+    {
+      "buildId": "demo.build.mage-life-craft",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-life-craft: actual current realm books and discovery counts use the shared allocation path; mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-sorcery-craft",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-sorcery-craft: actual current realm books and discovery counts use the shared allocation path; mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-nature-craft",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-nature-craft: actual current realm books and discovery counts use the shared allocation path; mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-death-craft",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-death-craft: actual current realm books and discovery counts use the shared allocation path; mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-arcane-craft",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-arcane-craft: actual current realm books and discovery counts use the shared allocation path; mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-craft-life",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-craft-life: actual current realm books and discovery counts use the shared allocation path; mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-craft-sorcery",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-craft-sorcery: actual current realm books and discovery counts use the shared allocation path; mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-craft-nature",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-craft-nature: actual current realm books and discovery counts use the shared allocation path; mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-craft-death",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-craft-death: actual current realm books and discovery counts use the shared allocation path; mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-craft-arcane",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-craft-arcane: actual current realm books and discovery counts use the shared allocation path; mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-craft-daemon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-craft-daemon: actual current realm books and discovery counts use the shared allocation path; mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-craft-crusade",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-craft-crusade: actual current realm books and discovery counts use the shared allocation path; mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-craft-armageddon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-craft-armageddon: actual current realm books and discovery counts use the shared allocation path; mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-daemon-craft",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-daemon-craft: actual current realm books and discovery counts use the shared allocation path; mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-crusade-craft",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-crusade-craft: actual current realm books and discovery counts use the shared allocation path; mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-armageddon-craft",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-armageddon-craft: actual current realm books and discovery counts use the shared allocation path; mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "No Mage-specific Ego weight branch. Actual caster glove, negative generation, luck, theme and body consumers reuse shared evidence (mage-source-audit G2).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Mage class bias is scroll-only after the source gate, with 20% Warrior conversion; natural/theme generation, virtues, naming and save consumers share the Mage behavior evidence (mage-source-audit G3).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Mage Old Castle 1:1:8 fixed choice, uniqueness and named duplicate replacement; ordinary thieves long sword. The three source artifacts and actual equipment/activation consumers are covered by shared evidence (mage-source-audit G4).",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.paladin-life",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.paladin-life: actual current realm books and discovery counts use the shared allocation path; paladin equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "no-special-difference",
+          "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Priestly, with 60% Warrior conversion after bias selection; Death realm does not change the scroll class switch.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_death_books_are_counted_studied_cast_and_restored",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.paladin-crusade",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.paladin-crusade: actual current realm books and discovery counts use the shared allocation path; paladin equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "no-special-difference",
+          "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Priestly, with 60% Warrior conversion after bias selection; Death realm does not change the scroll class switch.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_death_books_are_counted_studied_cast_and_restored",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.paladin-daemon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.paladin-daemon: actual current realm books and discovery counts use the shared allocation path; paladin equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "no-special-difference",
+          "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Priestly, with 60% Warrior conversion after bias selection; Death realm does not change the scroll class switch.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_death_books_are_counted_studied_cast_and_restored",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.high-mage-life",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.high-mage-life: actual current realm books and discovery counts use the shared allocation path; high-mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "no-special-difference",
+          "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Mage, with 20% Warrior conversion after bias selection.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/craft.rs#generated_craft_book_is_counted_studied_cast_and_restored",
+            "crates/rfb-core/src/game/tests/craft.rs#mundanity_converts_fixed_artifact_preserves_ledger_and_erases_device_magic",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_high_mage_device_is_usable_and_restores_its_charges",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.high-mage-sorcery",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.high-mage-sorcery: actual current realm books and discovery counts use the shared allocation path; high-mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "no-special-difference",
+          "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Mage, with 20% Warrior conversion after bias selection.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/craft.rs#generated_craft_book_is_counted_studied_cast_and_restored",
+            "crates/rfb-core/src/game/tests/craft.rs#mundanity_converts_fixed_artifact_preserves_ledger_and_erases_device_magic",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_high_mage_device_is_usable_and_restores_its_charges",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.high-mage-nature",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.high-mage-nature: actual current realm books and discovery counts use the shared allocation path; high-mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "no-special-difference",
+          "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Mage, with 20% Warrior conversion after bias selection.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/craft.rs#generated_craft_book_is_counted_studied_cast_and_restored",
+            "crates/rfb-core/src/game/tests/craft.rs#mundanity_converts_fixed_artifact_preserves_ledger_and_erases_device_magic",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_high_mage_device_is_usable_and_restores_its_charges",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.high-mage-arcane",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.high-mage-arcane: actual current realm books and discovery counts use the shared allocation path; high-mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "no-special-difference",
+          "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Mage, with 20% Warrior conversion after bias selection.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/craft.rs#generated_craft_book_is_counted_studied_cast_and_restored",
+            "crates/rfb-core/src/game/tests/craft.rs#mundanity_converts_fixed_artifact_preserves_ledger_and_erases_device_magic",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_high_mage_device_is_usable_and_restores_its_charges",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.high-mage-daemon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.high-mage-daemon: actual current realm books and discovery counts use the shared allocation path; high-mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "no-special-difference",
+          "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Mage, with 20% Warrior conversion after bias selection.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/craft.rs#generated_craft_book_is_counted_studied_cast_and_restored",
+            "crates/rfb-core/src/game/tests/craft.rs#mundanity_converts_fixed_artifact_preserves_ledger_and_erases_device_magic",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_high_mage_device_is_usable_and_restores_its_charges",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.high-mage-crusade",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.high-mage-crusade: actual current realm books and discovery counts use the shared allocation path; high-mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "no-special-difference",
+          "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Mage, with 20% Warrior conversion after bias selection.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/craft.rs#generated_craft_book_is_counted_studied_cast_and_restored",
+            "crates/rfb-core/src/game/tests/craft.rs#mundanity_converts_fixed_artifact_preserves_ledger_and_erases_device_magic",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_high_mage_device_is_usable_and_restores_its_charges",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.high-mage-armageddon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.high-mage-armageddon: actual current realm books and discovery counts use the shared allocation path; high-mage equipment and device preference is unchanged. See docs/existing-realms-opening.md source review.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Uses the shared Ego/negative path; no current class-specific source condition. Class-dependent equipment effects are recorded under use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "no-special-difference",
+          "reason": "Natural/themed generation uses shared bias rules and non-Berserker case 31. Player scroll-only result: Mage, with 20% Warrior conversion after bias selection.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Terror Mask remains an ordinary candidate and receives AGGRAVATE/TY_CURSE, heavy curse and one source heavy random curse. Generated properties persist across identification, equipment and save; no wearer-time reroll.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Actual ordinary generation, pickup/book discovery, chosen or divine study, casting and same-command save continuation are covered for this entry.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/craft.rs#generated_craft_book_is_counted_studied_cast_and_restored",
+            "crates/rfb-core/src/game/tests/craft.rs#mundanity_converts_fixed_artifact_preserves_ledger_and_erases_device_magic",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_high_mage_device_is_usable_and_restores_its_charges",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
+            "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
     }
   ]
 }

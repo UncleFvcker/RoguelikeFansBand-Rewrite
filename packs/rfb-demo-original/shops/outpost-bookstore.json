@@ -16,6 +16,8 @@
     "purchasePriceCap": 10000
   },
   "stock": [
+    { "itemKindId": "demo.item.handbook-for-pupils", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.grade-holders-book", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
     { "itemKindId": "demo.item.black-prayers", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
     { "itemKindId": "demo.item.black-mass", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
     { "itemKindId": "demo.item.beginners-handbook", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },

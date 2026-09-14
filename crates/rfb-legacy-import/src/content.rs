@@ -30208,6 +30208,76 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
     }
 
     #[test]
+    fn existing_realms_preserve_class_specific_spell_parameters() {
+        let profiles = parse_m_info(include_str!("testdata/existing-realms-m-info.txt")).unwrap();
+        let root =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+        for (class, class_index, realms) in [
+            ("mage", 1, vec![("craft", 7)]),
+            (
+                "paladin",
+                5,
+                vec![("life", 0), ("daemon", 8), ("crusade", 9)],
+            ),
+        ] {
+            let formal: serde_json::Value = serde_json::from_str(
+                &std::fs::read_to_string(root.join(format!("classes/{class}.json"))).unwrap(),
+            )
+            .unwrap();
+            let source = profiles
+                .iter()
+                .find(|p| p.class_index == class_index)
+                .unwrap();
+            for (realm, index) in realms {
+                let rows = &source
+                    .realms
+                    .iter()
+                    .find(|r| r.index == index)
+                    .unwrap()
+                    .spells;
+                let profile = formal["castingProfile"]["realmProfiles"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .find(|r| r["realmId"] == realm)
+                    .unwrap();
+                let overrides = profile["abilityOverrides"].as_array().unwrap();
+                assert_eq!(overrides.len(), 32);
+                assert_eq!(rows.len(), 32);
+                let mut slot = 0;
+                for book_id in profile["abilityBookIds"].as_array().unwrap() {
+                    let slug = book_id
+                        .as_str()
+                        .unwrap()
+                        .strip_prefix("demo.ability-book.")
+                        .unwrap();
+                    let book: serde_json::Value = serde_json::from_str(
+                        &std::fs::read_to_string(root.join(format!("abilityBooks/{slug}.json")))
+                            .unwrap(),
+                    )
+                    .unwrap();
+                    for id in book["abilityIds"].as_array().unwrap() {
+                        let actual = overrides.iter().find(|r| r["abilityId"] == *id).unwrap();
+                        let expected = &rows[slot];
+                        assert_eq!(
+                            actual["minimumLevel"], expected.level,
+                            "{class}/{realm}/{slot}"
+                        );
+                        assert_eq!(actual["resourceCost"], expected.mana);
+                        assert_eq!(actual["baseFailurePercent"], expected.failure_percent);
+                        assert_eq!(
+                            actual["firstSuccessExperience"],
+                            u32::from(expected.level) * u32::from(expected.experience)
+                        );
+                        slot += 1;
+                    }
+                }
+                assert_eq!(slot, 32);
+            }
+        }
+    }
+
+    #[test]
     fn n3_artifacts_match_source_parameters() {
         check_n1_passive_artifact_source_parameters(
             include_str!("testdata/n3-artifacts.txt"),

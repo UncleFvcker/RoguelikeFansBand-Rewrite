@@ -41,21 +41,21 @@
             "index": 11,
             "maximumNatural": 13,
             "natural": 13,
-            "potential": 128
+            "potential": 138
           },
           "constitution": {
             "effective": 15,
             "index": 12,
             "maximumNatural": 13,
             "natural": 13,
-            "potential": 98
+            "potential": 108
           },
           "dexterity": {
             "effective": 15,
             "index": 12,
             "maximumNatural": 13,
             "natural": 13,
-            "potential": 118
+            "potential": 148
           },
           "intelligence": {
             "effective": 11,
@@ -69,14 +69,14 @@
             "index": 14,
             "maximumNatural": 13,
             "natural": 13,
-            "potential": 128
+            "potential": 118
           },
           "wisdom": {
             "effective": 11,
             "index": 8,
             "maximumNatural": 13,
             "natural": 13,
-            "potential": 138
+            "potential": 98
           }
         },
         "lifeForce": 1000
@@ -84,7 +84,7 @@
       "playerHp": 33,
       "playerMaxHp": 56,
       "revision": 1,
-      "stateHash": "d0018168287f797ce0dd117cd5de8949b95f514e7cd7ddf96b25083cffd0787c",
+      "stateHash": "33c9f57b25c97574006798813f29c1ff04150dc377ab92a7105e54eee1adda3c",
       "turn": 1
     },
     "events": [
@@ -116,6 +116,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "d0018168287f797ce0dd117cd5de8949b95f514e7cd7ddf96b25083cffd0787c"
+    "saveRoundTripStateHash": "33c9f57b25c97574006798813f29c1ff04150dc377ab92a7105e54eee1adda3c"
   }
 }
