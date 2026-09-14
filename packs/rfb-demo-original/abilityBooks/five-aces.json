@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.five-aces",
+  "nameKey": "ability-book-demo-five-aces-name",
+  "descriptionKey": "ability-book-demo-five-aces-description",
+  "realmId": "trump",
+  "rank": 4,
+  "abilityIds": [
+    "demo.ability.trump-divination",
+    "demo.ability.trump-lore",
+    "demo.ability.trump-heal-monster",
+    "demo.ability.trump-dragon",
+    "demo.ability.trump-meteors",
+    "demo.ability.trump-demon",
+    "demo.ability.trump-greater-undead",
+    "demo.ability.trump-ancient-dragon"
+  ],
+  "tags": [
+    "trump",
+    "spellbook"
+  ]
+}

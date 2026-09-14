@@ -224,6 +224,8 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::NatureGate { .. }
                     | AbilityEffectDefinition::ChainLightning
                     | AbilityEffectDefinition::ChaosMeteorSwarm
+                    | AbilityEffectDefinition::TrumpShuffle
+                    | AbilityEffectDefinition::ResetRecall
                     | AbilityEffectDefinition::CallChaos
                     | AbilityEffectDefinition::ChaosPolymorphSelf
                     | AbilityEffectDefinition::CallVoid
@@ -314,7 +316,8 @@ fn ability_program_input_accepts_step(
         AbilityProgramInputDefinition::CastTarget => {
             matches!(
                 effect,
-                AbilityEffectDefinition::Damage { .. }
+                AbilityEffectDefinition::TrumpSummoning { .. }
+                    | AbilityEffectDefinition::Damage { .. }
                     | AbilityEffectDefinition::Malediction { .. }
                     | AbilityEffectDefinition::AreaDamage { .. }
                     | AbilityEffectDefinition::BeamDamage { .. }
@@ -478,9 +481,10 @@ fn ability_program_input_matches_target(
         }
         AbilityProgramInputDefinition::CastTarget => {
             !target.modes.is_empty()
-                && !target
+                && (!target
                     .modes
                     .contains(&AbilityTargetModeDefinition::SelfTarget)
+                    || matches!(effect, AbilityEffectDefinition::TrumpSummoning { category } if category != "kamikaze"))
                 && !target.modes.contains(&AbilityTargetModeDefinition::Item)
                 && (1..=64).contains(&target.range)
                 && (target.requires_line_of_effect

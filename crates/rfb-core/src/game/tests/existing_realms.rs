@@ -74,7 +74,7 @@ fn existing_realms_new_builds_generate_pick_up_study_cast_and_resume() {
         })
         .map(|b| b.id.clone())
         .collect();
-    assert_eq!(builds.len(), 26);
+    assert_eq!(builds.len(), 29);
     for build in builds {
         let mut game = prepared(&build);
         let book_ids: BTreeSet<_> = game

@@ -186,7 +186,7 @@ impl Game {
         Ok(())
     }
 
-    fn ty_curse_earthquake(
+    pub(in crate::game) fn ty_curse_earthquake(
         &mut self,
         source: &str,
         radius: u8,
@@ -399,7 +399,7 @@ impl Game {
         count
     }
 
-    fn ty_curse_wall_breaker(
+    pub(in crate::game) fn ty_curse_wall_breaker(
         &mut self,
         source: &str,
         events: &mut Vec<DomainEvent>,

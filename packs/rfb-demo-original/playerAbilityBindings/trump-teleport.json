@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.trump-teleport",
+  "minimumLevel": 7,
+  "resourceCost": 7,
+  "baseFailurePercent": 20,
+  "firstSuccessExperience": 28,
+  "resourceId": "demo.resource.mana"
+}

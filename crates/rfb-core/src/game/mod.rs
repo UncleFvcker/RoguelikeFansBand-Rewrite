@@ -1933,11 +1933,12 @@ impl Game {
                 )?;
             }
             GameAction::CancelAbilityDirection => {
-                if self
-                    .pending_ability_direction
-                    .as_ref()
-                    .is_some_and(|p| p.ability_id == "demo.ability.chaos-call-chaos")
-                {
+                if self.pending_ability_direction.as_ref().is_some_and(|p| {
+                    matches!(
+                        p.ability_id.as_str(),
+                        "demo.ability.chaos-call-chaos" | "demo.ability.trump-shuffle"
+                    )
+                }) {
                     self.resolve_pending_call_chaos(
                         None,
                         &mut events,

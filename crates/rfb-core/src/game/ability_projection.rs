@@ -476,6 +476,13 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
             duration_turns: *duration_turns,
         },
         AbilityEffectDefinition::ChaosMeteorSwarm => AbilityEffectSpecDto::ChaosMeteorSwarm,
+        AbilityEffectDefinition::TrumpSummoning { category } => {
+            AbilityEffectSpecDto::TrumpSummoning {
+                category: category.clone(),
+            }
+        }
+        AbilityEffectDefinition::TrumpShuffle => AbilityEffectSpecDto::TrumpShuffle,
+        AbilityEffectDefinition::ResetRecall => AbilityEffectSpecDto::ResetRecall,
         AbilityEffectDefinition::CallChaos => AbilityEffectSpecDto::CallChaos,
         AbilityEffectDefinition::ChaosPolymorphSelf => AbilityEffectSpecDto::ChaosPolymorphSelf,
         AbilityEffectDefinition::CallVoid => AbilityEffectSpecDto::CallVoid,

@@ -12,6 +12,9 @@ use std::collections::BTreeSet;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::game) enum AbilityTargetPlan {
+    TrumpSummoning {
+        center: Position,
+    },
     DuelistChallenge {
         target_entity_id: String,
     },
@@ -117,6 +120,32 @@ impl Game {
         target: &TargetSelection,
     ) -> Option<AbilityTargetPlan> {
         match ability.effect {
+            AbilityEffectDefinition::ResetRecall => (matches!(target, TargetSelection::SelfTarget)
+                && self.recall_reset_plan().is_some())
+            .then_some(AbilityTargetPlan::SelfTarget),
+            AbilityEffectDefinition::TrumpSummoning { ref category } => {
+                let center = match target {
+                    TargetSelection::SelfTarget if category != "kamikaze" => self.player.position,
+                    TargetSelection::Position { position } => *position,
+                    TargetSelection::Entity { entity_id } => {
+                        self.entities
+                            .iter()
+                            .find(|a| a.id == *entity_id && self.entity_is_visible_to_player(a))?
+                            .position
+                    }
+                    _ => return None,
+                };
+                (self.index(center).is_some()
+                    && self.is_visible(center)
+                    && super::super::projectile_geometry::has_line_of_effect(
+                        self,
+                        self.player.position,
+                        center,
+                    )
+                    && super::super::chebyshev_distance(self.player.position, center)
+                        <= u32::from(ability.target.range))
+                .then_some(AbilityTargetPlan::TrumpSummoning { center })
+            }
             AbilityEffectDefinition::ElementalBrand
             | AbilityEffectDefinition::ElementalImmunity { .. } => {
                 let TargetSelection::Element { element } = target else {
@@ -944,6 +973,7 @@ impl Game {
             | AbilityEffectDefinition::ChainLightning
             | AbilityEffectDefinition::ChaosMeteorSwarm
             | AbilityEffectDefinition::CallChaos
+            | AbilityEffectDefinition::TrumpShuffle
             | AbilityEffectDefinition::ChaosPolymorphSelf
             | AbilityEffectDefinition::CallVoid
             | AbilityEffectDefinition::DemonSummoning

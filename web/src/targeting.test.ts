@@ -106,3 +106,12 @@ test("entity targeting can select a mount sharing the player's position", () => 
     { type: "entity", entityId: "mount" },
   );
 });
+
+test("summoning can confirm the origin only when self targeting is permitted", () => {
+  const origin = { x: 3, y: 3 };
+  const spec = { modes: ["self", "position", "entity"], range: 18, requiresLineOfEffect: true };
+  assert.deepEqual(targetSelectionAtCursor(beginTargeting(origin, spec)!, []), {
+    type: "position", position: origin,
+  });
+  assert.equal(targetSelectionAtCursor(beginTargeting(origin, { ...spec, modes: ["position", "entity"] })!, []), undefined);
+});

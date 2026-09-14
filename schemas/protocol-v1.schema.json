@@ -4730,6 +4730,46 @@
         {
           "type": "object",
           "properties": {
+            "category": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "trump-summoning"
+            }
+          },
+          "required": [
+            "type",
+            "category"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "trump-shuffle"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "reset-recall"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "type": {
               "type": "string",
               "const": "call-chaos"

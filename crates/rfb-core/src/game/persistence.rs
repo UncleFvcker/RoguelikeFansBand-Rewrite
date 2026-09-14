@@ -1103,6 +1103,7 @@ impl Game {
             !match pending.ability_id.as_str() {
                 "demo.ability.nature-natures-wrath" => matches!(pending.branch_roll, 2 | 6),
                 "demo.ability.chaos-call-chaos" => (1..=62).contains(&pending.branch_roll),
+                "demo.ability.trump-shuffle" => pending.branch_roll == 1,
                 _ => false,
             } || pending.cast_resolution.ability_id != pending.ability_id
                 || !pending.cast_resolution.succeeded
@@ -1116,6 +1117,9 @@ impl Game {
                         ) | (
                             AbilityEffectDefinition::CallChaos,
                             "demo.ability.chaos-call-chaos"
+                        ) | (
+                            AbilityEffectDefinition::TrumpShuffle,
+                            "demo.ability.trump-shuffle"
                         )
                     )
                 })

@@ -1519,7 +1519,7 @@ impl Game {
         });
     }
 
-    fn resolve_player_disenchantment(&mut self) {
+    pub(in crate::game) fn resolve_player_disenchantment(&mut self) {
         let remove_status = self.rng.bounded(5) != 0;
         let resistance = self
             .effective_player_resistances()

@@ -787,6 +787,242 @@
             "firstSuccessExperience": 12500
           }
         ]
+      },
+      {
+        "realmId": "trump",
+        "abilityBookIds": [
+          "demo.ability-book.conjurings-and-tricks",
+          "demo.ability-book.deck-of-many-things",
+          "demo.ability-book.trumps-of-doom",
+          "demo.ability-book.five-aces"
+        ],
+        "learningCapacityBonus": 0,
+        "abilityOverrides": [
+          {
+            "abilityId": "demo.ability.trump-phase-door",
+            "minimumLevel": 1,
+            "resourceCost": 1,
+            "baseFailurePercent": 25,
+            "firstSuccessExperience": 3
+          },
+          {
+            "abilityId": "demo.ability.trump-spiders",
+            "minimumLevel": 5,
+            "resourceCost": 5,
+            "baseFailurePercent": 25,
+            "firstSuccessExperience": 20
+          },
+          {
+            "abilityId": "demo.ability.trump-shuffle",
+            "minimumLevel": 7,
+            "resourceCost": 7,
+            "baseFailurePercent": 37,
+            "firstSuccessExperience": 56
+          },
+          {
+            "abilityId": "demo.ability.trump-reset-recall",
+            "minimumLevel": 8,
+            "resourceCost": 7,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 64
+          },
+          {
+            "abilityId": "demo.ability.trump-teleport",
+            "minimumLevel": 10,
+            "resourceCost": 10,
+            "baseFailurePercent": 20,
+            "firstSuccessExperience": 40
+          },
+          {
+            "abilityId": "demo.ability.trump-spying",
+            "minimumLevel": 14,
+            "resourceCost": 15,
+            "baseFailurePercent": 30,
+            "firstSuccessExperience": 84
+          },
+          {
+            "abilityId": "demo.ability.trump-teleport-away",
+            "minimumLevel": 18,
+            "resourceCost": 18,
+            "baseFailurePercent": 30,
+            "firstSuccessExperience": 90
+          },
+          {
+            "abilityId": "demo.ability.trump-animals",
+            "minimumLevel": 21,
+            "resourceCost": 23,
+            "baseFailurePercent": 30,
+            "firstSuccessExperience": 168
+          },
+          {
+            "abilityId": "demo.ability.trump-reach",
+            "minimumLevel": 24,
+            "resourceCost": 23,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 192
+          },
+          {
+            "abilityId": "demo.ability.trump-kamikaze",
+            "minimumLevel": 27,
+            "resourceCost": 24,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 243
+          },
+          {
+            "abilityId": "demo.ability.trump-phantasmal-servant",
+            "minimumLevel": 29,
+            "resourceCost": 26,
+            "baseFailurePercent": 30,
+            "firstSuccessExperience": 232
+          },
+          {
+            "abilityId": "demo.ability.trump-haste-monster",
+            "minimumLevel": 35,
+            "resourceCost": 32,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 420
+          },
+          {
+            "abilityId": "demo.ability.trump-teleport-level",
+            "minimumLevel": 38,
+            "resourceCost": 38,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 380
+          },
+          {
+            "abilityId": "demo.ability.trump-dimension-door",
+            "minimumLevel": 41,
+            "resourceCost": 40,
+            "baseFailurePercent": 45,
+            "firstSuccessExperience": 492
+          },
+          {
+            "abilityId": "demo.ability.trump-word-of-recall",
+            "minimumLevel": 44,
+            "resourceCost": 42,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 660
+          },
+          {
+            "abilityId": "demo.ability.trump-banish",
+            "minimumLevel": 48,
+            "resourceCost": 46,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 576
+          },
+          {
+            "abilityId": "demo.ability.trump-swap-position",
+            "minimumLevel": 23,
+            "resourceCost": 35,
+            "baseFailurePercent": 70,
+            "firstSuccessExperience": 920
+          },
+          {
+            "abilityId": "demo.ability.trump-undead",
+            "minimumLevel": 29,
+            "resourceCost": 27,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 725
+          },
+          {
+            "abilityId": "demo.ability.trump-reptiles",
+            "minimumLevel": 31,
+            "resourceCost": 30,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 930
+          },
+          {
+            "abilityId": "demo.ability.trump-monsters",
+            "minimumLevel": 33,
+            "resourceCost": 30,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 297
+          },
+          {
+            "abilityId": "demo.ability.trump-hounds",
+            "minimumLevel": 35,
+            "resourceCost": 33,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 1225
+          },
+          {
+            "abilityId": "demo.ability.trump-branding",
+            "minimumLevel": 40,
+            "resourceCost": 80,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 4000
+          },
+          {
+            "abilityId": "demo.ability.trump-living-trump",
+            "minimumLevel": 42,
+            "resourceCost": 120,
+            "baseFailurePercent": 45,
+            "firstSuccessExperience": 10500
+          },
+          {
+            "abilityId": "demo.ability.trump-cyberdemon",
+            "minimumLevel": 50,
+            "resourceCost": 135,
+            "baseFailurePercent": 45,
+            "firstSuccessExperience": 10000
+          },
+          {
+            "abilityId": "demo.ability.trump-divination",
+            "minimumLevel": 33,
+            "resourceCost": 30,
+            "baseFailurePercent": 30,
+            "firstSuccessExperience": 1650
+          },
+          {
+            "abilityId": "demo.ability.trump-lore",
+            "minimumLevel": 40,
+            "resourceCost": 60,
+            "baseFailurePercent": 45,
+            "firstSuccessExperience": 4000
+          },
+          {
+            "abilityId": "demo.ability.trump-heal-monster",
+            "minimumLevel": 42,
+            "resourceCost": 65,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 6300
+          },
+          {
+            "abilityId": "demo.ability.trump-dragon",
+            "minimumLevel": 45,
+            "resourceCost": 95,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 6750
+          },
+          {
+            "abilityId": "demo.ability.trump-meteors",
+            "minimumLevel": 45,
+            "resourceCost": 50,
+            "baseFailurePercent": 70,
+            "firstSuccessExperience": 4500
+          },
+          {
+            "abilityId": "demo.ability.trump-demon",
+            "minimumLevel": 48,
+            "resourceCost": 125,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 7200
+          },
+          {
+            "abilityId": "demo.ability.trump-greater-undead",
+            "minimumLevel": 49,
+            "resourceCost": 130,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 9800
+          },
+          {
+            "abilityId": "demo.ability.trump-ancient-dragon",
+            "minimumLevel": 50,
+            "resourceCost": 135,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 11000
+          }
+        ]
       }
     ],
     "firstSpellLevel": 1,

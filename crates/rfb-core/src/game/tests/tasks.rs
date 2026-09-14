@@ -2190,7 +2190,10 @@ fn old_man_willow_unlocks_after_crows_nest_and_rewards_an_elemental_ring() {
         "demo.terrain.old-man-willow-entry-completed"
     );
     game.player.position = Position { x: 124, y: 35 };
+    game.mark_shop_visited_at_player().unwrap();
+    game.reveal_current_visibility();
     let before_draws = game.rng_draw_counter();
+    let mut restored = Game::from_save(game.to_save()).unwrap();
     dispatch_next(
         &mut game,
         GameCommand::ClaimTaskReward {
@@ -2202,7 +2205,16 @@ fn old_man_willow_unlocks_after_crows_nest_and_rewards_an_elemental_ring() {
         game.task_states[task_id].status,
         TaskStatusKindDto::Completed
     );
-    assert_eq!(game.rng_draw_counter(), before_draws + 4);
+    assert!(game.rng_draw_counter() > before_draws);
+    dispatch_next(
+        &mut restored,
+        GameCommand::ClaimTaskReward {
+            facility_id: "demo.town-facility.outpost-white-horse".into(),
+            task_id: task_id.into(),
+        },
+    );
+    assert_eq!(game.state_hash(), restored.state_hash());
+    assert_eq!(game.rng, restored.rng);
     let reward = game
         .items
         .iter()

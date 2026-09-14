@@ -214,7 +214,7 @@ fn ranger_requires_nature_and_a_distinct_supported_second_realm() {
         (Some("death"), Some("nature")),
         (Some("nature"), Some("nature")),
         (Some("nature"), Some("craft")),
-        (Some("nature"), Some("trump")),
+        (Some("nature"), Some("necromancy")),
     ] {
         let mut invalid = original.clone();
         let build = invalid
@@ -279,7 +279,7 @@ fn mage_requires_two_distinct_supported_realms_and_bounded_spell_experience() {
         (None, Some("life")),
         (Some("life"), Some("life")),
         (Some("death"), Some("missing")),
-        (Some("death"), Some("trump")),
+        (Some("death"), Some("necromancy")),
     ] {
         let mut invalid = original.clone();
         let build = invalid
@@ -854,7 +854,7 @@ fn warrior_mage_requires_arcane_and_a_distinct_supported_second_realm() {
         (Some("arcane"), None),
         (Some("life"), Some("death")),
         (Some("arcane"), Some("arcane")),
-        (Some("arcane"), Some("trump")),
+        (Some("arcane"), Some("necromancy")),
     ] {
         let mut invalid = original.clone();
         let build = invalid
@@ -883,7 +883,7 @@ fn priest_birth_requires_a_primary_alignment_and_distinct_non_opposing_second_re
         (Some("crusade"), Some("daemon")),
         (Some("death"), Some("crusade")),
         (Some("daemon"), Some("life")),
-        (Some("life"), Some("trump")),
+        (Some("life"), Some("necromancy")),
     ] {
         let mut invalid = original.clone();
         let build = invalid

@@ -2036,6 +2036,7 @@ fn food_and_light_eating_consume_one_food_and_leave_one_light_fuel() {
         .as_mut()
         .expect("torch should carry fuel")
         .current = 250;
+    light.rng = RfbRng::seeded(13);
     let mut events = Vec::new();
     light
         .resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())

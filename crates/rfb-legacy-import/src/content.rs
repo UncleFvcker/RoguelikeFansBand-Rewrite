@@ -30208,6 +30208,59 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
     }
 
     #[test]
+    fn trump_source_contract_matches_five_formal_profiles() {
+        let parsed = parse_m_info(include_str!("testdata/trump-m-info.txt")).unwrap();
+        let root =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+        let source: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(root.join("legacy-trump-source.json")).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(source["spells"].as_array().unwrap().len(), 32);
+        for profile in source["classProfiles"].as_array().unwrap() {
+            let class = profile["classId"]
+                .as_str()
+                .unwrap()
+                .rsplit('.')
+                .next()
+                .unwrap();
+            let formal: serde_json::Value = serde_json::from_str(
+                &std::fs::read_to_string(root.join(format!("classes/{class}.json"))).unwrap(),
+            )
+            .unwrap();
+            let overrides = &formal["castingProfile"]["realmProfiles"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|p| p["realmId"] == "trump")
+                .unwrap()["abilityOverrides"];
+            assert_eq!(*overrides, profile["abilityOverrides"]);
+            let original = parsed
+                .iter()
+                .find(|c| u64::from(c.class_index) == profile["sourceClassIndex"].as_u64().unwrap())
+                .unwrap();
+            let rows = &original
+                .realms
+                .iter()
+                .find(|r| r.index == 5)
+                .unwrap()
+                .spells;
+            assert_eq!(rows.len(), 32);
+            for (i, row) in rows.iter().enumerate() {
+                let a = &overrides[i];
+                assert_eq!(a["abilityId"], source["spells"][i]["abilityId"]);
+                assert_eq!(a["minimumLevel"], row.level);
+                assert_eq!(a["resourceCost"], row.mana);
+                assert_eq!(a["baseFailurePercent"], row.failure_percent);
+                assert_eq!(
+                    a["firstSuccessExperience"],
+                    u32::from(row.level) * u32::from(row.experience)
+                );
+            }
+        }
+    }
+
+    #[test]
     fn chaos_source_contract_preserves_all_slots_and_five_class_profiles() {
         let parsed = parse_m_info(include_str!("testdata/chaos-m-info.txt")).unwrap();
         let root =

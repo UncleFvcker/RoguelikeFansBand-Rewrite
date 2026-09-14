@@ -99,3 +99,5 @@ mod weapon_ego_activations;
 mod weapon_proficiency;
 mod weapon_traits;
 mod world;
+
+mod trump;

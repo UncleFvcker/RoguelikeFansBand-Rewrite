@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.267";
+pub const PROTOCOL_VERSION: &str = "1.268";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 29;
 
@@ -1606,6 +1606,11 @@ pub enum AbilityEffectSpecDto {
     },
     ChainLightning,
     ChaosMeteorSwarm,
+    TrumpSummoning {
+        category: String,
+    },
+    TrumpShuffle,
+    ResetRecall,
     CallChaos,
     ChaosPolymorphSelf,
     CallVoid,

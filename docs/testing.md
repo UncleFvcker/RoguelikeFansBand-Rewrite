@@ -128,6 +128,10 @@ Q2–Q5代表流程使用 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --
 
 在`web`运行`npm run build:standalone:debug`，随后从仓库根执行`node web/e2e/ordinary-equipment-standalone.e2e.mjs --chaos`。构建、导出和桌面脚本共用`CARGO_TARGET_DIR=.../target/n1-validation`与`CARGO_BUILD_BUILD_DIR=.../target/n1-validation-build`。普通产物不启用WebDriver准备IPC；ignored核心导出仅准备合法等级、书本、目标和种子，产品UI完成学习、施法、选物、追加方向及等待，27步各经原生保存恢复核对哈希。中英文25入口和8个场景见`test-results/chaos/report.json`，来源差异与核心验收见[混沌计划](chaos-realm-plan.md#ch5开放与统一验收2026-09-14)。这不是自然练级、自然获取或Android验收。
 
+## 王牌领域桌面验收
+
+王牌领域使用 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --trump`。共享应用数据中的博物馆档案使用了当前分支不识别的格式，本次使用独立应用标识的普通standalone，保留原档案。构建及脚本设置 `CARGO_TARGET_DIR=.../target/trump-desktop-validation`、`CARGO_BUILD_BUILD_DIR=.../target/n1-validation-build`；在 `target/trump-standalone.conf.json` 写入 `{"identifier":"org.rfb.rewrite.trump-validation"}`，于 `web` 执行 `npm run build:standalone:debug -- --config ../target/trump-standalone.conf.json`。它只覆盖应用标识，未启用WebDriver或准备IPC。27 个王牌入口逐一检查中英文选择；六个场景共15步，覆盖第一册学习、相位门、召唤地点、恋人牌方向与取消、治疗宠物和烙印，每步原生保存恢复核对哈希。ignored 导出用例从正式高阶法师王牌构筑准备50级、满资源、无敌、书本、局部目标及实际施法成功种子。来源范围与限制见[王牌领域](trump-realm.md)，报告和截图在 `test-results/trump/`；不是自然练级或自然取得证明。
+
 ## 随机荒野地牢桌面专项
 
 在 `web` 执行：

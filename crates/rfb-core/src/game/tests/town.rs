@@ -3634,74 +3634,14 @@ fn angwil_inner_temple_uses_class_membership_for_healing_and_restoration() {
 #[test]
 fn angwil_trump_tower_prices_and_recall_survive_save_and_return() {
     let id = "demo.town-facility.angwil-trump-tower";
-    // Trump is not a formal player build yet. This validated fixture supplies
-    // only a realm identity to exercise the real membership and recall paths.
-    let root =
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
-    let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
-    // New realm identities need both high-book reward ranks required by the world.
-    for (rank, source) in [(3, "black-prayers"), (4, "necronomicon")] {
-        let book_id = format!("test.ability-book.trump-{rank}");
-        let mut book = artifact
-            .content
-            .ability_books
-            .iter()
-            .find(|book| book.id == format!("demo.ability-book.{source}"))
-            .unwrap()
-            .clone();
-        book.id = book_id.clone();
-        book.realm_id = Some("trump".to_owned());
-        book.rank = Some(rank);
-        book.ability_ids.truncate(1);
-        artifact.content.ability_books.push(book);
-        let mut item = artifact
-            .content
-            .items
-            .iter()
-            .find(|item| item.id == format!("demo.item.{source}"))
-            .unwrap()
-            .clone();
-        item.id = format!("test.item.trump-book-{rank}");
-        item.rfb_base_kind = None;
-        item.ability_book_id = Some(book_id);
-        artifact.content.items.push(item);
-    }
-    let profile = artifact
-        .content
-        .classes
-        .iter_mut()
-        .find(|class| class.id == "demo.class.high-mage")
-        .unwrap()
-        .casting_profile
-        .as_mut()
-        .unwrap();
-    profile
-        .realm_profiles
-        .push(rfb_content::CastingRealmProfileDefinition {
-            realm_id: "trump".to_owned(),
-            ability_book_ids: vec![
-                "test.ability-book.trump-3".to_owned(),
-                "test.ability-book.trump-4".to_owned(),
-            ],
-            learning_capacity_bonus: 0,
-            ability_overrides: Vec::new(),
-        });
-    let mut build = artifact
-        .content
-        .builds
-        .iter()
-        .find(|build| build.id == "demo.build.high-mage-death")
-        .unwrap()
-        .clone();
-    build.id = "test.build.trump".to_owned();
-    build.first_realm_id = Some("trump".to_owned());
-    build.starting_items.clear();
-    artifact.content.builds.push(build);
-    let content = Arc::new(rfb_content::ContentCatalog::from_artifact(
-        rfb_content::encode_content(artifact.content).unwrap(),
-    ));
+    let content = load_built_in_content().unwrap();
     for (build, amberite, membership, base_cost) in [
-        ("test.build.trump", false, FacilityMembershipDto::Owner, 0),
+        (
+            "demo.build.high-mage-trump",
+            false,
+            FacilityMembershipDto::Owner,
+            0,
+        ),
         (
             "demo.build.warrior",
             false,
@@ -6408,6 +6348,8 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
             ("demo.item.grade-holders-book", 1_350),
             ("demo.item.sign-of-chaos", 135),
             ("demo.item.chaos-mastery", 1_350),
+            ("demo.item.conjurings-and-tricks", 135),
+            ("demo.item.deck-of-many-things", 1_350),
         ])
     );
     let book = shop

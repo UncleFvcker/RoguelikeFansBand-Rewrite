@@ -1277,6 +1277,8 @@ fn localized_realm_name(realm_id: &str, locale: Locale) -> String {
         ("crusade", Locale::EnUs) => "Crusade".to_owned(),
         ("chaos", Locale::ZhCn) => "混沌".to_owned(),
         ("chaos", Locale::EnUs) => "Chaos".to_owned(),
+        ("trump", Locale::ZhCn) => "王牌".to_owned(),
+        ("trump", Locale::EnUs) => "Trump".to_owned(),
         ("armageddon", Locale::ZhCn) => "毁灭".to_owned(),
         ("armageddon", Locale::EnUs) => "Armageddon".to_owned(),
         ("death", Locale::ZhCn) => "死亡".to_owned(),
@@ -2019,37 +2021,42 @@ mod tests {
     #[test]
     fn realm_change_updates_bilingual_variables_and_book_predicates() {
         use crate::game::tests::support::{dispatch_next, give_inventory_item};
-        let mut game = Game::new_with_build(925, "demo.build.mage-death-sorcery").unwrap();
-        give_inventory_item(&mut game, "test.new-realm", "demo.item.call-of-the-wild");
-        let old = game
-            .items
-            .iter()
-            .find(|item| item.kind_id == "demo.item.beginners-handbook")
-            .unwrap()
-            .clone();
-        let new = game.items.last().unwrap().clone();
-        assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::SecondRealm, &old));
-        assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::Unreadable, &new));
-        dispatch_next(
-            &mut game,
-            GameCommand::BeginRealmChange {
-                book_item_id: new.id.clone(),
-            },
-        );
-        dispatch_next(&mut game, GameCommand::ResolveRealmChange { confirm: true });
-        for (locale, name) in [(Locale::ZhCn, "自然"), (Locale::EnUs, "Nature")] {
-            assert_eq!(
-                game.mogaminator_variable_value(MogaminatorVariable::SecondRealm, locale),
-                name
+        for (book, zh_name, en_name) in [
+            ("demo.item.call-of-the-wild", "自然", "Nature"),
+            ("demo.item.conjurings-and-tricks", "王牌", "Trump"),
+        ] {
+            let mut game = Game::new_with_build(925, "demo.build.mage-death-sorcery").unwrap();
+            give_inventory_item(&mut game, "test.new-realm", book);
+            let old = game
+                .items
+                .iter()
+                .find(|item| item.kind_id == "demo.item.beginners-handbook")
+                .unwrap()
+                .clone();
+            let new = game.items.last().unwrap().clone();
+            assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::SecondRealm, &old));
+            assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::Unreadable, &new));
+            dispatch_next(
+                &mut game,
+                GameCommand::BeginRealmChange {
+                    book_item_id: new.id.clone(),
+                },
             );
+            dispatch_next(&mut game, GameCommand::ResolveRealmChange { confirm: true });
+            for (locale, name) in [(Locale::ZhCn, zh_name), (Locale::EnUs, en_name)] {
+                assert_eq!(
+                    game.mogaminator_variable_value(MogaminatorVariable::SecondRealm, locale),
+                    name
+                );
+            }
+            assert_eq!(
+                game.mogaminator_variable_value(MogaminatorVariable::FirstRealm, Locale::ZhCn),
+                "死亡"
+            );
+            assert!(!game.mogaminator_predicate_matches(MogaminatorPredicate::SecondRealm, &old));
+            assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::Unreadable, &old));
+            assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::SecondRealm, &new));
+            assert!(!game.mogaminator_predicate_matches(MogaminatorPredicate::Unreadable, &new));
         }
-        assert_eq!(
-            game.mogaminator_variable_value(MogaminatorVariable::FirstRealm, Locale::ZhCn),
-            "死亡"
-        );
-        assert!(!game.mogaminator_predicate_matches(MogaminatorPredicate::SecondRealm, &old));
-        assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::Unreadable, &old));
-        assert!(game.mogaminator_predicate_matches(MogaminatorPredicate::SecondRealm, &new));
-        assert!(!game.mogaminator_predicate_matches(MogaminatorPredicate::Unreadable, &new));
     }
 }

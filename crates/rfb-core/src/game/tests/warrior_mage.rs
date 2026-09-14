@@ -25,7 +25,7 @@ fn eight_births_have_arcane_two_books_equipment_and_valid_unlearned_memory() {
         .builds()
         .filter(|b| b.class_id == "demo.class.warrior-mage")
         .collect::<Vec<_>>();
-    assert_eq!(builds.len(), 9);
+    assert_eq!(builds.len(), 10);
     for build in builds {
         let game = Game::new_with_build(925, &build.id).unwrap();
         let snapshot = game.snapshot();

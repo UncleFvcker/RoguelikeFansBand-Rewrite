@@ -27,7 +27,7 @@ fn ch5_all_formal_builds_generate_study_cast_and_resume() {
         })
         .map(|b| b.id.clone())
         .collect();
-    assert_eq!(builds.len(), 25);
+    assert_eq!(builds.len(), 27);
     for build in builds {
         let birth = Game::new_with_build(925, &build).unwrap();
         assert!(birth.items.iter().any(|i| i.kind_id == BOOK));
@@ -119,76 +119,86 @@ fn ch5_all_formal_builds_generate_study_cast_and_resume() {
 
 #[test]
 fn ch5_realm_change_updates_chaos_access_and_saved_learning() {
-    for build in [
-        "mage-life-arcane",
-        "priest-life-arcane",
-        "priest-death-arcane",
-        "warrior-mage-arcane-life",
-        "ranger-nature-sorcery",
+    for (realm, book, tower) in [
+        ("chaos", BOOK, "demo.town-facility.zul-chaos-tower"),
+        (
+            "trump",
+            "demo.item.conjurings-and-tricks",
+            "demo.town-facility.angwil-trump-tower",
+        ),
     ] {
-        let mut game = prepared(&format!("demo.build.{build}"));
-        let original = game.current_second_realm_id().unwrap().to_owned();
-        let old_book = game
-            .items
-            .iter()
-            .find(|i| {
-                game.content
-                    .item(&i.kind_id)
-                    .and_then(|d| d.ability_book_id.as_deref())
-                    .and_then(|id| game.content.ability_book(id))
-                    .is_some_and(|b| b.realm_id.as_deref() == Some(&original))
-            })
-            .unwrap()
-            .id
-            .clone();
-        give_inventory_item(&mut game, "test.chaos", BOOK);
-        dispatch_next(
-            &mut game,
-            GameCommand::BeginRealmChange {
-                book_item_id: "test.chaos".into(),
-            },
-        );
-        let pending = game.to_save();
-        let mut cancelled = Game::from_save(pending.clone()).unwrap();
-        dispatch_next(
-            &mut cancelled,
-            GameCommand::ResolveRealmChange { confirm: false },
-        );
-        assert_eq!(cancelled.current_second_realm_id(), Some(original.as_str()));
-        let mut restored = Game::from_save(pending).unwrap();
-        for g in [&mut game, &mut restored] {
-            dispatch_next(g, GameCommand::ResolveRealmChange { confirm: true });
-        }
-        assert_eq!(game.state_hash(), restored.state_hash());
-        assert_eq!(game.current_second_realm_id(), Some("chaos"));
-        crate::game::tests::town::enter_town_facility(
-            &mut game,
-            "demo.town-facility.zul-chaos-tower",
-        );
-        let snapshot = game.snapshot();
-        assert_eq!(
-            snapshot
-                .task_services
+        for build in [
+            "mage-life-arcane",
+            "priest-life-arcane",
+            "priest-death-arcane",
+            "warrior-mage-arcane-life",
+            "ranger-nature-sorcery",
+        ] {
+            let mut game = prepared(&format!("demo.build.{build}"));
+            let original = game.current_second_realm_id().unwrap().to_owned();
+            let old_book = game
+                .items
                 .iter()
-                .find(|s| s.id == "demo.town-facility.zul-chaos-tower")
+                .find(|i| {
+                    game.content
+                        .item(&i.kind_id)
+                        .and_then(|d| d.ability_book_id.as_deref())
+                        .and_then(|id| game.content.ability_book(id))
+                        .is_some_and(|b| b.realm_id.as_deref() == Some(&original))
+                })
                 .unwrap()
-                .membership,
-            FacilityMembershipDto::Owner
-        );
-        dispatch_next(
-            &mut game,
-            GameCommand::BeginRealmChange {
-                book_item_id: old_book,
-            },
-        );
-        dispatch_next(&mut game, GameCommand::ResolveRealmChange { confirm: true });
-        assert_eq!(game.current_second_realm_id(), Some(original.as_str()));
-        assert!(
-            game.active_casting_book_ids()
-                .iter()
-                .all(|id| !id.ends_with("sign-of-chaos"))
-        );
-        Game::from_save(game.to_save()).unwrap();
+                .id
+                .clone();
+            give_inventory_item(&mut game, "test.chaos", book);
+            dispatch_next(
+                &mut game,
+                GameCommand::BeginRealmChange {
+                    book_item_id: "test.chaos".into(),
+                },
+            );
+            let pending = game.to_save();
+            let mut cancelled = Game::from_save(pending.clone()).unwrap();
+            dispatch_next(
+                &mut cancelled,
+                GameCommand::ResolveRealmChange { confirm: false },
+            );
+            assert_eq!(cancelled.current_second_realm_id(), Some(original.as_str()));
+            let mut restored = Game::from_save(pending).unwrap();
+            for g in [&mut game, &mut restored] {
+                dispatch_next(g, GameCommand::ResolveRealmChange { confirm: true });
+            }
+            assert_eq!(game.state_hash(), restored.state_hash());
+            assert_eq!(game.current_second_realm_id(), Some(realm));
+            crate::game::tests::town::enter_town_facility(&mut game, tower);
+            let snapshot = game.snapshot();
+            assert_eq!(
+                snapshot
+                    .task_services
+                    .iter()
+                    .find(|s| s.id == tower)
+                    .unwrap()
+                    .membership,
+                FacilityMembershipDto::Owner
+            );
+            dispatch_next(
+                &mut game,
+                GameCommand::BeginRealmChange {
+                    book_item_id: old_book,
+                },
+            );
+            dispatch_next(&mut game, GameCommand::ResolveRealmChange { confirm: true });
+            assert_eq!(game.current_second_realm_id(), Some(original.as_str()));
+            assert!(game.active_casting_book_ids().iter().all(|id| {
+                *id != game
+                    .content
+                    .item(book)
+                    .unwrap()
+                    .ability_book_id
+                    .as_deref()
+                    .unwrap()
+            }));
+            Game::from_save(game.to_save()).unwrap();
+        }
     }
 }
 

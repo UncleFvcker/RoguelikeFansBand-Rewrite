@@ -26,7 +26,7 @@ fn all_births_have_two_source_books_equipment_and_unlearned_prayers() {
         .builds()
         .filter(|build| build.class_id == "demo.class.priest")
         .collect::<Vec<_>>();
-    assert_eq!(builds.len(), 28);
+    assert_eq!(builds.len(), 32);
     for build in builds {
         let game = Game::new_with_build(925, &build.id).unwrap();
         let snapshot = game.snapshot();

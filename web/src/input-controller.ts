@@ -362,7 +362,9 @@ export class InputController {
         this.#state.targeting = targeting;
         this.#state.targetingIntent = { type: "ability-direction" };
         this.#announce(
-          pendingAbilityDirection.abilityId === "demo.ability.chaos-call-chaos"
+          pendingAbilityDirection.abilityId === "demo.ability.trump-shuffle"
+            ? "message-trump-direction-required"
+            : pendingAbilityDirection.abilityId === "demo.ability.chaos-call-chaos"
             ? "message-chaos-direction-required"
             : "message-ability-direction-required",
           undefined,

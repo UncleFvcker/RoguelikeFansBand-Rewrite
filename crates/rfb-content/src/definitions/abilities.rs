@@ -651,6 +651,11 @@ pub enum AbilityEffectDefinition {
     },
     ChainLightning,
     ChaosMeteorSwarm,
+    TrumpSummoning {
+        category: String,
+    },
+    TrumpShuffle,
+    ResetRecall,
     CallChaos,
     ChaosPolymorphSelf,
     CallVoid,

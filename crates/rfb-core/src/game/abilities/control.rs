@@ -130,7 +130,14 @@ impl Game {
                 }
             }
             AbilityEffectDefinition::HealTarget => {
-                let rolled = self.roll_damage(4, 6);
+                let rolled = if ability.id == "demo.ability.trump-heal-monster" {
+                    crate::game::ability_scaling::spell_power_value(
+                        u64::from(self.progress.level * 10 + 200),
+                        ability.spell_power_bonus,
+                    ) as i32
+                } else {
+                    self.roll_damage(4, 6)
+                };
                 let amount = if evil {
                     rolled
                 } else {

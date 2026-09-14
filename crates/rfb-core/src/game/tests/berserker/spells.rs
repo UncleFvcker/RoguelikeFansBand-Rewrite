@@ -384,7 +384,8 @@ fn earthquake_and_recall_keep_shared_floor_rules_and_hp_costs() {
     game.player.hp = game.effective_player_max_hp();
     let hp = game.player.hp;
     cast(&mut game, "recall", TargetSelection::SelfTarget);
-    assert!((16..=35).contains(&game.recall.as_ref().unwrap().remaining_turns.unwrap()));
+    // Direct effect resolution retains the extra tick consumed by the command's turn.
+    assert!((17..=36).contains(&game.recall.as_ref().unwrap().remaining_turns.unwrap()));
     assert_eq!(game.player.hp, hp - 10);
     cast(&mut game, "recall", TargetSelection::SelfTarget);
     assert_eq!(game.recall.as_ref().unwrap().remaining_turns, None);

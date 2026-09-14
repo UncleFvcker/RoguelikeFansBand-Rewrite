@@ -210,6 +210,10 @@ export function createPresentationFormatter(
         });
       case "ability-effects":
         if (event.outcome?.type === "ability-effects") {
+          const card = event.outcome.resolution.effects.find(effect => effect.type === "random-choice");
+          if (event.args.target === "demo.ability.trump-shuffle" && card?.type === "random-choice") {
+            return localization.format(`message-trump-card-${card.branchIndex}`);
+          }
           if (event.outcome.resolution.effects.some(effect => effect.type === "ring-of-power-backlash")) {
             return localization.format("message-ring-of-power-backlash");
           }

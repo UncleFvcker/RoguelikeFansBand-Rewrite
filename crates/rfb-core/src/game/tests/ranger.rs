@@ -333,7 +333,7 @@ fn ranger_spell_parameters_preserve_unavailable_slots_and_orb_scaling() {
                 .iter()
                 .map(|realm| realm.ability_overrides.len())
                 .sum::<usize>(),
-            192
+            224
         );
         assert_eq!(
             profile
@@ -342,7 +342,7 @@ fn ranger_spell_parameters_preserve_unavailable_slots_and_orb_scaling() {
                 .flat_map(|realm| &realm.ability_overrides)
                 .filter(|spell| spell.minimum_level == 99)
                 .count(),
-            19
+            24
         );
         let detect = profile
             .realm_profiles

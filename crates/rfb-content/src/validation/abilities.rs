@@ -585,6 +585,22 @@ pub(super) fn validate_abilities(
                         && (1..=1_000_000).contains(duration_sides)
                         && *duration_bonus <= 1_000_000
                 }
+                AbilityEffectDefinition::TrumpSummoning { category } => matches!(
+                    category.as_str(),
+                    "spider"
+                        | "animal"
+                        | "kamikaze"
+                        | "phantom"
+                        | "undead"
+                        | "hydra"
+                        | "any-monster"
+                        | "hound"
+                        | "cyber"
+                        | "dragon"
+                        | "demon"
+                        | "high-undead"
+                        | "high-dragon"
+                ),
                 AbilityEffectDefinition::Summon {
                     actor_kind_id,
                     count,
@@ -693,6 +709,8 @@ pub(super) fn validate_abilities(
                         && *duration_turns == 0
                 }
                 AbilityEffectDefinition::ChainLightning
+                | AbilityEffectDefinition::TrumpShuffle
+                | AbilityEffectDefinition::ResetRecall
                 | AbilityEffectDefinition::ChaosMeteorSwarm
                 | AbilityEffectDefinition::CallChaos
                 | AbilityEffectDefinition::ChaosPolymorphSelf
@@ -1401,6 +1419,21 @@ pub(super) fn validate_abilities(
                     && ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Position]
                     && (1..=64).contains(&ability.target.range)
                     && ability.target.requires_line_of_effect
+            }
+            AbilityEffectDefinition::TrumpSummoning { category } => {
+                ability.target.range == 18
+                    && ability.target.requires_line_of_effect
+                    && ability.target.modes.iter().all(|m| {
+                        matches!(
+                            m,
+                            AbilityTargetModeDefinition::Position
+                                | AbilityTargetModeDefinition::Entity
+                        ) || (*m == AbilityTargetModeDefinition::SelfTarget
+                            && category != "kamikaze")
+                    })
+            }
+            AbilityEffectDefinition::TrumpShuffle | AbilityEffectDefinition::ResetRecall => {
+                self_target_rule
             }
             AbilityEffectDefinition::Summon { .. }
             | AbilityEffectDefinition::SummonCategory { .. }

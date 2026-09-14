@@ -926,7 +926,21 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.sign-of-chaos",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.black-prayers",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.conjurings-and-tricks",
       "maxDepth": 30,
       "minDepth": 10,
       "quantity": 1,
@@ -936,27 +950,6 @@
       "itemKindId": "demo.item.cantrips-for-beginners",
       "maxDepth": 30,
       "minDepth": 10,
-      "quantity": 1,
-      "weight": 100
-    },
-    {
-      "itemKindId": "demo.item.sign-of-chaos",
-      "maxDepth": 30,
-      "minDepth": 10,
-      "quantity": 1,
-      "weight": 100
-    },
-    {
-      "itemKindId": "demo.item.chaos-mastery",
-      "maxDepth": 30,
-      "minDepth": 20,
-      "quantity": 1,
-      "weight": 100
-    },
-    {
-      "itemKindId": "demo.item.chaos-channels",
-      "maxDepth": 90,
-      "minDepth": 45,
       "quantity": 1,
       "weight": 100
     },
@@ -1500,7 +1493,21 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.chaos-mastery",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.black-mass",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.deck-of-many-things",
       "maxDepth": 50,
       "minDepth": 20,
       "quantity": 1,
@@ -2347,7 +2354,21 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.chaos-channels",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.black-channels",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.trumps-of-doom",
       "maxDepth": 90,
       "minDepth": 45,
       "quantity": 1,
@@ -2873,6 +2894,13 @@
     },
     {
       "itemKindId": "demo.item.necronomicon",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.five-aces",
       "maxDepth": 65535,
       "minDepth": 80,
       "quantity": 1,

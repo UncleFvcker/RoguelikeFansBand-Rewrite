@@ -2668,6 +2668,12 @@ fn b5_gloves_and_shields_generate_equip_and_preserve_combat_bonuses_after_save()
             actor_id: "test.b5-drop".into(),
         },
     };
+    assert!(
+        !game.generated_artifact_ids.contains("demo.item.fingolfin"),
+        "Fingolfin was already generated at birth"
+    );
+    // Keep this ordinary-pool sample independent of birth and shop RNG draws.
+    game.rng = RfbRng::seeded(472);
     let mut remaining = cases.iter().map(|c| c.0).collect::<BTreeSet<_>>();
     for _ in 0..200_000 {
         for item in game
@@ -12762,7 +12768,7 @@ fn b4_pick_up_tailored_matching(game: &mut Game, accepts: impl Fn(&Game, &str) -
 #[test]
 fn all_priest_builds_generate_tailored_hafted_weapons_equip_and_resume_generation() {
     let builds = super::support::priest_build_ids();
-    assert_eq!(builds.len(), 28);
+    assert_eq!(builds.len(), 32);
     for build in builds
         .into_iter()
         .chain(super::support::warrior_mage_build_ids())

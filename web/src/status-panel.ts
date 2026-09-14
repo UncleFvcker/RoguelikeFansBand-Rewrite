@@ -1805,7 +1805,7 @@ export class StatusPanel {
       });
       return;
     }
-    if (ability.targetSpec.modes.includes("self")) {
+    if (ability.targetSpec.modes.includes("self") && !ability.effects.some(effect => effect.type === "trump-summoning")) {
       void this.#dispatch({
         type: "cast-ability",
         abilityId: ability.id,

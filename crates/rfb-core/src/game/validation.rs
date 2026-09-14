@@ -1785,11 +1785,17 @@ impl Game {
                 }
             }
             if let Some(pending) = &self.pending_ability_direction
-                && pending.ability_id == "demo.ability.chaos-call-chaos"
+                && matches!(
+                    pending.ability_id.as_str(),
+                    "demo.ability.chaos-call-chaos" | "demo.ability.trump-shuffle"
+                )
             {
                 let cast = &pending.cast_resolution;
-                if !(1..=62).contains(&pending.branch_roll)
-                    || cast.ability_id != pending.ability_id
+                if !(if pending.ability_id == "demo.ability.trump-shuffle" {
+                    pending.branch_roll == 1
+                } else {
+                    (1..=62).contains(&pending.branch_roll)
+                }) || cast.ability_id != pending.ability_id
                     || !cast.succeeded
                     || cast.cast_count == 0
                     || !self.learned_abilities.contains(&pending.ability_id)
@@ -1820,10 +1826,12 @@ impl Game {
                 }
             }
             if self.player_uses_dual_realm_learning()
-                && self
-                    .pending_ability_direction
-                    .as_ref()
-                    .is_some_and(|p| p.ability_id != "demo.ability.chaos-call-chaos")
+                && self.pending_ability_direction.as_ref().is_some_and(|p| {
+                    !matches!(
+                        p.ability_id.as_str(),
+                        "demo.ability.chaos-call-chaos" | "demo.ability.trump-shuffle"
+                    )
+                })
                 && self
                     .pending_ability_direction
                     .as_ref()

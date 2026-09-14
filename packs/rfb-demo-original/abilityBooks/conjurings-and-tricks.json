@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.conjurings-and-tricks",
+  "nameKey": "ability-book-demo-conjurings-and-tricks-name",
+  "descriptionKey": "ability-book-demo-conjurings-and-tricks-description",
+  "realmId": "trump",
+  "rank": 1,
+  "abilityIds": [
+    "demo.ability.trump-phase-door",
+    "demo.ability.trump-spiders",
+    "demo.ability.trump-shuffle",
+    "demo.ability.trump-reset-recall",
+    "demo.ability.trump-teleport",
+    "demo.ability.trump-spying",
+    "demo.ability.trump-teleport-away",
+    "demo.ability.trump-animals"
+  ],
+  "tags": [
+    "trump",
+    "spellbook"
+  ]
+}

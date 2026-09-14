@@ -16,6 +16,7 @@ mod summoning;
 mod targeting;
 pub(in crate::game) mod terrain;
 mod travel;
+mod trump;
 
 pub(super) use casting::nature_wrath_direction_roll;
 pub(super) use targeting::AbilityTargetPlan;
@@ -39,13 +40,23 @@ impl Game {
     ) -> Result<Option<Position>, CoreError> {
         match (ability.effect.clone(), target_plan) {
             (
+                AbilityEffectDefinition::TrumpSummoning { category },
+                AbilityTargetPlan::TrumpSummoning { center },
+            ) => {
+                self.resolve_trump_summoning(&ability, &category, center, false, events, changed);
+            }
+            (AbilityEffectDefinition::ResetRecall, AbilityTargetPlan::SelfTarget) => {
+                self.reset_recall(self.recall_reset_plan().expect("validated recall reset"));
+            }
+            (
                 AbilityEffectDefinition::ElementalBrand
                 | AbilityEffectDefinition::ElementalImmunity { .. },
                 AbilityTargetPlan::Element { element },
             ) => self.resolve_player_elemental_enchantment(&ability, element, events),
             (AbilityEffectDefinition::LivingTrump, AbilityTargetPlan::SelfTarget) => {
-                let controlled =
-                    self.rng.bounded(7) == 0 || self.floor_depth(&self.current_floor_id) == 0;
+                let controlled = self.rng.bounded(7) == 0
+                    || (ability.id != "demo.ability.trump-living-trump"
+                        && self.floor_depth(&self.current_floor_id) == 0);
                 self.gain_mutation(
                     if controlled {
                         "rfb.mutation.teleport"

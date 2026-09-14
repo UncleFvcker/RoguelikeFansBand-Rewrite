@@ -44,7 +44,7 @@ fn desktop_preparation_preserves_natural_birth_and_round_trips_a_real_dungeon() 
 const BUILD: &str = "demo.build.mage-death-sorcery";
 const MANA: &str = "demo.resource.mana";
 const EAT_MAGIC: &str = "demo.ability.mage-eat-magic";
-const REALMS: [&str; 10] = [
+const REALMS: [&str; 11] = [
     "life",
     "sorcery",
     "nature",
@@ -55,6 +55,7 @@ const REALMS: [&str; 10] = [
     "crusade",
     "armageddon",
     "chaos",
+    "trump",
 ];
 
 fn at_level(build: &str, level: u16) -> Game {
@@ -80,14 +81,14 @@ fn cast(game: &mut Game, ability: &str, target: TargetSelection) -> Vec<DomainEv
 }
 
 #[test]
-fn all_seventy_two_births_have_two_distinct_first_books_and_the_same_mage() {
+fn all_formal_births_have_two_distinct_first_books_and_the_same_mage() {
     let content = load_built_in_content().unwrap();
     assert_eq!(
         content
             .builds()
             .filter(|build| build.class_id == "demo.class.mage")
             .count(),
-        90
+        110
     );
     for first in REALMS {
         for second in REALMS {

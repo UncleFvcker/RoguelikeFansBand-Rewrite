@@ -1024,3 +1024,14 @@ function readLocale(locale: "en-US" | "zh-CN"): string[] {
     readFileSync(new URL(`../../locales/${locale}/${file}`, import.meta.url), "utf8"),
   );
 }
+
+test("Trump cards display the server-selected card in both locales", () => {
+  const event = {
+    kind: "ability.effects", messageKey: "ability-effects", args: { target: "demo.ability.trump-shuffle" },
+    outcome: { type: "ability-effects" as const, resolution: { targetEntityId: null, targetKindId: null, effects: [{ type: "random-choice" as const, effectIndex: 0, roll: 88, branchIndex: 19, maximumRoll: 120 }] } },
+  };
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "是“恋人”。");
+  localization.setLocale("en-US");
+  assert.equal(formatter.formatEvent(event), "The Lovers.");
+});

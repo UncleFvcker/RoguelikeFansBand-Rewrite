@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.five-aces",
+  "nameKey": "item-demo-five-aces-name",
+  "descriptionKey": "item-demo-five-aces-description",
+  "abilityBookId": "demo.ability-book.five-aces",
+  "rfbBaseKind": {
+    "sourceIndex": 523,
+    "tval": 95,
+    "sval": 3
+  },
+  "baseValue": 100000,
+  "generationLevel": 80,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "book",
+    "trump",
+    "spellbook"
+  ],
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ]
+}

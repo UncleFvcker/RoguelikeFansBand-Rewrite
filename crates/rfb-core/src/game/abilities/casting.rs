@@ -519,6 +519,16 @@ impl Game {
                 resolution.hp_paid = self.pay_class_ability_hit_points(hp_paid);
             }
             events.push(DomainEvent::AbilityCastFailed { resolution });
+            if let AbilityEffectDefinition::TrumpSummoning { category } = &ability.effect {
+                self.resolve_trump_summoning(
+                    &ability,
+                    category,
+                    self.player.position,
+                    true,
+                    events,
+                    changed,
+                );
+            }
             if super::mindcraft::is_mindcraft_spell(&ability) {
                 self.resolve_mindcraft_failure(
                     &ability,
@@ -570,6 +580,15 @@ impl Game {
             return Ok(None);
         }
         let practice = book_spell.then(|| (ability.clone(), self.spell_practice_targets()));
+        let shuffle = matches!(ability.effect, AbilityEffectDefinition::TrumpShuffle);
+        if shuffle && self.begin_trump_shuffle(&ability, events, changed, removed_entities)? {
+            self.pending_ability_direction = Some(rfb_protocol::PendingAbilityDirectionDto {
+                ability_id: ability.id.clone(),
+                branch_roll: 1,
+                cast_resolution: resolution,
+            });
+            return Ok(None);
+        }
         let call_chaos = matches!(ability.effect, AbilityEffectDefinition::CallChaos);
         if call_chaos
             && let Some(branch_roll) =
@@ -582,7 +601,7 @@ impl Game {
             });
             return Ok(None);
         }
-        let result = if call_chaos {
+        let result = if call_chaos || shuffle {
             Ok(None)
         } else {
             self.resolve_player_ability_effect(
@@ -834,8 +853,9 @@ impl Game {
             .pending_ability_direction
             .clone()
             .ok_or(CoreError::AbilityDirectionUnavailable)?;
-        if pending.ability_id != "demo.ability.chaos-call-chaos"
-            || !(1..=62).contains(&pending.branch_roll)
+        if !((pending.ability_id == "demo.ability.chaos-call-chaos"
+            && (1..=62).contains(&pending.branch_roll))
+            || (pending.ability_id == "demo.ability.trump-shuffle" && pending.branch_roll == 1))
         {
             return Err(CoreError::AbilityDirectionUnavailable);
         }
@@ -847,16 +867,22 @@ impl Game {
         let targets = self.spell_practice_targets();
         self.pending_ability_direction = None;
         if let Some(direction) = direction {
-            self.call_chaos_projection(
-                &ability,
-                pending.branch_roll,
-                direction,
-                250,
-                3 + (self.progress.level / 35) as u8,
-                events,
-                changed,
-                removed_entities,
-            )?;
+            if pending.ability_id == "demo.ability.trump-shuffle" {
+                let profile = self.casting_profile().expect("paid spell profile");
+                let effective = self.effective_casting_ability(profile, &ability);
+                self.trump_lovers(&effective, direction, events, changed, removed_entities)?;
+            } else {
+                self.call_chaos_projection(
+                    &ability,
+                    pending.branch_roll,
+                    direction,
+                    250,
+                    3 + (self.progress.level / 35) as u8,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
         }
         if self.player_is_dead() {
             return Ok(());
@@ -891,11 +917,12 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
-        if self
-            .pending_ability_direction
-            .as_ref()
-            .is_some_and(|p| p.ability_id == "demo.ability.chaos-call-chaos")
-        {
+        if self.pending_ability_direction.as_ref().is_some_and(|p| {
+            matches!(
+                p.ability_id.as_str(),
+                "demo.ability.chaos-call-chaos" | "demo.ability.trump-shuffle"
+            )
+        }) {
             return self.resolve_pending_call_chaos(
                 Some(direction),
                 events,

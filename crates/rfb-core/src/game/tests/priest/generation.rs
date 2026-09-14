@@ -9,7 +9,7 @@ use rfb_protocol::{AutoGetModeDto, FacilityMembershipDto, FacilityServiceKindDto
 #[test]
 fn every_priest_build_claims_the_source_thieves_and_orc_rewards_and_resumes() {
     let builds = priest_build_ids();
-    assert_eq!(builds.len(), 28);
+    assert_eq!(builds.len(), 32);
     for build in builds {
         for task_slug in ["thieves-hideout", "anambar-orc-camp"] {
             let (mut game, task, facility, id) = reward_ready(925, &build, task_slug);

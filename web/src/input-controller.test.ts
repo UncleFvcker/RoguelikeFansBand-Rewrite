@@ -397,6 +397,7 @@ test("a pending Produce Mana effect opens mandatory direction targeting", () => 
 for (const [abilityId, message] of [
   ["demo.ability.nature-natures-wrath", "message-ability-direction-required"],
   ["demo.ability.chaos-call-chaos", "message-chaos-direction-required"],
+  ["demo.ability.trump-shuffle", "message-trump-direction-required"],
 ]) {
   test(`a pending ${abilityId} branch opens ability direction targeting`, () => {
     const state = new AppState();
