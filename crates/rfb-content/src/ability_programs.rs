@@ -239,6 +239,8 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::Heal { .. }
                     | AbilityEffectDefinition::HealDice { .. }
                     | AbilityEffectDefinition::ReduceStatus { .. }
+                    | AbilityEffectDefinition::PrepareConfusingStrike
+                    | AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors
                     | AbilityEffectDefinition::SatisfyHunger
                     | AbilityEffectDefinition::DevourFlesh { .. }
                     | AbilityEffectDefinition::Vomit

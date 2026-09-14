@@ -944,6 +944,8 @@ impl Game {
             | AbilityEffectDefinition::InsanityCircle { .. }
             | AbilityEffectDefinition::ExplodePets
             | AbilityEffectDefinition::ReduceStatus { .. }
+            | AbilityEffectDefinition::PrepareConfusingStrike
+            | AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors
             | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::DevourFlesh { .. }
             | AbilityEffectDefinition::Vomit

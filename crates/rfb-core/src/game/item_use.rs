@@ -1208,11 +1208,15 @@ impl Game {
         .then(|| (position, target_terrain_id.to_owned()))
     }
 
-    fn adjacent_trap_door_replacements(&self) -> Vec<(Position, String)> {
-        TERRAIN_INTERACTION_DIRECTIONS
-            .iter()
-            .filter_map(|direction| {
-                let position = self.position_in_direction(*direction);
+    pub(super) fn adjacent_trap_door_replacements(&self) -> Vec<(Position, String)> {
+        // destroy_doors_touch projects onto radius one, including the origin.
+        std::iter::once(self.player.position)
+            .chain(
+                TERRAIN_INTERACTION_DIRECTIONS
+                    .iter()
+                    .map(|direction| self.position_in_direction(*direction)),
+            )
+            .filter_map(|position| {
                 let terrain = self
                     .index(position)
                     .and_then(|index| self.content.terrain(&self.terrain[index]))?;

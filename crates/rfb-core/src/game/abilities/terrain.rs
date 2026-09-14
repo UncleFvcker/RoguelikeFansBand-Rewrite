@@ -252,6 +252,34 @@ impl Game {
         damage.applied
     }
 
+    pub(super) fn resolve_player_adjacent_trap_door_destruction(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        for (position, target_id) in self.adjacent_trap_door_replacements() {
+            let source_id = self.terrain[self.index(position).expect("planned neighbor")].clone();
+            self.replace_terrain_from_source(
+                position,
+                &target_id,
+                TerrainChangeSource::Magic,
+                events,
+                changed,
+            );
+            events.push(DomainEvent::AbilityTerrainTransformed {
+                ability_id: ability.id.clone(),
+                resolution: AbilityTerrainTransformResolutionDto {
+                    center: self.player.position,
+                    radius: 1,
+                    source_terrain_ids: vec![source_id],
+                    target_terrain_id: target_id,
+                    transformed_positions: vec![position],
+                },
+            });
+        }
+    }
+
     pub(super) fn resolve_player_terrain_beam_effect(
         &mut self,
         ability: &AbilityDefinition,

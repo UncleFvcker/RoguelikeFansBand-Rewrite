@@ -825,6 +825,12 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
             current_divisor: *current_divisor,
             remaining_divisor: *remaining_divisor,
         },
+        AbilityEffectDefinition::PrepareConfusingStrike => {
+            AbilityEffectSpecDto::PrepareConfusingStrike
+        }
+        AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors => {
+            AbilityEffectSpecDto::DestroyAdjacentTrapsAndDoors
+        }
         AbilityEffectDefinition::SatisfyHunger => AbilityEffectSpecDto::SatisfyHunger,
         AbilityEffectDefinition::DevourFlesh {
             maximum_hp_divisor,

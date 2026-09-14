@@ -695,6 +695,16 @@ impl Game {
             (AbilityEffectDefinition::ReduceStatus { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_status_reduction_effect(&ability, events);
             }
+            (AbilityEffectDefinition::PrepareConfusingStrike, AbilityTargetPlan::SelfTarget) => {
+                // The same one-hit state is consumed by melee and persisted for scrolls.
+                self.confusing_strike_ready = true;
+            }
+            (
+                AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors,
+                AbilityTargetPlan::SelfTarget,
+            ) => {
+                self.resolve_player_adjacent_trap_door_destruction(&ability, events, changed);
+            }
             (AbilityEffectDefinition::SatisfyHunger, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_satisfy_hunger_effect(&ability, events);
             }

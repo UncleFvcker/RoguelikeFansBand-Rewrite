@@ -940,6 +940,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.sign-of-chaos",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.handbook-for-pupils",
       "maxDepth": 30,
       "minDepth": 10,

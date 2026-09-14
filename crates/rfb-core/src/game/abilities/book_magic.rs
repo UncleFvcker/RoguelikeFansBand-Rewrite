@@ -16,6 +16,7 @@ fn attack_projection(effect: &AbilityEffectDefinition, self_target: bool) -> Opt
         | LightArea { .. }
         | DarkenRoom
         | TerrainBeam { .. }
+        | DestroyAdjacentTrapsAndDoors
         | LavaFlow { .. }
         | CreateDoor { .. }
         | CreateAdjacentTerrain { .. } => Some(false),

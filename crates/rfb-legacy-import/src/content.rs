@@ -30208,6 +30208,75 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
     }
 
     #[test]
+    fn chaos_source_contract_preserves_all_slots_and_five_class_profiles() {
+        let parsed = parse_m_info(include_str!("testdata/chaos-m-info.txt")).unwrap();
+        let root =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+        let source: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(root.join("legacy-chaos-source.json")).unwrap(),
+        )
+        .unwrap();
+        let spells = source["spells"].as_array().unwrap();
+        assert_eq!(spells.len(), 32);
+        let profiles = source["classProfiles"].as_array().unwrap();
+        assert_eq!(profiles.len(), 5);
+        for profile in profiles {
+            let original = parsed
+                .iter()
+                .find(|p| u64::from(p.class_index) == profile["sourceClassIndex"].as_u64().unwrap())
+                .unwrap();
+            let rows = &original
+                .realms
+                .iter()
+                .find(|r| r.index == 3)
+                .unwrap()
+                .spells;
+            assert_eq!(rows.len(), 32);
+            let overrides = profile["abilityOverrides"].as_array().unwrap();
+            assert_eq!(overrides.len(), 32);
+            for (slot, row) in rows.iter().enumerate() {
+                let actual = &overrides[slot];
+                assert_eq!(spells[slot]["slot"], slot);
+                assert_eq!(actual["abilityId"], spells[slot]["abilityId"]);
+                assert_eq!(actual["minimumLevel"], row.level);
+                assert_eq!(actual["resourceCost"], row.mana);
+                assert_eq!(actual["baseFailurePercent"], row.failure_percent);
+                assert_eq!(
+                    actual["firstSuccessExperience"],
+                    u32::from(row.level) * u32::from(row.experience)
+                );
+            }
+        }
+        let book: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(root.join("abilityBooks/sign-of-chaos.json")).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(book["abilityIds"].as_array().unwrap().len(), 8);
+        for (slot, spell) in spells.iter().take(8).enumerate() {
+            assert_eq!(book["abilityIds"][slot], spell["abilityId"]);
+            let slug = spell["abilityId"]
+                .as_str()
+                .unwrap()
+                .strip_prefix("demo.ability.")
+                .unwrap();
+            let binding: serde_json::Value = serde_json::from_str(
+                &std::fs::read_to_string(root.join(format!("playerAbilityBindings/{slug}.json")))
+                    .unwrap(),
+            )
+            .unwrap();
+            for key in [
+                "abilityId",
+                "minimumLevel",
+                "resourceCost",
+                "baseFailurePercent",
+                "firstSuccessExperience",
+            ] {
+                assert_eq!(binding[key], profiles[0]["abilityOverrides"][slot][key]);
+            }
+        }
+    }
+
+    #[test]
     fn existing_realms_preserve_class_specific_spell_parameters() {
         let profiles = parse_m_info(include_str!("testdata/existing-realms-m-info.txt")).unwrap();
         let root =

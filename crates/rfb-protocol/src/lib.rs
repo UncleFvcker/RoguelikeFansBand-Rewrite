@@ -1853,6 +1853,8 @@ pub enum AbilityEffectSpecDto {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         remaining_divisor: Option<u32>,
     },
+    PrepareConfusingStrike,
+    DestroyAdjacentTrapsAndDoors,
     SatisfyHunger,
     DevourFlesh {
         maximum_hp_divisor: u16,

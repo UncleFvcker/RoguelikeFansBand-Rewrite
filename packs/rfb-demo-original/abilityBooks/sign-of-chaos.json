@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.sign-of-chaos",
+  "nameKey": "ability-book-demo-sign-of-chaos-name",
+  "descriptionKey": "ability-book-demo-sign-of-chaos-description",
+  "realmId": "chaos",
+  "rank": 1,
+  "abilityIds": [
+    "demo.ability.chaos-magic-missile",
+    "demo.ability.chaos-trap-door-destruction",
+    "demo.ability.chaos-flash-of-light",
+    "demo.ability.chaos-confusing-touch",
+    "demo.ability.chaos-mana-burst",
+    "demo.ability.chaos-fire-bolt",
+    "demo.ability.chaos-fist-of-force",
+    "demo.ability.chaos-teleport-self"
+  ],
+  "tags": [
+    "chaos",
+    "spellbook"
+  ]
+}

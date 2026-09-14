@@ -359,6 +359,27 @@ impl Game {
                 SPELL_EXP_MASTER
             };
         }
+        // do-spell.c::do_chaos_spell(4): class-dependent base, before to_d_spell
+        // and final spell power. This path is shared by projection and actual casting.
+        if ability.id == "demo.ability.chaos-mana-burst"
+            && let AbilityEffectDefinition::AreaDamage {
+                damage_bonus,
+                radius,
+                ..
+            } = &mut effective.effect
+        {
+            let mage = self
+                .character_definitions()
+                .is_some_and(|(_, _, class, _)| {
+                    matches!(
+                        class.id.as_str(),
+                        "demo.class.mage" | "demo.class.high-mage"
+                    )
+                });
+            let level = self.progress.level;
+            *damage_bonus = level + level / if mage { 2 } else { 4 };
+            *radius = if level < 30 { 2 } else { 3 };
+        }
         effective
     }
 

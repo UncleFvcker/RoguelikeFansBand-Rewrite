@@ -970,7 +970,9 @@ pub(super) fn validate_abilities(
                         && !(current_divisor.is_some() && remaining_divisor.is_some())
                         && (remaining_divisor.is_none() || status_kind_id == "rfb.status.bleeding")
                 }
-                AbilityEffectDefinition::SatisfyHunger => true,
+                AbilityEffectDefinition::PrepareConfusingStrike
+                | AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors
+                | AbilityEffectDefinition::SatisfyHunger => true,
                 AbilityEffectDefinition::DevourFlesh {
                     maximum_hp_divisor,
                     bleeding_amount,
@@ -1395,6 +1397,8 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::HealDice { .. }
             | AbilityEffectDefinition::Entangle { .. }
             | AbilityEffectDefinition::ReduceStatus { .. }
+            | AbilityEffectDefinition::PrepareConfusingStrike
+            | AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors
             | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::DevourFlesh { .. }
             | AbilityEffectDefinition::Vomit

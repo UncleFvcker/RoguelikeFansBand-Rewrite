@@ -30,6 +30,7 @@ mod book_discovery;
 mod capture_ball;
 mod cavalry;
 mod centaur;
+mod chaos;
 mod combat;
 mod craft;
 mod death_scythe;
