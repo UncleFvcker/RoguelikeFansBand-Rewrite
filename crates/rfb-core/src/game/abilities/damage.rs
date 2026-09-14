@@ -928,7 +928,8 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
-        let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
+        let (trace, _) =
+            self.trace_projectile_path_with_damage_policy(path, false, Some(damage_type));
         let affected_positions = trace.traversed.clone();
         self.resolve_projectile_terrain_effects(&affected_positions, damage_type, changed);
         self.resolve_projectile_terrain_effects(&[trace.impact], damage_type, changed);

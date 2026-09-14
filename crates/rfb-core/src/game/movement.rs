@@ -568,10 +568,12 @@ impl Game {
     ) -> bool {
         !terrain.allows_wall_passage
             && (terrain.walkable || !terrain.movement_modes.is_empty())
-            && !terrain
-                .tags
-                .iter()
-                .any(|tag| matches!(tag.as_str(), "warding-glyph" | "explosive-rune"))
+            && !terrain.tags.iter().any(|tag| {
+                matches!(
+                    tag.as_str(),
+                    "warding-glyph" | "explosive-rune" | "monster-trap"
+                )
+            })
     }
 
     pub(super) fn actor_kind_can_enter_position(&self, kind_id: &str, position: Position) -> bool {

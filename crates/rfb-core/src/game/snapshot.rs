@@ -641,6 +641,7 @@ impl Game {
                     beam_damage: matches!(
                         effective_ability.effect,
                         AbilityEffectDefinition::BeamDamage { .. }
+                            | AbilityEffectDefinition::Law { spell: 27 }
                     ),
                     cone_radius: match effective_ability.effect {
                         AbilityEffectDefinition::ConeDamage { radius, .. } => Some(radius),

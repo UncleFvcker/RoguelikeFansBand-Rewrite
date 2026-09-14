@@ -27,7 +27,7 @@ fn ch5_all_formal_builds_generate_study_cast_and_resume() {
         })
         .map(|b| b.id.clone())
         .collect();
-    assert_eq!(builds.len(), 27);
+    assert_eq!(builds.len(), 29);
     for build in builds {
         let birth = Game::new_with_build(925, &build).unwrap();
         assert!(birth.items.iter().any(|i| i.kind_id == BOOK));

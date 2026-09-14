@@ -659,6 +659,9 @@ pub enum AbilityEffectDefinition {
     Necromancy {
         spell: u8,
     },
+    Law {
+        spell: u8,
+    },
     ResetRecall,
     CallChaos,
     ChaosPolymorphSelf,

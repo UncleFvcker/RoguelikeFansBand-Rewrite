@@ -1311,6 +1311,9 @@ impl Game {
                             ability.effect,
                             AbilityEffectDefinition::BlinkSelf { .. }
                                 | AbilityEffectDefinition::Strafing
+                                | AbilityEffectDefinition::Law {
+                                    spell: 18 | 24 | 30
+                                }
                         )
                     }) =>
             {

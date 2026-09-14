@@ -30308,6 +30308,57 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
     }
 
     #[test]
+    fn law_source_technic_table_matches_formal_bindings_and_slots() {
+        let root =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+        let manifest: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(root.join("legacy-law-source.json")).unwrap(),
+        )
+        .unwrap();
+        let rows = include_str!("testdata/law-technic-info.txt")
+            .lines()
+            .filter(|l| l.contains("{ REALM_LAW,"))
+            .collect::<Vec<_>>();
+        assert_eq!(rows.len(), 32);
+        for (i, row) in rows.iter().enumerate() {
+            let values = row
+                .split('}')
+                .next()
+                .unwrap()
+                .split(',')
+                .skip(1)
+                .map(|v| v.trim().parse::<u32>().unwrap())
+                .collect::<Vec<_>>();
+            assert_eq!(values[0], i as u32);
+            let slug = manifest["spells"][i]["abilityId"]
+                .as_str()
+                .unwrap()
+                .rsplit('.')
+                .next()
+                .unwrap();
+            let binding: serde_json::Value = serde_json::from_str(
+                &std::fs::read_to_string(root.join(format!("playerAbilityBindings/{slug}.json")))
+                    .unwrap(),
+            )
+            .unwrap();
+            for (field, value) in [
+                ("minimumLevel", values[1]),
+                ("resourceCost", values[2]),
+                ("baseFailurePercent", values[3]),
+                ("firstSuccessExperience", values[1] * values[4]),
+            ] {
+                assert_eq!(binding[field], value, "{slug} {field}");
+            }
+            let program: serde_json::Value = serde_json::from_str(
+                &std::fs::read_to_string(root.join(format!("abilityPrograms/{slug}.json")))
+                    .unwrap(),
+            )
+            .unwrap();
+            assert_eq!(program["steps"][0]["spell"], i);
+        }
+    }
+
+    #[test]
     fn chaos_source_contract_preserves_all_slots_and_five_class_profiles() {
         let parsed = parse_m_info(include_str!("testdata/chaos-m-info.txt")).unwrap();
         let root =

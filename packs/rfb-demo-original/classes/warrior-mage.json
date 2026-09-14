@@ -1023,6 +1023,16 @@
             "firstSuccessExperience": 11000
           }
         ]
+      },
+      {
+        "realmId": "law",
+        "abilityBookIds": [
+          "demo.ability-book.attractions-of-law",
+          "demo.ability-book.obstacle-coursebook",
+          "demo.ability-book.building-alternative-realities",
+          "demo.ability-book.acquiris-quodcumque-rapis"
+        ],
+        "learningCapacityBonus": 0
       }
     ],
     "firstSpellLevel": 1,

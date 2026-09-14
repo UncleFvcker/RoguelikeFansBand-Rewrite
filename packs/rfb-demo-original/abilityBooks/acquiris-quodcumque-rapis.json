@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.acquiris-quodcumque-rapis",
+  "nameKey": "item-demo-acquiris-quodcumque-rapis-name",
+  "descriptionKey": "ability-book-demo-five-aces-description",
+  "realmId": "law",
+  "rank": 4,
+  "abilityIds": [
+    "demo.ability.law-blink",
+    "demo.ability.law-tread-softly",
+    "demo.ability.law-map-surroundings",
+    "demo.ability.law-dig-deep",
+    "demo.ability.law-unholy-rage",
+    "demo.ability.law-subpoena",
+    "demo.ability.law-teleport",
+    "demo.ability.law-dazzle"
+  ],
+  "tags": [
+    "law",
+    "spellbook"
+  ]
+}

@@ -50,7 +50,7 @@
     "finalState": {
       "goldPiles": {
         "generated.gold.1": {
-          "amount": 58,
+          "amount": 70,
           "discovered": true,
           "position": {
             "x": 95,
@@ -75,7 +75,7 @@
         "y": 33
       },
       "revision": 2,
-      "stateHash": "ac2d02f0603ac9be0eea3dc041808b9ec441c45f431e6369ed3da8671f4b808d",
+      "stateHash": "a9ef2cbedf488d7932498a438e30c58283dc8687c9926fadf4d1346e47fb3833",
       "turn": 2
     },
     "events": [
@@ -106,6 +106,6 @@
         "args": {}
       }
     ],
-    "saveRoundTripStateHash": "ac2d02f0603ac9be0eea3dc041808b9ec441c45f431e6369ed3da8671f4b808d"
+    "saveRoundTripStateHash": "a9ef2cbedf488d7932498a438e30c58283dc8687c9926fadf4d1346e47fb3833"
   }
 }

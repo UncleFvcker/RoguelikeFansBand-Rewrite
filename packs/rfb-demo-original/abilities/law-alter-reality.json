@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.law-alter-reality",
+  "nameKey": "ability-demo-law-alter-reality-name",
+  "descriptionKey": "ability-demo-law-alter-reality-description",
+  "abilityProgramId": "demo.ability-program.law-alter-reality",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "law",
+    "spell"
+  ]
+}

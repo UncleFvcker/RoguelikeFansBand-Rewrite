@@ -19,6 +19,7 @@ use super::shared::{
 fn effect_can_affect_ground_items(effect: &AbilityEffectDefinition) -> bool {
     match effect {
         AbilityEffectDefinition::ChainLightning
+        | AbilityEffectDefinition::Law { spell: 27 }
         | AbilityEffectDefinition::ChaosMeteorSwarm
         | AbilityEffectDefinition::CallChaos
         | AbilityEffectDefinition::CallVoid
@@ -585,7 +586,8 @@ pub(super) fn validate_abilities(
                         && (1..=1_000_000).contains(duration_sides)
                         && *duration_bonus <= 1_000_000
                 }
-                AbilityEffectDefinition::Necromancy { spell } => *spell < 32,
+                AbilityEffectDefinition::Necromancy { spell }
+                | AbilityEffectDefinition::Law { spell } => *spell < 32,
                 AbilityEffectDefinition::TrumpSummoning { category } => matches!(
                     category.as_str(),
                     "spider"
@@ -1421,6 +1423,18 @@ pub(super) fn validate_abilities(
                     && (1..=64).contains(&ability.target.range)
                     && ability.target.requires_line_of_effect
             }
+            AbilityEffectDefinition::Law { spell } => match spell {
+                6 => item_target_rule,
+                29 => {
+                    ability.target.modes == [AbilityTargetModeDefinition::Entity]
+                        && ability.target.range == 18
+                        && ability.target.requires_line_of_effect
+                }
+                5 | 7 | 9..=11 | 16 | 22 | 27 => {
+                    projectile_target_rule && ability.target.range == 18
+                }
+                _ => self_target_rule,
+            },
             AbilityEffectDefinition::Necromancy { spell } => match spell {
                 11 => item_target_rule,
                 0 | 4 | 7 | 12 | 13 | 24 | 27 | 30 => {

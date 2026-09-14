@@ -54,13 +54,13 @@ function singleRealmCaster<const S extends string, const R extends readonly stri
   })) };
 }
 
-export const MAGE_REALMS = ["life", "sorcery", "nature", "chaos", "trump", "death", "arcane", "craft", "daemon", "crusade", "armageddon"] as const;
-export const PALADIN_REALMS = ["life", "crusade", "death", "daemon"] as const;
+export const MAGE_REALMS = ["life", "sorcery", "nature", "chaos", "trump", "death", "arcane", "craft", "daemon", "crusade", "armageddon", "law"] as const;
+export const PALADIN_REALMS = ["life", "crusade", "death", "daemon", "law"] as const;
 export const PRIEST_SECOND_REALMS = {
-  life: ["chaos", "trump", "sorcery", "nature", "arcane", "craft", "crusade", "armageddon"],
-  crusade: ["chaos", "trump", "life", "sorcery", "nature", "arcane", "craft", "armageddon"],
-  death: ["chaos", "trump", "sorcery", "nature", "arcane", "craft", "daemon", "armageddon"],
-  daemon: ["chaos", "trump", "sorcery", "nature", "death", "arcane", "craft", "armageddon"],
+  life: ["chaos", "trump", "sorcery", "nature", "arcane", "craft", "crusade", "armageddon", "law"],
+  crusade: ["chaos", "trump", "life", "sorcery", "nature", "arcane", "craft", "armageddon", "law"],
+  death: ["chaos", "trump", "sorcery", "nature", "arcane", "craft", "daemon", "armageddon", "law"],
+  daemon: ["chaos", "trump", "sorcery", "nature", "death", "arcane", "craft", "armageddon", "law"],
 } as const;
 const PRIEST = {
   ...career("priest"), id: "priest", childLabelKey: "session-first-realm-label",
@@ -77,7 +77,7 @@ const PRIEST = {
   })),
 } as const;
 export const RANGER_SECOND_REALMS = ["chaos", "trump", "sorcery", "death", "arcane", "daemon"] as const;
-export const WARRIOR_MAGE_SECOND_REALMS = ["life", "sorcery", "nature", "chaos", "trump", "death", "craft", "daemon", "crusade", "armageddon"] as const;
+export const WARRIOR_MAGE_SECOND_REALMS = ["life", "sorcery", "nature", "chaos", "trump", "death", "craft", "daemon", "crusade", "armageddon", "law"] as const;
 const WARRIOR_MAGE = {
   ...career("warrior-mage"), id: "warrior-mage", childLabelKey: "session-second-realm-label",
   notes: ["session-warrior-mage-realms-help"],

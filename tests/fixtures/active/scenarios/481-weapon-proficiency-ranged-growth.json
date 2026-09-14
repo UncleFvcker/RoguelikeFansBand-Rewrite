@@ -64,8 +64,8 @@
         "y": 33
       },
       "revision": 1,
-      "rngDrawCounter": 201,
-      "stateHash": "8d6a998e3105834bb95850dd4dc2060519d0816e0e86cb3919aee969e16dbd92",
+      "rngDrawCounter": 204,
+      "stateHash": "8d48bb171fdfda768e18461feefd7cf765ca6de69f3497c0b0083b715643d061",
       "turn": 1
     },
     "events": [
@@ -101,8 +101,8 @@
         }
       },
       {
-        "kind": "combat.projectile-ammo-recovered",
-        "messageKey": "projectile-ammo-recovered",
+        "kind": "combat.projectile-ammo-broken",
+        "messageKey": "projectile-ammo-broken",
         "args": {
           "target": "demo.item.arrow"
         }

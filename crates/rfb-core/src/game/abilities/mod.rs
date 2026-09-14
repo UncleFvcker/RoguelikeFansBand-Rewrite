@@ -10,6 +10,7 @@ mod damage;
 mod duelist;
 mod duelist_choices;
 mod items;
+mod law;
 pub(in crate::game) mod mindcraft;
 mod necromancy;
 mod restoration;
@@ -40,6 +41,9 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<Option<Position>, CoreError> {
         match (ability.effect.clone(), target_plan) {
+            (AbilityEffectDefinition::Law { spell }, plan) => {
+                return self.resolve_law(&ability, spell, plan, events, changed, removed_entities);
+            }
             (AbilityEffectDefinition::Necromancy { spell }, plan) => {
                 return self.resolve_necromancy(
                     &ability,

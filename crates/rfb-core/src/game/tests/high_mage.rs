@@ -1485,10 +1485,12 @@ fn crusade_sanctuary_reaches_unseen_adjacent_monsters_but_not_distant_or_immune_
     }
     assert!(!game.entity_is_visible_to_player(&game.entities[0]));
 
+    game.rng = RfbRng::seeded(0x9e37_79b9_7f4a_7c15); // Isolate the status save from birth/shop allocation.
+    let mut events = Vec::new();
     game.resolve_player_ability(
         "demo.ability.crusade-sanctuary",
         TargetSelection::SelfTarget,
-        &mut Vec::new(),
+        &mut events,
         &mut BTreeSet::new(),
         &mut Vec::new(),
     )
@@ -1503,7 +1505,7 @@ fn crusade_sanctuary_reaches_unseen_adjacent_monsters_but_not_distant_or_immune_
             .iter()
             .any(|status| status.kind_id == STATUS_SLEEP)
     };
-    assert!(has_sleep("test.crusade.unseen-adjacent"));
+    assert!(has_sleep("test.crusade.unseen-adjacent"), "{events:?}");
     assert!(!has_sleep("test.crusade.distant"));
     assert!(!has_sleep("test.crusade.immune"));
     assert!(!has_sleep("test.crusade.unique"));

@@ -1512,3 +1512,11 @@ message-trump-card-21 = 是“审判”。
 message-trump-card-22 = 是“太阳”。
 message-trump-card-23 = 是“世界”。
 confirm-ability-necromancy-repose = 你将进入深度沉睡。你确定吗？
+
+duelist-choice-law-escape-title = 逃之夭夭
+duelist-choice-law-escape-help = 传送到另一层？本次施法的消耗已结算。
+
+realm-law-name = 律法
+
+status-law-spin-name = 扭曲事实
+status-law-tread-softly-name = 轻声潜行

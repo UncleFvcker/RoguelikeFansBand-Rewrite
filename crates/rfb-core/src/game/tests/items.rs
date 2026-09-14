@@ -12768,7 +12768,7 @@ fn b4_pick_up_tailored_matching(game: &mut Game, accepts: impl Fn(&Game, &str) -
 #[test]
 fn all_priest_builds_generate_tailored_hafted_weapons_equip_and_resume_generation() {
     let builds = super::support::priest_build_ids();
-    assert_eq!(builds.len(), 32);
+    assert_eq!(builds.len(), 36);
     for build in builds
         .into_iter()
         .chain(super::support::warrior_mage_build_ids())

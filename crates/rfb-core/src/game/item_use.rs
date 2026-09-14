@@ -1174,7 +1174,7 @@ impl Game {
             .terrain(target_terrain_id)
             .is_some_and(|terrain| {
                 terrain.tags.iter().any(|tag| {
-                    tag == "explosive-rune"
+                    matches!(tag.as_str(), "explosive-rune" | "monster-trap")
                         || (tag == "warding-glyph"
                             && self.character_definitions().is_none_or(|(build, _, _, _)| {
                                 build.first_realm_id.as_deref() != Some("life")
@@ -1184,7 +1184,19 @@ impl Game {
             && self
                 .terrain
                 .iter()
-                .filter(|terrain_id| terrain_id.as_str() == target_terrain_id)
+                .filter(|terrain_id| {
+                    self.content.terrain(terrain_id).is_some_and(|t| {
+                        t.tags.iter().any(|tag| {
+                            matches!(tag.as_str(), "explosive-rune" | "monster-trap")
+                                || (tag == "warding-glyph"
+                                    && self.character_definitions().is_none_or(
+                                        |(build, _, _, _)| {
+                                            build.first_realm_id.as_deref() != Some("life")
+                                        },
+                                    ))
+                        })
+                    })
+                })
                 .count()
                 > 10
         {

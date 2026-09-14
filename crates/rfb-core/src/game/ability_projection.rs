@@ -482,6 +482,7 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
             }
         }
         AbilityEffectDefinition::TrumpShuffle => AbilityEffectSpecDto::TrumpShuffle,
+        AbilityEffectDefinition::Law { spell } => AbilityEffectSpecDto::Law { spell: *spell },
         AbilityEffectDefinition::Necromancy { spell } => {
             AbilityEffectSpecDto::Necromancy { spell: *spell }
         }

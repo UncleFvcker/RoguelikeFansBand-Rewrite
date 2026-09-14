@@ -1516,3 +1516,11 @@ message-trump-card-21 = Judgement.
 message-trump-card-22 = The Sun.
 message-trump-card-23 = The World.
 confirm-ability-necromancy-repose = You will enter a deep sleep and cannot act until you awaken. Continue?
+
+duelist-choice-law-escape-title = Getaway
+duelist-choice-law-escape-help = Teleport to another dungeon level? The casting cost has already been paid.
+
+realm-law-name = Law
+
+status-law-spin-name = Spin
+status-law-tread-softly-name = Tread Softly

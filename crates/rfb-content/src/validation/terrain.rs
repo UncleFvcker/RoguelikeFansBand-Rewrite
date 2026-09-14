@@ -219,10 +219,12 @@ pub(super) fn validate_terrain(
                 }
             }
         }
-        let monster_rune = terrain
-            .tags
-            .iter()
-            .any(|tag| matches!(tag.as_str(), "warding-glyph" | "explosive-rune"));
+        let monster_rune = terrain.tags.iter().any(|tag| {
+            matches!(
+                tag.as_str(),
+                "warding-glyph" | "explosive-rune" | "monster-trap"
+            )
+        });
         if monster_rune && terrain.monster_destroy_to_terrain_id.is_none() {
             return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));
         }

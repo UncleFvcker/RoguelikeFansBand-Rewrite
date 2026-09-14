@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.law-dig",
+  "nameKey": "ability-demo-law-dig-name",
+  "descriptionKey": "ability-demo-law-dig-description",
+  "abilityProgramId": "demo.ability-program.law-dig",
+  "target": {
+    "modes": [
+      "direction",
+      "entity",
+      "position"
+    ],
+    "range": 18,
+    "requiresLineOfEffect": true
+  },
+  "tags": [
+    "law",
+    "spell"
+  ]
+}

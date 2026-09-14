@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.obstacle-coursebook",
+  "nameKey": "item-demo-obstacle-coursebook-name",
+  "descriptionKey": "ability-book-demo-deck-of-many-things-description",
+  "realmId": "law",
+  "rank": 2,
+  "abilityIds": [
+    "demo.ability.law-detect-monsters",
+    "demo.ability.law-slow-monster",
+    "demo.ability.law-confuse-monster",
+    "demo.ability.law-scare-monster",
+    "demo.ability.law-semicolon-of-punishment",
+    "demo.ability.law-confuse-everybody",
+    "demo.ability.law-create-doors",
+    "demo.ability.law-semicolon-of-warding"
+  ],
+  "tags": [
+    "law",
+    "spellbook"
+  ]
+}

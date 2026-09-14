@@ -67,6 +67,7 @@
       "demo.build.mage-life-daemon",
       "demo.build.mage-life-crusade",
       "demo.build.mage-life-armageddon",
+      "demo.build.mage-life-law",
       "demo.build.mage-sorcery-life",
       "demo.build.mage-sorcery-nature",
       "demo.build.mage-sorcery-chaos",
@@ -77,6 +78,7 @@
       "demo.build.mage-sorcery-daemon",
       "demo.build.mage-sorcery-crusade",
       "demo.build.mage-sorcery-armageddon",
+      "demo.build.mage-sorcery-law",
       "demo.build.mage-nature-life",
       "demo.build.mage-nature-sorcery",
       "demo.build.mage-nature-chaos",
@@ -87,6 +89,7 @@
       "demo.build.mage-nature-daemon",
       "demo.build.mage-nature-crusade",
       "demo.build.mage-nature-armageddon",
+      "demo.build.mage-nature-law",
       "demo.build.mage-chaos-life",
       "demo.build.mage-chaos-sorcery",
       "demo.build.mage-chaos-nature",
@@ -97,6 +100,7 @@
       "demo.build.mage-chaos-daemon",
       "demo.build.mage-chaos-crusade",
       "demo.build.mage-chaos-armageddon",
+      "demo.build.mage-chaos-law",
       "demo.build.mage-trump-life",
       "demo.build.mage-trump-sorcery",
       "demo.build.mage-trump-nature",
@@ -107,6 +111,7 @@
       "demo.build.mage-trump-daemon",
       "demo.build.mage-trump-crusade",
       "demo.build.mage-trump-armageddon",
+      "demo.build.mage-trump-law",
       "demo.build.mage-death-life",
       "demo.build.mage-death-sorcery",
       "demo.build.mage-death-nature",
@@ -117,6 +122,7 @@
       "demo.build.mage-death-daemon",
       "demo.build.mage-death-crusade",
       "demo.build.mage-death-armageddon",
+      "demo.build.mage-death-law",
       "demo.build.mage-arcane-life",
       "demo.build.mage-arcane-sorcery",
       "demo.build.mage-arcane-nature",
@@ -127,6 +133,7 @@
       "demo.build.mage-arcane-daemon",
       "demo.build.mage-arcane-crusade",
       "demo.build.mage-arcane-armageddon",
+      "demo.build.mage-arcane-law",
       "demo.build.mage-craft-life",
       "demo.build.mage-craft-sorcery",
       "demo.build.mage-craft-nature",
@@ -137,6 +144,7 @@
       "demo.build.mage-craft-daemon",
       "demo.build.mage-craft-crusade",
       "demo.build.mage-craft-armageddon",
+      "demo.build.mage-craft-law",
       "demo.build.mage-daemon-life",
       "demo.build.mage-daemon-sorcery",
       "demo.build.mage-daemon-nature",
@@ -147,6 +155,7 @@
       "demo.build.mage-daemon-craft",
       "demo.build.mage-daemon-crusade",
       "demo.build.mage-daemon-armageddon",
+      "demo.build.mage-daemon-law",
       "demo.build.mage-crusade-life",
       "demo.build.mage-crusade-sorcery",
       "demo.build.mage-crusade-nature",
@@ -157,6 +166,7 @@
       "demo.build.mage-crusade-craft",
       "demo.build.mage-crusade-daemon",
       "demo.build.mage-crusade-armageddon",
+      "demo.build.mage-crusade-law",
       "demo.build.mage-armageddon-life",
       "demo.build.mage-armageddon-sorcery",
       "demo.build.mage-armageddon-nature",
@@ -167,6 +177,18 @@
       "demo.build.mage-armageddon-craft",
       "demo.build.mage-armageddon-daemon",
       "demo.build.mage-armageddon-crusade",
+      "demo.build.mage-armageddon-law",
+      "demo.build.mage-law-life",
+      "demo.build.mage-law-sorcery",
+      "demo.build.mage-law-nature",
+      "demo.build.mage-law-chaos",
+      "demo.build.mage-law-trump",
+      "demo.build.mage-law-death",
+      "demo.build.mage-law-arcane",
+      "demo.build.mage-law-craft",
+      "demo.build.mage-law-daemon",
+      "demo.build.mage-law-crusade",
+      "demo.build.mage-law-armageddon",
       "demo.build.high-mage-life",
       "demo.build.high-mage-sorcery",
       "demo.build.high-mage-nature",
@@ -178,6 +200,7 @@
       "demo.build.high-mage-daemon",
       "demo.build.high-mage-crusade",
       "demo.build.high-mage-armageddon",
+      "demo.build.high-mage-law",
       "demo.build.necromancer",
       "demo.build.magic-eater",
       "demo.build.priest-life-chaos",
@@ -188,6 +211,7 @@
       "demo.build.priest-life-craft",
       "demo.build.priest-life-crusade",
       "demo.build.priest-life-armageddon",
+      "demo.build.priest-life-law",
       "demo.build.priest-crusade-chaos",
       "demo.build.priest-crusade-trump",
       "demo.build.priest-crusade-life",
@@ -196,6 +220,7 @@
       "demo.build.priest-crusade-arcane",
       "demo.build.priest-crusade-craft",
       "demo.build.priest-crusade-armageddon",
+      "demo.build.priest-crusade-law",
       "demo.build.priest-death-chaos",
       "demo.build.priest-death-trump",
       "demo.build.priest-death-sorcery",
@@ -204,6 +229,7 @@
       "demo.build.priest-death-craft",
       "demo.build.priest-death-daemon",
       "demo.build.priest-death-armageddon",
+      "demo.build.priest-death-law",
       "demo.build.priest-daemon-chaos",
       "demo.build.priest-daemon-trump",
       "demo.build.priest-daemon-sorcery",
@@ -212,10 +238,12 @@
       "demo.build.priest-daemon-arcane",
       "demo.build.priest-daemon-craft",
       "demo.build.priest-daemon-armageddon",
+      "demo.build.priest-daemon-law",
       "demo.build.paladin-life",
       "demo.build.paladin-crusade",
       "demo.build.paladin-death",
       "demo.build.paladin-daemon",
+      "demo.build.paladin-law",
       "demo.build.warrior-mage-arcane-life",
       "demo.build.warrior-mage-arcane-sorcery",
       "demo.build.warrior-mage-arcane-nature",
@@ -226,6 +254,7 @@
       "demo.build.warrior-mage-arcane-daemon",
       "demo.build.warrior-mage-arcane-crusade",
       "demo.build.warrior-mage-arcane-armageddon",
+      "demo.build.warrior-mage-arcane-law",
       "demo.build.cavalry",
       "demo.build.mindcrafter"
     ],
@@ -427,6 +456,12 @@
         "secondRealmId": "armageddon"
       },
       {
+        "buildId": "demo.build.mage-life-law",
+        "classId": "demo.class.mage",
+        "firstRealmId": "life",
+        "secondRealmId": "law"
+      },
+      {
         "buildId": "demo.build.mage-sorcery-life",
         "classId": "demo.class.mage",
         "firstRealmId": "sorcery",
@@ -485,6 +520,12 @@
         "classId": "demo.class.mage",
         "firstRealmId": "sorcery",
         "secondRealmId": "armageddon"
+      },
+      {
+        "buildId": "demo.build.mage-sorcery-law",
+        "classId": "demo.class.mage",
+        "firstRealmId": "sorcery",
+        "secondRealmId": "law"
       },
       {
         "buildId": "demo.build.mage-nature-life",
@@ -547,6 +588,12 @@
         "secondRealmId": "armageddon"
       },
       {
+        "buildId": "demo.build.mage-nature-law",
+        "classId": "demo.class.mage",
+        "firstRealmId": "nature",
+        "secondRealmId": "law"
+      },
+      {
         "buildId": "demo.build.mage-chaos-life",
         "classId": "demo.class.mage",
         "firstRealmId": "chaos",
@@ -605,6 +652,12 @@
         "classId": "demo.class.mage",
         "firstRealmId": "chaos",
         "secondRealmId": "armageddon"
+      },
+      {
+        "buildId": "demo.build.mage-chaos-law",
+        "classId": "demo.class.mage",
+        "firstRealmId": "chaos",
+        "secondRealmId": "law"
       },
       {
         "buildId": "demo.build.mage-trump-life",
@@ -667,6 +720,12 @@
         "secondRealmId": "armageddon"
       },
       {
+        "buildId": "demo.build.mage-trump-law",
+        "classId": "demo.class.mage",
+        "firstRealmId": "trump",
+        "secondRealmId": "law"
+      },
+      {
         "buildId": "demo.build.mage-death-life",
         "classId": "demo.class.mage",
         "firstRealmId": "death",
@@ -725,6 +784,12 @@
         "classId": "demo.class.mage",
         "firstRealmId": "death",
         "secondRealmId": "armageddon"
+      },
+      {
+        "buildId": "demo.build.mage-death-law",
+        "classId": "demo.class.mage",
+        "firstRealmId": "death",
+        "secondRealmId": "law"
       },
       {
         "buildId": "demo.build.mage-arcane-life",
@@ -787,6 +852,12 @@
         "secondRealmId": "armageddon"
       },
       {
+        "buildId": "demo.build.mage-arcane-law",
+        "classId": "demo.class.mage",
+        "firstRealmId": "arcane",
+        "secondRealmId": "law"
+      },
+      {
         "buildId": "demo.build.mage-craft-life",
         "classId": "demo.class.mage",
         "firstRealmId": "craft",
@@ -845,6 +916,12 @@
         "classId": "demo.class.mage",
         "firstRealmId": "craft",
         "secondRealmId": "armageddon"
+      },
+      {
+        "buildId": "demo.build.mage-craft-law",
+        "classId": "demo.class.mage",
+        "firstRealmId": "craft",
+        "secondRealmId": "law"
       },
       {
         "buildId": "demo.build.mage-daemon-life",
@@ -907,6 +984,12 @@
         "secondRealmId": "armageddon"
       },
       {
+        "buildId": "demo.build.mage-daemon-law",
+        "classId": "demo.class.mage",
+        "firstRealmId": "daemon",
+        "secondRealmId": "law"
+      },
+      {
         "buildId": "demo.build.mage-crusade-life",
         "classId": "demo.class.mage",
         "firstRealmId": "crusade",
@@ -967,6 +1050,12 @@
         "secondRealmId": "armageddon"
       },
       {
+        "buildId": "demo.build.mage-crusade-law",
+        "classId": "demo.class.mage",
+        "firstRealmId": "crusade",
+        "secondRealmId": "law"
+      },
+      {
         "buildId": "demo.build.mage-armageddon-life",
         "classId": "demo.class.mage",
         "firstRealmId": "armageddon",
@@ -1025,6 +1114,78 @@
         "classId": "demo.class.mage",
         "firstRealmId": "armageddon",
         "secondRealmId": "crusade"
+      },
+      {
+        "buildId": "demo.build.mage-armageddon-law",
+        "classId": "demo.class.mage",
+        "firstRealmId": "armageddon",
+        "secondRealmId": "law"
+      },
+      {
+        "buildId": "demo.build.mage-law-life",
+        "classId": "demo.class.mage",
+        "firstRealmId": "law",
+        "secondRealmId": "life"
+      },
+      {
+        "buildId": "demo.build.mage-law-sorcery",
+        "classId": "demo.class.mage",
+        "firstRealmId": "law",
+        "secondRealmId": "sorcery"
+      },
+      {
+        "buildId": "demo.build.mage-law-nature",
+        "classId": "demo.class.mage",
+        "firstRealmId": "law",
+        "secondRealmId": "nature"
+      },
+      {
+        "buildId": "demo.build.mage-law-chaos",
+        "classId": "demo.class.mage",
+        "firstRealmId": "law",
+        "secondRealmId": "chaos"
+      },
+      {
+        "buildId": "demo.build.mage-law-trump",
+        "classId": "demo.class.mage",
+        "firstRealmId": "law",
+        "secondRealmId": "trump"
+      },
+      {
+        "buildId": "demo.build.mage-law-death",
+        "classId": "demo.class.mage",
+        "firstRealmId": "law",
+        "secondRealmId": "death"
+      },
+      {
+        "buildId": "demo.build.mage-law-arcane",
+        "classId": "demo.class.mage",
+        "firstRealmId": "law",
+        "secondRealmId": "arcane"
+      },
+      {
+        "buildId": "demo.build.mage-law-craft",
+        "classId": "demo.class.mage",
+        "firstRealmId": "law",
+        "secondRealmId": "craft"
+      },
+      {
+        "buildId": "demo.build.mage-law-daemon",
+        "classId": "demo.class.mage",
+        "firstRealmId": "law",
+        "secondRealmId": "daemon"
+      },
+      {
+        "buildId": "demo.build.mage-law-crusade",
+        "classId": "demo.class.mage",
+        "firstRealmId": "law",
+        "secondRealmId": "crusade"
+      },
+      {
+        "buildId": "demo.build.mage-law-armageddon",
+        "classId": "demo.class.mage",
+        "firstRealmId": "law",
+        "secondRealmId": "armageddon"
       },
       {
         "buildId": "demo.build.high-mage-life",
@@ -1093,6 +1254,12 @@
         "secondRealmId": null
       },
       {
+        "buildId": "demo.build.high-mage-law",
+        "classId": "demo.class.high-mage",
+        "firstRealmId": "law",
+        "secondRealmId": null
+      },
+      {
         "buildId": "demo.build.necromancer",
         "classId": "demo.class.necromancer",
         "firstRealmId": "necromancy",
@@ -1153,6 +1320,12 @@
         "secondRealmId": "armageddon"
       },
       {
+        "buildId": "demo.build.priest-life-law",
+        "classId": "demo.class.priest",
+        "firstRealmId": "life",
+        "secondRealmId": "law"
+      },
+      {
         "buildId": "demo.build.priest-crusade-chaos",
         "classId": "demo.class.priest",
         "firstRealmId": "crusade",
@@ -1199,6 +1372,12 @@
         "classId": "demo.class.priest",
         "firstRealmId": "crusade",
         "secondRealmId": "armageddon"
+      },
+      {
+        "buildId": "demo.build.priest-crusade-law",
+        "classId": "demo.class.priest",
+        "firstRealmId": "crusade",
+        "secondRealmId": "law"
       },
       {
         "buildId": "demo.build.priest-death-chaos",
@@ -1249,6 +1428,12 @@
         "secondRealmId": "armageddon"
       },
       {
+        "buildId": "demo.build.priest-death-law",
+        "classId": "demo.class.priest",
+        "firstRealmId": "death",
+        "secondRealmId": "law"
+      },
+      {
         "buildId": "demo.build.priest-daemon-chaos",
         "classId": "demo.class.priest",
         "firstRealmId": "daemon",
@@ -1297,6 +1482,12 @@
         "secondRealmId": "armageddon"
       },
       {
+        "buildId": "demo.build.priest-daemon-law",
+        "classId": "demo.class.priest",
+        "firstRealmId": "daemon",
+        "secondRealmId": "law"
+      },
+      {
         "buildId": "demo.build.paladin-life",
         "classId": "demo.class.paladin",
         "firstRealmId": "life",
@@ -1318,6 +1509,12 @@
         "buildId": "demo.build.paladin-daemon",
         "classId": "demo.class.paladin",
         "firstRealmId": "daemon",
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.paladin-law",
+        "classId": "demo.class.paladin",
+        "firstRealmId": "law",
         "secondRealmId": null
       },
       {
@@ -1379,6 +1576,12 @@
         "classId": "demo.class.warrior-mage",
         "firstRealmId": "arcane",
         "secondRealmId": "armageddon"
+      },
+      {
+        "buildId": "demo.build.warrior-mage-arcane-law",
+        "classId": "demo.class.warrior-mage",
+        "firstRealmId": "arcane",
+        "secondRealmId": "law"
       },
       {
         "buildId": "demo.build.cavalry",
@@ -2210,6 +2413,58 @@
         "complete": true
       },
       {
+        "buildId": "demo.build.mage-life-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-life-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-life-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-life-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-life-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-life-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
         "buildId": "demo.build.mage-sorcery-life",
         "areas": [
           {
@@ -2580,6 +2835,58 @@
         "complete": true
       },
       {
+        "buildId": "demo.build.mage-sorcery-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-sorcery-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-sorcery-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-sorcery-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-sorcery-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-sorcery-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
         "buildId": "demo.build.mage-nature-life",
         "areas": [
           {
@@ -2944,6 +3251,58 @@
             "review": "use-save",
             "status": "implemented",
             "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mage-nature-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-nature-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-nature-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-nature-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-nature-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-nature-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
           }
         ],
         "gapIds": [],
@@ -3418,6 +3777,58 @@
             "reason": "demo.build.mage-chaos-armageddon: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
             "tests": [
               "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mage-chaos-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-chaos-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-chaos-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-chaos-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-chaos-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-chaos-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
             ]
           }
         ],
@@ -3945,6 +4356,58 @@
         "complete": true
       },
       {
+        "buildId": "demo.build.mage-trump-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-trump-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-trump-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-trump-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-trump-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-trump-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
         "buildId": "demo.build.mage-death-life",
         "areas": [
           {
@@ -4315,6 +4778,58 @@
         "complete": true
       },
       {
+        "buildId": "demo.build.mage-death-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-death-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-death-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-death-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-death-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-death-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
         "buildId": "demo.build.mage-arcane-life",
         "areas": [
           {
@@ -4679,6 +5194,58 @@
             "review": "use-save",
             "status": "implemented",
             "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mage-arcane-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-arcane-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-arcane-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-arcane-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-arcane-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-arcane-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
           }
         ],
         "gapIds": [],
@@ -5160,6 +5727,58 @@
         "complete": true
       },
       {
+        "buildId": "demo.build.mage-craft-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-craft-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-craft-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-craft-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-craft-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-craft-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
         "buildId": "demo.build.mage-daemon-life",
         "areas": [
           {
@@ -5524,6 +6143,58 @@
             "review": "use-save",
             "status": "implemented",
             "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mage-daemon-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-daemon-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-daemon-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-daemon-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-daemon-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-daemon-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
           }
         ],
         "gapIds": [],
@@ -5900,6 +6571,58 @@
         "complete": true
       },
       {
+        "buildId": "demo.build.mage-crusade-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-crusade-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-crusade-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-crusade-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-crusade-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-crusade-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
         "buildId": "demo.build.mage-armageddon-life",
         "areas": [
           {
@@ -6264,6 +6987,630 @@
             "review": "use-save",
             "status": "implemented",
             "reason": "Generated equipment/devices, fixed staff activation/cooldown and mana brand, eight-realm book purchases, class towers and current-realm guild services survive save and continued RNG. No birth-realm fallback after replacement (mage-source-audit G5)."
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mage-armageddon-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-armageddon-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-armageddon-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-armageddon-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-armageddon-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-armageddon-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mage-law-life",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-life: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-life: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-life: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-life: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-life: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mage-law-sorcery",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-sorcery: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-sorcery: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-sorcery: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-sorcery: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-sorcery: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mage-law-nature",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-nature: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-nature: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-nature: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-nature: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-nature: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mage-law-chaos",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-chaos: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-chaos: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-chaos: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-chaos: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-chaos: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mage-law-trump",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-trump: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-trump: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-trump: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-trump: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-trump: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mage-law-death",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-death: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-death: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-death: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-death: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-death: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mage-law-arcane",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-arcane: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-arcane: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-arcane: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-arcane: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-arcane: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mage-law-craft",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-craft: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-craft: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-craft: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-craft: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-craft: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mage-law-daemon",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-daemon: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-daemon: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-daemon: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-daemon: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-daemon: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mage-law-crusade",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-crusade: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-crusade: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-crusade: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-crusade: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-crusade: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.mage-law-armageddon",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-armageddon: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-armageddon: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.mage-law-armageddon: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-armageddon: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.mage-law-armageddon: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
           }
         ],
         "gapIds": [],
@@ -6822,6 +8169,58 @@
         "complete": true
       },
       {
+        "buildId": "demo.build.high-mage-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.high-mage-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.high-mage-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.high-mage-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.high-mage-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.high-mage-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
         "buildId": "demo.build.necromancer",
         "areas": [
           {
@@ -7248,6 +8647,58 @@
         "complete": true
       },
       {
+        "buildId": "demo.build.priest-life-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.priest-life-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.priest-life-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.priest-life-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.priest-life-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.priest-life-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
         "buildId": "demo.build.priest-crusade-chaos",
         "areas": [
           {
@@ -7533,6 +8984,58 @@
             "review": "use-save",
             "status": "implemented",
             "reason": "Born with crusade/armageddon; the first realm is fixed and the legal current secondary realm is authoritative. All 24 use the generated equipment, scroll and reward/save paths and both temple Owner services at source prices. Current realms update book allocation, Mogaminator inscriptions and realm-based facilities after confirmation. Good/evil powers pay MP then HP; blessing knowledge, penalties and RNG survive save/load. UI acceptance covers legal pairs, cancellation, focus, busy locks and prepared power boundaries. The referenced regressions passed in step 7; UI/play preparation and execution limits are recorded in docs/priest-source-audit.md section 9."
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.priest-crusade-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.priest-crusade-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.priest-crusade-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.priest-crusade-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.priest-crusade-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.priest-crusade-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
           }
         ],
         "gapIds": [],
@@ -7830,6 +9333,58 @@
         "complete": true
       },
       {
+        "buildId": "demo.build.priest-death-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.priest-death-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.priest-death-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.priest-death-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.priest-death-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.priest-death-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
         "buildId": "demo.build.priest-daemon-chaos",
         "areas": [
           {
@@ -8121,6 +9676,58 @@
         "complete": true
       },
       {
+        "buildId": "demo.build.priest-daemon-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.priest-daemon-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.priest-daemon-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.priest-daemon-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.priest-daemon-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.priest-daemon-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
         "buildId": "demo.build.paladin-life",
         "areas": [
           {
@@ -8299,6 +9906,58 @@
             "tests": [
               "crates/rfb-core/src/game/tests/items.rs#b4_tailored_death_books_are_counted_studied_cast_and_restored",
               "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.paladin-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.paladin-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.paladin-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.paladin-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.paladin-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.paladin-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
             ]
           }
         ],
@@ -9118,6 +10777,58 @@
             ]
           }
         ],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.warrior-mage-arcane-law",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "demo.build.warrior-mage-arcane-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: base-allocation-tailored.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.warrior-mage-arcane-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.warrior-mage-arcane-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.warrior-mage-arcane-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "demo.build.warrior-mage-arcane-law: Law uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 104. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/law-realm.md. Area: use-save.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
+              "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
         "complete": true
       },
       {

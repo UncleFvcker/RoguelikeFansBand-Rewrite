@@ -69,7 +69,7 @@ fn target(game: &mut Game) -> String {
     id
 }
 
-fn dungeon(game: &mut Game) {
+pub(super) fn dungeon(game: &mut Game) {
     let floor = game
         .content
         .world(DEFAULT_WORLD_ID)
@@ -107,7 +107,7 @@ fn trump_all_formal_builds_learn_cast_and_resume() {
         })
         .map(|b| b.id.clone())
         .collect::<Vec<_>>();
-    assert_eq!(builds.len(), 27);
+    assert_eq!(builds.len(), 29);
     for build in builds {
         let mut g = prepared(&build);
         arena(&mut g);

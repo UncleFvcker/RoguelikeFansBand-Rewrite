@@ -53,6 +53,20 @@
       "initialMaximum": 1,
       "maintenanceMinimum": 1,
       "maintenanceMaximum": 1
+    },
+    {
+      "itemKindId": "demo.item.attractions-of-law",
+      "initialMinimum": 1,
+      "initialMaximum": 1,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 1
+    },
+    {
+      "itemKindId": "demo.item.obstacle-coursebook",
+      "initialMinimum": 1,
+      "initialMaximum": 1,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 1
     }
   ],
   "maintenance": { "intervalWorldTicks": 10000 }

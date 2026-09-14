@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.269";
+pub const PROTOCOL_VERSION: &str = "1.270";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 29;
 
@@ -110,6 +110,7 @@ pub struct PendingAbilityGlyphDto {
     rename_all_fields = "camelCase"
 )]
 pub enum DuelistPromptDto {
+    LawEscape,
     Charge {
         ability_id: String,
         target_entity_id: String,
@@ -1611,6 +1612,9 @@ pub enum AbilityEffectSpecDto {
     },
     TrumpShuffle,
     Necromancy {
+        spell: u8,
+    },
+    Law {
         spell: u8,
     },
     ResetRecall,

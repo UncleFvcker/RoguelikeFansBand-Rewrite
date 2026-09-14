@@ -1,0 +1,356 @@
+{
+  "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+  "realmIndex": 15,
+  "sourceFiles": [
+    "src/lawyer.c",
+    "src/tables.c",
+    "src/cave.c",
+    "src/gf.c",
+    "src/spells3.c",
+    "lib/edit/k_info.txt",
+    "src/kind_name_zh.inc"
+  ],
+  "books": [
+    {
+      "sourceIndex": 548,
+      "name": "[Attractions of Law]",
+      "chineseName": "[律法之引力]"
+    },
+    {
+      "sourceIndex": 549,
+      "name": "[Obstacle Coursebook]",
+      "chineseName": "[障碍课程教材]"
+    },
+    {
+      "sourceIndex": 550,
+      "name": "[Building Alternative Realities]",
+      "chineseName": "[构建多重现实]"
+    },
+    {
+      "sourceIndex": 551,
+      "name": "[Acquiris Quodcumque Rapis]",
+      "chineseName": "[夺你所欲]"
+    }
+  ],
+  "spells": [
+    {
+      "slot": 0,
+      "abilityId": "demo.ability.law-detect-money",
+      "name": "探测金钱",
+      "minimumLevel": 1,
+      "resourceCost": 1,
+      "baseFailurePercent": 10,
+      "experienceMultiplier": 2
+    },
+    {
+      "slot": 1,
+      "abilityId": "demo.ability.law-detect-traps",
+      "name": "探测陷阱",
+      "minimumLevel": 2,
+      "resourceCost": 1,
+      "baseFailurePercent": 10,
+      "experienceMultiplier": 2
+    },
+    {
+      "slot": 2,
+      "abilityId": "demo.ability.law-satisfy-hunger",
+      "name": "满足饥饿",
+      "minimumLevel": 3,
+      "resourceCost": 2,
+      "baseFailurePercent": 10,
+      "experienceMultiplier": 4
+    },
+    {
+      "slot": 3,
+      "abilityId": "demo.ability.law-detect-objects",
+      "name": "探测物品",
+      "minimumLevel": 4,
+      "resourceCost": 2,
+      "baseFailurePercent": 20,
+      "experienceMultiplier": 4
+    },
+    {
+      "slot": 4,
+      "abilityId": "demo.ability.law-basic-trap",
+      "name": "基础陷阱",
+      "minimumLevel": 6,
+      "resourceCost": 3,
+      "baseFailurePercent": 20,
+      "experienceMultiplier": 8
+    },
+    {
+      "slot": 5,
+      "abilityId": "demo.ability.law-disarm-traps",
+      "name": "解除陷阱",
+      "minimumLevel": 8,
+      "resourceCost": 4,
+      "baseFailurePercent": 20,
+      "experienceMultiplier": 8
+    },
+    {
+      "slot": 6,
+      "abilityId": "demo.ability.law-identify",
+      "name": "鉴定",
+      "minimumLevel": 10,
+      "resourceCost": 5,
+      "baseFailurePercent": 30,
+      "experienceMultiplier": 12
+    },
+    {
+      "slot": 7,
+      "abilityId": "demo.ability.law-dig",
+      "name": "挖掘",
+      "minimumLevel": 12,
+      "resourceCost": 5,
+      "baseFailurePercent": 30,
+      "experienceMultiplier": 12
+    },
+    {
+      "slot": 8,
+      "abilityId": "demo.ability.law-detect-monsters",
+      "name": "探测怪物",
+      "minimumLevel": 10,
+      "resourceCost": 5,
+      "baseFailurePercent": 25,
+      "experienceMultiplier": 20
+    },
+    {
+      "slot": 9,
+      "abilityId": "demo.ability.law-slow-monster",
+      "name": "减速怪物",
+      "minimumLevel": 12,
+      "resourceCost": 6,
+      "baseFailurePercent": 30,
+      "experienceMultiplier": 35
+    },
+    {
+      "slot": 10,
+      "abilityId": "demo.ability.law-confuse-monster",
+      "name": "混乱怪物",
+      "minimumLevel": 14,
+      "resourceCost": 6,
+      "baseFailurePercent": 30,
+      "experienceMultiplier": 25
+    },
+    {
+      "slot": 11,
+      "abilityId": "demo.ability.law-scare-monster",
+      "name": "恐吓怪物",
+      "minimumLevel": 15,
+      "resourceCost": 7,
+      "baseFailurePercent": 30,
+      "experienceMultiplier": 30
+    },
+    {
+      "slot": 12,
+      "abilityId": "demo.ability.law-semicolon-of-punishment",
+      "name": "惩戒分号",
+      "minimumLevel": 25,
+      "resourceCost": 25,
+      "baseFailurePercent": 50,
+      "experienceMultiplier": 50
+    },
+    {
+      "slot": 13,
+      "abilityId": "demo.ability.law-confuse-everybody",
+      "name": "群体混乱",
+      "minimumLevel": 27,
+      "resourceCost": 15,
+      "baseFailurePercent": 50,
+      "experienceMultiplier": 50
+    },
+    {
+      "slot": 14,
+      "abilityId": "demo.ability.law-create-doors",
+      "name": "创造门",
+      "minimumLevel": 35,
+      "resourceCost": 30,
+      "baseFailurePercent": 60,
+      "experienceMultiplier": 70
+    },
+    {
+      "slot": 15,
+      "abilityId": "demo.ability.law-semicolon-of-warding",
+      "name": "守护分号",
+      "minimumLevel": 42,
+      "resourceCost": 50,
+      "baseFailurePercent": 70,
+      "experienceMultiplier": 80
+    },
+    {
+      "slot": 16,
+      "abilityId": "demo.ability.law-charm-monster",
+      "name": "魅惑怪物",
+      "minimumLevel": 12,
+      "resourceCost": 8,
+      "baseFailurePercent": 25,
+      "experienceMultiplier": 13
+    },
+    {
+      "slot": 17,
+      "abilityId": "demo.ability.law-expert-trap",
+      "name": "专家陷阱",
+      "minimumLevel": 18,
+      "resourceCost": 18,
+      "baseFailurePercent": 30,
+      "experienceMultiplier": 45
+    },
+    {
+      "slot": 18,
+      "abilityId": "demo.ability.law-getaway",
+      "name": "逃之夭夭",
+      "minimumLevel": 20,
+      "resourceCost": 10,
+      "baseFailurePercent": 35,
+      "experienceMultiplier": 30
+    },
+    {
+      "slot": 19,
+      "abilityId": "demo.ability.law-blame-undead",
+      "name": "嫁祸死灵",
+      "minimumLevel": 30,
+      "resourceCost": 20,
+      "baseFailurePercent": 40,
+      "experienceMultiplier": 35
+    },
+    {
+      "slot": 20,
+      "abilityId": "demo.ability.law-probe",
+      "name": "探测术",
+      "minimumLevel": 32,
+      "resourceCost": 20,
+      "baseFailurePercent": 50,
+      "experienceMultiplier": 45
+    },
+    {
+      "slot": 21,
+      "abilityId": "demo.ability.law-spin",
+      "name": "扭曲事实",
+      "minimumLevel": 35,
+      "resourceCost": 25,
+      "baseFailurePercent": 50,
+      "experienceMultiplier": 60
+    },
+    {
+      "slot": 22,
+      "abilityId": "demo.ability.law-advanced-bloodsucking",
+      "name": "高级吸血",
+      "minimumLevel": 40,
+      "resourceCost": 40,
+      "baseFailurePercent": 60,
+      "experienceMultiplier": 70
+    },
+    {
+      "slot": 23,
+      "abilityId": "demo.ability.law-alter-reality",
+      "name": "改变现实",
+      "minimumLevel": 50,
+      "resourceCost": 125,
+      "baseFailurePercent": 65,
+      "experienceMultiplier": 200
+    },
+    {
+      "slot": 24,
+      "abilityId": "demo.ability.law-blink",
+      "name": "闪烁",
+      "minimumLevel": 10,
+      "resourceCost": 10,
+      "baseFailurePercent": 25,
+      "experienceMultiplier": 15
+    },
+    {
+      "slot": 25,
+      "abilityId": "demo.ability.law-tread-softly",
+      "name": "轻声潜行",
+      "minimumLevel": 15,
+      "resourceCost": 12,
+      "baseFailurePercent": 30,
+      "experienceMultiplier": 25
+    },
+    {
+      "slot": 26,
+      "abilityId": "demo.ability.law-map-surroundings",
+      "name": "测绘周围",
+      "minimumLevel": 20,
+      "resourceCost": 18,
+      "baseFailurePercent": 35,
+      "experienceMultiplier": 35
+    },
+    {
+      "slot": 27,
+      "abilityId": "demo.ability.law-dig-deep",
+      "name": "深度挖掘",
+      "minimumLevel": 25,
+      "resourceCost": 25,
+      "baseFailurePercent": 45,
+      "experienceMultiplier": 45
+    },
+    {
+      "slot": 28,
+      "abilityId": "demo.ability.law-unholy-rage",
+      "name": "邪恶狂暴",
+      "minimumLevel": 30,
+      "resourceCost": 30,
+      "baseFailurePercent": 45,
+      "experienceMultiplier": 55
+    },
+    {
+      "slot": 29,
+      "abilityId": "demo.ability.law-subpoena",
+      "name": "传票",
+      "minimumLevel": 35,
+      "resourceCost": 32,
+      "baseFailurePercent": 55,
+      "experienceMultiplier": 65
+    },
+    {
+      "slot": 30,
+      "abilityId": "demo.ability.law-teleport",
+      "name": "传送",
+      "minimumLevel": 40,
+      "resourceCost": 35,
+      "baseFailurePercent": 55,
+      "experienceMultiplier": 75
+    },
+    {
+      "slot": 31,
+      "abilityId": "demo.ability.law-dazzle",
+      "name": "致盲",
+      "minimumLevel": 45,
+      "resourceCost": 60,
+      "baseFailurePercent": 70,
+      "experienceMultiplier": 85
+    }
+  ],
+  "buildIds": [
+    "demo.build.high-mage-law",
+    "demo.build.paladin-law",
+    "demo.build.warrior-mage-arcane-law",
+    "demo.build.priest-life-law",
+    "demo.build.priest-crusade-law",
+    "demo.build.priest-death-law",
+    "demo.build.priest-daemon-law",
+    "demo.build.mage-law-life",
+    "demo.build.mage-life-law",
+    "demo.build.mage-law-sorcery",
+    "demo.build.mage-sorcery-law",
+    "demo.build.mage-law-nature",
+    "demo.build.mage-nature-law",
+    "demo.build.mage-law-chaos",
+    "demo.build.mage-chaos-law",
+    "demo.build.mage-law-trump",
+    "demo.build.mage-trump-law",
+    "demo.build.mage-law-death",
+    "demo.build.mage-death-law",
+    "demo.build.mage-law-arcane",
+    "demo.build.mage-arcane-law",
+    "demo.build.mage-law-craft",
+    "demo.build.mage-craft-law",
+    "demo.build.mage-law-daemon",
+    "demo.build.mage-daemon-law",
+    "demo.build.mage-law-crusade",
+    "demo.build.mage-crusade-law",
+    "demo.build.mage-law-armageddon",
+    "demo.build.mage-armageddon-law"
+  ]
+}

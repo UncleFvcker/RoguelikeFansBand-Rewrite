@@ -1971,6 +1971,26 @@
         {
           "additionalProperties": false,
           "properties": {
+            "spell": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "law",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "type": {
               "const": "reset-recall",
               "type": "string"

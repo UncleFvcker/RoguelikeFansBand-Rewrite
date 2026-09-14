@@ -340,6 +340,17 @@ impl Game {
                 effective.level_scaling.clone_from(&override_.level_scaling);
             }
         }
+        if matches!(ability.effect, AbilityEffectDefinition::Law { .. }) {
+            let aptitude = self.player_has_law_aptitude();
+            let level = u32::from(player.minimum_level) * if aptitude { 110 } else { 120 } / 100;
+            let level = if level >= 58 { 99 } else { level.clamp(1, 50) };
+            player.first_success_experience =
+                player.first_success_experience / u32::from(player.minimum_level) * level;
+            player.minimum_level = level as u16;
+            player.resource_cost =
+                (player.resource_cost * if aptitude { 120 } else { 140 } / 100).min(255);
+            player.base_failure_percent = player.base_failure_percent.saturating_add(10);
+        }
         // lawyer_hack applies these adjustments to every book caster.
         if ability.id == "demo.ability.death-vampirism-true" {
             player.resource_cost =
@@ -1064,6 +1075,9 @@ impl Game {
 
     pub(super) fn apply_player_dynamic_effect(&self, ability: &mut AbilityDefinition) {
         match &mut ability.effect {
+            AbilityEffectDefinition::Law { spell: 27 } => {
+                ability.target.range = self.law_dig_range(ability.spell_power_bonus);
+            }
             AbilityEffectDefinition::CraftEnchant {
                 maximum,
                 level_divisor,

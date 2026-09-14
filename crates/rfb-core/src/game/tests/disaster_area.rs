@@ -931,7 +931,7 @@ fn disaster_area_associated_race_keeps_ownership_exception() {
         .unwrap();
     assert_eq!(game.original_dungeon_weight(&actor, &policy), 0);
     let mut found = false;
-    for _ in 0..256 {
+    for _ in 0..4096 {
         let selected = game
             .select_original_allocated_monster(
                 "demo.floor.warrens-depth-9",

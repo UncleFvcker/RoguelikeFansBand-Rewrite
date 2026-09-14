@@ -86,7 +86,7 @@ impl Game {
     ) {
         let special = matches!(
             category,
-            "phantom" | "kamikaze" | "high-undead" | "high-dragon"
+            "phantom" | "kamikaze" | "high-undead" | "high-dragon" | "piranha"
         ) || category.starts_with("bizarre")
             || matches!(
                 category,
@@ -114,6 +114,10 @@ impl Game {
                 .filter(|id| {
                     let a = self.content.actor(id).expect("summon candidate");
                     match category {
+                        "piranha" => matches!(
+                            a.id.as_str(),
+                            "demo.actor.piranha" | "demo.actor.giant-piranha"
+                        ),
                         "rat" => a.glyph == "r",
                         "bat" => a.glyph == "b",
                         "wolf" => a.glyph == "C",

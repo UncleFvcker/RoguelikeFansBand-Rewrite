@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.law-confuse-monster",
+  "minimumLevel": 14,
+  "resourceCost": 6,
+  "baseFailurePercent": 30,
+  "firstSuccessExperience": 350,
+  "resourceId": "demo.resource.mana"
+}

@@ -989,6 +989,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.attractions-of-law",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.jo-staff",
       "maxDepth": 65535,
       "minDepth": 11,
@@ -1557,6 +1564,13 @@
     },
     {
       "itemKindId": "demo.item.earth-wind-and-fire",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.obstacle-coursebook",
       "maxDepth": 50,
       "minDepth": 20,
       "quantity": 1,
@@ -2585,6 +2599,13 @@
       "weight": 6
     },
     {
+      "itemKindId": "demo.item.building-alternative-realities",
+      "maxDepth": 90,
+      "minDepth": 50,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.leather-pouch",
       "maxDepth": 50,
       "minDepth": 50,
@@ -2842,6 +2863,13 @@
       "minDepth": 75,
       "quantity": 1,
       "weight": 16
+    },
+    {
+      "itemKindId": "demo.item.acquiris-quodcumque-rapis",
+      "maxDepth": 65535,
+      "minDepth": 75,
+      "quantity": 1,
+      "weight": 33
     },
     {
       "itemKindId": "demo.item.mace-of-disruption",

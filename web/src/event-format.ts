@@ -1997,7 +1997,7 @@ export function createPresentationFormatter(
   }
 
   function statusName(statusId: string | undefined): string {
-    if (statusId === "rfb.status.necromancy-cloak" || statusId === "rfb.status.necromancy-shield") {
+    if (statusId === "rfb.status.necromancy-cloak" || statusId === "rfb.status.necromancy-shield" || statusId === "rfb.status.law-spin" || statusId === "rfb.status.law-tread-softly") {
       return localization.format(`status-${statusId.slice(11)}-name`);
     }
     const craftStatuses: Record<string, string> = {

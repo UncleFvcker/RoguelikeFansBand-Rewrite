@@ -29,6 +29,9 @@ impl Game {
         let Some(terrain) = self.content.terrain(&self.terrain[terrain_index]) else {
             return Ok(true);
         };
+        if terrain.tags.iter().any(|tag| tag == "monster-trap") {
+            return self.trigger_law_trap(index, position, events, changed, removed_entities);
+        }
         if terrain.tags.iter().any(|tag| tag == "explosive-rune") {
             let terrain_kind_id = terrain.id.clone();
             let replacement_terrain_kind_id = terrain

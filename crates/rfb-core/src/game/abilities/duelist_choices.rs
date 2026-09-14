@@ -64,6 +64,10 @@ impl Game {
             return false;
         }
         let prompt_valid = match &pending.prompt {
+            Some(DuelistPromptDto::LawEscape) => {
+                self.learned_abilities.contains("demo.ability.law-getaway")
+                    && self.law_escape_plan().is_some()
+            }
             None => self.pending_mutation_direction.is_some() && !pending.continuations.is_empty(),
             Some(prompt @ DuelistPromptDto::Charge { ability_id, .. }) => {
                 pending.continuations.is_empty()
@@ -258,6 +262,7 @@ impl Game {
             (
                 Some(
                     DuelistPromptDto::Charge { .. }
+                    | DuelistPromptDto::LawEscape
                     | DuelistPromptDto::BlockTeleport { .. }
                     | DuelistPromptDto::FollowTeleport { .. },
                 ),
@@ -311,6 +316,17 @@ impl Game {
             .take()
             .expect("validated prompt");
         match (prompt, choice) {
+            (DuelistPromptDto::LawEscape, DuelistChoiceDto::Confirm { accepted }) => {
+                if accepted && let Some((ability, plan)) = self.law_escape_plan() {
+                    self.resolve_player_ability_effect(
+                        ability,
+                        plan,
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
+            }
             (DuelistPromptDto::Challenge, DuelistChoiceDto::Challenge { entity_id }) => {
                 if let Some(id) = entity_id {
                     self.resolve_duelist_challenge(id, events);

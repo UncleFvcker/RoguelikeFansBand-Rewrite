@@ -100,5 +100,6 @@ mod weapon_proficiency;
 mod weapon_traits;
 mod world;
 
+mod law;
 mod necromancy;
 mod trump;

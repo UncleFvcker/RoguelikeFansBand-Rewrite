@@ -64,7 +64,8 @@ test("challenge HUD uses projected identities, preserves unseen challenges, and 
 test("all suspended choices send only their resolver; Escape declines, busy prevents duplicate answers", () => {
   const { state, panel, element, commands } = fixture();
   const dialog = element("duelist-choice-dialog");
-  for (const type of ["charge", "block-teleport", "follow-teleport", "challenge"]) {
+  for (const type of ["charge", "block-teleport", "follow-teleport", "challenge", "law-escape"]) {
+    state.status.player.build.classId = type === "law-escape" ? "demo.class.high-mage" : "demo.class.duelist";
     state.status.player.pendingDuelist = { type, targetEntityId: "a", sourceEntityId: "a", distance: 9, range: 5 };
     panel.render();
     assert.equal(dialog.open, true);

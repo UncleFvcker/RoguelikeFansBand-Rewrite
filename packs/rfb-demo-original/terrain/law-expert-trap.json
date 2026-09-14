@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "blocksSight": false,
+  "descriptionKey": "terrain-demo-law-expert-trap-description",
+  "formatVersion": 1,
+  "glyph": ";",
+  "id": "demo.terrain.law-expert-trap",
+  "monsterDestroyToTerrainId": "demo.terrain.floor",
+  "nameKey": "terrain-demo-law-expert-trap-name",
+  "tags": [
+    "monster-trap"
+  ],
+  "walkable": true
+}

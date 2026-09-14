@@ -251,6 +251,25 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) -> bool {
+        self.resolve_monster_status_targets(
+            source_id,
+            projection,
+            power,
+            self.projected_monster_status_targets(),
+            events,
+            changed,
+        )
+    }
+
+    pub(super) fn resolve_monster_status_targets(
+        &mut self,
+        source_id: &str,
+        projection: MonsterStatusProjectionDefinition,
+        power: u16,
+        targets: Vec<String>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> bool {
         // ponytail: source initial counters use shared tick recovery; source
         // noise/fear recovery belongs to the monster timing parity work.
         use MonsterStatusProjectionDefinition::{Confusion, Fear, Sleep, Stasis};
@@ -261,7 +280,7 @@ impl Game {
             Stasis => STATUS_PARALYSIS,
         };
         let mut noticed = false;
-        for actor_id in self.projected_monster_status_targets() {
+        for actor_id in targets {
             let index = self
                 .entities
                 .iter()
@@ -524,7 +543,7 @@ impl Game {
         }
     }
 
-    fn erase_monsters_without_death(
+    pub(super) fn erase_monsters_without_death(
         &mut self,
         entity_ids: &[String],
         changed: &mut BTreeSet<Position>,
@@ -586,6 +605,11 @@ impl Game {
         if category == "any-monster" {
             return self.resolve_psychic_charm(target_index, effect_index, power);
         }
+        let power = if self.player_has_status_kind("rfb.status.law-spin") {
+            power.saturating_add(25.max(power * 2 / 5))
+        } else {
+            power
+        };
         let target_entity_id = self.entities[target_index].id.clone();
         let target_kind_id = self.entities[target_index].kind_id.clone();
         let definition = self

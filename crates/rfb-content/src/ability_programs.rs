@@ -210,6 +210,18 @@ fn ability_program_input_accepts_step(
     input: AbilityProgramInputDefinition,
     effect: &AbilityEffectDefinition,
 ) -> bool {
+    if let AbilityEffectDefinition::Law { spell } = effect {
+        return match input {
+            AbilityProgramInputDefinition::Item => *spell == 6,
+            AbilityProgramInputDefinition::CastTarget => {
+                matches!(spell, 5 | 7 | 9..=11 | 16 | 22 | 27 | 29)
+            }
+            AbilityProgramInputDefinition::SelfTarget => {
+                *spell < 32 && !matches!(spell, 5..=7 | 9..=11 | 16 | 22 | 27 | 29)
+            }
+            _ => false,
+        };
+    }
     if let AbilityEffectDefinition::Necromancy { spell } = effect {
         return match input {
             AbilityProgramInputDefinition::Item => *spell == 11,
